@@ -11,9 +11,7 @@ typedef ap_fixed<32,10> accum_t;
 typedef ap_fixed<32,8> weight_t;
 typedef ap_fixed<32,8> bias_t;
 typedef ap_fixed<32,8> input_t;
-typedef ap_fixed<32,8> layer1_t;
-typedef ap_fixed<32,8> layer2_t;
-typedef ap_fixed<32,8> layer3_t;
 typedef ap_fixed<32,8> result_t;
+//hls-fpga-machine-learning insert layer-precision
 
 #endif 
