@@ -48,6 +48,8 @@ def print_array_to_cpp(name, a):
 
 
 
+
+
 ######################
 ##  Do translation
 ######################
@@ -76,16 +78,16 @@ for layer in model_arch["config"]["layers"]:
     #Extract name for finding weights and biases
     print("PARSED LAYER NAME",layer["name"])
 
-    #Extract typoe of activation and number of nodes
+    #Extract type of activation and number of nodes
     for config,config_value in layer["config"].items():
         if(config=="activation"):
             print("PARSED ACTIVATION",config_value)
         if(config=="units"):
             print("PARSED NUM OF NODES",config_value)
 
-    #Get Weights and biases from h5 file
-    print_array_to_cpp("b{}".format(layer_counter),h5File['/{}/{}/bias:0'.format(layer["name"],layer["name"])][()])
+    #Translate weights and biases from h5 file
     print_array_to_cpp("w{}".format(layer_counter),h5File['/{}/{}/kernel:0'.format(layer["name"],layer["name"])][()])
+    print_array_to_cpp("b{}".format(layer_counter),h5File['/{}/{}/bias:0'.format(layer["name"],layer["name"])][()])
 
 
 #tarball output
