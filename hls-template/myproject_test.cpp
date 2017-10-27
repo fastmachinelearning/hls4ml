@@ -30,7 +30,9 @@
 int main(int argc, char **argv)
 {
 
-  input_t  data_str[N_INPUTS] = {0};
+  //hls-fpga-machine-learning insert data
+
+
   result_t res_str[N_OUTPUTS] = {0};
   unsigned short size_in, size_out;
   myproject(data_str, res_str, size_in, size_out);

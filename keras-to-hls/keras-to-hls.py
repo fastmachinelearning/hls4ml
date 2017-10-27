@@ -215,13 +215,36 @@ for line in f.readlines():
 f.close()
 fout.close()
 
+
+###################
+## test bench
+###################
+
+f = open('../hls-template/myproject_test.cpp','r')
+fout = open('{}/myproject_test.cpp'.format(out_dir_name),'w')
+
+for line in f.readlines():
+
+    #Insert numbers
+    if '//hls-fpga-machine-learning insert data' in line:
+        newline = line
+        newline = newline + '  input_t  data_str[N_INPUTS] = {'
+        for i in range(0,layer_list[0]['n_in']-1):
+            newline = newline + '0,'
+        newline = newline + '0};\n'
+    else:
+        newline = line
+    fout.write(newline)
+f.close()
+fout.close()
+
+
 #######################
 ## plain copy of rest
 #######################
 copyfile('../hls-template/firmware/myproject.h', '{}/firmware/myproject.h'.format(out_dir_name))
 copyfile('../hls-template/build_prj.tcl', '{}/build_prj.tcl'.format(out_dir_name))
 copyfile('../hls-template/myproject.tcl', '{}/myproject.tcl'.format(out_dir_name))
-copyfile('../hls-template/myproject_test.cpp', '{}/myproject_test.cpp'.format(out_dir_name))
 
 
 #tarball output
