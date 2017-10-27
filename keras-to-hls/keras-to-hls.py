@@ -163,6 +163,10 @@ for line in f.readlines():
                 newline = newline + '    nnet::relu<{}, {}, {}>(logits{}, {});\n'.format(output_type, output_type, n_out, i, output_object)
             elif layer_list[i-1]['activation'] =="softmax":
                 newline = newline + '    nnet::softmax<{}, {}, {}, 2048>(logits{}, {});\n'.format(output_type, output_type, n_out, i, output_object)
+            elif layer_list[i-1]['activation'] =="sigmoid":
+                newline = newline + '    nnet::sigmoid<{}, {}, {}, 1024>(logits{}, {});\n'.format(output_type, output_type, n_out, i, output_object)
+            elif layer_list[i-1]['activation'] =="":
+                newline = newline + '    nnet::tanh<{}, {}, {}, 1024>(logits{}, {});\n'.format(output_type, output_type, n_out, i, output_object)
             else:
                 raise Exception('ERROR: MISSING ACTIVATION')
 
@@ -179,6 +183,29 @@ fout.close()
 ## parameters.h
 ###################
 
+f = open('../hls-template/firmware/parameters','r')
+fout = open('{}/firmware/parameters'.format(out_dir_name),'w')
+
+for line in f.readlines():
+
+    #Insert numbers
+    if '//hls-fpga-machine-learning insert numbers' in line:
+        newline = line
+        for i in range(1,len(layer_list)+1):
+
+            if(i==1):
+                newline = newline + '#define N_INPUTS {}'.format()
+                newline = newline + '#define N_LAYER_1 {}'.format()
+
+    elif '//hls-fpga-machine-learning insert layer-precision' in line:
+        newline = line
+        for i in range(1,len(layer_list)):
+            newline = newline + 'typedef ap_fixed<32,8> layer{}_t;\n'.format(i)
+    else:
+        newline = line
+    fout.write(newline)
+f.close()
+fout.close()
 
 #tarball output
 with tarfile.open(out_dir_name + '.tar.gz', mode='w:gz') as archive:
