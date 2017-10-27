@@ -3,6 +3,7 @@ import h5py
 import os
 import tarfile
 import json
+from shutil import copyfile
 
 
 #####################
@@ -127,8 +128,8 @@ for line in f.readlines():
     if '//hls-fpga-machine-learning insert weights' in line:
         newline = line
         for i in range(1,len(layer_list)+1):
-            newline = newline + '#include "weights/w{}.h";\n'.format(i)
-            newline = newline + '#include "weights/b{}.h";\n'.format(i)
+            newline = newline + '#include "weights/w{}.h"\n'.format(i)
+            newline = newline + '#include "weights/b{}.h"\n'.format(i)
 
     #Add layers
     elif '//hls-fpga-machine-learning insert layers' in line:
@@ -147,16 +148,19 @@ for line in f.readlines():
             if(i==len(layer_list)):
                 output_type = 'result_t'
                 output_object = 'res'
-                n_out = 'N_OUPUTS'
+                n_out = 'N_OUTPUTS'
             else:
                 output_type = 'layer{}_t'.format(i)
                 output_object = 'layer{}_out'.format(i)
                 n_out = 'N_LAYER_{}'.format(i)
 
-            newline = newline + '    layer{}_t logits{}[N_LAYER_{}];\n'.format(i,i,i)
-            newline = newline + '    layer{}_t layer{}_out[N_LAYER_{}];\n'.format(i,i,i)
+            newline = newline + '    {} logits{}[{}];\n'.format(output_type,i,n_out)
             newline = newline + '    #pragma HLS ARRAY_PARTITION variable=logits{} complete\n'.format(i)
-            newline = newline + '    #pragma HLS ARRAY_PARTITION variable=layer{}_out complete\n'.format(i)
+
+            if(i!=len(layer_list)):
+                newline = newline + '    {} layer{}_out[{}];\n'.format(output_type,i,n_out)
+                newline = newline + '    #pragma HLS ARRAY_PARTITION variable=layer{}_out complete\n'.format(i)
+
             newline = newline + '    nnet::compute_layer<{}, {}, weight_t, bias_t, accum_t, {}, {}>({}, logits{}, w{}, b{});\n'.format(input_type, output_type, n_in, n_out, input_object, i, i, i, i)
             
             if layer_list[i-1]['activation'] == "relu":
@@ -183,8 +187,8 @@ fout.close()
 ## parameters.h
 ###################
 
-f = open('../hls-template/firmware/parameters','r')
-fout = open('{}/firmware/parameters'.format(out_dir_name),'w')
+f = open('../hls-template/firmware/parameters.h','r')
+fout = open('{}/firmware/parameters.h'.format(out_dir_name),'w')
 
 for line in f.readlines():
 
@@ -193,9 +197,13 @@ for line in f.readlines():
         newline = line
         for i in range(1,len(layer_list)+1):
 
-            if(i==1):
-                newline = newline + '#define N_INPUTS {}'.format()
-                newline = newline + '#define N_LAYER_1 {}'.format()
+            if i==1 :
+                newline = newline + '#define N_INPUTS {}\n'.format(layer_list[i-1]['n_in'])
+                newline = newline + '#define N_LAYER_1 {}\n'.format(layer_list[i-1]['n_out'])
+            elif i==len(layer_list):
+                newline = newline + '#define N_OUTPUTS {}\n'.format(layer_list[i-1]['n_out'])
+            else:
+                newline = newline + '#define N_LAYER_{} {}\n'.format(i, layer_list[i-1]['n_out'])
 
     elif '//hls-fpga-machine-learning insert layer-precision' in line:
         newline = line
@@ -206,6 +214,15 @@ for line in f.readlines():
     fout.write(newline)
 f.close()
 fout.close()
+
+#######################
+## plain copy of rest
+#######################
+copyfile('../hls-template/firmware/myproject.h', '{}/firmware/myproject.h'.format(out_dir_name))
+copyfile('../hls-template/build_prj.tcl', '{}/build_prj.tcl'.format(out_dir_name))
+copyfile('../hls-template/myproject.tcl', '{}/myproject.tcl'.format(out_dir_name))
+copyfile('../hls-template/myproject_test.cpp', '{}/myproject_test.cpp'.format(out_dir_name))
+
 
 #tarball output
 with tarfile.open(out_dir_name + '.tar.gz', mode='w:gz') as archive:
