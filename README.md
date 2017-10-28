@@ -8,9 +8,9 @@ contact: tbd
 
 ## dependencies
 
-_numpy,h5py_: required for the translation of keras model files \\
-http://www.numpy.org \\
-http://www.h5py.org \\
+_numpy,h5py_: required for the translation of keras model files <br/>
+http://www.numpy.org <br/>
+http://www.h5py.org <br/>
 
 _Xilinx license_: required for the simulation and synthesis of the HLS
 
