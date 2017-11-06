@@ -25,26 +25,33 @@
 
 namespace nnet {
 
+struct layer_settings {
+    int unroll_factor; 
+} ;
+
 template<class data_T, class res_T, class weight_T, class bias_T, class acc_T, int N_IN, int N_OUT>
 void compute_small_layer(
     data_T    data[N_IN],
     res_T     res[N_OUT],
     weight_T  weights[N_IN][N_OUT],
-    bias_T    biases[N_OUT]);
+    bias_T    biases[N_OUT],
+    layer_settings settings);
 
 template<class data_T, class res_T, class weight_T, class bias_T, class acc_T, int N_IN, int N_OUT>
 void compute_medium_layer(
     data_T    data[N_IN],
     res_T     res[N_OUT],
     weight_T  weights[N_IN][N_OUT],
-    bias_T    biases[N_OUT]);
+    bias_T    biases[N_OUT],
+    layer_settings settings);
 
 template<class data_T, class res_T, class weight_T, class bias_T, class acc_T, int N_IN, int N_OUT>
 void compute_large_layer(
     data_T    data[N_IN],
     res_T     res[N_OUT],
     weight_T  weights[N_IN][N_OUT],
-    bias_T    biases[N_OUT]);
+    bias_T    biases[N_OUT],
+    layer_settings settings);
 
 // *************************************************
 //       Entry Function
@@ -55,16 +62,17 @@ void compute_layer(
     data_T    data[N_IN],
     res_T     res[N_OUT],
     weight_T  weights[N_IN][N_OUT],
-    bias_T    biases[N_OUT])
+    bias_T    biases[N_OUT],
+    layer_settings settings)
 {
     if (N_OUT >= 512) {
-        compute_large_layer<data_T, res_T, weight_T, bias_T, acc_T, N_IN, N_OUT>(data, res, weights, biases);
+        compute_large_layer<data_T, res_T, weight_T, bias_T, acc_T, N_IN, N_OUT>(data, res, weights, biases, settings);
     }
     else if (N_OUT >= 64) {
-        compute_medium_layer<data_T, res_T, weight_T, bias_T, acc_T, N_IN, N_OUT>(data, res, weights, biases);
+        compute_medium_layer<data_T, res_T, weight_T, bias_T, acc_T, N_IN, N_OUT>(data, res, weights, biases, settings);
     }
     else {
-        compute_small_layer<data_T, res_T, weight_T, bias_T, acc_T, N_IN, N_OUT>(data, res, weights, biases);
+        compute_small_layer<data_T, res_T, weight_T, bias_T, acc_T, N_IN, N_OUT>(data, res, weights, biases, settings);
     }
 }
 
@@ -78,7 +86,8 @@ void compute_small_layer(
     data_T    data[N_IN],
     res_T     res[N_OUT],
     weight_T  weights[N_IN][N_OUT],
-    bias_T    biases[N_OUT])
+    bias_T    biases[N_OUT],
+    layer_settings settings)
 {
     data_T data_cache;
     acc_T acc[N_OUT];
@@ -111,7 +120,8 @@ void compute_medium_layer(
     data_T    data[N_IN],
     res_T     res[N_OUT],
     weight_T  weights[N_IN][N_OUT],
-    bias_T    biases[N_OUT])
+    bias_T    biases[N_OUT],
+    layer_settings settings)
 {
     data_T data_cache;
     acc_T acc[N_OUT];
@@ -148,7 +158,8 @@ void compute_large_layer(
     hls::stream<data_T>    &data,
     hls::stream<res_T>     &res,
     weight_T  weights[N_IN][N_OUT],
-    bias_T    biases[N_OUT])
+    bias_T    biases[N_OUT],
+    layer_settings settings)
 {
     data_T data_cache;
     acc_T acc[N_OUT];

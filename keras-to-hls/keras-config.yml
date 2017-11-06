@@ -1,3 +1,3 @@
 KerasJson: h3l.json
 KerasH5:   KERAS_check_best_model_weights.h5
-OutputDir: my-hls-dir2
+OutputDir: my-hls-dir-tmp
