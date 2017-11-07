@@ -34,7 +34,7 @@ void compute_layer(
     data_T    data[N_IN],
     res_T     res[N_OUT],
     weight_T  weights[N_IN][N_OUT],
-    bias_T    biases[N_OUT],
+    bias_T    biases[N_OUT]),
     layer_settings settings)
 {
 
@@ -53,23 +53,30 @@ void compute_layer(
 
     int unroll_factor_in  = N_IN / settings.roll_factor; 
     int unroll_factor_out = N_OUT / settings.roll_factor; 
+    //int unroll_factor_in  = N_IN;
+    //int unroll_factor_out = N_OUT;
+    std::cout << unroll_factor_in << " " << unroll_factor_out << " " << settings.roll_factor  << std::endl;
 
     Reset: for(int iacc = 0; iacc < N_OUT; iacc++) {
-        #pragma HLS UNROLL factor=unroll_factor_out 
+      #pragma HLS UNROLL factor=unroll_factor_out 
+      //#pragma HLS UNROLL 
         acc[iacc] = 0;
     }
 
     NewInput: for(int ii = 0; ii < N_IN; ii++) {
         #pragma HLS UNROLL factor=unroll_factor_in 
+      //#pragma HLS UNROLL 
         data_cache = data[ii];
         Product: for(int jj = 0; jj < N_OUT; jj++) {
-            #pragma HLS UNROLL factor=unroll_factor_out
+	  #pragma HLS UNROLL factor=unroll_factor_out
+	  //#pragma HLS UNROLL 
             acc[jj] += data_cache * weights[ii][jj];
         }
     }
 
     Result: for(int ires = 0; ires < N_OUT; ires++)
-        #pragma HLS UNROLL factor=unroll_factor_out
+	   #pragma HLS UNROLL factor=unroll_factor_out
+      //#pragma HLS UNROLL
         res[ires] = (res_T) (acc[ires] + (acc_T) biases[ires]);
 
 }
