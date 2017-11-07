@@ -51,12 +51,12 @@ void compute_layer(
         #pragma HLS RESOURCE variable=acc core=RAM_2P_LUTRAM
     #endif
 
-    for(int iacc = 0; iacc < N_OUT; iacc++) {
+    Reset: for(int iacc = 0; iacc < N_OUT; iacc++) {
         #pragma HLS UNROLL skip_exit_check factor=N_OUT/layer_settings.roll_factor 
         acc[iacc] = 0;
     }
 
-    for(int ii = 0; ii < N_IN; ii++) {
+    NewInput: for(int ii = 0; ii < N_IN; ii++) {
         #pragma HLS UNROLL skip_exit_check factor=N_IN/layer_settings.roll_factor 
         data_cache = data[ii];
         Product: for(int jj = 0; jj < N_OUT; jj++) {
@@ -65,7 +65,7 @@ void compute_layer(
         }
     }
 
-    for(int ires = 0; ires < N_OUT; ires++)
+    Result: for(int ires = 0; ires < N_OUT; ires++)
         #pragma HLS UNROLL skip_exit_check factor=N_OUT/layer_settings.roll_factor 
         res[ires] = (res_T) (acc[ires] + (acc_T) biases[ires]);
 
