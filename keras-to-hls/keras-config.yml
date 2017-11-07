@@ -1,3 +1,3 @@
-KerasJson: KERAS_3layer.json
-KerasH5:   KERAS_3layer_weights.h5
+KerasJson: KERAS_1layer.json
+KerasH5:   KERAS_1layer_weights.h5
 OutputDir: my-hls-dir
