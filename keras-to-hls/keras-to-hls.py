@@ -168,7 +168,7 @@ def main():
 
                 newline = newline + '    // layer {} set up;\n'.format(i)
                 newline = newline + '    nnet::layer_settings layer_settings_{};\n'.format(i)
-                newline = newline + '    layer_settings_{}.unroll_factor = LAYER_{}_UNROLL_FACTOR;\n\n'.format(i,i)
+                newline = newline + '    layer_settings_{}.roll_factor = LAYER_{}_ROLL_FACTOR;\n'.format(i,i)
                 newline = newline + '    {} logits{}[{}];\n'.format(output_type,i,n_out)
                 newline = newline + '    #pragma HLS ARRAY_PARTITION variable=logits{} complete\n'.format(i)
 
@@ -221,8 +221,7 @@ def main():
                     newline = newline + '#define N_LAYER_{} {}\n'.format(i, layer_list[i-1]['n_out'])
                     
                 # add here layer configurations                    
-                if i != len(layer_list):
-                    newline = newline + '#define LAYER_{}_UNROLL_FACTOR {}\n'.format(i, 1)
+                newline = newline + '#define LAYER_{}_ROLL_FACTOR {}\n'.format(i, 1)
 
         elif '//hls-fpga-machine-learning insert layer-precision' in line:
             newline = line
