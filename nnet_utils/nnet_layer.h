@@ -34,7 +34,7 @@ void compute_layer(
     data_T    data[N_IN],
     res_T     res[N_OUT],
     weight_T  weights[N_IN][N_OUT],
-    bias_T    biases[N_OUT]),
+    bias_T    biases[N_OUT],
     layer_settings settings)
 {
 
