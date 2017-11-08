@@ -25,10 +25,6 @@
 
 namespace nnet {
 
-struct layer_settings {
-    int roll_factor; 
-};
-
 struct layer_t
 {
     static const unsigned n_in = 10;
@@ -42,8 +38,7 @@ void compute_layer(
     data_T    data[CONFIG_T::n_in],
     res_T     res[CONFIG_T::n_out],
     weight_T  weights[CONFIG_T::n_in][CONFIG_T::n_out],
-    bias_T    biases[CONFIG_T::n_out],
-    layer_settings settings)
+    bias_T    biases[CONFIG_T::n_out])
 {
 
     data_T data_cache;
