@@ -166,9 +166,9 @@ def main():
                     output_object = 'layer{}_out'.format(i)
                     n_out = 'N_LAYER_{}'.format(i)
 
-                newline = newline + '    // layer {} set up;\n'.format(i)
-                newline = newline + '    nnet::layer_settings layer_settings_{};\n'.format(i)
-                newline = newline + '    layer_settings_{}.roll_factor = LAYER_{}_ROLL_FACTOR;\n'.format(i,i)
+                # newline = newline + '    // layer {} set up;\n'.format(i)
+                # newline = newline + '    nnet::layer_settings layer_settings_{};\n'.format(i)
+                # newline = newline + '    layer_settings_{}.roll_factor = LAYER_{}_ROLL_FACTOR;\n'.format(i,i)
                 newline = newline + '    {} logits{}[{}];\n'.format(output_type,i,n_out)
                 newline = newline + '    #pragma HLS ARRAY_PARTITION variable=logits{} complete\n'.format(i)
 
@@ -176,7 +176,7 @@ def main():
                     newline = newline + '    {} layer{}_out[{}];\n'.format(output_type,i,n_out)
                     newline = newline + '    #pragma HLS ARRAY_PARTITION variable=layer{}_out complete\n'.format(i)
 
-                newline = newline + '    nnet::compute_layer<{}, {}, weight_t, bias_t, accum_t, {}, {}>({}, logits{}, w{}, b{}, layer_settings_{});\n'.format(input_type, output_type, n_in, n_out, input_object, i, i, i, i, i)
+                newline = newline + '    nnet::compute_layer<{}, {}, weight_t, bias_t, accum_t, config{}>({}, logits{}, w{}, b{});\n'.format(input_type, output_type, i, input_object, i, i, i, i)
                 
                 if layer_list[i-1]['activation'] == "relu":
                     newline = newline + '    nnet::relu<{}, {}, {}>(logits{}, {});\n'.format(output_type, output_type, n_out, i, output_object)
@@ -205,6 +205,13 @@ def main():
     f = open('../hls-template/firmware/parameters.h','r')
     fout = open('{}/firmware/parameters.h'.format(yamlConfig['OutputDir']),'w')
 
+    config_template = """struct config{index} : nnet::layer_t {{
+        static const unsigned n_in = {n_in};
+        static const unsigned n_out = {n_out};
+        static const bool fully_unrolled = false;
+        static const unsigned roll_factor = {unroll};
+        }};\n"""
+
     for line in f.readlines():
 
         #Insert numbers
@@ -220,13 +227,28 @@ def main():
                 else:
                     newline = newline + '#define N_LAYER_{} {}\n'.format(i, layer_list[i-1]['n_out'])
                     
-                # add here layer configurations                    
-                newline = newline + '#define LAYER_{}_ROLL_FACTOR {}\n'.format(i, 1)
-
         elif '//hls-fpga-machine-learning insert layer-precision' in line:
             newline = line
             for i in range(1,len(layer_list)):
                 newline = newline + 'typedef ap_fixed<32,8> layer{}_t;\n'.format(i)
+
+        elif "//hls-fpga-machine-learning insert layer-config" in line:
+            newline = line
+            for i in range(1,len(layer_list)+1):
+                if i==1 :
+                    layer_in_name = "N_INPUTS"
+                    layer_out_name = "N_LAYER_1"
+                elif i==len(layer_list):
+                    layer_in_name = "N_LAYER_%i" % (i-1)
+                    layer_out_name = "N_OUTPUTS"
+                else:
+                    layer_in_name = "N_LAYER_%i" % (i-1)
+                    layer_out_name = "N_LAYER_%i" % (i)
+                newline = newline + config_template.format(index=str(i), 
+                                                           n_in=layer_in_name, 
+                                                           n_out=layer_out_name,
+                                                           unroll=yamlConfig["RollFactor"])
+
         else:
             newline = line
         fout.write(newline)
