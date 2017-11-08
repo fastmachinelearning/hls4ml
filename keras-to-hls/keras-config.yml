@@ -1,3 +1,4 @@
-KerasJson: h3l.json
-KerasH5:   KERAS_check_best_model_weights.h5
-OutputDir: my-hls-dir2
+KerasJson: example-keras-model-files/KERAS_1layer.json
+KerasH5:   example-keras-model-files/KERAS_1layer_weights.h5
+OutputDir: my-hls-dir-test
+RollFactor: 1
