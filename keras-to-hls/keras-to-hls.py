@@ -209,7 +209,9 @@ def main():
         static const unsigned n_in = {n_in};
         static const unsigned n_out = {n_out};
         static const bool fully_unrolled = false;
-        static const unsigned roll_factor = {unroll};
+        static const unsigned roll_factor_in = {unroll};
+        static const unsigned roll_factor_out = {unroll};
+        static const bool store_weights_in_bram = false;
         }};\n"""
 
     for line in f.readlines():
