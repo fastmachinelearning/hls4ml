@@ -25,158 +25,62 @@
 
 namespace nnet {
 
-template<class data_T, class res_T, class weight_T, class bias_T, class acc_T, int N_IN, int N_OUT>
-void compute_small_layer(
-    data_T    data[N_IN],
-    res_T     res[N_OUT],
-    weight_T  weights[N_IN][N_OUT],
-    bias_T    biases[N_OUT]);
+struct layer_t
+{
+    static const unsigned n_in = 10;
+    static const unsigned n_out = 10;
+    static const bool fully_unrolled = true;
+    static const unsigned roll_factor_in = 1;
+    static const unsigned roll_factor_out = 1;
+    static const bool store_weights_in_bram = false;
+    // partitioning arrays cyclically to go with roll factors?
+};
 
-template<class data_T, class res_T, class weight_T, class bias_T, class acc_T, int N_IN, int N_OUT>
-void compute_medium_layer(
-    data_T    data[N_IN],
-    res_T     res[N_OUT],
-    weight_T  weights[N_IN][N_OUT],
-    bias_T    biases[N_OUT]);
-
-template<class data_T, class res_T, class weight_T, class bias_T, class acc_T, int N_IN, int N_OUT>
-void compute_large_layer(
-    data_T    data[N_IN],
-    res_T     res[N_OUT],
-    weight_T  weights[N_IN][N_OUT],
-    bias_T    biases[N_OUT]);
-
-// *************************************************
-//       Entry Function
-// *************************************************
-
-template<class data_T, class res_T, class weight_T, class bias_T, class acc_T, int N_IN, int N_OUT>
+template<class data_T, class res_T, class weight_T, class bias_T, class acc_T, typename CONFIG_T>
 void compute_layer(
-    data_T    data[N_IN],
-    res_T     res[N_OUT],
-    weight_T  weights[N_IN][N_OUT],
-    bias_T    biases[N_OUT])
+    data_T    data[CONFIG_T::n_in],
+    res_T     res[CONFIG_T::n_out],
+    weight_T  weights[CONFIG_T::n_in][CONFIG_T::n_out],
+    bias_T    biases[CONFIG_T::n_out])
 {
-    if (N_OUT >= 512) {
-        compute_large_layer<data_T, res_T, weight_T, bias_T, acc_T, N_IN, N_OUT>(data, res, weights, biases);
-    }
-    else if (N_OUT >= 64) {
-        compute_medium_layer<data_T, res_T, weight_T, bias_T, acc_T, N_IN, N_OUT>(data, res, weights, biases);
-    }
-    else {
-        compute_small_layer<data_T, res_T, weight_T, bias_T, acc_T, N_IN, N_OUT>(data, res, weights, biases);
-    }
-}
 
-// *************************************************
-//       Possible implementation options
-// *************************************************
-
-
-template<class data_T, class res_T, class weight_T, class bias_T, class acc_T, int N_IN, int N_OUT>
-void compute_small_layer(
-    data_T    data[N_IN],
-    res_T     res[N_OUT],
-    weight_T  weights[N_IN][N_OUT],
-    bias_T    biases[N_OUT])
-{
     data_T data_cache;
-    acc_T acc[N_OUT];
+    acc_T acc[CONFIG_T::n_out];
 
-    //to be optimized
-    #pragma HLS ARRAY_PARTITION variable=weights complete dim=0
-    #pragma HLS ARRAY_PARTITION variable=acc complete dim=1
-    #pragma HLS ARRAY_PARTITION variable=biases complete dim=1
-    
-    Reset: for(int iacc = 0; iacc < N_OUT; iacc++)
-        #pragma HLS UNROLL
-        acc[iacc] = 0;
-
-    NewInput: for(int ii = 0; ii < N_IN; ii++) {
-        #pragma HLS UNROLL
-      	data_cache = data[ii];
-        Product: for(int jj = 0; jj < N_OUT; jj++) {
-            #pragma HLS UNROLL
-            acc[jj] += data_cache * weights[ii][jj];
-        }
-    }
-
-    Result: for(int ires = 0; ires < N_OUT; ires++)
-        #pragma HLS UNROLL
-        res[ires] = (res_T) (acc[ires] + (acc_T) biases[ires]);
-}
-
-template<class data_T, class res_T, class weight_T, class bias_T, class acc_T, int N_IN, int N_OUT>
-void compute_medium_layer(
-    data_T    data[N_IN],
-    res_T     res[N_OUT],
-    weight_T  weights[N_IN][N_OUT],
-    bias_T    biases[N_OUT])
-{
-    data_T data_cache;
-    acc_T acc[N_OUT];
-
-    #pragma HLS ARRAY_PARTITION variable=weights cyclic factor=16 dim=2
-    #pragma HLS ARRAY_PARTITION variable=acc cyclic factor=16 dim=1
-    #pragma HLS ARRAY_PARTITION variable=biases cyclic factor=16 dim=1
+    // is there a way to cyclically unroll multiple dimensions?
+    #pragma HLS ARRAY_PARTITION variable=weights complete
+    #pragma HLS ARRAY_PARTITION variable=acc complete
+    #pragma HLS ARRAY_PARTITION variable=biases complete
 
     // Optional... Cuts down on a few of the BRAMs
-    #pragma HLS RESOURCE variable=acc core=RAM_2P_LUTRAM
+    // #if CONFIG_T::n_out > 16
+    //     #pragma HLS RESOURCE variable=acc core=RAM_2P_LUTRAM
+    // #endif
 
-    Reset: for(int iacc = 0; iacc < N_OUT; iacc++) {
-    #pragma HLS UNROLL factor=16
+    int unroll_factor_in  = CONFIG_T::n_in / CONFIG_T::roll_factor_in;
+    int unroll_factor_out = CONFIG_T::n_out / CONFIG_T::roll_factor_out;
+    //int unroll_factor_in  = CONFIG_T::n_in;
+    //int unroll_factor_out = CONFIG_T::n_out;
+
+    Reset: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
+      #pragma HLS UNROLL factor=unroll_factor_out
         acc[iacc] = 0;
     }
 
-    NewInput: for(int ii = 0; ii < N_IN; ii++) {
-        #pragma HLS UNROLL factor=16
+    NewInput: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
+        #pragma HLS UNROLL factor=unroll_factor_in
         data_cache = data[ii];
-        Product: for(int jj = 0; jj < N_OUT; jj++) {
-            #pragma HLS UNROLL factor=16
+        Product: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
+        #pragma HLS UNROLL factor=unroll_factor_out
             acc[jj] += data_cache * weights[ii][jj];
         }
     }
 
-    Result: for(int ires = 0; ires < N_OUT; ires++)
-    #pragma HLS UNROLL
+    Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
+        #pragma HLS UNROLL factor=unroll_factor_out
         res[ires] = (res_T) (acc[ires] + (acc_T) biases[ires]);
-}
-
-
-template<class data_T, class res_T, class weight_T, class bias_T, class acc_T, int N_IN, int N_OUT>
-void compute_large_layer(
-    hls::stream<data_T>    &data,
-    hls::stream<res_T>     &res,
-    weight_T  weights[N_IN][N_OUT],
-    bias_T    biases[N_OUT])
-{
-    data_T data_cache;
-    acc_T acc[N_OUT];
-
-    #pragma HLS ARRAY_PARTITION variable=weights cyclic factor=128 dim=2
-    #pragma HLS ARRAY_PARTITION variable=acc cyclic factor=128 dim=1
-    #pragma HLS ARRAY_PARTITION variable=biases cyclic factor=128 dim=1
-
-    // Optional... Cuts down on a few of the BRAMs
-    #pragma HLS RESOURCE variable=acc core=RAM_2P_LUTRAM
-
-    Reset: for(int iacc = 0; iacc < N_OUT; iacc++) {
-        #pragma HLS UNROLL factor=128
-        acc[iacc] = 0;
     }
 
-    NewInput: for(int ii = 0; ii < N_IN; ii++) {
-        #pragma HLS UNROLL factor=128
-        data_cache = data[ii];
-        Product: for(int jj = 0; jj < N_OUT; jj++) {
-            #pragma HLS UNROLL factor=128
-            acc[jj] += data_cache * weights[ii][jj];
-        }
-    }
-
-    Result: for(int ires = 0; ires < N_OUT; ires++)
-    #pragma HLS UNROLL
-        res[ires] = (res_T) (acc[ires] + (acc_T) biases[ires]);
 }
 
 }
