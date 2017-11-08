@@ -30,7 +30,10 @@ struct layer_t
     static const unsigned n_in = 10;
     static const unsigned n_out = 10;
     static const bool fully_unrolled = true;
-    static const unsigned roll_factor = 1;
+    static const unsigned roll_factor_in = 1;
+    static const unsigned roll_factor_out = 1;
+    static const bool store_weights_in_bram = false;
+    // partitioning arrays cyclically to go with roll factors?
 };
 
 template<class data_T, class res_T, class weight_T, class bias_T, class acc_T, typename CONFIG_T>
@@ -54,32 +57,27 @@ void compute_layer(
     //     #pragma HLS RESOURCE variable=acc core=RAM_2P_LUTRAM
     // #endif
 
-    int unroll_factor_in  = CONFIG_T::n_in / CONFIG_T::roll_factor;
-    int unroll_factor_out = CONFIG_T::n_out / CONFIG_T::roll_factor;
+    int unroll_factor_in  = CONFIG_T::n_in / CONFIG_T::roll_factor_in;
+    int unroll_factor_out = CONFIG_T::n_out / CONFIG_T::roll_factor_out;
     //int unroll_factor_in  = CONFIG_T::n_in;
     //int unroll_factor_out = CONFIG_T::n_out;
-    std::cout << "Unroll: " << unroll_factor_in << " " << unroll_factor_out << " " << CONFIG_T::roll_factor  << std::endl;
 
     Reset: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
       #pragma HLS UNROLL factor=unroll_factor_out
-      //#pragma HLS UNROLL 
         acc[iacc] = 0;
     }
 
     NewInput: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
         #pragma HLS UNROLL factor=unroll_factor_in
-        //#pragma HLS UNROLL 
         data_cache = data[ii];
         Product: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
         #pragma HLS UNROLL factor=unroll_factor_out
-        //#pragma HLS UNROLL
             acc[jj] += data_cache * weights[ii][jj];
         }
     }
 
     Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
         #pragma HLS UNROLL factor=unroll_factor_out
-        //#pragma HLS UNROLL
         res[ires] = (res_T) (acc[ires] + (acc_T) biases[ires]);
     }
 
