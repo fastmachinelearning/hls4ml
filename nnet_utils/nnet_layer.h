@@ -27,19 +27,27 @@ namespace nnet {
 
 struct layer_settings {
     int roll_factor; 
-} ;
+};
 
-template<class data_T, class res_T, class weight_T, class bias_T, class acc_T, int N_IN, int N_OUT>
+struct layer_t
+{
+    static const unsigned n_in = 10;
+    static const unsigned n_out = 10;
+    static const bool fully_unrolled = true;
+    static const unsigned roll_factor = 1;
+};
+
+template<class data_T, class res_T, class weight_T, class bias_T, class acc_T, typename CONFIG_T>
 void compute_layer(
-    data_T    data[N_IN],
-    res_T     res[N_OUT],
-    weight_T  weights[N_IN][N_OUT],
-    bias_T    biases[N_OUT],
+    data_T    data[CONFIG_T::n_in],
+    res_T     res[CONFIG_T::n_out],
+    weight_T  weights[CONFIG_T::n_in][CONFIG_T::n_out],
+    bias_T    biases[CONFIG_T::n_out],
     layer_settings settings)
 {
 
     data_T data_cache;
-    acc_T acc[N_OUT];
+    acc_T acc[CONFIG_T::n_out];
 
     // is there a way to cyclically unroll multiple dimensions?
     #pragma HLS ARRAY_PARTITION variable=weights complete
@@ -47,37 +55,38 @@ void compute_layer(
     #pragma HLS ARRAY_PARTITION variable=biases complete
 
     // Optional... Cuts down on a few of the BRAMs
-    #if N_OUT > 16
-        #pragma HLS RESOURCE variable=acc core=RAM_2P_LUTRAM
-    #endif
+    // #if CONFIG_T::n_out > 16
+    //     #pragma HLS RESOURCE variable=acc core=RAM_2P_LUTRAM
+    // #endif
 
-    int unroll_factor_in  = N_IN / settings.roll_factor; 
-    int unroll_factor_out = N_OUT / settings.roll_factor; 
-    //int unroll_factor_in  = N_IN;
-    //int unroll_factor_out = N_OUT;
-    std::cout << unroll_factor_in << " " << unroll_factor_out << " " << settings.roll_factor  << std::endl;
+    int unroll_factor_in  = CONFIG_T::n_in / CONFIG_T::roll_factor;
+    int unroll_factor_out = CONFIG_T::n_out / CONFIG_T::roll_factor;
+    //int unroll_factor_in  = CONFIG_T::n_in;
+    //int unroll_factor_out = CONFIG_T::n_out;
+    std::cout << "Unroll: " << unroll_factor_in << " " << unroll_factor_out << " " << CONFIG_T::roll_factor  << std::endl;
 
-    Reset: for(int iacc = 0; iacc < N_OUT; iacc++) {
-      #pragma HLS UNROLL factor=unroll_factor_out 
+    Reset: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
+      #pragma HLS UNROLL factor=unroll_factor_out
       //#pragma HLS UNROLL 
         acc[iacc] = 0;
     }
 
-    NewInput: for(int ii = 0; ii < N_IN; ii++) {
-        #pragma HLS UNROLL factor=unroll_factor_in 
-      //#pragma HLS UNROLL 
+    NewInput: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
+        #pragma HLS UNROLL factor=unroll_factor_in
+        //#pragma HLS UNROLL 
         data_cache = data[ii];
-        Product: for(int jj = 0; jj < N_OUT; jj++) {
-	  #pragma HLS UNROLL factor=unroll_factor_out
-	  //#pragma HLS UNROLL 
+        Product: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
+        #pragma HLS UNROLL factor=unroll_factor_out
+        //#pragma HLS UNROLL
             acc[jj] += data_cache * weights[ii][jj];
         }
     }
 
-    Result: for(int ires = 0; ires < N_OUT; ires++)
-	   #pragma HLS UNROLL factor=unroll_factor_out
-      //#pragma HLS UNROLL
+    Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
+        #pragma HLS UNROLL factor=unroll_factor_out
+        //#pragma HLS UNROLL
         res[ires] = (res_T) (acc[ires] + (acc_T) biases[ires]);
+    }
 
 }
 
