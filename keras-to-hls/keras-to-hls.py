@@ -145,9 +145,10 @@ def main():
 
         #Add layers
         elif '//hls-fpga-machine-learning insert layers' in line:
-            newline = line;
+            newline = line + '\n'
             for i in range(1,len(layer_list)+1):
                 
+                #Input to compute_layer
                 if(i==1):
                     input_type = 'input_t'
                     input_object = 'data'
@@ -157,6 +158,7 @@ def main():
                     input_object = 'layer{}_out'.format(i-1)
                     n_in = 'N_LAYER_{}'.format(i-1);
 
+                #Outputs of compute_layer and activation 
                 if(i==len(layer_list)):
                     output_type = 'result_t'
                     output_object = 'res'
@@ -166,26 +168,29 @@ def main():
                     output_object = 'layer{}_out'.format(i)
                     n_out = 'N_LAYER_{}'.format(i)
 
-                # newline = newline + '    // layer {} set up;\n'.format(i)
-                # newline = newline + '    nnet::layer_settings layer_settings_{};\n'.format(i)
-                # newline = newline + '    layer_settings_{}.roll_factor = LAYER_{}_ROLL_FACTOR;\n'.format(i,i)
-                newline = newline + '    {} logits{}[{}];\n'.format(output_type,i,n_out)
-                newline = newline + '    #pragma HLS ARRAY_PARTITION variable=logits{} complete\n'.format(i)
-
                 if(i!=len(layer_list)):
                     newline = newline + '    {} layer{}_out[{}];\n'.format(output_type,i,n_out)
                     newline = newline + '    #pragma HLS ARRAY_PARTITION variable=layer{}_out complete\n'.format(i)
 
-                newline = newline + '    nnet::compute_layer<{}, {}, weight_t, bias_t, accum_t, config{}>({}, logits{}, w{}, b{});\n'.format(input_type, output_type, i, input_object, i, i, i, i)
+                #Compute layer
+                if layer_list[i-1]['activation'] == "linear":
+                    newline = newline + '    nnet::compute_layer<{}, {}, weight_t, bias_t, accum_t, config{}>({}, {}, w{}, b{});\n'.format(input_type, output_type, i, input_object, output_object, i, i)
+                else:
+                    newline = newline + '    {} logits{}[{}];\n'.format(output_type,i,n_out)
+                    newline = newline + '    #pragma HLS ARRAY_PARTITION variable=logits{} complete\n'.format(i)
+                    newline = newline + '    nnet::compute_layer<{}, {}, weight_t, bias_t, accum_t, config{}>({}, logits{}, w{}, b{});\n'.format(input_type, output_type, i, input_object, i, i, i, i)
                 
+                #Activations
                 if layer_list[i-1]['activation'] == "relu":
                     newline = newline + '    nnet::relu<{}, {}, {}>(logits{}, {});\n'.format(output_type, output_type, n_out, i, output_object)
                 elif layer_list[i-1]['activation'] =="softmax":
                     newline = newline + '    nnet::softmax<{}, {}, {}, 2048>(logits{}, {});\n'.format(output_type, output_type, n_out, i, output_object)
                 elif layer_list[i-1]['activation'] =="sigmoid":
                     newline = newline + '    nnet::sigmoid<{}, {}, {}, 1024>(logits{}, {});\n'.format(output_type, output_type, n_out, i, output_object)
-                elif layer_list[i-1]['activation'] =="":
+                elif layer_list[i-1]['activation'] =="tanh":
                     newline = newline + '    nnet::tanh<{}, {}, {}, 1024>(logits{}, {});\n'.format(output_type, output_type, n_out, i, output_object)
+                elif layer_list[i-1]['activation'] =="linear":
+                    newline = newline + '    //linear activation\n'
                 else:
                     raise Exception('ERROR: MISSING ACTIVATION')
 
