@@ -98,12 +98,14 @@ void  sigmoid(data_T data[N_IN], res_T res[N_IN])
     res_T sigmoid_table[TABLE_SIZE];
     init_sigmoid_table<res_T, TABLE_SIZE>(sigmoid_table);
 
+    #pragma HLS PIPELINE
+
     // Index into the lookup table based on data
     data_T datareg;
     int data_round;
     int index;
     for (int ii=0; ii<N_IN; ii++) {
-        #pragma HLS UNROLL 
+        #pragma HLS UNROLL
         data_round = data[ii]*TABLE_SIZE/16;
         index = data_round + 8*TABLE_SIZE/16;
         if (index < 0)   index = 0;

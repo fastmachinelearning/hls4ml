@@ -27,6 +27,11 @@ namespace nnet {
 
 struct layer_t
 {
+    // Internal data type definitions
+    typedef float bias_t;
+    typedef float weight_t;
+    typedef float accum_t;
+
     static const unsigned n_in = 10;
     static const unsigned n_out = 10;
     static const bool fully_unrolled = true;
@@ -36,16 +41,16 @@ struct layer_t
     // partitioning arrays cyclically to go with roll factors?
 };
 
-template<class data_T, class res_T, class weight_T, class bias_T, class acc_T, typename CONFIG_T>
+template<class data_T, class res_T, typename CONFIG_T>
 void compute_layer(
     data_T    data[CONFIG_T::n_in],
     res_T     res[CONFIG_T::n_out],
-    weight_T  weights[CONFIG_T::n_in][CONFIG_T::n_out],
-    bias_T    biases[CONFIG_T::n_out])
+    typename CONFIG_T::weight_t  weights[CONFIG_T::n_in][CONFIG_T::n_out],
+    typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
 {
 
     data_T data_cache;
-    acc_T acc[CONFIG_T::n_out];
+    typename CONFIG_T::acc_t acc[CONFIG_T::n_out];
 
     // is there a way to cyclically unroll multiple dimensions?
     #pragma HLS ARRAY_PARTITION variable=weights complete
@@ -56,6 +61,7 @@ void compute_layer(
     // #if CONFIG_T::n_out > 16
     //     #pragma HLS RESOURCE variable=acc core=RAM_2P_LUTRAM
     // #endif
+    #pragma HLS PIPELINE
 
     int unroll_factor_in  = CONFIG_T::n_in / CONFIG_T::roll_factor_in;
     int unroll_factor_out = CONFIG_T::n_out / CONFIG_T::roll_factor_out;
@@ -63,22 +69,23 @@ void compute_layer(
     //int unroll_factor_out = CONFIG_T::n_out;
 
     Reset: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
-      #pragma HLS UNROLL factor=unroll_factor_out
+      #pragma HLS UNROLL
         acc[iacc] = 0;
     }
 
     NewInput: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        #pragma HLS UNROLL factor=unroll_factor_in
+        #pragma HLS UNROLL
         data_cache = data[ii];
         Product: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-        #pragma HLS UNROLL factor=unroll_factor_out
+        #pragma HLS UNROLL
             acc[jj] += data_cache * weights[ii][jj];
         }
     }
 
     Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
         #pragma HLS UNROLL factor=unroll_factor_out
-        res[ires] = (res_T) (acc[ires] + (acc_T) biases[ires]);
+        #pragma HLS PIPELINE
+        res[ires] = (res_T) (acc[ires] + (typename CONFIG_T::acc_t) biases[ires]);
     }
 
 }
