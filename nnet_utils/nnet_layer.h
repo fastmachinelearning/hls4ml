@@ -61,6 +61,7 @@ void compute_layer(
     // #if CONFIG_T::n_out > 16
     //     #pragma HLS RESOURCE variable=acc core=RAM_2P_LUTRAM
     // #endif
+    #pragma HLS PIPELINE
 
     int unroll_factor_in  = CONFIG_T::n_in / CONFIG_T::roll_factor_in;
     int unroll_factor_out = CONFIG_T::n_out / CONFIG_T::roll_factor_out;
@@ -68,21 +69,22 @@ void compute_layer(
     //int unroll_factor_out = CONFIG_T::n_out;
 
     Reset: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
-      #pragma HLS UNROLL factor=unroll_factor_out
+      #pragma HLS UNROLL
         acc[iacc] = 0;
     }
 
     NewInput: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        #pragma HLS UNROLL factor=unroll_factor_in
+        #pragma HLS UNROLL
         data_cache = data[ii];
         Product: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-        #pragma HLS UNROLL factor=unroll_factor_out
+        #pragma HLS UNROLL
             acc[jj] += data_cache * weights[ii][jj];
         }
     }
 
     Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
         #pragma HLS UNROLL factor=unroll_factor_out
+        #pragma HLS PIPELINE
         res[ires] = (res_T) (acc[ires] + (typename CONFIG_T::acc_t) biases[ires]);
     }
 
