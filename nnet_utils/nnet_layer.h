@@ -32,9 +32,12 @@ struct layer_t
     typedef float weight_t;
     typedef float accum_t;
 
+    // Layer Sizes
     static const unsigned n_in = 10;
     static const unsigned n_out = 10;
-    static const bool fully_unrolled = true;
+
+    // Resource reuse info
+    static const bool full_parallel = true;
     static const unsigned roll_factor_in = 1;
     static const unsigned roll_factor_out = 1;
     static const bool store_weights_in_bram = false;
@@ -53,15 +56,17 @@ void compute_layer(
     typename CONFIG_T::acc_t acc[CONFIG_T::n_out];
 
     // is there a way to cyclically unroll multiple dimensions?
-    #pragma HLS ARRAY_PARTITION variable=weights complete
-    #pragma HLS ARRAY_PARTITION variable=acc complete
-    #pragma HLS ARRAY_PARTITION variable=biases complete
+    if (CONFIG_T::full_parallel){
+        #pragma HLS ARRAY_PARTITION variable=weights complete
+        #pragma HLS ARRAY_PARTITION variable=acc complete
+        #pragma HLS ARRAY_PARTITION variable=biases complete
+        #pragma HLS PIPELINE
+    }
 
     // Optional... Cuts down on a few of the BRAMs
     // #if CONFIG_T::n_out > 16
     //     #pragma HLS RESOURCE variable=acc core=RAM_2P_LUTRAM
     // #endif
-    #pragma HLS PIPELINE
 
     int unroll_factor_in  = CONFIG_T::n_in / CONFIG_T::roll_factor_in;
     int unroll_factor_out = CONFIG_T::n_out / CONFIG_T::roll_factor_out;
