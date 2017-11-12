@@ -25,7 +25,7 @@
 
 namespace nnet {
 
-struct layer_t
+struct layer_config
 {
     // Internal data type definitions
     typedef float bias_t;

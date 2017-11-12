@@ -55,12 +55,12 @@ void myproject(
     layer1_t logits1[N_LAYER_1];
     #pragma HLS ARRAY_PARTITION variable=logits1 complete
     nnet::compute_layer<input_t, layer1_t, config1>(data, logits1, w1, b1);
-    nnet::relu<layer1_t, layer1_t, N_LAYER_1>(logits1, layer1_out);
+    nnet::relu<layer1_t, layer1_t, relu_config>(logits1, layer1_out);
 
     result_t logits2[N_OUTPUTS];
     #pragma HLS ARRAY_PARTITION variable=logits2 complete
     nnet::compute_layer<layer1_t, result_t, config2>(layer1_out, logits2, w2, b2);
-    nnet::sigmoid<result_t, result_t, N_OUTPUTS, 1024>(logits2, res);
+    nnet::sigmoid<result_t, result_t, sigmoid_config>(logits2, res);
 
 
 }
