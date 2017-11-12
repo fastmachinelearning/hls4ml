@@ -74,22 +74,22 @@ void compute_layer(
     //int unroll_factor_out = CONFIG_T::n_out;
 
     Reset: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
-      #pragma HLS UNROLL
+        #pragma HLS UNROLL
         acc[iacc] = 0;
     }
 
     NewInput: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        #pragma HLS UNROLL
+        // #pragma HLS UNROLL
         data_cache = data[ii];
         Product: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-        #pragma HLS UNROLL
+        // #pragma HLS UNROLL
             acc[jj] += data_cache * weights[ii][jj];
         }
     }
 
     Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
-        #pragma HLS UNROLL factor=unroll_factor_out
-        #pragma HLS PIPELINE
+        // #pragma HLS UNROLL factor=unroll_factor_out
+        // #pragma HLS PIPELINE
         res[ires] = (res_T) (acc[ires] + (typename CONFIG_T::acc_t) biases[ires]);
     }
 
