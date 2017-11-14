@@ -36,7 +36,7 @@ struct activ_config
 
     // Resource reuse info
     static const unsigned io_type = io_parallel;
-    static const unsigned unroll_factor = 1;
+    static const unsigned reuse_factor = 1;
 };
 
 

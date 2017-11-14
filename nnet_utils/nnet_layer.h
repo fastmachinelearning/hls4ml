@@ -39,7 +39,7 @@ struct layer_config
 
     // Resource reuse info
     static const unsigned io_type = io_parallel;
-    static const unsigned unroll_factor = 1;
+    static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
     // partitioning arrays cyclically to go with roll factors?
 };
@@ -97,8 +97,8 @@ void compute_layer(
         #pragma HLS ARRAY_PARTITION variable=weights complete
         #pragma HLS ARRAY_PARTITION variable=biases complete
         #pragma HLS ARRAY_PARTITION variable=mult complete
-        if (CONFIG_T::unroll_factor > 1) {
-            int multiplier_limit  = ceil(CONFIG_T::n_in*CONFIG_T::n_out / CONFIG_T::unroll_factor);
+        if (CONFIG_T::reuse_factor > 1) {
+            int multiplier_limit  = ceil(CONFIG_T::n_in*CONFIG_T::n_out / CONFIG_T::reuse_factor);
             #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
         }
     } else if (CONFIG_T::io_type == io_serial){
