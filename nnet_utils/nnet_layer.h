@@ -44,38 +44,6 @@ struct layer_config
     // partitioning arrays cyclically to go with roll factors?
 };
 
-template<class res_t, typename CONFIG_T>
-void accumulator2D(typename CONFIG_T::acc_t mult[CONFIG_T::n_in][CONFIG_T::n_out],
-                 typename CONFIG_T::bias_t biases[CONFIG_T::n_out],
-                 res_t res[CONFIG_T::n_out]){
-
-    typename CONFIG_T::acc_t acc[CONFIG_T::n_out];
-
-    if (CONFIG_T::io_type == io_parallel){
-        #pragma HLS PIPELINE
-        #pragma HLS ARRAY_PARTITION variable=mult complete
-        #pragma HLS ARRAY_PARTITION variable=biases complete
-        #pragma HLS ARRAY_PARTITION variable=acc complete
-    }
-
-    // Initialize with the biases
-    ResetAccum: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
-        acc[iacc] = (typename CONFIG_T::acc_t) biases[iacc];
-    }
-
-    // Accumulate multiplication result
-    Accum1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        Accum2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-            acc[jj] += mult[ii][jj];
-        }
-    }
-
-    // Cast to res_t
-    Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
-        res[ires] = (res_t) (acc[ires]);// + (typename CONFIG_T::acc_t) biases[ires]);
-    }    
-}
-
 template<class data_T, class res_T, typename CONFIG_T>
 void compute_layer(
     data_T    data[CONFIG_T::n_in],
@@ -85,6 +53,7 @@ void compute_layer(
 {
     data_T cache;
     typename CONFIG_T::acc_t mult[CONFIG_T::n_in][CONFIG_T::n_out];
+    typename CONFIG_T::acc_t acc[CONFIG_T::n_out];
 
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
     #pragma HLS function_instantiate variable=weights,biases
@@ -97,6 +66,7 @@ void compute_layer(
         #pragma HLS ARRAY_PARTITION variable=weights complete
         #pragma HLS ARRAY_PARTITION variable=biases complete
         #pragma HLS ARRAY_PARTITION variable=mult complete
+        #pragma HLS ARRAY_PARTITION variable=acc complete
         if (CONFIG_T::reuse_factor > 1) {
             int multiplier_limit  = ceil(CONFIG_T::n_in*CONFIG_T::n_out / CONFIG_T::reuse_factor);
             #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
@@ -105,6 +75,7 @@ void compute_layer(
         // TODO: Fill out the directives for serial input
     }
 
+    // Do the matrix-multiply
     Product1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
         cache = data[ii];
         Product2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
@@ -112,7 +83,22 @@ void compute_layer(
         }
     }
 
-    accumulator2D<res_T, CONFIG_T>(mult, biases, res);
+    // Initialize accumulator with input biases
+    ResetAccum: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
+        acc[iacc] = (typename CONFIG_T::acc_t) biases[iacc];
+    }
+
+    // Accumulate multiplication result
+    Accum1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
+        Accum2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
+            acc[jj] += mult[ii][jj];
+        }
+    }
+
+    // Cast to "res_t" type
+    Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
+        res[ires] = (res_T) (acc[ires]);
+    }    
 }
 
 }
