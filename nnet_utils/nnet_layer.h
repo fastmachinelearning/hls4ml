@@ -104,8 +104,8 @@ void compute_layer(
         #pragma HLS ARRAY_PARTITION variable=acc complete
         #pragma HLS ARRAY_PARTITION variable=mult complete dim=0
         #pragma HLS ARRAY_PARTITION variable=cache complete
-        #pragma HLS PIPELINE
-        #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+        #pragma HLS DATAFLOW
+        // #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
     }
 
     int unroll_factor_in  = CONFIG_T::n_in / 2;
@@ -120,13 +120,10 @@ void compute_layer(
 
     Product1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
         if (!CONFIG_T::full_parallel){
-            // #pragma HLS UNROLL factor=16
-            // #pragma HLS PIPELINE
+            #pragma HLS UNROLL factor=unroll_factor_in
+            #pragma HLS PIPELINE rewind
         }
         Product2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-            // #pragma HLS UNROLL
-            // #pragma HLS PIPELINE
-            // #pragma HLS LOOP_FLATTEN
             mult[ii][jj] = cache[ii] * weights[ii][jj];
         }
     }
