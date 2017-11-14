@@ -33,7 +33,7 @@ struct config1 : nnet::layer_config {
         };
 struct relu_config : nnet::activ_config {
         static const unsigned n_in = N_LAYER_1;
-        static const bool full_parallel = true;
+        static const unsigned io_type = nnet::io_parallel;
         };
 struct config2 : nnet::layer_config {
         static const unsigned n_in = N_LAYER_1;
@@ -47,7 +47,7 @@ struct config2 : nnet::layer_config {
 struct sigmoid_config : nnet::activ_config {
         static const unsigned n_in = N_OUTPUTS;
         static const unsigned table_size = 1024;
-        static const bool full_parallel = true;
+        static const unsigned io_type = nnet::io_parallel;
         };
 
 #endif 
