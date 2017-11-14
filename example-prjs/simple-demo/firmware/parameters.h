@@ -24,7 +24,7 @@ typedef ap_fixed<18,8> layer1_t;
 struct config1 : nnet::layer_config {
         static const unsigned n_in = N_INPUTS;
         static const unsigned n_out = N_LAYER_1;
-        static const bool full_parallel = true;
+        static const bool full_parallel = false;
         static const unsigned roll_factor_in = 1;
         static const unsigned roll_factor_out = 1;
         static const bool store_weights_in_bram = false;
@@ -39,7 +39,7 @@ struct relu_config : nnet::activ_config {
 struct config2 : nnet::layer_config {
         static const unsigned n_in = N_LAYER_1;
         static const unsigned n_out = N_OUTPUTS;
-        static const bool full_parallel = true;
+        static const bool full_parallel = false;
         static const unsigned roll_factor_in = 1;
         static const unsigned roll_factor_out = 1;
         static const bool store_weights_in_bram = false;
