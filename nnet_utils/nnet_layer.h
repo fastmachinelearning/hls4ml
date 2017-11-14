@@ -20,7 +20,7 @@
 #ifndef NNET_LAYER_H_
 #define NNET_LAYER_H_
 
-#include "nnet_default.h"
+#include "nnet_common.h"
 #include "hls_stream.h"
 #include <math.h>
 
@@ -38,39 +38,39 @@ struct layer_config
     static const unsigned n_out = 10;
 
     // Resource reuse info
-    static const bool full_parallel = true;
-    static const unsigned roll_factor_in = 1;
-    static const unsigned roll_factor_out = 1;
+    static const unsigned io_type = io_parallel;
+    static const unsigned unroll_factor = 1;
     static const bool store_weights_in_bram = false;
     // partitioning arrays cyclically to go with roll factors?
 };
 
 template<class res_t, typename CONFIG_T>
-void accumulator(typename CONFIG_T::acc_t mult[CONFIG_T::n_in][CONFIG_T::n_out],
+void accumulator2D(typename CONFIG_T::acc_t mult[CONFIG_T::n_in][CONFIG_T::n_out],
                  typename CONFIG_T::bias_t biases[CONFIG_T::n_out],
                  res_t res[CONFIG_T::n_out]){
 
     typename CONFIG_T::acc_t acc[CONFIG_T::n_out];
 
-    #pragma HLS ARRAY_PARTITION variable=mult complete
-    #pragma HLS ARRAY_PARTITION variable=biases complete
-    #pragma HLS ARRAY_PARTITION variable=acc complete
-    if (CONFIG_T::full_parallel){
+    if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
+        #pragma HLS ARRAY_PARTITION variable=mult complete
+        #pragma HLS ARRAY_PARTITION variable=biases complete
+        #pragma HLS ARRAY_PARTITION variable=acc complete
     }
-    else {
-        #pragma HLS PIPELINE II=2
-    }
+
+    // Initialize with the biases
     ResetAccum: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
         acc[iacc] = (typename CONFIG_T::acc_t) biases[iacc];
     }
 
+    // Accumulate multiplication result
     Accum1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
         Accum2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
             acc[jj] += mult[ii][jj];
         }
     }
 
+    // Cast to res_t
     Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
         res[ires] = (res_t) (acc[ires]);// + (typename CONFIG_T::acc_t) biases[ires]);
     }    
@@ -83,53 +83,36 @@ void compute_layer(
     typename CONFIG_T::weight_t  weights[CONFIG_T::n_in][CONFIG_T::n_out],
     typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
 {
-
-    data_T cache[CONFIG_T::n_in];
+    data_T cache;
     typename CONFIG_T::acc_t mult[CONFIG_T::n_in][CONFIG_T::n_out];
-    typename CONFIG_T::acc_t acc[CONFIG_T::n_out];
 
+    // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
     #pragma HLS function_instantiate variable=weights,biases
 
-    if (CONFIG_T::full_parallel){
+    if (CONFIG_T::io_type == io_parallel){
+        // For parallel inputs:
+        //   - completely partition arrays -- target fabric
+        //   - if we have an unroll factor, limit number of multipliers
+        #pragma HLS PIPELINE
         #pragma HLS ARRAY_PARTITION variable=weights complete
         #pragma HLS ARRAY_PARTITION variable=biases complete
-        #pragma HLS ARRAY_PARTITION variable=acc complete
-        #pragma HLS ARRAY_PARTITION variable=mult complete dim=0
-        #pragma HLS PIPELINE
-    }
-    else {
-        int multiplier_limit  = ceil(CONFIG_T::n_in*CONFIG_T::n_out / 4);
-        #pragma HLS ARRAY_PARTITION variable=weights complete dim=0
-        #pragma HLS ARRAY_PARTITION variable=biases complete
-        #pragma HLS ARRAY_PARTITION variable=acc complete
-        #pragma HLS ARRAY_PARTITION variable=mult complete dim=0
-        #pragma HLS ARRAY_PARTITION variable=cache complete
-        #pragma HLS DATAFLOW
-        // #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
-    }
-
-    int unroll_factor_in  = CONFIG_T::n_in / 2;
-    int unroll_factor_out = CONFIG_T::n_out / 2;
-    //int unroll_factor_in  = CONFIG_T::n_in;
-    //int unroll_factor_out = CONFIG_T::n_out;
-
-    Input: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        #pragma HLS UNROLL
-        cache[ii] = data[ii];
+        #pragma HLS ARRAY_PARTITION variable=mult complete
+        if (CONFIG_T::unroll_factor > 1) {
+            int multiplier_limit  = ceil(CONFIG_T::n_in*CONFIG_T::n_out / CONFIG_T::unroll_factor);
+            #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+        }
+    } else if (CONFIG_T::io_type == io_serial){
+        // TODO: Fill out the directives for serial input
     }
 
     Product1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        if (!CONFIG_T::full_parallel){
-            #pragma HLS UNROLL factor=unroll_factor_in
-            #pragma HLS PIPELINE rewind
-        }
+        cache = data[ii];
         Product2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-            mult[ii][jj] = cache[ii] * weights[ii][jj];
+            mult[ii][jj] = cache * weights[ii][jj];
         }
     }
 
-    accumulator<res_T, CONFIG_T>(mult, biases, res);
-
+    accumulator2D<res_T, CONFIG_T>(mult, biases, res);
 }
 
 }

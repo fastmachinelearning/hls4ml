@@ -22,6 +22,7 @@
 
 #include <math.h>
 #include "ap_fixed.h"
+#include "nnet_common.h"
 
 namespace nnet {
 
@@ -34,8 +35,8 @@ struct activ_config
     static const unsigned table_size = 1024;
 
     // Resource reuse info
-    static const bool full_parallel = false;
-    static const unsigned roll_factor = 1;
+    static const unsigned io_type = io_parallel;
+    static const unsigned unroll_factor = 1;
 };
 
 
@@ -45,7 +46,7 @@ struct activ_config
 template<class data_T, class res_T, typename CONFIG_T>
 void  relu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
-    if (CONFIG_T::full_parallel){
+    if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
     }
 
@@ -61,7 +62,7 @@ void  relu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 template<class data_T, class res_T, int MAX_INT, typename CONFIG_T>
 void  relu_max(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
-    if (CONFIG_T::full_parallel){
+    if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
     }
 
@@ -111,7 +112,7 @@ void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     res_T sigmoid_table[CONFIG_T::table_size];
     init_sigmoid_table<res_T, CONFIG_T::table_size>(sigmoid_table);
 
-    if (CONFIG_T::full_parallel){
+    if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
     }
 
@@ -156,7 +157,7 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     res_T exp_table[CONFIG_T::table_size];
     init_exp_table<res_T, CONFIG_T::table_size>(exp_table);
 
-    if (CONFIG_T::full_parallel){
+    if (CONFIG_T::io_type == io_parallel){
         // Note: This is going to be a resource hog to run with pipeline, but hey, whatever
         #pragma HLS PIPELINE
     }
@@ -211,7 +212,7 @@ void  tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     res_T tanh_table[CONFIG_T::table_size];
     init_tanh_table<res_T, CONFIG_T::table_size>(tanh_table);
 
-    if (CONFIG_T::full_parallel){
+    if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
     }
 

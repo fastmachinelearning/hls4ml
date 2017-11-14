@@ -4,6 +4,7 @@
 #include <complex>
 #include "ap_int.h"
 #include "ap_fixed.h"
+#include "nnet_common.h"
 #include "nnet_layer.h"
 #include "nnet_activation.h"
 
@@ -24,10 +25,8 @@ typedef ap_fixed<18,8> layer1_t;
 struct config1 : nnet::layer_config {
         static const unsigned n_in = N_INPUTS;
         static const unsigned n_out = N_LAYER_1;
-        static const bool full_parallel = false;
-        static const unsigned roll_factor_in = 1;
-        static const unsigned roll_factor_out = 1;
-        static const bool store_weights_in_bram = false;
+        static const unsigned io_type = nnet::io_parallel;
+        static const unsigned unroll_factor = 4;
         typedef ap_fixed<18,10> acc_t;
         typedef ap_fixed<18,8> bias_t;
         typedef ap_fixed<18,8> weight_t;
@@ -39,10 +38,8 @@ struct relu_config : nnet::activ_config {
 struct config2 : nnet::layer_config {
         static const unsigned n_in = N_LAYER_1;
         static const unsigned n_out = N_OUTPUTS;
-        static const bool full_parallel = false;
-        static const unsigned roll_factor_in = 1;
-        static const unsigned roll_factor_out = 1;
-        static const bool store_weights_in_bram = false;
+        static const unsigned io_type = nnet::io_parallel;
+        static const unsigned unroll_factor = 4;
         typedef ap_fixed<18,10> acc_t;
         typedef ap_fixed<18,8> bias_t;
         typedef ap_fixed<18,8> weight_t;
