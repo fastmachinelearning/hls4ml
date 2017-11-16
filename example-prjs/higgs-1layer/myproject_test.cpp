@@ -16,33 +16,32 @@
 //    You should have received a copy of the GNU General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
+#include <fstream>
+#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 
-#include "parameters.h"
-#include "myproject.h"
+#include "firmware/parameters.h"
+#include "firmware/myproject.h"
+#include "nnet_helpers.h"
 
-#include "nnet_layer.h"
-#include "nnet_activation.h"
 
-//hls-fpga-machine-learning insert weights
-
-void myproject(
-		  input_t data[N_INPUTS],
-		  result_t res[N_OUTPUTS],
-		  unsigned short &const_size_in,
-		  unsigned short &const_size_out)
+int main(int argc, char **argv)
 {
-    #pragma HLS ARRAY_PARTITION variable=data complete
-    #pragma HLS ARRAY_PARTITION variable=res complete
 
-    #pragma HLS DATAFLOW
+  //hls-fpga-machine-learning insert data
+  input_t  data_str[N_INPUTS] = {0,0,0,0,0,0,0,0,0,0};
 
-    const_size_in   = N_INPUTS;
-    const_size_out  = N_OUTPUTS;
 
-    // ****************************************
-    // NETWORK INSTANTIATION
-    // ****************************************
-
-    //hls-fpga-machine-learning insert layers
-
+  result_t res_str[N_OUTPUTS] = {0};
+  unsigned short size_in, size_out;
+  myproject(data_str, res_str, size_in, size_out);
+    
+  for(int i=0; i<N_OUTPUTS; i++){
+    std::cout << res_str[i] << " ";
+  }
+  std::cout << std::endl;
+  
+  return 0;
 }

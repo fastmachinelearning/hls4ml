@@ -17,16 +17,21 @@
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef NNET_DEFAULT_H_
-#define NNET_DEFAULT_H_
+#ifndef NNET_COMMON_H_
+#define NNET_COMMON_H_
 
 #include "ap_fixed.h"
 
-// Default data types
+namespace nnet {
+
+// Common type definitions
+enum io_type {io_parallel = 0, io_serial};
+
+// Default data types (??) TODO: Deprecate
 typedef ap_fixed<16,4>  weight_t_def;
 typedef ap_fixed<16,4>  bias_t_def;
-
-// Default accumulator type
 typedef ap_fixed<32,10> accum_t_def;
+
+}
 
 #endif

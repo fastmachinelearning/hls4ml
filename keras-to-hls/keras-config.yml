@@ -1,4 +1,7 @@
 KerasJson: example-keras-model-files/KERAS_1layer.json
 KerasH5:   example-keras-model-files/KERAS_1layer_weights.h5
 OutputDir: my-hls-dir-test
-RollFactor: 1
+
+ReuseFactor: 1 
+DefaultPrecision: ap_fixed<18,8> 
+IOType: io_parallel  
