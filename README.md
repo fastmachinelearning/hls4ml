@@ -22,7 +22,7 @@ _Xilinx license_: required for the simulation and synthesis of the HLS
 *in construction* 
 
 ML code support: 
-   * Keras
+   * Keras/Tensorflow
    * Let us know if you would support for other ML codes.  
 
 Neural network architectures:
