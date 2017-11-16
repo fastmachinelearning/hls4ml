@@ -31,8 +31,8 @@ void myproject(
 		  unsigned short &const_size_in,
 		  unsigned short &const_size_out)
 {
-    #pragma HLS ARRAY_PARTITION variable=data complete
-    #pragma HLS ARRAY_PARTITION variable=res complete
+
+    //hls-fpga-machine-learning insert IO
 
     #pragma HLS DATAFLOW
 
