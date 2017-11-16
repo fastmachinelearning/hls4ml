@@ -31,7 +31,14 @@ def print_array_to_cpp(name, a, odir ):
     f.write("\n")
     
     #c++ variable 
-    f.write("weight_t {}".format(name))
+    if "w" in name: 
+        f.write("weight_default_t {}".format(name))
+    elif "b" in name: 
+        f.write("bias_default_t {}".format(name))
+    else:
+        raise Exception('ERROR: Unkown weights type')
+
+
     for x in a.shape:
         f.write("[{}]".format(x))
     f.write(" = {")
@@ -174,21 +181,22 @@ def main():
 
                 #Compute layer
                 if layer_list[i-1]['activation'] == "linear":
-                    newline = newline + '    nnet::compute_layer<{}, {}, weight_t, bias_t, accum_t, config{}>({}, {}, w{}, b{});\n'.format(input_type, output_type, i, input_object, output_object, i, i)
+                    newline = newline + '    nnet::compute_layer<{}, {}, config{}>({}, {}, w{}, b{});\n'.format(input_type, output_type, i, input_object, output_object, i, i)
                 else:
                     newline = newline + '    {} logits{}[{}];\n'.format(output_type,i,n_out)
                     newline = newline + '    #pragma HLS ARRAY_PARTITION variable=logits{} complete\n'.format(i)
-                    newline = newline + '    nnet::compute_layer<{}, {}, weight_t, bias_t, accum_t, config{}>({}, logits{}, w{}, b{});\n'.format(input_type, output_type, i, input_object, i, i, i, i)
+                    newline = newline + '    nnet::compute_layer<{}, {}, config{}>({}, logits{}, w{}, b{});\n'.format(input_type, output_type, i, input_object, i, i, i, i)
                 
                 #Activations
+                activation_name = layer_list[i-1]['activation']+'_config'+str(i)
                 if layer_list[i-1]['activation'] == "relu":
-                    newline = newline + '    nnet::relu<{}, {}, {}>(logits{}, {});\n'.format(output_type, output_type, n_out, i, output_object)
+                    newline = newline + '    nnet::relu<{}, {}, {}>(logits{}, {});\n'.format(output_type, output_type, activation_name, i, output_object)
                 elif layer_list[i-1]['activation'] =="softmax":
-                    newline = newline + '    nnet::softmax<{}, {}, {}, 2048>(logits{}, {});\n'.format(output_type, output_type, n_out, i, output_object)
+                    newline = newline + '    nnet::softmax<{}, {}, {}>(logits{}, {});\n'.format(output_type, output_type, activation_name, i, output_object)
                 elif layer_list[i-1]['activation'] =="sigmoid":
-                    newline = newline + '    nnet::sigmoid<{}, {}, {}, 1024>(logits{}, {});\n'.format(output_type, output_type, n_out, i, output_object)
+                    newline = newline + '    nnet::sigmoid<{}, {}, {}>(logits{}, {});\n'.format(output_type, output_type, activation_name, i, output_object)
                 elif layer_list[i-1]['activation'] =="tanh":
-                    newline = newline + '    nnet::tanh<{}, {}, {}, 1024>(logits{}, {});\n'.format(output_type, output_type, n_out, i, output_object)
+                    newline = newline + '    nnet::tanh<{}, {}, {}>(logits{}, {});\n'.format(output_type, output_type, activation_name, i, output_object)
                 elif layer_list[i-1]['activation'] =="linear":
                     newline = newline + '    //linear activation\n'
                 else:
@@ -210,20 +218,34 @@ def main():
     f = open('../hls-template/firmware/parameters.h','r')
     fout = open('{}/firmware/parameters.h'.format(yamlConfig['OutputDir']),'w')
 
-    config_template = """struct config{index} : nnet::layer_t {{
+    config_template = """struct config{index} : nnet::layer_config {{
         static const unsigned n_in = {n_in};
         static const unsigned n_out = {n_out};
-        static const bool fully_unrolled = false;
-        static const unsigned roll_factor_in = {unroll};
-        static const unsigned roll_factor_out = {unroll};
+        static const unsigned io_type = nnet::{iotype};
+        static const unsigned reuse_factor = {reuse};
         static const bool store_weights_in_bram = false;
+        typedef accum_default_t accum_t;
+        typedef bias_default_t bias_t;
+        typedef weight_default_t weight_t;
         }};\n"""
+
+    activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
+        static const unsigned n_in = {n_in};
+        static const unsigned table_size = 1024;
+        static const unsigned io_type = nnet::{iotype};
+        }};\n"""
+
 
     for line in f.readlines():
 
         #Insert numbers
         if '//hls-fpga-machine-learning insert numbers' in line:
             newline = line
+            newline = newline + 'typedef {precision} accum_default_t;\n'.format(precision=yamlConfig["DefaultPrecision"])
+            newline = newline + 'typedef {precision} weight_default_t;\n'.format(precision=yamlConfig["DefaultPrecision"])
+            newline = newline + 'typedef {precision} bias_default_t;\n'.format(precision=yamlConfig["DefaultPrecision"])
+            newline = newline + 'typedef {precision} input_t;\n'.format(precision=yamlConfig["DefaultPrecision"])
+            newline = newline + 'typedef {precision} result_t;\n'.format(precision=yamlConfig["DefaultPrecision"])
             for i in range(1,len(layer_list)+1):
 
                 if i==1 :
@@ -237,7 +259,7 @@ def main():
         elif '//hls-fpga-machine-learning insert layer-precision' in line:
             newline = line
             for i in range(1,len(layer_list)):
-                newline = newline + 'typedef ap_fixed<32,8> layer{}_t;\n'.format(i)
+                newline = newline + 'typedef {precision} layer{index}_t;\n'.format(precision=yamlConfig["DefaultPrecision"], index=i)
 
         elif "//hls-fpga-machine-learning insert layer-config" in line:
             newline = line
@@ -251,10 +273,17 @@ def main():
                 else:
                     layer_in_name = "N_LAYER_%i" % (i-1)
                     layer_out_name = "N_LAYER_%i" % (i)
+                
                 newline = newline + config_template.format(index=str(i), 
                                                            n_in=layer_in_name, 
                                                            n_out=layer_out_name,
-                                                           unroll=yamlConfig["RollFactor"])
+                                                           iotype=yamlConfig["IOType"],
+                                                           reuse=yamlConfig["ReuseFactor"])
+
+                newline = newline + activ_config_template.format(type=layer_list[i-1]['activation'],
+                                                                 index=str(i), 
+                                                                 n_in=layer_out_name,
+                                                                 iotype=yamlConfig["IOType"]) 
 
         else:
             newline = line
