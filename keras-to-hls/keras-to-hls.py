@@ -68,6 +68,8 @@ def main():
     if not args.config: parser.error('A configuration file needs to be specified.')
 
     yamlConfig = parse_config(args.config)
+    if not (yamlConfig["IOType"] == "io_parallel" or yamlConfig["IOType"] == "io_serial"): 
+        raise Exception('ERROR: Invalid IO type')
 
     ######################
     ##  Do translation
@@ -150,6 +152,16 @@ def main():
                 newline = newline + '#include "weights/w{}.h"\n'.format(i)
                 newline = newline + '#include "weights/b{}.h"\n'.format(i)
 
+        #Add input/output type
+        elif '//hls-fpga-machine-learning insert IO' in line:
+            newline = line;
+            if yamlConfig["IOType"] == "io_parallel":
+                newline = newline + '    #pragma HLS ARRAY_PARTITION variable=data complete \n';
+                newline = newline + '    #pragma HLS ARRAY_PARTITION variable=res complete \n';
+            if yamlConfig["IOType"] == "io_serial":
+                newline = newline + '    #pragma HLS STREAM variable=data dim=1\n';
+                newline = newline + '    #pragma HLS STREAM variable=res dim=1\n';
+
         #Add layers
         elif '//hls-fpga-machine-learning insert layers' in line:
             newline = line + '\n'
@@ -177,14 +189,16 @@ def main():
 
                 if(i!=len(layer_list)):
                     newline = newline + '    {} layer{}_out[{}];\n'.format(output_type,i,n_out)
-                    newline = newline + '    #pragma HLS ARRAY_PARTITION variable=layer{}_out complete\n'.format(i)
+                    if yamlConfig["IOType"] == "io_parallel": newline = newline + '    #pragma HLS ARRAY_PARTITION variable=layer{}_out complete\n'.format(i)
+                    if yamlConfig["IOType"] == "io_serial":   newline = newline + '    #pragma HLS STREAM variable=layer{}_out dim=1\n'.format(i)
 
                 #Compute layer
                 if layer_list[i-1]['activation'] == "linear":
                     newline = newline + '    nnet::compute_layer<{}, {}, config{}>({}, {}, w{}, b{});\n'.format(input_type, output_type, i, input_object, output_object, i, i)
                 else:
                     newline = newline + '    {} logits{}[{}];\n'.format(output_type,i,n_out)
-                    newline = newline + '    #pragma HLS ARRAY_PARTITION variable=logits{} complete\n'.format(i)
+                    if yamlConfig["IOType"] == "io_parallel": newline = newline + '    #pragma HLS ARRAY_PARTITION variable=logits{} complete\n'.format(i)
+                    if yamlConfig["IOType"] == "io_serial":   newline = newline + '    #pragma HLS STREAM variable=logits{} dim=1\n'.format(i)
                     newline = newline + '    nnet::compute_layer<{}, {}, config{}>({}, logits{}, w{}, b{});\n'.format(input_type, output_type, i, input_object, i, i, i, i)
                 
                 #Activations

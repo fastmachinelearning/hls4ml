@@ -73,6 +73,7 @@ void compute_layer(
         }
     } else if (CONFIG_T::io_type == io_serial){
         // TODO: Fill out the directives for serial input
+        // #pragma HLS ALLOCATION instances=mul limit=1 operation
     }
 
     // Do the matrix-multiply
