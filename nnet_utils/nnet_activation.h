@@ -22,39 +22,53 @@
 
 #include <math.h>
 #include "ap_fixed.h"
-//#include "hls_stream.h"
+#include "nnet_common.h"
 
 namespace nnet {
+
+struct activ_config
+{
+    // IO size
+    static const unsigned n_in = 10;
+
+    // Internal info
+    static const unsigned table_size = 1024;
+
+    // Resource reuse info
+    static const unsigned io_type = io_parallel;
+    static const unsigned reuse_factor = 1;
+};
 
 
 // *************************************************
 //       RELU Activation
 // *************************************************
-template<class data_T, class res_T, int N_IN>
-void  relu(data_T data[N_IN], res_T res[N_IN])
+template<class data_T, class res_T, typename CONFIG_T>
+void  relu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
-    //believe these two lines are not needed
-    //#pragma HLS ARRAY_PARTITION variable=data complete
-    //#pragma HLS ARRAY_PARTITION variable=res complete
-
-    //using unroll below instead
-    //#pragma HLS pipeline II=1 
+    if (CONFIG_T::io_type == io_parallel){
+        #pragma HLS PIPELINE
+    }
 
     data_T datareg;
-    for (int ii=0; ii<N_IN; ii++) {
-        #pragma HLS UNROLL 
+    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+        // #pragma HLS UNROLL
         datareg = data[ii];
         if (datareg > 0) res[ii] = datareg;
         else res[ii] = 0;
     }
 }
 
-template<class data_T, class res_T, int N_IN, int MAX_INT>
-void  relu_max(data_T data[N_IN], res_T res[N_IN])
+template<class data_T, class res_T, int MAX_INT, typename CONFIG_T>
+void  relu_max(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
+    if (CONFIG_T::io_type == io_parallel){
+        #pragma HLS PIPELINE
+    }
+
     data_T datareg;
-    for (int ii=0; ii<N_IN; ii++) {
-        #pragma HLS UNROLL 
+    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+        // #pragma HLS UNROLL
         datareg = data[ii];
         if (datareg < 0) res[ii] = 0;
         else if (datareg > MAX_INT) res[ii] = MAX_INT;
@@ -62,17 +76,17 @@ void  relu_max(data_T data[N_IN], res_T res[N_IN])
     }
 }
 
-template<class data_T, class res_T, int N_IN>
-void  relu6(data_T data[N_IN], res_T res[N_IN])
+template<class data_T, class res_T, typename CONFIG_T>
+void  relu6(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
-    relu_max<data_T, res_T, N_IN, 6>(data, res);
+    relu_max<data_T, res_T, 6, CONFIG_T>(data, res);
 }
 
 
 // *************************************************
 //       Sigmoid Activation
 // *************************************************
-float sigmoid_fcn_float(float input) {
+inline float sigmoid_fcn_float(float input) {
     return 1.0 / (1 + exp(-input));
 }
 
@@ -91,36 +105,35 @@ void init_sigmoid_table(data_T table_out[N_TABLE])
     }
 }
 
-template<class data_T, class res_T, int N_IN, int TABLE_SIZE/*=1024*/>
-void  sigmoid(data_T data[N_IN], res_T res[N_IN])
+template<class data_T, class res_T, typename CONFIG_T>
+void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
     // Initialize the lookup table
-    res_T sigmoid_table[TABLE_SIZE];
-    init_sigmoid_table<res_T, TABLE_SIZE>(sigmoid_table);
+    res_T sigmoid_table[CONFIG_T::table_size];
+    init_sigmoid_table<res_T, CONFIG_T::table_size>(sigmoid_table);
+
+    if (CONFIG_T::io_type == io_parallel){
+        #pragma HLS PIPELINE
+    }
 
     // Index into the lookup table based on data
     data_T datareg;
     int data_round;
     int index;
-    for (int ii=0; ii<N_IN; ii++) {
-        #pragma HLS UNROLL 
-        data_round = data[ii]*TABLE_SIZE/16;
-        index = data_round + 8*TABLE_SIZE/16;
+    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+        // #pragma HLS UNROLL
+        data_round = data[ii]*CONFIG_T::table_size/16;
+        index = data_round + 8*CONFIG_T::table_size/16;
         if (index < 0)   index = 0;
-        if (index > TABLE_SIZE-1) index = TABLE_SIZE-1;
+        if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
         res[ii] = sigmoid_table[index];
     }
 }
 
-// Default table size provided here:
-template<class data_T, class res_T, int N_IN>
-void  sigmoid(data_T data[N_IN], res_T res[N_IN]){ sigmoid<data_T, res_T, N_IN, 1024>(data, res); }
-
-
 // *************************************************
 //       Softmax Activation
 // *************************************************
-float exp_fcn_float(float input) {
+inline float exp_fcn_float(float input) {
     return exp(input);
 }
 
@@ -137,40 +150,41 @@ void init_exp_table(data_T table_out[N_TABLE])
     }
 }
 
-template<class data_T, class res_T, int N_IN, int TABLE_SIZE/*=1024*/>
-void  softmax(data_T data[N_IN], res_T res[N_IN])
+template<class data_T, class res_T, typename CONFIG_T>
+void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
     // Initialize the lookup table
-    res_T exp_table[TABLE_SIZE];
-    init_exp_table<res_T, TABLE_SIZE>(exp_table);
+    res_T exp_table[CONFIG_T::table_size];
+    init_exp_table<res_T, CONFIG_T::table_size>(exp_table);
+
+    if (CONFIG_T::io_type == io_parallel){
+        // Note: This is going to be a resource hog to run with pipeline, but hey, whatever
+        #pragma HLS PIPELINE
+    }
 
     // Index into the lookup table based on data for exponentials
-    res_T exp_res[N_IN];//same precision as rest?
+    res_T exp_res[CONFIG_T::n_in];//same precision as rest?
     res_T exp_res_sum=0;
     data_T datareg;
     int data_round;
     int index;
-    for (int ii=0; ii<N_IN; ii++) {
-        #pragma HLS UNROLL 
-        data_round = data[ii]*TABLE_SIZE/16;
-        index = data_round + 8*TABLE_SIZE/16;
+    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+        // #pragma HLS UNROLL
+        data_round = data[ii]*CONFIG_T::table_size/16;
+        index = data_round + 8*CONFIG_T::table_size/16;
         if (index < 0)   index = 0;
-        if (index > TABLE_SIZE-1) index = TABLE_SIZE-1;
+        if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
         exp_res[ii] = exp_table[index];
         exp_res_sum += exp_table[index];
     }
 
     //Second loop to divide by sum of exponentials
-    for (int ii=0; ii<N_IN; ii++) {
-      #pragma HLS UNROLL
+    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+      // #pragma HLS UNROLL
       res[ii] = exp_res[ii]/exp_res_sum; //Note division used here!
     }
 
 }
-
-// Default table size provided here:
-template<class data_T, class res_T, int N_IN>
-void  softmax(data_T data[N_IN], res_T res[N_IN]){ softmax<data_T, res_T, N_IN, 1024>(data, res); }
 
 
 // *************************************************
@@ -191,31 +205,31 @@ void init_tanh_table(data_T table_out[N_TABLE])
 }
 
 
-template<class data_T, class res_T, int N_IN, int TABLE_SIZE/*=1024*/>
-void  tanh(data_T data[N_IN], res_T res[N_IN])
+template<class data_T, class res_T, typename CONFIG_T>
+void  tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
     // Initialize the lookup table
-    res_T tanh_table[TABLE_SIZE];
-    init_tanh_table<res_T, TABLE_SIZE>(tanh_table);
+    res_T tanh_table[CONFIG_T::table_size];
+    init_tanh_table<res_T, CONFIG_T::table_size>(tanh_table);
+
+    if (CONFIG_T::io_type == io_parallel){
+        #pragma HLS PIPELINE
+    }
 
     // Index into the lookup table based on data
     data_T datareg;
     int data_round;
     int index;
-    for (int ii=0; ii<N_IN; ii++) {
-        #pragma HLS UNROLL 
-        data_round = data[ii]*TABLE_SIZE/8;
-        index = data_round + 4*TABLE_SIZE/8;
+    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+        // #pragma HLS UNROLL
+        data_round = data[ii]*CONFIG_T::table_size/8;
+        index = data_round + 4*CONFIG_T::table_size/8;
         //std::cout << "Input: "  << data[ii] << " Round: " << data_round << " Index: " << index << std::endl;
         if (index < 0)   index = 0;
-        if (index > TABLE_SIZE-1) index = TABLE_SIZE-1;
+        if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
         res[ii] = tanh_table[index];
     }
 }
-
-// Default table size provided here:
-template<class data_T, class res_T, int N_IN>
-void  tanh(data_T data[N_IN], res_T res[N_IN]){ tanh<data_T, res_T, N_IN, 1024>(data, res); }
 
 }
 

@@ -20,67 +20,86 @@
 #ifndef NNET_LAYER_H_
 #define NNET_LAYER_H_
 
-#include "nnet_default.h"
+#include "nnet_common.h"
 #include "hls_stream.h"
+#include <math.h>
 
 namespace nnet {
 
-struct layer_t
+struct layer_config
 {
+    // Internal data type definitions
+    typedef float bias_t;
+    typedef float weight_t;
+    typedef float accum_t;
+
+    // Layer Sizes
     static const unsigned n_in = 10;
     static const unsigned n_out = 10;
-    static const bool fully_unrolled = true;
-    static const unsigned roll_factor_in = 1;
-    static const unsigned roll_factor_out = 1;
+
+    // Resource reuse info
+    static const unsigned io_type = io_parallel;
+    static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
     // partitioning arrays cyclically to go with roll factors?
 };
 
-template<class data_T, class res_T, class weight_T, class bias_T, class acc_T, typename CONFIG_T>
+template<class data_T, class res_T, typename CONFIG_T>
 void compute_layer(
     data_T    data[CONFIG_T::n_in],
     res_T     res[CONFIG_T::n_out],
-    weight_T  weights[CONFIG_T::n_in][CONFIG_T::n_out],
-    bias_T    biases[CONFIG_T::n_out])
+    typename CONFIG_T::weight_t  weights[CONFIG_T::n_in][CONFIG_T::n_out],
+    typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
 {
+    data_T cache;
+    typename CONFIG_T::accum_t mult[CONFIG_T::n_in][CONFIG_T::n_out];
+    typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
 
-    data_T data_cache;
-    acc_T acc[CONFIG_T::n_out];
+    // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
+    #pragma HLS function_instantiate variable=weights,biases
 
-    // is there a way to cyclically unroll multiple dimensions?
-    #pragma HLS ARRAY_PARTITION variable=weights complete
-    #pragma HLS ARRAY_PARTITION variable=acc complete
-    #pragma HLS ARRAY_PARTITION variable=biases complete
-
-    // Optional... Cuts down on a few of the BRAMs
-    // #if CONFIG_T::n_out > 16
-    //     #pragma HLS RESOURCE variable=acc core=RAM_2P_LUTRAM
-    // #endif
-
-    int unroll_factor_in  = CONFIG_T::n_in / CONFIG_T::roll_factor_in;
-    int unroll_factor_out = CONFIG_T::n_out / CONFIG_T::roll_factor_out;
-    //int unroll_factor_in  = CONFIG_T::n_in;
-    //int unroll_factor_out = CONFIG_T::n_out;
-
-    Reset: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
-      #pragma HLS UNROLL factor=unroll_factor_out
-        acc[iacc] = 0;
+    if (CONFIG_T::io_type == io_parallel){
+        // For parallel inputs:
+        //   - completely partition arrays -- target fabric
+        //   - if we have an unroll factor, limit number of multipliers
+        #pragma HLS PIPELINE
+        #pragma HLS ARRAY_PARTITION variable=weights complete
+        #pragma HLS ARRAY_PARTITION variable=biases complete
+        #pragma HLS ARRAY_PARTITION variable=mult complete
+        #pragma HLS ARRAY_PARTITION variable=acc complete
+        if (CONFIG_T::reuse_factor > 1) {
+            int multiplier_limit  = ceil(CONFIG_T::n_in*CONFIG_T::n_out / CONFIG_T::reuse_factor);
+            #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+        }
+    } else if (CONFIG_T::io_type == io_serial){
+        // TODO: Fill out the directives for serial input
+        // #pragma HLS ALLOCATION instances=mul limit=1 operation
     }
 
-    NewInput: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        #pragma HLS UNROLL factor=unroll_factor_in
-        data_cache = data[ii];
-        Product: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-        #pragma HLS UNROLL factor=unroll_factor_out
-            acc[jj] += data_cache * weights[ii][jj];
+    // Do the matrix-multiply
+    Product1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
+        cache = data[ii];
+        Product2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
+            mult[ii][jj] = cache * weights[ii][jj];
         }
     }
 
-    Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
-        #pragma HLS UNROLL factor=unroll_factor_out
-        res[ires] = (res_T) (acc[ires] + (acc_T) biases[ires]);
+    // Initialize accumulator with input biases
+    ResetAccum: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
+        acc[iacc] = (typename CONFIG_T::accum_t) biases[iacc];
     }
 
+    // Accumulate multiplication result
+    Accum1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
+        Accum2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
+            acc[jj] += mult[ii][jj];
+        }
+    }
+
+    // Cast to "res_t" type
+    Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
+        res[ires] = (res_T) (acc[ires]);
+    }    
 }
 
 }
