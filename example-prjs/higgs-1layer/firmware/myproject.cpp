@@ -40,7 +40,7 @@ void myproject(
     #pragma HLS ARRAY_PARTITION variable=data complete 
     #pragma HLS ARRAY_PARTITION variable=res complete 
 
-    #pragma HLS DATAFLOW
+    #pragma HLS PIPELINE
 
     const_size_in   = N_INPUTS;
     const_size_out  = N_OUTPUTS;
