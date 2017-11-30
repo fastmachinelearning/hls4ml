@@ -4,7 +4,7 @@ A package for creating firmware implementations of machine learning algorithms u
 
 The project is currently in development, so please let us know your experiences and if you would like new features to be added.  
 
-contact: tbd
+contact: hls4ml.help@gmail.com
 
 ## dependencies
 
