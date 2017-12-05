@@ -41,10 +41,11 @@ struct layer_config
     static const unsigned io_type = io_parallel;
     static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
+    static const unsigned n_zeros = 0;
     // partitioning arrays cyclically to go with roll factors?
 };
 
-template<class data_T, class res_T, typename CONFIG_T>
+ template<class data_T, class res_T, typename CONFIG_T>
 void compute_layer(
     data_T    data[CONFIG_T::n_in],
     res_T     res[CONFIG_T::n_out],
@@ -68,7 +69,7 @@ void compute_layer(
         #pragma HLS ARRAY_PARTITION variable=mult complete
         #pragma HLS ARRAY_PARTITION variable=acc complete
         if (CONFIG_T::reuse_factor > 1) {
-            int multiplier_limit  = ceil(CONFIG_T::n_in*CONFIG_T::n_out / CONFIG_T::reuse_factor);
+	  int multiplier_limit  = ceil(CONFIG_T::n_in*CONFIG_T::n_out / CONFIG_T::reuse_factor) - floor(CONFIG_T::n_zeros / CONFIG_T::reuse_factor);
             #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
         }
     } else if (CONFIG_T::io_type == io_serial){
