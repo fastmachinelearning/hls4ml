@@ -64,13 +64,12 @@ void compute_layer(
         //   - completely partition arrays -- target fabric
         //   - if we have an unroll factor, limit number of multipliers
         #pragma HLS PIPELINE
-        #pragma HLS ARRAY_PARTITION variable=weights complete
+        v// #pragma HLS ARRAY_PARTITION variable=weights complete // remove this line for now, it breaks compression sometimes
         #pragma HLS ARRAY_PARTITION variable=biases complete
         #pragma HLS ARRAY_PARTITION variable=mult complete
         #pragma HLS ARRAY_PARTITION variable=acc complete
         // if (CONFIG_T::reuse_factor > 1) {
         int multiplier_limit  = ceil(CONFIG_T::n_in*CONFIG_T::n_out / CONFIG_T::reuse_factor) - floor(CONFIG_T::n_zeros / CONFIG_T::reuse_factor);
-        // printf("Multiplier Limit = %i, Number of zeros = %i \n", multiplier_limit, CONFIG_T::n_zeros);
         #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
         // }
     } else if (CONFIG_T::io_type == io_serial){
