@@ -385,14 +385,14 @@
 						<id>30</id>
 						<name></name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>45</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>48</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item class_id="10" tracking_level="0" version="0">
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second class_id="11" tracking_level="0" version="0">
 									<count>1</count>
 									<item_version>0</item_version>
@@ -401,7 +401,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>45</second>
+										<second>48</second>
 									</item>
 								</second>
 							</item>
@@ -429,14 +429,14 @@
 						<id>31</id>
 						<name></name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>46</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>49</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -445,7 +445,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>46</second>
+										<second>49</second>
 									</item>
 								</second>
 							</item>
@@ -473,14 +473,14 @@
 						<id>32</id>
 						<name>data_0_V_read</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -489,7 +489,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -516,14 +516,14 @@
 						<id>33</id>
 						<name>data_1_V_read</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -532,7 +532,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -559,14 +559,14 @@
 						<id>34</id>
 						<name>data_2_V_read</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -575,7 +575,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -602,14 +602,14 @@
 						<id>35</id>
 						<name>data_3_V_read</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -618,7 +618,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -645,14 +645,14 @@
 						<id>36</id>
 						<name>data_4_V_read</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -661,7 +661,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -688,14 +688,14 @@
 						<id>37</id>
 						<name>data_5_V_read</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -704,7 +704,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -731,14 +731,14 @@
 						<id>38</id>
 						<name>data_6_V_read</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -747,7 +747,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -774,14 +774,14 @@
 						<id>39</id>
 						<name>data_7_V_read</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -790,7 +790,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -817,14 +817,14 @@
 						<id>40</id>
 						<name>data_8_V_read</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -833,7 +833,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -860,14 +860,14 @@
 						<id>41</id>
 						<name>data_9_V_read</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -876,7 +876,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -903,14 +903,14 @@
 						<id>42</id>
 						<name>call_ret1</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -919,7 +919,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -955,14 +955,14 @@
 						<id>43</id>
 						<name>logits1_0_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -971,7 +971,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -997,14 +997,14 @@
 						<id>44</id>
 						<name>logits1_1_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1013,7 +1013,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1039,14 +1039,14 @@
 						<id>45</id>
 						<name>logits1_2_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1055,7 +1055,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1081,14 +1081,14 @@
 						<id>46</id>
 						<name>logits1_3_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1097,7 +1097,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1123,14 +1123,14 @@
 						<id>47</id>
 						<name>logits1_4_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1139,7 +1139,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1165,14 +1165,14 @@
 						<id>48</id>
 						<name>logits1_5_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1181,7 +1181,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1207,14 +1207,14 @@
 						<id>49</id>
 						<name>logits1_6_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1223,7 +1223,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1249,14 +1249,14 @@
 						<id>50</id>
 						<name>logits1_7_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1265,7 +1265,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1291,14 +1291,14 @@
 						<id>51</id>
 						<name>logits1_8_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1307,7 +1307,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1333,14 +1333,14 @@
 						<id>52</id>
 						<name>logits1_9_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1349,7 +1349,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1375,14 +1375,14 @@
 						<id>53</id>
 						<name>logits1_10_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1391,7 +1391,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1417,14 +1417,14 @@
 						<id>54</id>
 						<name>logits1_11_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1433,7 +1433,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1459,14 +1459,14 @@
 						<id>55</id>
 						<name>logits1_12_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1475,7 +1475,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1501,14 +1501,14 @@
 						<id>56</id>
 						<name>logits1_13_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1517,7 +1517,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1543,14 +1543,14 @@
 						<id>57</id>
 						<name>logits1_14_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1559,7 +1559,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1585,14 +1585,14 @@
 						<id>58</id>
 						<name>logits1_15_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1601,7 +1601,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1627,14 +1627,14 @@
 						<id>59</id>
 						<name>logits1_16_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1643,7 +1643,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1669,14 +1669,14 @@
 						<id>60</id>
 						<name>logits1_17_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1685,7 +1685,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1711,14 +1711,14 @@
 						<id>61</id>
 						<name>logits1_18_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1727,7 +1727,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1753,14 +1753,14 @@
 						<id>62</id>
 						<name>logits1_19_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1769,7 +1769,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1795,14 +1795,14 @@
 						<id>63</id>
 						<name>logits1_20_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1811,7 +1811,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1837,14 +1837,14 @@
 						<id>64</id>
 						<name>logits1_21_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1853,7 +1853,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1879,14 +1879,14 @@
 						<id>65</id>
 						<name>logits1_22_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1895,7 +1895,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1921,14 +1921,14 @@
 						<id>66</id>
 						<name>logits1_23_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1937,7 +1937,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -1963,14 +1963,14 @@
 						<id>67</id>
 						<name>logits1_24_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -1979,7 +1979,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -2005,14 +2005,14 @@
 						<id>68</id>
 						<name>logits1_25_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2021,7 +2021,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -2047,14 +2047,14 @@
 						<id>69</id>
 						<name>logits1_26_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2063,7 +2063,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -2089,14 +2089,14 @@
 						<id>70</id>
 						<name>logits1_27_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2105,7 +2105,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -2131,14 +2131,14 @@
 						<id>71</id>
 						<name>logits1_28_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2147,7 +2147,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -2173,14 +2173,14 @@
 						<id>72</id>
 						<name>logits1_29_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2189,7 +2189,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -2215,14 +2215,14 @@
 						<id>73</id>
 						<name>logits1_30_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2231,7 +2231,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -2257,14 +2257,14 @@
 						<id>74</id>
 						<name>logits1_31_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>58</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>61</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2273,7 +2273,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>58</second>
+										<second>61</second>
 									</item>
 								</second>
 							</item>
@@ -2299,14 +2299,14 @@
 						<id>75</id>
 						<name>call_ret2</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2315,7 +2315,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -2373,14 +2373,14 @@
 						<id>76</id>
 						<name>layer1_out_0_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2389,7 +2389,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -2415,14 +2415,14 @@
 						<id>77</id>
 						<name>layer1_out_1_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2431,7 +2431,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -2457,14 +2457,14 @@
 						<id>78</id>
 						<name>layer1_out_2_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2473,7 +2473,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -2499,14 +2499,14 @@
 						<id>79</id>
 						<name>layer1_out_3_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2515,7 +2515,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -2541,14 +2541,14 @@
 						<id>80</id>
 						<name>layer1_out_4_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2557,7 +2557,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -2583,14 +2583,14 @@
 						<id>81</id>
 						<name>layer1_out_5_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2599,7 +2599,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -2625,14 +2625,14 @@
 						<id>82</id>
 						<name>layer1_out_6_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2641,7 +2641,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -2667,14 +2667,14 @@
 						<id>83</id>
 						<name>layer1_out_7_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2683,7 +2683,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -2709,14 +2709,14 @@
 						<id>84</id>
 						<name>layer1_out_8_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2725,7 +2725,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -2751,14 +2751,14 @@
 						<id>85</id>
 						<name>layer1_out_9_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2767,7 +2767,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -2793,14 +2793,14 @@
 						<id>86</id>
 						<name>layer1_out_10_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2809,7 +2809,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -2835,14 +2835,14 @@
 						<id>87</id>
 						<name>layer1_out_11_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2851,7 +2851,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -2877,14 +2877,14 @@
 						<id>88</id>
 						<name>layer1_out_12_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2893,7 +2893,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -2919,14 +2919,14 @@
 						<id>89</id>
 						<name>layer1_out_13_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2935,7 +2935,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -2961,14 +2961,14 @@
 						<id>90</id>
 						<name>layer1_out_14_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -2977,7 +2977,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -3003,14 +3003,14 @@
 						<id>91</id>
 						<name>layer1_out_15_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3019,7 +3019,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -3045,14 +3045,14 @@
 						<id>92</id>
 						<name>layer1_out_16_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3061,7 +3061,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -3087,14 +3087,14 @@
 						<id>93</id>
 						<name>layer1_out_17_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3103,7 +3103,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -3129,14 +3129,14 @@
 						<id>94</id>
 						<name>layer1_out_18_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3145,7 +3145,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -3171,14 +3171,14 @@
 						<id>95</id>
 						<name>layer1_out_19_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3187,7 +3187,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -3213,14 +3213,14 @@
 						<id>96</id>
 						<name>layer1_out_20_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3229,7 +3229,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -3255,14 +3255,14 @@
 						<id>97</id>
 						<name>layer1_out_21_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3271,7 +3271,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -3297,14 +3297,14 @@
 						<id>98</id>
 						<name>layer1_out_22_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3313,7 +3313,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -3339,14 +3339,14 @@
 						<id>99</id>
 						<name>layer1_out_23_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3355,7 +3355,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -3381,14 +3381,14 @@
 						<id>100</id>
 						<name>layer1_out_24_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3397,7 +3397,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -3423,14 +3423,14 @@
 						<id>101</id>
 						<name>layer1_out_25_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3439,7 +3439,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -3465,14 +3465,14 @@
 						<id>102</id>
 						<name>layer1_out_26_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3481,7 +3481,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -3507,14 +3507,14 @@
 						<id>103</id>
 						<name>layer1_out_27_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3523,7 +3523,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -3549,14 +3549,14 @@
 						<id>104</id>
 						<name>layer1_out_28_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3565,7 +3565,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -3591,14 +3591,14 @@
 						<id>105</id>
 						<name>layer1_out_29_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3607,7 +3607,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -3633,14 +3633,14 @@
 						<id>106</id>
 						<name>layer1_out_30_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3649,7 +3649,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -3675,14 +3675,14 @@
 						<id>107</id>
 						<name>layer1_out_31_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>59</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>62</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3691,7 +3691,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>59</second>
+										<second>62</second>
 									</item>
 								</second>
 							</item>
@@ -3717,14 +3717,14 @@
 						<id>108</id>
 						<name>logits2_0_V</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>63</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>66</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3733,7 +3733,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>63</second>
+										<second>66</second>
 									</item>
 								</second>
 							</item>
@@ -3791,14 +3791,14 @@
 						<id>109</id>
 						<name>call_ret</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>64</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>67</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3807,7 +3807,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>64</second>
+										<second>67</second>
 									</item>
 								</second>
 							</item>
@@ -3835,14 +3835,14 @@
 						<id>110</id>
 						<name>p_trunc_ext</name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>64</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>67</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3851,7 +3851,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>64</second>
+										<second>67</second>
 									</item>
 								</second>
 							</item>
@@ -3877,14 +3877,14 @@
 						<id>111</id>
 						<name></name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>64</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>67</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3893,7 +3893,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>64</second>
+										<second>67</second>
 									</item>
 								</second>
 							</item>
@@ -3921,14 +3921,14 @@
 						<id>112</id>
 						<name></name>
 						<fileName>firmware/myproject.cpp</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
-						<lineNumber>67</lineNumber>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
+						<lineNumber>70</lineNumber>
 						<contextFuncName>myproject</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -3937,7 +3937,7 @@
 											<first>firmware/myproject.cpp</first>
 											<second>myproject</second>
 										</first>
-										<second>67</second>
+										<second>70</second>
 									</item>
 								</second>
 							</item>

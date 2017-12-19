@@ -42824,7 +42824,10 @@ void myproject(
 _ssdm_SpecArrayPartition( data, 1, "COMPLETE", 0, "");
 _ssdm_SpecArrayPartition( res, 1, "COMPLETE", 0, "");
 
-_ssdm_op_SpecPipeline(-1, 1, 1, 0, "");
+ //#pragma HLS DATAFLOW
+_ssdm_SpecStream( data, 0, 0, "");
+
+_ssdm_op_SpecPipeline(1, 1, 1, 0, "");
 
  const_size_in = 10;
     const_size_out = 1;

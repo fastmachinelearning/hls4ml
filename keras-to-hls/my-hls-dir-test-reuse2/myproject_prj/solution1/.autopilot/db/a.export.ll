@@ -1,4 +1,4 @@
-; ModuleID = '/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.o.2.bc'
+; ModuleID = '/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2/myproject_prj/solution1/.autopilot/db/a.o.2.bc'
 target datalayout = "e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128"
 target triple = "x86_64-unknown-linux-gnu"
 
@@ -338,7 +338,7 @@ define void @myproject(i18* %data_0_V, i18* %data_1_V, i18* %data_2_V, i18* %dat
   call void (...)* @_ssdm_op_SpecBitsMap(i16* %const_size_in), !map !1302
   call void (...)* @_ssdm_op_SpecBitsMap(i16* %const_size_out), !map !1308
   call void (...)* @_ssdm_op_SpecTopModule([10 x i8]* @myproject_str) nounwind
-  call void (...)* @_ssdm_op_SpecPipeline(i32 -1, i32 1, i32 1, i32 0, [1 x i8]* @p_str5) nounwind
+  call void (...)* @_ssdm_op_SpecPipeline(i32 1, i32 1, i32 1, i32 0, [1 x i8]* @p_str5) nounwind
   call void @_ssdm_op_Write.ap_auto.i16P(i16* %const_size_in, i16 10)
   call void @_ssdm_op_Write.ap_auto.i16P(i16* %const_size_out, i16 1)
   %data_0_V_read = call i18 @_ssdm_op_Read.ap_auto.i18P(i18* %data_0_V)

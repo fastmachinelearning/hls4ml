@@ -43,7 +43,7 @@ set SCTraceOption "all"
 set TargetInfo "xc7vx690t:ffg1927:-2"
 set SourceFiles {sc {} c ../../firmware/myproject.cpp}
 set SourceFlags {sc {} c {{ -I/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils }}}
-set DirectiveFile {/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/solution1.directive}
+set DirectiveFile {/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2/myproject_prj/solution1/solution1.directive}
 set TBFiles {verilog {../../firmware/weights ../../myproject_test.cpp} bc {../../firmware/weights ../../myproject_test.cpp} sc {../../firmware/weights ../../myproject_test.cpp} vhdl {../../firmware/weights ../../myproject_test.cpp} c {} cas {../../firmware/weights ../../myproject_test.cpp}}
 set SpecLanguage "C"
 set TVInFiles {bc {} c {} sc {} cas {} vhdl {} verilog {}}
