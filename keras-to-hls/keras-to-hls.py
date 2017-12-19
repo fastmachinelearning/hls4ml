@@ -5,7 +5,6 @@ import tarfile
 import json
 import argparse
 import yaml
-import random
 from shutil import copyfile
 
 #######################################
@@ -97,7 +96,6 @@ def main():
 
     #Loop through layers
     layer_counter = 0;
-    weights_n_zeros = [];
     for keras_layer in model_arch["config"]["layers"]:
         if keras_layer["class_name"] in skip_layers:
             continue 
@@ -122,7 +120,7 @@ def main():
         biases = h5File['/{}/{}/bias:0'.format(layer['name'],layer['name'])][()]
         cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
         print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
-        weights_n_zeros.append( cur_n_zeros );
+        layer['weights_n_zeros'] = cur_n_zeros 
 
         #Get number of inputs and outputs
         #(We take it from the weights to avoid dealing with InputLayer and Flatten details)
@@ -301,7 +299,7 @@ def main():
                                                            n_out=layer_out_name,
                                                            iotype=yamlConfig["IOType"],
                                                            reuse=yamlConfig["ReuseFactor"],
-                                                           nzeros=weights_n_zeros[i-1])
+                                                           nzeros=layer_list[i-1]['weights_n_zeros'])
 
                 newline = newline + activ_config_template.format(type=layer_list[i-1]['activation'],
                                                                  index=str(i), 
