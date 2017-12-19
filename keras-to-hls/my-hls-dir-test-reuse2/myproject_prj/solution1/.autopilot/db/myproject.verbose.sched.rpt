@@ -1,0 +1,561 @@
+
+
+================================================================
+== Vivado HLS Report for 'myproject'
+================================================================
+* Date:           Tue Dec 19 09:29:20 2017
+
+* Version:        2016.4 (Build 1756540 on Mon Jan 23 19:31:01 MST 2017)
+* Project:        myproject_prj
+* Solution:       solution1
+* Product family: virtex7
+* Target device:  xc7vx690tffg1927-2
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing (ns): 
+    * Summary: 
+    +--------+-------+----------+------------+
+    |  Clock | Target| Estimated| Uncertainty|
+    +--------+-------+----------+------------+
+    |ap_clk  |   5.00|      4.33|        0.62|
+    +--------+-------+----------+------------+
+
++ Latency (clock cycles): 
+    * Summary: 
+    +-----+-----+-----+-----+----------+
+    |  Latency  |  Interval | Pipeline |
+    | min | max | min | max |   Type   |
+    +-----+-----+-----+-----+----------+
+    |   14|   14|    2|    2| function |
+    +-----+-----+-----+-----+----------+
+
+    + Detail: 
+        * Instance: 
+        N/A
+
+        * Loop: 
+        N/A
+
+============================================================
++ Verbose Summary: Synthesis Manager
+============================================================
+InlineROM: 1
+ExposeGlobal: 0
+============================================================
++ Verbose Summary: CDFG Model
+============================================================
+IsTopModel: 1
+ResetActiveHigh: 1
+IsCombinational: 0
+IsDatapathOnly: 0
+HasWiredReturn: 1
+HasMFsm: 2
+HasVarLatency: 0
+IsPipeline: 1
+IsRtlPipelined: 1
+IsInstanceOverlapped: 0
+IsDontTouch: 0
+HasImplIP: 0
+IsGatedGlobalClock: 0
+
++ Individual pipeline summary: 
+  * Pipeline-0: initiation interval (II) = 2, depth = 15
+
+
+============================================================
++ Verbose Summary: Schedule
+============================================================
+* Number of FSM states: 15
+* Pipeline: 1
+  Pipeline-0: II = 2, D = 15, States = { 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 }
+* Dataflow Pipeline: 0
+
+* FSM state transitions: 
+1 --> 
+	2  / true
+2 --> 
+	3  / true
+3 --> 
+	4  / true
+4 --> 
+	5  / true
+5 --> 
+	6  / true
+6 --> 
+	7  / true
+7 --> 
+	8  / true
+8 --> 
+	9  / true
+9 --> 
+	10  / true
+10 --> 
+	11  / true
+11 --> 
+	12  / true
+12 --> 
+	13  / true
+13 --> 
+	14  / true
+14 --> 
+	15  / true
+15 --> 
+* FSM state operations: 
+
+ <State 1>: 1.57ns
+ST_1: data_0_V_read (32)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:17  %data_0_V_read = call i18 @_ssdm_op_Read.ap_auto.i18P(i18* %data_0_V)
+
+ST_1: data_1_V_read (33)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:18  %data_1_V_read = call i18 @_ssdm_op_Read.ap_auto.i18P(i18* %data_1_V)
+
+ST_1: data_2_V_read (34)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:19  %data_2_V_read = call i18 @_ssdm_op_Read.ap_auto.i18P(i18* %data_2_V)
+
+ST_1: data_3_V_read (35)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:20  %data_3_V_read = call i18 @_ssdm_op_Read.ap_auto.i18P(i18* %data_3_V)
+
+ST_1: data_4_V_read (36)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:21  %data_4_V_read = call i18 @_ssdm_op_Read.ap_auto.i18P(i18* %data_4_V)
+
+ST_1: data_5_V_read (37)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:22  %data_5_V_read = call i18 @_ssdm_op_Read.ap_auto.i18P(i18* %data_5_V)
+
+ST_1: data_6_V_read (38)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:23  %data_6_V_read = call i18 @_ssdm_op_Read.ap_auto.i18P(i18* %data_6_V)
+
+ST_1: data_7_V_read (39)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:24  %data_7_V_read = call i18 @_ssdm_op_Read.ap_auto.i18P(i18* %data_7_V)
+
+ST_1: data_8_V_read (40)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:25  %data_8_V_read = call i18 @_ssdm_op_Read.ap_auto.i18P(i18* %data_8_V)
+
+ST_1: data_9_V_read (41)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:26  %data_9_V_read = call i18 @_ssdm_op_Read.ap_auto.i18P(i18* %data_9_V)
+
+ST_1: call_ret1 (42)  [5/5] 1.57ns  loc: firmware/myproject.cpp:58
+:27  %call_ret1 = call fastcc { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } @compute_layer.0.0.0.(i18 %data_0_V_read, i18 %data_1_V_read, i18 %data_2_V_read, i18 %data_3_V_read, i18 %data_4_V_read, i18 %data_5_V_read, i18 %data_6_V_read, i18 %data_7_V_read, i18 %data_8_V_read, i18 %data_9_V_read)
+
+
+ <State 2>: 4.33ns
+ST_2: call_ret1 (42)  [4/5] 4.33ns  loc: firmware/myproject.cpp:58
+:27  %call_ret1 = call fastcc { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } @compute_layer.0.0.0.(i18 %data_0_V_read, i18 %data_1_V_read, i18 %data_2_V_read, i18 %data_3_V_read, i18 %data_4_V_read, i18 %data_5_V_read, i18 %data_6_V_read, i18 %data_7_V_read, i18 %data_8_V_read, i18 %data_9_V_read)
+
+
+ <State 3>: 4.33ns
+ST_3: call_ret1 (42)  [3/5] 4.33ns  loc: firmware/myproject.cpp:58
+:27  %call_ret1 = call fastcc { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } @compute_layer.0.0.0.(i18 %data_0_V_read, i18 %data_1_V_read, i18 %data_2_V_read, i18 %data_3_V_read, i18 %data_4_V_read, i18 %data_5_V_read, i18 %data_6_V_read, i18 %data_7_V_read, i18 %data_8_V_read, i18 %data_9_V_read)
+
+
+ <State 4>: 4.33ns
+ST_4: call_ret1 (42)  [2/5] 4.33ns  loc: firmware/myproject.cpp:58
+:27  %call_ret1 = call fastcc { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } @compute_layer.0.0.0.(i18 %data_0_V_read, i18 %data_1_V_read, i18 %data_2_V_read, i18 %data_3_V_read, i18 %data_4_V_read, i18 %data_5_V_read, i18 %data_6_V_read, i18 %data_7_V_read, i18 %data_8_V_read, i18 %data_9_V_read)
+
+
+ <State 5>: 4.03ns
+ST_5: call_ret1 (42)  [1/5] 4.03ns  loc: firmware/myproject.cpp:58
+:27  %call_ret1 = call fastcc { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } @compute_layer.0.0.0.(i18 %data_0_V_read, i18 %data_1_V_read, i18 %data_2_V_read, i18 %data_3_V_read, i18 %data_4_V_read, i18 %data_5_V_read, i18 %data_6_V_read, i18 %data_7_V_read, i18 %data_8_V_read, i18 %data_9_V_read)
+
+ST_5: logits1_0_V (43)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:28  %logits1_0_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 0
+
+ST_5: logits1_1_V (44)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:29  %logits1_1_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 1
+
+ST_5: logits1_2_V (45)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:30  %logits1_2_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 2
+
+ST_5: logits1_3_V (46)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:31  %logits1_3_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 3
+
+ST_5: logits1_4_V (47)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:32  %logits1_4_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 4
+
+ST_5: logits1_5_V (48)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:33  %logits1_5_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 5
+
+ST_5: logits1_6_V (49)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:34  %logits1_6_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 6
+
+ST_5: logits1_7_V (50)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:35  %logits1_7_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 7
+
+ST_5: logits1_8_V (51)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:36  %logits1_8_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 8
+
+ST_5: logits1_9_V (52)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:37  %logits1_9_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 9
+
+ST_5: logits1_10_V (53)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:38  %logits1_10_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 10
+
+ST_5: logits1_11_V (54)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:39  %logits1_11_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 11
+
+ST_5: logits1_12_V (55)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:40  %logits1_12_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 12
+
+ST_5: logits1_13_V (56)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:41  %logits1_13_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 13
+
+ST_5: logits1_14_V (57)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:42  %logits1_14_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 14
+
+ST_5: logits1_15_V (58)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:43  %logits1_15_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 15
+
+ST_5: logits1_16_V (59)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:44  %logits1_16_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 16
+
+ST_5: logits1_17_V (60)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:45  %logits1_17_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 17
+
+ST_5: logits1_18_V (61)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:46  %logits1_18_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 18
+
+ST_5: logits1_19_V (62)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:47  %logits1_19_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 19
+
+ST_5: logits1_20_V (63)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:48  %logits1_20_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 20
+
+ST_5: logits1_21_V (64)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:49  %logits1_21_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 21
+
+ST_5: logits1_22_V (65)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:50  %logits1_22_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 22
+
+ST_5: logits1_23_V (66)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:51  %logits1_23_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 23
+
+ST_5: logits1_24_V (67)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:52  %logits1_24_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 24
+
+ST_5: logits1_25_V (68)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:53  %logits1_25_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 25
+
+ST_5: logits1_26_V (69)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:54  %logits1_26_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 26
+
+ST_5: logits1_27_V (70)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:55  %logits1_27_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 27
+
+ST_5: logits1_28_V (71)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:56  %logits1_28_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 28
+
+ST_5: logits1_29_V (72)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:57  %logits1_29_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 29
+
+ST_5: logits1_30_V (73)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:58  %logits1_30_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 30
+
+ST_5: logits1_31_V (74)  [1/1] 0.00ns  loc: firmware/myproject.cpp:58
+:59  %logits1_31_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret1, 31
+
+
+ <State 6>: 2.02ns
+ST_6: call_ret2 (75)  [1/1] 2.02ns  loc: firmware/myproject.cpp:59
+:60  %call_ret2 = call fastcc { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } @relu(i18 %logits1_0_V, i18 %logits1_1_V, i18 %logits1_2_V, i18 %logits1_3_V, i18 %logits1_4_V, i18 %logits1_5_V, i18 %logits1_6_V, i18 %logits1_7_V, i18 %logits1_8_V, i18 %logits1_9_V, i18 %logits1_10_V, i18 %logits1_11_V, i18 %logits1_12_V, i18 %logits1_13_V, i18 %logits1_14_V, i18 %logits1_15_V, i18 %logits1_16_V, i18 %logits1_17_V, i18 %logits1_18_V, i18 %logits1_19_V, i18 %logits1_20_V, i18 %logits1_21_V, i18 %logits1_22_V, i18 %logits1_23_V, i18 %logits1_24_V, i18 %logits1_25_V, i18 %logits1_26_V, i18 %logits1_27_V, i18 %logits1_28_V, i18 %logits1_29_V, i18 %logits1_30_V, i18 %logits1_31_V)
+
+ST_6: layer1_out_0_V (76)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:61  %layer1_out_0_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 0
+
+ST_6: layer1_out_1_V (77)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:62  %layer1_out_1_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 1
+
+ST_6: layer1_out_2_V (78)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:63  %layer1_out_2_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 2
+
+ST_6: layer1_out_3_V (79)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:64  %layer1_out_3_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 3
+
+ST_6: layer1_out_4_V (80)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:65  %layer1_out_4_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 4
+
+ST_6: layer1_out_5_V (81)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:66  %layer1_out_5_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 5
+
+ST_6: layer1_out_6_V (82)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:67  %layer1_out_6_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 6
+
+ST_6: layer1_out_7_V (83)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:68  %layer1_out_7_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 7
+
+ST_6: layer1_out_8_V (84)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:69  %layer1_out_8_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 8
+
+ST_6: layer1_out_9_V (85)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:70  %layer1_out_9_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 9
+
+ST_6: layer1_out_10_V (86)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:71  %layer1_out_10_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 10
+
+ST_6: layer1_out_11_V (87)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:72  %layer1_out_11_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 11
+
+ST_6: layer1_out_12_V (88)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:73  %layer1_out_12_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 12
+
+ST_6: layer1_out_13_V (89)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:74  %layer1_out_13_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 13
+
+ST_6: layer1_out_14_V (90)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:75  %layer1_out_14_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 14
+
+ST_6: layer1_out_15_V (91)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:76  %layer1_out_15_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 15
+
+ST_6: layer1_out_16_V (92)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:77  %layer1_out_16_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 16
+
+ST_6: layer1_out_17_V (93)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:78  %layer1_out_17_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 17
+
+ST_6: layer1_out_18_V (94)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:79  %layer1_out_18_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 18
+
+ST_6: layer1_out_19_V (95)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:80  %layer1_out_19_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 19
+
+ST_6: layer1_out_20_V (96)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:81  %layer1_out_20_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 20
+
+ST_6: layer1_out_21_V (97)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:82  %layer1_out_21_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 21
+
+ST_6: layer1_out_22_V (98)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:83  %layer1_out_22_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 22
+
+ST_6: layer1_out_23_V (99)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:84  %layer1_out_23_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 23
+
+ST_6: layer1_out_24_V (100)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:85  %layer1_out_24_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 24
+
+ST_6: layer1_out_25_V (101)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:86  %layer1_out_25_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 25
+
+ST_6: layer1_out_26_V (102)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:87  %layer1_out_26_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 26
+
+ST_6: layer1_out_27_V (103)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:88  %layer1_out_27_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 27
+
+ST_6: layer1_out_28_V (104)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:89  %layer1_out_28_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 28
+
+ST_6: layer1_out_29_V (105)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:90  %layer1_out_29_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 29
+
+ST_6: layer1_out_30_V (106)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:91  %layer1_out_30_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 30
+
+ST_6: layer1_out_31_V (107)  [1/1] 0.00ns  loc: firmware/myproject.cpp:59
+:92  %layer1_out_31_V = extractvalue { i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18, i18 } %call_ret2, 31
+
+
+ <State 7>: 2.64ns
+ST_7: logits2_0_V (108)  [6/6] 2.64ns  loc: firmware/myproject.cpp:63
+:93  %logits2_0_V = call fastcc i18 @compute_layer.0.0.0..1(i18 %layer1_out_0_V, i18 %layer1_out_1_V, i18 %layer1_out_2_V, i18 %layer1_out_3_V, i18 %layer1_out_4_V, i18 %layer1_out_5_V, i18 %layer1_out_6_V, i18 %layer1_out_7_V, i18 %layer1_out_8_V, i18 %layer1_out_9_V, i18 %layer1_out_10_V, i18 %layer1_out_11_V, i18 %layer1_out_12_V, i18 %layer1_out_13_V, i18 %layer1_out_14_V, i18 %layer1_out_15_V, i18 %layer1_out_16_V, i18 %layer1_out_17_V, i18 %layer1_out_18_V, i18 %layer1_out_19_V, i18 %layer1_out_20_V, i18 %layer1_out_21_V, i18 %layer1_out_22_V, i18 %layer1_out_23_V, i18 %layer1_out_24_V, i18 %layer1_out_25_V, i18 %layer1_out_26_V, i18 %layer1_out_27_V, i18 %layer1_out_28_V, i18 %layer1_out_29_V, i18 %layer1_out_30_V, i18 %layer1_out_31_V)
+
+
+ <State 8>: 4.33ns
+ST_8: logits2_0_V (108)  [5/6] 4.33ns  loc: firmware/myproject.cpp:63
+:93  %logits2_0_V = call fastcc i18 @compute_layer.0.0.0..1(i18 %layer1_out_0_V, i18 %layer1_out_1_V, i18 %layer1_out_2_V, i18 %layer1_out_3_V, i18 %layer1_out_4_V, i18 %layer1_out_5_V, i18 %layer1_out_6_V, i18 %layer1_out_7_V, i18 %layer1_out_8_V, i18 %layer1_out_9_V, i18 %layer1_out_10_V, i18 %layer1_out_11_V, i18 %layer1_out_12_V, i18 %layer1_out_13_V, i18 %layer1_out_14_V, i18 %layer1_out_15_V, i18 %layer1_out_16_V, i18 %layer1_out_17_V, i18 %layer1_out_18_V, i18 %layer1_out_19_V, i18 %layer1_out_20_V, i18 %layer1_out_21_V, i18 %layer1_out_22_V, i18 %layer1_out_23_V, i18 %layer1_out_24_V, i18 %layer1_out_25_V, i18 %layer1_out_26_V, i18 %layer1_out_27_V, i18 %layer1_out_28_V, i18 %layer1_out_29_V, i18 %layer1_out_30_V, i18 %layer1_out_31_V)
+
+
+ <State 9>: 4.33ns
+ST_9: logits2_0_V (108)  [4/6] 4.33ns  loc: firmware/myproject.cpp:63
+:93  %logits2_0_V = call fastcc i18 @compute_layer.0.0.0..1(i18 %layer1_out_0_V, i18 %layer1_out_1_V, i18 %layer1_out_2_V, i18 %layer1_out_3_V, i18 %layer1_out_4_V, i18 %layer1_out_5_V, i18 %layer1_out_6_V, i18 %layer1_out_7_V, i18 %layer1_out_8_V, i18 %layer1_out_9_V, i18 %layer1_out_10_V, i18 %layer1_out_11_V, i18 %layer1_out_12_V, i18 %layer1_out_13_V, i18 %layer1_out_14_V, i18 %layer1_out_15_V, i18 %layer1_out_16_V, i18 %layer1_out_17_V, i18 %layer1_out_18_V, i18 %layer1_out_19_V, i18 %layer1_out_20_V, i18 %layer1_out_21_V, i18 %layer1_out_22_V, i18 %layer1_out_23_V, i18 %layer1_out_24_V, i18 %layer1_out_25_V, i18 %layer1_out_26_V, i18 %layer1_out_27_V, i18 %layer1_out_28_V, i18 %layer1_out_29_V, i18 %layer1_out_30_V, i18 %layer1_out_31_V)
+
+
+ <State 10>: 4.33ns
+ST_10: logits2_0_V (108)  [3/6] 4.33ns  loc: firmware/myproject.cpp:63
+:93  %logits2_0_V = call fastcc i18 @compute_layer.0.0.0..1(i18 %layer1_out_0_V, i18 %layer1_out_1_V, i18 %layer1_out_2_V, i18 %layer1_out_3_V, i18 %layer1_out_4_V, i18 %layer1_out_5_V, i18 %layer1_out_6_V, i18 %layer1_out_7_V, i18 %layer1_out_8_V, i18 %layer1_out_9_V, i18 %layer1_out_10_V, i18 %layer1_out_11_V, i18 %layer1_out_12_V, i18 %layer1_out_13_V, i18 %layer1_out_14_V, i18 %layer1_out_15_V, i18 %layer1_out_16_V, i18 %layer1_out_17_V, i18 %layer1_out_18_V, i18 %layer1_out_19_V, i18 %layer1_out_20_V, i18 %layer1_out_21_V, i18 %layer1_out_22_V, i18 %layer1_out_23_V, i18 %layer1_out_24_V, i18 %layer1_out_25_V, i18 %layer1_out_26_V, i18 %layer1_out_27_V, i18 %layer1_out_28_V, i18 %layer1_out_29_V, i18 %layer1_out_30_V, i18 %layer1_out_31_V)
+
+
+ <State 11>: 4.33ns
+ST_11: logits2_0_V (108)  [2/6] 4.33ns  loc: firmware/myproject.cpp:63
+:93  %logits2_0_V = call fastcc i18 @compute_layer.0.0.0..1(i18 %layer1_out_0_V, i18 %layer1_out_1_V, i18 %layer1_out_2_V, i18 %layer1_out_3_V, i18 %layer1_out_4_V, i18 %layer1_out_5_V, i18 %layer1_out_6_V, i18 %layer1_out_7_V, i18 %layer1_out_8_V, i18 %layer1_out_9_V, i18 %layer1_out_10_V, i18 %layer1_out_11_V, i18 %layer1_out_12_V, i18 %layer1_out_13_V, i18 %layer1_out_14_V, i18 %layer1_out_15_V, i18 %layer1_out_16_V, i18 %layer1_out_17_V, i18 %layer1_out_18_V, i18 %layer1_out_19_V, i18 %layer1_out_20_V, i18 %layer1_out_21_V, i18 %layer1_out_22_V, i18 %layer1_out_23_V, i18 %layer1_out_24_V, i18 %layer1_out_25_V, i18 %layer1_out_26_V, i18 %layer1_out_27_V, i18 %layer1_out_28_V, i18 %layer1_out_29_V, i18 %layer1_out_30_V, i18 %layer1_out_31_V)
+
+
+ <State 12>: 3.87ns
+ST_12: logits2_0_V (108)  [1/6] 3.87ns  loc: firmware/myproject.cpp:63
+:93  %logits2_0_V = call fastcc i18 @compute_layer.0.0.0..1(i18 %layer1_out_0_V, i18 %layer1_out_1_V, i18 %layer1_out_2_V, i18 %layer1_out_3_V, i18 %layer1_out_4_V, i18 %layer1_out_5_V, i18 %layer1_out_6_V, i18 %layer1_out_7_V, i18 %layer1_out_8_V, i18 %layer1_out_9_V, i18 %layer1_out_10_V, i18 %layer1_out_11_V, i18 %layer1_out_12_V, i18 %layer1_out_13_V, i18 %layer1_out_14_V, i18 %layer1_out_15_V, i18 %layer1_out_16_V, i18 %layer1_out_17_V, i18 %layer1_out_18_V, i18 %layer1_out_19_V, i18 %layer1_out_20_V, i18 %layer1_out_21_V, i18 %layer1_out_22_V, i18 %layer1_out_23_V, i18 %layer1_out_24_V, i18 %layer1_out_25_V, i18 %layer1_out_26_V, i18 %layer1_out_27_V, i18 %layer1_out_28_V, i18 %layer1_out_29_V, i18 %layer1_out_30_V, i18 %layer1_out_31_V)
+
+
+ <State 13>: 4.20ns
+ST_13: call_ret (109)  [3/3] 4.20ns  loc: firmware/myproject.cpp:64
+:94  %call_ret = call fastcc i10 @sigmoid(i18 %logits2_0_V)
+
+
+ <State 14>: 4.21ns
+ST_14: call_ret (109)  [2/3] 4.21ns  loc: firmware/myproject.cpp:64
+:94  %call_ret = call fastcc i10 @sigmoid(i18 %logits2_0_V)
+
+
+ <State 15>: 2.39ns
+ST_15: StgValue_104 (15)  [1/1] 0.00ns
+:0  call void (...)* @_ssdm_op_SpecBitsMap(i18* %res_0_V), !map !1238
+
+ST_15: StgValue_105 (16)  [1/1] 0.00ns
+:1  call void (...)* @_ssdm_op_SpecBitsMap(i18* %data_9_V), !map !1244
+
+ST_15: StgValue_106 (17)  [1/1] 0.00ns
+:2  call void (...)* @_ssdm_op_SpecBitsMap(i18* %data_8_V), !map !1250
+
+ST_15: StgValue_107 (18)  [1/1] 0.00ns
+:3  call void (...)* @_ssdm_op_SpecBitsMap(i18* %data_7_V), !map !1256
+
+ST_15: StgValue_108 (19)  [1/1] 0.00ns
+:4  call void (...)* @_ssdm_op_SpecBitsMap(i18* %data_6_V), !map !1262
+
+ST_15: StgValue_109 (20)  [1/1] 0.00ns
+:5  call void (...)* @_ssdm_op_SpecBitsMap(i18* %data_5_V), !map !1268
+
+ST_15: StgValue_110 (21)  [1/1] 0.00ns
+:6  call void (...)* @_ssdm_op_SpecBitsMap(i18* %data_4_V), !map !1274
+
+ST_15: StgValue_111 (22)  [1/1] 0.00ns
+:7  call void (...)* @_ssdm_op_SpecBitsMap(i18* %data_3_V), !map !1280
+
+ST_15: StgValue_112 (23)  [1/1] 0.00ns
+:8  call void (...)* @_ssdm_op_SpecBitsMap(i18* %data_2_V), !map !1286
+
+ST_15: StgValue_113 (24)  [1/1] 0.00ns
+:9  call void (...)* @_ssdm_op_SpecBitsMap(i18* %data_1_V), !map !1292
+
+ST_15: StgValue_114 (25)  [1/1] 0.00ns
+:10  call void (...)* @_ssdm_op_SpecBitsMap(i18* %data_0_V), !map !1298
+
+ST_15: StgValue_115 (26)  [1/1] 0.00ns
+:11  call void (...)* @_ssdm_op_SpecBitsMap(i16* %const_size_in), !map !1302
+
+ST_15: StgValue_116 (27)  [1/1] 0.00ns
+:12  call void (...)* @_ssdm_op_SpecBitsMap(i16* %const_size_out), !map !1308
+
+ST_15: StgValue_117 (28)  [1/1] 0.00ns
+:13  call void (...)* @_ssdm_op_SpecTopModule([10 x i8]* @myproject_str) nounwind
+
+ST_15: StgValue_118 (29)  [1/1] 0.00ns  loc: firmware/myproject.cpp:43
+:14  call void (...)* @_ssdm_op_SpecPipeline(i32 -1, i32 1, i32 1, i32 0, [1 x i8]* @p_str5) nounwind
+
+ST_15: StgValue_119 (30)  [1/1] 0.00ns  loc: firmware/myproject.cpp:45
+:15  call void @_ssdm_op_Write.ap_auto.i16P(i16* %const_size_in, i16 10)
+
+ST_15: StgValue_120 (31)  [1/1] 0.00ns  loc: firmware/myproject.cpp:46
+:16  call void @_ssdm_op_Write.ap_auto.i16P(i16* %const_size_out, i16 1)
+
+ST_15: call_ret (109)  [1/3] 2.39ns  loc: firmware/myproject.cpp:64
+:94  %call_ret = call fastcc i10 @sigmoid(i18 %logits2_0_V)
+
+ST_15: p_trunc_ext (110)  [1/1] 0.00ns  loc: firmware/myproject.cpp:64
+:95  %p_trunc_ext = zext i10 %call_ret to i18
+
+ST_15: StgValue_123 (111)  [1/1] 0.00ns  loc: firmware/myproject.cpp:64
+:96  call void @_ssdm_op_Write.ap_auto.i18P(i18* %res_0_V, i18 %p_trunc_ext)
+
+ST_15: StgValue_124 (112)  [1/1] 0.00ns  loc: firmware/myproject.cpp:67
+:97  ret void
+
+
+
+============================================================
++ Verbose Summary: Timing violations
+============================================================
+Target clock period: 5ns, clock uncertainty: 0.625ns.
+
+ <State 1>: 1.57ns
+The critical path consists of the following:
+	wire read on port 'data_0_V' (firmware/myproject.cpp:58) [32]  (0 ns)
+	'call' operation ('call_ret1', firmware/myproject.cpp:58) to 'compute_layer.0.0.0.' [42]  (1.57 ns)
+
+ <State 2>: 4.33ns
+The critical path consists of the following:
+	'call' operation ('call_ret1', firmware/myproject.cpp:58) to 'compute_layer.0.0.0.' [42]  (4.33 ns)
+
+ <State 3>: 4.33ns
+The critical path consists of the following:
+	'call' operation ('call_ret1', firmware/myproject.cpp:58) to 'compute_layer.0.0.0.' [42]  (4.33 ns)
+
+ <State 4>: 4.33ns
+The critical path consists of the following:
+	'call' operation ('call_ret1', firmware/myproject.cpp:58) to 'compute_layer.0.0.0.' [42]  (4.33 ns)
+
+ <State 5>: 4.03ns
+The critical path consists of the following:
+	'call' operation ('call_ret1', firmware/myproject.cpp:58) to 'compute_layer.0.0.0.' [42]  (4.03 ns)
+
+ <State 6>: 2.02ns
+The critical path consists of the following:
+	'call' operation ('call_ret2', firmware/myproject.cpp:59) to 'relu' [75]  (2.02 ns)
+
+ <State 7>: 2.64ns
+The critical path consists of the following:
+	'call' operation ('logits2[0].V', firmware/myproject.cpp:63) to 'compute_layer.0.0.0..1' [108]  (2.64 ns)
+
+ <State 8>: 4.33ns
+The critical path consists of the following:
+	'call' operation ('logits2[0].V', firmware/myproject.cpp:63) to 'compute_layer.0.0.0..1' [108]  (4.33 ns)
+
+ <State 9>: 4.33ns
+The critical path consists of the following:
+	'call' operation ('logits2[0].V', firmware/myproject.cpp:63) to 'compute_layer.0.0.0..1' [108]  (4.33 ns)
+
+ <State 10>: 4.33ns
+The critical path consists of the following:
+	'call' operation ('logits2[0].V', firmware/myproject.cpp:63) to 'compute_layer.0.0.0..1' [108]  (4.33 ns)
+
+ <State 11>: 4.33ns
+The critical path consists of the following:
+	'call' operation ('logits2[0].V', firmware/myproject.cpp:63) to 'compute_layer.0.0.0..1' [108]  (4.33 ns)
+
+ <State 12>: 3.87ns
+The critical path consists of the following:
+	'call' operation ('logits2[0].V', firmware/myproject.cpp:63) to 'compute_layer.0.0.0..1' [108]  (3.87 ns)
+
+ <State 13>: 4.2ns
+The critical path consists of the following:
+	'call' operation ('call_ret', firmware/myproject.cpp:64) to 'sigmoid' [109]  (4.2 ns)
+
+ <State 14>: 4.21ns
+The critical path consists of the following:
+	'call' operation ('call_ret', firmware/myproject.cpp:64) to 'sigmoid' [109]  (4.21 ns)
+
+ <State 15>: 2.39ns
+The critical path consists of the following:
+	'call' operation ('call_ret', firmware/myproject.cpp:64) to 'sigmoid' [109]  (2.39 ns)
+
+
+============================================================
++ Verbose Summary: Binding
+============================================================
+N/A
+* FSMD analyzer results:
+  - Output states:
+ - Input state : 
+  - Chain level:
+	State 1
+	State 2
+	State 3
+	State 4
+	State 5
+	State 6
+	State 7
+	State 8
+	State 9
+	State 10
+	State 11
+	State 12
+	State 13
+	State 14
+	State 15
+
+
+============================================================
++ Verbose Summary: Datapath Resource usage 
+============================================================
+N/A

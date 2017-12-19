@@ -5,6 +5,7 @@ import tarfile
 import json
 import argparse
 import yaml
+import random
 from shutil import copyfile
 
 #######################################
@@ -46,14 +47,30 @@ def print_array_to_cpp(name, a, odir ):
     #fill c++ array.  
     #not including internal brackets for multidimensional case
     i=0;
+    # for x in np.nditer(a, order='C'):
+    #     if i==0:
+    #         f.write("{}".format(x))
+    #     else:
+    #         f.write(", {}".format(x))
+
+    zero_ctr = 0;
     for x in np.nditer(a, order='C'):
-        if i==0:
-            f.write("{}".format(x))
+        if name=="w1" and random.random() < .50:
+            zero_ctr += 1;
+            if i==0:
+                f.write("0")
+            else:
+                f.write(", 0")
         else:
-            f.write(", {}".format(x))
+            if i==0:
+                f.write("{}".format(x))
+            else:
+                f.write(", {}".format(x))
         i=i+1
     f.write("};")
     f.close()
+
+    return zero_ctr;
 
 ############################################################################################
 ## M A I N
@@ -92,6 +109,7 @@ def main():
 
     #Loop through layers
     layer_counter = 0;
+    weights_n_zeros = [];
     for keras_layer in model_arch["config"]["layers"]:
         if keras_layer["class_name"] in skip_layers:
             continue 
@@ -114,8 +132,9 @@ def main():
         #Translate weights and biases from h5 file
         weights = h5File['/{}/{}/kernel:0'.format(layer['name'],layer['name'])][()]
         biases = h5File['/{}/{}/bias:0'.format(layer['name'],layer['name'])][()]
-        print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
+        cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
         print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
+        weights_n_zeros.append( cur_n_zeros );
 
         #Get number of inputs and outputs
         #(We take it from the weights to avoid dealing with InputLayer and Flatten details)
@@ -238,6 +257,7 @@ def main():
         static const unsigned io_type = nnet::{iotype};
         static const unsigned reuse_factor = {reuse};
         static const bool store_weights_in_bram = false;
+        static const unsigned n_zeros = {nzeros};
         typedef accum_default_t accum_t;
         typedef bias_default_t bias_t;
         typedef weight_default_t weight_t;
@@ -292,7 +312,8 @@ def main():
                                                            n_in=layer_in_name, 
                                                            n_out=layer_out_name,
                                                            iotype=yamlConfig["IOType"],
-                                                           reuse=yamlConfig["ReuseFactor"])
+                                                           reuse=yamlConfig["ReuseFactor"],
+                                                           nzeros=weights_n_zeros[i-1])
 
                 newline = newline + activ_config_template.format(type=layer_list[i-1]['activation'],
                                                                  index=str(i), 

@@ -1,0 +1,217 @@
+<profile>
+
+<section name = "Vivado HLS Report for 'myproject'" level="0">
+<item name = "Date">Tue Dec 19 09:24:16 2017
+</item>
+<item name = "Version">2016.4 (Build 1756540 on Mon Jan 23 19:31:01 MST 2017)</item>
+<item name = "Project">myproject_prj</item>
+<item name = "Solution">solution1</item>
+<item name = "Product family">virtex7</item>
+<item name = "Target device">xc7vx690tffg1927-2</item>
+</section>
+
+<section name = "Performance Estimates" level="0">
+<item name = "Timing (ns)">
+<section name = "" level="1">
+<item name = "Target clock period (ns)">5.00</item>
+<item name = "Clock uncertainty (ns)">0.62</item>
+<item name = "Target initiation interval">1</item>
+<item name = "Estimated clock period (ns)">4.33</item>
+</section>
+</item>
+<item name = "Latency (clock cycles)">
+<section name = "" level="1">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="6">, min, max, min, max, Type</keys>
+<column name="">12, 12, 1, 1, function</column>
+</table>
+</item>
+<item name = "Detail">
+<section name = "" level="1">
+<item name = "Instance"><table name="" hasTotal="0">
+<keys size="7">Instance, Module, min, max, min, max, Type</keys>
+<column name="grp_compute_layer_0_0_0_1_fu_145">compute_layer_0_0_0_1, 3, 3, 1, 1, function</column>
+<column name="grp_compute_layer_0_0_0_s_fu_169">compute_layer_0_0_0_s, 4, 4, 1, 1, function</column>
+<column name="call_ret2_relu_fu_205">relu, 0, 0, 1, 1, function</column>
+<column name="grp_sigmoid_fu_241">sigmoid, 2, 2, 1, 1, function</column>
+</table>
+</item>
+<item name = "Loop"><table name="" hasTotal="0">
+<keys size="8">Loop Name, min, max, Latency, achieved, target, Count, Pipelined</keys>
+</table>
+</item>
+</section>
+</item>
+</section>
+</item>
+</section>
+
+<section name = "Utilization Estimates" level="0">
+<item name = "Summary"><table name="" hasTotal="1">
+<keys size="5">Name, BRAM_18K, DSP48E, FF, LUT</keys>
+<column name="DSP">-, -, -, -</column>
+<column name="Expression">-, -, -, -</column>
+<column name="FIFO">-, -, -, -</column>
+<column name="Instance">1, 163, 3585, 4047</column>
+<column name="Memory">-, -, -, -</column>
+<column name="Multiplexer">-, -, -, -</column>
+<column name="Register">-, -, 1184, -</column>
+<specialColumn name="Available">2940, 3600, 866400, 433200</specialColumn>
+<specialColumn name="Utilization (%)">~0, 4, ~0, ~0</specialColumn>
+</table>
+</item>
+<item name = "Detail">
+<section name = "" level="1">
+<item name = "Instance"><table name="" hasTotal="1">
+<keys size="6">Instance, Module, BRAM_18K, DSP48E, FF, LUT</keys>
+<column name="grp_compute_layer_0_0_0_1_fu_145">compute_layer_0_0_0_1, 0, 140, 2893, 2516</column>
+<column name="grp_compute_layer_0_0_0_s_fu_169">compute_layer_0_0_0_s, 0, 23, 675, 659</column>
+<column name="call_ret2_relu_fu_205">relu, 0, 0, 0, 768</column>
+<column name="grp_sigmoid_fu_241">sigmoid, 1, 0, 17, 104</column>
+</table>
+</item>
+<item name = "DSP48"><table name="" hasTotal="0">
+<keys size="3">Instance, Module, Expression</keys>
+</table>
+</item>
+<item name = "Memory"><table name="" hasTotal="1">
+<keys size="9">Memory, Module, BRAM_18K, FF, LUT, Words, Bits, Banks, W*Bits*Banks</keys>
+</table>
+</item>
+<item name = "FIFO"><table name="" hasTotal="1">
+<keys size="7">Name, BRAM_18K, FF, LUT, Depth, Bits, Size:D*B</keys>
+</table>
+</item>
+<item name = "Expression"><table name="" hasTotal="1">
+<keys size="7">Variable Name, Operation, DSP48E, FF, LUT, Bitwidth P0, Bitwidth P1</keys>
+</table>
+</item>
+<item name = "Multiplexer"><table name="" hasTotal="1">
+<keys size="5">Name, LUT, Input Size, Bits, Total Bits</keys>
+</table>
+</item>
+<item name = "Register"><table name="" hasTotal="1">
+<keys size="5">Name, FF, LUT, Bits, Const Bits</keys>
+<column name="ap_CS_fsm">1, 0, 1, 0</column>
+<column name="ap_enable_reg_pp0_iter1">1, 0, 1, 0</column>
+<column name="ap_enable_reg_pp0_iter10">1, 0, 1, 0</column>
+<column name="ap_enable_reg_pp0_iter11">1, 0, 1, 0</column>
+<column name="ap_enable_reg_pp0_iter12">1, 0, 1, 0</column>
+<column name="ap_enable_reg_pp0_iter2">1, 0, 1, 0</column>
+<column name="ap_enable_reg_pp0_iter3">1, 0, 1, 0</column>
+<column name="ap_enable_reg_pp0_iter4">1, 0, 1, 0</column>
+<column name="ap_enable_reg_pp0_iter5">1, 0, 1, 0</column>
+<column name="ap_enable_reg_pp0_iter6">1, 0, 1, 0</column>
+<column name="ap_enable_reg_pp0_iter7">1, 0, 1, 0</column>
+<column name="ap_enable_reg_pp0_iter8">1, 0, 1, 0</column>
+<column name="ap_enable_reg_pp0_iter9">1, 0, 1, 0</column>
+<column name="ap_reg_grp_sigmoid_fu_241_ap_start">1, 0, 1, 0</column>
+<column name="layer1_out_0_V_reg_669">18, 0, 18, 0</column>
+<column name="layer1_out_10_V_reg_719">18, 0, 18, 0</column>
+<column name="layer1_out_11_V_reg_724">18, 0, 18, 0</column>
+<column name="layer1_out_12_V_reg_729">18, 0, 18, 0</column>
+<column name="layer1_out_13_V_reg_734">18, 0, 18, 0</column>
+<column name="layer1_out_14_V_reg_739">18, 0, 18, 0</column>
+<column name="layer1_out_15_V_reg_744">18, 0, 18, 0</column>
+<column name="layer1_out_16_V_reg_749">18, 0, 18, 0</column>
+<column name="layer1_out_17_V_reg_754">18, 0, 18, 0</column>
+<column name="layer1_out_18_V_reg_759">18, 0, 18, 0</column>
+<column name="layer1_out_19_V_reg_764">18, 0, 18, 0</column>
+<column name="layer1_out_1_V_reg_674">18, 0, 18, 0</column>
+<column name="layer1_out_20_V_reg_769">18, 0, 18, 0</column>
+<column name="layer1_out_21_V_reg_774">18, 0, 18, 0</column>
+<column name="layer1_out_22_V_reg_779">18, 0, 18, 0</column>
+<column name="layer1_out_23_V_reg_784">18, 0, 18, 0</column>
+<column name="layer1_out_24_V_reg_789">18, 0, 18, 0</column>
+<column name="layer1_out_25_V_reg_794">18, 0, 18, 0</column>
+<column name="layer1_out_26_V_reg_799">18, 0, 18, 0</column>
+<column name="layer1_out_27_V_reg_804">18, 0, 18, 0</column>
+<column name="layer1_out_28_V_reg_809">18, 0, 18, 0</column>
+<column name="layer1_out_29_V_reg_814">18, 0, 18, 0</column>
+<column name="layer1_out_2_V_reg_679">18, 0, 18, 0</column>
+<column name="layer1_out_30_V_reg_819">18, 0, 18, 0</column>
+<column name="layer1_out_31_V_reg_824">18, 0, 18, 0</column>
+<column name="layer1_out_3_V_reg_684">18, 0, 18, 0</column>
+<column name="layer1_out_4_V_reg_689">18, 0, 18, 0</column>
+<column name="layer1_out_5_V_reg_694">18, 0, 18, 0</column>
+<column name="layer1_out_6_V_reg_699">18, 0, 18, 0</column>
+<column name="layer1_out_7_V_reg_704">18, 0, 18, 0</column>
+<column name="layer1_out_8_V_reg_709">18, 0, 18, 0</column>
+<column name="layer1_out_9_V_reg_714">18, 0, 18, 0</column>
+<column name="logits1_0_V_reg_509">18, 0, 18, 0</column>
+<column name="logits1_10_V_reg_559">18, 0, 18, 0</column>
+<column name="logits1_11_V_reg_564">18, 0, 18, 0</column>
+<column name="logits1_12_V_reg_569">18, 0, 18, 0</column>
+<column name="logits1_13_V_reg_574">18, 0, 18, 0</column>
+<column name="logits1_14_V_reg_579">18, 0, 18, 0</column>
+<column name="logits1_15_V_reg_584">18, 0, 18, 0</column>
+<column name="logits1_16_V_reg_589">18, 0, 18, 0</column>
+<column name="logits1_17_V_reg_594">18, 0, 18, 0</column>
+<column name="logits1_18_V_reg_599">18, 0, 18, 0</column>
+<column name="logits1_19_V_reg_604">18, 0, 18, 0</column>
+<column name="logits1_1_V_reg_514">18, 0, 18, 0</column>
+<column name="logits1_20_V_reg_609">18, 0, 18, 0</column>
+<column name="logits1_21_V_reg_614">18, 0, 18, 0</column>
+<column name="logits1_22_V_reg_619">18, 0, 18, 0</column>
+<column name="logits1_23_V_reg_624">18, 0, 18, 0</column>
+<column name="logits1_24_V_reg_629">18, 0, 18, 0</column>
+<column name="logits1_25_V_reg_634">18, 0, 18, 0</column>
+<column name="logits1_26_V_reg_639">18, 0, 18, 0</column>
+<column name="logits1_27_V_reg_644">18, 0, 18, 0</column>
+<column name="logits1_28_V_reg_649">18, 0, 18, 0</column>
+<column name="logits1_29_V_reg_654">18, 0, 18, 0</column>
+<column name="logits1_2_V_reg_519">18, 0, 18, 0</column>
+<column name="logits1_30_V_reg_659">18, 0, 18, 0</column>
+<column name="logits1_31_V_reg_664">18, 0, 18, 0</column>
+<column name="logits1_3_V_reg_524">18, 0, 18, 0</column>
+<column name="logits1_4_V_reg_529">18, 0, 18, 0</column>
+<column name="logits1_5_V_reg_534">18, 0, 18, 0</column>
+<column name="logits1_6_V_reg_539">18, 0, 18, 0</column>
+<column name="logits1_7_V_reg_544">18, 0, 18, 0</column>
+<column name="logits1_8_V_reg_549">18, 0, 18, 0</column>
+<column name="logits1_9_V_reg_554">18, 0, 18, 0</column>
+<column name="logits2_0_V_reg_829">18, 0, 18, 0</column>
+</table>
+</item>
+</section>
+</item>
+</section>
+
+<section name = "Interface" level="0">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="6">RTL Ports, Dir, Bits, Protocol, Source Object, C Type</keys>
+<column name="ap_clk">in, 1, ap_ctrl_hs, myproject, return value</column>
+<column name="ap_rst">in, 1, ap_ctrl_hs, myproject, return value</column>
+<column name="ap_start">in, 1, ap_ctrl_hs, myproject, return value</column>
+<column name="ap_done">out, 1, ap_ctrl_hs, myproject, return value</column>
+<column name="ap_idle">out, 1, ap_ctrl_hs, myproject, return value</column>
+<column name="ap_ready">out, 1, ap_ctrl_hs, myproject, return value</column>
+<column name="data_0_V">in, 18, ap_none, data_0_V, pointer</column>
+<column name="data_1_V">in, 18, ap_none, data_1_V, pointer</column>
+<column name="data_2_V">in, 18, ap_none, data_2_V, pointer</column>
+<column name="data_3_V">in, 18, ap_none, data_3_V, pointer</column>
+<column name="data_4_V">in, 18, ap_none, data_4_V, pointer</column>
+<column name="data_5_V">in, 18, ap_none, data_5_V, pointer</column>
+<column name="data_6_V">in, 18, ap_none, data_6_V, pointer</column>
+<column name="data_7_V">in, 18, ap_none, data_7_V, pointer</column>
+<column name="data_8_V">in, 18, ap_none, data_8_V, pointer</column>
+<column name="data_9_V">in, 18, ap_none, data_9_V, pointer</column>
+<column name="res_0_V">out, 18, ap_vld, res_0_V, pointer</column>
+<column name="res_0_V_ap_vld">out, 1, ap_vld, res_0_V, pointer</column>
+<column name="const_size_in">out, 16, ap_vld, const_size_in, pointer</column>
+<column name="const_size_in_ap_vld">out, 1, ap_vld, const_size_in, pointer</column>
+<column name="const_size_out">out, 16, ap_vld, const_size_out, pointer</column>
+<column name="const_size_out_ap_vld">out, 1, ap_vld, const_size_out, pointer</column>
+</table>
+</item>
+</section>
+
+<section name = "Critical Path" level="0">
+<item name = "Max Delay">4.33</item>
+<item name = "Critical Path Table"><table name="Critical Path Table" hasTotal="0">
+<keys size="15">Name, Operator, Delay, Accumulated Delay, Store Source, Resource, Core, Interface, Type, Port, Array, Scope, Pointer, Callee, Phi Node</keys>
+<column name="'call_ret1', firmware/myproject.cpp:58">call, 4.33, 4.33, -, -, -, -, -, -, -, -, -, compute_layer.0.0.0..1, -</column>
+</table>
+</item>
+</section>
+</profile>

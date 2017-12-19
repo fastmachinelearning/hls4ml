@@ -1,0 +1,1221 @@
+@I [HLS-0] Workspace /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1 opened at Tue Dec 19 09:28:52 CST 2017
+@I [HLS-100] Command     open_solution returned 0; 0.01 sec.
+@I [HLS-100] Execute     set_part xc7vx690tffg1927-2 
+@I [HLS-100] Execute       add_library xilinx/virtex7/virtex7:xc7vx690t:ffg1927:-2 
+@I [HLS-100] Execute         get_default_platform 
+@I [HLS-100] Command         get_default_platform returned 0; 0 sec.
+@I [HLS-100] Execute         license_isbetapart xc7vx690t 
+@I [HLS-100] Command         license_isbetapart returned 1; 0 sec.
+@I [HLS-100] Execute         open_platform DefaultPlatform 
+@I [HLS-100] Command         open_platform returned 0; 0 sec.
+@I [HLS-100] Execute         import_lib /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/virtex7/virtex7 
+@I [HLS-100] Execute           source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/xilinx.lib 
+@I [HLS-100] Execute             source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/xilinx_interface.lib 
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/plb46.lib 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/fsl.lib 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/axi4.lib 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/maxi.lib 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/saxilite.lib 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Command             ap_source returned 0; 0 sec.
+@I [HLS-100] Execute             source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/dsp48.lib 
+@I [HLS-100] Command             ap_source returned 0; 0 sec.
+@I [HLS-100] Execute             source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/ip/dds_compiler.lib 
+@I [HLS-100] Command             ap_source returned 0; 0 sec.
+@I [HLS-100] Execute             source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/ip/xfft.lib 
+@I [HLS-100] Command             ap_source returned 0; 0 sec.
+@I [HLS-100] Execute             source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/ip/xfir.lib 
+@I [HLS-100] Command             ap_source returned 0; 0 sec.
+@I [HLS-100] Command           ap_source returned 0; 0 sec.
+@I [HLS-100] Execute           source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/xilinx_old.lib 
+@I [HLS-100] Command           ap_source returned 0; 0 sec.
+@I [HLS-100] Execute           source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/xilinx_vivado.lib 
+@I [HLS-100] Command           ap_source returned 0; 0 sec.
+@I [HLS-100] Execute           source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/xilinx.hlp 
+@I [HLS-100] Execute             source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/target_info.tcl 
+@I [HLS-100] Command             ap_source returned 0; 0 sec.
+@I [HLS-100] Execute             source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/xilinx_interface.hlp 
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/maxi.hlp 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/saxilite.hlp 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Command             ap_source returned 0; 0 sec.
+@I [HLS-100] Execute             source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/dsp48.hlp 
+@I [HLS-100] Command             ap_source returned 0; 0 sec.
+@I [HLS-100] Command           ap_source returned 0; 0 sec.
+@I [HLS-100] Execute           source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/virtex7/dsp48e1.hlp 
+@I [HLS-100] Command           ap_source returned 0; 0 sec.
+@I [HLS-100] Execute           get_default_platform 
+@I [HLS-100] Command           get_default_platform returned 0; 0 sec.
+@I [HLS-100] Execute           config_chip_info -quiet -resource  {SLICE 91050 } {LUT 364200 } {FF 728400 } {DSP48E 1260} {BRAM 1590}  
+@I [HLS-100] Command           config_chip_info returned 0; 0 sec.
+@I [HLS-100] Execute           config_chip_info -quiet -speed medium 
+@I [HLS-100] Command           config_chip_info returned 0; 0 sec.
+@I [HLS-100] Command         import_lib returned 0; 0.01 sec.
+@I [HLS-100] Execute         source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/virtex7/virtex7.gen 
+@I [HLS-100] Execute           source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/virtex.gen 
+@I [HLS-100] Execute             source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/xilinx.gen 
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/plb46.gen 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/fsl.gen 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/axi4.gen 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/nativeAXI4.gen 
+@I [HLS-100] Execute                 source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/saxilite.gen 
+@I [HLS-100] Command                 ap_source returned 0; 0.01 sec.
+@I [HLS-100] Execute                 source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/maxi.gen 
+@I [HLS-100] Command                 ap_source returned 0; 0 sec.
+@I [HLS-100] Command               ap_source returned 0; 0.01 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/scripts/xilinxcoregen.gen 
+@I [HLS-100] Command               ap_source returned 0; 0.01 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/XilEDKCoreGen.gen 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/ip/dds_compiler.gen 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/ip/util.gen 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/ip/xfft.gen 
+@I [HLS-100] Command               ap_source returned 0; 0.05 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/ip/xfir.gen 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Command             ap_source returned 0; 0.07 sec.
+@I [HLS-100] Execute             source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/dsp48.gen 
+@I [HLS-100] Command             ap_source returned 0; 0 sec.
+@I [HLS-100] Command           ap_source returned 0; 0.07 sec.
+@I [HLS-100] Command         ap_source returned 0; 0.07 sec.
+@I [HLS-100] Execute         get_default_platform 
+@I [HLS-100] Command         get_default_platform returned 0; 0 sec.
+@I [HLS-100] Execute         config_chip_info -quiet -resource  {SLICE 108300} {LUT 433200 } {FF 866400 } {DSP48E 3600} {BRAM 2940}  
+@I [HLS-100] Command         config_chip_info returned 0; 0 sec.
+@I [HLS-100] Execute         config_chip_info -quiet -speed medium 
+@I [HLS-100] Command         config_chip_info returned 0; 0 sec.
+@I [HLS-100] Command       add_library returned 0; 0.08 sec.
+@I [HLS-100] Execute       add_library xilinx/virtex7/virtex7_fpv6 
+@I [HLS-100] Execute         get_default_platform 
+@I [HLS-100] Command         get_default_platform returned 0; 0 sec.
+@I [HLS-100] Execute         open_platform DefaultPlatform 
+@I [HLS-100] Command         open_platform returned 0; 0 sec.
+@I [HLS-100] Execute         import_lib /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/virtex7/virtex7_fpv6 
+@I [HLS-100] Execute           source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/xilinx_fpv7.lib 
+@I [HLS-100] Execute             source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/xilinx_hp.lib 
+@I [HLS-100] Command             ap_source returned 0; 0 sec.
+@I [HLS-100] Command           ap_source returned 0; 0.01 sec.
+@I [HLS-100] Execute           source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/xilinx_fpv.hlp 
+@I [HLS-100] Execute             source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/xilinx.hlp 
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/target_info.tcl 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/xilinx_interface.hlp 
+@I [HLS-100] Execute                 source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/maxi.hlp 
+@I [HLS-100] Command                 ap_source returned 0; 0 sec.
+@I [HLS-100] Execute                 source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/saxilite.hlp 
+@I [HLS-100] Command                 ap_source returned 0; 0 sec.
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/dsp48.hlp 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Command             ap_source returned 0; 0 sec.
+@I [HLS-100] Command           ap_source returned 0; 0 sec.
+@I [HLS-100] Execute           source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/virtex7/virtex7_hp.hlp 
+@I [HLS-100] Command           ap_source returned 0; 0 sec.
+@I [HLS-100] Command         import_lib returned 0; 0.01 sec.
+@I [HLS-100] Execute         source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/virtex7/virtex7_fpv6.gen 
+@I [HLS-100] Execute           source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/xilinx_fpv6.gen 
+@I [HLS-100] Command           ap_source returned 0; 0 sec.
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-100] Command       add_library returned 0; 0.01 sec.
+@I [HLS-10] Setting target device to 'xc7vx690tffg1927-2'
+@I [HLS-100] Command     set_part returned 0; 0.09 sec.
+@I [HLS-100] Execute     create_clock -period 5 -name default 
+@I [HLS-100] Execute       config_clock -quiet -name default -period 5 -default=false 
+@I [SYN-201] Setting up clock 'default' with a period of 5ns.
+@I [HLS-100] Command       config_clock returned 0; 0 sec.
+@I [HLS-100] Command     create_clock returned 0; 0.01 sec.
+@I [HLS-100] Execute     csim_design 
+@I [SIM-2] *************** CSIM start ***************
+@I [SIM-4] CSIM will launch GCC as the compiler.
+@I [HLS-100] Execute       is_encrypted /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_test.cpp 
+@I [HLS-100] Command       is_encrypted returned 0; 0 sec.
+@I [HLS-100] Execute       is_xip /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_test.cpp 
+@I [HLS-100] Command       is_xip returned 0; 0 sec.
+@I [HLS-100] Execute       is_encrypted /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/firmware/myproject.cpp 
+@I [HLS-100] Command       is_encrypted returned 0; 0 sec.
+@I [HLS-100] Execute       is_xip /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/firmware/myproject.cpp 
+@I [HLS-100] Command       is_xip returned 0; 0 sec.
+@I [HLS-100] Execute       source run_sim.tcl 
+@I [HLS-100] Command       ap_source returned 0; 0 sec.
+@I [SIM-1] CSim done with 0 errors.
+@I [SIM-3] *************** CSIM finish ***************
+@I [HLS-100] Command     csim_design returned 0; 1.52 sec.
+@I [HLS-100] Execute     csynth_design 
+@I [HLS-100] Execute       elaborate -effort=medium -skip_syncheck=0 -keep_printf=0 -lm=0 -skip_cdt=0 -skip_transform=0 -ng=0 -g=0 -opt_fp=0 
+@I [HLS-10] Analyzing design file 'firmware/myproject.cpp' ... 
+@I [HLS-0] Compiling one TU...
+@I [HLS-0] Handling firmware/myproject.cpp as C++
+@I [HLS-0] Syntax Checking before pre-processing...
+@I [HLS-100] Execute         clang  -fno-limit-debug-info -gcc-toolchain "/data/xilinx/Vivado_HLS/2016.4/lnx64/tools/gcc" -hls  -I/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils  -fno-math-errno -c -emit-llvm -O0  -mllvm -disable-llvm-optzns -fno-threadsafe-statics  -fno-use-cxa-atexit  -fno-threadsafe-statics -fno-use-cxa-atexit -Wno-attributes -Wno-gcc-compat   -I "/data/xilinx/Vivado_HLS/2016.4/lnx64/tools/systemc/include" -I "/data/xilinx/Vivado_HLS/2016.4/include" -I "/data/xilinx/Vivado_HLS/2016.4/include/ap_sysc" -fexceptions -I "/data/xilinx/Vivado_HLS/2016.4/common/technology/autopilot" -include etc/autopilot_ssdm_op.h "firmware/myproject.cpp"  -o "/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.pp.00.o" 
+@I [HLS-100] Command         clang returned 0; 0.52 sec.
+@I [HLS-100] Execute         is_encrypted /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.pp.00.o 
+@I [HLS-100] Command         is_encrypted returned 0; 0 sec.
+@I [HLS-0] Source preprocessing
+@I [HLS-100] Execute         clang  -fno-limit-debug-info -gcc-toolchain "/data/xilinx/Vivado_HLS/2016.4/lnx64/tools/gcc" -hls -fno-exceptions  -D__llvm__  -CC -E "firmware/myproject.cpp"   -I/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils  -fno-math-errno -c -emit-llvm -O0  -mllvm -disable-llvm-optzns -fno-threadsafe-statics  -fno-use-cxa-atexit  -fno-threadsafe-statics -fno-use-cxa-atexit -Wno-attributes -Wno-gcc-compat -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I "/data/xilinx/Vivado_HLS/2016.4/common/technology/autopilot" -I "/data/xilinx/Vivado_HLS/2016.4/common/technology/autopilot/ap_sysc" -include etc/autopilot_ssdm_op.h  -o "/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp" 
+@I [HLS-100] Command         clang returned 0; 0.09 sec.
+@I [HLS-0] GCC PP time: 0 seconds per iteration
+@I [HLS-100] Execute         list_core -type functional_unit 
+@I [HLS-100] Command         list_core returned 0; 0 sec.
+@I [HLS-0] CDT Preprocessing...
+@I [HLS-0] Marker-Pragma convertor: /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp.ap-line.cpp /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp.ap-line.cpp.CXX 1
+@I [HLS-0] Converting Markers to Pragmas...
+@I [HLS-100] Execute         cdt  "/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp.ap-line.cpp"  -m "myproject" -o "/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp.ap-cdt.cpp" --pp --directive /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/solution1.directive --source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/firmware/myproject.cpp --error /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db --funcunit "AddSub AddSub_DSP AddSubnS DAddSub_fulldsp DAddSub_nodsp DDiv DExp_fulldsp DExp_meddsp DExp_nodsp DLog_fulldsp DLog_meddsp DLog_nodsp DMul_fulldsp DMul_maxdsp DMul_meddsp DMul_nodsp DRSqrt DRecip DSqrt DivnS FAddSub_fulldsp FAddSub_nodsp FDiv FExp_fulldsp FExp_meddsp FExp_nodsp FLog_fulldsp FLog_meddsp FLog_nodsp FMul_fulldsp FMul_maxdsp FMul_meddsp FMul_nodsp FRSqrt_fulldsp FRSqrt_nodsp FRecip_fulldsp FRecip_nodsp FSqrt HAddSub_nodsp HDiv HMul_fulldsp HMul_maxdsp HMul_nodsp HSqrt Mul Mul2S Mul3S Mul4S Mul5S Mul6S Mul_LUT MulnS MuxnS" --ve --vetcl /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db --ca --es --gf --pd --p2d /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db --sd --scff /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/.systemc_flag --ad 
+@I [HLS-0] Error:Syntax error in source:for (__decltype(__n + 0) __niter = __n;
+Error:Missing ; in source:t
+Error:Syntax error in source:)
+ *__first = __value;
+Error:Syntax error in source:for (__decltype(__n + 0) __niter = __n;
+Error:Missing ; in source:t
+Error:Syntax error in source:)
+ *__first = __tmp;
+@I [HLS-100] Command         cdt returned 0; 4.58 sec.
+@I [HLS-0] Marker-Pragma convertor: /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp.ap-cdt.cpp /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.pragma.0.cpp /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.pragma.0.cpp.ap-line.CXX 0
+@I [HLS-0] Converting Pragmas to Markers...
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/pragma.status.tcl 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-0] Pragma Handling...
+@I [HLS-0] Source preprocessing
+@I [HLS-100] Execute         clang  -fno-limit-debug-info -gcc-toolchain "/data/xilinx/Vivado_HLS/2016.4/lnx64/tools/gcc" -hls -fno-exceptions  -D__llvm__  -CC -E "/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.pragma.1.cpp"   -I/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils  -fno-math-errno -c -emit-llvm -O0  -mllvm -disable-llvm-optzns -fno-threadsafe-statics  -fno-use-cxa-atexit  -fno-threadsafe-statics -fno-use-cxa-atexit -Wno-attributes -Wno-gcc-compat -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I "/data/xilinx/Vivado_HLS/2016.4/common/technology/autopilot" -I "/data/xilinx/Vivado_HLS/2016.4/common/technology/autopilot/ap_sysc" -include etc/autopilot_ssdm_op.h  -o "/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.pragma.2.cpp" 
+@I [HLS-100] Command         clang returned 0; 0.08 sec.
+@I [HLS-0] Processing labels
+@I [HLS-100] Execute         clang  -fno-limit-debug-info -gcc-toolchain /data/xilinx/Vivado_HLS/2016.4/lnx64/tools/gcc -hls -hls-analyze-label -hls-analyze-pragma -fno-exceptions  -D__llvm__  -w  "/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.pragma.2.cpp"  -I/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils  -fno-math-errno -c -emit-llvm -O0  -mllvm -disable-llvm-optzns -fno-threadsafe-statics  -fno-use-cxa-atexit -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I "/data/xilinx/Vivado_HLS/2016.4/common/technology/autopilot" -I "/data/xilinx/Vivado_HLS/2016.4/common/technology/autopilot/ap_sysc" -include etc/autopilot_ssdm_op.h -g -o "/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.g.bc" 
+@I [HLS-100] Command         clang returned 0; 0.47 sec.
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/ve_warning.tcl 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-10] Validating synthesis directives ...
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/pragma.status.tcl 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-111] Finished Checking Pragmas Time (s): cpu = 00:00:17 ; elapsed = 00:00:08 . Memory (MB): peak = 420.965 ; gain = 16.715 ; free physical = 4986 ; free virtual = 47014
+@I [HLS-0] Linking Release ...
+@I [HLS-100] Execute         llvm-ld /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.bc -disable-opt -L/data/xilinx/Vivado_HLS/2016.4/lnx64/lib -lm_basic -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.o 
+@I [HLS-100] Command         llvm-ld returned 0; 1.14 sec.
+@I [HLS-100] Execute         disassemble /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.o 
+@I [HLS-100] Execute           is_encrypted /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.o.bc 
+@I [HLS-100] Command           is_encrypted returned 0; 0 sec.
+@I [HLS-100] Command         disassemble returned 0; 0.69 sec.
+@I [HLS-0] Disassemble time: 0 seconds per iteration
+@I [HLS-0] Linking Debug ...
+@I [HLS-100] Execute         llvm-ld /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.g.bc -disable-opt -L/data/xilinx/Vivado_HLS/2016.4/lnx64/lib -lm_basic -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.g 
+@I [HLS-100] Command         llvm-ld returned 0; 1.09 sec.
+@I [HLS-100] Execute         disassemble /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.g /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.g 
+@I [HLS-100] Execute           is_encrypted /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.g.bc 
+@I [HLS-100] Command           is_encrypted returned 0; 0 sec.
+@I [HLS-100] Command         disassemble returned 0; 0.69 sec.
+@I [HLS-0] Disassemble time: 0 seconds per iteration
+@I [HLS-111] Finished Linking Time (s): cpu = 00:00:21 ; elapsed = 00:00:12 . Memory (MB): peak = 420.965 ; gain = 16.715 ; free physical = 4916 ; free virtual = 47043
+@I [HLS-100] Execute         opt_and_import_c a -opt_level=2 -skip_syncheck=0 -ng=0 -keep_printf=0 
+@I [HLS-100] Execute           cleanup_all_models 
+@I [HLS-100] Command           cleanup_all_models returned 0; 0 sec.
+@I [HLS-10] Starting code transformations ...
+@I [HLS-100] Execute           transform -promote-dbg-pointer /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.pp.bc -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.pp.0.bc -f 
+@I [HLS-100] Command           transform returned 0; 0.47 sec.
+@I [HLS-100] Execute           llvm-ld /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.pp.0.bc -disable-opt -L/data/xilinx/Vivado_HLS/2016.4/lnx64/lib -lfloatconversion -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.g.0 
+@I [HLS-100] Command           llvm-ld returned 0; 1.77 sec.
+@I [HLS-0] Running Standard Transforms...
+@I [HLS-100] Execute           transform -hls -share-std-xform -always-inline -promote-dbg-pointer -interface-preproc -scalarrepl -mem2reg -keep-read-access -instcombine -dce -promote-dbg-pointer -bitop-raise -indvarspre -indvars -loop-simplify -xunroll -constprop -instcombine -simplifycfg -indvars -simplifycfg -dce -globaldce -basicaa -simplifycfg -mem2reg -globalopt -global-constprop -deadargelim -instcombine -simplifycfg -prune-eh -simplifycfg -scalarrepl -instcombine -reassociate -licm -simplifycfg -loop-simplify -indvars -instcombine -simplifycfg -mem2reg -loop-simplify -indvars -instcombine -gvn -gvn -instcombine -adce -break-crit-edges -simplifycfg -loop-delete -global-array-opt -dce -dse -adce -find-syn-modules -top myproject -deadargelim -mem2reg -instcombine -dce -presyn-prepare -auto-rom-infer -interface-preproc -syn-check -check-rec-only -find-region -simplifycfg -func-extr -function-inline -globaldce -mem2reg -instcombine -dce -gvn -globaldce -adce -adse -constprop -instcombine -bit-constprop -instcombine -dce -simplifycfg -bitop-raise -simplifycfg -dce -loop-delete -reassociate -globalopt -global-privatize -mem2reg -dce -global-constprop -pointer-simplify -constprop -dce -func-inst -deadargelim -promote-dbg-pointer -norm-name /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.g.0.bc -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.g.1.bc -f -phase std-opt 
+@I [XFORM-603] Inlining function 'ap_fixed_base<136, 84, false, (ap_q_mode)5, (ap_o_mode)3, 0>::operator<<' into 'hls::cast_IEEE754<int, double>' (/wrk/2016.4/nightly/2017_01_23_1756540/src/products/hls/hls_lib/src/hls/hls_round.h:371).
+@I [XFORM-603] Inlining function 'ap_fixed_base<1, 33, false, (ap_q_mode)5, (ap_o_mode)0, 0>::overflow_adjust' into 'ap_fixed_base<1, 33, false, (ap_q_mode)5, (ap_o_mode)0, 0>::ap_fixed_base<84, 84, false, (ap_q_mode)5, (ap_o_mode)3, 0>' ().
+@I [HLS-100] Command           transform returned 0; 2.4 sec.
+@I [HLS-100] Execute           disassemble /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.g.1 /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.g.1 
+@I [HLS-100] Execute             is_encrypted /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.g.1.bc 
+@I [HLS-100] Command             is_encrypted returned 0; 0 sec.
+@I [HLS-100] Command           disassemble returned 0; 0.71 sec.
+@I [HLS-111] Finished Standard Transforms Time (s): cpu = 00:00:26 ; elapsed = 00:00:17 . Memory (MB): peak = 755.047 ; gain = 350.797 ; free physical = 4536 ; free virtual = 46739
+@I [HLS-10] Checking synthesizability ...
+@I [HLS-0] Checking Synthesizability 1/2..
+@I [HLS-100] Execute           transform -hls -syn-check -check-rec-only -disaggr -scalarrepl -norm-name -dce -mem2reg -instcombine -function-uniquify -directive-preproc -mem2reg -dse -dce -auto-rom-infer -dce -array-normalize -instcombine -dce -array-seg-normalize -instcombine -dce -array-flatten -instcombine -dce -array-burst -dce -deadargelim -promote-global-argument -simplifycfg -mem2reg -globaldce -resolve-double-ptr -dce -deadargelim -dce -instcombine -function-inline -globaldce -dce -doublePtrSimplify -doublePtrElim -dce -doublePtrSimplify -promote-dbg-pointer -dce -scalarrepl -dse -adse -instcombine -ptrLegalization -simplifycfg -dce -instcombine -pointer-simplify -ptrArgReplace -dce -instcombine -disaggr -scalarrepl -norm-name -dce -mem2reg -instcombine -ptrLegalization -simplifycfg -deadargelim -instcombine -dce -inst-simplify -function-uniquify -directive-preproc -mem2reg -dse -dce -globaldce /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.g.1.bc -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.g.2.prechk.bc -f 
+@I [XFORM-602] Inlining function 'fp_struct<double>::mantissa' into 'hls::cast_IEEE754<int, double>' (/wrk/2016.4/nightly/2017_01_23_1756540/src/products/hls/hls_lib/src/hls/hls_round.h:368) automatically.
+@I [XFORM-602] Inlining function 'fp_struct<double>::expv' into 'hls::cast_IEEE754<int, double>' (/wrk/2016.4/nightly/2017_01_23_1756540/src/products/hls/hls_lib/src/hls/hls_round.h:371) automatically.
+@I [XFORM-602] Inlining function 'fp_struct<double>::__signbit' into 'hls::cast_IEEE754<int, double>' (/wrk/2016.4/nightly/2017_01_23_1756540/src/products/hls/hls_lib/src/hls/hls_round.h:383) automatically.
+@I [XFORM-602] Inlining function 'hls::cast_IEEE754<int, double>' into '__hls_fptosi_double_i32' (/wrk/2016.4/nightly/2017_01_23_1756540/src/products/hls/hls_lib/src/lib_floatconversion.cpp:43) automatically.
+@I [XFORM-602] Inlining function '__hls_fptosi_double_i32' into 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:72) automatically.
+@I [XFORM-602] Inlining function '__hls_fptosi_double_i32' into 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:72) automatically.
+@I [HLS-100] Command           transform returned 0; 0.65 sec.
+@I [HLS-0] Checking Synthesizability 2/2..
+@I [HLS-100] Execute           transform -syn-check /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.g.2.prechk.bc -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.g.2.bc -f -phase syn-check 
+@I [HLS-100] Command           transform returned 0; 0.23 sec.
+@I [HLS-111] Finished Checking Synthesizability Time (s): cpu = 00:00:27 ; elapsed = 00:00:18 . Memory (MB): peak = 814.609 ; gain = 410.359 ; free physical = 4490 ; free virtual = 46700
+@I [HLS-0] Compiler optimizing ...
+@I [HLS-0] Share syncheck's 1.bc for syn flow: copy /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.g.1.bc to /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.o.1.bc
+@I [HLS-0] Presyn 1...
+@I [HLS-100] Execute           transform -hls -tmp /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db -interface-port-rename -type-info -function-uniquify -directive-preproc -mem2reg -dse -dce -disaggr -scalarrepl -norm-name -deadargelim -mem2reg -instcombine -dce -auto-rom-infer -dce -function-uniquify -resource-proc -simplifycfg -mem2reg -globaldce -resolve-double-ptr -dce -deadargelim -dce -instcombine -clib-intrinsic-prepare -dce -func-buffer -dce -array-normalize -func-legal -instcombine -gvn -constprop -dce -ptrArgReplace -mem2reg -instcombine -dce -array-seg-normalize -deadargelim -instcombine -dce -pointer-simplify -dce -port-alignment -dce -interface-preproc -data-pack -instcombine -dce -basicaa -aggr-aa -aggrmodref-aa -aggr-aa -gvn -gvn -basicaa -aggr-aa -aggrmodref-aa -aggr-aa -dse -adse -adce -loop-simplify -indvars -instcombine -gvn -loop-simplify -mem2reg -dce -simplifycfg -find-region -instcombine -auto-loop-pipeline -inst-simplify -interface-preproc -cfgopt -instcombine -indvars -auto-loop-unroll -loop-simplify -loop-bound -xunroll -constprop -instcombine -simplifycfg -indvars -simplifycfg -dce -globaldce -clean-region -attach-range -gvn -inst-simplify -constprop -simplifycfg -dce -pointer-simplify -dce -globalopt -constprop -dce -array-promote -constprop -instcombine -dce -ptrArgReplace -mem2reg -instcombine -simplifycfg -dce -auto-par -instcombine -dce -array-transform-check -array-reshape -instcombine -simplifycfg -dce -ptrArgReplace -deadargelim -mem2reg -instcombine -simplifycfg -dce -indvars -loop-simplify -loop-bound -xunroll -constprop -instcombine -simplifycfg -indvars -simplifycfg -dce -globaldce -duplicate-dataflow-processes -globaldce -instcombine -array-partition -instcombine -simplifycfg -dce -ptrArgReplace -global-constprop -deadargelim -mem2reg -func-legal -instcombine -dce -global-constprop -deadargelim -mem2reg -instcombine -simplifycfg -dce -globalopt -constprop -dce -array-promote -constprop -instcombine -dce -ptrArgReplace -mem2reg -instcombine -simplifycfg -dce -mem-intrinsic-preproc -dce -global-privatize -mem2reg -globaldce -promote-global-argument -ptrArgReplace -mem2reg -instcombine -dce -globalopt -mergereturn -simplify-global-access -mem2reg -dce -pointer-simplify -dce -functionattrs -basicaa -aggr-aa -aggrmodref-aa -aggr-aa -gvn -gvn -basicaa -aggr-aa -aggrmodref-aa -aggr-aa -dse -adse -adce -inst-simplify -dce -norm-name -function-inline -globaldce -func-inst -constprop -instcombine -simplifycfg -dce -func-legal -dce -loop-bound -arraycheck -bitwidthmin -on-by-dataflow -loop-delete -instcombine -simplifycfg -globaldce -dce -gvn -deadargelim -dce -loop-simplify -clean-region -simplifycfg -propagate-stable-arguments -loop-stream -instcombine -simplifycfg -dce -globaldce -stream-intrinsic-preproc -dce -check-ap-stream -loop-simplify -eliminate-keepreads -extract-dataflow-in-loop -loop-simplify -dce -gvn -deadargelim -dse -check-dataflow-syntax -legalize-stream-variable -legalize-global -extract-subproc -dce -dead-channel-elimination -canonicalize-gep -globaldce -dce -gvn -deadargelim -annotate-dataflow-channels -scalar-propagation -deadargelim -globaldce -mem2reg -check-dataflow-channels -function-stream -dce -globaldce -prop-fifo-spec -internal-stream-gen -canonicalize-gep -globaldce -dce -gvn -deadargelim -mergereturn -indvars -loop-simplify -instcombine -array-stream -array-seg-normalize -array-partition -func-legal -instcombine -simplifycfg -dce -bundle-memfifo-ops -deadargelim -function-uniquify -directive-preproc -mem2reg -dse -dce -group-axi-access -licm -simplifycfg -dce -loop-delete -norm-name /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.o.1.bc -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.o.1.tmp.bc -f 
+@I [XFORM-502] Unrolling all loops for pipelining in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56:50).
+@I [XFORM-502] Unrolling all loops for pipelining in function 'nnet::relu<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:49:39).
+@I [XFORM-502] Unrolling all loops for pipelining in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56:55).
+@I [XFORM-501] Unrolling loop 'Product1' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:82) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' completely.
+@I [XFORM-501] Unrolling loop 'Accum1' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:95) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' completely.
+@I [XFORM-501] Unrolling loop 'Loop-1' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:54) in function 'nnet::relu<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' completely.
+@I [XFORM-501] Unrolling loop 'Product1' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:82) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+@I [XFORM-501] Unrolling loop 'Product2' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:84) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+@I [XFORM-501] Unrolling loop 'ResetAccum' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:90) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+@I [XFORM-501] Unrolling loop 'Accum1' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:95) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+@I [XFORM-501] Unrolling loop 'Accum2' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:96) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+@I [XFORM-501] Unrolling loop 'Result' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:102) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+@I [XFORM-101] Partitioning array 'data.V' (firmware/myproject.cpp:33) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'res.V' (firmware/myproject.cpp:34) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'layer1_out.V' (firmware/myproject.cpp:54) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'logits1.V' (firmware/myproject.cpp:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'logits2.V' (firmware/myproject.cpp:61) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'w2.V'  in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'b2.V'  in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'acc.V' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:57) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'w1.V'  in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'b1.V'  in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'acc.V' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:57) in dimension 1 completely.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.0' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.1' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.2' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.3' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.4' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.5' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.6' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.7' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.8' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.9' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.10' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.11' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.12' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.13' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.14' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.15' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.16' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.17' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.18' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.19' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.20' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.21' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.22' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.23' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.24' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.25' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.26' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.27' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.28' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.29' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.30' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-102] Automatically partitioning small array 'mult.V.31' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) completely based on array size.
+@I [XFORM-101] Partitioning array 'mult.V.0' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.1' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.2' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.3' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.4' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.5' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.6' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.7' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.8' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.9' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.10' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.11' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.12' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.13' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.14' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.15' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.16' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.17' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.18' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.19' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.20' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.21' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.22' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.23' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.24' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.25' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.26' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.27' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.28' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.29' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.30' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-101] Partitioning array 'mult.V.31' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+@I [XFORM-102] Partitioning array 'mult.V.0' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) automatically.
+@I [XFORM-102] Partitioning array 'mult.V.1' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) automatically.
+@I [XFORM-102] Partitioning array 'mult.V.2' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) automatically.
+@I [XFORM-102] Partitioning array 'mult.V.3' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) automatically.
+@I [XFORM-102] Partitioning array 'mult.V.4' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) automatically.
+@I [XFORM-102] Partitioning array 'mult.V.5' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) automatically.
+@I [XFORM-102] Partitioning array 'mult.V.6' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) automatically.
+@I [XFORM-102] Partitioning array 'mult.V.7' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) automatically.
+@I [XFORM-102] Partitioning array 'mult.V.8' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) automatically.
+@I [XFORM-102] Partitioning array 'mult.V.9' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:56) automatically.
+@I [XFORM-602] Inlining function 'fp_struct<double>::mantissa' into 'hls::cast_IEEE754<int, double>' (/wrk/2016.4/nightly/2017_01_23_1756540/src/products/hls/hls_lib/src/hls/hls_round.h:368) automatically.
+@I [XFORM-602] Inlining function 'fp_struct<double>::expv' into 'hls::cast_IEEE754<int, double>' (/wrk/2016.4/nightly/2017_01_23_1756540/src/products/hls/hls_lib/src/hls/hls_round.h:371) automatically.
+@I [XFORM-602] Inlining function 'fp_struct<double>::__signbit' into 'hls::cast_IEEE754<int, double>' (/wrk/2016.4/nightly/2017_01_23_1756540/src/products/hls/hls_lib/src/hls/hls_round.h:383) automatically.
+@I [XFORM-602] Inlining function 'hls::cast_IEEE754<int, double>' into '__hls_fptosi_double_i32' (/wrk/2016.4/nightly/2017_01_23_1756540/src/products/hls/hls_lib/src/lib_floatconversion.cpp:43) automatically.
+@I [XFORM-602] Inlining function '__hls_fptosi_double_i32' into 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:72) automatically.
+@I [XFORM-602] Inlining function '__hls_fptosi_double_i32' into 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:72) automatically.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0' at call site (firmware/myproject.cpp:63) by setting 'weights[0].V' to 'w2.V.0'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[1].V' to 'w2.V.1'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[2].V' to 'w2.V.2'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[3].V' to 'w2.V.3'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[4].V' to 'w2.V.4'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[5].V' to 'w2.V.5'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[6].V' to 'w2.V.6'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[7].V' to 'w2.V.7'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[8].V' to 'w2.V.8'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[9].V' to 'w2.V.9'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[10].V' to 'w2.V.10'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[11].V' to 'w2.V.11'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[12].V' to 'w2.V.12'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[13].V' to 'w2.V.13'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[14].V' to 'w2.V.14'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[15].V' to 'w2.V.15'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[16].V' to 'w2.V.16'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[17].V' to 'w2.V.17'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[18].V' to 'w2.V.18'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[19].V' to 'w2.V.19'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[20].V' to 'w2.V.20'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[21].V' to 'w2.V.21'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[22].V' to 'w2.V.22'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[23].V' to 'w2.V.23'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[24].V' to 'w2.V.24'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[25].V' to 'w2.V.25'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[26].V' to 'w2.V.26'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[27].V' to 'w2.V.27'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[28].V' to 'w2.V.28'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[29].V' to 'w2.V.29'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[30].V' to 'w2.V.30'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'weights[31].V' to 'w2.V.31'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:63) by setting 'biases.V' to 'b2.V.0'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0' at call site (firmware/myproject.cpp:58) by setting 'weights[0].V' to 'w1.V.0'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0' at call site (firmware/myproject.cpp:58) by setting 'weights[1].V' to 'w1.V.1'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'weights[2].V' to 'w1.V.2'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'weights[3].V' to 'w1.V.3'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'weights[4].V' to 'w1.V.4'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'weights[5].V' to 'w1.V.5'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'weights[6].V' to 'w1.V.6'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'weights[7].V' to 'w1.V.7'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'weights[8].V' to 'w1.V.8'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'weights[9].V' to 'w1.V.9'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[0].V' to 'b1.V.0'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[1].V' to 'b1.V.1'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[2].V' to 'b1.V.2'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[3].V' to 'b1.V.3'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[4].V' to 'b1.V.4'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[5].V' to 'b1.V.5'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[6].V' to 'b1.V.6'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[7].V' to 'b1.V.7'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[8].V' to 'b1.V.8'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[9].V' to 'b1.V.9'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[10].V' to 'b1.V.10'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[11].V' to 'b1.V.11'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[12].V' to 'b1.V.12'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[13].V' to 'b1.V.13'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[14].V' to 'b1.V.14'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[15].V' to 'b1.V.15'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[16].V' to 'b1.V.16'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[17].V' to 'b1.V.17'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[18].V' to 'b1.V.18'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[19].V' to 'b1.V.19'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[20].V' to 'b1.V.20'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[21].V' to 'b1.V.21'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[22].V' to 'b1.V.22'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[23].V' to 'b1.V.23'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[24].V' to 'b1.V.24'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[25].V' to 'b1.V.25'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[26].V' to 'b1.V.26'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[27].V' to 'b1.V.27'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[28].V' to 'b1.V.28'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[29].V' to 'b1.V.29'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[30].V' to 'b1.V.30'.
+@I [XFORM-622] Instantiating function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'(/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28) to 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:58) by setting 'biases[31].V' to 'b1.V.31'.
+@I [HLS-100] Command           transform returned 0; 2.38 sec.
+@I [HLS-0] Presyn 2...
+@I [HLS-100] Execute           transform -hls -keep-callgraph -scalarrepl -mem2reg -port-alignment -attach-range -dce -pipe-mux-gen -indvars -loop-bound -inst-simplify -instcombine -dce -merge-array-access -mem2reg -dce -clean-region -mergereturn -if-conv -instcombine -dce -constprop -basicaa -aggr-aa -aggrmodref-aa -aggr-aa -gvn -gvn -basicaa -aggr-aa -aggrmodref-aa -aggr-aa -dse -adse -adce -scalarrepl -mem2reg -global-constprop -deadargelim -deadargelim -instcombine -dce -simplifycfg -ptrArgReplace -mem2reg -function-inline -globaldce -mem2reg -instcombine -dce -expr-balance -instcombine -dce -bitwidthmin -interface-preproc -directive-preproc -inst-rectify -instcombine -dce -functionattrs -constprop -instcombine -bit-constprop -simplify-global-access -globalopt -globaldce -inst-simplify -instcombine -elimdeaddata -dce -loop-delete -simplifycfg -loop-simplify -auto-burst -norm-name /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.o.1.tmp.bc -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.o.2.bc -f -phase presyn 
+@I [XFORM-401] Performing if-conversion on hyperblock from (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:109:21) to (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:131:1) in function 'nnet::sigmoid<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, sigmoid_config2>'... converting 3 basic blocks.
+@I [XFORM-11] Balancing expressions in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1)...32 expression(s) balanced.
+@I [XFORM-11] Balancing expressions in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:28)...165 expression(s) balanced.
+@I [HLS-100] Command           transform returned 0; 0.45 sec.
+@I [HLS-100] Execute           disassemble /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.o.2 /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.o.2 
+@I [HLS-100] Execute             is_encrypted /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.o.2.bc 
+@I [HLS-100] Command             is_encrypted returned 0; 0 sec.
+@I [HLS-100] Command           disassemble returned 0; 0.08 sec.
+@I [HLS-111] Finished Pre-synthesis Time (s): cpu = 00:00:29 ; elapsed = 00:00:21 . Memory (MB): peak = 932.961 ; gain = 528.711 ; free physical = 4297 ; free virtual = 46560
+@I [HLS-0] Building ssdm...
+@I [HLS-100] Execute           transform -hls -function-uniquify -auto-function-inline -globaldce -ptrArgReplace -mem2reg -instcombine -dce -reset-lda -loop-simplify -indvars -licm -loop-dep -loop-bound -licm -loop-simplify -flattenloopnest -array-flatten -gvn -instcombine -dce -array-map -dce -func-legal -gvn -adce -instcombine -cfgopt -simplifycfg -loop-simplify -array-burst -promote-global-argument -dce -axi4-lower -array-seg-normalize -basicaa -aggrmodref-aa -globalsmodref-aa -aggr-aa -gvn -gvn -basicaa -aggrmodref-aa -globalsmodref-aa -aggr-aa -dse -adse -adce -licm -inst-simplify -dce -globaldce -instcombine -array-stream -eliminate-keepreads -instcombine -dce -deadargelim -doublePtrSimplify -doublePtrElim -dce -doublePtrSimplify -promote-dbg-pointer -dce -scalarrepl -mem2reg -disaggr -norm-name -mem2reg -instcombine -dse -adse -adce -ptrLegalization -dce -auto-rom-infer -array-flatten -dce -instcombine -loop-rot -constprop -cfgopt -simplifycfg -loop-simplify -indvars -pointer-simplify -dce -loop-bound -loop-simplify -loop-preproc -constprop -global-constprop -gvn -mem2reg -instcombine -dce -loop-bound -loop-merge -dce -bitwidthmin -deadargelim -dce -canonicalize-dataflow -dce -scalar-propagation -deadargelim -globaldce -mem2reg -interface-preproc -interface-gen -deadargelim -directive-preproc -inst-simplify -dce -gvn -mem2reg -instcombine -dce -adse -loop-bound -instcombine -cfgopt -simplifycfg -loop-simplify -clean-region -io-protocol -find-region -mem2reg -bitop-raise -inst-simplify -inst-rectify -instcombine -adce -deadargelim -loop-simplify -phi-opt -bitop-raise -cfgopt -simplifycfg -strip-dead-prototypes -interface-lower -bitop-lower -intrinsic-lower -auto-function-inline -basicaa -aggrmodref-aa -globalsmodref-aa -aggr-aa -inst-simplify -simplifycfg -loop-simplify -mergereturn -inst-simplify -inst-rectify -dce -bitop-lower -loop-rewind -pointer-simplify -dce -cfgopt -read-loop-dep -dce -bitwidth -loop-dep -norm-name -legalize -cdfg-build /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.o.2.bc -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.o.3.bc -f -phase build-ssdm 
+@W [XFORM-631] Renaming function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:13) into compute_layer.0.0.0..
+@W [XFORM-631] Renaming function 'nnet::relu<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:49:1) into relu.
+@W [XFORM-631] Renaming function 'nnet::sigmoid<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, sigmoid_config2>' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:115:1) into sigmoid.
+@W [XFORM-631] Renaming function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' (/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_layer.h:62:1) into compute_layer.0.0.0..1.
+@I [HLS-100] Command           transform returned 0; 1.38 sec.
+@I [HLS-100] Execute           disassemble /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.o.3 /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.o.3 
+@I [HLS-100] Execute             is_encrypted /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.o.3.bc 
+@I [HLS-100] Command             is_encrypted returned 0; 0 sec.
+@I [HLS-100] Command           disassemble returned 0; 0.05 sec.
+@I [HLS-111] Finished Architecture Synthesis Time (s): cpu = 00:00:31 ; elapsed = 00:00:23 . Memory (MB): peak = 964.965 ; gain = 560.715 ; free physical = 4266 ; free virtual = 46532
+@I [HLS-0] Finish building internal data model.
+@I [HLS-100] Command         opt_and_import_c returned 0; 10.61 sec.
+@I [HLS-100] Command       elaborate returned 0; 20.8 sec.
+@I [HLS-100] Execute       autosyn 
+@I [HLS-10] Starting hardware synthesis ...
+@I [HLS-0] Synthesizing C/C++ design ...
+@I [HLS-10] Synthesizing 'myproject' ...
+@I [HLS-100] Execute         ap_set_top_model myproject 
+@W [SYN-103] Legalizing function name 'compute_layer.0.0.0.' to 'compute_layer_0_0_0_s'.
+@W [SYN-103] Legalizing function name 'compute_layer.0.0.0..1' to 'compute_layer_0_0_0_1'.
+@I [HLS-100] Command         ap_set_top_model returned 0; 0 sec.
+@I [HLS-100] Execute         get_model_list myproject -filter all-wo-channel -topdown 
+@I [HLS-100] Command         get_model_list returned 0; 0 sec.
+@I [HLS-100] Execute         preproc_iomode -model myproject 
+@I [HLS-100] Command         preproc_iomode returned 0; 0 sec.
+@I [HLS-100] Execute         preproc_iomode -model sigmoid 
+@I [HLS-100] Command         preproc_iomode returned 0; 0 sec.
+@I [HLS-100] Execute         preproc_iomode -model compute_layer.0.0.0..1 
+@I [HLS-100] Command         preproc_iomode returned 0; 0 sec.
+@I [HLS-100] Execute         preproc_iomode -model relu 
+@I [HLS-100] Command         preproc_iomode returned 0; 0 sec.
+@I [HLS-100] Execute         preproc_iomode -model compute_layer.0.0.0. 
+@I [HLS-100] Command         preproc_iomode returned 0; 0 sec.
+@I [HLS-100] Execute         get_model_list myproject -filter all-wo-channel 
+@I [HLS-100] Command         get_model_list returned 0; 0 sec.
+@I [HLS-0] Model list for configure: compute_layer.0.0.0. relu compute_layer.0.0.0..1 sigmoid myproject
+@I [HLS-0] Configuring Module : compute_layer.0.0.0. ...
+@I [HLS-100] Execute         set_default_model compute_layer.0.0.0. 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         apply_spec_resource_limit compute_layer.0.0.0. 
+@I [HLS-100] Command         apply_spec_resource_limit returned 0; 0 sec.
+@I [HLS-0] Configuring Module : relu ...
+@I [HLS-100] Execute         set_default_model relu 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         apply_spec_resource_limit relu 
+@I [HLS-100] Command         apply_spec_resource_limit returned 0; 0 sec.
+@I [HLS-0] Configuring Module : compute_layer.0.0.0..1 ...
+@I [HLS-100] Execute         set_default_model compute_layer.0.0.0..1 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         apply_spec_resource_limit compute_layer.0.0.0..1 
+@I [HLS-100] Command         apply_spec_resource_limit returned 0; 0 sec.
+@I [HLS-0] Configuring Module : sigmoid ...
+@I [HLS-100] Execute         set_default_model sigmoid 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         apply_spec_resource_limit sigmoid 
+@I [HLS-100] Command         apply_spec_resource_limit returned 0; 0 sec.
+@I [HLS-0] Configuring Module : myproject ...
+@I [HLS-100] Execute         set_default_model myproject 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         apply_spec_resource_limit myproject 
+@I [HLS-100] Command         apply_spec_resource_limit returned 0; 0 sec.
+@I [HLS-0] Model list for preprocess: compute_layer.0.0.0. relu compute_layer.0.0.0..1 sigmoid myproject
+@I [HLS-0] Preprocessing Module: compute_layer.0.0.0. ...
+@I [HLS-100] Execute         set_default_model compute_layer.0.0.0. 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         cdfg_preprocess -model compute_layer.0.0.0. 
+@I [HLS-100] Command         cdfg_preprocess returned 0; 0 sec.
+@I [HLS-100] Execute         rtl_gen_preprocess compute_layer.0.0.0. 
+@I [HLS-100] Command         rtl_gen_preprocess returned 0; 0 sec.
+@I [HLS-0] Preprocessing Module: relu ...
+@I [HLS-100] Execute         set_default_model relu 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         cdfg_preprocess -model relu 
+@I [HLS-100] Command         cdfg_preprocess returned 0; 0 sec.
+@I [HLS-100] Execute         rtl_gen_preprocess relu 
+@I [HLS-100] Command         rtl_gen_preprocess returned 0; 0 sec.
+@I [HLS-0] Preprocessing Module: compute_layer.0.0.0..1 ...
+@I [HLS-100] Execute         set_default_model compute_layer.0.0.0..1 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         cdfg_preprocess -model compute_layer.0.0.0..1 
+@I [HLS-100] Command         cdfg_preprocess returned 0; 0.01 sec.
+@I [HLS-100] Execute         rtl_gen_preprocess compute_layer.0.0.0..1 
+@I [HLS-100] Command         rtl_gen_preprocess returned 0; 0 sec.
+@I [HLS-0] Preprocessing Module: sigmoid ...
+@I [HLS-100] Execute         set_default_model sigmoid 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         cdfg_preprocess -model sigmoid 
+@I [HLS-100] Command         cdfg_preprocess returned 0; 0 sec.
+@I [HLS-100] Execute         rtl_gen_preprocess sigmoid 
+@I [HLS-100] Command         rtl_gen_preprocess returned 0; 0 sec.
+@I [HLS-0] Preprocessing Module: myproject ...
+@I [HLS-100] Execute         set_default_model myproject 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         cdfg_preprocess -model myproject 
+@I [HLS-100] Command         cdfg_preprocess returned 0; 0 sec.
+@I [HLS-100] Execute         rtl_gen_preprocess myproject 
+@I [HLS-100] Command         rtl_gen_preprocess returned 0; 0 sec.
+@I [HLS-0] Model list for synthesis: compute_layer.0.0.0. relu compute_layer.0.0.0..1 sigmoid myproject
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-10] -- Implementing module 'compute_layer_0_0_0_s' 
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-100] Execute         set_default_model compute_layer.0.0.0. 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         schedule -model compute_layer.0.0.0. 
+@I [SCHED-11] Starting scheduling ...
+@I [SCHED-61] Pipelining function 'compute_layer.0.0.0.'.
+@W [SCHED-69] Unable to satisfy resource constraint for operation type mul(II = 1).
+@I [SCHED-61] Pipelining result: Target II: 1, Final II: 2, Depth: 5.
+@I [SCHED-11] Finished scheduling.
+@I [HLS-100] Command         schedule returned 0; 2.3 sec.
+@I [HLS-111]  Elapsed time: 24.88 seconds; current allocated memory: 518.901 MB.
+@I [HLS-100] Execute         report -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.verbose.sched.rpt -verbose -f 
+@I [HLS-100] Command         report returned 0; 0.18 sec.
+@I [HLS-100] Execute         db_write -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.sched.adb -f 
+@I [HLS-100] Command         db_write returned 0; 0.18 sec.
+@I [HLS-0] Finish scheduling compute_layer.0.0.0..
+@I [HLS-100] Execute         set_default_model compute_layer.0.0.0. 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         bind -model compute_layer.0.0.0. 
+@I [BIND-110] clear=
+@I [BIND-110] debug=
+@I [BIND-110] drf=
+@I [BIND-110] effort=
+@I [BIND-110] fast_refine=
+@I [BIND-110] fu_weight=[ 0.0 -- 1.0 ]
+@I [BIND-110] global_opt=
+@I [BIND-110] gsearch=
+@I [BIND-110] help=
+@I [BIND-110] help-hidden=
+@I [BIND-110] min_mem_port=
+@I [BIND-110] min_op=
+@I [BIND-110] minreg=
+@I [BIND-110] ml=
+@I [BIND-110] model=compute_layer.0.0.0.
+@I [BIND-110] no_false_path=
+@I [BIND-110] no_min_op=
+@I [BIND-110] normalize=
+@I [BIND-110] quiet=
+@I [BIND-110] refine=
+@I [BIND-110] reg_weight=[ 0.0 -- 1.0 ]
+@I [BIND-110] search=
+@I [BIND-110] tight_delay=
+@I [BIND-110] verbose=
+@I [BIND-110] wFF=
+@I [BIND-110] wFU=
+@I [BIND-110] wMUX=
+@I [BIND-110] wNET=
+@I [BIND-100] Starting micro-architecture generation ...
+@I [BIND-101] Performing variable lifetime analysis.
+@I [BIND-101] Exploring resource sharing.
+@I [BIND-101] Binding ...
+@I [BIND-100] Starting global binding ...
+@I [BIND-100] Finished micro-architecture generation.
+@I [HLS-100] Command         bind returned 0; 0.58 sec.
+@I [HLS-111]  Elapsed time: 0.94 seconds; current allocated memory: 523.208 MB.
+@I [HLS-100] Execute         report -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.verbose.bind.rpt -verbose -f 
+@I [HLS-100] Command         report returned 0; 0.67 sec.
+@I [HLS-100] Execute         db_write -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.bind.adb -f 
+@I [HLS-100] Command         db_write returned 0; 0.19 sec.
+@I [HLS-0] Finish binding compute_layer.0.0.0..
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-10] -- Implementing module 'relu' 
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-100] Execute         set_default_model relu 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         schedule -model relu 
+@I [SCHED-11] Starting scheduling ...
+@I [SCHED-61] Pipelining function 'relu'.
+@I [SCHED-61] Pipelining result: Target II: 1, Final II: 1, Depth: 1.
+@I [SCHED-11] Finished scheduling.
+@I [HLS-100] Command         schedule returned 0; 0.03 sec.
+@I [HLS-111]  Elapsed time: 0.89 seconds; current allocated memory: 524.199 MB.
+@I [HLS-100] Execute         report -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/relu.verbose.sched.rpt -verbose -f 
+@I [HLS-100] Command         report returned 0; 0.04 sec.
+@I [HLS-100] Execute         db_write -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/relu.sched.adb -f 
+@I [HLS-100] Command         db_write returned 0; 0.03 sec.
+@I [HLS-0] Finish scheduling relu.
+@I [HLS-100] Execute         set_default_model relu 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         bind -model relu 
+@I [BIND-110] clear=
+@I [BIND-110] debug=
+@I [BIND-110] drf=
+@I [BIND-110] effort=
+@I [BIND-110] fast_refine=
+@I [BIND-110] fu_weight=[ 0.0 -- 1.0 ]
+@I [BIND-110] global_opt=
+@I [BIND-110] gsearch=
+@I [BIND-110] help=
+@I [BIND-110] help-hidden=
+@I [BIND-110] min_mem_port=
+@I [BIND-110] min_op=
+@I [BIND-110] minreg=
+@I [BIND-110] ml=
+@I [BIND-110] model=relu
+@I [BIND-110] no_false_path=
+@I [BIND-110] no_min_op=
+@I [BIND-110] normalize=
+@I [BIND-110] quiet=
+@I [BIND-110] refine=
+@I [BIND-110] reg_weight=[ 0.0 -- 1.0 ]
+@I [BIND-110] search=
+@I [BIND-110] tight_delay=
+@I [BIND-110] verbose=
+@I [BIND-110] wFF=
+@I [BIND-110] wFU=
+@I [BIND-110] wMUX=
+@I [BIND-110] wNET=
+@I [BIND-100] Starting micro-architecture generation ...
+@I [BIND-101] Performing variable lifetime analysis.
+@I [BIND-101] Exploring resource sharing.
+@I [BIND-101] Binding ...
+@I [BIND-100] Finished micro-architecture generation.
+@I [HLS-100] Command         bind returned 0; 0.02 sec.
+@I [HLS-111]  Elapsed time: 0.09 seconds; current allocated memory: 524.862 MB.
+@I [HLS-100] Execute         report -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/relu.verbose.bind.rpt -verbose -f 
+@I [HLS-100] Command         report returned 0; 0.07 sec.
+@I [HLS-100] Execute         db_write -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/relu.bind.adb -f 
+@I [HLS-100] Command         db_write returned 0; 0.04 sec.
+@I [HLS-0] Finish binding relu.
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-10] -- Implementing module 'compute_layer_0_0_0_1' 
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-100] Execute         set_default_model compute_layer.0.0.0..1 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         schedule -model compute_layer.0.0.0..1 
+@I [SCHED-11] Starting scheduling ...
+@I [SCHED-61] Pipelining function 'compute_layer.0.0.0..1'.
+@W [SCHED-69] Unable to satisfy resource constraint for operation type mul(II = 1).
+@I [SCHED-61] Pipelining result: Target II: 1, Final II: 2, Depth: 6.
+@I [SCHED-11] Finished scheduling.
+@I [HLS-100] Command         schedule returned 0; 0.39 sec.
+@I [HLS-111]  Elapsed time: 0.5 seconds; current allocated memory: 525.733 MB.
+@I [HLS-100] Execute         report -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_1.verbose.sched.rpt -verbose -f 
+@I [HLS-100] Command         report returned 0; 0.05 sec.
+@I [HLS-100] Execute         db_write -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_1.sched.adb -f 
+@I [HLS-100] Command         db_write returned 0; 0.05 sec.
+@I [HLS-0] Finish scheduling compute_layer.0.0.0..1.
+@I [HLS-100] Execute         set_default_model compute_layer.0.0.0..1 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         bind -model compute_layer.0.0.0..1 
+@I [BIND-110] clear=
+@I [BIND-110] debug=
+@I [BIND-110] drf=
+@I [BIND-110] effort=
+@I [BIND-110] fast_refine=
+@I [BIND-110] fu_weight=[ 0.0 -- 1.0 ]
+@I [BIND-110] global_opt=
+@I [BIND-110] gsearch=
+@I [BIND-110] help=
+@I [BIND-110] help-hidden=
+@I [BIND-110] min_mem_port=
+@I [BIND-110] min_op=
+@I [BIND-110] minreg=
+@I [BIND-110] ml=
+@I [BIND-110] model=compute_layer.0.0.0..1
+@I [BIND-110] no_false_path=
+@I [BIND-110] no_min_op=
+@I [BIND-110] normalize=
+@I [BIND-110] quiet=
+@I [BIND-110] refine=
+@I [BIND-110] reg_weight=[ 0.0 -- 1.0 ]
+@I [BIND-110] search=
+@I [BIND-110] tight_delay=
+@I [BIND-110] verbose=
+@I [BIND-110] wFF=
+@I [BIND-110] wFU=
+@I [BIND-110] wMUX=
+@I [BIND-110] wNET=
+@I [BIND-100] Starting micro-architecture generation ...
+@I [BIND-101] Performing variable lifetime analysis.
+@I [BIND-101] Exploring resource sharing.
+@I [BIND-101] Binding ...
+@I [BIND-100] Starting global binding ...
+@I [BIND-100] Finished micro-architecture generation.
+@I [HLS-100] Command         bind returned 0; 0.09 sec.
+@I [HLS-111]  Elapsed time: 0.19 seconds; current allocated memory: 526.688 MB.
+@I [HLS-100] Execute         report -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_1.verbose.bind.rpt -verbose -f 
+@I [HLS-100] Command         report returned 0; 0.14 sec.
+@I [HLS-100] Execute         db_write -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_1.bind.adb -f 
+@I [HLS-100] Command         db_write returned 0; 0.05 sec.
+@I [HLS-0] Finish binding compute_layer.0.0.0..1.
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-10] -- Implementing module 'sigmoid' 
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-100] Execute         set_default_model sigmoid 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         schedule -model sigmoid 
+@I [SCHED-11] Starting scheduling ...
+@I [SCHED-61] Pipelining function 'sigmoid'.
+@I [SCHED-61] Pipelining result: Target II: 1, Final II: 1, Depth: 3.
+@I [SCHED-11] Finished scheduling.
+@I [HLS-100] Command         schedule returned 0; 0.01 sec.
+@I [HLS-111]  Elapsed time: 0.2 seconds; current allocated memory: 526.913 MB.
+@I [HLS-100] Execute         report -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/sigmoid.verbose.sched.rpt -verbose -f 
+@I [HLS-100] Command         report returned 0; 0.01 sec.
+@I [HLS-100] Execute         db_write -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/sigmoid.sched.adb -f 
+@I [HLS-100] Command         db_write returned 0; 0 sec.
+@I [HLS-0] Finish scheduling sigmoid.
+@I [HLS-100] Execute         set_default_model sigmoid 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         bind -model sigmoid 
+@I [BIND-110] clear=
+@I [BIND-110] debug=
+@I [BIND-110] drf=
+@I [BIND-110] effort=
+@I [BIND-110] fast_refine=
+@I [BIND-110] fu_weight=[ 0.0 -- 1.0 ]
+@I [BIND-110] global_opt=
+@I [BIND-110] gsearch=
+@I [BIND-110] help=
+@I [BIND-110] help-hidden=
+@I [BIND-110] min_mem_port=
+@I [BIND-110] min_op=
+@I [BIND-110] minreg=
+@I [BIND-110] ml=
+@I [BIND-110] model=sigmoid
+@I [BIND-110] no_false_path=
+@I [BIND-110] no_min_op=
+@I [BIND-110] normalize=
+@I [BIND-110] quiet=
+@I [BIND-110] refine=
+@I [BIND-110] reg_weight=[ 0.0 -- 1.0 ]
+@I [BIND-110] search=
+@I [BIND-110] tight_delay=
+@I [BIND-110] verbose=
+@I [BIND-110] wFF=
+@I [BIND-110] wFU=
+@I [BIND-110] wMUX=
+@I [BIND-110] wNET=
+@I [BIND-100] Starting micro-architecture generation ...
+@I [BIND-101] Performing variable lifetime analysis.
+@I [BIND-101] Exploring resource sharing.
+@I [BIND-101] Binding ...
+@I [BIND-100] Finished micro-architecture generation.
+@I [HLS-100] Command         bind returned 0; 0.01 sec.
+@I [HLS-111]  Elapsed time: 0.02 seconds; current allocated memory: 527.035 MB.
+@I [HLS-100] Execute         report -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/sigmoid.verbose.bind.rpt -verbose -f 
+@I [HLS-100] Command         report returned 0; 0.01 sec.
+@I [HLS-100] Execute         db_write -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/sigmoid.bind.adb -f 
+@I [HLS-100] Command         db_write returned 0; 0 sec.
+@I [HLS-0] Finish binding sigmoid.
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-10] -- Implementing module 'myproject' 
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-100] Execute         set_default_model myproject 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         schedule -model myproject 
+@I [SCHED-11] Starting scheduling ...
+@I [SCHED-61] Pipelining function 'myproject'.
+@I [SCHED-61] Pipelining result: Target II: 1, Final II: 2, Depth: 15.
+@I [SCHED-11] Finished scheduling.
+@I [HLS-100] Command         schedule returned 0; 0.01 sec.
+@I [HLS-111]  Elapsed time: 0.02 seconds; current allocated memory: 527.337 MB.
+@I [HLS-100] Execute         report -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.verbose.sched.rpt -verbose -f 
+@I [HLS-100] Command         report returned 0; 0.02 sec.
+@I [HLS-100] Execute         db_write -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.sched.adb -f 
+@I [HLS-100] Command         db_write returned 0; 0.02 sec.
+@I [HLS-0] Finish scheduling myproject.
+@I [HLS-100] Execute         set_default_model myproject 
+@I [HLS-100] Command         set_default_model returned 0; 0 sec.
+@I [HLS-100] Execute         bind -model myproject 
+@I [BIND-110] clear=
+@I [BIND-110] debug=
+@I [BIND-110] drf=
+@I [BIND-110] effort=
+@I [BIND-110] fast_refine=
+@I [BIND-110] fu_weight=[ 0.0 -- 1.0 ]
+@I [BIND-110] global_opt=
+@I [BIND-110] gsearch=
+@I [BIND-110] help=
+@I [BIND-110] help-hidden=
+@I [BIND-110] min_mem_port=
+@I [BIND-110] min_op=
+@I [BIND-110] minreg=
+@I [BIND-110] ml=
+@I [BIND-110] model=myproject
+@I [BIND-110] no_false_path=
+@I [BIND-110] no_min_op=
+@I [BIND-110] normalize=
+@I [BIND-110] quiet=
+@I [BIND-110] refine=
+@I [BIND-110] reg_weight=[ 0.0 -- 1.0 ]
+@I [BIND-110] search=
+@I [BIND-110] tight_delay=
+@I [BIND-110] verbose=
+@I [BIND-110] wFF=
+@I [BIND-110] wFU=
+@I [BIND-110] wMUX=
+@I [BIND-110] wNET=
+@I [BIND-100] Starting micro-architecture generation ...
+@I [BIND-101] Performing variable lifetime analysis.
+@I [BIND-101] Exploring resource sharing.
+@I [BIND-101] Binding ...
+@I [BIND-100] Finished micro-architecture generation.
+@I [HLS-100] Command         bind returned 0; 0.91 sec.
+@I [HLS-111]  Elapsed time: 0.96 seconds; current allocated memory: 528.592 MB.
+@I [HLS-100] Execute         report -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.verbose.bind.rpt -verbose -f 
+@I [HLS-100] Command         report returned 0; 0.66 sec.
+@I [HLS-100] Execute         db_write -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.bind.adb -f 
+@I [HLS-100] Command         db_write returned 0; 0.02 sec.
+@I [HLS-0] Finish binding myproject.
+@I [HLS-100] Execute         get_model_list myproject -filter all-wo-channel 
+@I [HLS-100] Command         get_model_list returned 0; 0 sec.
+@I [HLS-0] Preprocessing for RTLGen ...
+@I [HLS-100] Execute         rtl_gen_preprocess compute_layer.0.0.0. 
+@I [HLS-100] Command         rtl_gen_preprocess returned 0; 0 sec.
+@I [HLS-100] Execute         rtl_gen_preprocess relu 
+@I [HLS-100] Command         rtl_gen_preprocess returned 0; 0.01 sec.
+@I [HLS-100] Execute         rtl_gen_preprocess compute_layer.0.0.0..1 
+@I [HLS-100] Command         rtl_gen_preprocess returned 0; 0 sec.
+@I [HLS-100] Execute         rtl_gen_preprocess sigmoid 
+@I [HLS-100] Command         rtl_gen_preprocess returned 0; 0 sec.
+@I [HLS-100] Execute         rtl_gen_preprocess myproject 
+@I [HLS-100] Command         rtl_gen_preprocess returned 0; 0 sec.
+@I [HLS-0] Model list for RTL generation: compute_layer.0.0.0. relu compute_layer.0.0.0..1 sigmoid myproject
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-10] -- Generating RTL for module 'compute_layer_0_0_0_s' 
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-100] Execute         create_rtl_model compute_layer.0.0.0. -vendor xilinx -mg_file /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.compgen.tcl 
+@I [SYN-210] Renamed object name 'myproject_mul_18s_10ns_28_3' to 'myproject_mul_18sbkb' due to the length limit 20
+@I [SYN-210] Renamed object name 'myproject_mul_18s_10s_27_3' to 'myproject_mul_18scud' due to the length limit 20
+@I [SYN-210] Renamed object name 'myproject_mul_18s_11s_28_3' to 'myproject_mul_18sdEe' due to the length limit 20
+@I [SYN-210] Renamed object name 'myproject_mul_18s_10s_28_3' to 'myproject_mul_18seOg' due to the length limit 20
+@I [SYN-210] Renamed object name 'myproject_mul_18s_9s_27_3' to 'myproject_mul_18sfYi' due to the length limit 20
+@I [SYN-210] Renamed object name 'myproject_mul_18s_9s_26_3' to 'myproject_mul_18sg8j' due to the length limit 20
+@I [SYN-210] Renamed object name 'myproject_mul_18s_11ns_28_3' to 'myproject_mul_18shbi' due to the length limit 20
+@I [SYN-210] Renamed object name 'myproject_mul_18s_8ns_26_3' to 'myproject_mul_18sibs' due to the length limit 20
+@I [SYN-210] Renamed object name 'myproject_mul_18s_12s_28_3' to 'myproject_mul_18sjbC' due to the length limit 20
+@I [SYN-210] Renamed object name 'myproject_mul_18s_8s_26_3' to 'myproject_mul_18skbM' due to the length limit 20
+@I [SYN-210] Renamed object name 'myproject_mul_18s_8s_25_3' to 'myproject_mul_18slbW' due to the length limit 20
+@I [SYN-210] Renamed object name 'myproject_mul_18s_6s_24_3' to 'myproject_mul_18smb6' due to the length limit 20
+@I [SYN-210] Renamed object name 'myproject_mul_18s_9ns_27_3' to 'myproject_mul_18sncg' due to the length limit 20
+@I [RTGEN-100] Generating core module 'myproject_mul_18sbkb': 25 instance(s).
+@I [RTGEN-100] Generating core module 'myproject_mul_18scud': 4 instance(s).
+@I [RTGEN-100] Generating core module 'myproject_mul_18sdEe': 20 instance(s).
+@I [RTGEN-100] Generating core module 'myproject_mul_18seOg': 15 instance(s).
+@I [RTGEN-100] Generating core module 'myproject_mul_18sfYi': 2 instance(s).
+@I [RTGEN-100] Generating core module 'myproject_mul_18sg8j': 5 instance(s).
+@I [RTGEN-100] Generating core module 'myproject_mul_18shbi': 4 instance(s).
+@I [RTGEN-100] Generating core module 'myproject_mul_18sibs': 2 instance(s).
+@I [RTGEN-100] Generating core module 'myproject_mul_18sjbC': 1 instance(s).
+@I [RTGEN-100] Generating core module 'myproject_mul_18skbM': 1 instance(s).
+@I [RTGEN-100] Generating core module 'myproject_mul_18slbW': 1 instance(s).
+@I [RTGEN-100] Generating core module 'myproject_mul_18smb6': 1 instance(s).
+@I [RTGEN-100] Generating core module 'myproject_mul_18sncg': 3 instance(s).
+@I [RTGEN-100] Finished creating RTL model for 'compute_layer_0_0_0_s'.
+@I [HLS-100] Command         create_rtl_model returned 0; 0.27 sec.
+@I [HLS-111]  Elapsed time: 0.96 seconds; current allocated memory: 536.297 MB.
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.rtl_wrap.cfg.tcl 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-100] Execute         gen_rtl compute_layer.0.0.0. -style xilinx -tracefl mytrace -tracefmt vcd -traceopt all -f -lang sc -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/systemc/compute_layer_0_0_0_s -synmodules compute_layer.0.0.0. relu compute_layer.0.0.0..1 sigmoid myproject 
+@I [HLS-100] Command         gen_rtl returned 0; 0.01 sec.
+@I [HLS-100] Execute         gen_rtl compute_layer.0.0.0. -style xilinx -f -lang vhdl -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/vhdl/compute_layer_0_0_0_s 
+@I [HLS-100] Command         gen_rtl returned 0; 0 sec.
+@I [HLS-100] Execute         gen_rtl compute_layer.0.0.0. -style xilinx -f -lang vlog -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/verilog/compute_layer_0_0_0_s 
+@I [HLS-100] Command         gen_rtl returned 0; 0.01 sec.
+@I [HLS-100] Execute         gen_tb_info compute_layer.0.0.0. -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s -p /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db 
+@I [HLS-100] Command         gen_tb_info returned 0; 0.17 sec.
+@I [HLS-100] Execute         report -model compute_layer.0.0.0. -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/report/compute_layer_0_0_0_s_csynth.rpt -f 
+@I [HLS-100] Command         report returned 0; 0.18 sec.
+@I [HLS-100] Execute         report -model compute_layer.0.0.0. -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/report/compute_layer_0_0_0_s_csynth.xml -f -x 
+@I [HLS-100] Command         report returned 0; 0.17 sec.
+@I [HLS-100] Execute         report -model compute_layer.0.0.0. -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.verbose.rpt -verbose -f 
+@I [HLS-100] Command         report returned 0; 0.85 sec.
+@I [HLS-100] Execute         db_write -model compute_layer.0.0.0. -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.adb -f 
+@I [HLS-100] Command         db_write returned 0; 0.37 sec.
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-10] -- Generating RTL for module 'relu' 
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-100] Execute         create_rtl_model relu -vendor xilinx -mg_file /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/relu.compgen.tcl 
+@I [RTGEN-100] Finished creating RTL model for 'relu'.
+@I [HLS-100] Command         create_rtl_model returned 0; 0.05 sec.
+@I [HLS-111]  Elapsed time: 1.89 seconds; current allocated memory: 551.001 MB.
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.rtl_wrap.cfg.tcl 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-100] Execute         gen_rtl relu -style xilinx -tracefl mytrace -tracefmt vcd -traceopt all -f -lang sc -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/systemc/relu -synmodules compute_layer.0.0.0. relu compute_layer.0.0.0..1 sigmoid myproject 
+@I [HLS-100] Command         gen_rtl returned 0; 0 sec.
+@I [HLS-100] Execute         gen_rtl relu -style xilinx -f -lang vhdl -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/vhdl/relu 
+@I [HLS-100] Command         gen_rtl returned 0; 0 sec.
+@I [HLS-100] Execute         gen_rtl relu -style xilinx -f -lang vlog -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/verilog/relu 
+@I [HLS-100] Command         gen_rtl returned 0; 0 sec.
+@I [HLS-100] Execute         gen_tb_info relu -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/relu -p /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db 
+@I [HLS-100] Command         gen_tb_info returned 0; 0.01 sec.
+@I [HLS-100] Execute         report -model relu -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/report/relu_csynth.rpt -f 
+@I [HLS-100] Command         report returned 0; 0.02 sec.
+@I [HLS-100] Execute         report -model relu -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/report/relu_csynth.xml -f -x 
+@I [HLS-100] Command         report returned 0; 0.02 sec.
+@I [HLS-100] Execute         report -model relu -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/relu.verbose.rpt -verbose -f 
+@I [HLS-100] Command         report returned 0; 0.09 sec.
+@I [HLS-100] Execute         db_write -model relu -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/relu.adb -f 
+@I [HLS-100] Command         db_write returned 0; 0.05 sec.
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-10] -- Generating RTL for module 'compute_layer_0_0_0_1' 
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-100] Execute         create_rtl_model compute_layer.0.0.0..1 -vendor xilinx -mg_file /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_1.compgen.tcl 
+@W [RTGEN-101] RTL name 'myproject_mul_18seOg' is changed to 'myproject_mul_18seOg_x' due to conflict.
+@W [RTGEN-101] RTL name 'myproject_mul_18sfYi' is changed to 'myproject_mul_18sfYi_x' due to conflict.
+@W [RTGEN-101] RTL name 'myproject_mul_18sg8j' is changed to 'myproject_mul_18sg8j_x' due to conflict.
+@W [RTGEN-101] RTL name 'myproject_mul_18scud' is changed to 'myproject_mul_18scud_x' due to conflict.
+@I [SYN-210] Renamed object name 'myproject_mul_18s_6ns_24_3' to 'myproject_mul_18socq' due to the length limit 20
+@W [RTGEN-101] RTL name 'myproject_mul_18sncg' is changed to 'myproject_mul_18sncg_x' due to conflict.
+@I [RTGEN-100] Generating core module 'myproject_mul_18scud': 1 instance(s).
+@I [RTGEN-100] Generating core module 'myproject_mul_18seOg': 6 instance(s).
+@I [RTGEN-100] Generating core module 'myproject_mul_18sfYi': 4 instance(s).
+@I [RTGEN-100] Generating core module 'myproject_mul_18sg8j': 2 instance(s).
+@I [RTGEN-100] Generating core module 'myproject_mul_18sncg': 2 instance(s).
+@I [RTGEN-100] Generating core module 'myproject_mul_18socq': 1 instance(s).
+@I [RTGEN-100] Finished creating RTL model for 'compute_layer_0_0_0_1'.
+@I [HLS-100] Command         create_rtl_model returned 0; 0.03 sec.
+@I [HLS-111]  Elapsed time: 0.24 seconds; current allocated memory: 554.808 MB.
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.rtl_wrap.cfg.tcl 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-100] Execute         gen_rtl compute_layer.0.0.0..1 -style xilinx -tracefl mytrace -tracefmt vcd -traceopt all -f -lang sc -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/systemc/compute_layer_0_0_0_1 -synmodules compute_layer.0.0.0. relu compute_layer.0.0.0..1 sigmoid myproject 
+@I [HLS-100] Command         gen_rtl returned 0; 0.01 sec.
+@I [HLS-100] Execute         gen_rtl compute_layer.0.0.0..1 -style xilinx -f -lang vhdl -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/vhdl/compute_layer_0_0_0_1 
+@I [HLS-100] Command         gen_rtl returned 0; 0 sec.
+@I [HLS-100] Execute         gen_rtl compute_layer.0.0.0..1 -style xilinx -f -lang vlog -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/verilog/compute_layer_0_0_0_1 
+@I [HLS-100] Command         gen_rtl returned 0; 0 sec.
+@I [HLS-100] Execute         gen_tb_info compute_layer.0.0.0..1 -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_1 -p /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db 
+@I [HLS-100] Command         gen_tb_info returned 0; 0.03 sec.
+@I [HLS-100] Execute         report -model compute_layer.0.0.0..1 -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/report/compute_layer_0_0_0_1_csynth.rpt -f 
+@I [HLS-100] Command         report returned 0; 0.04 sec.
+@I [HLS-100] Execute         report -model compute_layer.0.0.0..1 -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/report/compute_layer_0_0_0_1_csynth.xml -f -x 
+@I [HLS-100] Command         report returned 0; 0.03 sec.
+@I [HLS-100] Execute         report -model compute_layer.0.0.0..1 -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_1.verbose.rpt -verbose -f 
+@I [HLS-100] Command         report returned 0; 0.18 sec.
+@I [HLS-100] Execute         db_write -model compute_layer.0.0.0..1 -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_1.adb -f 
+@I [HLS-100] Command         db_write returned 0; 0.08 sec.
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-10] -- Generating RTL for module 'sigmoid' 
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-100] Execute         create_rtl_model sigmoid -vendor xilinx -mg_file /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/sigmoid.compgen.tcl 
+@I [SYN-210] Renamed object name 'sigmoid_sigmoid_table2' to 'sigmoid_sigmoid_tpcA' due to the length limit 20
+@I [RTGEN-100] Finished creating RTL model for 'sigmoid'.
+@I [HLS-100] Command         create_rtl_model returned 0; 0 sec.
+@I [HLS-111]  Elapsed time: 0.4 seconds; current allocated memory: 558.050 MB.
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.rtl_wrap.cfg.tcl 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-100] Execute         gen_rtl sigmoid -style xilinx -tracefl mytrace -tracefmt vcd -traceopt all -f -lang sc -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/systemc/sigmoid -synmodules compute_layer.0.0.0. relu compute_layer.0.0.0..1 sigmoid myproject 
+@I [HLS-100] Command         gen_rtl returned 0; 0 sec.
+@I [HLS-100] Execute         gen_rtl sigmoid -style xilinx -f -lang vhdl -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/vhdl/sigmoid 
+@I [HLS-100] Command         gen_rtl returned 0; 0 sec.
+@I [HLS-100] Execute         gen_rtl sigmoid -style xilinx -f -lang vlog -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/verilog/sigmoid 
+@I [HLS-100] Command         gen_rtl returned 0; 0 sec.
+@I [HLS-100] Execute         gen_tb_info sigmoid -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/sigmoid -p /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db 
+@I [HLS-100] Command         gen_tb_info returned 0; 0.01 sec.
+@I [HLS-100] Execute         report -model sigmoid -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/report/sigmoid_csynth.rpt -f 
+@I [HLS-100] Command         report returned 0; 0 sec.
+@I [HLS-100] Execute         report -model sigmoid -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/report/sigmoid_csynth.xml -f -x 
+@I [HLS-100] Command         report returned 0; 0 sec.
+@I [HLS-100] Execute         report -model sigmoid -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/sigmoid.verbose.rpt -verbose -f 
+@I [HLS-100] Command         report returned 0; 0.02 sec.
+@I [HLS-100] Execute         db_write -model sigmoid -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/sigmoid.adb -f 
+@I [HLS-100] Command         db_write returned 0; 0.01 sec.
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-10] -- Generating RTL for module 'myproject' 
+@I [HLS-10] ----------------------------------------------------------------
+@I [HLS-100] Execute         create_rtl_model myproject -vendor xilinx -mg_file /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.compgen.tcl 
+@I [RTGEN-500] Setting interface mode on port 'myproject/data_0_V' to 'ap_none'.
+@I [RTGEN-500] Setting interface mode on port 'myproject/data_1_V' to 'ap_none'.
+@I [RTGEN-500] Setting interface mode on port 'myproject/data_2_V' to 'ap_none'.
+@I [RTGEN-500] Setting interface mode on port 'myproject/data_3_V' to 'ap_none'.
+@I [RTGEN-500] Setting interface mode on port 'myproject/data_4_V' to 'ap_none'.
+@I [RTGEN-500] Setting interface mode on port 'myproject/data_5_V' to 'ap_none'.
+@I [RTGEN-500] Setting interface mode on port 'myproject/data_6_V' to 'ap_none'.
+@I [RTGEN-500] Setting interface mode on port 'myproject/data_7_V' to 'ap_none'.
+@I [RTGEN-500] Setting interface mode on port 'myproject/data_8_V' to 'ap_none'.
+@I [RTGEN-500] Setting interface mode on port 'myproject/data_9_V' to 'ap_none'.
+@I [RTGEN-500] Setting interface mode on port 'myproject/res_0_V' to 'ap_vld'.
+@I [RTGEN-500] Setting interface mode on port 'myproject/const_size_in' to 'ap_vld'.
+@I [RTGEN-500] Setting interface mode on port 'myproject/const_size_out' to 'ap_vld'.
+@I [RTGEN-500] Setting interface mode on function 'myproject' to 'ap_ctrl_hs'.
+@I [RTGEN-100] Finished creating RTL model for 'myproject'.
+@I [HLS-100] Command         create_rtl_model returned 0; 0.06 sec.
+@I [HLS-111]  Elapsed time: 0.1 seconds; current allocated memory: 561.831 MB.
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.rtl_wrap.cfg.tcl 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-100] Execute         gen_rtl myproject -istop -style xilinx -tracefl mytrace -tracefmt vcd -traceopt all -f -lang sc -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/systemc/myproject -synmodules compute_layer.0.0.0. relu compute_layer.0.0.0..1 sigmoid myproject 
+@I [HLS-100] Command         gen_rtl returned 0; 0 sec.
+@I [HLS-100] Execute         gen_rtl myproject -istop -style xilinx -f -lang vhdl -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/vhdl/myproject 
+@I [HLS-100] Command         gen_rtl returned 0; 0.01 sec.
+@I [HLS-100] Execute         gen_rtl myproject -istop -style xilinx -f -lang vlog -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/verilog/myproject 
+@I [HLS-100] Command         gen_rtl returned 0; 0.01 sec.
+@I [HLS-100] Execute         export_constraint_db -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.constraint.tcl -f -tool general 
+@I [HLS-100] Command         export_constraint_db returned 0; 0 sec.
+@I [HLS-100] Execute         report -model myproject -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.design.xml -verbose -f -dv 
+@I [HLS-100] Command         report returned 0; 0.44 sec.
+@I [HLS-100] Execute         report -model myproject -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.sdaccel.xml -verbose -f -sdaccel 
+@I [HLS-100] Command         report returned 0; 0.01 sec.
+@I [HLS-100] Execute         gen_tb_info myproject -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject -p /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db 
+@I [HLS-100] Command         gen_tb_info returned 0; 0 sec.
+@I [HLS-100] Execute         report -model myproject -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/report/myproject_csynth.rpt -f 
+@I [HLS-100] Command         report returned 0; 0.01 sec.
+@I [HLS-100] Execute         report -model myproject -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/syn/report/myproject_csynth.xml -f -x 
+@I [HLS-100] Command         report returned 0; 0 sec.
+@I [HLS-100] Execute         report -model myproject -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.verbose.rpt -verbose -f 
+@I [HLS-100] Command         report returned 0; 0.67 sec.
+@I [HLS-100] Execute         db_write -model myproject -o /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.adb -f 
+@I [HLS-100] Command         db_write returned 0; 0.03 sec.
+@I [HLS-100] Execute         sc_get_clocks myproject 
+@I [HLS-100] Command         sc_get_clocks returned 0; 0 sec.
+@I [HLS-100] Execute         sc_get_portdomain myproject 
+@I [HLS-100] Command         sc_get_portdomain returned 0; 0 sec.
+@I [HLS-0] Model list for RTL component generation: compute_layer.0.0.0. relu compute_layer.0.0.0..1 sigmoid myproject
+@I [HLS-0] Handling components in module [compute_layer_0_0_0_s] ... 
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.compgen.tcl 
+@I [HLS-0] Found component myproject_mul_18sbkb.
+@I [HLS-0] Append model myproject_mul_18sbkb
+@I [HLS-0] Found component myproject_mul_18scud.
+@I [HLS-0] Append model myproject_mul_18scud
+@I [HLS-0] Found component myproject_mul_18sdEe.
+@I [HLS-0] Append model myproject_mul_18sdEe
+@I [HLS-0] Found component myproject_mul_18seOg.
+@I [HLS-0] Append model myproject_mul_18seOg
+@I [HLS-0] Found component myproject_mul_18sfYi.
+@I [HLS-0] Append model myproject_mul_18sfYi
+@I [HLS-0] Found component myproject_mul_18sg8j.
+@I [HLS-0] Append model myproject_mul_18sg8j
+@I [HLS-0] Found component myproject_mul_18shbi.
+@I [HLS-0] Append model myproject_mul_18shbi
+@I [HLS-0] Found component myproject_mul_18sibs.
+@I [HLS-0] Append model myproject_mul_18sibs
+@I [HLS-0] Found component myproject_mul_18sjbC.
+@I [HLS-0] Append model myproject_mul_18sjbC
+@I [HLS-0] Found component myproject_mul_18skbM.
+@I [HLS-0] Append model myproject_mul_18skbM
+@I [HLS-0] Found component myproject_mul_18slbW.
+@I [HLS-0] Append model myproject_mul_18slbW
+@I [HLS-0] Found component myproject_mul_18smb6.
+@I [HLS-0] Append model myproject_mul_18smb6
+@I [HLS-0] Found component myproject_mul_18sncg.
+@I [HLS-0] Append model myproject_mul_18sncg
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-0] Handling components in module [relu] ... 
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/relu.compgen.tcl 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-0] Handling components in module [compute_layer_0_0_0_1] ... 
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_1.compgen.tcl 
+@I [HLS-0] Found component myproject_mul_18socq.
+@I [HLS-0] Append model myproject_mul_18socq
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-0] Handling components in module [sigmoid] ... 
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/sigmoid.compgen.tcl 
+@I [HLS-0] Found component sigmoid_sigmoid_tpcA.
+@I [HLS-0] Append model sigmoid_sigmoid_tpcA
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-0] Handling components in module [myproject] ... 
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.compgen.tcl 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-0] Append model compute_layer_0_0_0_s
+@I [HLS-0] Append model relu
+@I [HLS-0] Append model compute_layer_0_0_0_1
+@I [HLS-0] Append model sigmoid
+@I [HLS-0] Append model myproject
+@I [HLS-0] Generating RTL model list ...
+@I [HLS-0] All models in this session: myproject_mul_18sbkb myproject_mul_18scud myproject_mul_18sdEe myproject_mul_18seOg myproject_mul_18sfYi myproject_mul_18sg8j myproject_mul_18shbi myproject_mul_18sibs myproject_mul_18sjbC myproject_mul_18skbM myproject_mul_18slbW myproject_mul_18smb6 myproject_mul_18sncg myproject_mul_18socq sigmoid_sigmoid_tpcA compute_layer_0_0_0_s relu compute_layer_0_0_0_1 sigmoid myproject
+@I [HLS-0] To file: write model myproject_mul_18sbkb
+@I [HLS-0] To file: write model myproject_mul_18scud
+@I [HLS-0] To file: write model myproject_mul_18sdEe
+@I [HLS-0] To file: write model myproject_mul_18seOg
+@I [HLS-0] To file: write model myproject_mul_18sfYi
+@I [HLS-0] To file: write model myproject_mul_18sg8j
+@I [HLS-0] To file: write model myproject_mul_18shbi
+@I [HLS-0] To file: write model myproject_mul_18sibs
+@I [HLS-0] To file: write model myproject_mul_18sjbC
+@I [HLS-0] To file: write model myproject_mul_18skbM
+@I [HLS-0] To file: write model myproject_mul_18slbW
+@I [HLS-0] To file: write model myproject_mul_18smb6
+@I [HLS-0] To file: write model myproject_mul_18sncg
+@I [HLS-0] To file: write model myproject_mul_18socq
+@I [HLS-0] To file: write model sigmoid_sigmoid_tpcA
+@I [HLS-0] To file: write model compute_layer_0_0_0_s
+@I [HLS-0] To file: write model relu
+@I [HLS-0] To file: write model compute_layer_0_0_0_1
+@I [HLS-0] To file: write model sigmoid
+@I [HLS-0] To file: write model myproject
+@I [HLS-0] Finished generating RTL model list.
+
+
+@I [HLS-0] RTL Generation done.
+@I [HLS-0] CAS Generation done.
+@I [HLS-0] CBC Generation done.
+@I [HLS-100] Execute         export_ssdm /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/a.export.ll 
+@I [HLS-100] Command         export_ssdm returned 0; 0 sec.
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-100] Execute         source /data/xilinx/Vivado_HLS/2016.4/common/technology/generic/autopilot/common.gen 
+@I [HLS-100] Execute           source /data/xilinx/Vivado_HLS/2016.4/common/technology/generic/autopilot/APCoreGen.gen 
+@I [HLS-100] Command           ap_source returned 0; 0 sec.
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-100] Execute         source /data/xilinx/Vivado_HLS/2016.4/common/technology/generic/autopilot/op.gen 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-100] Execute         source /data/xilinx/Vivado_HLS/2016.4/common/technology/generic/autopilot/op_simcore.gen 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-100] Execute         source /data/xilinx/Vivado_HLS/2016.4/common/technology/generic/autopilot/interface.gen 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-100] Execute         source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/virtex7/virtex7.gen 
+@I [HLS-100] Execute           source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/virtex.gen 
+@I [HLS-100] Execute             source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/xilinx.gen 
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/plb46.gen 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/fsl.gen 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/axi4.gen 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/nativeAXI4.gen 
+@I [HLS-100] Execute                 source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/saxilite.gen 
+@I [HLS-100] Command                 ap_source returned 0; 0 sec.
+@I [HLS-100] Execute                 source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/maxi.gen 
+@I [HLS-100] Command                 ap_source returned 0; 0 sec.
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/scripts/xilinxcoregen.gen 
+@I [HLS-100] Command               ap_source returned 0; 0.01 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/interface/XilEDKCoreGen.gen 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/ip/dds_compiler.gen 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/ip/util.gen 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/ip/xfft.gen 
+@I [HLS-100] Command               ap_source returned 0; 0.04 sec.
+@I [HLS-100] Execute               source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/ip/xfir.gen 
+@I [HLS-100] Command               ap_source returned 0; 0 sec.
+@I [HLS-100] Command             ap_source returned 0; 0.06 sec.
+@I [HLS-100] Execute             source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/dsp48.gen 
+@I [HLS-100] Command             ap_source returned 0; 0 sec.
+@I [HLS-100] Command           ap_source returned 0; 0.07 sec.
+@I [HLS-100] Command         ap_source returned 0; 0.07 sec.
+@I [HLS-100] Execute         source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/virtex7/virtex7_fpv6.gen 
+@I [HLS-100] Execute           source /data/xilinx/Vivado_HLS/2016.4/common/technology/xilinx/common/xilinx_fpv6.gen 
+@I [HLS-100] Command           ap_source returned 0; 0 sec.
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.compgen.tcl 
+@I [RTMG-282] Generating pipelined core: 'myproject_mul_18sbkb_MulnS_0'
+@I [RTMG-282] Generating pipelined core: 'myproject_mul_18scud_MulnS_1'
+@I [RTMG-282] Generating pipelined core: 'myproject_mul_18sdEe_MulnS_2'
+@I [RTMG-282] Generating pipelined core: 'myproject_mul_18seOg_MulnS_3'
+@I [RTMG-282] Generating pipelined core: 'myproject_mul_18sfYi_MulnS_4'
+@I [RTMG-282] Generating pipelined core: 'myproject_mul_18sg8j_MulnS_5'
+@I [RTMG-282] Generating pipelined core: 'myproject_mul_18shbi_MulnS_6'
+@I [RTMG-282] Generating pipelined core: 'myproject_mul_18sibs_MulnS_7'
+@I [RTMG-282] Generating pipelined core: 'myproject_mul_18sjbC_MulnS_8'
+@I [RTMG-282] Generating pipelined core: 'myproject_mul_18skbM_MulnS_9'
+@I [RTMG-282] Generating pipelined core: 'myproject_mul_18slbW_MulnS_10'
+@I [RTMG-282] Generating pipelined core: 'myproject_mul_18smb6_MulnS_11'
+@I [RTMG-282] Generating pipelined core: 'myproject_mul_18sncg_MulnS_12'
+@I [HLS-100] Command         ap_source returned 0; 0.07 sec.
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/relu.compgen.tcl 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_1.compgen.tcl 
+@I [RTMG-282] Generating pipelined core: 'myproject_mul_18socq_MulnS_13'
+@I [HLS-100] Command         ap_source returned 0; 0.01 sec.
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/sigmoid.compgen.tcl 
+@I [RTMG-279] Implementing memory 'sigmoid_sigmoid_tpcA_rom' using auto ROMs.
+@I [HLS-100] Command         ap_source returned 0; 0.02 sec.
+@I [HLS-100] Execute         source /home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.compgen.tcl 
+@I [HLS-100] Command         ap_source returned 0; 0 sec.
+@I [HLS-111] Finished generating all RTL models Time (s): cpu = 00:00:39 ; elapsed = 00:00:34 . Memory (MB): peak = 964.969 ; gain = 560.719 ; free physical = 4177 ; free virtual = 46484
+@I [SYSC-301] Generating SystemC RTL for myproject.
+@I [VHDL-304] Generating VHDL RTL for myproject.
+@I [VLOG-307] Generating Verilog RTL for myproject.
+@I [HLS-100] Command       autosyn returned 0; 11.11 sec.
+@I [HLS-100] Command     csynth_design returned 0; 31.91 sec.
+@I [HLS-100] Execute     cleanup_all 
+@I [HLS-100] Command     cleanup_all returned 0; 0.04 sec.

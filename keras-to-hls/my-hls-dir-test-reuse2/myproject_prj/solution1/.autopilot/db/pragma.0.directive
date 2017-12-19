@@ -1,0 +1,91 @@
+<AutoPilot:ProjectResources xmlns:AutoPilot="com.autoesl.autopilot.ui.directiveView">
+<sourceFile name="">
+<directive functionLabel="" functionName="compute_layer" label="">
+<pragma name="FUNCTION_INSTANTIATE">
+<option name="variable" positionalBoolean="4" value="weights,biases"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="compute_layer" label="">
+<pragma name="PIPELINE"/>
+</directive>
+<directive functionLabel="" functionName="compute_layer" label="">
+<pragma name="ARRAY_PARTITION">
+<option name="variable" positionalBoolean="4" value="weights"/>
+<option name="complete" positionalBoolean="type" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="compute_layer" label="">
+<pragma name="ARRAY_PARTITION">
+<option name="variable" positionalBoolean="4" value="biases"/>
+<option name="complete" positionalBoolean="type" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="compute_layer" label="">
+<pragma name="ARRAY_PARTITION">
+<option name="variable" positionalBoolean="4" value="mult"/>
+<option name="complete" positionalBoolean="type" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="compute_layer" label="">
+<pragma name="ARRAY_PARTITION">
+<option name="variable" positionalBoolean="4" value="acc"/>
+<option name="complete" positionalBoolean="type" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="compute_layer" label="">
+<pragma name="ALLOCATION">
+<option name="instances" positionalBoolean="4" value="mul"/>
+<option name="limit" value="multiplier_limit"/>
+<option name="operation" positionalBoolean="type" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="relu" label="">
+<pragma name="PIPELINE"/>
+</directive>
+<directive functionLabel="" functionName="relu_max" label="">
+<pragma name="PIPELINE"/>
+</directive>
+<directive functionLabel="" functionName="sigmoid" label="">
+<pragma name="PIPELINE"/>
+</directive>
+<directive functionLabel="" functionName="softmax" label="">
+<pragma name="PIPELINE"/>
+</directive>
+<directive functionLabel="" functionName="tanh" label="">
+<pragma name="PIPELINE"/>
+</directive>
+<directive functionLabel="" functionName="myproject" label="">
+<pragma name="ARRAY_PARTITION">
+<option name="variable" positionalBoolean="4" value="data"/>
+<option name="complete" positionalBoolean="type" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="myproject" label="">
+<pragma name="ARRAY_PARTITION">
+<option name="variable" positionalBoolean="4" value="res"/>
+<option name="complete" positionalBoolean="type" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="myproject" label="">
+<pragma name="PIPELINE"/>
+</directive>
+<directive functionLabel="" functionName="myproject" label="">
+<pragma name="ARRAY_PARTITION">
+<option name="variable" positionalBoolean="4" value="layer1_out"/>
+<option name="complete" positionalBoolean="type" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="myproject" label="">
+<pragma name="ARRAY_PARTITION">
+<option name="variable" positionalBoolean="4" value="logits1"/>
+<option name="complete" positionalBoolean="type" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="myproject" label="">
+<pragma name="ARRAY_PARTITION">
+<option name="variable" positionalBoolean="4" value="logits2"/>
+<option name="complete" positionalBoolean="type" value=""/>
+</pragma>
+</directive>
+</sourceFile>
+</AutoPilot:ProjectResources>

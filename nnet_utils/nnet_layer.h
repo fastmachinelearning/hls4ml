@@ -68,10 +68,11 @@ void compute_layer(
         #pragma HLS ARRAY_PARTITION variable=biases complete
         #pragma HLS ARRAY_PARTITION variable=mult complete
         #pragma HLS ARRAY_PARTITION variable=acc complete
-        if (CONFIG_T::reuse_factor > 1) {
-	  int multiplier_limit  = ceil(CONFIG_T::n_in*CONFIG_T::n_out / CONFIG_T::reuse_factor) - floor(CONFIG_T::n_zeros / CONFIG_T::reuse_factor);
-            #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
-        }
+        // if (CONFIG_T::reuse_factor > 1) {
+        int multiplier_limit  = ceil(CONFIG_T::n_in*CONFIG_T::n_out / CONFIG_T::reuse_factor) - floor(CONFIG_T::n_zeros / CONFIG_T::reuse_factor);
+        // printf("Multiplier Limit = %i, Number of zeros = %i \n", multiplier_limit, CONFIG_T::n_zeros);
+        #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+        // }
     } else if (CONFIG_T::io_type == io_serial){
         // TODO: Fill out the directives for serial input
         // #pragma HLS ALLOCATION instances=mul limit=1 operation
