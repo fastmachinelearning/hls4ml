@@ -1,7 +1,7 @@
 <profile>
 
 <section name = "Vivado HLS Report for 'myproject'" level="0">
-<item name = "Date">Tue Dec 19 09:29:21 2017
+<item name = "Date">Tue Dec 19 12:54:11 2017
 </item>
 <item name = "Version">2016.4 (Build 1756540 on Mon Jan 23 19:31:01 MST 2017)</item>
 <item name = "Project">myproject_prj</item>
@@ -31,10 +31,10 @@
 <section name = "" level="1">
 <item name = "Instance"><table name="" hasTotal="0">
 <keys size="7">Instance, Module, min, max, min, max, Type</keys>
-<column name="grp_compute_layer_0_0_0_s_fu_145">compute_layer_0_0_0_s, 4, 4, 2, 2, function</column>
-<column name="grp_compute_layer_0_0_0_1_fu_169">compute_layer_0_0_0_1, 5, 5, 2, 2, function</column>
-<column name="call_ret2_relu_fu_205">relu, 0, 0, 1, 1, function</column>
-<column name="grp_sigmoid_fu_241">sigmoid, 2, 2, 1, 1, function</column>
+<column name="grp_compute_layer_0_0_0_s_fu_143">compute_layer_0_0_0_s, 4, 4, 2, 2, function</column>
+<column name="grp_compute_layer_0_0_0_1_fu_167">compute_layer_0_0_0_1, 5, 5, 2, 2, function</column>
+<column name="call_ret2_relu_fu_203">relu, 0, 0, 1, 1, function</column>
+<column name="grp_sigmoid_fu_239">sigmoid, 2, 2, 1, 1, function</column>
 </table>
 </item>
 <item name = "Loop"><table name="" hasTotal="0">

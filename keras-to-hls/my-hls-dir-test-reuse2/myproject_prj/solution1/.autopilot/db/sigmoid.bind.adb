@@ -78,14 +78,14 @@
 						<id>7</id>
 						<name>tmp_1</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>125</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item class_id="11" tracking_level="0" version="0">
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second class_id="12" tracking_level="0" version="0">
 									<count>1</count>
 									<item_version>0</item_version>
@@ -123,14 +123,14 @@
 						<id>8</id>
 						<name>ret_V_cast</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>125</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -165,14 +165,14 @@
 						<id>9</id>
 						<name>tmp_2</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>125</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -237,14 +237,14 @@
 						<id>11</id>
 						<name>p_Result_2</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>125</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -281,14 +281,14 @@
 						<id>12</id>
 						<name>tmp_5</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>125</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -324,14 +324,14 @@
 						<id>13</id>
 						<name>ret_V</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>125</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -367,14 +367,14 @@
 						<id>14</id>
 						<name>p_s</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>125</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -411,14 +411,14 @@
 						<id>15</id>
 						<name>p_2</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>125</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -455,14 +455,14 @@
 						<id>16</id>
 						<name>tmp_4</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>125</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -497,14 +497,14 @@
 						<id>17</id>
 						<name>index</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>126</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -540,14 +540,14 @@
 						<id>18</id>
 						<name>index_cast</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>126</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -583,14 +583,14 @@
 						<id>19</id>
 						<name>tmp_6</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>127</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -627,14 +627,14 @@
 						<id>20</id>
 						<name>p_1</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>127</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -671,14 +671,14 @@
 						<id>21</id>
 						<name>tmp_7</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>127</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -713,14 +713,14 @@
 						<id>22</id>
 						<name>tmp_8</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>128</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -758,14 +758,14 @@
 						<id>23</id>
 						<name>icmp</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>128</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -801,14 +801,14 @@
 						<id>24</id>
 						<name>index_1</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>128</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -845,14 +845,14 @@
 						<id>25</id>
 						<name>tmp_s</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>129</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -887,14 +887,14 @@
 						<id>26</id>
 						<name>sigmoid_table2_addr</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>129</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -931,14 +931,14 @@
 						<id>27</id>
 						<name>sigmoid_table2_load</name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>129</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>
@@ -973,14 +973,14 @@
 						<id>28</id>
 						<name></name>
 						<fileName>/home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h</fileName>
-						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</fileDirectory>
+						<fileDirectory>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</fileDirectory>
 						<lineNumber>131</lineNumber>
 						<contextFuncName>sigmoid&amp;lt;ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, ap_fixed&amp;lt;18, 8, 5, 3, 0&amp;gt;, sigmoid_config2&amp;gt;</contextFuncName>
 						<inlineStackInfo>
 							<count>1</count>
 							<item_version>0</item_version>
 							<item>
-								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test</first>
+								<first>/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2</first>
 								<second>
 									<count>1</count>
 									<item_version>0</item_version>

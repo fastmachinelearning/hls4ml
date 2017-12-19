@@ -1,5 +1,5 @@
-# 1 "/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.pragma.1.cpp"
-# 1 "/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.pragma.1.cpp" 1
+# 1 "/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2/myproject_prj/solution1/.autopilot/db/myproject.pragma.1.cpp"
+# 1 "/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2/myproject_prj/solution1/.autopilot/db/myproject.pragma.1.cpp" 1
 # 1 "<built-in>" 1
 # 1 "<built-in>" 3
 # 155 "<built-in>" 3
@@ -203,7 +203,7 @@ extern "C" {
 // XSIP watermark, do not delete 67d7842dbbe25473c3c32b93c0da8047785f30d78e8a024de1b57352245f9689
 # 6 "<command line>" 2
 # 1 "<built-in>" 2
-# 1 "/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test/myproject_prj/solution1/.autopilot/db/myproject.pragma.1.cpp" 2
+# 1 "/home/ntran/HLS/ML/dev/HLS4ML/keras-to-hls/my-hls-dir-test-reuse2/myproject_prj/solution1/.autopilot/db/myproject.pragma.1.cpp" 2
 # 1 "firmware/myproject.cpp"
 # 1 "firmware/myproject.cpp" 1
 # 1 "<built-in>" 1
@@ -42853,7 +42853,10 @@ void myproject(
 _ssdm_SpecArrayPartition( data, 1, "COMPLETE", 0, "");
 _ssdm_SpecArrayPartition( res, 1, "COMPLETE", 0, "");
 
-_ssdm_op_SpecPipeline(-1, 1, 1, 0, "");
+ //#pragma HLS DATAFLOW
+_ssdm_SpecStream( data, 0, 0, "");
+
+_ssdm_op_SpecPipeline(1, 1, 1, 0, "");
 
  const_size_in = 10;
     const_size_out = 1;

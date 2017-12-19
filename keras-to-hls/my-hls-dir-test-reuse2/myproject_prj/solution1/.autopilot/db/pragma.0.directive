@@ -67,7 +67,14 @@
 </pragma>
 </directive>
 <directive functionLabel="" functionName="myproject" label="">
-<pragma name="PIPELINE"/>
+<pragma name="STREAM">
+<option name="variable" positionalBoolean="4" value="data"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="myproject" label="">
+<pragma name="PIPELINE">
+<option name="II" value="1"/>
+</pragma>
 </directive>
 <directive functionLabel="" functionName="myproject" label="">
 <pragma name="ARRAY_PARTITION">

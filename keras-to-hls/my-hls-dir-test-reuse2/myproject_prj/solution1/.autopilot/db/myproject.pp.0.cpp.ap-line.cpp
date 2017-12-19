@@ -42780,7 +42780,10 @@ void myproject(
 #pragma HLS ARRAY_PARTITION variable=data complete
 #pragma HLS ARRAY_PARTITION variable=res complete
 #pragma empty_line
-#pragma HLS PIPELINE
+ //#pragma HLS DATAFLOW
+#pragma HLS STREAM variable=data
+#pragma empty_line
+#pragma HLS PIPELINE II=1
 #pragma empty_line
  const_size_in = 10;
     const_size_out = 1;
