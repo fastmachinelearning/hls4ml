@@ -48,11 +48,12 @@ def print_array_to_cpp(name, a, odir ):
     i=0;
     zero_ctr = 0;
     for x in np.nditer(a, order='C'):
-        if x == 0: zero_ctr += 1
+        if x == 0: 
+            zero_ctr += 1
         if i==0:
-             f.write("{}".format(x))
-         else:
-             f.write(", {}".format(x))
+            f.write("{}".format(x))
+        else:
+            f.write(", {}".format(x))
         i=i+1
     f.write("};")
     f.close()
