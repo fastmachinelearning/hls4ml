@@ -47,25 +47,13 @@ def print_array_to_cpp(name, a, odir ):
     #fill c++ array.  
     #not including internal brackets for multidimensional case
     i=0;
-    # for x in np.nditer(a, order='C'):
-    #     if i==0:
-    #         f.write("{}".format(x))
-    #     else:
-    #         f.write(", {}".format(x))
-
     zero_ctr = 0;
     for x in np.nditer(a, order='C'):
-        if name=="w1" and random.random() < .50:
-            zero_ctr += 1;
-            if i==0:
-                f.write("0")
-            else:
-                f.write(", 0")
-        else:
-            if i==0:
-                f.write("{}".format(x))
-            else:
-                f.write(", {}".format(x))
+        if x == 0: zero_ctr += 1
+        if i==0:
+             f.write("{}".format(x))
+         else:
+             f.write(", {}".format(x))
         i=i+1
     f.write("};")
     f.close()
