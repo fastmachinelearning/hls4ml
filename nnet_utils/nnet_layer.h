@@ -64,7 +64,7 @@ void compute_layer(
         //   - completely partition arrays -- target fabric
         //   - if we have an unroll factor, limit number of multipliers
         #pragma HLS PIPELINE
-        v// #pragma HLS ARRAY_PARTITION variable=weights complete // remove this line for now, it breaks compression sometimes
+        // #pragma HLS ARRAY_PARTITION variable=weights complete // remove this line for now, it breaks compression sometimes
         #pragma HLS ARRAY_PARTITION variable=biases complete
         #pragma HLS ARRAY_PARTITION variable=mult complete
         #pragma HLS ARRAY_PARTITION variable=acc complete
