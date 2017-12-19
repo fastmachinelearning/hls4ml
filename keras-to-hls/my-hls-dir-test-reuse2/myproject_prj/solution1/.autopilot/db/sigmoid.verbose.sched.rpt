@@ -1,0 +1,214 @@
+
+
+================================================================
+== Vivado HLS Report for 'sigmoid'
+================================================================
+* Date:           Tue Dec 19 09:29:20 2017
+
+* Version:        2016.4 (Build 1756540 on Mon Jan 23 19:31:01 MST 2017)
+* Project:        myproject_prj
+* Solution:       solution1
+* Product family: virtex7
+* Target device:  xc7vx690tffg1927-2
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing (ns): 
+    * Summary: 
+    +--------+-------+----------+------------+
+    |  Clock | Target| Estimated| Uncertainty|
+    +--------+-------+----------+------------+
+    |ap_clk  |   5.00|      4.21|        0.62|
+    +--------+-------+----------+------------+
+
++ Latency (clock cycles): 
+    * Summary: 
+    +-----+-----+-----+-----+----------+
+    |  Latency  |  Interval | Pipeline |
+    | min | max | min | max |   Type   |
+    +-----+-----+-----+-----+----------+
+    |    2|    2|    1|    1| function |
+    +-----+-----+-----+-----+----------+
+
+    + Detail: 
+        * Instance: 
+        N/A
+
+        * Loop: 
+        N/A
+
+============================================================
++ Verbose Summary: Synthesis Manager
+============================================================
+InlineROM: 1
+ExposeGlobal: 0
+============================================================
++ Verbose Summary: CDFG Model
+============================================================
+IsTopModel: 0
+ResetActiveHigh: 1
+IsCombinational: 0
+IsDatapathOnly: 0
+HasWiredReturn: 1
+HasMFsm: 2
+HasVarLatency: 0
+IsPipeline: 1
+IsRtlPipelined: 1
+IsInstanceOverlapped: 0
+IsDontTouch: 0
+HasImplIP: 0
+IsGatedGlobalClock: 0
+
++ Individual pipeline summary: 
+  * Pipeline-0: initiation interval (II) = 1, depth = 3
+
+
+============================================================
++ Verbose Summary: Schedule
+============================================================
+* Number of FSM states: 3
+* Pipeline: 1
+  Pipeline-0: II = 1, D = 3, States = { 1 2 3 }
+* Dataflow Pipeline: 0
+
+* FSM state transitions: 
+1 --> 
+	2  / true
+2 --> 
+	3  / true
+3 --> 
+* FSM state operations: 
+
+ <State 1>: 4.20ns
+ST_1: data_V_read_1 (3)  [1/1] 0.00ns
+.critedge_ifconv:0  %data_V_read_1 = call i18 @_ssdm_op_Read.ap_auto.i18(i18 %data_V_read)
+
+ST_1: tmp_1 (7)  [1/1] 0.00ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:125
+.critedge_ifconv:4  %tmp_1 = call i14 @_ssdm_op_PartSelect.i14.i18.i32.i32(i18 %data_V_read_1, i32 4, i32 17)
+
+ST_1: ret_V_cast (8)  [1/1] 0.00ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:125
+.critedge_ifconv:5  %ret_V_cast = sext i14 %tmp_1 to i15
+
+ST_1: tmp_2 (9)  [1/1] 0.00ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:125 (grouped into LUT with out node p_2)
+.critedge_ifconv:6  %tmp_2 = call i1 @_ssdm_op_BitSelect.i1.i18.i32(i18 %data_V_read_1, i32 17)
+
+ST_1: tmp_3 (10)  [1/1] 0.00ns
+.critedge_ifconv:7  %tmp_3 = trunc i18 %data_V_read_1 to i4
+
+ST_1: p_Result_2 (11)  [1/1] 0.00ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:125
+.critedge_ifconv:8  %p_Result_2 = call i10 @_ssdm_op_BitConcatenate.i10.i4.i6(i4 %tmp_3, i6 0)
+
+ST_1: tmp_5 (12)  [1/1] 1.23ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:125
+.critedge_ifconv:9  %tmp_5 = icmp eq i10 %p_Result_2, 0
+
+ST_1: ret_V (13)  [1/1] 1.39ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:125
+.critedge_ifconv:10  %ret_V = add i15 1, %ret_V_cast
+
+ST_1: p_s (14)  [1/1] 0.00ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:125 (grouped into LUT with out node p_2)
+.critedge_ifconv:11  %p_s = select i1 %tmp_5, i15 %ret_V_cast, i15 %ret_V
+
+ST_1: p_2 (15)  [1/1] 0.71ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:125 (out node of the LUT)
+.critedge_ifconv:12  %p_2 = select i1 %tmp_2, i15 %p_s, i15 %ret_V_cast
+
+ST_1: tmp_4 (16)  [1/1] 0.00ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:125
+.critedge_ifconv:13  %tmp_4 = trunc i15 %p_2 to i14
+
+ST_1: index (17)  [1/1] 1.39ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:126
+.critedge_ifconv:14  %index = add i15 512, %p_2
+
+ST_1: index_cast (18)  [1/1] 1.39ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:126
+.critedge_ifconv:15  %index_cast = add i14 512, %tmp_4
+
+ST_1: tmp_6 (19)  [1/1] 0.00ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:127
+.critedge_ifconv:16  %tmp_6 = call i1 @_ssdm_op_BitSelect.i1.i15.i32(i15 %index, i32 14)
+
+ST_1: p_1 (20)  [1/1] 0.71ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:127
+.critedge_ifconv:17  %p_1 = select i1 %tmp_6, i14 0, i14 %index_cast
+
+ST_1: tmp_7 (21)  [1/1] 0.00ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:127
+.critedge_ifconv:18  %tmp_7 = trunc i14 %p_1 to i10
+
+ST_1: tmp_8 (22)  [1/1] 0.00ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:128
+.critedge_ifconv:19  %tmp_8 = call i4 @_ssdm_op_PartSelect.i4.i14.i32.i32(i14 %p_1, i32 10, i32 13)
+
+
+ <State 2>: 4.21ns
+ST_2: icmp (23)  [1/1] 1.11ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:128
+.critedge_ifconv:20  %icmp = icmp ne i4 %tmp_8, 0
+
+ST_2: index_1 (24)  [1/1] 0.71ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:128
+.critedge_ifconv:21  %index_1 = select i1 %icmp, i10 -1, i10 %tmp_7
+
+ST_2: tmp_s (25)  [1/1] 0.00ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:129
+.critedge_ifconv:22  %tmp_s = zext i10 %index_1 to i64
+
+ST_2: sigmoid_table2_addr (26)  [1/1] 0.00ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:129
+.critedge_ifconv:23  %sigmoid_table2_addr = getelementptr [1024 x i10]* @sigmoid_table2, i64 0, i64 %tmp_s
+
+ST_2: sigmoid_table2_load (27)  [2/2] 2.39ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:129
+.critedge_ifconv:24  %sigmoid_table2_load = load i10* %sigmoid_table2_addr, align 2
+
+
+ <State 3>: 2.39ns
+ST_3: tmp (4)  [1/1] 0.00ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:115
+.critedge_ifconv:1  %tmp = call i32 (...)* @_ssdm_op_SpecRegionBegin([12 x i8]* @p_str6)
+
+ST_3: StgValue_27 (5)  [1/1] 0.00ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:116
+.critedge_ifconv:2  call void (...)* @_ssdm_op_SpecPipeline(i32 -1, i32 1, i32 1, i32 0, [1 x i8]* @p_str5) nounwind
+
+ST_3: empty (6)  [1/1] 0.00ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:117
+.critedge_ifconv:3  %empty = call i32 (...)* @_ssdm_op_SpecRegionEnd([12 x i8]* @p_str6, i32 %tmp)
+
+ST_3: sigmoid_table2_load (27)  [1/2] 2.39ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:129
+.critedge_ifconv:24  %sigmoid_table2_load = load i10* %sigmoid_table2_addr, align 2
+
+ST_3: StgValue_30 (28)  [1/1] 0.00ns  loc: /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:131
+.critedge_ifconv:25  ret i10 %sigmoid_table2_load
+
+
+
+============================================================
++ Verbose Summary: Timing violations
+============================================================
+Target clock period: 5ns, clock uncertainty: 0.625ns.
+
+ <State 1>: 4.2ns
+The critical path consists of the following:
+	wire read on port 'data_V_read' [3]  (0 ns)
+	'add' operation ('ret.V', /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:125) [13]  (1.39 ns)
+	'select' operation ('p_s', /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:125) [14]  (0 ns)
+	'select' operation ('p_2', /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:125) [15]  (0.71 ns)
+	'add' operation ('index_cast', /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:126) [18]  (1.39 ns)
+	'select' operation ('p_1', /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:127) [20]  (0.71 ns)
+
+ <State 2>: 4.21ns
+The critical path consists of the following:
+	'icmp' operation ('icmp', /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:128) [23]  (1.11 ns)
+	'select' operation ('index_1', /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:128) [24]  (0.71 ns)
+	'getelementptr' operation ('sigmoid_table2_addr', /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:129) [26]  (0 ns)
+	'load' operation ('res.V', /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:129) on array 'sigmoid_table2' [27]  (2.39 ns)
+
+ <State 3>: 2.39ns
+The critical path consists of the following:
+	'load' operation ('res.V', /home/ntran/HLS/ML/dev/HLS4ML/nnet_utils/nnet_activation.h:129) on array 'sigmoid_table2' [27]  (2.39 ns)
+
+
+============================================================
++ Verbose Summary: Binding
+============================================================
+N/A
+* FSMD analyzer results:
+  - Output states:
+ - Input state : 
+  - Chain level:
+	State 1
+	State 2
+	State 3
+
+
+============================================================
++ Verbose Summary: Datapath Resource usage 
+============================================================
+N/A
