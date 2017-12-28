@@ -27,6 +27,7 @@ struct config1 : nnet::layer_config {
         static const unsigned n_out = N_LAYER_1;
         static const unsigned io_type = nnet::io_parallel;
         static const unsigned reuse_factor = 1;
+        static const unsigned n_zeros = 0;
         static const bool store_weights_in_bram = false;
         typedef accum_default_t accum_t;
         typedef bias_default_t bias_t;
@@ -42,6 +43,7 @@ struct config2 : nnet::layer_config {
         static const unsigned n_out = N_OUTPUTS;
         static const unsigned io_type = nnet::io_parallel;
         static const unsigned reuse_factor = 1;
+        static const unsigned n_zeros = 0;
         static const bool store_weights_in_bram = false;
         typedef accum_default_t accum_t;
         typedef bias_default_t bias_t;
