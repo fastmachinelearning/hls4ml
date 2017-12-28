@@ -50,7 +50,10 @@ def print_array_to_cpp(name, a, odir ):
     #fill c++ array.  
     #not including internal brackets for multidimensional case
     i=0;
+    zero_ctr = 0;
     for x in np.nditer(a, order='C'):
+        if x == 0: 
+            zero_ctr += 1
         if i==0:
             f.write("{}".format(x))
         else:
@@ -58,6 +61,8 @@ def print_array_to_cpp(name, a, odir ):
         i=i+1
     f.write("};")
     f.close()
+
+    return zero_ctr;
 
 ############################################################################################
 ## M A I N
@@ -118,8 +123,9 @@ def main():
         #Translate weights and biases from h5 file
         weights = h5File['/{}/{}/kernel:0'.format(layer['name'],layer['name'])][()]
         biases = h5File['/{}/{}/bias:0'.format(layer['name'],layer['name'])][()]
-        print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
+        cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
         print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
+        layer['weights_n_zeros'] = cur_n_zeros 
 
         #Get number of inputs and outputs
         #(We take it from the weights to avoid dealing with InputLayer and Flatten details)
