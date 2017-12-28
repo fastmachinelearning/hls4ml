@@ -104,6 +104,7 @@ def hls_writer(layer_list, yamlConfig):
         static const unsigned n_out = {n_out};
         static const unsigned io_type = nnet::{iotype};
         static const unsigned reuse_factor = {reuse};
+        static const unsigned n_zeros = {nzeros};
         static const bool store_weights_in_bram = false;
         typedef accum_default_t accum_t;
         typedef bias_default_t bias_t;
@@ -159,7 +160,8 @@ def hls_writer(layer_list, yamlConfig):
                                                            n_in=layer_in_name, 
                                                            n_out=layer_out_name,
                                                            iotype=yamlConfig["IOType"],
-                                                           reuse=yamlConfig["ReuseFactor"])
+                                                           reuse=yamlConfig["ReuseFactor"],
+                                                           nzeros=layer_list[i-1]['weights_n_zeros'])
 
                 newline = newline + activ_config_template.format(type=layer_list[i-1]['activation'],
                                                                  index=str(i), 
