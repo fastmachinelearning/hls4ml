@@ -10,11 +10,11 @@
 #include "nnet_common.h"
 
 //hls-fpga-machine-learning insert numbers
-typedef ap_fixed<32,8> accum_default_t;
-typedef ap_fixed<32,8> weight_default_t;
-typedef ap_fixed<32,8> bias_default_t;
-typedef ap_fixed<32,8> input_t;
-typedef ap_fixed<32,8> result_t;
+typedef ap_fixed<18,8> accum_default_t;
+typedef ap_fixed<18,8> weight_default_t;
+typedef ap_fixed<18,8> bias_default_t;
+typedef ap_fixed<18,8> input_t;
+typedef ap_fixed<18,8> result_t;
 #define Y_INPUTS 32
 #define N_CHAN 4
 #define Y_FILT 5
@@ -38,9 +38,7 @@ struct config1 : nnet::conv_config {
 	static const unsigned stride = STRIDE;
 	static const unsigned y_out = Y_OUTPUTS;
 
-        static const bool fully_unrolled = true;
-        static const unsigned roll_factor_in = 1;
-        static const unsigned roll_factor_out = 1;
+	static const unsigned reuse_factor = 1;
         static const bool store_weights_in_bram = false;
 
         typedef accum_default_t accum_t;

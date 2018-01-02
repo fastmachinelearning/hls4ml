@@ -42,9 +42,7 @@ struct conv_config
     static const unsigned stride = 1;
     static const unsigned y_out = 128; 
   
-    static const bool fully_unrolled = true;
-    static const unsigned roll_factor_in = 1;
-    static const unsigned roll_factor_out = 1;
+    static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
 };
 
@@ -72,6 +70,7 @@ void conv_1d(
     #pragma HLS ARRAY_PARTITION variable=biases complete
   
     // Limit multipliers to control parallelization
+    int multiplier_limit = ceil( (CONFIG_T::y_out*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::y_filt) / CONFIG_T::reuse_factor ); //TODO: double check, account for zeros
     //#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
     
@@ -89,26 +88,13 @@ void conv_1d(
     
     
     // Convolve, saving all multiplication results to accumulate later
-    for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
-	for(int ff = 0; ff < CONFIG_T::n_filt; ff++){
+    ConvOut: for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
+        ConvFilt: for(int ff = 0; ff < CONFIG_T::n_filt; ff++){
 
-	    for(int cc = 0; cc < CONFIG_T::n_chan; cc++){
-		
-		//Select data
-                //data_T data_buffer[CONFIG_T::y_filt];
-		//for(int jj = 0; jj < CONFIG_T::y_filt; jj++){
-		//    data_buffer[jj]=data_padded[ii*CONFIG_T::stride+jj][cc];
-		//}
-
-		//Select filter
-		//typename CONFIG_T::weight_t my_filter[CONFIG_T::y_filt];
-		//for(int jj = 0; jj < CONFIG_T::y_filt; jj++){
-		//    my_filter[jj]=weights[jj][cc][ff];
-		//}
+            ConvChan: for(int cc = 0; cc < CONFIG_T::n_chan; cc++){
 		
 		//Multiply
-		for(int jj = 0; jj < CONFIG_T::y_filt; jj++){
-                    //mult[ii][ff][cc][jj] = data_buffer[jj] * my_filter[jj]; 
+                ConvMult: for(int jj = 0; jj < CONFIG_T::y_filt; jj++){
                     mult[ii][ff][cc][jj] = data_padded[ii*CONFIG_T::stride+jj][cc] * weights[jj][cc][ff];
 		}
 
@@ -126,14 +112,14 @@ void conv_1d(
 
     
     // Accumulate multiplication result
-    for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
-	for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
+    AccumOut: for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
+        AccumFilt: for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
 	 
 	    //Do "dot product" sum within filter and sum over channels
-	    for(int cc = 0; cc < CONFIG_T::n_chan; cc++){
-		for(int jj = 0; jj < CONFIG_T::y_filt; jj++){
+            AccumChan: for(int cc = 0; cc < CONFIG_T::n_chan; cc++){
+                AccumDot: for(int jj = 0; jj < CONFIG_T::y_filt; jj++){
 		    acc[ii][ff] += mult[ii][ff][cc][jj];
-		}//end dot product loop
+                }//end dot product loop
 	    }//end channel loop
 
 	}//end filter loop
