@@ -30,7 +30,7 @@
 // Prototype of top level function for C-synthesis
 void myproject(
       input_t data[Y_INPUTS][N_CHAN],
-      result_t res[Y_INPUTS][N_CHAN],
+      result_t res[Y_OUTPUTS][N_FILT],
       unsigned short &const_size_in,
       unsigned short &const_size_out);
 
