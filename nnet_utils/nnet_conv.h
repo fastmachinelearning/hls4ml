@@ -70,7 +70,7 @@ void conv_1d(
     #pragma HLS ARRAY_PARTITION variable=biases complete
   
     // Limit multipliers to control parallelization
-    int multiplier_limit = ceil( (CONFIG_T::y_out*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::y_filt) / CONFIG_T::reuse_factor ); //TODO: double check, account for zeros
+    int multiplier_limit = ceil( (CONFIG_T::y_out*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::y_filt) / CONFIG_T::reuse_factor ); //TODO: account for sride and zeros
     //#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
     
