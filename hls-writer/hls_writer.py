@@ -9,11 +9,13 @@ def hls_writer(layer_list, yamlConfig):
     ###################
     
     f = open('../hls-template/firmware/myproject.cpp','r')
-    fout = open('{}/firmware/myproject.cpp'.format(yamlConfig['OutputDir']),'w')
+    fout = open('{}/firmware/{}.cpp'.format(yamlConfig['OutputDir'], yamlConfig['ProjectName']),'w')
 
     for line in f.readlines():
         #Add headers to weights and biases
-        if '//hls-fpga-machine-learning insert weights' in line:
+        if 'myproject' in line:
+            newline = line.replace('myproject',yamlConfig['ProjectName'])
+        elif '//hls-fpga-machine-learning insert weights' in line:
             newline = line
             for i in range(1,len(layer_list)+1):
                 newline = newline + '#include "weights/w{}.h"\n'.format(i)
@@ -180,12 +182,14 @@ def hls_writer(layer_list, yamlConfig):
     ###################
 
     f = open('../hls-template/myproject_test.cpp','r')
-    fout = open('{}/myproject_test.cpp'.format(yamlConfig['OutputDir']),'w')
+    fout = open('{}/{}_test.cpp'.format(yamlConfig['OutputDir'], yamlConfig['ProjectName']),'w')
 
     for line in f.readlines():
 
         #Insert numbers
-        if '//hls-fpga-machine-learning insert data' in line:
+        if 'myproject' in line:
+            newline = line.replace('myproject',yamlConfig['ProjectName'])
+        elif '//hls-fpga-machine-learning insert data' in line:
             newline = line
             newline = newline + '  input_t  data_str[N_INPUTS] = {'
             for i in range(0,layer_list[0]['n_in']-1):
@@ -199,14 +203,48 @@ def hls_writer(layer_list, yamlConfig):
 
 
     #######################
-    ## plain copy of rest
+    ## myproject.h
     #######################
-    copyfile('../hls-template/firmware/myproject.h', '{}/firmware/myproject.h'.format(yamlConfig['OutputDir']))
-    copyfile('../hls-template/build_prj.tcl', '{}/build_prj.tcl'.format(yamlConfig['OutputDir']))
-    copyfile('../hls-template/myproject.tcl', '{}/myproject.tcl'.format(yamlConfig['OutputDir']))
+    f = open('../hls-template/firmware/myproject.h','r')
+    fout = open('{}/firmware/{}.h'.format(yamlConfig['OutputDir'], yamlConfig['ProjectName']),'w')
+
+    for line in f.readlines():
+
+        if 'MYPROJECT' in line:
+            newline = line.replace('MYPROJECT',format(yamlConfig['ProjectName'].upper()))
+        elif 'void myproject(' in line:
+            newline = 'void {}(\n'.format(yamlConfig['ProjectName'])
+        else:
+            newline = line
+        fout.write(newline)
+
+    f.close()
+    fout.close()
 
 
-    #tarball output
+    #######################
+    ## build_prj.tcl
+    #######################
+    f = open('../hls-template/build_prj.tcl','r')
+    fout = open('{}/build_prj.tcl'.format(yamlConfig['OutputDir']),'w')
+
+    for line in f.readlines():
+
+        #Insert numbers
+        if 'myproject' in line:
+            newline = line.replace('myproject',yamlConfig['ProjectName'])
+        elif 'set_part {xc7vx690tffg1927-2}' in line:
+            newline = 'set_part {{{}}}\n'.format(yamlConfig['XilinxPart'])
+        else:
+            newline = line
+        fout.write(newline)
+    f.close()
+    fout.close()
+
+
+    ###################
+    # Tarball output
+    ###################
     with tarfile.open(yamlConfig['OutputDir'] + '.tar.gz', mode='w:gz') as archive:
         archive.add(yamlConfig['OutputDir'], recursive=True)
 
