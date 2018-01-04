@@ -135,6 +135,35 @@ void conv_1d(
 
 }
 
+
+template<class data_T, int NROWS, int NCOLS>
+    void flatten(
+        data_T    data[NROWS][NCOLS], 
+	data_T     res[NROWS*NCOLS])
+{
+    for(int r=0; r<NROWS; r++){
+        for(int c=0; c<NCOLS; c++){
+            res[r*NCOLS+c] = data[r][c];
+        }
+    }
+}
+
+
+template<class data_T, int NROWS, int NCOLS>
+    void unflatten(
+        data_T    data[NROWS*NCOLS], 
+	data_T     res[NROWS][NCOLS])
+{
+    for(int r=0; r<NROWS; r++){
+        for(int c=0; c<NCOLS; c++){
+             res[r][c] = data[r*NCOLS+c];
+        }
+    }
+}
+
+
+
+
 }//end namespace
 
 #endif
