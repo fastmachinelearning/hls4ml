@@ -20,17 +20,22 @@
 #include "parameters.h"
 #include "myproject.h"
 
+
 #include "nnet_layer.h"
 #include "nnet_conv.h"
 #include "nnet_activation.h"
 
+
+
 //hls-fpga-machine-learning insert weights
 #include "weights/w1.h"
 #include "weights/b1.h"
+#include "weights/w2.h"
+#include "weights/b2.h"
 
 void myproject(
 		  input_t data[Y_INPUTS][N_CHAN],
-		  result_t res[Y_OUTPUTS][N_FILT],
+		  result_t res[N_OUTPUTS],
 		  unsigned short &const_size_in,
 		  unsigned short &const_size_out)
 {
@@ -42,19 +47,36 @@ void myproject(
     #pragma HLS PIPELINE
 
     const_size_in   = Y_INPUTS*N_CHAN;
-    const_size_out  = Y_OUTPUTS*N_FILT;
+    const_size_out  = N_OUTPUTS;
 
     // ****************************************
     // NETWORK INSTANTIATION
     // ****************************************
 
     //hls-fpga-machine-learning insert layers
+    
+    //Conv1d
+    input_t layer1_out[Y_OUTPUTS][N_FILT];
+    #pragma HLS ARRAY_PARTITION variable=layer1_out complete
+    nnet::conv_1d<input_t, input_t, config1>(data, layer1_out, w1, b1);
 
-    //#pragma HLS ARRAY_PARTITION variable=conv1_out complete
-    //conv1_t logits1[N_LAYER_1];
-    //#pragma HLS ARRAY_PARTITION variable=logits1 complete
-    //nnet::conv_1d<input_t, layer1_t, config1>(data, logits1_out, w1, b1);
-    //nnet::relu<layer1_t, layer1_t, relu_config1>(logits1, conv1_out);
-    nnet::conv_1d<input_t, result_t, config1>(data, res, w1, b1);
+    //Flatten
+    input_t layer1_out_flat[Y_OUTPUTS*N_FILT];
+    #pragma HLS ARRAY_PARTITION variable=layer1_out_flat complete
+    nnet::flatten<input_t, Y_OUTPUTS, N_FILT>(layer1_out, layer1_out_flat);
+    //TODO:: CHANGE flatten to use a struct
+
+    //Relu
+    input_t layer1_out_flat_relu[Y_OUTPUTS*N_FILT];
+    #pragma HLS ARRAY_PARTITION variable=layer1_out_flat_relu complete
+    nnet::relu<input_t, input_t, relu_config1>(layer1_out_flat, layer1_out_flat_relu); 
+    
+    //Dense
+    result_t logits2[N_OUTPUTS];
+    #pragma HLS ARRAY_PARTITION variable=logits2 complete
+    nnet::compute_layer<input_t, result_t, config2>(layer1_out_flat_relu, logits2, w2, b2);
+
+    //Softmax
+    nnet::softmax<result_t, result_t, softmax_config2>(logits2, res);
 
 }
