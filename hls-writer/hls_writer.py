@@ -1,14 +1,17 @@
 import tarfile
 import yaml
 from shutil import copyfile
+import os
 
 def hls_writer(layer_list, yamlConfig):
     
     ###################
     ## myproject.cpp
     ###################
+
+    filedir = os.path.dirname(os.path.abspath(__file__))
     
-    f = open('../hls-template/firmware/myproject.cpp','r')
+    f = open(os.path.join(filedir,'../hls-template/firmware/myproject.cpp'),'r')
     fout = open('{}/firmware/myproject.cpp'.format(yamlConfig['OutputDir']),'w')
 
     for line in f.readlines():
@@ -96,7 +99,7 @@ def hls_writer(layer_list, yamlConfig):
     ## parameters.h
     ###################
 
-    f = open('../hls-template/firmware/parameters.h','r')
+    f = open(os.path.join(filedir,'../hls-template/firmware/parameters.h'),'r')
     fout = open('{}/firmware/parameters.h'.format(yamlConfig['OutputDir']),'w')
 
     config_template = """struct config{index} : nnet::layer_config {{
@@ -179,7 +182,7 @@ def hls_writer(layer_list, yamlConfig):
     ## test bench
     ###################
 
-    f = open('../hls-template/myproject_test.cpp','r')
+    f = open(os.path.join(filedir,'../hls-template/myproject_test.cpp'),'r')
     fout = open('{}/myproject_test.cpp'.format(yamlConfig['OutputDir']),'w')
 
     for line in f.readlines():
@@ -197,14 +200,25 @@ def hls_writer(layer_list, yamlConfig):
     f.close()
     fout.close()
 
+    #########################
+    ## adjust include paths
+    #########################
+    f = open(os.path.join(filedir, '../hls-template/build_prj.tcl'),'r')
+    nnetdir = os.path.abspath(os.path.join(filedir, "../nnet_utils"))
+    fout = open(os.path.abspath('{}/build_prj.tcl'.format(yamlConfig['OutputDir'])),'w')
+
+    relpath = os.path.relpath(nnetdir, start=yamlConfig['OutputDir'])
+    for line in f.readlines():
+        newline = line.replace("nnet_utils", relpath)
+        fout.write(newline)
+    f.close()
+    fout.close()
 
     #######################
     ## plain copy of rest
     #######################
-    copyfile('../hls-template/firmware/myproject.h', '{}/firmware/myproject.h'.format(yamlConfig['OutputDir']))
-    copyfile('../hls-template/build_prj.tcl', '{}/build_prj.tcl'.format(yamlConfig['OutputDir']))
-    copyfile('../hls-template/myproject.tcl', '{}/myproject.tcl'.format(yamlConfig['OutputDir']))
-
+    copyfile(os.path.join(filedir, '../hls-template/firmware/myproject.h'), '{}/firmware/myproject.h'.format(yamlConfig['OutputDir']))
+    copyfile(os.path.join(filedir, '../hls-template/myproject.tcl'), '{}/myproject.tcl'.format(yamlConfig['OutputDir']))
 
     #tarball output
     with tarfile.open(yamlConfig['OutputDir'] + '.tar.gz', mode='w:gz') as archive:
