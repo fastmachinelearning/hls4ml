@@ -8,7 +8,8 @@ import yaml
 import sys
 from shutil import copyfile
 
-sys.path.insert(0,'../hls-writer/')
+filedir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0,os.path.join(filedir, "..", "hls-writer"))
 from hls_writer import hls_writer
 
 #######################################
@@ -76,7 +77,12 @@ def main():
     args = parser.parse_args()
     if not args.config: parser.error('A configuration file needs to be specified.')
 
+    configDir  = os.path.abspath(os.path.dirname(args.config))
     yamlConfig = parse_config(args.config)
+    yamlConfig['OutputDir'] = os.path.join(configDir, yamlConfig['OutputDir'])
+    yamlConfig['KerasH5'] = os.path.join(configDir, yamlConfig['KerasH5'])
+    yamlConfig['KerasJson'] = os.path.join(configDir, yamlConfig['KerasJson'])
+
     if not (yamlConfig["IOType"] == "io_parallel" or yamlConfig["IOType"] == "io_serial"): 
         raise Exception('ERROR: Invalid IO type')
 
