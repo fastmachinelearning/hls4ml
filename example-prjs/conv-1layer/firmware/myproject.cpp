@@ -16,6 +16,7 @@
 //    You should have received a copy of the GNU General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
+#include <iostream>
 
 #include "parameters.h"
 #include "myproject.h"
@@ -70,7 +71,7 @@ void myproject(
     input_t layer1_out_flat_relu[Y_OUTPUTS*N_FILT];
     #pragma HLS ARRAY_PARTITION variable=layer1_out_flat_relu complete
     nnet::relu<input_t, input_t, relu_config1>(layer1_out_flat, layer1_out_flat_relu); 
-    
+
     //Dense
     result_t logits2[N_OUTPUTS];
     #pragma HLS ARRAY_PARTITION variable=logits2 complete
