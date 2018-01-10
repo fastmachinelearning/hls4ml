@@ -48,11 +48,11 @@ int main(int argc, char **argv)
     unsigned short size_in, size_out;
     myproject(data_str, res_str, size_in, size_out);
 
-    result_t res_expected[N_OUTPUTS] = {1.87593214e-02, 5.61190536e-04, 6.72846363e-05, 1.25997201e-01, 8.54614913e-01, 8.57645812e-12};
+    result_t res_expected[N_OUTPUTS] = {  1.87593365e-02,   5.61190830e-04,   6.72846166e-05,   1.25997232e-01,
+					  8.54614956e-01,   8.57646913e-12};
     
     for(int i=0; i<N_OUTPUTS; i++){
-	std::cout << res_str[i] 
-		  << " (expected " << res_expected[i] << ", " << 100.0*((float)res_str[i]-(float)res_expected[i])/(float)res_expected[i] << " percent difference)" << std::endl;
+	std::cout << res_str[i] << " (expected " << res_expected[i] << ", " << 100.0*((float)res_str[i]-(float)res_expected[i])/(float)res_expected[i] << " percent difference)" << std::endl;
     }
     //std::cout << std::endl;
     

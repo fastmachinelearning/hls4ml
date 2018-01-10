@@ -90,7 +90,6 @@ void conv_1d(
     // Convolve, saving all multiplication results to accumulate later
     ConvOut: for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
         ConvFilt: for(int ff = 0; ff < CONFIG_T::n_filt; ff++){
-
             ConvChan: for(int cc = 0; cc < CONFIG_T::n_chan; cc++){
 		
 		//Multiply
@@ -141,9 +140,15 @@ template<class data_T, int NROWS, int NCOLS>
         data_T    data[NROWS][NCOLS], 
 	data_T     res[NROWS*NCOLS])
 {
+
+    //Initialize
+    for(int i=0; i<NROWS*NCOLS; i++){
+	res[i]=0;
+    }
+
     for(int r=0; r<NROWS; r++){
         for(int c=0; c<NCOLS; c++){
-            res[r*NCOLS+c] = data[r][c];
+            res[r*NCOLS+c] += data[r][c];
         }
     }
 }
@@ -156,6 +161,8 @@ template<class data_T, int NROWS, int NCOLS>
 {
     for(int r=0; r<NROWS; r++){
         for(int c=0; c<NCOLS; c++){
+//	     data_T datareg = data[r*NCOLS+c];
+//             res[r][c] = datareg;
              res[r][c] = data[r*NCOLS+c];
         }
     }
