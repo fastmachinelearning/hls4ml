@@ -76,7 +76,7 @@ void myproject(
     result_t logits2[N_OUTPUTS];
     #pragma HLS ARRAY_PARTITION variable=logits2 complete
     nnet::compute_layer<input_t, result_t, config2>(layer1_out_flat_relu, logits2, w2, b2);
-
+    
     //Softmax
     nnet::softmax<result_t, result_t, softmax_config2>(logits2, res);
 

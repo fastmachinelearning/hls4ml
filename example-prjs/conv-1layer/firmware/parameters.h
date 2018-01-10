@@ -10,19 +10,19 @@
 #include "nnet_common.h"
 
 //hls-fpga-machine-learning insert numbers
-typedef ap_fixed<32,16> accum_default_t;
-typedef ap_fixed<32,16> weight_default_t;
-typedef ap_fixed<32,16> bias_default_t;
-typedef ap_fixed<32,16> input_t;
-typedef ap_fixed<32,16> result_t;
-#define Y_INPUTS 32
-#define N_CHAN 4
-#define Y_FILT 5
-#define N_FILT 3
-#define STRIDE 1
-#define PAD_LEFT 2
-#define PAD_RIGHT 2
-#define Y_OUTPUTS 32
+typedef ap_fixed<32,8> accum_default_t;
+typedef ap_fixed<32,8> weight_default_t;
+typedef ap_fixed<32,8> bias_default_t;
+typedef ap_fixed<32,8> input_t;
+typedef ap_fixed<32,8> result_t;
+#define Y_INPUTS 16
+#define N_CHAN 2
+#define Y_FILT 2
+#define N_FILT 2
+#define STRIDE 3
+#define PAD_LEFT 0
+#define PAD_RIGHT 0
+#define Y_OUTPUTS 5
 #define N_OUTPUTS 6
 
 //hls-fpga-machine-learning insert layer-precision
