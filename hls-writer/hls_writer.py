@@ -235,6 +235,8 @@ def hls_writer(layer_list, yamlConfig):
             newline = line.replace('myproject',yamlConfig['ProjectName'])
         elif 'set_part {xc7vx690tffg1927-2}' in line:
             newline = 'set_part {{{}}}\n'.format(yamlConfig['XilinxPart'])
+        elif 'create_clock -period 5 -name default' in line:
+            newline = 'create_clock -period {} -name default\n'.format(yamlConfig['ClockPeriod'])
         else:
             newline = line
         fout.write(newline)
