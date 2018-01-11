@@ -79,9 +79,12 @@ def main():
 
     configDir  = os.path.abspath(os.path.dirname(args.config))
     yamlConfig = parse_config(args.config)
-    yamlConfig['OutputDir'] = os.path.join(configDir, yamlConfig['OutputDir'])
-    yamlConfig['KerasH5'] = os.path.join(configDir, yamlConfig['KerasH5'])
-    yamlConfig['KerasJson'] = os.path.join(configDir, yamlConfig['KerasJson'])
+    if not os.path.isabs(yamlConfig['OutputDir']):
+        yamlConfig['OutputDir'] = os.path.join(configDir, yamlConfig['OutputDir'])
+    if not os.path.isabs(yamlConfig['KerasH5']):
+        yamlConfig['KerasH5'] = os.path.join(configDir, yamlConfig['KerasH5'])
+    if not os.path.isabs(yamlConfig['KerasJson']):
+        yamlConfig['KerasJson'] = os.path.join(configDir, yamlConfig['KerasJson'])
 
     if not (yamlConfig["IOType"] == "io_parallel" or yamlConfig["IOType"] == "io_serial"): 
         raise Exception('ERROR: Invalid IO type')
