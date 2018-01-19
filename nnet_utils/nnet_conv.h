@@ -54,11 +54,9 @@ void conv_1d(
 	     typename CONFIG_T::bias_t    biases[CONFIG_T::n_filt])
 {
 
-    data_T   data_padded[CONFIG_T::pad_left + CONFIG_T::y_in + CONFIG_T::pad_right][CONFIG_T::n_chan];
     typename CONFIG_T::accum_t mult[CONFIG_T::y_out][CONFIG_T::n_filt][CONFIG_T::n_chan][CONFIG_T::y_filt];
     typename CONFIG_T::accum_t acc[CONFIG_T::y_out][CONFIG_T::n_filt];
 
-    #pragma HLS ARRAY_PARTITION variable=data_padded complete
     #pragma HLS ARRAY_PARTITION variable=mult complete
     #pragma HLS ARRAY_PARTITION variable=acc complete
     
@@ -74,19 +72,6 @@ void conv_1d(
     //#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
     
-    // Padding
-    PadLoop1: for(int ii=0; ii<CONFIG_T::pad_left + CONFIG_T::y_in + CONFIG_T::pad_right; ii++){
-        PadLoop2: for(int cc=0; cc<CONFIG_T::n_chan; cc++){
-	    if(ii<CONFIG_T::pad_left || ii>=CONFIG_T::pad_left + CONFIG_T::y_in){
-	        data_padded[ii][cc] = 0;
-	    }
-	    else{
-	        data_padded[ii][cc] = data[ii-CONFIG_T::pad_left][cc];
- 	    }
-        } 
-    }
-    
-    
     // Convolve, saving all multiplication results to accumulate later
     ConvOut: for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
         ConvFilt: for(int ff = 0; ff < CONFIG_T::n_filt; ff++){
@@ -94,8 +79,13 @@ void conv_1d(
 		
 		//Multiply
                 ConvMult: for(int jj = 0; jj < CONFIG_T::y_filt; jj++){
-                    mult[ii][ff][cc][jj] = data_padded[ii*CONFIG_T::stride+jj][cc] * weights[jj][cc][ff];
-		}
+                    if((ii*CONFIG_T::stride+jj) < CONFIG_T::pad_left || (ii*CONFIG_T::stride+jj) >= (CONFIG_T::pad_left + CONFIG_T::y_in)){
+                        mult[ii][ff][cc][jj] = 0;
+                    }
+                    else {
+                        mult[ii][ff][cc][jj] = data[ii*CONFIG_T::stride+jj-CONFIG_T::pad_left][cc] * weights[jj][cc][ff];
+                    }
+                }
 
 	    }//end channel loop
 	}//end filter loop

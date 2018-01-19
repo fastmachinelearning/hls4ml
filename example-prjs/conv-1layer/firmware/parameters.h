@@ -16,13 +16,13 @@ typedef ap_fixed<32,8> bias_default_t;
 typedef ap_fixed<32,8> input_t;
 typedef ap_fixed<32,8> result_t;
 #define Y_INPUTS 16
-#define N_CHAN 2
-#define Y_FILT 2
-#define N_FILT 2
-#define STRIDE 3
-#define PAD_LEFT 0
-#define PAD_RIGHT 0
-#define Y_OUTPUTS 5
+#define N_CHAN 9
+#define Y_FILT 3
+#define N_FILT 8
+#define STRIDE 1
+#define PAD_LEFT 1
+#define PAD_RIGHT 1
+#define Y_OUTPUTS 16
 #define N_OUTPUTS 6
 
 //hls-fpga-machine-learning insert layer-precision
