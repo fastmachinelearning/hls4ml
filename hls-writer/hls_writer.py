@@ -1,14 +1,17 @@
 import tarfile
 import yaml
 from shutil import copyfile
+import os
 
 def hls_writer(layer_list, yamlConfig):
-    
+
+    filedir = os.path.dirname(os.path.abspath(__file__))
+
     ###################
     ## myproject.cpp
     ###################
-    
-    f = open('../hls-template/firmware/myproject.cpp','r')
+
+    f = open(os.path.join(filedir,'../hls-template/firmware/myproject.cpp'),'r')
     fout = open('{}/firmware/{}.cpp'.format(yamlConfig['OutputDir'], yamlConfig['ProjectName']),'w')
 
     for line in f.readlines():
@@ -98,7 +101,7 @@ def hls_writer(layer_list, yamlConfig):
     ## parameters.h
     ###################
 
-    f = open('../hls-template/firmware/parameters.h','r')
+    f = open(os.path.join(filedir,'../hls-template/firmware/parameters.h'),'r')
     fout = open('{}/firmware/parameters.h'.format(yamlConfig['OutputDir']),'w')
 
     config_template = """struct config{index} : nnet::layer_config {{
@@ -181,7 +184,7 @@ def hls_writer(layer_list, yamlConfig):
     ## test bench
     ###################
 
-    f = open('../hls-template/myproject_test.cpp','r')
+    f = open(os.path.join(filedir,'../hls-template/myproject_test.cpp'),'r')
     fout = open('{}/{}_test.cpp'.format(yamlConfig['OutputDir'], yamlConfig['ProjectName']),'w')
 
     for line in f.readlines():
@@ -205,7 +208,8 @@ def hls_writer(layer_list, yamlConfig):
     #######################
     ## myproject.h
     #######################
-    f = open('../hls-template/firmware/myproject.h','r')
+
+    f = open(os.path.join(filedir,'../hls-template/firmware/myproject.h'),'r')
     fout = open('{}/firmware/{}.h'.format(yamlConfig['OutputDir'], yamlConfig['ProjectName']),'w')
 
     for line in f.readlines():
@@ -225,21 +229,24 @@ def hls_writer(layer_list, yamlConfig):
     #######################
     ## build_prj.tcl
     #######################
-    f = open('../hls-template/build_prj.tcl','r')
+
+    nnetdir = os.path.abspath(os.path.join(filedir, "../nnet_utils"))
+    relpath = os.path.relpath(nnetdir, start=yamlConfig['OutputDir'])
+
+    f = open(os.path.join(filedir,'../hls-template/build_prj.tcl'),'r')
     fout = open('{}/build_prj.tcl'.format(yamlConfig['OutputDir']),'w')
 
     for line in f.readlines():
 
-        #Insert numbers
-        if 'myproject' in line:
-            newline = line.replace('myproject',yamlConfig['ProjectName'])
-        elif 'set_part {xc7vx690tffg1927-2}' in line:
-            newline = 'set_part {{{}}}\n'.format(yamlConfig['XilinxPart'])
+        line = line.replace('myproject',yamlConfig['ProjectName'])
+        line = line.replace('nnet_utils', relpath)
+
+        if 'set_part {xc7vx690tffg1927-2}' in line:
+            line = 'set_part {{{}}}\n'.format(yamlConfig['XilinxPart'])
         elif 'create_clock -period 5 -name default' in line:
-            newline = 'create_clock -period {} -name default\n'.format(yamlConfig['ClockPeriod'])
-        else:
-            newline = line
-        fout.write(newline)
+            line = 'create_clock -period {} -name default\n'.format(yamlConfig['ClockPeriod'])
+
+        fout.write(line)
     f.close()
     fout.close()
 
