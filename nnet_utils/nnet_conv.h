@@ -68,8 +68,11 @@ void conv_1d(
     #pragma HLS ARRAY_PARTITION variable=biases complete
   
     // Limit multipliers to control parallelization
-    int multiplier_limit = ceil( (CONFIG_T::y_out*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::y_filt) / CONFIG_T::reuse_factor ); //TODO: account for stride and zeros
-    //#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+    int multiplier_limit = ceil( (CONFIG_T::y_out*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::y_filt - 
+	                          CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::pad_left - 
+                              	  CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::pad_right) 
+	                        / CONFIG_T::reuse_factor ); 
+    #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
     
     // Convolve, saving all multiplication results to accumulate later
