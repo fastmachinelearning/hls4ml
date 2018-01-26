@@ -6,4 +6,15 @@ The project is currently in development, so please let us know your experiences 
 
 contact: hls4ml.help@gmail.com
 
+## status
+
+*in construction* 
+
+ML code support: 
+   * Keras/Tensorflow
+   * Let us know if you want support for other ML codes.  
+
+Neural network architectures:
+   * DNNs 
+   * in progress: CNNs, regressions
 

@@ -1,4 +1,5 @@
 # Summary
 
-* [Introduction](README.md)
+* [HLS4ML](README.md)
+* [Dependencies](DEPENDENCIES.md)
 
