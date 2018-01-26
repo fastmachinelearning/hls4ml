@@ -1,6 +1,6 @@
 # HLS4ML
 
-[logo](img/logo.png)
+![logo](img/logo.jpg)
 
 A package for creating firmware implementations of machine learning algorithms using high level synthesis language (HLS). We translate traditional machine learning package models into HLS that can be configured for your use-case!
 
