@@ -1,20 +1,22 @@
-<img src="img/logo.jpg" width="200" />
+<img src="img/logo.jpg" width="500" />
 
 A package for creating firmware implementations of machine learning algorithms using high level synthesis language (HLS). We translate traditional machine learning package models into HLS that can be configured for your use-case!
 
 The project is currently in development, so please let us know your experiences and if you would like new features to be added.
 
-contact: hls4ml.help@gmail.com
+contact: [hls4ml.help@gmail.com](mailto:hls4ml.help@gmail.com)
 
-## status
+## Project status
 
-*in construction* 
+*in alpha version* 
 
 ML code support: 
    * Keras/Tensorflow
-   * Let us know if you want support for other ML codes.  
+   * Let us know if you want support for other ML codes
+      * Planned: PyTorch  
 
 Neural network architectures:
    * DNNs 
-   * in progress: CNNs, regressions
+   * in progress: CNN
+   * in progress: RNN/LSTM
 
