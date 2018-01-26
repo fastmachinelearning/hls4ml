@@ -1,5 +1,9 @@
 # Summary
 
+![logo](img/logo.png)
+
 * [HLS4ML](README.md)
-* [Dependencies](DEPENDENCIES.md)
+* [Setup](SETUP.md)
+   * [Dependencies](setup/DEPENDENCIES.md)
+* [Concepts](CONCEPTS.md)
 
