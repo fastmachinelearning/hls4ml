@@ -1,3 +1,9 @@
-# Introduction
+# HLS4ML
 
-My first test
+A package for creating firmware implementations of machine learning algorithms using high level synthesis language (HLS). We translate traditional machine learning package models into HLS that can be configured for your use-case!
+
+The project is currently in development, so please let us know your experiences and if you would like new features to be added.
+
+contact: hls4ml.help@gmail.com
+
+
