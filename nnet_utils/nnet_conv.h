@@ -51,11 +51,11 @@ template<class data_T, class res_T, typename CONFIG_T>
 void conv_1d(
 	     data_T    data[CONFIG_T::y_in][CONFIG_T::n_chan],
 	     res_T     res[CONFIG_T::y_out][CONFIG_T::n_filt],
-	     typename CONFIG_T::weight_t  weights[CONFIG_T::y_filt][CONFIG_T::n_chan][CONFIG_T::n_filt],
+	     typename CONFIG_T::weight_t  weights[CONFIG_T::y_filt * CONFIG_T::n_chan * CONFIG_T::n_filt],
 	     typename CONFIG_T::bias_t    biases[CONFIG_T::n_filt])
 {
 
-    typename CONFIG_T::accum_t mult[CONFIG_T::y_out][CONFIG_T::n_filt][CONFIG_T::n_chan][CONFIG_T::y_filt];
+    typename CONFIG_T::accum_t mult[CONFIG_T::y_out * CONFIG_T::n_filt * CONFIG_T::n_chan * CONFIG_T::y_filt];
     typename CONFIG_T::accum_t acc[CONFIG_T::y_out][CONFIG_T::n_filt];
 
     #pragma HLS ARRAY_PARTITION variable=mult complete dim=0
@@ -80,52 +80,51 @@ void conv_1d(
     ConvOut: for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
         ConvFilt: for(int ff = 0; ff < CONFIG_T::n_filt; ff++){
             ConvChan: for(int cc = 0; cc < CONFIG_T::n_chan; cc++){
-		
-		//Multiply
                 ConvMult: for(int jj = 0; jj < CONFIG_T::y_filt; jj++){
+                    
+                    int index_mult   = ii*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::y_filt + ff*CONFIG_T::n_chan*CONFIG_T::y_filt + cc*CONFIG_T::y_filt + jj;
+                    int index_weight = jj*CONFIG_T::n_chan*CONFIG_T::n_filt + cc*CONFIG_T::n_filt + ff;
+                    
                     if((ii*CONFIG_T::stride+jj) < CONFIG_T::pad_left || (ii*CONFIG_T::stride+jj) >= (CONFIG_T::pad_left + CONFIG_T::y_in)){
-                        mult[ii][ff][cc][jj] = 0;
+                        mult[index_mult] = 0;
                     }
                     else {
-                        mult[ii][ff][cc][jj] = data[ii*CONFIG_T::stride+jj-CONFIG_T::pad_left][cc] * weights[jj][cc][ff];
+                        mult[index_mult] = data[ii*CONFIG_T::stride+jj-CONFIG_T::pad_left][cc] * weights[index_weight];
                     }
                 }
-
-	    }//end channel loop
-	}//end filter loop
+	    	}//end channel loop
+		}//end filter loop
     }//end output loop
 
 
     // Initialize accumulator with input biases
     for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
-	for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
-	    acc[ii][ff]=biases[ff];
-	}
+		for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
+	    	acc[ii][ff]=biases[ff];
+		}
     }
 
     
     // Accumulate multiplication result
     AccumOut: for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
         AccumFilt: for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
-	 
-	    //Do "dot product" sum within filter and sum over channels
+			//Do "dot product" sum within filter and sum over channels
             AccumChan: for(int cc = 0; cc < CONFIG_T::n_chan; cc++){
-                AccumDot: for(int jj = 0; jj < CONFIG_T::y_filt; jj++){
-		    acc[ii][ff] += mult[ii][ff][cc][jj];
+			    AccumDot: for(int jj = 0; jj < CONFIG_T::y_filt; jj++){
+                    int index_mult = ii*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::y_filt + ff*CONFIG_T::n_chan*CONFIG_T::y_filt + cc*CONFIG_T::y_filt + jj;
+		    		acc[ii][ff] += mult[index_mult];
                 }//end dot product loop
-	    }//end channel loop
-
-	}//end filter loop
+	    	}//end channel loop
+		}//end filter loop
     }//end output loop
 
     
      // Cast to "res_t" type 
     for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
-	for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
-	    res[ii][ff] = (res_T)(acc[ii][ff]);
-	}
+		for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
+	    	res[ii][ff] = (res_T)(acc[ii][ff]);
+		}
     }
-
 }
 
 
