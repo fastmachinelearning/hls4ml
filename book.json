@@ -4,4 +4,10 @@
       "theme": "white"
     }
   }
+  {	  
+    "plugins": ["styles-less"],
+      "styles": {
+         "pdf": "./styles/website.less"
+    }
+  }
 }
