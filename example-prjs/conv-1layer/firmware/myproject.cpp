@@ -44,7 +44,7 @@ void myproject(
     //hls-fpga-machine-learning insert IO
     #pragma HLS ARRAY_RESHAPE variable=data complete dim=0
     #pragma HLS ARRAY_RESHAPE variable=res complete dim=0
-    #pragma HLS INTERFACE ap_hs port=data,res
+    #pragma HLS INTERFACE ap_vld port=data,res
 
     #pragma HLS PIPELINE
 
