@@ -42,8 +42,9 @@ void myproject(
 {
 
     //hls-fpga-machine-learning insert IO
-    #pragma HLS ARRAY_PARTITION variable=data complete 
-    #pragma HLS ARRAY_PARTITION variable=res complete 
+    #pragma HLS ARRAY_RESHAPE variable=data complete dim=0
+    #pragma HLS ARRAY_RESHAPE variable=res complete dim=0
+    #pragma HLS INTERFACE ap_hs port=data,res
 
     #pragma HLS PIPELINE
 
@@ -58,23 +59,23 @@ void myproject(
     
     //Conv1d
     input_t layer1_out[Y_OUTPUTS][N_FILT];
-    #pragma HLS ARRAY_PARTITION variable=layer1_out complete
+    #pragma HLS ARRAY_PARTITION variable=layer1_out complete dim=0
     nnet::conv_1d<input_t, input_t, config1>(data, layer1_out, w1, b1);
 
     //Flatten
     input_t layer1_out_flat[Y_OUTPUTS*N_FILT];
-    #pragma HLS ARRAY_PARTITION variable=layer1_out_flat complete
+    #pragma HLS ARRAY_PARTITION variable=layer1_out_flat complete dim=0
     nnet::flatten<input_t, Y_OUTPUTS, N_FILT>(layer1_out, layer1_out_flat);
     //TODO:: CHANGE flatten to use a struct
 
     //Relu
     input_t layer1_out_flat_relu[Y_OUTPUTS*N_FILT];
-    #pragma HLS ARRAY_PARTITION variable=layer1_out_flat_relu complete
+    #pragma HLS ARRAY_PARTITION variable=layer1_out_flat_relu complete dim=0
     nnet::relu<input_t, input_t, relu_config1>(layer1_out_flat, layer1_out_flat_relu); 
 
     //Dense
     result_t logits2[N_OUTPUTS];
-    #pragma HLS ARRAY_PARTITION variable=logits2 complete
+    #pragma HLS ARRAY_PARTITION variable=logits2 complete dim=0
     nnet::compute_layer<input_t, result_t, config2>(layer1_out_flat_relu, logits2, w2, b2);
     
     //Softmax
