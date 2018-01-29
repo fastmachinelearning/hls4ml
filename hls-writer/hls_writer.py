@@ -4,19 +4,21 @@ from shutil import copyfile
 import os
 
 def hls_writer(layer_list, yamlConfig):
-    
+
+    filedir = os.path.dirname(os.path.abspath(__file__))
+
     ###################
     ## myproject.cpp
     ###################
 
-    filedir = os.path.dirname(os.path.abspath(__file__))
-    
     f = open(os.path.join(filedir,'../hls-template/firmware/myproject.cpp'),'r')
-    fout = open('{}/firmware/myproject.cpp'.format(yamlConfig['OutputDir']),'w')
+    fout = open('{}/firmware/{}.cpp'.format(yamlConfig['OutputDir'], yamlConfig['ProjectName']),'w')
 
     for line in f.readlines():
         #Add headers to weights and biases
-        if '//hls-fpga-machine-learning insert weights' in line:
+        if 'myproject' in line:
+            newline = line.replace('myproject',yamlConfig['ProjectName'])
+        elif '//hls-fpga-machine-learning insert weights' in line:
             newline = line
             for i in range(1,len(layer_list)+1):
                 newline = newline + '#include "weights/w{}.h"\n'.format(i)
@@ -183,12 +185,14 @@ def hls_writer(layer_list, yamlConfig):
     ###################
 
     f = open(os.path.join(filedir,'../hls-template/myproject_test.cpp'),'r')
-    fout = open('{}/myproject_test.cpp'.format(yamlConfig['OutputDir']),'w')
+    fout = open('{}/{}_test.cpp'.format(yamlConfig['OutputDir'], yamlConfig['ProjectName']),'w')
 
     for line in f.readlines():
 
         #Insert numbers
-        if '//hls-fpga-machine-learning insert data' in line:
+        if 'myproject' in line:
+            newline = line.replace('myproject',yamlConfig['ProjectName'])
+        elif '//hls-fpga-machine-learning insert data' in line:
             newline = line
             newline = newline + '  input_t  data_str[N_INPUTS] = {'
             for i in range(0,layer_list[0]['n_in']-1):
@@ -200,27 +204,56 @@ def hls_writer(layer_list, yamlConfig):
     f.close()
     fout.close()
 
-    #########################
-    ## adjust include paths
-    #########################
-    f = open(os.path.join(filedir, '../hls-template/build_prj.tcl'),'r')
-    nnetdir = os.path.abspath(os.path.join(filedir, "../nnet_utils"))
-    fout = open(os.path.abspath('{}/build_prj.tcl'.format(yamlConfig['OutputDir'])),'w')
 
-    relpath = os.path.relpath(nnetdir, start=yamlConfig['OutputDir'])
+    #######################
+    ## myproject.h
+    #######################
+
+    f = open(os.path.join(filedir,'../hls-template/firmware/myproject.h'),'r')
+    fout = open('{}/firmware/{}.h'.format(yamlConfig['OutputDir'], yamlConfig['ProjectName']),'w')
+
     for line in f.readlines():
-        newline = line.replace("nnet_utils", relpath)
+
+        if 'MYPROJECT' in line:
+            newline = line.replace('MYPROJECT',format(yamlConfig['ProjectName'].upper()))
+        elif 'void myproject(' in line:
+            newline = 'void {}(\n'.format(yamlConfig['ProjectName'])
+        else:
+            newline = line
         fout.write(newline)
+
     f.close()
     fout.close()
 
-    #######################
-    ## plain copy of rest
-    #######################
-    copyfile(os.path.join(filedir, '../hls-template/firmware/myproject.h'), '{}/firmware/myproject.h'.format(yamlConfig['OutputDir']))
-    copyfile(os.path.join(filedir, '../hls-template/myproject.tcl'), '{}/myproject.tcl'.format(yamlConfig['OutputDir']))
 
-    #tarball output
+    #######################
+    ## build_prj.tcl
+    #######################
+
+    nnetdir = os.path.abspath(os.path.join(filedir, "../nnet_utils"))
+    relpath = os.path.relpath(nnetdir, start=yamlConfig['OutputDir'])
+
+    f = open(os.path.join(filedir,'../hls-template/build_prj.tcl'),'r')
+    fout = open('{}/build_prj.tcl'.format(yamlConfig['OutputDir']),'w')
+
+    for line in f.readlines():
+
+        line = line.replace('myproject',yamlConfig['ProjectName'])
+        line = line.replace('nnet_utils', relpath)
+
+        if 'set_part {xc7vx690tffg1927-2}' in line:
+            line = 'set_part {{{}}}\n'.format(yamlConfig['XilinxPart'])
+        elif 'create_clock -period 5 -name default' in line:
+            line = 'create_clock -period {} -name default\n'.format(yamlConfig['ClockPeriod'])
+
+        fout.write(line)
+    f.close()
+    fout.close()
+
+
+    ###################
+    # Tarball output
+    ###################
     with tarfile.open(yamlConfig['OutputDir'] + '.tar.gz', mode='w:gz') as archive:
         archive.add(yamlConfig['OutputDir'], recursive=True)
 
