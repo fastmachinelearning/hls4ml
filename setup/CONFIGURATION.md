@@ -53,7 +53,7 @@ nnet::compute_layer<layer1_t, result_t, config2>(layer1_out, logits2, w2, b2);
 nnet::sigmoid<result_t, result_t, sigmoid_config2>(logits2, res);
 ```
 
-You can see, for the simple 1-layer DNN, the computation(`nnet::compute_layer`) and activation (`nnet::relu`/`nnet::sigmoid`) caluclation for each layer.  For each layer, it has its own additional configuration parameters, e.g. `config1`.
+You can see, for the simple 1-layer DNN, the computation (`nnet::compute_layer`) and activation (`nnet::relu`/`nnet::sigmoid`) caluclation for each layer.  For each layer, it has its own additional configuration parameters, e.g. `config1`.
 
 In your project, the file `<OutputDir>/firmware/parameters.h` stores all the configuration options for each neural network library.
 An example is [here](https://github.com/hls-fpga-machine-learning/HLS4ML/blob/v0.0.2/example-prjs/higgs-1layer/firmware/parameters.h). So for example, the detailed configuration options for an example DNN layer is:
