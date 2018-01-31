@@ -21,6 +21,7 @@
 #define NNET_CONV_H_
 
 #include "nnet_common.h"
+#include <cstdlib>
 
 namespace nnet {
 
@@ -31,86 +32,136 @@ struct conv_config
     typedef float weight_t;
     typedef float accum_t;
 
-    static const unsigned y_in = 10;
-    static const unsigned n_chan = 1;
-    static const unsigned y_filt = 2;
-
-    static const bool fully_unrolled = true;
-    static const unsigned roll_factor_in = 1;
-    static const unsigned roll_factor_out = 1;
+    // Convolutional parameters
+    static const unsigned pad_left = 4;
+    static const unsigned pad_right = 5;
+    static const unsigned y_in = 128;
+    static const unsigned n_chan = 9;
+    static const unsigned y_filt = 10;
+    static const unsigned n_filt = 4;
+    static const unsigned stride = 1;
+    static const unsigned y_out = 128; 
+  
+    static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
-    // partitioning arrays cyclically to go with roll factors?
 };
 
 template<class data_T, class res_T, typename CONFIG_T>
 void conv_1d(
 	     data_T    data[CONFIG_T::y_in][CONFIG_T::n_chan],
-	     res_T     res[CONFIG_T::y_in][CONFIG_T::n_chan],
-	     typename CONFIG_T::weight_t  weights[CONFIG_T::y_filt][CONFIG_T::n_chan],
-	     typename CONFIG_T::bias_t    biases[CONFIG_T::n_chan])
+	     res_T     res[CONFIG_T::y_out][CONFIG_T::n_filt],
+	     typename CONFIG_T::weight_t  weights[CONFIG_T::y_filt][CONFIG_T::n_chan][CONFIG_T::n_filt],
+	     typename CONFIG_T::bias_t    biases[CONFIG_T::n_filt])
 {
-    // conv_1d: 1-dimensional convolution
-    //   - Also includes multiple input channels
-    //   - Only allows new data on each ROW (i.e. this is NOT a 2D convolution)
-    // Only ONE output channel per input channel
 
-    // Initial directives used from HLS User guide, pg 381
-    // (https://www.xilinx.com/support/documentation/sw_manuals/xilinx2015_4/ug902-vivado-high-level-synthesis.pdf)
+    typename CONFIG_T::accum_t mult[CONFIG_T::y_out][CONFIG_T::n_filt][CONFIG_T::n_chan][CONFIG_T::y_filt];
+    typename CONFIG_T::accum_t acc[CONFIG_T::y_out][CONFIG_T::n_filt];
 
-    // TODO: Figure out how to correctly pipeline FiltLoop-- It sort of needs to be pipelined
-    // across iterations of ChanLoop. Otherwise it does not want to consistently hit 10 ns timing
-    data_T buffer[CONFIG_T::y_filt][CONFIG_T::n_chan];
-    for(int ii = 0; ii < CONFIG_T::y_filt; ii++) {
-      for(int chan = 0; chan < CONFIG_T::n_chan; chan++){
-      #pragma HLS UNROLL
-	// Initialize buffer to zero: effecively a form of "same" zero padding
-	buffer[ii][chan] = 0;
-      }
-    }
+    #pragma HLS ARRAY_PARTITION variable=mult complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=acc complete dim=0
     
-    typename CONFIG_T::accum_t int_accum[CONFIG_T::n_chan];
+    // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases 
+    #pragma HLS function_instantiate variable=weights,biases
+    
+    // Parallel mode
+    #pragma HLS PIPELINE
+    #pragma HLS ARRAY_PARTITION variable=biases complete dim=0
+  
+    // Limit multipliers to control parallelization
+    int multiplier_limit = ceil( (CONFIG_T::y_out*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::y_filt - 
+	                          CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::pad_left - 
+                              	  CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::pad_right) 
+	                        / CONFIG_T::reuse_factor ); 
+    #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
-    #pragma HLS ARRAY_PARTITION variable=buffer complete
-    #pragma HLS ARRAY_PARTITION variable=weights complete
+    
+    // Convolve, saving all multiplication results to accumulate later
+    ConvOut: for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
+        ConvFilt: for(int ff = 0; ff < CONFIG_T::n_filt; ff++){
+            ConvChan: for(int cc = 0; cc < CONFIG_T::n_chan; cc++){
+		
+		//Multiply
+                ConvMult: for(int jj = 0; jj < CONFIG_T::y_filt; jj++){
+                    if((ii*CONFIG_T::stride+jj) < CONFIG_T::pad_left || (ii*CONFIG_T::stride+jj) >= (CONFIG_T::pad_left + CONFIG_T::y_in)){
+                        mult[ii][ff][cc][jj] = 0;
+                    }
+                    else {
+                        mult[ii][ff][cc][jj] = data[ii*CONFIG_T::stride+jj-CONFIG_T::pad_left][cc] * weights[jj][cc][ff];
+                    }
+                }
 
-    // NOTE: Currently we only output data after the kernel is full
-    //         (ie: row >= CONFIG_T::y_filt-1)
-    // NOTE UPDATE: Now, we output data with "same" zero padding on the left 
-    // (0's are used if buffer is not full)
-    // TODO: Find out what states get saved between runs!
+	    }//end channel loop
+	}//end filter loop
+    }//end output loop
 
-    RowLoop:for(int row = 0; row < CONFIG_T::y_in; row++) {
-        ChanLoop:for(int chan = 0; chan < CONFIG_T::n_chan; chan++){
-	    // data_T val = data.read();
-	    data_T val = data[row][chan];
 
-            // std::cout << "Read " << val << std::endl;
+    // Initialize accumulator with input biases
+    for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
+	for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
+	    acc[ii][ff]=biases[ff];
+	}
+    }
 
-            BuffLoop:for(int ii = 0; ii < CONFIG_T::y_filt; ii++) {
-            #pragma HLS UNROLL
-                // Shift operation for buffer
-                buffer[ii][chan] = ii < CONFIG_T::y_filt - 1 ? buffer[ii + 1][chan] : val;
-            }
+    
+    // Accumulate multiplication result
+    AccumOut: for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
+        AccumFilt: for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
+	 
+	    //Do "dot product" sum within filter and sum over channels
+            AccumChan: for(int cc = 0; cc < CONFIG_T::n_chan; cc++){
+                AccumDot: for(int jj = 0; jj < CONFIG_T::y_filt; jj++){
+		    acc[ii][ff] += mult[ii][ff][cc][jj];
+                }//end dot product loop
+	    }//end channel loop
 
-            int_accum[chan] = 0;
+	}//end filter loop
+    }//end output loop
 
-            FiltLoop:for(int ii = 0; ii < CONFIG_T::y_filt; ii++){
-            #pragma HLS UNROLL factor=4
-                int_accum[chan] += buffer[ii][chan] * weights[ii][chan];
-                // std::cout << "\tFilter/ChIn: " << ii << "/" << chan << ", Buffer: " << buffer[ii][chan] << std::endl;
-                // std::cout << "\tAccum: " << int_accum[chan] << std::endl;
-                // std::cout << "\tWeight: " << weights[ii][chan] << std::endl;
-            }
-            // When we hit the last filter sample, add bias term and output
-	    //            if (row >= CONFIG_T::y_filt-1) {
-	    // res << int_accum[chan] + biases[chan];
-	    res[row][chan] = int_accum[chan] + biases[chan];
-	    // std::cout << "\tResult: " << int_accum[jj] + biases[chan][jj]] << std::endl;
-	    //            }
+    
+     // Cast to "res_t" type 
+    for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
+	for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
+	    res[ii][ff] = (res_T)(acc[ii][ff]);
+	}
+    }
+
+}
+
+
+template<class data_T, int NROWS, int NCOLS>
+    void flatten(
+        data_T    data[NROWS][NCOLS], 
+	data_T     res[NROWS*NCOLS])
+{
+
+    //Initialize
+    //for(int i=0; i<NROWS*NCOLS; i++){
+    //    res[i]=0;
+    //}
+
+    for(int r=0; r<NROWS; r++){
+        for(int c=0; c<NCOLS; c++){
+            res[r*NCOLS+c] = data[r][c];
         }
     }
 }
 
+
+template<class data_T, int NROWS, int NCOLS>
+    void unflatten(
+        data_T    data[NROWS*NCOLS], 
+	data_T     res[NROWS][NCOLS])
+{
+    for(int r=0; r<NROWS; r++){
+        for(int c=0; c<NCOLS; c++){
+             res[r][c] = data[r*NCOLS+c];
+        }
+    }
 }
+
+
+
+
+}//end namespace
 
 #endif
