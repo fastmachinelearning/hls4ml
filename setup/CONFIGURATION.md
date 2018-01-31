@@ -2,9 +2,11 @@
 
 Now that you have a run a quick example workflow of hls4ml, let's go through the various configuration options that you have for the translation of your machine learning algorithm.  
 
-# Keras translation
+One important part of hls4ml to remember is that the user is responsible for the format of the inputs.  There is no automatic formatting or normalization so this must be done in the training. 
 
-## Top level configuration
+## Keras translation
+
+### Top level configuration
 
 Configuration files are YAML files in hls4ml (`*.yml`). An example configuration file is [here](https://github.com/hls-fpga-machine-learning/HLS4ML/blob/v0.0.2/keras-to-hls/keras-config.yml).
 
@@ -35,7 +37,7 @@ Then you have some optimization parameters for how your algorithm runs:
 
 For more information on the optimization parameters and what they mean, you can visit the <a href="../CONCEPTS.html">Concepts</a> chapter.
 
-## Detailed configuration
+### Detailed configuration
 
 After you create your project, you have the opportunity to do more configuration if you so choose.  
 In your project, the file `<OutputDir>/firmware/<ProjectName>.h` is your top level file.  It has the network architecture constructed for you.  An example is [here](https://github.com/hls-fpga-machine-learning/HLS4ML/blob/v0.0.2/example-prjs/higgs-1layer/firmware/myproject.cpp) and the important snippet is:
