@@ -8,7 +8,7 @@ contact: [hls4ml.help@gmail.com](mailto:hls4ml.help@gmail.com)
 
 ## Project status
 
-*in alpha version (Jan 26, 2018)* 
+*in alpha version (Jan 30, 2018)*, **v0.0.2**
 
 ML code support: 
    * Keras/Tensorflow

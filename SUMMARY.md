@@ -4,6 +4,7 @@
 * [Setup](SETUP.md)
    * [Dependencies](setup/DEPENDENCIES.md)
    * [Quick Start](setup/QUICKSTART.md)
+   * [Configuration](setup/CONFIGURATION.md)
 * [Concepts](CONCEPTS.md)
 * [Release Notes](RELEASENOTES.md)
 * [Reference and Contributors](REFERENCE.md)

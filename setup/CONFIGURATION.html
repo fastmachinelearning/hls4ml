@@ -1,0 +1,396 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>Configuration · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="../CONCEPTS.html" />
+    
+    
+    <link rel="prev" href="QUICKSTART.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../">
+            
+                <a href="../">
+            
+                    
+                    HLS4ML
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="../SETUP.html">
+            
+                <a href="../SETUP.html">
+            
+                    
+                    Setup
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.2.1" data-path="DEPENDENCIES.html">
+            
+                <a href="DEPENDENCIES.html">
+            
+                    
+                    Dependencies
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.2" data-path="QUICKSTART.html">
+            
+                <a href="QUICKSTART.html">
+            
+                    
+                    Quick Start
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.2.3" data-path="CONFIGURATION.html">
+            
+                <a href="CONFIGURATION.html">
+            
+                    
+                    Configuration
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="../CONCEPTS.html">
+            
+                <a href="../CONCEPTS.html">
+            
+                    
+                    Concepts
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="../RELEASENOTES.html">
+            
+                <a href="../RELEASENOTES.html">
+            
+                    
+                    Release Notes
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="../REFERENCE.html">
+            
+                <a href="../REFERENCE.html">
+            
+                    
+                    Reference and Contributors
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" >
+            
+                <a target="_blank" href="https://github.com/hls-fpga-machine-learning/HLS4ML">
+            
+                    
+                    Code Repository
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href=".." >Configuration</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="configuration">Configuration</h1>
+<p>Now that you have a run a quick example workflow of hls4ml, let&apos;s go through the various configuration options that you have for the translation of your machine learning algorithm.  </p>
+<h1 id="keras-translation">Keras translation</h1>
+<h2 id="top-level-configuration">Top level configuration</h2>
+<p>Configuration files are YAML files in hls4ml (<code>*.yml</code>). An example configuration file is <a href="https://github.com/hls-fpga-machine-learning/HLS4ML/blob/v0.0.2/keras-to-hls/keras-config.yml" target="_blank">here</a>.</p>
+<p>It looks like this:</p>
+<pre><code>KerasJson: example-keras-model-files/KERAS_1layer.json
+KerasH5:   example-keras-model-files/KERAS_1layer_weights.h5 
+OutputDir: my-hls-dir-test
+ProjectName: myproject
+XilinxPart: xc7vx690tffg1927-2
+ClockPeriod: 5
+
+IOType: io_parallel # options: io_serial/io_parallel
+ReuseFactor: 1
+DefaultPrecision: ap_fixed&lt;18,8&gt;
+</code></pre><p>There are a number of configuration options that you have.  Let&apos;s go through them.  You have basic setup parameters: </p>
+<ul>
+<li><strong>KerasJson/KerasH5</strong>: for Keras, the model architecture and weights are stored in a <code>json</code> and <code>h5</code> file.  The path to those files are required here.</li>
+<li><strong>OutputDir</strong>: the output directory where you want your HLS project to appear</li>
+<li><strong>ProjectName</strong>: the name of the HLS project IP that is produced</li>
+<li><strong>XilinxPart</strong>: the particular FPGA part number that you are considering, here it&apos;s a Xilinx Virtex-7 FPGA</li>
+<li><strong>ClockPeriod</strong>: the clock period, in ns, at which your algorithm runs
+Then you have some optimization parameters for how your algorithm runs:</li>
+<li><strong>IOType</strong>: your options are <code>io_parallel</code> or <code>io_serial</code> where this really defines if you are pipelining your algorithm or not</li>
+<li><strong>ReuseFactor</strong>: in the case that you are pipelining, this defines the pipeline interval or initiation interval</li>
+<li><strong>DefaultPrecision</strong>: this defines the precsion of your inputs, outputs, weights and biases.  you have a chance to further configure this more finely</li>
+</ul>
+<p>For more information on the optimization parameters and what they mean, you can visit the <a href="../CONCEPTS.html">Concepts</a> chapter.</p>
+<h2 id="detailed-configuration">Detailed configuration</h2>
+<p>After you create your project, you have the opportunity to do more configuration if you so choose.<br>In your project, the file <code>&lt;OutputDir&gt;/firmware/&lt;ProjectName&gt;.h</code> is your top level file.  It has the network architecture constructed for you.  An example is <a href="https://github.com/hls-fpga-machine-learning/HLS4ML/blob/v0.0.2/example-prjs/higgs-1layer/firmware/myproject.cpp" target="_blank">here</a> and the important snippet is:</p>
+<pre><code>layer1_t layer1_out[N_LAYER_1];
+#pragma HLS ARRAY_PARTITION variable=layer1_out complete
+layer1_t logits1[N_LAYER_1];
+#pragma HLS ARRAY_PARTITION variable=logits1 complete
+nnet::compute_layer&lt;input_t, layer1_t, config1&gt;(data, logits1, w1, b1);
+nnet::relu&lt;layer1_t, layer1_t, relu_config1&gt;(logits1, layer1_out);
+
+result_t logits2[N_OUTPUTS];
+#pragma HLS ARRAY_PARTITION variable=logits2 complete
+nnet::compute_layer&lt;layer1_t, result_t, config2&gt;(layer1_out, logits2, w2, b2);
+nnet::sigmoid&lt;result_t, result_t, sigmoid_config2&gt;(logits2, res);
+</code></pre><p>You can see, for the simple 1-layer DNN, the computation(<code>nnet::compute_layer</code>) and activation (<code>nnet::relu</code>/<code>nnet::sigmoid</code>) caluclation for each layer.  For each layer, it has its own additional configuration parameters, e.g. <code>config1</code>.</p>
+<p>In your project, the file <code>&lt;OutputDir&gt;/firmware/parameters.h</code> stores all the configuration options for each neural network library.
+An example is <a href="https://github.com/hls-fpga-machine-learning/HLS4ML/blob/v0.0.2/example-prjs/higgs-1layer/firmware/parameters.h" target="_blank">here</a>. So for example, the detailed configuration options for an example DNN layer is:</p>
+<pre><code>struct config1 : nnet::layer_config {
+        static const unsigned n_in = N_INPUTS;
+        static const unsigned n_out = N_LAYER_1;
+        static const unsigned io_type = nnet::io_parallel;
+        static const unsigned reuse_factor = 1;
+        static const unsigned n_zeros = 0;
+        static const bool store_weights_in_bram = false;
+        typedef accum_default_t accum_t;
+        typedef bias_default_t bias_t;
+        typedef weight_default_t weight_t;
+        };
+</code></pre><p>It is at this stage that a user can even further configure their network HLS implementation in finer detail.</p>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="QUICKSTART.html" class="navigation navigation-prev " aria-label="Previous page: Quick Start">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="../CONCEPTS.html" class="navigation navigation-next " aria-label="Next page: Concepts">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Configuration","level":"1.2.3","depth":2,"next":{"title":"Concepts","level":"1.3","depth":1,"path":"CONCEPTS.md","ref":"CONCEPTS.md","articles":[]},"previous":{"title":"Quick Start","level":"1.2.2","depth":2,"path":"setup/QUICKSTART.md","ref":"setup/QUICKSTART.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"white"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/CONFIGURATION.md","mtime":"2018-01-31T14:27:56.000Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-01-31T14:28:11.528Z"},"basePath":"..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../gitbook/gitbook.js"></script>
+    <script src="../gitbook/theme.js"></script>
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+
