@@ -57,15 +57,15 @@ void conv_1d(
     typename CONFIG_T::accum_t mult[CONFIG_T::y_out][CONFIG_T::n_filt][CONFIG_T::n_chan][CONFIG_T::y_filt];
     typename CONFIG_T::accum_t acc[CONFIG_T::y_out][CONFIG_T::n_filt];
 
-    #pragma HLS ARRAY_PARTITION variable=mult complete
-    #pragma HLS ARRAY_PARTITION variable=acc complete
+    #pragma HLS ARRAY_PARTITION variable=mult complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=acc complete dim=0
     
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases 
     #pragma HLS function_instantiate variable=weights,biases
     
     // Parallel mode
     #pragma HLS PIPELINE
-    #pragma HLS ARRAY_PARTITION variable=biases complete
+    #pragma HLS ARRAY_PARTITION variable=biases complete dim=0
   
     // Limit multipliers to control parallelization
     int multiplier_limit = ceil( (CONFIG_T::y_out*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::y_filt - 
