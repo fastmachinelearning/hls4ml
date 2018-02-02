@@ -1,7 +1,7 @@
 {
   "pluginsConfig": {
     "fontSettings": {
-      "theme": 'night',
+      "theme": 'white',
       "family": 'sans',
       "size": 2
     }
