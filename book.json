@@ -1,9 +1,8 @@
 {
   "pluginsConfig": {
     "fontSettings": {
-      "theme": 'white',
-      "family": 'sans',
-      "size": 2
+      "theme": "sepia",
+      "family": "sans"
     }
   }
 }
