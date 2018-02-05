@@ -7,6 +7,7 @@ import argparse
 import yaml
 import sys
 from shutil import copyfile
+import math
 
 filedir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,os.path.join(filedir, "..", "hls-writer"))
@@ -27,7 +28,7 @@ def parse_config(config_file) :
 def print_array_to_cpp(name, a, odir ):
 
     #count zeros
-    zero_ctr = 0;
+    zero_ctr = 0
     for x in np.nditer(a, order='C'):
         if x == 0: 
             zero_ctr += 1
@@ -56,7 +57,7 @@ def print_array_to_cpp(name, a, odir ):
     
     #fill c++ array.  
     #not including internal brackets for multidimensional case
-    i=0;
+    i=0
     for x in np.nditer(a, order='C'):
         if i==0:
             f.write("{}".format(x))
@@ -66,7 +67,7 @@ def print_array_to_cpp(name, a, odir ):
     f.write("};\n")
     f.close()
 
-    return zero_ctr;
+    return zero_ctr
 
 ############################################################################################
 ## M A I N
@@ -109,11 +110,22 @@ def main():
     #print(model_arch)
 
     #Define layers to skip for conversion to HLS
-    skip_layers = ['InputLayer', 'Dropout', 'Flatten'] 
+    skip_layers = ['InputLayer','Dropout', 'Flatten'] 
 
     #Loop through layers
-    layer_counter = 0;
+    layer_counter = 0
+    input_layer = {}
     for keras_layer in model_arch["config"]["layers"]:
+        print keras_layer['name']
+        if keras_layer['class_name']=='InputLayer':
+            input_layer = keras_layer
+    current_shape = input_layer['config']['batch_input_shape'] # [None, 100, 7]
+    print 'current_shape', current_shape
+    
+    for keras_layer in model_arch["config"]["layers"]:
+        if keras_layer["class_name"]=='Flatten':
+            current_shape = [current_shape[0], np.prod(current_shape[1:])]
+            print 'current_shape', current_shape
         if keras_layer["class_name"] in skip_layers:
             continue 
 
@@ -124,6 +136,7 @@ def main():
 
         #Extract name for finding weights and biases
         layer['name']=keras_layer['name']
+        layer['class_name']=keras_layer['class_name']
 
         #Extract type of activation and number of nodes
         for config,config_value in keras_layer["config"].items():
@@ -141,16 +154,36 @@ def main():
 
         #Get number of inputs and outputs
         #(We take it from the weights to avoid dealing with InputLayer and Flatten details)
-        shape_count = 0#more elegant way of doing this?
-        for x in weights.shape:
-            if(shape_count==0):
-                layer['n_in']=x
-            elif(shape_count==1):
-                layer['n_out']=x
-            else :
-                raise Exception('ERROR: WRONG DIMENSIONS')
-            shape_count = shape_count+1
-
+        if layer['class_name']=='Dense':
+            layer['n_in']=weights.shape[0]
+            layer['n_out']=weights.shape[1]
+            current_shape = [current_shape[0], layer['n_out']]
+            print 'current_shape', current_shape
+        elif layer['class_name']=='Conv1D':
+            # weights.shape = (filter_width, n_channels, n_filters)
+            layer['y_in']=current_shape[1]
+            layer['y_filt']=weights.shape[0] # or keras_layer['config']['kernel_size']
+            layer['n_chan']=weights.shape[1] 
+            layer['n_filt']=weights.shape[2] # or keras_layer['config']['filters']
+            layer['stride']=keras_layer['config']['strides'][0]
+            layer['padding']=keras_layer['config']['padding']
+            if layer['padding']=='same':
+                in_width = current_shape[1]
+                layer['y_out'] = int(math.ceil(float(in_width) / float(layer['stride'])))
+                if (in_width % layer['stride'] == 0):
+                    pad_along_width = max(layer['y_filt'] - layer['stride'], 0)
+                else:
+                    pad_along_width = max(layer['y_filt'] - (in_width % layer['stride']), 0)
+                layer['pad_left']  = pad_along_width // 2
+                layer['pad_right']  = pad_along_width - layer['pad_left']
+            elif padding=='valid':
+                in_width = current_shape[1]
+                layer['y_out'] = int(math.ceil(float(in_width - layer['y_filt'] + 1) / float(layer['stride'])))
+                layer['pad_left'] = 0
+                layer['pad_right'] = 0
+            current_shape=[current_shape[0], layer['y_out'], layer['n_filt']]
+            print 'current_shape', current_shape
+                
         print layer
         layer_list.append( layer )
         
@@ -165,4 +198,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main();    
+    main()

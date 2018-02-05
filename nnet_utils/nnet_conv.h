@@ -44,6 +44,7 @@ struct conv_config
   
     static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
+    static const unsigned n_zeros = 0; // not used yet
 };
 
 template<class data_T, class res_T, typename CONFIG_T>
