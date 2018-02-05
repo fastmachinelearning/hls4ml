@@ -220,9 +220,12 @@ def hls_writer(layer_list, yamlConfig):
                 elif i==len(layer_list) and layer_list[i-1]['class_name']=='Dense':
                     layer_in_name = "N_LAYER_%i" % (i-1)
                     layer_out_name = "N_OUTPUTS"               
+                elif layer_list[i-1]['class_name']=='Dense' and layer_list[i-2]['class_name']=='Conv1D':
+                    layer_in_name = "Y_OUTPUTS_%i*N_FILT_%i" % (i-1, i-1)
+                    layer_out_name = "N_LAYER_%i" % (i)   
                 elif layer_list[i-1]['class_name']=='Dense':
                     layer_in_name = "N_LAYER_%i" % (i-1)
-                    layer_out_name = "N_LAYER_%i" % (i)   
+                    layer_out_name = "N_LAYER_%i" % (i)    
                 elif layer_list[i-1]['class_name']=='Conv1D':
                     layer_y_in_name = "Y_INPUTS_%i" % (i)
                     layer_n_chan_name = "N_CHAN_%i" % (i)
