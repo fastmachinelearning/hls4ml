@@ -48,12 +48,16 @@ def hls_writer(layer_list, yamlConfig):
                     input_type = 'input_t'
                     input_object = 'data'
                     n_in = 'N_INPUTS'
+                elif layer_list[i-1]['class_name']=='Dense' and layer_list[i-2]['class_name']=='Conv1D':
+                    input_type = 'input_t'.format(i-1)
+                    input_object = 'layer{}_out'.format(i-1)
+                    n_in = 'Y_OUTPUTS_{}*N_FILT_{}'.format(i-1,i-1)
                 elif layer_list[i-1]['class_name']=='Dense':
                     input_type = 'layer{}_t'.format(i-1)
                     input_object = 'layer{}_out'.format(i-1)
                     n_in = 'N_LAYER_{}'.format(i-1)
                 elif layer_list[i-1]['class_name']=='Conv1D':
-                    input_type = 'layer{}_t'.format(i-1)
+                    input_type = 'input_t'
                     input_object = 'layer{}_out'.format(i-1)
                     y_in = 'Y_INPUTS_{}'.format(i)
                     n_chan = 'N_CHAN_{}'.format(i)
@@ -68,7 +72,7 @@ def hls_writer(layer_list, yamlConfig):
                     output_object = 'layer{}_out'.format(i)
                     n_out = 'N_LAYER_{}'.format(i)
                 elif layer_list[i-1]['class_name']=='Conv1D':
-                    output_type = 'layer{}_t'.format(i)
+                    output_type = 'input_t'
                     output_object = 'layer{}_out'.format(i)
                     y_out = 'Y_OUTPUTS_{}'.format(i)
                     n_filt = 'N_FILT_{}'.format(i)
@@ -204,7 +208,8 @@ def hls_writer(layer_list, yamlConfig):
         elif '//hls-fpga-machine-learning insert layer-precision' in line:
             newline = line
             for i in range(1,len(layer_list)):
-                newline += 'typedef {precision} layer{index}_t;\n'.format(precision=yamlConfig["DefaultPrecision"], index=i)
+                if layer_list[i-1]['class_name']=='Dense':
+                    newline += 'typedef {precision} layer{index}_t;\n'.format(precision=yamlConfig["DefaultPrecision"], index=i)
 
         elif "//hls-fpga-machine-learning insert layer-config" in line:
             newline = line
