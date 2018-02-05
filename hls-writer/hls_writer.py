@@ -18,6 +18,10 @@ def hls_writer(layer_list, yamlConfig):
         #Add headers to weights and biases
         if 'myproject' in line:
             newline = line.replace('myproject',yamlConfig['ProjectName'])
+        elif 'input_t data[N_INPUTS]' in line and layer_list[0]['class_name']=='Conv1D':
+            newline = line.replace('input_t data[N_INPUTS]','input_t data[Y_INPUTS_1][N_CHAN_1]')
+        elif 'const_size_in   = N_INPUTS' in line and layer_list[0]['class_name']=='Conv1D':
+            newline = line.replace('const_size_in   = N_INPUTS','const_size_in   = Y_INPUTS*N_CHAN')
         elif '//hls-fpga-machine-learning insert weights' in line:
             newline = line
             for i in range(1,len(layer_list)+1):
@@ -28,8 +32,8 @@ def hls_writer(layer_list, yamlConfig):
         elif '//hls-fpga-machine-learning insert IO' in line:
             newline = line
             if yamlConfig["IOType"] == "io_parallel":
-                newline += '    #pragma HLS ARRAY_PARTITION variable=data complete \n'
-                newline += '    #pragma HLS ARRAY_PARTITION variable=res complete \n'
+                newline += '    #pragma HLS ARRAY_PARTITION variable=data complete dim=0 \n'
+                newline += '    #pragma HLS ARRAY_PARTITION variable=res complete dim=0 \n'
             if yamlConfig["IOType"] == "io_serial":
                 newline += '    #pragma HLS STREAM variable=data dim=1\n'
                 newline += '    #pragma HLS STREAM variable=res dim=1\n'
@@ -301,6 +305,8 @@ def hls_writer(layer_list, yamlConfig):
             newline = line.replace('MYPROJECT',format(yamlConfig['ProjectName'].upper()))
         elif 'void myproject(' in line:
             newline = 'void {}(\n'.format(yamlConfig['ProjectName'])
+        elif 'input_t data[N_INPUTS]' in line and layer_list[0]['class_name']=='Conv1D':
+            newline = line.replace('input_t data[N_INPUTS]','input_t data[Y_INPUTS_1][N_CHAN_1]')
         else:
             newline = line
         fout.write(newline)
