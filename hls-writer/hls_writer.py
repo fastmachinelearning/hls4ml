@@ -21,7 +21,7 @@ def hls_writer(layer_list, yamlConfig):
         elif 'input_t data[N_INPUTS]' in line and layer_list[0]['class_name']=='Conv1D':
             newline = line.replace('input_t data[N_INPUTS]','input_t data[Y_INPUTS_1][N_CHAN_1]')
         elif 'const_size_in   = N_INPUTS' in line and layer_list[0]['class_name']=='Conv1D':
-            newline = line.replace('const_size_in   = N_INPUTS','const_size_in   = Y_INPUTS*N_CHAN')
+            newline = line.replace('const_size_in   = N_INPUTS','const_size_in   = Y_INPUTS_1*N_CHAN_1')
         elif '//hls-fpga-machine-learning insert weights' in line:
             newline = line
             for i in range(1,len(layer_list)+1):
@@ -56,6 +56,11 @@ def hls_writer(layer_list, yamlConfig):
                     input_type = 'layer{}_t'.format(i-1)
                     input_object = 'layer{}_out'.format(i-1)
                     n_in = 'N_LAYER_{}'.format(i-1)
+                elif (i==1 and layer_list[i-1]['class_name']=='Conv1D'):
+                    input_type = 'input_t'
+                    input_object = 'data'
+                    y_in = 'Y_INPUTS_{}'.format(i)
+                    n_chan = 'N_CHAN_{}'.format(i)
                 elif layer_list[i-1]['class_name']=='Conv1D':
                     input_type = 'input_t'
                     input_object = 'layer{}_out'.format(i-1)
