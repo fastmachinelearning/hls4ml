@@ -1,5 +1,5 @@
-KerasJson: example-keras-model-files/KERAS_1layer.json
-KerasH5:   example-keras-model-files/KERAS_1layer_weights.h5 
+KerasJson: example-keras-model-files/KERAS_conv1d.json
+KerasH5:   example-keras-model-files/KERAS_conv1d_weights.h5
 OutputDir: my-hls-dir-test
 ProjectName: myproject
 XilinxPart: xc7vx690tffg1927-2
