@@ -115,14 +115,21 @@ def main():
     #Loop through layers
     layer_counter = 0
     input_layer = {}
-    for keras_layer in model_arch["config"]["layers"]:
-        print keras_layer['name']
-        if keras_layer['class_name']=='InputLayer':
-            input_layer = keras_layer
-    current_shape = input_layer['config']['batch_input_shape'] # [None, 100, 7]
+
+    layer_config = None
+    if model_arch['class_name'] == 'Sequential':
+        layer_config = model_arch["config"]
+    elif model_arch['class_name'] == 'Model':
+        layer_config = model_arch["config"]["layers"]
+
+    current_shape = None
+    for keras_layer in layer_config:
+        print keras_layer['config']['name']
+        if 'batch_input_shape' in keras_layer['config']:
+            current_shape = keras_layer['config']['batch_input_shape'] # [None, 100, 7]    
     print 'current_shape', current_shape
     
-    for keras_layer in model_arch["config"]["layers"]:
+    for keras_layer in layer_config:
         if keras_layer["class_name"]=='Flatten':
             current_shape = [current_shape[0], np.prod(current_shape[1:])]
             print 'current_shape', current_shape
@@ -135,7 +142,7 @@ def main():
         layer = {}
 
         #Extract name for finding weights and biases
-        layer['name']=keras_layer['name']
+        layer['name']=keras_layer['config']['name']
         layer['class_name']=keras_layer['class_name']
 
         #Extract type of activation and number of nodes
