@@ -32,8 +32,9 @@ def hls_writer(layer_list, yamlConfig):
         elif '//hls-fpga-machine-learning insert IO' in line:
             newline = line
             if yamlConfig["IOType"] == "io_parallel":
-                newline += '    #pragma HLS ARRAY_PARTITION variable=data complete dim=0 \n'
-                newline += '    #pragma HLS ARRAY_PARTITION variable=res complete dim=0 \n'
+                newline += '    #pragma HLS ARRAY_RESHAPE variable=data complete dim=0 \n'
+                newline += '    #pragma HLS ARRAY_RESHAPE variable=res complete dim=0 \n'
+                newline += '    #pragma HLS INTERFACE ap_vld port=data,res \n'
             if yamlConfig["IOType"] == "io_serial":
                 newline += '    #pragma HLS STREAM variable=data dim=1\n'
                 newline += '    #pragma HLS STREAM variable=res dim=1\n'
