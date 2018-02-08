@@ -162,6 +162,7 @@ def main():
         #Get number of inputs and outputs
         #(We take it from the weights to avoid dealing with InputLayer and Flatten details)
         if layer['class_name']=='Dense':
+            print weights.shape, layer['name']
             layer['n_in']=weights.shape[0]
             layer['n_out']=weights.shape[1]
             current_shape = [current_shape[0], layer['n_out']]
@@ -183,7 +184,7 @@ def main():
                     pad_along_width = max(layer['y_filt'] - (in_width % layer['stride']), 0)
                 layer['pad_left']  = pad_along_width // 2
                 layer['pad_right']  = pad_along_width - layer['pad_left']
-            elif padding=='valid':
+            elif layer['padding']=='valid':
                 in_width = current_shape[1]
                 layer['y_out'] = int(math.ceil(float(in_width - layer['y_filt'] + 1) / float(layer['stride'])))
                 layer['pad_left'] = 0
