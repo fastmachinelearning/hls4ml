@@ -63,7 +63,7 @@
                         }
                     },
                     "kernel_size": [
-                        4
+                        5
                     ],
                     "name": "conv1_relu",
                     "padding": "same",
