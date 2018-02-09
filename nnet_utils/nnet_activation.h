@@ -214,6 +214,57 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 
 }
 
+// *************************************************
+//       Softmax Activation (floating point)
+// *************************************************
+template<class data_T, int N_TABLE>
+void init_exp_table_float(float table_out[N_TABLE])
+{
+    for (int ii = 0; ii < N_TABLE; ii++) {
+        // First, convert from table index to X-value (signed 8-bit, range -8 to +8)
+        float in_val = 2*8.0*(ii-float(N_TABLE)/2.0)/float(N_TABLE);
+        // Next, compute lookup table function
+        float real_val = exp_fcn_float(in_val);
+        //std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
+        table_out[ii] = real_val;
+    }
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
+void  softmax_float(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
+{
+    // Initialize the lookup table
+    float exp_table[CONFIG_T::table_size];
+    init_exp_table_float<float, CONFIG_T::table_size>(exp_table);
+
+    if (CONFIG_T::io_type == io_parallel){
+        // Note: This is going to be a resource hog to run with pipeline, but hey, whatever
+        #pragma HLS PIPELINE
+    }
+
+    // Index into the lookup table based on data for exponentials
+    float exp_res[CONFIG_T::n_in];//same precision as rest?
+    float exp_res_sum=0;
+    data_T datareg;
+    int data_round;
+    int index;
+    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+        // #pragma HLS UNROLL
+        data_round = data[ii]*CONFIG_T::table_size/16;
+        index = data_round + 8*CONFIG_T::table_size/16;
+        if (index < 0)   index = 0;
+        if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+        exp_res[ii] = exp_table[index];
+        exp_res_sum += exp_table[index];
+    }
+
+    //Second loop to divide by sum of exponentials
+    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+      // #pragma HLS UNROLL
+      res[ii] = exp_res[ii]/exp_res_sum; //Note division used here!
+    }
+
+}
 
 // *************************************************
 //       TanH Activation
