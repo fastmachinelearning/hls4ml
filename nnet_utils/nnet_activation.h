@@ -150,12 +150,29 @@ void init_exp_table(data_T table_out[N_TABLE])
     }
 }
 
+template<class data_T, int N_TABLE>
+void init_invert_table(data_T table_out[N_TABLE])
+{
+    // Inversion function:
+    //   result = 1/x
+    for (int ii = 0; ii < N_TABLE; ii++) {
+      // First, convert from table index to X-value (signed 8-bit, range 0 to +64)
+	float in_val = 64.0*ii/float(N_TABLE);
+        // Next, compute lookup table function
+	if (in_val > 0.0) table_out[ii] = 1.0/in_val;
+	else table_out[ii] = 0.0;
+    }    
+}
+
 template<class data_T, class res_T, typename CONFIG_T>
 void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
     // Initialize the lookup table
     res_T exp_table[CONFIG_T::table_size];
     init_exp_table<res_T, CONFIG_T::table_size>(exp_table);
+
+    res_T invert_table[CONFIG_T::table_size];
+    init_invert_table<res_T, CONFIG_T::table_size>(invert_table);
 
     if (CONFIG_T::io_type == io_parallel){
         // Note: This is going to be a resource hog to run with pipeline, but hey, whatever
@@ -178,10 +195,21 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
         exp_res_sum += exp_table[index];
     }
 
+
+    int exp_res_sum_index = exp_res_sum*CONFIG_T::table_size/64;
+    if (exp_res_sum_index < 0)   exp_res_sum_index = 0;
+    if (exp_res_sum_index > CONFIG_T::table_size-1) exp_res_sum_index = CONFIG_T::table_size-1;
+    data_T exp_res_sum_invert = invert_table[exp_res_sum_index];
+
+    //std::cout << "exp_res_sum = " << exp_res_sum << std::endl;
+    //std::cout << "1/exp_res_sum = " << 1.0/float(exp_res_sum) << std::endl;
+    //std::cout << "exp_res_sum_invert = " << (float) exp_res_sum_invert << std::endl;    
+
     //Second loop to divide by sum of exponentials
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
       // #pragma HLS UNROLL
-      res[ii] = exp_res[ii]/exp_res_sum; //Note division used here!
+      //res[ii] = exp_res[ii]/exp_res_sum; //Note division used here!
+      res[ii] = exp_res[ii]*exp_res_sum_invert;
     }
 
 }
