@@ -24,6 +24,8 @@
 #include "ap_fixed.h"
 #include "nnet_common.h"
 
+
+
 namespace nnet {
 
 struct activ_config
@@ -117,7 +119,6 @@ void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     }
 
     // Index into the lookup table based on data
-    data_T datareg;
     int data_round;
     int index;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
@@ -133,25 +134,28 @@ void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 // *************************************************
 //       Softmax Activation
 // *************************************************
+typedef ap_fixed<18,8> table_t;
+
 inline float exp_fcn_float(float input) {
     return exp(input);
 }
 
-template<class data_T, int N_TABLE>
-void init_exp_table(data_T table_out[N_TABLE])
+
+template<class table_t, int N_TABLE>
+void init_exp_table(table_t table_out[N_TABLE])
 {
     for (int ii = 0; ii < N_TABLE; ii++) {
         // First, convert from table index to X-value (signed 8-bit, range -8 to +8)
         float in_val = 2*8.0*(ii-float(N_TABLE)/2.0)/float(N_TABLE);
         // Next, compute lookup table function
-        data_T real_val = exp_fcn_float(in_val);
+        table_t real_val = exp_fcn_float(in_val);
         //std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
         table_out[ii] = real_val;
     }
 }
 
-template<class data_T, int N_TABLE>
-void init_invert_table(data_T table_out[N_TABLE])
+template<class table_t, int N_TABLE>
+void init_invert_table(table_t table_out[N_TABLE])
 {
     // Inversion function:
     //   result = 1/x
@@ -168,11 +172,11 @@ template<class data_T, class res_T, typename CONFIG_T>
 void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
     // Initialize the lookup table
-    res_T exp_table[CONFIG_T::table_size];
-    init_exp_table<res_T, CONFIG_T::table_size>(exp_table);
+    table_t exp_table[CONFIG_T::table_size];
+    init_exp_table<table_t, CONFIG_T::table_size>(exp_table);
 
-    res_T invert_table[CONFIG_T::table_size];
-    init_invert_table<res_T, CONFIG_T::table_size>(invert_table);
+    table_t invert_table[CONFIG_T::table_size];
+    init_invert_table<table_t, CONFIG_T::table_size>(invert_table);
 
     if (CONFIG_T::io_type == io_parallel){
         // Note: This is going to be a resource hog to run with pipeline, but hey, whatever
@@ -180,9 +184,8 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     }
 
     // Index into the lookup table based on data for exponentials
-    res_T exp_res[CONFIG_T::n_in];//same precision as rest?
-    res_T exp_res_sum=0;
-    data_T datareg;
+    table_t exp_res[CONFIG_T::n_in];// different, independent, fixed point precision
+    table_t exp_res_sum=0;
     int data_round;
     int index;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
@@ -199,7 +202,7 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     int exp_res_sum_index = exp_res_sum*CONFIG_T::table_size/64;
     if (exp_res_sum_index < 0)   exp_res_sum_index = 0;
     if (exp_res_sum_index > CONFIG_T::table_size-1) exp_res_sum_index = CONFIG_T::table_size-1;
-    data_T exp_res_sum_invert = invert_table[exp_res_sum_index];
+    table_t exp_res_sum_invert = invert_table[exp_res_sum_index];
 
     //std::cout << "exp_res_sum = " << exp_res_sum << std::endl;
     //std::cout << "1/exp_res_sum = " << 1.0/float(exp_res_sum) << std::endl;
@@ -209,7 +212,7 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
       // #pragma HLS UNROLL
       //res[ii] = exp_res[ii]/exp_res_sum; //Note division used here!
-      res[ii] = exp_res[ii]*exp_res_sum_invert;
+      res[ii] = (res_T) exp_res[ii]*exp_res_sum_invert;
     }
 
 }
@@ -230,6 +233,21 @@ void init_exp_table_float(float table_out[N_TABLE])
     }
 }
 
+template<class data_T, int N_TABLE>
+void init_invert_table_float(float table_out[N_TABLE])
+{
+    // Inversion function:
+    //   result = 1/x
+    for (int ii = 0; ii < N_TABLE; ii++) {
+      // First, convert from table index to X-value (signed 8-bit, range 0 to +64)
+	float in_val = 64.0*ii/float(N_TABLE);
+        // Next, compute lookup table function
+	if (in_val > 0.0) table_out[ii] = 1.0/in_val;
+	else table_out[ii] = 0.0;
+    }    
+}
+
+
 template<class data_T, class res_T, typename CONFIG_T>
 void  softmax_float(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
@@ -237,19 +255,22 @@ void  softmax_float(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     float exp_table[CONFIG_T::table_size];
     init_exp_table_float<float, CONFIG_T::table_size>(exp_table);
 
+    float invert_table[CONFIG_T::table_size];
+    init_invert_table_float<float, CONFIG_T::table_size>(invert_table);
+
     if (CONFIG_T::io_type == io_parallel){
         // Note: This is going to be a resource hog to run with pipeline, but hey, whatever
         #pragma HLS PIPELINE
     }
 
     // Index into the lookup table based on data for exponentials
-    float exp_res[CONFIG_T::n_in];//same precision as rest?
+    float exp_res[CONFIG_T::n_in];//floating point precision
     float exp_res_sum=0;
-    data_T datareg;
     int data_round;
     int index;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
         // #pragma HLS UNROLL
+        //std::cout << "data[" << ii << "] = " << data[ii] << std::endl;
         data_round = data[ii]*CONFIG_T::table_size/16;
         index = data_round + 8*CONFIG_T::table_size/16;
         if (index < 0)   index = 0;
@@ -257,11 +278,20 @@ void  softmax_float(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
         exp_res[ii] = exp_table[index];
         exp_res_sum += exp_table[index];
     }
+    int exp_res_sum_index = exp_res_sum*CONFIG_T::table_size/64;
+    if (exp_res_sum_index < 0)   exp_res_sum_index = 0;
+    if (exp_res_sum_index > CONFIG_T::table_size-1) exp_res_sum_index = CONFIG_T::table_size-1;
+    float exp_res_sum_invert = invert_table[exp_res_sum_index];
+
+    //std::cout << "exp_res_sum = " << exp_res_sum << std::endl;
+    //std::cout << "1/exp_res_sum = " << 1.0/float(exp_res_sum) << std::endl;
+    //std::cout << "exp_res_sum_invert = " << (float) exp_res_sum_invert << std::endl;    
 
     //Second loop to divide by sum of exponentials
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
       // #pragma HLS UNROLL
-      res[ii] = exp_res[ii]/exp_res_sum; //Note division used here!
+      //res[ii] = exp_res[ii]/exp_res_sum; //Note division used here!
+      res[ii] = exp_res[ii]*exp_res_sum_invert;
     }
 
 }
@@ -278,7 +308,7 @@ void init_tanh_table(data_T table_out[N_TABLE])
         float in_val = 2*4.0*(ii-float(N_TABLE)/2.0)/float(N_TABLE);
         // Next, compute lookup table function
         data_T real_val = tanh(in_val);
-        std::cout << "Tanh:  Lookup table Index: " <<  ii<< " In Value: " << in_val << " Result: " << real_val << std::endl;
+        //std::cout << "Tanh:  Lookup table Index: " <<  ii<< " In Value: " << in_val << " Result: " << real_val << std::endl;
         table_out[ii] = real_val;
     }
 }
@@ -296,7 +326,6 @@ void  tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     }
 
     // Index into the lookup table based on data
-    data_T datareg;
     int data_round;
     int index;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
