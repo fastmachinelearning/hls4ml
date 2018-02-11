@@ -56,7 +56,7 @@ void myproject(
         std::cout << std::endl << "********* Loop " << iloop << " ************" << std::endl;
         std::cout << "Data: [ "; for (int ii = 0; ii < N_INPUTS; ii++) std::cout << data[iloop][ii] << " "; std::cout << "]" << std::endl;
 
-        nnet::simple_rnn<float, float, config1>(data[iloop], res[iloop], w_U, w_W, w_V);
+        nnet::simple_rnn<float, float, config1, config1_activ>(data[iloop], res[iloop], w_U, w_W, w_V);
 
         std::cout << "Res: [ "; for (int ii = 0; ii < N_INPUTS; ii++) std::cout << res[iloop][ii] << " "; std::cout << "]" << std::endl;
     }

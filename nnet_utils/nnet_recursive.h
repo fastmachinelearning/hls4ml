@@ -21,6 +21,7 @@
 #define NNET_RECURSIVE_H_
 
 #include "nnet_common.h"
+#include "nnet_activation.h"
 
 namespace nnet {
 
@@ -36,6 +37,8 @@ struct rnn_config
     static const unsigned n_in = 10;
     static const unsigned n_out = 2;
     static const unsigned n_state = 2;
+    static const unsigned activation_type = activ_relu;
+    static const unsigned table_size = 1024;
 
     // Resource reuse info
     static const unsigned io_type = io_parallel;
@@ -52,7 +55,7 @@ struct rnn_config
 //      - newstate = activation(U*input + W*state)
 //      - output   = V*newstate
 //  - If softmax is needed on output, perform *outside* this operations
-template<class data_T, class res_T, typename CONFIG_T>
+template<class data_T, class res_T, typename CONFIG_T, typename ACT_CONFIG_T>
 void simple_rnn(
     data_T    data[CONFIG_T::n_in],
     res_T     res[CONFIG_T::n_out],
@@ -107,13 +110,24 @@ void simple_rnn(
     // Operation: U*input + W*state
     typename CONFIG_T::state_t rawstate[CONFIG_T::n_state];
     for(int iacc = 0; iacc < CONFIG_T::n_state; iacc++) {
-        newstate[iacc] = inputacc[iacc] + stateacc[iacc];
+        rawstate[iacc] = inputacc[iacc] + stateacc[iacc];
     }
 
-    std::cout << "Post-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << newstate[ii] << " "; std::cout << "]" << std::endl;
+    std::cout << "Post-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << rawstate[ii] << " "; std::cout << "]" << std::endl;
 
     // Run activation function
 
+    if (CONFIG_T::activation_type == activ_relu){
+        relu<typename CONFIG_T::state_t, typename CONFIG_T::state_t, ACT_CONFIG_T>(rawstate, newstate);
+    }
+    else if (CONFIG_T::activation_type == activ_tanh){
+        sigmoid<typename CONFIG_T::state_t, typename CONFIG_T::state_t, ACT_CONFIG_T>(rawstate, newstate);
+    }
+    else if (CONFIG_T::activation_type == activ_tanh){
+        tanh<typename CONFIG_T::state_t, typename CONFIG_T::state_t, ACT_CONFIG_T>(rawstate, newstate);
+    }
+
+    std::cout << "Activated State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << newstate[ii] << " "; std::cout << "]" << std::endl;
 
     // Operation: output = V*state
     data_T outputcache;
