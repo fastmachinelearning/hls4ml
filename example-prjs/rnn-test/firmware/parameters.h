@@ -29,8 +29,14 @@ struct config1 : nnet::rnn_config {
     static const unsigned n_out = N_OUTPUTS;
     static const unsigned n_state = N_STATE;
     static const unsigned io_type = nnet::io_parallel;
+    static const unsigned activation_type = nnet::activ_relu;
     static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
+};
+struct config1_activ : nnet::activ_config {
+    static const unsigned n_in = N_STATE;
+    static const unsigned table_size = 1024;
+    static const unsigned io_type = nnet::io_parallel;
 };
 
 #endif 
