@@ -27,7 +27,7 @@ namespace nnet {
 struct rnn_config
 {
     // Internal data type definitions
-    typedef float state_t;                                                                                 
+    typedef float state_t;
     typedef float U_t;  // State x Input
     typedef float W_t;  // State x State
     typedef float V_t;  // Output x State
@@ -61,8 +61,10 @@ void simple_rnn(
     typename CONFIG_T::V_t  param_V[CONFIG_T::n_state][CONFIG_T::n_out])
 {
 
-	// Initialize the state variable -- will maintain state between function calls
-	static typename CONFIG_T::state_t newstate[CONFIG_T::n_state];
+    // Initialize the state variable -- will maintain state between function calls
+    static typename CONFIG_T::state_t newstate[CONFIG_T::n_state];
+
+    std::cout << "Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << newstate[ii] << " "; std::cout << "]" << std::endl;
 
     // Operation: U*input
     data_T inputcache;
@@ -108,6 +110,8 @@ void simple_rnn(
         newstate[iacc] = inputacc[iacc] + stateacc[iacc];
     }
 
+    std::cout << "Post-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << newstate[ii] << " "; std::cout << "]" << std::endl;
+
     // Run activation function
 
 
@@ -128,6 +132,7 @@ void simple_rnn(
             res[jj] += outputmult[ii][jj];
         }
     }
+
 }
 
 }//end namespace
