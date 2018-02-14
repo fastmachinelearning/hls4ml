@@ -195,7 +195,7 @@ def main():
                 layer['pad_left'] = 0
                 layer['pad_right'] = 0
             current_shape=[current_shape[0], layer['y_out'], layer['n_filt']]
-        print 'Layer name: %s, layer type: %s, current shape: %s'%(layer['name'], layer['class_name'], current_shape)
+        print 'Layer name: %s, layer type: %s, current shape: %s, number of zeros: %s'%(layer['name'], layer['class_name'], current_shape, cur_n_zeros)
         layer_list.append( layer )
         
 
