@@ -109,6 +109,9 @@ def main():
         model_arch = json.load(json_file)
     #print(model_arch)
 
+    #Define supported laers
+    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'Conv1D']
+
     #Define layers to skip for conversion to HLS
     skip_layers = ['InputLayer','Dropout', 'Flatten'] 
 
@@ -118,21 +121,25 @@ def main():
 
     layer_config = None
     if model_arch['class_name'] == 'Sequential':
+        print 'Interpreting Sequential'
         layer_config = model_arch["config"]
     elif model_arch['class_name'] == 'Model':
+        print 'Interpreting Model'
         layer_config = model_arch["config"]["layers"]
 
+    # Get input shape and check for unsupported layer type
     current_shape = None
     for keras_layer in layer_config:
-        print keras_layer['config']['name']
+        if keras_layer["class_name"] not in supported_layers:
+            raise Exception('ERROR: Unsupported layer type: %s'%keras_layer["class_name"])            
         if 'batch_input_shape' in keras_layer['config']:
             current_shape = keras_layer['config']['batch_input_shape'] # [None, 100, 7]    
-    print 'current_shape', current_shape
-    
+    print 'Input shape:', current_shape
+
+    print 'Topology:' 
     for keras_layer in layer_config:
-        if keras_layer["class_name"]=='Flatten':
+        if keras_layer["class_name"] is 'Flatten':
             current_shape = [current_shape[0], np.prod(current_shape[1:])]
-            print 'current_shape', current_shape
         if keras_layer["class_name"] in skip_layers:
             continue 
 
@@ -162,11 +169,9 @@ def main():
         #Get number of inputs and outputs
         #(We take it from the weights to avoid dealing with InputLayer and Flatten details)
         if layer['class_name']=='Dense':
-            print weights.shape, layer['name']
             layer['n_in']=weights.shape[0]
             layer['n_out']=weights.shape[1]
             current_shape = [current_shape[0], layer['n_out']]
-            print 'current_shape', current_shape
         elif layer['class_name']=='Conv1D':
             # weights.shape = (filter_width, n_channels, n_filters)
             layer['y_in']=current_shape[1]
@@ -190,9 +195,7 @@ def main():
                 layer['pad_left'] = 0
                 layer['pad_right'] = 0
             current_shape=[current_shape[0], layer['y_out'], layer['n_filt']]
-            print 'current_shape', current_shape
-                
-        print layer
+        print 'Layer name: %s, layer type: %s, current shape: %s'%(layer['name'], layer['class_name'], current_shape)
         layer_list.append( layer )
         
 
