@@ -4,5 +4,5 @@ A package for machine learning inference in FPGAs. We create firmware implementa
 
 contact: hls4ml.help@gmail.com
 
-For more information visit the webpage: [https://hls-fpga-machine-learning.github.io/HLS4ML/](https://hls-fpga-machine-learning.github.io/hls4ml/)
+For more information visit the webpage: [https://hls-fpga-machine-learning.github.io/hls4ml/](https://hls-fpga-machine-learning.github.io/hls4ml/)
 
