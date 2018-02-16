@@ -35,7 +35,7 @@ def print_array_to_cpp(name, a, odir ):
     #count zeros
     zero_ctr = 0;
     for x in np.nditer(a, order='C'):
-        if x == 0: 
+        if x == 0:
             zero_ctr += 1
 
     #put output in subdir for tarballing later
@@ -47,11 +47,11 @@ def print_array_to_cpp(name, a, odir ):
     f.write("//Max {}\n".format(np.max(a)))
     f.write("//Number of zeros {}\n".format(zero_ctr))
     f.write("\n")
-    
-    #c++ variable 
-    if "w" in name: 
+
+    #c++ variable
+    if "w" in name:
         f.write("weight_default_t {}".format(name))
-    elif "b" in name: 
+    elif "b" in name:
         f.write("bias_default_t {}".format(name))
     else:
         raise Exception('ERROR: Unkown weights type')
@@ -59,8 +59,8 @@ def print_array_to_cpp(name, a, odir ):
     for x in a.shape:
         f.write("[{}]".format(x))
     f.write(" = {")
-    
-    #fill c++ array.  
+
+    #fill c++ array.
     #not including internal brackets for multidimensional case
     i=0;
     for x in np.nditer(a, order='C'):
@@ -96,7 +96,7 @@ def main():
     if not os.path.isabs(yamlConfig['PytorchDict']):
         yamlConfig['PytorchDict'] = os.path.join(configDir, yamlConfig['PytorchDict'])
 
-    if not (yamlConfig["IOType"] == "io_parallel" or yamlConfig["IOType"] == "io_serial"): 
+    if not (yamlConfig["IOType"] == "io_parallel" or yamlConfig["IOType"] == "io_serial"):
         raise Exception('ERROR: Invalid IO type')
 
     ######################
@@ -118,14 +118,14 @@ def main():
     layer_counter = 1;
     for i, pytorch_layer in enumerate(modelstr):
         Nlayer = -1
-        NlayerMatch =re.search("\((\d)\):\s", pytorch_layer) 
+        NlayerMatch =re.search("\((\d)\):\s", pytorch_layer)
         if NlayerMatch is not None:
             print pytorch_layer, NlayerMatch.group(1)
             Nlayer = NlayerMatch.group(1)
 
         layerFun = pytorch_layer.split(":")[-1]
 
-        matchname = re.match("(\w+)\(in_features=(\d+), out_features=(\d+)\)", layerFun.strip())
+        matchname = re.match("(\w+)\(in_features=(\d+), out_features=(\d+).*\)", layerFun.strip())
         if matchname is None:
             continue
 
@@ -147,11 +147,11 @@ def main():
         biases =  n[Nlayer+".bias"].numpy().transpose()
         cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
         print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
-        layer['weights_n_zeros'] = cur_n_zeros 
+        layer['weights_n_zeros'] = cur_n_zeros
 
         layer_list.append(layer)
 
-        NlayerMatch =re.search("\((\d)\):\s", pytorch_layer) 
+        NlayerMatch =re.search("\((\d)\):\s", pytorch_layer)
 
         layer_counter = layer_counter+1
 
