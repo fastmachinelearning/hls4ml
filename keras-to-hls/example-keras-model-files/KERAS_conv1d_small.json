@@ -1,0 +1,337 @@
+{
+    "backend": "tensorflow",
+    "class_name": "Model",
+    "config": {
+        "input_layers": [
+            [
+                "input_1",
+                0,
+                0
+            ]
+        ],
+        "layers": [
+            {
+                "class_name": "InputLayer",
+                "config": {
+                    "batch_input_shape": [
+                        null,
+                        10,
+                        4
+                    ],
+                    "dtype": "float32",
+                    "name": "input_1",
+                    "sparse": false
+                },
+                "inbound_nodes": [],
+                "name": "input_1"
+            },
+            {
+                "class_name": "Conv1D",
+                "config": {
+                    "activation": "relu",
+                    "activity_regularizer": null,
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "normal",
+                            "mode": "fan_in",
+                            "scale": 2.0,
+                            "seed": null
+                        }
+                    },
+                    "bias_regularizer": null,
+                    "dilation_rate": [
+                        1
+                    ],
+                    "filters": 3,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "normal",
+                            "mode": "fan_in",
+                            "scale": 2.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": {
+                        "class_name": "L1L2",
+                        "config": {
+                            "l1": 0.0,
+                            "l2": 0.0
+                        }
+                    },
+                    "kernel_size": [
+                        4
+                    ],
+                    "name": "conv1_relu",
+                    "padding": "same",
+                    "strides": [
+                        1
+                    ],
+                    "trainable": true,
+                    "use_bias": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "input_1",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "conv1_relu"
+            },
+            {
+                "class_name": "Conv1D",
+                "config": {
+                    "activation": "relu",
+                    "activity_regularizer": null,
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "normal",
+                            "mode": "fan_in",
+                            "scale": 2.0,
+                            "seed": null
+                        }
+                    },
+                    "bias_regularizer": null,
+                    "dilation_rate": [
+                        1
+                    ],
+                    "filters": 2,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "normal",
+                            "mode": "fan_in",
+                            "scale": 2.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": {
+                        "class_name": "L1L2",
+                        "config": {
+                            "l1": 0.0,
+                            "l2": 0.0
+                        }
+                    },
+                    "kernel_size": [
+                        4
+                    ],
+                    "name": "conv2_relu",
+                    "padding": "same",
+                    "strides": [
+                        1
+                    ],
+                    "trainable": true,
+                    "use_bias": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "conv1_relu",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "conv2_relu"
+            },
+            {
+                "class_name": "Conv1D",
+                "config": {
+                    "activation": "relu",
+                    "activity_regularizer": null,
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "normal",
+                            "mode": "fan_in",
+                            "scale": 2.0,
+                            "seed": null
+                        }
+                    },
+                    "bias_regularizer": null,
+                    "dilation_rate": [
+                        1
+                    ],
+                    "filters": 1,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "normal",
+                            "mode": "fan_in",
+                            "scale": 2.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": {
+                        "class_name": "L1L2",
+                        "config": {
+                            "l1": 0.0,
+                            "l2": 0.0
+                        }
+                    },
+                    "kernel_size": [
+                        4
+                    ],
+                    "name": "conv3_relu",
+                    "padding": "same",
+                    "strides": [
+                        1
+                    ],
+                    "trainable": true,
+                    "use_bias": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "conv2_relu",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "conv3_relu"
+            },
+            {
+                "class_name": "Flatten",
+                "config": {
+                    "name": "flatten_1",
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "conv3_relu",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "flatten_1"
+            },
+            {
+                "class_name": "Dense",
+                "config": {
+                    "activation": "relu",
+                    "activity_regularizer": null,
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_in",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "bias_regularizer": null,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_in",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": {
+                        "class_name": "L1L2",
+                        "config": {
+                            "l1": 0.0,
+                            "l2": 0.0
+                        }
+                    },
+                    "name": "fc1_relu",
+                    "trainable": true,
+                    "units": 5,
+                    "use_bias": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "flatten_1",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "fc1_relu"
+            },
+            {
+                "class_name": "Dense",
+                "config": {
+                    "activation": "softmax",
+                    "activity_regularizer": null,
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_in",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "bias_regularizer": null,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_in",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": {
+                        "class_name": "L1L2",
+                        "config": {
+                            "l1": 0.0,
+                            "l2": 0.0
+                        }
+                    },
+                    "name": "output_softmax",
+                    "trainable": true,
+                    "units": 5,
+                    "use_bias": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "fc1_relu",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "output_softmax"
+            }
+        ],
+        "name": "model_1",
+        "output_layers": [
+            [
+                "output_softmax",
+                0,
+                0
+            ]
+        ]
+    },
+    "keras_version": "2.0.0"
+}
