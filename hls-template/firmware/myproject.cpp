@@ -36,7 +36,6 @@ void myproject(
 
     //hls-fpga-machine-learning insert IO
 
-    #pragma HLS PIPELINE
 
     const_size_in   = N_INPUTS;
     const_size_out  = N_OUTPUTS;
