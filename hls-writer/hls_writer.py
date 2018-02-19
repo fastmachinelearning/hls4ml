@@ -35,9 +35,11 @@ def hls_writer(layer_list, yamlConfig):
                 newline += '    #pragma HLS ARRAY_RESHAPE variable=data complete dim=0 \n'
                 newline += '    #pragma HLS ARRAY_RESHAPE variable=res complete dim=0 \n'
                 newline += '    #pragma HLS INTERFACE ap_vld port=data,res \n'
+                newline += '    #pragma HLS PIPELINE \n'
             if yamlConfig["IOType"] == "io_serial":
-                newline += '    #pragma HLS STREAM variable=data dim=1\n'
-                newline += '    #pragma HLS STREAM variable=res dim=1\n'
+                newline += '    #pragma HLS ARRAY_RESHAPE variable=data complete dim=0 \n'
+                newline += '    #pragma HLS ARRAY_RESHAPE variable=res complete dim=0 \n'
+                newline += '    #pragma HLS INTERFACE ap_vld port=data,res \n'
 
         #Add layers
         elif '//hls-fpga-machine-learning insert layers' in line:
@@ -89,7 +91,7 @@ def hls_writer(layer_list, yamlConfig):
                     elif layer_list[i-1]['class_name']=='Conv1D':
                         newline += '    {} layer{}_out[{}*{}];\n'.format(output_type,i,y_out,n_filt)
                     if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=layer{}_out complete dim=0\n'.format(i)
-                    if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=layer{}_out dim=1\n'.format(i)
+                    if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS ARRAY_PARTITION variable=layer{}_out complete dim=0\n'.format(i)
 
                 #Compute Dense layer
                 if layer_list[i-1]['activation'] == "linear" and layer_list[i-1]['class_name']=='Dense':
@@ -97,26 +99,26 @@ def hls_writer(layer_list, yamlConfig):
                 elif layer_list[i-1]['class_name']=='Dense':
                     newline += '    {} logits{}[{}];\n'.format(output_type,i,n_out)
                     if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=logits{} complete dim=0\n'.format(i)
-                    if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=logits{} dim=1\n'.format(i)
+                    if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS ARRAY_PARTITION variable=logits{} complete dim=0\n'.format(i)
                     newline += '    nnet::compute_layer<{}, {}, config{}>({}, logits{}, w{}, b{});\n'.format(input_type, output_type, i, input_object, i, i, i, i)
                 elif layer_list[i-1]['class_name']=='Conv1D':
                     if i>1 and layer_list[i-2]['class_name']=='Conv1D':
                         newline += '    {} conv_layer{}_in[{}][{}];\n'.format(input_type,i,y_in,n_chan)
                         if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=conv_layer{}_in complete dim=0\n'.format(i)
-                        if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=conv_layer{}_in dim=1\n'.format(i)
+                        if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS ARRAY_PARTITION variable=conv_layer{}_in complete dim=0\n'.format(i)
                         newline += '    nnet::unflatten<{}, {}, {}>({}, conv_layer{}_in);\n'.format(input_type, y_in, n_chan, input_object, i)                              
                         newline += '    {} conv_layer{}_out[{}][{}];\n'.format(output_type,i,y_out,n_filt)
                         if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=conv_layer{}_out complete dim=0\n'.format(i)
-                        if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=conv_layer{}_out dim=1\n'.format(i)
+                        if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS ARRAY_PARTITION variable=conv_layer{}_out complete dim=0\n'.format(i)
                         newline += '    nnet::conv_1d<{}, {}, config{}>(conv_layer{}_in, conv_layer{}_out, w{}, b{});\n'.format(input_type, input_type, i, i, i, i, i, i)  
                     else:                        
                         newline += '    {} conv_layer{}_out[{}][{}];\n'.format(output_type,i,y_out,n_filt)
                         if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=conv_layer{}_out complete dim=0\n'.format(i)
-                        if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=conv_layer{}_out dim=1\n'.format(i)
+                        if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS ARRAY_PARTITION variable=conv_layer{}_out complete dim=0\n'.format(i)
                         newline += '    nnet::conv_1d<{}, {}, config{}>({}, conv_layer{}_out, w{}, b{});\n'.format(input_type, input_type, i, input_object, i, i, i, i)
                     newline += '    {} logits{}[{}*{}];\n'.format(output_type,i,y_out,n_filt)
                     if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=logits{} complete dim=0\n'.format(i)
-                    if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=logits{} dim=1\n'.format(i)
+                    if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS ARRAY_PARTITION variable=logits{} complete dim=0\n'.format(i)
                     newline += '    nnet::flatten<{}, {}, {}>(conv_layer{}_out, logits{});\n'.format(input_type, y_out, n_filt, i, i)
                 
                 #Activations
