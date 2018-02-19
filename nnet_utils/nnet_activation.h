@@ -95,8 +95,8 @@ inline float sigmoid_fcn_float(float input) {
     return 1.0 / (1 + exp(-input));
 }
 
-template<class data_T, int N_TABLE>
-void init_sigmoid_table(data_T table_out[N_TABLE])
+template<typename CONFIG_T, int N_TABLE>
+void init_sigmoid_table(typename CONFIG_T::table_t table_out[N_TABLE])
 {
     // Default logistic sigmoid function:
     //   result = 1/(1+e^(-x))
@@ -104,7 +104,7 @@ void init_sigmoid_table(data_T table_out[N_TABLE])
         // First, convert from table index to X-value (signed 8-bit, range -8 to +8)
         float in_val = 2*8.0*(ii-float(N_TABLE)/2.0)/float(N_TABLE);
         // Next, compute lookup table function
-        data_T real_val = sigmoid_fcn_float(in_val);
+        typename CONFIG_T::table_t real_val = sigmoid_fcn_float(in_val);
         //std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
         table_out[ii] = real_val;
     }
@@ -114,8 +114,8 @@ template<class data_T, class res_T, typename CONFIG_T>
 void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
     // Initialize the lookup table
-    res_T sigmoid_table[CONFIG_T::table_size];
-    init_sigmoid_table<res_T, CONFIG_T::table_size>(sigmoid_table);
+    typename CONFIG_T::table_t sigmoid_table[CONFIG_T::table_size];
+    init_sigmoid_table<CONFIG_T, CONFIG_T::table_size>(sigmoid_table);
 
     if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
@@ -130,7 +130,7 @@ void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
         index = data_round + 8*CONFIG_T::table_size/16;
         if (index < 0)   index = 0;
         if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
-        res[ii] = sigmoid_table[index];
+        res[ii] = (res_T) sigmoid_table[index];
     }
 }
 
@@ -186,34 +186,31 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 
     // Index into the lookup table based on data for exponentials
     typename CONFIG_T::table_t exp_res[CONFIG_T::n_in];// different, independent, fixed point precision
-    typename CONFIG_T::table_t exp_res_sum=0;
+    typename CONFIG_T::table_t exp_diff_res[CONFIG_T::n_in][CONFIG_T::n_in];// different, independent, fixed point precision
     int data_round;
     int index;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        // #pragma HLS UNROLL
-        data_round = data[ii]*CONFIG_T::table_size/16;
-        index = data_round + 8*CONFIG_T::table_size/16;
-        if (index < 0)   index = 0;
-        if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
-        exp_res[ii] = exp_table[index];
-        exp_res_sum += exp_table[index];
+      exp_res[ii] = 0;
+      for (int jj=0; jj<CONFIG_T::n_in; jj++) {
+	if (ii==jj) exp_diff_res[ii][jj] = 1;
+	else {
+	  data_round = (data[ii]-data[jj])*CONFIG_T::table_size/16;
+	  index = data_round + 8*CONFIG_T::table_size/16;
+	  if (index < 0)   index = 0;
+	  if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+	  exp_diff_res[ii][jj] = exp_table[index];
+	}
+	exp_res[ii] += exp_diff_res[ii][jj];
+      }
     }
 
-
-    int exp_res_sum_index = exp_res_sum*CONFIG_T::table_size/64;
-    if (exp_res_sum_index < 0)   exp_res_sum_index = 0;
-    if (exp_res_sum_index > CONFIG_T::table_size-1) exp_res_sum_index = CONFIG_T::table_size-1;
-    typename CONFIG_T::table_t exp_res_sum_invert = invert_table[exp_res_sum_index];
-
-    //std::cout << "exp_res_sum = " << exp_res_sum << std::endl;
-    //std::cout << "1/exp_res_sum = " << 1.0/float(exp_res_sum) << std::endl;
-    //std::cout << "exp_res_sum_invert = " << (float) exp_res_sum_invert << std::endl;    
-
-    //Second loop to divide by sum of exponentials
+    //Second loop to invert
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-      // #pragma HLS UNROLL
-      //res[ii] = exp_res[ii]/exp_res_sum; //Note division used here!
-      res[ii] = (res_T) exp_res[ii]*exp_res_sum_invert;
+      int exp_res_index = exp_res[ii]*CONFIG_T::table_size/64;
+      if (exp_res_index < 0)   exp_res_index = 0;
+      if (exp_res_index > CONFIG_T::table_size-1) exp_res_index = CONFIG_T::table_size-1;
+      //typename CONFIG_T::table_t exp_res_invert = invert_table[exp_res_index];
+      res[ii] = (res_T) invert_table[exp_res_index];
     }
 
 }
@@ -221,15 +218,15 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 // *************************************************
 //       TanH Activation
 // *************************************************
-template<class data_T, int N_TABLE>
-void init_tanh_table(data_T table_out[N_TABLE])
+template<typename CONFIG_T, int N_TABLE>
+void init_tanh_table(typename CONFIG_T::table_t table_out[N_TABLE])
 {
     // Implement tanh lookup
     for (int ii = 0; ii < N_TABLE; ii++) {
         // First, convert from table index to X-value (signed 8-bit, range -4 to +4)
         float in_val = 2*4.0*(ii-float(N_TABLE)/2.0)/float(N_TABLE);
         // Next, compute lookup table function
-        data_T real_val = tanh(in_val);
+        typename CONFIG_T::table_t real_val = tanh(in_val);
         //std::cout << "Tanh:  Lookup table Index: " <<  ii<< " In Value: " << in_val << " Result: " << real_val << std::endl;
         table_out[ii] = real_val;
     }
@@ -240,8 +237,8 @@ template<class data_T, class res_T, typename CONFIG_T>
 void  tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
     // Initialize the lookup table
-    res_T tanh_table[CONFIG_T::table_size];
-    init_tanh_table<res_T, CONFIG_T::table_size>(tanh_table);
+    typename CONFIG_T::table_t tanh_table[CONFIG_T::table_size];
+    init_tanh_table<CONFIG_T, CONFIG_T::table_size>(tanh_table);
 
     if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
@@ -257,7 +254,7 @@ void  tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
         //std::cout << "Input: "  << data[ii] << " Round: " << data_round << " Index: " << index << std::endl;
         if (index < 0)   index = 0;
         if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
-        res[ii] = tanh_table[index];
+        res[ii] = (res_T) tanh_table[index];
     }
 }
 
