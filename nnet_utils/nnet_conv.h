@@ -41,7 +41,9 @@ struct conv_config
     static const unsigned n_filt = 4;
     static const unsigned stride = 1;
     static const unsigned y_out = 128; 
-  
+
+    // Resources
+    static const unsigned io_type = io_parallel;
     static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
     static const unsigned n_zeros = 0; // not used yet
@@ -58,24 +60,28 @@ void conv_1d(
     typename CONFIG_T::accum_t mult[CONFIG_T::y_out * CONFIG_T::n_filt * CONFIG_T::n_chan * CONFIG_T::y_filt];
     typename CONFIG_T::accum_t acc[CONFIG_T::y_out][CONFIG_T::n_filt];
 
-    #pragma HLS ARRAY_PARTITION variable=mult complete dim=0
-    #pragma HLS ARRAY_PARTITION variable=acc complete dim=0
-    
-    // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases 
+
+    // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
     #pragma HLS function_instantiate variable=weights,biases
-    
-    // Parallel mode
-    #pragma HLS PIPELINE
-    #pragma HLS ARRAY_PARTITION variable=biases complete dim=0
+
+    if (CONFIG_T::io_type == io_parallel){
+        
+        #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+
+        #pragma HLS ARRAY_PARTITION variable=mult complete dim=0
+        #pragma HLS ARRAY_PARTITION variable=acc complete dim=0
+        #pragma HLS ARRAY_PARTITION variable=biases complete dim=0
   
-    // Limit multipliers to control parallelization
-    int multiplier_limit = ceil( (CONFIG_T::y_out*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::y_filt - 
-	                          CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::pad_left - 
+        // Limit multipliers to control parallelization
+        int multiplier_limit = ceil( (CONFIG_T::y_out*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::y_filt - 
+    	                          CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::pad_left - 
                               	  CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::pad_right) 
 	                        / CONFIG_T::reuse_factor ); 
-    #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+        #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+    }
+    //Do nothing for CONFIG_T::io_type == io_serial
 
-    
+
     // Convolve, saving all multiplication results to accumulate later
     ConvOut: for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
         ConvFilt: for(int ff = 0; ff < CONFIG_T::n_filt; ff++){

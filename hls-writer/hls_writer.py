@@ -173,6 +173,7 @@ def hls_writer(layer_list, yamlConfig):
         static const unsigned n_filt = {n_filt};
         static const unsigned stride = {stride};
         static const unsigned y_out = {y_out};
+        static const unsigned io_type = nnet::{iotype};
         static const unsigned reuse_factor = {reuse};
         static const unsigned n_zeros = {nzeros};
         static const bool store_weights_in_bram = false;
