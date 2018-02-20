@@ -76,8 +76,6 @@ void compute_layer(
 
         // }
     } else if (CONFIG_T::io_type == io_serial){
-        // TODO: Fill out the directives for serial input
-        #pragma HLS ALLOCATION instances=mul limit=CONFIG_T::n_out operation
         #pragma HLS ARRAY_RESHAPE variable=weights complete dim=2
         #pragma HLS ARRAY_PARTITION variable=mult complete dim=2
         #pragma HLS ARRAY_PARTITION variable=acc complete dim=1
@@ -89,10 +87,14 @@ void compute_layer(
     // Do the matrix-multiply
     Product1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
         if (CONFIG_T::io_type == io_serial){
-            #pragma HLS PIPELINE
+            #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
         }
         cache = data[ii];
         Product2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
+            if (CONFIG_T::io_type == io_serial) {
+                int multiplier_limit  = ceil(CONFIG_T::n_out / CONFIG_T::reuse_factor);
+                #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+            }
             mult[ii][jj] = cache * weights[ii][jj];
         }
     }
