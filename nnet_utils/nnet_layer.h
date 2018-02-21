@@ -87,12 +87,14 @@ void compute_layer(
     // Do the matrix-multiply
     Product1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
         if (CONFIG_T::io_type == io_serial){
-            #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+  //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+            #pragma HLS PIPELINE
         }
         cache = data[ii];
         Product2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
             if (CONFIG_T::io_type == io_serial) {
                 int multiplier_limit  = ceil(CONFIG_T::n_out / CONFIG_T::reuse_factor);
+		if (multiplier_limit < 1) multiplier_limit = 1;
                 #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
             }
             mult[ii][jj] = cache * weights[ii][jj];
