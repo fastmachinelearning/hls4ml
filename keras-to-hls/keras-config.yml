@@ -1,10 +1,10 @@
 KerasJson: example-keras-model-files/KERAS_1layer.json
 KerasH5:   example-keras-model-files/KERAS_1layer_weights.h5
-OutputDir: my-hls-test
+OutputDir: my-hls-test-r1
 ProjectName: myproject
 XilinxPart: xc7vx690tffg1927-2
 ClockPeriod: 5
 
-IOType: io_parallel # options: io_serial/io_parallel
+IOType: io_serial # options: io_serial/io_parallel
 ReuseFactor: 1
 DefaultPrecision: ap_fixed<18,8> 
