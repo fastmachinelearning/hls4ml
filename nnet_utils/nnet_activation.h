@@ -52,7 +52,9 @@ void  relu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 
     data_T datareg;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        // #pragma HLS UNROLL
+        if (CONFIG_T::io_type == io_serial){
+            #pragma HLS PIPELINE
+        }
         datareg = data[ii];
         if (datareg > 0) res[ii] = datareg;
         else res[ii] = 0;
@@ -68,7 +70,9 @@ void  relu_max(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 
     data_T datareg;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        // #pragma HLS UNROLL
+        if (CONFIG_T::io_type == io_serial){
+            #pragma HLS PIPELINE
+        }
         datareg = data[ii];
         if (datareg < 0) res[ii] = 0;
         else if (datareg > MAX_INT) res[ii] = MAX_INT;
@@ -121,7 +125,9 @@ void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     int data_round;
     int index;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        // #pragma HLS UNROLL
+        if (CONFIG_T::io_type == io_serial){
+            #pragma HLS PIPELINE
+        }
         data_round = data[ii]*CONFIG_T::table_size/16;
         index = data_round + 8*CONFIG_T::table_size/16;
         if (index < 0)   index = 0;
@@ -169,7 +175,9 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     int data_round;
     int index;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        // #pragma HLS UNROLL
+        if (CONFIG_T::io_type == io_serial){
+            #pragma HLS PIPELINE
+        }
         data_round = data[ii]*CONFIG_T::table_size/16;
         index = data_round + 8*CONFIG_T::table_size/16;
         if (index < 0)   index = 0;
@@ -221,7 +229,9 @@ void  tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     int data_round;
     int index;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        // #pragma HLS UNROLL
+        if (CONFIG_T::io_type == io_serial){
+            #pragma HLS PIPELINE
+        }
         data_round = data[ii]*CONFIG_T::table_size/8;
         index = data_round + 4*CONFIG_T::table_size/8;
         //std::cout << "Input: "  << data[ii] << " Round: " << data_round << " Index: " << index << std::endl;

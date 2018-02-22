@@ -76,25 +76,43 @@ void compute_layer(
 
         // }
     } else if (CONFIG_T::io_type == io_serial){
-        // TODO: Fill out the directives for serial input
-        // #pragma HLS ALLOCATION instances=mul limit=1 operation
+        #pragma HLS ARRAY_RESHAPE variable=weights complete dim=2
+        #pragma HLS ARRAY_PARTITION variable=mult complete dim=2
+        #pragma HLS ARRAY_PARTITION variable=acc complete dim=1
+        #pragma HLS DATAFLOW
+        #pragma HLS STREAM variable=mult depth=1
+        #pragma HLS STREAM variable=acc depth=1
     }
 
     // Do the matrix-multiply
     Product1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
+        if (CONFIG_T::io_type == io_serial){
+            #pragma HLS PIPELINE
+        }
         cache = data[ii];
         Product2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
+            if (CONFIG_T::io_type == io_serial) {
+                int multiplier_limit  = ceil(CONFIG_T::n_out / CONFIG_T::reuse_factor);
+            if (multiplier_limit < 1) multiplier_limit = 1;
+                #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+            }
             mult[ii][jj] = cache * weights[ii][jj];
         }
     }
 
     // Initialize accumulator with input biases
     ResetAccum: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
+        if (CONFIG_T::io_type == io_serial){
+            #pragma HLS UNROLL
+        }
         acc[iacc] = (typename CONFIG_T::accum_t) biases[iacc];
     }
 
     // Accumulate multiplication result
     Accum1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
+        if (CONFIG_T::io_type == io_serial){
+            #pragma HLS PIPELINE
+        }
         Accum2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
             acc[jj] += mult[ii][jj];
         }
@@ -102,6 +120,9 @@ void compute_layer(
 
     // Cast to "res_t" type
     Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
+        if (CONFIG_T::io_type == io_serial){
+            #pragma HLS UNROLL
+        }
         res[ires] = (res_T) (acc[ires]);
     }    
 }
