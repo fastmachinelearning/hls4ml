@@ -28,22 +28,26 @@
 #include "nnet_recursive.h"
 
 //hls-fpga-machine-learning insert weights
-float w_U[N_INPUTS][N_STATE]  = {1, 2, 0, 4, 0, 2};
-float w_W[N_STATE][N_STATE]   = {2, 3, 4, 0, -1, -2, -1, 0, 0};
-float w_V[N_STATE][N_OUTPUTS] = {0, 2, 1, 0,-2, 3};
-
+mytype w_U[N_INPUTS][N_STATE]  = {1, 2, 3, 4};//, 0, 2};
+mytype w_W[N_STATE][N_STATE]   = {2, 3, 4, 5};//, -1, -2, -1, 0, 0};
+mytype w_V[N_STATE][N_OUTPUTS] = {5, 2, 1, 3};//,-2, 3};
 void myproject(
-		  float data[N_LOOP][N_INPUTS],
-		  float res[N_LOOP][N_OUTPUTS],
+		  mytype data[N_LOOP][N_INPUTS],
+		  mytype res[N_LOOP][N_OUTPUTS],
 		  unsigned short &const_size_in,
 		  unsigned short &const_size_out)
 {
 
     //hls-fpga-machine-learning insert IO
-    #pragma HLS ARRAY_RESHAPE variable=data complete dim=0
-    #pragma HLS ARRAY_RESHAPE variable=res complete dim=0
+    //#pragma HLS ARRAY_RESHAPE variable=data complete dim=0
+    //#pragma HLS ARRAY_RESHAPE variable=res complete dim=0
+    mytype state[N_STATE]          = {0,0};
+    //Note: Partition is needed to pipeline inputs 
+    #pragma HLS ARRAY_PARTITION variable=state dim=0 complete
+    #pragma HLS ARRAY_PARTITION variable=data  dim=0 complete 
+    #pragma HLS ARRAY_PARTITION variable=res   dim=0 complete 
     #pragma HLS INTERFACE ap_vld port=data,res
-    // #pragma HLS PIPELINE
+    #pragma HLS PIPELINE
     const_size_in   = 2;
     const_size_out  = 2;
 
@@ -55,9 +59,8 @@ void myproject(
     for(int iloop = 0; iloop < N_LOOP; iloop++) {
         std::cout << std::endl << "********* Loop " << iloop << " ************" << std::endl;
         std::cout << "Data: [ "; for (int ii = 0; ii < N_INPUTS; ii++) std::cout << data[iloop][ii] << " "; std::cout << "]" << std::endl;
-
-        nnet::simple_rnn<float, float, config1, config1_activ>(data[iloop], res[iloop], w_U, w_W, w_V);
-
+        //nnet::simple_rnn_static<mytype, mytype, config1, config1_activ>(data[iloop], res[iloop], w_U, w_W, w_V);
+        nnet::simple_rnn<mytype, mytype, config1, config1_activ>(data[iloop], res[iloop], state, w_U, w_W, w_V);
         std::cout << "Res: [ "; for (int ii = 0; ii < N_INPUTS; ii++) std::cout << res[iloop][ii] << " "; std::cout << "]" << std::endl;
     }
 
