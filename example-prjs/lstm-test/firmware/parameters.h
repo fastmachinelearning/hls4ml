@@ -17,23 +17,23 @@ typedef ap_uint<18> mytype;
 #define N_INPUTS 2
 #define N_OUTPUTS 2
 #define N_STATE 2
+#define N_TOT 4
 
 //hls-fpga-machine-learning insert layer-precision
 
 //hls-fpga-machine-learning insert layer-config
 
-struct config1 : nnet::rnn_config {
-    typedef mytype state_t;
-    typedef mytype U_t;  // State x Input
-    typedef mytype W_t;  // State x State
-    typedef mytype V_t;  // Output x State
+struct config1 : nnet::lstm_config {
+    typedef mytype W_t;  // Matrix
+    typedef mytype b_t;  // Vector
     static const unsigned n_in = N_INPUTS;
     static const unsigned n_out = N_OUTPUTS;
     static const unsigned n_state = N_STATE;
+    static const unsigned n_tot   = N_TOT;
     static const unsigned io_type = nnet::io_parallel;
     static const unsigned activation_type = nnet::activ_relu;
     static const unsigned reuse_factor = 1;
-    static const bool store_weights_in_bram = false;
+    static const bool     store_weights_in_bram = false;
 };
 struct config1_activ : nnet::activ_config {
     static const unsigned n_in = N_STATE;
