@@ -194,7 +194,7 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
       for (int jj=0; jj<CONFIG_T::n_in; jj++) {
 	if (ii==jj) exp_diff_res[ii][jj] = 1;
 	else {
-	  data_round = (data[ii]-data[jj])*CONFIG_T::table_size/16;
+	  data_round = (data[jj]-data[ii])*CONFIG_T::table_size/16;
 	  index = data_round + 8*CONFIG_T::table_size/16;
 	  if (index < 0)   index = 0;
 	  if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
