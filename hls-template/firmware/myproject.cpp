@@ -16,11 +16,13 @@
 //    You should have received a copy of the GNU General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
+#include <iostream>
 
 #include "parameters.h"
 #include "myproject.h"
 
 #include "nnet_layer.h"
+#include "nnet_conv.h"
 #include "nnet_activation.h"
 
 //hls-fpga-machine-learning insert weights
@@ -34,7 +36,6 @@ void myproject(
 
     //hls-fpga-machine-learning insert IO
 
-    #pragma HLS PIPELINE
 
     const_size_in   = N_INPUTS;
     const_size_out  = N_OUTPUTS;
