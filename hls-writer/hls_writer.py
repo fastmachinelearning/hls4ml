@@ -92,6 +92,7 @@ def hls_writer(layer_list, yamlConfig):
                     if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=layer{}_out complete dim=0\n'.format(i)
                     if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=layer{}_out depth=1\n'.format(i)
 
+                #github Issue 53
                 #Compute Dense layer
                 #if layer_list[i-1]['activation'] == "linear" and layer_list[i-1]['class_name']=='Dense':
                 #    newline += '    nnet::compute_layer<{}, {}, config{}>({}, {}, w{}, b{});\n'.format(input_type, output_type, i, input_object, output_object, i, i)
