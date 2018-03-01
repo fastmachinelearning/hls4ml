@@ -54,13 +54,11 @@ void  linear(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
         #pragma HLS PIPELINE
     }
 
-    data_T datareg;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS PIPELINE
         }
-        datareg = data[ii];
-        res[ii] = datareg;
+        res[ii] = data[ii];
     }
 }
 
