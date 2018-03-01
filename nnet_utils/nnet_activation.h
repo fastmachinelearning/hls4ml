@@ -44,6 +44,27 @@ struct activ_config
     typedef ap_fixed<18,8> table_t;
 };
 
+// *************************************************
+//       LINEAR Activation -- See Issue 53
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void  linear(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
+{
+    if (CONFIG_T::io_type == io_parallel){
+        #pragma HLS PIPELINE
+    }
+
+    data_T datareg;
+    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+        if (CONFIG_T::io_type == io_serial){
+            #pragma HLS PIPELINE
+        }
+        datareg = data[ii];
+        res[ii] = datareg;
+    }
+}
+
+
 
 // *************************************************
 //       RELU Activation
