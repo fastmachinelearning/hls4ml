@@ -92,10 +92,12 @@ def hls_writer(layer_list, yamlConfig):
                     if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=layer{}_out complete dim=0\n'.format(i)
                     if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=layer{}_out depth=1\n'.format(i)
 
+                #github Issue 53
                 #Compute Dense layer
-                if layer_list[i-1]['activation'] == "linear" and layer_list[i-1]['class_name']=='Dense':
-                    newline += '    nnet::compute_layer<{}, {}, config{}>({}, {}, w{}, b{});\n'.format(input_type, output_type, i, input_object, output_object, i, i)
-                elif layer_list[i-1]['class_name']=='Dense':
+                #if layer_list[i-1]['activation'] == "linear" and layer_list[i-1]['class_name']=='Dense':
+                #    newline += '    nnet::compute_layer<{}, {}, config{}>({}, {}, w{}, b{});\n'.format(input_type, output_type, i, input_object, output_object, i, i)
+                #elif layer_list[i-1]['class_name']=='Dense':
+                if layer_list[i-1]['class_name']=='Dense':
                     newline += '    {} logits{}[{}];\n'.format(output_type,i,n_out)
                     if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=logits{} complete dim=0\n'.format(i)
                     if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=logits{} depth=1\n'.format(i)
@@ -130,8 +132,9 @@ def hls_writer(layer_list, yamlConfig):
                     newline += '    nnet::sigmoid<{}, {}, {}>(logits{}, {});\n'.format(output_type, output_type, activation_name, i, output_object)
                 elif layer_list[i-1]['activation'] =="tanh":
                     newline += '    nnet::tanh<{}, {}, {}>(logits{}, {});\n'.format(output_type, output_type, activation_name, i, output_object)
-                elif layer_list[i-1]['activation'] =="linear":
-                    newline += '    //linear activation\n'
+                elif layer_list[i-1]['activation'] =="linear": 
+                    #github Issue 53
+                    newline += '    nnet::linear<{}, {}, {}>(logits{}, {});\n'.format(output_type, output_type, activation_name, i, output_object)
                 else:
                     raise Exception('ERROR: MISSING ACTIVATION')
 
