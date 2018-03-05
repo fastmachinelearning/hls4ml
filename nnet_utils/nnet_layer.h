@@ -70,11 +70,9 @@ void compute_layer(
         #pragma HLS ARRAY_PARTITION variable=mult complete
         #pragma HLS ARRAY_PARTITION variable=acc complete
 
-        // if (CONFIG_T::reuse_factor > 1) {
-        int multiplier_limit  = ceil(CONFIG_T::n_in*CONFIG_T::n_out / CONFIG_T::reuse_factor) - floor(CONFIG_T::n_zeros / CONFIG_T::reuse_factor);
+        int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_out) / float(CONFIG_T::reuse_factor)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
         #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
-        // }
     } else if (CONFIG_T::io_type == io_serial){
         #pragma HLS ARRAY_RESHAPE variable=weights complete dim=2
         #pragma HLS ARRAY_PARTITION variable=mult complete dim=2
@@ -92,8 +90,7 @@ void compute_layer(
         cache = data[ii];
         Product2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
             if (CONFIG_T::io_type == io_serial) {
-                int multiplier_limit  = ceil(CONFIG_T::n_out / CONFIG_T::reuse_factor);
-            if (multiplier_limit < 1) multiplier_limit = 1;
+                int multiplier_limit  = ceil(float(CONFIG_T::n_out) / float(CONFIG_T::reuse_factor));
                 #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
             }
             mult[ii][jj] = cache * weights[ii][jj];
