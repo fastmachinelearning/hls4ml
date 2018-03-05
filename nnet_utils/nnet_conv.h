@@ -70,11 +70,10 @@ void conv_1d(
   
     // Limit multipliers to control parallelization
     int multiplier_limit = ceil( float((CONFIG_T::y_out*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::y_filt - 
-        	                        CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::pad_left - 
-   	                                CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::pad_right)) 
-	                                / float(CONFIG_T::reuse_factor) ); 
+                                        CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::pad_left - 
+                                        CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::pad_right)) 
+                                        / float(CONFIG_T::reuse_factor) ); 
     #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
-
     
     // Convolve, saving all multiplication results to accumulate later
     ConvOut: for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
