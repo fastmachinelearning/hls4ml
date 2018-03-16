@@ -8,7 +8,7 @@ Here we give line-by-line instructions on how to build a first project and expla
 These instructions are for simply running the tool out-of-the-box and getting a feel for the workflow.  
 
 ```
-git clone https://github.com/hls-fpga-machine-learning/HLS4ML.git -b v.0.0.2
+git clone https://github.com/hls-fpga-machine-learning/HLS4ML.git -b v.0.1.0
 cd HLS4ML/keras-to-hls
 python keras-to-hls.py -c keras-config.yml
 ```
