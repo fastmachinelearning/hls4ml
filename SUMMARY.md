@@ -1,6 +1,6 @@
 # Summary
 
-* [HLS4ML](README.md)
+* [hls4ml](README.md)
 * [Setup](SETUP.md)
    * [Dependencies](setup/DEPENDENCIES.md)
    * [Quick Start](setup/QUICKSTART.md)
