@@ -49,7 +49,7 @@ struct conv_config
 
 
 //Computes number of multiplications required 
-//This function is not synthesized into firmware
+//This function should not be synthesized into firmware
 template<typename CONFIG_T>
 int compute_n_mult(
     typename CONFIG_T::weight_t  weights[CONFIG_T::y_filt * CONFIG_T::n_chan * CONFIG_T::n_filt]
@@ -105,8 +105,8 @@ void conv_1d(
     #pragma HLS ARRAY_PARTITION variable=biases complete dim=0
   
     // Limit multipliers to control parallelization
-    //const int n_mult = compute_n_mult<CONFIG_T>(weights);
-    //const int multiplier_limit = ceil( float(n_mult) / float(CONFIG_T::reuse_factor) );
+    const int n_mult = compute_n_mult<CONFIG_T>(weights);
+    const int multiplier_limit = ceil( float(n_mult) / float(CONFIG_T::reuse_factor) );
     int multiplier_limit = ceil ( float(compute_n_mult<CONFIG_T>(weights)) / float(CONFIG_T::reuse_factor) );
     #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
     
