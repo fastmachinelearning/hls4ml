@@ -107,7 +107,6 @@ void conv_1d(
     // Limit multipliers to control parallelization
     const int n_mult = compute_n_mult<CONFIG_T>(weights);
     const int multiplier_limit = ceil( float(n_mult) / float(CONFIG_T::reuse_factor) );
-    int multiplier_limit = ceil ( float(compute_n_mult<CONFIG_T>(weights)) / float(CONFIG_T::reuse_factor) );
     #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
     
     // Convolve, saving all multiplication results to accumulate later
