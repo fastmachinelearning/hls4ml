@@ -68,7 +68,7 @@ int compute_multiplier_limit(
 			//padded -- do nothing
                     }
                     else {
-			//need to tune this cut
+			//need to tune this cut?
                         if( weights[index_weight] > 1e-20 || weights[index_weight] < -1e-20 ){
 			    n_mult++;
 			}//end if nonzero weight
