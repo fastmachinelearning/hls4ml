@@ -1,6 +1,6 @@
-PytorchModel: example-models/2LayerModel.plk
-PytorchDict: example-models/2LayerDict.plk
-OutputDir: my-hls-dir-test
+#PytorchModel: example-models/two_layer_model.pt
+PytorchModel: example-models/three_layer_model.pt
+OutputDir: my-hls-dir-3L
 ProjectName: myproject
 XilinxPart: xc7vx690tffg1927-2
 ClockPeriod: 5

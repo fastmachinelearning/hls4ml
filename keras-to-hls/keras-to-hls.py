@@ -11,67 +11,7 @@ import math
 
 filedir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,os.path.join(filedir, "..", "hls-writer"))
-from hls_writer import hls_writer
-
-#######################################
-## Config module
-#######################################
-def parse_config(config_file) :
-
-    print "Loading configuration from " + str(config_file)
-    config = open(config_file, 'r')
-    return yaml.load(config)
-
-#######################################
-## Print a bias or weight array to C++
-#######################################
-def print_array_to_cpp(name, a, odir ):
-
-    #count zeros
-    zero_ctr = 0
-    for x in np.nditer(a, order='C'):
-        if x == 0: 
-            zero_ctr += 1
-
-    #put output in subdir for tarballing later
-    f=open("{}/firmware/weights/{}.h".format(odir,name),"w")
-
-    #meta data
-    f.write("//Numpy array shape {}\n".format(a.shape))
-    f.write("//Min {}\n".format(np.min(a)))
-    f.write("//Max {}\n".format(np.max(a)))
-    f.write("//Number of zeros {}\n".format(zero_ctr))
-    f.write("\n")
-    
-    #c++ variable 
-    if "w" in name: 
-        f.write("weight_default_t {}".format(name))
-    elif "b" in name: 
-        f.write("bias_default_t {}".format(name))
-    else:
-        raise Exception('ERROR: Unkown weights type')
-
-    #hls doesn't like 3d arrays... unrolling to 1d
-    if len(a.shape)>=3: 
-        f.write("[{}]".format(np.prod(a.shape)))
-    else:
-        for x in a.shape:
-            f.write("[{}]".format(x))
-    f.write(" = {")
-    
-    #fill c++ array.  
-    #not including internal brackets for multidimensional case
-    i=0
-    for x in np.nditer(a, order='C'):
-        if i==0:
-            f.write("{}".format(x))
-        else:
-            f.write(", {}".format(x))
-        i=i+1
-    f.write("};\n")
-    f.close()
-
-    return zero_ctr
+from hls_writer import parse_config, print_array_to_cpp, hls_writer
 
 ############################################################################################
 ## M A I N
