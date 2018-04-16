@@ -13,67 +13,7 @@ from shutil import copyfile
 
 filedir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,os.path.join(filedir, "..", "hls-writer"))
-from hls_writer import hls_writer
-## hyphen doesn't work for python import...Below won't work
-# sys.path.insert(0,os.path.join(filedir, "..", "keras-to-hls"))
-# from keras-to-hls import parse_config, print_array_to_cpp
-
-#######################################
-## Config module
-#######################################
-def parse_config(config_file) :
-
-    print "Loading configuration from " + str(config_file)
-    config = open(config_file, 'r')
-    return yaml.load(config)
-
-#######################################
-## Print a bias or weight array to C++
-#######################################
-def print_array_to_cpp(name, a, odir ):
-
-    #count zeros
-    zero_ctr = 0;
-    for x in np.nditer(a, order='C'):
-        if x == 0:
-            zero_ctr += 1
-
-    #put output in subdir for tarballing later
-    f=open("{}/firmware/weights/{}.h".format(odir,name),"w")
-
-    #meta data
-    f.write("//Numpy array shape {}\n".format(a.shape))
-    f.write("//Min {}\n".format(np.min(a)))
-    f.write("//Max {}\n".format(np.max(a)))
-    f.write("//Number of zeros {}\n".format(zero_ctr))
-    f.write("\n")
-
-    #c++ variable
-    if "w" in name:
-        f.write("weight_default_t {}".format(name))
-    elif "b" in name:
-        f.write("bias_default_t {}".format(name))
-    else:
-        raise Exception('ERROR: Unkown weights type')
-
-    for x in a.shape:
-        f.write("[{}]".format(x))
-    f.write(" = {")
-
-    #fill c++ array.
-    #not including internal brackets for multidimensional case
-    i=0;
-    for x in np.nditer(a, order='C'):
-        if i==0:
-            f.write("{}".format(x))
-        else:
-            f.write(", {}".format(x))
-        i=i+1
-    f.write("};\n")
-    f.close()
-
-    return zero_ctr;
-
+from hls_writer import parse_config, print_array_to_cpp, hls_writer
 
 ############################################################################################
 ## M A I N
@@ -93,8 +33,6 @@ def main():
         yamlConfig['OutputDir'] = os.path.join(configDir, yamlConfig['OutputDir'])
     if not os.path.isabs(yamlConfig['PytorchModel']):
         yamlConfig['PytorchModel'] = os.path.join(configDir, yamlConfig['PytorchModel'])
-    if not os.path.isabs(yamlConfig['PytorchDict']):
-        yamlConfig['PytorchDict'] = os.path.join(configDir, yamlConfig['PytorchDict'])
 
     if not (yamlConfig["IOType"] == "io_parallel" or yamlConfig["IOType"] == "io_serial"):
         raise Exception('ERROR: Invalid IO type')
@@ -105,10 +43,13 @@ def main():
     if not os.path.isdir("{}/firmware/weights".format(yamlConfig['OutputDir'])):
         os.makedirs("{}/firmware/weights".format(yamlConfig['OutputDir']))
 
-    t = pickle.load(open( yamlConfig['PytorchModel'] , 'rb' ))
-    n = torch.load(yamlConfig['PytorchDict'])
-    t.load_state_dict(n)
+    if not torch.cuda.is_available():
+      t = torch.load(yamlConfig['PytorchModel'], map_location=lambda storage, loc: storage)
+    else:
+      t = torch.load(yamlConfig['PytorchModel'])
+  
     modelstr = repr(t).split('\n')
+    modeldict = t.state_dict()
 
     #This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
@@ -132,8 +73,9 @@ def main():
         # #Dictionary to fill in and append to layer_list
         layer={}
 
-        # #Extract name for finding weights and biases
-        layer['name'] = matchname.group(1)+"_"+Nlayer
+        ## Extract name for finding weights and biases
+        ## Only suport Dense network for now. Will update this later for others
+        layer['class_name'] = "Dense"
 
         # #Get number of inputs and outputs
         layer["n_in"] =  int(matchname.group(2))
@@ -143,8 +85,8 @@ def main():
         layer["activation"] = modelstr[i+1].split(":")[-1].strip().lower()[:-2]
 
         # Translate weights and biases from tensorfile
-        weights = n[Nlayer+".weight"].numpy().transpose()
-        biases =  n[Nlayer+".bias"].numpy().transpose()
+        weights = modeldict[Nlayer+".weight"].numpy().transpose()
+        biases  = modeldict[Nlayer+".bias"].numpy().transpose()
         cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
         print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
         layer['weights_n_zeros'] = cur_n_zeros
