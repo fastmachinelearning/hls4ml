@@ -8,12 +8,11 @@ If you are using the package please cite:
    * Connecting the Dots Workshop: [talk](https://indico.cern.ch/event/658267/contributions/2813688/)
    * Fermilab Research Techniques Seminar: [talk](https://indico.fnal.gov/event/16908/)
    * CERN EP/IT - Data Science Seminar: [talk](https://indico.cern.ch/event/721567/) 
-   
+
 # Contributors
 
    * Jennifer Ngadiuba, Maurizio Pierini [CERN]
    * Javier Duarte, Sergo Jindariani, Benjamin Kreis, Ryan Rivera, Nhan Tran [Fermilab]
    * Edward Kreinar [Hawkeye360]
-   * Philip Harris [MIT]
-   * Song Han [MIT]
+   * Song Han, Philip Harris [MIT]
    * Zhenbin Wu [University of Illinois at Chicago]
