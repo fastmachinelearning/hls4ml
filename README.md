@@ -8,11 +8,10 @@ contact: [hls4ml.help@gmail.com](mailto:hls4ml.help@gmail.com)
 
 ## Project status
 
-*in beta version (March 17, 2018)*, **v0.1.2**
+*in beta version (April 23, 2018)*, **v0.1.3**
 
 ML code support: 
-   * Keras/Tensorflow
-   * PyTorch, in alpha testing
+   * Keras/Tensorflow, PyTorch
    * Planned: ? 
 
 Neural network architectures:

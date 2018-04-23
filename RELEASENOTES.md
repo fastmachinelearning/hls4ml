@@ -1,5 +1,7 @@
 # Release notes
 
+**v0.1.3**: adding PyTorch support
+
 **v0.1.2**: first beta release
    * some bug fixes for pipelining and support for layer types
 
