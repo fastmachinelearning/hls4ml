@@ -1,6 +1,6 @@
 # Concepts
 
-[**Under Construction**, for more information see <a href="REFERENCE.html">References</a>]
+[**Under Construction**, for more detailed information see <a href="REFERENCE.html">References</a>]
 
 The goal of hls4ml is to provide an efficient and fast translation of machine learning models.
 The resulting HLS project can be then used to produce an IP which can be plugged into more complex designs or be used to create a kernal for CPU co-processing.
