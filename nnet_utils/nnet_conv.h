@@ -66,6 +66,7 @@ int compute_multiplier_limit(
                     
                     if((ii*CONFIG_T::stride+jj) < CONFIG_T::pad_left || (ii*CONFIG_T::stride+jj) >= (CONFIG_T::pad_left + CONFIG_T::y_in)){
 			//padded -- do nothing
+			continue;
                     }
                     else {
 			//need to tune this cut?
