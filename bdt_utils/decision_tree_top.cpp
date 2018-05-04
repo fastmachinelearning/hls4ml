@@ -1,21 +1,8 @@
 #include "decision_tree.h"
+#include "parameters.h"
 
-#include "ap_int.h"
-#include "ap_fixed.h"
-#include <iostream>
-
-//typedef ap_fixed<18,8> input_t;
-//typedef ap_fixed<18,8> output_t;
-
-int main(){
-
-	BDT::input_arr_t x[6] = {{0.7, 1.2, 15.0, 1.0}, // score: 1.04
-					   {0.7, 1.5, 15.0, 1.0}, // score: -1.829
-					   {0.3, 1.0, 30., 0.0 }, // score: 0.361
-					   {0.3, 1.0, 100., 0.0 }, // score: -2.657
-					   {0.3, 2.0, 100., 0.0 }, // score: -2.553
-					   {0.3, 2.0, 100., 1.0 }}; // score: -4.232
-	BDT::score_t y;
+BDT::score_t decision_function(BDT::input_arr_t x){
+	#pragma HLS pipeline II=1
 
 	BDT::tree_params_t<15> t0 = {{2, 2, 3, -2, -2, 1, -2, -2, 1, 2, -2, -2, 3, -2, -2},
 	{23.44139862,  11.824199676513672, 0.5, -2.0, -2.0, 1.4481849670410156, -2.0, -2.0, 1.160520076751709, 66.10154724121094, -2.0, -2.0, 0.5, -2.0, -2.0},
@@ -26,9 +13,6 @@ int main(){
 	};
 
 	Tree<15, 8> tree(t0);
+	return tree.decision_function(x);
 
-	for(int i = 0; i < 6; i++){
-		y = tree.decision_function(x[i]);
-		std::cout << y << std::endl;
-	}
 }
