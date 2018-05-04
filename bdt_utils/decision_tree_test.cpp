@@ -1,4 +1,4 @@
-#include "../decision_tree.h"
+#include "decision_tree.h"
 
 #include "ap_int.h"
 #include "ap_fixed.h"

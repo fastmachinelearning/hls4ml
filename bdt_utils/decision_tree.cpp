@@ -1,6 +1,8 @@
 #include "decision_tree.h"
 
 output_t tree(input_t x[4]){//, output_t [1]){//bool activations[8]){
+	#pragma HLS pipeline II=1
+
 	
 	int feature[15] = {2, 2, 3, -2, -2, 1, -2, -2, 1, 2, -2, -2, 3, -2, -2};
 	double threshold[15] = {23.44139862,  11.824199676513672, 0.5, -2.0, -2.0, 1.4481849670410156, -2.0, -2.0, 1.160520076751709, 66.10154724121094, -2.0, -2.0, 0.5, -2.0, -2.0};
@@ -16,6 +18,7 @@ output_t tree(input_t x[4]){//, output_t [1]){//bool activations[8]){
 	
 	// Execute all comparisons
 	for(int i = 0; i < 15; i++){
+		#pragma HLS unroll
 		// Only non-leaf nodes do comparisons
 		if(x[feature[i]] != -2){
 			comparison[i] = x[feature[i]] <= threshold[i];
@@ -27,6 +30,7 @@ output_t tree(input_t x[4]){//, output_t [1]){//bool activations[8]){
 	// Determine node activity for all nodes
 	int iLeaf = 0;
 	for(int i = 0; i < 15; i++){
+		#pragma HLS unroll
 		// Root node is always active
 		if(i == 0){
 			active[i] = true;
@@ -48,6 +52,7 @@ output_t tree(input_t x[4]){//, output_t [1]){//bool activations[8]){
 	// Set each bit of addr to the corresponding leaf activation
 	ap_uint<8> active_leaf_addr;
 	for(int i = 0; i < 8; i++){
+		#pragma HLS unroll
 		active_leaf_addr[i] = active_leaf[i];
 	}
 
