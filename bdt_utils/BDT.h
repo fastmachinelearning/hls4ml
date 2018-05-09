@@ -5,22 +5,27 @@
 
 namespace BDT{
 
-template<int n_nodes, int n_leaves, class input_t, class score_t>
+template<int n_nodes, int n_leaves, class input_t, class score_t, class threshold_t>
 struct Tree {
 	int feature[n_nodes];
-	double threshold[n_nodes];
-	double value[n_nodes];
+	threshold_t threshold[n_nodes];
+	score_t value[n_nodes];
 	int children_left[n_nodes];
 	int children_right[n_nodes];
 	int parent[n_nodes];
 
-	score_t decision_function(input_t x){
+	score_t decision_function(input_t x) const{
 		#pragma HLS pipeline II = 1
 
 		bool comparison[n_nodes];
 		bool activation[n_nodes];
 		bool activation_leaf[n_leaves];
-		double value_leaf[n_leaves];
+		score_t value_leaf[n_leaves];
+
+		#pragma HLS ARRAY_PARTITION variable=comparison
+		#pragma HLS ARRAY_PARTITION variable=activation
+		#pragma HLS ARRAY_PARTITION variable=activation_leaf
+		#pragma HLS ARRAY_PARTITION variable=value_leaf
 
 		// Execute all comparisons
 		Compare: for(int i = 0; i < n_nodes; i++){
@@ -78,14 +83,14 @@ struct Tree {
 	}
 };
 
-template<int n_trees, int n_nodes, int n_leaves, class input_t, class score_t>
+template<int n_trees, int n_nodes, int n_leaves, class input_t, class score_t, class threshold_t>
 struct BDT{
-	Tree<n_nodes, n_leaves, input_t, score_t> trees[n_trees];
-	BDT(){}
+	Tree<n_nodes, n_leaves, input_t, score_t, threshold_t> trees[n_trees];
 
-	score_t decision_function(input_t x){
+	score_t decision_function(input_t x) const{
 		score_t score = 0;
 		Trees: for(int i = 0; i < n_trees; i++){
+			#pragma HLS UNROLL
 			score += trees[i].decision_function(x);
 		}
 		return score;

@@ -3,14 +3,15 @@
 
 #include "ap_fixed.h"
 
-const int n_trees = 2;
-const int n_nodes = 15;
-const int n_leaves = 8;
-const int n_features = 4; // Number of features
+static const int n_trees = 10;
+static const int n_nodes = 15;
+static const int n_leaves = 8;
+static const int n_features = 4; // Number of features
 
 typedef ap_fixed<18,9> input_t; // Input features type
 typedef input_t input_arr_t[n_features];
 typedef ap_fixed<18, 9> score_t; // Type for tree score
+typedef input_t threshold_t;
 
 // TODO make this work
 // Struct for input data, allowing different types
