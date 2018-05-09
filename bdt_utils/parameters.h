@@ -3,7 +3,7 @@
 
 #include "ap_fixed.h"
 
-static const int n_trees = 10;
+static const int n_trees = 100;
 static const int n_nodes = 15;
 static const int n_leaves = 8;
 static const int n_features = 4; // Number of features

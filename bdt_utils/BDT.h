@@ -16,6 +16,12 @@ struct Tree {
 
 	score_t decision_function(input_t x) const{
 		#pragma HLS pipeline II = 1
+#pragma HLS RESOURCE variable=feature core=ROM_nP_LUTRAM
+#pragma HLS RESOURCE variable=threshold core=ROM_nP_LUTRAM
+#pragma HLS RESOURCE variable=value core=ROM_nP_LUTRAM
+#pragma HLS RESOURCE variable=children_left core=ROM_nP_LUTRAM
+#pragma HLS RESOURCE variable=children_right core=ROM_nP_LUTRAM
+
 
 		bool comparison[n_nodes];
 		bool activation[n_nodes];
