@@ -57,13 +57,12 @@ struct config1 : nnet::conv_config {
 
 struct config1 : nnet::conv2d_config {
 
-    // Internal data type definitions                                                                                                                                            
-    typedef float bias_t;
-    typedef float weight_t;
-    typedef float accum_t;
+    // Internal data type definitions
+    typedef accum_default_t accum_t;
+    typedef bias_default_t bias_t;
+    typedef weight_default_t weight_t;
 
-    // Convolutional parameters                                                                                                                                                 
-
+    // Convolutional parameters
     static const unsigned pad_top = PAD_TOP;
     static const unsigned pad_bottom = PAD_BOTTOM;
     static const unsigned pad_left = PAD_LEFT;
