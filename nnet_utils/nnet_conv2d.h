@@ -53,12 +53,55 @@ struct conv2d_config
     static const unsigned n_zeros = 0; // not used yet
 };
 
+
+//Computes multiplier limit
+//This function should not be synthesized into firmware
+template<typename CONFIG_T>
+    int compute_multiplier_limit_conv2d(
+	typename CONFIG_T::weight_t  weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt]
+	)
+{
+    int n_mult = 0;
+
+    for(int oh = 0; oh < CONFIG_T::out_height; oh++) {
+      for(int ow = 0; ow < CONFIG_T::out_width; ow++) {
+        for(int ff = 0; ff < CONFIG_T::n_filt; ff++){
+          for(int cc = 0; cc < CONFIG_T::n_chan; cc++){
+            for(int fh = 0; fh < CONFIG_T::filt_height; fh++){
+              for(int fw = 0; fw < CONFIG_T::filt_width; fw++){
+                    
+		int index_weight = fh*CONFIG_T::filt_width*CONFIG_T::n_chan*CONFIG_T::n_filt
+                		 + fw*CONFIG_T::n_chan*CONFIG_T::n_filt
+            		         + cc*CONFIG_T::n_filt
+         		         + ff;
+
+		if( (oh*CONFIG_T::stride_height+fh) < CONFIG_T::pad_top || (oh*CONFIG_T::stride_height+fh) >= (CONFIG_T::pad_top+CONFIG_T::in_height) 
+          	 || (ow*CONFIG_T::stride_width+fw) < CONFIG_T::pad_left || (ow*CONFIG_T::stride_width+fw) >= (CONFIG_T::pad_left+CONFIG_T::in_width)) {
+		    //padded - do nothing
+		    continue;
+                }
+		else {
+		    if( weights[index_weight] > 1e-20 || weights[index_weight] < -1e-20 ){
+			n_mult++;
+		     }
+		}
+
+              }//end mult loop
+            }//end channel loop
+	  }//end filter width loop
+        }//end filter height loop      
+      }//end output width loop
+    }//end output height loop
+
+    return ceil( float(n_mult) / float(CONFIG_T::reuse_factor) );
+
+}//end compute_n_mult 
+
+
 template<class data_T, class res_T, typename CONFIG_T>
 void conv_2d(
              data_T   data[CONFIG_T::in_height][CONFIG_T::in_width][CONFIG_T::n_chan],
-//             data_T   data[CONFIG_T::in_height*CONFIG_T::in_width*CONFIG_T::n_chan],
 	     res_T    res[CONFIG_T::out_height][CONFIG_T::out_width][CONFIG_T::n_filt],
-//	     res_T    res[CONFIG_T::out_height*CONFIG_T::out_width*CONFIG_T::n_filt],
 	     typename CONFIG_T::weight_t  weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
 	     typename CONFIG_T::bias_t    biases[CONFIG_T::n_filt])
 {
@@ -90,8 +133,8 @@ void conv_2d(
     #pragma HLS ARRAY_PARTITION variable=biases complete dim=0
   
     // Limit multipliers to control parallelization
-    //const int multiplier_limit = compute_multiplier_limit_conv2d<CONFIG_T>(weights);
-    //#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+    const int multiplier_limit = compute_multiplier_limit_conv2d<CONFIG_T>(weights);
+    #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
     
     // Convolve, saving all multiplication results to accumulate later
     ConvOutHeight: for(int oh = 0; oh < CONFIG_T::out_height; oh++) {
@@ -119,9 +162,6 @@ void conv_2d(
                   mult[index_mult] = 0;
                 }
 		else {
-		    // mult[index_mult] = data  [oh*CONFIG_T::stride_height+fh-CONFIG_T::pad_top]
-		    //		  		[ow*CONFIG_T::stride_width+fw-CONFIG_T::pad_left]
-		    //                          [cc];
 		    mult[index_mult] = data_1d  [ (oh*CONFIG_T::stride_height+fh-CONFIG_T::pad_top)*CONFIG_T::in_width*CONFIG_T::n_chan
 						+(ow*CONFIG_T::stride_width+fw-CONFIG_T::pad_left)*CONFIG_T::n_chan
                                                 +cc ] * weights[index_weight];
@@ -175,7 +215,6 @@ void conv_2d(
       for(int ow = 0; ow < CONFIG_T::out_width; ow++) {
 	for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
  	  res[oh][ow][ff] = (res_T)(acc[oh*CONFIG_T::out_width*CONFIG_T::n_filt + ow*CONFIG_T::n_filt + ff]);
-//	  res[oh*CONFIG_T::out_width*CONFIG_T::n_filt + ow*CONFIG_T::n_filt + ff] = (res_T)(acc[oh*CONFIG_T::out_width*CONFIG_T::n_filt + ow*CONFIG_T::n_filt + ff]);
 	}
       }
     }
@@ -183,37 +222,33 @@ void conv_2d(
 }//end conv2d
 
 
-//Could change to overloaded
-template<class data_T, int NROWS, int NCOLS>
-    void flatten_3d(
-        data_T    data[NROWS][NCOLS], 
-	data_T     res[NROWS*NCOLS])
+template<class data_T, int N1, int N2, int N3>
+    void flatten(
+        data_T    data[N1][N2][N3], 
+	data_T     res[N1*N2*N3])
 {
-
-    //Initialize
-    //for(int i=0; i<NROWS*NCOLS; i++){
-    //    res[i]=0;
-    //}
-
-    for(int r=0; r<NROWS; r++){
-        for(int c=0; c<NCOLS; c++){
-            res[r*NCOLS+c] = data[r][c];
-        }
-    }
+    for(int i1=0; i1<N1; i1++){
+      for(int i2=0; i2<N2; i2++){
+        for(int i3=0; i3<N3; i3++){
+            res[i1*N2*N3+i2*N3+i3] = data[i1][i2][i3];
+        }//i3
+      }//i2
+    }//i1
 }
 
 
-//Could change to overloaded
-template<class data_T, int NROWS, int NCOLS>
-    void unflatten_3d(
-        data_T    data[NROWS*NCOLS], 
-	data_T     res[NROWS][NCOLS])
+template<class data_T, int N1, int N2, int N3>
+    void unflatten(
+        data_T    data[N1*N2*N3], 
+	data_T     res[N1][N2][N3])
 {
-    for(int r=0; r<NROWS; r++){
-        for(int c=0; c<NCOLS; c++){
-             res[r][c] = data[r*NCOLS+c];
-        }
-    }
+    for(int i1=0; i1<N1; i1++){
+      for(int i2=0; i2<N2; i2++){
+        for(int i3=0; i2<N3; i3++){
+             res[i1][i2][i3] = data[i1*N2*N3+i2*N3+i3];
+        }//i3
+      }//i2
+    }//i1  
 }
 
 
