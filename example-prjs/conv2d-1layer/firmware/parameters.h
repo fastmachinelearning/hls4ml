@@ -11,11 +11,11 @@
 #include "nnet_common.h"
 
 //hls-fpga-machine-learning insert numbers
-typedef ap_fixed<32,8> accum_default_t;
-typedef ap_fixed<32,8> weight_default_t;
-typedef ap_fixed<32,8> bias_default_t;
-typedef ap_fixed<32,8> input_t;
-typedef ap_fixed<32,8> result_t;
+typedef ap_fixed<18,8> accum_default_t;
+typedef ap_fixed<18,8> weight_default_t;
+typedef ap_fixed<18,8> bias_default_t;
+typedef ap_fixed<18,8> input_t;
+typedef ap_fixed<18,8> result_t;
 #define IN_HEIGHT 8
 #define IN_WIDTH 8
 #define N_CHAN 1
@@ -83,7 +83,7 @@ struct config2 : nnet::layer_config {
 };
 struct softmax_config2 : nnet::activ_config {
     static const unsigned n_in = N_OUTPUTS;
-    static const unsigned table_size = 16384;
+    static const unsigned table_size = 1024;
     static const unsigned io_type = nnet::io_parallel;
 };
 
