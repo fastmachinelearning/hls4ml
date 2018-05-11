@@ -29,10 +29,10 @@
 
 // Prototype of top level function for C-synthesis
 void myproject(
-//      input_t data[IN_HEIGHT][IN_WIDTH][N_CHAN],
-//      result_t res[OUT_HEIGHT][OUT_WIDTH][N_FILT],
-      input_t data[IN_HEIGHT*IN_WIDTH*N_CHAN],
-      result_t res[OUT_HEIGHT*OUT_WIDTH*N_FILT],
+      input_t data[IN_HEIGHT][IN_WIDTH][N_CHAN],
+      result_t res[OUT_HEIGHT][OUT_WIDTH][N_FILT],
+//      input_t data[IN_HEIGHT*IN_WIDTH*N_CHAN],
+//      result_t res[OUT_HEIGHT*OUT_WIDTH*N_FILT],
       unsigned short &const_size_in,
       unsigned short &const_size_out);
 

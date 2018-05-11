@@ -55,26 +55,26 @@ struct conv2d_config
 
 template<class data_T, class res_T, typename CONFIG_T>
 void conv_2d(
-//             data_T   data[CONFIG_T::in_height][CONFIG_T::in_width][CONFIG_T::n_chan],
-             data_T   data[CONFIG_T::in_height*CONFIG_T::in_width*CONFIG_T::n_chan],
-//	     res_T    res[CONFIG_T::out_height][CONFIG_T::out_width][CONFIG_T::n_filt],
-	     res_T    res[CONFIG_T::out_height*CONFIG_T::out_width*CONFIG_T::n_filt],
+             data_T   data[CONFIG_T::in_height][CONFIG_T::in_width][CONFIG_T::n_chan],
+//             data_T   data[CONFIG_T::in_height*CONFIG_T::in_width*CONFIG_T::n_chan],
+	     res_T    res[CONFIG_T::out_height][CONFIG_T::out_width][CONFIG_T::n_filt],
+//	     res_T    res[CONFIG_T::out_height*CONFIG_T::out_width*CONFIG_T::n_filt],
 	     typename CONFIG_T::weight_t  weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
 	     typename CONFIG_T::bias_t    biases[CONFIG_T::n_filt])
 {
 
-    /*
+  
     //Convert data to 1D
     data_T data_1d[CONFIG_T::in_height*CONFIG_T::in_width*CONFIG_T::n_chan];
     #pragma HLS ARRAY_PARTITION variable=data complete dim=0
-    for(int oh = 0; oh < CONFIG_T::out_height; oh++) {
-      for(int ow = 0; ow < CONFIG_T::out_width; ow++) {
+    for(int ih = 0; ih < CONFIG_T::in_height; ih++) {
+      for(int iw = 0; iw < CONFIG_T::in_width; iw++) {
 	for(int cc = 0; cc < CONFIG_T::n_chan; cc++){
-          data_1d[oh*CONFIG_T::in_width*CONFIG_T::n_chan + ow*CONFIG_T::n_chan + cc] = data[oh][ow][cc];
+          data_1d[ih*CONFIG_T::in_width*CONFIG_T::n_chan + iw*CONFIG_T::n_chan + cc] = data[ih][iw][cc];
         }
       }
     }
-    */
+  
 	  
     typename CONFIG_T::accum_t mult[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt * CONFIG_T::n_chan * CONFIG_T::filt_height * CONFIG_T::filt_width];
     typename CONFIG_T::accum_t acc[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt];
@@ -119,14 +119,12 @@ void conv_2d(
                   mult[index_mult] = 0;
                 }
 		else {
-		  //data_1d[oh*CONFIG_T::in_width*CONFIG_T::n_chan + ow*CONFIG_T::n_chan + cc] = data[oh][ow][cc];
-                  //mult[index_mult] = data[ii*CONFIG_T::stride+jj-CONFIG_T::pad_left][cc] * weights[index_weight];
 		    // mult[index_mult] = data  [oh*CONFIG_T::stride_height+fh-CONFIG_T::pad_top]
 		    //		  		[ow*CONFIG_T::stride_width+fw-CONFIG_T::pad_left]
 		    //                          [cc];
-		    mult[index_mult] = data[ (oh*CONFIG_T::stride_height+fh-CONFIG_T::pad_top)*CONFIG_T::in_width*CONFIG_T::n_chan
+		    mult[index_mult] = data_1d  [ (oh*CONFIG_T::stride_height+fh-CONFIG_T::pad_top)*CONFIG_T::in_width*CONFIG_T::n_chan
 						+(ow*CONFIG_T::stride_width+fw-CONFIG_T::pad_left)*CONFIG_T::n_chan
-                                                +cc ];
+                                                +cc ] * weights[index_weight];
                 }
 
               }//end mult loop
@@ -176,8 +174,8 @@ void conv_2d(
     for(int oh = 0; oh < CONFIG_T::out_height; oh++) {
       for(int ow = 0; ow < CONFIG_T::out_width; ow++) {
 	for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
-//	  res[oh][ow][ff] = (res_T)(acc[oh*CONFIG_T::out_width*CONFIG_T::n_filt + ow*CONFIG_T::n_filt + ff]);
-          res[oh*CONFIG_T::out_width*CONFIG_T::n_filt + ow*CONFIG_T::n_filt + ff] = (res_T)(acc[oh*CONFIG_T::out_width*CONFIG_T::n_filt + ow*CONFIG_T::n_filt + ff]);
+ 	  res[oh][ow][ff] = (res_T)(acc[oh*CONFIG_T::out_width*CONFIG_T::n_filt + ow*CONFIG_T::n_filt + ff]);
+//	  res[oh*CONFIG_T::out_width*CONFIG_T::n_filt + ow*CONFIG_T::n_filt + ff] = (res_T)(acc[oh*CONFIG_T::out_width*CONFIG_T::n_filt + ow*CONFIG_T::n_filt + ff]);
 	}
       }
     }

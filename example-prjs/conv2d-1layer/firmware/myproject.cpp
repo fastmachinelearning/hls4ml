@@ -36,10 +36,10 @@
 //#include "weights/b2.h"
 
 void myproject(
-//		  input_t data[IN_HEIGHT][IN_WIDTH][N_CHAN],
-//		  result_t res[OUT_HEIGHT][OUT_WIDTH][N_FILT],
-		  input_t data[IN_HEIGHT*IN_WIDTH*N_CHAN],
-		  result_t res[OUT_HEIGHT*OUT_WIDTH*N_FILT],
+		  input_t data[IN_HEIGHT][IN_WIDTH][N_CHAN],
+		  result_t res[OUT_HEIGHT][OUT_WIDTH][N_FILT],
+//		  input_t data[IN_HEIGHT*IN_WIDTH*N_CHAN],
+//		  result_t res[OUT_HEIGHT*OUT_WIDTH*N_FILT],
 		  unsigned short &const_size_in,
 		  unsigned short &const_size_out)
 {
@@ -60,16 +60,16 @@ void myproject(
 
     //hls-fpga-machine-learning insert layers
 
-    input_t layer0[IN_HEIGHT*IN_WIDTH*N_CHAN];
-    #pragma HLS ARRAY_PARTITION variable=layer0 complete dim=0
+//    input_t layer0[IN_HEIGHT*IN_WIDTH*N_CHAN];
+//    #pragma HLS ARRAY_PARTITION variable=layer0 complete dim=0
     
     //Conv2d
 //    input_t layer1_out[OUT_HEIGHT][OUT_WIDTH][N_FILT];
     input_t layer1_out[OUT_HEIGHT*OUT_WIDTH*N_FILT];
     #pragma HLS ARRAY_PARTITION variable=layer1_out complete dim=0
 //    nnet::conv_2d<input_t, input_t, config1>(data, layer1_out, w1, b1);
-    nnet::conv_2d<input_t, input_t, config1>(layer0, layer1_out, w1, b1);
-    // nnet::conv_2d<input_t, result_t, config1>(data, res, w1, b1);
+//    nnet::conv_2d<input_t, input_t, config1>(layer0, layer1_out, w1, b1);
+     nnet::conv_2d<input_t, result_t, config1>(data, res, w1, b1);
 
 /*
     //Flatten
