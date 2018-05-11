@@ -61,7 +61,6 @@ int compute_multiplier_limit(
 	    for(int cc = 0; cc < CONFIG_T::n_chan; cc++){
                 for(int jj = 0; jj < CONFIG_T::y_filt; jj++){
                     
-                    int index_mult   = ii*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::y_filt + ff*CONFIG_T::n_chan*CONFIG_T::y_filt + cc*CONFIG_T::y_filt + jj;
                     int index_weight = jj*CONFIG_T::n_chan*CONFIG_T::n_filt + cc*CONFIG_T::n_filt + ff;
                     
                     if((ii*CONFIG_T::stride+jj) < CONFIG_T::pad_left || (ii*CONFIG_T::stride+jj) >= (CONFIG_T::pad_left + CONFIG_T::y_in)){
