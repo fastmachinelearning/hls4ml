@@ -66,7 +66,7 @@ void conv_2d(
   
     //Convert data to 1D
     data_T data_1d[CONFIG_T::in_height*CONFIG_T::in_width*CONFIG_T::n_chan];
-    #pragma HLS ARRAY_PARTITION variable=data complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=data_1d complete dim=0
     for(int ih = 0; ih < CONFIG_T::in_height; ih++) {
       for(int iw = 0; iw < CONFIG_T::in_width; iw++) {
 	for(int cc = 0; cc < CONFIG_T::n_chan; cc++){
