@@ -32,14 +32,13 @@
 //hls-fpga-machine-learning insert weights
 #include "weights/w1.h"
 #include "weights/b1.h"
-//#include "weights/w2.h"
-//#include "weights/b2.h"
+#include "weights/w2.h"
+#include "weights/b2.h"
 
 void myproject(
 		  input_t data[IN_HEIGHT][IN_WIDTH][N_CHAN],
-		  result_t res[OUT_HEIGHT][OUT_WIDTH][N_FILT],
-//		  input_t data[IN_HEIGHT*IN_WIDTH*N_CHAN],
-//		  result_t res[OUT_HEIGHT*OUT_WIDTH*N_FILT],
+//		  result_t res[OUT_HEIGHT][OUT_WIDTH][N_FILT],
+		  result_t res[N_OUTPUTS],
 		  unsigned short &const_size_in,
 		  unsigned short &const_size_out)
 {
@@ -60,25 +59,19 @@ void myproject(
 
     //hls-fpga-machine-learning insert layers
 
-//    input_t layer0[IN_HEIGHT*IN_WIDTH*N_CHAN];
-//    #pragma HLS ARRAY_PARTITION variable=layer0 complete dim=0
-    
     //Conv2d
-//    input_t layer1_out[OUT_HEIGHT][OUT_WIDTH][N_FILT];
-    input_t layer1_out[OUT_HEIGHT*OUT_WIDTH*N_FILT];
+    input_t layer1_out[OUT_HEIGHT][OUT_WIDTH][N_FILT];
     #pragma HLS ARRAY_PARTITION variable=layer1_out complete dim=0
-//    nnet::conv_2d<input_t, input_t, config1>(data, layer1_out, w1, b1);
-//    nnet::conv_2d<input_t, input_t, config1>(layer0, layer1_out, w1, b1);
-     nnet::conv_2d<input_t, result_t, config1>(data, res, w1, b1);
+    //nnet::conv_2d<input_t, result_t, config1>(data, res, w1, b1);
+    nnet::conv_2d<input_t, result_t, config1>(data, layer1_out, w1, b1);
 
-/*
     //Flatten
-    input_t layer1_out_flat[Y_OUTPUTS*N_FILT];
+    input_t layer1_out_flat[OUT_HEIGHT*OUT_WIDTH*N_FILT];
     #pragma HLS ARRAY_PARTITION variable=layer1_out_flat complete dim=0
-    nnet::flatten<input_t, Y_OUTPUTS, N_FILT>(layer1_out, layer1_out_flat);
+    nnet::flatten<input_t, OUT_HEIGHT, OUT_WIDTH, N_FILT>(layer1_out, layer1_out_flat);
  
     //Relu
-    input_t layer1_out_flat_relu[Y_OUTPUTS*N_FILT];
+    input_t layer1_out_flat_relu[OUT_HEIGHT*OUT_WIDTH*N_FILT];
     #pragma HLS ARRAY_PARTITION variable=layer1_out_flat_relu complete dim=0
     nnet::relu<input_t, input_t, relu_config1>(layer1_out_flat, layer1_out_flat_relu); 
 
@@ -86,9 +79,8 @@ void myproject(
     result_t logits2[N_OUTPUTS];
     #pragma HLS ARRAY_PARTITION variable=logits2 complete dim=0
     nnet::compute_layer<input_t, result_t, config2>(layer1_out_flat_relu, logits2, w2, b2);
-    
+ 
     //Softmax
     nnet::softmax<result_t, result_t, softmax_config2>(logits2, res);
-*/
 
 }
