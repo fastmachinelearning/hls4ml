@@ -73,17 +73,11 @@ struct Tree {
 			#pragma HLS unroll
 			active_leaf_addr[i] = activation_leaf[i];
 		}
-		score_t y;
-		switch (active_leaf_addr){
-		case 1 : y = value_leaf[0]; break;
-		case 2 : y = value_leaf[1]; break;
-		case 4 : y = value_leaf[2]; break;
-		case 8 : y = value_leaf[3]; break;
-		case 16 : y = value_leaf[4]; break;
-		case 32 : y = value_leaf[5]; break;
-		case 64 : y = value_leaf[6]; break;
-		case 128 : y = value_leaf[7]; break;
-		default : y = 0;
+		score_t y = 0;
+		for(int i = 0; i < n_leaves; i++){
+			if(activation_leaf[i]){
+				return value_leaf[i];
+			}
 		}
 		return y;
 	}
