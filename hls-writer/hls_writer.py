@@ -430,3 +430,55 @@ def print_array_to_cpp(name, a, odir ):
 
     return zero_ctr
 
+#######################################
+## Print a BDT to C++
+#######################################
+def bdt_writer(ensemble_dict, yamlConfig):
+
+    filedir = os.path.dirname(os.path.abspath(__file__))
+
+    ###################
+    ## myproject.cpp
+    ###################
+
+    #f = open(os.path.join(filedir,'../hls-template/firmware/myproject.cpp'),'r')
+    fout = open('{}/firmware/{}.cpp'.format(yamlConfig['OutputDir'], yamlConfig['ProjectName']),'w')
+
+    ###################
+    ## parameters.h
+    ###################
+
+    #f = open(os.path.join(filedir,'../hls-template/firmware/parameters.h'),'r')
+    fout = open('{}/firmware/parameters.h'.format(yamlConfig['OutputDir']),'w')
+
+    ###################
+    ## bdt_config.h
+    ###################
+
+    #f = open(os.path.join(filedir,'../hls-template/firmware/bdt_config.h'),'r')
+    fout = open('{}/firmware/bdt_config.h'.format(yamlConfig['OutputDir']),'w')
+
+    tree_fields = ['feature', 'threshold', 'value', 'children_left', 'children_right', 'parent']
+
+    fout.write('#include "BDT.h"\n#include "parameters.h"\n\n')
+    fout.write("static const BDT::BDT<n_trees, n_nodes, n_leaves, input_arr_t, score_t, threshold_t> bdt = \n")
+    fout.write("{ // The struct\n\t{ // The array of trees\n")
+
+    for itree, tree in enumerate(ensemble_dict['trees']):
+        fout.write('\t\t{ // trees[' + str(itree) + ']\n')
+        for ifield, field in enumerate(tree_fields):
+            newline = '\t\t\t{'
+            newline += ','.join(map(str, tree[field]))
+            newline += '}'
+            if ifield < len(tree_fields) - 1:
+                newline += ','
+            newline += '\n'
+            fout.write(newline)
+        newline = '\t\t}'
+        if itree < ensemble_dict['n_trees'] - 1:
+          newline += ','
+        newline += '\n'
+        fout.write(newline)
+    fout.write('\t}\n};')
+
+    fout.close()
