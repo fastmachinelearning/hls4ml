@@ -443,13 +443,37 @@ def bdt_writer(ensemble_dict, yamlConfig):
 
     #f = open(os.path.join(filedir,'../hls-template/firmware/myproject.cpp'),'r')
     fout = open('{}/firmware/{}.cpp'.format(yamlConfig['OutputDir'], yamlConfig['ProjectName']),'w')
+    fout.write('#include "BDT.h"\n')
+    fout.write('#include "parameters.h"\n')
+    fout.write('#include "bdt_config.h"\n\n')
+
+    fout.write('score_t decision_function(input_arr_t x){\n')
+    fout.write('\t#pragma HLS pipeline II = 1\n')
+    fout.write('\t#pragma HLS array_partition variable=x\n\n')
+    fout.write('\treturn bdt.decision_function(x);\n}')
+    fout.close()
 
     ###################
     ## parameters.h
     ###################
 
+    n_nodes = 2**(ensemble_dict['max_depth'] + 1) - 1
+    n_leaves = 2**ensemble_dict['max_depth']
     #f = open(os.path.join(filedir,'../hls-template/firmware/parameters.h'),'r')
     fout = open('{}/firmware/parameters.h'.format(yamlConfig['OutputDir']),'w')
+    fout.write('#ifndef BDT_PARAMS_H__\n#define BDT_PARAMS_H__\n\n')
+    fout.write('#include "ap_fixed.h"\n\n')
+    fout.write('static const int n_trees = {};\n'.format(ensemble_dict['n_trees']))
+    fout.write('static const int n_nodes = {};\n'.format(n_nodes))
+    fout.write('static const int n_leaves = {};\n'.format(n_leaves))
+    fout.write('static const int n_features = {};\n'.format(ensemble_dict['max_features']))
+
+    fout.write('typedef {} input_t;\n'.format(yamlConfig['DefaultPrecision']))
+    fout.write('typedef input_t input_arr_t[n_features];\n')
+    fout.write('typedef {} score_t;\n'.format(yamlConfig['DefaultPrecision']))
+    fout.write('typedef input_t threshold_t;\n')
+    fout.write('\n#endif')
+    fout.close()
 
     ###################
     ## bdt_config.h

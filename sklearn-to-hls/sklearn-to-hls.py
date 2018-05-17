@@ -10,7 +10,8 @@ from hls_writer import bdt_writer, parse_config
 
 def ensembleToDict(bdt):
   ensembleDict = {'max_depth' : bdt.max_depth, 'n_trees' : bdt.n_estimators,
-                  'init_predict' : bdt.init_.predict(np.array([0]))[0][0], 'trees' : []}
+                  'init_predict' : bdt.init_.predict(np.array([0]))[0][0],
+                  'max_features' : bdt.max_features_, 'trees' : []}
   for tree in bdt.estimators_:
     tree = treeToDict(tree[0].tree_)
     tree = padTree(ensembleDict, tree)
