@@ -448,7 +448,9 @@ def bdt_writer(ensemble_dict, yamlConfig):
     fout.write('#include "bdt_config.h"\n\n')
 
     fout.write('score_t decision_function(input_arr_t x){\n')
-    fout.write('\t#pragma HLS pipeline II = 1\n')
+    # TODO: probably only one of the pragmas is necessary?
+    fout.write('\t#pragma HLS pipeline II = {}\n'.format(yamlConfig['ReuseFactor']))
+    fout.write('\t#pragma HLS unroll factor = {}\n'.format(yamlConfig['ReuseFactor']))
     fout.write('\t#pragma HLS array_partition variable=x\n\n')
     fout.write('\treturn bdt.decision_function(x);\n}')
     fout.close()
