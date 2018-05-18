@@ -16,11 +16,11 @@ struct Tree {
 
 	score_t decision_function(input_t x) const{
 		#pragma HLS pipeline II = 1
-#pragma HLS RESOURCE variable=feature core=ROM_nP_LUTRAM
-#pragma HLS RESOURCE variable=threshold core=ROM_nP_LUTRAM
-#pragma HLS RESOURCE variable=value core=ROM_nP_LUTRAM
-#pragma HLS RESOURCE variable=children_left core=ROM_nP_LUTRAM
-#pragma HLS RESOURCE variable=children_right core=ROM_nP_LUTRAM
+		#pragma HLS RESOURCE variable=feature core=ROM_nP_LUTRAM
+		#pragma HLS RESOURCE variable=threshold core=ROM_nP_LUTRAM
+		#pragma HLS RESOURCE variable=value core=ROM_nP_LUTRAM
+		#pragma HLS RESOURCE variable=children_left core=ROM_nP_LUTRAM
+		#pragma HLS RESOURCE variable=children_right core=ROM_nP_LUTRAM
 
 
 		bool comparison[n_nodes];
@@ -67,12 +67,6 @@ struct Tree {
 			}
 		}
 
-		// Set each bit of addr to the corresponding leaf activation
-		ap_uint<n_leaves> active_leaf_addr;
-		Select: for(int i = 0; i < n_leaves; i++){
-			#pragma HLS unroll
-			active_leaf_addr[i] = activation_leaf[i];
-		}
 		score_t y = 0;
 		for(int i = 0; i < n_leaves; i++){
 			if(activation_leaf[i]){
@@ -90,7 +84,6 @@ struct BDT{
 	score_t decision_function(input_t x) const{
 		score_t score = 0;
 		Trees: for(int i = 0; i < n_trees; i++){
-			#pragma HLS UNROLL
 			score += trees[i].decision_function(x);
 		}
 		return score;
