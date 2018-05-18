@@ -445,9 +445,10 @@ def bdt_writer(ensemble_dict, yamlConfig):
     fout = open('{}/firmware/{}.cpp'.format(yamlConfig['OutputDir'], yamlConfig['ProjectName']),'w')
     fout.write('#include "BDT.h"\n')
     fout.write('#include "parameters.h"\n')
+    fout.write('#include "{}.h"\n'.format(yamlConfig['ProjectName']))
     fout.write('#include "bdt_config.h"\n\n')
 
-    fout.write('score_t decision_function(input_arr_t x){\n')
+    fout.write('score_t {}(input_arr_t x){{\n'.format(yamlConfig['ProjectName']))
     # TODO: probably only one of the pragmas is necessary?
     fout.write('\t#pragma HLS pipeline II = {}\n'.format(yamlConfig['ReuseFactor']))
     fout.write('\t#pragma HLS unroll factor = {}\n'.format(yamlConfig['ReuseFactor']))
@@ -508,3 +509,60 @@ def bdt_writer(ensemble_dict, yamlConfig):
     fout.write('\t}\n};')
 
     fout.close()
+
+    #######################
+    ## myproject.h
+    #######################
+
+    f = open(os.path.join(filedir,'../hls-template/firmware/myproject.h'),'r')
+    fout = open('{}/firmware/{}.h'.format(yamlConfig['OutputDir'], yamlConfig['ProjectName']),'w')
+
+    for line in f.readlines():
+
+        if 'MYPROJECT' in line:
+            newline = line.replace('MYPROJECT',format(yamlConfig['ProjectName'].upper()))
+        elif 'void myproject(' in line:
+            newline = 'score_t {}(\n'.format(yamlConfig['ProjectName'])
+        elif 'input_t data[N_INPUTS]' in line:
+            newline = '\tinput_arr_t data);'
+        # Remove some lines
+        elif ('result_t' in line) or ('unsigned short' in line):
+            newline = ''
+        else:
+            newline = line
+        fout.write(newline)
+
+    f.close()
+    fout.close()
+
+    #######################
+    ## build_prj.tcl
+    #######################
+
+    bdtdir = os.path.abspath(os.path.join(filedir, "../bdt_utils"))
+    relpath = os.path.relpath(bdtdir, start=yamlConfig['OutputDir'])
+
+    f = open(os.path.join(filedir,'../hls-template/build_prj.tcl'),'r')
+    fout = open('{}/build_prj.tcl'.format(yamlConfig['OutputDir']),'w')
+
+    for line in f.readlines():
+
+        line = line.replace('nnet_utils', relpath)
+        line = line.replace('myproject', yamlConfig['ProjectName'])
+
+        #if 'set_top' in line:
+        #    line = line.replace('myproject', '{}_decision_function'.format(yamlConfig['ProjectName']))
+        if 'set_part {xc7vx690tffg1927-2}' in line:
+            line = 'set_part {{{}}}\n'.format(yamlConfig['XilinxPart'])
+        elif 'create_clock -period 5 -name default' in line:
+            line = 'create_clock -period {} -name default\n'.format(yamlConfig['ClockPeriod'])
+        # Remove some lines
+        elif ('weights' in line) or ('-tb' in line):
+            line = ''
+        elif ('csim_design' in line) or ('cosim_design' in line):
+            line = ''
+
+        fout.write(line)
+    f.close()
+    fout.close()
+
