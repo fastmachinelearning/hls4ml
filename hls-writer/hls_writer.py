@@ -460,15 +460,12 @@ def bdt_writer(ensemble_dict, yamlConfig):
     ## parameters.h
     ###################
 
-    n_nodes = 2**(ensemble_dict['max_depth'] + 1) - 1
-    n_leaves = 2**ensemble_dict['max_depth']
     #f = open(os.path.join(filedir,'../hls-template/firmware/parameters.h'),'r')
     fout = open('{}/firmware/parameters.h'.format(yamlConfig['OutputDir']),'w')
     fout.write('#ifndef BDT_PARAMS_H__\n#define BDT_PARAMS_H__\n\n')
     fout.write('#include "ap_fixed.h"\n\n')
     fout.write('static const int n_trees = {};\n'.format(ensemble_dict['n_trees']))
-    fout.write('static const int n_nodes = {};\n'.format(n_nodes))
-    fout.write('static const int n_leaves = {};\n'.format(n_leaves))
+    fout.write('static const int max_depth = {};\n'.format(ensemble_dict['max_depth']))
     fout.write('static const int n_features = {};\n'.format(ensemble_dict['max_features']))
 
     fout.write('typedef {} input_t;\n'.format(yamlConfig['DefaultPrecision']))
@@ -488,7 +485,7 @@ def bdt_writer(ensemble_dict, yamlConfig):
     tree_fields = ['feature', 'threshold', 'value', 'children_left', 'children_right', 'parent']
 
     fout.write('#include "BDT.h"\n#include "parameters.h"\n\n')
-    fout.write("static const BDT::BDT<n_trees, n_nodes, n_leaves, input_arr_t, score_t, threshold_t> bdt = \n")
+    fout.write("static const BDT::BDT<n_trees, max_depth, input_arr_t, score_t, threshold_t> bdt = \n")
     fout.write("{ // The struct\n\t{ // The array of trees\n")
 
     for itree, tree in enumerate(ensemble_dict['trees']):

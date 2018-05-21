@@ -1,7 +1,7 @@
 #include "BDT.h"
 #include "parameters.h"
 
-static const BDT::BDT<n_trees, n_nodes, n_leaves, input_arr_t, score_t, threshold_t> bdt = 
+static const BDT::BDT<n_trees, max_depth, input_arr_t, score_t, threshold_t> bdt = 
 { // The struct
 	{ // The array of trees
 		{ // trees[0]

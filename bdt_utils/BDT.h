@@ -5,8 +5,24 @@
 
 namespace BDT{
 
-template<int n_nodes, int n_leaves, class input_t, class score_t, class threshold_t>
+constexpr int pow2(int x){
+  return x == 0 ? 1 : 2 * pow2(x - 1);
+}
+
+constexpr int fn_nodes(int max_depth){
+  return pow2(max_depth + 1) - 1;
+}
+
+constexpr int fn_leaves(int max_depth){
+  return pow2(max_depth);
+}
+
+template<int max_depth, class input_t, class score_t, class threshold_t>
 struct Tree {
+private:
+  static constexpr int n_nodes = fn_nodes(max_depth);
+  static constexpr int n_leaves = fn_leaves(max_depth);
+public:
 	int feature[n_nodes];
 	threshold_t threshold[n_nodes];
 	score_t value[n_nodes];
@@ -77,9 +93,11 @@ struct Tree {
 	}
 };
 
-template<int n_trees, int n_nodes, int n_leaves, class input_t, class score_t, class threshold_t>
+template<int n_trees, int max_depth, class input_t, class score_t, class threshold_t>
 struct BDT{
-	Tree<n_nodes, n_leaves, input_t, score_t, threshold_t> trees[n_trees];
+
+public:
+	Tree<max_depth, input_t, score_t, threshold_t> trees[n_trees];
 
 	score_t decision_function(input_t x) const{
 		score_t score = 0;
@@ -89,6 +107,12 @@ struct BDT{
 		return score;
 	}
 };
+
+template<int max_depth, class input_t, class score_t, class threshold_t>
+constexpr int Tree<max_depth, input_t, score_t, threshold_t>::n_nodes;
+
+template<int max_depth, class input_t, class score_t, class threshold_t>
+constexpr int Tree<max_depth, input_t, score_t, threshold_t>::n_leaves;
 
 }
 #endif
