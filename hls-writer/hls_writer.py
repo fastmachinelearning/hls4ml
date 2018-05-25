@@ -409,11 +409,8 @@ def print_array_to_cpp(name, a, odir ):
         raise Exception('ERROR: Unkown weights type')
 
     #hls doesn't like 3d arrays... unrolling to 1d
-    if len(a.shape)>=3: 
-        f.write("[{}]".format(np.prod(a.shape)))
-    else:
-        for x in a.shape:
-            f.write("[{}]".format(x))
+    #also doing for all (including 2d) arrays now
+    f.write("[{}]".format(np.prod(a.shape)))
     f.write(" = {")
     
     #fill c++ array.  

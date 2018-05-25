@@ -17,8 +17,8 @@
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef NNET_LAYER_H_
-#define NNET_LAYER_H_
+#ifndef NNET_SUBLAYER_H_
+#define NNET_SUBLAYER_H_
 
 #include "nnet_common.h"
 #include "hls_stream.h"
@@ -26,7 +26,7 @@
 
 namespace nnet {
 
-struct layer_config
+struct sublayer_config
 {
     // Internal data type definitions
     typedef float bias_t;
@@ -37,6 +37,14 @@ struct layer_config
     static const unsigned n_in = 10;
     static const unsigned n_out = 10;
 
+    // Number of sublayer partitions
+    static const unsigned n_part = 2;
+    static const unsigned i_part = 0;
+
+    // Number of outputs; starting index (inclusive)
+    static const unsigned n_sub_out = 5;
+    static const unsigned i_sub_out = 0;
+  
     // Resource reuse info
     static const unsigned io_type = io_parallel;
     static const unsigned reuse_factor = 1;
@@ -46,15 +54,15 @@ struct layer_config
 };
 
  template<class data_T, class res_T, typename CONFIG_T>
-void compute_layer(
+void compute_sublayer(
     data_T    data[CONFIG_T::n_in],
-    res_T     res[CONFIG_T::n_out],
+    res_T     res[CONFIG_T::n_sub_out],
     typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
     typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
 {
     data_T cache;
-    typename CONFIG_T::accum_t mult[CONFIG_T::n_in*CONFIG_T::n_out];
-    typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
+    typename CONFIG_T::accum_t mult[CONFIG_T::n_in*CONFIG_T::n_sub_out];
+    typename CONFIG_T::accum_t acc[CONFIG_T::n_sub_out];
 
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
     #pragma HLS function_instantiate variable=weights,biases
@@ -69,9 +77,9 @@ void compute_layer(
         #pragma HLS ARRAY_PARTITION variable=biases complete
         #pragma HLS ARRAY_PARTITION variable=mult complete
         #pragma HLS ARRAY_PARTITION variable=acc complete
-
-        int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_out) / float(CONFIG_T::reuse_factor)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
-        #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+  
+        int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_out) / float(CONFIG_T::reuse_factor*CONFIG_T::n_part)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor*CONFIG_T::n_part));
+        //#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
     } else if (CONFIG_T::io_type == io_serial){
         #pragma HLS ARRAY_RESHAPE variable=weights complete dim=1
@@ -88,22 +96,24 @@ void compute_layer(
             #pragma HLS PIPELINE
         }
         cache = data[ii];
-        Product2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
+        Product2: for(int jj = 0; jj < CONFIG_T::n_sub_out; jj++) {
             if (CONFIG_T::io_type == io_serial) {
-                int multiplier_limit  = ceil(float(CONFIG_T::n_out) / float(CONFIG_T::reuse_factor));
+                int multiplier_limit  = ceil(float(CONFIG_T::n_out) / float(CONFIG_T::reuse_factor*CONFIG_T::n_part));
                 #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
             }
-	    int index = ii*CONFIG_T::n_out+jj;
-	    mult[index] = cache * weights[index];
+	    int weight_index = ii*CONFIG_T::n_out+jj+CONFIG_T::i_sub_out;
+	    int mult_index   = ii*CONFIG_T::n_sub_out+jj;
+	    mult[mult_index] = cache * weights[weight_index];
         }
     }
 
     // Initialize accumulator with input biases
-    ResetAccum: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
+    ResetAccum: for(int iacc = 0; iacc < CONFIG_T::n_sub_out; iacc++) {
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS UNROLL
         }
-        acc[iacc] = (typename CONFIG_T::accum_t) biases[iacc];
+	int bias_index = iacc+CONFIG_T::i_sub_out;
+        acc[iacc] = (typename CONFIG_T::accum_t) biases[bias_index];
     }
 
     // Accumulate multiplication result
@@ -111,14 +121,14 @@ void compute_layer(
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS PIPELINE
         }
-        Accum2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-	    int index = ii*CONFIG_T::n_out+jj;
+        Accum2: for(int jj = 0; jj < CONFIG_T::n_sub_out; jj++) {
+	    int index = ii*CONFIG_T::n_sub_out+jj;
 	    acc[jj] += mult[index];
         }
     }
 
     // Cast to "res_t" type
-    Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
+    Result: for(int ires = 0; ires < CONFIG_T::n_sub_out; ires++){
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS UNROLL
         }
@@ -126,6 +136,24 @@ void compute_layer(
     }    
 }
 
+template<class data_T, int NIN1, int NIN2>
+    void merge(
+        data_T data1[NIN1], 
+	data_T data2[NIN2],
+        data_T res[NIN1+NIN2])
+{
+    for(int ii=0; ii<NIN1; ii++){
+        res[ii] = data1[ii];
+    }
+    for(int ii=0; ii<NIN2; ii++){
+        res[NIN1+ii] = data2[ii];
+    }
 }
 
+
+
+
+}//end namespace
+  
+  
 #endif
