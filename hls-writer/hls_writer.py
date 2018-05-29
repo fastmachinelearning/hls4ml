@@ -557,7 +557,7 @@ def bdt_writer(ensemble_dict, yamlConfig):
     fout.write('int main(){\n')
     fout.write('\tinput_arr_t x = {{{}}};\n'.format(str([0] * ensemble_dict['n_features'])[1:-1]));
     fout.write('\tscore_arr_t score;\n')
-    fout.write('\tmyproject(x, score);\n')
+    fout.write('\t{}(x, score);\n'.format(yamlConfig['ProjectName']))
     fout.write('\tfor(int i = 0; i < n_classes; i++){\n')
     fout.write('\t\tstd::cout << score[i] << ", ";\n\t}\n')
     fout.write('\tstd::cout << std::endl;\n')
