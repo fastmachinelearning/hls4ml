@@ -17,6 +17,11 @@ constexpr int fn_leaves(int max_depth){
   return pow2(max_depth);
 }
 
+constexpr int fn_classes(int n_classes){
+  // Number of trees given number of classes
+  return n_classes == 2 ? 1 : n_classes;
+}
+
 template<int max_depth, class input_t, class score_t, class threshold_t>
 struct Tree {
 private:
@@ -37,7 +42,7 @@ public:
 		#pragma HLS RESOURCE variable=value core=ROM_nP_LUTRAM
 		#pragma HLS RESOURCE variable=children_left core=ROM_nP_LUTRAM
 		#pragma HLS RESOURCE variable=children_right core=ROM_nP_LUTRAM
-
+		#pragma HLS RESOURCE variable=parent core=ROM_nP_LUTRAM
 
 		bool comparison[n_nodes];
 		bool activation[n_nodes];
@@ -93,19 +98,26 @@ public:
 	}
 };
 
-template<int n_trees, int max_depth, class input_t, class score_t, class threshold_t>
+template<int n_trees, int max_depth, int n_classes, class input_t, class score_t, class threshold_t>
 struct BDT{
 
 public:
-	Tree<max_depth, input_t, score_t, threshold_t> trees[n_trees];
+	score_t init_predict[fn_classes(n_classes)];
+	Tree<max_depth, input_t, score_t, threshold_t> trees[n_trees][fn_classes(n_classes)];
 
-	score_t decision_function(input_t x) const{
-		score_t score = 0;
-		Trees: for(int i = 0; i < n_trees; i++){
-			score += trees[i].decision_function(x);
+	void decision_function(input_t x, score_t score[fn_classes(n_classes)]) const{
+		for(int j = 0; j < fn_classes(n_classes); j++){
+			score[j] = init_predict[j];
 		}
-		return score;
+		Trees:
+		for(int i = 0; i < n_trees; i++){
+			Classes:
+			for(int j = 0; j < fn_classes(n_classes); j++){
+				score[j] += trees[i][j].decision_function(x);
+			}
+		}
 	}
+
 };
 
 template<int max_depth, class input_t, class score_t, class threshold_t>

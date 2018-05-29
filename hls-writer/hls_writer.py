@@ -446,14 +446,14 @@ def bdt_writer(ensemble_dict, yamlConfig):
     fout.write('#include "BDT.h"\n')
     fout.write('#include "parameters.h"\n')
     fout.write('#include "{}.h"\n'.format(yamlConfig['ProjectName']))
-    fout.write('#include "bdt_config.h"\n\n')
 
-    fout.write('score_t {}(input_arr_t x){{\n'.format(yamlConfig['ProjectName']))
+    fout.write('void {}(input_arr_t x, score_arr_t score){{\n'.format(yamlConfig['ProjectName']))
     # TODO: probably only one of the pragmas is necessary?
     fout.write('\t#pragma HLS pipeline II = {}\n'.format(yamlConfig['ReuseFactor']))
     fout.write('\t#pragma HLS unroll factor = {}\n'.format(yamlConfig['ReuseFactor']))
     fout.write('\t#pragma HLS array_partition variable=x\n\n')
-    fout.write('\treturn bdt.decision_function(x);\n}')
+    fout.write('\t#pragma HLS array_partition variable=score\n\n')
+    fout.write('\tbdt.decision_function(x, score);\n}')
     fout.close()
 
     ###################
@@ -463,38 +463,49 @@ def bdt_writer(ensemble_dict, yamlConfig):
     #f = open(os.path.join(filedir,'../hls-template/firmware/parameters.h'),'r')
     fout = open('{}/firmware/parameters.h'.format(yamlConfig['OutputDir']),'w')
     fout.write('#ifndef BDT_PARAMS_H__\n#define BDT_PARAMS_H__\n\n')
+    fout.write('#include  "BDT.h"\n')
     fout.write('#include "ap_fixed.h"\n\n')
     fout.write('static const int n_trees = {};\n'.format(ensemble_dict['n_trees']))
     fout.write('static const int max_depth = {};\n'.format(ensemble_dict['max_depth']))
-    fout.write('static const int n_features = {};\n'.format(ensemble_dict['max_features']))
-
+    fout.write('static const int n_features = {};\n'.format(ensemble_dict['n_features']))
+    fout.write('static const int n_classes = {};\n'.format(ensemble_dict['n_classes']))
     fout.write('typedef {} input_t;\n'.format(yamlConfig['DefaultPrecision']))
     fout.write('typedef input_t input_arr_t[n_features];\n')
     fout.write('typedef {} score_t;\n'.format(yamlConfig['DefaultPrecision']))
-    fout.write('typedef input_t threshold_t;\n')
-    fout.write('\n#endif')
-    fout.close()
-
-    ###################
-    ## bdt_config.h
-    ###################
-
-    #f = open(os.path.join(filedir,'../hls-template/firmware/bdt_config.h'),'r')
-    fout = open('{}/firmware/bdt_config.h'.format(yamlConfig['OutputDir']),'w')
+    fout.write('typedef score_t score_arr_t[n_classes];\n')
+    # TODO score_arr_t
+    fout.write('typedef input_t threshold_t;\n\n')
 
     tree_fields = ['feature', 'threshold', 'value', 'children_left', 'children_right', 'parent']
 
-    fout.write('#include "BDT.h"\n#include "parameters.h"\n\n')
-    fout.write("static const BDT::BDT<n_trees, max_depth, input_arr_t, score_t, threshold_t> bdt = \n")
-    fout.write("{ // The struct\n\t{ // The array of trees\n")
-
-    for itree, tree in enumerate(ensemble_dict['trees']):
+    fout.write("static const BDT::BDT<n_trees, max_depth, n_classes, input_arr_t, score_t, threshold_t> bdt = \n")
+    fout.write("{ // The struct\n")
+    newline = "\t{"
+    for iip, ip in enumerate(ensemble_dict['init_predict']):
+        newline += str(ip)
+        if iip < len(ensemble_dict['init_predict']) - 1:
+            newline += ','
+        else:
+            newline += '}, // The init_predict\n'
+    fout.write(newline)
+    fout.write("\t{ // The array of trees\n")
+    # loop over trees
+    for itree, trees in enumerate(ensemble_dict['trees']):
         fout.write('\t\t{ // trees[' + str(itree) + ']\n')
-        for ifield, field in enumerate(tree_fields):
-            newline = '\t\t\t{'
-            newline += ','.join(map(str, tree[field]))
-            newline += '}'
-            if ifield < len(tree_fields) - 1:
+        # loop over classes
+        for iclass, tree in enumerate(trees):
+            fout.write('\t\t\t{ // [' + str(iclass) + ']\n')
+            # loop over fields
+            for ifield, field in enumerate(tree_fields):
+                newline = '\t\t\t\t{'
+                newline += ','.join(map(str, tree[field]))
+                newline += '}'
+                if ifield < len(tree_fields) - 1:
+                    newline += ','
+                newline += '\n'
+                fout.write(newline)
+            newline = '\t\t\t}'
+            if iclass < len(trees) - 1:
                 newline += ','
             newline += '\n'
             fout.write(newline)
@@ -505,6 +516,7 @@ def bdt_writer(ensemble_dict, yamlConfig):
         fout.write(newline)
     fout.write('\t}\n};')
 
+    fout.write('\n#endif')
     fout.close()
 
     #######################
@@ -519,9 +531,9 @@ def bdt_writer(ensemble_dict, yamlConfig):
         if 'MYPROJECT' in line:
             newline = line.replace('MYPROJECT',format(yamlConfig['ProjectName'].upper()))
         elif 'void myproject(' in line:
-            newline = 'score_t {}(\n'.format(yamlConfig['ProjectName'])
+            newline = 'void {}(\n'.format(yamlConfig['ProjectName'])
         elif 'input_t data[N_INPUTS]' in line:
-            newline = '\tinput_arr_t data);'
+            newline = '\tinput_arr_t data,\n\tscore_arr_t score);'
         # Remove some lines
         elif ('result_t' in line) or ('unsigned short' in line):
             newline = ''
@@ -530,6 +542,28 @@ def bdt_writer(ensemble_dict, yamlConfig):
         fout.write(newline)
 
     f.close()
+    fout.close()
+
+    #######################
+    ## myproject_test.cpp
+    #######################
+
+    fout = open('{}/{}_test.cpp'.format(yamlConfig['OutputDir'], yamlConfig['ProjectName']),'w')
+
+    fout.write('#include "BDT.h"\n')
+    fout.write('#include "firmware/parameters.h"\n')
+    fout.write('#include "firmware/{}.h"\n'.format(yamlConfig['ProjectName']))
+
+    fout.write('int main(){\n')
+    fout.write('\tinput_arr_t x = {{{}}};\n'.format(str([0] * ensemble_dict['n_features'])[1:-1]));
+    fout.write('\tscore_arr_t score;\n')
+    fout.write('\tmyproject(x, score);\n')
+    fout.write('\tfor(int i = 0; i < n_classes; i++){\n')
+    fout.write('\t\tstd::cout << score[i] << ", ";\n\t}\n')
+    fout.write('\tstd::cout << std::endl;\n')
+    fout.write('\treturn 0;\n}')
+    fout.close()
+   
     fout.close()
 
     #######################
@@ -554,9 +588,9 @@ def bdt_writer(ensemble_dict, yamlConfig):
         elif 'create_clock -period 5 -name default' in line:
             line = 'create_clock -period {} -name default\n'.format(yamlConfig['ClockPeriod'])
         # Remove some lines
-        elif ('weights' in line) or ('-tb' in line):
+        elif ('weights' in line) or ('-tb firmware/weights' in line):
             line = ''
-        elif ('csim_design' in line) or ('cosim_design' in line):
+        elif ('cosim_design' in line):
             line = ''
 
         fout.write(line)

@@ -10,17 +10,23 @@ from hls_writer import bdt_writer, parse_config
 
 def ensembleToDict(bdt):
   ensembleDict = {'max_depth' : bdt.max_depth, 'n_trees' : bdt.n_estimators,
-                  'init_predict' : bdt.init_.predict(np.array([0]))[0][0],
-                  'max_features' : bdt.max_features_, 'trees' : []}
-  for tree in bdt.estimators_:
-    tree = treeToDict(tree[0].tree_)
-    tree = padTree(ensembleDict, tree)
-    ensembleDict['trees'].append(tree)
+                  'n_features' : len(bdt.feature_importances_),
+                  'n_classes' : bdt.n_classes_, 'trees' : [],
+                  'init_predict' : bdt.init_.predict(np.array([0]))[0].tolist()}
+  for trees in bdt.estimators_:
+    treesl = []
+    for tree in trees:
+      tree = treeToDict(bdt, tree.tree_)
+      tree = padTree(ensembleDict, tree)
+      treesl.append(tree)
+    ensembleDict['trees'].append(treesl)
 
   return ensembleDict
 
-def treeToDict(tree):
-  treeDict = {'feature' : tree.feature.tolist(), 'threshold' : tree.threshold.tolist(), 'value' : tree.value[:,0,0].tolist()}
+def treeToDict(bdt, tree):
+  # Extract the relevant tree parameters
+  # NB node values are multiplied by the learning rate here, saving work in the FPGA
+  treeDict = {'feature' : tree.feature.tolist(), 'threshold' : tree.threshold.tolist(), 'value' : (tree.value[:,0,0] * bdt.learning_rate).tolist()}
   treeDict['children_left'] = tree.children_left.tolist()
   treeDict['children_right'] = tree.children_right.tolist()
   # add the parent index
@@ -47,7 +53,7 @@ def treeToDict(tree):
   return treeDict
 
 def padTree(ensembleDict, treeDict):
-  '''Pad a tree with dummy nodes if not perfectly balanced'''
+  '''Pad a tree with dummy nodes if not perfectly balanced or depth < max_depth'''
   n_nodes = len(treeDict['children_left'])
   # while th tree is unbalanced
   while n_nodes != 2 ** (ensembleDict['max_depth'] + 1) - 1:
@@ -58,6 +64,8 @@ def padTree(ensembleDict, treeDict):
         treeDict['parent'].extend([i, i])
         treeDict['feature'].extend([-2, -2])
         treeDict['threshold'].extend([-2.0, -2.0])
+        val = treeDict['value'][i]
+        treeDict['value'].extend([val, val])
         newDepth = treeDict['depth'][i] + 1
         treeDict['depth'].extend([newDepth, newDepth])
         iRChild = len(treeDict['children_left']) - 1

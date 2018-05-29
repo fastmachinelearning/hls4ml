@@ -28,6 +28,7 @@
 
 
 // Prototype of top level function for C-synthesis
-score_t bdt_eg(
-	input_arr_t data);
+void bdt_eg(
+	input_arr_t data,
+	score_arr_t score);
 #endif
