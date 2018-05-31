@@ -78,8 +78,9 @@ void compute_sublayer(
         #pragma HLS ARRAY_PARTITION variable=mult complete
         #pragma HLS ARRAY_PARTITION variable=acc complete
   
-        int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_out) / float(CONFIG_T::reuse_factor*CONFIG_T::n_part)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor*CONFIG_T::n_part));
-        //#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+        //int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_out) / float(CONFIG_T::reuse_factor*CONFIG_T::n_part)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor*CONFIG_T::n_part));
+        int multiplier_limit = ceil(float(CONFIG_T::n_in*CONFIG_T::n_sub_out) / float(CONFIG_T::reuse_factor)); // ignoring pruning for now
+        #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
     } else if (CONFIG_T::io_type == io_serial){
         #pragma HLS ARRAY_RESHAPE variable=weights complete dim=1
