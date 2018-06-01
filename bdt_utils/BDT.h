@@ -37,12 +37,20 @@ public:
 
 	score_t decision_function(input_t x) const{
 		#pragma HLS pipeline II = 1
-		#pragma HLS RESOURCE variable=feature core=ROM_nP_LUTRAM
+		#pragma HLS ARRAY_PARTITION variable=feature
+		#pragma HLS ARRAY_PARTITION variable=threshold
+		#pragma HLS ARRAY_PARTITION variable=value
+		#pragma HLS ARRAY_PARTITION variable=children_left
+		#pragma HLS ARRAY_PARTITION variable=children_right
+		#pragma HLS ARRAY_PARTITION variable=parent
+    // These resource pragmas prevent the array of trees from being partitioned
+    // They should be unnecessary anyway due to their own partitioning above
+		/*#pragma HLS RESOURCE variable=feature core=ROM_nP_LUTRAM
 		#pragma HLS RESOURCE variable=threshold core=ROM_nP_LUTRAM
 		#pragma HLS RESOURCE variable=value core=ROM_nP_LUTRAM
 		#pragma HLS RESOURCE variable=children_left core=ROM_nP_LUTRAM
 		#pragma HLS RESOURCE variable=children_right core=ROM_nP_LUTRAM
-		#pragma HLS RESOURCE variable=parent core=ROM_nP_LUTRAM
+		#pragma HLS RESOURCE variable=parent core=ROM_nP_LUTRAM*/
 
 		bool comparison[n_nodes];
 		bool activation[n_nodes];
@@ -106,6 +114,7 @@ public:
 	Tree<max_depth, input_t, score_t, threshold_t> trees[n_trees][fn_classes(n_classes)];
 
 	void decision_function(input_t x, score_t score[fn_classes(n_classes)]) const{
+		#pragma HLS ARRAY_PARTITION variable=trees dim=0
 		for(int j = 0; j < fn_classes(n_classes); j++){
 			score[j] = init_predict[j];
 		}
