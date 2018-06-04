@@ -15,6 +15,8 @@ Neural network architectures:
    * Convolutional NNs, in alpha testing
    * Recurrent NN/LSTM, in prototyping
 
+| test 1 | test 2 |
+| hm  | why |
 
 | Architectures/Toolkits | Keras/TensorFlow | PyTorch | ScikitLearn |
 | MLP | `supported` | `supported`| - |
