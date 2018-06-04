@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <title>Setup · GitBook</title>
+        <title>Status and Features · GitBook</title>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="description" content="">
         <meta name="generator" content="GitBook 3.2.3">
@@ -57,10 +57,10 @@
     <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="setup/DEPENDENCIES.html" />
+    <link rel="next" href="SETUP.html" />
     
     
-    <link rel="prev" href="STATUS.html" />
+    <link rel="prev" href="./" />
     
 
     </head>
@@ -102,7 +102,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.2" data-path="STATUS.html">
+        <li class="chapter active" data-level="1.2" data-path="STATUS.html">
             
                 <a href="STATUS.html">
             
@@ -115,7 +115,7 @@
             
         </li>
     
-        <li class="chapter active" data-level="1.3" data-path="SETUP.html">
+        <li class="chapter " data-level="1.3" data-path="SETUP.html">
             
                 <a href="SETUP.html">
             
@@ -255,7 +255,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href="." >Setup</a>
+        <a href="." >Status and Features</a>
     </h1>
 </div>
 
@@ -270,8 +270,26 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h1 id="setup">Setup</h1>
-<p>This chapter is dedicated to setting up the tool.  We discuss software dependencies of HLS4ML.  There is a quick start guide for beginners to get familiar quickly.  Then we discuss in more detail the features of the tool and user configuration.</p>
+                                <h1 id="status">Status</h1>
+<p>The latest stable release is <strong>v0.1.3</strong>, including a validated multilayer perceptron model based on our paper, <a href="https://arxiv.org/abs/1804.06913" target="_blank">arXiv:1804.06913</a>.</p>
+<p>A beta release </p>
+<h1 id="features">Features</h1>
+<p>ML code support: </p>
+<ul>
+<li>Keras/Tensorflow, PyTorch</li>
+<li>Planned: ? </li>
+</ul>
+<p>Neural network architectures:</p>
+<ul>
+<li>Fully Connected NNs (multi-layer perceptron) </li>
+<li>Convolutional NNs, in alpha testing</li>
+<li>Recurrent NN/LSTM, in prototyping</li>
+</ul>
+<p>| | Keras/TensorFlow | PyTorch | ScikitLearn |
+| MLP | <code>supported</code> | <code>supported</code>| - |
+| Conv1D/Conv2D | <code>supported</code> | <code>supported</code> | - |
+| BDT | - | - | <code>in development</code> |
+| RNN/LSTM | <code>in development</code> | - | - |</p>
 
                                 
                                 </section>
@@ -299,12 +317,12 @@
 
             
                 
-                <a href="STATUS.html" class="navigation navigation-prev " aria-label="Previous page: Status and Features">
+                <a href="./" class="navigation navigation-prev " aria-label="Previous page: hls4ml">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
                 
-                <a href="setup/DEPENDENCIES.html" class="navigation navigation-next " aria-label="Next page: Dependencies">
+                <a href="SETUP.html" class="navigation navigation-next " aria-label="Next page: Setup">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -315,7 +333,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Setup","level":"1.3","depth":1,"next":{"title":"Dependencies","level":"1.3.1","depth":2,"path":"setup/DEPENDENCIES.md","ref":"setup/DEPENDENCIES.md","articles":[]},"previous":{"title":"Status and Features","level":"1.2","depth":1,"path":"STATUS.md","ref":"STATUS.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"SETUP.md","mtime":"2018-06-04T16:17:53.816Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-06-04T16:28:31.430Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Status and Features","level":"1.2","depth":1,"next":{"title":"Setup","level":"1.3","depth":1,"path":"SETUP.md","ref":"SETUP.md","articles":[{"title":"Dependencies","level":"1.3.1","depth":2,"path":"setup/DEPENDENCIES.md","ref":"setup/DEPENDENCIES.md","articles":[]},{"title":"Quick Start","level":"1.3.2","depth":2,"path":"setup/QUICKSTART.md","ref":"setup/QUICKSTART.md","articles":[]},{"title":"Configuration","level":"1.3.3","depth":2,"path":"setup/CONFIGURATION.md","ref":"setup/CONFIGURATION.md","articles":[]}]},"previous":{"title":"hls4ml","level":"1.1","depth":1,"path":"README.md","ref":"README.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"STATUS.md","mtime":"2018-06-04T16:28:23.220Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-06-04T16:28:31.430Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>

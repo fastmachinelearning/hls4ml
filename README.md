@@ -8,14 +8,7 @@ contact: [hls4ml.help@gmail.com](mailto:hls4ml.help@gmail.com)
 
 ## Project status
 
-*in beta version (April 23, 2018)*, **v0.1.3**
+For the latest status including current and planned features, see the <a href="STATUS.html">Status and Features</a> page. 
 
-ML code support: 
-   * Keras/Tensorflow, PyTorch
-   * Planned: ? 
 
-Neural network architectures:
-   * Fully Connected NNs (multi-layer perceptron) 
-   * Convolutional NNs, in alpha testing
-   * Recurrent NN/LSTM, in prototyping
 
