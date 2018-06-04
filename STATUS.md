@@ -16,7 +16,7 @@ Neural network architectures:
    * Recurrent NN/LSTM, in prototyping
 
 
-| | Keras/TensorFlow | PyTorch | ScikitLearn |
+| Architectures/Toolkits | Keras/TensorFlow | PyTorch | ScikitLearn |
 | MLP | `supported` | `supported`| - |
 | Conv1D/Conv2D | `supported` | `supported` | - |
 | BDT | - | - | `in development` |
