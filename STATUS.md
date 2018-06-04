@@ -22,6 +22,7 @@ Neural network architectures:
 | quux     | quuz     |
 
 | Architectures/Toolkits | Keras/TensorFlow | PyTorch | ScikitLearn |
+|----------|----------|----------|----------|
 | MLP | `supported` | `supported`| - |
 | Conv1D/Conv2D | `supported` | `supported` | - |
 | BDT | - | - | `in development` |
