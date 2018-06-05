@@ -25,7 +25,7 @@ A summary of the on-going status of the `hls4ml` tool is in the table below.
 | Architectures/Toolkits | Keras/TensorFlow | PyTorch | scikit-learn |
 |:----------:|:----------:|:----------:|:----------:|
 | MLP | `supported` | `supported`| - |
-| Conv1D/Conv2D | `supported` | `supported` | - |
+| Conv1D/Conv2D | `supported` | `in development` | - |
 | BDT | - | - | `in development` |
 | RNN/LSTM | `in development` | - | - |
 
