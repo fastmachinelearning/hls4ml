@@ -9,6 +9,8 @@ import sys
 from shutil import copyfile
 import math
 
+MAXMULT = 4096
+
 filedir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,os.path.join(filedir, "..", "hls-writer"))
 from hls_writer import parse_config, print_array_to_cpp, hls_writer
@@ -115,6 +117,25 @@ def main():
         if layer['class_name']=='Dense':
             layer['n_in']=weights.shape[0]
             layer['n_out']=weights.shape[1]
+            # if this layer is too big (more than MAXMULT multiplications); 
+            # break it out into chunks!
+            layer['n_subout']=[weights.shape[1]]
+            layer['n_part'] = 1
+            if layer['n_in']*layer['n_out']>MAXMULT:
+                n_subout = int(MAXMULT/layer['n_in'])
+                n_totout = 0
+                layer['n_subout'] = []
+                layer['n_part'] = 0
+                while n_totout < layer['n_out']:
+                    if n_totout + n_subout <= layer['n_out']:
+                        layer['n_subout'].append(n_subout)
+                        n_totout += n_subout                    
+                    else:
+                        layer['n_subout'].append(layer['n_out']-n_totout)
+                        n_totout += layer['n_out']-n_totout
+
+                    layer['n_part'] += 1
+                
             current_shape = [current_shape[0], layer['n_out']]
         elif layer['class_name']=='Conv1D':
             # weights.shape = (filter_width, n_channels, n_filters)
@@ -140,6 +161,8 @@ def main():
                 layer['pad_right'] = 0
             current_shape=[current_shape[0], layer['y_out'], layer['n_filt']]
         print 'Layer name: %s, layer type: %s, current shape: %s, number of zeros: %s'%(layer['name'], layer['class_name'], current_shape, cur_n_zeros)
+        if layer['n_part'] > 1: 
+            print ' -> layer will be divided into %s sublayer calls; output neurons: %s '%(layer['n_part'], layer['n_subout'])
         layer_list.append( layer )
         
 
