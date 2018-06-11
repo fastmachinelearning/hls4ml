@@ -1,0 +1,41 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: linux-64
+@EXPLICIT
+https://repo.anaconda.com/pkgs/main/linux-64/blas-1.0-mkl.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/ca-certificates-2018.03.07-0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/intel-openmp-2018.0.3-0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/libgcc-ng-7.2.0-hdf63c60_3.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/libgfortran-ng-7.2.0-hdf63c60_3.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/libstdcxx-ng-7.2.0-hdf63c60_3.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/jpeg-9b-h024ee3a_2.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/libffi-3.2.1-hd88cf55_4.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/mkl-2018.0.3-1.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/ncurses-6.1-hf484d3e_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/openssl-1.0.2o-h20670df_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/tk-8.6.7-hc745277_3.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/xz-5.2.4-h14c3975_4.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/zlib-1.2.11-ha838bed_2.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/libedit-3.1.20170329-h6b74fdf_2.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/libpng-1.6.34-hb9fc6fc_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/libtiff-4.0.9-he85c1e1_1.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/readline-7.0-ha6073c6_4.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/freetype-2.8-hab7d2ae_1.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/sqlite-3.23.1-he433501_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/python-2.7.15-h1571d57_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/certifi-2018.4.16-py27_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/ninja-1.8.2-py27h6bb024c_1.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/numpy-base-1.14.3-py27hdbf6ddf_2.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/olefile-0.45.1-py27_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/pycparser-2.18-py27hefa08c5_1.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/six-1.11.0-py27h5f960f1_1.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/cffi-1.11.5-py27h9745a5d_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/pillow-5.1.0-py27h3deb7b8_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/setuptools-39.2.0-py27_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/wheel-0.31.1-py27_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/pip-10.0.1-py27_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/mkl_fft-1.0.1-py27h3010b51_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/mkl_random-1.0.1-py27h629b387_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/numpy-1.14.3-py27hcd700cb_2.tar.bz2
+https://conda.anaconda.org/pytorch/linux-64/pytorch-cpu-0.4.0-py27_cpu_1.tar.bz2
+https://conda.anaconda.org/pytorch/linux-64/torchvision-cpu-0.2.1-py27_1.tar.bz2
