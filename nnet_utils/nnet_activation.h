@@ -137,9 +137,15 @@ template<class data_T, class res_T, typename CONFIG_T>
 void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
     // Initialize the lookup table
-    static typename CONFIG_T::table_t sigmoid_table[CONFIG_T::table_size] ={-999.};
-    if(sigmoid_table[0] == -999.)
+    static bool initialized = false;
+    static typename CONFIG_T::table_t sigmoid_table[CONFIG_T::table_size];
+    if (!initialized)
+    {
       init_sigmoid_table<CONFIG_T, CONFIG_T::table_size>(sigmoid_table);
+      initialized = true;
+    }
+
+    if(sigmoid_table[0] == CONFIG_T::table_dummy)
 
     if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
@@ -198,14 +204,16 @@ void init_invert_table(typename CONFIG_T::table_t table_out[N_TABLE])
 template<class data_T, class res_T, typename CONFIG_T>
 void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
+    static bool initialized = false;
     // Initialize the lookup table
-    static typename CONFIG_T::table_t exp_table[CONFIG_T::table_size] = {-999.};
-    if (exp_table[0] == -999)
+    static typename CONFIG_T::table_t exp_table[CONFIG_T::table_size];
+    static typename CONFIG_T::table_t invert_table[CONFIG_T::table_size];
+    if (!initialized)
+    {
       init_exp_table<CONFIG_T, CONFIG_T::table_size>(exp_table);
-
-    static typename CONFIG_T::table_t invert_table[CONFIG_T::table_size] = {-999.};
-    if (invert_table[0] == -999)
       init_invert_table<CONFIG_T, CONFIG_T::table_size>(invert_table);
+      initialized = true;
+    }
 
     if (CONFIG_T::io_type == io_parallel){
         // Note: This is going to be a resource hog to run with pipeline, but hey, whatever
@@ -273,9 +281,13 @@ template<class data_T, class res_T, typename CONFIG_T>
 void  tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
     // Initialize the lookup table
-    static typename CONFIG_T::table_t tanh_table[CONFIG_T::table_size]={-999.};
-    if(tanh_table[0] == -999.)
+    static bool initialized = false;
+    static typename CONFIG_T::table_t tanh_table[CONFIG_T::table_size];
+    if (!initialized)
+    {
       init_tanh_table<CONFIG_T, CONFIG_T::table_size>(tanh_table);
+      initialized=true;
+    }
 
     if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
