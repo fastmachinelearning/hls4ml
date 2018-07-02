@@ -145,8 +145,6 @@ void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
       initialized = true;
     }
 
-    if(sigmoid_table[0] == CONFIG_T::table_dummy)
-
     if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
     }
