@@ -314,7 +314,7 @@ def hls_writer(layer_list, yamlConfig):
             for i in range(1,len(layer_list)):
             #    if layer_list[i-1]['class_name']=='Dense':
             #        newline += 'typedef {precision} layer{index}_t;\n'.format(precision=yamlConfig["DefaultPrecision"], index=i)
-                newline += 'typedef {precision} layer{index}_t;\n'.format(precision=yamlConfig["DefaultPrecision"], index=i)
+                newline += 'typedef {precision} layer{index}_t;\n'.format(precision=yamlConfig["DefaultPrecision"][:-1]+", AP_TRN_ZERO, AP_SAT>", index=i)
 
         elif "//hls-fpga-machine-learning insert layer-config" in line:
             newline = line
