@@ -15,6 +15,10 @@ def hls_writer(layer_list, yamlConfig):
     f = open(os.path.join(filedir,'../hls-template/firmware/myproject.cpp'),'r')
     fout = open('{}/firmware/{}.cpp'.format(yamlConfig['OutputDir'], yamlConfig['ProjectName']),'w')
 
+    # lines to add to .cpp for sublayers
+    sublayerlines = []
+    # lines to add to .h for sublayers
+    sublayerlines_h = []
     for line in f.readlines():
         #Add headers to weights and biases
         if 'myproject' in line:
@@ -107,35 +111,40 @@ def hls_writer(layer_list, yamlConfig):
                         newline += '    nnet::compute_layer<{}, {}, config{}>({}, logits{}, w{}, b{});\n'.format(input_type, output_type, i, input_object, i, i, i, i)
                     else:
                         # initialize arrays for sublayer outputs
+                        newline += '    compute_layer{}({}, logits{});\n'.format(i, input_object, i)
+                        sublayerline = 'void compute_layer{}({} {}[{}], {} logits{}[{}]) {{\n'.format(i,input_type, input_object, n_in, output_type, i, n_out)
+                        sublayerline_h = 'void compute_layer{}({} {}[{}], {} logits{}[{}]);\n'.format(i,input_type, input_object, n_in, output_type, i, n_out)
+                        sublayerlines_h.append(sublayerline_h)
                         for i_part in range(0, layer_list[i-1]['n_part']):
                             n_subout = layer_list[i-1]['n_subout'][i_part]
-                            newline += '    {} logits{}_{}[{}];\n'.format(output_type,i,i_part,n_subout)                        
-                            if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=logits{}_{} complete dim=0\n'.format(i,i_part)
-                            if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=logits{}_{} depth=1\n'.format(i,i_part)
+                            sublayerline += '    {} logits{}_{}[{}];\n'.format(output_type,i,i_part,n_subout)                        
+                            if yamlConfig["IOType"] == "io_parallel": sublayerline += '    #pragma HLS ARRAY_PARTITION variable=logits{}_{} complete dim=0\n'.format(i,i_part)
+                            if yamlConfig["IOType"] == "io_serial":   sublayerline += '    #pragma HLS STREAM variable=logits{}_{} depth=1\n'.format(i,i_part)
 
                         # initialize arrays for merged partial outputs 
                         for i_part in range(1, layer_list[i-1]['n_part']-1):
                             n_mergeout = sum([layer_list[i-1]['n_subout'][kk] for kk in range(0, i_part+1)])
-                            newline += '    {} logits{}_0to{}[{}];\n'.format(output_type,i,i_part,n_mergeout)                        
-                            if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=logits{}_0to{} complete dim=0\n'.format(i,i_part)
-                            if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=logits{}_0to{} depth=1\n'.format(i,i_part)
+                            sublayerline += '    {} logits{}_0to{}[{}];\n'.format(output_type,i,i_part,n_mergeout)                        
+                            if yamlConfig["IOType"] == "io_parallel": sublayerline += '    #pragma HLS ARRAY_PARTITION variable=logits{}_0to{} complete dim=0\n'.format(i,i_part)
+                            if yamlConfig["IOType"] == "io_serial":   sublayerline += '    #pragma HLS STREAM variable=logits{}_0to{} depth=1\n'.format(i,i_part)
                         # compute sublayer outputs
                         for i_part in range(0, layer_list[i-1]['n_part']):
-                            newline += '    nnet::compute_sublayer<{}, {}, config{}_{}>({}, logits{}_{}, w{}, b{});\n'.format(input_type, output_type, i, i_part, input_object, i, i_part, i, i, i)   
+                            sublayerline += '    nnet::compute_sublayer<{}, {}, config{}_{}>({}, logits{}_{}, w{}, b{});\n'.format(input_type, output_type, i, i_part, input_object, i, i_part, i, i, i)   
 
                         # merge sublayer outputs
                         for i_part in range(0, layer_list[i-1]['n_part']-1):
                             n_subout = layer_list[i-1]['n_subout'][i_part+1]
                             n_mergeout = sum([layer_list[i-1]['n_subout'][kk] for kk in range(0, i_part+1)])
                             if layer_list[i-1]['n_part']==2:
-                                newline += '    nnet::merge<{}, {}, {}>(logits{}_{}, logits{}_{}, logits{});\n'.format(output_type, n_mergeout, n_subout, i, i_part, i, i_part+1, i)
+                                sublayerline += '    nnet::merge<{}, {}, {}>(logits{}_{}, logits{}_{}, logits{});\n'.format(output_type, n_mergeout, n_subout, i, i_part, i, i_part+1, i)
                             elif i_part==0: 
-                                newline += '    nnet::merge<{}, {}, {}>(logits{}_{}, logits{}_{}, logits{}_0to{});\n'.format(output_type, n_mergeout, n_subout, i, i_part, i, i_part+1, i, i_part+1)
+                                sublayerline += '    nnet::merge<{}, {}, {}>(logits{}_{}, logits{}_{}, logits{}_0to{});\n'.format(output_type, n_mergeout, n_subout, i, i_part, i, i_part+1, i, i_part+1)
                             elif i_part==layer_list[i-1]['n_part']-2:
-                                newline += '    nnet::merge<{}, {}, {}>(logits{}_0to{}, logits{}_{}, logits{});\n'.format(output_type, n_mergeout, n_subout, i, i_part, i, i_part+1, i)
+                                sublayerline += '    nnet::merge<{}, {}, {}>(logits{}_0to{}, logits{}_{}, logits{});\n'.format(output_type, n_mergeout, n_subout, i, i_part, i, i_part+1, i)
                             else:
-                                newline += '    nnet::merge<{}, {}, {}>(logits{}_0to{}, logits{}_{}, logits{}_0to{});\n'.format(output_type, n_mergeout, n_subout, i, i_part, i, i_part+1, i, i_part+1)
-
+                                sublayerline += '    nnet::merge<{}, {}, {}>(logits{}_0to{}, logits{}_{}, logits{}_0to{});\n'.format(output_type, n_mergeout, n_subout, i, i_part, i, i_part+1, i, i_part+1)
+                        sublayerline += '}\n'
+                        sublayerlines.append(sublayerline)
                     
                 elif layer_list[i-1]['class_name']=='Conv1D':
                     if i>1 and layer_list[i-2]['class_name']=='Conv1D':
@@ -179,6 +188,10 @@ def hls_writer(layer_list, yamlConfig):
         else: 
             newline = line
         fout.write(newline)
+    for sublayerline in sublayerlines:
+        fout.write('\n')
+        fout.write(sublayerline)
+        fout.write('\n')
     f.close()
     fout.close()
 
@@ -392,6 +405,10 @@ def hls_writer(layer_list, yamlConfig):
             newline = 'void {}(\n'.format(yamlConfig['ProjectName'])
         elif 'input_t data[N_INPUTS]' in line and layer_list[0]['class_name']=='Conv1D':
             newline = line.replace('input_t data[N_INPUTS]','input_t data[Y_INPUTS_1][N_CHAN_1]')
+        elif '#endif' in line:
+            for sublayerline_h in sublayerlines_h:
+                fout.write(sublayerline_h)
+            fout.write('\n#endif\n')
         else:
             newline = line
         fout.write(newline)
