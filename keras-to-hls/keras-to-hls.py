@@ -56,7 +56,7 @@ def main():
     #print(model_arch)
 
     #Define supported laers
-    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'Conv1D']
+    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'Conv1D', 'Conv2D']
 
     #Define layers to skip for conversion to HLS
     skip_layers = ['InputLayer','Dropout', 'Flatten'] 
@@ -160,6 +160,45 @@ def main():
                 layer['pad_left'] = 0
                 layer['pad_right'] = 0
             current_shape=[current_shape[0], layer['y_out'], layer['n_filt']]
+        elif layer['class_name']=='Conv2D':
+            layer['in_height']=current_shape[1]
+            layer['in_width']=current_shape[2]
+            layer['filt_height']=weights.shape[0]
+            layer['filt_width']=weights.shape[1]
+            layer['n_chan']=weights.shape[2]
+            layer['n_filt']=weights.shape[3]
+            layer['stride_height']=keras_layer['config']['strides'][0]
+            layer['stride_width']=keras_layer['config']['strides'][1]
+            layer['padding']=keras_layer['config']['padding']
+            if layer['padding']=='same':
+                #Height
+                in_height = current_shape[1]
+                layer['out_height'] = int(math.ceil(float(in_height) / float(layer['stride_height'])))
+                if (in_height % layer['stride_height'] == 0):
+                    pad_along_height = max(layer['filt_height'] - layer['stride_height'], 0)
+                else:
+                    pad_along_height = max(layer['filt_height'] - (in_height % layer['stride_height']), 0)
+                layer['pad_top']  = pad_along_height // 2
+                layer['pad_bottom']  = pad_along_height - layer['pad_top']
+                #Width
+                in_width = current_shape[2]
+                layer['out_width'] = int(math.ceil(float(in_width) / float(layer['stride_width'])))
+                if (in_width % layer['stride_width'] == 0):
+                    pad_along_width = max(layer['filt_width'] - layer['stride_width'], 0)
+                else:
+                    pad_along_width = max(layer['filt_width'] - (in_width % layer['stride_width']), 0)
+                layer['pad_left']  = pad_along_width // 2
+                layer['pad_right']  = pad_along_width - layer['pad_left']
+            elif layer['padding']=='valid':
+                in_height = current_shape[1]
+                in_width = current_shape[2]
+                layer['out_width'] = int(math.ceil(float(in_width - layer['filt_width'] + 1) / float(layer['stride_width'])))
+                layer['out_height'] = int(math.ceil(float(in_height - layer['filt_height'] + 1) / float(layer['stride_height'])))
+                layer['pad_top'] = 0
+                layer['pad_bottom'] = 0
+                layer['pad_left'] = 0
+                layer['pad_right'] = 0
+                current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
         print 'Layer name: %s, layer type: %s, current shape: %s, number of zeros: %s'%(layer['name'], layer['class_name'], current_shape, cur_n_zeros)
         if layer['n_part'] > 1: 
             print ' -> layer will be divided into %s sublayer calls; output neurons: %s '%(layer['n_part'], layer['n_subout'])
