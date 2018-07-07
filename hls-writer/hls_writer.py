@@ -324,35 +324,35 @@ def hls_writer(layer_list, yamlConfig):
                     layer_in_name = "N_INPUTS"
                     layer_out_name = "N_LAYER_1"
                 elif i==len(layer_list) and layer_list[i-1]['class_name']=='Dense' and layer_list[i-2]['class_name']=='Conv1D':
-                    layer_in_name = "Y_OUTPUTS_%i*N_FILT_%i" % (i-1, i-1)
+                    layer_in_name = "Y_OUTPUTS_{}*N_FILT_{}".format(i-1, i-1)
                     layer_out_name = "N_OUTPUTS"
                 elif i==len(layer_list) and layer_list[i-1]['class_name']=='Dense' and layer_list[i-2]['class_name']=='Conv2D':
-                    layer_in_name = "OUT_HEIGHT_%i*OUT_WIDTH_%i*N_FILT_%i" % (i-1, i-1, i-1)
+                    layer_in_name = "OUT_HEIGHT_{}*OUT_WIDTH_{}*N_FILT_{}".format(i-1, i-1, i-1)
                     layer_out_name = "N_OUTPUTS"
                 elif layer_list[i-1]['class_name']=='Dense' and layer_list[i-2]['class_name']=='Conv1D':
-                    layer_in_name = "Y_OUTPUTS_%i*N_FILT_%i" % (i-1, i-1)
-                    layer_out_name = "N_LAYER_%i" % (i)   
+                    layer_in_name = "Y_OUTPUTS_{}*N_FILT_{}".format(i-1, i-1)
+                    layer_out_name = "N_LAYER_{}".format(i)   
                 elif layer_list[i-1]['class_name']=='Dense' and layer_list[i-2]['class_name']=='Conv2D':
-                    layer_in_name = "OUT_HEIGHT_%i*OUT_WIDTH_%i*N_FILT_%i" % (i-1, i-1, i-1)
-                    layer_out_name = "N_LAYER_%i" % (i)   
+                    layer_in_name = "OUT_HEIGHT_{}*OUT_WIDTH_{}*N_FILT_{}".format(i-1, i-1, i-1)
+                    layer_out_name = "N_LAYER_{}".format(i)   
                 elif i==len(layer_list) and layer_list[i-1]['class_name']=='Dense':
-                    layer_in_name = "N_LAYER_%i" % (i-1)
+                    layer_in_name = "N_LAYER_{}".format(i-1)
                     layer_out_name = "N_OUTPUTS"               
                 elif layer_list[i-1]['class_name']=='Dense':
-                    layer_in_name = "N_LAYER_%i" % (i-1)
-                    layer_out_name = "N_LAYER_%i" % (i)    
+                    layer_in_name = "N_LAYER_{}".format(i-1)
+                    layer_out_name = "N_LAYER_{}".format(i)    
                 elif layer_list[i-1]['class_name']=='Conv1D':
-                    layer_y_in_name = "Y_INPUTS_%i" % (i)
-                    layer_n_chan_name = "N_CHAN_%i" % (i)
-                    layer_y_out_name = "Y_OUTPUTS_%i" % (i)
-                    layer_n_filt_name = "N_FILT_%i" % (i)
+                    layer_y_in_name = "Y_INPUTS_{}".format(i)
+                    layer_n_chan_name = "N_CHAN_{}".format(i)
+                    layer_y_out_name = "Y_OUTPUTS_{}".format(i)
+                    layer_n_filt_name = "N_FILT_{}".format(i)
                 elif layer_list[i-1]['class_name']=='Conv2D':
-                    layer_in_height_name = "IN_HEIGHT_%i" % (i)
-                    layer_in_width_name = "IN_WIDTH_%i" % (i)
-                    layer_n_chan_name = "N_CHAN_%i" % (i)
-                    layer_out_height_name = "OUT_HEIGHT_%i" % (i)
-                    layer_out_width_name = "OUT_WIDTH_%i" % (i)
-                    layer_n_filt_name = "N_FILT_%i" % (i)
+                    layer_in_height_name = "IN_HEIGHT_{}".format(i)
+                    layer_in_width_name = "IN_WIDTH_{}".format(i)
+                    layer_n_chan_name = "N_CHAN_{}".format(i)
+                    layer_out_height_name = "OUT_HEIGHT_{}".format(i)
+                    layer_out_width_name = "OUT_WIDTH_{}".format(i)
+                    layer_n_filt_name = "N_FILT_{}".format(i)
                 if layer_list[i-1]['class_name']=='Dense':
                     newline += dense_config_template.format(index=str(i), 
                                                             n_in=layer_in_name, 
@@ -381,7 +381,7 @@ def hls_writer(layer_list, yamlConfig):
 
                     newline += activ_config_template.format(type=layer_list[i-1]['activation'],
                                                                     index=str(i), 
-                                                                    n_in='%s*%s'%(layer_y_out_name,layer_n_filt_name),
+                                                                    n_in='{}*{}'.format(layer_y_out_name,layer_n_filt_name),
                                                                     iotype=yamlConfig["IOType"]) 
 
                 elif layer_list[i-1]['class_name']=='Conv2D':
@@ -406,7 +406,7 @@ def hls_writer(layer_list, yamlConfig):
 
                     newline += activ_config_template.format(type=layer_list[i-1]['activation'],
                                                                     index=str(i), 
-                                                                    n_in='%s*%s*%s'%(layer_out_height_name,layer_out_width_name,layer_n_filt_name),
+                                                                    n_in='{}*{}*{}'.format(layer_out_height_name,layer_out_width_name,layer_n_filt_name),
                                                                     iotype=yamlConfig["IOType"]) 
 
         else:
