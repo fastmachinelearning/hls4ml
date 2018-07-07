@@ -76,7 +76,7 @@ def main():
     current_shape = None
     for keras_layer in layer_config:
         if keras_layer["class_name"] not in supported_layers:
-            raise Exception('ERROR: Unsupported layer type: %s'%keras_layer["class_name"])            
+            raise Exception('ERROR: Unsupported layer type: {}'.format(keras_layer["class_name"]))
         if 'batch_input_shape' in keras_layer['config']:
             current_shape = keras_layer['config']['batch_input_shape'] # [None, 100, 7]    
     print('Input shape:', current_shape)
@@ -179,7 +179,7 @@ def main():
                 layer['pad_left'] = 0
                 layer['pad_right'] = 0
                 current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
-        print('Layer name: %s, layer type: %s, current shape: %s, number of zeros: %s'%(layer['name'], layer['class_name'], current_shape, cur_n_zeros))
+        print('Layer name: {}, layer type: {}, current shape: {}, number of zeros: {}'.format(layer['name'], layer['class_name'], current_shape, cur_n_zeros))
         layer_list.append( layer )
         
 
