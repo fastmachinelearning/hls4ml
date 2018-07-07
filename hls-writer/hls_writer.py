@@ -1,3 +1,4 @@
+from __future__ import print_function
 import tarfile
 import yaml
 from shutil import copyfile
@@ -515,7 +516,7 @@ def hls_writer(layer_list, yamlConfig):
 #######################################
 def parse_config(config_file) :
 
-    print "Loading configuration from " + str(config_file)
+    print("Loading configuration from", config_file)
     config = open(config_file, 'r')
     return yaml.load(config)
 
