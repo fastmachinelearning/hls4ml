@@ -111,7 +111,10 @@ def main():
         cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
         print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
         layer['weights_n_zeros'] = cur_n_zeros 
-
+        
+        # Default one layer call
+        layer['n_part'] = 1
+        
         #Get number of inputs and outputs
         #(We take it from the weights to avoid dealing with InputLayer and Flatten details)
         if layer['class_name']=='Dense':
@@ -120,7 +123,6 @@ def main():
             # if this layer is too big (more than MAXMULT multiplications); 
             # break it out into chunks!
             layer['n_subout']=[weights.shape[1]]
-            layer['n_part'] = 1
             if layer['n_in']*layer['n_out']>MAXMULT:
                 n_subout = int(MAXMULT/layer['n_in'])
                 n_totout = 0
