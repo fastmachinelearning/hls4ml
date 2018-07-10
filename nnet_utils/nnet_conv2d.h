@@ -244,8 +244,8 @@ template<class data_T, int N1, int N2, int N3>
 {
     for(int i1=0; i1<N1; i1++){
       for(int i2=0; i2<N2; i2++){
-        for(int i3=0; i2<N3; i3++){
-             res[i1][i2][i3] = data[i1*N2*N3+i2*N3+i3];
+        for(int i3=0; i3<N3; i3++){
+	    res[i1][i2][i3] = data[i1*N2*N3+i2*N3+i3];
         }//i3
       }//i2
     }//i1  
