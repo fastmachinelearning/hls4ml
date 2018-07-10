@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import h5py
 import os
@@ -67,22 +68,22 @@ def main():
 
     layer_config = None
     if model_arch['class_name'] == 'Sequential':
-        print 'Interpreting Sequential'
+        print('Interpreting Sequential')
         layer_config = model_arch["config"]
     elif model_arch['class_name'] == 'Model':
-        print 'Interpreting Model'
+        print('Interpreting Model')
         layer_config = model_arch["config"]["layers"]
 
     # Get input shape and check for unsupported layer type
     current_shape = None
     for keras_layer in layer_config:
         if keras_layer["class_name"] not in supported_layers:
-            raise Exception('ERROR: Unsupported layer type: %s'%keras_layer["class_name"])            
+            raise Exception('ERROR: Unsupported layer type: {}'.format(keras_layer["class_name"]))
         if 'batch_input_shape' in keras_layer['config']:
             current_shape = keras_layer['config']['batch_input_shape'] # [None, 100, 7]    
-    print 'Input shape:', current_shape
+    print('Input shape:', current_shape)
 
-    print 'Topology:' 
+    print('Topology:')
     for keras_layer in layer_config:
         if keras_layer["class_name"] is 'Flatten':
             current_shape = [current_shape[0], np.prod(current_shape[1:])]
@@ -201,9 +202,9 @@ def main():
                 layer['pad_left'] = 0
                 layer['pad_right'] = 0
                 current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
-        print 'Layer name: %s, layer type: %s, current shape: %s, number of zeros: %s'%(layer['name'], layer['class_name'], current_shape, cur_n_zeros)
+        print('Layer name: {}, layer type: {}, current shape: {}, number of zeros: {}'.format(layer['name'], layer['class_name'], current_shape, cur_n_zeros))
         if layer['n_part'] > 1: 
-            print ' -> layer will be divided into %s sublayer calls; output neurons: %s '%(layer['n_part'], layer['n_subout'])
+            print(' -> layer will be divided into {} sublayer calls; output neurons: {} '.format(layer['n_part'], layer['n_subout']))
         layer_list.append( layer )
         
 
