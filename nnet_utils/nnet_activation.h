@@ -20,7 +20,7 @@
 #ifndef NNET_ACTIVATION_H_
 #define NNET_ACTIVATION_H_
 
-#include <math.h>
+#include <cmath>
 #include "ap_fixed.h"
 #include "nnet_common.h"
 
@@ -115,7 +115,7 @@ void  relu6(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 //       Sigmoid Activation
 // *************************************************
 inline float sigmoid_fcn_float(float input) {
-    return 1.0 / (1 + exp(-input));
+    return 1.0 / (1 + std::exp(-input));
 }
 
 template<typename CONFIG_T, int N_TABLE>
@@ -168,7 +168,7 @@ void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 //       Softmax Activation
 // *************************************************
 inline float exp_fcn_float(float input) {
-    return exp(input);
+    return std::exp(input);
 }
 
 
@@ -268,7 +268,7 @@ void init_tanh_table(typename CONFIG_T::table_t table_out[N_TABLE])
         // First, convert from table index to X-value (signed 8-bit, range -4 to +4)
         float in_val = 2*4.0*(ii-float(N_TABLE)/2.0)/float(N_TABLE);
         // Next, compute lookup table function
-        typename CONFIG_T::table_t real_val = tanh(in_val);
+        typename CONFIG_T::table_t real_val = std::tanh(in_val);
         //std::cout << "Tanh:  Lookup table Index: " <<  ii<< " In Value: " << in_val << " Result: " << real_val << std::endl;
         table_out[ii] = real_val;
     }
