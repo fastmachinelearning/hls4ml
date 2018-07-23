@@ -20,7 +20,7 @@
 #ifndef NNET_ACTIVATION_H_
 #define NNET_ACTIVATION_H_
 
-#include <math.h>
+#include <cmath>
 #include "ap_fixed.h"
 #include "nnet_common.h"
 
@@ -115,7 +115,7 @@ void  relu6(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 //       Sigmoid Activation
 // *************************************************
 inline float sigmoid_fcn_float(float input) {
-    return 1.0 / (1 + exp(-input));
+    return 1.0 / (1 + std::exp(-input));
 }
 
 template<typename CONFIG_T, int N_TABLE>
@@ -137,8 +137,13 @@ template<class data_T, class res_T, typename CONFIG_T>
 void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
     // Initialize the lookup table
+#ifdef __HLS_SYN__
+    bool initialized = false;
+    typename CONFIG_T::table_t sigmoid_table[CONFIG_T::table_size];
+#else
     static bool initialized = false;
     static typename CONFIG_T::table_t sigmoid_table[CONFIG_T::table_size];
+#endif
     if (!initialized)
     {
       init_sigmoid_table<CONFIG_T, CONFIG_T::table_size>(sigmoid_table);
@@ -168,7 +173,7 @@ void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 //       Softmax Activation
 // *************************************************
 inline float exp_fcn_float(float input) {
-    return exp(input);
+    return std::exp(input);
 }
 
 
@@ -202,10 +207,17 @@ void init_invert_table(typename CONFIG_T::table_t table_out[N_TABLE])
 template<class data_T, class res_T, typename CONFIG_T>
 void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
+#ifdef __HLS_SYN__
+    bool initialized = false;
+    // Initialize the lookup table
+    typename CONFIG_T::table_t exp_table[CONFIG_T::table_size];
+    typename CONFIG_T::table_t invert_table[CONFIG_T::table_size];
+#else
     static bool initialized = false;
     // Initialize the lookup table
     static typename CONFIG_T::table_t exp_table[CONFIG_T::table_size];
     static typename CONFIG_T::table_t invert_table[CONFIG_T::table_size];
+#endif
     if (!initialized)
     {
       init_exp_table<CONFIG_T, CONFIG_T::table_size>(exp_table);
@@ -279,8 +291,14 @@ template<class data_T, class res_T, typename CONFIG_T>
 void  tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
     // Initialize the lookup table
+#ifdef __HLS_SYN__
+    bool initialized = false;
+    typename CONFIG_T::table_t tanh_table[CONFIG_T::table_size];
+#else
     static bool initialized = false;
     static typename CONFIG_T::table_t tanh_table[CONFIG_T::table_size];
+#endif
+    
     if (!initialized)
     {
       init_tanh_table<CONFIG_T, CONFIG_T::table_size>(tanh_table);
