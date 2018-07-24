@@ -1,4 +1,4 @@
-conda create --copy --name hls4ml-env python=2.7
+conda create --copy --name hls4ml-env python=3.6
 
 source activate hls4ml-env
 
