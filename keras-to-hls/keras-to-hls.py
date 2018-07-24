@@ -57,7 +57,7 @@ def main():
     #print(model_arch)
 
     #Define supported laers
-    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'Conv1D', 'Conv2D']
+    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'Conv1D', 'Conv2D','BatchNormalization','Activation']
 
     #Define layers to skip for conversion to HLS
     skip_layers = ['InputLayer','Dropout', 'Flatten'] 
@@ -103,15 +103,29 @@ def main():
         for config,config_value in keras_layer["config"].items():
             if(config=="activation"):
                 layer['activation']=config_value
+            if(config=="epsilon"):
+                layer['epsilon']=config_value	
             #if(config=="units"):
                 #print("PARSED NUM OF NODES",config_value)
 
+        
         #Translate weights and biases from h5 file
-        weights = h5File['/{}/{}/kernel:0'.format(layer['name'],layer['name'])][()]
-        biases = h5File['/{}/{}/bias:0'.format(layer['name'],layer['name'])][()]
-        cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
-        print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
-        layer['weights_n_zeros'] = cur_n_zeros 
+        if layer['class_name'] != 'BatchNormalization' and layer['class_name'] != 'Activation':
+         weights = h5File['/{}/{}/kernel:0'.format(layer['name'],layer['name'])][()]
+         biases = h5File['/{}/{}/bias:0'.format(layer['name'],layer['name'])][()]
+         cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
+         print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
+         layer['weights_n_zeros'] = cur_n_zeros 
+        elif layer['class_name'] == 'BatchNormalization':
+         beta = h5File['/{}/{}/beta:0'.format(layer['name'],layer['name'])][()]
+         print_array_to_cpp("beta{}".format(layer_counter), beta, yamlConfig['OutputDir'])
+         mean = h5File['/{}/{}/moving_mean:0'.format(layer['name'],layer['name'])][()]
+         print_array_to_cpp("mean{}".format(layer_counter), mean, yamlConfig['OutputDir'])	 
+         gamma = h5File['/{}/{}/gamma:0'.format(layer['name'],layer['name'])][()]
+         var = h5File['/{}/{}/moving_variance:0'.format(layer['name'],layer['name'])][()]
+         var = var + layer['epsilon']
+         scale = gamma/np.sqrt(var)	 
+         print_array_to_cpp("scale{}".format(layer_counter), scale, yamlConfig['OutputDir'])
         
         # Default one layer call
         layer['n_part'] = 1
@@ -202,6 +216,10 @@ def main():
                 layer['pad_left'] = 0
                 layer['pad_right'] = 0
                 current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
+        elif layer['class_name']=='BatchNormalization':
+            layer['n_in']=mean.shape[0]
+            layer['n_out']=mean.shape[0]
+            current_shape = [current_shape[0], layer['n_out']]
         print('Layer name: {}, layer type: {}, current shape: {}, number of zeros: {}'.format(layer['name'], layer['class_name'], current_shape, cur_n_zeros))
         if layer['n_part'] > 1: 
             print(' -> layer will be divided into {} sublayer calls; output neurons: {} '.format(layer['n_part'], layer['n_subout']))
