@@ -16,6 +16,14 @@ filedir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,os.path.join(filedir, "..", "hls-writer"))
 from hls_writer import parse_config, print_array_to_cpp, hls_writer
 
+def find_kernel_in_h5(name):
+    if 'kernel' in name:
+        return name
+
+def find_bias_in_h5(name):
+    if 'bias' in name:
+        return name
+
 ############################################################################################
 ## M A I N
 ############################################################################################
@@ -107,8 +115,10 @@ def main():
                 #print("PARSED NUM OF NODES",config_value)
 
         #Translate weights and biases from h5 file
-        weights = h5File['/{}/{}/kernel:0'.format(layer['name'],layer['name'])][()]
-        biases = h5File['/{}/{}/bias:0'.format(layer['name'],layer['name'])][()]
+        found_weights = h5File[layer['name']].visit(find_kernel_in_h5)
+        weights = h5File['/{}/{}'.format(layer['name'],found_weights)][()]
+        found_bias = h5File[layer['name']].visit(find_bias_in_h5)
+        biases = h5File['/{}/{}'.format(layer['name'],found_bias)][()]
         cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
         print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
         layer['weights_n_zeros'] = cur_n_zeros 
