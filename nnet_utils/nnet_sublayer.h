@@ -53,6 +53,29 @@ struct sublayer_config
     // partitioning arrays cyclically to go with roll factors?
 };
 
+//Computes multiplier limit
+//This function should not be synthesized into firmware
+template<typename CONFIG_T>
+int compute_multiplier_limit_sublayer(
+			     typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out]
+)
+{
+    int n_mult = 0;
+    // Do the matrix-multiply                                                                                                                       
+    for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
+      for(int jj = 0; jj < CONFIG_T::n_sub_out; jj++) {
+	int weight_index = ii*CONFIG_T::n_out+jj+CONFIG_T::i_sub_out;
+	//need to tune this cut?
+	if( weights[weight_index] > 1e-20 || weights[weight_index] < -1e-20 ){
+	  n_mult++;
+	}//end if nonzero weight
+      }//end output loop
+    }//end input loop
+    
+    return ceil( float(n_mult) / float(CONFIG_T::reuse_factor) );
+   
+}//end compute_n_mult
+
  template<class data_T, class res_T, typename CONFIG_T>
 void compute_sublayer(
     data_T    data[CONFIG_T::n_in],
@@ -78,8 +101,7 @@ void compute_sublayer(
         #pragma HLS ARRAY_PARTITION variable=mult complete
         #pragma HLS ARRAY_PARTITION variable=acc complete
   
-        //int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_out) / float(CONFIG_T::reuse_factor*CONFIG_T::n_part)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor*CONFIG_T::n_part));
-        int multiplier_limit = ceil(float(CONFIG_T::n_in*CONFIG_T::n_sub_out) / float(CONFIG_T::reuse_factor)); // ignoring pruning for now
+	const int multiplier_limit = compute_multiplier_limit_sublayer<CONFIG_T>(weights);
         #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
     } else if (CONFIG_T::io_type == io_serial){
@@ -99,7 +121,7 @@ void compute_sublayer(
         cache = data[ii];
         Product2: for(int jj = 0; jj < CONFIG_T::n_sub_out; jj++) {
             if (CONFIG_T::io_type == io_serial) {
-                int multiplier_limit  = ceil(float(CONFIG_T::n_out) / float(CONFIG_T::reuse_factor*CONFIG_T::n_part));
+                int multiplier_limit  = ceil(float(CONFIG_T::n_sub_out) / float(CONFIG_T::reuse_factor));
                 #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
             }
 	    int weight_index = ii*CONFIG_T::n_out+jj+CONFIG_T::i_sub_out;
