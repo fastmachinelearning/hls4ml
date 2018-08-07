@@ -118,6 +118,11 @@ def hls_writer(layer_list, yamlConfig):
                     output_type = 'result_t'
                     output_object = 'res'
                     n_out = 'N_OUTPUTS'
+                    if layer_list[i-1]['class_name']=='Activation': input_type = 'result_t'
+                elif(i==len(layer_list)-1 and layer_list[i-1]['class_name']=='BatchNormalization'):
+                    output_type = 'result_t'
+                    output_object = 'layer{}_out'.format(i)
+                    n_out = 'N_OUTPUTS' 
                 elif layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BatchNormalization' or layer_list[i-1]['class_name']=='Activation':
                     output_type = 'layer{}_t'.format(i)
                     output_object = 'layer{}_out'.format(i)
@@ -135,7 +140,7 @@ def hls_writer(layer_list, yamlConfig):
                     n_filt = 'N_FILT_{}'.format(i)
                 #Currently assumes end with dense
 
-                if(i!=len(layer_list)):
+                if( i!=len(layer_list) ):
                     if layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BatchNormalization' or layer_list[i-1]['class_name']=='Activation':
                         newline += '    {} layer{}_out[{}];\n'.format(output_type,i,n_out)
                     elif layer_list[i-1]['class_name']=='Conv1D':

@@ -109,7 +109,7 @@ void normalize(
     }    
     
     // Initialize accumulator with beta values
-    ResetAccum: for(int i = 0; i < CONFIG_T::n_out; i++) {
+    ResetAccum: for(int i = 0; i < CONFIG_T::n_in; i++) {
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS UNROLL
         }
