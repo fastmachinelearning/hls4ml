@@ -104,7 +104,7 @@ def hls_writer(layer_list, yamlConfig):
                     in_width = 'IN_WIDTH_{}'.format(i)
                     n_chan = 'N_CHAN_{}'.format(i)
                 #Layer is Conv2D
-                elif layer_list[i-1]['class_name']=='Conv1D':
+                elif layer_list[i-1]['class_name']=='Conv2D':
                     input_type = 'layer{}_t'.format(i-1)
                     input_object = 'layer{}_out'.format(i-1)
                     in_height = 'IN_HEIGHT_{}'.format(i)
@@ -208,12 +208,12 @@ def hls_writer(layer_list, yamlConfig):
                         newline += '    {} conv_layer{}_out[{}][{}];\n'.format(output_type,i,y_out,n_filt)
                         if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=conv_layer{}_out complete dim=0\n'.format(i)
                         if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=conv_layer{}_out depth=1\n'.format(i)
-                        newline += '    nnet::conv_1d<{}, {}, config{}>(conv_layer{}_in, conv_layer{}_out, w{}, b{});\n'.format(input_type, input_type, i, i, i, i, i, i)  
+                        newline += '    nnet::conv_1d<{}, {}, config{}>(conv_layer{}_in, conv_layer{}_out, w{}, b{});\n'.format(input_type, output_type, i, i, i, i, i, i)  
                     else:                        
                         newline += '    {} conv_layer{}_out[{}][{}];\n'.format(output_type,i,y_out,n_filt)
                         if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=conv_layer{}_out complete dim=0\n'.format(i)
                         if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=conv_layer{}_out depth=1\n'.format(i)
-                        newline += '    nnet::conv_1d<{}, {}, config{}>({}, conv_layer{}_out, w{}, b{});\n'.format(input_type, input_type, i, input_object, i, i, i, i)
+                        newline += '    nnet::conv_1d<{}, {}, config{}>({}, conv_layer{}_out, w{}, b{});\n'.format(input_type, output_type, i, input_object, i, i, i, i)
                     newline += '    {} logits{}[{}*{}];\n'.format(output_type,i,y_out,n_filt)
                     if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=logits{} complete dim=0\n'.format(i)
                     if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=logits{} complete depth=1\n'.format(i)
@@ -227,16 +227,16 @@ def hls_writer(layer_list, yamlConfig):
                         newline += '    {} conv2d_layer{}_out[{}][{}][{}];\n'.format(output_type,i,out_height,out_width,n_filt)
                         if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=conv2d_layer{}_out complete dim=0\n'.format(i)
                         if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=conv2d_layer{}_out depth=1\n'.format(i)
-                        newline += '    nnet::conv_2d<{}, {}, config{}>(conv2d_layer{}_in, conv2d_layer{}_out, w{}, b{});\n'.format(input_type, input_type, i, i, i, i, i, i)  
+                        newline += '    nnet::conv_2d<{}, {}, config{}>(conv2d_layer{}_in, conv2d_layer{}_out, w{}, b{});\n'.format(input_type, output_type, i, i, i, i, i, i)  
                     else:                        
                         newline += '    {} conv2d_layer{}_out[{}][{}][{}];\n'.format(output_type,i,out_height,out_width,n_filt)
                         if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=conv2d_layer{}_out complete dim=0\n'.format(i)
                         if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=conv2d_layer{}_out depth=1\n'.format(i)
-                        newline += '    nnet::conv_2d<{}, {}, config{}>({}, conv2d_layer{}_out, w{}, b{});\n'.format(input_type, input_type, i, input_object, i, i, i, i)
+                        newline += '    nnet::conv_2d<{}, {}, config{}>({}, conv2d_layer{}_out, w{}, b{});\n'.format(input_type, output_type, i, input_object, i, i, i, i)
                     newline += '    {} logits{}[{}*{}*{}];\n'.format(output_type,i,out_height,out_width,n_filt)
                     if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=logits{} complete dim=0\n'.format(i)
                     if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=logits{} complete depth=1\n'.format(i)
-                    newline += '    nnet::flatten<{}, {}, {}, {}>(conv2d_layer{}_out, logits{});\n'.format(input_type, out_height, out_width, n_filt, i, i)
+                    newline += '    nnet::flatten<{}, {}, {}, {}>(conv2d_layer{}_out, logits{});\n'.format(output_type, out_height, out_width, n_filt, i, i)
                 elif layer_list[i-1]['class_name'] == 'BatchNormalization':
                     newline += '    nnet::normalize<{}, {}, config{}>({}, {}, scale{}, beta{}, mean{});\n'.format(input_type, output_type, i, input_object, output_object, i, i, i)
                 
