@@ -80,10 +80,10 @@ void normalize(
         #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
     } else if (CONFIG_T::io_type == io_serial){
-        #pragma HLS ARRAY_RESHAPE variable=scale complete dim=2
-        #pragma HLS ARRAY_RESHAPE variable=beta complete dim=2
-        #pragma HLS ARRAY_RESHAPE variable=mean complete dim=2
-        #pragma HLS ARRAY_PARTITION variable=mult complete dim=2
+        #pragma HLS ARRAY_RESHAPE variable=scale complete dim=1
+        #pragma HLS ARRAY_RESHAPE variable=beta complete dim=1
+        #pragma HLS ARRAY_RESHAPE variable=mean complete dim=1
+        #pragma HLS ARRAY_PARTITION variable=mult complete dim=1
         #pragma HLS ARRAY_PARTITION variable=acc complete dim=1
         #pragma HLS ARRAY_PARTITION variable=shift complete dim=1
         #pragma HLS DATAFLOW
