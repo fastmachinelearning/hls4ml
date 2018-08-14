@@ -32,7 +32,6 @@ struct batchnorm_config
     typedef float beta_t;
     typedef float scale_t;
     typedef float mean_t;
-    typedef float accum_t;
 
     // Layer Sizes
     static const unsigned n_in = 10;
@@ -54,11 +53,7 @@ void normalize(
     typename CONFIG_T::mean_t   mean[CONFIG_T::n_in])
 {
     data_T cache;
-    typename CONFIG_T::accum_t mult[CONFIG_T::n_in];
-    typename CONFIG_T::accum_t acc[CONFIG_T::n_in];
-    typename CONFIG_T::accum_t shift[CONFIG_T::n_in];
-
-    
+   
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
     #pragma HLS function_instantiate variable=scale,beta,mean
 
@@ -72,9 +67,6 @@ void normalize(
 	#pragma HLS ARRAY_PARTITION variable=scale complete
         #pragma HLS ARRAY_PARTITION variable=beta complete
 	#pragma HLS ARRAY_PARTITION variable=mean complete
-        #pragma HLS ARRAY_PARTITION variable=mult complete
-        #pragma HLS ARRAY_PARTITION variable=acc complete
-        #pragma HLS ARRAY_PARTITION variable=shift complete
 
         int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_in) / float(CONFIG_T::reuse_factor)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
         #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
@@ -83,53 +75,17 @@ void normalize(
         #pragma HLS ARRAY_RESHAPE variable=scale complete dim=1
         #pragma HLS ARRAY_RESHAPE variable=beta complete dim=1
         #pragma HLS ARRAY_RESHAPE variable=mean complete dim=1
-        #pragma HLS ARRAY_PARTITION variable=mult complete dim=1
-        #pragma HLS ARRAY_PARTITION variable=acc complete dim=1
-        #pragma HLS ARRAY_PARTITION variable=shift complete dim=1
         #pragma HLS DATAFLOW
-        #pragma HLS STREAM variable=mult depth=1
-        #pragma HLS STREAM variable=acc depth=1
-    }
+    }            
 
-    // Shift input data by the mean
-    ShiftInputs: for(int i = 0; i < CONFIG_T::n_in; i++) {
-        if (CONFIG_T::io_type == io_serial){
-            #pragma HLS UNROLL
-        }
-        shift[i] = (typename CONFIG_T::accum_t) (data[i]-mean[i]);
-    }
-        
-    // Do the multiplication
-    Product: for(int i = 0; i < CONFIG_T::n_in; i++) {
-        if (CONFIG_T::io_type == io_serial){
-            #pragma HLS PIPELINE
-        }
-        mult[i] = scale[i] * shift[i];
-    }    
-    
-    // Initialize accumulator with beta values
-    ResetAccum: for(int i = 0; i < CONFIG_T::n_in; i++) {
-        if (CONFIG_T::io_type == io_serial){
-            #pragma HLS UNROLL
-        }
-        acc[i] = (typename CONFIG_T::accum_t) beta[i];
-    }
-
-    // Accumulate multiplication result
-    Accum: for(int i = 0; i < CONFIG_T::n_in; i++) {
-        if (CONFIG_T::io_type == io_serial){
-            #pragma HLS PIPELINE
-        }
-        acc[i] += mult[i];
-    }
-
-    // Cast to "res_t" type
+    // Calcuate result
     Result: for(int ires = 0; ires < CONFIG_T::n_in; ires++){
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS UNROLL
+            #pragma HLS PIPELINE
         }
-        res[ires] = (res_T) (acc[ires]);
-    }              
+        res[ires] = (res_T) (data[ires]-mean[ires])*scale[ires]+beta[ires];
+    }   
        
 }
 
