@@ -36,7 +36,6 @@ struct batchnorm_config
 
     // Layer Sizes
     static const unsigned n_in = 10;
-    static const unsigned n_out = 10;
 
     // Resource reuse info
     static const unsigned io_type = io_parallel;
@@ -49,7 +48,7 @@ struct batchnorm_config
 template<class data_T, class res_T, typename CONFIG_T>
 void normalize(
     data_T    data[CONFIG_T::n_in],
-    res_T     res[CONFIG_T::n_out],
+    res_T     res[CONFIG_T::n_in],
     typename CONFIG_T::scale_t  scale[CONFIG_T::n_in],
     typename CONFIG_T::beta_t   beta[CONFIG_T::n_in],
     typename CONFIG_T::mean_t   mean[CONFIG_T::n_in])
@@ -77,7 +76,7 @@ void normalize(
         #pragma HLS ARRAY_PARTITION variable=acc complete
         #pragma HLS ARRAY_PARTITION variable=shift complete
 
-        int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_out) / float(CONFIG_T::reuse_factor)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
+        int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_in) / float(CONFIG_T::reuse_factor)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
         #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
     } else if (CONFIG_T::io_type == io_serial){
@@ -125,7 +124,7 @@ void normalize(
     }
 
     // Cast to "res_t" type
-    Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
+    Result: for(int ires = 0; ires < CONFIG_T::n_in; ires++){
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS UNROLL
         }

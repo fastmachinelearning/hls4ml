@@ -24,6 +24,22 @@ def find_bias_in_h5(name):
     if 'bias' in name:
         return name
 
+def find_beta_in_h5(name):
+    if 'beta' in name:
+        return name
+
+def find_moving_mean_in_h5(name):
+    if 'moving_mean' in name:
+        return name
+
+def find_moving_variance_in_h5(name):
+    if 'moving_variance' in name:
+        return name
+
+def find_gamma_in_h5(name):
+    if 'gamma' in name:
+        return name
+
 ############################################################################################
 ## M A I N
 ############################################################################################
@@ -127,12 +143,16 @@ def main():
          print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
          layer['weights_n_zeros'] = cur_n_zeros 
         elif layer['class_name'] == 'BatchNormalization':
-         beta = h5File['/{}/{}/beta:0'.format(layer['name'],layer['name'])][()]
+         found_beta = h5File[layer['name']].visit(find_beta_in_h5)
+         beta = h5File['/{}/{}'.format(layer['name'],found_beta)][()]
          print_array_to_cpp("beta{}".format(layer_counter), beta, yamlConfig['OutputDir'])
-         mean = h5File['/{}/{}/moving_mean:0'.format(layer['name'],layer['name'])][()]
-         print_array_to_cpp("mean{}".format(layer_counter), mean, yamlConfig['OutputDir'])	 
-         gamma = h5File['/{}/{}/gamma:0'.format(layer['name'],layer['name'])][()]
-         var = h5File['/{}/{}/moving_variance:0'.format(layer['name'],layer['name'])][()]
+         found_mean = h5File[layer['name']].visit(find_moving_mean_in_h5)
+         mean = h5File['/{}/{}'.format(layer['name'],found_mean)][()]
+         print_array_to_cpp("mean{}".format(layer_counter), mean, yamlConfig['OutputDir'])	
+         found_gamma = h5File[layer['name']].visit(find_gamma_in_h5)
+         gamma = h5File['/{}/{}'.format(layer['name'],found_gamma)][()]
+         found_var = h5File[layer['name']].visit(find_moving_variance_in_h5)
+         var = h5File['/{}/{}'.format(layer['name'],found_var)][()]
          var = var + layer['epsilon']
          scale = gamma/np.sqrt(var)	 
          print_array_to_cpp("scale{}".format(layer_counter), scale, yamlConfig['OutputDir'])

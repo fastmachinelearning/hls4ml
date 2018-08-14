@@ -325,7 +325,6 @@ def hls_writer(layer_list, yamlConfig):
 
     batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
         static const unsigned n_in = {n_in};
-        static const unsigned n_out = {n_out};
         static const unsigned io_type = nnet::{iotype};
         static const unsigned reuse_factor = {reuse};
         static const bool store_weights_in_bram = false;
@@ -408,7 +407,7 @@ def hls_writer(layer_list, yamlConfig):
                     newline += '#define N_OUTPUTS {}\n'.format(layer_list[i-1]['n_out'])
                 elif i==len(layer_list) and layer_list[i-1]['class_name']=='Activation':
                     newline += '#define N_OUTPUTS {}\n'.format(layer_list[i-2]['n_out']) 
-                elif layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BatchNormalization':
+                elif layer_list[i-1]['class_name']=='Dense' or (layer_list[i-1]['class_name']=='BatchNormalization' and i!=len(layer_list)-1):
                     newline += '#define N_LAYER_{} {}\n'.format(i, layer_list[i-1]['n_out'])    
                 elif layer_list[i-1]['class_name']=='Activation':        
                     newline += '#define N_LAYER_{} {}\n'.format(i, layer_list[i-2]['n_out'])
