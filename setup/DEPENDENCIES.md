@@ -17,4 +17,18 @@ _Xilinx Vivado license_: the package currently is only for Xilinx devices, a lic
 
 # Miniconda
 
-For interested users, we provide a small script for setting up your environment using Miniconda (https://conda.io/miniconda.html).  We are currently supporting `Python2` though envision a `Python3` update soon.
+For interested users, we provide a small script for setting up your environment using Miniconda (https://conda.io/miniconda.html).  We are currently support both `Python2` and `Python3`. `Python3` will be supported by default in the future.
+
+Setup: 
+
+To install `miniconda3` and dependencies:
+```
+source install_miniconda3.sh
+source install.sh
+```
+
+After installation, to set up in the enviroment:
+```
+source activate hls4ml-env
+```
+
