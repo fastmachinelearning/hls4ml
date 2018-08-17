@@ -35,6 +35,7 @@ struct dense_config
     typedef float accum_t;
 
     // Layer Sizes
+    static const unsigned n_batch = 1;
     static const unsigned n_in = 10;
     static const unsigned n_out = 10;
 
@@ -201,6 +202,18 @@ void dense_latency(
     }
 }
 
+ template<class data_T, class res_T, typename CONFIG_T>
+void compute_layer_batch(
+    data_T    data[CONFIG_T::n_batch][CONFIG_T::n_in],
+    res_T     res[CONFIG_T::n_batch][CONFIG_T::n_out],
+    typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
+    typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
+{
+  for (int bb = 0; bb < CONFIG_T::n_batch; bb++) {
+  //#pragma HLS ALLOCATION instances=compute_layer limit=10 
+  compute_layer<data_T, res_T, CONFIG_T>(data[bb], res[bb], weights, biases);
+}
+}
 }
 
 #endif
