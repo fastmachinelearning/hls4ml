@@ -209,10 +209,18 @@ void compute_layer_batch(
     typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
     typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
 {
+  data_T data_temp[CONFIG_T::n_in];
+  res_T res_temp[CONFIG_T::n_out];
   for (int bb = 0; bb < CONFIG_T::n_batch; bb++) {
-  //#pragma HLS ALLOCATION instances=compute_layer limit=10 
-  compute_layer<data_T, res_T, CONFIG_T>(data[bb], res[bb], weights, biases);
-}
+    for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
+      data_temp[ii] = data[bb][ii];
+    }
+    //#pragma HLS ALLOCATION instances=compute_layer limit=10 
+    compute_layer<data_T, res_T, CONFIG_T>(data_temp, res_temp, weights, biases);
+    for (int ii = 0; ii < CONFIG_T::n_out; ii++) {
+      res[bb][ii] = res_temp[ii];
+    }
+  }
 }
 }
 

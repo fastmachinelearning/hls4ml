@@ -24,8 +24,12 @@ typedef ap_fixed<16,6> result_t;
 //typedef float result_t;
 #define N_FEATURES 3
 #define N_HIDDEN_FEATURES 4
+//2x2 example:
 #define N_NODES 4
 #define N_EDGES 4
+//3x3 example:
+//#define N_NODES 9
+//#define N_EDGES 18
 
 //hls-fpga-machine-learning insert layer-config
 struct graph_config1 : nnet::graph_config {
@@ -58,7 +62,7 @@ struct layer_config1 : nnet::layer_config {
 struct tanh_config1 : nnet::activ_config {
   static const unsigned n_batch = N_NODES;
   static const unsigned n_in = N_HIDDEN_FEATURES;
-  static const unsigned table_size = 4096;
+  static const unsigned table_size = 1024;
   static const unsigned io_type = nnet::io_parallel;
 };
 
@@ -78,7 +82,7 @@ struct layer_config2 : nnet::layer_config {
 struct tanh_config2 : nnet::activ_config {
   static const unsigned n_batch = N_EDGES;
   static const unsigned n_in = N_HIDDEN_FEATURES;
-  static const unsigned table_size = 4096;
+  static const unsigned table_size = 1024;
   static const unsigned io_type = nnet::io_parallel;
 };
 
@@ -98,7 +102,7 @@ struct layer_config3 : nnet::layer_config {
 struct sigmoid_config1 : nnet::activ_config {
   static const unsigned n_batch = N_EDGES;
   static const unsigned n_in = 1;
-  static const unsigned table_size = 4096;
+  static const unsigned table_size = 1024;
   static const unsigned io_type = nnet::io_parallel;
 };
 
@@ -118,14 +122,14 @@ struct layer_config4 : nnet::layer_config {
 struct tanh_config3 : nnet::activ_config {
   static const unsigned n_batch = N_NODES;
   static const unsigned n_in = N_HIDDEN_FEATURES;
-  static const unsigned table_size = 4096;
+  static const unsigned table_size = 1024;
   static const unsigned io_type = nnet::io_parallel;
 };
 
 struct tanh_config4 : nnet::activ_config {
   static const unsigned n_batch = N_NODES;
   static const unsigned n_in = N_HIDDEN_FEATURES;
-  static const unsigned table_size = 4096;
+  static const unsigned table_size = 1024;
   static const unsigned io_type = nnet::io_parallel;
 };
 
@@ -145,7 +149,7 @@ struct layer_config5 : nnet::layer_config {
 struct tanh_config5 : nnet::activ_config {
   static const unsigned n_batch = N_NODES;
   static const unsigned n_in = N_HIDDEN_FEATURES;
-  static const unsigned table_size = 4096;
+  static const unsigned table_size = 1024;
   static const unsigned io_type = nnet::io_parallel;
 };
 
