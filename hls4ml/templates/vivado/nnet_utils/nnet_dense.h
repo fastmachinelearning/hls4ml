@@ -128,9 +128,9 @@ void dense_latency(
         #pragma HLS ARRAY_PARTITION variable=biases complete
         #pragma HLS ARRAY_PARTITION variable=mult complete
         #pragma HLS ARRAY_PARTITION variable=acc complete
-
+  
         int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_out) / float(CONFIG_T::reuse_factor)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
-        #pragma HLS ALLOCATION instances=product limit=multiplier_limit function
+        #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
     } else if (CONFIG_T::io_type == io_serial){
         // Only reduce cycle_factor if n_out is evenly divisible by reuse_factor

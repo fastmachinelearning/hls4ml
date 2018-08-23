@@ -31,13 +31,24 @@ hidden_dim = 4
 n_iters = 1
 model = SegmentClassifier(input_dim=n_features, hidden_dim=hidden_dim, n_iters=n_iters)
 estim = Estimator(model, loss_func=nn.BCELoss(), cuda=cuda, l1= 0)
-#estim.load_checkpoint('model_3_1iteration.pt')
-estim.load_checkpoint('model_1iteration.pt')
+#estim.load_checkpoint('model_5_1iteration.pt')
+#estim.load_checkpoint('model_4_1iteration.pt')
+estim.load_checkpoint('model_3_1iteration.pt')
+#estim.load_checkpoint('model_1iteration.pt')
 
-#graph = load_graphs(['graph000001_3.npz'], SparseGraph)
-graph = load_graphs(['graph000001.npz'], SparseGraph)
+#graph = load_graphs(['graph000001_5.npz'], SparseGraph)
+#graph = load_graphs(['graph000001_4.npz'], SparseGraph)
+graph = load_graphs(['graph000001_3.npz'], SparseGraph)
+#graph = load_graphs(['graph000001.npz'], SparseGraph)
 
 g = graph[0]
+print("sparse X",g.X)
+print("sparse Ri_rows",len(g.Ri_rows))
+print("sparse Ri_cols",len(g.Ri_cols))
+print("sparse Ro_rows",len(g.Ro_rows))
+print("sparse Ro_cols",len(g.Ro_cols))
+print("spase y", g.y)
+
 g = graph_from_sparse(g)
 
 X = np_to_torch(g.X, volatile=False)
@@ -101,3 +112,4 @@ print("H", H)
 
 e = model.forward([X, Ri, Ro]) 
 print("e", e)
+print_array_to_cpp("we",torch_to_np(e), './')

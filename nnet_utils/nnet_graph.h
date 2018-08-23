@@ -30,11 +30,6 @@ namespace nnet {
   
   struct graph_config
   {
-    // Internal data type definitions
-    typedef float bias_t;
-    typedef float weight_t;
-    typedef float accum_t;
-    
     // Layer Sizes
     static const unsigned n_node = 4;
     static const unsigned n_edge = 4;
@@ -44,7 +39,6 @@ namespace nnet {
     // Resource reuse info
     static const unsigned io_type = io_parallel;
     static const unsigned reuse_factor = 1;
-    static const bool store_weights_in_bram = false;
     static const unsigned n_zeros = 0;
   };
 
@@ -119,6 +113,8 @@ namespace nnet {
 #pragma HLS ARRAY_PARTITION variable=mi complete
 #pragma HLS ARRAY_PARTITION variable=Rwo complete
 #pragma HLS ARRAY_PARTITION variable=Rwi complete
+      int multiplier_limit  = ceil(float(2*CONFIG_T::n_node*CONFIG_T::n_edge*CONFIG_T::n_input_dim) / float(CONFIG_T::reuse_factor));
+#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
       
     } else if (CONFIG_T::io_type == io_serial){
 #pragma HLS DATAFLOW
@@ -160,6 +156,7 @@ namespace nnet {
 
     // Multiply mi = Rwi bo
     // Multiply mo = Rwo bi
+    int counter = 0;
     for(int ii = 0; ii < CONFIG_T::n_node; ii++) {
       if (CONFIG_T::io_type == io_serial){
 #pragma HLS PIPELINE
@@ -167,9 +164,8 @@ namespace nnet {
       for(int jj = 0; jj < CONFIG_T::n_input_dim; jj++) {
 	mi[ii][jj] = 0;
 	mo[ii][jj] = 0;
-	//std::cout << "mi[ii][jj] = " << mi[ii][jj] << std::endl;
-	//std::cout << "mo[ii][jj] = " << mo[ii][jj] << std::endl;
 	for(int kk = 0; kk < CONFIG_T::n_edge; kk++) {
+	  counter+=1;
 	  mi[ii][jj] += Rwi[ii][kk] * bo[kk][jj];
 	  mo[ii][jj] += Rwo[ii][kk] * bi[kk][jj];
 	}
