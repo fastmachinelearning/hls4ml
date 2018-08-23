@@ -26,28 +26,22 @@
 #include "firmware/myproject.h"
 #include "nnet_helpers.h"
 
+
 int main(int argc, char **argv)
 {
-    
-    //hls-fpga-machine-learning insert data
-    //input_t  data_str[Y_INPUTS][N_CHAN];
-    //for(int i=0; i<Y_INPUTS; i++){
-    //    for(int j=0; j<N_CHAN; j++){
-    //	    data_str[i][j]=1;
-    //	}
-    //}
-  mytype data[N_LOOP][N_INPUTS] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};//, 11, 12, 13, 14, 15 ,16 ,17, 18, 19, 20};
-  mytype res[N_LOOP][N_OUTPUTS];
 
-    unsigned short size_in, size_out;
-    myproject(data, res, size_in, size_out);
+  //hls-fpga-machine-learning insert data
+  input_t  data_str[N_LOOP][N_INPUTS] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
-    // result_t res_expected[N_OUTPUTS] = {0.528625502721, 0.352447456382, 0.11757160967, 0.000254924257721, 8.45225898784e-05, 0.00101598437936};
+
+  result_t res_str[N_OUTPUTS] = {0};
+  unsigned short size_in, size_out;
+  myproject(data_str, res_str, size_in, size_out);
     
-    // for(int i=0; i<N_OUTPUTS; i++){
-    //     std::cout << res_str[i] << " (expected " << res_expected[i] << ", " << 100.0*((float)res_str[i]-(float)res_expected[i])/(float)res_expected[i] << " percent difference)" << std::endl;
-    // }
-    //std::cout << std::endl;
-    
-    return 0;
+  for(int i=0; i<N_OUTPUTS; i++){
+    std::cout << res_str[i] << " ";
+  }
+  std::cout << std::endl;
+  
+  return 0;
 }
