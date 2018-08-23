@@ -120,7 +120,7 @@ void simple_rnn(
         relu<typename CONFIG_T::state_t, typename CONFIG_T::state_t, ACT_CONFIG_T>(rawstate, newstate);
     }
     else if (CONFIG_T::activation_type == activ_sigmoid){
-      sigmoid<typename CONFIG_T::state_t, typename CONFIG_T::state_t, ACT_CONFIG_T>(rawstate, newstate);
+        sigmoid<typename CONFIG_T::state_t, typename CONFIG_T::state_t, ACT_CONFIG_T>(rawstate, newstate);
     }
     else if (CONFIG_T::activation_type == activ_tanh){
         tanh<typename CONFIG_T::state_t, typename CONFIG_T::state_t, ACT_CONFIG_T>(rawstate, newstate);
@@ -259,6 +259,49 @@ struct lstm_config
     static const unsigned n_zeros = 0;
     static const bool store_weights_in_bram = false;
 };
+template<class data_T, class res_T, typename CONFIG_T, typename ACT_CONFIG_T>
+void matrixmult(
+		data_T tmpdata[CONFIG_T::n_tot],
+		res_T  tmpres [CONFIG_T::n_state],
+		typename CONFIG_T::W_t     param_W[CONFIG_T::n_state][CONFIG_T::n_tot],
+		typename CONFIG_T::b_t     param_b[CONFIG_T::n_state]
+		) 
+{
+  // Operation: U*input
+  data_T inputcache;
+  typename CONFIG_T::W_t inputmult[CONFIG_T::n_in][CONFIG_T::n_state];
+  typename CONFIG_T::W_t inputacc [CONFIG_T::n_state];
+
+  const unsigned n_tot = CONFIG_T::n_in+CONFIG_T::n_state;
+  Prod1: for(int ii = 0; ii < n_tot; ii++) {
+    inputcache = tmpdata[ii];
+  Prod2: for(int jj = 0; jj < n_tot; jj++) {
+      inputmult[ii][jj] = inputcache * param_W[ii][jj];
+    }
+  }
+  for(int iacc = 0; iacc < CONFIG_T::n_state; iacc++) {
+    inputacc[iacc] = 0;
+  }
+ Accum1: for(int ii = 0; ii < n_tot; ii++) {
+  Accum2: for(int jj = 0; jj < CONFIG_T::n_state; jj++) {
+      inputacc[jj] += inputmult[ii][jj] + param_b[jj];
+    }
+  }
+  //std::cout << "Param B: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << param_b[ii] << " "; std::cout << "]" << std::endl;  
+    
+  // Run activation function
+  if (CONFIG_T::activation_type == activ_relu){
+    relu<res_T, typename CONFIG_T::W_t, ACT_CONFIG_T>(inputacc, tmpres);
+  }
+  else if (CONFIG_T::activation_type == activ_sigmoid){
+    sigmoid<res_T, typename CONFIG_T::W_t, ACT_CONFIG_T>(inputacc, tmpres);
+  }
+  else if (CONFIG_T::activation_type == activ_tanh){
+    tanh<res_T, typename CONFIG_T::W_t, ACT_CONFIG_T>(inputacc, tmpres);
+  }
+  std::cout << " Mul Activated State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << tmpres[ii] << " "; std::cout << "]" << std::endl;
+}
+
 // Long Short term Memory NN (LSTM)
 // Resources: 
 // https://github.com/nicodjimenez/lstm/blob/master/lstm.py

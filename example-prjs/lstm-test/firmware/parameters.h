@@ -87,5 +87,4 @@ struct softmax_config2 : nnet::activ_config {
         static const unsigned io_type = nnet::io_parallel;
         static const unsigned activation_type = nnet::activ_softmax;
         };
-
 #endif 
