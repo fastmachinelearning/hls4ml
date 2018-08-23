@@ -24,6 +24,6 @@ Examples are in the directory: `example-keras-model-files`
 # Running HLS 
 
 ```
-cd my-hls-dir-test
+cd my-hls-test
 vivado_hls -f build_prj.tcl
 ```

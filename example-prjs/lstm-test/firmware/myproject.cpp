@@ -21,52 +21,78 @@
 #include "parameters.h"
 #include "myproject.h"
 
-
 #include "nnet_layer.h"
 #include "nnet_conv.h"
-#include "nnet_activation.h"
+#include "nnet_conv2d.h"
 #include "nnet_recursive.h"
+#include "nnet_activation.h"
 
 //hls-fpga-machine-learning insert weights
-mytype w_F[N_STATE][N_STATE+N_INPUTS] = {1, 2, 3, 4, 5, 6, 7, 8};
-mytype w_I[N_STATE][N_STATE+N_INPUTS] = {1, 2, 3, 4, 5, 6, 7, 8};
-mytype w_O[N_STATE][N_STATE+N_INPUTS] = {1, 2, 3, 4, 5, 6, 7, 8};
-mytype w_G[N_STATE][N_STATE+N_INPUTS] = {1, 2, 3, 4, 5, 6, 7, 8};
+#include "weights/w1.h"
+#include "weights/b1.h"
+#include "weights/wr1.h"
+#include "weights/w2.h"
+#include "weights/b2.h"
 
-mytype b_F[N_STATE] = {1, 2};
-mytype b_I[N_STATE] = {1, 2};
-mytype b_O[N_STATE] = {1, 2};
-mytype b_G[N_STATE] = {1, 2};
 void myproject(
-	       mytype data[N_LOOP][N_INPUTS],
-	       mytype res [N_LOOP][N_OUTPUTS],
-	       unsigned short &const_size_in,
-	       unsigned short &const_size_out)
+		  input_t data[N_LOOP][N_INPUTS],
+		  result_t res[N_OUTPUTS],
+		  unsigned short &const_size_in,
+		  unsigned short &const_size_out)
 {
 
-    mytype s_state[N_STATE]            = {0,0};
-    mytype tmp_state[N_STATE]          = {0,0};
-    #pragma HLS ARRAY_PARTITION variable=s_state   dim=0 complete
-    #pragma HLS ARRAY_PARTITION variable=tmp_state dim=0 complete
-    #pragma HLS ARRAY_PARTITION variable=data      dim=0 complete 
-    #pragma HLS ARRAY_PARTITION variable=res       dim=0 complete 
-    #pragma HLS INTERFACE ap_vld port=data,res
-    #pragma HLS PIPELINE
-    const_size_in   = 2;
-    const_size_out  = 2;
+    //hls-fpga-machine-learning insert IO
+    #pragma HLS ARRAY_RESHAPE variable=data complete dim=0 
+    #pragma HLS ARRAY_RESHAPE variable=res complete dim=0 
+    #pragma HLS INTERFACE ap_vld port=data,res 
+    #pragma HLS PIPELINE 
 
-   // ****************************************
-   // NETWORK INSTANTIATION
-   // ****************************************
-   //hls-fpga-machine-learning insert layers
-   //First layer we pass a temporary state for H as 0s
-   std::cout << "Data: [ "; for (int ii = 0; ii < N_INPUTS; ii++) std::cout << data[0][ii] << " "; std::cout << "]" << std::endl;
-   nnet::lstm<mytype, mytype, config1, config1_activ>(data[0], res[0], s_state, tmp_state,  w_F, w_I, w_G, w_O, b_F, b_I, b_G, b_O);
-   std::cout << "Res: [ "; for (int ii = 0; ii < N_INPUTS; ii++) std::cout << res[0][ii] << " "; std::cout << "]" << std::endl;
-   for(int iloop = 1; iloop < N_LOOP; iloop++) {
-        std::cout << std::endl << "********* Loop " << iloop << " ************" << std::endl;
-        std::cout << "Data: [ "; for (int ii = 0; ii < N_INPUTS; ii++) std::cout << data[iloop][ii] << " "; std::cout << "]" << std::endl;
-	nnet::lstm<mytype, mytype, config1, config1_activ>(data[iloop], res[iloop], s_state, res[iloop-1],  w_F, w_I, w_G, w_O, b_F, b_I, b_G, b_O);
-        std::cout << "Res: [ "; for (int ii = 0; ii < N_INPUTS; ii++) std::cout << res[iloop][ii] << " "; std::cout << "]" << std::endl;
+
+    const_size_in   = N_INPUTS*N_LOOP;
+    const_size_out  = N_OUTPUTS;
+
+    // ****************************************
+    // NETWORK INSTANTIATION
+    // ****************************************
+
+    //hls-fpga-machine-learning insert layers
+
+    static    layer1_t layer1_out[N_STATE_1];
+    #pragma HLS ARRAY_PARTITION variable=layer1_out complete dim=0
+    for(int ii = 0; ii < N_STATE_1; ii++) layer1_out[ii] = 0;
+    for(int iloop = 0; iloop < N_LOOP; iloop++) { 
+       nnet::lstm_static<input_t, input_t, config1,relu_config1,sigmoid_config1_lstm>(1,data[iloop],layer1_out,w1,wr1,b1);
+
     }
+
+    result_t logits2[N_OUTPUTS];
+    #pragma HLS ARRAY_PARTITION variable=logits2 complete dim=0
+    compute_layer2(layer1_out, logits2);
+    nnet::softmax<result_t, result_t, softmax_config2>(logits2, res);
+
+
 }
+
+void lstm_matrixmult_1 ( 
+          input_t  data              [N_INPUTS],
+          input_t  data_recurr       [N_STATE_1],
+          layer1_t logits1     [N_STATE_1*4],
+          layer1_t logitsnob1  [N_STATE_1*4],
+          weight_default_t W1   [N_INPUTS*N_STATE_1*4],
+          weight_default_t Wr1  [N_STATE_1*N_STATE_1*4],
+          weight_default_t b1   [N_STATE_1*4]) { 
+    nnet::matrixmult_Wb<input_t, layer1_t, 6,64, config1>(data      ,logits1   , W1,b1); 
+    nnet::matrixmult_W<input_t, layer1_t, 16,64, config1>(data_recurr,logitsnob1, Wr1);
+}
+
+
+void compute_layer2(layer1_t layer1_out[N_LAYER_1], result_t logits2[N_OUTPUTS]) {
+    result_t logits2_0[3];
+    #pragma HLS ARRAY_PARTITION variable=logits2_0 complete dim=0
+    result_t logits2_1[2];
+    #pragma HLS ARRAY_PARTITION variable=logits2_1 complete dim=0
+    nnet::compute_sublayer<layer1_t, result_t, config2_0>(layer1_out, logits2_0, w2, b2);
+    nnet::compute_sublayer<layer1_t, result_t, config2_1>(layer1_out, logits2_1, w2, b2);
+    nnet::merge<result_t, 3, 2>(logits2_0, logits2_1, logits2);
+}
+

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import h5py
 import os
@@ -7,66 +8,15 @@ import argparse
 import yaml
 import sys
 from shutil import copyfile
+import math
+
+#MAXMULT = 512
+#MAXMULT = 1024
+MAXMULT = 1024
 
 filedir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,os.path.join(filedir, "..", "hls-writer"))
-from hls_writer import hls_writer
-
-#######################################
-## Config module
-#######################################
-def parse_config(config_file) :
-
-    print "Loading configuration from " + str(config_file)
-    config = open(config_file, 'r')
-    return yaml.load(config)
-
-#######################################
-## Print a bias or weight array to C++
-#######################################
-def print_array_to_cpp(name, a, odir ):
-
-    #count zeros
-    zero_ctr = 0;
-    for x in np.nditer(a, order='C'):
-        if x == 0: 
-            zero_ctr += 1
-
-    #put output in subdir for tarballing later
-    f=open("{}/firmware/weights/{}.h".format(odir,name),"w")
-
-    #meta data
-    f.write("//Numpy array shape {}\n".format(a.shape))
-    f.write("//Min {}\n".format(np.min(a)))
-    f.write("//Max {}\n".format(np.max(a)))
-    f.write("//Number of zeros {}\n".format(zero_ctr))
-    f.write("\n")
-    
-    #c++ variable 
-    if "w" in name: 
-        f.write("weight_default_t {}".format(name))
-    elif "b" in name: 
-        f.write("bias_default_t {}".format(name))
-    else:
-        raise Exception('ERROR: Unkown weights type')
-
-    for x in a.shape:
-        f.write("[{}]".format(x))
-    f.write(" = {")
-    
-    #fill c++ array.  
-    #not including internal brackets for multidimensional case
-    i=0;
-    for x in np.nditer(a, order='C'):
-        if i==0:
-            f.write("{}".format(x))
-        else:
-            f.write(", {}".format(x))
-        i=i+1
-    f.write("};\n")
-    f.close()
-
-    return zero_ctr;
+from hls_writer import parse_config, print_array_to_cpp, hls_writer
 
 ############################################################################################
 ## M A I N
@@ -106,14 +56,40 @@ def main():
     #Extract model architecture from json
     with open( yamlConfig['KerasJson'] ) as json_file:
         model_arch = json.load(json_file)
-    #print(model_arch)
+    #Define supported laers
+    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'Conv1D', 'Conv2D','LSTM']
 
     #Define layers to skip for conversion to HLS
-    skip_layers = ['InputLayer', 'Dropout', 'Flatten'] 
+    skip_layers = ['InputLayer','Dropout', 'Flatten'] 
 
     #Loop through layers
-    layer_counter = 0;
-    for keras_layer in model_arch["config"]["layers"]:
+    layer_counter = 0
+    input_layer = {}
+
+    layer_config = None
+    if model_arch['class_name'] == 'Sequential':
+        print('Interpreting Sequential')
+        layer_config = model_arch["config"]
+    elif model_arch['class_name'] == 'Model':
+        print('Interpreting Model')
+        layer_config = model_arch["config"]["layers"]
+
+    # Get input shape and check for unsupported layer type
+    current_shape = None
+    for keras_layer in layer_config:
+        print(keras_layer["class_name"])
+        if keras_layer["class_name"] not in supported_layers:
+            raise Exception('ERROR: Unsupported layer type: {}'.format(keras_layer["class_name"]))
+        if 'batch_input_shape' in keras_layer['config']:
+            current_shape = keras_layer['config']['batch_input_shape'] # [None, 100, 7]    
+
+    print('Input shape:', current_shape)
+
+    print('Topology:')
+    for keras_layer in layer_config:
+        print(keras_layer["class_name"],"Layer")
+        if keras_layer["class_name"] is 'Flatten':
+            current_shape = [current_shape[0], np.prod(current_shape[1:])]
         if keras_layer["class_name"] in skip_layers:
             continue 
 
@@ -123,35 +99,157 @@ def main():
         layer = {}
 
         #Extract name for finding weights and biases
-        layer['name']=keras_layer['name']
+        layer['name']=keras_layer['config']['name']
+        layer['class_name']=keras_layer['class_name']
 
+        print("Items",keras_layer["config"].items())
         #Extract type of activation and number of nodes
         for config,config_value in keras_layer["config"].items():
             if(config=="activation"):
                 layer['activation']=config_value
+            if(config=="recurrent_activation"):
+                layer['recurrent_activation']=config_value
             #if(config=="units"):
                 #print("PARSED NUM OF NODES",config_value)
-
+ 
         #Translate weights and biases from h5 file
-        weights = h5File['/{}/{}/kernel:0'.format(layer['name'],layer['name'])][()]
-        biases = h5File['/{}/{}/bias:0'.format(layer['name'],layer['name'])][()]
+        if keras_layer["class_name"] == 'LSTM':
+            recurrent_weights = h5File['/model_weights/{}/{}/recurrent_kernel:0'.format(layer['name'],layer['name'])][()]
+        weights = h5File['/model_weights/{}/{}/kernel:0'.format(layer['name'],layer['name'])][()]
+        biases = h5File['/model_weights/{}/{}/bias:0'.format(layer['name'],layer['name'])][()]
         cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
         print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
         layer['weights_n_zeros'] = cur_n_zeros 
-
+        if keras_layer["class_name"] == 'LSTM':
+            cur_n_zeros = print_array_to_cpp("wr{}".format(layer_counter), recurrent_weights, yamlConfig['OutputDir'])
+            layer['recurr_weights_n_zeros'] = cur_n_zeros 
+        
+        # Default one layer call
+        layer['n_part'] = 1
+        
         #Get number of inputs and outputs
         #(We take it from the weights to avoid dealing with InputLayer and Flatten details)
-        shape_count = 0#more elegant way of doing this?
-        for x in weights.shape:
-            if(shape_count==0):
-                layer['n_in']=x
-            elif(shape_count==1):
-                layer['n_out']=x
-            else :
-                raise Exception('ERROR: WRONG DIMENSIONS')
-            shape_count = shape_count+1
+        if layer['class_name']=='Dense' :
+            layer['n_in']=weights.shape[0]
+            layer['n_out']=weights.shape[1]
+            # if this layer is too big (more than MAXMULT multiplications); 
+            # break it out into chunks!
+            layer['n_subout']=[weights.shape[1]]
+            if layer['n_in']*layer['n_out']>MAXMULT:
+                n_subout = int(MAXMULT/layer['n_in'])
+                n_totout = 0
+                layer['n_subout'] = []
+                layer['n_part'] = 0
+                while n_totout < layer['n_out']:
+                    if n_totout + n_subout <= layer['n_out']:
+                        layer['n_subout'].append(n_subout)
+                        n_totout += n_subout                    
+                    else:
+                        layer['n_subout'].append(layer['n_out']-n_totout)
+                        n_totout += layer['n_out']-n_totout
 
-        print layer
+                    layer['n_part'] += 1
+                
+            current_shape = [current_shape[0], layer['n_out']]
+        elif layer['class_name']=='LSTM':
+            layer['n_in']=weights.shape[0]
+            layer['n_out']=weights.shape[1]
+            layer['n_subout']=[weights.shape[1]]
+            if layer['n_in']*layer['n_out']>MAXMULT:
+                n_subout = int(MAXMULT/layer['n_in'])
+                n_totout = 0
+                layer['n_subout'] = []
+                layer['n_part'] = 0
+                while n_totout < layer['n_out']:
+                    if n_totout + n_subout <= layer['n_out']:
+                        layer['n_subout'].append(n_subout)
+                        n_totout += n_subout
+                    else:
+                        layer['n_subout'].append(layer['n_out']-n_totout)
+                        n_totout += layer['n_out']-n_totout
+                    layer['n_part'] += 1
+            layer['recurr_n_in']=recurrent_weights.shape[0]
+            layer['recurr_n_out']=recurrent_weights.shape[1]
+            layer['recurr_n_subout']=[recurrent_weights.shape[1]]
+            layer['recurr_n_part'] = 1
+            if layer['recurr_n_in']*layer['recurr_n_out']>MAXMULT:
+                n_subout = int(MAXMULT/layer['recurr_n_in'])
+                n_totout = 0
+                layer['recurr_n_subout'] = []
+                layer['recurr_n_part'] = 0
+                while n_totout < layer['recurr_n_out']:
+                    if n_totout + n_subout <= layer['recurr_n_out']:
+                        layer['recurr_n_subout'].append(n_subout)
+                        n_totout += n_subout
+                    else:
+                        layer['recurr_n_subout'].append(layer['recurr_n_out']-n_totout)
+                        n_totout += layer['recurr_n_out']-n_totout
+                    layer['recurr_n_part'] += 1
+        elif layer['class_name']=='Conv1D':
+            # weights.shape = (filter_width, n_channels, n_filters)
+            layer['y_in']=current_shape[1]
+            layer['y_filt']=weights.shape[0] # or keras_layer['config']['kernel_size']
+            layer['n_chan']=weights.shape[1] 
+            layer['n_filt']=weights.shape[2] # or keras_layer['config']['filters']
+            layer['stride']=keras_layer['config']['strides'][0]
+            layer['padding']=keras_layer['config']['padding']
+            if layer['padding']=='same':
+                in_width = current_shape[1]
+                layer['y_out'] = int(math.ceil(float(in_width) / float(layer['stride'])))
+                if (in_width % layer['stride'] == 0):
+                    pad_along_width = max(layer['y_filt'] - layer['stride'], 0)
+                else:
+                    pad_along_width = max(layer['y_filt'] - (in_width % layer['stride']), 0)
+                layer['pad_left']  = pad_along_width // 2
+                layer['pad_right']  = pad_along_width - layer['pad_left']
+            elif layer['padding']=='valid':
+                in_width = current_shape[1]
+                layer['y_out'] = int(math.ceil(float(in_width - layer['y_filt'] + 1) / float(layer['stride'])))
+                layer['pad_left'] = 0
+                layer['pad_right'] = 0
+            current_shape=[current_shape[0], layer['y_out'], layer['n_filt']]
+        elif layer['class_name']=='Conv2D':
+            layer['in_height']=current_shape[1]
+            layer['in_width']=current_shape[2]
+            layer['filt_height']=weights.shape[0]
+            layer['filt_width']=weights.shape[1]
+            layer['n_chan']=weights.shape[2]
+            layer['n_filt']=weights.shape[3]
+            layer['stride_height']=keras_layer['config']['strides'][0]
+            layer['stride_width']=keras_layer['config']['strides'][1]
+            layer['padding']=keras_layer['config']['padding']
+            if layer['padding']=='same':
+                #Height
+                in_height = current_shape[1]
+                layer['out_height'] = int(math.ceil(float(in_height) / float(layer['stride_height'])))
+                if (in_height % layer['stride_height'] == 0):
+                    pad_along_height = max(layer['filt_height'] - layer['stride_height'], 0)
+                else:
+                    pad_along_height = max(layer['filt_height'] - (in_height % layer['stride_height']), 0)
+                layer['pad_top']  = pad_along_height // 2
+                layer['pad_bottom']  = pad_along_height - layer['pad_top']
+                #Width
+                in_width = current_shape[2]
+                layer['out_width'] = int(math.ceil(float(in_width) / float(layer['stride_width'])))
+                if (in_width % layer['stride_width'] == 0):
+                    pad_along_width = max(layer['filt_width'] - layer['stride_width'], 0)
+                else:
+                    pad_along_width = max(layer['filt_width'] - (in_width % layer['stride_width']), 0)
+                layer['pad_left']  = pad_along_width // 2
+                layer['pad_right']  = pad_along_width - layer['pad_left']
+            elif layer['padding']=='valid':
+                in_height = current_shape[1]
+                in_width = current_shape[2]
+                layer['out_width'] = int(math.ceil(float(in_width - layer['filt_width'] + 1) / float(layer['stride_width'])))
+                layer['out_height'] = int(math.ceil(float(in_height - layer['filt_height'] + 1) / float(layer['stride_height'])))
+                layer['pad_top'] = 0
+                layer['pad_bottom'] = 0
+                layer['pad_left'] = 0
+                layer['pad_right'] = 0
+                current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
+        print('Layer name: {}, layer type: {}, current shape: {}, number of zeros: {}'.format(layer['name'], layer['class_name'], current_shape, cur_n_zeros))
+        if layer['n_part'] > 1: 
+            print(' -> layer will be divided into {} sublayer calls; output neurons: {} '.format(layer['n_part'], layer['n_subout']))
         layer_list.append( layer )
         
 
@@ -165,4 +263,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main();    
+    main()

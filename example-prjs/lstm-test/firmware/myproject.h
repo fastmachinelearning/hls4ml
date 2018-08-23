@@ -29,9 +29,20 @@
 
 // Prototype of top level function for C-synthesis
 void myproject(
-      mytype data[N_LOOP][N_INPUTS],
-      mytype res[N_LOOP][N_OUTPUTS],
+      input_t data[N_LOOP][N_INPUTS],
+      result_t res[N_OUTPUTS],
       unsigned short &const_size_in,
       unsigned short &const_size_out);
 
+void lstm_matrixmult_1 ( 
+          input_t  data              [N_INPUTS],
+          input_t  data_recurr       [N_STATE_1],
+          layer1_t logits1     [N_STATE_1*4],
+          layer1_t logitsnob1  [N_STATE_1*4],
+          weight_default_t W1   [N_INPUTS*N_STATE_1*4],
+          weight_default_t Wr1  [N_STATE_1*N_STATE_1*4],
+          weight_default_t b1   [N_STATE_1*4]); 
+void compute_layer2(layer1_t layer1_out[N_LAYER_1], result_t logits2[N_OUTPUTS]);
+
 #endif
+
