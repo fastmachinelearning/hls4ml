@@ -74,9 +74,10 @@ void compute_layer(
         #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
     } else if (CONFIG_T::io_type == io_serial){
-        #pragma HLS ARRAY_RESHAPE variable=weights complete dim=1
-        #pragma HLS ARRAY_PARTITION variable=mult complete dim=1
-        #pragma HLS ARRAY_PARTITION variable=acc complete dim=1
+        unsigned int cycle_factor = CONFIG_T::n_out;
+        #pragma HLS ARRAY_PARTITION variable=weights cyclic factor=cycle_factor
+        #pragma HLS ARRAY_PARTITION variable=mult cyclic factor=cycle_factor
+        #pragma HLS ARRAY_PARTITION variable=acc complete
         #pragma HLS DATAFLOW
         #pragma HLS STREAM variable=mult depth=1
         #pragma HLS STREAM variable=acc depth=1
