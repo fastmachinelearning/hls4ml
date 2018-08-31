@@ -91,32 +91,36 @@ void conv_1d(
 	     typename CONFIG_T::bias_t    biases[CONFIG_T::n_filt])
 {
 
+#ifdef __SYNTHESIS__
     typename CONFIG_T::accum_t mult[CONFIG_T::y_out * CONFIG_T::n_filt * CONFIG_T::n_chan * CONFIG_T::y_filt];
+#else
+    typename CONFIG_T::accum_t *mult = new typename CONFIG_T::accum_t[CONFIG_T::y_out * CONFIG_T::n_filt * CONFIG_T::n_chan * CONFIG_T::y_filt];
+#endif
     typename CONFIG_T::accum_t acc[CONFIG_T::y_out][CONFIG_T::n_filt];
 
     #pragma HLS ARRAY_PARTITION variable=mult complete dim=0
     #pragma HLS ARRAY_PARTITION variable=acc complete dim=0
-    
-    // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases 
+
+    // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
     #pragma HLS function_instantiate variable=weights,biases
-    
+
     // Parallel mode
     #pragma HLS PIPELINE
     #pragma HLS ARRAY_PARTITION variable=biases complete dim=0
-  
+
     // Limit multipliers to control parallelization
     const int multiplier_limit = compute_multiplier_limit<CONFIG_T>(weights);
     #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
-    
+
     // Convolve, saving all multiplication results to accumulate later
     ConvOut: for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
         ConvFilt: for(int ff = 0; ff < CONFIG_T::n_filt; ff++){
             ConvChan: for(int cc = 0; cc < CONFIG_T::n_chan; cc++){
                 ConvMult: for(int jj = 0; jj < CONFIG_T::y_filt; jj++){
-                    
+
                     int index_mult   = ii*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::y_filt + ff*CONFIG_T::n_chan*CONFIG_T::y_filt + cc*CONFIG_T::y_filt + jj;
                     int index_weight = jj*CONFIG_T::n_chan*CONFIG_T::n_filt + cc*CONFIG_T::n_filt + ff;
-                    
+
                     if((ii*CONFIG_T::stride+jj) < CONFIG_T::pad_left || (ii*CONFIG_T::stride+jj) >= (CONFIG_T::pad_left + CONFIG_T::y_in)){
                         mult[index_mult] = 0;
                     }
@@ -136,7 +140,7 @@ void conv_1d(
 		}
     }
 
-    
+
     // Accumulate multiplication result
     AccumOut: for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
         AccumFilt: for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
@@ -150,13 +154,17 @@ void conv_1d(
 		}//end filter loop
     }//end output loop
 
-    
-     // Cast to "res_t" type 
+
+     // Cast to "res_t" type
     for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
 		for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
 	    	res[ii][ff] = (res_T)(acc[ii][ff]);
 		}
     }
+
+#ifndef __SYNTHESIS__
+    delete[] mult;
+#endif
 }
 
 
