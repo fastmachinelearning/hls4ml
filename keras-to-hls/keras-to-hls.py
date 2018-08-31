@@ -54,7 +54,7 @@ def main():
     if not os.path.isdir("{}/firmware/weights".format(yamlConfig['OutputDir'])):
         os.makedirs("{}/firmware/weights".format(yamlConfig['OutputDir']))
 
-    h5File = h5py.File( yamlConfig['KerasH5'] )
+    h5File = h5py.File( yamlConfig['KerasH5'], 'r' )
 
     #This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
