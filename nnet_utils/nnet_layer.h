@@ -74,13 +74,23 @@ void compute_layer(
         #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
     } else if (CONFIG_T::io_type == io_serial){
-        unsigned int cycle_factor = CONFIG_T::n_out;
+        // Only reduce cycle_factor if n_out is evenly divisible by reuse_factor
+        // Otherwise, HLS wont be happy
+        int cycle_factor = CONFIG_T::n_out;
+        float reused_cycle = CONFIG_T::n_out / CONFIG_T::reuse_factor;
+        if (reused_cycle == ceil(reused_cycle)){
+            // Dont use "ceil" here; as of 2018.2, HLS crashes mysteriously
+            cycle_factor = cycle_factor / CONFIG_T::reuse_factor;
+        }
         #pragma HLS ARRAY_PARTITION variable=weights cyclic factor=cycle_factor
         #pragma HLS ARRAY_PARTITION variable=mult cyclic factor=cycle_factor
         #pragma HLS ARRAY_PARTITION variable=acc complete
         #pragma HLS DATAFLOW
         #pragma HLS STREAM variable=mult depth=1
         #pragma HLS STREAM variable=acc depth=1
+        if (CONFIG_T::store_weights_in_bram){
+            #pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
+        }
     }
     
     // Do the matrix-multiply
