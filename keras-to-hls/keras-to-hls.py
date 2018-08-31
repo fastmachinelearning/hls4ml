@@ -57,7 +57,7 @@ def main():
     with open( yamlConfig['KerasJson'] ) as json_file:
         model_arch = json.load(json_file)
     #Define supported laers
-    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'Conv1D', 'Conv2D','LSTM']
+    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'Conv1D', 'Conv2D','LSTM', 'GRU']
 
     #Define layers to skip for conversion to HLS
     skip_layers = ['InputLayer','Dropout', 'Flatten'] 
@@ -113,16 +113,24 @@ def main():
                 #print("PARSED NUM OF NODES",config_value)
  
         #Translate weights and biases from h5 file
-        if keras_layer["class_name"] == 'LSTM':
+        if keras_layer["class_name"] == 'LSTM' or keras_layer["class_name"] == 'GRU':
             recurrent_weights = h5File['/model_weights/{}/{}/recurrent_kernel:0'.format(layer['name'],layer['name'])][()]
+            if keras_layer["class_name"] == 'GRU':
+                recurrent_weights_0 = recurrent_weights[:,0:recurrent_weights.shape[0]*2]
+                recurrent_weights_1 = recurrent_weights[:,recurrent_weights.shape[0]*2:recurrent_weights.shape[0]*3]
         weights = h5File['/model_weights/{}/{}/kernel:0'.format(layer['name'],layer['name'])][()]
         biases = h5File['/model_weights/{}/{}/bias:0'.format(layer['name'],layer['name'])][()]
         cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
         print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
         layer['weights_n_zeros'] = cur_n_zeros 
-        if keras_layer["class_name"] == 'LSTM':
+        if keras_layer["class_name"] == 'LSTM' or keras_layer["class_name"] == 'GRU':
             cur_n_zeros = print_array_to_cpp("wr{}".format(layer_counter), recurrent_weights, yamlConfig['OutputDir'])
             layer['recurr_weights_n_zeros'] = cur_n_zeros 
+        if keras_layer["class_name"] == 'GRU':
+            cur_n_zeros = print_array_to_cpp("wr0{}".format(layer_counter), recurrent_weights_0, yamlConfig['OutputDir'])
+            layer['recurr1_weights_n_zeros'] = cur_n_zeros 
+            cur_n_zeros = print_array_to_cpp("wr1{}".format(layer_counter), recurrent_weights_1, yamlConfig['OutputDir'])
+            layer['recurr2_weights_n_zeros'] = cur_n_zeros 
         
         # Default one layer call
         layer['n_part'] = 1
@@ -151,7 +159,7 @@ def main():
                     layer['n_part'] += 1
                 
             current_shape = [current_shape[0], layer['n_out']]
-        elif layer['class_name']=='LSTM':
+        elif (layer['class_name']=='LSTM' or keras_layer["class_name"] == 'GRU'):
             layer['n_in']=weights.shape[0]
             layer['n_out']=weights.shape[1]
             layer['n_subout']=[weights.shape[1]]
@@ -185,6 +193,44 @@ def main():
                         layer['recurr_n_subout'].append(layer['recurr_n_out']-n_totout)
                         n_totout += layer['recurr_n_out']-n_totout
                     layer['recurr_n_part'] += 1
+            if keras_layer["class_name"] == 'GRU':
+            #computation for the two GRU matrices
+                layer['recurr1_n_in']=recurrent_weights_0.shape[0]
+                layer['recurr1_n_out']=recurrent_weights_0.shape[1]
+                layer['recurr1_n_subout']=[recurrent_weights_0.shape[1]]
+                layer['recurr1_n_part'] = 1
+                if layer['recurr1_n_in']*layer['recurr1_n_out']>MAXMULT:
+                    n_subout = int(MAXMULT/layer['recurr1_n_in'])
+                    n_totout = 0
+                    layer['recurr1_n_subout'] = []
+                    layer['recurr1_n_part'] = 0
+                    while n_totout < layer['recurr1_n_out']:
+                        if n_totout + n_subout <= layer['recurr1_n_out']:
+                            layer['recurr1_n_subout'].append(n_subout)
+                            n_totout += n_subout
+                        else:
+                            layer['recurr1_n_subout'].append(layer['recurr1_n_out']-n_totout)
+                            n_totout += layer['recurr1_n_out']-n_totout
+                        layer['recurr1_n_part'] += 1
+            #This is pretty messy (2nd GRU matrix)
+                layer['recurr2_n_in']=recurrent_weights_1.shape[0]
+                layer['recurr2_n_out']=recurrent_weights_1.shape[1]
+                layer['recurr2_n_subout']=[recurrent_weights_1.shape[1]]
+                layer['recurr2_n_part'] = 1
+                if layer['recurr2_n_in']*layer['recurr2_n_out']>MAXMULT:
+                    n_subout = int(MAXMULT/layer['recurr2_n_in'])
+                    n_totout = 0
+                    layer['recurr2_n_subout'] = []
+                    layer['recurr2_n_part'] = 0
+                    while n_totout < layer['recurr2_n_out']:
+                        if n_totout + n_subout <= layer['recurr2_n_out']:
+                            layer['recurr2_n_subout'].append(n_subout)
+                            n_totout += n_subout
+                        else:
+                            layer['recurr2_n_subout'].append(layer['recurr2_n_out']-n_totout)
+                            n_totout += layer['recurr2_n_out']-n_totout
+                        layer['recurr2_n_part'] += 1
+
         elif layer['class_name']=='Conv1D':
             # weights.shape = (filter_width, n_channels, n_filters)
             layer['y_in']=current_shape[1]
