@@ -616,8 +616,8 @@ def print_array_to_cpp(name, a, odir ):
 
     #meta data
     f.write("//Numpy array shape {}\n".format(a.shape))
-    f.write("//Min {}\n".format(np.min(a)))
-    f.write("//Max {}\n".format(np.max(a)))
+    f.write("//Min {:.12f}\n".format(np.min(a)))
+    f.write("//Max {:.12f}\n".format(np.max(a)))
     f.write("//Number of zeros {}\n".format(zero_ctr))
     f.write("\n")
     
@@ -639,9 +639,9 @@ def print_array_to_cpp(name, a, odir ):
     i=0
     for x in np.nditer(a, order='C'):
         if i==0:
-            f.write("{}".format(x))
+            f.write("%.12f" % x)
         else:
-            f.write(", {}".format(x))
+            f.write(", %.12f" % x)
         i=i+1
     f.write("};\n")
     f.close()
