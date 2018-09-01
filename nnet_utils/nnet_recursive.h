@@ -553,9 +553,6 @@ template<class data_T, class res_T, typename CONFIG_T, typename ACT_CONFIG_T, ty
   #pragma HLS ARRAY_PARTITION variable=tmpres_h        complete
   #pragma HLS ARRAY_PARTITION variable=inputacc_zr     complete
   #pragma HLS ARRAY_PARTITION variable=inputacc_h      complete
-  for(int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
-    h_state[iacc] = h_newstate[iacc];
-  }
   gru_matrixmult_1_0(data,h_state,tmpres,tmpres_state_zr,param,param_zr,param_b);
   for(int iacc = 0; iacc < (2*CONFIG_T::n_state); iacc++) {
     int index = iacc; 
@@ -593,8 +590,11 @@ template<class data_T, class res_T, typename CONFIG_T, typename ACT_CONFIG_T, ty
   //Mix the stat with the previous state
   for(int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
 #pragma HLS UNROLL
-    h_newstate[iacc] =  tmpres_h[iacc]*(1-tmpres_zr[iacc]) + h_state[iacc]*tmpres_zr[iacc];
-    h_state[iacc]    =  tmpres_h[iacc]*(1-tmpres_zr[iacc]) + h_state[iacc]*tmpres_zr[iacc];
+    h_state[iacc]       =  tmpres_h[iacc]*(1-tmpres_zr[iacc]) + h_state[iacc]*tmpres_zr[iacc];
+  }
+  for(int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
+#pragma HLS UNROLL
+    h_newstate[iacc]    =  h_static[iacc];
   }
   std::cout << "Post-State: h [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
 }
