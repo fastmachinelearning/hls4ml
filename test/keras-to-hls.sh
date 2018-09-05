@@ -85,12 +85,12 @@ do
 
    echo "Creating config file for model '${model}'"
    base=`echo "${h5}" | sed -e 's/\(_weights\)*$//g'`
-   file="${basedir}/${base}-${pycmd}.yml"
+   file="${basedir}/${base}-${pycmd}-${io}.yml"
 
    # This scheme assumes base output directory is one level deep 
    echo "KerasJson: ../../keras-to-hls/example-keras-model-files/${name}.json" > ${file}
    echo "KerasH5:   ../../keras-to-hls/example-keras-model-files/${h5}.h5" >> ${file}
-   echo "OutputDir: ${base}-${pycmd}" >> ${file}
+   echo "OutputDir: ${base}-${pycmd}-${io}" >> ${file}
    echo "ProjectName: myproject" >> ${file}
    echo "XilinxPart: ${xilinxpart}" >> ${file}
    echo "ClockPeriod: ${clock}" >> ${file}
