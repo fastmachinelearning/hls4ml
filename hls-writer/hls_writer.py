@@ -148,7 +148,8 @@ def hls_writer(layer_list, yamlConfig):
                     if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=logits{} complete dim=0\n'.format(i)
                     if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=logits{} depth=1\n'.format(i)
                     
-                    if layer_list[i-1]['n_part']==1: 
+                    if layer_list[i-1]['n_part']==1 or yamlConfig["IOType"]=="io_serial":
+                        # Use one layer if there's only 1 partition, or if we're using serial mode
                         newline += '    nnet::compute_layer<{}, {}, config{}>({}, logits{}, w{}, b{});\n'.format(input_type, output_type, i, input_object, i, i, i, i)
                     else:
                         # initialize arrays for sublayer outputs
