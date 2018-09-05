@@ -134,7 +134,7 @@ def main():
             # if this layer is too big (more than MAXMULT multiplications); 
             # break it out into chunks!
             layer['n_subout']=[weights.shape[1]]
-            if layer['n_in']*layer['n_out']>MAXMULT:
+            if layer['n_in']*layer['n_out']>MAXMULT and yamlConfig["IOType"] != "io_serial":
                 n_subout = int(MAXMULT/layer['n_in'])
                 n_totout = 0
                 layer['n_subout'] = []
