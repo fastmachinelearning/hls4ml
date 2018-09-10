@@ -160,7 +160,8 @@ def hls_writer(layer_list, yamlConfig):
                     if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=logits{} complete dim=0\n'.format(i)
                     if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=logits{} depth=1\n'.format(i)
                     
-                    if layer_list[i-1]['n_part']==1: 
+                    if layer_list[i-1]['n_part']==1 or yamlConfig["IOType"]=="io_serial":
+                        # Use one layer if there's only 1 partition, or if we're using serial mode
                         newline += '    nnet::compute_layer<{}, {}, config{}>({}, logits{}, w{}, b{});\n'.format(input_type, output_type, i, input_object, i, i, i, i)
                     else:
                         # initialize arrays for sublayer outputs
@@ -679,8 +680,8 @@ def print_array_to_cpp(name, a, odir ):
 
     #meta data
     f.write("//Numpy array shape {}\n".format(a.shape))
-    f.write("//Min {}\n".format(np.min(a)))
-    f.write("//Max {}\n".format(np.max(a)))
+    f.write("//Min {:.12f}\n".format(np.min(a)))
+    f.write("//Max {:.12f}\n".format(np.max(a)))
     f.write("//Number of zeros {}\n".format(zero_ctr))
     f.write("\n")
     
@@ -709,9 +710,9 @@ def print_array_to_cpp(name, a, odir ):
     i=0
     for x in np.nditer(a, order='C'):
         if i==0:
-            f.write("{}".format(x))
+            f.write("%.12f" % x)
         else:
-            f.write(", {}".format(x))
+            f.write(", %.12f" % x)
         i=i+1
     f.write("};\n")
     f.close()

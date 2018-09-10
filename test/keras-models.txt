@@ -1,0 +1,7 @@
+KERAS_1layer
+KERAS_3layer
+KERAS_3layer:KERAS_3layer_70pruned_retrained_weights
+KERAS_conv1d
+KERAS_conv1d_small
+KERAS_conv2d_model
+KERAS_dense_big

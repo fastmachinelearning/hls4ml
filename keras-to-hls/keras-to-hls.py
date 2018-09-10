@@ -70,7 +70,7 @@ def main():
     if not os.path.isdir("{}/firmware/weights".format(yamlConfig['OutputDir'])):
         os.makedirs("{}/firmware/weights".format(yamlConfig['OutputDir']))
 
-    h5File = h5py.File( yamlConfig['KerasH5'] )
+    h5File = h5py.File( yamlConfig['KerasH5'], 'r' )
 
     #This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
@@ -168,7 +168,7 @@ def main():
             # if this layer is too big (more than MAXMULT multiplications); 
             # break it out into chunks!
             layer['n_subout']=[weights.shape[1]]
-            if layer['n_in']*layer['n_out']>MAXMULT:
+            if layer['n_in']*layer['n_out']>MAXMULT and yamlConfig["IOType"] != "io_serial":
                 n_subout = int(MAXMULT/layer['n_in'])
                 n_totout = 0
                 layer['n_subout'] = []

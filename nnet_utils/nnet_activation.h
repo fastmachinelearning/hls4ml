@@ -233,12 +233,11 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     // Index into the lookup table based on data for exponentials
     typename CONFIG_T::table_t exp_res[CONFIG_T::n_in];// different, independent, fixed point precision
     typename CONFIG_T::table_t exp_diff_res;// different, independent, fixed point precision
+    data_T data_cache[CONFIG_T::n_in];
     int data_round;
     int index;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-      if (CONFIG_T::io_type == io_serial){
-            #pragma HLS UNROLL
-      }
+      data_cache[ii] = data[ii];
       exp_res[ii] = 0;
     }
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
@@ -248,7 +247,7 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
         }
 	if (ii==jj) exp_diff_res = 1;
 	else {
-	  data_round = (data[jj]-data[ii])*CONFIG_T::table_size/16;
+	  data_round = (data_cache[jj]-data_cache[ii])*CONFIG_T::table_size/16;
 	  index = data_round + 8*CONFIG_T::table_size/16;
 	  if (index < 0)   index = 0;
 	  if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
