@@ -143,6 +143,7 @@ def main():
          print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
          layer['weights_n_zeros'] = cur_n_zeros 
         elif layer['class_name'] == 'BatchNormalization':
+         cur_n_zeros = []
          found_beta = h5File[layer['name']].visit(find_beta_in_h5)
          beta = h5File['/{}/{}'.format(layer['name'],found_beta)][()]
          print_array_to_cpp("beta{}".format(layer_counter), beta, yamlConfig['OutputDir'])

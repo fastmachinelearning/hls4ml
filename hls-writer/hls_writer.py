@@ -65,7 +65,7 @@ def hls_writer(layer_list, yamlConfig):
                 #Input to compute_layer
 
                 #First layer and dense
-                if(i==1 and layer_list[i-1]['class_name']=='Dense'):
+                if(i==1 and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BatchNormalization')):
                     input_type = 'input_t'
                     input_object = 'data'
                     n_in = 'N_INPUTS'
@@ -114,12 +114,12 @@ def hls_writer(layer_list, yamlConfig):
 
 
                 #Outputs of compute_layer and activation 
-                if(i==len(layer_list) and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='Activation')):
+                if(i==len(layer_list) and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='Activation' or layer_list[i-1]['class_name']=='BatchNormalization')):
                     output_type = 'result_t'
                     output_object = 'res'
                     n_out = 'N_OUTPUTS'
                     if layer_list[i-1]['class_name']=='Activation': input_type = 'result_t'
-                elif(i==len(layer_list)-1 and layer_list[i-1]['class_name']=='BatchNormalization'):
+                elif(i==len(layer_list)-1 and layer_list[i-1]['class_name']=='BatchNormalization' and layer_list[i]['class_name']=='Activation'):
                     output_type = 'result_t'
                     output_object = 'layer{}_out'.format(i)
                     n_out = 'N_OUTPUTS' 
@@ -399,15 +399,16 @@ def hls_writer(layer_list, yamlConfig):
              newline += 'typedef {precision} scale_default_t;\n'.format(precision=yamlConfig["DefaultPrecision"])
 
             for i in range(1,len(layer_list)+1):
-
-                if i==1 and layer_list[i-1]['class_name']=='Dense':
+                if i==1 and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BatchNormalization'):
                     newline += '#define N_INPUTS {}\n'.format(layer_list[i-1]['n_in'])
                     newline += '#define N_LAYER_1 {}\n'.format(layer_list[i-1]['n_out'])
-                elif i==len(layer_list) and layer_list[i-1]['class_name']=='Dense':
+                elif i==len(layer_list) and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BatchNormalization'):
                     newline += '#define N_OUTPUTS {}\n'.format(layer_list[i-1]['n_out'])
                 elif i==len(layer_list) and layer_list[i-1]['class_name']=='Activation':
                     newline += '#define N_OUTPUTS {}\n'.format(layer_list[i-2]['n_out']) 
-                elif layer_list[i-1]['class_name']=='Dense' or (layer_list[i-1]['class_name']=='BatchNormalization' and i!=len(layer_list)-1):
+                elif layer_list[i-1]['class_name']=='Dense' or (layer_list[i-1]['class_name']=='BatchNormalization' and i!=len(layer_list)-1 and i < len(layer_list) and layer_list[i]['class_name']=='Activation'):
+                    newline += '#define N_LAYER_{} {}\n'.format(i, layer_list[i-1]['n_out'])    
+                elif layer_list[i-1]['class_name']=='BatchNormalization' and i < len(layer_list) and layer_list[i]['class_name']!='Activation':
                     newline += '#define N_LAYER_{} {}\n'.format(i, layer_list[i-1]['n_out'])    
                 elif layer_list[i-1]['class_name']=='Activation':        
                     newline += '#define N_LAYER_{} {}\n'.format(i, layer_list[i-2]['n_out'])
@@ -435,7 +436,7 @@ def hls_writer(layer_list, yamlConfig):
         elif "//hls-fpga-machine-learning insert layer-config" in line:
             newline = line
             for i in range(1,len(layer_list)+1):
-                if i==1 and layer_list[i-1]['class_name']=='Dense':
+                if i==1 and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BatchNormalization'):
                     layer_in_name = "N_INPUTS"
                     layer_out_name = "N_LAYER_1"                        
                 elif i==len(layer_list) and layer_list[i-1]['class_name']=='Dense' and layer_list[i-2]['class_name']=='Conv1D':
@@ -450,7 +451,7 @@ def hls_writer(layer_list, yamlConfig):
                 elif layer_list[i-1]['class_name']=='Dense' and layer_list[i-2]['class_name']=='Conv2D':
                     layer_in_name = "OUT_HEIGHT_{}*OUT_WIDTH_{}*N_FILT_{}".format(i-1, i-1, i-1)
                     layer_out_name = "N_LAYER_{}".format(i)   
-                elif i==len(layer_list) and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='Activation'):
+                elif i==len(layer_list) and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='Activation' or layer_list[i-1]['class_name']=='BatchNormalization'):
                     layer_in_name = "N_LAYER_{}".format(i-1)
                     layer_out_name = "N_OUTPUTS"               
                 elif layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BatchNormalization' or layer_list[i-1]['class_name']=='Activation':
@@ -568,7 +569,7 @@ def hls_writer(layer_list, yamlConfig):
         #Insert numbers
         if 'myproject' in line:
             newline = line.replace('myproject',yamlConfig['ProjectName'])
-        elif '//hls-fpga-machine-learning insert data' in line and layer_list[0]['class_name']=='Dense':
+        elif '//hls-fpga-machine-learning insert data' in line and (layer_list[0]['class_name']=='Dense' or layer_list[0]['class_name']=='BatchNormalization'):
             newline = line
             newline += '  input_t  data_str[N_INPUTS] = {'
             for i in range(0,layer_list[0]['n_in']-1):
