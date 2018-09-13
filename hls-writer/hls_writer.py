@@ -466,6 +466,12 @@ def hls_writer(layer_list, yamlConfig):
                     newline += '#define N_INPUTS {}\n'.format(layer_list[i-1]['n_in'])
                     newline += '#define N_LAYER_1 {}\n'.format(layer_list[i-1]['n_out'])
                     newline += '#define N_FILT_1 {}\n'.format(layer_list[i-1]['n_filt'])
+                elif i==1 and layer_list[i-1]['class_name']=='BatchNormalization' and is_conv2d:
+                    newline += '#define N_INPUTS {}\n'.format(layer_list[i-1]['n_in'])
+                    newline += '#define N_LAYER_{} {}\n'.format(i,layer_list[i-1]['n_out'])
+                    newline += '#define IN_HEIGHT_{} {}\n'.format(i, layer_list[i-1]['in_height'])
+                    newline += '#define IN_WIDTH_{} {}\n'.format(i, layer_list[i-1]['in_width'])
+                    newline += '#define N_FILT_{} {}\n'.format(i, layer_list[i-1]['n_filt'])
                 elif i==len(layer_list) and layer_list[i-1]['class_name']=='Dense':
                     newline += '#define N_OUTPUTS {}\n'.format(layer_list[i-1]['n_out'])
                 elif i==len(layer_list) and layer_list[i-1]['class_name']=='Activation':
