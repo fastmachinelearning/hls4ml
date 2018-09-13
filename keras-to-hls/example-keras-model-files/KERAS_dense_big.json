@@ -31,13 +31,8 @@
                     "activity_regularizer": null,
                     "bias_constraint": null,
                     "bias_initializer": {
-                        "class_name": "VarianceScaling",
-                        "config": {
-                            "distribution": "uniform",
-                            "mode": "fan_in",
-                            "scale": 1.0,
-                            "seed": null
-                        }
+                        "class_name": "Zeros",
+                        "config": {}
                     },
                     "bias_regularizer": null,
                     "kernel_constraint": null,
@@ -59,7 +54,7 @@
                     },
                     "name": "fc1_relu",
                     "trainable": true,
-                    "units": 200,
+                    "units": 100,
                     "use_bias": true
                 },
                 "inbound_nodes": [
@@ -78,7 +73,9 @@
                 "class_name": "Dropout",
                 "config": {
                     "name": "dropout_1",
+                    "noise_shape": null,
                     "rate": 0.25,
+                    "seed": null,
                     "trainable": true
                 },
                 "inbound_nodes": [
@@ -100,13 +97,8 @@
                     "activity_regularizer": null,
                     "bias_constraint": null,
                     "bias_initializer": {
-                        "class_name": "VarianceScaling",
-                        "config": {
-                            "distribution": "uniform",
-                            "mode": "fan_in",
-                            "scale": 1.0,
-                            "seed": null
-                        }
+                        "class_name": "Zeros",
+                        "config": {}
                     },
                     "bias_regularizer": null,
                     "kernel_constraint": null,
@@ -128,7 +120,7 @@
                     },
                     "name": "fc2_relu",
                     "trainable": true,
-                    "units": 200,
+                    "units": 100,
                     "use_bias": true
                 },
                 "inbound_nodes": [
@@ -147,7 +139,9 @@
                 "class_name": "Dropout",
                 "config": {
                     "name": "dropout_2",
+                    "noise_shape": null,
                     "rate": 0.25,
+                    "seed": null,
                     "trainable": true
                 },
                 "inbound_nodes": [
@@ -169,13 +163,8 @@
                     "activity_regularizer": null,
                     "bias_constraint": null,
                     "bias_initializer": {
-                        "class_name": "VarianceScaling",
-                        "config": {
-                            "distribution": "uniform",
-                            "mode": "fan_in",
-                            "scale": 1.0,
-                            "seed": null
-                        }
+                        "class_name": "Zeros",
+                        "config": {}
                     },
                     "bias_regularizer": null,
                     "kernel_constraint": null,
@@ -197,7 +186,7 @@
                     },
                     "name": "fc3_relu",
                     "trainable": true,
-                    "units": 200,
+                    "units": 100,
                     "use_bias": true
                 },
                 "inbound_nodes": [
@@ -216,7 +205,9 @@
                 "class_name": "Dropout",
                 "config": {
                     "name": "dropout_3",
+                    "noise_shape": null,
                     "rate": 0.25,
+                    "seed": null,
                     "trainable": true
                 },
                 "inbound_nodes": [
@@ -238,13 +229,8 @@
                     "activity_regularizer": null,
                     "bias_constraint": null,
                     "bias_initializer": {
-                        "class_name": "VarianceScaling",
-                        "config": {
-                            "distribution": "uniform",
-                            "mode": "fan_in",
-                            "scale": 1.0,
-                            "seed": null
-                        }
+                        "class_name": "Zeros",
+                        "config": {}
                     },
                     "bias_regularizer": null,
                     "kernel_constraint": null,
@@ -266,7 +252,7 @@
                     },
                     "name": "fc4_relu",
                     "trainable": true,
-                    "units": 200,
+                    "units": 100,
                     "use_bias": true
                 },
                 "inbound_nodes": [
@@ -285,7 +271,9 @@
                 "class_name": "Dropout",
                 "config": {
                     "name": "dropout_4",
+                    "noise_shape": null,
                     "rate": 0.25,
+                    "seed": null,
                     "trainable": true
                 },
                 "inbound_nodes": [
@@ -307,13 +295,8 @@
                     "activity_regularizer": null,
                     "bias_constraint": null,
                     "bias_initializer": {
-                        "class_name": "VarianceScaling",
-                        "config": {
-                            "distribution": "uniform",
-                            "mode": "fan_in",
-                            "scale": 1.0,
-                            "seed": null
-                        }
+                        "class_name": "Zeros",
+                        "config": {}
                     },
                     "bias_regularizer": null,
                     "kernel_constraint": null,
@@ -335,7 +318,7 @@
                     },
                     "name": "fc5_relu",
                     "trainable": true,
-                    "units": 200,
+                    "units": 100,
                     "use_bias": true
                 },
                 "inbound_nodes": [
@@ -357,13 +340,8 @@
                     "activity_regularizer": null,
                     "bias_constraint": null,
                     "bias_initializer": {
-                        "class_name": "VarianceScaling",
-                        "config": {
-                            "distribution": "uniform",
-                            "mode": "fan_in",
-                            "scale": 1.0,
-                            "seed": null
-                        }
+                        "class_name": "Zeros",
+                        "config": {}
                     },
                     "bias_regularizer": null,
                     "kernel_constraint": null,
@@ -404,5 +382,5 @@
             ]
         ]
     },
-    "keras_version": "2.0.0"
+    "keras_version": "2.1.5"
 }
