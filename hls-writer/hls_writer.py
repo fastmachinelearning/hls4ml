@@ -26,10 +26,12 @@ def hls_writer(layer_list, yamlConfig):
      if layer_list[i-1]['class_name']=='Conv2D':
       is_conv2d = True
       break
-     if layer_list[i-1]['class_name']=='Dense':
-      is_dense = True
-      break
-       
+    if not is_conv2d:
+     for i in range(1,len(layer_list)+1):
+      if layer_list[i-1]['class_name']=='Dense':
+       is_dense = True
+       break
+    
     # lines to add to .cpp for sublayers
     sublayerlines = []
     # lines to add to .h for sublayers
@@ -473,11 +475,9 @@ def hls_writer(layer_list, yamlConfig):
                     newline += '#define N_FILT_{} {}\n'.format(i-1, layer_list[i-1]['n_filt']) 
                 elif layer_list[i-1]['class_name']=='Dense':
                     newline += '#define N_LAYER_{} {}\n'.format(i, layer_list[i-1]['n_out'])    
-                elif layer_list[i-1]['class_name']=='Dense':
-                    newline += '#define N_LAYER_{} {}\n'.format(i, layer_list[i-1]['n_out'])  
                 elif is_dense and layer_list[i-1]['class_name']=='BatchNormalization':
                     newline += '#define N_LAYER_{} {}\n'.format(i, layer_list[i-1]['n_out'])  
-                    newline += '#define N_FILT_{} {}\n'.format(i-1, layer_list[i-1]['n_filt']) 		    
+                    newline += '#define N_FILT_{} {}\n'.format(i-1, layer_list[i-1]['n_filt']) 	
                 elif layer_list[i-1]['class_name']=='Activation':        
                     newline += '#define N_LAYER_{} {}\n'.format(i, layer_list[i-2]['n_out'])
                 elif layer_list[i-1]['class_name']=='Conv1D':
@@ -493,6 +493,7 @@ def hls_writer(layer_list, yamlConfig):
                     newline += '#define OUT_WIDTH_{} {}\n'.format(i, layer_list[i-1]['out_width'])
                     newline += '#define N_FILT_{} {}\n'.format(i, layer_list[i-1]['n_filt'])
                 elif layer_list[i-1]['class_name']=='BatchNormalization' and is_conv2d:
+                    newline += '#define N_LAYER_{} {}\n'.format(i, layer_list[i-1]['n_out']) 
                     newline += '#define IN_HEIGHT_{} {}\n'.format(i, layer_list[i-1]['in_height'])
                     newline += '#define IN_WIDTH_{} {}\n'.format(i, layer_list[i-1]['in_width'])
                     newline += '#define N_FILT_{} {}\n'.format(i, layer_list[i-1]['n_filt'])
@@ -546,13 +547,18 @@ def hls_writer(layer_list, yamlConfig):
                     layer_n_chan_name = "N_CHAN_{}".format(i)
                     layer_y_out_name = "Y_OUTPUTS_{}".format(i)
                     layer_n_filt_name = "N_FILT_{}".format(i)
-                elif layer_list[i-1]['class_name']=='Conv2D' or (is_conv2d and layer_list[i-1]['class_name']=='BatchNormalization'):
+                elif layer_list[i-1]['class_name']=='Conv2D': #or (is_conv2d and layer_list[i-1]['class_name']=='BatchNormalization'):
                     layer_in_height_name = "IN_HEIGHT_{}".format(i)
                     layer_in_width_name = "IN_WIDTH_{}".format(i)
                     layer_n_chan_name = "N_CHAN_{}".format(i)
                     layer_out_height_name = "OUT_HEIGHT_{}".format(i)
                     layer_out_width_name = "OUT_WIDTH_{}".format(i)
                     layer_n_filt_name = "N_FILT_{}".format(i)
+                    layer_in_name = "N_LAYER_{}".format(i-1)
+                elif is_conv2d and layer_list[i-1]['class_name']=='BatchNormalization':
+                    layer_in_name = "OUT_HEIGHT_{}*OUT_WIDTH_{}*N_FILT_{}".format(i-1, i-1, i-1)
+                    layer_out_name = "N_LAYER_{}".format(i)
+                    layer_n_filt_name = "N_FILT_{}".format(i-1)
                 if layer_list[i-1]['class_name']=='Dense':
                     if layer_list[i-1]['n_part']==1:
                         newline += dense_config_template.format(index=str(i), 
