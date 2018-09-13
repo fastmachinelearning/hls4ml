@@ -510,6 +510,7 @@ def hls_writer(layer_list, yamlConfig):
                 if i==1 and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BatchNormalization'):
                     layer_in_name = "N_INPUTS"
                     layer_out_name = "N_LAYER_1"                        
+                    layer_n_filt_name = "N_FILT_1"
                 elif i==1 and layer_list[i-1]['class_name']=='BatchNormalization' and is_conv2d:
                     layer_in_name = "IN_HEIGHT_{}*IN_WIDTH_{}*N_FILT_{}".format(i, i, i)
                     layer_out_name = "N_LAYER_1"       
