@@ -35,7 +35,8 @@ struct batchnorm_config
 
     // Layer Sizes
     static const unsigned n_in = 10;
-
+    static const unsigned n_filt = -1;
+    
     // Resource reuse info
     static const unsigned io_type = io_parallel;
     static const unsigned reuse_factor = 1;
@@ -84,7 +85,11 @@ void normalize(
             #pragma HLS UNROLL
             #pragma HLS PIPELINE
         }
-        res[ires] = (res_T) (data[ires]-mean[ires])*scale[ires]+beta[ires];
+        if(CONFIG_T::n_filt==-1) res[ires] = (res_T) (data[ires]-mean[ires])*scale[ires]+beta[ires];
+	else{
+	 int norm_index = ires%CONFIG_T::n_filt;
+	 res[ires] = (res_T) (data[ires]-mean[norm_index])*scale[norm_index]+beta[norm_index];
+	}
     }   
        
 }

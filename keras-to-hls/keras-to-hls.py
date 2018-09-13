@@ -107,8 +107,19 @@ def main():
             current_shape = keras_layer['config']['batch_input_shape'] # [None, 100, 7]    
     print('Input shape:', current_shape)
 
-    print('Topology:')
+    # Set some variables to make the routine after a bit smoother
+    is_conv2d = False
+    is_dense = False
     for keras_layer in layer_config:
+     if keras_layer["class_name"]=='Conv2D':
+      is_conv2d = True
+      break
+     if keras_layer["class_name"]=='Dense':
+      is_dense = True
+      break
+	        
+    print('Topology:')
+    for il,keras_layer in enumerate(layer_config):
         if keras_layer["class_name"] is 'Flatten':
             current_shape = [current_shape[0], np.prod(current_shape[1:])]
         if keras_layer["class_name"] in skip_layers:
@@ -143,6 +154,7 @@ def main():
          print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
          layer['weights_n_zeros'] = cur_n_zeros 
         elif layer['class_name'] == 'BatchNormalization':
+         cur_n_zeros = []
          found_beta = h5File[layer['name']].visit(find_beta_in_h5)
          beta = h5File['/{}/{}'.format(layer['name'],found_beta)][()]
          print_array_to_cpp("beta{}".format(layer_counter), beta, yamlConfig['OutputDir'])
@@ -159,7 +171,6 @@ def main():
         
         # Default one layer call
         layer['n_part'] = 1
-        
         #Get number of inputs and outputs
         #(We take it from the weights to avoid dealing with InputLayer and Flatten details)
         if layer['class_name']=='Dense':
@@ -181,8 +192,7 @@ def main():
                         layer['n_subout'].append(layer['n_out']-n_totout)
                         n_totout += layer['n_out']-n_totout
 
-                    layer['n_part'] += 1
-                
+                    layer['n_part'] += 1   
             current_shape = [current_shape[0], layer['n_out']]
         elif layer['class_name']=='Conv1D':
             # weights.shape = (filter_width, n_channels, n_filters)
@@ -246,10 +256,18 @@ def main():
                 layer['pad_left'] = 0
                 layer['pad_right'] = 0
                 current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
-        elif layer['class_name']=='BatchNormalization':
-            layer['n_in']=mean.shape[0]
-            layer['n_out']=mean.shape[0]
-            current_shape = [current_shape[0], layer['n_out']]
+        elif layer['class_name']=='BatchNormalization' and is_dense:
+                layer['n_in']=mean.shape[0]
+                layer['n_out']=mean.shape[0]
+                layer['n_filt'] = -1
+                current_shape = [current_shape[0], layer['n_out']] 
+        elif layer['class_name']=='BatchNormalization' and is_conv2d:
+                layer['n_in']=current_shape[1]*current_shape[2]*current_shape[3] 
+                layer['n_out']=layer['n_in']
+                layer['in_height']=current_shape[1]
+                layer['in_width']=current_shape[2]
+                layer['n_filt']=current_shape[3]
+                current_shape=[current_shape[0], layer['in_height'], layer['in_width'], layer['n_filt']]	    
         print('Layer name: {}, layer type: {}, current shape: {}, number of zeros: {}'.format(layer['name'], layer['class_name'], current_shape, cur_n_zeros))
         if layer['n_part'] > 1: 
             print(' -> layer will be divided into {} sublayer calls; output neurons: {} '.format(layer['n_part'], layer['n_subout']))
