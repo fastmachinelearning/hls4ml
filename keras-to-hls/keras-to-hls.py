@@ -246,6 +246,7 @@ def main():
                     pad_along_width = max(layer['filt_width'] - (in_width % layer['stride_width']), 0)
                 layer['pad_left']  = pad_along_width // 2
                 layer['pad_right']  = pad_along_width - layer['pad_left']
+                current_shape[3] = layer['n_filt']
             elif layer['padding']=='valid':
                 in_height = current_shape[1]
                 in_width = current_shape[2]

@@ -116,7 +116,7 @@ def hls_writer(layer_list, yamlConfig):
                 elif is_conv2d and layer_list[i-1]['class_name']=='BatchNormalization':
                     input_type = 'layer{}_t'.format(i-1)
                     input_object = 'layer{}_out'.format(i-1)
-                    n_in = 'IN_HEIGHT_{}*IN_WIDTH_{}*N_FILT_{}'.format(i-1,i-1,i-1)
+                    n_in = 'OUT_HEIGHT_{}*OUT_WIDTH_{}*N_FILT_{}'.format(i-1,i-1,i-1)
                     n_filt = 'N_FILT_{}'.format(i-1)
                 #First layer and Conv1D
                 elif (i==1 and layer_list[i-1]['class_name']=='Conv1D'):
@@ -197,7 +197,8 @@ def hls_writer(layer_list, yamlConfig):
                     elif layer_list[i-1]['class_name']=='Conv2D':
                         newline += '    {} layer{}_out[{}*{}*{}];\n'.format(output_type,i,out_height,out_width,n_filt)
                     elif layer_list[i-1]['class_name']=='BatchNormalization' and is_conv2d:
-                        newline += '    {} layer{}_out[{}*{}*{}];\n'.format(output_type,i,in_height,in_width,n_filt)
+                        if i!= 1: newline += '    {} layer{}_out[{}*{}*{}];\n'.format(output_type,i,out_height,out_width,n_filt)
+                        else: newline += '    {} layer{}_out[{}*{}*{}];\n'.format(output_type,i,in_height,in_width,n_filt)
                     if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=layer{}_out complete dim=0\n'.format(i)
                     if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=layer{}_out depth=1\n'.format(i)
 
@@ -500,10 +501,9 @@ def hls_writer(layer_list, yamlConfig):
                     newline += '#define N_FILT_{} {}\n'.format(i, layer_list[i-1]['n_filt'])
                 elif layer_list[i-1]['class_name']=='BatchNormalization' and is_conv2d:
                     newline += '#define N_LAYER_{} {}\n'.format(i, layer_list[i-1]['n_out']) 
-                    newline += '#define IN_HEIGHT_{} {}\n'.format(i, layer_list[i-1]['in_height'])
-                    newline += '#define IN_WIDTH_{} {}\n'.format(i, layer_list[i-1]['in_width'])
-                    newline += '#define N_FILT_{} {}\n'.format(i, layer_list[i-1]['n_filt'])
-                    
+                    newline += '#define OUT_HEIGHT_{} {}\n'.format(i, layer_list[i-1]['in_height'])
+                    newline += '#define OUT_WIDTH_{} {}\n'.format(i, layer_list[i-1]['in_width'])
+                    newline += '#define N_FILT_{} {}\n'.format(i, layer_list[i-1]['n_filt'])                    
         elif '//hls-fpga-machine-learning insert layer-precision' in line:
             newline = line
             for i in range(1,len(layer_list)):
