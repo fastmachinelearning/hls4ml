@@ -34,4 +34,7 @@ void myproject(
       unsigned short &const_size_in,
       unsigned short &const_size_out);
 
+void compute_layer2(layer1_t layer1_out[N_LAYER_1], layer2_t logits2[N_LAYER_2]);
+
 #endif
+

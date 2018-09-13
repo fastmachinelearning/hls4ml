@@ -22,15 +22,17 @@
 #include "myproject.h"
 
 #include "nnet_layer.h"
-#include "nnet_sublayer.h"
 #include "nnet_conv.h"
+#include "nnet_conv2d.h"
 #include "nnet_activation.h"
 
 //hls-fpga-machine-learning insert weights
 #include "weights/w1.h"
 #include "weights/b1.h"
-#include "weights/w2.h"
-#include "weights/b2.h"
+#include "weights/w2_0.h"
+#include "weights/b2_0.h"
+#include "weights/w2_1.h"
+#include "weights/b2_1.h"
 #include "weights/w3.h"
 #include "weights/b3.h"
 #include "weights/w4.h"
@@ -63,22 +65,14 @@ void myproject(
     #pragma HLS ARRAY_PARTITION variable=layer1_out complete dim=0
     layer1_t logits1[N_LAYER_1];
     #pragma HLS ARRAY_PARTITION variable=logits1 complete dim=0
-    layer1_t logits1_0[N_LAYER_1/2];
-    #pragma HLS ARRAY_PARTITION variable=logits1_0 complete dim=0
-    layer1_t logits1_1[N_LAYER_1/2];
-    #pragma HLS ARRAY_PARTITION variable=logits1_1 complete dim=0
-    nnet::compute_sublayer<input_t, layer1_t, config1_0>(data, logits1_0, w1, b1);
-    nnet::compute_sublayer<input_t, layer1_t, config1_1>(data, logits1_1, w1, b1);
-    nnet::merge<layer1_t, N_LAYER_1/2, N_LAYER_1/2>(logits1_0, logits1_1, logits1);
-    //nnet::compute_layer<input_t, layer1_t, config1>(data, logits1, w1, b1);
+    nnet::compute_layer<input_t, layer1_t, config1>(data, logits1, w1, b1);
     nnet::relu<layer1_t, layer1_t, relu_config1>(logits1, layer1_out);
-
 
     layer2_t layer2_out[N_LAYER_2];
     #pragma HLS ARRAY_PARTITION variable=layer2_out complete dim=0
     layer2_t logits2[N_LAYER_2];
     #pragma HLS ARRAY_PARTITION variable=logits2 complete dim=0
-    nnet::compute_layer<layer1_t, layer2_t, config2>(layer1_out, logits2, w2, b2);
+    compute_layer2(layer1_out, logits2);
     nnet::relu<layer2_t, layer2_t, relu_config2>(logits2, layer2_out);
 
     layer3_t layer3_out[N_LAYER_3];
@@ -95,3 +89,14 @@ void myproject(
 
 
 }
+
+void compute_layer2(layer1_t layer1_out[N_LAYER_1], layer2_t logits2[N_LAYER_2]) {
+    layer2_t logits2_0[16];
+    #pragma HLS ARRAY_PARTITION variable=logits2_0 complete dim=0
+    layer2_t logits2_1[16];
+    #pragma HLS ARRAY_PARTITION variable=logits2_1 complete dim=0
+    nnet::compute_layer<layer1_t, layer2_t, config2_0>(layer1_out, logits2_0, w2_0, b2_0);
+    nnet::compute_layer<layer1_t, layer2_t, config2_1>(layer1_out, logits2_1, w2_1, b2_1);
+    nnet::merge<layer2_t, 16, 16>(logits2_0, logits2_1, logits2);
+}
+

@@ -10,7 +10,7 @@ import sys
 from shutil import copyfile
 import math
 
-MAXMULT = 4096
+MAXMULT = 1024
 
 filedir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,os.path.join(filedir, "..", "hls-writer"))
@@ -138,6 +138,7 @@ def main():
                 n_subout = int(MAXMULT/layer['n_in'])
                 n_totout = 0
                 layer['n_subout'] = []
+                layer['weights_n_subzeros'] = []
                 layer['n_part'] = 0
                 while n_totout < layer['n_out']:
                     if n_totout + n_subout <= layer['n_out']:
@@ -148,7 +149,14 @@ def main():
                         n_totout += layer['n_out']-n_totout
 
                     layer['n_part'] += 1
-                
+                for i_part in range(0,layer['n_part']):
+                    i_subout = 0
+                    if i_part>0:
+                        i_subout = sum(layer['n_subout'][0:i_part])
+                    cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'], i_part, layer['n_part'], i_subout, layer['n_subout'][i_part])
+                    print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'], i_part, layer['n_part'], i_subout, layer['n_subout'][i_part])
+                    layer['weights_n_subzeros'].append(cur_n_zeros)
+            
             current_shape = [current_shape[0], layer['n_out']]
         elif layer['class_name']=='Conv1D':
             # weights.shape = (filter_width, n_channels, n_filters)
@@ -212,7 +220,7 @@ def main():
                 layer['pad_left'] = 0
                 layer['pad_right'] = 0
                 current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
-        print('Layer name: {}, layer type: {}, current shape: {}, number of zeros: {}'.format(layer['name'], layer['class_name'], current_shape, cur_n_zeros))
+        print('Layer name: {}, layer type: {}, current shape: {}, number of zeros: {}'.format(layer['name'], layer['class_name'], current_shape, layer['weights_n_zeros']))
         if layer['n_part'] > 1: 
             print(' -> layer will be divided into {} sublayer calls; output neurons: {} '.format(layer['n_part'], layer['n_subout']))
         layer_list.append( layer )
