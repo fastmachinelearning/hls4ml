@@ -75,7 +75,7 @@ void compute_layer(
         if (reused_cycle == ceil(reused_cycle) && CONFIG_T::store_weights_in_bram){
             // Dont use "ceil" here; as of 2018.2, HLS crashes mysteriously
             cycle_factor = cycle_factor / CONFIG_T::reuse_factor;
-            #pragma HLS ARRAY_PARTITION variable=weights cyclic factor=cycle_factor
+            #pragma HLS ARRAY_RESHAPE variable=weights block factor=cycle_factor
             #pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
         }
 
