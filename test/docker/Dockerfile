@@ -39,3 +39,8 @@ RUN rm -rf /tmp/*
 
 ARG LICENSE_SERVER
 ENV XILINXD_LICENSE_FILE $LICENSE_SERVER
+
+#RUN apt-get install -y \
+#  gcc-multilib \
+#  g++-multilib && \
+#  ln -s /usr/lib/x86_64-linux-gnu /usr/lib64
