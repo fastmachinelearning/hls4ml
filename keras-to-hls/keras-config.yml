@@ -1,8 +1,8 @@
-KerasJson: example-keras-model-files/KERAS_conv2d_model.json
-KerasH5:   example-keras-model-files/KERAS_conv2d_model_weights.h5
-OutputDir: my-hls-test
+KerasJson: example-keras-model-files/jetTagger_Conv2D_Small.json
+KerasH5:   example-keras-model-files/jetTagger_Conv2D_Small.h5
+OutputDir: test_conv2d_batch_norm
 ProjectName: myproject
-XilinxPart: xc7vx690tffg1927-2
+XilinxPart: xcku115-flvf1924-2-i
 ClockPeriod: 5
 
 IOType: io_parallel # options: io_serial/io_parallel

@@ -24,6 +24,22 @@ def find_bias_in_h5(name):
     if 'bias' in name:
         return name
 
+def find_beta_in_h5(name):
+    if 'beta' in name:
+        return name
+
+def find_moving_mean_in_h5(name):
+    if 'moving_mean' in name:
+        return name
+
+def find_moving_variance_in_h5(name):
+    if 'moving_variance' in name:
+        return name
+
+def find_gamma_in_h5(name):
+    if 'gamma' in name:
+        return name
+
 ############################################################################################
 ## M A I N
 ############################################################################################
@@ -65,7 +81,7 @@ def main():
     #print(model_arch)
 
     #Define supported laers
-    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'Conv1D', 'Conv2D']
+    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'Conv1D', 'Conv2D','BatchNormalization','Activation']
 
     #Define layers to skip for conversion to HLS
     skip_layers = ['InputLayer','Dropout', 'Flatten'] 
@@ -91,8 +107,19 @@ def main():
             current_shape = keras_layer['config']['batch_input_shape'] # [None, 100, 7]    
     print('Input shape:', current_shape)
 
-    print('Topology:')
+    # Set some variables to make the routine after a bit smoother
+    is_conv2d = False
+    is_dense = False
     for keras_layer in layer_config:
+     if keras_layer["class_name"]=='Conv2D':
+      is_conv2d = True
+      break
+     if keras_layer["class_name"]=='Dense':
+      is_dense = True
+      break
+	        
+    print('Topology:')
+    for il,keras_layer in enumerate(layer_config):
         if keras_layer["class_name"] is 'Flatten':
             current_shape = [current_shape[0], np.prod(current_shape[1:])]
         if keras_layer["class_name"] in skip_layers:
@@ -111,21 +138,39 @@ def main():
         for config,config_value in keras_layer["config"].items():
             if(config=="activation"):
                 layer['activation']=config_value
+            if(config=="epsilon"):
+                layer['epsilon']=config_value	
             #if(config=="units"):
                 #print("PARSED NUM OF NODES",config_value)
 
+        
         #Translate weights and biases from h5 file
-        found_weights = h5File[layer['name']].visit(find_kernel_in_h5)
-        weights = h5File['/{}/{}'.format(layer['name'],found_weights)][()]
-        found_bias = h5File[layer['name']].visit(find_bias_in_h5)
-        biases = h5File['/{}/{}'.format(layer['name'],found_bias)][()]
-        cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
-        print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
-        layer['weights_n_zeros'] = cur_n_zeros 
+        if layer['class_name'] != 'BatchNormalization' and layer['class_name'] != 'Activation':
+         found_weights = h5File[layer['name']].visit(find_kernel_in_h5)
+         weights = h5File['/{}/{}'.format(layer['name'],found_weights)][()]
+         found_bias = h5File[layer['name']].visit(find_bias_in_h5)
+         biases = h5File['/{}/{}'.format(layer['name'],found_bias)][()]
+         cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
+         print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
+         layer['weights_n_zeros'] = cur_n_zeros 
+        elif layer['class_name'] == 'BatchNormalization':
+         cur_n_zeros = []
+         found_beta = h5File[layer['name']].visit(find_beta_in_h5)
+         beta = h5File['/{}/{}'.format(layer['name'],found_beta)][()]
+         print_array_to_cpp("beta{}".format(layer_counter), beta, yamlConfig['OutputDir'])
+         found_mean = h5File[layer['name']].visit(find_moving_mean_in_h5)
+         mean = h5File['/{}/{}'.format(layer['name'],found_mean)][()]
+         print_array_to_cpp("mean{}".format(layer_counter), mean, yamlConfig['OutputDir'])	
+         found_gamma = h5File[layer['name']].visit(find_gamma_in_h5)
+         gamma = h5File['/{}/{}'.format(layer['name'],found_gamma)][()]
+         found_var = h5File[layer['name']].visit(find_moving_variance_in_h5)
+         var = h5File['/{}/{}'.format(layer['name'],found_var)][()]
+         var = var + layer['epsilon']
+         scale = gamma/np.sqrt(var)	 
+         print_array_to_cpp("scale{}".format(layer_counter), scale, yamlConfig['OutputDir'])
         
         # Default one layer call
         layer['n_part'] = 1
-        
         #Get number of inputs and outputs
         #(We take it from the weights to avoid dealing with InputLayer and Flatten details)
         if layer['class_name']=='Dense':
@@ -147,8 +192,7 @@ def main():
                         layer['n_subout'].append(layer['n_out']-n_totout)
                         n_totout += layer['n_out']-n_totout
 
-                    layer['n_part'] += 1
-                
+                    layer['n_part'] += 1   
             current_shape = [current_shape[0], layer['n_out']]
         elif layer['class_name']=='Conv1D':
             # weights.shape = (filter_width, n_channels, n_filters)
@@ -202,6 +246,7 @@ def main():
                     pad_along_width = max(layer['filt_width'] - (in_width % layer['stride_width']), 0)
                 layer['pad_left']  = pad_along_width // 2
                 layer['pad_right']  = pad_along_width - layer['pad_left']
+                current_shape[3] = layer['n_filt']
             elif layer['padding']=='valid':
                 in_height = current_shape[1]
                 in_width = current_shape[2]
@@ -212,6 +257,18 @@ def main():
                 layer['pad_left'] = 0
                 layer['pad_right'] = 0
                 current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
+        elif layer['class_name']=='BatchNormalization' and is_dense:
+                layer['n_in']=mean.shape[0]
+                layer['n_out']=mean.shape[0]
+                layer['n_filt'] = -1
+                current_shape = [current_shape[0], layer['n_out']] 
+        elif layer['class_name']=='BatchNormalization' and is_conv2d:
+                layer['n_in']=current_shape[1]*current_shape[2]*current_shape[3] 
+                layer['n_out']=layer['n_in']
+                layer['in_height']=current_shape[1]
+                layer['in_width']=current_shape[2]
+                layer['n_filt']=current_shape[3]
+                current_shape=[current_shape[0], layer['in_height'], layer['in_width'], layer['n_filt']]	    
         print('Layer name: {}, layer type: {}, current shape: {}, number of zeros: {}'.format(layer['name'], layer['class_name'], current_shape, cur_n_zeros))
         if layer['n_part'] > 1: 
             print(' -> layer will be divided into {} sublayer calls; output neurons: {} '.format(layer['n_part'], layer['n_subout']))

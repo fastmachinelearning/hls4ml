@@ -1,0 +1,466 @@
+{
+    "backend": "tensorflow",
+    "class_name": "Model",
+    "config": {
+        "input_layers": [
+            [
+                "input_1",
+                0,
+                0
+            ]
+        ],
+        "layers": [
+            {
+                "class_name": "InputLayer",
+                "config": {
+                    "batch_input_shape": [
+                        null,
+                        16
+                    ],
+                    "dtype": "float32",
+                    "name": "input_1",
+                    "sparse": false
+                },
+                "inbound_nodes": [],
+                "name": "input_1"
+            },
+            {
+                "class_name": "Dense",
+                "config": {
+                    "activation": "linear",
+                    "activity_regularizer": null,
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "bias_regularizer": null,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_in",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": {
+                        "class_name": "L1L2",
+                        "config": {
+                            "l1": 9.999999747378752e-05,
+                            "l2": 0.0
+                        }
+                    },
+                    "name": "fc1_relu",
+                    "trainable": true,
+                    "units": 64,
+                    "use_bias": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "input_1",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "fc1_relu"
+            },
+            {
+                "class_name": "BatchNormalization",
+                "config": {
+                    "axis": -1,
+                    "beta_constraint": null,
+                    "beta_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "beta_regularizer": null,
+                    "center": true,
+                    "epsilon": 1e-06,
+                    "gamma_constraint": null,
+                    "gamma_initializer": {
+                        "class_name": "Ones",
+                        "config": {}
+                    },
+                    "gamma_regularizer": null,
+                    "momentum": 0.9,
+                    "moving_mean_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "moving_variance_initializer": {
+                        "class_name": "Ones",
+                        "config": {}
+                    },
+                    "name": "bn1",
+                    "scale": true,
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "fc1_relu",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "bn1"
+            },
+            {
+                "class_name": "Activation",
+                "config": {
+                    "activation": "relu",
+                    "name": "relu1",
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "bn1",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "relu1"
+            },
+            {
+                "class_name": "Dense",
+                "config": {
+                    "activation": "linear",
+                    "activity_regularizer": null,
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "bias_regularizer": null,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_in",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": {
+                        "class_name": "L1L2",
+                        "config": {
+                            "l1": 9.999999747378752e-05,
+                            "l2": 0.0
+                        }
+                    },
+                    "name": "fc2_relu",
+                    "trainable": true,
+                    "units": 32,
+                    "use_bias": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "relu1",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "fc2_relu"
+            },
+            {
+                "class_name": "BatchNormalization",
+                "config": {
+                    "axis": -1,
+                    "beta_constraint": null,
+                    "beta_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "beta_regularizer": null,
+                    "center": true,
+                    "epsilon": 1e-06,
+                    "gamma_constraint": null,
+                    "gamma_initializer": {
+                        "class_name": "Ones",
+                        "config": {}
+                    },
+                    "gamma_regularizer": null,
+                    "momentum": 0.9,
+                    "moving_mean_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "moving_variance_initializer": {
+                        "class_name": "Ones",
+                        "config": {}
+                    },
+                    "name": "bn2",
+                    "scale": true,
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "fc2_relu",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "bn2"
+            },
+            {
+                "class_name": "Activation",
+                "config": {
+                    "activation": "relu",
+                    "name": "relu2",
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "bn2",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "relu2"
+            },
+            {
+                "class_name": "Dense",
+                "config": {
+                    "activation": "linear",
+                    "activity_regularizer": null,
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "bias_regularizer": null,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_in",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": {
+                        "class_name": "L1L2",
+                        "config": {
+                            "l1": 9.999999747378752e-05,
+                            "l2": 0.0
+                        }
+                    },
+                    "name": "fc3_relu",
+                    "trainable": true,
+                    "units": 32,
+                    "use_bias": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "relu2",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "fc3_relu"
+            },
+            {
+                "class_name": "BatchNormalization",
+                "config": {
+                    "axis": -1,
+                    "beta_constraint": null,
+                    "beta_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "beta_regularizer": null,
+                    "center": true,
+                    "epsilon": 1e-06,
+                    "gamma_constraint": null,
+                    "gamma_initializer": {
+                        "class_name": "Ones",
+                        "config": {}
+                    },
+                    "gamma_regularizer": null,
+                    "momentum": 0.9,
+                    "moving_mean_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "moving_variance_initializer": {
+                        "class_name": "Ones",
+                        "config": {}
+                    },
+                    "name": "bn3",
+                    "scale": true,
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "fc3_relu",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "bn3"
+            },
+            {
+                "class_name": "Activation",
+                "config": {
+                    "activation": "relu",
+                    "name": "relu3",
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "bn3",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "relu3"
+            },
+            {
+                "class_name": "Dense",
+                "config": {
+                    "activation": "linear",
+                    "activity_regularizer": null,
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "bias_regularizer": null,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_in",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": {
+                        "class_name": "L1L2",
+                        "config": {
+                            "l1": 9.999999747378752e-05,
+                            "l2": 0.0
+                        }
+                    },
+                    "name": "output_softmax",
+                    "trainable": true,
+                    "units": 5,
+                    "use_bias": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "relu3",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "output_softmax"
+            },
+            {
+                "class_name": "BatchNormalization",
+                "config": {
+                    "axis": -1,
+                    "beta_constraint": null,
+                    "beta_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "beta_regularizer": null,
+                    "center": true,
+                    "epsilon": 1e-06,
+                    "gamma_constraint": null,
+                    "gamma_initializer": {
+                        "class_name": "Ones",
+                        "config": {}
+                    },
+                    "gamma_regularizer": null,
+                    "momentum": 0.9,
+                    "moving_mean_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "moving_variance_initializer": {
+                        "class_name": "Ones",
+                        "config": {}
+                    },
+                    "name": "bn4",
+                    "scale": true,
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "output_softmax",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "bn4"
+            },
+            {
+                "class_name": "Activation",
+                "config": {
+                    "activation": "softmax",
+                    "name": "softmax",
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "bn4",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "softmax"
+            }
+        ],
+        "name": "model_1",
+        "output_layers": [
+            [
+                "softmax",
+                0,
+                0
+            ]
+        ]
+    },
+    "keras_version": "2.0.8"
+}
