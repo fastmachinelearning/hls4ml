@@ -46,12 +46,12 @@ fi
 cd "${basedir}"
 
 py2dirs=()
-for dir in *-python2/ ; do
+for dir in *-python2-*/ ; do
    py2dirs+=("${dir}")
 done
 
 py3dirs=()
-for dir in *-python3/ ; do
+for dir in *-python3-*/ ; do
    py3dirs+=("${dir}")
 done
 
