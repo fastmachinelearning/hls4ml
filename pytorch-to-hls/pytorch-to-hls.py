@@ -82,6 +82,9 @@ def main():
         layer["n_in"] =  int(matchname.group(2))
         layer["n_out"] =  int(matchname.group(3))
 
+        # number of sublayer calls
+        layer["n_part"] = 1
+
         # #Extract type of activation and number of nodes
         layer["activation"] = modelstr[i+1].split(":")[-1].strip().lower()[:-2]
 

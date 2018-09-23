@@ -8,7 +8,8 @@ add_files -tb myproject_test.cpp -cflags "-I[file normalize ../../nnet_utils]"
 add_files -tb firmware/weights
 #add_files -tb tb_data
 open_solution -reset "solution1"
-set_part {xcku115-flvf1924-2-i}
+config_array_partition -maximum_size 4096
+set_part {xcku115-flvb2104-2-i}
 create_clock -period 5 -name default
 csim_design
 csynth_design

@@ -31,7 +31,7 @@ int main(int argc, char **argv)
 {
 
   //hls-fpga-machine-learning insert data
-  input_t  data_str[N_INPUTS] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+  input_t  data_str[N_INPUTS] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 
   result_t res_str[N_OUTPUTS] = {0};

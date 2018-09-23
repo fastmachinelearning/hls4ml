@@ -55,7 +55,11 @@ def hls_writer(layer_list, yamlConfig):
         elif '//hls-fpga-machine-learning insert weights' in line:
             newline = line
             for i in range(1,len(layer_list)+1):
-                if layer_list[i-1]['class_name'] != 'BatchNormalization' and layer_list[i-1]['class_name'] != 'Activation':
+                if layer_list[i-1]['n_part']>1:
+                    for i_part in range(layer_list[i-1]['n_part']):
+                        newline += '#include "weights/w{}_{}.h"\n'.format(i,i_part)
+                        newline += '#include "weights/b{}_{}.h"\n'.format(i,i_part)
+                elif layer_list[i-1]['class_name'] != 'BatchNormalization' and layer_list[i-1]['class_name'] != 'Activation':
                   newline += '#include "weights/w{}.h"\n'.format(i)
                   newline += '#include "weights/b{}.h"\n'.format(i)
                 elif layer_list[i-1]['class_name'] == 'BatchNormalization':
@@ -235,7 +239,7 @@ def hls_writer(layer_list, yamlConfig):
                             if yamlConfig["IOType"] == "io_serial":   sublayerline += '    #pragma HLS STREAM variable=logits{}_0to{} depth=1\n'.format(i,i_part)
                         # compute sublayer outputs
                         for i_part in range(0, layer_list[i-1]['n_part']):
-                            sublayerline += '    nnet::compute_sublayer<{}, {}, config{}_{}>({}, logits{}_{}, w{}, b{});\n'.format(input_type, output_type, i, i_part, input_object, i, i_part, i, i, i)   
+                            sublayerline += '    nnet::compute_layer<{}, {}, config{}_{}>({}, logits{}_{}, w{}_{}, b{}_{});\n'.format(input_type, output_type, i, i_part, input_object, i, i_part, i, i_part, i, i_part)   
 
                         # merge sublayer outputs
                         for i_part in range(0, layer_list[i-1]['n_part']-1):
@@ -368,13 +372,9 @@ def hls_writer(layer_list, yamlConfig):
         typedef weight_default_t weight_t;
         }};\n"""
 
-    dense_sub_config_template = """struct config{index}_{i_part} : nnet::sublayer_config {{
+    dense_sub_config_template = """struct config{index}_{i_part} : nnet::layer_config {{
         static const unsigned n_in = {n_in};
         static const unsigned n_out = {n_out};
-        static const unsigned n_part = {n_part};
-        static const unsigned i_part = {i_part};
-        static const unsigned n_sub_out = {n_sub_out};
-        static const unsigned i_sub_out = {i_sub_out};
         static const unsigned io_type = nnet::{iotype};
         static const unsigned reuse_factor = {reuse};
         static const unsigned n_zeros = {nzeros};
@@ -576,15 +576,12 @@ def hls_writer(layer_list, yamlConfig):
                     else:
                         for i_part in range(0, layer_list[i-1]['n_part']):
                             newline += dense_sub_config_template.format(index=str(i),
-                                                                        n_in=layer_in_name,
-                                                                        n_out=layer_out_name,
-                                                                        n_part=layer_list[i-1]['n_part'],        
                                                                         i_part=i_part,
-                                                                        n_sub_out=layer_list[i-1]['n_subout'][i_part],
-                                                                        i_sub_out=sum([layer_list[i-1]['n_subout'][kk] for kk in range(0, i_part)]),
+                                                                        n_in=layer_in_name,
+                                                                        n_out=layer_list[i-1]['n_subout'][i_part],
                                                                         iotype=yamlConfig["IOType"],
                                                                         reuse=yamlConfig["ReuseFactor"],
-                                                                        nzeros=0) # must recalculate nzeros within sublayer function!
+                                                                        nzeros=layer_list[i-1]['weights_n_subzeros'][i_part])
 
                     newline += activ_config_template.format(type=layer_list[i-1]['activation'],
                                                                     index=str(i), 
@@ -773,16 +770,24 @@ def parse_config(config_file) :
 #######################################
 ## Print a bias or weight array to C++
 #######################################
-def print_array_to_cpp(name, a, odir ):
+def print_array_to_cpp(name, a, odir, i_part = 0, n_part = 1, i_subout = 0, n_subout = 1):
+
+    #put output in subdir for tarballing later
+    #check if we're doing sublayer
+    if n_part > 1:
+        f=open("{}/firmware/weights/{}_{}.h".format(odir,name,i_part),"w")
+        if len(a.shape)==2: # dense weight
+            a = a[:,i_subout:i_subout+n_subout]
+        elif len(a.shape)==1: # bias
+            a = a[i_subout:i_subout+n_subout]
+    else:
+        f=open("{}/firmware/weights/{}.h".format(odir,name),"w")
 
     #count zeros
     zero_ctr = 0
     for x in np.nditer(a, order='C'):
         if x == 0: 
             zero_ctr += 1
-
-    #put output in subdir for tarballing later
-    f=open("{}/firmware/weights/{}.h".format(odir,name),"w")
 
     #meta data
     f.write("//Numpy array shape {}\n".format(a.shape))
@@ -792,11 +797,16 @@ def print_array_to_cpp(name, a, odir ):
     f.write("\n")
     
     #c++ variable 
-    #c++ variable 
     if "w" in name: 
-        f.write("weight_default_t {}".format(name))
+        if n_part > 1:
+            f.write("weight_default_t {}_{}".format(name,i_part))
+        else:
+            f.write("weight_default_t {}".format(name))
     elif "b" in name and not "beta" in name: 
-        f.write("bias_default_t {}".format(name))
+        if n_part > 1:
+            f.write("bias_default_t {}_{}".format(name,i_part))
+        else:
+            f.write("bias_default_t {}".format(name))
     elif "beta" in name: 
         f.write("beta_default_t {}".format(name))	
     elif "mean" in name: 

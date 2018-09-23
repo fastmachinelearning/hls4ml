@@ -5,8 +5,8 @@
 #include "ap_int.h"
 #include "ap_fixed.h"
 #include "nnet_layer.h"
-#include "nnet_sublayer.h"
 #include "nnet_conv.h"
+#include "nnet_conv2d.h"
 #include "nnet_activation.h"
 #include "nnet_common.h"
 
@@ -31,42 +31,9 @@ typedef ap_fixed<16,6> layer3_t;
 struct config1 : nnet::layer_config {
         static const unsigned n_in = N_INPUTS;
         static const unsigned n_out = N_LAYER_1;
-
         static const unsigned io_type = nnet::io_parallel;
         static const unsigned reuse_factor = 1;
-        static const unsigned n_zeros = 0;
-        static const bool store_weights_in_bram = false;
-        typedef accum_default_t accum_t;
-        typedef bias_default_t bias_t;
-        typedef weight_default_t weight_t;
-        };
-struct config1_0 : nnet::sublayer_config {
-        static const unsigned n_in = N_INPUTS;
-        static const unsigned n_out = N_LAYER_1;
-	static const unsigned n_part = 1;
-	static const unsigned i_part = 0;
-	static const unsigned n_sub_out = N_LAYER_1/2;
-	static const unsigned i_sub_out = 0;
-
-        static const unsigned io_type = nnet::io_parallel;
-        static const unsigned reuse_factor = 1;
-        static const unsigned n_zeros = 0;
-        static const bool store_weights_in_bram = false;
-        typedef accum_default_t accum_t;
-        typedef bias_default_t bias_t;
-        typedef weight_default_t weight_t;
-        };
-struct config1_1 : nnet::sublayer_config {
-        static const unsigned n_in = N_INPUTS;
-        static const unsigned n_out = N_LAYER_1;
-	static const unsigned n_part = 1;
-	static const unsigned i_part = 0;
-	static const unsigned n_sub_out = N_LAYER_1/2;
-	static const unsigned i_sub_out = N_LAYER_1/2;
-
-        static const unsigned io_type = nnet::io_parallel;
-        static const unsigned reuse_factor = 1;
-        static const unsigned n_zeros = 0;
+        static const unsigned n_zeros = 593;
         static const bool store_weights_in_bram = false;
         typedef accum_default_t accum_t;
         typedef bias_default_t bias_t;
@@ -77,12 +44,23 @@ struct relu_config1 : nnet::activ_config {
         static const unsigned table_size = 1024;
         static const unsigned io_type = nnet::io_parallel;
         };
-struct config2 : nnet::layer_config {
+struct config2_0 : nnet::layer_config {
         static const unsigned n_in = N_LAYER_1;
-        static const unsigned n_out = N_LAYER_2;
+        static const unsigned n_out = 16;
         static const unsigned io_type = nnet::io_parallel;
         static const unsigned reuse_factor = 1;
-        static const unsigned n_zeros = 1579;
+        static const unsigned n_zeros = 774;
+        static const bool store_weights_in_bram = false;
+        typedef accum_default_t accum_t;
+        typedef bias_default_t bias_t;
+        typedef weight_default_t weight_t;
+        };
+struct config2_1 : nnet::layer_config {
+        static const unsigned n_in = N_LAYER_1;
+        static const unsigned n_out = 16;
+        static const unsigned io_type = nnet::io_parallel;
+        static const unsigned reuse_factor = 1;
+        static const unsigned n_zeros = 805;
         static const bool store_weights_in_bram = false;
         typedef accum_default_t accum_t;
         typedef bias_default_t bias_t;
