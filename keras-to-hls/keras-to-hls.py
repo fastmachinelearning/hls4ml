@@ -81,7 +81,8 @@ def main():
     #print(model_arch)
 
     #Define supported laers
-    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'Conv1D', 'Conv2D','BatchNormalization','Activation']
+    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'Conv1D', 'Conv2D', 'BatchNormalization']
+    activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']
 
     #Define layers to skip for conversion to HLS
     skip_layers = ['InputLayer','Dropout', 'Flatten'] 
@@ -101,7 +102,7 @@ def main():
     # Get input shape and check for unsupported layer type
     current_shape = None
     for keras_layer in layer_config:
-        if keras_layer["class_name"] not in supported_layers:
+        if keras_layer["class_name"] not in supported_layers + activation_layers:
             raise Exception('ERROR: Unsupported layer type: {}'.format(keras_layer["class_name"]))
         if 'batch_input_shape' in keras_layer['config']:
             current_shape = keras_layer['config']['batch_input_shape'] # [None, 100, 7]    
@@ -125,7 +126,8 @@ def main():
         if keras_layer["class_name"] in skip_layers:
             continue 
 
-        layer_counter = layer_counter+1
+        if keras_layer["class_name"] in supported_layers + activation_layers:
+            layer_counter = layer_counter + 1
 
         #Dictionary to fill in and append to layer_list
         layer = {}
@@ -145,31 +147,33 @@ def main():
 
         
         #Translate weights and biases from h5 file
-        if layer['class_name'] != 'BatchNormalization' and layer['class_name'] != 'Activation':
-         found_weights = h5File[layer['name']].visit(find_kernel_in_h5)
-         weights = h5File['/{}/{}'.format(layer['name'],found_weights)][()]
-         found_bias = h5File[layer['name']].visit(find_bias_in_h5)
-         biases = h5File['/{}/{}'.format(layer['name'],found_bias)][()]
-         cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
-         print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
-         layer['weights_n_zeros'] = cur_n_zeros 
+        if layer['class_name'] != 'BatchNormalization' and layer['class_name'] not in activation_layers:
+            found_weights = h5File[layer['name']].visit(find_kernel_in_h5)
+            weights = h5File['/{}/{}'.format(layer['name'],found_weights)][()]
+            found_bias = h5File[layer['name']].visit(find_bias_in_h5)
+            biases = h5File['/{}/{}'.format(layer['name'],found_bias)][()]
+            cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
+            print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
+            layer['weights_n_zeros'] = cur_n_zeros
         elif layer['class_name'] == 'BatchNormalization':
-         cur_n_zeros = []
-         layer['weights_n_zeros'] = cur_n_zeros 
-         found_beta = h5File[layer['name']].visit(find_beta_in_h5)
-         beta = h5File['/{}/{}'.format(layer['name'],found_beta)][()]
-         print_array_to_cpp("beta{}".format(layer_counter), beta, yamlConfig['OutputDir'])
-         found_mean = h5File[layer['name']].visit(find_moving_mean_in_h5)
-         mean = h5File['/{}/{}'.format(layer['name'],found_mean)][()]
-         print_array_to_cpp("mean{}".format(layer_counter), mean, yamlConfig['OutputDir'])	
-         found_gamma = h5File[layer['name']].visit(find_gamma_in_h5)
-         gamma = h5File['/{}/{}'.format(layer['name'],found_gamma)][()]
-         found_var = h5File[layer['name']].visit(find_moving_variance_in_h5)
-         var = h5File['/{}/{}'.format(layer['name'],found_var)][()]
-         var = var + layer['epsilon']
-         scale = gamma/np.sqrt(var)	 
-         print_array_to_cpp("scale{}".format(layer_counter), scale, yamlConfig['OutputDir'])
+            cur_n_zeros = []
+            layer['weights_n_zeros'] = cur_n_zeros 
+            found_beta = h5File[layer['name']].visit(find_beta_in_h5)
+            beta = h5File['/{}/{}'.format(layer['name'],found_beta)][()]
+            print_array_to_cpp("beta{}".format(layer_counter), beta, yamlConfig['OutputDir'])
+            found_mean = h5File[layer['name']].visit(find_moving_mean_in_h5)
+            mean = h5File['/{}/{}'.format(layer['name'],found_mean)][()]
+            print_array_to_cpp("mean{}".format(layer_counter), mean, yamlConfig['OutputDir'])
+            found_gamma = h5File[layer['name']].visit(find_gamma_in_h5)
+            gamma = h5File['/{}/{}'.format(layer['name'],found_gamma)][()]
+            found_var = h5File[layer['name']].visit(find_moving_variance_in_h5)
+            var = h5File['/{}/{}'.format(layer['name'],found_var)][()]
+            var = var + layer['epsilon']
+            scale = gamma/np.sqrt(var)
+            print_array_to_cpp("scale{}".format(layer_counter), scale, yamlConfig['OutputDir'])
         
+        # Skip activation layers if possible
+        skip_layer = False
         # Default one layer call
         layer['n_part'] = 1
         #Get number of inputs and outputs
@@ -266,23 +270,69 @@ def main():
                 layer['pad_left'] = 0
                 layer['pad_right'] = 0
                 current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
-        elif layer['class_name']=='BatchNormalization' and is_dense:
+        elif layer['class_name']=='BatchNormalization':
+            if is_dense:
                 layer['n_in']=mean.shape[0]
                 layer['n_out']=mean.shape[0]
                 layer['n_filt'] = -1
-                current_shape = [current_shape[0], layer['n_out']] 
-        elif layer['class_name']=='BatchNormalization' and is_conv2d:
+                current_shape = [current_shape[0], layer['n_out']]
+            elif is_conv2d:
                 layer['n_in']=current_shape[1]*current_shape[2]*current_shape[3] 
                 layer['n_out']=layer['n_in']
                 layer['in_height']=current_shape[1]
                 layer['in_width']=current_shape[2]
                 layer['n_filt']=current_shape[3]
-                current_shape=[current_shape[0], layer['in_height'], layer['in_width'], layer['n_filt']]	    
-        print('Layer name: {}, layer type: {}, current shape: {}, number of zeros: {}'.format(layer['name'], layer['class_name'], current_shape, layer['weights_n_zeros']))
-        if layer['n_part'] > 1: 
-            print(' -> layer will be divided into {} sublayer calls; output neurons: {} '.format(layer['n_part'], layer['n_subout']))
-        layer_list.append( layer )
-        
+                current_shape=[current_shape[0], layer['in_height'], layer['in_width'], layer['n_filt']]
+        elif layer['class_name']=='Activation':
+            if layer_list[-1]['class_name'] != 'BatchNormalization':
+                layer_list[-1]['activation'] = layer['activation']
+                skip_layer = True
+                layer_counter = layer_counter - 1
+        elif layer['class_name']=='LeakyReLU':
+            if layer_list[-1]['class_name'] != 'BatchNormalization':
+                layer_list[-1]['activation'] = layer['class_name']
+                layer_list[-1]['activ_param'] = keras_layer["config"].get('alpha', 0.3)
+                skip_layer = True
+                layer_counter = layer_counter - 1
+            else:
+                layer['activation'] = layer['class_name']
+                layer['activ_param'] = keras_layer["config"].get('alpha', 0.3)
+        elif layer['class_name']=='ThresholdedReLU':
+            if layer_list[-1]['class_name'] != 'BatchNormalization':
+                layer_list[-1]['activation'] = layer['class_name']
+                layer_list[-1]['activ_param'] = keras_layer["config"].get('theta', 1.)
+                skip_layer = True
+                layer_counter = layer_counter - 1
+            else:
+                layer['activation'] = layer['class_name']
+                layer['activ_param'] = keras_layer["config"].get('theta', 1.)
+        elif layer['class_name']=='ELU':
+            if layer_list[-1]['class_name'] != 'BatchNormalization':
+                layer_list[-1]['activation'] = layer['class_name']
+                layer_list[-1]['activ_param'] = keras_layer["config"].get('alpha', 1.)
+                skip_layer = True
+                layer_counter = layer_counter - 1
+            else:
+                layer['activation'] = layer['class_name']
+                layer['activ_param'] = keras_layer["config"].get('alpha', 1.)
+        elif layer['class_name']=='PReLU':
+            if layer_list[-1]['class_name'] != 'BatchNormalization':
+                layer_list[-1]['activation'] = layer['class_name']
+                skip_layer = True
+                layer_counter = layer_counter - 1
+            else:
+                layer['activation'] = layer['class_name']
+            
+            #Translate learned alpha array from h5 file
+            weights = h5File['/{}/{}/alpha:0'.format(layer['name'],layer['name'])][()]
+            print_array_to_cpp("a{}".format(layer_counter), weights, yamlConfig['OutputDir'])
+
+        if not skip_layer:
+            print('Layer name: {}, layer type: {}, current shape: {}, number of zeros: {}'.format(layer['name'], layer['class_name'], current_shape, cur_n_zeros))
+            if layer['n_part'] > 1: 
+                print(' -> layer will be divided into {} sublayer calls; output neurons: {} '.format(layer['n_part'], layer['n_subout']))
+            layer_list.append( layer )
+
 
     #################
     ## Generate HLS
