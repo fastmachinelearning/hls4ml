@@ -1,0 +1,88 @@
+
+****** Vivado(TM) HLS - High-Level Synthesis from C, C++ and SystemC v2018.2 (64-bit)
+  **** SW Build 2258646 on Thu Jun 14 20:02:38 MDT 2018
+  **** IP Build 2256618 on Thu Jun 14 22:10:49 MDT 2018
+    ** Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
+
+source /opt/local/Xilinx/Vivado/2018.2/scripts/vivado_hls/hls.tcl -notrace
+INFO: [HLS 200-10] Running '/opt/local/Xilinx/Vivado/2018.2/bin/unwrapped/lnx64.o/vivado_hls'
+INFO: [HLS 200-10] For user 'pharris' on host 'correlator2.fnal.gov' (Linux_x86_64 version 3.10.0-862.3.3.el7.x86_64) on Thu Sep 27 14:09:32 CDT 2018
+INFO: [HLS 200-10] On os "Scientific Linux release 7.5 (Nitrogen)"
+INFO: [HLS 200-10] In directory '/home/pharris/tmp/HLS4ML/keras-to-hls/my-hls-test'
+INFO: [HLS 200-10] Opening and resetting project '/home/pharris/tmp/HLS4ML/keras-to-hls/my-hls-test/myproject_prj'.
+INFO: [HLS 200-10] Adding design file 'firmware/myproject.cpp' to the project
+INFO: [HLS 200-10] Adding test bench file 'myproject_test.cpp' to the project
+INFO: [HLS 200-10] Adding test bench file 'firmware/weights' to the project
+INFO: [HLS 200-10] Opening and resetting solution '/home/pharris/tmp/HLS4ML/keras-to-hls/my-hls-test/myproject_prj/solution1'.
+INFO: [HLS 200-10] Cleaning up the solution database.
+INFO: [HLS 200-10] Setting target device to 'xc7vx690tffg1927-2'
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 5ns.
+INFO: [XFORM 203-101] Allowed max sub elements number after partition is 8192.
+***** C SIMULATION *****
+INFO: [SIM 211-2] *************** CSIM start ***************
+INFO: [SIM 211-4] CSIM will launch GCC as the compiler.
+   Compiling ../../../../myproject_test.cpp in debug mode
+   Compiling ../../../../firmware/myproject.cpp in debug mode
+   Generating csim.exe
+0.0566406 0.571289 0.169922 0.158203 0.0458984 
+INFO: [SIM 211-1] CSim done with 0 errors.
+INFO: [SIM 211-3] *************** CSIM finish ***************
+***** C/RTL SYNTHESIS *****
+INFO: [HLS 200-10] Analyzing design file 'firmware/myproject.cpp' ... 
+WARNING: [HLS 214-114] Only function calls and local variable declarations are allowed in a dataflow region: /home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:90:9
+INFO: [HLS 200-111] Finished Linking Time (s): cpu = 00:00:18 ; elapsed = 00:00:20 . Memory (MB): peak = 460.055 ; gain = 4.234 ; free physical = 34958 ; free virtual = 160203
+INFO: [HLS 200-111] Finished Checking Pragmas Time (s): cpu = 00:00:18 ; elapsed = 00:00:20 . Memory (MB): peak = 460.055 ; gain = 4.234 ; free physical = 34958 ; free virtual = 160203
+INFO: [HLS 200-10] Starting code transformations ...
+INFO: [XFORM 203-603] Inlining function 'ap_fixed_base<137, 84, false, (ap_q_mode)5, (ap_o_mode)3, 0>::operator<<' into 'generic_cast_IEEE754<int, (ap_q_mode)6, double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_case_IEEE754.h:17).
+INFO: [XFORM 203-603] Inlining function 'ap_fixed_base<1, 32, false, (ap_q_mode)5, (ap_o_mode)0, 0>::overflow_adjust' into 'ap_fixed_base<1, 32, false, (ap_q_mode)5, (ap_o_mode)0, 0>::ap_fixed_base<137, 84, false, (ap_q_mode)5, (ap_o_mode)3, 0>' ().
+INFO: [HLS 200-111] Finished Standard Transforms Time (s): cpu = 00:00:22 ; elapsed = 00:00:23 . Memory (MB): peak = 656.699 ; gain = 200.879 ; free physical = 34843 ; free virtual = 160102
+INFO: [HLS 200-10] Checking synthesizability ...
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::mantissa' into 'generic_cast_IEEE754<int, (ap_q_mode)6, double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_case_IEEE754.h:14) automatically.
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::expv' into 'generic_cast_IEEE754<int, (ap_q_mode)6, double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_case_IEEE754.h:17) automatically.
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::__signbit' into 'generic_cast_IEEE754<int, (ap_q_mode)6, double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_case_IEEE754.h:49) automatically.
+INFO: [XFORM 203-602] Inlining function 'generic_cast_IEEE754<int, (ap_q_mode)6, double>' into 'generic_cast_IEEE754<int, double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_case_IEEE754.h:98) automatically.
+INFO: [XFORM 203-602] Inlining function 'generic_cast_IEEE754<int, double>' into '__hls_fptosi_double_i32' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/src/lib_floatconversion.cpp:54) automatically.
+INFO: [XFORM 203-602] Inlining function '__hls_fptosi_double_i32' into 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:82) automatically.
+INFO: [XFORM 203-602] Inlining function '__hls_fptosi_double_i32' into 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:82) automatically.
+INFO: [XFORM 203-602] Inlining function '__hls_fptosi_double_i32' into 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config3>' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:82) automatically.
+INFO: [XFORM 203-602] Inlining function '__hls_fptosi_double_i32' into 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config4>' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:82) automatically.
+INFO: [HLS 200-111] Finished Checking Synthesizability Time (s): cpu = 00:00:23 ; elapsed = 00:00:24 . Memory (MB): peak = 656.699 ; gain = 200.879 ; free physical = 34812 ; free virtual = 160073
+INFO: [XFORM 203-502] Unrolling all loops for pipelining in function 'nnet::softmax<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config4>' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_activation.h:228:4).
+INFO: [XFORM 203-502] Unrolling all loops for pipelining in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config4>' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:56:55).
+INFO: [XFORM 203-502] Unrolling all loops for pipelining in function 'nnet::relu<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config3>' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_activation.h:73:39).
+INFO: [XFORM 203-502] Unrolling all loops for pipelining in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config3>' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:56:55).
+INFO: [XFORM 203-502] Unrolling all loops for pipelining in function 'nnet::relu<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config2>' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_activation.h:73:39).
+INFO: [XFORM 203-502] Unrolling all loops for pipelining in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:56:55).
+INFO: [XFORM 203-502] Unrolling all loops for pipelining in function 'nnet::relu<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_activation.h:73:39).
+INFO: [XFORM 203-502] Unrolling all loops for pipelining in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:56:55).
+INFO: [XFORM 203-501] Unrolling loop 'Loop-1' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_activation.h:239) in function 'nnet::softmax<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config4>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-2' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_activation.h:243) in function 'nnet::softmax<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config4>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-2.1' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_activation.h:244) in function 'nnet::softmax<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config4>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-3' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_activation.h:261) in function 'nnet::softmax<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config4>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Product1' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:106) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config4>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Product2' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:111) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config4>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'ResetAccum' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:122) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config4>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Accum1' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:130) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config4>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Accum2' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:134) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config4>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Result' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:141) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config4>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-1' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_activation.h:78) in function 'nnet::relu<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config3>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Product1' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:106) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config3>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Product2' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:111) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config3>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'ResetAccum' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:122) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config3>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Accum1' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:130) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config3>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Accum2' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:134) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config3>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Result' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:141) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config3>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-1' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_activation.h:78) in function 'nnet::relu<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config2>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Product1' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:106) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Product2' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:111) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'ResetAccum' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:122) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Accum1' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:130) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Accum2' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:134) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Result' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:141) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-1' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_activation.h:78) in function 'nnet::relu<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Product1' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:106) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Product2' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:111) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'ResetAccum' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:122) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Accum1' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:130) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Accum2' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:134) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Result' (/home/pharris/tmp/HLS4ML/nnet_utils/nnet_layer.h:141) in function 'nnet::compute_layer<ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<18, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
