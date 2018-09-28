@@ -16,7 +16,8 @@ pipeline {
             dir(path: 'test') {
               sh '''#!/bin/bash
                  . activate hls4ml-py36
-                 cat keras-models.txt | xargs ./keras-to-hls.sh -p 3'''
+                 cat keras-models.txt | xargs ./keras-to-hls.sh -p 3
+                 cat keras-models-serial.txt | xargs ./keras-to-hls.sh -p 3 -s'''
             }
           }
         }
@@ -25,7 +26,8 @@ pipeline {
             dir(path: 'test') {
               sh '''#!/bin/bash
                  . activate hls4ml-py27
-                 cat keras-models.txt | xargs ./keras-to-hls.sh -p 2'''
+                 cat keras-models.txt | xargs ./keras-to-hls.sh -p 2
+                 cat keras-models-serial.txt | xargs ./keras-to-hls.sh -p 2 -s'''
             }
           }
         }
