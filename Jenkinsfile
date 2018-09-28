@@ -16,7 +16,7 @@ pipeline {
             dir(path: 'test') {
               sh '''#!/bin/bash
                  . activate hls4ml-py36
-                 ./convert-keras-models.sh -p 3 -f keras-models.txt'''
+                 ./convert-keras-models.sh -p 3 -x -f keras-models.txt'''
             }
           }
         }
@@ -25,7 +25,7 @@ pipeline {
             dir(path: 'test') {
               sh '''#!/bin/bash
                  . activate hls4ml-py27
-                 ./convert-keras-models.sh -p 2 -f keras-models.txt'''
+                 ./convert-keras-models.sh -p 2 -x -f keras-models.txt'''
             }
           }
         }
