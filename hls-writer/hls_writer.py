@@ -4,6 +4,7 @@ import yaml
 from shutil import copyfile
 import numpy as np
 import os
+import re
 
 def hls_writer(layer_list, yamlConfig):
 
@@ -32,6 +33,8 @@ def hls_writer(layer_list, yamlConfig):
        is_dense = True
        break
     
+    activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']
+    
     # lines to add to .cpp for sublayers
     sublayerlines = []
     # lines to add to .h for sublayers
@@ -55,17 +58,22 @@ def hls_writer(layer_list, yamlConfig):
         elif '//hls-fpga-machine-learning insert weights' in line:
             newline = line
             for i in range(1,len(layer_list)+1):
-                if layer_list[i-1]['n_part']>1:
-                    for i_part in range(layer_list[i-1]['n_part']):
-                        newline += '#include "weights/w{}_{}.h"\n'.format(i,i_part)
-                        newline += '#include "weights/b{}_{}.h"\n'.format(i,i_part)
-                elif layer_list[i-1]['class_name'] != 'BatchNormalization' and layer_list[i-1]['class_name'] != 'Activation':
-                  newline += '#include "weights/w{}.h"\n'.format(i)
-                  newline += '#include "weights/b{}.h"\n'.format(i)
-                elif layer_list[i-1]['class_name'] == 'BatchNormalization':
-                 newline += '#include "weights/beta{}.h"\n'.format(i)
-                 newline += '#include "weights/scale{}.h"\n'.format(i)
-                 newline += '#include "weights/mean{}.h"\n'.format(i)
+                if layer_list[i-1]['class_name'] == 'BatchNormalization':
+                    newline += '#include "weights/beta{}.h"\n'.format(i)
+                    newline += '#include "weights/scale{}.h"\n'.format(i)
+                    newline += '#include "weights/mean{}.h"\n'.format(i)
+                else:
+                    if layer_list[i-1]['n_part']>1:
+                        for i_part in range(layer_list[i-1]['n_part']):
+                            newline += '#include "weights/w{}_{}.h"\n'.format(i,i_part)
+                            newline += '#include "weights/b{}_{}.h"\n'.format(i,i_part)
+                    elif layer_list[i-1]['class_name'] not in activation_layers:
+                        newline += '#include "weights/w{}.h"\n'.format(i)
+                        newline += '#include "weights/b{}.h"\n'.format(i)
+                        if layer_list[i-1].get('activation') == 'PReLU':
+                            newline += '#include "weights/a{}.h"\n'.format(i)
+                    elif layer_list[i-1]['class_name'] == 'PReLU':
+                        newline += '#include "weights/a{}.h"\n'.format(i)
 
         #Add input/output type
         elif '//hls-fpga-machine-learning insert IO' in line:
@@ -102,7 +110,7 @@ def hls_writer(layer_list, yamlConfig):
                     input_object = 'layer{}_out'.format(i-1)
                     n_in = 'IN_HEIGHT_{}*IN_WIDTH_{}*N_FILT_{}'.format(i-1,i-1,i-1)
                 #Layer is Dense, BatchNormalization or Activation
-                elif layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='Activation':
+                elif layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name'] in activation_layers:
                     input_type = 'layer{}_t'.format(i-1)
                     input_object = 'layer{}_out'.format(i-1)
                     n_in = 'N_LAYER_{}'.format(i-1)
@@ -156,8 +164,8 @@ def hls_writer(layer_list, yamlConfig):
                     output_type = 'result_t'
                     output_object = 'res'
                     n_out = 'N_OUTPUTS'
-                    if layer_list[i-1]['class_name']=='Activation': input_type = 'result_t'
-                elif i==len(layer_list) and layer_list[i-1]['class_name']=='Activation' and is_dense:
+                    if layer_list[i-1]['class_name'] in activation_layers: input_type = 'result_t'
+                elif i==len(layer_list) and layer_list[i-1]['class_name'] in activation_layers and is_dense:
                     output_type = 'result_t'
                     output_object = 'res'
                     n_out = 'N_OUTPUTS'
@@ -172,11 +180,11 @@ def hls_writer(layer_list, yamlConfig):
                     out_height = 'OUT_HEIGHT_{}'.format(i)
                     out_width = 'OUT_WIDTH_{}'.format(i)
                     n_filt = 'N_FILT_{}'.format(i)
-                elif(i==len(layer_list)-1 and is_dense and layer_list[i-1]['class_name']=='BatchNormalization' and layer_list[i]['class_name']=='Activation'):
+                elif(i==len(layer_list)-1 and is_dense and layer_list[i-1]['class_name']=='BatchNormalization' and layer_list[i]['class_name'] in activation_layers):
                     output_type = 'result_t'
                     output_object = 'layer{}_out'.format(i)
                     n_out = 'N_OUTPUTS' 
-                elif layer_list[i-1]['class_name']=='Dense' or (layer_list[i-1]['class_name']=='BatchNormalization' and is_dense) or (layer_list[i-1]['class_name']=='Activation' and is_dense):
+                elif layer_list[i-1]['class_name']=='Dense' or (layer_list[i-1]['class_name']=='BatchNormalization' and is_dense) or (layer_list[i-1]['class_name'] in activation_layers and is_dense):
                     output_type = 'layer{}_t'.format(i)
                     output_object = 'layer{}_out'.format(i)
                     n_out = 'N_LAYER_{}'.format(i)
@@ -194,7 +202,7 @@ def hls_writer(layer_list, yamlConfig):
                 #Currently assumes end with dense
 
                 if( i!=len(layer_list) ):
-                    if layer_list[i-1]['class_name']=='Dense' or (layer_list[i-1]['class_name']=='BatchNormalization' and is_dense) or (layer_list[i-1]['class_name']=='Activation' and is_dense):
+                    if layer_list[i-1]['class_name']=='Dense' or (layer_list[i-1]['class_name']=='BatchNormalization' and is_dense) or (layer_list[i-1]['class_name'] in activation_layers and is_dense):
                         newline += '    {} layer{}_out[{}];\n'.format(output_type,i,n_out)
                     elif layer_list[i-1]['class_name']=='Conv1D':
                         newline += '    {} layer{}_out[{}*{}];\n'.format(output_type,i,y_out,n_filt)
@@ -306,39 +314,48 @@ def hls_writer(layer_list, yamlConfig):
                     newline += '    nnet::normalize<{}, {}, config{}>({}, {}, scale{}, beta{}, mean{});\n'.format(input_type, output_type, i, input_object, output_object, i, i, i)
 		    		                    
                 #Activations
-                if 'activation' in layer_list[i-1].keys() and layer_list[i-1]['class_name'] != 'Activation':
-                 activation_name = layer_list[i-1]['activation']+'_config'+str(i)
-                 if layer_list[i-1]['activation'] == "relu":
-                     newline += '    nnet::relu<{}, {}, {}>(logits{}, {});\n'.format(output_type, output_type, activation_name, i, output_object)
-                 elif layer_list[i-1]['activation'] =="softmax":
-                     newline += '    nnet::softmax<{}, {}, {}>(logits{}, {});\n'.format(output_type, output_type, activation_name, i, output_object)
-                 elif layer_list[i-1]['activation'] =="sigmoid":
-                     newline += '    nnet::sigmoid<{}, {}, {}>(logits{}, {});\n'.format(output_type, output_type, activation_name, i, output_object)
-                 elif layer_list[i-1]['activation'] =="tanh":
-                     newline += '    nnet::tanh<{}, {}, {}>(logits{}, {});\n'.format(output_type, output_type, activation_name, i, output_object)
-                 elif layer_list[i-1]['activation'] =="linear": 
-                     #github Issue 53
-                     newline += '    nnet::linear<{}, {}, {}>(logits{}, {});\n'.format(output_type, output_type, activation_name, i, output_object)
-                 else:
-                     raise Exception('ERROR: MISSING ACTIVATION')
-
-                if layer_list[i-1]['class_name'] == 'Activation':
-                 activation_name = layer_list[i-1]['activation']+'_config'+str(i)
-                 if layer_list[i-1]['activation'] == "relu":
-                    newline += '    nnet::relu<{}, {}, {}>({}, {});\n'.format(input_type, output_type, activation_name, input_object, output_object)
-                 elif layer_list[i-1]['activation'] =="softmax":
-                    newline += '    nnet::softmax<{}, {}, {}>({}, {});\n'.format(input_type, output_type, activation_name, input_object, output_object)
-                 elif layer_list[i-1]['activation'] =="sigmoid":
-                    newline += '    nnet::sigmoid<{}, {}, {}>({}, {});\n'.format(input_type, output_type, activation_name, input_object, output_object)
-                 elif layer_list[i-1]['activation'] =="tanh":
-                    newline += '    nnet::tanh<{}, {}, {}>({}, {});\n'.format(input_type, output_type, activation_name, input_object, output_object)
-                 elif layer_list[i-1]['activation'] == "binary_tanh":	
-                    newline += '    nnet::binary_tanh<{}, {}, {}>({}, {});\n'.format(input_type, output_type, activation_name, input_object, output_object)
-                 elif layer_list[i-1]['activation'] =="linear": 
-                    #github Issue 53
-                    newline += '    nnet::linear<{}, {}, {}>(logits{}, {});\n'.format(input_type, output_type, activation_name, input_object, output_object)
-                 else:
-                    raise Exception('ERROR: MISSING ACTIVATION')
+                if layer_list[i-1]['class_name'] in activation_layers or 'activation' in layer_list[i-1].keys():
+                    if layer_list[i-1]['class_name'] not in activation_layers:
+                        act_input_type = output_type
+                        act_input_object = "logits" + str(i)
+                    else:
+                        act_input_type = input_type
+                        act_input_object = input_object
+                    
+                    activation_name = layer_list[i-1]['activation']+'_config'+str(i)
+                    activation_param = layer_list[i-1].get('activ_param')
+                    if layer_list[i-1]['activation'] == "relu":
+                        newline += '    nnet::relu<{}, {}, {}>({}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, output_object)
+                    elif layer_list[i-1]['activation'] == "LeakyReLU":
+                        newline += '    nnet::leaky_relu<{}, {}, {}>({}, {}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, activation_param, output_object)
+                    elif layer_list[i-1]['activation'] == "ThresholdedReLU":
+                        newline += '    nnet::thresholded_relu<{}, {}, {}>({}, {}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, activation_param, output_object)
+                    elif layer_list[i-1]['activation'].lower() == "elu":
+                        if activation_param:
+                            newline += '    nnet::elu<{}, {}, {}>({}, {}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, activation_param, output_object)
+                        else:
+                            newline += '    nnet::elu<{}, {}, {}>({}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, output_object)
+                    elif layer_list[i-1]['activation'] == "selu":
+                        newline += '    nnet::selu<{}, {}, {}>({}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, output_object)
+                    elif layer_list[i-1]['activation'] == "PReLU":
+                        newline += '    nnet::prelu<{}, {}, {}>({}, a{}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, i, output_object)
+                    elif layer_list[i-1]['activation'] == "softmax":
+                        newline += '    nnet::softmax<{}, {}, {}>({}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, output_object)
+                    elif layer_list[i-1]['activation'] == "sigmoid":
+                        newline += '    nnet::sigmoid<{}, {}, {}>({}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, output_object)
+                    elif layer_list[i-1]['activation'] == "hard_sigmoid":
+                        newline += '    nnet::hard_sigmoid<{}, {}, {}>({}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, output_object)
+                    elif layer_list[i-1]['activation'] == "tanh":
+                        newline += '    nnet::tanh<{}, {}, {}>({}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, output_object)
+                    elif layer_list[i-1]['activation'] == "linear": 
+                        #github Issue 53
+                        newline += '    nnet::linear<{}, {}, {}>({}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, output_object)
+                    elif layer_list[i-1]['activation'] == "softsign":
+                        newline += '    nnet::softsign<{}, {}, {}>({}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, output_object)
+                    elif layer_list[i-1]['activation'] == "softplus":
+                        newline += '    nnet::softplus<{}, {}, {}>({}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, output_object)
+                    else:
+                        raise Exception('ERROR: MISSING ACTIVATION')
 
                 newline += '\n'
 
@@ -475,7 +492,7 @@ def hls_writer(layer_list, yamlConfig):
                     newline += '#define N_FILT_{} {}\n'.format(i, layer_list[i-1]['n_filt'])
                 elif i==len(layer_list) and layer_list[i-1]['class_name']=='Dense':
                     newline += '#define N_OUTPUTS {}\n'.format(layer_list[i-1]['n_out'])
-                elif i==len(layer_list) and layer_list[i-1]['class_name']=='Activation':
+                elif i==len(layer_list) and layer_list[i-1]['class_name'] in activation_layers:
                     newline += '#define N_OUTPUTS {}\n'.format(layer_list[i-2]['n_out']) 
                 elif i==len(layer_list) and layer_list[i-1]['class_name']=='BatchNormalization':
                     newline += '#define N_OUTPUTS {}\n'.format(layer_list[i-1]['n_out']) 
@@ -485,7 +502,7 @@ def hls_writer(layer_list, yamlConfig):
                 elif is_dense and layer_list[i-1]['class_name']=='BatchNormalization':
                     newline += '#define N_LAYER_{} {}\n'.format(i, layer_list[i-1]['n_out'])  
                     newline += '#define N_FILT_{} {}\n'.format(i-1, layer_list[i-1]['n_filt']) 	
-                elif layer_list[i-1]['class_name']=='Activation':        
+                elif layer_list[i-1]['class_name'] in activation_layers:        
                     newline += '#define N_LAYER_{} {}\n'.format(i, layer_list[i-2]['n_out'])
                 elif layer_list[i-1]['class_name']=='Conv1D':
                     newline += '#define Y_INPUTS_{} {}\n'.format(i, layer_list[i-1]['y_in'])
@@ -542,10 +559,10 @@ def hls_writer(layer_list, yamlConfig):
                 elif layer_list[i-1]['class_name']=='Dense' and layer_list[i-2]['class_name']=='Conv2D':
                     layer_in_name = "OUT_HEIGHT_{}*OUT_WIDTH_{}*N_FILT_{}".format(i-1, i-1, i-1)
                     layer_out_name = "N_LAYER_{}".format(i)   
-                elif i==len(layer_list) and (layer_list[i-1]['class_name']=='Dense' or (is_dense and layer_list[i-1]['class_name']=='Activation') or (is_dense and layer_list[i-1]['class_name']=='BatchNormalization')):
+                elif i==len(layer_list) and (layer_list[i-1]['class_name']=='Dense' or (is_dense and layer_list[i-1]['class_name'] in activation_layers) or (is_dense and layer_list[i-1]['class_name']=='BatchNormalization')):
                     layer_in_name = "N_LAYER_{}".format(i-1)
                     layer_out_name = "N_OUTPUTS"               
-                elif layer_list[i-1]['class_name']=='Dense' or (is_dense and layer_list[i-1]['class_name']=='Activation'):
+                elif layer_list[i-1]['class_name']=='Dense' or (is_dense and layer_list[i-1]['class_name'] in activation_layers):
                     layer_in_name = "N_LAYER_{}".format(i-1)
                     layer_out_name = "N_LAYER_{}".format(i)
                 elif layer_list[i-1]['class_name']=='Conv1D':
@@ -594,7 +611,7 @@ def hls_writer(layer_list, yamlConfig):
                                                             n_filt=layer_n_filt_name,
                                                             iotype=yamlConfig["IOType"],
                                                             reuse=yamlConfig["ReuseFactor"])
-                elif layer_list[i-1]['class_name']=='Activation':	
+                elif layer_list[i-1]['class_name'] in activation_layers:	
                     newline += activ_config_template.format(type=layer_list[i-1]['activation'],
                                                                     index=str(i), 
                                                                     n_in=layer_out_name,
@@ -796,22 +813,22 @@ def print_array_to_cpp(name, a, odir, i_part = 0, n_part = 1, i_subout = 0, n_su
     f.write("//Number of zeros {}\n".format(zero_ctr))
     f.write("\n")
     
-    #c++ variable 
-    if "w" in name: 
+    #c++ variable
+    if re.match(r"^w\d*$", name) or re.match(r"^a\d*$", name):
         if n_part > 1:
             f.write("weight_default_t {}_{}".format(name,i_part))
         else:
             f.write("weight_default_t {}".format(name))
-    elif "b" in name and not "beta" in name: 
+    elif re.match(r"^b\d*$", name):
         if n_part > 1:
             f.write("bias_default_t {}_{}".format(name,i_part))
         else:
             f.write("bias_default_t {}".format(name))
-    elif "beta" in name: 
+    elif re.match(r"^beta\d*$", name):
         f.write("beta_default_t {}".format(name))	
-    elif "mean" in name: 
+    elif re.match(r"^mean\d*$", name):
         f.write("mean_default_t {}".format(name))
-    elif "scale" in name: 
+    elif re.match(r"^scale\d*$", name):
         f.write("scale_default_t {}".format(name))
     else:
         raise Exception('ERROR: Unkown weights type')
@@ -834,4 +851,3 @@ def print_array_to_cpp(name, a, odir, i_part = 0, n_part = 1, i_subout = 0, n_su
     f.close()
 
     return zero_ctr
-
