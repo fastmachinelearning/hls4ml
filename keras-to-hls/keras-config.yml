@@ -7,4 +7,6 @@ ClockPeriod: 5
 
 IOType: io_parallel # options: io_serial/io_parallel
 ReuseFactor: 1
+Compression: 1 # options: 1 enable data compression, 0 otherwise
+MaxIndexWordSize: 14 # as a rule of thumb, the sum of this value and the word size of the default precision should be 32
 DefaultPrecision: ap_fixed<18,8>
