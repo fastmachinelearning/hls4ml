@@ -45,7 +45,7 @@ def main():
     if not os.path.isabs(yamlConfig['KerasJson']):
         yamlConfig['KerasJson'] = os.path.join(configDir, yamlConfig['KerasJson'])
 
-    if not (yamlConfig["IOType"] == "io_parallel" or yamlConfig["IOType"] == "io_serial"): 
+    if not (yamlConfig["IOType"] == "io_parallel" or yamlConfig["IOType"] == "io_serial"):
         raise Exception('ERROR: Invalid IO type')
 
     ######################
@@ -68,7 +68,7 @@ def main():
     supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'Conv1D', 'Conv2D']
 
     #Define layers to skip for conversion to HLS
-    skip_layers = ['InputLayer','Dropout', 'Flatten'] 
+    skip_layers = ['InputLayer','Dropout', 'Flatten']
 
     #Loop through layers
     layer_counter = 0
@@ -88,7 +88,7 @@ def main():
         if keras_layer["class_name"] not in supported_layers:
             raise Exception('ERROR: Unsupported layer type: {}'.format(keras_layer["class_name"]))
         if 'batch_input_shape' in keras_layer['config']:
-            current_shape = keras_layer['config']['batch_input_shape'] # [None, 100, 7]    
+            current_shape = keras_layer['config']['batch_input_shape'] # [None, 100, 7]
     print('Input shape:', current_shape)
 
     print('Topology:')
@@ -96,7 +96,7 @@ def main():
         if keras_layer["class_name"] is 'Flatten':
             current_shape = [current_shape[0], np.prod(current_shape[1:])]
         if keras_layer["class_name"] in skip_layers:
-            continue 
+            continue
 
         layer_counter = layer_counter+1
 
@@ -121,17 +121,17 @@ def main():
         biases = h5File['/{}/{}'.format(layer['name'],found_bias)][()]
         cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
         print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
-        layer['weights_n_zeros'] = cur_n_zeros 
-        
+        layer['weights_n_zeros'] = cur_n_zeros
+
         # Default one layer call
         layer['n_part'] = 1
-        
+
         #Get number of inputs and outputs
         #(We take it from the weights to avoid dealing with InputLayer and Flatten details)
         if layer['class_name']=='Dense':
             layer['n_in']=weights.shape[0]
             layer['n_out']=weights.shape[1]
-            # if this layer is too big (more than MAXMULT multiplications); 
+            # if this layer is too big (more than MAXMULT multiplications);
             # break it out into chunks!
             layer['n_subout']=[weights.shape[1]]
             if layer['n_in']*layer['n_out']>MAXMULT and yamlConfig["IOType"] != "io_serial":
@@ -142,19 +142,19 @@ def main():
                 while n_totout < layer['n_out']:
                     if n_totout + n_subout <= layer['n_out']:
                         layer['n_subout'].append(n_subout)
-                        n_totout += n_subout                    
+                        n_totout += n_subout
                     else:
                         layer['n_subout'].append(layer['n_out']-n_totout)
                         n_totout += layer['n_out']-n_totout
 
                     layer['n_part'] += 1
-                
+
             current_shape = [current_shape[0], layer['n_out']]
         elif layer['class_name']=='Conv1D':
             # weights.shape = (filter_width, n_channels, n_filters)
             layer['y_in']=current_shape[1]
             layer['y_filt']=weights.shape[0] # or keras_layer['config']['kernel_size']
-            layer['n_chan']=weights.shape[1] 
+            layer['n_chan']=weights.shape[1]
             layer['n_filt']=weights.shape[2] # or keras_layer['config']['filters']
             layer['stride']=keras_layer['config']['strides'][0]
             layer['padding']=keras_layer['config']['padding']
@@ -213,10 +213,10 @@ def main():
                 layer['pad_right'] = 0
                 current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
         print('Layer name: {}, layer type: {}, current shape: {}, number of zeros: {}'.format(layer['name'], layer['class_name'], current_shape, cur_n_zeros))
-        if layer['n_part'] > 1: 
+        if layer['n_part'] > 1:
             print(' -> layer will be divided into {} sublayer calls; output neurons: {} '.format(layer['n_part'], layer['n_subout']))
         layer_list.append( layer )
-        
+
 
     #################
     ## Generate HLS
