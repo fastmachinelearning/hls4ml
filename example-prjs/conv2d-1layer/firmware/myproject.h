@@ -17,35 +17,22 @@
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef NNET_COMMON_H_
-#define NNET_COMMON_H_
+#ifndef MYPROJECT_H_
+#define MYPROJECT_H_
 
+#include <complex>
+#include "ap_int.h"
 #include "ap_fixed.h"
 
-namespace nnet {
+#include "parameters.h"
 
-// Common type definitions
-enum io_type {io_parallel = 0, io_serial};
 
-// Default data types (??) TODO: Deprecate
-typedef ap_fixed<16,4>  weight_t_def;
-typedef ap_fixed<16,4>  bias_t_def;
-typedef ap_fixed<32,10> accum_t_def;
-
- template<class data_T, int NIN1, int NIN2>
-   void merge(
-	      data_T data1[NIN1], 
-	      data_T data2[NIN2],
-	      data_T res[NIN1+NIN2])
- {
-   for(int ii=0; ii<NIN1; ii++){
-     res[ii] = data1[ii];
-   }
-   for(int ii=0; ii<NIN2; ii++){
-     res[NIN1+ii] = data2[ii];
-   }
- }
-
-}
+// Prototype of top level function for C-synthesis
+void myproject(
+      input_t data[IN_HEIGHT][IN_WIDTH][N_CHAN],
+      //result_t res[OUT_HEIGHT][OUT_WIDTH][N_FILT]
+      result_t res[N_OUTPUTS],
+      unsigned short &const_size_in,
+      unsigned short &const_size_out);
 
 #endif

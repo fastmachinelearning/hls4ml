@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import h5py
 import os
@@ -61,7 +62,7 @@ def main():
         Nlayer = -1
         NlayerMatch =re.search("\((\d)\):\s", pytorch_layer)
         if NlayerMatch is not None:
-            print pytorch_layer, NlayerMatch.group(1)
+            print(pytorch_layer, NlayerMatch.group(1))
             Nlayer = NlayerMatch.group(1)
 
         layerFun = pytorch_layer.split(":")[-1]
@@ -80,6 +81,9 @@ def main():
         # #Get number of inputs and outputs
         layer["n_in"] =  int(matchname.group(2))
         layer["n_out"] =  int(matchname.group(3))
+
+        # number of sublayer calls
+        layer["n_part"] = 1
 
         # #Extract type of activation and number of nodes
         layer["activation"] = modelstr[i+1].split(":")[-1].strip().lower()[:-2]
