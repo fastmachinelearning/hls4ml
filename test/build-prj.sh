@@ -124,6 +124,7 @@ if [ "${parallel}" -gt 1 ]; then
       ((n=n%parallel)); ((n++==0)) && wait
       run_vivado "${dir}" "${opt}" &
    done
+   wait
    )
 else
    # Run sequentially
