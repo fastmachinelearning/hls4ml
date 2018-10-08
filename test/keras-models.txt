@@ -1,7 +1,32 @@
+# Keras models from examples directory that will be used for testing
+#
+# Synthax:
+#    MODEL_NAME[:WEIGHTS_FILE] [x:XILINXPART] [c:CLOCK_PERIOD] [io:s] [r:REUSE_FACTOR] [t:AP_TYPE]
+# where
+#    MODEL_NAME - Name of the file containing json model (without ".json")
+#    WEIGHTS_FILE - Name of the HDF5 file containing model weights (without ".h5")
+#    x:XILINXPART - Xilinx part number to use
+#    c:CLOCK_PERIOD - Clock period
+#    io:s - User serial I/O, otherwise use parallel I/O
+#    r:REUSE_FACTOR - Reuse factor
+#    t:AP_TYPE - Default precision
+#
+# Lines starting with "#" are ignored.
+#
+
 KERAS_1layer
 KERAS_3layer
-KERAS_3layer:KERAS_3layer_70pruned_retrained_weights
-KERAS_conv1d
+#KERAS_3layer:KERAS_3layer_70pruned_retrained_weights
+#KERAS_conv1d
 KERAS_conv1d_small
 KERAS_conv2d_model
 KERAS_dense_big
+KERAS_3layer_batch_norm
+
+#Fails synthesis due to a problem with loop unrolling
+#jetTagger_Conv2D_Small:jetTagger_Conv2D_Small
+
+KERAS_1layer io:s
+KERAS_3layer io:s
+
+#KERAS_1layer x:xcku115-flvf1924-2-i
