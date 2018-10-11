@@ -259,7 +259,6 @@ def main():
                     pad_along_width = max(layer['filt_width'] - (in_width % layer['stride_width']), 0)
                 layer['pad_left']  = pad_along_width // 2
                 layer['pad_right']  = pad_along_width - layer['pad_left']
-                current_shape[3] = layer['n_filt']
             elif layer['padding']=='valid':
                 in_height = current_shape[1]
                 in_width = current_shape[2]
@@ -269,7 +268,7 @@ def main():
                 layer['pad_bottom'] = 0
                 layer['pad_left'] = 0
                 layer['pad_right'] = 0
-                current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
+            current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
         elif layer['class_name']=='BatchNormalization':
             if is_dense:
                 layer['n_in']=mean.shape[0]
