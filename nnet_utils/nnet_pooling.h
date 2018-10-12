@@ -40,7 +40,7 @@ template<typename T, int N, Pool_Op op>
 T pool_op(T x[N]){
 	switch(op){
 	case Max: return max<T, N>(x);
-	case Avg: return avg<T, N>(x);
+	case Average: return avg<T, N>(x);
 	case L2Norm: return l2norm<T, N>(x);
 	}
 }

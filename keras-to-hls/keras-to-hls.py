@@ -81,7 +81,7 @@ def main():
     #print(model_arch)
 
     #Define supported laers
-    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'Conv1D', 'Conv2D', 'BatchNormalization']
+    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'Conv1D', 'Conv2D', 'BatchNormalization', 'MaxPooling1D', 'MaxPooling2D', 'AveragePooling1D', 'AveragePooling2D']
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']
 
     #Define layers to skip for conversion to HLS
@@ -147,7 +147,7 @@ def main():
 
         
         #Translate weights and biases from h5 file
-        if layer['class_name'] != 'BatchNormalization' and layer['class_name'] not in activation_layers:
+        if layer['class_name'] != 'BatchNormalization' and layer['class_name'] not in activation_layers and 'Pooling' not in layer['class_name']:
             found_weights = h5File[layer['name']].visit(find_kernel_in_h5)
             weights = h5File['/{}/{}'.format(layer['name'],found_weights)][()]
             found_bias = h5File[layer['name']].visit(find_bias_in_h5)
@@ -283,6 +283,24 @@ def main():
                 layer['in_width']=current_shape[2]
                 layer['n_filt']=current_shape[3]
                 current_shape=[current_shape[0], layer['in_height'], layer['in_width'], layer['n_filt']]
+        elif 'Pooling' in layer['class_name']:
+            info = layer['class_name'].split('Pooling')
+            d = int(info[1].split('D')[0])
+            op = info[0]
+            if d == 1:
+                layer['pool_size']=keras_layer['config']['pool_size']
+                layer['stride']=keras_layer['config']['stride']
+            elif d == 2:
+                # Get the input size from the prev. layer output size
+                layer['in_height']=layer_list[-1]['out_height']
+                layer['in_width']=layer_list[-1]['out_width']
+                layer['n_filt']=layer_list[-1]['n_filt']
+                layer['stride_height']=keras_layer['config']['strides'][0]
+                layer['stride_width']=keras_layer['config']['strides'][1]
+                layer['pool_height']=keras_layer['config']['pool_size'][0]
+                layer['pool_width']=keras_layer['config']['pool_size'][1]
+                layer['out_height']=int((layer['in_height']-layer['pool_height'])/layer['stride_height'] + 1)
+                layer['out_width']=int((layer['in_width']-layer['pool_width'])/layer['stride_width'] + 1)
         elif layer['class_name']=='Activation':
             if layer_list[-1]['class_name'] != 'BatchNormalization':
                 layer_list[-1]['activation'] = layer['activation']
