@@ -5,7 +5,7 @@ pipeline {
     }
   }
   options {
-    timeout(time: 3, unit: 'HOURS')
+    timeout(time: 6, unit: 'HOURS')
   }
 
   stages {
@@ -110,9 +110,9 @@ pipeline {
       steps {
         dir(path: 'test') {
           sh '''#!/bin/bash
-             ./gather-reports.sh -b'''
+             ./gather-reports.sh -b | tee report.rpt'''
         }
-
+        archiveArtifacts artifacts: 'test/report.rpt', fingerprint: true
       }
     }
   }
