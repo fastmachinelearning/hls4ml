@@ -112,8 +112,7 @@ for archive in *.tar.gz ; do
    mkdir -p "${dir}" && tar -xzf "${archive}" -C "${dir}" --strip-components ${#slashes}
 done
 
-source ${vivadodir}/Vivado/${vivadover}/.settings64-Vivado.sh
-source ${vivadodir}/Vivado_HLS/${vivadover}/.settings64-Vivado_High_Level_Synthesis.sh
+source ${vivadodir}/Vivado/${vivadover}/settings64.sh
 
 opt="${csim} ${synth} ${cosim} ${export}"
 
