@@ -47,6 +47,16 @@ fi
 original="${report_files[0]}"
 new="${report_files[1]}"
 
+if [ ! -f "${original}" ]; then
+    echo "Report file ${original} not found!"
+    exit 1
+fi
+
+if [ ! -f "${new}" ]; then
+    echo "Report file ${new} not found!"
+    exit 1
+fi
+
 rptname_orig=()
 reports_orig=()
 report=""
