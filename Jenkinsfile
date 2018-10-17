@@ -110,8 +110,9 @@ pipeline {
       steps {
         dir(path: 'test') {
           sh '''#!/bin/bash
+             printenv
              ./gather-reports.sh -b | tee report.rpt
-             cp $JENKINS_HOME/jobs/hls4ml/branches/master/lastSuccessful/archive/test/report.rpt master.rpt
+             cp ${JENKINS_HOME}/jobs/hls4ml/branches/master/lastSuccessful/archive/test/report.rpt master.rpt
              ./compare-reports.sh -l -u master.rpt report.rpt'''
         }
         archiveArtifacts artifacts: 'test/report.rpt', fingerprint: true
