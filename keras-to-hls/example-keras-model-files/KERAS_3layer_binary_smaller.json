@@ -1,0 +1,308 @@
+{
+    "backend": "tensorflow",
+    "class_name": "Sequential",
+    "config": [
+        {
+            "class_name": "BinaryDense",
+            "config": {
+                "H": 1,
+                "activation": "linear",
+                "activity_regularizer": null,
+                "batch_input_shape": [
+                    null,
+                    16
+                ],
+                "bias_constraint": null,
+                "bias_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
+                "bias_lr_multiplier": null,
+                "bias_regularizer": null,
+                "dtype": "float32",
+                "kernel_constraint": {
+                    "class_name": "Clip",
+                    "config": {
+                        "max_value": 1,
+                        "min_value": -1
+                    }
+                },
+                "kernel_initializer": {
+                    "class_name": "RandomUniform",
+                    "config": {
+                        "maxval": 1,
+                        "minval": -1,
+                        "seed": null
+                    }
+                },
+                "kernel_lr_multiplier": 7.302967548370361,
+                "kernel_regularizer": null,
+                "name": "fc1",
+                "trainable": true,
+                "units": 64,
+                "use_bias": false
+            }
+        },
+        {
+            "class_name": "BatchNormalization",
+            "config": {
+                "axis": -1,
+                "beta_constraint": null,
+                "beta_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
+                "beta_regularizer": null,
+                "center": true,
+                "epsilon": 1e-06,
+                "gamma_constraint": null,
+                "gamma_initializer": {
+                    "class_name": "Ones",
+                    "config": {}
+                },
+                "gamma_regularizer": null,
+                "momentum": 0.9,
+                "moving_mean_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
+                "moving_variance_initializer": {
+                    "class_name": "Ones",
+                    "config": {}
+                },
+                "name": "bn1",
+                "scale": true,
+                "trainable": true
+            }
+        },
+        {
+            "class_name": "Activation",
+            "config": {
+                "activation": "binary_tanh",
+                "name": "act1",
+                "trainable": true
+            }
+        },
+        {
+            "class_name": "BinaryDense",
+            "config": {
+                "H": 1,
+                "activation": "linear",
+                "activity_regularizer": null,
+                "bias_constraint": null,
+                "bias_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
+                "bias_lr_multiplier": null,
+                "bias_regularizer": null,
+                "kernel_constraint": {
+                    "class_name": "Clip",
+                    "config": {
+                        "max_value": 1,
+                        "min_value": -1
+                    }
+                },
+                "kernel_initializer": {
+                    "class_name": "RandomUniform",
+                    "config": {
+                        "maxval": 1,
+                        "minval": -1,
+                        "seed": null
+                    }
+                },
+                "kernel_lr_multiplier": 8.0,
+                "kernel_regularizer": null,
+                "name": "fc2",
+                "trainable": true,
+                "units": 32,
+                "use_bias": false
+            }
+        },
+        {
+            "class_name": "BatchNormalization",
+            "config": {
+                "axis": -1,
+                "beta_constraint": null,
+                "beta_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
+                "beta_regularizer": null,
+                "center": true,
+                "epsilon": 1e-06,
+                "gamma_constraint": null,
+                "gamma_initializer": {
+                    "class_name": "Ones",
+                    "config": {}
+                },
+                "gamma_regularizer": null,
+                "momentum": 0.9,
+                "moving_mean_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
+                "moving_variance_initializer": {
+                    "class_name": "Ones",
+                    "config": {}
+                },
+                "name": "bn2",
+                "scale": true,
+                "trainable": true
+            }
+        },
+        {
+            "class_name": "Activation",
+            "config": {
+                "activation": "binary_tanh",
+                "name": "act2",
+                "trainable": true
+            }
+        },
+        {
+            "class_name": "BinaryDense",
+            "config": {
+                "H": 1,
+                "activation": "linear",
+                "activity_regularizer": null,
+                "bias_constraint": null,
+                "bias_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
+                "bias_lr_multiplier": null,
+                "bias_regularizer": null,
+                "kernel_constraint": {
+                    "class_name": "Clip",
+                    "config": {
+                        "max_value": 1,
+                        "min_value": -1
+                    }
+                },
+                "kernel_initializer": {
+                    "class_name": "RandomUniform",
+                    "config": {
+                        "maxval": 1,
+                        "minval": -1,
+                        "seed": null
+                    }
+                },
+                "kernel_lr_multiplier": 6.531972885131836,
+                "kernel_regularizer": null,
+                "name": "fc3",
+                "trainable": true,
+                "units": 32,
+                "use_bias": false
+            }
+        },
+        {
+            "class_name": "BatchNormalization",
+            "config": {
+                "axis": -1,
+                "beta_constraint": null,
+                "beta_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
+                "beta_regularizer": null,
+                "center": true,
+                "epsilon": 1e-06,
+                "gamma_constraint": null,
+                "gamma_initializer": {
+                    "class_name": "Ones",
+                    "config": {}
+                },
+                "gamma_regularizer": null,
+                "momentum": 0.9,
+                "moving_mean_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
+                "moving_variance_initializer": {
+                    "class_name": "Ones",
+                    "config": {}
+                },
+                "name": "bn3",
+                "scale": true,
+                "trainable": true
+            }
+        },
+        {
+            "class_name": "Activation",
+            "config": {
+                "activation": "binary_tanh",
+                "name": "act3",
+                "trainable": true
+            }
+        },
+        {
+            "class_name": "BinaryDense",
+            "config": {
+                "H": 1,
+                "activation": "linear",
+                "activity_regularizer": null,
+                "bias_constraint": null,
+                "bias_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
+                "bias_lr_multiplier": null,
+                "bias_regularizer": null,
+                "kernel_constraint": {
+                    "class_name": "Clip",
+                    "config": {
+                        "max_value": 1,
+                        "min_value": -1
+                    }
+                },
+                "kernel_initializer": {
+                    "class_name": "RandomUniform",
+                    "config": {
+                        "maxval": 1,
+                        "minval": -1,
+                        "seed": null
+                    }
+                },
+                "kernel_lr_multiplier": 4.966554641723633,
+                "kernel_regularizer": null,
+                "name": "output",
+                "trainable": true,
+                "units": 5,
+                "use_bias": false
+            }
+        },
+        {
+            "class_name": "BatchNormalization",
+            "config": {
+                "axis": -1,
+                "beta_constraint": null,
+                "beta_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
+                "beta_regularizer": null,
+                "center": true,
+                "epsilon": 1e-06,
+                "gamma_constraint": null,
+                "gamma_initializer": {
+                    "class_name": "Ones",
+                    "config": {}
+                },
+                "gamma_regularizer": null,
+                "momentum": 0.9,
+                "moving_mean_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
+                "moving_variance_initializer": {
+                    "class_name": "Ones",
+                    "config": {}
+                },
+                "name": "bn",
+                "scale": true,
+                "trainable": true
+            }
+        }
+    ],
+    "keras_version": "2.0.5"
+}
