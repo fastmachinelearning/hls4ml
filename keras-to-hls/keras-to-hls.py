@@ -290,16 +290,46 @@ def main():
                 layer['pool_size']=keras_layer['config']['pool_size']
                 layer['stride']=keras_layer['config']['stride']
             elif d == 2:
-                # Get the input size from the prev. layer output size
-                layer['in_height']=layer_list[-1]['out_height']
-                layer['in_width']=layer_list[-1]['out_width']
+                layer['in_height']=current_shape[1]
+                layer['in_width']=current_shape[2]
                 layer['n_filt']=layer_list[-1]['n_filt']
                 layer['stride_height']=keras_layer['config']['strides'][0]
                 layer['stride_width']=keras_layer['config']['strides'][1]
                 layer['pool_height']=keras_layer['config']['pool_size'][0]
                 layer['pool_width']=keras_layer['config']['pool_size'][1]
-                layer['out_height']=int((layer['in_height']-layer['pool_height'])/layer['stride_height'] + 1)
-                layer['out_width']=int((layer['in_width']-layer['pool_width'])/layer['stride_width'] + 1)
+                layer['padding']=keras_layer['config']['padding']
+            if layer['padding']=='same':
+                #Height
+                in_height = current_shape[1]
+                layer['out_height'] = int(math.ceil(float(in_height) / float(layer['stride_height'])))
+                if (in_height % layer['stride_height'] == 0):
+                    pad_along_height = max(layer['pool_height'] - layer['stride_height'], 0)
+                else:
+                    pad_along_height = max(layer['pool_height'] - (in_height % layer['stride_height']), 0)
+                layer['pad_top']  = pad_along_height // 2
+                layer['pad_bottom']  = pad_along_height - layer['pad_top']
+                #Width
+                in_width = current_shape[2]
+                layer['out_width'] = int(math.ceil(float(in_width) / float(layer['stride_width'])))
+                if (in_width % layer['stride_width'] == 0):
+                    pad_along_width = max(layer['pool_width'] - layer['stride_width'], 0)
+                else:
+                    pad_along_width = max(layer['pool_width'] - (in_width % layer['stride_width']), 0)
+                layer['pad_left']  = pad_along_width // 2
+                layer['pad_right']  = pad_along_width - layer['pad_left']
+                layer['n_out'] = layer['out_height'] * layer['out_width'] * layer['n_filt']
+            elif layer['padding']=='valid':
+                in_height = current_shape[1]
+                in_width = current_shape[2]
+                layer['out_width'] = int(math.ceil(float(in_width - layer['pool_width'] + 1) / float(layer['stride_width'])))
+                layer['out_height'] = int(math.ceil(float(in_height - layer['pool_height'] + 1) / float(layer['stride_height'])))
+                layer['pad_top'] = 0
+                layer['pad_bottom'] = 0
+                layer['pad_left'] = 0
+                layer['pad_right'] = 0
+                layer['n_out'] = layer['out_height'] * layer['out_height'] * layer['n_filt'] 
+            current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
+
         elif layer['class_name']=='Activation':
             if layer_list[-1]['class_name'] != 'BatchNormalization':
                 layer_list[-1]['activation'] = layer['activation']
