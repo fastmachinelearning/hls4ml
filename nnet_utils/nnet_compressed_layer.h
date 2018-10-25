@@ -24,6 +24,9 @@
 #include "hls_stream.h"
 #include <math.h>
 
+// This is a substitute for "ceil(n/(float)d)".
+#define DIV_ROUNDUP(n,d) ((n + d - 1) / d)
+
 namespace nnet {
 
 template<class data_T, class res_T, typename CONFIG_T>
@@ -36,9 +39,6 @@ void compute_compressed_layer(
     // Create a separate module for each layer
 #pragma HLS inline off
 #pragma HLS function_instantiate variable=weights,biases
-
-    // Pack the weight/index in a single element
-//#pragma HLS data_pack variable=weights struct_level
 
     typename CONFIG_T::compressed_weight_t mult[CONFIG_T::n_nonzeros];
 //#pragma HLS data_pack variable=mult struct_level
@@ -56,50 +56,38 @@ void compute_compressed_layer(
     printf("INFO:   store_weights_in_bram: %u\n", CONFIG_T::store_weights_in_bram);
 
     if (CONFIG_T::io_type == io_parallel) {
-    	printf("INFO:   io_type: io_parallel\n");
-
         // For parallel inputs:
         //   - completely partition arrays
         //   - if we have a reuse factor, limit number of multipliers
 #pragma HLS ARRAY_PARTITION variable=biases complete
-#pragma HLS ARRAY_PARTITION variable=mult complete
 #pragma HLS ARRAY_PARTITION variable=acc complete
 
 #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
-        unsigned multiplier_limit  = ceil(float(CONFIG_T::n_nonzeros) / float(CONFIG_T::reuse_factor));
+        int multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_nonzeros, CONFIG_T::reuse_factor);
 #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
          if (CONFIG_T::store_weights_in_bram) {
-             unsigned block_size = CONFIG_T::n_nonzeros / CONFIG_T::reuse_factor;
-#pragma HLS ARRAY_RESHAPE variable=weights block factor=block_size
+#pragma HLS ARRAY_RESHAPE variable=weights block factor=multiplier_limit
 #pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
+#pragma HLS ARRAY_RESHAPE variable=mult block factor=multiplier_limit
+#pragma HLS RESOURCE variable=mult core=RAM_2P_BRAM
+
+    // Pack the row_index, col_index, and weight in a single 32-bit memory element
+#pragma HLS data_pack variable=weights struct_level
+#pragma HLS data_pack variable=mult struct_level
          } else {
 #pragma HLS ARRAY_PARTITION variable=weights complete
+#pragma HLS ARRAY_PARTITION variable=mult complete
          }
 
     } else if (CONFIG_T::io_type == io_serial) {
-    	printf("INFO:   io_type: io_serial\n");
-
-//        // Only reduce cycle_factor if n_out is evenly divisible by reuse_factor
-//        // Otherwise, HLS wont be happy
-//        int cycle_factor = CONFIG_T::n_out;
-//        float reused_cycle = CONFIG_T::n_out / CONFIG_T::reuse_factor;
-//        if (reused_cycle == ceil(reused_cycle)){
-//            // Dont use "ceil" here; as of 2018.2, HLS crashes mysteriously
-//            cycle_factor = cycle_factor / CONFIG_T::reuse_factor;
-//        }
+        // TODO: to be extended and tested! 
 
 #pragma HLS ARRAY_PARTITION variable=biases complete
 #pragma HLS ARRAY_PARTITION variable=acc complete
 
 
-//#pragma HLS ARRAY_PARTITION variable=weights cyclic factor=cycle_factor
-////#pragma HLS ARRAY_PARTITION variable=mult cyclic factor=cycle_factor
-//#pragma HLS ARRAY_PARTITION variable=biases complete
-//#pragma HLS ARRAY_PARTITION variable=acc complete
-////#pragma HLS STREAM variable=mult depth=1
-////#pragma HLS STREAM variable=acc depth=1
         if (CONFIG_T::store_weights_in_bram) {
 #pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
 #pragma HLS RESOURCE variable=mul core=ROM_2P_BRAM
@@ -109,20 +97,20 @@ void compute_compressed_layer(
 
     // Do the compressed matrix-multiply
 COMPRESSED_MAT_MULT_L:
-	for(unsigned i = 0; i < CONFIG_T::n_nonzeros; i++) {
+    for(unsigned i = 0; i < CONFIG_T::n_nonzeros; i++) {
         if (CONFIG_T::io_type == io_serial){
 #pragma HLS PIPELINE
         }
 
-        // TODO: remove this division
-		unsigned j = weights[i].index / CONFIG_T::n_out;
-        mult[i].index = weights[i].index;
+        unsigned j = weights[i].row_index;
+        mult[i].row_index = weights[i].row_index;
+        mult[i].col_index = weights[i].col_index;
         mult[i].weight = weights[i].weight * data[j];
     }
 
     // Initialize accumulator with input biases
 ACCUMULATOR_INIT_L:
-	for(unsigned i = 0; i < CONFIG_T::n_out; i++) {
+    for(unsigned i = 0; i < CONFIG_T::n_out; i++) {
         if (CONFIG_T::io_type == io_serial){
 #pragma HLS UNROLL
         }
@@ -136,13 +124,13 @@ COMPRESSED_ACCUMULATOR_L:
 #pragma HLS PIPELINE
         }
 
-        unsigned j = mult[i].index % CONFIG_T::n_out;
+        unsigned j = mult[i].col_index;
         acc[j] += mult[i].weight;
     }
 
     // Cast to "res_t" type
 RESULT_L:
-	for(unsigned i = 0; i < CONFIG_T::n_out; i++){
+    for(unsigned i = 0; i < CONFIG_T::n_out; i++){
         if (CONFIG_T::io_type == io_serial){
 #pragma HLS UNROLL
         }

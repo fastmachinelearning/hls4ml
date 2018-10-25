@@ -357,7 +357,7 @@ def hls_writer(layer_list, yamlConfig):
             newline += 'typedef {precision} input_t;\n'.format(precision=yamlConfig["DefaultPrecision"])
             newline += 'typedef {precision} result_t;\n'.format(precision=yamlConfig["DefaultPrecision"])
             newline += 'typedef ap_uint<{precision}> index_default_t;\n'.format(precision=yamlConfig["MaxIndexWordSize"])
-            newline += 'typedef struct compressed_weight_default_t { index_default_t index; weight_default_t weight; } compressed_weight_default_t;\n'
+            newline += 'typedef struct compressed_weight_default_t { index_default_t row_index; index_default_t col_index; weight_default_t weight; } compressed_weight_default_t;\n'
             for i in range(1,len(layer_list)+1):
 
                 if i==1 and layer_list[i-1]['class_name']=='Dense':
@@ -688,16 +688,18 @@ def print_compressed_array_to_cpp(name, a, odir ):
     f.write(" = {")
 
     # fill c++ array.
+    nrows = a.shape[0]
+    ncols = a.shape[1]
     first_element = 1
     i = 0
     for x in np.nditer(a):
         if first_element == 1:
             if x != 0:
-                f.write("{ %u, %.12f }" % (i, x))
+                f.write("{ %u, %u, %.12f }" % (i/ncols, i%ncols, x))
                 first_element=0
         else:
             if x != 0:
-                f.write(", { %u, %.12f }" % (i, x))
+                f.write(", { %u, %u, %.12f }" % (i/ncols, i%ncols, x))
         i = i + 1
     f.write("};\n")
     f.close()
