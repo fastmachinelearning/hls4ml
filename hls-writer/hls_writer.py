@@ -160,7 +160,7 @@ def hls_writer(layer_list, yamlConfig):
 
 
                 #Outputs of compute_layer and activation 
-                if i==len(layer_list) and layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense':
+                if i==len(layer_list) and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense'):
                     output_type = 'result_t'
                     output_object = 'res'
                     n_out = 'N_OUTPUTS'
@@ -355,7 +355,7 @@ def hls_writer(layer_list, yamlConfig):
                     elif layer_list[i-1]['activation'] == "softplus":
                         newline += '    nnet::softplus<{}, {}, {}>({}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, output_object)
                     elif layer_list[i-1]['activation'] == "binary_tanh":	
-                        newline += '    nnet::binary_tanh<{}, {}, {}>({}, {});\n'.format(input_type, output_type, activation_name, input_object, output_object) 
+                        newline += '    nnet::binary_tanh<{}, {}, {}>({}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, output_object) 
                     else:
                         raise Exception('ERROR: MISSING ACTIVATION')
 
