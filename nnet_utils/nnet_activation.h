@@ -674,6 +674,35 @@ void  binary_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
  
 }
 
+// *************************************************
+//       Ternary TanH Activation
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void  ternary_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
+{
+
+ if (CONFIG_T::io_type == io_parallel){
+     #pragma HLS PIPELINE
+ }
+  
+ data_T datareg;   
+ res_T cache; 
+ for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+
+  if (CONFIG_T::io_type == io_serial){
+      #pragma HLS PIPELINE
+  }
+  datareg = data[ii];	 
+  if( datareg >= 1 ) cache = 1;
+  else if( datareg > -1 && datareg < 1) cache = datareg;
+  else cache = -1;
+  
+  res[ii] = (res_T) cache;
+ 
+ }
+ 
+}
+
 }
 
 #endif

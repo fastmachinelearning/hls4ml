@@ -29,7 +29,7 @@ def hls_writer(layer_list, yamlConfig):
       break
     if not is_conv2d:
      for i in range(1,len(layer_list)+1):
-      if layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense':
+      if layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or layer_list[i-1]['class_name']=='TernaryDense':
        is_dense = True
        break
     
@@ -95,7 +95,7 @@ def hls_writer(layer_list, yamlConfig):
                 #Input to compute_layer
 
                 #First layer and dense
-                if i==1 and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or (layer_list[i-1]['class_name']=='BatchNormalization' and is_dense)):
+                if i==1 and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or layer_list[i-1]['class_name']=='TernaryDense' or (layer_list[i-1]['class_name']=='BatchNormalization' and is_dense)):
                     input_type = 'input_t'
                     input_object = 'data'
                     n_in = 'N_INPUTS'
@@ -110,7 +110,7 @@ def hls_writer(layer_list, yamlConfig):
                     input_object = 'layer{}_out'.format(i-1)
                     n_in = 'IN_HEIGHT_{}*IN_WIDTH_{}*N_FILT_{}'.format(i-1,i-1,i-1)
                 #Layer is Dense, BatchNormalization or Activation
-                elif layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or layer_list[i-1]['class_name'] in activation_layers:
+                elif layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or layer_list[i-1]['class_name']=='TernaryDense' or layer_list[i-1]['class_name'] in activation_layers:
                     input_type = 'layer{}_t'.format(i-1)
                     input_object = 'layer{}_out'.format(i-1)
                     n_in = 'N_LAYER_{}'.format(i-1)
@@ -160,7 +160,7 @@ def hls_writer(layer_list, yamlConfig):
 
 
                 #Outputs of compute_layer and activation 
-                if i==len(layer_list) and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense'):
+                if i==len(layer_list) and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or layer_list[i-1]['class_name']=='TernaryDense'):
                     output_type = 'result_t'
                     output_object = 'res'
                     n_out = 'N_OUTPUTS'
@@ -184,7 +184,7 @@ def hls_writer(layer_list, yamlConfig):
                     output_type = 'result_t'
                     output_object = 'layer{}_out'.format(i)
                     n_out = 'N_OUTPUTS' 
-                elif layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or (layer_list[i-1]['class_name']=='BatchNormalization' and is_dense) or (layer_list[i-1]['class_name'] in activation_layers and is_dense):
+                elif layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or layer_list[i-1]['class_name']=='TernaryDense' or (layer_list[i-1]['class_name']=='BatchNormalization' and is_dense) or (layer_list[i-1]['class_name'] in activation_layers and is_dense):
                     output_type = 'layer{}_t'.format(i)
                     output_object = 'layer{}_out'.format(i)
                     n_out = 'N_LAYER_{}'.format(i)
@@ -202,7 +202,7 @@ def hls_writer(layer_list, yamlConfig):
                 #Currently assumes end with dense
 
                 if( i!=len(layer_list) ):
-                    if layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or (layer_list[i-1]['class_name']=='BatchNormalization' and is_dense) or (layer_list[i-1]['class_name'] in activation_layers and is_dense):
+                    if layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or layer_list[i-1]['class_name']=='TernaryDense' or (layer_list[i-1]['class_name']=='BatchNormalization' and is_dense) or (layer_list[i-1]['class_name'] in activation_layers and is_dense):
                         newline += '    {} layer{}_out[{}];\n'.format(output_type,i,n_out)
                     elif layer_list[i-1]['class_name']=='Conv1D':
                         newline += '    {} layer{}_out[{}*{}];\n'.format(output_type,i,y_out,n_filt)
@@ -219,7 +219,7 @@ def hls_writer(layer_list, yamlConfig):
                 #if layer_list[i-1]['activation'] == "linear" and layer_list[i-1]['class_name']=='Dense':
                 #    newline += '    nnet::compute_layer<{}, {}, config{}>({}, {}, w{}, b{});\n'.format(input_type, output_type, i, input_object, output_object, i, i)
                 #elif layer_list[i-1]['class_name']=='Dense':
-                if layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense':
+                if layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or layer_list[i-1]['class_name']=='TernaryDense':
                     newline += '    {} logits{}[{}];\n'.format(output_type,i,n_out)
                     if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=logits{} complete dim=0\n'.format(i)
                     if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=logits{} depth=1\n'.format(i)
@@ -356,6 +356,8 @@ def hls_writer(layer_list, yamlConfig):
                         newline += '    nnet::softplus<{}, {}, {}>({}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, output_object)
                     elif layer_list[i-1]['activation'] == "binary_tanh":	
                         newline += '    nnet::binary_tanh<{}, {}, {}>({}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, output_object) 
+                    elif layer_list[i-1]['activation'] == "ternary_tanh":	
+                        newline += '    nnet::ternary_tanh<{}, {}, {}>({}, {});\n'.format(act_input_type, output_type, activation_name, act_input_object, output_object) 
                     else:
                         raise Exception('ERROR: MISSING ACTIVATION')
 
@@ -479,7 +481,7 @@ def hls_writer(layer_list, yamlConfig):
              newline += 'typedef {precision} scale_default_t;\n'.format(precision=yamlConfig["DefaultPrecision"])
 
             for i in range(1,len(layer_list)+1):
-                if i==1 and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense'):
+                if i==1 and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or layer_list[i-1]['class_name']=='TernaryDense'):
                     newline += '#define N_INPUTS {}\n'.format(layer_list[i-1]['n_in'])
                     newline += '#define N_LAYER_1 {}\n'.format(layer_list[i-1]['n_out'])
                 elif i==1 and layer_list[i-1]['class_name']=='BatchNormalization' and is_dense:
@@ -492,14 +494,14 @@ def hls_writer(layer_list, yamlConfig):
                     newline += '#define IN_HEIGHT_{} {}\n'.format(i, layer_list[i-1]['in_height'])
                     newline += '#define IN_WIDTH_{} {}\n'.format(i, layer_list[i-1]['in_width'])
                     newline += '#define N_FILT_{} {}\n'.format(i, layer_list[i-1]['n_filt'])
-                elif i==len(layer_list) and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense'):
+                elif i==len(layer_list) and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or layer_list[i-1]['class_name']=='TernaryDense'):
                     newline += '#define N_OUTPUTS {}\n'.format(layer_list[i-1]['n_out'])
                 elif i==len(layer_list) and layer_list[i-1]['class_name'] in activation_layers:
                     newline += '#define N_OUTPUTS {}\n'.format(layer_list[i-2]['n_out']) 
                 elif i==len(layer_list) and layer_list[i-1]['class_name']=='BatchNormalization':
                     newline += '#define N_OUTPUTS {}\n'.format(layer_list[i-1]['n_out']) 
                     newline += '#define N_FILT_{} {}\n'.format(i-1, layer_list[i-1]['n_filt']) 
-                elif layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense':
+                elif layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or layer_list[i-1]['class_name']=='TernaryDense':
                     newline += '#define N_LAYER_{} {}\n'.format(i, layer_list[i-1]['n_out'])    
                 elif is_dense and layer_list[i-1]['class_name']=='BatchNormalization':
                     newline += '#define N_LAYER_{} {}\n'.format(i, layer_list[i-1]['n_out'])  
@@ -533,7 +535,7 @@ def hls_writer(layer_list, yamlConfig):
         elif "//hls-fpga-machine-learning insert layer-config" in line:
             newline = line
             for i in range(1,len(layer_list)+1):
-                if i==1 and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or layer_list[i-1]['class_name']=='BatchNormalization'):
+                if i==1 and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or layer_list[i-1]['class_name']=='TernaryDense' or layer_list[i-1]['class_name']=='BatchNormalization'):
                     layer_in_name = "N_INPUTS"
                     layer_out_name = "N_LAYER_1"                        
                     layer_n_filt_name = "N_FILT_1"
@@ -561,10 +563,10 @@ def hls_writer(layer_list, yamlConfig):
                 elif layer_list[i-1]['class_name']=='Dense' and layer_list[i-2]['class_name']=='Conv2D':
                     layer_in_name = "OUT_HEIGHT_{}*OUT_WIDTH_{}*N_FILT_{}".format(i-1, i-1, i-1)
                     layer_out_name = "N_LAYER_{}".format(i)   
-                elif i==len(layer_list) and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or (is_dense and layer_list[i-1]['class_name'] in activation_layers) or (is_dense and layer_list[i-1]['class_name']=='BatchNormalization')):
+                elif i==len(layer_list) and (layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or layer_list[i-1]['class_name']=='TernaryDense' or (is_dense and layer_list[i-1]['class_name'] in activation_layers) or (is_dense and layer_list[i-1]['class_name']=='BatchNormalization')):
                     layer_in_name = "N_LAYER_{}".format(i-1)
                     layer_out_name = "N_OUTPUTS"               
-                elif layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or (is_dense and layer_list[i-1]['class_name'] in activation_layers):
+                elif layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or layer_list[i-1]['class_name']=='TernaryDense' or (is_dense and layer_list[i-1]['class_name'] in activation_layers):
                     layer_in_name = "N_LAYER_{}".format(i-1)
                     layer_out_name = "N_LAYER_{}".format(i)
                 elif layer_list[i-1]['class_name']=='Conv1D':
@@ -584,7 +586,7 @@ def hls_writer(layer_list, yamlConfig):
                     layer_in_name = "OUT_HEIGHT_{}*OUT_WIDTH_{}*N_FILT_{}".format(i-1, i-1, i-1)
                     layer_out_name = "N_LAYER_{}".format(i)
                     layer_n_filt_name = "N_FILT_{}".format(i-1)
-                if layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense':
+                if layer_list[i-1]['class_name']=='Dense' or layer_list[i-1]['class_name']=='BinaryDense' or layer_list[i-1]['class_name']=='TernaryDense':
                     if layer_list[i-1]['n_part']==1:
                         newline += dense_config_template.format(index=str(i), 
                                                                 n_in=layer_in_name, 
@@ -682,7 +684,7 @@ def hls_writer(layer_list, yamlConfig):
         #Insert numbers
         if 'myproject' in line:
             newline = line.replace('myproject',yamlConfig['ProjectName'])
-        elif '//hls-fpga-machine-learning insert data' in line and (layer_list[0]['class_name']=='Dense' or layer_list[0]['class_name']=='BinaryDense' or (is_dense and layer_list[0]['class_name']=='BatchNormalization')):
+        elif '//hls-fpga-machine-learning insert data' in line and (layer_list[0]['class_name']=='Dense' or layer_list[0]['class_name']=='BinaryDense' or layer_list[0]['class_name']=='TernaryDense' or (is_dense and layer_list[0]['class_name']=='BatchNormalization')):
             newline = line
             newline += '  input_t  data_str[N_INPUTS] = {'
             for i in range(0,layer_list[0]['n_in']-1):
@@ -808,11 +810,15 @@ def print_array_to_cpp(name, a, odir, quantize=0, i_part = 0, n_part = 1, i_subo
         if x == 0: 
             zero_ctr += 1
 
-    #quantize weights if BinaryDense
+    #quantize weights if BinaryDense or TernaryDense
     if quantize == 2:
      a[a>0] = 1
      a[a<=0] = -1
-    elif quantize == 3: a = ternarize_weights(a) #to be implemented
+    elif quantize == 3:
+     ones = np.ones_like(a)
+     zeros = np.zeros_like(a)
+     at = np.where(a > 0.5, ones, np.where(a <= -0.5, -ones, zeros))
+     a = at
 
     #meta data
     f.write("//Numpy array shape {}\n".format(a.shape))

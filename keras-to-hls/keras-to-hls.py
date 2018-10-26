@@ -81,7 +81,7 @@ def main():
     #print(model_arch)
 
     #Define supported laers
-    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'BinaryDense', 'Conv1D', 'Conv2D', 'BatchNormalization']
+    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'BinaryDense', 'TernaryDense', 'Conv1D', 'Conv2D', 'BatchNormalization']
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']
 
     #Define layers to skip for conversion to HLS
@@ -116,9 +116,10 @@ def main():
      if keras_layer["class_name"]=='Conv2D':
       is_conv2d = True
       break
-     if keras_layer["class_name"]=='Dense' or keras_layer["class_name"]=='BinaryDense':
+     if keras_layer["class_name"]=='Dense' or keras_layer["class_name"]=='BinaryDense' or keras_layer["class_name"]=='TernaryDense':
       is_dense = True
       if keras_layer["class_name"]=='BinaryDense': quantize = 2
+      if keras_layer["class_name"]=='TernaryDense': quantize = 3
       break
 	        
     print('Topology:')
@@ -181,7 +182,7 @@ def main():
         layer['n_part'] = 1
         #Get number of inputs and outputs
         #(We take it from the weights to avoid dealing with InputLayer and Flatten details)
-        if layer['class_name']=='Dense' or layer['class_name']=='BinaryDense':
+        if layer['class_name']=='Dense' or layer['class_name']=='BinaryDense' or layer['class_name']=='TernaryDense':
             layer['n_in']=weights.shape[0]
             layer['n_out']=weights.shape[1]
             # if this layer is too big (more than MAXMULT multiplications); 
