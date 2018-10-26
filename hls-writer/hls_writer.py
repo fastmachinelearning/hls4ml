@@ -63,7 +63,7 @@ def hls_writer(layer_list, yamlConfig):
                     newline += '#include "weights/scale{}.h"\n'.format(i)
                     newline += '#include "weights/mean{}.h"\n'.format(i)
                 elif 'Pooling' in layer_list[i-1]['class_name']:
-                    pass # No headers for pooling
+                    pass # No weights for pooling
                 else:
                     if layer_list[i-1]['n_part']>1:
                         for i_part in range(layer_list[i-1]['n_part']):
@@ -216,9 +216,9 @@ def hls_writer(layer_list, yamlConfig):
                 if( i!=len(layer_list) ):
                     if layer_list[i-1]['class_name']=='Dense' or (layer_list[i-1]['class_name']=='BatchNormalization' and is_dense) or (layer_list[i-1]['class_name'] in activation_layers and is_dense):
                         newline += '    {} layer{}_out[{}];\n'.format(output_type,i,n_out)
-                    elif layer_list[i-1]['class_name']=='Conv1D':
+                    elif layer_list[i-1]['class_name']=='Conv1D' or 'Pooling1D' in layer_list[i-1]['class_name']:
                         newline += '    {} layer{}_out[{}*{}];\n'.format(output_type,i,y_out,n_filt)
-                    elif layer_list[i-1]['class_name']=='Conv2D':
+                    elif layer_list[i-1]['class_name']=='Conv2D' or 'Pooling2D' in layer_list[i-1]['class_name']:
                         newline += '    {} layer{}_out[{}*{}*{}];\n'.format(output_type,i,out_height,out_width,n_filt)
                     elif layer_list[i-1]['class_name']=='BatchNormalization' and is_conv2d:
                         if i!= 1: newline += '    {} layer{}_out[{}*{}*{}];\n'.format(output_type,i,out_height,out_width,n_filt)
@@ -350,9 +350,6 @@ def hls_writer(layer_list, yamlConfig):
                         else:
                             newline += '    nnet::pooling2d<{}, config{i}>({}, {});\n'.format(input_type, i, input_object, output_object)
                         # Flatten the pooling output
-                        newline += '    {} layer{}_out[{}];\n'.format(input_type, i, '*'.join([out_height, out_width, n_filt]))
-                        if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=layer{}_out complete dim=0\n'.format(i)
-                        if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=layer{}_out complete depth=1\n'.format(i)
                         newline += '    nnet::flatten<{}, {}, {}, {}>(pool2d_layer{}_out, layer{}_out);\n'.format(input_type, out_height, out_width, n_filt, i, i)
                         
                 #Activations

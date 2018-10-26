@@ -1,6 +1,8 @@
 #ifndef NNET_POOLING_H_
 #define NNET_POOLING_H_
 
+#include <iostream>
+
 namespace nnet{
 
 // Return the maximum value from an array
@@ -43,6 +45,25 @@ T pool_op(T x[N]){
 	case Average: return avg<T, N>(x);
 	// case L2Norm: return l2norm<T, N>(x);
 	}
+}
+
+template<typename T, Pool_Op op>
+T pad_val(){
+  /*---
+  *- In Tensorflow, pooling ignores the value in the padded cells
+  *- For Avg pooling, return 0 (the divisior is modified to the
+  *- area overlapping the unpadded image.
+  *- For max pooling, return the most negative value for the type.
+  *- TODO this is not really generic, it assumes fixed point or integer T
+  ---*/
+  switch(op){
+    case Max:{ 
+      T x = 0;
+      x[x.width - 1] = 1;
+      return x;
+      break;}
+    case Average: return 0;
+  }
 }
 
 struct pooling1d_config{
@@ -92,38 +113,39 @@ void pooling2d(data_T data[CONFIG_T::in_height][CONFIG_T::in_width][CONFIG_T::n_
                data_T res[CONFIG_T::out_height][CONFIG_T::out_width][CONFIG_T::n_filt]){
 
   // Add any necessary padding
-  unsigned padded_height = CONFIG_T::in_height + CONFIG_T::pad_top + CONFIG_T::pad_bottom;
-  unsigned padded_width = CONFIG_T::in_width + CONFIG_T::pad_left + CONFIG_T::pad_right;
-  data_T dataInt[padded_height][padded_width][CONFIG_T::n_filt];
-  for(int ff = 0; ff < CONFIG_T::n_filt; ff++){
-    for(int ii = 0; ii < padded_height; ii++){
-      for(int jj = 0; jj < padded_width; jj++){
-        if(ii < CONFIG_T::pad_top || ii > CONFIG_T::pad_bottom || jj < CONFIG_T::pad_left || jj > CONFIG_T::pad_right){
-          dataInt[ii][jj][ff] = 0;
-        }
-        dataInt[ii][jj][ff] = data[ii - CONFIG_T::pad_top][jj - CONFIG_T::pad_left][ff];
-      }
-    }
-  }
+  const unsigned padded_height = CONFIG_T::in_height + CONFIG_T::pad_top + CONFIG_T::pad_bottom;
+  const unsigned padded_width = CONFIG_T::in_width + CONFIG_T::pad_left + CONFIG_T::pad_right;
 
   for(int ff = 0; ff < CONFIG_T::n_filt; ff++){
 	  // Loop over input image y in steps of stride
+    std::cout << "[";
 	  for(int ii = 0; ii < padded_height; ii += CONFIG_T::stride_height){
 		  // Loop over input image x in steps of stride
+      std::cout << "[";
 		  for(int jj = 0; jj < padded_width; jj += CONFIG_T::stride_width){
 			  data_T pool[CONFIG_T::pool_height * CONFIG_T::pool_width];
 			  // Loop over pool window y
 			  for(int kk = 0; kk < CONFIG_T::stride_height; kk++){
 				  // Loop over pool window x
 				  for(int ll = 0; ll < CONFIG_T::stride_width; ll++){
-					  pool[kk * CONFIG_T::stride_width + ll] = data[ii + kk][jj + ll][ff];
+            if(ii+kk < CONFIG_T::pad_top || ii+kk >= (padded_height - CONFIG_T::pad_bottom) || jj+ll < CONFIG_T::pad_left || jj+ll >= (padded_width - CONFIG_T::pad_right)){
+              // Add padding
+              pool[kk * CONFIG_T::stride_width + ll] = pad_val<data_T, CONFIG_T::pool_op>();
+            }else{
+  					  pool[kk * CONFIG_T::stride_width + ll] = data[ii + kk][jj + ll][ff];
+            }
 				  }
 			  }
 			  // do the pooling
+        // TODO in the case of average pooling, need to reduce height * width to area of pool window
+        // not overlapping padding region
 			  res[ii/CONFIG_T::stride_height][jj/CONFIG_T::stride_width][ff] =
 					  pool_op<data_T, CONFIG_T::pool_height*CONFIG_T::pool_width, CONFIG_T::pool_op>(pool);
+        std::cout << res[ii/CONFIG_T::stride_height][jj/CONFIG_T::stride_width][ff] << ",";
 		  }
+      std::cout << "]" << std::endl;
 	  }
+    std::cout << "]" << std::endl;
   }
 }
 
