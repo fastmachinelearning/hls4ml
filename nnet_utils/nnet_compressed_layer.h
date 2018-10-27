@@ -78,7 +78,7 @@ void compute_compressed_layer(
 #pragma HLS RESOURCE variable=mult core=RAM_2P_BRAM
 
             // Pack the row_index, col_index, and weight in a single 32-bit memory element
-//#pragma HLS data_pack variable=weights struct_level
+#pragma HLS data_pack variable=weights struct_level
             // TODO: Packing mult provides worst results (disable it)
 //#pragma HLS data_pack variable=mult struct_level
          } else {
@@ -88,26 +88,31 @@ void compute_compressed_layer(
          }
 
     } else if (CONFIG_T::io_type == io_serial) {
-//#pragma HLS ARRAY_PARTITION variable=biases complete
-//#pragma HLS ARRAY_PARTITION variable=acc complete
-//
-//        // Replace ceil function with home-made macro prevents Vivado 2018.2 segfault
-//        int multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_nonzeros, CONFIG_T::reuse_factor);
-//#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
-//
-//        if (CONFIG_T::store_weights_in_bram) {
-//#pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
-//#pragma HLS RESOURCE variable=mul core=RAM_2P_BRAM
-//
-//            // Pack the row_index, col_index, and weight in a single 32-bit memory element
-//#pragma HLS data_pack variable=weights struct_level
-//            // TODO: packing the structs in mult array provide worst results.
-////#pragma HLS data_pack variable=mult struct_level
-//        } else {
-//#pragma HLS ARRAY_PARTITION variable=weights complete
-//#pragma HLS ARRAY_PARTITION variable=mult complete
-//        }
-////#pragma HLS DATAFLOW
+#pragma HLS ARRAY_PARTITION variable=biases complete
+#pragma HLS ARRAY_PARTITION variable=acc complete
+
+        // Replace ceil function with home-made macro prevents Vivado 2018.2 segfault
+        int multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_nonzeros, CONFIG_T::reuse_factor);
+#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+
+        if (CONFIG_T::store_weights_in_bram) {
+#pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
+#pragma HLS RESOURCE variable=mul core=RAM_2P_BRAM
+
+#pragma HLS ARRAY_PARTITION variable=weights cyclic factor=multiplier_limit
+#pragma HLS ARRAY_PARTITION variable=mult cyclic factor=multiplier_limit
+
+            // Pack the row_index, col_index, and weight in a single 32-bit memory element
+#pragma HLS data_pack variable=weights struct_level
+            // TODO: packing the structs in mult array provide worst results.
+//#pragma HLS data_pack variable=mult struct_level
+        } else {
+            // TODO: non tested yet!
+#pragma HLS ARRAY_PARTITION variable=weights cyclic factor=multiplier_limit
+#pragma HLS ARRAY_PARTITION variable=mult cyclic factor=multiplier_limit
+        }
+        // TODO: it generates a segfault
+//#pragma HLS DATAFLOW
     }
 
     // Do the compressed matrix-multiply
