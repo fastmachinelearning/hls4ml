@@ -118,10 +118,8 @@ void pooling2d(data_T data[CONFIG_T::in_height][CONFIG_T::in_width][CONFIG_T::n_
 
   for(int ff = 0; ff < CONFIG_T::n_filt; ff++){
 	  // Loop over input image y in steps of stride
-    std::cout << "[";
 	  for(int ii = 0; ii < padded_height; ii += CONFIG_T::stride_height){
 		  // Loop over input image x in steps of stride
-      std::cout << "[";
 		  for(int jj = 0; jj < padded_width; jj += CONFIG_T::stride_width){
 			  data_T pool[CONFIG_T::pool_height * CONFIG_T::pool_width];
         // Keep track of number of pixels in image vs pading region
@@ -148,11 +146,8 @@ void pooling2d(data_T data[CONFIG_T::in_height][CONFIG_T::in_width][CONFIG_T::n_
         if(CONFIG_T::pool_op == Pool_Op::Average){
           res[ii/CONFIG_T::stride_height][jj/CONFIG_T::stride_width][ff] *= CONFIG_T::pool_height * CONFIG_T::pool_width / img_overlap;
         }
-        std::cout << res[ii/CONFIG_T::stride_height][jj/CONFIG_T::stride_width][ff] << ",";
 		  }
-      std::cout << "]" << std::endl;
 	  }
-    std::cout << "]" << std::endl;
   }
 }
 
