@@ -124,6 +124,8 @@ void pooling2d(data_T data[CONFIG_T::in_height][CONFIG_T::in_width][CONFIG_T::n_
       std::cout << "[";
 		  for(int jj = 0; jj < padded_width; jj += CONFIG_T::stride_width){
 			  data_T pool[CONFIG_T::pool_height * CONFIG_T::pool_width];
+        // Keep track of number of pixels in image vs pading region
+        unsigned img_overlap = 0;
 			  // Loop over pool window y
 			  for(int kk = 0; kk < CONFIG_T::stride_height; kk++){
 				  // Loop over pool window x
@@ -133,6 +135,7 @@ void pooling2d(data_T data[CONFIG_T::in_height][CONFIG_T::in_width][CONFIG_T::n_
               pool[kk * CONFIG_T::stride_width + ll] = pad_val<data_T, CONFIG_T::pool_op>();
             }else{
   					  pool[kk * CONFIG_T::stride_width + ll] = data[ii + kk][jj + ll][ff];
+              img_overlap++;
             }
 				  }
 			  }
@@ -141,6 +144,10 @@ void pooling2d(data_T data[CONFIG_T::in_height][CONFIG_T::in_width][CONFIG_T::n_
         // not overlapping padding region
 			  res[ii/CONFIG_T::stride_height][jj/CONFIG_T::stride_width][ff] =
 					  pool_op<data_T, CONFIG_T::pool_height*CONFIG_T::pool_width, CONFIG_T::pool_op>(pool);
+        // If the pool op is Average, the zero-padding needs to be removed from the results
+        if(CONFIG_T::pool_op == Pool_Op::Average){
+          res[ii/CONFIG_T::stride_height][jj/CONFIG_T::stride_width][ff] *= CONFIG_T::pool_height * CONFIG_T::pool_width / img_overlap;
+        }
         std::cout << res[ii/CONFIG_T::stride_height][jj/CONFIG_T::stride_width][ff] << ",";
 		  }
       std::cout << "]" << std::endl;
