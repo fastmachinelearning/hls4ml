@@ -8,6 +8,8 @@ rf=1
 type="ap_fixed<18,8>"
 basedir=vivado_prj
 
+sanitizer="[^A-Za-z0-9._]"
+
 function print_usage {
    echo "Usage: `basename $0` [OPTION] MODEL..."
    echo ""
@@ -76,7 +78,7 @@ do
    file="${basedir}/${base}-${pycmd}.yml"
 
    echo "PytorchModel: ../pytorch-to-hls/example-models/${model}.pt" > ${file}
-   echo "OutputDir: ${base}-${pycmd}" >> ${file}
+   echo "OutputDir: ${base}-${pycmd}-${xilinxpart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}" >> ${file}
    echo "ProjectName: myproject" >> ${file}
    echo "XilinxPart: ${xilinxpart}" >> ${file}
    echo "ClockPeriod: ${clock}" >> ${file}

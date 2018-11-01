@@ -8,6 +8,8 @@ rf=1
 type="ap_fixed<18,8>"
 basedir=vivado_prj
 
+sanitizer="[^A-Za-z0-9._]"
+
 function print_usage {
    echo "Usage: `basename $0` [OPTION] MODEL[:H5FILE]..."
    echo ""
@@ -90,14 +92,14 @@ do
    # This scheme assumes base output directory is one level deep 
    echo "KerasJson: ../../keras-to-hls/example-keras-model-files/${name}.json" > ${file}
    echo "KerasH5:   ../../keras-to-hls/example-keras-model-files/${h5}.h5" >> ${file}
-   echo "OutputDir: ${base}-${pycmd}" >> ${file}
+   echo "OutputDir: ${base}-${pycmd}-${xilinxpart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}" >> ${file}
    echo "ProjectName: myproject" >> ${file}
    echo "XilinxPart: ${xilinxpart}" >> ${file}
    echo "ClockPeriod: ${clock}" >> ${file}
    echo "" >> ${file}
    echo "IOType: ${io}" >> ${file}
    echo "ReuseFactor: ${rf}" >> ${file}
-   echo "DefaultPrecision: ap_fixed<18,8> " >> ${file}
+   echo "DefaultPrecision: ${type} " >> ${file}
 
    ${pycmd} ../keras-to-hls/keras-to-hls.py -c ${file} || exit 1
    rm ${file}

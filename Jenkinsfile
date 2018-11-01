@@ -5,7 +5,7 @@ pipeline {
     }
   }
   options {
-    timeout(time: 3, unit: 'HOURS')
+    timeout(time: 6, unit: 'HOURS')
   }
 
   stages {
@@ -16,7 +16,7 @@ pipeline {
             dir(path: 'test') {
               sh '''#!/bin/bash
                  . activate hls4ml-py36
-                 cat keras-models.txt | xargs ./keras-to-hls.sh -p 3'''
+                 ./convert-keras-models.sh -p 3 -x -f keras-models.txt'''
             }
           }
         }
@@ -25,7 +25,7 @@ pipeline {
             dir(path: 'test') {
               sh '''#!/bin/bash
                  . activate hls4ml-py27
-                 cat keras-models.txt | xargs ./keras-to-hls.sh -p 2'''
+                 ./convert-keras-models.sh -p 2 -x -f keras-models.txt'''
             }
           }
         }
@@ -110,9 +110,9 @@ pipeline {
       steps {
         dir(path: 'test') {
           sh '''#!/bin/bash
-             ./gather-reports.sh -b'''
+             ./gather-reports.sh -b | tee report.rpt'''
         }
-
+        archiveArtifacts artifacts: 'test/report.rpt', fingerprint: true
       }
     }
   }
