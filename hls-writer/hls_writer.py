@@ -62,6 +62,8 @@ def hls_writer(layer_list, yamlConfig):
                     newline += '#include "weights/beta{}.h"\n'.format(i)
                     newline += '#include "weights/scale{}.h"\n'.format(i)
                     newline += '#include "weights/mean{}.h"\n'.format(i)
+                elif 'Pooling' in layer_list[i-1]['class_name']:
+                    pass # No weights for pooling
                 else:
                     if layer_list[i-1]['n_part']>1:
                         for i_part in range(layer_list[i-1]['n_part']):
@@ -156,6 +158,16 @@ def hls_writer(layer_list, yamlConfig):
                     in_height = 'IN_HEIGHT_{}'.format(i)
                     in_width = 'IN_WIDTH_{}'.format(i)
                     n_chan = 'N_CHAN_{}'.format(i)
+                #Pooling layer
+                elif 'Pooling' in layer_list[i-1]['class_name']:
+                    input_type = 'layer{}_t'.format(i-1)
+                    input_object = 'layer{}_out'.format(i-1)
+                    output_object = 'layer{}_out'.format(i)
+                    in_height = 'IN_HEIGHT_{}'.format(i)
+                    in_width = 'IN_WIDTH_{}'.format(i)
+                    out_height = 'OUT_HEIGHT_{}'.format(i)
+                    out_width = 'OUT_WIDTH_{}'.format(i)
+                    n_filt = 'N_FILT_{}'.format(i)
                 #Currently doesn't allow all combinations
 
 
@@ -204,9 +216,9 @@ def hls_writer(layer_list, yamlConfig):
                 if( i!=len(layer_list) ):
                     if layer_list[i-1]['class_name']=='Dense' or (layer_list[i-1]['class_name']=='BatchNormalization' and is_dense) or (layer_list[i-1]['class_name'] in activation_layers and is_dense):
                         newline += '    {} layer{}_out[{}];\n'.format(output_type,i,n_out)
-                    elif layer_list[i-1]['class_name']=='Conv1D':
+                    elif layer_list[i-1]['class_name']=='Conv1D' or 'Pooling1D' in layer_list[i-1]['class_name']:
                         newline += '    {} layer{}_out[{}*{}];\n'.format(output_type,i,y_out,n_filt)
-                    elif layer_list[i-1]['class_name']=='Conv2D':
+                    elif layer_list[i-1]['class_name']=='Conv2D' or 'Pooling2D' in layer_list[i-1]['class_name']:
                         newline += '    {} layer{}_out[{}*{}*{}];\n'.format(output_type,i,out_height,out_width,n_filt)
                     elif layer_list[i-1]['class_name']=='BatchNormalization' and is_conv2d:
                         if i!= 1: newline += '    {} layer{}_out[{}*{}*{}];\n'.format(output_type,i,out_height,out_width,n_filt)
@@ -312,7 +324,34 @@ def hls_writer(layer_list, yamlConfig):
                     newline += '    nnet::normalize<{}, {}, config{}>(logits{}, {}, scale{}, beta{}, mean{});\n'.format(output_type, output_type, i, i, output_object, i, i, i)
                 elif layer_list[i-1]['class_name'] == 'BatchNormalization' and is_conv2d:
                     newline += '    nnet::normalize<{}, {}, config{}>({}, {}, scale{}, beta{}, mean{});\n'.format(input_type, output_type, i, input_object, output_object, i, i, i)
-		    		                    
+                elif 'Pooling' in layer_list[i-1]['class_name']:
+                    info = layer_list[i-1]['class_name'].split('Pooling')
+                    d = int(info[1].split('D')[0]) # n dimensions
+                    if d == 1:
+                        newline += '    nnet::pooling1d<{}, config{}>({}, {});\n'.format(input_type, i, input_object, output_object)
+                    elif d == 2:
+                        # Unflatten if needed: if the last layer is activation or batchnorm
+                        unflatten = layer_list[i-2]['class_name'] in activation_layers
+                        unflatten |= 'activation' in layer_list[i-2].keys()
+                        unflatten |= layer_list[i-2]['class_name'] == 'BatchNormalization'
+                        if unflatten:
+                            # Add the unflatten layer
+                            inshape = ''.join('[{0}]'.format(dim) for dim in [in_height, in_width, n_filt])
+                            newline += '    {} pool2d_layer{}_in{};\n'.format(input_type, i, inshape)
+                            if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=pool2d_layer{}_in complete dim=0\n'.format(i)
+                            if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=pool2d_layer{}_in depth=1\n'.format(i)
+                            newline += '    nnet::unflatten<{}, {}, {}, {}>({}, pool2d_layer{}_in);\n'.format(input_type, in_height, in_width, n_filt, input_object, i)                              
+                            outshape = ''.join('[{0}]'.format(dim) for dim in [out_height, out_width, n_filt])
+                            newline += '    {} pool2d_layer{}_out{};\n'.format(input_type, i, outshape)
+                            if yamlConfig["IOType"] == "io_parallel": newline += '    #pragma HLS ARRAY_PARTITION variable=pool2d_layer{}_out complete dim=0\n'.format(i)
+                            if yamlConfig["IOType"] == "io_serial":   newline += '    #pragma HLS STREAM variable=pool2d_layer{}_out depth=1\n'.format(i)
+                            # Do the pooling layer
+                            newline += '    nnet::pooling2d<{}, config{i}>(pool2d_layer{i}_in, pool2d_layer{i}_out);\n'.format(input_type, i=i)
+                        else:
+                            newline += '    nnet::pooling2d<{}, config{i}>({}, {});\n'.format(input_type, i, input_object, output_object)
+                        # Flatten the pooling output
+                        newline += '    nnet::flatten<{}, {}, {}, {}>(pool2d_layer{}_out, layer{}_out);\n'.format(input_type, out_height, out_width, n_filt, i, i)
+                        
                 #Activations
                 if layer_list[i-1]['class_name'] in activation_layers or 'activation' in layer_list[i-1].keys():
                     if layer_list[i-1]['class_name'] not in activation_layers:
@@ -460,6 +499,33 @@ def hls_writer(layer_list, yamlConfig):
         static const unsigned io_type = nnet::{iotype};
         }};\n"""
 
+    pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
+        static const unsigned n_in = {n_in};
+        static const unsigned pool_size = {pool_size};
+        static const unsigned n_out = {n_out};
+        static const unsigned pad_left = {pad_left};
+        static const unsigned pad_right = {pad_right};
+        static const unsigned stride = {stride};
+        static const nnet::Pool_Op pool_op = nnet::{Op};
+    }};\n"""
+
+    pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
+        static const unsigned in_height = {in_height};
+        static const unsigned in_width = {in_width};
+        static const unsigned n_filt = {n_filt};
+        static const unsigned stride_height = {stride_height};
+        static const unsigned stride_width = {stride_width};
+        static const unsigned pool_height = {pool_height};
+        static const unsigned pool_width = {pool_width};
+        static const unsigned out_height = {out_height};
+        static const unsigned out_width = {out_width};
+        static const unsigned pad_top = {pad_top};
+        static const unsigned pad_bottom = {pad_bottom};
+        static const unsigned pad_left = {pad_left};
+        static const unsigned pad_right = {pad_right};
+        static const nnet::Pool_Op pool_op = nnet::{Op};
+    }};\n
+    """
 
     for line in f.readlines():
 
@@ -520,7 +586,26 @@ def hls_writer(layer_list, yamlConfig):
                     newline += '#define N_LAYER_{} {}\n'.format(i, layer_list[i-1]['n_out']) 
                     newline += '#define OUT_HEIGHT_{} {}\n'.format(i, layer_list[i-1]['in_height'])
                     newline += '#define OUT_WIDTH_{} {}\n'.format(i, layer_list[i-1]['in_width'])
-                    newline += '#define N_FILT_{} {}\n'.format(i, layer_list[i-1]['n_filt'])                    
+                    newline += '#define N_FILT_{} {}\n'.format(i, layer_list[i-1]['n_filt']) 
+                elif 'Pooling' in layer_list[i-1]['class_name']:
+                    info = layer_list[i-1]['class_name'].split('Pooling')
+                    d = int(info[1].split('D')[0])
+                    op = info[0]
+                    if d == 1:
+                        newline += '#define Y_INPUTS_{} {}\n'.format(i, layer_list[i-1]['y_in'])
+                        newline += '#define Y_OUTPUTS_{} {}\n'.format(i, layer_list[i-1]['y_out'])
+                        newline += '#define POOL_SIZE_{} {}\n'.format(i, layer_list[i-1]['pool_size'])
+                    elif d == 2:
+                        newline += '#define IN_HEIGHT_{} {}\n'.format(i, layer_list[i-1]['in_height'])
+                        newline += '#define IN_WIDTH_{} {}\n'.format(i, layer_list[i-1]['in_width'])
+                        newline += '#define OUT_HEIGHT_{} {}\n'.format(i, layer_list[i-1]['out_height'])
+                        newline += '#define OUT_WIDTH_{} {}\n'.format(i, layer_list[i-1]['out_width'])
+                        newline += '#define POOL_HEIGHT_{} {}\n'.format(i, layer_list[i-1]['pool_height'])
+                        newline += '#define POOL_WIDTH_{} {}\n'.format(i, layer_list[i-1]['pool_width'])
+                        newline += '#define N_FILT_{} {}\n'.format(i, layer_list[i-1]['n_filt'])
+                        newline += '#define N_LAYER_{} {}\n'.format(i, layer_list[i-1]['n_out'])
+
+
         elif '//hls-fpga-machine-learning insert layer-precision' in line:
             newline = line
             for i in range(1,len(layer_list)):
@@ -582,6 +667,21 @@ def hls_writer(layer_list, yamlConfig):
                     layer_in_name = "OUT_HEIGHT_{}*OUT_WIDTH_{}*N_FILT_{}".format(i-1, i-1, i-1)
                     layer_out_name = "N_LAYER_{}".format(i)
                     layer_n_filt_name = "N_FILT_{}".format(i-1)
+                elif 'Pooling' in layer_list[i-1]['class_name']:
+                    info = layer_list[i-1]['class_name'].split('Pooling')
+                    d = int(info[1].split('D')[0])
+                    op = info[0]
+                    if d == 1:
+                        layer_y_in_name = "Y_INPUTS_{}".format(i)
+                        layer_y_out_name = "Y_OUTPUTS_{}".format(i)
+                        layer_n_filt_name = "N_FILT_{}".format(i)
+                    elif d == 2:
+                        layer_in_height_name = "IN_HEIGHT_{}".format(i)
+                        layer_in_width_name = "IN_WIDTH_{}".format(i)
+                        layer_out_height_name = "OUT_HEIGHT_{}".format(i)
+                        layer_out_width_name = "OUT_WIDTH_{}".format(i)
+                        layer_n_filt_name = "N_FILT_{}".format(i)
+                        layer_in_name = "N_LAYER_{}".format(i-1)
                 if layer_list[i-1]['class_name']=='Dense':
                     if layer_list[i-1]['n_part']==1:
                         newline += dense_config_template.format(index=str(i), 
@@ -660,13 +760,41 @@ def hls_writer(layer_list, yamlConfig):
                                                                     index=str(i), 
                                                                     n_in='{}*{}*{}'.format(layer_out_height_name,layer_out_width_name,layer_n_filt_name),
                                                                     iotype=yamlConfig["IOType"]) 
+                elif 'Pooling' in layer_list[i-1]['class_name']:
+                    info = layer_list[i-1]['class_name'].split('Pooling')
+                    d = int(info[1].split('D')[0])
+                    op = info[0]
+                    if d == 1:
+                        newline += pooling1d_config_template.format(index=str(i),
+                                                                    n_in=layer_n_in,
+                                                                    n_out=layer_n_out,
+                                                                    stride=layer_list[i-1]['stride'],
+                                                                    pool_size=layer_list[i-1]['pool_size'],
+                                                                    pad_left=layer_list[i-1]['pad_left'],
+                                                                    pad_right=layer_list[i-1]['pad_right'],
+                                                                    Op=op)
+                    elif d == 2:
+                        newline += pooling2d_config_template.format(index=str(i),
+                                                                    in_height=layer_in_height_name,
+                                                                    in_width=layer_in_width_name,
+                                                                    out_height=layer_out_height_name,
+                                                                    out_width=layer_out_width_name,
+                                                                    n_filt=layer_n_filt_name,
+                                                                    stride_height=layer_list[i-1]['stride_height'],
+                                                                    stride_width=layer_list[i-1]['stride_width'],
+                                                                    pool_height=layer_list[i-1]['pool_height'],
+                                                                    pool_width=layer_list[i-1]['pool_width'],
+                                                                    pad_left=layer_list[i-1]['pad_left'],
+                                                                    pad_right=layer_list[i-1]['pad_right'],
+                                                                    pad_top=layer_list[i-1]['pad_top'],
+                                                                    pad_bottom=layer_list[i-1]['pad_bottom'],
+                                                                    Op=op)
 
         else:
             newline = line
         fout.write(newline)
     f.close()
     fout.close()
-
 
     ###################
     ## test bench

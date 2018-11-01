@@ -10,6 +10,7 @@
 #include "nnet_activation.h"
 #include "nnet_common.h"
 #include "nnet_batchnorm.h"
+#include "nnet_pooling.h"
 
 //hls-fpga-machine-learning insert numbers
 
