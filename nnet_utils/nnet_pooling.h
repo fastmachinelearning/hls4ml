@@ -2,6 +2,7 @@
 #define NNET_POOLING_H_
 
 #include <iostream>
+#include "nnet_helpers.h"
 
 namespace nnet{
 
@@ -15,9 +16,35 @@ T max(T x[N]){
   return y;
 }
 
+template<int W, int N>
+ap_int<W> avg(ap_int<W> (&x)[N]){
+  // Use a wider accumulator than the input to avoid overflow
+  ap_int<W + ceillog2(N)> tmp = 0;
+  for(int i = 0; i < N; i++){
+    tmp += x[i];
+  }
+  tmp /= N;
+  // Now cast back to original type
+  ap_int<W> y = tmp;
+  return tmp;
+}
+
+template<int W, int I, int N>
+ap_fixed<W, I> avg(ap_fixed<W, I> (&x)[N]){
+  // Use a wider accumulator than the input to avoid overflow
+  ap_fixed<W + ceillog2(N), I + ceillog2(N)> tmp = 0;
+  for(int i = 0; i < N; i++){
+    tmp += x[i];
+  }
+  tmp /= N;
+  // Now cast back to original type
+  ap_fixed<W, I> y = tmp;
+  return y;
+}
+
 // Return the mean value of an array
 template<typename T, int N>
-T avg(T x[N]){
+T avg(T (&x)[N]){
   T y = 0;
   for(int i = 0; i < N; i++){
     y += x[i];
@@ -26,23 +53,13 @@ T avg(T x[N]){
   return y;
 }
 
-/*template<typename T, int N>
-T l2norm(T x[N]){
-	T y = 0;
-	for(int i = 0; i < N; i++){
-		y += x[i] * x[i];
-	}
-	y = sqrt(y);
-	return y;
-}*/
-
 // Enumeration for pooling operation (max, avg, l2norm pooling)
 enum Pool_Op { Max, Average }; // L2Norm };
 template<typename T, int N, Pool_Op op>
-T pool_op(T x[N]){
+T pool_op(T (&x)[N]){
 	switch(op){
 	case Max: return max<T, N>(x);
-	case Average: return avg<T, N>(x);
+	case Average: return avg(x);
 	// case L2Norm: return l2norm<T, N>(x);
 	}
 }
@@ -144,7 +161,8 @@ void pooling2d(data_T data[CONFIG_T::in_height][CONFIG_T::in_width][CONFIG_T::n_
 					  pool_op<data_T, CONFIG_T::pool_height*CONFIG_T::pool_width, CONFIG_T::pool_op>(pool);
         // If the pool op is Average, the zero-padding needs to be removed from the results
         if(CONFIG_T::pool_op == Average){
-          res[ii/CONFIG_T::stride_height][jj/CONFIG_T::stride_width][ff] *= CONFIG_T::pool_height * CONFIG_T::pool_width / img_overlap;
+          data_T rescale = CONFIG_T::pool_height * CONFIG_T::pool_width / img_overlap;
+          res[ii/CONFIG_T::stride_height][jj/CONFIG_T::stride_width][ff] *= rescale;
         }
 		  }
 	  }
