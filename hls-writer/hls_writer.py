@@ -524,6 +524,7 @@ def hls_writer(layer_list, yamlConfig):
         static const unsigned pad_left = {pad_left};
         static const unsigned pad_right = {pad_right};
         static const nnet::Pool_Op pool_op = nnet::{Op};
+        static const unsigned reuse = {reuse};
     }};\n
     """
 
@@ -788,7 +789,8 @@ def hls_writer(layer_list, yamlConfig):
                                                                     pad_right=layer_list[i-1]['pad_right'],
                                                                     pad_top=layer_list[i-1]['pad_top'],
                                                                     pad_bottom=layer_list[i-1]['pad_bottom'],
-                                                                    Op=op)
+                                                                    Op=op,
+                                                                    reuse=yamlConfig["ReuseFactor"])
 
         else:
             newline = line
