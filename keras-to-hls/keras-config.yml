@@ -8,5 +8,6 @@ ClockPeriod: 5
 IOType: io_parallel # options: io_serial/io_parallel
 ReuseFactor: 1
 DefaultPrecision: ap_fixed<18,8>
-Compression: 1 # options: 1 enable data compression, 0 otherwise
+UseBRAMs: false # options: 'true' store in BRAMs, 'false' otherwise
+Compression: true # options: 'true' enable data compression, 'false' otherwise
 MaxIndexWordSize: 7 # number of bits to encode each index when compression is enabled, ignored otherwise

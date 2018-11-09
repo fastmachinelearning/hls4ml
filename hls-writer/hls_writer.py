@@ -226,10 +226,10 @@ def hls_writer(layer_list, yamlConfig):
 
                     if layer_list[i-1]['n_part']==1 or yamlConfig["IOType"]=="io_serial":
                         # Use one layer if there's only 1 partition, or if we're using serial mode
-                        if yamlConfig["Compression"] == 0:
-                            newline += '    nnet::compute_layer<{}, {}, config{}>({}, logits{}, w{}, b{});\n'.format(input_type, output_type, i, input_object, i, i, i, i)
-                        else:
+                        if yamlConfig["Compression"]:
                             newline += '    nnet::compute_compressed_layer<{}, {}, config{}>({}, logits{}, w{}, b{});\n'.format(input_type, output_type, i, input_object, i, i, i, i)
+                        else:
+                            newline += '    nnet::compute_layer<{}, {}, config{}>({}, logits{}, w{}, b{});\n'.format(input_type, output_type, i, input_object, i, i, i, i)
                     else:
                         # initialize arrays for sublayer outputs
                         newline += '    compute_layer{}({}, logits{});\n'.format(i, input_object, i)
@@ -387,7 +387,7 @@ def hls_writer(layer_list, yamlConfig):
         static const unsigned reuse_factor = {reuse};
         static const unsigned n_zeros = {nzeros};
         static const unsigned n_nonzeros = {n_in} * {n_out} - {nzeros};
-        static const bool store_weights_in_bram = false;
+        static const bool store_weights_in_bram = {use_brams};
         typedef accum_default_t accum_t;
         typedef bias_default_t bias_t;
         typedef weight_default_t weight_t;
@@ -401,7 +401,7 @@ def hls_writer(layer_list, yamlConfig):
         static const unsigned io_type = nnet::{iotype};
         static const unsigned reuse_factor = {reuse};
         static const unsigned n_zeros = {nzeros};
-        static const bool store_weights_in_bram = false;
+        static const bool store_weights_in_bram = {use_brams};
         typedef accum_default_t accum_t;
         typedef bias_default_t bias_t;
         typedef weight_default_t weight_t;
@@ -412,7 +412,7 @@ def hls_writer(layer_list, yamlConfig):
         static const unsigned n_filt = {n_filt};
         static const unsigned io_type = nnet::{iotype};
         static const unsigned reuse_factor = {reuse};
-        static const bool store_weights_in_bram = false;
+        static const bool store_weights_in_bram = {use_brams};
         typedef beta_default_t beta_t;
         typedef scale_default_t scale_t;
         typedef mean_default_t mean_t;
@@ -429,7 +429,7 @@ def hls_writer(layer_list, yamlConfig):
         static const unsigned y_out = {y_out};
         static const unsigned reuse_factor = {reuse};
         static const unsigned n_zeros = {nzeros};
-        static const bool store_weights_in_bram = false;
+        static const bool store_weights_in_bram = {use_brams};
         typedef accum_default_t accum_t;
         typedef bias_default_t bias_t;
         typedef weight_default_t weight_t;
@@ -452,7 +452,7 @@ def hls_writer(layer_list, yamlConfig):
         static const unsigned out_width = {out_width};
         static const unsigned reuse_factor = {reuse};
         static const unsigned n_zeros = {nzeros};
-        static const bool store_weights_in_bram = false;
+        static const bool store_weights_in_bram = {use_brams};
         typedef accum_default_t accum_t;
         typedef bias_default_t bias_t;
         typedef weight_default_t weight_t;
@@ -597,7 +597,8 @@ def hls_writer(layer_list, yamlConfig):
                                                                 n_out=layer_out_name,
                                                                 iotype=yamlConfig["IOType"],
                                                                 reuse=yamlConfig["ReuseFactor"],
-                                                                nzeros=layer_list[i-1]['weights_n_zeros'])
+                                                                nzeros=layer_list[i-1]['weights_n_zeros'],
+                                                                use_brams="true" if yamlConfig["UseBRAMs"] else "false")
                     else:
                         for i_part in range(0, layer_list[i-1]['n_part']):
                             newline += dense_sub_config_template.format(index=str(i),
@@ -606,7 +607,8 @@ def hls_writer(layer_list, yamlConfig):
                                                                         n_out=layer_list[i-1]['n_subout'][i_part],
                                                                         iotype=yamlConfig["IOType"],
                                                                         reuse=yamlConfig["ReuseFactor"],
-                                                                        nzeros=layer_list[i-1]['weights_n_subzeros'][i_part])
+                                                                        nzeros=layer_list[i-1]['weights_n_subzeros'][i_part],
+                                                                        use_brams="true" if yamlConfig["UseBRAMs"] else "false")
 
                     newline += activ_config_template.format(type=layer_list[i-1]['activation'],
                                                                     index=str(i),
@@ -618,7 +620,8 @@ def hls_writer(layer_list, yamlConfig):
                                                             n_out=layer_out_name,
                                                             n_filt=layer_n_filt_name,
                                                             iotype=yamlConfig["IOType"],
-                                                            reuse=yamlConfig["ReuseFactor"])
+                                                            reuse=yamlConfig["ReuseFactor"],
+                                                            use_brams="true" if yamlConfig["UseBRAMs"] else "false")
                 elif layer_list[i-1]['class_name'] in activation_layers:
                     newline += activ_config_template.format(type=layer_list[i-1]['activation'],
                                                                     index=str(i),
@@ -637,7 +640,8 @@ def hls_writer(layer_list, yamlConfig):
                                                             stride=layer_list[i-1]['stride'],
                                                             iotype=yamlConfig["IOType"],
                                                             reuse=yamlConfig["ReuseFactor"],
-                                                            nzeros=layer_list[i-1]['weights_n_zeros'])
+                                                            nzeros=layer_list[i-1]['weights_n_zeros'],
+                                                            use_brams="true" if yamlConfig["UseBRAMs"] else "false")
 
                     newline += activ_config_template.format(type=layer_list[i-1]['activation'],
                                                                     index=str(i),
@@ -662,7 +666,8 @@ def hls_writer(layer_list, yamlConfig):
                                                             stride_width=layer_list[i-1]['stride_width'],
                                                             iotype=yamlConfig["IOType"],
                                                             reuse=yamlConfig["ReuseFactor"],
-                                                            nzeros=layer_list[i-1]['weights_n_zeros'])
+                                                            nzeros=layer_list[i-1]['weights_n_zeros'],
+                                                            use_brams="true" if yamlConfig["UseBRAMs"] else "false")
 
                     newline += activ_config_template.format(type=layer_list[i-1]['activation'],
                                                                     index=str(i),
