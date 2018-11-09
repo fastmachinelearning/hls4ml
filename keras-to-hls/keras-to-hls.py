@@ -14,7 +14,7 @@ MAXMULT = 4096
 
 filedir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,os.path.join(filedir, "..", "hls-writer"))
-from hls_writer import parse_config, print_array_to_cpp, hls_writer
+from hls_writer import parse_config, print_array_to_cpp, print_compressed_array_to_cpp, hls_writer
 
 def find_kernel_in_h5(name):
     if 'kernel' in name:
@@ -61,8 +61,11 @@ def main():
     if not os.path.isabs(yamlConfig['KerasJson']):
         yamlConfig['KerasJson'] = os.path.join(configDir, yamlConfig['KerasJson'])
 
-    if not (yamlConfig["IOType"] == "io_parallel" or yamlConfig["IOType"] == "io_serial"): 
+    if not (yamlConfig["IOType"] == "io_parallel" or yamlConfig["IOType"] == "io_serial"):
         raise Exception('ERROR: Invalid IO type')
+
+    if not (yamlConfig["Compression"] == 1 or yamlConfig["Compression"] == 0):
+        raise Exception('ERROR: Invalid Compression type')
 
     ######################
     ##  Do translation
@@ -85,7 +88,7 @@ def main():
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']
 
     #Define layers to skip for conversion to HLS
-    skip_layers = ['InputLayer','Dropout', 'Flatten'] 
+    skip_layers = ['InputLayer','Dropout', 'Flatten']
 
     #Loop through layers
     layer_counter = 0
@@ -105,7 +108,7 @@ def main():
         if keras_layer["class_name"] not in supported_layers + activation_layers:
             raise Exception('ERROR: Unsupported layer type: {}'.format(keras_layer["class_name"]))
         if 'batch_input_shape' in keras_layer['config']:
-            current_shape = keras_layer['config']['batch_input_shape'] # [None, 100, 7]    
+            current_shape = keras_layer['config']['batch_input_shape'] # [None, 100, 7]
     print('Input shape:', current_shape)
 
     # Set some variables to make the routine after a bit smoother
@@ -118,13 +121,13 @@ def main():
      if keras_layer["class_name"]=='Dense':
       is_dense = True
       break
-	        
+
     print('Topology:')
     for il,keras_layer in enumerate(layer_config):
         if keras_layer["class_name"] is 'Flatten':
             current_shape = [current_shape[0], np.prod(current_shape[1:])]
         if keras_layer["class_name"] in skip_layers:
-            continue 
+            continue
 
         if keras_layer["class_name"] in supported_layers + activation_layers:
             layer_counter = layer_counter + 1
@@ -141,23 +144,26 @@ def main():
             if(config=="activation"):
                 layer['activation']=config_value
             if(config=="epsilon"):
-                layer['epsilon']=config_value	
+                layer['epsilon']=config_value
             #if(config=="units"):
                 #print("PARSED NUM OF NODES",config_value)
 
-        
+
         #Translate weights and biases from h5 file
         if layer['class_name'] != 'BatchNormalization' and layer['class_name'] not in activation_layers:
             found_weights = h5File[layer['name']].visit(find_kernel_in_h5)
             weights = h5File['/{}/{}'.format(layer['name'],found_weights)][()]
             found_bias = h5File[layer['name']].visit(find_bias_in_h5)
             biases = h5File['/{}/{}'.format(layer['name'],found_bias)][()]
-            cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
+            if yamlConfig["Compression"] == 0:
+                cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
+            else:
+                cur_n_zeros = print_compressed_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
             print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
             layer['weights_n_zeros'] = cur_n_zeros
         elif layer['class_name'] == 'BatchNormalization':
             cur_n_zeros = []
-            layer['weights_n_zeros'] = cur_n_zeros 
+            layer['weights_n_zeros'] = cur_n_zeros
             found_beta = h5File[layer['name']].visit(find_beta_in_h5)
             beta = h5File['/{}/{}'.format(layer['name'],found_beta)][()]
             print_array_to_cpp("beta{}".format(layer_counter), beta, yamlConfig['OutputDir'])
@@ -171,7 +177,7 @@ def main():
             var = var + layer['epsilon']
             scale = gamma/np.sqrt(var)
             print_array_to_cpp("scale{}".format(layer_counter), scale, yamlConfig['OutputDir'])
-        
+
         # Skip activation layers if possible
         skip_layer = False
         # Default one layer call
@@ -181,7 +187,7 @@ def main():
         if layer['class_name']=='Dense':
             layer['n_in']=weights.shape[0]
             layer['n_out']=weights.shape[1]
-            # if this layer is too big (more than MAXMULT multiplications); 
+            # if this layer is too big (more than MAXMULT multiplications);
             # break it out into chunks!
             layer['n_subout']=[weights.shape[1]]
             if layer['n_in']*layer['n_out']>MAXMULT and yamlConfig["IOType"] != "io_serial":
@@ -193,7 +199,7 @@ def main():
                 while n_totout < layer['n_out']:
                     if n_totout + n_subout <= layer['n_out']:
                         layer['n_subout'].append(n_subout)
-                        n_totout += n_subout                    
+                        n_totout += n_subout
                     else:
                         layer['n_subout'].append(layer['n_out']-n_totout)
                         n_totout += layer['n_out']-n_totout
@@ -205,13 +211,13 @@ def main():
                     cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'], i_part, layer['n_part'], i_subout, layer['n_subout'][i_part])
                     print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'], i_part, layer['n_part'], i_subout, layer['n_subout'][i_part])
                     layer['weights_n_subzeros'].append(cur_n_zeros)
-            
+
             current_shape = [current_shape[0], layer['n_out']]
         elif layer['class_name']=='Conv1D':
             # weights.shape = (filter_width, n_channels, n_filters)
             layer['y_in']=current_shape[1]
             layer['y_filt']=weights.shape[0] # or keras_layer['config']['kernel_size']
-            layer['n_chan']=weights.shape[1] 
+            layer['n_chan']=weights.shape[1]
             layer['n_filt']=weights.shape[2] # or keras_layer['config']['filters']
             layer['stride']=keras_layer['config']['strides'][0]
             layer['padding']=keras_layer['config']['padding']
@@ -276,7 +282,7 @@ def main():
                 layer['n_filt'] = -1
                 current_shape = [current_shape[0], layer['n_out']]
             elif is_conv2d:
-                layer['n_in']=current_shape[1]*current_shape[2]*current_shape[3] 
+                layer['n_in']=current_shape[1]*current_shape[2]*current_shape[3]
                 layer['n_out']=layer['n_in']
                 layer['in_height']=current_shape[1]
                 layer['in_width']=current_shape[2]
@@ -321,14 +327,14 @@ def main():
                 layer_counter = layer_counter - 1
             else:
                 layer['activation'] = layer['class_name']
-            
+
             #Translate learned alpha array from h5 file
             weights = h5File['/{}/{}/alpha:0'.format(layer['name'],layer['name'])][()]
             print_array_to_cpp("a{}".format(layer_counter), weights, yamlConfig['OutputDir'])
 
         if not skip_layer:
             print('Layer name: {}, layer type: {}, current shape: {}, number of zeros: {}'.format(layer['name'], layer['class_name'], current_shape, cur_n_zeros))
-            if layer['n_part'] > 1: 
+            if layer['n_part'] > 1:
                 print(' -> layer will be divided into {} sublayer calls; output neurons: {} '.format(layer['n_part'], layer['n_subout']))
             layer_list.append( layer )
 
