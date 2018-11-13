@@ -64,8 +64,11 @@ def main():
     if not (yamlConfig["IOType"] == "io_parallel" or yamlConfig["IOType"] == "io_serial"):
         raise Exception('ERROR: Invalid IO type')
 
-    if not (yamlConfig["Compression"] == 1 or yamlConfig["Compression"] == 0):
+    if not (yamlConfig["Compression"] == True or yamlConfig["Compression"] == False):
         raise Exception('ERROR: Invalid Compression type')
+
+    if not (yamlConfig["UseBRAMs"] == True or yamlConfig["UseBRAMs"] == False):
+        raise Exception('ERROR: Invalid UseBRAMs flag (true/false)')
 
     ######################
     ##  Do translation
