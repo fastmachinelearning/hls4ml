@@ -24,6 +24,9 @@
 #include "hls_stream.h"
 #include <math.h>
 
+// This is a substitute for "ceil(n/(float)d)".
+#define DIV_ROUNDUP(n,d) ((n + d - 1) / d)
+
 namespace nnet {
 
 struct layer_config
@@ -76,12 +79,15 @@ void compute_layer(
     } else if (CONFIG_T::io_type == io_serial){
         // Only reduce cycle_factor if n_out is evenly divisible by reuse_factor
         // Otherwise, HLS wont be happy
-        int cycle_factor = CONFIG_T::n_out;
-        float reused_cycle = CONFIG_T::n_out / CONFIG_T::reuse_factor;
-        if (reused_cycle == ceil(reused_cycle)){
-            // Dont use "ceil" here; as of 2018.2, HLS crashes mysteriously
-            cycle_factor = cycle_factor / CONFIG_T::reuse_factor;
-        }
+        //int cycle_factor = CONFIG_T::n_out;
+        //float reused_cycle = CONFIG_T::n_out / CONFIG_T::reuse_factor;
+        //if (reused_cycle == ceil(reused_cycle)){
+        //    // Dont use "ceil" here; as of 2018.2, HLS crashes mysteriously
+        //    cycle_factor = cycle_factor / CONFIG_T::reuse_factor;
+        //}
+        // Remove previous workaround.
+        // Replace ceil function with home-made macro prevents Vivado 2018.2 segfault.
+        int cycle_factor = DIV_ROUNDUP(CONFIG_T::n_out, CONFIG_T::reuse_factor);
         #pragma HLS ARRAY_PARTITION variable=weights cyclic factor=cycle_factor
         #pragma HLS ARRAY_PARTITION variable=mult cyclic factor=cycle_factor
         #pragma HLS ARRAY_PARTITION variable=acc complete
