@@ -83,8 +83,14 @@ void compute_compressed_layer(
 //#pragma HLS data_pack variable=mult struct_level
          } else {
              // Completely partition the remaining arrays
-#pragma HLS ARRAY_PARTITION variable=weights complete
-#pragma HLS ARRAY_PARTITION variable=mult complete
+
+// Vivado 2018.2 cannot complete partition arrays bigger than 1024 elements.
+//#pragma HLS ARRAY_PARTITION variable=weights complete
+//#pragma HLS ARRAY_PARTITION variable=mult complete
+
+// Workaround the above restriction.
+#pragma HLS ARRAY_RESHAPE variable=weights block factor=multiplier_limit
+#pragma HLS ARRAY_RESHAPE variable=mult block factor=multiplier_limit
          }
 
     } else if (CONFIG_T::io_type == io_serial) {
