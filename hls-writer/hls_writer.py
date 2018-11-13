@@ -380,20 +380,34 @@ def hls_writer(layer_list, yamlConfig):
     f = open(os.path.join(filedir,'../hls-template/firmware/parameters.h'),'r')
     fout = open('{}/firmware/parameters.h'.format(yamlConfig['OutputDir']),'w')
 
-    dense_config_template = """struct config{index} : nnet::layer_config {{
-        static const unsigned n_in = {n_in};
-        static const unsigned n_out = {n_out};
-        static const unsigned io_type = nnet::{iotype};
-        static const unsigned reuse_factor = {reuse};
-        static const unsigned n_zeros = {nzeros};
-        static const unsigned n_nonzeros = {n_in} * {n_out} - {nzeros};
-        static const bool store_weights_in_bram = {use_brams};
-        typedef accum_default_t accum_t;
-        typedef bias_default_t bias_t;
-        typedef weight_default_t weight_t;
-        typedef index_default_t index_t;
-        typedef compressed_weight_default_t compressed_weight_t;
-        }};\n"""
+    if yamlConfig["Compression"]:
+        dense_config_template = """struct config{index} : nnet::layer_config {{
+            static const unsigned n_in = {n_in};
+            static const unsigned n_out = {n_out};
+            static const unsigned io_type = nnet::{iotype};
+            static const unsigned reuse_factor = {reuse};
+            static const unsigned n_zeros = {nzeros};
+            static const unsigned n_nonzeros = {n_in} * {n_out} - {nzeros};
+            static const bool store_weights_in_bram = {use_brams};
+            typedef accum_default_t accum_t;
+            typedef bias_default_t bias_t;
+            typedef weight_default_t weight_t;
+            typedef index_default_t index_t;
+            typedef compressed_weight_default_t compressed_weight_t;
+            }};\n"""
+    else:
+        dense_config_template = """struct config{index} : nnet::layer_config {{
+            static const unsigned n_in = {n_in};
+            static const unsigned n_out = {n_out};
+            static const unsigned io_type = nnet::{iotype};
+            static const unsigned reuse_factor = {reuse};
+            static const unsigned n_zeros = {nzeros};
+            static const unsigned n_nonzeros = {n_in} * {n_out} - {nzeros};
+            static const bool store_weights_in_bram = {use_brams};
+            typedef accum_default_t accum_t;
+            typedef bias_default_t bias_t;
+            typedef weight_default_t weight_t;
+            }};\n"""
 
     dense_sub_config_template = """struct config{index}_{i_part} : nnet::layer_config {{
         static const unsigned n_in = {n_in};
@@ -477,8 +491,9 @@ def hls_writer(layer_list, yamlConfig):
             newline += 'typedef {precision} bias_default_t;\n'.format(precision=yamlConfig["DefaultPrecision"])
             newline += 'typedef {precision} input_t;\n'.format(precision=yamlConfig["DefaultPrecision"])
             newline += 'typedef {precision} result_t;\n'.format(precision=yamlConfig["DefaultPrecision"])
-            newline += 'typedef ap_uint<{precision}> index_default_t;\n'.format(precision=yamlConfig["MaxIndexWordSize"])
-            newline += 'typedef struct compressed_weight_default_t { index_default_t row_index; index_default_t col_index; weight_default_t weight; } compressed_weight_default_t;\n'
+            if yamlConfig["Compression"]:
+                newline += 'typedef ap_uint<{precision}> index_default_t;\n'.format(precision=yamlConfig["MaxIndexWordSize"])
+                newline += 'typedef struct compressed_weight_default_t { index_default_t row_index; index_default_t col_index; weight_default_t weight; } compressed_weight_default_t;\n'
             if do_batchnorm:
              newline += 'typedef {precision} beta_default_t;\n'.format(precision=yamlConfig["DefaultPrecision"])
              newline += 'typedef {precision} mean_default_t;\n'.format(precision=yamlConfig["DefaultPrecision"])
