@@ -96,36 +96,44 @@ void compute_compressed_layer(
     } else if (CONFIG_T::io_type == io_serial) {
 #pragma HLS ARRAY_PARTITION variable=biases complete
 #pragma HLS ARRAY_PARTITION variable=acc complete
+#pragma HLS ARRAY_RESHAPE variable=data block factor=CONFIG_T::n_in
 
         // Replace ceil function with home-made macro prevents Vivado 2018.2 segfault
         int multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_nonzeros, CONFIG_T::reuse_factor);
-#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
-
-        if (CONFIG_T::store_weights_in_bram) {
-#pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
-#pragma HLS RESOURCE variable=mul core=RAM_2P_BRAM
-
-#pragma HLS ARRAY_PARTITION variable=weights cyclic factor=multiplier_limit
-#pragma HLS ARRAY_PARTITION variable=mult cyclic factor=multiplier_limit
-
-            // Pack the row_index, col_index, and weight in a single 32-bit memory element
-#pragma HLS data_pack variable=weights struct_level
-            // TODO: packing the structs in mult array provide worst results.
-//#pragma HLS data_pack variable=mult struct_level
-        } else {
-            // TODO: non tested yet!
-#pragma HLS ARRAY_PARTITION variable=weights cyclic factor=multiplier_limit
-#pragma HLS ARRAY_PARTITION variable=mult cyclic factor=multiplier_limit
-        }
-        // TODO: it generates a segfault
+//#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+#if 0
+//        if (CONFIG_T::store_weights_in_bram) {
+//#pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
+//#pragma HLS RESOURCE variable=mul core=RAM_2P_BRAM
+//
+//#pragma HLS ARRAY_PARTITION variable=weights cyclic factor=multiplier_limit
+//#pragma HLS ARRAY_PARTITION variable=mult cyclic factor=multiplier_limit
+//
+//            // Pack the row_index, col_index, and weight in a single 32-bit memory element
+//#pragma HLS data_pack variable=weights struct_level
+//            // TODO: packing the structs in mult array provide worst results.
+////#pragma HLS data_pack variable=mult struct_level
+//        } else {
+#endif
+#pragma HLS ARRAY_RESHAPE variable=weights cyclic factor=multiplier_limit
+#pragma HLS ARRAY_RESHAPE variable=mult cyclic factor=multiplier_limit
 #pragma HLS DATAFLOW
+
+#if 0
+#pragma HLS STREAM variable=mult depth=1
+#pragma HLS STREAM variable=acc depth=1
+//        }
+        // TODO: it generates a segfault
+#endif
     }
 
     // Do the compressed matrix-multiply
 COMPRESSED_MAT_MULT_L:
     for(unsigned i = 0; i < CONFIG_T::n_nonzeros; i++) {
         if (CONFIG_T::io_type == io_serial){
+            int unroll_factor = DIV_ROUNDUP(CONFIG_T::n_nonzeros, CONFIG_T::reuse_factor);
 #pragma HLS PIPELINE
+#pragma HLS UNROLL factor=unroll_factor
         }
 
         unsigned j = weights[i].row_index;
@@ -148,7 +156,9 @@ ACCUMULATOR_INIT_L:
 COMPRESSED_ACCUMULATOR_L:
     for(unsigned i = 0; i < CONFIG_T::n_nonzeros; i++) {
         if (CONFIG_T::io_type == io_serial){
+            int unroll_factor = DIV_ROUNDUP(CONFIG_T::n_nonzeros, CONFIG_T::reuse_factor);
 #pragma HLS PIPELINE
+#pragma HLS UNROLL factor=CONFIG_T::n_in
         }
 
         unsigned j = mult[i].col_index;
