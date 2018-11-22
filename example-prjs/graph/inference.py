@@ -59,9 +59,9 @@ print("X", X)
 print("Ri", Ri)
 print("Ro", Ro)
 
-print_array_to_cpp("wX",g.X, './')
-print_array_to_cpp("wRi",g.Ri, './')
-print_array_to_cpp("wRo",g.Ro, './')
+print_array_to_cpp("w00",g.X, './')
+print_array_to_cpp("w01",g.Ri, './')
+print_array_to_cpp("w02",g.Ro, './')
 
 print("w1", model.input_network[0].weight.data.transpose(0,1))
 print("b1", model.input_network[0].bias.data)
@@ -112,4 +112,4 @@ print("H", H)
 
 e = model.forward([X, Ri, Ro]) 
 print("e", e)
-print_array_to_cpp("we",torch_to_np(e), './')
+print_array_to_cpp("w03",torch_to_np(e), './')
