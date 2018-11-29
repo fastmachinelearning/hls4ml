@@ -901,7 +901,7 @@ def print_compressed_array_to_cpp(name, a, odir ):
     f.write("//Min {:.12f}\n".format(np.min(a)))
     f.write("//Max {:.12f}\n".format(np.max(a)))
     f.write("//Number of zeros {}\n".format(zero_ctr))
-    f.write("//Number of zeros {}\n".format(zero_ctr))
+    f.write("//Number of non-zeros {}\n".format(nonzero_ctr))
     f.write("\n")
 
     #c++ variable
