@@ -27,7 +27,7 @@ create_clock -period 5 -name default
 
 if {$opt(csim)} {
   puts "***** C SIMULATION *****"
-  csim_design
+  csim_design -compiler clang
 }
 
 if {$opt(synth)} {
@@ -35,7 +35,7 @@ if {$opt(synth)} {
   csynth_design
   if {$opt(cosim)} {
     puts "***** C/RTL SIMULATION *****"
-    cosim_design -trace_level all
+    cosim_design -trace_level all -compiler clang
   }
   if {$opt(export)} {
     puts "***** EXPORT IP *****"
