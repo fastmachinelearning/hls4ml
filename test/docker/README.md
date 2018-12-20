@@ -1,6 +1,6 @@
 # Docker image for hls4ml with Vivado
 
-Put the Vivado installation folder here and provide the path to license server.
+Extract the Vivado installation archive here and provide the path to license server.
 For example:
 
 ```
@@ -17,7 +17,30 @@ To install specific version of Vivado, first generate the silent installation co
 ./xsetup -b configGen
 ```
 
-Choose the products/devices the you would like to install by editing the generated file. Name the file `install_config.txt` and place it in the directory with `Dockerfile`. Edit the `Dockerfile` to add the folder of your Vivado installation and build the image using the command provided above. 
+Choose the products/devices the you would like to install by modifying the generated file. Name the file `install_config.txt` and place it in the directory with `Dockerfile`. Edit the `Dockerfile` to add the folder of your Vivado installation and build the image using the command provided above.
+
+## Using the created image
+
+The image can be used in a standard way, e.g., with [`docker run`](https://docs.docker.com/engine/reference/commandline/run/) command:
+
+```
+docker run -it --rm hls4ml-with-vivado
+```
+
+Alternatively, a reusable container can be created and later accessed with [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) command:
+
+```
+docker run -dit --name my-hls4ml-container hls4ml-with-vivado
+docker exec -it my-hls4ml-container bash
+```
+
+We recommend using docker volumes to mount the local filesystem into the docker container in order to access files on host from the image.
+
+```
+docker run -it --rm -v /path/on/host:/home/hls4ml/path/in/container hls4ml-with-vivado
+```
+
+Consult the docker [documentation](https://docs.docker.com/storage/volumes/) for more information about volumes.
 
 ## GUI support
 
