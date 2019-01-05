@@ -5,10 +5,10 @@ vivadodir=/opt/Xilinx
 vivadover=2017.2
 parallel=1
 
-csim="csim 0"
-synth="synth 0"
-cosim="cosim 0"
-export="export 0"
+csim="csim=0"
+synth="synth=0"
+cosim="cosim=0"
+export="export=0"
 
 function print_usage {
    echo "Usage: `basename $0` [OPTION]"
@@ -73,15 +73,15 @@ while getopts ":d:i:v:p:csreh" opt; do
       ;;
    p) parallel=$OPTARG
       ;;
-   c) csim="csim 1"
+   c) csim="csim=1"
       ;;
-   s) synth="synth 1"
+   s) synth="synth=1"
       ;;
-   r) cosim="cosim 1"
-      synth="synth 1"
+   r) cosim="cosim=1"
+      synth="synth=1"
       ;;
-   e) export="export 1"
-      synth="synth 1"
+   e) export="export=1"
+      synth="synth=1"
       ;;
    h)
       print_usage
