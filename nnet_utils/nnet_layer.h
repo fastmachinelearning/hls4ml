@@ -68,29 +68,6 @@ void compute_layer(
 
     if (CONFIG_T::io_type == io_parallel){
 
-        /*
-        #pragma HLS ARRAY_PARTITION variable=biases complete
-        #pragma HLS ARRAY_PARTITION variable=acc complete
-
-        // Pipelining force all the loops being unrolled
-        #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
-
-        // Replace ceil function with home-made macro prevents Vivado 2018.2 segfault
-        int multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in*CONFIG_T::n_out, CONFIG_T::reuse_factor);
-        #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
-
-        // Workaround the above restriction.
-        #pragma HLS ARRAY_RESHAPE variable=weights block factor=multiplier_limit
-        #pragma HLS ARRAY_RESHAPE variable=mult block factor=multiplier_limit 
-        */
-
-        // the same for all io_parallel and io_serial
-        // typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
-        // #pragma HLS function_instantiate variable=weights,biases
-        
-        //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor rewind
-        // const int cycle_factor_loop = (CONFIG_T::n_in*CONFIG_T::n_out)/CONFIG_T::reuse_factor;
-        
         //#pragma HLS RESOURCE variable=weights core=ROM_1P_BRAM
         #pragma HLS RESOURCE variable=weights core=ROM_1P_LUTRAM
         #pragma HLS ARRAY_PARTITION variable=biases complete
@@ -124,49 +101,6 @@ void compute_layer(
             #pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
         }
     }
-    
-    // // Do the matrix-multiply
-    // Product1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
-    //     if (CONFIG_T::io_type == io_serial){
-    //         #pragma HLS PIPELINE
-    //     }
-    //     cache = data[ii];
-    //     Product2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-    //         if (CONFIG_T::io_type == io_serial) {
-    //             int multiplier_limit  = ceil(float(CONFIG_T::n_out) / float(CONFIG_T::reuse_factor));
-    //             #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
-    //         }
-	   //  int index = ii*CONFIG_T::n_out+jj;
-	   //  mult[index] = cache * weights[index];
-    //     }
-    // }
-
-    // // Initialize accumulator with input biases
-    // ResetAccum: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
-    //     if (CONFIG_T::io_type == io_serial){
-    //         #pragma HLS UNROLL
-    //     }
-    //     acc[iacc] = (typename CONFIG_T::accum_t) biases[iacc];
-    // }
-
-    // // Accumulate multiplication result
-    // Accum1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
-    //     if (CONFIG_T::io_type == io_serial){
-    //         #pragma HLS PIPELINE
-    //     }
-    //     Accum2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-	   //  int index = ii*CONFIG_T::n_out+jj;
-	   //  acc[jj] += mult[index];
-    //     }
-    // }
-
-    // // Cast to "res_t" type
-    // Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
-    //     if (CONFIG_T::io_type == io_serial){
-    //         #pragma HLS UNROLL
-    //     }
-    //     res[ires] = (res_T) (acc[ires]);
-    // }    
 
     // Initialize accumulator with input biases
     ResetAccum: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
