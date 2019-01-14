@@ -81,7 +81,7 @@ def main():
     #print(model_arch)
 
     #Define supported laers
-    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'BinaryDense', 'TernaryDense', 'Conv1D', 'Conv2D', 'BatchNormalization']
+    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'BinaryDense', 'TernaryDense', 'Conv1D', 'Conv2D', 'BatchNormalization', 'MaxPooling1D', 'MaxPooling2D', 'AveragePooling1D', 'AveragePooling2D']
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']
 
     #Define layers to skip for conversion to HLS
@@ -150,7 +150,7 @@ def main():
 
         
         #Translate weights and biases from h5 file
-        if layer['class_name'] != 'BatchNormalization' and layer['class_name'] not in activation_layers:
+        if layer['class_name'] != 'BatchNormalization' and layer['class_name'] not in activation_layers and 'Pooling' not in layer['class_name']:
             found_weights = h5File[layer['name']].visit(find_kernel_in_h5)
             weights = h5File['/{}/{}'.format(layer['name'],found_weights)][()]
             cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'],quantize)
@@ -286,6 +286,54 @@ def main():
                 layer['in_width']=current_shape[2]
                 layer['n_filt']=current_shape[3]
                 current_shape=[current_shape[0], layer['in_height'], layer['in_width'], layer['n_filt']]
+        elif 'Pooling' in layer['class_name']:
+            info = layer['class_name'].split('Pooling')
+            d = int(info[1].split('D')[0])
+            op = info[0]
+            if d == 1:
+                layer['pool_size']=keras_layer['config']['pool_size']
+                layer['stride']=keras_layer['config']['stride']
+            elif d == 2:
+                layer['in_height']=current_shape[1]
+                layer['in_width']=current_shape[2]
+                layer['n_filt']=layer_list[-1]['n_filt']
+                layer['stride_height']=keras_layer['config']['strides'][0]
+                layer['stride_width']=keras_layer['config']['strides'][1]
+                layer['pool_height']=keras_layer['config']['pool_size'][0]
+                layer['pool_width']=keras_layer['config']['pool_size'][1]
+                layer['padding']=keras_layer['config']['padding']
+            if layer['padding']=='same':
+                #Height
+                in_height = current_shape[1]
+                layer['out_height'] = int(math.ceil(float(in_height) / float(layer['stride_height'])))
+                if (in_height % layer['stride_height'] == 0):
+                    pad_along_height = max(layer['pool_height'] - layer['stride_height'], 0)
+                else:
+                    pad_along_height = max(layer['pool_height'] - (in_height % layer['stride_height']), 0)
+                layer['pad_top']  = pad_along_height // 2
+                layer['pad_bottom']  = pad_along_height - layer['pad_top']
+                #Width
+                in_width = current_shape[2]
+                layer['out_width'] = int(math.ceil(float(in_width) / float(layer['stride_width'])))
+                if (in_width % layer['stride_width'] == 0):
+                    pad_along_width = max(layer['pool_width'] - layer['stride_width'], 0)
+                else:
+                    pad_along_width = max(layer['pool_width'] - (in_width % layer['stride_width']), 0)
+                layer['pad_left']  = pad_along_width // 2
+                layer['pad_right']  = pad_along_width - layer['pad_left']
+                layer['n_out'] = layer['out_height'] * layer['out_width'] * layer['n_filt']
+            elif layer['padding']=='valid':
+                in_height = current_shape[1]
+                in_width = current_shape[2]
+                layer['out_width'] = int(math.ceil(float(in_width - layer['pool_width'] + 1) / float(layer['stride_width'])))
+                layer['out_height'] = int(math.ceil(float(in_height - layer['pool_height'] + 1) / float(layer['stride_height'])))
+                layer['pad_top'] = 0
+                layer['pad_bottom'] = 0
+                layer['pad_left'] = 0
+                layer['pad_right'] = 0
+                layer['n_out'] = layer['out_height'] * layer['out_height'] * layer['n_filt'] 
+            current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
+
         elif layer['class_name']=='Activation':
             if layer_list[-1]['class_name'] != 'BatchNormalization':
                 layer_list[-1]['activation'] = layer['activation']

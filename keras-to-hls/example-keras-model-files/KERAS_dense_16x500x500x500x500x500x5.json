@@ -1,0 +1,386 @@
+{
+    "backend": "tensorflow",
+    "class_name": "Model",
+    "config": {
+        "input_layers": [
+            [
+                "input_1",
+                0,
+                0
+            ]
+        ],
+        "layers": [
+            {
+                "class_name": "InputLayer",
+                "config": {
+                    "batch_input_shape": [
+                        null,
+                        16
+                    ],
+                    "dtype": "float32",
+                    "name": "input_1",
+                    "sparse": false
+                },
+                "inbound_nodes": [],
+                "name": "input_1"
+            },
+            {
+                "class_name": "Dense",
+                "config": {
+                    "activation": "relu",
+                    "activity_regularizer": null,
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "bias_regularizer": null,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_in",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": {
+                        "class_name": "L1L2",
+                        "config": {
+                            "l1": 0.009999999776482582,
+                            "l2": 0.0
+                        }
+                    },
+                    "name": "fc1_relu",
+                    "trainable": true,
+                    "units": 500,
+                    "use_bias": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "input_1",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "fc1_relu"
+            },
+            {
+                "class_name": "Dropout",
+                "config": {
+                    "name": "dropout_1",
+                    "noise_shape": null,
+                    "rate": 0.25,
+                    "seed": null,
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "fc1_relu",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "dropout_1"
+            },
+            {
+                "class_name": "Dense",
+                "config": {
+                    "activation": "relu",
+                    "activity_regularizer": null,
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "bias_regularizer": null,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_in",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": {
+                        "class_name": "L1L2",
+                        "config": {
+                            "l1": 0.009999999776482582,
+                            "l2": 0.0
+                        }
+                    },
+                    "name": "fc2_relu",
+                    "trainable": true,
+                    "units": 500,
+                    "use_bias": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "dropout_1",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "fc2_relu"
+            },
+            {
+                "class_name": "Dropout",
+                "config": {
+                    "name": "dropout_2",
+                    "noise_shape": null,
+                    "rate": 0.25,
+                    "seed": null,
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "fc2_relu",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "dropout_2"
+            },
+            {
+                "class_name": "Dense",
+                "config": {
+                    "activation": "relu",
+                    "activity_regularizer": null,
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "bias_regularizer": null,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_in",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": {
+                        "class_name": "L1L2",
+                        "config": {
+                            "l1": 0.009999999776482582,
+                            "l2": 0.0
+                        }
+                    },
+                    "name": "fc3_relu",
+                    "trainable": true,
+                    "units": 500,
+                    "use_bias": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "dropout_2",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "fc3_relu"
+            },
+            {
+                "class_name": "Dropout",
+                "config": {
+                    "name": "dropout_3",
+                    "noise_shape": null,
+                    "rate": 0.25,
+                    "seed": null,
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "fc3_relu",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "dropout_3"
+            },
+            {
+                "class_name": "Dense",
+                "config": {
+                    "activation": "relu",
+                    "activity_regularizer": null,
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "bias_regularizer": null,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_in",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": {
+                        "class_name": "L1L2",
+                        "config": {
+                            "l1": 0.009999999776482582,
+                            "l2": 0.0
+                        }
+                    },
+                    "name": "fc4_relu",
+                    "trainable": true,
+                    "units": 500,
+                    "use_bias": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "dropout_3",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "fc4_relu"
+            },
+            {
+                "class_name": "Dropout",
+                "config": {
+                    "name": "dropout_4",
+                    "noise_shape": null,
+                    "rate": 0.25,
+                    "seed": null,
+                    "trainable": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "fc4_relu",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "dropout_4"
+            },
+            {
+                "class_name": "Dense",
+                "config": {
+                    "activation": "relu",
+                    "activity_regularizer": null,
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "bias_regularizer": null,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_in",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": {
+                        "class_name": "L1L2",
+                        "config": {
+                            "l1": 0.009999999776482582,
+                            "l2": 0.0
+                        }
+                    },
+                    "name": "fc5_relu",
+                    "trainable": true,
+                    "units": 500,
+                    "use_bias": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "dropout_4",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "fc5_relu"
+            },
+            {
+                "class_name": "Dense",
+                "config": {
+                    "activation": "softmax",
+                    "activity_regularizer": null,
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "bias_regularizer": null,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_in",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": null,
+                    "name": "output_softmax",
+                    "trainable": true,
+                    "units": 5,
+                    "use_bias": true
+                },
+                "inbound_nodes": [
+                    [
+                        [
+                            "fc5_relu",
+                            0,
+                            0,
+                            {}
+                        ]
+                    ]
+                ],
+                "name": "output_softmax"
+            }
+        ],
+        "name": "model_1",
+        "output_layers": [
+            [
+                "output_softmax",
+                0,
+                0
+            ]
+        ]
+    },
+    "keras_version": "2.1.5"
+}

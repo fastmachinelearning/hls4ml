@@ -238,10 +238,10 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
       exp_res[ii] = 0;
     }
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+      if (CONFIG_T::io_type == io_serial){
+          #pragma HLS PIPELINE
+      }
       for (int jj=0; jj<CONFIG_T::n_in; jj++) {
-        if (CONFIG_T::io_type == io_serial){
-            #pragma HLS PIPELINE
-        }
 	if (ii==jj) exp_diff_res = 1;
 	else {
 	  data_round = (data_cache[jj]-data_cache[ii])*CONFIG_T::table_size/16;
