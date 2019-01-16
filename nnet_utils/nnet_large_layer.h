@@ -42,6 +42,7 @@ struct large_layer_config
     static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
     static const unsigned n_zeros = 0;
+    static const bool  use_lowlatency=false;
     // partitioning arrays cyclically to go with roll factors?
 };
 
@@ -52,92 +53,61 @@ void compute_large_layer(
     data_T    data[CONFIG_T::n_in],
     res_T     res[CONFIG_T::n_out],
     typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
-    typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
-{
-  //#pragma HLS ARRAY_RESHAPE variable=data    complete dim=0
-  //#pragma HLS ARRAY_RESHAPE variable=res     complete dim=0
-  //#pragma HLS inline off
-  //#pragma HLS dataflow
+    typename CONFIG_T::bias_t    biases[CONFIG_T::n_out]) {
+    int      cycle_factor = DIV_ROUNDUP(CONFIG_T::n_in*CONFIG_T::n_out, CONFIG_T::reuse_factor);
+    typename CONFIG_T::weight_t mult[CONFIG_T::n_in*CONFIG_T::n_out];
+    if(CONFIG_T::use_lowlatency) { 
+      int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_out) / float(CONFIG_T::reuse_factor)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
+      #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+      #pragma HLS PIPELINE II=CONFIG_T::reuse_factor rewind
+    } 
+    if(CONFIG_T::store_weights_in_bram) { 
+      #pragma HLS RESOURCE        variable=weights core=ROM_1P_BRAM
+    }
     typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
     #pragma HLS function_instantiate variable=weights,biases
-    //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor rewind
-    const int cycle_factor_loop = DIV_ROUNDUP(CONFIG_T::n_in*CONFIG_T::n_out, CONFIG_T::reuse_factor);
-    //const int cycle_factor_loop = (CONFIG_T::n_in*CONFIG_T::n_out)/CONFIG_T::reuse_factor;
-    #pragma HLS RESOURCE variable=weights core=ROM_1P_BRAM
-    #pragma HLS ARRAY_PARTITION variable=biases complete
-    #pragma HLS ARRAY_PARTITION variable=acc    complete
-    //#pragma HLS ARRAY_RESHAPE   variable=weights complete
-    //float reused_cycle = CONFIG_T::n_out / CONFIG_T::reuse_factor;
-    //#pragma HLS ARRAY_RESHAPE variable=biases block factor=reuse_cycle
-    //#pragma HLS ARRAY_RESHAPE variable=acc    block factor=reuse_cycle
-    //int multiplier_limit  = cycle_factor_loop;//ceil(float(CONFIG_T::n_in*CONFIG_T::n_out) / float(CONFIG_T::reuse_factor));// - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
-    //#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
-    //typename CONFIG_T::accum_t tmpmult[cycle_factor_loop];
-    //typename CONFIG_T::accum_t tmpmult[CONFIG_T::n_in*CONFIG_T::n_out];
-    #pragma HLS ARRAY_RESHAPE   variable=weights block factor=cycle_factor_loop
-    //#pragma HLS ARRAY_RESHAPE   variable=tmpmult block factor=cycle_factor_loop
-    //#pragma HLS ARRAY_PARTITION variable=tmpmult complete
-    // Initialize accumulator with input biases
+    #pragma HLS ARRAY_PARTITION variable=biases  complete
+    #pragma HLS ARRAY_PARTITION variable=acc     complete
+    #pragma HLS ARRAY_RESHAPE   variable=mult    block factor=cycle_factor
+    #pragma HLS ARRAY_RESHAPE   variable=weights block factor=cycle_factor
     ResetAccum: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
         #pragma HLS UNROLL
         acc[iacc] = (typename CONFIG_T::accum_t) biases[iacc];
     }
-    /*
-    ResetMult: for(int iacc = 0; iacc < cycle_factor_loop; iacc++) {
-        #pragma HLS UNROLL
-        tmpmult[iacc] = 0;
-	}*/
-    const int rufactor=CONFIG_T::reuse_factor;
-    /* => One alternative to deal with zero supp
-    Setup1: for(int ii = 0; ii < rufactor; ii++) {
-    #pragma HLS PIPELINE
-    Setup0: for(int jj = 0; jj < cycle_factor; jj++) {
-     #pragma HLS UNROLL
-     int windex = ii+jj*rufactor;
-     int index   = windex/CONFIG_T::n_out;    
-     tmpmult[windex] = data[index];
-     }
-    Fan1: for(int ii = 0; ii < rufactor; ii++) {
-    #pragma HLS PIPELINE II=1 rewind 
-    Fan0: for(int jj = 0; jj < cycle_factor_loop; jj++) {
-    #pragma HLS UNROLL
-        int windex = ii+jj*rufactor;
-	int index   = windex/CONFIG_T::n_out;
-	data_in[windex] = data[index];
-      }
+    int rufactor=CONFIG_T::reuse_factor;
+    if(CONFIG_T::use_lowlatency) { 
+      rufactor          = CONFIG_T::n_in;
+      cycle_factor      = CONFIG_T::n_out;
     }
-    }*/
+    data_T cache;
     Product1: for(int ii = 0; ii < rufactor; ii++) {
-    // #pragma HLS UNROLL
-    #pragma HLS PIPELINE II=1 rewind 
-    //#pragma HLS LOOP_FLATTEN off
-    Product0: for(int jj = 0; jj < cycle_factor_loop; jj++) {
+       #pragma HLS PIPELINE II=1 rewind 
+       if(CONFIG_T::use_lowlatency) { 
+        cache = data[ii];
+       }
+    Product0: for(int jj = 0; jj < cycle_factor; jj++) {
         #pragma HLS UNROLL
         int windex = ii+jj*rufactor;
 	int index   = windex/CONFIG_T::n_out;
-	int aindex  = windex/CONFIG_T::n_in;
-	acc[aindex] += data[index]*weights[windex];
-	//tmpmult[jj] += data[index]*weights[windex];
-	//tmpmult[windex] = data[index]*weights[windex]; //See above
+	if(CONFIG_T::use_lowlatency) { 
+         mult[windex] = cache*weights[windex];
+	} else { 
+ 	 int aindex  = windex/CONFIG_T::n_in;
+  	 acc[aindex] += data[index]*weights[windex];
+	}
       }
     }
-    /*
-   for(int ii = 0; ii < cycle_factor_loop; ii++) {  
-    #pragma HLS UNROLL
-       int aindex  = (ii*rufactor)/CONFIG_T::n_in;
-       acc[aindex] += tmpmult[ii];
-       }*/
-    /* Accumulate multiplication result See above alternative*/
-    /*
-    Accum1: for(int ii = 0; ii < rufactor; ii++) {
-    #pragma HLS PIPELINE II=1 rewind
-    Accum0: for(int jj = 0; jj < cycle_factor_loop; jj++) { 
-     #pragma HLS UNROLL
-        int windex=jj*rufactor+ii;
-  	int index=windex/CONFIG_T::n_in;
-	acc[index] += tmpmult[windex];
-      }    
-    }*/
+    if(CONFIG_T::use_lowlatency) { 
+     // Accumulate multiplication result
+     Accum1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
+         #pragma HLS UNROLL
+         Accum2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
+            #pragma HLS UNROLL
+	    int index = ii*CONFIG_T::n_out+jj;
+	    acc[jj] += mult[index];
+         }
+     }
+    }
     Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
         #pragma HLS UNROLL
         res[ires] = (res_T) (acc[ires]);

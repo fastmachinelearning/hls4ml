@@ -14,7 +14,7 @@
 
 //hls-fpga-machine-learning insert numbers
 typedef ap_fixed<16,6> accum_default_t;
-typedef ap_fixed<16,6> weight_default_t;
+typedef ap_fixed<32,6> weight_default_t;
 typedef ap_fixed<16,6> bias_default_t;
 typedef ap_fixed<16,6> input_t;
 typedef ap_fixed<16,6> result_t;

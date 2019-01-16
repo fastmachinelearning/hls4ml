@@ -27,8 +27,6 @@
 #include "nnet_batchnorm.h"
 #include "nnet_activation.h"
 #include "nnet_pooling.h"
-
-//hls-fpga-machine-learning insert weights
 #include "weights/w1.h"
 #include "weights/b1.h"
 #include "weights/w2.h"
@@ -36,6 +34,7 @@
 #include "weights/w3.h"
 #include "weights/b3.h"
 
+//hls-fpga-machine-learning insert weights
 void myproject(
 		  input_t data[N_INPUTS],
 		  result_t res[N_OUTPUTS],
@@ -48,8 +47,7 @@ void myproject(
     #pragma HLS ARRAY_RESHAPE variable=res complete dim=0 
     #pragma HLS INTERFACE ap_vld port=data,res 
     #pragma HLS DATAFLOW
-
-
+  //#pragma HLS PIPELINE
     const_size_in   = N_INPUTS;
     const_size_out  = N_OUTPUTS;
 
