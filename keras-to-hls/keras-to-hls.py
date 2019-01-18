@@ -81,7 +81,7 @@ def main():
     #print(model_arch)
 
     #Define supported laers
-    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'Conv1D', 'Conv2D', 'BatchNormalization', 'MaxPooling1D', 'MaxPooling2D', 'AveragePooling1D', 'AveragePooling2D']
+    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'BinaryDense', 'TernaryDense', 'Conv1D', 'Conv2D', 'BatchNormalization', 'MaxPooling1D', 'MaxPooling2D', 'AveragePooling1D', 'AveragePooling2D']
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']
 
     #Define layers to skip for conversion to HLS
@@ -111,12 +111,15 @@ def main():
     # Set some variables to make the routine after a bit smoother
     is_conv2d = False
     is_dense = False
+    quantize = 0
     for keras_layer in layer_config:
      if keras_layer["class_name"]=='Conv2D':
       is_conv2d = True
       break
-     if keras_layer["class_name"]=='Dense':
+     if keras_layer["class_name"]=='Dense' or keras_layer["class_name"]=='BinaryDense' or keras_layer["class_name"]=='TernaryDense':
       is_dense = True
+      if keras_layer["class_name"]=='BinaryDense': quantize = 2
+      if keras_layer["class_name"]=='TernaryDense': quantize = 3
       break
 	        
     print('Topology:')
@@ -150,9 +153,10 @@ def main():
         if layer['class_name'] != 'BatchNormalization' and layer['class_name'] not in activation_layers and 'Pooling' not in layer['class_name']:
             found_weights = h5File[layer['name']].visit(find_kernel_in_h5)
             weights = h5File['/{}/{}'.format(layer['name'],found_weights)][()]
+            cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'],quantize)
             found_bias = h5File[layer['name']].visit(find_bias_in_h5)
-            biases = h5File['/{}/{}'.format(layer['name'],found_bias)][()]
-            cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
+            if found_bias: biases = h5File['/{}/{}'.format(layer['name'],found_bias)][()]
+            else: biases = np.zeros(weights.shape[1]) 
             print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
             layer['weights_n_zeros'] = cur_n_zeros
         elif layer['class_name'] == 'BatchNormalization':
@@ -178,7 +182,7 @@ def main():
         layer['n_part'] = 1
         #Get number of inputs and outputs
         #(We take it from the weights to avoid dealing with InputLayer and Flatten details)
-        if layer['class_name']=='Dense':
+        if layer['class_name']=='Dense' or layer['class_name']=='BinaryDense' or layer['class_name']=='TernaryDense':
             layer['n_in']=weights.shape[0]
             layer['n_out']=weights.shape[1]
             # if this layer is too big (more than MAXMULT multiplications); 
@@ -202,7 +206,7 @@ def main():
                     i_subout = 0
                     if i_part>0:
                         i_subout = sum(layer['n_subout'][0:i_part])
-                    cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'], i_part, layer['n_part'], i_subout, layer['n_subout'][i_part])
+                    cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'], quantize, i_part, layer['n_part'], i_subout, layer['n_subout'][i_part])
                     print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'], i_part, layer['n_part'], i_subout, layer['n_subout'][i_part])
                     layer['weights_n_subzeros'].append(cur_n_zeros)
             
