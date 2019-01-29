@@ -692,9 +692,9 @@ void  ternary_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
   if (CONFIG_T::io_type == io_serial){
       #pragma HLS PIPELINE
   }
-  datareg = data[ii];	 
-  if( datareg > 0.5 ) cache = 1;
-  else if( datareg > -0.5 && datareg <= 0.5) cache=0;
+  datareg = 2*data[ii];	 
+  if( datareg > 1 ) cache = 1;
+  else if( datareg > -1 && datareg <= 1) cache=0;
   else cache = -1;
   
   res[ii] = (res_T) cache;
