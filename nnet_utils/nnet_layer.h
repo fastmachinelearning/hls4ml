@@ -73,12 +73,14 @@ void compute_layer(
 
     // Replace ceil function with home-made macro prevents Vivado 2018.2 segfault
     int multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in*CONFIG_T::n_out, CONFIG_T::reuse_factor);
-    #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+    // #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
     // Workaround the above restriction.
     #pragma HLS ARRAY_RESHAPE variable=weights block factor=multiplier_limit
     #pragma HLS ARRAY_RESHAPE variable=mult block factor=multiplier_limit
-    
+    // #pragma HLS ARRAY_PARTITION variable=weights block factor=multiplier_limit
+    // #pragma HLS ARRAY_PARTITION variable=mult    block factor=multiplier_limit
+
     // Do the matrix-multiply
     // Product1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
 
