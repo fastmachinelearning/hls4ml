@@ -56,8 +56,9 @@ void compute_layer(
     typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
 {
     static const int mult_factor = DIV_ROUNDUP(CONFIG_T::n_in*CONFIG_T::n_out, CONFIG_T::reuse_factor);
-    static const int nmult       = DIV_ROUNDUP(mult_factor, CONFIG_T::n_out);
-    static const int nmults      = DIV_ROUNDUP(mult_factor, CONFIG_T::n_out)*CONFIG_T::n_out;
+    static const int nmult       = DIV_ROUNDUP(mult_factor, CONFIG_T::n_out); //CONFIG_T::n_mult;//DIV_ROUNDUP(mult_factor, CONFIG_T::n_out);
+    static const int nmults      = nmult*CONFIG_T::n_out;//DIV_ROUNDUP(mult_factor, CONFIG_T::n_out)*CONFIG_T::n_out;
+
     int mult_factor_loop         = mult_factor;
     typename CONFIG_T::accum_t mult[nmults];
     typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
@@ -72,7 +73,7 @@ void compute_layer(
       }
       #pragma HLS ARRAY_PARTITION variable=biases complete
       #pragma HLS ARRAY_PARTITION variable=acc    complete
-      #pragma HLS ARRAY_RESHAPE   variable=mult   complete
+      #pragma HLS ARRAY_PARTITION variable=mult   complete
       #pragma HLS ARRAY_RESHAPE   variable=weights block factor=mult_factor
       if(CONFIG_T::use_lowlatency) { 
         #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
@@ -92,7 +93,7 @@ void compute_layer(
         #pragma HLS ARRAY_PARTITION variable=mult cyclic factor=cycle_factor
         #pragma HLS ARRAY_PARTITION variable=acc complete
         #pragma HLS DATAFLOW
-        #pragma HLS STREAM variable=mult depth=1
+	#pragma HLS STREAM variable=mult depth=1
         #pragma HLS STREAM variable=acc depth=1
         if (CONFIG_T::store_weights_in_bram){
             #pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
@@ -104,7 +105,7 @@ void compute_layer(
     }
     ResetMult: for(int imult = 0; imult < nmults; imult++) {
         #pragma HLS UNROLL
-      mult[imult] = 0;
+        mult[imult] = 0;
     }
     int rufactor=CONFIG_T::reuse_factor;
     if(CONFIG_T::use_lowlatency) { 
@@ -127,7 +128,7 @@ void compute_layer(
 	 int windex = ii+jj*rufactor;
 	 int index   = windex/CONFIG_T::n_out;
 	 if(CONFIG_T::use_lowlatency) { 
-	   mult[windex] = cache*weights[windex];
+	   acc[windex] = cache*weights[windex];
 	 } else { 
            int aindex  = (nmult*windex)/CONFIG_T::n_in;
 	   mult[aindex] += data[index]*weights[windex];
@@ -145,8 +146,8 @@ void compute_layer(
        #pragma HLS UNROLL
        int index = ii*nmult+jj;
        acc[ii]  += mult[index];
-      }
-    }
+     }
+    } 
     // Cast to "res_t" type
     Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
        #pragma HLS UNROLL 
