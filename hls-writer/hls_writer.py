@@ -45,7 +45,7 @@ def hls_writer(layer_list, yamlConfig):
                 newline += '    #pragma HLS ARRAY_RESHAPE variable=data complete dim=0 \n'
                 newline += '    #pragma HLS ARRAY_RESHAPE variable=res complete dim=0 \n'
                 newline += '    #pragma HLS INTERFACE ap_vld port=data,res \n'
-                newline += '    #pragma HLS PIPELINE \n'
+                newline += '    #pragma HLS DATAFLOW \n'
             if yamlConfig["IOType"] == "io_serial":
                 newline += '    #pragma HLS INTERFACE axis port=data,res \n'
                 newline += '    #pragma HLS DATAFLOW \n'
@@ -272,8 +272,9 @@ def hls_writer(layer_list, yamlConfig):
         static const unsigned io_type = nnet::{iotype};
         static const unsigned reuse_factor = {reuse};
         static const unsigned n_zeros = {nzeros};
-        static const unsigned n_nonzeros = {n_in} * {n_out} - {nzeros};
+        static const unsigned n_nonzeros = {n_in} * {n_out} - {nzeros} + {nzerosadded};
         static const bool store_weights_in_bram = false;
+        static const bool use_lowlatency = false;
         typedef accum_default_t accum_t;
         typedef bias_default_t bias_t;
         typedef weight_default_t weight_t;
@@ -309,6 +310,7 @@ def hls_writer(layer_list, yamlConfig):
         static const unsigned reuse_factor = {reuse};
         static const unsigned n_zeros = {nzeros};
         static const bool store_weights_in_bram = false;
+        static const bool use_lowlatency = false;
         typedef accum_default_t accum_t;
         typedef bias_default_t bias_t;
         typedef weight_default_t weight_t;
@@ -431,7 +433,8 @@ def hls_writer(layer_list, yamlConfig):
                                                                 n_out=layer_out_name,
                                                                 iotype=yamlConfig["IOType"],
                                                                 reuse=yamlConfig["ReuseFactor"],
-                                                                nzeros=layer_list[i-1]['weights_n_zeros'])
+                                                                nzeros=layer_list[i-1]['weights_n_zeros'],
+                                                                nzerosadded=layer_list[i-1]['n_zeros_added'])
                     else:
                         for i_part in range(0, layer_list[i-1]['n_part']):
                             newline += dense_sub_config_template.format(index=str(i),
@@ -631,9 +634,9 @@ def print_array_to_cpp(name, a, odir ):
 
     #c++ variable
     if "w" in name:
-        f.write("weight_default_t {}".format(name))
+        f.write("static weight_default_t {}".format(name))
     elif "b" in name:
-        f.write("bias_default_t {}".format(name))
+        f.write("static bias_default_t {}".format(name))
     else:
         raise Exception('ERROR: Unkown weights type')
 
@@ -659,7 +662,7 @@ def print_array_to_cpp(name, a, odir ):
 #################################################
 ## Print a compressed bias or weight array to C++
 #################################################
-def print_compressed_array_to_cpp(name, a, odir ):
+def print_compressed_array_to_cpp(name, a, odir, reuse ):
 
     # count zeros
     zero_ctr = 0
@@ -668,6 +671,14 @@ def print_compressed_array_to_cpp(name, a, odir ):
             zero_ctr += 1
     # count non zeros
     nonzero_ctr = np.prod(a.shape) - zero_ctr
+    
+    nzero_add = 0
+    tmp_reuse_ctr = nonzero_ctr
+    while tmp_reuse_ctr % reuse != 0:
+        nzero_add += 1
+        tmp_reuse_ctr += 1
+    nzero_added=nzero_add
+    print("Adding %s nonseroweights",nzero_add)
 
     #put output in subdir for tarballing later
     f=open("{}/firmware/weights/{}.h".format(odir,name),"w")
@@ -677,32 +688,46 @@ def print_compressed_array_to_cpp(name, a, odir ):
     f.write("//Min {:.12f}\n".format(np.min(a)))
     f.write("//Max {:.12f}\n".format(np.max(a)))
     f.write("//Number of zeros {}\n".format(zero_ctr))
+    f.write("//Number of added zeros {}\n".format(nzero_add))
     f.write("\n")
 
     #c++ variable
     if "w" in name:
-        f.write("compressed_weight_default_t {}".format(name))
+        f.write("static compressed_weight_default_t {}".format(name))
     else:
         raise Exception('ERROR: Unkown weights type')
-    f.write("[{}]".format(nonzero_ctr))
+    f.write("[{}]".format(tmp_reuse_ctr))
     f.write(" = {")
 
     # fill c++ array.
     nrows = a.shape[0]
     ncols = a.shape[1]
     first_element = 1
-    i = 0
+    i = -1
+    weights=[]
     for x in np.nditer(a):
+        i=i+1
+        if x == 0 and nzero_add < 1:
+            continue
+        if x == 0: 
+            nzero_add-=1
+        val=x
+        weights.append([int(i%ncols),int(i/ncols),val])
+        
+    weights.sort()
+    i=0
+    for w in weights:
+        val=w[2]
+        print("v:",val)
         if first_element == 1:
-            if x != 0:
-                f.write("{ %u, %u, %.12f }" % (i/ncols, i%ncols, x))
-                first_element=0
+            f.write("{ %u, %u, %.12f }" % (w[1],w[0],w[2]))
+            first_element=0
         else:
-            if x != 0:
-                f.write(", { %u, %u, %.12f }" % (i/ncols, i%ncols, x))
-        i = i + 1
+            f.write(", { %u, %u, %.12f }" % (w[1], w[0], w[2]))
+        i=i+1
+
     f.write("};\n")
     f.close()
 
-    return zero_ctr
+    return zero_ctr,nzero_added
 
