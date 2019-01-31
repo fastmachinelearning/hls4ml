@@ -37,10 +37,10 @@ void compute_compressed_layer(
     typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
 {
     // Create a separate module for each layer
-#pragma HLS inline off
+  //#pragma HLS inline off
 
     // Explicitly optimize unchanging weights/biases
-#pragma HLS function_instantiate variable=weights,biases
+  //#pragma HLS function_instantiate variable=weights,biases
 
     // Intermediate computational buffers
     typename CONFIG_T::compressed_weight_t mult[CONFIG_T::n_nonzeros];
@@ -53,6 +53,7 @@ void compute_compressed_layer(
     printf("INFO:   n_zeros: %u\n", CONFIG_T::n_zeros);
     printf("INFO:   n_nonzeros: %u\n", CONFIG_T::n_nonzeros);
     printf("INFO:   store_weights_in_bram: %u\n", CONFIG_T::store_weights_in_bram);
+    int multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_nonzeros, CONFIG_T::reuse_factor);
 
     // Parallel vs. Serial IO
     if (CONFIG_T::io_type == io_parallel) {
@@ -60,33 +61,29 @@ void compute_compressed_layer(
         //   - completely partition arrays
         //   - if we have a reuse factor, limit number of multipliers
 #pragma HLS ARRAY_PARTITION variable=biases complete
-#pragma HLS ARRAY_PARTITION variable=acc complete
+#pragma HLS ARRAY_PARTITION variable=acc    complete
+#pragma HLS ARRAY_PARTITION variable=mult   complete
+#pragma HLS ARRAY_RESHAPE variable=weights block factor=multiplier_limit
 
         // Pipelining force all the loops being unrolled
-#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+        //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
         // Replace ceil function with home-made macro prevents Vivado 2018.2 segfault
-        int multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_nonzeros, CONFIG_T::reuse_factor);
-#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+        //int multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_nonzeros, CONFIG_T::reuse_factor);
+	//#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
         // BRAMs vs. registers
         if (CONFIG_T::store_weights_in_bram) {
             // Reshape the arrays as memory with a larger bit-width
-#pragma HLS ARRAY_RESHAPE variable=weights block factor=multiplier_limit
-#pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
-#pragma HLS ARRAY_RESHAPE variable=mult block factor=multiplier_limit
-#pragma HLS RESOURCE variable=mult core=RAM_2P_BRAM
+#pragma HLS RESOURCE variable=weights core=ROM_1P_BRAM
+	  //#pragma HLS ARRAY_RESHAPE variable=mult block factor=multiplier_limit
+	  //#pragma HLS RESOURCE variable=mult core=RAM_2P_BRAM
 
             // Pack the row_index, col_index, and weight in a single 32-bit memory element
 #pragma HLS data_pack variable=weights struct_level
             // TODO: Packing mult provides worst results (disable it)
 //#pragma HLS data_pack variable=mult struct_level
-         } else {
-             // Completely partition the remaining arrays
-#pragma HLS ARRAY_PARTITION variable=weights complete
-#pragma HLS ARRAY_PARTITION variable=mult complete
-         }
-
+         } 
     } else if (CONFIG_T::io_type == io_serial) {
 #pragma HLS ARRAY_PARTITION variable=biases complete
 #pragma HLS ARRAY_PARTITION variable=acc complete
@@ -115,17 +112,22 @@ void compute_compressed_layer(
 //#pragma HLS DATAFLOW
     }
 
+    int rufactor=CONFIG_T::reuse_factor;
     // Do the compressed matrix-multiply
 COMPRESSED_MAT_MULT_L:
-    for(unsigned i = 0; i < CONFIG_T::n_nonzeros; i++) {
+    for(unsigned ru = 0; ru < rufactor; ru++) { 
+      #pragma HLS PIPELINE II=1
+      for(unsigned i = 0; i < multiplier_limit; i++) {
+        #pragma HLS UNROLL
+	unsigned w=i*rufactor+ru;
         if (CONFIG_T::io_type == io_serial){
 #pragma HLS PIPELINE
         }
-
-        unsigned j = weights[i].row_index;
-        mult[i].row_index = weights[i].row_index;
-        mult[i].col_index = weights[i].col_index;
-        mult[i].weight = weights[i].weight * data[j];
+        unsigned j = weights[w].row_index;
+        mult[w].row_index = weights[w].row_index;
+        mult[w].col_index = weights[w].col_index;
+        mult[w].weight = weights[w].weight * data[j];
+     }
     }
 
     // Initialize accumulator with input biases

@@ -10,7 +10,7 @@ import sys
 from shutil import copyfile
 import math
 
-MAXMULT = 4096
+MAXMULT = 409600000
 
 filedir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,os.path.join(filedir, "..", "hls-writer"))
@@ -122,10 +122,12 @@ def main():
         weights = h5File['/{}/{}'.format(layer['name'],found_weights)][()]
         found_bias = h5File[layer['name']].visit(find_bias_in_h5)
         biases = h5File['/{}/{}'.format(layer['name'],found_bias)][()]
+        layer['n_zeros_added'] = 0
         if yamlConfig["Compression"] == 0:
             cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
         else:
-            cur_n_zeros = print_compressed_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
+            cur_n_zeros,n_zeros_added = print_compressed_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'], yamlConfig['ReuseFactor'])
+            layer['n_zeros_added'] = n_zeros_added
         layer['weights_n_zeros'] = cur_n_zeros
         print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
 
