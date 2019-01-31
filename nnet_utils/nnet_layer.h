@@ -24,6 +24,9 @@
 #include "hls_stream.h"
 #include <math.h>
 
+// This is a substitute for "ceil(n/(float)d)".
+#define DIV_ROUNDUP(n,d) ((n + d - 1) / d)
+
 namespace nnet {
 
 struct layer_config
@@ -52,6 +55,7 @@ void compute_layer(
     typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
     typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
 {
+    
     data_T cache;
     typename CONFIG_T::accum_t mult[CONFIG_T::n_in*CONFIG_T::n_out];
     typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
@@ -59,80 +63,68 @@ void compute_layer(
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
     #pragma HLS function_instantiate variable=weights,biases
 
-    if (CONFIG_T::io_type == io_parallel){
-        // For parallel inputs:
-        //   - completely partition arrays -- target fabric
-        //   - if we have an unroll factor, limit number of multipliers
-        #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+    // For parallel inputs:
+    //   - completely partition arrays
+    //   - if we have a reuse factor, limit number of multipliers
+    #pragma HLS ARRAY_PARTITION variable=biases complete
+    #pragma HLS ARRAY_PARTITION variable=acc complete
 
-        // #pragma HLS ARRAY_PARTITION variable=weights complete // remove this line for now, it breaks compression sometimes
-        #pragma HLS ARRAY_PARTITION variable=biases complete
-        #pragma HLS ARRAY_PARTITION variable=mult complete
-        #pragma HLS ARRAY_PARTITION variable=acc complete
+    // Pipelining force all the loops being unrolled
+    #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
-        int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_out) / float(CONFIG_T::reuse_factor)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
-        #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+    // Replace ceil function with home-made macro prevents Vivado 2018.2 segfault
+    const int totals_multipliers = CONFIG_T::n_in*CONFIG_T::n_out;
+    const int multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in*CONFIG_T::n_out, CONFIG_T::reuse_factor);
+    // #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
-    } else if (CONFIG_T::io_type == io_serial){
-        // Only reduce cycle_factor if n_out is evenly divisible by reuse_factor
-        // Otherwise, HLS wont be happy
-        int cycle_factor = CONFIG_T::n_out;
-        float reused_cycle = CONFIG_T::n_out / CONFIG_T::reuse_factor;
-        if (reused_cycle == ceil(reused_cycle)){
-            // Dont use "ceil" here; as of 2018.2, HLS crashes mysteriously
-            cycle_factor = cycle_factor / CONFIG_T::reuse_factor;
-        }
-        #pragma HLS ARRAY_PARTITION variable=weights cyclic factor=cycle_factor
-        #pragma HLS ARRAY_PARTITION variable=mult cyclic factor=cycle_factor
-        #pragma HLS ARRAY_PARTITION variable=acc complete
-        #pragma HLS DATAFLOW
-        #pragma HLS STREAM variable=mult depth=1
-        #pragma HLS STREAM variable=acc depth=1
-        if (CONFIG_T::store_weights_in_bram){
-            #pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
-        }
-    }
-    
-    // Do the matrix-multiply
-    Product1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        if (CONFIG_T::io_type == io_serial){
-            #pragma HLS PIPELINE
-        }
-        cache = data[ii];
-        Product2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-            if (CONFIG_T::io_type == io_serial) {
-                int multiplier_limit  = ceil(float(CONFIG_T::n_out) / float(CONFIG_T::reuse_factor));
-                #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
-            }
-	    int index = ii*CONFIG_T::n_out+jj;
-	    mult[index] = cache * weights[index];
-        }
-    }
+    // Workaround the above restriction.
+    #pragma HLS ARRAY_RESHAPE variable=weights block factor=multiplier_limit
+    // #pragma HLS ARRAY_RESHAPE variable=mult complete
+    #pragma HLS ARRAY_RESHAPE variable=mult block factor=multiplier_limit
 
     // Initialize accumulator with input biases
     ResetAccum: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
-        if (CONFIG_T::io_type == io_serial){
-            #pragma HLS UNROLL
-        }
+        #pragma HLS UNROLL
         acc[iacc] = (typename CONFIG_T::accum_t) biases[iacc];
+    }
+
+    // ------- accumulated outside --------
+    int rufactor=CONFIG_T::reuse_factor;
+    ReuseLoop: for (int ir = 0; ir < rufactor; ir++){
+        //#pragma HLS PIPELINE ii=1 rewind
+	    // #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+
+        ///
+        // printf("on the clock tick \n");
+        MultLoop1: for (int im = 0; im < multiplier_limit; im++){
+            // #pragma UNROLL
+            
+            int w_index   = ir + rufactor * im;
+            int in_index  = w_index / CONFIG_T::n_out;
+            int out_index = w_index % CONFIG_T::n_out;
+
+            if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
+
+            // printf("ir = %i, im = %i, w_index = %i, in_index = %i, out_index = %i \n", ir, im, w_index, in_index, out_index);
+            mult[w_index] = data[in_index] * weights[w_index];
+        }
+        ///
     }
 
     // Accumulate multiplication result
     Accum1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        if (CONFIG_T::io_type == io_serial){
-            #pragma HLS PIPELINE
-        }
+		// #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+        // #pragma HLS UNROLL 
         Accum2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-	    int index = ii*CONFIG_T::n_out+jj;
-	    acc[jj] += mult[index];
+            // #pragma HLS UNROLL
+	    	int index = ii*CONFIG_T::n_out+jj;
+	    	acc[jj] += mult[index];
         }
     }
 
     // Cast to "res_t" type
     Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
-        if (CONFIG_T::io_type == io_serial){
-            #pragma HLS UNROLL
-        }
+        // #pragma HLS UNROLL
         res[ires] = (res_T) (acc[ires]);
     }    
 }
