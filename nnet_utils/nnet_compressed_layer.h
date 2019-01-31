@@ -112,6 +112,16 @@ void compute_compressed_layer(
 //#pragma HLS DATAFLOW
     }
 
+    // Initialize accumulator with input biases
+ACCUMULATOR_INIT_L:
+    for(unsigned i = 0; i < CONFIG_T::n_out; i++) {
+        #pragma HLS UNROLL
+        if (CONFIG_T::io_type == io_serial){
+#pragma HLS UNROLL
+        }
+        acc[i] = (typename CONFIG_T::accum_t) (biases[i]);
+    }
+
     int rufactor=CONFIG_T::reuse_factor;
     // Do the compressed matrix-multiply
 COMPRESSED_MAT_MULT_L:
@@ -130,19 +140,10 @@ COMPRESSED_MAT_MULT_L:
      }
     }
 
-    // Initialize accumulator with input biases
-ACCUMULATOR_INIT_L:
-    for(unsigned i = 0; i < CONFIG_T::n_out; i++) {
-        if (CONFIG_T::io_type == io_serial){
-#pragma HLS UNROLL
-        }
-
-        acc[i] = (typename CONFIG_T::accum_t) (biases[i]);
-    }
-
     // Accumulate over the columns
 COMPRESSED_ACCUMULATOR_L:
     for(unsigned i = 0; i < CONFIG_T::n_nonzeros; i++) {
+        #pragma HLS UNROLL
         if (CONFIG_T::io_type == io_serial){
 #pragma HLS PIPELINE
         }
@@ -154,6 +155,7 @@ COMPRESSED_ACCUMULATOR_L:
     // Cast to "res_t" type
 RESULT_L:
     for(unsigned i = 0; i < CONFIG_T::n_out; i++){
+        #pragma HLS UNROLL
         if (CONFIG_T::io_type == io_serial){
 #pragma HLS UNROLL
         }
