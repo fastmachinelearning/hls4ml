@@ -73,7 +73,7 @@ void compute_layer(
       }
       #pragma HLS ARRAY_PARTITION variable=biases complete
       #pragma HLS ARRAY_PARTITION variable=acc    complete
-      #pragma HLS ARRAY_PARTITION variable=mult   complete
+      //#pragma HLS ARRAY_PARTITION variable=mult   complete
       #pragma HLS ARRAY_RESHAPE   variable=weights block factor=mult_factor
       if(CONFIG_T::use_lowlatency) { 
         #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
@@ -103,10 +103,11 @@ void compute_layer(
         #pragma HLS UNROLL
       acc[iacc] = (typename CONFIG_T::accum_t) biases[iacc];
     }
+    /*
     ResetMult: for(int imult = 0; imult < nmults; imult++) {
         #pragma HLS UNROLL
         mult[imult] = 0;
-    }
+	}*/
     int rufactor=CONFIG_T::reuse_factor;
     if(CONFIG_T::use_lowlatency) { 
       rufactor          = CONFIG_T::n_in;
@@ -130,11 +131,14 @@ void compute_layer(
 	 if(CONFIG_T::use_lowlatency) { 
 	   acc[windex] = cache*weights[windex];
 	 } else { 
-           int aindex  = (nmult*windex)/CONFIG_T::n_in;
-	   mult[aindex] += data[index]*weights[windex];
+           //int aindex  = (nmult*windex)/CONFIG_T::n_in;
+	   //mult[aindex] += data[index]*weights[windex];
+           int aindex  = (windex)/CONFIG_T::n_in;
+	   acc[aindex] += data[index]*weights[windex];
 	 }
        }
     }
+    /*
     // Accumulate multiplication result
     Accum1: for(int ii = 0; ii < CONFIG_T::n_out; ii++) {
      if (CONFIG_T::io_type == io_serial){
@@ -147,7 +151,7 @@ void compute_layer(
        int index = ii*nmult+jj;
        acc[ii]  += mult[index];
      }
-    } 
+     } */
     // Cast to "res_t" type
     Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
        #pragma HLS UNROLL 
