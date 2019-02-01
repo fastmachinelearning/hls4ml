@@ -96,33 +96,7 @@ void compute_layer(
     ReuseLoop: for (int ir = 0; ir < rufactor; ir++){
         #pragma HLS PIPELINE ii=1 rewind
         matvec_op<data_T,CONFIG_T>(data,acc,weights,ir);
-
-        // printf("on the clock tick \n");
-        // MultLoop1: for (int im = 0; im < multiplier_limit; im++){
-        //     #pragma UNROLL
-            
-        //     int w_index   = ir + rufactor * im;
-        //     int in_index  = w_index / CONFIG_T::n_out;
-        //     int out_index = w_index % CONFIG_T::n_out;
-
-        //     if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
-
-        //     // printf("ir = %i, im = %i, w_index = %i, in_index = %i, out_index = %i \n", ir, im, w_index, in_index, out_index);
-        //     mult[w_index] = data[in_index] * weights[w_index];
-        // }
-        ///
     }
-
-    // Accumulate multiplication result
-  //   Accum1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
-		// // #pragma HLS PIPELINE II=CONFIG_T::reuse_factor rewind
-  //       #pragma HLS UNROLL 
-  //       Accum2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-  //           #pragma HLS UNROLL
-	 //    	int index = ii*CONFIG_T::n_out+jj;
-	 //    	acc[jj] += mult[index];
-  //       }
-  //   }
 
     // Cast to "res_t" type
     Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
