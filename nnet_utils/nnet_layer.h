@@ -55,6 +55,7 @@ void compute_layer(
     typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
     typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
 {
+    #pragma HLS DATAFLOW
     static const int mult_factor = DIV_ROUNDUP(CONFIG_T::n_in*CONFIG_T::n_out, CONFIG_T::reuse_factor);
     static const int nmult       = DIV_ROUNDUP(mult_factor, CONFIG_T::n_out); //CONFIG_T::n_mult;//DIV_ROUNDUP(mult_factor, CONFIG_T::n_out);
     static const int nmults      = nmult*CONFIG_T::n_out;//DIV_ROUNDUP(mult_factor, CONFIG_T::n_out)*CONFIG_T::n_out;
@@ -77,10 +78,10 @@ void compute_layer(
       #pragma HLS ARRAY_PARTITION variable=acc    complete
       #pragma HLS ARRAY_PARTITION variable=mult   complete
       #pragma HLS ARRAY_RESHAPE   variable=weights block factor=mult_factor
-      #pragma HLS DEPENDENCE variable=acc     inter false
+      //#pragma HLS DEPENDENCE variable=acc     inter false
       #pragma HLS DEPENDENCE variable=weights inter false
       #pragma HLS DEPENDENCE variable=data    inter false
-      #pragma HLS DEPENDENCE variable=mult    inter false
+      //#pragma HLS DEPENDENCE variable=mult    inter false
       if(CONFIG_T::use_lowlatency) { 
         #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 	int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_out) / float(CONFIG_T::reuse_factor)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
