@@ -28,32 +28,12 @@
 #define DIV_ROUNDUP(n,d) ((n + d - 1) / d)
 
 namespace nnet {
-  template<class data_T, typename CONFIG_T>
-  void fillacc(
+ template<class data_T, typename CONFIG_T>
+   void fillacc(
 	       data_T              data[CONFIG_T::n_in],
 	       typename CONFIG_T::compressed_weight_t  weights[CONFIG_T::n_nonzeros],
-	       //typename CONFIG_T::compressed_weight_t cache,
-	       //typename CONFIG_T::compressed_weight_t  *weights,
 	       typename CONFIG_T::accum_t acc[CONFIG_T::n_out],
-	       unsigned ru) { 
-    #pragma HLS PIPELINE
-    #pragma HLS ARRAY_PARTITION variable=acc    complete
-    static const unsigned multlimit = DIV_ROUNDUP(CONFIG_T::n_nonzeros, CONFIG_T::reuse_factor);
-    #pragma HLS ARRAY_RESHAPE variable=weights block factor=multlimit
-    //#pragma HLS inline off
-    static const unsigned rufactor=CONFIG_T::reuse_factor;
-    for(int i = 0; i < multlimit; i++) { 
-    //for(int ru = 0; ru < rufactor; ru++) { 
-    //#pragma HLS PIPELINE II=1
-      #pragma HLS UNROLL
-     unsigned w = i*rufactor+ru;
-     unsigned j = weights[w].row_index;
-     unsigned c = weights[w].col_index;
-     typename CONFIG_T::weight_t cache_weight = weights[w].weight;
-     typename CONFIG_T::weight_t data_cache = data[j];
-     acc[c] += cache_weight*data_cache;
-    }
-  }
+	       unsigned ru);
 
 template<class data_T, class res_T, typename CONFIG_T>
 void compute_compressed_layer(
@@ -62,84 +42,16 @@ void compute_compressed_layer(
     typename CONFIG_T::compressed_weight_t  weights[CONFIG_T::n_nonzeros],
     typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
 {
-
-  #pragma HLS DATAFLOW
-    // Create a separate module for each layer
-  //#pragma HLS inline off
-
-    // Explicitly optimize unchanging weights/biases
-  //#pragma HLS function_instantiate variable=weights,biases
-
-    // Intermediate computational buffers
-    //typename CONFIG_T::compressed_weight_t mult[CONFIG_T::n_nonzeros];
-    typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
-
-    printf("INFO: compute_compressed_layer\n");
-    printf("INFO:   n_in: %u\n", CONFIG_T::n_in);
-    printf("INFO:   n_out: %u\n", CONFIG_T::n_out);
-    printf("INFO:   reuse_factor: %u\n", CONFIG_T::reuse_factor);
-    printf("INFO:   n_zeros: %u\n", CONFIG_T::n_zeros);
-    printf("INFO:   n_nonzeros: %u\n", CONFIG_T::n_nonzeros);
-    printf("INFO:   store_weights_in_bram: %u\n", CONFIG_T::store_weights_in_bram);
-    static const unsigned multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_nonzeros, CONFIG_T::reuse_factor);
-
-    // Parallel vs. Serial IO
-    if (CONFIG_T::io_type == io_parallel) {
-        // For parallel inputs:
-        //   - completely partition arrays
-        //   - if we have a reuse factor, limit number of multipliers
-#pragma HLS ARRAY_PARTITION variable=biases complete
-#pragma HLS ARRAY_PARTITION variable=acc    complete
-      //#pragma HLS ARRAY_PARTITION variable=mult   complete
-      //#pragma HLS ARRAY_RESHAPE variable=mult    block factor=multiplier_limit
-#pragma HLS ARRAY_RESHAPE variable=weights block factor=multiplier_limit
-
-        // Pipelining force all the loops being unrolled
-        //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
-
-        // Replace ceil function with home-made macro prevents Vivado 2018.2 segfault
-        //int multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_nonzeros, CONFIG_T::reuse_factor);
-	//#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
-
-        // BRAMs vs. registers
-        if (CONFIG_T::store_weights_in_bram) {
-            // Reshape the arrays as memory with a larger bit-width
-#pragma HLS RESOURCE variable=weights core=ROM_1P_BRAM
-	  //#pragma HLS ARRAY_RESHAPE variable=mult block factor=multiplier_limit
-	  //#pragma HLS RESOURCE variable=mult core=RAM_2P_BRAM
-
-            // Pack the row_index, col_index, and weight in a single 32-bit memory element
-#pragma HLS data_pack variable=weights struct_level
-            // TODO: Packing mult provides worst results (disable it)
-//#pragma HLS data_pack variable=mult struct_level
-         } 
-    } else if (CONFIG_T::io_type == io_serial) {
-#pragma HLS ARRAY_PARTITION variable=biases complete
-#pragma HLS ARRAY_PARTITION variable=acc complete
-
-        // Replace ceil function with home-made macro prevents Vivado 2018.2 segfault
-        int multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_nonzeros, CONFIG_T::reuse_factor);
-#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
-
-        if (CONFIG_T::store_weights_in_bram) {
-#pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
-    //#pragma HLS RESOURCE variable=mul core=RAM_2P_BRAM
-
-#pragma HLS ARRAY_PARTITION variable=weights cyclic factor=multiplier_limit
-	  //#pragma HLS ARRAY_PARTITION variable=mult cyclic factor=multiplier_limit
-
-            // Pack the row_index, col_index, and weight in a single 32-bit memory element
-#pragma HLS data_pack variable=weights struct_level
-            // TODO: packing the structs in mult array provide worst results.
-//#pragma HLS data_pack variable=mult struct_level
-        } else {
-            // TODO: non tested yet!
-#pragma HLS ARRAY_PARTITION variable=weights cyclic factor=multiplier_limit
-	  //#pragma HLS ARRAY_PARTITION variable=mult cyclic factor=multiplier_limit
-        }
-        // TODO: it generates a segfault
-//#pragma HLS DATAFLOW
-    }
+   static const unsigned multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_nonzeros, CONFIG_T::reuse_factor);
+   #pragma HLS function_instantiate variable=weights,biases
+   #pragma HLS ARRAY_PARTITION variable=biases complete
+   #pragma HLS ARRAY_RESHAPE variable=weights block factor=multiplier_limit   
+   
+   typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
+   #pragma HLS ARRAY_PARTITION variable=acc    complete
+   #pragma HLS DEPENDENCE variable=data    inter false
+   #pragma HLS DEPENDENCE variable=acc     inter false
+   #pragma HLS DEPENDENCE variable=weights inter false
 
     // Initialize accumulator with input biases
 ACCUMULATOR_INIT_L:
@@ -151,36 +63,39 @@ ACCUMULATOR_INIT_L:
     // Do the compressed matrix-multiply
 COMPRESSED_MAT_MULT_L:
     for(unsigned ru = 0; ru < rufactor; ru++) { 
-      #pragma HLS PIPELINE II=1 rewind
-      fillacc<data_T,CONFIG_T>(data,weights,acc,ru);
+      #pragma HLS PIPELINE ii=1 rewind
+     fillacc<data_T,CONFIG_T>(data,weights,acc,ru);
+     //PH: Note to self putting fillacc in the loop still doesn't work
     }
-    // Accumulate over the columns
-    /*
-COMPRESSED_ACCUMULATOR_L:
-    for(unsigned i = 0; i < CONFIG_T::n_nonzeros; i++) {
-        #pragma HLS UNROLL 
-        unsigned j = mult[i].col_index;
-        acc[j] += mult[i].weight;
-	}
-    for(unsigned ru = 0; ru < rufactor; ru++) { 
-      #pragma HLS PIPELINE II=1 
-      for(unsigned k = 0; k < CONFIG_T::n_out; k++) {
-        #pragma HLS UNROLL 
-	for(unsigned i = 0; i < multiplier_limit; i++) {
-	  unsigned w = ru*multiplier_limit+i;
-	  unsigned j = mult[w].col_index;
-	  if(k==j) acc[k] += mult[w].weight;
-       }
-      }
-    }
-    */
-    // Cast to "res_t" type
 RESULT_L:
     for(unsigned i = 0; i < CONFIG_T::n_out; i++){
         #pragma HLS UNROLL
         res[i] = (res_T) (acc[i]);
     }
 }
+
+  template<class data_T, typename CONFIG_T>
+  void fillacc(
+	       data_T              data[CONFIG_T::n_in],
+	       typename CONFIG_T::compressed_weight_t  weights[CONFIG_T::n_nonzeros],
+	       typename CONFIG_T::accum_t acc[CONFIG_T::n_out],
+	       unsigned ru) { 
+    #pragma HLS PIPELINE
+    const int multlimit = DIV_ROUNDUP(CONFIG_T::n_nonzeros, CONFIG_T::reuse_factor);
+    int rufactor=CONFIG_T::reuse_factor;
+    typename CONFIG_T::accum_t mult[multlimit];
+    #pragma HLS ARRAY_PARTITION variable=mult complete
+    for(int i = 0; i < multlimit; i++) { 
+     #pragma HLS UNROLL
+     unsigned w = i*rufactor+ru;
+     unsigned j = weights[w].row_index;
+     unsigned c = weights[w].col_index;
+     typename CONFIG_T::weight_t cache_weight = weights[w].weight;
+     typename CONFIG_T::weight_t data_cache = data[j];
+     mult[i]  = data_cache * cache_weight;
+     acc[c]  += mult[i];
+    }
+  }
 
 }
 
