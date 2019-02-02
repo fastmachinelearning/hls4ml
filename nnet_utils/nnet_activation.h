@@ -41,7 +41,7 @@ struct activ_config
     static const unsigned reuse_factor = 1;
 
     // Internal data type definitions
-    typedef ap_fixed<18,8> table_t;
+    typedef ap_fixed<18,8, AP_TRN_ZERO, AP_WRAP> table_t;
 };
 
 // *************************************************

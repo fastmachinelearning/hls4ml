@@ -23,7 +23,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#ifdef MNTR_CATAPULT_HLS
+#include <ac_channel.h>
+#else
 #include "hls_stream.h"
+#endif
 
 namespace nnet {
 
@@ -72,17 +76,29 @@ int read_file_2D(const char * filename, dataType data[nrows][ncols])
 }
 
 template<class in_T, class out_T, int N_IN>
+#ifdef MNTR_CATAPULT_HLS
+void change_type(ac_channel<in_T> &in, ac_channel<out_T> &out)
+#else
 void change_type(hls::stream<in_T> &in, hls::stream<out_T> &out)
+#endif
 {
     in_T datareg;
+#ifdef MNTR_CATAPULT_HLS
+    ac_channel<out_T> input_trunc;
+#else
     hls::stream<out_T> input_trunc;
+#endif
     for (int ii=0; ii<N_IN; ii++) {
         out << (out_T) in.read();
     }
 }
 
 template<class data_T, int N_IN>
+#ifdef MNTR_CATAPULT_HLS
+void  hls_stream_debug(ac_channel<data_T> &data, ac_channel<data_T> &res)
+#else
 void  hls_stream_debug(hls::stream<data_T> &data, hls::stream<data_T> &res)
+#endif
 {
     data_T datareg;
     for (int ii=0; ii<N_IN; ii++) {

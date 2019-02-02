@@ -28,9 +28,9 @@ namespace nnet {
 enum io_type {io_parallel = 0, io_serial};
 
 // Default data types (??) TODO: Deprecate
-typedef ap_fixed<16,4>  weight_t_def;
-typedef ap_fixed<16,4>  bias_t_def;
-typedef ap_fixed<32,10> accum_t_def;
+typedef ap_fixed<16,4, AP_TRN_ZERO, AP_WRAP>  weight_t_def;
+typedef ap_fixed<16,4, AP_TRN_ZERO, AP_WRAP>  bias_t_def;
+typedef ap_fixed<32,10, AP_TRN_ZERO, AP_WRAP> accum_t_def;
 
  template<class data_T, int NIN1, int NIN2>
    void merge(

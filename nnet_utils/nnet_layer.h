@@ -21,7 +21,10 @@
 #define NNET_LAYER_H_
 
 #include "nnet_common.h"
+#ifdef MNTR_CATAPULT_HLS
+#else
 #include "hls_stream.h"
+#endif
 #include <math.h>
 
 namespace nnet {

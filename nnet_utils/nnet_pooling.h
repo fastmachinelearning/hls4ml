@@ -30,15 +30,15 @@ ap_int<W> avg(ap_int<W> (&x)[N]){
 }
 
 template<int W, int I, int N>
-ap_fixed<W, I> avg(ap_fixed<W, I> (&x)[N]){
+ap_fixed<W, I, AP_TRN_ZERO, AP_WRAP> avg(ap_fixed<W, I, AP_TRN_ZERO, AP_WRAP> (&x)[N]){
   // Use a wider accumulator than the input to avoid overflow
-  ap_fixed<W + ceillog2(N), I + ceillog2(N)> tmp = 0;
+  ap_fixed<W + ceillog2(N), I + ceillog2(N), AP_TRN_ZERO, AP_WRAP> tmp = 0;
   for(int i = 0; i < N; i++){
     tmp += x[i];
   }
   tmp /= N;
   // Now cast back to original type
-  ap_fixed<W, I> y = tmp;
+  ap_fixed<W, I, AP_TRN_ZERO, AP_WRAP> y = tmp;
   return y;
 }
 
