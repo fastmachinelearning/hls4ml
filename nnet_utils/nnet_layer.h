@@ -62,6 +62,8 @@ void compute_layer(
     int mult_factor_loop         = mult_factor;
     typename CONFIG_T::accum_t mult[nmults];
     typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
+    
+
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
     #pragma HLS function_instantiate variable=weights,biases
     if (CONFIG_T::io_type == io_parallel){
@@ -75,6 +77,10 @@ void compute_layer(
       #pragma HLS ARRAY_PARTITION variable=acc    complete
       #pragma HLS ARRAY_PARTITION variable=mult   complete
       #pragma HLS ARRAY_RESHAPE   variable=weights block factor=mult_factor
+      #pragma HLS DEPENDENCE variable=acc     inter false
+      #pragma HLS DEPENDENCE variable=weights inter false
+      #pragma HLS DEPENDENCE variable=data    inter false
+      #pragma HLS DEPENDENCE variable=mult    inter false
       if(CONFIG_T::use_lowlatency) { 
         #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 	int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_out) / float(CONFIG_T::reuse_factor)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));

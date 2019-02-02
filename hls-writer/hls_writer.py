@@ -423,7 +423,7 @@ def hls_writer(layer_list, yamlConfig):
         static const unsigned reuse_factor = {reuse};
         static const unsigned n_zeros = {nzeros};
         static const bool store_weights_in_bram = false;
-        static const bool use_lowlatency = true;
+        static const bool use_lowlatency = false;
         typedef accum_default_t accum_t;
         typedef bias_default_t bias_t;
         typedef weight_default_t weight_t;
