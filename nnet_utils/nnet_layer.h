@@ -36,6 +36,7 @@ struct layer_config
     // Layer Sizes
     static const unsigned n_in = 10;
     static const unsigned n_out = 10;
+    static const unsigned n_mult = 1;
 
     // Resource reuse info
     static const unsigned io_type = io_parallel;
