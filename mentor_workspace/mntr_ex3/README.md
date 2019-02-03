@@ -73,7 +73,7 @@ datatypes provided with Catapult HLS. There are few differences between
   ```
 
 - Currently I am getting an error (in Catapult HLS libraries). This may require some support from Mentor.
-  **IMPORTANT: FOUND THE MEANING OF THE ERROR - WORKING ON A CORRECT IMPLEMENTATION **
+  **IMPORTANT: FOUND THE MEANING OF THE ERROR - WORKING ON A CORRECT IMPLEMENTATION**
   ```
   # Error: $MGC_HOME/shared/include/math/mgc_ac_hcordic.h(98): class "MgcAcHtrigAssert<false>" has no member "test" (CRD-135) 
   # Error: $MGC_HOME/shared/include/math/mgc_ac_hcordic.h(98):           detected during: (CRD-135) 
