@@ -1,5 +1,7 @@
 # Porting of an HLS Project to SystemC Arbitrary-Precision Datatypes
 
+**==== THIS WORKS WITH THE COMMIT e42b63f ====**
+
 This **hls4ml** project supports SystemC arbitrary-precision datatypes provided
 with Catapult HLS.
 
@@ -58,8 +60,8 @@ make clean
 make run
 ```
 
-We are using the Algorithmic Datatypes (`ac_fixed`), the SystemC implementation
-and the `g++` compiler in the Catapult HLS installation.
+**Please, note that we are using the the SystemC implementation of `sc_fixed`
+types and the `g++` compiler in the Catapult HLS installation.**
 
 ### Vivado HLS
 

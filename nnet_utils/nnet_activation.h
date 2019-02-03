@@ -24,7 +24,9 @@
 #include "ap_fixed.h"
 #include "nnet_common.h"
 
-
+#ifdef MNTR_CATAPULT_HLS
+#include <math/mgc_ac_math.h>
+#endif
 
 namespace nnet {
 
@@ -41,7 +43,7 @@ struct activ_config
     static const unsigned reuse_factor = 1;
 
     // Internal data type definitions
-    typedef ap_fixed<18,8, AP_TRN_ZERO, AP_WRAP> table_t;
+    typedef ap_fixed<18,8> table_t;
 };
 
 // *************************************************
@@ -50,14 +52,17 @@ struct activ_config
 template<class data_T, class res_T, typename CONFIG_T>
 void  linear(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
+#ifndef MNTR_CATAPULT_HLS
     if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
     }
-
+#endif
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+#ifndef MNTR_CATAPULT_HLS
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS PIPELINE
         }
+#endif
         res[ii] = data[ii];
     }
 }
@@ -70,14 +75,17 @@ void  linear(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 template<class data_T, class res_T, typename CONFIG_T>
 void  relu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
+#ifndef MNTR_CATAPULT_HLS
     if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
     }
-
+#endif
     data_T datareg;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
         if (CONFIG_T::io_type == io_serial){
+#ifndef MNTR_CATAPULT_HLS
             #pragma HLS PIPELINE
+#endif
         }
         datareg = data[ii];
         if (datareg > 0) res[ii] = datareg;
@@ -88,15 +96,18 @@ void  relu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 template<class data_T, class res_T, int MAX_INT, typename CONFIG_T>
 void  relu_max(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
+#ifndef MNTR_CATAPULT_HLS
     if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
     }
-
+#endif
     data_T datareg;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+#ifndef MNTR_CATAPULT_HLS
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS PIPELINE
         }
+#endif
         datareg = data[ii];
         if (datareg < 0) res[ii] = 0;
         else if (datareg > MAX_INT) res[ii] = MAX_INT;
@@ -148,18 +159,20 @@ void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
         init_sigmoid_table<CONFIG_T, CONFIG_T::table_size>(sigmoid_table);
         initialized = true;
     }
-
+#ifndef MNTR_CATAPULT_HLS
     if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
     }
-
+#endif
     // Index into the lookup table based on data
     int data_round;
     int index;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+#ifndef MNTR_CATAPULT_HLS
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS PIPELINE
         }
+#endif
         data_round = data[ii]*CONFIG_T::table_size/16;
         index = data_round + 8*CONFIG_T::table_size/16;
         if (index < 0)   index = 0;
@@ -171,20 +184,38 @@ void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 // *************************************************
 //       Softmax Activation
 // *************************************************
+#ifdef MNTR_CATAPULT_HLS
+inline ap_fixed<18,8> exp_fcn_float(ap_fixed<18,8> input) {
+    ap_fixed<18,8> result;
+    mgc_ac_exp(input, result);
+    return result;
+}
+#else
 inline float exp_fcn_float(float input) {
     return std::exp(input);
 }
-
+#endif
 
 template<typename CONFIG_T, int N_TABLE>
 void init_exp_table(typename CONFIG_T::table_t table_out[N_TABLE])
 {
     for (int ii = 0; ii < N_TABLE; ii++) {
+#ifdef MNTR_CATAPULT_HLS
+        // First, convert from table index to X-value (signed 8-bit, range -8 to +8)
+        ap_fixed<18,8> range = 2*8.0;
+        ap_fixed<18,8> N_TABLE_HALF = ap_fixed<18,8>((N_TABLE)/2.0);
+        ap_fixed<18,8> in_val;
+        //div(ap_fixed<18,8>(range * ( ii - N_TABLE_HALF )), ap_fixed<18,8>(N_TABLE), in_val);
+        // Next, compute lookup table function
+        typename CONFIG_T::table_t real_val = exp_fcn_float(in_val);
+        //std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
+#else
         // First, convert from table index to X-value (signed 8-bit, range -8 to +8)
         float in_val = 2*8.0*(ii-float(N_TABLE)/2.0)/float(N_TABLE);
         // Next, compute lookup table function
         typename CONFIG_T::table_t real_val = exp_fcn_float(in_val);
         //std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
+#endif
         table_out[ii] = real_val;
     }
 }
@@ -221,34 +252,53 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
         init_invert_table<CONFIG_T, CONFIG_T::table_size>(invert_table);
         initialized = true;
     }
-
+#ifndef MNTR_CATAPULT_HLS
     if (CONFIG_T::io_type == io_parallel){
         // Note: This is going to be a resource hog to run with pipeline, but hey, whatever
         #pragma HLS PIPELINE
     }
+#endif
 
     // Index into the lookup table based on data for exponentials
     typename CONFIG_T::table_t exp_res[CONFIG_T::n_in];// different, independent, fixed point precision
     typename CONFIG_T::table_t exp_diff_res;// different, independent, fixed point precision
     data_T data_cache[CONFIG_T::n_in];
+#ifdef MNTR_CATAPULT_HLS
+    ap_int<32> data_round;
+    ap_int<32> index;
+#else
     int data_round;
     int index;
+#endif
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
       data_cache[ii] = data[ii];
       exp_res[ii] = 0;
     }
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+#ifndef MNTR_CATAPULT_HLS
       if (CONFIG_T::io_type == io_serial){
           #pragma HLS PIPELINE
       }
+#endif
       for (int jj=0; jj<CONFIG_T::n_in; jj++) {
 	if (ii==jj) exp_diff_res = 1;
 	else {
+#ifdef MNTR_CATAPULT_HLS
+      data_T _data_cache = (data_cache[jj]-data_cache[ii]);
+      ap_int<32> _table_size_16 = ap_int<32>(CONFIG_T::table_size)/ap_int<32>(16);
+	  data_round = (_data_cache * _table_size_16).to_int();
+	  index = data_round + ap_int<32>(8)*(ap_int<32>(CONFIG_T::table_size)/ap_int<32>(16));
+#else
 	  data_round = (data_cache[jj]-data_cache[ii])*CONFIG_T::table_size/16;
 	  index = data_round + 8*CONFIG_T::table_size/16;
+#endif
 	  if (index < 0)   index = 0;
 	  if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+#ifdef MNTR_CATAPULT_HLS
+	  exp_diff_res = exp_table[index.to_uint()];
+#else
 	  exp_diff_res = exp_table[index];
+#endif
 	}
 	exp_res[ii] += exp_diff_res;
       }
@@ -256,7 +306,8 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 
     //Second loop to invert
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-      int exp_res_index = exp_res[ii]*CONFIG_T::table_size/64;
+      //int exp_res_index = exp_res[ii]*CONFIG_T::table_size/64;
+      int exp_res_index = 8;
       if (exp_res_index < 0)   exp_res_index = 0;
       if (exp_res_index > CONFIG_T::table_size-1) exp_res_index = CONFIG_T::table_size-1;
       //typename CONFIG_T::table_t exp_res_invert = invert_table[exp_res_index];
@@ -298,18 +349,20 @@ void  tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
         init_tanh_table<CONFIG_T, CONFIG_T::table_size>(tanh_table);
         initialized = true;
     }
-
+#ifndef MNTR_CATAPULT_HLS
     if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
     }
-
+#endif
     // Index into the lookup table based on data
     int data_round;
     int index;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+#ifndef MNTR_CATAPULT_HLS
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS PIPELINE
         }
+#endif
         data_round = data[ii]*CONFIG_T::table_size/8;
         index = data_round + 4*CONFIG_T::table_size/8;
         //std::cout << "Input: "  << data[ii] << " Round: " << data_round << " Index: " << index << std::endl;
@@ -325,10 +378,11 @@ void  tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 template<class data_T, class res_T, typename CONFIG_T>
 void  hard_sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
+#ifndef MNTR_CATAPULT_HLS
     if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
     }
-
+#endif
     data_T datareg;
     data_T slope = (data_T) 0.2;
     data_T shift = (data_T) 0.5;
@@ -376,9 +430,11 @@ void  thresholded_relu(data_T data[CONFIG_T::n_in], data_T theta, res_T res[CONF
 
     data_T datareg;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+#ifndef MNTR_CATAPULT_HLS
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS PIPELINE
         }
+#endif
         datareg = data[ii];
         if (datareg > theta) res[ii] = datareg;
         else res[ii] = 0;
@@ -388,9 +444,17 @@ void  thresholded_relu(data_T data[CONFIG_T::n_in], data_T theta, res_T res[CONF
 // *************************************************
 //       Softplus Activation
 // *************************************************
+#ifdef MNTR_CATAPULT_HLS
+inline ap_fixed<18,8> softplus_fcn_float(ap_fixed<18,8> input) {
+    ap_fixed<18,8> _exp; mgc_ac_exp(input, _exp);
+    ap_fixed<18,8> _log; mgc_ac_log(_exp, _log);
+    return _log + ap_fixed<18,8>(1.);
+}
+#else
 inline float softplus_fcn_float(float input) {
     return std::log(std::exp(input) + 1.);
 }
+#endif
 
 template<typename CONFIG_T, int N_TABLE>
 void init_softplus_table(typename CONFIG_T::table_t table_out[N_TABLE])
@@ -399,7 +463,11 @@ void init_softplus_table(typename CONFIG_T::table_t table_out[N_TABLE])
     //   result = log(exp(x) + 1)
     for (int ii = 0; ii < N_TABLE; ii++) {
         // First, convert from table index to X-value (signed 8-bit, range -8 to +8)
+#ifdef MNTR_CATAPULT_HLS
+        ap_fixed<18,8>in_val = 2*8.0*(ii-ap_fixed<18,8>(N_TABLE)/ap_fixed<18,8>(2.0))/ap_fixed<18,8>(N_TABLE);
+#else
         float in_val = 2*8.0*(ii-float(N_TABLE)/2.0)/float(N_TABLE);
+#endif
         // Next, compute lookup table function
         typename CONFIG_T::table_t real_val = softplus_fcn_float(in_val);
         //std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
@@ -422,18 +490,20 @@ void  softplus(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
         init_softplus_table<CONFIG_T, CONFIG_T::table_size>(softplus_table);
         initialized = true;
     }
-
+#ifndef MNTR_CATAPULT_HLS
     if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
     }
-
+#endif
     // Index into the lookup table based on data
     int data_round;
     int index;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+#ifndef MNTR_CATAPULT_HLS
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS PIPELINE
         }
+#endif
         data_round = data[ii]*CONFIG_T::table_size/16;
         index = data_round + 8*CONFIG_T::table_size/16;
         if (index < 0)   index = 0;
@@ -479,18 +549,20 @@ void  softsign(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
         init_softsign_table<CONFIG_T, CONFIG_T::table_size>(softsign_table);
         initialized = true;
     }
-
+#ifndef MNTR_CATAPULT_HLS
     if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
     }
-
+#endif
     // Index into the lookup table based on data
     int data_round;
     int index;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+#ifndef MNTR_CATAPULT_HLS
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS PIPELINE
         }
+#endif
         data_round = data[ii]*CONFIG_T::table_size/16;
         index = data_round + 8*CONFIG_T::table_size/16;
         if (index < 0)   index = 0;
@@ -537,17 +609,21 @@ void  elu(data_T data[CONFIG_T::n_in], const res_T alpha, res_T res[CONFIG_T::n_
         initialized = true;
     }
 
+#ifndef MNTR_CATAPULT_HLS
     if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
     }
+#endif
 
     data_T datareg;
     // Index into the lookup table based on data
     int index;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+#ifndef MNTR_CATAPULT_HLS
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS PIPELINE
         }
+#endif
         datareg = data[ii];
         if (datareg >= 0) {
             res[ii] = datareg;
@@ -602,18 +678,20 @@ void  selu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
         init_selu_table<CONFIG_T, CONFIG_T::table_size>(selu_table);
         initialized = true;
     }
-
+#ifndef MNTR_CATAPULT_HLS
     if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
     }
-
+#endif
     data_T datareg;
     // Index into the lookup table based on data
     int index;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+#ifndef MNTR_CATAPULT_HLS
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS PIPELINE
         }
+#endif
         datareg = data[ii];
         if (datareg >= 0) {
             res[ii] = res_T(1.0507009873554804934193349852946) * datareg;
@@ -631,15 +709,18 @@ void  selu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 template<class data_T, class res_T, typename CONFIG_T>
 void  prelu(data_T data[CONFIG_T::n_in], data_T alpha[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
+#ifndef MNTR_CATAPULT_HLS
     if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
     }
-
+#endif
     data_T datareg;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+#ifndef MNTR_CATAPULT_HLS
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS PIPELINE
         }
+#endif
         datareg = data[ii];
         if (datareg > 0) res[ii] = datareg;
         else res[ii] = alpha[ii] * datareg;
@@ -652,18 +733,19 @@ void  prelu(data_T data[CONFIG_T::n_in], data_T alpha[CONFIG_T::n_in], res_T res
 template<class data_T, class res_T, typename CONFIG_T>
 void  binary_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
-
+#ifndef MNTR_CATAPULT_HLS
  if (CONFIG_T::io_type == io_parallel){
      #pragma HLS PIPELINE
  }
-  
+#endif
  data_T datareg;   
  res_T cache; 
  for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-
+#ifndef MNTR_CATAPULT_HLS
   if (CONFIG_T::io_type == io_serial){
       #pragma HLS PIPELINE
   }
+#endif
   datareg = data[ii];	 
   if( datareg > 0 ) cache = 1;
   else cache = -1;
@@ -680,18 +762,19 @@ void  binary_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 template<class data_T, class res_T, typename CONFIG_T>
 void  ternary_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
-
+#ifndef MNTR_CATAPULT_HLS
  if (CONFIG_T::io_type == io_parallel){
      #pragma HLS PIPELINE
  }
-  
+#endif
  data_T datareg;   
  res_T cache; 
  for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-
+#ifndef MNTR_CATAPULT_HLS
   if (CONFIG_T::io_type == io_serial){
       #pragma HLS PIPELINE
   }
+#endif
   datareg = data[ii];	 
   if( datareg > 0.5 ) cache = 1;
   else if( datareg > -0.5 && datareg <= 0.5) cache=0;

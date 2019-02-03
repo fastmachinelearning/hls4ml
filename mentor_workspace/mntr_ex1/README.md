@@ -45,8 +45,8 @@ At this point you can compile and run the test case:
 make run
 ```
 
-Please, note that we are using the Algorithmic Datatypes (`ac_fixed`), the
-SystemC implementation and the `g++` compiler in the Catapult HLS installation.
+**Please, note that we are using the the SystemC implementation of `sc_fixed`
+types and the `g++` compiler in the Catapult HLS installation.**
 
 ## Portability
 

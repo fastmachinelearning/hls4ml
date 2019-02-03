@@ -22,6 +22,7 @@
 
 #include "nnet_common.h"
 #ifdef MNTR_CATAPULT_HLS
+#include <ac_float.h>
 #else
 #include "hls_stream.h"
 #endif
@@ -32,9 +33,15 @@ namespace nnet {
 struct layer_config
 {
     // Internal data type definitions
+#ifdef MNTR_CATAPULT_HLS
+    typedef ac_float<23, 23, 8> bias_t;
+    typedef ac_float<23, 23, 8> weight_t;
+    typedef ac_float<23, 23, 8> accum_t;
+#else
     typedef float bias_t;
     typedef float weight_t;
     typedef float accum_t;
+#endif
 
     // Layer Sizes
     static const unsigned n_in = 10;
@@ -59,10 +66,13 @@ void compute_layer(
     typename CONFIG_T::accum_t mult[CONFIG_T::n_in*CONFIG_T::n_out];
     typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
 
+#ifndef MNTR_CATAPULT_HLS
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
     #pragma HLS function_instantiate variable=weights,biases
+#endif
 
     if (CONFIG_T::io_type == io_parallel){
+#ifndef MNTR_CATAPULT_HLS
         // For parallel inputs:
         //   - completely partition arrays -- target fabric
         //   - if we have an unroll factor, limit number of multipliers
@@ -75,11 +85,12 @@ void compute_layer(
 
         int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_out) / float(CONFIG_T::reuse_factor)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
         #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
-
+#endif
     } else if (CONFIG_T::io_type == io_serial){
         // Only reduce cycle_factor if n_out is evenly divisible by reuse_factor
         // Otherwise, HLS wont be happy
         int cycle_factor = CONFIG_T::n_out;
+#ifndef MNTR_CATAPULT_HLS
         float reused_cycle = CONFIG_T::n_out / CONFIG_T::reuse_factor;
         if (reused_cycle == ceil(reused_cycle)){
             // Dont use "ceil" here; as of 2018.2, HLS crashes mysteriously
@@ -94,18 +105,23 @@ void compute_layer(
         if (CONFIG_T::store_weights_in_bram){
             #pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
         }
+#endif
     }
     
     // Do the matrix-multiply
     Product1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
+#ifndef MNTR_CATAPULT_HLS
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS PIPELINE
         }
+#endif
         cache = data[ii];
         Product2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
             if (CONFIG_T::io_type == io_serial) {
                 int multiplier_limit  = ceil(float(CONFIG_T::n_out) / float(CONFIG_T::reuse_factor));
+#ifndef MNTR_CATAPULT_HLS
                 #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+#endif
             }
 	    int index = ii*CONFIG_T::n_out+jj;
 	    mult[index] = cache * weights[index];
@@ -114,17 +130,21 @@ void compute_layer(
 
     // Initialize accumulator with input biases
     ResetAccum: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
+#ifndef MNTR_CATAPULT_HLS
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS UNROLL
         }
+#endif
         acc[iacc] = (typename CONFIG_T::accum_t) biases[iacc];
     }
 
     // Accumulate multiplication result
     Accum1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
+#ifndef MNTR_CATAPULT_HLS
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS PIPELINE
         }
+#endif
         Accum2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
 	    int index = ii*CONFIG_T::n_out+jj;
 	    acc[jj] += mult[index];
@@ -133,9 +153,11 @@ void compute_layer(
 
     // Cast to "res_t" type
     Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
+#ifndef MNTR_CATAPULT_HLS
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS UNROLL
         }
+#endif
         res[ires] = (res_T) (acc[ires]);
     }    
 }
