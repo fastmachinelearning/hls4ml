@@ -26,6 +26,7 @@
 
 // This is a substitute for "ceil(n/(float)d)".
 #define DIV_ROUNDUP(n,d) ((n + d - 1) / d)
+// #define ADD_LAT 5
 
 namespace nnet {
 
@@ -75,15 +76,21 @@ void compute_layer(
 
     // Workaround the above restriction.
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
-    #pragma HLS function_instantiate variable=weights,biases
-    #pragma HLS ARRAY_RESHAPE variable=weights block factor=multiplier_limit
+    // #pragma HLS function_instantiate variable=weights,biases
+    // #pragma HLS RESOURCE        variable=weights core=ROM_1P_BRAM
+    #pragma HLS RESOURCE        variable=weights core=ROM_nP_LUTRAM
+    #pragma HLS ARRAY_RESHAPE   variable=weights block factor=multiplier_limit
     #pragma HLS ARRAY_PARTITION variable=biases complete
     
     // typename CONFIG_T::accum_t mult[CONFIG_T::n_in*CONFIG_T::n_out];
     typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
     // #pragma HLS ARRAY_RESHAPE variable=mult    block factor=multiplier_limit
     #pragma HLS ARRAY_PARTITION variable=acc complete
-    #pragma HLS DEPENDENCE variable=acc inter false
+    #pragma HLS DEPENDENCE variable=acc,weights,biases inter false
+
+    // typename CONFIG_T::accum_t acc_tmp[CONFIG_T::n_out];
+    // #pragma HLS ARRAY_PARTITION variable=acc_tmp complete
+    // #pragma HLS DEPENDENCE variable=acc_tmp inter false
 
     // Initialize accumulator with input biases
     ResetAccum: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
@@ -94,8 +101,11 @@ void compute_layer(
     // ------- accumulated outside --------
     int rufactor=CONFIG_T::reuse_factor;
     ReuseLoop: for (int ir = 0; ir < rufactor; ir++){
-        #pragma HLS PIPELINE ii=1 rewind
+        #pragma HLS PIPELINE II=1 rewind
         matvec_op<data_T,CONFIG_T>(data,acc,weights,ir);
+        // for(int io = 0; io < CONFIG_T::n_out; io++){
+        //     acc[io] += acc_tmp[io];
+        // } 
     }
 
     // Cast to "res_t" type
@@ -115,7 +125,10 @@ void matvec_op(
     typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
     int                          reuse_index){
 
-    #pragma HLS PIPELINE
+    // #pragma HLS PIPELINE II=1 
+    // #pragma HLS ALLOCATION instances=FIFO_BRAM limit=0 core
+    // #pragma HLS ALLOCATION instances=RAM_1P_BRAM limit=0 core
+    // #pragma HLS ALLOCATION instances=RAM_2P_BRAM limit=0 core
 
     int rufactor=CONFIG_T::reuse_factor;
     const int multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in*CONFIG_T::n_out, CONFIG_T::reuse_factor);
@@ -124,7 +137,7 @@ void matvec_op(
 
     MultLoop: 
     for (int im = 0; im < multiplier_limit; im++){
-        #pragma UNROLL
+        // #pragma UNROLL
         
         int w_index   = reuse_index + rufactor * im;
         int in_index  = w_index / CONFIG_T::n_out;
@@ -133,22 +146,46 @@ void matvec_op(
         if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
         printf("ir = %i, im = %i, w_index = %i, in_index = %i, out_index = %i, data = %0.4f, weight = %0.4f \n", reuse_index, im, w_index, in_index, out_index, (float) data[in_index], (float) weights[w_index]);
         mult[im] = data[in_index] * weights[w_index];
-        acc[out_index] += mult[im];
-
+        // acc[out_index] += mult[im];
+        // acc[out_index] += data[in_index] * weights[w_index];
     }
 
-    // AccumLoop:
-    // for (int im = 0; im < multiplier_limit; im++){
-    //     #pragma UNROLL
-        
-    //     int w_index   = reuse_index + rufactor * im;
-    //     int out_index = w_index % CONFIG_T::n_out;
+    // special loop for accumulation
+    const int ADD_LAT = DIV_ROUNDUP(multiplier_limit,CONFIG_T::n_out);
+    typename CONFIG_T::accum_t acc_lat[CONFIG_T::n_out][ADD_LAT];
+    #pragma HLS ARRAY_PARTITION variable=acc_lat complete
 
-    //     if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
-    //     // printf("ir = %i, im = %i, w_index = %i, in_index = %i, out_index = %i \n", ir, im, w_index, in_index, out_index);
-    //     // printf("acc[%i] = %0.4f ", out_index, (float) acc[out_index]);
-    // }
+
+    AddLatencyInit: 
+    for (int ii = 0; ii < CONFIG_T::n_out; ii++){
+        for (int ij= 0; ij < ADD_LAT; ij++){
+            #pragma UNROLL
+            acc_lat[ii][ij] = 0;
+        }
+    }
+
+    AccumLoop:
+    for (int im = 0; im < multiplier_limit; im += ADD_LAT){
+        #pragma UNROLL
+        
+        for (int il = 0; il < ADD_LAT; il++){
+            int w_index   = reuse_index + rufactor * (im+il);
+            int out_index = w_index % CONFIG_T::n_out;
+            if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
+            // printf("ir = %i, im = %i, w_index = %i, in_index = %i, out_index = %i \n", ir, im, w_index, in_index, out_index);
+            // printf("acc[%i] = %0.4f ", out_index, (float) acc[out_index]);
+            acc_lat[out_index][il] += mult[im+il];
+        }
+    }
     // printf("\n");
+
+    FullAccum: 
+    for (int ii = 0; ii < CONFIG_T::n_out; ii++){
+        for (int ij= 0; ij < ADD_LAT; ij++){
+            #pragma UNROLL
+            acc[ii] += acc_lat[ii][ij];
+        }
+    }    
 
 }
 
