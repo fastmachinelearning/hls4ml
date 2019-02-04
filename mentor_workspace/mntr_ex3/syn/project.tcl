@@ -4,7 +4,7 @@ solution options defaults
 solution options set /Input/CppStandard c++11
 solution options set /Input/TargetPlatform x86_64
 solution options set /Input/CompilerFlags -DMNTR_CATAPULT_HLS
-solution options set /Input/SearchPath {/extras/giuseppe/research/projects/hls4ml/hls4ml.git/mentor_workspace/mntr_ex3/inc /extras/giuseppe/research/projects/hls4ml/hls4ml.git/mentor_workspace/mntr_ex3/my-hls-test/firmware /extras/giuseppe/research/projects/hls4ml/hls4ml.git/mentor_workspace/mntr_ex3/my-hls-test/firmware/weights /extras/giuseppe/research/projects/hls4ml/hls4ml.git/nnet_utils}
+solution options set /Input/SearchPath {../inc ../my-hls-test/firmware ../my-hls-test/firmware/weights ../../../nnet_utils}
 
 solution file add ../my-hls-test/myproject_test.cpp -type C++
 solution file add ../my-hls-test/firmware/myproject.cpp -type C++
@@ -56,8 +56,8 @@ directive set -CLUSTER_TYPE combinational
 directive set -COMPGRADE fast
 
 go new
-directive set -DESIGN_HIERARCHY myproject
 go analyze
+directive set -DESIGN_HIERARCHY myproject
 go compile
 
 solution library add mgc_Xilinx-KINTEX-u-2_beh -- -rtlsyntool Vivado -manufacturer Xilinx -family KINTEX-u -speed -2 -part xcku115-flva2104-2-i

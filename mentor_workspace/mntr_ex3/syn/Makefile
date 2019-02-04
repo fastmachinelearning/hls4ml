@@ -1,14 +1,26 @@
 help:
 	@echo "make <TAB> for usage"
+.PHONY: help
 
-hls:
+CCS := $(shell ls -t Catapult*ccs | head -n1)
+
+gui:
+	catapult $(CCS)
+.PHONY: gui
+
+hls-gui:
 	catapult -file project.tcl
+.PHONY: hls-gui
 
 hls-sh:
 	catapult -shell -file project.tcl
+.PHONY: hls-sh
 
 clean:
 	rm -rf *log slec_*
+.PHONY: clean
 
 distclean: clean
 	rm -rf Catapult*
+.PHONY: distclean
+
