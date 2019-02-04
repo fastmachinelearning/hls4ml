@@ -8,7 +8,7 @@ hls-sh:
 	catapult -shell -file project.tcl
 
 clean:
-	rm -rf *log
+	rm -rf *log slec_*
 
 distclean: clean
 	rm -rf Catapult*

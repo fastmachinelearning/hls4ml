@@ -72,22 +72,31 @@ datatypes provided with Catapult HLS. There are few differences between
   #endif
   ```
 
-- Currently I am getting an error (in Catapult HLS libraries). This may require some support from Mentor.
-  **IMPORTANT: FOUND THE MEANING OF THE ERROR - WORKING ON A CORRECT IMPLEMENTATION**
-  ```
-  # Error: $MGC_HOME/shared/include/math/mgc_ac_hcordic.h(98): class "MgcAcHtrigAssert<false>" has no member "test" (CRD-135) 
-  # Error: $MGC_HOME/shared/include/math/mgc_ac_hcordic.h(98):           detected during: (CRD-135) 
-  # Error: $MGC_HOME/shared/include/math/mgc_ac_hcordic.h(98):             instantiation of "ac_fixed<W, 0, false, AC_TRN, AC_WRAP> MgcAcHtrig::ln2<W>() [with W=196]" at line 409 (CRD-135)
-  # Error: $MGC_HOME/shared/include/math/mgc_ac_hcordic.h(98):             instantiation of "void mgc_ac_exp(const ac_fixed<AW, AI, AS, AQ, AV> &, ac_fixed<ZW, ZI, ZS, ZQ, ZV> &) [with AW=18, AI=8, AS=true, AQ=AC_TRN, AV=AC_W
-  RAP, ZW=18, ZI=8, ZS=true, ZQ=AC_TRN, ZV=AC_WRAP]" at line 190 of "/extras/giuseppe/research/projects/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h" (CRD-135) 
-  ```
+## Simulation (w/out licenses)
+
+You still need Catapult HLS installed on your local machine. Update the
+`sim/envsetup.sh` and to match the installation paths on your local machine.
+Finally:
+
+Use a new console.
+```
+cd sim
+source envsetup-mntr.sh
+make clean
+make run
+```
+
+**Please, note that we are using the `ac_fixed` and `ac_int` datatypes and the
+`g++` compiler in the Catapult HLS installation.**
 
 ## Synthesis
 
 You need Catapult HLS installed on your local machine. Update the
 `syn/envsetup.sh` script to match the installation paths on your local machine.
+This script exports also the environment variable for the Mentor licenses.
 Finally:
 
+Use a new console.
 ```
 cd syn
 source envsetup.sh

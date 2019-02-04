@@ -185,8 +185,8 @@ void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 //       Softmax Activation
 // *************************************************
 #ifdef MNTR_CATAPULT_HLS
-inline ap_fixed<18,8> exp_fcn_float(ap_fixed<18,8> input) {
-    ap_fixed<18,8> result;
+inline ap_fixed<52,42> exp_fcn_fixed(ap_fixed<10,4> input) {
+    ap_fixed<52,42> result;
     mgc_ac_exp(input, result);
     return result;
 }
@@ -202,21 +202,22 @@ void init_exp_table(typename CONFIG_T::table_t table_out[N_TABLE])
     for (int ii = 0; ii < N_TABLE; ii++) {
 #ifdef MNTR_CATAPULT_HLS
         // First, convert from table index to X-value (signed 8-bit, range -8 to +8)
-        ap_fixed<18,8> range = 2*8.0;
-        ap_fixed<18,8> N_TABLE_HALF = ap_fixed<18,8>((N_TABLE)/2.0);
-        ap_fixed<18,8> in_val;
-        //div(ap_fixed<18,8>(range * ( ii - N_TABLE_HALF )), ap_fixed<18,8>(N_TABLE), in_val);
+        ap_fixed<18,8> range(2 * 8.0);
+        ap_fixed<32,30> N_TABLE_HALF(N_TABLE / 2.0);
+        ap_fixed<32,16> in_val;
+        div(ap_fixed<32,30>(range * ( ii - N_TABLE_HALF )), ap_fixed<32,32>(N_TABLE), in_val);
         // Next, compute lookup table function
-        typename CONFIG_T::table_t real_val = exp_fcn_float(in_val);
+        typename CONFIG_T::table_t fixed_val = exp_fcn_fixed(in_val);
         //std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
+        table_out[ii] = fixed_val;
 #else
         // First, convert from table index to X-value (signed 8-bit, range -8 to +8)
         float in_val = 2*8.0*(ii-float(N_TABLE)/2.0)/float(N_TABLE);
         // Next, compute lookup table function
         typename CONFIG_T::table_t real_val = exp_fcn_float(in_val);
         //std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
-#endif
         table_out[ii] = real_val;
+#endif
     }
 }
 
@@ -227,10 +228,23 @@ void init_invert_table(typename CONFIG_T::table_t table_out[N_TABLE])
     //   result = 1/x
     for (int ii = 0; ii < N_TABLE; ii++) {
       // First, convert from table index to X-value (signed 8-bit, range 0 to +64)
+#ifdef MNTR_CATAPULT_HLS
+	ap_fixed<18,8> in_val;
+    ap_fixed<32,32> dividend(64.0*ii);
+    ap_fixed<32,32> divisor(N_TABLE);
+    div(dividend, divisor, in_val);
+        // Next, compute lookup table function
+	if (in_val > 0.0) {
+        ap_fixed<18,8> one(1.0);
+        div(one, in_val, table_out[ii]);
+    }
+	else table_out[ii] = 0.0;
+#else
 	float in_val = 64.0*ii/float(N_TABLE);
         // Next, compute lookup table function
 	if (in_val > 0.0) table_out[ii] = 1.0/in_val;
 	else table_out[ii] = 0.0;
+#endif
     }
 }
 
@@ -306,7 +320,11 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 
     //Second loop to invert
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+#ifdef MNTR_CATAPULT_HLS
+      int exp_res_index = (exp_res[ii]*ac_fixed<18,8>(CONFIG_T::table_size/64)).to_int();
+#else
       int exp_res_index = exp_res[ii]*CONFIG_T::table_size/64;
+#endif
       if (exp_res_index < 0)   exp_res_index = 0;
       if (exp_res_index > CONFIG_T::table_size-1) exp_res_index = CONFIG_T::table_size-1;
       //typename CONFIG_T::table_t exp_res_invert = invert_table[exp_res_index];
@@ -445,8 +463,8 @@ void  thresholded_relu(data_T data[CONFIG_T::n_in], data_T theta, res_T res[CONF
 // *************************************************
 #ifdef MNTR_CATAPULT_HLS
 inline ap_fixed<18,8> softplus_fcn_float(ap_fixed<18,8> input) {
-    ap_fixed<18,8> _exp; mgc_ac_exp(input, _exp);
-    ap_fixed<18,8> _log; mgc_ac_log(_exp, _log);
+    ap_fixed<18,8> _exp; //mgc_ac_exp(input, _exp);
+    ap_fixed<18,8> _log; //mgc_ac_log(_exp, _log);
     return _log + ap_fixed<18,8>(1.);
 }
 #else
@@ -463,7 +481,7 @@ void init_softplus_table(typename CONFIG_T::table_t table_out[N_TABLE])
     for (int ii = 0; ii < N_TABLE; ii++) {
         // First, convert from table index to X-value (signed 8-bit, range -8 to +8)
 #ifdef MNTR_CATAPULT_HLS
-        ap_fixed<18,8>in_val = 2*8.0*(ii-ap_fixed<18,8>(N_TABLE)/ap_fixed<18,8>(2.0))/ap_fixed<18,8>(N_TABLE);
+        ap_fixed<18,8>in_val; // = 2*8.0*(ii-ap_fixed<18,8>(N_TABLE)/ap_fixed<18,8>(2.0))/ap_fixed<18,8>(N_TABLE);
 #else
         float in_val = 2*8.0*(ii-float(N_TABLE)/2.0)/float(N_TABLE);
 #endif

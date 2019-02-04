@@ -27,7 +27,7 @@
 #include "nnet_helpers.h"
 
 #ifdef MNTR_CATAPULT_HLS
-int sc_main (int argc, char *argv[])
+int main (int argc, char *argv[])
 {
   std::cout << "Mentor Graphics Catapult HLS" << std::endl;
 #else
