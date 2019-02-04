@@ -306,8 +306,7 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 
     //Second loop to invert
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-      //int exp_res_index = exp_res[ii]*CONFIG_T::table_size/64;
-      int exp_res_index = 8;
+      int exp_res_index = exp_res[ii]*CONFIG_T::table_size/64;
       if (exp_res_index < 0)   exp_res_index = 0;
       if (exp_res_index > CONFIG_T::table_size-1) exp_res_index = CONFIG_T::table_size-1;
       //typename CONFIG_T::table_t exp_res_invert = invert_table[exp_res_index];
