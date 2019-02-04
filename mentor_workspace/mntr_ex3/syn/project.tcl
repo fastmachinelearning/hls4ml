@@ -6,7 +6,7 @@ solution options set /Input/TargetPlatform x86_64
 solution options set /Input/CompilerFlags -DMNTR_CATAPULT_HLS
 solution options set /Input/SearchPath {../inc ../my-hls-test/firmware ../my-hls-test/firmware/weights ../../../nnet_utils}
 
-solution file add ../my-hls-test/myproject_test.cpp -type C++
+solution file add ../my-hls-test/myproject_test.cpp -type C++ -exclude true
 solution file add ../my-hls-test/firmware/myproject.cpp -type C++
 
 directive set -DESIGN_GOAL area
@@ -71,3 +71,8 @@ directive set /myproject/res:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
 
 go assembly
 go extract
+
+flow run /SCVerify/launch_make ./scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim
+
+# Missing modelsim gcc
+#flow run /SCVerify/launch_make ./scverify/Verify_rtl_vhdl_msim.mk {} SIMTOOL=msim simgui
