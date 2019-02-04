@@ -74,6 +74,7 @@ void compute_layer(
 
     // Pipelining force all the loops being unrolled
     // #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+    // #pragma HLS DATAFLOW
 
     // Replace ceil function with home-made macro prevents Vivado 2018.2 segfault
     const int totals_multipliers = CONFIG_T::n_in*CONFIG_T::n_out;
@@ -82,17 +83,22 @@ void compute_layer(
 
     // Workaround the above restriction.
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
-    // #pragma HLS function_instantiate variable=weights,biases
+    #pragma HLS function_instantiate variable=weights,biases
     #pragma HLS RESOURCE        variable=weights core=ROM_nP_LUTRAM
-    #pragma HLS ARRAY_RESHAPE   variable=weights block factor=multiplier_limit
+    // if(CONFIG_T::store_weights_in_bram) { 
+    // #pragma HLS RESOURCE        variable=weights core=ROM_1P_BRAM
+    // }
+
+    // #pragma HLS ARRAY_RESHAPE   variable=weights block factor=multiplier_limit
+    #pragma HLS ARRAY_RESHAPE   variable=weights cyclic factor=multiplier_limit
     #pragma HLS ARRAY_PARTITION variable=biases complete
     
     // typename CONFIG_T::accum_t mult[CONFIG_T::n_in*CONFIG_T::n_out];
     typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
     // #pragma HLS ARRAY_RESHAPE variable=mult    block factor=multiplier_limit
     #pragma HLS ARRAY_PARTITION variable=acc complete
-    // #pragma HLS DEPENDENCE variable=acc,weights,biases inter false
-    #pragma HLS DEPENDENCE variable=acc inter false
+    #pragma HLS DEPENDENCE variable=acc,weights,biases inter false
+    // #pragma HLS DEPENDENCE variable=acc inter false
 
     // typename CONFIG_T::accum_t acc_tmp[CONFIG_T::n_out];
     // #pragma HLS ARRAY_PARTITION variable=acc_tmp complete
@@ -106,23 +112,37 @@ void compute_layer(
 
     // core functionality
     int rufactor=CONFIG_T::reuse_factor;
+    // a tmp mult for each reuse loop iteration
+    typename CONFIG_T::accum_t mult[multiplier_limit];
+    #pragma HLS ARRAY_PARTITION variable=mult complete
+    #pragma HLS DEPENDENCE variable=mult inter false
+
     const int ADD_LAT = DIV_ROUNDUP(multiplier_limit,CONFIG_T::n_out);
+    printf("rufactor = %i, add latency = %i, multiplier limit = %i \n", rufactor, ADD_LAT, multiplier_limit);
     ReuseLoop: for (int ir = 0; ir < rufactor; ir++){
 
         #pragma HLS PIPELINE II=1 rewind
         ///////// --------------------------------------
-        // a tmp mult for each reuse loop iteration
-        typename CONFIG_T::accum_t mult[multiplier_limit];
-        #pragma HLS ARRAY_PARTITION variable=mult complete
-
+        printf("on this clock tick: %i \n", ir);
         MultLoop: 
         for (int im = 0; im < multiplier_limit; im++){
-            int w_index   = ir + rufactor * im;
+            // int w_index   = ir + rufactor * im;
+            int w_index   = ir * multiplier_limit + im;
             int in_index  = w_index / CONFIG_T::n_out;
             int out_index = w_index % CONFIG_T::n_out;
             if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
             mult[im] = data[in_index] * weights[w_index];
+            // acc[out_index] += mult[im];
+            // acc[out_index] += data[in_index] * weights[w_index];
+            printf("m++ ir = %i, im = %i, w_index = %i, in_index = %i, out_index = %i \n", ir, im, w_index, in_index, out_index);
         }
+        // AccumLoop:
+        // for (int im = 0; im < multiplier_limit; im++){
+        //     int w_index   = ir + rufactor * im;
+        //     int out_index = w_index % CONFIG_T::n_out;
+        //     if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
+        //     acc[out_index] += mult[im];
+        // }
 
         // special loop for accumulation
         typename CONFIG_T::accum_t acc_lat[CONFIG_T::n_out][ADD_LAT];
@@ -138,13 +158,31 @@ void compute_layer(
         }
 
         AccumLoop:
-        for (int im = 0; im < multiplier_limit; im += ADD_LAT){
-            #pragma UNROLL
-            for (int il = 0; il < ADD_LAT; il++){
-                int w_index   = ir + rufactor * (im+il);
-                int out_index = w_index % CONFIG_T::n_out;
-                if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
-                acc_lat[out_index][il] += mult[im+il];
+        // for (int im = 0; im < multiplier_limit; im += ADD_LAT){
+        //     #pragma UNROLL
+        //     for (int il = 0; il < ADD_LAT; il++){
+        //         #pragma UNROLL
+        //         // int w_index   = ir + rufactor * (im+il);
+        //         int w_index   = ir * multiplier_limit + (im+il);
+        //         int out_index = w_index % CONFIG_T::n_out;
+        //         if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
+        //         acc_lat[out_index][il] += mult[im+il];
+        //         // printf("im = %i; il = %i; w_index = %i; out_index = %i \n", im, il, w_index, out_index);
+        //     }
+        // }
+        for (int io = 0; io < CONFIG_T::n_out; io++){
+            #pragma HLS UNROLL
+            for (int ia = 0; ia < ADD_LAT; ia++){
+                #pragma HLS UNROLL
+                int w_index_acc    = ir * multiplier_limit + (io*ADD_LAT + ia);
+                int mult_index_acc = (io*ADD_LAT + ia); 
+                int out_index_acc  = w_index_acc % CONFIG_T::n_out;
+                
+                if (mult_index_acc >= multiplier_limit) continue;
+                if (w_index_acc >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
+                
+                acc_lat[out_index_acc][ia] += mult[mult_index_acc];
+                printf("a++ ir = %i, io = %i, ia = %i, w_index = %i, out_index = %i, mult_index = %i \n", ir, io, ia, w_index_acc, out_index_acc, mult_index_acc);
             }
         }
         // printf("\n");
@@ -152,7 +190,7 @@ void compute_layer(
         FullAccum: 
         for (int ii = 0; ii < CONFIG_T::n_out; ii++){
             for (int ij= 0; ij < ADD_LAT; ij++){
-                #pragma UNROLL
+                #pragma HLS UNROLL
                 acc[ii] += acc_lat[ii][ij];
             }
         }    
@@ -163,10 +201,10 @@ void compute_layer(
     // Cast to "res_t" type
     Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
         #pragma HLS UNROLL
-        printf("acc[%i] = %0.4f ", ires, (float) acc[ires]);
+        //printf("acc[%i] = %0.4f ", ires, (float) acc[ires]);
         res[ires] = (res_T) (acc[ires]);
     }    
-    printf("\n");
+    //printf("\n");
 
 }
 
