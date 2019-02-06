@@ -126,10 +126,10 @@ void compute_layer(
         printf("on this clock tick: %i \n", ir);
         MultLoop: 
         for (int im = 0; im < multiplier_limit; im++){
-            // int w_index   = ir + rufactor * im;
-            int w_index   = ir * multiplier_limit + im;
-            int in_index  = w_index / CONFIG_T::n_out;
-            int out_index = w_index % CONFIG_T::n_out;
+            int w_index   = ir + rufactor * im;
+            //int w_index   = ir * multiplier_limit + im;
+            int out_index = w_index / CONFIG_T::n_out;
+            int  in_index = w_index % CONFIG_T::n_out;
             if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
             mult[im] = data[in_index] * weights[w_index];
             // acc[out_index] += mult[im];

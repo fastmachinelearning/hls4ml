@@ -922,7 +922,6 @@ def parse_config(config_file) :
 ## Print a bias or weight array to C++
 #######################################
 def print_array_to_cpp(name, a, odir, quantize=0, i_part = 0, n_part = 1, i_subout = 0, n_subout = 1):
-
     #put output in subdir for tarballing later
     #check if we're doing sublayer
     if n_part > 1:
@@ -982,16 +981,42 @@ def print_array_to_cpp(name, a, odir, quantize=0, i_part = 0, n_part = 1, i_subo
     f.write("[{}]".format(np.prod(a.shape)))
     f.write(" = {")
     
-    #fill c++ array.  
-    #not including internal brackets for multidimensional case
-    i=0
-    for x in np.nditer(a, order='C'):
-        if i==0:
-            f.write("%.12f" % x)
-        else:
-            f.write(", %.12f" % x)
-        i=i+1
-    f.write("};\n")
-    f.close()
+    print("!!!!",a.shape,len(a.shape))
+    if len(a.shape) > 1:
+    
+        #fill c++ array.  
+        nrows = a.shape[0]
+        ncols = a.shape[1]
+        first_element = 1
+        i = -1
+        weights=[]
+        for x in np.nditer(a):
+            i=i+1
+            val=x
+            weights.append([int(i%ncols),int(i/ncols),val])
+        weights.sort()
+        #not including internal brackets for multidimensional case
+        i=0
+        for w in weights:
+            val=w[2]
+            print("v:",val)
+            if i==0:
+                f.write("%.12f" % w[2])
+            else:
+                f.write(", %.12f" % w[2])
+            i=i+1
+        f.write("};\n")
+        f.close()
+
+    else:
+        i=0
+        for x in np.nditer(a, order='C'):
+            if i==0:
+                f.write("%.12f" % x)
+            else:
+                f.write(", %.12f" % x)
+            i=i+1
+        f.write("};\n")
+        f.close()
 
     return zero_ctr
