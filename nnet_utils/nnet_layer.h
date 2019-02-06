@@ -90,7 +90,7 @@ void compute_layer(
     // }
 
     // #pragma HLS ARRAY_RESHAPE   variable=weights block factor=multiplier_limit
-    #pragma HLS ARRAY_RESHAPE   variable=weights cyclic factor=multiplier_limit
+    #pragma HLS ARRAY_RESHAPE   variable=weights block factor=multiplier_limit
     #pragma HLS ARRAY_PARTITION variable=biases complete
     
     // typename CONFIG_T::accum_t mult[CONFIG_T::n_in*CONFIG_T::n_out];
