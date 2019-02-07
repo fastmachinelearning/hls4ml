@@ -47,8 +47,8 @@ void compute_compressed_layer(
     #pragma HLS ARRAY_PARTITION variable=biases complete
     #pragma HLS ARRAY_RESHAPE   variable=weights block factor=multiplier_limit
     if (CONFIG_T::store_weights_in_bram){
-     #pragma HLS RESOURCE variable=weights core=ROM_1P_BRAM
-     #pragma HLS data_pack variable=weights struct_level 
+         #pragma HLS RESOURCE variable=weights core=ROM_1P_BRAM
+         #pragma HLS data_pack variable=weights struct_level 
     }
     ACCUMULATOR_INIT_L:
     for(unsigned i = 0; i < CONFIG_T::n_out; i++) {
@@ -56,36 +56,35 @@ void compute_compressed_layer(
       acc[i] = (typename CONFIG_T::accum_t) (biases[i]);
     }
     #pragma HLS DEPENDENCE variable=weights,acc,biases inter false
-    // Do the compressed matrix-multiply
     int rufactor = CONFIG_T::reuse_factor;
+    // Do the compressed matrix-multiply
+    typename CONFIG_T::accum_t  tmpmult[CONFIG_T::n_nonzeros];
+    #pragma HLS ARRAY_PARTITION variable=tmpmult   complete
+    #pragma HLS DEPENDENCE variable=tmpmult inter false
+    typename CONFIG_T::index_t  tmpindx[CONFIG_T::n_nonzeros];
+    #pragma HLS ARRAY_PARTITION variable=tmpindx   complete
+    #pragma HLS DEPENDENCE variable=tmpindx inter false
+
     COMPRESSED_MAT_MULT_L:
     for(unsigned ru = 0; ru < rufactor; ru++) {
       #pragma HLS PIPELINE  II=1 rewind
-      typename CONFIG_T::accum_t  tmpmult[multiplier_limits];
-      #pragma HLS ARRAY_PARTITION variable=tmpmult   complete
-      #pragma HLS DEPENDENCE variable=tmpmult inter false
-
-      typename CONFIG_T::index_t  tmpindx[multiplier_limits];
-      #pragma HLS ARRAY_PARTITION variable=tmpindx   complete
-      #pragma HLS DEPENDENCE variable=tmpindx inter false
-
-      for(unsigned i = 0; i < multiplier_limit; i++) { 
+      for(unsigned i = 0; i < multiplier_limits; i++) { 
         #pragma HLS UNROLL 
         unsigned w = i*rufactor + ru; //PH CHeck me
 	typename CONFIG_T::index_t  j = weights[w].row_index;
 	typename CONFIG_T::index_t  c = weights[w].col_index;
 	typename CONFIG_T::weight_t cache = weights[w].weight;
 	typename CONFIG_T::accum_t  data_cache = data[j];
-	tmpmult[i]            = (cache)*data_cache;
-	tmpindx[i]            = c;
+	tmpmult[w]            = (cache)*data_cache;
+	tmpindx[w]            = c;
       }
-      unsigned count=0;
-      for(unsigned i = 0; i < multiplier_limit; i++) { 
-        #pragma HLS UNROLL 
-        typename CONFIG_T::weight_t cache = tmpmult[i];
-        typename CONFIG_T::index_t a      = tmpindx[i];
-	fillMult<CONFIG_T>(a,acc,cache);
-      }
+    }
+    for(unsigned i = 0; i < CONFIG_T::n_nonzeros; i++) { 
+      #pragma HLS UNROLL 
+      typename CONFIG_T::weight_t cache = tmpmult[i];
+      typename CONFIG_T::index_t a      = tmpindx[i];
+      //fillMult<CONFIG_T>(a,acc,cache);
+      acc[a] += cache;
     }
     // Cast to "res_t" type
     RESULT_L:
