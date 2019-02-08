@@ -140,8 +140,12 @@ void pooling2d(data_T data[CONFIG_T::in_height][CONFIG_T::in_width][CONFIG_T::n_
   const int limit = pool_op_limit<CONFIG_T>();
   #pragma HLS ALLOCATION instances=pool_op limit=limit function
   // Add any necessary padding
-  const unsigned padded_height = CONFIG_T::in_height + CONFIG_T::pad_top + CONFIG_T::pad_bottom;
-  const unsigned padded_width = CONFIG_T::in_width + CONFIG_T::pad_left + CONFIG_T::pad_right;
+  unsigned padded_height = CONFIG_T::in_height + CONFIG_T::pad_top + CONFIG_T::pad_bottom;
+  unsigned padded_width = CONFIG_T::in_width + CONFIG_T::pad_left + CONFIG_T::pad_right;
+  if (CONFIG_T::pad_top == 0 && CONFIG_T::pad_bottom == 0 && CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0) {
+    padded_height -= padded_height - (padded_height / CONFIG_T::stride_height * CONFIG_T::stride_height);
+    padded_width -= padded_width - (padded_width / CONFIG_T::stride_width * CONFIG_T::stride_width);
+  }
 
   for(int ff = 0; ff < CONFIG_T::n_filt; ff++){
 	  // Loop over input image y in steps of stride
