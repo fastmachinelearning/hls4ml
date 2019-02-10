@@ -10,3 +10,4 @@ ReuseFactor: 200
 Compression: 1 # options: 1 enable data compression, 0 otherwise
 MaxIndexWordSize: 7 # as a rule of thumb, the sum of this-value-time-2 and the word size of the default precision should be 32 = (7*2)+18
 DefaultPrecision: ap_fixed<16,6>
+
