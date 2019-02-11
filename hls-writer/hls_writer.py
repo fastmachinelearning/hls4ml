@@ -882,6 +882,8 @@ def hls_writer(layer_list, yamlConfig):
 
     nnetdir = os.path.abspath(os.path.join(filedir, "../nnet_utils"))
     relpath = os.path.relpath(nnetdir, start=yamlConfig['OutputDir'])
+    if os.name == 'nt':
+        relpath = relpath.replace('\\','/')
 
     f = open(os.path.join(filedir,'../hls-template/build_prj.tcl'),'r')
     fout = open('{}/build_prj.tcl'.format(yamlConfig['OutputDir']),'w')
