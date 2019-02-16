@@ -118,7 +118,7 @@ logs:
 	$(QUIET_RUN)mkdir -p logs
 .PHONY: logs
 
-run: debug logs
+run: release logs
 	$(QUIET_RUN)./$(TARGET) $(INPUT)
 .PHONY: run
 

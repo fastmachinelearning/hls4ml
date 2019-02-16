@@ -16,18 +16,18 @@
 //    You should have received a copy of the GNU General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-#include <iostream>
+//#include <iostream>
 
-#include "parameters.h"
+//#include "parameters.h"
 #include "myproject.h"
 
-#include "nnet_layer.h"
-#include "nnet_conv.h"
-#include "nnet_conv2d.h"
-#include "nnet_batchnorm.h"
-#include "nnet_activation.h"
-#include "nnet_pooling.h"
-
+//#include "nnet_layer.h"
+//#include "nnet_conv.h"
+//#include "nnet_conv2d.h"
+//#include "nnet_batchnorm.h"
+//#include "nnet_activation.h"
+//#include "nnet_pooling.h"
+//
 //hls-fpga-machine-learning insert weights
 #include "weights/w1.h"
 #include "weights/b1.h"

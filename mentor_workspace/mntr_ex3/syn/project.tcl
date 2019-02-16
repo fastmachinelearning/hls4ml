@@ -1,11 +1,15 @@
+# Reset the options to the factory defaults
 solution new -state initial
-
 solution options defaults
+
 solution options set Flows/ModelSim/VLOG_OPTS {-suppress 12110}
+solution options set Flows/ModelSim/VSIM_OPTS {-t ps -suppress 12110}
 solution options set /Input/CppStandard c++11
 solution options set /Input/TargetPlatform x86_64
 solution options set /Input/CompilerFlags -DMNTR_CATAPULT_HLS
 solution options set /Input/SearchPath {../inc ../my-hls-test/firmware ../my-hls-test/firmware/weights ../../../nnet_utils}
+
+flow package require /SCVerify
 
 solution file add ../my-hls-test/myproject_test.cpp -type C++ -exclude true
 solution file add ../my-hls-test/firmware/myproject.cpp -type C++
@@ -65,7 +69,7 @@ solution library add mgc_Xilinx-KINTEX-u-2_beh -- -rtlsyntool Vivado -manufactur
 solution library add Xilinx_RAMS
 go libraries
 
-directive set -CLOCKS {clk {-CLOCK_PERIOD 10 -CLOCK_EDGE rising -CLOCK_HIGH_TIME 5 -CLOCK_OFFSET 0.000000 -CLOCK_UNCERTAINTY 0.0 -RESET_KIND sync -RESET_SYNC_NAME rst -RESET_SYNC_ACTIVE high -RESET_ASYNC_NAME arst_n -RESET_ASYNC_ACTIVE low -ENABLE_NAME {} -ENABLE_ACTIVE high}}
+directive set -CLOCKS {clk {-CLOCK_PERIOD 100.0 -CLOCK_EDGE rising -CLOCK_HIGH_TIME 50.0 -CLOCK_OFFSET 0.000000 -CLOCK_UNCERTAINTY 0.0 -RESET_KIND sync -RESET_SYNC_NAME rst -RESET_SYNC_ACTIVE high -RESET_ASYNC_NAME arst_n -RESET_ASYNC_ACTIVE low -ENABLE_NAME {} -ENABLE_ACTIVE high}}
 
 directive set /myproject/data:rsc -MAP_TO_MODULE ccs_ioport.ccs_in_vld
 directive set /myproject/res:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
@@ -73,8 +77,7 @@ directive set /myproject/res:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
 go assembly
 go extract
 
-#options set Flows/ModelSim/VCOM_OPTS {-suppress 12110}
+flow run /SCVerify/launch_make ./scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim
+flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim sim
 
-#flow run /SCVerify/launch_make ./scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim
-
-flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim simgui
+#flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim simgui

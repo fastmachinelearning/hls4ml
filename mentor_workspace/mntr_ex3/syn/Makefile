@@ -2,7 +2,7 @@ help:
 	@echo "make <TAB> for usage"
 .PHONY: help
 
-CCS := $(shell ls -t Catapult*ccs | head -n1)
+CCS := $(shell ls -t Catapult*ccs 2> /dev/null | head -n1)
 
 gui:
 	catapult $(CCS) &

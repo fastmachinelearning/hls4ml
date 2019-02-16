@@ -20,9 +20,9 @@
 #ifndef MYPROJECT_H_
 #define MYPROJECT_H_
 
-#include <complex>
-#include "ap_int.h"
-#include "ap_fixed.h"
+//#include <complex>
+//#include "ap_int.h"
+//#include "ap_fixed.h"
 
 #include "parameters.h"
 
