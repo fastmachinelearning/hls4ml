@@ -5,11 +5,11 @@ help:
 CCS := $(shell ls -t Catapult*ccs | head -n1)
 
 gui:
-	catapult $(CCS)
+	catapult $(CCS) &
 .PHONY: gui
 
 hls-gui:
-	catapult -file project.tcl
+	catapult -file project.tcl &
 .PHONY: hls-gui
 
 hls-sh:

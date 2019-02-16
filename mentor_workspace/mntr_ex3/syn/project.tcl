@@ -1,6 +1,7 @@
 solution new -state initial
-solution options defaults
 
+solution options defaults
+solution options set Flows/ModelSim/VLOG_OPTS {-suppress 12110}
 solution options set /Input/CppStandard c++11
 solution options set /Input/TargetPlatform x86_64
 solution options set /Input/CompilerFlags -DMNTR_CATAPULT_HLS
@@ -72,7 +73,8 @@ directive set /myproject/res:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
 go assembly
 go extract
 
-flow run /SCVerify/launch_make ./scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim
+#options set Flows/ModelSim/VCOM_OPTS {-suppress 12110}
 
-# Missing modelsim gcc
-#flow run /SCVerify/launch_make ./scverify/Verify_rtl_vhdl_msim.mk {} SIMTOOL=msim simgui
+#flow run /SCVerify/launch_make ./scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim
+
+flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim simgui
