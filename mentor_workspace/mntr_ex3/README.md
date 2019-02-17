@@ -68,6 +68,12 @@ datatypes provided with Catapult HLS. There are few differences between
   #include "ac_channel.h"
   ac_channel< data_T > &data
   ```
+  
+- The synthesis time runs a little high for SoftMax layer, but it should be possible to fix it.
+  ```
+  # Info: Running transformation 'schedule' on solution 'nnet__softmax_result_t_result_t_softmax_config4__010e30973ea6d05ff01ff02f57fe4706e9aafd.v1': elapsed time 938.12 seconds, memory usage 3280436kB, peak memory usage 3313584kB (SOL-15)
+  # Info: Running transformation 'dpfsm' on solution 'nnet__softmax_result_t_result_t_softmax_config4__010e30973ea6d05ff01ff02f57fe4706e9aafd.v1': elapsed time 27.38 seconds, memory usage 3345972kB, peak memory usage 3345972kB (SOL-15)
+```
 
 - Catapult HLS uses pragma, but TCL directives are preferable
   - See `directive` in [syn/project.tcl](syn/project.tcl)
