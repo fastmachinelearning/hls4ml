@@ -52,6 +52,12 @@ datatypes provided with Catapult HLS. There are few differences between
      ```
    This porting requires some error propagation analysis to avoid overflow and lost of precision.
 
+- Some headers are included multiple times. This is fine with GCC, but not with Modelsim (simulation). We should fix this in any case also for the standard Xilinx flow.
+  - [my-hls-test/myproject_test.cpp](my-hls-test/myproject_test.cpp)
+  - [my-hls-test/firmware/parameters.h](my-hls-test/firmware/parameters.h)
+  - [my-hls-test/firmware/myproject.h](my-hls-test/firmware/myproject.h)
+  - [my-hls-test/firmware/myproject.cpp](my-hls-test/firmware/myproject.cpp)
+
 - Change the Streaming data interface.
   ```
   #include "hls_stream.h"
@@ -62,6 +68,9 @@ datatypes provided with Catapult HLS. There are few differences between
   #include "ac_channel.h"
   ac_channel< data_T > &data
   ```
+
+- Catapult HLS uses pragma, but TCL directives are preferable
+  - See `directive` in [syn/project.tcl](syn/project.tcl)
 
 - Some of these changes are under conditional macros.
   ```
