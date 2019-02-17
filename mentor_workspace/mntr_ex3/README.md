@@ -71,6 +71,8 @@ datatypes provided with Catapult HLS. There are few differences between
 
 - Catapult HLS uses pragma, but TCL directives are preferable
   - See `directive` in [syn/project.tcl](syn/project.tcl)
+  - More in general, have a look at the manual for the Catapult HLS flow and pragmas
+    ![Catapult HLS flow](doc/catapulthls_flow.png)
 
 - Some of these changes are under conditional macros.
   ```
