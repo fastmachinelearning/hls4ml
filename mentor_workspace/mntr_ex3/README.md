@@ -71,6 +71,7 @@ datatypes provided with Catapult HLS. There are few differences between
 
 - Catapult HLS uses pragma, but TCL directives are preferable
   - See `directive` in [syn/project.tcl](syn/project.tcl)
+  - Many of the directives that are required in Vivado HLS for [../../keras-to-hls/keras-config.yml](../../keras-to-hls/keras-config.yml) (io_parallel ---> loop unrolls) are a default for Catapult HLS, thus they are not specified in the TCL file [syn/project.tcl](syn/project.tcl)
   - More in general, have a look at the manual for the Catapult HLS flow and pragmas
     ![Catapult HLS flow](doc/catapulthls_flow.png)
 
