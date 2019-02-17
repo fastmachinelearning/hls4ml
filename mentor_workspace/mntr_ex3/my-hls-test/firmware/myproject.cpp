@@ -44,13 +44,13 @@ void myproject(
 		  unsigned short &const_size_in,
 		  unsigned short &const_size_out)
 {
-
+#ifndef MNTR_CATAPULT_HLS
     //hls-fpga-machine-learning insert IO
     #pragma HLS ARRAY_RESHAPE variable=data complete dim=0 
     #pragma HLS ARRAY_RESHAPE variable=res complete dim=0 
     #pragma HLS INTERFACE ap_vld port=data,res 
     #pragma HLS PIPELINE 
-
+#endif
 
     const_size_in   = N_INPUTS;
     const_size_out  = N_OUTPUTS;
@@ -62,28 +62,42 @@ void myproject(
     //hls-fpga-machine-learning insert layers
 
     layer1_t layer1_out[N_LAYER_1];
+#ifndef MNTR_CATAPULT_HLS
     #pragma HLS ARRAY_PARTITION variable=layer1_out complete dim=0
+#endif
     layer1_t logits1[N_LAYER_1];
+#ifndef MNTR_CATAPULT_HLS
     #pragma HLS ARRAY_PARTITION variable=logits1 complete dim=0
+#endif
     nnet::compute_layer<input_t, layer1_t, config1>(data, logits1, w1, b1);
     nnet::relu<layer1_t, layer1_t, relu_config1>(logits1, layer1_out);
 
     layer2_t layer2_out[N_LAYER_2];
+#ifndef MNTR_CATAPULT_HLS
     #pragma HLS ARRAY_PARTITION variable=layer2_out complete dim=0
+#endif
     layer2_t logits2[N_LAYER_2];
+#ifndef MNTR_CATAPULT_HLS
     #pragma HLS ARRAY_PARTITION variable=logits2 complete dim=0
+#endif
     nnet::compute_layer<layer1_t, layer2_t, config2>(layer1_out, logits2, w2, b2);
     nnet::relu<layer2_t, layer2_t, relu_config2>(logits2, layer2_out);
 
     layer3_t layer3_out[N_LAYER_3];
+#ifndef MNTR_CATAPULT_HLS
     #pragma HLS ARRAY_PARTITION variable=layer3_out complete dim=0
+#endif
     layer3_t logits3[N_LAYER_3];
+#ifndef MNTR_CATAPULT_HLS
     #pragma HLS ARRAY_PARTITION variable=logits3 complete dim=0
+#endif
     nnet::compute_layer<layer2_t, layer3_t, config3>(layer2_out, logits3, w3, b3);
     nnet::relu<layer3_t, layer3_t, relu_config3>(logits3, layer3_out);
 
     result_t logits4[N_OUTPUTS];
+#ifndef MNTR_CATAPULT_HLS
     #pragma HLS ARRAY_PARTITION variable=logits4 complete dim=0
+#endif
     nnet::compute_layer<layer3_t, result_t, config4>(layer3_out, logits4, w4, b4);
     nnet::softmax<result_t, result_t, softmax_config4>(logits4, res);
 

@@ -22,4 +22,7 @@ export PATH=${CATAPULT_PATH}/bin:${PATH}
 export PATH=${CAD_PATH}/msim/modeltech/bin/:$PATH
 
 # Let's use the SystemC headers and library provided with Catapult HLS.
-export SYSTEMC=${CATAPULT_PATH}/shared/
+export SYSTEMC=${CATAPULT_PATH}/shared
+
+# We need Vivado for logic synthesis.
+source ${CAD_PATH}/vivado/settings64.sh

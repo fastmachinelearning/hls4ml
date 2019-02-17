@@ -16,6 +16,11 @@ hls-sh:
 	catapult -shell -file project.tcl
 .PHONY: hls-sh
 
+kill-all:
+	pkill -f vsim
+	pkill -f catapult
+.PHONY: kill-all
+
 clean:
 	rm -rf *log slec_*
 .PHONY: clean
