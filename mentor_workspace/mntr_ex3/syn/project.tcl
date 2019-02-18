@@ -66,10 +66,10 @@ go analyze
 
 # Set the top module and set FC, RELU, SOFTMAX as submodules.
 # Error: myproject.cpp(41): Detected a C++ design with features unsupported in the current Catapult release. (ASM-34)
-#directive set -DESIGN_HIERARCHY {myproject {nnet::compute_layer<input_t, layer1_t, config1>} {nnet::compute_layer<layer1_t, layer2_t, config2>} {nnet::compute_layer<layer2_t, layer3_t, config3>} {nnet::compute_layer<layer3_t, result_t, config4>} {nnet::relu<layer1_t, layer1_t, relu_config1>} {nnet::relu<layer2_t, layer2_t, relu_config2>} {nnet::relu<layer3_t, layer3_t, relu_config3>} {nnet::softmax<result_t, result_t, softmax_config4>}}
+directive set -DESIGN_HIERARCHY {myproject {nnet::compute_layer<input_t, layer1_t, config1>} {nnet::compute_layer<layer1_t, layer2_t, config2>} {nnet::compute_layer<layer2_t, layer3_t, config3>} {nnet::compute_layer<layer3_t, result_t, config4>} {nnet::relu<layer1_t, layer1_t, relu_config1>} {nnet::relu<layer2_t, layer2_t, relu_config2>} {nnet::relu<layer3_t, layer3_t, relu_config3>} {nnet::softmax<result_t, result_t, softmax_config4>}}
 
 # Set the top module, set FC as submodules, and inline all of the other functions.
-directive set -DESIGN_HIERARCHY {myproject {nnet::compute_layer<input_t, layer1_t, config1>} {nnet::compute_layer<layer1_t, layer2_t, config2>} {nnet::compute_layer<layer2_t, layer3_t, config3>} {nnet::compute_layer<layer3_t, result_t, config4>}}
+#directive set -DESIGN_HIERARCHY {myproject {nnet::compute_layer<input_t, layer1_t, config1>} {nnet::compute_layer<layer1_t, layer2_t, config2>} {nnet::compute_layer<layer2_t, layer3_t, config3>} {nnet::compute_layer<layer3_t, result_t, config4>}}
 
 # Set the top module and inline all of the other functions.
 #directive set -DESIGN_HIERARCHY myproject
@@ -83,27 +83,34 @@ go libraries
 
 directive set -CLOCKS {clk {-CLOCK_PERIOD 200.0 -CLOCK_EDGE rising -CLOCK_HIGH_TIME 100.0 -CLOCK_OFFSET 0.000000 -CLOCK_UNCERTAINTY 0.0 -RESET_KIND sync -RESET_SYNC_NAME rst -RESET_SYNC_ACTIVE high -RESET_ASYNC_NAME arst_n -RESET_ASYNC_ACTIVE low -ENABLE_NAME {} -ENABLE_ACTIVE high}}
 directive set /myproject/nnet::compute_layer<input_t,layer1_t,config1> -MAP_TO_MODULE {[CCORE]}
-directive set /myproject/nnet::compute_layer<layer3_t,result_t,config4> -MAP_TO_MODULE {[CCORE]}
 directive set /myproject/nnet::compute_layer<layer2_t,layer3_t,config3> -MAP_TO_MODULE {[CCORE]}
+directive set /myproject/nnet::relu<layer2_t,layer2_t,relu_config2> -MAP_TO_MODULE {[CCORE]}
+directive set /myproject/nnet::softmax<result_t,result_t,softmax_config4> -MAP_TO_MODULE {[CCORE]}
 directive set /myproject/nnet::compute_layer<layer1_t,layer2_t,config2> -MAP_TO_MODULE {[CCORE]}
+directive set /myproject/nnet::compute_layer<layer3_t,result_t,config4> -MAP_TO_MODULE {[CCORE]}
+directive set /myproject/nnet::relu<layer1_t,layer1_t,relu_config1> -MAP_TO_MODULE {[CCORE]}
+directive set /myproject/nnet::relu<layer3_t,layer3_t,relu_config3> -MAP_TO_MODULE {[CCORE]}
+
+go assembly
 
 # I/O
 directive set /myproject/data:rsc -MAP_TO_MODULE ccs_ioport.ccs_in_vld
 directive set /myproject/res:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
 
 # Arrays
-directive set /myproject/core/layer1_out:rsc -MAP_TO_MODULE {[Register]}
-directive set /myproject/core/logits1:rsc -MAP_TO_MODULE {[Register]}
-directive set /myproject/core/layer2_out:rsc -MAP_TO_MODULE {[Register]}
-directive set /myproject/core/logits2:rsc -MAP_TO_MODULE {[Register]}
-directive set /myproject/core/layer3_out:rsc -MAP_TO_MODULE {[Register]}
-directive set /myproject/core/logits3:rsc -MAP_TO_MODULE {[Register]}
-directive set /myproject/core/logits4:rsc -MAP_TO_MODULE {[Register]}
+directive set /myproject/core/nnet::relu<layer1_t,layer1_t,relu_config1>(logits1):rsc -MAP_TO_MODULE {[Register]}
+directive set /myproject/core/nnet::compute_layer<layer1_t,layer2_t,config2>(layer1_out):rsc -MAP_TO_MODULE {[Register]}
+directive set /myproject/core/nnet::relu<layer2_t,layer2_t,relu_config2>(logits2):rsc -MAP_TO_MODULE {[Register]}
+directive set /myproject/core/nnet::compute_layer<layer2_t,layer3_t,config3>(layer2_out):rsc -MAP_TO_MODULE {[Register]}
+directive set /myproject/core/nnet::relu<layer3_t,layer3_t,relu_config3>(logits3):rsc -MAP_TO_MODULE {[Register]}
+directive set /myproject/core/nnet::compute_layer<layer3_t,result_t,config4>(layer3_out):rsc -MAP_TO_MODULE {[Register]}
+directive set /myproject/nnet::softmax<result_t,result_t,softmax_config4>/MgcAcHtrig::hcordic_table.rom:rsc -MAP_TO_MODULE {[Register]}
+directive set /myproject/nnet::softmax<result_t,result_t,softmax_config4>/MgcAcHtrig::shift_dist_table.rom:rsc -MAP_TO_MODULE {[Register]}
 
 # Loops
 directive set /myproject/core/main -PIPELINE_INIT_INTERVAL 1
 
-go assembly
+go architect
 
 go extract
 
