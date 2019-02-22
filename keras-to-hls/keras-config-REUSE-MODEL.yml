@@ -1,0 +1,10 @@
+KerasJson: ../example-keras-model-files/>>>MODEL<<<.json
+KerasH5:   ../example-keras-model-files/>>>MODEL<<<_weights.h5
+OutputDir: >>>MODEL<<<_RF>>>REUSE<<<
+ProjectName: myproject
+XilinxPart: xcku115-flvb2104-2-i
+ClockPeriod: 5
+
+IOType: io_parallel # options: io_serial/io_parallel
+ReuseFactor: >>>REUSE<<<
+DefaultPrecision: ap_fixed<16,6> 
