@@ -8,17 +8,24 @@ gui:
 	catapult $(CCS) &
 .PHONY: gui
 
-hls-gui:
-	catapult -file project.tcl &
+hls-solution1-gui:
+	catapult -file project_solution1.tcl &
 .PHONY: hls-gui
 
-hls-sh:
-	catapult -shell -file project.tcl
+hls-solution1-sh:
+	catapult -shell -file project_solution1.tcl
+.PHONY: hls-sh
+
+hls-solution2-gui:
+	catapult -file project_solution1.tcl &
+.PHONY: hls-gui
+
+hls-solution2-sh:
+	catapult -shell -file project_solution1.tcl
 .PHONY: hls-sh
 
 kill-all:
-	pkill -f vsim
-	pkill -f catapult
+	pkill -f catapult || pkill -f vsim
 .PHONY: kill-all
 
 clean:

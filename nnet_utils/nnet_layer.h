@@ -33,15 +33,15 @@ namespace nnet {
 struct layer_config
 {
     // Internal data type definitions
-#ifdef MNTR_CATAPULT_HLS
-    typedef ac_float<23, 23, 8> bias_t;
-    typedef ac_float<23, 23, 8> weight_t;
-    typedef ac_float<23, 23, 8> accum_t;
-#else
-    typedef float bias_t;
-    typedef float weight_t;
-    typedef float accum_t;
-#endif
+//#ifdef MNTR_CATAPULT_HLS
+//    typedef ac_float<23, 23, 8> bias_t;
+//    typedef ac_float<23, 23, 8> weight_t;
+//    typedef ac_float<23, 23, 8> accum_t;
+//#else
+//    typedef float bias_t;
+//    typedef float weight_t;
+//    typedef float accum_t;
+//#endif
 
     // Layer Sizes
     static const unsigned n_in = 10;
