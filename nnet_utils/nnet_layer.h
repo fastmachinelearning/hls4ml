@@ -45,6 +45,7 @@ struct layer_config
     static const unsigned io_type = io_parallel;
     static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
+    static const bool store_weights_in_uram = false;
     static const unsigned n_zeros = 0;
     // partitioning arrays cyclically to go with roll factors?
 };
@@ -84,12 +85,15 @@ void compute_layer(
     // Workaround the above restriction.
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
     #pragma HLS function_instantiate variable=weights,biases
-    #pragma HLS RESOURCE        variable=weights core=ROM_nP_LUTRAM
-    // if(CONFIG_T::store_weights_in_bram) { 
-    // #pragma HLS RESOURCE        variable=weights core=ROM_1P_BRAM
-    // }
-
-    // #pragma HLS ARRAY_RESHAPE   variable=weights block factor=multiplier_limit
+    if(CONFIG_T::store_weights_in_bram) { 
+     #pragma HLS RESOURCE        variable=weights core=ROM_1P_BRAM
+    }
+    if(CONFIG_T::store_weights_in_uram) { 
+     #pragma HLS RESOURCE variable=weights core=XPM_MEMORY uram
+    }
+    if(!CONFIG_T::store_weights_in_uram && !CONFIG_T::store_weights_in_bram) { 
+     #pragma HLS RESOURCE        variable=weights core=ROM_nP_LUTRAM
+    }
     #pragma HLS ARRAY_RESHAPE   variable=weights cyclic factor=multiplier_limit
     #pragma HLS ARRAY_PARTITION variable=biases complete
     

@@ -427,6 +427,7 @@ def hls_writer(layer_list, yamlConfig):
         static const unsigned reuse_factor = {reuse};
         static const unsigned n_zeros = {nzeros};
         static const bool store_weights_in_bram = false;
+        static const bool store_weights_in_uram = false;
         typedef accum_default_t accum_t;
         typedef bias_default_t bias_t;
         typedef weight_default_t weight_t;
@@ -439,6 +440,7 @@ def hls_writer(layer_list, yamlConfig):
         static const unsigned reuse_factor = {reuse};
         static const unsigned n_zeros = {nzeros};
         static const bool store_weights_in_bram = false;
+        static const bool store_weights_in_uram = false;
         typedef accum_default_t accum_t;
         typedef bias_default_t bias_t;
         typedef weight_default_t weight_t;
@@ -450,6 +452,7 @@ def hls_writer(layer_list, yamlConfig):
         static const unsigned io_type = nnet::{iotype};
         static const unsigned reuse_factor = {reuse};
         static const bool store_weights_in_bram = false;
+        static const bool store_weights_in_uram = false;
         typedef beta_default_t beta_t;
         typedef scale_default_t scale_t;
         typedef mean_default_t mean_t;
@@ -467,6 +470,7 @@ def hls_writer(layer_list, yamlConfig):
         static const unsigned reuse_factor = {reuse};
         static const unsigned n_zeros = {nzeros};
         static const bool store_weights_in_bram = false;
+        static const bool store_weights_in_uram = false;
         typedef accum_default_t accum_t;
         typedef bias_default_t bias_t;
         typedef weight_default_t weight_t;
@@ -490,6 +494,7 @@ def hls_writer(layer_list, yamlConfig):
         static const unsigned reuse_factor = {reuse};
         static const unsigned n_zeros = {nzeros};
         static const bool store_weights_in_bram = false;
+        static const bool store_weights_in_uram = false;
         typedef accum_default_t accum_t;
         typedef bias_default_t bias_t;
         typedef weight_default_t weight_t;
