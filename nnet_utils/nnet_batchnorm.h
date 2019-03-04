@@ -85,10 +85,10 @@ void normalize(
             #pragma HLS UNROLL
             #pragma HLS PIPELINE
         }
-        if(CONFIG_T::n_filt==-1) res[ires] = (res_T) (data[ires]-mean[ires])*scale[ires]+beta[ires];
+        if(CONFIG_T::n_filt==-1) res[ires] = (data[ires]-mean[ires])*scale[ires]+beta[ires];
 	else{
 	 int norm_index = ires%CONFIG_T::n_filt;
-	 res[ires] = (res_T) (data[ires]-mean[norm_index])*scale[norm_index]+beta[norm_index];
+	 res[ires] = (data[ires]-mean[norm_index])*scale[norm_index]+beta[norm_index];
 	}
     }   
        
