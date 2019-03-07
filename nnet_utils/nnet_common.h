@@ -28,7 +28,7 @@ namespace nnet {
 enum io_type {io_parallel = 0, io_serial};
 
 // Activation enum
-enum activ_type {activ_relu = 0, activ_sigmoid, activ_tanh};
+enum activ_type {activ_relu = 0, activ_sigmoid, activ_tanh, activ_softmax};
 
 // Default data types (??) TODO: Deprecate
 typedef ap_fixed<16,4>  weight_t_def;
