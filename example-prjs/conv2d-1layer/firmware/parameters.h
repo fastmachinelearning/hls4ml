@@ -70,7 +70,7 @@ struct relu_config1 : nnet::activ_config {
     static const unsigned io_type = nnet::io_parallel;
 };
 
-struct config2 : nnet::layer_config {
+struct config2 : nnet::dense_config {
     static const unsigned n_in = OUT_HEIGHT*OUT_WIDTH*N_FILT;
     static const unsigned n_out = N_OUTPUTS;
     static const unsigned io_type = nnet::io_parallel;
