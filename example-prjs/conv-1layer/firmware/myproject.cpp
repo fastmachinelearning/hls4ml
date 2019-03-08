@@ -22,7 +22,7 @@
 #include "myproject.h"
 
 
-#include "nnet_layer.h"
+#include "nnet_dense.h"
 #include "nnet_conv.h"
 #include "nnet_activation.h"
 

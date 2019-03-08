@@ -20,7 +20,7 @@
 #include "parameters.h"
 #include "myproject.h"
 
-#include "nnet_layer.h"
+#include "nnet_dense.h"
 #include "nnet_activation.h"
 
 //hls-fpga-machine-learning insert weights

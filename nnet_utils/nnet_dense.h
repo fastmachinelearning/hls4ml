@@ -17,8 +17,8 @@
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef NNET_LAYER_H_
-#define NNET_LAYER_H_
+#ifndef NNET_DENSE_H_
+#define NNET_DENSE_H_
 
 #include "nnet_common.h"
 #include "hls_stream.h"

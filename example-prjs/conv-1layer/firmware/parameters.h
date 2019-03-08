@@ -4,7 +4,7 @@
 #include <complex>
 #include "ap_int.h"
 #include "ap_fixed.h"
-#include "nnet_layer.h"
+#include "nnet_dense.h"
 #include "nnet_conv.h"
 #include "nnet_activation.h"
 #include "nnet_common.h"
