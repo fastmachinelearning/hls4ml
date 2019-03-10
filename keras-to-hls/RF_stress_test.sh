@@ -7,14 +7,15 @@
 # TODO: Can this script be ported/integrated in Jenkins?
 
 # Model name.
-MODEL="KERAS_3layer"
+#MODEL="KERAS_3layer"
+MODEL="2layer_100x100"
 # We assume the model files being
 # KerasJson: ../example-keras-model-files/MODEL.json
 # KerasH5:   ../example-keras-model-files/MODEL_weights.h5
 
 # Begin, end and step for Reuse Factor.
-RF_BEGIN=1
-RF_END=64
+RF_BEGIN=116
+RF_END=200
 RF_STEP=1
 
 # Run at most $THREADS instances of Vivado.
@@ -25,11 +26,14 @@ RUN_HLS=1
 RUN_LS=0
 RUN_LOG=1
 
+# Remove previous intermediate files.
+RUN_CLEAN=1
+
 # Let's use a working directory.
-DIR=stress-dir
+DIR=RF_stress_dir
 mkdir -p $DIR
 
-RESULT_FILE=stress_results.csv
+RESULT_FILE=RF_stress_results.csv
 
 # Count how many tests.
 let "test_count=0"
@@ -46,10 +50,17 @@ run_hls4ml_vivado ()
     if [ ! $? -eq 0 ]; then echo "Cannot find find directory $DIR"; continue; fi
 
     # Create HLS4ML configuration file (in the working directory).
+    if [ $RUN_CLEAN -eq 1 ]; then
+        rm -f keras-config-$rf-$MODEL.yml
+    fi
     sed "s/>>>REUSE<<</$rf/g" ../keras-config-REUSE-MODEL.yml | sed "s/>>>MODEL<<</$MODEL/g" > keras-config-$rf-$MODEL.yml
     if [ ! $? -eq 0 ]; then echo "Cannot create HLS4ML configuration file $DIR/keras-config-$rf-$MODEL.yml"; cd ..; continue; fi
 
     # Run HLS4ML generators.
+    if [ $RUN_CLEAN -eq 1 ]; then
+        rm -f keras-config-$rf-$MODEL.log
+        rm -rf $MODEL\_RF$rf
+    fi
     python ../keras-to-hls.py -c keras-config-$rf-$MODEL.yml > keras-config-$rf-$MODEL.log
     if [ ! $? -eq 0 ]; then echo "Cannot run HLS4ML generator on with the configuration file $DIR/keras-config-$rf-$MODEL.yml"; cd ..; continue; fi
 
@@ -66,6 +77,9 @@ run_hls4ml_vivado ()
 #    # Run Vivado (it does not check if there was a previous HLS run).
 #    if [ $RUN_LS -eq 1 ]; then
 #        cd $MODEL\_RF$rf
+#        if [ $RUN_CLEAN -eq 1 ]; then
+#           rm -f run_vivado.tcl
+#        fi
 #        echo "open_project myproject_prj" > run_vivado.tcl
 #        echo "export_design -flow syn -format ip_catalog" >> run_vivado.tcl
 #        echo "exit" >> run_vivado.tcl
@@ -97,7 +111,7 @@ for rf_base in $(seq $(expr $RF_BEGIN) $THREADS $RF_END); do
         # Collect results (it does not check if there were HLS and LS runs).
         # TODO: Report script does not extract LS information.
         if [ $RUN_LOG -eq 1 ]; then
-            ./parse-vivadohls-report.sh ./stress-dir/$MODEL\_RF$rf/myproject_prj $MODEL $rf $RESULT_FILE
+            ./parse-vivadohls-report.sh ./$DIR/$MODEL\_RF$rf/myproject_prj $MODEL $rf $RESULT_FILE
         fi
     done
 done
