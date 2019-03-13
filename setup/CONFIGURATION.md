@@ -14,7 +14,7 @@ It looks like this:
 ```
 KerasJson: example-keras-model-files/KERAS_1layer.json
 KerasH5:   example-keras-model-files/KERAS_1layer_weights.h5 
-OutputDir: my-hls-dir-test
+OutputDir: my-hls-test
 ProjectName: myproject
 XilinxPart: xc7vx690tffg1927-2
 ClockPeriod: 5
@@ -40,7 +40,7 @@ For more information on the optimization parameters and what they mean, you can 
 ### Detailed configuration
 
 After you create your project, you have the opportunity to do more configuration if you so choose.  
-In your project, the file `<OutputDir>/firmware/<ProjectName>.h` is your top level file.  It has the network architecture constructed for you.  An example is [here](https://github.com/hls-fpga-machine-learning/HLS4ML/blob/v0.0.2/example-prjs/higgs-1layer/firmware/myproject.cpp) and the important snippet is:
+In your project, the file `<OutputDir>/firmware/<ProjectName>.cpp` is your top level file.  It has the network architecture constructed for you.  An example is [here](https://github.com/hls-fpga-machine-learning/HLS4ML/blob/v0.0.2/example-prjs/higgs-1layer/firmware/myproject.cpp) and the important snippet is:
 ```
 layer1_t layer1_out[N_LAYER_1];
 #pragma HLS ARRAY_PARTITION variable=layer1_out complete

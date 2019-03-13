@@ -10,6 +10,9 @@ These instructions are for simply running the tool out-of-the-box and getting a 
 ```
 git clone https://github.com/hls-fpga-machine-learning/HLS4ML.git -b v0.1.3
 cd HLS4ML/keras-to-hls
+2to3 -w keras-to-hls.py
+cd HLS4ML/hls-writer
+2to3 -w hls_writer.py
 python keras-to-hls.py -c keras-config.yml
 ```
 
@@ -18,7 +21,7 @@ The model files, along with other configuration parameters, are defined in the `
 To run the HLS project, do:
 
 ```
-cd my-hls-dir-test
+cd my-hls-test
 vivado_hls -f build.tcl
 ```
 
