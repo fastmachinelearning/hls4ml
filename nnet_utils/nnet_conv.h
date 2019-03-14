@@ -91,23 +91,50 @@ void conv_1d(
 	     typename CONFIG_T::bias_t    biases[CONFIG_T::n_filt])
 {
 
-    typename CONFIG_T::accum_t mult[CONFIG_T::y_out * CONFIG_T::n_filt * CONFIG_T::n_chan * CONFIG_T::y_filt];
-    typename CONFIG_T::accum_t acc[CONFIG_T::y_out][CONFIG_T::n_filt];
+    //typename CONFIG_T::accum_t mult[CONFIG_T::y_out * CONFIG_T::n_filt * CONFIG_T::n_chan * CONFIG_T::y_filt];
+    //#pragma HLS ARRAY_PARTITION variable=mult complete dim=0
 
-    #pragma HLS ARRAY_PARTITION variable=mult complete dim=0
+    typename CONFIG_T::accum_t acc[CONFIG_T::y_out][CONFIG_T::n_filt];
     #pragma HLS ARRAY_PARTITION variable=acc complete dim=0
-    
+
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases 
     #pragma HLS function_instantiate variable=weights,biases
-    
-    // Parallel mode
-    #pragma HLS PIPELINE
-    #pragma HLS ARRAY_PARTITION variable=biases complete dim=0
-  
+
     // Limit multipliers to control parallelization
     const int multiplier_limit = compute_multiplier_limit<CONFIG_T>(weights);
-    #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+    //#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
     
+    // Parallel mode
+    //#pragma HLS PIPELINE
+    #pragma HLS ARRAY_PARTITION variable=biases complete dim=0
+    //consider ARRAY_RESHAPE for data in and/or out
+
+    #pragma HLS DEPENDENCE variable=acc,weights,biases inter false
+
+    // core functionality
+    int rufactor=CONFIG_T::reuse_factor;
+    // a tmp mult for each reuse loop iteration
+    typename CONFIG_T::accum_t mult[multiplier_limit];
+    #pragma HLS ARRAY_PARTITION variable=mult complete
+    #pragma HLS DEPENDENCE variable=mult inter false
+
+
+    const int ADD_LAT = XXX; //DIV_ROUNDUP(multiplier_limit,CONFIG_T::n_out);
+    ReuseLoop: for (int ir = 0; ir < rufactor; ir++){
+      
+      #pragma HLS PIPELINE II=1 rewind
+      ///////// --------------------------------------
+
+        MultLoop: 
+        for (int im = 0; im < multiplier_limit; im++){
+
+        }
+
+	//Accumulation loop 1 -- R = n_chan*y_filt by n_filt*y_out
+
+	//Accumulation loop 2 -- 
+    }
+
     // Convolve, saving all multiplication results to accumulate later
     ConvOut: for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
         ConvFilt: for(int ff = 0; ff < CONFIG_T::n_filt; ff++){

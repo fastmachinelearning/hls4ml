@@ -45,8 +45,9 @@ void myproject(
     #pragma HLS ARRAY_RESHAPE variable=data complete dim=0 
     #pragma HLS ARRAY_RESHAPE variable=res complete dim=0 
     #pragma HLS INTERFACE ap_vld port=data,res 
-    #pragma HLS PIPELINE 
-
+  
+    //#pragma HLS PIPELINE 
+    #pragma HLS DATAFLOW
 
     const_size_in   = Y_INPUTS_1*N_CHAN_1;
     const_size_out  = N_OUTPUTS;
