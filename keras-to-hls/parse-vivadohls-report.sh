@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ ! $# -eq 4 ]; then echo "Usage: $0 <project-directory> <model> <reuse-factor> <CSV-file>"; exit 1; fi
+if [ ! $# -eq 5 ]; then echo "Usage: $0 <project-directory> <model> <reuse-factor> <CSV-file>"; exit 1; fi
 
 PROJECT_DIR=$1
 APP_FILE=$PROJECT_DIR/vivado_hls.app
@@ -10,7 +10,9 @@ MODEL=$2
 
 REUSE_FACTOR=$3
 
-CSV_FILE=$4
+MAX_TIME=$4
+
+CSV_FILE=$5
 if [ ! -f $CSV_FILE ]; then echo "VivadoVersion,FpgaPart,TopModule,TargetClk,EstimatedClk,BestLatency,WorstLatency,IIntervalMin,IIntevalMax,ResourceBram,ResourceDsp,ResourceFf,ResourceLut,GitRevision,Arch,Model,ReuseFactor,ExecutionTime" > $CSV_FILE; fi
 
 #ARCHS=$(cat $APP_FILE | sed -e 's/ xmlns.*=".*"//g' | xmlstarlet sel -t -m "/project/solutions/solution" -v "@name" -n)
@@ -19,37 +21,37 @@ ARCHS="solution1"
 for ARCH in $ARCHS; do
     echo "==============================================================================="
     XML_FILE="$PROJECT_DIR/$ARCH/syn/report/csynth.xml"
-    VIVADO_VERSION=$(xmllint --xpath "/profile/ReportVersion/Version/text()" $XML_FILE)
-    if [ ! $? -eq 0 ]; then echo "Xmllint Error"; exit 1; fi
-    FPGA_PART=$(xmllint --xpath "/profile/UserAssignments/Part/text()" $XML_FILE)
-    if [ ! $? -eq 0 ]; then echo "Xmllint Error"; exit 1; fi
-    TOP_MODULE=$(xmllint --xpath "/profile/UserAssignments/TopModelName/text()" $XML_FILE)
-    if [ ! $? -eq 0 ]; then echo "Xmllint Error"; exit 1; fi
-    TARGET_CLK=$(xmllint --xpath "/profile/UserAssignments/TargetClockPeriod/text()" $XML_FILE)
-    if [ ! $? -eq 0 ]; then echo "Xmllint Error"; exit 1; fi
-    ESTIMATED_CLK=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfTimingAnalysis/EstimatedClockPeriod/text()" $XML_FILE)
-    if [ ! $? -eq 0 ]; then echo "Xmllint Error"; exit 1; fi
-    BEST_LATENCY=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfOverallLatency/Best-caseLatency/text()" $XML_FILE)
-    if [ ! $? -eq 0 ]; then echo "Xmllint Error"; exit 1; fi
-    WORST_LATENCY=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfOverallLatency/Worst-caseLatency/text()" $XML_FILE)
-    if [ ! $? -eq 0 ]; then echo "Xmllint Error"; exit 1; fi
-    IINTERVAL_MIN=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfOverallLatency/Interval-min/text()" $XML_FILE)
-    if [ ! $? -eq 0 ]; then echo "Xmllint Error"; exit 1; fi
-    IINTERVAL_MAX=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfOverallLatency/Interval-max/text()" $XML_FILE)
-    if [ ! $? -eq 0 ]; then echo "Xmllint Error"; exit 1; fi
-    RESOURCE_BRAM=$(xmllint --xpath "/profile/AreaEstimates/Resources/BRAM_18K/text()" $XML_FILE)
-    if [ ! $? -eq 0 ]; then echo "Xmllint Error"; exit 1; fi
-    RESOURCE_DSP=$(xmllint --xpath "/profile/AreaEstimates/Resources/DSP48E/text()" $XML_FILE)
-    if [ ! $? -eq 0 ]; then echo "Xmllint Error"; exit 1; fi
-    RESOURCE_FF=$(xmllint --xpath "/profile/AreaEstimates/Resources/FF/text()" $XML_FILE)
-    if [ ! $? -eq 0 ]; then echo "Xmllint Error"; exit 1; fi
-    RESOURCE_LUT=$(xmllint --xpath "/profile/AreaEstimates/Resources/LUT/text()" $XML_FILE)
-    if [ ! $? -eq 0 ]; then echo "Xmllint Error"; exit 1; fi
+    VIVADO_VERSION=$(xmllint --xpath "/profile/ReportVersion/Version/text()" $XML_FILE 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_VERSION=?; fi
+    FPGA_PART=$(xmllint --xpath "/profile/UserAssignments/Part/text()" $XML_FILE 2> /dev/null)
+    if [ ! $? -eq 0 ]; then FPGA_PART=?; fi
+    TOP_MODULE=$(xmllint --xpath "/profile/UserAssignments/TopModelName/text()" $XML_FILE 2> /dev/null)
+    if [ ! $? -eq 0 ]; then TOP_MODULE=?; fi
+    TARGET_CLK=$(xmllint --xpath "/profile/UserAssignments/TargetClockPeriod/text()" $XML_FILE 2> /dev/null)
+    if [ ! $? -eq 0 ]; then TARGET_CLK=?; fi
+    ESTIMATED_CLK=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfTimingAnalysis/EstimatedClockPeriod/text()" $XML_FILE 2> /dev/null)
+    if [ ! $? -eq 0 ]; then ESTIMATED_CLK=?; fi
+    BEST_LATENCY=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfOverallLatency/Best-caseLatency/text()" $XML_FILE 2> /dev/null)
+    if [ ! $? -eq 0 ]; then BEST_LATENCY=?; fi
+    WORST_LATENCY=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfOverallLatency/Worst-caseLatency/text()" $XML_FILE 2> /dev/null)
+    if [ ! $? -eq 0 ]; then WORST_LATENCY=?; fi
+    IINTERVAL_MIN=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfOverallLatency/Interval-min/text()" $XML_FILE 2> /dev/null)
+    if [ ! $? -eq 0 ]; then IINTERVAL_MIN=?; fi
+    IINTERVAL_MAX=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfOverallLatency/Interval-max/text()" $XML_FILE 2> /dev/null)
+    if [ ! $? -eq 0 ]; then IINTERVAL_MAX=?; fi
+    RESOURCE_BRAM=$(xmllint --xpath "/profile/AreaEstimates/Resources/BRAM_18K/text()" $XML_FILE 2> /dev/null)
+    if [ ! $? -eq 0 ]; then RESOURCE_BRAM=?; fi
+    RESOURCE_DSP=$(xmllint --xpath "/profile/AreaEstimates/Resources/DSP48E/text()" $XML_FILE 2> /dev/null)
+    if [ ! $? -eq 0 ]; then RESOURCE_DSP=?; fi
+    RESOURCE_FF=$(xmllint --xpath "/profile/AreaEstimates/Resources/FF/text()" $XML_FILE 2> /dev/null)
+    if [ ! $? -eq 0 ]; then RESOURCE_FF=?; fi
+    RESOURCE_LUT=$(xmllint --xpath "/profile/AreaEstimates/Resources/LUT/text()" $XML_FILE 2> /dev/null)
+    if [ ! $? -eq 0 ]; then RESOURCE_LUT=?; fi
     GIT_REVISION=$(git rev-parse --short HEAD)
     if [ ! $? -eq 0 ]; then echo "Git Error"; exit 1; fi
 
     EXECUTION_TIME=$(grep "Total elapsed time:" $PROJECT_DIR/../vivado_hls.log | awk '{print $7}')
-    if [ ! $? -eq 0 ]; then echo "Couldn't extract execution time"; exit 1; fi
+    if [ -z "$EXECUTION_TIME" ]; then EXECUTION_TIME=?; fi
 
     echo "Vivado version: $VIVADO_VERSION"
     echo "FPGA part: $FPGA_PART"

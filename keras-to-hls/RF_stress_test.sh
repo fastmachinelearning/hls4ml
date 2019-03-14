@@ -14,12 +14,16 @@ MODEL="2layer_100x100"
 # KerasH5:   ../example-keras-model-files/MODEL_weights.h5
 
 # Begin, end and step for Reuse Factor.
-RF_BEGIN=116
+RF_BEGIN=20
 RF_END=200
 RF_STEP=1
 
 # Run at most $THREADS instances of Vivado.
 THREADS=4
+
+# Max execution time
+# 3h = 10800s
+MAX_TIME=10800
 
 # Enable/disable Vivado HLS, Vivado (logic synthesis), and result collection.
 RUN_HLS=1
@@ -33,7 +37,7 @@ RUN_CLEAN=1
 DIR=RF_stress_dir
 mkdir -p $DIR
 
-RESULT_FILE=RF_stress_results.csv
+RESULT_FILE=RF_stress_results_$MODEL.csv
 
 # Count how many tests.
 let "test_count=0"
@@ -69,7 +73,7 @@ run_hls4ml_vivado ()
         cd $MODEL\_RF$rf
         if [ ! $? -eq 0 ]; then echo "Cannot find find directory $MODEL\_RF$rf"; cd ../..; continue; fi
         # Kill Vivado HLS if does not return after 3 hours.
-        timeout -k 30s 3h vivado_hls -f build_prj.tcl > /dev/null
+        timeout -k 30s $MAX_TIME vivado_hls -f build_prj.tcl > /dev/null
         if [ ! $? -eq 0 ]; then echo "Vivado HLS failed in $DIR/$MODEL\_RF$rf"; cd ../..; continue; fi
         cd ..
     fi
@@ -84,7 +88,7 @@ run_hls4ml_vivado ()
 #        echo "export_design -flow syn -format ip_catalog" >> run_vivado.tcl
 #        echo "exit" >> run_vivado.tcl
 #        # Kill Vivado HLS if does not return after 3 hours.
-#        timeout -k 30s 3h vivado_hls -l vivado.log -f run_vivado.tcl > /dev/null
+#        timeout -k 30s $MAX_TIME vivado_hls -l vivado.log -f run_vivado.tcl > /dev/null
 #        if [ ! $? -eq 0 ]; then echo "Vivado failed in $DIR/$MODEL\_RF$rf"; cd ../..; continue; fi
 #        cd ..
 #    fi
@@ -111,7 +115,7 @@ for rf_base in $(seq $(expr $RF_BEGIN) $THREADS $RF_END); do
         # Collect results (it does not check if there were HLS and LS runs).
         # TODO: Report script does not extract LS information.
         if [ $RUN_LOG -eq 1 ]; then
-            ./parse-vivadohls-report.sh ./$DIR/$MODEL\_RF$rf/myproject_prj $MODEL $rf $RESULT_FILE
+            ./parse-vivadohls-report.sh ./$DIR/$MODEL\_RF$rf/myproject_prj $MODEL $rf $MAX_TIME $RESULT_FILE
         fi
     done
 done
