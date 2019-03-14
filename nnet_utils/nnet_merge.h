@@ -42,15 +42,6 @@ struct concat_config {
     static const unsigned axis = -1;
 };
 
-// This approach has issues when synthetising
-/*struct concat_config {
-    static const unsigned rank = 3;
-    static constexpr unsigned n_elem1[rank] = {0};
-    static constexpr unsigned n_elem2[rank] = {0};
-
-    static const unsigned axis = -1;
-};*/
-
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void add(
     input1_T data1[CONFIG_T::n_elem],
