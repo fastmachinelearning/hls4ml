@@ -299,7 +299,7 @@ class Input(Layer):
         shape = self.attributes['input_shape']
         if shape[0] is None:
             shape = shape[1:]
-        dims = ['N_INPUT{}_{}'.format(self.index, i) for i in range(1, len(shape) + 1)]
+        dims = ['N_INPUT_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
         self.add_output_variable(shape, dims, var_name=self.name, type_name='input_t')
 
     def function_cpp(self):
@@ -506,6 +506,61 @@ class BatchNormalization(Layer):
 
         return self._config_template.format(**params)
 
+class Merge(Layer):
+    def initialize(self):
+        assert(len(self.inputs) == 2)
+        inp1 = self.get_input_variable(self.inputs[0])
+        inp2 = self.get_input_variable(self.inputs[1])
+        shape = inp1.shape
+        assert(inp1.shape == inp2.shape)
+        dims = inp1.dim_names
+        self.add_output_variable(shape, dims)
+
+    def function_cpp(self):
+        params = {}
+        params['merge'] = self.get_attr('op').lower()
+        params['config'] = 'config{}'.format(self.index)
+        params['input1_t'] = self.get_input_variable(self.inputs[0]).type
+        params['input2_t'] = self.get_input_variable(self.inputs[1]).type
+        params['output_t'] = self.get_output_variable().type
+        params['input1'] = self.get_input_variable(self.inputs[0]).name
+        params['input2'] = self.get_input_variable(self.inputs[1]).name
+        params['output'] = self.get_output_variable().name
+
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+        params['n_elem'] = self.get_input_variable(self.inputs[0]).size_cpp()
+
+        return self._config_template.format(**params)
+
+class Concatenate(Merge):
+    def initialize(self):
+        assert(len(self.inputs) == 2)
+        inp1 = self.get_input_variable(self.inputs[0])
+        inp2 = self.get_input_variable(self.inputs[1])
+        shape = [sum(x) for x in zip(inp1.shape, inp2.shape)]
+        rank = len(shape)
+        if rank > 1:
+            dims = ['OUT_CONCAT_{}_{}'.format(i, self.index) for i in range(rank)]
+        else:
+            dims = ['OUT_CONCAT_{}'.format(self.index)]
+        self.add_output_variable(shape, dims)
+
+    def config_cpp(self):
+        params = self._default_config_params()
+        for i in range(3):
+            params.setdefault('n_elem1_{}'.format(i), 0)
+            params.setdefault('n_elem2_{}'.format(i), 0)
+        inp1 = self.get_input_variable(self.inputs[0])
+        inp2 = self.get_input_variable(self.inputs[1])
+        for i, (s1, s2) in enumerate(zip(inp1.shape, inp2.shape)):
+            params['n_elem1_{}'.format(i)] = s1
+            params['n_elem2_{}'.format(i)] = s2
+
+        return self._config_template.format(**params)
+
 layer_map = {
     'InputLayer'         : Input,
     'Activation'         : Activation,
@@ -523,4 +578,6 @@ layer_map = {
     'AveragePooling1D'   : Pooling1D,
     'MaxPooling2D'       : Pooling2D,
     'AveragePooling2D'   : Pooling2D,
+    'Merge'              : Merge,
+    'Concatenate'        : Concatenate,
 }

@@ -11,6 +11,7 @@
 #include "nnet_common.h"
 #include "nnet_batchnorm.h"
 #include "nnet_pooling.h"
+#include "nnet_merge.h"
 
 //hls-fpga-machine-learning insert numbers
 

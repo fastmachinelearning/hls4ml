@@ -96,6 +96,21 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
     static const unsigned reuse = {reuse};
 }};\n"""
 
+merge_config_template = """struct config{index} : nnet::merge_config {{
+    static const unsigned n_elem = {n_elem};
+}};\n"""
+
+concat_config_template = """struct config{index} : nnet::concat_config {{
+    static const unsigned n_elem1_0 = {n_elem1_0};
+    static const unsigned n_elem1_1 = {n_elem1_1};
+    static const unsigned n_elem1_2 = {n_elem1_2};
+    static const unsigned n_elem2_0 = {n_elem2_0};
+    static const unsigned n_elem2_1 = {n_elem2_1};
+    static const unsigned n_elem2_2 = {n_elem2_2};
+
+    static const unsigned axis = {axis};
+}};\n"""
+
 config_templates = {
     'Dense'                  : dense_config_template,
     'BatchNormalization'     : batchnorm_config_template,
@@ -106,6 +121,8 @@ config_templates = {
     'PReLU'                  : activ_config_template,
     'Pooling1D'              : pooling1d_config_template,
     'Pooling2D'              : pooling2d_config_template,
+    'Merge'                  : merge_config_template,
+    'Concatenate'            : concat_config_template,
 }
 
 dense_function_template = 'nnet::dense<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
@@ -116,6 +133,7 @@ activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({
 param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {param}, {output});'
 pooling1d_function_template = 'nnet::pooling1d<{input_t}, {config}>({input}, {output});'
 pooling2d_function_template = 'nnet::pooling2d<{input_t}, {config}>({input}, {output});'
+merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
 
 function_templates = {
     'Dense'                  : dense_function_template,
@@ -127,6 +145,8 @@ function_templates = {
     'PReLU'                  : param_activ_function_template,
     'Pooling1D'              : pooling1d_function_template,
     'Pooling2D'              : pooling2d_function_template,
+    'Merge'                  : merge_function_template,
+    'Concatenate'            : merge_function_template,
 }
 
 def get_config_template(kind):

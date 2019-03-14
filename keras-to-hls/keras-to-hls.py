@@ -86,8 +86,13 @@ def main():
     #print(model_arch)
 
     #Define supported laers
-    supported_layers = ['InputLayer','Dropout', 'Flatten', 'Dense', 'BinaryDense', 'TernaryDense', 'Conv1D', 'Conv2D', 'BatchNormalization', 'MaxPooling1D', 'MaxPooling2D', 'AveragePooling1D', 'AveragePooling2D']
+    core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Dense', 'BinaryDense', 'TernaryDense']
+    conv_layers = ['Conv1D', 'Conv2D']
+    pooling_layers = ['MaxPooling1D', 'MaxPooling2D', 'AveragePooling1D', 'AveragePooling2D']
+    norm_layers = ['BatchNormalization']
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']
+    merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate']
+    supported_layers = core_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers
 
     #Define layers to skip for conversion to HLS
     skip_layers = ['Dropout', 'Flatten']
@@ -120,7 +125,7 @@ def main():
     # Get input shape and check for unsupported layer type
     current_shape = None
     for keras_layer in layer_config:
-        if keras_layer["class_name"] not in supported_layers + activation_layers:
+        if keras_layer["class_name"] not in supported_layers:
             raise Exception('ERROR: Unsupported layer type: {}'.format(keras_layer["class_name"]))
         if 'batch_input_shape' in keras_layer['config']:
             current_shape = keras_layer['config']['batch_input_shape'] # [None, 100, 7]
@@ -138,7 +143,7 @@ def main():
                 inputs_map[name] = inputs_map.get(parent_input, parent_input)
             continue
 
-        if keras_layer["class_name"] in supported_layers + activation_layers:
+        if keras_layer["class_name"] in supported_layers:
             layer_counter = layer_counter + 1
 
         #Dictionary to fill in and append to layer_list
@@ -311,6 +316,19 @@ def main():
             layer['activ_param'] = keras_layer["config"].get('alpha', 1.)
         elif layer['class_name']=='PReLU':
             layer['activation'] = layer['class_name']
+
+        elif layer['class_name'] in merge_layers:
+            layer['op'] = layer['class_name'].lower()
+            if layer['class_name'] == 'Concatenate':
+                rank = len(current_shape[1:])
+                if rank > 3:
+                    raise Exception('ERROR: Concatenation of tensors with rank > 3 is not yet supported.')
+                layer['op'] = layer['class_name'].lower() + '{}d'.format(rank)
+                layer['axis'] = keras_layer['config']['axis']
+            else:
+                layer['class_name'] = 'Merge'
+            if len(layer['inputs']) > 2:
+                raise Exception('ERROR: Merging more than two tensors is not yet supported.')
 
         print('Layer name: {}, layer type: {}, current shape: {}'.format(layer['name'], layer['class_name'], current_shape))
         layer_list.append( layer )
