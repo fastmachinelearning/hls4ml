@@ -183,3 +183,6 @@ VivadoVersion,FpgaPart,TopModule,TargetClk,EstimatedClk,BestLatency,WorstLatency
 ?,?,?,?,?,?,?,?,?,?,?,?,?,0619978,solution1,2layer_100x100,201,?
 ?,?,?,?,?,?,?,?,?,?,?,?,?,0619978,solution1,2layer_100x100,202,?
 ?,?,?,?,?,?,?,?,?,?,?,?,?,0619978,solution1,2layer_100x100,203,?
+2018.3,xcku115-flvb2104-2-i,myproject,5.00,4.375,20509,20511,10200,10200,308,136,76587,429374,2c7609d,solution1,2layer_100x100,300,4907.22
+2018.3,xcku115-flvb2104-2-i,myproject,5.00,4.375,1081,1083,500,500,296,80,77414,279483,2c7609d,solution1,2layer_100x100,500,973.49
+2018.3,xcku115-flvb2104-2-i,myproject,5.00,4.375,2059,2061,1000,1000,296,40,62794,168039,2c7609d,solution1,2layer_100x100,1000,463.49

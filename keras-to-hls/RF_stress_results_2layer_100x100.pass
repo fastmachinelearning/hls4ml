@@ -1,3 +1,5 @@
+# RF for which Vivado HLS succesfully terminates under 3h
+
 20
 25
 50
@@ -21,3 +23,6 @@
 198
 199
 200
+300
+500
+1000
