@@ -9,18 +9,18 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     typedef accum_default_t accum_t;
     typedef bias_default_t bias_t;
     typedef weight_default_t weight_t;
-    }};\n"""
+}};\n"""
 
 batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
-   static const unsigned n_in = {n_in};
-   static const unsigned n_filt = {n_filt};
-   static const unsigned io_type = nnet::{iotype};
-   static const unsigned reuse_factor = {reuse};
-   static const bool store_weights_in_bram = false;
-   typedef beta_default_t beta_t;
-   typedef scale_default_t scale_t;
-   typedef mean_default_t mean_t;
-   }};\n"""
+    static const unsigned n_in = {n_in};
+    static const unsigned n_filt = {n_filt};
+    static const unsigned io_type = nnet::{iotype};
+    static const unsigned reuse_factor = {reuse};
+    static const bool store_weights_in_bram = false;
+    typedef beta_default_t beta_t;
+    typedef scale_default_t scale_t;
+    typedef mean_default_t mean_t;
+}};\n"""
 
 conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     static const unsigned pad_left = {pad_left};
@@ -37,7 +37,7 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     typedef accum_default_t accum_t;
     typedef bias_default_t bias_t;
     typedef weight_default_t weight_t;
-    }};\n"""
+}};\n"""
 
 conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned pad_top = {pad_top};
@@ -60,13 +60,13 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     typedef accum_default_t accum_t;
     typedef bias_default_t bias_t;
     typedef weight_default_t weight_t;
-    }};\n"""
+}};\n"""
 
 activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned n_in = {n_in};
     static const unsigned table_size = 1024;
     static const unsigned io_type = nnet::{iotype};
-    }};\n"""
+}};\n"""
 
 pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
     static const unsigned n_in = {n_in};
