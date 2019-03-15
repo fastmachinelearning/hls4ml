@@ -101,7 +101,8 @@ void conv_1d(
     #pragma HLS function_instantiate variable=weights,biases
 
     // Limit multipliers to control parallelization
-    const int multiplier_limit = compute_multiplier_limit<CONFIG_T>(weights);
+    //const int multiplier_limit = compute_multiplier_limit<CONFIG_T>(weights);
+    const int multiplier_limit = CONFIG_T::n_filt*CONFIG_T::y_out;
     //#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
     
     // Parallel mode
@@ -113,14 +114,15 @@ void conv_1d(
 
     // core functionality
     //int rufactor=CONFIG_T::reuse_factor;
-    int rufactor=CONFIG_T::y_out*CONFIG_T::n_filt;
+    //int rufactor=CONFIG_T::y_out*CONFIG_T::n_filt;
+    int rufactor=CONFIG_T::n_chan*CONFIG_T::y_filt;
     // a tmp mult for each reuse loop iteration
     typename CONFIG_T::accum_t mult[multiplier_limit];
     #pragma HLS ARRAY_PARTITION variable=mult complete
     #pragma HLS DEPENDENCE variable=mult inter false
 
 
-    const int ADD_LAT = DIV_ROUNDUP(multiplier_limit,CONFIG_T::y_out*CONFIG_T::n_filt);//should equal nchan*yfilt
+    const int ADD_LAT = DIV_ROUNDUP(multiplier_limit,CONFIG_T::n_filt*CONFIG_T::y_out);//should equal 1 for this case
     ReuseLoop: for (int ir = 0; ir < rufactor; ir++){
       
       #pragma HLS PIPELINE II=1 rewind
