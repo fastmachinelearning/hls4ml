@@ -112,14 +112,15 @@ void conv_1d(
     #pragma HLS DEPENDENCE variable=acc,weights,biases inter false
 
     // core functionality
-    int rufactor=CONFIG_T::reuse_factor;
+    //int rufactor=CONFIG_T::reuse_factor;
+    int rufactor=CONFIG_T::y_out*CONFIG_T::n_filt;
     // a tmp mult for each reuse loop iteration
     typename CONFIG_T::accum_t mult[multiplier_limit];
     #pragma HLS ARRAY_PARTITION variable=mult complete
     #pragma HLS DEPENDENCE variable=mult inter false
 
 
-    const int ADD_LAT = XXX; //DIV_ROUNDUP(multiplier_limit,CONFIG_T::n_out);
+    const int ADD_LAT = DIV_ROUNDUP(multiplier_limit,CONFIG_T::y_out*CONFIG_T::n_filt);//should equal nchan*yfilt
     ReuseLoop: for (int ir = 0; ir < rufactor; ir++){
       
       #pragma HLS PIPELINE II=1 rewind
@@ -130,11 +131,41 @@ void conv_1d(
 
         }
 
-	//Accumulation loop 1 -- R = n_chan*y_filt by n_filt*y_out
+        // special loop for accumulation
+        typename CONFIG_T::accum_t acc_lat[CONFIG_T::n_filt*CONFIG_T::y_out][ADD_LAT];
+        #pragma HLS ARRAY_PARTITION variable=acc_lat complete dim=0
+        #pragma HLS DEPENDENCE variable=acc_lat inter false
 
-	//Accumulation loop 2 -- 
-    }
+        AddLatencyInit: 
+        for (int ii = 0; ii < CONFIG_T::n_out; ii++){
+	  for (int ij= 0; ij < ADD_LAT; ij++){
+            #pragma UNROLL
+	    acc_lat[ii][ij] = 0;
+	  }
+        }
+        
+        AccumLoop:
+	for (int io = 0; io < CONFIG_T::n_out; io++){
+          #pragma HLS UNROLL
+	  for (int ia = 0; ia < ADD_LAT; ia++){
+            #pragma HLS UNROLL
+	    
+             acc_lat[out_index_acc][ia] += mult[mult_index_acc];
 
+	  }
+	}
+
+        FullAccum: 
+	  for (int ii = 0; ii < CONFIG_T::n_out; ii++){
+	    for (int ij= 0; ij < ADD_LAT; ij++){
+              #pragma HLS UNROLL
+	      acc[ii] += acc_lat[ii][ij];
+	    }
+          }
+   
+    }//reuse
+
+    /*
     // Convolve, saving all multiplication results to accumulate later
     ConvOut: for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
         ConvFilt: for(int ff = 0; ff < CONFIG_T::n_filt; ff++){
@@ -176,15 +207,16 @@ void conv_1d(
 	    	}//end channel loop
 		}//end filter loop
     }//end output loop
-
+    */
     
      // Cast to "res_t" type 
     for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
-		for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
-	    	res[ii][ff] = (res_T)(acc[ii][ff]);
-		}
+      for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
+	res[ii][ff] = (res_T)(acc[ii][ff]);
+      }
     }
-}
+
+}//conv1d
 
 
 template<class data_T, int NROWS, int NCOLS>
