@@ -23,6 +23,9 @@
 #include "nnet_common.h"
 #include <cstdlib>
 
+#define DIV_ROUNDUP(n,d) ((n + d - 1) / d)
+
+
 namespace nnet {
 
 struct conv_config
@@ -127,10 +130,25 @@ void conv_1d(
       
       #pragma HLS PIPELINE II=1 rewind
       ///////// --------------------------------------
+      int i_chan = ir%CONFIG_T::n_chan;
+      int i_yfilt = (ir-i_chan)/CONFIG_T::y_filt;
 
         MultLoop: 
         for (int im = 0; im < multiplier_limit; im++){
 
+	  //map ir and im 
+	  int i_filt = im%CONFIG_T::y_out;
+	  int i_yout = (im-i_filt)/CONFIG_T::n_filt;
+
+	  if((i_filt*CONFIG_T::stride+i_yfilt) < CONFIG_T::pad_left || (i_filt*CONFIG_T::stride+i_yfilt) >= (CONFIG_T::pad_left + CONFIG_T::y_in)){
+	    mult[im] = 0;
+	  }
+	  else{
+	    int index_weight = i_yfilt*CONFIG_T::n_chan*CONFIG_T::n_filt + i_chan*CONFIG_T::n_filt + i_filt;
+	    int index_data = i_yout*CONFIG_T::stride+i_yfilt-CONFIG_T::pad_left;
+
+	    mult[im] = data[index_data][i_chan] * weights[index_weight];
+	  }
         }
 
         // special loop for accumulation
@@ -139,29 +157,40 @@ void conv_1d(
         #pragma HLS DEPENDENCE variable=acc_lat inter false
 
         AddLatencyInit: 
-        for (int ii = 0; ii < CONFIG_T::n_out; ii++){
+        for (int ii = 0; ii < CONFIG_T::y_out*CONFIG_T::n_filt; ii++){
 	  for (int ij= 0; ij < ADD_LAT; ij++){
-            #pragma UNROLL
+            #pragma HLS UNROLL
 	    acc_lat[ii][ij] = 0;
 	  }
         }
         
         AccumLoop:
-	for (int io = 0; io < CONFIG_T::n_out; io++){
+	for (int io = 0; io < CONFIG_T::y_out*CONFIG_T::n_filt; io++){
           #pragma HLS UNROLL
 	  for (int ia = 0; ia < ADD_LAT; ia++){
             #pragma HLS UNROLL
-	    
-             acc_lat[out_index_acc][ia] += mult[mult_index_acc];
+
+	    int mult_index_acc = (io*ADD_LAT + ia); 	    
+	    int w_index_acc    = ir * multiplier_limit + mult_index_acc;
+	    int out_index_acc  = w_index_acc % (CONFIG_T::y_out*CONFIG_T::n_filt);
+	    if (mult_index_acc >= multiplier_limit) continue;
+
+	    //acc_lat[io][ia] += mult[mult_index_acc];
+	    acc_lat[out_index_acc][ia] += mult[mult_index_acc];
 
 	  }
 	}
 
         FullAccum: 
-	  for (int ii = 0; ii < CONFIG_T::n_out; ii++){
+	  for (int ii = 0; ii < CONFIG_T::y_out*CONFIG_T::n_filt; ii++){
 	    for (int ij= 0; ij < ADD_LAT; ij++){
               #pragma HLS UNROLL
-	      acc[ii] += acc_lat[ii][ij];
+
+	    //could be flipped
+	      int i_yout = ii % CONFIG_T::n_filt;
+	      int i_filt = (ii-i_yout) % CONFIG_T::y_out; 
+
+	      acc[i_yout][i_filt] += acc_lat[ii][ij];
 	    }
           }
    
