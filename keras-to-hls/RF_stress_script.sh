@@ -9,21 +9,35 @@
 # Model name.
 #MODEL="KERAS_3layer"
 MODEL="2layer_100x100"
-# We assume the model files being
+
+# We assume the model files being:
 # KerasJson: ../example-keras-model-files/MODEL.json
 # KerasH5:   ../example-keras-model-files/MODEL_weights.h5
+
+# Network characteristics.
+N_IN=100
+N_OUT=100
+
+# If brute force sweeping is enabled, all of the reuse factors between RF_BEGIN
+# and RF_END (with a RF_STEP) will be tested. ATTENTION: Some values of reuse
+# factor may cause very long synthesis time.
+BRUTE_FORCE=0
 
 # Begin, end and step for Reuse Factor.
 RF_BEGIN=20
 RF_END=200
 RF_STEP=1
 
-# Run at most $THREADS instances of Vivado.
-THREADS=4
-
-# Max execution time
+# Max execution time.
 # 3h = 10800s
-MAX_TIME=10800
+# 5h = 18000s
+# 6h = 21600s
+#MAX_TIME=10800
+#MAX_TIME=18000
+MAX_TIME=21600
+
+# Run at most THREADS instances of Vivado.
+THREADS=4
 
 # Enable/disable Vivado HLS, Vivado (logic synthesis), and result collection.
 RUN_HLS=1
@@ -34,31 +48,87 @@ RUN_LOG=1
 RUN_CLEAN=1
 
 # Let's use a working directory.
-DIR=RF_stress_dir
+DIR=RF_stress_dir_$MODEL
 mkdir -p $DIR
 
+# Output CSV file.
 RESULT_FILE=RF_stress_results_$MODEL.csv
 
-# Count how many tests.
-let "test_count=0"
+# ------------------------------------------------------------------------------
+#
+# GNU Parallel configuration.
+#
+# This iteration of the "RF stress script" uses GNU Parallel.
+#
+# See 'man parallel' for details
+#
+# This is the first time I found a licensing disclaimer like this:
+#
+# Academic tradition requires you to cite works you base your article on.
+# When using programs that use GNU Parallel to process data for publication
+# please cite:
+#
+#  O. Tange (2011): GNU Parallel - The Command-Line Power Tool,
+#    ;login: The USENIX Magazine, February 2011:42-47.
+#
+#    This helps funding further development; AND IT WON'T COST YOU A CENT.
+#    If you pay 10000 EUR you should feel free to use GNU Parallel without citing.
+#
 
+# Do not swap
+#SWAP=--noswap
+# ------------------------------------------------------------------------------
+
+#
+# Print some general information on the console.
+#
+print_info ()
+{
+if [ $BRUTE_FORCE == 1 ]; then
+    echo "INFO: Brute force RF: RF_BEGIN=$RF_BEGIN, RF_END=$RF_END, RF_STEP=$RF_STEP, RF_COUNT=$(((RF_END - RF_BEGIN) / RF_STEP))"
+else
+    echo "INFO: Modulo-candidate RF: N_IN=$N_IN, N_OUT=$N_OUT"
+fi
+}
+
+#
+# Print the console output the candidate reuse factors.
+#
+# If BRUTE_FORCE is enabled, it prints all of the values between RF_BEGIN and
+# RF_END with a RF_STEP. The total number of values are ((RF_END - RF_BEGIN) /
+# RF_STEP).
+#
+# If BRUTE_FORCE is not enabled, it prints all of the 'rf' values that satisfy
+# the equation (((N_IN * N_OUT) % rf) == 0).
+#
+get_candidate_reuse_factors ()
+{
+if [ $BRUTE_FORCE == 1 ]; then
+    seq $RF_BEGIN $RF_STEP $RF_END
+else
+    for i in $(seq 1 $((N_IN * N_OUT))); do if [ $(((N_IN * N_OUT) % $i)) == 0 ]; then echo $i; fi; done
+fi
+}
+
+#
+# Run Vivado HLS and Vivado (logic synthesis).
+#
 run_hls4ml_vivado ()
 {
-    test_count=$1
-    rf=$2
+    rf=$1
 
-    echo "Test # $test_count: ReuseFactor=$rf, Model:$MODEL"
+    echo "INFO: Stress ReuseFactor=$rf, Model:$MODEL"
 
     # Move to the working directory.
     cd $DIR
-    if [ ! $? -eq 0 ]; then echo "Cannot find find directory $DIR"; continue; fi
+    if [ ! $? -eq 0 ]; then echo "ERROR: Cannot find find directory $DIR"; return; fi
 
     # Create HLS4ML configuration file (in the working directory).
     if [ $RUN_CLEAN -eq 1 ]; then
         rm -f keras-config-$rf-$MODEL.yml
     fi
     sed "s/>>>REUSE<<</$rf/g" ../keras-config-REUSE-MODEL.yml | sed "s/>>>MODEL<<</$MODEL/g" > keras-config-$rf-$MODEL.yml
-    if [ ! $? -eq 0 ]; then echo "Cannot create HLS4ML configuration file $DIR/keras-config-$rf-$MODEL.yml"; cd ..; continue; fi
+    if [ ! $? -eq 0 ]; then echo "ERROR: Cannot create HLS4ML configuration file $DIR/keras-config-$rf-$MODEL.yml"; cd ..; return; fi
 
     # Run HLS4ML generators.
     if [ $RUN_CLEAN -eq 1 ]; then
@@ -66,56 +136,63 @@ run_hls4ml_vivado ()
         rm -rf $MODEL\_RF$rf
     fi
     python ../keras-to-hls.py -c keras-config-$rf-$MODEL.yml > keras-config-$rf-$MODEL.log
-    if [ ! $? -eq 0 ]; then echo "Cannot run HLS4ML generator on with the configuration file $DIR/keras-config-$rf-$MODEL.yml"; cd ..; continue; fi
+    if [ ! $? -eq 0 ]; then echo "ERROR: Cannot run HLS4ML generator on with the configuration file $DIR/keras-config-$rf-$MODEL.yml"; cd ..; return; fi
 
-    # Run Vivado HLS.
+   # Run Vivado HLS.
     if [ $RUN_HLS -eq 1 ]; then
         cd $MODEL\_RF$rf
-        if [ ! $? -eq 0 ]; then echo "Cannot find find directory $MODEL\_RF$rf"; cd ../..; continue; fi
+        if [ ! $? -eq 0 ]; then echo "ERROR: Cannot find find directory $MODEL\_RF$rf"; cd ../..; return; fi
         # Kill Vivado HLS if does not return after 3 hours.
         timeout -k 30s $MAX_TIME vivado_hls -f build_prj.tcl > /dev/null
-        if [ ! $? -eq 0 ]; then echo "Vivado HLS failed in $DIR/$MODEL\_RF$rf"; cd ../..; continue; fi
+        if [ ! $? -eq 0 ]; then echo "ERROR: Vivado HLS failed. See $DIR/$MODEL\_RF$rf/vivado_hls.log"; cd ../..; return; fi
         cd ..
     fi
 
-#    # Run Vivado (it does not check if there was a previous HLS run).
-#    if [ $RUN_LS -eq 1 ]; then
-#        cd $MODEL\_RF$rf
-#        if [ $RUN_CLEAN -eq 1 ]; then
-#           rm -f run_vivado.tcl
-#        fi
-#        echo "open_project myproject_prj" > run_vivado.tcl
-#        echo "export_design -flow syn -format ip_catalog" >> run_vivado.tcl
-#        echo "exit" >> run_vivado.tcl
-#        # Kill Vivado HLS if does not return after 3 hours.
-#        timeout -k 30s $MAX_TIME vivado_hls -l vivado.log -f run_vivado.tcl > /dev/null
-#        if [ ! $? -eq 0 ]; then echo "Vivado failed in $DIR/$MODEL\_RF$rf"; cd ../..; continue; fi
-#        cd ..
-#    fi
+##    # Run Vivado (it does not check if there was a previous HLS run).
+##    if [ $RUN_LS -eq 1 ]; then
+##        cd $MODEL\_RF$rf
+##        if [ $RUN_CLEAN -eq 1 ]; then
+##           rm -f run_vivado.tcl
+##        fi
+##        echo "open_project myproject_prj" > run_vivado.tcl
+##        echo "export_design -flow syn -format ip_catalog" >> run_vivado.tcl
+##        echo "exit" >> run_vivado.tcl
+##        # Kill Vivado HLS if does not return after 3 hours.
+##        timeout -k 30s $MAX_TIME vivado_hls -l vivado.log -f run_vivado.tcl > /dev/null
+##        if [ ! $? -eq 0 ]; then echo "Vivado failed in $DIR/$MODEL\_RF$rf"; cd ../..; return; fi
+##        cd ..
+##    fi
 
      cd ..
 
 }
 
-# Iterate over the reuse factor value.
-for rf_base in $(seq $(expr $RF_BEGIN) $THREADS $RF_END); do
-
-    # Run parallel instances of Vivado.
-    for rf in $(seq $rf_base $RF_STEP $(expr $rf_base + $THREADS - 1)); do
-        let "test_count++"
-        run_hls4ml_vivado $test_count $rf &
-    done
-
-    # Wait for all of the previous instances to terminate before collecting the
-    # results and moving on to the next batch of runs.
-    wait
-
+#
+# Parse the Vivado HLS and Vivado (logic synthesis) reports and collect the
+# results in a CSV file.
+#
+collect_results ()
+{
     # Collect the results.
-    for rf in $(seq $rf_base $RF_STEP $(expr $rf_base + $THREADS - 1)); do
+    for rf in $(get_candidate_reuse_factors); do
         # Collect results (it does not check if there were HLS and LS runs).
         # TODO: Report script does not extract LS information.
         if [ $RUN_LOG -eq 1 ]; then
             ./parse-vivadohls-report.sh ./$DIR/$MODEL\_RF$rf/myproject_prj $MODEL $rf $MAX_TIME $RESULT_FILE
         fi
     done
-done
+}
+
+# These exports are necessary for GNU Parallel.
+export -f run_hls4ml_vivado
+export MODEL
+export DIR
+export RUN_CLEAN
+export RUN_HLS
+export MAX_TIME
+
+# Finally, print some info, run the stress tests in parallel, and collect the
+# results.
+print_info
+get_candidate_reuse_factors | parallel --will-cite -j $THREADS $SWAP run_hls4ml_vivado
+collect_results
