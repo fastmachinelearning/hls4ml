@@ -99,9 +99,18 @@ void conv_1d(
 
     typename CONFIG_T::accum_t acc[CONFIG_T::y_out][CONFIG_T::n_filt];
     #pragma HLS ARRAY_PARTITION variable=acc complete dim=0
-
+    
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases 
     #pragma HLS function_instantiate variable=weights,biases
+
+    // Initialize accumulator with input biases
+    for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
+      #pragma HLS UNROLL
+      for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
+	#pragma HLS UNROLL
+	acc[ii][ff]=biases[ff];
+      }
+    }
 
     // Limit multipliers to control parallelization
     //const int multiplier_limit = compute_multiplier_limit<CONFIG_T>(weights);
@@ -113,7 +122,7 @@ void conv_1d(
     #pragma HLS ARRAY_PARTITION variable=biases complete dim=0
     //consider ARRAY_RESHAPE for data in and/or out
 
-    #pragma HLS DEPENDENCE variable=acc,weights,biases inter false
+    //#pragma HLS DEPENDENCE variable=acc,weights,biases inter false
 
     // core functionality
     //int rufactor=CONFIG_T::reuse_factor;
@@ -121,7 +130,7 @@ void conv_1d(
     // a tmp mult for each reuse loop iteration
     typename CONFIG_T::accum_t mult[multiplier_limit];
     #pragma HLS ARRAY_PARTITION variable=mult complete
-    #pragma HLS DEPENDENCE variable=mult inter false
+    //#pragma HLS DEPENDENCE variable=mult inter false
 
     const int N_ACCUM = CONFIG_T::n_filt*CONFIG_T::y_out;
     const int ADD_LAT = DIV_ROUNDUP(multiplier_limit,N_ACCUM);//should equal 1 for special case being tested
@@ -159,7 +168,7 @@ void conv_1d(
         // special loop for accumulation
         typename CONFIG_T::accum_t acc_lat[CONFIG_T::n_filt*CONFIG_T::y_out][ADD_LAT];
         #pragma HLS ARRAY_PARTITION variable=acc_lat complete dim=0
-        #pragma HLS DEPENDENCE variable=acc_lat inter false
+        //#pragma HLS DEPENDENCE variable=acc_lat inter false
 
         AddLatencyInit: 
         for (int ii = 0; ii < CONFIG_T::y_out*CONFIG_T::n_filt; ii++){//number of accumulators
@@ -176,21 +185,14 @@ void conv_1d(
             #pragma HLS UNROLL
 
 	    int mult_index_acc = (io*ADD_LAT + ia); 	    
-	    
+
+	    /*
 	    int w_index_acc    = ir * multiplier_limit + mult_index_acc;
 	    int out_index_acc  = w_index_acc % (CONFIG_T::y_out*CONFIG_T::n_filt);
-	    
 	    std::cout << "io " << io << " ia " << ia << " mult_index_acc " << mult_index_acc << " w_index_acc " << w_index_acc << " out_index_acc " << out_index_acc << std::endl;
-
-	    //Derive mult_index_acc from io and ia
-	    //
-	    //int i_filt = im%CONFIG_T::n_filt; //inner loop
-	    //int i_yout = (im-i_filt)/CONFIG_T::n_filt; //outer loop
-
-	    
 	    if (mult_index_acc >= multiplier_limit) continue;//is this necessary?
-
 	    //acc_lat[out_index_acc][ia] += mult[mult_index_acc];
+	    */
 	    acc_lat[io][ia] += mult[mult_index_acc];
 	    
 	  }
@@ -198,12 +200,11 @@ void conv_1d(
 
         FullAccum: 
 	  for (int ii = 0; ii < CONFIG_T::y_out*CONFIG_T::n_filt; ii++){
-	    for (int ij= 0; ij < ADD_LAT; ij++){
+	    for (int ij= 0; ij < ADD_LAT; ij++){//just 1 ignore now
               #pragma HLS UNROLL
 
-	    //could be flipped
-	      int i_yout = ii % CONFIG_T::n_filt;
-	      int i_filt = (ii-i_yout) % CONFIG_T::y_out; 
+	      int i_filt = ii%CONFIG_T::n_filt; //inner loop
+	      int i_yout = (ii-i_filt)/CONFIG_T::n_filt; //outer loop
 
 	      acc[i_yout][i_filt] += acc_lat[ii][ij];
 	    }
