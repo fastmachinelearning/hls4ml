@@ -50,7 +50,7 @@ struct conv_config
     static const unsigned n_zeros = 0; // not used yet
 };
 
-
+/*
 //Computes multiplier limit
 //This function should not be synthesized into firmware
 template<typename CONFIG_T>
@@ -84,7 +84,7 @@ int compute_multiplier_limit(
     return ceil( float(n_mult) / float(CONFIG_T::reuse_factor) );
    
 }//end compute_n_mult
-
+*/
 
 template<class data_T, class res_T, typename CONFIG_T>
 void conv_1d(
@@ -117,39 +117,44 @@ void conv_1d(
 
     // core functionality
     //int rufactor=CONFIG_T::reuse_factor;
-    //int rufactor=CONFIG_T::y_out*CONFIG_T::n_filt;
     int rufactor=CONFIG_T::n_chan*CONFIG_T::y_filt;
     // a tmp mult for each reuse loop iteration
     typename CONFIG_T::accum_t mult[multiplier_limit];
     #pragma HLS ARRAY_PARTITION variable=mult complete
     #pragma HLS DEPENDENCE variable=mult inter false
 
+    const int N_ACCUM = CONFIG_T::n_filt*CONFIG_T::y_out;
+    const int ADD_LAT = DIV_ROUNDUP(multiplier_limit,N_ACCUM);//should equal 1 for special case being tested
+    //std::cout << "multiplier_limit " << multiplier_limit << " N_ACCUM " << N_ACCUM << " ADD_LAT " << ADD_LAT << std::endl;
 
-    const int ADD_LAT = DIV_ROUNDUP(multiplier_limit,CONFIG_T::n_filt*CONFIG_T::y_out);//should equal 1 for this case
-    ReuseLoop: for (int ir = 0; ir < rufactor; ir++){
+      ReuseLoop: for (int ir = 0; ir < rufactor; ir++){
       
       #pragma HLS PIPELINE II=1 rewind
       ///////// --------------------------------------
-      int i_chan = ir%CONFIG_T::n_chan;
-      int i_yfilt = (ir-i_chan)/CONFIG_T::y_filt;
+      int i_chan = ir%CONFIG_T::n_chan; //inner loop
+      int i_yfilt = (ir-i_chan)/CONFIG_T::n_chan; //outer loop
+
 
         MultLoop: 
         for (int im = 0; im < multiplier_limit; im++){
 
-	  //map ir and im 
-	  int i_filt = im%CONFIG_T::y_out;
-	  int i_yout = (im-i_filt)/CONFIG_T::n_filt;
+	  int i_filt = im%CONFIG_T::n_filt; //inner loop
+	  int i_yout = (im-i_filt)/CONFIG_T::n_filt; //outer loop
 
-	  if((i_filt*CONFIG_T::stride+i_yfilt) < CONFIG_T::pad_left || (i_filt*CONFIG_T::stride+i_yfilt) >= (CONFIG_T::pad_left + CONFIG_T::y_in)){
+	  //std::cout << "ir " << ir << " im " << im << " yfilt " << i_yfilt << " chan " << i_chan << " yout " << i_yout << " filt " << i_filt << std::endl;
+	  
+	  if((i_yout*CONFIG_T::stride+i_yfilt) < CONFIG_T::pad_left || (i_yout*CONFIG_T::stride+i_yfilt) >= (CONFIG_T::pad_left + CONFIG_T::y_in)){
 	    mult[im] = 0;
 	  }
 	  else{
+
 	    int index_weight = i_yfilt*CONFIG_T::n_chan*CONFIG_T::n_filt + i_chan*CONFIG_T::n_filt + i_filt;
 	    int index_data = i_yout*CONFIG_T::stride+i_yfilt-CONFIG_T::pad_left;
 
 	    mult[im] = data[index_data][i_chan] * weights[index_weight];
 	  }
-        }
+
+        }//multiplier_limit im
 
         // special loop for accumulation
         typename CONFIG_T::accum_t acc_lat[CONFIG_T::n_filt*CONFIG_T::y_out][ADD_LAT];
@@ -157,27 +162,37 @@ void conv_1d(
         #pragma HLS DEPENDENCE variable=acc_lat inter false
 
         AddLatencyInit: 
-        for (int ii = 0; ii < CONFIG_T::y_out*CONFIG_T::n_filt; ii++){
-	  for (int ij= 0; ij < ADD_LAT; ij++){
+        for (int ii = 0; ii < CONFIG_T::y_out*CONFIG_T::n_filt; ii++){//number of accumulators
+	  for (int ij= 0; ij < ADD_LAT; ij++){//multiplier_limit / number of accumulators
             #pragma HLS UNROLL
 	    acc_lat[ii][ij] = 0;
 	  }
         }
         
         AccumLoop:
-	for (int io = 0; io < CONFIG_T::y_out*CONFIG_T::n_filt; io++){
+	for (int io = 0; io < CONFIG_T::y_out*CONFIG_T::n_filt; io++){//number of accumulators
           #pragma HLS UNROLL
-	  for (int ia = 0; ia < ADD_LAT; ia++){
+	  for (int ia = 0; ia < ADD_LAT; ia++){//multiplier_limit / number of accumulators
             #pragma HLS UNROLL
 
 	    int mult_index_acc = (io*ADD_LAT + ia); 	    
+	    
 	    int w_index_acc    = ir * multiplier_limit + mult_index_acc;
 	    int out_index_acc  = w_index_acc % (CONFIG_T::y_out*CONFIG_T::n_filt);
-	    if (mult_index_acc >= multiplier_limit) continue;
+	    
+	    std::cout << "io " << io << " ia " << ia << " mult_index_acc " << mult_index_acc << " w_index_acc " << w_index_acc << " out_index_acc " << out_index_acc << std::endl;
 
-	    //acc_lat[io][ia] += mult[mult_index_acc];
-	    acc_lat[out_index_acc][ia] += mult[mult_index_acc];
+	    //Derive mult_index_acc from io and ia
+	    //
+	    //int i_filt = im%CONFIG_T::n_filt; //inner loop
+	    //int i_yout = (im-i_filt)/CONFIG_T::n_filt; //outer loop
 
+	    
+	    if (mult_index_acc >= multiplier_limit) continue;//is this necessary?
+
+	    //acc_lat[out_index_acc][ia] += mult[mult_index_acc];
+	    acc_lat[io][ia] += mult[mult_index_acc];
+	    
 	  }
 	}
 
@@ -194,7 +209,7 @@ void conv_1d(
 	    }
           }
    
-    }//reuse
+    }//reuse ir
 
     /*
     // Convolve, saving all multiplication results to accumulate later
