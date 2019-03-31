@@ -1,4 +1,4 @@
-VivadoVersion,FpgaPart,TopModule,TargetClk,EstimatedClk,BestLatency,WorstLatency,IIntervalMin,IIntevalMax,ResourceBram,ResourceDsp,ResourceFf,ResourceLut,GitRevision,Arch,Model,ReuseFactor,ExecutionTime
+VivadoVersion,FpgaPart,TopModule,TargetClk,EstimatedClk,BestLatency,WorstLatency,IIntervalMin,IIntevalMax,HLSResourceBram,HLSResourceDsp,HLSResourceFf,HLSResourceLut,ResourceBram,ResourceDsp,ResourceFf,ResourceLut,GitRevision,Arch,Model,ReuseFactor,ExecutionTime
 2018.3,xcku115-flvb2104-2-i,myproject,5.00,4.375,30034,34130,14469,16517,13,4,157489,168539,94c1139,solution1,KERAS_3layer,1,4108.15
 2018.3,xcku115-flvb2104-2-i,myproject,5.00,4.375,39,43,2,2,13,2160,170279,104400,94c1139,solution1,KERAS_3layer,2,960.07
 2018.3,xcku115-flvb2104-2-i,myproject,5.00,4.375,228,236,173,178,13,1421,178406,1096852,94c1139,solution1,KERAS_3layer,3,25185.6
