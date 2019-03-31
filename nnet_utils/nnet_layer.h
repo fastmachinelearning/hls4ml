@@ -44,7 +44,7 @@ struct layer_config
     // Resource reuse info
     static const unsigned io_type = io_parallel;
     static const unsigned reuse_factor = 1;
-    static const bool store_weights_in_bram = false;
+    static const bool store_weights_in_bram = true;
     static const bool store_weights_in_uram = false;
     static const unsigned n_zeros = 0;
     // partitioning arrays cyclically to go with roll factors?

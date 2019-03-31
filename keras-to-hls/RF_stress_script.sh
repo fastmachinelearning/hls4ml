@@ -9,6 +9,8 @@
 # Model name.
 #MODEL="KERAS_3layer"
 MODEL="2layer_100x100"
+#MODEL="KERAS_dense_16x500x500x500x500x500x5"
+#MODEL="KERAS_dense_16x200x200x200x200x200x5"
 
 # We assume the model files being:
 # KerasJson: ../example-keras-model-files/MODEL.json
@@ -21,27 +23,27 @@ N_OUT=100
 # If brute force sweeping is enabled, all of the reuse factors between RF_BEGIN
 # and RF_END (with a RF_STEP) will be tested. ATTENTION: Some values of reuse
 # factor may cause very long synthesis time.
-BRUTE_FORCE=0
+BRUTE_FORCE=1
 
 # Begin, end and step for Reuse Factor.
-RF_BEGIN=20
-RF_END=200
+RF_BEGIN=100
+RF_END=100
 RF_STEP=1
 
 # Max execution time.
 # 3h = 10800s
 # 5h = 18000s
 # 6h = 21600s
-#MAX_TIME=10800
+MAX_TIME=10800
 #MAX_TIME=18000
-MAX_TIME=21600
+#MAX_TIME=21600
 
 # Run at most THREADS instances of Vivado.
-THREADS=4
+THREADS=16
 
 # Enable/disable Vivado HLS, Vivado (logic synthesis), and result collection.
 RUN_HLS=1
-RUN_LS=0
+RUN_LS=1
 RUN_LOG=1
 
 # Remove previous intermediate files.
@@ -87,7 +89,10 @@ print_info ()
 if [ $BRUTE_FORCE == 1 ]; then
     echo "INFO: Brute force RF: RF_BEGIN=$RF_BEGIN, RF_END=$RF_END, RF_STEP=$RF_STEP, RF_COUNT=$(((RF_END - RF_BEGIN) / RF_STEP))"
 else
-    echo "INFO: Modulo-candidate RF: N_IN=$N_IN, N_OUT=$N_OUT"
+    echo "INFO: Network dimensions: N_IN=$N_IN, N_OUT=$N_OUT"
+    candidates=$(get_candidate_reuse_factors | tr '\n' ' ')
+    echo "INFO: Modulo-candidate RF: $candidates"
+    echo "INFO: Total count: $(echo $candidates | wc -w)"
 fi
 }
 
@@ -142,28 +147,28 @@ run_hls4ml_vivado ()
     if [ $RUN_HLS -eq 1 ]; then
         cd $MODEL\_RF$rf
         if [ ! $? -eq 0 ]; then echo "ERROR: Cannot find find directory $MODEL\_RF$rf"; cd ../..; return; fi
-        # Kill Vivado HLS if does not return after 3 hours.
+        #if [ $RUN_LS -eq 1 ]; then
+
+	#fi
+	# Kill Vivado HLS if does not return after 3 hours.
         timeout -k 30s $MAX_TIME vivado_hls -f build_prj.tcl > /dev/null
         if [ ! $? -eq 0 ]; then echo "ERROR: Vivado HLS failed. See $DIR/$MODEL\_RF$rf/vivado_hls.log"; cd ../..; return; fi
         cd ..
     fi
 
-##    # Run Vivado (it does not check if there was a previous HLS run).
-##    if [ $RUN_LS -eq 1 ]; then
-##        cd $MODEL\_RF$rf
-##        if [ $RUN_CLEAN -eq 1 ]; then
-##           rm -f run_vivado.tcl
-##        fi
-##        echo "open_project myproject_prj" > run_vivado.tcl
-##        echo "export_design -flow syn -format ip_catalog" >> run_vivado.tcl
-##        echo "exit" >> run_vivado.tcl
-##        # Kill Vivado HLS if does not return after 3 hours.
-##        timeout -k 30s $MAX_TIME vivado_hls -l vivado.log -f run_vivado.tcl > /dev/null
-##        if [ ! $? -eq 0 ]; then echo "Vivado failed in $DIR/$MODEL\_RF$rf"; cd ../..; return; fi
-##        cd ..
-##    fi
+#    # Run Vivado (it does not check if there was a previous HLS run).
+#    if [ $RUN_LS -eq 1 ]; then
+#        cd $MODEL\_RF$rf
+#        echo "open_project myproject_prj" > run_vivado_ls.tcl
+#        echo "export_design -flow syn -format ip_catalog" >> run_vivado_ls.tcl
+#        echo "exit" >> run_vivado_ls.tcl
+#        # Kill Vivado HLS if does not return after 3 hours.
+#        timeout -k 30s $MAX_TIME vivado_hls -l vivado_ls.log -f run_vivado_ls.tcl > /dev/null
+#        if [ ! $? -eq 0 ]; then echo "Vivado failed in $DIR/$MODEL\_RF$rf"; cd ../..; return; fi
+#        cd ..
+#    fi
 
-     cd ..
+    cd ..
 
 }
 
@@ -189,6 +194,7 @@ export MODEL
 export DIR
 export RUN_CLEAN
 export RUN_HLS
+export RUN_LS
 export MAX_TIME
 
 # Finally, print some info, run the stress tests in parallel, and collect the
