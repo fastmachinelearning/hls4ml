@@ -86,14 +86,14 @@ RESULT_FILE=RF_stress_results_$MODEL.csv
 #
 print_info ()
 {
-if [ $BRUTE_FORCE == 1 ]; then
-    echo "INFO: Brute force RF: RF_BEGIN=$RF_BEGIN, RF_END=$RF_END, RF_STEP=$RF_STEP, RF_COUNT=$(((RF_END - RF_BEGIN) / RF_STEP))"
-else
-    echo "INFO: Network dimensions: N_IN=$N_IN, N_OUT=$N_OUT"
-    candidates=$(get_candidate_reuse_factors | tr '\n' ' ')
-    echo "INFO: Modulo-candidate RF: $candidates"
-    echo "INFO: Total count: $(echo $candidates | wc -w)"
-fi
+    if [ $BRUTE_FORCE == 1 ]; then
+        echo "INFO: Brute force RF: RF_BEGIN=$RF_BEGIN, RF_END=$RF_END, RF_STEP=$RF_STEP, RF_COUNT=$(((RF_END - RF_BEGIN) / RF_STEP))"
+    else
+        echo "INFO: Network dimensions: N_IN=$N_IN, N_OUT=$N_OUT"
+        candidates=$(get_candidate_reuse_factors | tr '\n' ' ')
+        echo "INFO: Modulo-candidate RF: $candidates"
+        echo "INFO: Total count: $(echo $candidates | wc -w)"
+    fi
 }
 
 #
@@ -108,11 +108,11 @@ fi
 #
 get_candidate_reuse_factors ()
 {
-if [ $BRUTE_FORCE == 1 ]; then
-    seq $RF_BEGIN $RF_STEP $RF_END
-else
-    for i in $(seq 1 $((N_IN * N_OUT))); do if [ $(((N_IN * N_OUT) % $i)) == 0 ]; then echo $i; fi; done
-fi
+    if [ $BRUTE_FORCE == 1 ]; then
+        seq $RF_BEGIN $RF_STEP $RF_END
+    else
+        for i in $(seq 1 $((N_IN * N_OUT))); do if [ $(((N_IN * N_OUT) % $i)) == 0 ]; then echo $i; fi; done
+    fi
 }
 
 #
@@ -144,31 +144,19 @@ run_hls4ml_vivado ()
     if [ ! $? -eq 0 ]; then echo "ERROR: Cannot run HLS4ML generator on with the configuration file $DIR/keras-config-$rf-$MODEL.yml"; cd ..; return; fi
 
    # Run Vivado HLS.
-    if [ $RUN_HLS -eq 1 ]; then
-        cd $MODEL\_RF$rf
-        if [ ! $? -eq 0 ]; then echo "ERROR: Cannot find find directory $MODEL\_RF$rf"; cd ../..; return; fi
-        #if [ $RUN_LS -eq 1 ]; then
+   if [ $RUN_HLS -eq 1 ]; then
+       cd $MODEL\_RF$rf
+       if [ ! $? -eq 0 ]; then echo "ERROR: Cannot find find directory $MODEL\_RF$rf"; cd ../..; return; fi
+       #if [ $RUN_LS -eq 1 ]; then
+       # TODO: enable logic synthesis (if disabled)
+       #fi
+       # Kill Vivado HLS if does not return after 3 hours.
+       timeout -k 30s $MAX_TIME vivado_hls -f build_prj.tcl > /dev/null
+       if [ ! $? -eq 0 ]; then echo "ERROR: Vivado HLS failed. See $DIR/$MODEL\_RF$rf/vivado_hls.log"; cd ../..; return; fi
+       cd ..
+   fi
 
-	#fi
-	# Kill Vivado HLS if does not return after 3 hours.
-        timeout -k 30s $MAX_TIME vivado_hls -f build_prj.tcl > /dev/null
-        if [ ! $? -eq 0 ]; then echo "ERROR: Vivado HLS failed. See $DIR/$MODEL\_RF$rf/vivado_hls.log"; cd ../..; return; fi
-        cd ..
-    fi
-
-#    # Run Vivado (it does not check if there was a previous HLS run).
-#    if [ $RUN_LS -eq 1 ]; then
-#        cd $MODEL\_RF$rf
-#        echo "open_project myproject_prj" > run_vivado_ls.tcl
-#        echo "export_design -flow syn -format ip_catalog" >> run_vivado_ls.tcl
-#        echo "exit" >> run_vivado_ls.tcl
-#        # Kill Vivado HLS if does not return after 3 hours.
-#        timeout -k 30s $MAX_TIME vivado_hls -l vivado_ls.log -f run_vivado_ls.tcl > /dev/null
-#        if [ ! $? -eq 0 ]; then echo "Vivado failed in $DIR/$MODEL\_RF$rf"; cd ../..; return; fi
-#        cd ..
-#    fi
-
-    cd ..
+   cd ..
 
 }
 
