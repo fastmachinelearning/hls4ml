@@ -1,0 +1,186 @@
+
+
+================================================================
+== Vivado HLS Report for 'relu'
+================================================================
+* Date:           Sun Mar 31 23:52:33 2019
+
+* Version:        2018.2 (Build 2258646 on Thu Jun 14 20:25:20 MDT 2018)
+* Project:        myproject_prj
+* Solution:       solution1
+* Product family: kintexu
+* Target device:  xcku115-flva1517-2-e
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing (ns): 
+    * Summary: 
+    +--------+-------+----------+------------+
+    |  Clock | Target| Estimated| Uncertainty|
+    +--------+-------+----------+------------+
+    |ap_clk  |   5.00|     1.602|        0.62|
+    +--------+-------+----------+------------+
+
++ Latency (clock cycles): 
+    * Summary: 
+    +-----+-----+-----+-----+----------+
+    |  Latency  |  Interval | Pipeline |
+    | min | max | min | max |   Type   |
+    +-----+-----+-----+-----+----------+
+    |    0|    0|    1|    1| function |
+    +-----+-----+-----+-----+----------+
+
+    + Detail: 
+        * Instance: 
+        N/A
+
+        * Loop: 
+        N/A
+
+============================================================
++ Verbose Summary: Synthesis Manager
+============================================================
+InlineROM: 1
+ExposeGlobal: 0
+============================================================
++ Verbose Summary: CDFG Model
+============================================================
+IsTopModel: 0
+ResetActiveHigh: 1
+IsCombinational: 0
+IsDatapathOnly: 0
+HasWiredReturn: 1
+HasMFsm: 2
+HasVarLatency: 0
+IsPipeline: 1
+IsRtlPipelined: 0
+IsInstanceOverlapped: 0
+IsDontTouch: 0
+HasImplIP: 0
+IsGatedGlobalClock: 0
+
++ Individual pipeline summary: 
+  * Pipeline-0: initiation interval (II) = 1, depth = 1
+
+
+============================================================
++ Verbose Summary: Schedule
+============================================================
+* Number of FSM states : 1
+* Pipeline : 1
+  Pipeline-0 : II = 1, D = 1, States = { 1 }
+* Dataflow Pipeline: 0
+
+* FSM state transitions: 
+1 --> 
+
+* FSM state operations: 
+
+State 1 <SV = 0> <Delay = 1.60>
+ST_1 : Operation 2 [1/1] (0.00ns)   --->   "%data_11_V_read_1 = call i32 @_ssdm_op_Read.ap_auto.i32(i32 %data_11_V_read)"   --->   Operation 2 'read' 'data_11_V_read_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 3 [1/1] (0.00ns)   --->   "%data_10_V_read_1 = call i32 @_ssdm_op_Read.ap_auto.i32(i32 %data_10_V_read)"   --->   Operation 3 'read' 'data_10_V_read_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 4 [1/1] (0.00ns)   --->   "%data_9_V_read_1 = call i32 @_ssdm_op_Read.ap_auto.i32(i32 %data_9_V_read)"   --->   Operation 4 'read' 'data_9_V_read_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 5 [1/1] (0.00ns)   --->   "%data_8_V_read_1 = call i32 @_ssdm_op_Read.ap_auto.i32(i32 %data_8_V_read)"   --->   Operation 5 'read' 'data_8_V_read_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 6 [1/1] (0.00ns)   --->   "%data_7_V_read_1 = call i32 @_ssdm_op_Read.ap_auto.i32(i32 %data_7_V_read)"   --->   Operation 6 'read' 'data_7_V_read_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 7 [1/1] (0.00ns)   --->   "%data_6_V_read_1 = call i32 @_ssdm_op_Read.ap_auto.i32(i32 %data_6_V_read)"   --->   Operation 7 'read' 'data_6_V_read_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 8 [1/1] (0.00ns)   --->   "%data_5_V_read_2 = call i32 @_ssdm_op_Read.ap_auto.i32(i32 %data_5_V_read)"   --->   Operation 8 'read' 'data_5_V_read_2' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 9 [1/1] (0.00ns)   --->   "%data_4_V_read_2 = call i32 @_ssdm_op_Read.ap_auto.i32(i32 %data_4_V_read)"   --->   Operation 9 'read' 'data_4_V_read_2' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 10 [1/1] (0.00ns)   --->   "%data_3_V_read_2 = call i32 @_ssdm_op_Read.ap_auto.i32(i32 %data_3_V_read)"   --->   Operation 10 'read' 'data_3_V_read_2' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 11 [1/1] (0.00ns)   --->   "%data_2_V_read_2 = call i32 @_ssdm_op_Read.ap_auto.i32(i32 %data_2_V_read)"   --->   Operation 11 'read' 'data_2_V_read_2' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 12 [1/1] (0.00ns)   --->   "%data_1_V_read_2 = call i32 @_ssdm_op_Read.ap_auto.i32(i32 %data_1_V_read)"   --->   Operation 12 'read' 'data_1_V_read_2' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 13 [1/1] (0.00ns)   --->   "%data_0_V_read_2 = call i32 @_ssdm_op_Read.ap_auto.i32(i32 %data_0_V_read)"   --->   Operation 13 'read' 'data_0_V_read_2' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 14 [1/1] (0.00ns)   --->   "%tmp = call i32 (...)* @_ssdm_op_SpecRegionBegin([12 x i8]* @p_str16)" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:73]   --->   Operation 14 'specregionbegin' 'tmp' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 15 [1/1] (0.00ns)   --->   "call void (...)* @_ssdm_op_SpecPipeline(i32 -1, i32 1, i32 1, i32 0, [1 x i8]* @p_str5) nounwind" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:74]   --->   Operation 15 'specpipeline' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 16 [1/1] (0.00ns)   --->   "%empty = call i32 (...)* @_ssdm_op_SpecRegionEnd([12 x i8]* @p_str16, i32 %tmp)" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:75]   --->   Operation 16 'specregionend' 'empty' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 17 [1/1] (1.14ns)   --->   "%tmp_29 = icmp sgt i32 %data_0_V_read_2, 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 17 'icmp' 'tmp_29' <Predicate = true> <Delay = 1.14> <Core = "Cmp">   --->   Core 25 'Cmp' <Latency = 0> <II = 1> <Delay = 1.14> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_1 : Operation 18 [1/1] (0.00ns)   --->   "%tmp_257 = trunc i32 %data_0_V_read_2 to i31" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 18 'trunc' 'tmp_257' <Predicate = (tmp_29)> <Delay = 0.00>
+ST_1 : Operation 19 [1/1] (0.46ns)   --->   "%res_0_V_write_assig = select i1 %tmp_29, i31 %tmp_257, i31 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 19 'select' 'res_0_V_write_assig' <Predicate = true> <Delay = 0.46> <Core = "Sel">   --->   Core 26 'Sel' <Latency = 0> <II = 1> <Delay = 0.46> <FuncUnit> <Opcode : 'select'> <InPorts = 3> <OutPorts = 1>
+ST_1 : Operation 20 [1/1] (0.00ns)   --->   "%res_0_V_write_assig_1 = zext i31 %res_0_V_write_assig to i32" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 20 'zext' 'res_0_V_write_assig_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 21 [1/1] (1.14ns)   --->   "%tmp_29_1 = icmp sgt i32 %data_1_V_read_2, 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 21 'icmp' 'tmp_29_1' <Predicate = true> <Delay = 1.14> <Core = "Cmp">   --->   Core 25 'Cmp' <Latency = 0> <II = 1> <Delay = 1.14> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_1 : Operation 22 [1/1] (0.00ns)   --->   "%tmp_258 = trunc i32 %data_1_V_read_2 to i31" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 22 'trunc' 'tmp_258' <Predicate = (tmp_29_1)> <Delay = 0.00>
+ST_1 : Operation 23 [1/1] (0.46ns)   --->   "%res_1_V_write_assig = select i1 %tmp_29_1, i31 %tmp_258, i31 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 23 'select' 'res_1_V_write_assig' <Predicate = true> <Delay = 0.46> <Core = "Sel">   --->   Core 26 'Sel' <Latency = 0> <II = 1> <Delay = 0.46> <FuncUnit> <Opcode : 'select'> <InPorts = 3> <OutPorts = 1>
+ST_1 : Operation 24 [1/1] (0.00ns)   --->   "%res_1_V_write_assig_1 = zext i31 %res_1_V_write_assig to i32" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 24 'zext' 'res_1_V_write_assig_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 25 [1/1] (1.14ns)   --->   "%tmp_29_2 = icmp sgt i32 %data_2_V_read_2, 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 25 'icmp' 'tmp_29_2' <Predicate = true> <Delay = 1.14> <Core = "Cmp">   --->   Core 25 'Cmp' <Latency = 0> <II = 1> <Delay = 1.14> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_1 : Operation 26 [1/1] (0.00ns)   --->   "%tmp_259 = trunc i32 %data_2_V_read_2 to i31" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 26 'trunc' 'tmp_259' <Predicate = (tmp_29_2)> <Delay = 0.00>
+ST_1 : Operation 27 [1/1] (0.46ns)   --->   "%res_2_V_write_assig = select i1 %tmp_29_2, i31 %tmp_259, i31 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 27 'select' 'res_2_V_write_assig' <Predicate = true> <Delay = 0.46> <Core = "Sel">   --->   Core 26 'Sel' <Latency = 0> <II = 1> <Delay = 0.46> <FuncUnit> <Opcode : 'select'> <InPorts = 3> <OutPorts = 1>
+ST_1 : Operation 28 [1/1] (0.00ns)   --->   "%res_2_V_write_assig_1 = zext i31 %res_2_V_write_assig to i32" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 28 'zext' 'res_2_V_write_assig_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 29 [1/1] (1.14ns)   --->   "%tmp_29_3 = icmp sgt i32 %data_3_V_read_2, 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 29 'icmp' 'tmp_29_3' <Predicate = true> <Delay = 1.14> <Core = "Cmp">   --->   Core 25 'Cmp' <Latency = 0> <II = 1> <Delay = 1.14> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_1 : Operation 30 [1/1] (0.00ns)   --->   "%tmp_260 = trunc i32 %data_3_V_read_2 to i31" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 30 'trunc' 'tmp_260' <Predicate = (tmp_29_3)> <Delay = 0.00>
+ST_1 : Operation 31 [1/1] (0.46ns)   --->   "%res_3_V_write_assig = select i1 %tmp_29_3, i31 %tmp_260, i31 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 31 'select' 'res_3_V_write_assig' <Predicate = true> <Delay = 0.46> <Core = "Sel">   --->   Core 26 'Sel' <Latency = 0> <II = 1> <Delay = 0.46> <FuncUnit> <Opcode : 'select'> <InPorts = 3> <OutPorts = 1>
+ST_1 : Operation 32 [1/1] (0.00ns)   --->   "%res_3_V_write_assig_1 = zext i31 %res_3_V_write_assig to i32" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 32 'zext' 'res_3_V_write_assig_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 33 [1/1] (1.14ns)   --->   "%tmp_29_4 = icmp sgt i32 %data_4_V_read_2, 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 33 'icmp' 'tmp_29_4' <Predicate = true> <Delay = 1.14> <Core = "Cmp">   --->   Core 25 'Cmp' <Latency = 0> <II = 1> <Delay = 1.14> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_1 : Operation 34 [1/1] (0.00ns)   --->   "%tmp_261 = trunc i32 %data_4_V_read_2 to i31" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 34 'trunc' 'tmp_261' <Predicate = (tmp_29_4)> <Delay = 0.00>
+ST_1 : Operation 35 [1/1] (0.46ns)   --->   "%res_4_V_write_assig = select i1 %tmp_29_4, i31 %tmp_261, i31 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 35 'select' 'res_4_V_write_assig' <Predicate = true> <Delay = 0.46> <Core = "Sel">   --->   Core 26 'Sel' <Latency = 0> <II = 1> <Delay = 0.46> <FuncUnit> <Opcode : 'select'> <InPorts = 3> <OutPorts = 1>
+ST_1 : Operation 36 [1/1] (0.00ns)   --->   "%res_4_V_write_assig_1 = zext i31 %res_4_V_write_assig to i32" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 36 'zext' 'res_4_V_write_assig_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 37 [1/1] (1.14ns)   --->   "%tmp_29_5 = icmp sgt i32 %data_5_V_read_2, 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 37 'icmp' 'tmp_29_5' <Predicate = true> <Delay = 1.14> <Core = "Cmp">   --->   Core 25 'Cmp' <Latency = 0> <II = 1> <Delay = 1.14> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_1 : Operation 38 [1/1] (0.00ns)   --->   "%tmp_262 = trunc i32 %data_5_V_read_2 to i31" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 38 'trunc' 'tmp_262' <Predicate = (tmp_29_5)> <Delay = 0.00>
+ST_1 : Operation 39 [1/1] (0.46ns)   --->   "%res_5_V_write_assig = select i1 %tmp_29_5, i31 %tmp_262, i31 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 39 'select' 'res_5_V_write_assig' <Predicate = true> <Delay = 0.46> <Core = "Sel">   --->   Core 26 'Sel' <Latency = 0> <II = 1> <Delay = 0.46> <FuncUnit> <Opcode : 'select'> <InPorts = 3> <OutPorts = 1>
+ST_1 : Operation 40 [1/1] (0.00ns)   --->   "%res_5_V_write_assig_1 = zext i31 %res_5_V_write_assig to i32" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 40 'zext' 'res_5_V_write_assig_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 41 [1/1] (1.14ns)   --->   "%tmp_29_6 = icmp sgt i32 %data_6_V_read_1, 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 41 'icmp' 'tmp_29_6' <Predicate = true> <Delay = 1.14> <Core = "Cmp">   --->   Core 25 'Cmp' <Latency = 0> <II = 1> <Delay = 1.14> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_1 : Operation 42 [1/1] (0.00ns)   --->   "%tmp_263 = trunc i32 %data_6_V_read_1 to i31" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 42 'trunc' 'tmp_263' <Predicate = (tmp_29_6)> <Delay = 0.00>
+ST_1 : Operation 43 [1/1] (0.46ns)   --->   "%res_6_V_write_assig = select i1 %tmp_29_6, i31 %tmp_263, i31 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 43 'select' 'res_6_V_write_assig' <Predicate = true> <Delay = 0.46> <Core = "Sel">   --->   Core 26 'Sel' <Latency = 0> <II = 1> <Delay = 0.46> <FuncUnit> <Opcode : 'select'> <InPorts = 3> <OutPorts = 1>
+ST_1 : Operation 44 [1/1] (0.00ns)   --->   "%res_6_V_write_assig_1 = zext i31 %res_6_V_write_assig to i32" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 44 'zext' 'res_6_V_write_assig_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 45 [1/1] (1.14ns)   --->   "%tmp_29_7 = icmp sgt i32 %data_7_V_read_1, 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 45 'icmp' 'tmp_29_7' <Predicate = true> <Delay = 1.14> <Core = "Cmp">   --->   Core 25 'Cmp' <Latency = 0> <II = 1> <Delay = 1.14> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_1 : Operation 46 [1/1] (0.00ns)   --->   "%tmp_264 = trunc i32 %data_7_V_read_1 to i31" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 46 'trunc' 'tmp_264' <Predicate = (tmp_29_7)> <Delay = 0.00>
+ST_1 : Operation 47 [1/1] (0.46ns)   --->   "%res_7_V_write_assig = select i1 %tmp_29_7, i31 %tmp_264, i31 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 47 'select' 'res_7_V_write_assig' <Predicate = true> <Delay = 0.46> <Core = "Sel">   --->   Core 26 'Sel' <Latency = 0> <II = 1> <Delay = 0.46> <FuncUnit> <Opcode : 'select'> <InPorts = 3> <OutPorts = 1>
+ST_1 : Operation 48 [1/1] (0.00ns)   --->   "%res_7_V_write_assig_1 = zext i31 %res_7_V_write_assig to i32" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 48 'zext' 'res_7_V_write_assig_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 49 [1/1] (1.14ns)   --->   "%tmp_29_8 = icmp sgt i32 %data_8_V_read_1, 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 49 'icmp' 'tmp_29_8' <Predicate = true> <Delay = 1.14> <Core = "Cmp">   --->   Core 25 'Cmp' <Latency = 0> <II = 1> <Delay = 1.14> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_1 : Operation 50 [1/1] (0.00ns)   --->   "%tmp_265 = trunc i32 %data_8_V_read_1 to i31" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 50 'trunc' 'tmp_265' <Predicate = (tmp_29_8)> <Delay = 0.00>
+ST_1 : Operation 51 [1/1] (0.46ns)   --->   "%res_8_V_write_assig = select i1 %tmp_29_8, i31 %tmp_265, i31 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 51 'select' 'res_8_V_write_assig' <Predicate = true> <Delay = 0.46> <Core = "Sel">   --->   Core 26 'Sel' <Latency = 0> <II = 1> <Delay = 0.46> <FuncUnit> <Opcode : 'select'> <InPorts = 3> <OutPorts = 1>
+ST_1 : Operation 52 [1/1] (0.00ns)   --->   "%res_8_V_write_assig_1 = zext i31 %res_8_V_write_assig to i32" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 52 'zext' 'res_8_V_write_assig_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 53 [1/1] (1.14ns)   --->   "%tmp_29_9 = icmp sgt i32 %data_9_V_read_1, 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 53 'icmp' 'tmp_29_9' <Predicate = true> <Delay = 1.14> <Core = "Cmp">   --->   Core 25 'Cmp' <Latency = 0> <II = 1> <Delay = 1.14> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_1 : Operation 54 [1/1] (0.00ns)   --->   "%tmp_266 = trunc i32 %data_9_V_read_1 to i31" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 54 'trunc' 'tmp_266' <Predicate = (tmp_29_9)> <Delay = 0.00>
+ST_1 : Operation 55 [1/1] (0.46ns)   --->   "%res_9_V_write_assig = select i1 %tmp_29_9, i31 %tmp_266, i31 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 55 'select' 'res_9_V_write_assig' <Predicate = true> <Delay = 0.46> <Core = "Sel">   --->   Core 26 'Sel' <Latency = 0> <II = 1> <Delay = 0.46> <FuncUnit> <Opcode : 'select'> <InPorts = 3> <OutPorts = 1>
+ST_1 : Operation 56 [1/1] (0.00ns)   --->   "%res_9_V_write_assig_1 = zext i31 %res_9_V_write_assig to i32" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 56 'zext' 'res_9_V_write_assig_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 57 [1/1] (1.14ns)   --->   "%tmp_29_s = icmp sgt i32 %data_10_V_read_1, 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 57 'icmp' 'tmp_29_s' <Predicate = true> <Delay = 1.14> <Core = "Cmp">   --->   Core 25 'Cmp' <Latency = 0> <II = 1> <Delay = 1.14> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_1 : Operation 58 [1/1] (0.00ns)   --->   "%tmp_267 = trunc i32 %data_10_V_read_1 to i31" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 58 'trunc' 'tmp_267' <Predicate = (tmp_29_s)> <Delay = 0.00>
+ST_1 : Operation 59 [1/1] (0.46ns)   --->   "%res_10_V_write_assi = select i1 %tmp_29_s, i31 %tmp_267, i31 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 59 'select' 'res_10_V_write_assi' <Predicate = true> <Delay = 0.46> <Core = "Sel">   --->   Core 26 'Sel' <Latency = 0> <II = 1> <Delay = 0.46> <FuncUnit> <Opcode : 'select'> <InPorts = 3> <OutPorts = 1>
+ST_1 : Operation 60 [1/1] (0.00ns)   --->   "%res_10_V_write_assi_1 = zext i31 %res_10_V_write_assi to i32" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 60 'zext' 'res_10_V_write_assi_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 61 [1/1] (1.14ns)   --->   "%tmp_29_10 = icmp sgt i32 %data_11_V_read_1, 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 61 'icmp' 'tmp_29_10' <Predicate = true> <Delay = 1.14> <Core = "Cmp">   --->   Core 25 'Cmp' <Latency = 0> <II = 1> <Delay = 1.14> <FuncUnit> <Opcode : 'icmp'> <InPorts = 2> <OutPorts = 1>
+ST_1 : Operation 62 [1/1] (0.00ns)   --->   "%tmp_268 = trunc i32 %data_11_V_read_1 to i31" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 62 'trunc' 'tmp_268' <Predicate = (tmp_29_10)> <Delay = 0.00>
+ST_1 : Operation 63 [1/1] (0.46ns)   --->   "%res_11_V_write_assi = select i1 %tmp_29_10, i31 %tmp_268, i31 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 63 'select' 'res_11_V_write_assi' <Predicate = true> <Delay = 0.46> <Core = "Sel">   --->   Core 26 'Sel' <Latency = 0> <II = 1> <Delay = 0.46> <FuncUnit> <Opcode : 'select'> <InPorts = 3> <OutPorts = 1>
+ST_1 : Operation 64 [1/1] (0.00ns)   --->   "%res_11_V_write_assi_1 = zext i31 %res_11_V_write_assi to i32" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83]   --->   Operation 64 'zext' 'res_11_V_write_assi_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 65 [1/1] (0.00ns)   --->   "%mrv = insertvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } undef, i32 %res_0_V_write_assig_1, 0" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:86]   --->   Operation 65 'insertvalue' 'mrv' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 66 [1/1] (0.00ns)   --->   "%mrv_1 = insertvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %mrv, i32 %res_1_V_write_assig_1, 1" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:86]   --->   Operation 66 'insertvalue' 'mrv_1' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 67 [1/1] (0.00ns)   --->   "%mrv_2 = insertvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %mrv_1, i32 %res_2_V_write_assig_1, 2" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:86]   --->   Operation 67 'insertvalue' 'mrv_2' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 68 [1/1] (0.00ns)   --->   "%mrv_3 = insertvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %mrv_2, i32 %res_3_V_write_assig_1, 3" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:86]   --->   Operation 68 'insertvalue' 'mrv_3' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 69 [1/1] (0.00ns)   --->   "%mrv_4 = insertvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %mrv_3, i32 %res_4_V_write_assig_1, 4" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:86]   --->   Operation 69 'insertvalue' 'mrv_4' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 70 [1/1] (0.00ns)   --->   "%mrv_5 = insertvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %mrv_4, i32 %res_5_V_write_assig_1, 5" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:86]   --->   Operation 70 'insertvalue' 'mrv_5' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 71 [1/1] (0.00ns)   --->   "%mrv_6 = insertvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %mrv_5, i32 %res_6_V_write_assig_1, 6" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:86]   --->   Operation 71 'insertvalue' 'mrv_6' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 72 [1/1] (0.00ns)   --->   "%mrv_7 = insertvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %mrv_6, i32 %res_7_V_write_assig_1, 7" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:86]   --->   Operation 72 'insertvalue' 'mrv_7' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 73 [1/1] (0.00ns)   --->   "%mrv_8 = insertvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %mrv_7, i32 %res_8_V_write_assig_1, 8" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:86]   --->   Operation 73 'insertvalue' 'mrv_8' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 74 [1/1] (0.00ns)   --->   "%mrv_9 = insertvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %mrv_8, i32 %res_9_V_write_assig_1, 9" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:86]   --->   Operation 74 'insertvalue' 'mrv_9' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 75 [1/1] (0.00ns)   --->   "%mrv_s = insertvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %mrv_9, i32 %res_10_V_write_assi_1, 10" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:86]   --->   Operation 75 'insertvalue' 'mrv_s' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 76 [1/1] (0.00ns)   --->   "%mrv_10 = insertvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %mrv_s, i32 %res_11_V_write_assi_1, 11" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:86]   --->   Operation 76 'insertvalue' 'mrv_10' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 77 [1/1] (0.00ns)   --->   "ret { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %mrv_10" [/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:86]   --->   Operation 77 'ret' <Predicate = true> <Delay = 0.00>
+
+
+============================================================
++ Verbose Summary: Timing violations
+============================================================
+Target clock period: 5ns, clock uncertainty: 0.625ns.
+
+ <State 1>: 1.6ns
+The critical path consists of the following:
+	wire read on port 'data_11_V_read' [13]  (0 ns)
+	'icmp' operation ('tmp_29_10', /home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83) [72]  (1.14 ns)
+	'select' operation ('res[11].V', /home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:83) [74]  (0.462 ns)
+
+
+============================================================
++ Verbose Summary: Binding
+============================================================
+N/A
+* FSMD analyzer results:
+  - Output states:
+ - Input state : 
+  - Chain level:
+	State 1
+
+
+============================================================
++ Verbose Summary: Datapath Resource usage 
+============================================================
+N/A

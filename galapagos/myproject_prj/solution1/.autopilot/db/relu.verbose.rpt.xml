@@ -1,0 +1,151 @@
+<profile>
+
+<section name = "Vivado HLS Report for 'relu'" level="0">
+<item name = "Date">Sun Mar 31 23:52:44 2019
+</item>
+<item name = "Version">2018.2 (Build 2258646 on Thu Jun 14 20:25:20 MDT 2018)</item>
+<item name = "Project">myproject_prj</item>
+<item name = "Solution">solution1</item>
+<item name = "Product family">kintexu</item>
+<item name = "Target device">xcku115-flva1517-2-e</item>
+</section>
+
+<section name = "Performance Estimates" level="0">
+<item name = "Timing (ns)">
+<section name = "" level="1">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="4">Clock, Target, Estimated, Uncertainty</keys>
+<column name="ap_clk">5.00, 1.602, 0.62</column>
+</table>
+</item>
+</section>
+</item>
+<item name = "Latency (clock cycles)">
+<section name = "" level="1">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="6">, min, max, min, max, Type</keys>
+<column name="">0, 0, 1, 1, function</column>
+</table>
+</item>
+<item name = "Detail">
+<section name = "" level="1">
+<item name = "Instance"><table name="" hasTotal="0">
+<keys size="7">Instance, Module, min, max, min, max, Type</keys>
+</table>
+</item>
+<item name = "Loop"><table name="" hasTotal="0">
+<keys size="8">Loop Name, min, max, Latency, achieved, target, Count, Pipelined</keys>
+</table>
+</item>
+</section>
+</item>
+</section>
+</item>
+</section>
+
+<section name = "Utilization Estimates" level="0">
+<item name = "Summary"><table name="" hasTotal="1">
+<keys size="5">Name, BRAM_18K, DSP48E, FF, LUT</keys>
+<column name="DSP">-, -, -, -</column>
+<column name="Expression">-, -, 0, 612</column>
+<column name="FIFO">-, -, -, -</column>
+<column name="Instance">-, -, -, -</column>
+<column name="Memory">-, -, -, -</column>
+<column name="Multiplexer">-, -, -, -</column>
+<column name="Register">-, -, -, -</column>
+<specialColumn name="Available SLR">2160, 2760, 663360, 331680</specialColumn>
+<specialColumn name="Utilization SLR (%)">0, 0, 0, ~0</specialColumn>
+<specialColumn name="Available">4320, 5520, 1326720, 663360</specialColumn>
+<specialColumn name="Utilization (%)">0, 0, 0, ~0</specialColumn>
+</table>
+</item>
+<item name = "Detail">
+<section name = "" level="1">
+<item name = "Instance"><table name="" hasTotal="1">
+<keys size="6">Instance, Module, BRAM_18K, DSP48E, FF, LUT</keys>
+</table>
+</item>
+<item name = "DSP48"><table name="" hasTotal="0">
+<keys size="3">Instance, Module, Expression</keys>
+</table>
+</item>
+<item name = "Memory"><table name="" hasTotal="1">
+<keys size="9">Memory, Module, BRAM_18K, FF, LUT, Words, Bits, Banks, W*Bits*Banks</keys>
+</table>
+</item>
+<item name = "FIFO"><table name="" hasTotal="1">
+<keys size="7">Name, BRAM_18K, FF, LUT, Depth, Bits, Size:D*B</keys>
+</table>
+</item>
+<item name = "Expression"><table name="" hasTotal="1">
+<keys size="7">Variable Name, Operation, DSP48E, FF, LUT, Bitwidth P0, Bitwidth P1</keys>
+<column name="tmp_29_10_fu_360_p2">icmp, 0, 0, 20, 32, 1</column>
+<column name="tmp_29_1_fu_140_p2">icmp, 0, 0, 20, 32, 1</column>
+<column name="tmp_29_2_fu_162_p2">icmp, 0, 0, 20, 32, 1</column>
+<column name="tmp_29_3_fu_184_p2">icmp, 0, 0, 20, 32, 1</column>
+<column name="tmp_29_4_fu_206_p2">icmp, 0, 0, 20, 32, 1</column>
+<column name="tmp_29_5_fu_228_p2">icmp, 0, 0, 20, 32, 1</column>
+<column name="tmp_29_6_fu_250_p2">icmp, 0, 0, 20, 32, 1</column>
+<column name="tmp_29_7_fu_272_p2">icmp, 0, 0, 20, 32, 1</column>
+<column name="tmp_29_8_fu_294_p2">icmp, 0, 0, 20, 32, 1</column>
+<column name="tmp_29_9_fu_316_p2">icmp, 0, 0, 20, 32, 1</column>
+<column name="tmp_29_fu_118_p2">icmp, 0, 0, 20, 32, 1</column>
+<column name="tmp_29_s_fu_338_p2">icmp, 0, 0, 20, 32, 1</column>
+<column name="res_0_V_write_assig_fu_128_p3">select, 0, 0, 31, 1, 31</column>
+<column name="res_10_V_write_assi_fu_348_p3">select, 0, 0, 31, 1, 31</column>
+<column name="res_11_V_write_assi_fu_370_p3">select, 0, 0, 31, 1, 31</column>
+<column name="res_1_V_write_assig_fu_150_p3">select, 0, 0, 31, 1, 31</column>
+<column name="res_2_V_write_assig_fu_172_p3">select, 0, 0, 31, 1, 31</column>
+<column name="res_3_V_write_assig_fu_194_p3">select, 0, 0, 31, 1, 31</column>
+<column name="res_4_V_write_assig_fu_216_p3">select, 0, 0, 31, 1, 31</column>
+<column name="res_5_V_write_assig_fu_238_p3">select, 0, 0, 31, 1, 31</column>
+<column name="res_6_V_write_assig_fu_260_p3">select, 0, 0, 31, 1, 31</column>
+<column name="res_7_V_write_assig_fu_282_p3">select, 0, 0, 31, 1, 31</column>
+<column name="res_8_V_write_assig_fu_304_p3">select, 0, 0, 31, 1, 31</column>
+<column name="res_9_V_write_assig_fu_326_p3">select, 0, 0, 31, 1, 31</column>
+</table>
+</item>
+<item name = "Multiplexer"><table name="" hasTotal="1">
+<keys size="5">Name, LUT, Input Size, Bits, Total Bits</keys>
+</table>
+</item>
+<item name = "Register"><table name="" hasTotal="1">
+<keys size="5">Name, FF, LUT, Bits, Const Bits</keys>
+</table>
+</item>
+</section>
+</item>
+</section>
+
+<section name = "Interface" level="0">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="6">RTL Ports, Dir, Bits, Protocol, Source Object, C Type</keys>
+<column name="ap_ready">out, 1, ap_ctrl_hs, relu, return value</column>
+<column name="ap_return_0">out, 32, ap_ctrl_hs, relu, return value</column>
+<column name="ap_return_1">out, 32, ap_ctrl_hs, relu, return value</column>
+<column name="ap_return_2">out, 32, ap_ctrl_hs, relu, return value</column>
+<column name="ap_return_3">out, 32, ap_ctrl_hs, relu, return value</column>
+<column name="ap_return_4">out, 32, ap_ctrl_hs, relu, return value</column>
+<column name="ap_return_5">out, 32, ap_ctrl_hs, relu, return value</column>
+<column name="ap_return_6">out, 32, ap_ctrl_hs, relu, return value</column>
+<column name="ap_return_7">out, 32, ap_ctrl_hs, relu, return value</column>
+<column name="ap_return_8">out, 32, ap_ctrl_hs, relu, return value</column>
+<column name="ap_return_9">out, 32, ap_ctrl_hs, relu, return value</column>
+<column name="ap_return_10">out, 32, ap_ctrl_hs, relu, return value</column>
+<column name="ap_return_11">out, 32, ap_ctrl_hs, relu, return value</column>
+<column name="data_0_V_read">in, 32, ap_none, data_0_V_read, scalar</column>
+<column name="data_1_V_read">in, 32, ap_none, data_1_V_read, scalar</column>
+<column name="data_2_V_read">in, 32, ap_none, data_2_V_read, scalar</column>
+<column name="data_3_V_read">in, 32, ap_none, data_3_V_read, scalar</column>
+<column name="data_4_V_read">in, 32, ap_none, data_4_V_read, scalar</column>
+<column name="data_5_V_read">in, 32, ap_none, data_5_V_read, scalar</column>
+<column name="data_6_V_read">in, 32, ap_none, data_6_V_read, scalar</column>
+<column name="data_7_V_read">in, 32, ap_none, data_7_V_read, scalar</column>
+<column name="data_8_V_read">in, 32, ap_none, data_8_V_read, scalar</column>
+<column name="data_9_V_read">in, 32, ap_none, data_9_V_read, scalar</column>
+<column name="data_10_V_read">in, 32, ap_none, data_10_V_read, scalar</column>
+<column name="data_11_V_read">in, 32, ap_none, data_11_V_read, scalar</column>
+</table>
+</item>
+</section>
+</profile>

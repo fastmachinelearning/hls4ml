@@ -1,0 +1,286 @@
+
+
+================================================================
+== Vivado HLS Report for 'myproject'
+================================================================
+* Date:           Sun Mar 31 23:52:37 2019
+
+* Version:        2018.2 (Build 2258646 on Thu Jun 14 20:25:20 MDT 2018)
+* Project:        myproject_prj
+* Solution:       solution1
+* Product family: kintexu
+* Target device:  xcku115-flva1517-2-e
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing (ns): 
+    * Summary: 
+    +--------+-------+----------+------------+
+    |  Clock | Target| Estimated| Uncertainty|
+    +--------+-------+----------+------------+
+    |ap_clk  |   5.00|     4.168|        0.62|
+    +--------+-------+----------+------------+
+
++ Latency (clock cycles): 
+    * Summary: 
+    +-----+-----+-----+-----+----------+
+    |  Latency  |  Interval | Pipeline |
+    | min | max | min | max |   Type   |
+    +-----+-----+-----+-----+----------+
+    |   14|   14|    1|    1| function |
+    +-----+-----+-----+-----+----------+
+
+    + Detail: 
+        * Instance: 
+        N/A
+
+        * Loop: 
+        N/A
+
+============================================================
++ Verbose Summary: Synthesis Manager
+============================================================
+InlineROM: 1
+ExposeGlobal: 0
+============================================================
++ Verbose Summary: CDFG Model
+============================================================
+IsTopModel: 0
+ResetActiveHigh: 1
+IsCombinational: 0
+IsDatapathOnly: 0
+HasWiredReturn: 1
+HasMFsm: 2
+HasVarLatency: 0
+IsPipeline: 1
+IsRtlPipelined: 1
+IsInstanceOverlapped: 0
+IsDontTouch: 0
+HasImplIP: 0
+IsGatedGlobalClock: 0
+
++ Individual pipeline summary: 
+  * Pipeline-0: initiation interval (II) = 1, depth = 15
+
+
+============================================================
++ Verbose Summary: Schedule
+============================================================
+* Number of FSM states : 15
+* Pipeline : 1
+  Pipeline-0 : II = 1, D = 15, States = { 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 }
+* Dataflow Pipeline: 0
+
+* FSM state transitions: 
+1 --> 
+	2  / true
+2 --> 
+	3  / true
+3 --> 
+	4  / true
+4 --> 
+	5  / true
+5 --> 
+	6  / true
+6 --> 
+	7  / true
+7 --> 
+	8  / true
+8 --> 
+	9  / true
+9 --> 
+	10  / true
+10 --> 
+	11  / true
+11 --> 
+	12  / true
+12 --> 
+	13  / true
+13 --> 
+	14  / true
+14 --> 
+	15  / true
+15 --> 
+
+* FSM state operations: 
+
+State 1 <SV = 0> <Delay = 0.00>
+ST_1 : Operation 16 [1/1] (0.00ns)   --->   "%data_V_read = call i768 @_ssdm_op_Read.ap_vld.i768P(i768* %data_V)"   --->   Operation 16 'read' 'data_V_read' <Predicate = true> <Delay = 0.00>
+ST_1 : Operation 17 [5/5] (0.00ns)   --->   "%call_ret = call fastcc { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } @conv_1d.0.0.0.0(i768 %data_V_read)"   --->   Operation 17 'call' 'call_ret' <Predicate = true> <Delay = 0.00> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+
+State 2 <SV = 1> <Delay = 3.80>
+ST_2 : Operation 18 [4/5] (3.80ns)   --->   "%call_ret = call fastcc { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } @conv_1d.0.0.0.0(i768 %data_V_read)"   --->   Operation 18 'call' 'call_ret' <Predicate = true> <Delay = 3.80> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+
+State 3 <SV = 2> <Delay = 3.80>
+ST_3 : Operation 19 [3/5] (3.80ns)   --->   "%call_ret = call fastcc { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } @conv_1d.0.0.0.0(i768 %data_V_read)"   --->   Operation 19 'call' 'call_ret' <Predicate = true> <Delay = 3.80> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+
+State 4 <SV = 3> <Delay = 3.80>
+ST_4 : Operation 20 [2/5] (3.80ns)   --->   "%call_ret = call fastcc { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } @conv_1d.0.0.0.0(i768 %data_V_read)"   --->   Operation 20 'call' 'call_ret' <Predicate = true> <Delay = 3.80> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+
+State 5 <SV = 4> <Delay = 4.16>
+ST_5 : Operation 21 [1/5] (2.56ns)   --->   "%call_ret = call fastcc { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } @conv_1d.0.0.0.0(i768 %data_V_read)"   --->   Operation 21 'call' 'call_ret' <Predicate = true> <Delay = 2.56> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+ST_5 : Operation 22 [1/1] (0.00ns)   --->   "%layer1_out_flat_0_V = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret, 0" [firmware/myproject.cpp:68]   --->   Operation 22 'extractvalue' 'layer1_out_flat_0_V' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 23 [1/1] (0.00ns)   --->   "%layer1_out_flat_1_V = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret, 1" [firmware/myproject.cpp:68]   --->   Operation 23 'extractvalue' 'layer1_out_flat_1_V' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 24 [1/1] (0.00ns)   --->   "%layer1_out_flat_2_V = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret, 2" [firmware/myproject.cpp:68]   --->   Operation 24 'extractvalue' 'layer1_out_flat_2_V' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 25 [1/1] (0.00ns)   --->   "%layer1_out_flat_3_V = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret, 3" [firmware/myproject.cpp:68]   --->   Operation 25 'extractvalue' 'layer1_out_flat_3_V' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 26 [1/1] (0.00ns)   --->   "%layer1_out_flat_4_V = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret, 4" [firmware/myproject.cpp:68]   --->   Operation 26 'extractvalue' 'layer1_out_flat_4_V' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 27 [1/1] (0.00ns)   --->   "%layer1_out_flat_5_V = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret, 5" [firmware/myproject.cpp:68]   --->   Operation 27 'extractvalue' 'layer1_out_flat_5_V' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 28 [1/1] (0.00ns)   --->   "%layer1_out_flat_6_V = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret, 6" [firmware/myproject.cpp:68]   --->   Operation 28 'extractvalue' 'layer1_out_flat_6_V' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 29 [1/1] (0.00ns)   --->   "%layer1_out_flat_7_V = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret, 7" [firmware/myproject.cpp:68]   --->   Operation 29 'extractvalue' 'layer1_out_flat_7_V' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 30 [1/1] (0.00ns)   --->   "%layer1_out_flat_8_V = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret, 8" [firmware/myproject.cpp:68]   --->   Operation 30 'extractvalue' 'layer1_out_flat_8_V' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 31 [1/1] (0.00ns)   --->   "%layer1_out_flat_9_V = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret, 9" [firmware/myproject.cpp:68]   --->   Operation 31 'extractvalue' 'layer1_out_flat_9_V' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 32 [1/1] (0.00ns)   --->   "%layer1_out_flat_10_s = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret, 10" [firmware/myproject.cpp:68]   --->   Operation 32 'extractvalue' 'layer1_out_flat_10_s' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 33 [1/1] (0.00ns)   --->   "%layer1_out_flat_11_s = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret, 11" [firmware/myproject.cpp:68]   --->   Operation 33 'extractvalue' 'layer1_out_flat_11_s' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 34 [1/1] (1.60ns)   --->   "%call_ret2 = call fastcc { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } @relu(i32 %layer1_out_flat_0_V, i32 %layer1_out_flat_1_V, i32 %layer1_out_flat_2_V, i32 %layer1_out_flat_3_V, i32 %layer1_out_flat_4_V, i32 %layer1_out_flat_5_V, i32 %layer1_out_flat_6_V, i32 %layer1_out_flat_7_V, i32 %layer1_out_flat_8_V, i32 %layer1_out_flat_9_V, i32 %layer1_out_flat_10_s, i32 %layer1_out_flat_11_s)" [firmware/myproject.cpp:74]   --->   Operation 34 'call' 'call_ret2' <Predicate = true> <Delay = 1.60> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+ST_5 : Operation 35 [1/1] (0.00ns)   --->   "%layer1_out_flat_relu = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret2, 0" [firmware/myproject.cpp:74]   --->   Operation 35 'extractvalue' 'layer1_out_flat_relu' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 36 [1/1] (0.00ns)   --->   "%layer1_out_flat_relu_1 = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret2, 1" [firmware/myproject.cpp:74]   --->   Operation 36 'extractvalue' 'layer1_out_flat_relu_1' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 37 [1/1] (0.00ns)   --->   "%layer1_out_flat_relu_2 = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret2, 2" [firmware/myproject.cpp:74]   --->   Operation 37 'extractvalue' 'layer1_out_flat_relu_2' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 38 [1/1] (0.00ns)   --->   "%layer1_out_flat_relu_3 = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret2, 3" [firmware/myproject.cpp:74]   --->   Operation 38 'extractvalue' 'layer1_out_flat_relu_3' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 39 [1/1] (0.00ns)   --->   "%layer1_out_flat_relu_4 = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret2, 4" [firmware/myproject.cpp:74]   --->   Operation 39 'extractvalue' 'layer1_out_flat_relu_4' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 40 [1/1] (0.00ns)   --->   "%layer1_out_flat_relu_5 = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret2, 5" [firmware/myproject.cpp:74]   --->   Operation 40 'extractvalue' 'layer1_out_flat_relu_5' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 41 [1/1] (0.00ns)   --->   "%layer1_out_flat_relu_6 = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret2, 6" [firmware/myproject.cpp:74]   --->   Operation 41 'extractvalue' 'layer1_out_flat_relu_6' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 42 [1/1] (0.00ns)   --->   "%layer1_out_flat_relu_7 = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret2, 7" [firmware/myproject.cpp:74]   --->   Operation 42 'extractvalue' 'layer1_out_flat_relu_7' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 43 [1/1] (0.00ns)   --->   "%layer1_out_flat_relu_8 = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret2, 8" [firmware/myproject.cpp:74]   --->   Operation 43 'extractvalue' 'layer1_out_flat_relu_8' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 44 [1/1] (0.00ns)   --->   "%layer1_out_flat_relu_9 = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret2, 9" [firmware/myproject.cpp:74]   --->   Operation 44 'extractvalue' 'layer1_out_flat_relu_9' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 45 [1/1] (0.00ns)   --->   "%layer1_out_flat_relu_10 = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret2, 10" [firmware/myproject.cpp:74]   --->   Operation 45 'extractvalue' 'layer1_out_flat_relu_10' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 46 [1/1] (0.00ns)   --->   "%layer1_out_flat_relu_11 = extractvalue { i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32 } %call_ret2, 11" [firmware/myproject.cpp:74]   --->   Operation 46 'extractvalue' 'layer1_out_flat_relu_11' <Predicate = true> <Delay = 0.00>
+ST_5 : Operation 47 [4/4] (0.00ns)   --->   "%call_ret3 = call fastcc { i32, i32, i32, i32, i32, i32 } @compute_layer.0.0.0.(i32 %layer1_out_flat_relu, i32 %layer1_out_flat_relu_1, i32 %layer1_out_flat_relu_2, i32 %layer1_out_flat_relu_3, i32 %layer1_out_flat_relu_4, i32 %layer1_out_flat_relu_5, i32 %layer1_out_flat_relu_6, i32 %layer1_out_flat_relu_7, i32 %layer1_out_flat_relu_8, i32 %layer1_out_flat_relu_9, i32 %layer1_out_flat_relu_10, i32 %layer1_out_flat_relu_11)" [firmware/myproject.cpp:79]   --->   Operation 47 'call' 'call_ret3' <Predicate = true> <Delay = 0.00> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+
+State 6 <SV = 5> <Delay = 3.80>
+ST_6 : Operation 48 [3/4] (3.80ns)   --->   "%call_ret3 = call fastcc { i32, i32, i32, i32, i32, i32 } @compute_layer.0.0.0.(i32 %layer1_out_flat_relu, i32 %layer1_out_flat_relu_1, i32 %layer1_out_flat_relu_2, i32 %layer1_out_flat_relu_3, i32 %layer1_out_flat_relu_4, i32 %layer1_out_flat_relu_5, i32 %layer1_out_flat_relu_6, i32 %layer1_out_flat_relu_7, i32 %layer1_out_flat_relu_8, i32 %layer1_out_flat_relu_9, i32 %layer1_out_flat_relu_10, i32 %layer1_out_flat_relu_11)" [firmware/myproject.cpp:79]   --->   Operation 48 'call' 'call_ret3' <Predicate = true> <Delay = 3.80> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+
+State 7 <SV = 6> <Delay = 3.80>
+ST_7 : Operation 49 [2/4] (3.80ns)   --->   "%call_ret3 = call fastcc { i32, i32, i32, i32, i32, i32 } @compute_layer.0.0.0.(i32 %layer1_out_flat_relu, i32 %layer1_out_flat_relu_1, i32 %layer1_out_flat_relu_2, i32 %layer1_out_flat_relu_3, i32 %layer1_out_flat_relu_4, i32 %layer1_out_flat_relu_5, i32 %layer1_out_flat_relu_6, i32 %layer1_out_flat_relu_7, i32 %layer1_out_flat_relu_8, i32 %layer1_out_flat_relu_9, i32 %layer1_out_flat_relu_10, i32 %layer1_out_flat_relu_11)" [firmware/myproject.cpp:79]   --->   Operation 49 'call' 'call_ret3' <Predicate = true> <Delay = 3.80> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+
+State 8 <SV = 7> <Delay = 3.64>
+ST_8 : Operation 50 [1/4] (3.64ns)   --->   "%call_ret3 = call fastcc { i32, i32, i32, i32, i32, i32 } @compute_layer.0.0.0.(i32 %layer1_out_flat_relu, i32 %layer1_out_flat_relu_1, i32 %layer1_out_flat_relu_2, i32 %layer1_out_flat_relu_3, i32 %layer1_out_flat_relu_4, i32 %layer1_out_flat_relu_5, i32 %layer1_out_flat_relu_6, i32 %layer1_out_flat_relu_7, i32 %layer1_out_flat_relu_8, i32 %layer1_out_flat_relu_9, i32 %layer1_out_flat_relu_10, i32 %layer1_out_flat_relu_11)" [firmware/myproject.cpp:79]   --->   Operation 50 'call' 'call_ret3' <Predicate = true> <Delay = 3.64> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+ST_8 : Operation 51 [1/1] (0.00ns)   --->   "%logits2_0_V = extractvalue { i32, i32, i32, i32, i32, i32 } %call_ret3, 0" [firmware/myproject.cpp:79]   --->   Operation 51 'extractvalue' 'logits2_0_V' <Predicate = true> <Delay = 0.00>
+ST_8 : Operation 52 [1/1] (0.00ns)   --->   "%logits2_1_V = extractvalue { i32, i32, i32, i32, i32, i32 } %call_ret3, 1" [firmware/myproject.cpp:79]   --->   Operation 52 'extractvalue' 'logits2_1_V' <Predicate = true> <Delay = 0.00>
+ST_8 : Operation 53 [1/1] (0.00ns)   --->   "%logits2_2_V = extractvalue { i32, i32, i32, i32, i32, i32 } %call_ret3, 2" [firmware/myproject.cpp:79]   --->   Operation 53 'extractvalue' 'logits2_2_V' <Predicate = true> <Delay = 0.00>
+ST_8 : Operation 54 [1/1] (0.00ns)   --->   "%logits2_3_V = extractvalue { i32, i32, i32, i32, i32, i32 } %call_ret3, 3" [firmware/myproject.cpp:79]   --->   Operation 54 'extractvalue' 'logits2_3_V' <Predicate = true> <Delay = 0.00>
+ST_8 : Operation 55 [1/1] (0.00ns)   --->   "%logits2_4_V = extractvalue { i32, i32, i32, i32, i32, i32 } %call_ret3, 4" [firmware/myproject.cpp:79]   --->   Operation 55 'extractvalue' 'logits2_4_V' <Predicate = true> <Delay = 0.00>
+ST_8 : Operation 56 [1/1] (0.00ns)   --->   "%logits2_5_V = extractvalue { i32, i32, i32, i32, i32, i32 } %call_ret3, 5" [firmware/myproject.cpp:79]   --->   Operation 56 'extractvalue' 'logits2_5_V' <Predicate = true> <Delay = 0.00>
+
+State 9 <SV = 8> <Delay = 3.29>
+ST_9 : Operation 57 [7/7] (3.29ns)   --->   "%res_V_write_assign = call fastcc i189 @softmax(i32 %logits2_0_V, i32 %logits2_1_V, i32 %logits2_2_V, i32 %logits2_3_V, i32 %logits2_4_V, i32 %logits2_5_V)" [firmware/myproject.cpp:79]   --->   Operation 57 'call' 'res_V_write_assign' <Predicate = true> <Delay = 3.29> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+
+State 10 <SV = 9> <Delay = 3.95>
+ST_10 : Operation 58 [6/7] (3.95ns)   --->   "%res_V_write_assign = call fastcc i189 @softmax(i32 %logits2_0_V, i32 %logits2_1_V, i32 %logits2_2_V, i32 %logits2_3_V, i32 %logits2_4_V, i32 %logits2_5_V)" [firmware/myproject.cpp:79]   --->   Operation 58 'call' 'res_V_write_assign' <Predicate = true> <Delay = 3.95> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+
+State 11 <SV = 10> <Delay = 3.95>
+ST_11 : Operation 59 [5/7] (3.95ns)   --->   "%res_V_write_assign = call fastcc i189 @softmax(i32 %logits2_0_V, i32 %logits2_1_V, i32 %logits2_2_V, i32 %logits2_3_V, i32 %logits2_4_V, i32 %logits2_5_V)" [firmware/myproject.cpp:79]   --->   Operation 59 'call' 'res_V_write_assign' <Predicate = true> <Delay = 3.95> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+
+State 12 <SV = 11> <Delay = 3.95>
+ST_12 : Operation 60 [4/7] (3.95ns)   --->   "%res_V_write_assign = call fastcc i189 @softmax(i32 %logits2_0_V, i32 %logits2_1_V, i32 %logits2_2_V, i32 %logits2_3_V, i32 %logits2_4_V, i32 %logits2_5_V)" [firmware/myproject.cpp:79]   --->   Operation 60 'call' 'res_V_write_assign' <Predicate = true> <Delay = 3.95> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+
+State 13 <SV = 12> <Delay = 3.95>
+ST_13 : Operation 61 [3/7] (3.95ns)   --->   "%res_V_write_assign = call fastcc i189 @softmax(i32 %logits2_0_V, i32 %logits2_1_V, i32 %logits2_2_V, i32 %logits2_3_V, i32 %logits2_4_V, i32 %logits2_5_V)" [firmware/myproject.cpp:79]   --->   Operation 61 'call' 'res_V_write_assign' <Predicate = true> <Delay = 3.95> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+
+State 14 <SV = 13> <Delay = 3.95>
+ST_14 : Operation 62 [2/7] (3.95ns)   --->   "%res_V_write_assign = call fastcc i189 @softmax(i32 %logits2_0_V, i32 %logits2_1_V, i32 %logits2_2_V, i32 %logits2_3_V, i32 %logits2_4_V, i32 %logits2_5_V)" [firmware/myproject.cpp:79]   --->   Operation 62 'call' 'res_V_write_assign' <Predicate = true> <Delay = 3.95> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+
+State 15 <SV = 14> <Delay = 1.77>
+ST_15 : Operation 63 [1/1] (0.00ns)   --->   "call void (...)* @_ssdm_op_SpecInterface(i768* %data_V, [7 x i8]* @p_str6, i32 0, i32 0, [1 x i8]* @p_str5, i32 0, i32 0, [1 x i8]* @p_str5, [1 x i8]* @p_str5, [1 x i8]* @p_str5, i32 0, i32 0, i32 0, i32 0, [1 x i8]* @p_str5, [1 x i8]* @p_str5) nounwind"   --->   Operation 63 'specinterface' <Predicate = true> <Delay = 0.00>
+ST_15 : Operation 64 [1/1] (0.00ns)   --->   "call void (...)* @_ssdm_op_SpecInterface(i32 0, [7 x i8]* @p_str6, i32 0, i32 0, [1 x i8]* @p_str5, i32 0, i32 0, [1 x i8]* @p_str5, [1 x i8]* @p_str5, [1 x i8]* @p_str5, i32 0, i32 0, i32 0, i32 0, [1 x i8]* @p_str5, [1 x i8]* @p_str5)"   --->   Operation 64 'specinterface' <Predicate = true> <Delay = 0.00>
+ST_15 : Operation 65 [1/1] (0.00ns)   --->   "call void (...)* @_ssdm_op_SpecPipeline(i32 -1, i32 1, i32 1, i32 0, [1 x i8]* @p_str5) nounwind" [firmware/myproject.cpp:49]   --->   Operation 65 'specpipeline' <Predicate = true> <Delay = 0.00>
+ST_15 : Operation 66 [1/7] (1.77ns)   --->   "%res_V_write_assign = call fastcc i189 @softmax(i32 %logits2_0_V, i32 %logits2_1_V, i32 %logits2_2_V, i32 %logits2_3_V, i32 %logits2_4_V, i32 %logits2_5_V)" [firmware/myproject.cpp:79]   --->   Operation 66 'call' 'res_V_write_assign' <Predicate = true> <Delay = 1.77> <CoreType = "Generic">   --->   Core 0 '' <Latency = 0> <II = 1> <Delay = 1.00> <Generic> <Opcode : >
+ST_15 : Operation 67 [1/1] (0.00ns)   --->   "ret i189 %res_V_write_assign" [firmware/myproject.cpp:79]   --->   Operation 67 'ret' <Predicate = true> <Delay = 0.00>
+
+
+============================================================
++ Verbose Summary: Timing violations
+============================================================
+Target clock period: 5ns, clock uncertainty: 0.625ns.
+
+ <State 1>: 0ns
+The critical path consists of the following:
+
+ <State 2>: 3.81ns
+The critical path consists of the following:
+	'call' operation ('call_ret') to 'conv_1d.0.0.0.0' [8]  (3.81 ns)
+
+ <State 3>: 3.81ns
+The critical path consists of the following:
+	'call' operation ('call_ret') to 'conv_1d.0.0.0.0' [8]  (3.81 ns)
+
+ <State 4>: 3.81ns
+The critical path consists of the following:
+	'call' operation ('call_ret') to 'conv_1d.0.0.0.0' [8]  (3.81 ns)
+
+ <State 5>: 4.17ns
+The critical path consists of the following:
+	'call' operation ('call_ret') to 'conv_1d.0.0.0.0' [8]  (2.57 ns)
+	'call' operation ('call_ret2', firmware/myproject.cpp:74) to 'relu' [21]  (1.6 ns)
+
+ <State 6>: 3.81ns
+The critical path consists of the following:
+	'call' operation ('call_ret3', firmware/myproject.cpp:79) to 'compute_layer.0.0.0.' [34]  (3.81 ns)
+
+ <State 7>: 3.81ns
+The critical path consists of the following:
+	'call' operation ('call_ret3', firmware/myproject.cpp:79) to 'compute_layer.0.0.0.' [34]  (3.81 ns)
+
+ <State 8>: 3.65ns
+The critical path consists of the following:
+	'call' operation ('call_ret3', firmware/myproject.cpp:79) to 'compute_layer.0.0.0.' [34]  (3.65 ns)
+
+ <State 9>: 3.3ns
+The critical path consists of the following:
+	'call' operation ('res_V_write_assign', firmware/myproject.cpp:79) to 'softmax' [41]  (3.3 ns)
+
+ <State 10>: 3.96ns
+The critical path consists of the following:
+	'call' operation ('res_V_write_assign', firmware/myproject.cpp:79) to 'softmax' [41]  (3.96 ns)
+
+ <State 11>: 3.96ns
+The critical path consists of the following:
+	'call' operation ('res_V_write_assign', firmware/myproject.cpp:79) to 'softmax' [41]  (3.96 ns)
+
+ <State 12>: 3.96ns
+The critical path consists of the following:
+	'call' operation ('res_V_write_assign', firmware/myproject.cpp:79) to 'softmax' [41]  (3.96 ns)
+
+ <State 13>: 3.96ns
+The critical path consists of the following:
+	'call' operation ('res_V_write_assign', firmware/myproject.cpp:79) to 'softmax' [41]  (3.96 ns)
+
+ <State 14>: 3.96ns
+The critical path consists of the following:
+	'call' operation ('res_V_write_assign', firmware/myproject.cpp:79) to 'softmax' [41]  (3.96 ns)
+
+ <State 15>: 1.77ns
+The critical path consists of the following:
+	'call' operation ('res_V_write_assign', firmware/myproject.cpp:79) to 'softmax' [41]  (1.77 ns)
+
+
+============================================================
++ Verbose Summary: Binding
+============================================================
+N/A
+* FSMD analyzer results:
+  - Output states:
+ - Input state : 
+  - Chain level:
+	State 1
+	State 2
+	State 3
+	State 4
+	State 5
+	State 6
+	State 7
+	State 8
+	State 9
+	State 10
+	State 11
+	State 12
+	State 13
+	State 14
+	State 15
+
+
+============================================================
++ Verbose Summary: Datapath Resource usage 
+============================================================
+N/A

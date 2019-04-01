@@ -1,0 +1,1070 @@
+INFO-FLOW: Workspace /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1 opened at Sun Mar 31 23:51:51 EDT 2019
+Execute   set_part xcku115-flva1517-2-e 
+Execute     add_library xilinx/kintexu/kintexu:xcku115:-flva1517:-2-e 
+Execute       get_default_platform 
+Execute       license_isbetapart xcku115 
+Command       license_isbetapart done; error code: 1; 
+Execute       open_platform DefaultPlatform 
+Execute       import_lib /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/kintexu/kintexu 
+Execute         source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/xilinx.lib 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/xilinx_interface.lib 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/plb46.lib 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/fsl.lib 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/axi4.lib 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/maxi.lib 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/saxilite.lib 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/dsp48.lib 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/ip/dds_compiler.lib 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/ip/xfft.lib 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/ip/xfir.lib 
+Execute         source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/xilinx_old.lib 
+Execute         source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/xilinx_vivado.lib 
+Execute         source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/xilinx.hlp 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/target_info.tcl 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/xilinx_interface.hlp 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/maxi.hlp 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/saxilite.hlp 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/dsp48.hlp 
+Execute         source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/kintexu/dsp48e2.hlp 
+Execute         get_default_platform 
+Execute         config_chip_info -quiet -resource  {SLICE 30300} {LUT 242400}    {FF 484800} {DSP48E 1920}   {BRAM 1200}  
+Execute         config_chip_info -quiet -speed medium 
+Execute         source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/xilinx.hlp 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/target_info.tcl 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/xilinx_interface.hlp 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/maxi.hlp 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/saxilite.hlp 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/dsp48.hlp 
+Execute       source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/kintexu/kintexu.gen 
+Execute         source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/virtex.gen 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/xilinx.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/plb46.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/fsl.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/axi4.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/nativeAXI4.gen 
+Execute               source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/saxilite.gen 
+Execute               source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/maxi.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/scripts/xilinxcoregen.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/XilEDKCoreGen.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/ip/dds_compiler.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/ip/util.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/ip/xfft.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/ip/xfir.gen 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/dsp48.gen 
+Execute       get_default_platform 
+Execute       config_chip_info -quiet -resource  {SLICE 82920} {LUT 663360}    {FF 1326720} {DSP48E 5520}  {BRAM 4320} {SLR 2}  
+Execute       config_chip_info -quiet -speed medium 
+Command     add_library done; 0.11 sec.
+Execute     add_library xilinx/kintexu/kintexu_fpv7 
+Execute       get_default_platform 
+Execute       open_platform DefaultPlatform 
+Execute       import_lib /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/kintexu/kintexu_fpv7 
+Execute         source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/xilinx_fpv7.lib 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/xilinx_hp.lib 
+Execute         source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/xilinx_fpv.hlp 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/xilinx.hlp 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/target_info.tcl 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/xilinx_interface.hlp 
+Execute               source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/maxi.hlp 
+Execute               source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/saxilite.hlp 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/dsp48.hlp 
+Execute         source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/kintexu/kintexu_hp.hlp 
+Execute       source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/kintexu/kintexu_fpv7.gen 
+Execute         source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/xilinx_fpv6.gen 
+INFO: [HLS 200-10] Setting target device to 'xcku115-flva1517-2-e'
+Execute     get_default_platform 
+Command   set_part done; 0.15 sec.
+Execute   create_clock -period 5 -name default 
+Execute     config_clock -quiet -name default -period 5 -default=false 
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 5ns.
+Execute   csynth_design 
+Execute     get_config_compile -effort 
+Execute     get_config_compile -enable_clang39 
+Execute     get_config_compile -g 
+Execute     get_config_compile -lm 
+Execute     get_config_compile -ng 
+Execute     get_config_compile -opt_fp 
+Execute     get_config_compile -skip_cdt 
+Execute     get_config_compile -skip_syncheck 
+Execute     get_config_compile -skip_transform 
+Execute     get_config_compile -keep_printf 
+Execute     elaborate -effort=medium -skip_syncheck=0 -keep_printf=0 -lm=0 -skip_cdt=0 -skip_transform=0 -ng=0 -g=0 -opt_fp=0 -from_csynth_design=1 
+Execute       get_config_schedule -relax_ii_for_timing 
+Execute       get_config_schedule -suppress_dependence_error_break 
+INFO: [HLS 200-10] Analyzing design file 'myproject_galapagos.cpp' ... 
+INFO-FLOW: Compiling one TU...
+Execute       is_m_axi_addr64 
+INFO-FLOW: Handling myproject_galapagos.cpp as C++
+Execute       get_default_platform 
+Execute       is_encrypted myproject_galapagos.cpp 
+Execute       get_default_platform 
+INFO-FLOW: Source preprocessing
+Execute       clang  -fno-limit-debug-info -gcc-toolchain "/opt/Xilinx/Vivado/2018.2/lnx64/tools/gcc" -hls  -fno-exceptions  -D__llvm__  -E "myproject_galapagos.cpp"   -I/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils -I/home/tarafdar/workDir/test/galapagos/middleware/CPP_lib/Galapagos_lib -I/home/tarafdar/workDir/test/galapagos/middleware/include  -fno-math-errno -c -emit-llvm -O0  -mllvm -disable-llvm-optzns -fno-threadsafe-statics  -fno-use-cxa-atexit  -fno-threadsafe-statics -fno-use-cxa-atexit -D__CLANG_3_1__ -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I "/opt/Xilinx/Vivado/2018.2/common/technology/autopilot" -I "/opt/Xilinx/Vivado/2018.2/common/technology/autopilot/ap_sysc" -include etc/autopilot_ssdm_op.h -D__DSP48E2__  -o "/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pp.0.cpp" 
+INFO-FLOW: exec /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang/bin/clang -fno-limit-debug-info -gcc-toolchain /opt/Xilinx/Vivado/2018.2/lnx64/tools/gcc -hls -fno-exceptions -D__llvm__ -E myproject_galapagos.cpp -I/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils -I/home/tarafdar/workDir/test/galapagos/middleware/CPP_lib/Galapagos_lib -I/home/tarafdar/workDir/test/galapagos/middleware/include -fno-math-errno -c -emit-llvm -O0 -mllvm -disable-llvm-optzns -fno-threadsafe-statics -fno-use-cxa-atexit -fno-threadsafe-statics -fno-use-cxa-atexit -D__CLANG_3_1__ -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I /opt/Xilinx/Vivado/2018.2/common/technology/autopilot -I /opt/Xilinx/Vivado/2018.2/common/technology/autopilot/ap_sysc -include etc/autopilot_ssdm_op.h -D__DSP48E2__ -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pp.0.cpp
+Command       clang done; 1.25 sec.
+INFO-FLOW: Syntax Checking before pre-processing...
+Execute       clang  -fno-limit-debug-info -gcc-toolchain "/opt/Xilinx/Vivado/2018.2/lnx64/tools/gcc" -hls  -I/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils -I/home/tarafdar/workDir/test/galapagos/middleware/CPP_lib/Galapagos_lib -I/home/tarafdar/workDir/test/galapagos/middleware/include  -fno-math-errno -c -emit-llvm -O0  -mllvm -disable-llvm-optzns -fno-threadsafe-statics  -fno-use-cxa-atexit  -fno-threadsafe-statics -fno-use-cxa-atexit -D__CLANG_3_1__ -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I "/opt/Xilinx/Vivado/2018.2/common/technology/autopilot" -I "/opt/Xilinx/Vivado/2018.2/common/technology/autopilot/ap_sysc" -include etc/autopilot_ssdm_op.h -D__DSP48E2__  "/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pp.0.cpp"  -o "/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/useless.bc"  
+INFO-FLOW: exec /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang/bin/clang -fno-limit-debug-info -gcc-toolchain /opt/Xilinx/Vivado/2018.2/lnx64/tools/gcc -hls -I/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils -I/home/tarafdar/workDir/test/galapagos/middleware/CPP_lib/Galapagos_lib -I/home/tarafdar/workDir/test/galapagos/middleware/include -fno-math-errno -c -emit-llvm -O0 -mllvm -disable-llvm-optzns -fno-threadsafe-statics -fno-use-cxa-atexit -fno-threadsafe-statics -fno-use-cxa-atexit -D__CLANG_3_1__ -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I /opt/Xilinx/Vivado/2018.2/common/technology/autopilot -I /opt/Xilinx/Vivado/2018.2/common/technology/autopilot/ap_sysc -include etc/autopilot_ssdm_op.h -D__DSP48E2__ /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pp.0.cpp -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/useless.bc
+Command       clang done; 1.71 sec.
+INFO-FLOW: GCC PP time: 2 seconds per iteration
+Execute       list_core -type functional_unit 
+Execute       tidy_31 xilinx-systemc-detector /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pp.0.cpp std=gnu++98 -directive=/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/.systemc_flag 
+INFO-FLOW: exec /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang-3.9-csynth/bin/tidy-3.1 -header-filter=.* --checks=-*,xilinx-systemc-detector -import-directive=/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/.systemc_flag -quiet -fix-errors /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pp.0.cpp -- -std=gnu++98 -fhls -ferror-limit=0
+Command       tidy_31 done; 0.85 sec.
+INFO-FLOW: CDT Preprocessing with tidy-3.1...
+Execute       tidy_31 xilinx-directive2pragma /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pp.0.cpp std=gnu++98 -directive=/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/solution1.json 
+INFO-FLOW: exec /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang-3.9-csynth/bin/tidy-3.1 -header-filter=.* --checks=-*,xilinx-directive2pragma -import-directive=/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/solution1.json -quiet -fix-errors /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pp.0.cpp -- -std=gnu++98 -fhls -ferror-limit=0
+Command       tidy_31 done; 0.82 sec.
+Execute       get_config_dataflow -strict_mode 
+Execute       ap_eval exec -ignorestderr /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang-3.9-csynth/bin/xilinx-dataflow-lawyer -export-fixes=/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/xilinx-dataflow-lawyer.myproject_galapagos.pp.0.cpp.diag.yml /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pp.0.cpp -- -std=gnu++98 -fhls -ferror-limit=0 -fstrict-dataflow > /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/xilinx-dataflow-lawyer.myproject_galapagos.pp.0.cpp.out.log 2> /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/xilinx-dataflow-lawyer.myproject_galapagos.pp.0.cpp.err.log 
+Command       ap_eval done; 0.65 sec.
+WARNING: [HLS 214-114] Only function calls and local variable declarations are allowed in a dataflow region: /home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:81:9
+Execute       tidy_31 -errorcheck xilinx-constantarray-param,xilinx-resource-pragma-transformer /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pp.0.cpp std=gnu++98 
+INFO-FLOW: exec /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang-3.9-csynth/bin/tidy-3.1 -header-filter=.* --checks=-*,xilinx-constantarray-param,xilinx-resource-pragma-transformer -quiet -fix-errors /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pp.0.cpp -- -std=gnu++98 -fhls -ferror-limit=0
+INFO-FLOW: exec /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang-3.9-csynth/bin/xilinx-legacy-rewriter /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pp.0.cpp -- -std=gnu++98 -fhls -ferror-limit=0
+Command       tidy_31 done; 1.74 sec.
+INFO-FLOW: tidy-3.1 time 3 seconds per iteration
+INFO-FLOW: Pragma Handling...
+Execute       tidy_31 xilinx-ssdm-intrinsics-arguments /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pragma.1.cpp std=gnu++98 
+INFO-FLOW: exec /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang-3.9-csynth/bin/tidy-3.1 -header-filter=.* --checks=-*,xilinx-ssdm-intrinsics-arguments -quiet -fix-errors /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pragma.1.cpp -- -std=gnu++98 -fhls -ferror-limit=0
+Command       tidy_31 done; 1.04 sec.
+INFO-FLOW: Source preprocessing
+Execute       clang  -fno-limit-debug-info -gcc-toolchain "/opt/Xilinx/Vivado/2018.2/lnx64/tools/gcc" -hls  -fno-exceptions  -D__llvm__  -E "/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pragma.1.cpp"   -I/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils -I/home/tarafdar/workDir/test/galapagos/middleware/CPP_lib/Galapagos_lib -I/home/tarafdar/workDir/test/galapagos/middleware/include  -fno-math-errno -c -emit-llvm -O0  -mllvm -disable-llvm-optzns -fno-threadsafe-statics  -fno-use-cxa-atexit  -fno-threadsafe-statics -fno-use-cxa-atexit -D__CLANG_3_1__ -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I "/opt/Xilinx/Vivado/2018.2/common/technology/autopilot" -I "/opt/Xilinx/Vivado/2018.2/common/technology/autopilot/ap_sysc" -include etc/autopilot_ssdm_op.h -D__DSP48E2__  -o "/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pragma.2.cpp" 
+INFO-FLOW: exec /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang/bin/clang -fno-limit-debug-info -gcc-toolchain /opt/Xilinx/Vivado/2018.2/lnx64/tools/gcc -hls -fno-exceptions -D__llvm__ -E /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pragma.1.cpp -I/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils -I/home/tarafdar/workDir/test/galapagos/middleware/CPP_lib/Galapagos_lib -I/home/tarafdar/workDir/test/galapagos/middleware/include -fno-math-errno -c -emit-llvm -O0 -mllvm -disable-llvm-optzns -fno-threadsafe-statics -fno-use-cxa-atexit -fno-threadsafe-statics -fno-use-cxa-atexit -D__CLANG_3_1__ -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I /opt/Xilinx/Vivado/2018.2/common/technology/autopilot -I /opt/Xilinx/Vivado/2018.2/common/technology/autopilot/ap_sysc -include etc/autopilot_ssdm_op.h -D__DSP48E2__ -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pragma.2.cpp
+Command       clang done; 1.25 sec.
+Execute       get_default_platform 
+INFO-FLOW: Processing labels
+Execute       clang -src /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pragma.2.cpp  -fno-limit-debug-info -gcc-toolchain /opt/Xilinx/Vivado/2018.2/lnx64/tools/gcc -hls -hls-analyze-label -hls-analyze-pragma -fno-exceptions  -D__llvm__  -w  "/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pragma.2.cpp"  -I/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils -I/home/tarafdar/workDir/test/galapagos/middleware/CPP_lib/Galapagos_lib -I/home/tarafdar/workDir/test/galapagos/middleware/include  -fno-math-errno -c -emit-llvm -O0  -mllvm -disable-llvm-optzns -fno-threadsafe-statics  -fno-use-cxa-atexit -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I "/opt/Xilinx/Vivado/2018.2/common/technology/autopilot" -I "/opt/Xilinx/Vivado/2018.2/common/technology/autopilot/ap_sysc" -include etc/autopilot_ssdm_op.h -D__DSP48E2__ -g -o "/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.bc" 
+INFO-FLOW: exec /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang/bin/clang -fno-limit-debug-info -gcc-toolchain /opt/Xilinx/Vivado/2018.2/lnx64/tools/gcc -hls -hls-analyze-label -hls-analyze-pragma -fno-exceptions -D__llvm__ -w /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.pragma.2.cpp -I/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils -I/home/tarafdar/workDir/test/galapagos/middleware/CPP_lib/Galapagos_lib -I/home/tarafdar/workDir/test/galapagos/middleware/include -fno-math-errno -c -emit-llvm -O0 -mllvm -disable-llvm-optzns -fno-threadsafe-statics -fno-use-cxa-atexit -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I /opt/Xilinx/Vivado/2018.2/common/technology/autopilot -I /opt/Xilinx/Vivado/2018.2/common/technology/autopilot/ap_sysc -include etc/autopilot_ssdm_op.h -D__DSP48E2__ -g -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.bc
+Command       clang done; 1.71 sec.
+INFO: [HLS 200-10] Analyzing design file 'firmware/myproject.cpp' ... 
+INFO-FLOW: Compiling one TU...
+Execute       is_m_axi_addr64 
+INFO-FLOW: Handling firmware/myproject.cpp as C++
+Execute       get_default_platform 
+Execute       is_encrypted firmware/myproject.cpp 
+Execute       get_default_platform 
+INFO-FLOW: Source preprocessing
+Execute       clang  -fno-limit-debug-info -gcc-toolchain "/opt/Xilinx/Vivado/2018.2/lnx64/tools/gcc" -hls  -fno-exceptions  -D__llvm__  -E "firmware/myproject.cpp"   -I/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils  -fno-math-errno -c -emit-llvm -O0  -mllvm -disable-llvm-optzns -fno-threadsafe-statics  -fno-use-cxa-atexit  -fno-threadsafe-statics -fno-use-cxa-atexit -D__CLANG_3_1__ -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I "/opt/Xilinx/Vivado/2018.2/common/technology/autopilot" -I "/opt/Xilinx/Vivado/2018.2/common/technology/autopilot/ap_sysc" -include etc/autopilot_ssdm_op.h -D__DSP48E2__  -o "/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp" 
+INFO-FLOW: exec /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang/bin/clang -fno-limit-debug-info -gcc-toolchain /opt/Xilinx/Vivado/2018.2/lnx64/tools/gcc -hls -fno-exceptions -D__llvm__ -E firmware/myproject.cpp -I/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils -fno-math-errno -c -emit-llvm -O0 -mllvm -disable-llvm-optzns -fno-threadsafe-statics -fno-use-cxa-atexit -fno-threadsafe-statics -fno-use-cxa-atexit -D__CLANG_3_1__ -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I /opt/Xilinx/Vivado/2018.2/common/technology/autopilot -I /opt/Xilinx/Vivado/2018.2/common/technology/autopilot/ap_sysc -include etc/autopilot_ssdm_op.h -D__DSP48E2__ -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp
+Command       clang done; 1.25 sec.
+INFO-FLOW: Syntax Checking before pre-processing...
+Execute       clang  -fno-limit-debug-info -gcc-toolchain "/opt/Xilinx/Vivado/2018.2/lnx64/tools/gcc" -hls  -I/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils  -fno-math-errno -c -emit-llvm -O0  -mllvm -disable-llvm-optzns -fno-threadsafe-statics  -fno-use-cxa-atexit  -fno-threadsafe-statics -fno-use-cxa-atexit -D__CLANG_3_1__ -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I "/opt/Xilinx/Vivado/2018.2/common/technology/autopilot" -I "/opt/Xilinx/Vivado/2018.2/common/technology/autopilot/ap_sysc" -include etc/autopilot_ssdm_op.h -D__DSP48E2__  "/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp"  -o "/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/useless.bc"  
+INFO-FLOW: exec /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang/bin/clang -fno-limit-debug-info -gcc-toolchain /opt/Xilinx/Vivado/2018.2/lnx64/tools/gcc -hls -I/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils -fno-math-errno -c -emit-llvm -O0 -mllvm -disable-llvm-optzns -fno-threadsafe-statics -fno-use-cxa-atexit -fno-threadsafe-statics -fno-use-cxa-atexit -D__CLANG_3_1__ -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I /opt/Xilinx/Vivado/2018.2/common/technology/autopilot -I /opt/Xilinx/Vivado/2018.2/common/technology/autopilot/ap_sysc -include etc/autopilot_ssdm_op.h -D__DSP48E2__ /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/useless.bc
+WARNING: [HLS 200-40] In file included from firmware/myproject.cpp:1:
+In file included from firmware/myproject.cpp:21:
+In file included from firmware/parameters.h:8:
+/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:120:49: warning: comparison of unsigned expression < 0 is always false [-Wtautological-compare]
+                    if((ii*CONFIG_T::stride+jj) < CONFIG_T::pad_left || (ii*CONFIG_T::stride+jj) >= (CONFIG_T::pad_left + CONFIG_T::y_in)){
+                       ~~~~~~~~~~~~~~~~~~~~~~~~ ^ ~~~~~~~~~~~~~~~~~~
+firmware/myproject.cpp:63:2: note: in instantiation of function template specialization 'nnet::conv_1d<ap_fixed<32, 8, 5, 3, 0>, ap_fixed<32, 8, 5, 3, 0>, config1>' requested here
+ nnet::conv_1d<input_t, input_t, config1>(data, layer1_out, w1, b1);
+ ^
+In file included from firmware/myproject.cpp:1:
+In file included from firmware/myproject.cpp:21:
+In file included from firmware/parameters.h:8:
+/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:66:49: warning: comparison of unsigned expression < 0 is always false [-Wtautological-compare]
+                    if((ii*CONFIG_T::stride+jj) < CONFIG_T::pad_left || (ii*CONFIG_T::stride+jj) >= (CONFIG_T::pad_left + CONFIG_T::y_in)){
+                       ~~~~~~~~~~~~~~~~~~~~~~~~ ^ ~~~~~~~~~~~~~~~~~~
+/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:108:31: note: in instantiation of function template specialization 'nnet::compute_multiplier_limit<config1>' requested here
+ const int multiplier_limit = compute_multiplier_limit<CONFIG_T>(weights);
+                              ^
+firmware/myproject.cpp:63:2: note: in instantiation of function template specialization 'nnet::conv_1d<ap_fixed<32, 8, 5, 3, 0>, ap_fixed<32, 8, 5, 3, 0>, config1>' requested here
+ nnet::conv_1d<input_t, input_t, config1>(data, layer1_out, w1, b1);
+ ^
+2 warnings generated.\n
+Command       clang done; 1.79 sec.
+INFO-FLOW: GCC PP time: 3 seconds per iteration
+Execute       list_core -type functional_unit 
+Execute       tidy_31 xilinx-systemc-detector /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp std=gnu++98 -directive=/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/.systemc_flag 
+INFO-FLOW: exec /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang-3.9-csynth/bin/tidy-3.1 -header-filter=.* --checks=-*,xilinx-systemc-detector -import-directive=/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/.systemc_flag -quiet -fix-errors /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp -- -std=gnu++98 -fhls -ferror-limit=0
+Command       tidy_31 done; 1.06 sec.
+INFO-FLOW: CDT Preprocessing with tidy-3.1...
+Execute       tidy_31 xilinx-directive2pragma /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp std=gnu++98 -directive=/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/solution1.json 
+INFO-FLOW: exec /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang-3.9-csynth/bin/tidy-3.1 -header-filter=.* --checks=-*,xilinx-directive2pragma -import-directive=/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/solution1.json -quiet -fix-errors /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp -- -std=gnu++98 -fhls -ferror-limit=0
+Command       tidy_31 done; 1.02 sec.
+Execute       get_config_dataflow -strict_mode 
+Execute       ap_eval exec -ignorestderr /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang-3.9-csynth/bin/xilinx-dataflow-lawyer -export-fixes=/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/xilinx-dataflow-lawyer.myproject.pp.0.cpp.diag.yml /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp -- -std=gnu++98 -fhls -ferror-limit=0 -fstrict-dataflow > /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/xilinx-dataflow-lawyer.myproject.pp.0.cpp.out.log 2> /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/xilinx-dataflow-lawyer.myproject.pp.0.cpp.err.log 
+Command       ap_eval done; 0.76 sec.
+WARNING: [HLS 214-114] Only function calls and local variable declarations are allowed in a dataflow region: /home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:81:9
+Execute       tidy_31 -errorcheck xilinx-constantarray-param,xilinx-resource-pragma-transformer /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp std=gnu++98 
+INFO-FLOW: exec /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang-3.9-csynth/bin/tidy-3.1 -header-filter=.* --checks=-*,xilinx-constantarray-param,xilinx-resource-pragma-transformer -quiet -fix-errors /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp -- -std=gnu++98 -fhls -ferror-limit=0
+INFO-FLOW: exec /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang-3.9-csynth/bin/xilinx-legacy-rewriter /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pp.0.cpp -- -std=gnu++98 -fhls -ferror-limit=0
+Command       tidy_31 done; 2.55 sec.
+INFO-FLOW: tidy-3.1 time 4 seconds per iteration
+INFO-FLOW: Pragma Handling...
+Execute       tidy_31 xilinx-ssdm-intrinsics-arguments /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pragma.1.cpp std=gnu++98 
+INFO-FLOW: exec /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang-3.9-csynth/bin/tidy-3.1 -header-filter=.* --checks=-*,xilinx-ssdm-intrinsics-arguments -quiet -fix-errors /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pragma.1.cpp -- -std=gnu++98 -fhls -ferror-limit=0
+Command       tidy_31 done; 1.92 sec.
+INFO-FLOW: Source preprocessing
+Execute       clang  -fno-limit-debug-info -gcc-toolchain "/opt/Xilinx/Vivado/2018.2/lnx64/tools/gcc" -hls  -fno-exceptions  -D__llvm__  -E "/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pragma.1.cpp"   -I/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils  -fno-math-errno -c -emit-llvm -O0  -mllvm -disable-llvm-optzns -fno-threadsafe-statics  -fno-use-cxa-atexit  -fno-threadsafe-statics -fno-use-cxa-atexit -D__CLANG_3_1__ -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I "/opt/Xilinx/Vivado/2018.2/common/technology/autopilot" -I "/opt/Xilinx/Vivado/2018.2/common/technology/autopilot/ap_sysc" -include etc/autopilot_ssdm_op.h -D__DSP48E2__  -o "/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pragma.2.cpp" 
+INFO-FLOW: exec /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang/bin/clang -fno-limit-debug-info -gcc-toolchain /opt/Xilinx/Vivado/2018.2/lnx64/tools/gcc -hls -fno-exceptions -D__llvm__ -E /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pragma.1.cpp -I/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils -fno-math-errno -c -emit-llvm -O0 -mllvm -disable-llvm-optzns -fno-threadsafe-statics -fno-use-cxa-atexit -fno-threadsafe-statics -fno-use-cxa-atexit -D__CLANG_3_1__ -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I /opt/Xilinx/Vivado/2018.2/common/technology/autopilot -I /opt/Xilinx/Vivado/2018.2/common/technology/autopilot/ap_sysc -include etc/autopilot_ssdm_op.h -D__DSP48E2__ -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pragma.2.cpp
+Command       clang done; 1.22 sec.
+Execute       get_default_platform 
+INFO-FLOW: Processing labels
+Execute       clang -src /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pragma.2.cpp  -fno-limit-debug-info -gcc-toolchain /opt/Xilinx/Vivado/2018.2/lnx64/tools/gcc -hls -hls-analyze-label -hls-analyze-pragma -fno-exceptions  -D__llvm__  -w  "/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pragma.2.cpp"  -I/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils  -fno-math-errno -c -emit-llvm -O0  -mllvm -disable-llvm-optzns -fno-threadsafe-statics  -fno-use-cxa-atexit -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I "/opt/Xilinx/Vivado/2018.2/common/technology/autopilot" -I "/opt/Xilinx/Vivado/2018.2/common/technology/autopilot/ap_sysc" -include etc/autopilot_ssdm_op.h -D__DSP48E2__ -g -o "/home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.bc" 
+INFO-FLOW: exec /opt/Xilinx/Vivado/2018.2/lnx64/tools/clang/bin/clang -fno-limit-debug-info -gcc-toolchain /opt/Xilinx/Vivado/2018.2/lnx64/tools/gcc -hls -hls-analyze-label -hls-analyze-pragma -fno-exceptions -D__llvm__ -w /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.pragma.2.cpp -I/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils -fno-math-errno -c -emit-llvm -O0 -mllvm -disable-llvm-optzns -fno-threadsafe-statics -fno-use-cxa-atexit -DAESL_SYN -D__SYNTHESIS__ -D__HLS_SYN__ -I /opt/Xilinx/Vivado/2018.2/common/technology/autopilot -I /opt/Xilinx/Vivado/2018.2/common/technology/autopilot/ap_sysc -include etc/autopilot_ssdm_op.h -D__DSP48E2__ -g -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.bc
+Command       clang done; 1.85 sec.
+INFO-FLOW: Linking Debug ...
+Execute       llvm-ld /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.g.bc /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.g.bc -hls-opt -except-internalize myproject_galapagos -L/opt/Xilinx/Vivado/2018.2/lnx64/lib -lhlsm -lhlsmc++ -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.g 
+Command       llvm-ld done; 1.04 sec.
+INFO: [HLS 200-111] Finished Linking Time (s): cpu = 00:00:26 ; elapsed = 00:00:26 . Memory (MB): peak = 365.875 ; gain = 0.176 ; free physical = 587 ; free virtual = 36803
+INFO: [HLS 200-111] Finished Checking Pragmas Time (s): cpu = 00:00:26 ; elapsed = 00:00:26 . Memory (MB): peak = 365.875 ; gain = 0.176 ; free physical = 587 ; free virtual = 36803
+Execute       ::config_rtl 
+Execute       opt_and_import_c a -opt_level=2 -skip_syncheck=0 -ng=0 -keep_printf=0 
+Execute         cleanup_all_models 
+INFO: [HLS 200-10] Starting code transformations ...
+Execute         transform -promote-dbg-pointer /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.pp.bc -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.pp.0.bc -f 
+Command         transform done; 0.16 sec.
+Execute         llvm-ld /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.pp.0.bc -disable-opt -L/opt/Xilinx/Vivado/2018.2/lnx64/lib -lfloatconversion -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.g.0 
+Command         llvm-ld done; 1.49 sec.
+INFO-FLOW: Running Standard Transforms...
+Execute         transform -hls -share-std-xform -demangle-name -inline-byval-memcpy -always-inline -promote-dbg-pointer -interface-preproc -scalarrepl -mem2reg -keep-read-access -instcombine -dce -promote-dbg-pointer -bitop-raise -loop-simplify -indvarspre -indvars -loop-simplify -xunroll -constprop -instcombine -simplifycfg -indvars -simplifycfg -dce -globaldce -basicaa -simplifycfg -mem2reg -globalopt -global-constprop -deadargelim -instcombine -simplifycfg -prune-eh -simplifycfg -scalarrepl -instcombine -reassociate -licm -simplifycfg -loop-simplify -indvars -instcombine -simplifycfg -mem2reg -loop-simplify -indvars -instcombine -gvn -gvn -instcombine -adce -break-crit-edges -simplifycfg -loop-delete -global-array-opt -dce -dse -adce -find-syn-modules -top myproject_galapagos -deadargelim -mem2reg -instcombine -dce -presyn-prepare -auto-rom-infer -interface-preproc -syn-check -check-rec-only -find-region -simplifycfg -func-extr -function-inline -globaldce -mem2reg -instcombine -dce -gvn -globaldce -adce -adse -constprop -instcombine -bit-constprop -instcombine -dce -simplifycfg -bitop-raise -simplifycfg -dce -loop-delete -reassociate -globalopt -global-privatize -mem2reg -dce -global-constprop -pointer-simplify -constprop -dce -func-inst -deadargelim -auto-shift-reg-idiom -promote-dbg-pointer -norm-name /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.g.0.bc -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.g.1.bc -f -phase std-opt 
+INFO: [XFORM 203-603] Inlining function 'ap_fixed_base<32, 8, true, (ap_q_mode)5, (ap_o_mode)3, 0>::to_double' into 'nnet::compute_multiplier_limit<config1>' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:72).
+INFO: [XFORM 203-603] Inlining function 'ap_fixed_base<32, 8, true, (ap_q_mode)5, (ap_o_mode)3, 0>::to_double' into 'nnet::compute_multiplier_limit<config1>' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:72).
+INFO: [XFORM 203-603] Inlining function 'ap_fixed_base<137, 84, false, (ap_q_mode)5, (ap_o_mode)3, 0>::operator<<' into 'generic_cast_IEEE754<int, (ap_q_mode)6, double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_case_IEEE754.h:17).
+INFO: [XFORM 203-603] Inlining function 'ap_fixed_base<1, 32, false, (ap_q_mode)5, (ap_o_mode)0, 0>::overflow_adjust' into 'ap_fixed_base<1, 32, false, (ap_q_mode)5, (ap_o_mode)0, 0>::ap_fixed_base<137, 84, false, (ap_q_mode)5, (ap_o_mode)3, 0>' ().
+Command         transform done; 1.45 sec.
+INFO: [HLS 200-111] Finished Standard Transforms Time (s): cpu = 00:00:29 ; elapsed = 00:00:30 . Memory (MB): peak = 562.633 ; gain = 196.934 ; free physical = 475 ; free virtual = 36704
+INFO: [HLS 200-10] Checking synthesizability ...
+INFO-FLOW: Checking Synthesizability 1/2..
+Execute         transform -hls -syn-check -check-rec-only -disaggr -scalarrepl -norm-name -dce -mem2reg -instcombine -function-uniquify -directive-preproc -mem2reg -dse -dce -auto-rom-infer -dce -array-normalize -instcombine -dce -warn-fifo-pointer -array-seg-normalize -instcombine -dce -array-flatten -instcombine -dce -array-burst -dce -deadargelim -promote-global-argument -simplifycfg -mem2reg -globaldce -resolve-double-ptr -dce -deadargelim -dce -instcombine -function-inline -globaldce -dce -doublePtrSimplify -doublePtrElim -dce -doublePtrSimplify -promote-dbg-pointer -dce -scalarrepl -dse -adse -instcombine -ptrLegalization -simplifycfg -dce -instcombine -pointer-simplify -ptrArgReplace -dce -instcombine -disaggr -scalarrepl -norm-name -dce -mem2reg -instcombine -ptrLegalization -simplifycfg -deadargelim -instcombine -dce -inst-simplify -function-uniquify -directive-preproc -mem2reg -dse -dce -globaldce /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.g.1.bc -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.g.2.prechk.bc -f 
+INFO: [XFORM 203-602] Inlining function '_ZN9fp_structIdEC2Ed10' into '_ZN9fp_structIdEC1Ed6' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/src/technology/autopilot/header_files/utils/x_hls_utils.h:442) automatically.
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::data' into 'fp_struct<double>::to_double' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/src/technology/autopilot/header_files/utils/x_hls_utils.h:475) automatically.
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::to_double' into 'fp_struct<double>::to_ieee' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/src/technology/autopilot/header_files/utils/x_hls_utils.h:489) automatically.
+INFO: [XFORM 203-602] Inlining function '_ZN9fp_structIdEC1Ed6' into 'generic_copysign<double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_copysign.h:11) automatically.
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::to_ieee' into 'generic_copysign<double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_copysign.h:13) automatically.
+INFO: [XFORM 203-602] Inlining function '_ZN9fp_structIdEC1Ed6' into 'generic_ceil<double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_ceil.h:17) automatically.
+INFO: [XFORM 203-602] Inlining function '_ZNK9fp_structIdE9__signbitEv8' into 'generic_ceil<double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_ceil.h:20) automatically.
+INFO: [XFORM 203-602] Inlining function 'generic_copysign<double>' into 'generic_ceil<double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_ceil.h:23) automatically.
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::data' into 'generic_ceil<double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_ceil.h:37) automatically.
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::to_ieee' into 'generic_ceil<double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_ceil.h:41) automatically.
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::mantissa' into 'generic_cast_IEEE754<int, (ap_q_mode)6, double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_case_IEEE754.h:14) automatically.
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::expv' into 'generic_cast_IEEE754<int, (ap_q_mode)6, double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_case_IEEE754.h:17) automatically.
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::__signbit' into 'generic_cast_IEEE754<int, (ap_q_mode)6, double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_case_IEEE754.h:49) automatically.
+INFO: [XFORM 203-602] Inlining function 'generic_cast_IEEE754<int, (ap_q_mode)6, double>' into 'generic_cast_IEEE754<int, double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_case_IEEE754.h:98) automatically.
+INFO: [XFORM 203-602] Inlining function 'generic_cast_IEEE754<int, double>' into '__hls_fptosi_double_i32' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/src/lib_floatconversion.cpp:54) automatically.
+INFO: [XFORM 203-602] Inlining function 'ceil' into 'nnet::compute_multiplier_limit<config1>' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:81) automatically.
+INFO: [XFORM 203-602] Inlining function '__hls_fptosi_double_i32' into 'nnet::compute_multiplier_limit<config1>' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:81) automatically.
+INFO: [XFORM 203-602] Inlining function '__hls_fptosi_double_i32' into 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:73) automatically.
+INFO: [XFORM 203-602] Inlining function 'nnet::flatten<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, 4, 3>' into 'myproject' (firmware/myproject.cpp:68) automatically.
+Command         transform done; 0.5 sec.
+INFO-FLOW: Checking Synthesizability 2/2..
+Execute         transform -syn-check /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.g.2.prechk.bc -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.g.2.bc -f -phase syn-check 
+Command         transform done; 0.16 sec.
+INFO: [HLS 200-111] Finished Checking Synthesizability Time (s): cpu = 00:00:29 ; elapsed = 00:00:30 . Memory (MB): peak = 562.633 ; gain = 196.934 ; free physical = 417 ; free virtual = 36650
+INFO-FLOW: Compiler optimizing ...
+INFO-FLOW: Share syncheck's 1.bc for syn flow: copy /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.g.1.bc to /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.o.1.bc
+INFO-FLOW: Presyn 1...
+Execute         transform -hls -tmp /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db -interface-port-rename -type-info -function-uniquify -directive-preproc -mem2reg -dse -dce -disaggr -scalarrepl -norm-name -deadargelim -mem2reg -instcombine -dce -simplifycfg -auto-rom-infer -dce -function-uniquify -resource-proc -simplifycfg -mem2reg -globaldce -resolve-double-ptr -dce -deadargelim -dce -instcombine -clib-intrinsic-prepare -dce -func-buffer -dce -array-normalize -func-legal -instcombine -gvn -constprop -dce -ptrArgReplace -mem2reg -instcombine -dce -array-seg-normalize -deadargelim -instcombine -dce -pointer-simplify -dce -port-alignment -dce -interface-preproc -data-pack -instcombine -dce -basicaa -aggr-aa -aggrmodref-aa -aggr-aa -gvn -gvn -basicaa -aggr-aa -aggrmodref-aa -aggr-aa -dse -adse -adce -loop-simplify -indvars -instcombine -gvn -loop-simplify -mem2reg -dce -find-region -instcombine -auto-loop-pipeline -inst-simplify -interface-preproc -cfgopt -instcombine -indvars -auto-loop-unroll -loop-simplify -loop-bound -xunroll -constprop -instcombine -simplifycfg -indvars -simplifycfg -dce -globaldce -clean-region -attach-range -gvn -inst-simplify -constprop -simplifycfg -dce -pointer-simplify -dce -globalopt -constprop -dce -array-promote -constprop -instcombine -dce -ptrArgReplace -mem2reg -instcombine -simplifycfg -dce -auto-par -instcombine -dce -array-transform-check -array-reshape -instcombine -simplifycfg -dce -ptrArgReplace -deadargelim -mem2reg -instcombine -simplifycfg -dce -indvars -loop-simplify -loop-bound -xunroll -constprop -instcombine -simplifycfg -indvars -simplifycfg -dce -globaldce -duplicate-dataflow-processes -globaldce -instcombine -array-partition -instcombine -simplifycfg -dce -ptrArgReplace -global-constprop -deadargelim -mem2reg -func-legal -instcombine -dce -global-constprop -deadargelim -mem2reg -instcombine -simplifycfg -dce -merge-param -deadargelim -globalopt -constprop -dce -array-promote -constprop -instcombine -dce -ptrArgReplace -mem2reg -instcombine -simplifycfg -dce -mem-intrinsic-preproc -dce -global-internalize -global-privatize -mem2reg -globaldce -promote-global-argument -ptrArgReplace -mem2reg -instcombine -dce -globalopt -mergereturn -simplify-global-access -mem2reg -dce -pointer-simplify -dce -functionattrs -basicaa -aggr-aa -aggrmodref-aa -aggr-aa -gvn -gvn -basicaa -aggr-aa -aggrmodref-aa -aggr-aa -dse -adse -adce -inst-simplify -dce -norm-name -function-inline -globaldce -func-inst -constprop -instcombine -simplifycfg -dce -func-legal -dce -loop-bound -arraycheck -bitwidthmin -on-by-dataflow -loop-delete -instcombine -simplifycfg -globaldce -dce -gvn -deadargelim -dce -loop-simplify -clean-region -simplifycfg -propagate-stable-arguments -loop-stream -instcombine -simplifycfg -dce -globaldce -duplicate-dataflow-processes -stream-intrinsic-preproc -dce -check-ap-stream -loop-simplify -eliminate-keepreads -extract-dataflow-in-loop -loop-simplify -dce -gvn -deadargelim -dse -check-dataflow-syntax -legalize-stream-variable -legalize-global -extract-subproc -dce -dead-channel-elimination -canonicalize-gep -globaldce -dce -gvn -deadargelim -annotate-dataflow-channels -scalar-propagation -deadargelim -globaldce -mem2reg -check-dataflow-channels -function-stream -dce -globaldce -prop-fifo-spec -internal-stream-gen -canonicalize-gep -globaldce -dce -gvn -deadargelim -mergereturn -indvars -loop-simplify -instcombine -array-stream -array-seg-normalize -array-partition -func-legal -instcombine -simplifycfg -dce -bundle-memfifo-ops -deadargelim -function-uniquify -directive-preproc -mem2reg -dse -dce -group-axi-access -licm -simplifycfg -dce -loop-delete -norm-name /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.o.1.bc -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.o.1.tmp.bc -f 
+INFO: [XFORM 203-502] Unrolling all loops for pipelining in function 'nnet::softmax<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:225:4).
+INFO: [XFORM 203-502] Unrolling all loops for pipelining in function 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:56:55).
+INFO: [XFORM 203-502] Unrolling all loops for pipelining in function 'nnet::relu<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:73:39).
+INFO: [XFORM 203-502] Unrolling all loops for pipelining in function 'nnet::flatten<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, 4, 3>' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:174:31).
+INFO: [XFORM 203-502] Unrolling all loops for pipelining in function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:94:57).
+INFO: [XFORM 203-502] Unrolling all loops for pipelining in function 'nnet::compute_multiplier_limit<config1>' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:55).
+INFO: [XFORM 203-501] Unrolling loop 'Loop-1' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:236) in function 'nnet::softmax<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-2' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:240) in function 'nnet::softmax<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-2.1' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:244) in function 'nnet::softmax<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-3' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:258) in function 'nnet::softmax<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Product1' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:97) in function 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Product2' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:102) in function 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'ResetAccum' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:113) in function 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Accum1' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:121) in function 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Accum2' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:125) in function 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Result' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:132) in function 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-1' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:78) in function 'nnet::relu<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-1' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:174) in function 'nnet::flatten<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, 4, 3>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-1.1' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:175) in function 'nnet::flatten<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, 4, 3>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'ConvOut' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:112) in function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'ConvFilt' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:113) in function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'ConvChan' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:114) in function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'ConvMult' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:115) in function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-2' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:133) in function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-2.1' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:134) in function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'AccumOut' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:141) in function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'AccumFilt' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:142) in function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'AccumChan' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:144) in function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'AccumDot' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:145) in function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-4' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:155) in function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-4.1' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:156) in function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-1' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:59) in function 'nnet::compute_multiplier_limit<config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-1.1' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:60) in function 'nnet::compute_multiplier_limit<config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-1.1.1' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:61) in function 'nnet::compute_multiplier_limit<config1>' completely.
+INFO: [XFORM 203-501] Unrolling loop 'Loop-1.1.1.1' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:62) in function 'nnet::compute_multiplier_limit<config1>' completely.
+INFO: [XFORM 203-102] Partitioning array 'exp_res.V' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:231) automatically.
+INFO: [XFORM 203-102] Partitioning array 'data_cache.V' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:233) automatically.
+INFO: [XFORM 203-131] Reshaping array 'data_str.V' (myproject_galapagos.cpp:41) in dimension 1 completely.
+INFO: [XFORM 203-131] Reshaping array 'res_str'  in dimension 1 completely.
+INFO: [XFORM 203-131] Reshaping array 'data_str.V' (myproject_galapagos.cpp:41) in dimension 2 completely.
+INFO: [XFORM 203-101] Partitioning array 'layer1_out.V' (firmware/myproject.cpp:61) in dimension 1 completely.
+INFO: [XFORM 203-101] Partitioning array 'layer1_out_flat.V' (firmware/myproject.cpp:66) in dimension 1 completely.
+INFO: [XFORM 203-101] Partitioning array 'layer1_out_flat_relu.V' (firmware/myproject.cpp:72) in dimension 1 completely.
+INFO: [XFORM 203-101] Partitioning array 'logits2.V' (firmware/myproject.cpp:77) in dimension 1 completely.
+INFO: [XFORM 203-101] Partitioning array 'mult.V' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:94) in dimension 1 completely.
+INFO: [XFORM 203-101] Partitioning array 'acc.V' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:95) in dimension 1 completely.
+INFO: [XFORM 203-101] Partitioning array 'b1.V'  in dimension 1 completely.
+INFO: [XFORM 203-101] Partitioning array 'b2.V'  in dimension 1 completely.
+INFO: [XFORM 203-101] Partitioning array 'mult.V' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:56) in dimension 1 completely.
+INFO: [XFORM 203-101] Partitioning array 'acc.V' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:57) in dimension 1 completely.
+INFO: [XFORM 203-101] Partitioning array 'layer1_out.V' (firmware/myproject.cpp:61) in dimension 2 completely.
+INFO: [XFORM 203-101] Partitioning array 'acc.V' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:95) in dimension 2 completely.
+INFO: [XFORM 203-602] Inlining function '_ZN9fp_structIdEC2Ed10' into '_ZN9fp_structIdEC1Ed6' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/src/technology/autopilot/header_files/utils/x_hls_utils.h:442) automatically.
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::data' into 'fp_struct<double>::to_double' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/src/technology/autopilot/header_files/utils/x_hls_utils.h:475) automatically.
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::to_double' into 'fp_struct<double>::to_ieee' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/src/technology/autopilot/header_files/utils/x_hls_utils.h:489) automatically.
+INFO: [XFORM 203-602] Inlining function '_ZN9fp_structIdEC1Ed6' into 'generic_copysign<double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_copysign.h:11) automatically.
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::to_ieee' into 'generic_copysign<double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_copysign.h:13) automatically.
+INFO: [XFORM 203-602] Inlining function '_ZN9fp_structIdEC1Ed6' into 'generic_ceil<double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_ceil.h:17) automatically.
+INFO: [XFORM 203-602] Inlining function '_ZNK9fp_structIdE9__signbitEv8' into 'generic_ceil<double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_ceil.h:20) automatically.
+INFO: [XFORM 203-602] Inlining function 'generic_copysign<double>' into 'generic_ceil<double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_ceil.h:23) automatically.
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::data' into 'generic_ceil<double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_ceil.h:37) automatically.
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::to_ieee' into 'generic_ceil<double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_ceil.h:41) automatically.
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::mantissa' into 'generic_cast_IEEE754<int, (ap_q_mode)6, double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_case_IEEE754.h:14) automatically.
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::expv' into 'generic_cast_IEEE754<int, (ap_q_mode)6, double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_case_IEEE754.h:17) automatically.
+INFO: [XFORM 203-602] Inlining function 'fp_struct<double>::__signbit' into 'generic_cast_IEEE754<int, (ap_q_mode)6, double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_case_IEEE754.h:49) automatically.
+INFO: [XFORM 203-602] Inlining function 'generic_cast_IEEE754<int, (ap_q_mode)6, double>' into 'generic_cast_IEEE754<int, double>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_case_IEEE754.h:98) automatically.
+INFO: [XFORM 203-602] Inlining function 'generic_cast_IEEE754<int, double>' into '__hls_fptosi_double_i32' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/src/lib_floatconversion.cpp:54) automatically.
+INFO: [XFORM 203-602] Inlining function 'ceil' into 'nnet::compute_multiplier_limit<config1>' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:81) automatically.
+INFO: [XFORM 203-602] Inlining function '__hls_fptosi_double_i32' into 'nnet::compute_multiplier_limit<config1>' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:81) automatically.
+INFO: [XFORM 203-602] Inlining function '__hls_fptosi_double_i32' into 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:73) automatically.
+INFO: [XFORM 203-602] Inlining function 'nnet::flatten<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, 4, 3>' into 'myproject' (firmware/myproject.cpp:68) automatically.
+INFO: [XFORM 203-622] Instantiating function 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>'(/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:14:6) to 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0' at call site (firmware/myproject.cpp:79) by setting 'weights.V' to 'w2.V'.
+INFO: [XFORM 203-622] Instantiating function 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0'(/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:14:6) to 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0' at call site (firmware/myproject.cpp:79) by setting 'biases[0].V' to 'b2.V.0'.
+INFO: [XFORM 203-622] Instantiating function 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0'(/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:14:6) to 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0' at call site (firmware/myproject.cpp:79) by setting 'biases[1].V' to 'b2.V.1'.
+INFO: [XFORM 203-622] Instantiating function 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0'(/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:14:6) to 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0' at call site (firmware/myproject.cpp:79) by setting 'biases[2].V' to 'b2.V.2'.
+INFO: [XFORM 203-622] Instantiating function 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0'(/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:14:6) to 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0' at call site (firmware/myproject.cpp:79) by setting 'biases[3].V' to 'b2.V.3'.
+INFO: [XFORM 203-622] Instantiating function 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0'(/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:14:6) to 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0' at call site (firmware/myproject.cpp:79) by setting 'biases[4].V' to 'b2.V.4'.
+INFO: [XFORM 203-622] Instantiating function 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0'(/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:14:6) to 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0' at call site (firmware/myproject.cpp:79) by setting 'biases[5].V' to 'b2.V.5'.
+INFO: [XFORM 203-622] Instantiating function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>'(/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:104:44) to 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0' by setting 'weights.V' to 'w1.V'.
+INFO: [XFORM 203-622] Instantiating function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0'(/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:104:44) to 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0' by setting 'biases[0].V' to 'b1.V.0'.
+INFO: [XFORM 203-622] Instantiating function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0'(/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:104:44) to 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0' by setting 'biases[1].V' to 'b1.V.1'.
+INFO: [XFORM 203-622] Instantiating function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0'(/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:104:44) to 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0' by setting 'biases[2].V' to 'b1.V.2'.
+Command         transform done; 4.36 sec.
+INFO-FLOW: Presyn 2...
+Execute         transform -hls -keep-callgraph -scalarrepl -mem2reg -port-alignment -attach-range -dce -pipe-mux-gen -indvars -loop-bound -inst-simplify -instcombine -dce -merge-array-access -mem2reg -dce -clean-region -mergereturn -if-conv -instcombine -dce -constprop -basicaa -aggr-aa -aggrmodref-aa -aggr-aa -gvn -gvn -basicaa -aggr-aa -aggrmodref-aa -aggr-aa -dse -adse -adce -scalarrepl -mem2reg -global-constprop -deadargelim -deadargelim -instcombine -dce -simplifycfg -ptrArgReplace -mem2reg -function-inline -globaldce -mem2reg -instcombine -dce -expr-balance -instcombine -dce -bitwidthmin -interface-preproc -directive-preproc -inst-rectify -instcombine -dce -functionattrs -constprop -instcombine -bit-constprop -simplify-global-access -globalopt -globaldce -inst-simplify -instcombine -elimdeaddata -dce -loop-delete -simplifycfg -loop-simplify -auto-burst -norm-name /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.o.1.tmp.bc -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.o.2.bc -f -phase presyn 
+INFO: [XFORM 203-401] Performing if-conversion on hyperblock from (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:207:21) to (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:266:1) in function 'nnet::softmax<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>'... converting 73 basic blocks.
+INFO: [XFORM 203-401] Performing if-conversion on hyperblock from (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:55:33) to (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:81:12) in function 'nnet::compute_multiplier_limit<config1>'... converting 253 basic blocks.
+INFO: [XFORM 203-401] Performing if-conversion on hyperblock from (myproject_galapagos.cpp:57:9) to (myproject_galapagos.cpp:56:23) in function 'myproject_galapagos'... converting 3 basic blocks.
+INFO: [XFORM 203-401] Performing if-conversion on hyperblock from (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_ceil.h:13:18) to (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/include/FloatingPoint/hls_ceil.h:43:1) in function 'generic_ceil<double>'... converting 9 basic blocks.
+INFO: [XFORM 203-602] Inlining function 'generic_ceil<double>' into 'nnet::compute_multiplier_limit<config1>' (/wrk/2018.2/continuous/2018_06_14_2258646/src/products/hls/hls_lib/hlsmath/src/c/ceildouble.cpp:6->/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:81) automatically.
+INFO: [XFORM 203-11] Balancing expressions in function 'nnet::softmax<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:225:18)...54 expression(s) balanced.
+INFO: [XFORM 203-11] Balancing expressions in function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:104:9)...126 expression(s) balanced.
+INFO: [XFORM 203-11] Balancing expressions in function 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:62:1)...72 expression(s) balanced.
+Command         transform done; 1.52 sec.
+INFO: [HLS 200-111] Finished Pre-synthesis Time (s): cpu = 00:00:35 ; elapsed = 00:00:36 . Memory (MB): peak = 701.703 ; gain = 336.004 ; free physical = 286 ; free virtual = 36527
+INFO-FLOW: Building ssdm...
+Execute         transform -hls -function-uniquify -auto-function-inline -globaldce -ptrArgReplace -mem2reg -instcombine -dce -reset-lda -loop-simplify -indvars -licm -loop-dep -loop-bound -licm -loop-simplify -flattenloopnest -array-flatten -gvn -instcombine -dce -array-map -dce -func-legal -gvn -adce -instcombine -cfgopt -simplifycfg -loop-simplify -array-burst -promote-global-argument -dce -axi4-lower -array-seg-normalize -basicaa -aggrmodref-aa -globalsmodref-aa -aggr-aa -gvn -gvn -basicaa -aggrmodref-aa -globalsmodref-aa -aggr-aa -dse -adse -adce -licm -inst-simplify -dce -globaldce -instcombine -array-stream -eliminate-keepreads -instcombine -dce -deadargelim -doublePtrSimplify -doublePtrElim -dce -doublePtrSimplify -promote-dbg-pointer -dce -scalarrepl -mem2reg -disaggr -norm-name -mem2reg -instcombine -dse -adse -adce -ptrLegalization -dce -auto-rom-infer -array-flatten -dce -instcombine -check-doubleptr -loop-rot -constprop -cfgopt -simplifycfg -loop-simplify -indvars -pointer-simplify -dce -loop-bound -loop-simplify -loop-preproc -constprop -global-constprop -gvn -mem2reg -instcombine -dce -loop-bound -loop-merge -dce -bitwidthmin -deadargelim -dce -canonicalize-dataflow -dce -scalar-propagation -deadargelim -globaldce -mem2reg -read-loop-dep -interface-preproc -directive-preproc -interface-gen -bram-byte-enable -deadargelim -inst-simplify -dce -gvn -mem2reg -instcombine -dce -adse -loop-bound -instcombine -cfgopt -simplifycfg -loop-simplify -clean-region -io-protocol -find-region -mem2reg -bitop-raise -inst-simplify -inst-rectify -instcombine -adce -deadargelim -loop-simplify -phi-opt -bitop-raise -cfgopt -simplifycfg -strip-dead-prototypes -interface-lower -bitop-lower -intrinsic-lower -auto-function-inline -basicaa -aggrmodref-aa -globalsmodref-aa -aggr-aa -inst-simplify -simplifycfg -loop-simplify -mergereturn -inst-simplify -inst-rectify -dce -load-elim -bitop-lower -loop-rewind -pointer-simplify -dce -cfgopt -dce -bitwidth -loop-dep -read-loop-dep -dce -check-stream -norm-name -legalize -validate-dataflow -dead-allocation-elimination -cdfg-build /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.o.2.bc -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/a.o.3.bc -f -phase build-ssdm 
+INFO: [XFORM 203-603] Evaluating the output(s) of a call to function 'nnet::compute_multiplier_limit<config1>' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:108:31) in function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0' and propagating its result(s) since all actual argument(s) to the function are constants.
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::conv_1d<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0' to 'conv_1d.0.0.0.0' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_conv.h:104:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_layer<ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<32, 8, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0' to 'compute_layer.0.0.0.' (/home/tarafdar/workDir/test/galapagos/hls4ml/nnet_utils/nnet_layer.h:62:1)
+Command         transform done; 2.09 sec.
+INFO: [HLS 200-111] Finished Architecture Synthesis Time (s): cpu = 00:00:37 ; elapsed = 00:00:38 . Memory (MB): peak = 701.703 ; gain = 336.004 ; free physical = 256 ; free virtual = 36498
+INFO-FLOW: Finish building internal data model.
+Command       opt_and_import_c done; 11.73 sec.
+Command     elaborate done; 37.83 sec.
+Execute     autosyn -from_csynth_design=1 
+INFO: [HLS 200-10] Starting hardware synthesis ...
+INFO-FLOW: Synthesizing C/C++ design ...
+INFO: [HLS 200-10] Synthesizing 'myproject_galapagos' ...
+Execute       ap_set_top_model myproject_galapagos 
+WARNING: [SYN 201-103] Legalizing function name 'conv_1d.0.0.0.0' to 'conv_1d_0_0_0_0'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_layer.0.0.0.' to 'compute_layer_0_0_0_s'.
+Execute       get_model_list myproject_galapagos -filter all-wo-channel -topdown 
+Execute       preproc_iomode -model myproject_galapagos 
+Execute       preproc_iomode -model myproject 
+Execute       preproc_iomode -model softmax 
+Execute       preproc_iomode -model compute_layer.0.0.0. 
+Execute       preproc_iomode -model relu 
+Execute       preproc_iomode -model conv_1d.0.0.0.0 
+Execute       get_model_list myproject_galapagos -filter all-wo-channel 
+INFO-FLOW: Model list for configure: conv_1d.0.0.0.0 relu compute_layer.0.0.0. softmax myproject myproject_galapagos
+INFO-FLOW: Configuring Module : conv_1d.0.0.0.0 ...
+Execute       set_default_model conv_1d.0.0.0.0 
+Execute       apply_spec_resource_limit conv_1d.0.0.0.0 
+INFO-FLOW: Configuring Module : relu ...
+Execute       set_default_model relu 
+Execute       apply_spec_resource_limit relu 
+INFO-FLOW: Configuring Module : compute_layer.0.0.0. ...
+Execute       set_default_model compute_layer.0.0.0. 
+Execute       apply_spec_resource_limit compute_layer.0.0.0. 
+INFO-FLOW: Configuring Module : softmax ...
+Execute       set_default_model softmax 
+Execute       apply_spec_resource_limit softmax 
+INFO-FLOW: Configuring Module : myproject ...
+Execute       set_default_model myproject 
+Execute       apply_spec_resource_limit myproject 
+INFO-FLOW: Configuring Module : myproject_galapagos ...
+Execute       set_default_model myproject_galapagos 
+Execute       apply_spec_resource_limit myproject_galapagos 
+INFO-FLOW: Model list for preprocess: conv_1d.0.0.0.0 relu compute_layer.0.0.0. softmax myproject myproject_galapagos
+INFO-FLOW: Preprocessing Module: conv_1d.0.0.0.0 ...
+Execute       set_default_model conv_1d.0.0.0.0 
+Execute       cdfg_preprocess -model conv_1d.0.0.0.0 
+Execute       rtl_gen_preprocess conv_1d.0.0.0.0 
+INFO-FLOW: Preprocessing Module: relu ...
+Execute       set_default_model relu 
+Execute       cdfg_preprocess -model relu 
+Execute       rtl_gen_preprocess relu 
+INFO-FLOW: Preprocessing Module: compute_layer.0.0.0. ...
+Execute       set_default_model compute_layer.0.0.0. 
+Execute       cdfg_preprocess -model compute_layer.0.0.0. 
+Execute       rtl_gen_preprocess compute_layer.0.0.0. 
+INFO-FLOW: Preprocessing Module: softmax ...
+Execute       set_default_model softmax 
+Execute       cdfg_preprocess -model softmax 
+Execute       rtl_gen_preprocess softmax 
+INFO-FLOW: Preprocessing Module: myproject ...
+Execute       set_default_model myproject 
+Execute       cdfg_preprocess -model myproject 
+Execute       rtl_gen_preprocess myproject 
+INFO-FLOW: Preprocessing Module: myproject_galapagos ...
+Execute       set_default_model myproject_galapagos 
+Execute       cdfg_preprocess -model myproject_galapagos 
+Execute       rtl_gen_preprocess myproject_galapagos 
+INFO-FLOW: Model list for synthesis: conv_1d.0.0.0.0 relu compute_layer.0.0.0. softmax myproject myproject_galapagos
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'conv_1d_0_0_0_0' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+Execute       set_default_model conv_1d.0.0.0.0 
+Execute       schedule -model conv_1d.0.0.0.0 
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining function 'conv_1d.0.0.0.0'.
+INFO: [SCHED 204-61] Pipelining result : Target II = 1, Final II = 1, Depth = 4.
+INFO: [SCHED 204-11] Finished scheduling.
+Command       schedule done; 2.54 sec.
+INFO: [HLS 200-111]  Elapsed time: 40.77 seconds; current allocated memory: 320.769 MB.
+Execute       report -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/conv_1d_0_0_0_0.verbose.sched.rpt -verbose -f 
+Command       report done; 0.21 sec.
+Execute       db_write -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/conv_1d_0_0_0_0.sched.adb -f 
+Command       db_write done; 0.12 sec.
+INFO-FLOW: Finish scheduling conv_1d.0.0.0.0.
+Execute       set_default_model conv_1d.0.0.0.0 
+Execute       bind -model conv_1d.0.0.0.0 
+BIND OPTION: fu_weight=[ 0.0 -- 1.0 ]
+BIND OPTION: model=conv_1d.0.0.0.0
+BIND OPTION: reg_weight=[ 0.0 -- 1.0 ]
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Starting global binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+Command       bind done; 0.32 sec.
+INFO: [HLS 200-111]  Elapsed time: 0.65 seconds; current allocated memory: 324.220 MB.
+Execute       report -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/conv_1d_0_0_0_0.verbose.bind.rpt -verbose -f 
+Command       report done; 0.56 sec.
+Execute       db_write -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/conv_1d_0_0_0_0.bind.adb -f 
+Command       db_write done; 0.12 sec.
+INFO-FLOW: Finish binding conv_1d.0.0.0.0.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'relu' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+Execute       set_default_model relu 
+Execute       schedule -model relu 
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining function 'relu'.
+INFO: [SCHED 204-61] Pipelining result : Target II = 1, Final II = 1, Depth = 1.
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111]  Elapsed time: 0.73 seconds; current allocated memory: 324.763 MB.
+Execute       report -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/relu.verbose.sched.rpt -verbose -f 
+Execute       db_write -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/relu.sched.adb -f 
+INFO-FLOW: Finish scheduling relu.
+Execute       set_default_model relu 
+Execute       bind -model relu 
+BIND OPTION: fu_weight=[ 0.0 -- 1.0 ]
+BIND OPTION: model=relu
+BIND OPTION: reg_weight=[ 0.0 -- 1.0 ]
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111]  Elapsed time: 0.05 seconds; current allocated memory: 325.007 MB.
+Execute       report -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/relu.verbose.bind.rpt -verbose -f 
+Execute       db_write -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/relu.bind.adb -f 
+INFO-FLOW: Finish binding relu.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'compute_layer_0_0_0_s' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+Execute       set_default_model compute_layer.0.0.0. 
+Execute       schedule -model compute_layer.0.0.0. 
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining function 'compute_layer.0.0.0.'.
+INFO: [SCHED 204-61] Pipelining result : Target II = 1, Final II = 1, Depth = 3.
+INFO: [SCHED 204-11] Finished scheduling.
+Command       schedule done; 0.99 sec.
+INFO: [HLS 200-111]  Elapsed time: 1.06 seconds; current allocated memory: 327.055 MB.
+Execute       report -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.verbose.sched.rpt -verbose -f 
+Command       report done; 0.12 sec.
+Execute       db_write -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.sched.adb -f 
+INFO-FLOW: Finish scheduling compute_layer.0.0.0..
+Execute       set_default_model compute_layer.0.0.0. 
+Execute       bind -model compute_layer.0.0.0. 
+BIND OPTION: fu_weight=[ 0.0 -- 1.0 ]
+BIND OPTION: model=compute_layer.0.0.0.
+BIND OPTION: reg_weight=[ 0.0 -- 1.0 ]
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Starting global binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+Command       bind done; 0.15 sec.
+INFO: [HLS 200-111]  Elapsed time: 0.33 seconds; current allocated memory: 328.849 MB.
+Execute       report -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.verbose.bind.rpt -verbose -f 
+Command       report done; 0.3 sec.
+Execute       db_write -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.bind.adb -f 
+INFO-FLOW: Finish binding compute_layer.0.0.0..
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'softmax' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+Execute       set_default_model softmax 
+Execute       schedule -model softmax 
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining function 'softmax'.
+INFO: [SCHED 204-61] Pipelining result : Target II = 1, Final II = 1, Depth = 7.
+INFO: [SCHED 204-11] Finished scheduling.
+Command       schedule done; 0.52 sec.
+INFO: [HLS 200-111]  Elapsed time: 0.9 seconds; current allocated memory: 332.135 MB.
+Execute       report -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/softmax.verbose.sched.rpt -verbose -f 
+Command       report done; 0.27 sec.
+Execute       db_write -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/softmax.sched.adb -f 
+Command       db_write done; 0.16 sec.
+INFO-FLOW: Finish scheduling softmax.
+Execute       set_default_model softmax 
+Execute       bind -model softmax 
+BIND OPTION: fu_weight=[ 0.0 -- 1.0 ]
+BIND OPTION: model=softmax
+BIND OPTION: reg_weight=[ 0.0 -- 1.0 ]
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+Command       bind done; 0.22 sec.
+INFO: [HLS 200-111]  Elapsed time: 0.65 seconds; current allocated memory: 335.059 MB.
+Execute       report -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/softmax.verbose.bind.rpt -verbose -f 
+Command       report done; 0.71 sec.
+Execute       db_write -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/softmax.bind.adb -f 
+Command       db_write done; 0.16 sec.
+INFO-FLOW: Finish binding softmax.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'myproject' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+Execute       set_default_model myproject 
+Execute       schedule -model myproject 
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining function 'myproject'.
+INFO: [SCHED 204-61] Pipelining result : Target II = 1, Final II = 1, Depth = 15.
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111]  Elapsed time: 0.91 seconds; current allocated memory: 335.742 MB.
+Execute       report -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.verbose.sched.rpt -verbose -f 
+Execute       db_write -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.sched.adb -f 
+INFO-FLOW: Finish scheduling myproject.
+Execute       set_default_model myproject 
+Execute       bind -model myproject 
+BIND OPTION: fu_weight=[ 0.0 -- 1.0 ]
+BIND OPTION: model=myproject
+BIND OPTION: reg_weight=[ 0.0 -- 1.0 ]
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+Command       bind done; 1.58 sec.
+INFO: [HLS 200-111]  Elapsed time: 1.61 seconds; current allocated memory: 336.913 MB.
+Execute       report -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.verbose.bind.rpt -verbose -f 
+Command       report done; 1.1 sec.
+Execute       db_write -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.bind.adb -f 
+INFO-FLOW: Finish binding myproject.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'myproject_galapagos' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+Execute       set_default_model myproject_galapagos 
+Execute       schedule -model myproject_galapagos 
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+Command       schedule done; 0.14 sec.
+INFO: [HLS 200-111]  Elapsed time: 1.26 seconds; current allocated memory: 338.348 MB.
+Execute       report -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.verbose.sched.rpt -verbose -f 
+INFO: [HLS 200-434] Only 0 loops out of a total 3 loops have been pipelined in this design.
+Execute       db_write -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.sched.adb -f 
+INFO-FLOW: Finish scheduling myproject_galapagos.
+Execute       set_default_model myproject_galapagos 
+Execute       bind -model myproject_galapagos 
+BIND OPTION: fu_weight=[ 0.0 -- 1.0 ]
+BIND OPTION: model=myproject_galapagos
+BIND OPTION: reg_weight=[ 0.0 -- 1.0 ]
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+Command       bind done; 0.42 sec.
+INFO: [HLS 200-111]  Elapsed time: 0.51 seconds; current allocated memory: 339.194 MB.
+Execute       report -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.verbose.bind.rpt -verbose -f 
+Command       report done; 1.16 sec.
+Execute       db_write -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.bind.adb -f 
+INFO-FLOW: Finish binding myproject_galapagos.
+Execute       get_model_list myproject_galapagos -filter all-wo-channel 
+INFO-FLOW: Preprocessing for RTLGen ...
+Execute       rtl_gen_preprocess conv_1d.0.0.0.0 
+Execute       rtl_gen_preprocess relu 
+Execute       rtl_gen_preprocess compute_layer.0.0.0. 
+Execute       rtl_gen_preprocess softmax 
+Execute       rtl_gen_preprocess myproject 
+Execute       rtl_gen_preprocess myproject_galapagos 
+INFO-FLOW: Model list for RTL generation: conv_1d.0.0.0.0 relu compute_layer.0.0.0. softmax myproject myproject_galapagos
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'conv_1d_0_0_0_0' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+Execute       get_config_rtl -prefix 
+Execute       get_config_rtl -auto_prefix 
+Execute       create_rtl_model conv_1d.0.0.0.0 -vendor xilinx -mg_file /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/conv_1d_0_0_0_0.compgen.tcl 
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_25s_32s_56_2_0' to 'myproject_galapagbkb' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_27ns_32s_56_2_0' to 'myproject_galapagcud' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_27s_32s_56_2_0' to 'myproject_galapagdEe' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_24s_32s_55_2_0' to 'myproject_galapageOg' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_23ns_32s_54_2_0' to 'myproject_galapagfYi' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_22ns_32s_53_2_0' to 'myproject_galapagg8j' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_26ns_32s_56_2_0' to 'myproject_galapaghbi' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_26s_32s_56_2_0' to 'myproject_galapagibs' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_25ns_32s_56_2_0' to 'myproject_galapagjbC' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_20ns_32s_51_2_0' to 'myproject_galapagkbM' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_24ns_32s_55_2_0' to 'myproject_galapaglbW' due to the length limit 20
+INFO: [RTGEN 206-104] Estimated max fanout for 'conv_1d_0_0_0_0' is 6217 from HDL expression: (1'b0 == ap_block_pp0_stage0)
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagbkb': 23 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagcud': 18 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagdEe': 13 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapageOg': 7 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagfYi': 9 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagg8j': 3 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapaghbi': 14 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagibs': 15 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagjbC': 6 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagkbM': 3 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapaglbW': 15 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_1d_0_0_0_0'.
+Command       create_rtl_model done; 0.16 sec.
+INFO: [HLS 200-111]  Elapsed time: 1.37 seconds; current allocated memory: 345.158 MB.
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.rtl_wrap.cfg.tcl 
+Execute       gen_rtl conv_1d.0.0.0.0 -style xilinx -tracefl mytrace -tracefmt vcd -traceopt all -f -lang sc -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/systemc/conv_1d_0_0_0_0 -synmodules conv_1d.0.0.0.0 relu compute_layer.0.0.0. softmax myproject myproject_galapagos 
+Execute       gen_rtl conv_1d.0.0.0.0 -style xilinx -f -lang vhdl -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/vhdl/conv_1d_0_0_0_0 
+Execute       gen_rtl conv_1d.0.0.0.0 -style xilinx -f -lang vlog -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/verilog/conv_1d_0_0_0_0 
+Execute       gen_tb_info conv_1d.0.0.0.0 -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/conv_1d_0_0_0_0 -p /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db 
+Command       gen_tb_info done; 0.12 sec.
+Execute       report -model conv_1d.0.0.0.0 -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/report/conv_1d_0_0_0_0_csynth.rpt -f 
+Command       report done; 0.12 sec.
+Execute       report -model conv_1d.0.0.0.0 -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/report/conv_1d_0_0_0_0_csynth.xml -f -x 
+Command       report done; 0.12 sec.
+Execute       report -model conv_1d.0.0.0.0 -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/conv_1d_0_0_0_0.verbose.rpt -verbose -f 
+Command       report done; 0.76 sec.
+Execute       db_write -model conv_1d.0.0.0.0 -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/conv_1d_0_0_0_0.adb -f 
+Command       db_write done; 0.36 sec.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'relu' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+Execute       get_config_rtl -prefix 
+Execute       get_config_rtl -auto_prefix 
+Execute       create_rtl_model relu -vendor xilinx -mg_file /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/relu.compgen.tcl 
+INFO: [RTGEN 206-100] Finished creating RTL model for 'relu'.
+INFO: [HLS 200-111]  Elapsed time: 1.61 seconds; current allocated memory: 354.707 MB.
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.rtl_wrap.cfg.tcl 
+Execute       gen_rtl relu -style xilinx -tracefl mytrace -tracefmt vcd -traceopt all -f -lang sc -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/systemc/relu -synmodules conv_1d.0.0.0.0 relu compute_layer.0.0.0. softmax myproject myproject_galapagos 
+Execute       gen_rtl relu -style xilinx -f -lang vhdl -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/vhdl/relu 
+Execute       gen_rtl relu -style xilinx -f -lang vlog -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/verilog/relu 
+Execute       gen_tb_info relu -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/relu -p /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db 
+Execute       report -model relu -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/report/relu_csynth.rpt -f 
+Execute       report -model relu -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/report/relu_csynth.xml -f -x 
+Execute       report -model relu -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/relu.verbose.rpt -verbose -f 
+Execute       db_write -model relu -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/relu.adb -f 
+Command       db_write done; 0.13 sec.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'compute_layer_0_0_0_s' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+Execute       get_config_rtl -prefix 
+Execute       get_config_rtl -auto_prefix 
+Execute       create_rtl_model compute_layer.0.0.0. -vendor xilinx -mg_file /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.compgen.tcl 
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_32s_22s_53_2_0' to 'myproject_galapagmb6' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_32s_25s_56_2_0' to 'myproject_galapagncg' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_32s_26s_56_2_0' to 'myproject_galapagocq' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_32s_27s_56_2_0' to 'myproject_galapagpcA' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_32s_22ns_53_2_0' to 'myproject_galapagqcK' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_32s_25ns_56_2_0' to 'myproject_galapagrcU' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_32s_23s_54_2_0' to 'myproject_galapagsc4' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_32s_26ns_56_2_0' to 'myproject_galapagtde' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_32s_24ns_55_2_0' to 'myproject_galapagudo' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_32s_23ns_54_2_0' to 'myproject_galapagvdy' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_32s_24s_55_2_0' to 'myproject_galapagwdI' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_32s_19ns_51_2_0' to 'myproject_galapagxdS' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_32s_21s_52_2_0' to 'myproject_galapagyd2' due to the length limit 20
+INFO: [SYN 201-210] Renamed object name 'myproject_galapagos_mul_32s_21ns_52_2_0' to 'myproject_galapagzec' due to the length limit 20
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagmb6': 2 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagncg': 6 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagocq': 13 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagpcA': 14 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagqcK': 4 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagrcU': 12 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagsc4': 1 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagtde': 4 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagudo': 7 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagvdy': 4 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagwdI': 2 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagxdS': 1 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagyd2': 1 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'myproject_galapagzec': 1 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'compute_layer_0_0_0_s'.
+Command       create_rtl_model done; 0.13 sec.
+INFO: [HLS 200-111]  Elapsed time: 0.37 seconds; current allocated memory: 358.612 MB.
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.rtl_wrap.cfg.tcl 
+Execute       gen_rtl compute_layer.0.0.0. -style xilinx -tracefl mytrace -tracefmt vcd -traceopt all -f -lang sc -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/systemc/compute_layer_0_0_0_s -synmodules conv_1d.0.0.0.0 relu compute_layer.0.0.0. softmax myproject myproject_galapagos 
+Execute       gen_rtl compute_layer.0.0.0. -style xilinx -f -lang vhdl -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/vhdl/compute_layer_0_0_0_s 
+Execute       gen_rtl compute_layer.0.0.0. -style xilinx -f -lang vlog -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/verilog/compute_layer_0_0_0_s 
+Execute       gen_tb_info compute_layer.0.0.0. -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s -p /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db 
+Execute       report -model compute_layer.0.0.0. -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/report/compute_layer_0_0_0_s_csynth.rpt -f 
+Execute       report -model compute_layer.0.0.0. -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/report/compute_layer_0_0_0_s_csynth.xml -f -x 
+Execute       report -model compute_layer.0.0.0. -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.verbose.rpt -verbose -f 
+Command       report done; 0.42 sec.
+Execute       db_write -model compute_layer.0.0.0. -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.adb -f 
+Command       db_write done; 0.32 sec.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'softmax' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+Execute       get_config_rtl -prefix 
+Execute       get_config_rtl -auto_prefix 
+Execute       create_rtl_model softmax -vendor xilinx -mg_file /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/softmax.compgen.tcl 
+INFO: [SYN 201-210] Renamed object name 'softmax_invert_table3' to 'softmax_invert_taAem' due to the length limit 20
+INFO: [RTGEN 206-100] Finished creating RTL model for 'softmax'.
+Command       create_rtl_model done; 0.14 sec.
+INFO: [HLS 200-111]  Elapsed time: 1.15 seconds; current allocated memory: 368.523 MB.
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.rtl_wrap.cfg.tcl 
+Execute       gen_rtl softmax -style xilinx -tracefl mytrace -tracefmt vcd -traceopt all -f -lang sc -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/systemc/softmax -synmodules conv_1d.0.0.0.0 relu compute_layer.0.0.0. softmax myproject myproject_galapagos 
+Execute       gen_rtl softmax -style xilinx -f -lang vhdl -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/vhdl/softmax 
+Execute       gen_rtl softmax -style xilinx -f -lang vlog -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/verilog/softmax 
+Execute       gen_tb_info softmax -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/softmax -p /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db 
+Command       gen_tb_info done; 0.15 sec.
+Execute       report -model softmax -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/report/softmax_csynth.rpt -f 
+Command       report done; 0.16 sec.
+Execute       report -model softmax -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/report/softmax_csynth.xml -f -x 
+Command       report done; 0.15 sec.
+Execute       report -model softmax -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/softmax.verbose.rpt -verbose -f 
+Command       report done; 0.91 sec.
+Execute       db_write -model softmax -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/softmax.adb -f 
+Command       db_write done; 0.74 sec.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'myproject' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+Execute       get_config_rtl -prefix 
+Execute       get_config_rtl -auto_prefix 
+Execute       create_rtl_model myproject -vendor xilinx -mg_file /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.compgen.tcl 
+INFO: [RTGEN 206-100] Finished creating RTL model for 'myproject'.
+INFO: [HLS 200-111]  Elapsed time: 2.29 seconds; current allocated memory: 382.478 MB.
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.rtl_wrap.cfg.tcl 
+Execute       gen_rtl myproject -style xilinx -tracefl mytrace -tracefmt vcd -traceopt all -f -lang sc -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/systemc/myproject -synmodules conv_1d.0.0.0.0 relu compute_layer.0.0.0. softmax myproject myproject_galapagos 
+Execute       gen_rtl myproject -style xilinx -f -lang vhdl -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/vhdl/myproject 
+Execute       gen_rtl myproject -style xilinx -f -lang vlog -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/verilog/myproject 
+Execute       gen_tb_info myproject -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject -p /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db 
+Execute       report -model myproject -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/report/myproject_csynth.rpt -f 
+Execute       report -model myproject -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/report/myproject_csynth.xml -f -x 
+Execute       report -model myproject -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.verbose.rpt -verbose -f 
+Command       report done; 1.09 sec.
+Execute       db_write -model myproject -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.adb -f 
+Command       db_write done; 0.33 sec.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'myproject_galapagos' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+Execute       get_config_rtl -prefix 
+Execute       get_config_rtl -auto_prefix 
+Execute       create_rtl_model myproject_galapagos -vendor xilinx -mg_file /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.compgen.tcl 
+INFO: [RTGEN 206-500] Setting interface mode on port 'myproject_galapagos/in_V_data_V' to 'ap_fifo'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'myproject_galapagos/in_V_dest_V' to 'ap_fifo'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'myproject_galapagos/in_V_last_V' to 'ap_fifo'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'myproject_galapagos/in_V_id_V' to 'ap_fifo'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'myproject_galapagos/in_V_user_V' to 'ap_fifo'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'myproject_galapagos/in_V_keep_V' to 'ap_fifo'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'myproject_galapagos/out_V_data_V' to 'ap_fifo'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'myproject_galapagos/out_V_dest_V' to 'ap_fifo'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'myproject_galapagos/out_V_last_V' to 'ap_fifo'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'myproject_galapagos/out_V_id_V' to 'ap_fifo'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'myproject_galapagos/out_V_user_V' to 'ap_fifo'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'myproject_galapagos/out_V_keep_V' to 'ap_fifo'.
+INFO: [RTGEN 206-500] Setting interface mode on function 'myproject_galapagos' to 'ap_ctrl_hs'.
+INFO: [RTGEN 206-100] Finished creating RTL model for 'myproject_galapagos'.
+INFO: [HLS 200-111]  Elapsed time: 1.54 seconds; current allocated memory: 385.113 MB.
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.rtl_wrap.cfg.tcl 
+Execute       gen_rtl myproject_galapagos -istop -style xilinx -tracefl mytrace -tracefmt vcd -traceopt all -f -lang sc -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/systemc/myproject_galapagos -synmodules conv_1d.0.0.0.0 relu compute_layer.0.0.0. softmax myproject myproject_galapagos 
+Execute       gen_rtl myproject_galapagos -istop -style xilinx -f -lang vhdl -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/vhdl/myproject_galapagos 
+Execute       gen_rtl myproject_galapagos -istop -style xilinx -f -lang vlog -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/verilog/myproject_galapagos 
+Execute       export_constraint_db -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.constraint.tcl -f -tool general 
+Execute       report -model myproject_galapagos -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.design.xml -verbose -f -dv 
+Command       report done; 0.76 sec.
+Execute       report -model myproject_galapagos -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.sdaccel.xml -verbose -f -sdaccel 
+Execute       gen_tb_info myproject_galapagos -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos -p /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db 
+Execute       report -model myproject_galapagos -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/report/myproject_galapagos_csynth.rpt -f 
+Execute       report -model myproject_galapagos -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/syn/report/myproject_galapagos_csynth.xml -f -x 
+Execute       report -model myproject_galapagos -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.verbose.rpt -verbose -f 
+Command       report done; 1.2 sec.
+Execute       db_write -model myproject_galapagos -o /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.adb -f 
+Command       db_write done; 0.4 sec.
+Execute       sc_get_clocks myproject_galapagos 
+Execute       sc_get_portdomain myproject_galapagos 
+INFO-FLOW: Model list for RTL component generation: conv_1d.0.0.0.0 relu compute_layer.0.0.0. softmax myproject myproject_galapagos
+INFO-FLOW: Handling components in module [conv_1d_0_0_0_0] ... 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/conv_1d_0_0_0_0.compgen.tcl 
+INFO-FLOW: Found component myproject_galapagbkb.
+INFO-FLOW: Append model myproject_galapagbkb
+INFO-FLOW: Found component myproject_galapagcud.
+INFO-FLOW: Append model myproject_galapagcud
+INFO-FLOW: Found component myproject_galapagdEe.
+INFO-FLOW: Append model myproject_galapagdEe
+INFO-FLOW: Found component myproject_galapageOg.
+INFO-FLOW: Append model myproject_galapageOg
+INFO-FLOW: Found component myproject_galapagfYi.
+INFO-FLOW: Append model myproject_galapagfYi
+INFO-FLOW: Found component myproject_galapagg8j.
+INFO-FLOW: Append model myproject_galapagg8j
+INFO-FLOW: Found component myproject_galapaghbi.
+INFO-FLOW: Append model myproject_galapaghbi
+INFO-FLOW: Found component myproject_galapagibs.
+INFO-FLOW: Append model myproject_galapagibs
+INFO-FLOW: Found component myproject_galapagjbC.
+INFO-FLOW: Append model myproject_galapagjbC
+INFO-FLOW: Found component myproject_galapagkbM.
+INFO-FLOW: Append model myproject_galapagkbM
+INFO-FLOW: Found component myproject_galapaglbW.
+INFO-FLOW: Append model myproject_galapaglbW
+INFO-FLOW: Handling components in module [relu] ... 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/relu.compgen.tcl 
+INFO-FLOW: Handling components in module [compute_layer_0_0_0_s] ... 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.compgen.tcl 
+INFO-FLOW: Found component myproject_galapagmb6.
+INFO-FLOW: Append model myproject_galapagmb6
+INFO-FLOW: Found component myproject_galapagncg.
+INFO-FLOW: Append model myproject_galapagncg
+INFO-FLOW: Found component myproject_galapagocq.
+INFO-FLOW: Append model myproject_galapagocq
+INFO-FLOW: Found component myproject_galapagpcA.
+INFO-FLOW: Append model myproject_galapagpcA
+INFO-FLOW: Found component myproject_galapagqcK.
+INFO-FLOW: Append model myproject_galapagqcK
+INFO-FLOW: Found component myproject_galapagrcU.
+INFO-FLOW: Append model myproject_galapagrcU
+INFO-FLOW: Found component myproject_galapagsc4.
+INFO-FLOW: Append model myproject_galapagsc4
+INFO-FLOW: Found component myproject_galapagtde.
+INFO-FLOW: Append model myproject_galapagtde
+INFO-FLOW: Found component myproject_galapagudo.
+INFO-FLOW: Append model myproject_galapagudo
+INFO-FLOW: Found component myproject_galapagvdy.
+INFO-FLOW: Append model myproject_galapagvdy
+INFO-FLOW: Found component myproject_galapagwdI.
+INFO-FLOW: Append model myproject_galapagwdI
+INFO-FLOW: Found component myproject_galapagxdS.
+INFO-FLOW: Append model myproject_galapagxdS
+INFO-FLOW: Found component myproject_galapagyd2.
+INFO-FLOW: Append model myproject_galapagyd2
+INFO-FLOW: Found component myproject_galapagzec.
+INFO-FLOW: Append model myproject_galapagzec
+INFO-FLOW: Handling components in module [softmax] ... 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/softmax.compgen.tcl 
+INFO-FLOW: Found component softmax_exp_table2.
+INFO-FLOW: Append model softmax_exp_table2
+INFO-FLOW: Found component softmax_invert_taAem.
+INFO-FLOW: Append model softmax_invert_taAem
+INFO-FLOW: Handling components in module [myproject] ... 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.compgen.tcl 
+INFO-FLOW: Handling components in module [myproject_galapagos] ... 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.compgen.tcl 
+INFO-FLOW: Append model conv_1d_0_0_0_0
+INFO-FLOW: Append model relu
+INFO-FLOW: Append model compute_layer_0_0_0_s
+INFO-FLOW: Append model softmax
+INFO-FLOW: Append model myproject
+INFO-FLOW: Append model myproject_galapagos
+INFO-FLOW: Generating RTL model list ...
+INFO-FLOW: All models in this session: myproject_galapagbkb myproject_galapagcud myproject_galapagdEe myproject_galapageOg myproject_galapagfYi myproject_galapagg8j myproject_galapaghbi myproject_galapagibs myproject_galapagjbC myproject_galapagkbM myproject_galapaglbW myproject_galapagmb6 myproject_galapagncg myproject_galapagocq myproject_galapagpcA myproject_galapagqcK myproject_galapagrcU myproject_galapagsc4 myproject_galapagtde myproject_galapagudo myproject_galapagvdy myproject_galapagwdI myproject_galapagxdS myproject_galapagyd2 myproject_galapagzec softmax_exp_table2 softmax_invert_taAem conv_1d_0_0_0_0 relu compute_layer_0_0_0_s softmax myproject myproject_galapagos
+INFO-FLOW: To file: write model myproject_galapagbkb
+INFO-FLOW: To file: write model myproject_galapagcud
+INFO-FLOW: To file: write model myproject_galapagdEe
+INFO-FLOW: To file: write model myproject_galapageOg
+INFO-FLOW: To file: write model myproject_galapagfYi
+INFO-FLOW: To file: write model myproject_galapagg8j
+INFO-FLOW: To file: write model myproject_galapaghbi
+INFO-FLOW: To file: write model myproject_galapagibs
+INFO-FLOW: To file: write model myproject_galapagjbC
+INFO-FLOW: To file: write model myproject_galapagkbM
+INFO-FLOW: To file: write model myproject_galapaglbW
+INFO-FLOW: To file: write model myproject_galapagmb6
+INFO-FLOW: To file: write model myproject_galapagncg
+INFO-FLOW: To file: write model myproject_galapagocq
+INFO-FLOW: To file: write model myproject_galapagpcA
+INFO-FLOW: To file: write model myproject_galapagqcK
+INFO-FLOW: To file: write model myproject_galapagrcU
+INFO-FLOW: To file: write model myproject_galapagsc4
+INFO-FLOW: To file: write model myproject_galapagtde
+INFO-FLOW: To file: write model myproject_galapagudo
+INFO-FLOW: To file: write model myproject_galapagvdy
+INFO-FLOW: To file: write model myproject_galapagwdI
+INFO-FLOW: To file: write model myproject_galapagxdS
+INFO-FLOW: To file: write model myproject_galapagyd2
+INFO-FLOW: To file: write model myproject_galapagzec
+INFO-FLOW: To file: write model softmax_exp_table2
+INFO-FLOW: To file: write model softmax_invert_taAem
+INFO-FLOW: To file: write model conv_1d_0_0_0_0
+INFO-FLOW: To file: write model relu
+INFO-FLOW: To file: write model compute_layer_0_0_0_s
+INFO-FLOW: To file: write model softmax
+INFO-FLOW: To file: write model myproject
+INFO-FLOW: To file: write model myproject_galapagos
+INFO-FLOW: Finished generating RTL model list.
+
+
+INFO-FLOW: RTL Generation done.
+INFO-FLOW: CAS Generation done.
+INFO-FLOW: CBC Generation done.
+Execute       get_config_sdx -target 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+Execute       source /opt/Xilinx/Vivado/2018.2/common/technology/generic/autopilot/common.gen 
+Execute         source /opt/Xilinx/Vivado/2018.2/common/technology/generic/autopilot/APCoreGen.gen 
+Execute       source /opt/Xilinx/Vivado/2018.2/common/technology/generic/autopilot/op.gen 
+Execute       source /opt/Xilinx/Vivado/2018.2/common/technology/generic/autopilot/op_simcore.gen 
+Execute       source /opt/Xilinx/Vivado/2018.2/common/technology/generic/autopilot/interface.gen 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+Execute       source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/kintexu/kintexu.gen 
+Execute         source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/virtex.gen 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/xilinx.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/plb46.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/fsl.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/axi4.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/nativeAXI4.gen 
+Execute               source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/saxilite.gen 
+Execute               source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/maxi.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/scripts/xilinxcoregen.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/XilEDKCoreGen.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/ip/dds_compiler.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/ip/util.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/ip/xfft.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/ip/xfir.gen 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/dsp48.gen 
+Execute       source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/kintexu/kintexu_fpv7.gen 
+Execute         source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/xilinx_fpv6.gen 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/conv_1d_0_0_0_0.compgen.tcl 
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagbkb_MulnS_0'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagcud_MulnS_1'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagdEe_MulnS_2'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapageOg_MulnS_3'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagfYi_MulnS_4'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagg8j_MulnS_5'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapaghbi_MulnS_6'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagibs_MulnS_7'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagjbC_MulnS_8'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagkbM_MulnS_9'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapaglbW_MulnS_10'
+Command       ap_source done; 0.11 sec.
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/relu.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.compgen.tcl 
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagmb6_MulnS_11'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagncg_MulnS_12'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagocq_MulnS_13'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagpcA_MulnS_14'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagqcK_MulnS_15'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagrcU_MulnS_16'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagsc4_MulnS_17'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagtde_MulnS_18'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagudo_MulnS_19'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagvdy_MulnS_20'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagwdI_MulnS_21'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagxdS_MulnS_22'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagyd2_MulnS_23'
+INFO: [RTMG 210-282] Generating pipelined core: 'myproject_galapagzec_MulnS_24'
+Command       ap_source done; 0.14 sec.
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/softmax.compgen.tcl 
+INFO: [RTMG 210-279] Implementing memory 'softmax_exp_table2_rom' using block ROMs.
+INFO: [RTMG 210-279] Implementing memory 'softmax_invert_taAem_rom' using block ROMs.
+Command       ap_source done; 0.3 sec.
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.compgen.tcl 
+Execute       get_config_sdx -target 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+Execute       source /opt/Xilinx/Vivado/2018.2/common/technology/generic/autopilot/common.gen 
+Execute         source /opt/Xilinx/Vivado/2018.2/common/technology/generic/autopilot/APCoreGen.gen 
+Execute       source /opt/Xilinx/Vivado/2018.2/common/technology/generic/autopilot/op.gen 
+Execute       source /opt/Xilinx/Vivado/2018.2/common/technology/generic/autopilot/op_simcore.gen 
+Execute       source /opt/Xilinx/Vivado/2018.2/common/technology/generic/autopilot/interface.gen 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+Execute       source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/kintexu/kintexu.gen 
+Execute         source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/virtex.gen 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/xilinx.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/plb46.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/fsl.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/axi4.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/nativeAXI4.gen 
+Execute               source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/saxilite.gen 
+Execute               source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/maxi.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/scripts/xilinxcoregen.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/interface/XilEDKCoreGen.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/ip/dds_compiler.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/ip/util.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/ip/xfft.gen 
+Execute             source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/ip/xfir.gen 
+Execute           source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/dsp48.gen 
+Execute       source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/kintexu/kintexu_fpv7.gen 
+Execute         source /opt/Xilinx/Vivado/2018.2/common/technology/xilinx/common/xilinx_fpv6.gen 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.rtl_wrap.cfg.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.rtl_wrap.cfg.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.rtl_wrap.cfg.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.tbgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.tbgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/conv_1d_0_0_0_0.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/relu.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/softmax.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/conv_1d_0_0_0_0.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/relu.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/softmax.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/conv_1d_0_0_0_0.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/relu.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/compute_layer_0_0_0_s.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/softmax.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.compgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.constraint.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.tbgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.tbgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.tbgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.tbgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.tbgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.tbgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.tbgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.tbgen.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/myproject_galapagos.constraint.tcl 
+Execute       sc_get_clocks myproject_galapagos 
+Execute       source /home/tarafdar/workDir/test/galapagos/hls4ml/galapagos/myproject_prj/solution1/.autopilot/db/global.setting.tcl 
+Execute       get_config_sdx -target 
+Execute       get_config_sdx -profile 
+Execute       ::config_rtl 
+INFO: [HLS 200-111] Finished generating all RTL models Time (s): cpu = 00:00:56 ; elapsed = 00:01:01 . Memory (MB): peak = 765.703 ; gain = 400.004 ; free physical = 309 ; free virtual = 36465
+INFO: [SYSC 207-301] Generating SystemC RTL for myproject_galapagos.
+INFO: [VHDL 208-304] Generating VHDL RTL for myproject_galapagos.
+INFO: [VLOG 209-307] Generating Verilog RTL for myproject_galapagos.
+Command     autosyn done; 23.2 sec.
+Command   csynth_design done; 61.03 sec.
+Execute   cleanup_all 

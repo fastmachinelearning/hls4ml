@@ -1,0 +1,156 @@
+
+
+================================================================
+== Vivado HLS Report for 'relu'
+================================================================
+* Date:           Sun Mar 31 23:52:44 2019
+
+* Version:        2018.2 (Build 2258646 on Thu Jun 14 20:25:20 MDT 2018)
+* Project:        myproject_prj
+* Solution:       solution1
+* Product family: kintexu
+* Target device:  xcku115-flva1517-2-e
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing (ns): 
+    * Summary: 
+    +--------+-------+----------+------------+
+    |  Clock | Target| Estimated| Uncertainty|
+    +--------+-------+----------+------------+
+    |ap_clk  |   5.00|     1.602|        0.62|
+    +--------+-------+----------+------------+
+
++ Latency (clock cycles): 
+    * Summary: 
+    +-----+-----+-----+-----+----------+
+    |  Latency  |  Interval | Pipeline |
+    | min | max | min | max |   Type   |
+    +-----+-----+-----+-----+----------+
+    |    0|    0|    1|    1| function |
+    +-----+-----+-----+-----+----------+
+
+    + Detail: 
+        * Instance: 
+        N/A
+
+        * Loop: 
+        N/A
+
+
+
+================================================================
+== Utilization Estimates
+================================================================
+* Summary: 
++---------------------+---------+-------+---------+--------+
+|         Name        | BRAM_18K| DSP48E|    FF   |   LUT  |
++---------------------+---------+-------+---------+--------+
+|DSP                  |        -|      -|        -|       -|
+|Expression           |        -|      -|        0|     612|
+|FIFO                 |        -|      -|        -|       -|
+|Instance             |        -|      -|        -|       -|
+|Memory               |        -|      -|        -|       -|
+|Multiplexer          |        -|      -|        -|       -|
+|Register             |        -|      -|        -|       -|
++---------------------+---------+-------+---------+--------+
+|Total                |        0|      0|        0|     612|
++---------------------+---------+-------+---------+--------+
+|Available SLR        |     2160|   2760|   663360|  331680|
++---------------------+---------+-------+---------+--------+
+|Utilization SLR (%)  |        0|      0|        0|   ~0   |
++---------------------+---------+-------+---------+--------+
+|Available            |     4320|   5520|  1326720|  663360|
++---------------------+---------+-------+---------+--------+
+|Utilization (%)      |        0|      0|        0|   ~0   |
++---------------------+---------+-------+---------+--------+
+
++ Detail: 
+    * Instance: 
+    N/A
+
+    * DSP48: 
+    N/A
+
+    * Memory: 
+    N/A
+
+    * FIFO: 
+    N/A
+
+    * Expression: 
+    +-------------------------------+----------+-------+---+----+------------+------------+
+    |         Variable Name         | Operation| DSP48E| FF| LUT| Bitwidth P0| Bitwidth P1|
+    +-------------------------------+----------+-------+---+----+------------+------------+
+    |tmp_29_10_fu_360_p2            |   icmp   |      0|  0|  20|          32|           1|
+    |tmp_29_1_fu_140_p2             |   icmp   |      0|  0|  20|          32|           1|
+    |tmp_29_2_fu_162_p2             |   icmp   |      0|  0|  20|          32|           1|
+    |tmp_29_3_fu_184_p2             |   icmp   |      0|  0|  20|          32|           1|
+    |tmp_29_4_fu_206_p2             |   icmp   |      0|  0|  20|          32|           1|
+    |tmp_29_5_fu_228_p2             |   icmp   |      0|  0|  20|          32|           1|
+    |tmp_29_6_fu_250_p2             |   icmp   |      0|  0|  20|          32|           1|
+    |tmp_29_7_fu_272_p2             |   icmp   |      0|  0|  20|          32|           1|
+    |tmp_29_8_fu_294_p2             |   icmp   |      0|  0|  20|          32|           1|
+    |tmp_29_9_fu_316_p2             |   icmp   |      0|  0|  20|          32|           1|
+    |tmp_29_fu_118_p2               |   icmp   |      0|  0|  20|          32|           1|
+    |tmp_29_s_fu_338_p2             |   icmp   |      0|  0|  20|          32|           1|
+    |res_0_V_write_assig_fu_128_p3  |  select  |      0|  0|  31|           1|          31|
+    |res_10_V_write_assi_fu_348_p3  |  select  |      0|  0|  31|           1|          31|
+    |res_11_V_write_assi_fu_370_p3  |  select  |      0|  0|  31|           1|          31|
+    |res_1_V_write_assig_fu_150_p3  |  select  |      0|  0|  31|           1|          31|
+    |res_2_V_write_assig_fu_172_p3  |  select  |      0|  0|  31|           1|          31|
+    |res_3_V_write_assig_fu_194_p3  |  select  |      0|  0|  31|           1|          31|
+    |res_4_V_write_assig_fu_216_p3  |  select  |      0|  0|  31|           1|          31|
+    |res_5_V_write_assig_fu_238_p3  |  select  |      0|  0|  31|           1|          31|
+    |res_6_V_write_assig_fu_260_p3  |  select  |      0|  0|  31|           1|          31|
+    |res_7_V_write_assig_fu_282_p3  |  select  |      0|  0|  31|           1|          31|
+    |res_8_V_write_assig_fu_304_p3  |  select  |      0|  0|  31|           1|          31|
+    |res_9_V_write_assig_fu_326_p3  |  select  |      0|  0|  31|           1|          31|
+    +-------------------------------+----------+-------+---+----+------------+------------+
+    |Total                          |          |      0|  0| 612|         396|         384|
+    +-------------------------------+----------+-------+---+----+------------+------------+
+
+    * Multiplexer: 
+    N/A
+
+    * Register: 
+    N/A
+
+
+
+================================================================
+== Interface
+================================================================
+* Summary: 
++----------------+-----+-----+------------+----------------+--------------+
+|    RTL Ports   | Dir | Bits|  Protocol  |  Source Object |    C Type    |
++----------------+-----+-----+------------+----------------+--------------+
+|ap_ready        | out |    1| ap_ctrl_hs |      relu      | return value |
+|ap_return_0     | out |   32| ap_ctrl_hs |      relu      | return value |
+|ap_return_1     | out |   32| ap_ctrl_hs |      relu      | return value |
+|ap_return_2     | out |   32| ap_ctrl_hs |      relu      | return value |
+|ap_return_3     | out |   32| ap_ctrl_hs |      relu      | return value |
+|ap_return_4     | out |   32| ap_ctrl_hs |      relu      | return value |
+|ap_return_5     | out |   32| ap_ctrl_hs |      relu      | return value |
+|ap_return_6     | out |   32| ap_ctrl_hs |      relu      | return value |
+|ap_return_7     | out |   32| ap_ctrl_hs |      relu      | return value |
+|ap_return_8     | out |   32| ap_ctrl_hs |      relu      | return value |
+|ap_return_9     | out |   32| ap_ctrl_hs |      relu      | return value |
+|ap_return_10    | out |   32| ap_ctrl_hs |      relu      | return value |
+|ap_return_11    | out |   32| ap_ctrl_hs |      relu      | return value |
+|data_0_V_read   |  in |   32|   ap_none  |  data_0_V_read |    scalar    |
+|data_1_V_read   |  in |   32|   ap_none  |  data_1_V_read |    scalar    |
+|data_2_V_read   |  in |   32|   ap_none  |  data_2_V_read |    scalar    |
+|data_3_V_read   |  in |   32|   ap_none  |  data_3_V_read |    scalar    |
+|data_4_V_read   |  in |   32|   ap_none  |  data_4_V_read |    scalar    |
+|data_5_V_read   |  in |   32|   ap_none  |  data_5_V_read |    scalar    |
+|data_6_V_read   |  in |   32|   ap_none  |  data_6_V_read |    scalar    |
+|data_7_V_read   |  in |   32|   ap_none  |  data_7_V_read |    scalar    |
+|data_8_V_read   |  in |   32|   ap_none  |  data_8_V_read |    scalar    |
+|data_9_V_read   |  in |   32|   ap_none  |  data_9_V_read |    scalar    |
+|data_10_V_read  |  in |   32|   ap_none  | data_10_V_read |    scalar    |
+|data_11_V_read  |  in |   32|   ap_none  | data_11_V_read |    scalar    |
++----------------+-----+-----+------------+----------------+--------------+
+

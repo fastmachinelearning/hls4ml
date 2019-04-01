@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cluster>
+    <node>
+        <type> sw </type>
+        <kernel> 6 </kernel>
+        <mac>  0c:c4:7a:88:c0:47 </mac>
+        <ip> 10.1.2.101 </ip>
+    </node>
+    <node>
+        <app_bridge> 
+            <clk> aclk </clk>
+            <aresetn> aresetn </aresetn>
+            <lib> hls </lib>
+            <vendor> xilinx.com </vendor>
+            <name> communication_bridge_eth_mpi </name> 
+            <to_app> to_app_V </to_app>
+            <from_app> from_app_V </from_app>
+            <to_net> to_net_V </to_net>
+            <from_net> from_net_V </from_net>
+        </app_bridge>
+        <board> adm-8k5-debug </board>
+        <comm> eth </comm>
+        <type> hw </type>
+        <kernel> 0 </kernel>
+        <kernel> 1 </kernel>
+        <kernel> 2 </kernel>
+        <kernel> 3 </kernel>
+        <kernel> 4 </kernel>
+        <kernel> 5 </kernel>
+        <mac>  fa:16:3e:55:ca:02 </mac>
+        <ip> 10.1.2.102 </ip>
+    </node>
+</cluster>
