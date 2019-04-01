@@ -6,29 +6,25 @@
         <last> 1 </last>
         <dest> 16 </dest>
     </packet>
-    <kernel> axi_fifo_mm_s 
+    <kernel> myproject_galapagos 
         <vendor> xilinx.com </vendor>
-        <version> 4.1 </version>
-        <lib> ip </lib>
+        <version> 1.0 </version>
+        <lib> hls </lib>
         <num> 0 </num>
-        <rep> 6 </rep>
-        <clk> s_axi_aclk </clk>
-        <aresetn> s_axi_aresetn </aresetn>
+        <rep> 1 </rep>
+        <clk> ap_clk </clk>
+        <aresetn> ap_rst </aresetn>
         <s_axis>
             <scope> global </scope>
-            <name> AXI_STR_RXD </name>
+            <name> in_V </name>
         </s_axis>
         <m_axis>
             <scope> global </scope>
-            <name> AXI_STR_TXD </name>
+            <name> out_V </name>
         </m_axis>
-        <s_axi>
-            <scope> global </scope>
-            <name> S_AXI </name>
-        </s_axi>
     </kernel>
 	<kernel> cpu
-        <num> 6 </num>
+        <num> 0 </num>
         <rep> 1 </rep>
         <s_axis>
             <scope> global </scope>

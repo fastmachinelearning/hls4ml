@@ -45,7 +45,7 @@ void myproject_galapagos(hls::stream<galapagos_packet> * in, hls::stream<galapag
 
     unsigned short size_in, size_out;
     //galapagos_packet gp;
-    galapagos::stream_packet gp;
+    galapagos_packet gp;
     for(int i=0; i<Y_INPUTS; i++){
         for(int j=0; j<N_CHAN; j++){
             gp = in->read();
