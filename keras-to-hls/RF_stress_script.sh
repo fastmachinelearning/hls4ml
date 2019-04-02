@@ -6,6 +6,10 @@
 
 # TODO: Can this script be ported/integrated in Jenkins?
 
+# ==============================================================================
+# Model Configuration
+# ==============================================================================
+
 # Model name.
 #MODEL="KERAS_3layer"
 MODEL="2layer_100x100"
@@ -20,26 +24,48 @@ MODEL="2layer_100x100"
 N_IN=100
 N_OUT=100
 
-# If brute force sweeping is enabled, all of the reuse factors between RF_BEGIN
-# and RF_END (with a RF_STEP) will be tested. ATTENTION: Some values of reuse
-# factor may cause very long synthesis time.
-BRUTE_FORCE=1
+# ==============================================================================
+# Design-Space-Exploration Configuration
+# ==============================================================================
 
-# Begin, end and step for Reuse Factor.
+# Exploration mode.
+# - Best-candidate mode [0]
+#   use a formula to generate the best values for RF given the network
+#   architecture.
+# - Brute-force mode    [1]
+#   all of the reuse factors between RF_BEGIN and RF_END (with a RF_STEP) will
+#   be tested. ATTENTION: Some values of reuse factor may cause very long
+#   synthesis time.
+# - User-defined mode   [2]
+#   use a RF list provided by the user.
+EXPLORATION_MODE=2
+
+# Brute-force-mode configuration: begin, end and step for Reuse Factor.
 RF_BEGIN=100
 RF_END=100
 RF_STEP=1
+
+# User-defined RF values
+USER_DEFINED_RF="1 2 4 5 8 16 40 80 125 200 250"
+
+# ==============================================================================
+# Host constraints
+# ==============================================================================
 
 # Max execution time.
 # 3h = 10800s
 # 5h = 18000s
 # 6h = 21600s
-MAX_TIME=10800
-#MAX_TIME=18000
+#MAX_TIME=10800
+MAX_TIME=18000
 #MAX_TIME=21600
 
-# Run at most THREADS instances of Vivado.
-THREADS=16
+# Run at most THREADS instances of Vivado HLS / Vivado.
+THREADS=8
+
+# ==============================================================================
+# HLS, Logic Synthesis, Reports
+# ==============================================================================
 
 # Enable/disable Vivado HLS, Vivado (logic synthesis), and result collection.
 RUN_HLS=1
@@ -49,6 +75,10 @@ RUN_LOG=1
 # Remove previous intermediate files.
 RUN_CLEAN=1
 
+# ==============================================================================
+# Files and directories
+# ==============================================================================
+
 # Let's use a working directory.
 DIR=RF_stress_dir_$MODEL
 mkdir -p $DIR
@@ -56,7 +86,7 @@ mkdir -p $DIR
 # Output CSV file.
 RESULT_FILE=RF_stress_results_$MODEL.csv
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 #
 # GNU Parallel configuration.
 #
@@ -76,42 +106,53 @@ RESULT_FILE=RF_stress_results_$MODEL.csv
 #    This helps funding further development; AND IT WON'T COST YOU A CENT.
 #    If you pay 10000 EUR you should feel free to use GNU Parallel without citing.
 #
+# ==============================================================================
 
-# Do not swap
+# Do not swap.
 #SWAP=--noswap
-# ------------------------------------------------------------------------------
+
+# ==============================================================================
+# Functions
+# ==============================================================================
 
 #
 # Print some general information on the console.
 #
 print_info ()
 {
-    if [ $BRUTE_FORCE == 1 ]; then
-        echo "INFO: Brute force RF: RF_BEGIN=$RF_BEGIN, RF_END=$RF_END, RF_STEP=$RF_STEP, RF_COUNT=$(((RF_END - RF_BEGIN) / RF_STEP))"
-    else
+    if [ $EXPLORATION_MODE == 0 ]; then # best-candidate mode
         echo "INFO: Network dimensions: N_IN=$N_IN, N_OUT=$N_OUT"
         candidates=$(get_candidate_reuse_factors | tr '\n' ' ')
-        echo "INFO: Modulo-candidate RF: $candidates"
+        echo "INFO: Best-candidate RF: $candidates"
         echo "INFO: Total count: $(echo $candidates | wc -w)"
+    elif [ $EXPLORATION_MODE == 1 ]; then # brute-force mode
+        echo "INFO: Brute force RF: RF_BEGIN=$RF_BEGIN, RF_END=$RF_END, RF_STEP=$RF_STEP, RF_COUNT=$(((RF_END - RF_BEGIN) / RF_STEP))"
+        candidates=$(get_candidate_reuse_factors | tr '\n' ' ')
+        echo "INFO: Brute-force-candidate RF: $candidates"
+    else # user-defined mode
+        candidates=$(get_candidate_reuse_factors | tr '\n' ' ')
+        echo "INFO: User-defined-candidate RF: $candidates"
     fi
 }
 
 #
-# Print the console output the candidate reuse factors.
+# Print the candidate reuse factors on the output console.
 #
-# If BRUTE_FORCE is enabled, it prints all of the values between RF_BEGIN and
+# If brute-force mode is enabled, it prints all of the values between RF_BEGIN and
 # RF_END with a RF_STEP. The total number of values are ((RF_END - RF_BEGIN) /
 # RF_STEP).
 #
-# If BRUTE_FORCE is not enabled, it prints all of the 'rf' values that satisfy
-# the equation (((N_IN * N_OUT) % rf) == 0).
+# If best-candidate mode is enabled, it prints all of the 'rf' values that
+# satisfy the equation (((N_IN * N_OUT) % rf) == 0).
 #
 get_candidate_reuse_factors ()
 {
-    if [ $BRUTE_FORCE == 1 ]; then
-        seq $RF_BEGIN $RF_STEP $RF_END
-    else
+    if [ $EXPLORATION_MODE == 0 ]; then # best-candidate mode
         for i in $(seq 1 $((N_IN * N_OUT))); do if [ $(((N_IN * N_OUT) % $i)) == 0 ]; then echo $i; fi; done
+    elif [ $EXPLORATION_MODE == 1 ]; then # brute-force mode
+        seq $RF_BEGIN $RF_STEP $RF_END
+    else # user-defined mode
+        for i in $USER_DEFINED_RF; do echo $i; done
     fi
 }
 
@@ -143,20 +184,20 @@ run_hls4ml_vivado ()
     python ../keras-to-hls.py -c keras-config-$rf-$MODEL.yml > keras-config-$rf-$MODEL.log
     if [ ! $? -eq 0 ]; then echo "ERROR: Cannot run HLS4ML generator on with the configuration file $DIR/keras-config-$rf-$MODEL.yml"; cd ..; return; fi
 
-   # Run Vivado HLS.
-   if [ $RUN_HLS -eq 1 ]; then
-       cd $MODEL\_RF$rf
-       if [ ! $? -eq 0 ]; then echo "ERROR: Cannot find find directory $MODEL\_RF$rf"; cd ../..; return; fi
-       #if [ $RUN_LS -eq 1 ]; then
-       # TODO: enable logic synthesis (if disabled)
-       #fi
-       # Kill Vivado HLS if does not return after 3 hours.
-       timeout -k 30s $MAX_TIME vivado_hls -f build_prj.tcl > /dev/null
-       if [ ! $? -eq 0 ]; then echo "ERROR: Vivado HLS failed. See $DIR/$MODEL\_RF$rf/vivado_hls.log"; cd ../..; return; fi
-       cd ..
-   fi
+    # Run Vivado HLS.
+    if [ $RUN_HLS -eq 1 ]; then
+        cd $MODEL\_RF$rf
+        if [ ! $? -eq 0 ]; then echo "ERROR: Cannot find find directory $MODEL\_RF$rf"; cd ../..; return; fi
+        #if [ $RUN_LS -eq 1 ]; then
+        # TODO: enable logic synthesis (if disabled)
+        #fi
+        # Kill Vivado HLS if does not return after 3 hours.
+        timeout -k 30s $MAX_TIME vivado_hls -f build_prj.tcl > /dev/null
+        if [ ! $? -eq 0 ]; then echo "ERROR: Vivado HLS failed. See $DIR/$MODEL\_RF$rf/vivado_hls.log"; cd ../..; return; fi
+        cd ..
+    fi
 
-   cd ..
+    cd ..
 
 }
 

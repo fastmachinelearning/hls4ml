@@ -16,8 +16,9 @@ set datafile separator ','
 set datafile missing '-1'
 
 # X and Y axes
-set xtics 10
+set xtics 1000
 set logscale y 2
+
 set xtics font ",4"
 set ytics font ",4"
 
@@ -44,6 +45,12 @@ set style line 4 \
     linetype 0 linewidth 0.5 \
     linecolor rgb "#808080"
 
+set style line 5 \
+    linecolor rgb '#ad6000' \
+    linetype 1 linewidth 1 \
+    pointtype 7 pointsize 0.2
+
+
 # Legend
 set key font ",6"
 #set key below
@@ -66,7 +73,7 @@ set size 0.5,0.5
 set origin 0.0,0.5 # Top-Left
 #set xlabel "Success" font ",8"
 #set ylabel "II" font ",8"
-plot CSV_FILE using 17:($18 < 0 ? NaN : 1) title "Success" with linespoints linestyle 3
+plot CSV_FILE using 21:($22 < 0 ? NaN : 1) title "Success" with linespoints linestyle 3
 
 # =============================================================================
 # HLS Time
@@ -76,7 +83,7 @@ set origin 0.5,0.5 # Top-Right
 set key left
 #set xlabel "Reuse Factor" font ",8"
 #set ylabel "HLS Time (s)" offset 5,0 font ",8"
-plot CSV_FILE using 17:18 title "HLS Time (s)" with linespoints linestyle 1
+plot CSV_FILE using 21:22 title "HLS Time (s)" with linespoints linestyle 1
 
 # =============================================================================
 # (Best and Worst) Latency
@@ -86,8 +93,8 @@ set origin 0.0,0.0 # Bottom-Left
 set key left
 #set xlabel "Reuse Factor" font ",8"
 #set ylabel "Best Latency" font ",8"
-plot CSV_FILE using 17:6 title "Best Latency" with linespoints linestyle 2, \
-     CSV_FILE using 17:7 title "Worst Latency" with linespoints linestyle 1
+plot CSV_FILE using 21:6 title "Best Latency" with linespoints linestyle 2, \
+     CSV_FILE using 21:7 title "Worst Latency" with linespoints linestyle 1
 
 # =============================================================================
 # (Min and Max) II
@@ -97,8 +104,8 @@ set origin 0.5,0.0 # Bottom-Right
 set key left
 #set xlabel "Reuse Factor" font ",8"
 #set ylabel "II" font ",8"
-plot CSV_FILE using 17:8 title "Min II" with linespoints linestyle 2, \
-     CSV_FILE using 17:9 title "Max II" with linespoints linestyle 1
+plot CSV_FILE using 21:8 title "Min II" with linespoints linestyle 2, \
+     CSV_FILE using 21:9 title "Max II" with linespoints linestyle 1
 
 unset multiplot
 
@@ -120,7 +127,8 @@ set origin 0.0,0.5 # Top-Left
 set key right
 #set xlabel "Reuse Factor" font ",8"
 #set ylabel "DSP" offset 5,0 font ",8"
-plot CSV_FILE using 17:11 title "DSP" with linespoints linestyle 1
+plot CSV_FILE using 21:11 title "DSP (hls)" with linespoints linestyle 1, \
+     CSV_FILE using 21:15 title "DSP" with linespoints linestyle 5
 
 # =============================================================================
 # FF
@@ -131,7 +139,8 @@ set origin 0.5,0.5 # Top-Right
 set key left
 #set xlabel "Reuse Factor" font ",8"
 #set ylabel "FF" offset 5,0 font ",8"
-plot CSV_FILE using 17:12 title "FF" with linespoints linestyle 1
+plot CSV_FILE using 21:12 title "FF (hls)" with linespoints linestyle 1, \
+     CSV_FILE using 21:16 title "FF" with linespoints linestyle 5
 
 # =============================================================================
 # LUT
@@ -142,7 +151,8 @@ set origin 0.0,0.0 # Bottom-Left
 set key left
 #set xlabel "Reuse Factor" font ",8"
 #set ylabel "LUT" offset 5,0 font ",8"
-plot CSV_FILE using 17:13 title "LUT" with linespoints linestyle 1
+plot CSV_FILE using 21:13 title "LUT (hls)" with linespoints linestyle 1, \
+     CSV_FILE using 21:17 title "LUT" with linespoints linestyle 5
 
 # =============================================================================
 # BRAM
@@ -153,6 +163,6 @@ set origin 0.5,0.0 # Bottom-Right
 set key left
 #set xlabel "Reuse Factor" font ",8"
 #set ylabel "BRAM" offset 5,0 font ",8"
-plot CSV_FILE using 17:10 title "BRAM" with linespoints linestyle 1
-
+plot CSV_FILE using 21:10 title "BRAM (hls)" with linespoints linestyle 1, \
+     CSV_FILE using 21:14 title "BRAM" with linespoints linestyle 5
 unset multiplot
