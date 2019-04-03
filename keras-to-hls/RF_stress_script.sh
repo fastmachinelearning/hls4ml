@@ -87,8 +87,14 @@ RUN_CLEAN=1
 # Files and directories
 # ==============================================================================
 
-# Let's use a working directory.
-WORK_DIR=RF_stress_dir_$MODEL
+# Choose a partition where you have a lot of space. You can check it with:
+# $ df -h
+SANDBOX_DIR=$HOME/sandbox1
+#SANDBOX_DIR=$HOME/sandbox2
+#SANDBOX_DIR=$HOME/sandbox3
+
+# Let's use a working directory in the sandbox.
+WORK_DIR=$SANDBOX_DIR/RF_stress_dir_$MODEL
 
 # Output CSV file.
 RESULT_FILE=RF_stress_results_$MODEL.csv
