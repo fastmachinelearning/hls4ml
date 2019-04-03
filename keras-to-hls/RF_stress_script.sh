@@ -45,7 +45,7 @@ N_OUT=100
 #   synthesis time.
 # - User-defined mode   [2]
 #   use a RF list provided by the user.
-EXPLORATION_MODE=2
+EXPLORATION_MODE=0
 
 # Brute-force-mode configuration: begin, end and step for Reuse Factor.
 RF_BEGIN=10
@@ -88,8 +88,7 @@ RUN_CLEAN=1
 # ==============================================================================
 
 # Let's use a working directory.
-DIR=RF_stress_dir_$MODEL
-mkdir -p $DIR
+WORK_DIR=RF_stress_dir_$MODEL
 
 # Output CSV file.
 RESULT_FILE=RF_stress_results_$MODEL.csv
@@ -192,6 +191,14 @@ get_candidate_reuse_factors ()
 }
 
 #
+# Setup working directory
+#
+setup_working_directory ()
+{
+    mkdir -p $WORK_DIR
+}
+
+#
 # Run Vivado HLS and Vivado (logic synthesis).
 #
 run_hls4ml_vivado ()
@@ -201,15 +208,15 @@ run_hls4ml_vivado ()
     echo "INFO: Stress ReuseFactor=$rf, Model:$MODEL"
 
     # Move to the working directory.
-    cd $DIR
-    if [ ! $? -eq 0 ]; then echo "ERROR: Cannot find find directory $DIR"; return; fi
+    cd $WORK_DIR
+    if [ ! $? -eq 0 ]; then echo "ERROR: Cannot find find directory $WORK_DIR"; return; fi
 
     # Create HLS4ML configuration file (in the working directory).
     if [ $RUN_CLEAN -eq 1 ]; then
         rm -f keras-config-$rf-$MODEL.yml
     fi
     sed "s/>>>REUSE<<</$rf/g" ../keras-config-REUSE-MODEL.yml | sed "s/>>>MODEL<<</$MODEL/g" > keras-config-$rf-$MODEL.yml
-    if [ ! $? -eq 0 ]; then echo "ERROR: Cannot create HLS4ML configuration file $DIR/keras-config-$rf-$MODEL.yml"; cd ..; return; fi
+    if [ ! $? -eq 0 ]; then echo "ERROR: Cannot create HLS4ML configuration file $WORK_DIR/keras-config-$rf-$MODEL.yml"; cd ..; return; fi
 
     # Run HLS4ML generators.
     if [ $RUN_CLEAN -eq 1 ]; then
@@ -217,7 +224,7 @@ run_hls4ml_vivado ()
         rm -rf $MODEL\_RF$rf
     fi
     python ../keras-to-hls.py -c keras-config-$rf-$MODEL.yml > keras-config-$rf-$MODEL.log
-    if [ ! $? -eq 0 ]; then echo "ERROR: Cannot run HLS4ML generator on with the configuration file $DIR/keras-config-$rf-$MODEL.yml"; cd ..; return; fi
+    if [ ! $? -eq 0 ]; then echo "ERROR: Cannot run HLS4ML generator on with the configuration file $WORK_DIR/keras-config-$rf-$MODEL.yml"; cd ..; return; fi
 
     # Run Vivado HLS.
     if [ $RUN_HLS -eq 1 ]; then
@@ -228,7 +235,7 @@ run_hls4ml_vivado ()
         #fi
         # Kill Vivado HLS if does not return after 3 hours.
         vivado_hls -f build_prj.tcl > /dev/null
-        if [ ! $? -eq 0 ]; then echo "ERROR: Vivado HLS failed. See $DIR/$MODEL\_RF$rf/vivado_hls.log"; cd ../..; return; fi
+        if [ ! $? -eq 0 ]; then echo "ERROR: Vivado HLS failed. See $WORK_DIR/$MODEL\_RF$rf/vivado_hls.log"; cd ../..; return; fi
         cd ..
     fi
 
@@ -247,7 +254,7 @@ collect_results ()
         # Collect results (it does not check if there were HLS and LS runs).
         # TODO: Report script does not extract LS information.
         if [ $RUN_LOG -eq 1 ]; then
-            ./parse-vivadohls-report.sh ./$DIR/$MODEL\_RF$rf/myproject_prj $MODEL $rf $TIMEOUT_TIME $RESULT_FILE
+            ./parse-vivadohls-report.sh ./$WORK_DIR/$MODEL\_RF$rf/myproject_prj $MODEL $rf $TIMEOUT_TIME $RESULT_FILE
         fi
     done
 }
@@ -259,7 +266,7 @@ collect_results ()
 # These exports are necessary for GNU Parallel.
 export -f run_hls4ml_vivado
 export MODEL
-export DIR
+export WORK_DIR
 export RUN_CLEAN
 export RUN_HLS
 export RUN_LS
@@ -268,5 +275,6 @@ export TIMEOUT_TIME
 # Print some info, run the stress tests with GNU parallel, and collect the
 # results.
 print_info
-get_candidate_reuse_factors | parallel --will-cite --timeout $TIMEOUT_TIME --jobs $THREADS $SWAP run_hls4ml_vivado
+setup_working_directory
+get_candidate_reuse_factors | parallel --progress --will-cite --timeout $TIMEOUT_TIME --jobs $THREADS $SWAP run_hls4ml_vivado
 collect_results
