@@ -4,7 +4,13 @@
 # Stress test HLS4ML projects over the reuse factor.
 #
 
-# TODO: Can this script be ported/integrated in Jenkins?
+# TODO:
+# - Can this script be ported/integrated in Jenkins?
+# - Catch error code from GNU parallel and add that to CSV report (it can be
+#   useful to distinguish timeouts from Vivado crashes)
+# - Port to floating-point arithmetics the timing computation in the
+#   information report
+# - If logic synthesis is disabled in the configuration file, enable it
 
 # ==============================================================================
 # Model Configuration
@@ -12,9 +18,10 @@
 
 # Model name.
 #MODEL="KERAS_3layer"
-MODEL="2layer_100x100"
-#MODEL="KERAS_dense_16x500x500x500x500x500x5"
+#MODEL="2layer_100x100"
+MODEL="KERAS_dense_16x100x100x100x100x100x5"
 #MODEL="KERAS_dense_16x200x200x200x200x200x5"
+#MODEL="KERAS_dense_16x500x500x500x500x500x5"
 
 # We assume the model files being:
 # KerasJson: ../example-keras-model-files/MODEL.json
@@ -41,7 +48,7 @@ N_OUT=100
 EXPLORATION_MODE=2
 
 # Brute-force-mode configuration: begin, end and step for Reuse Factor.
-RF_BEGIN=100
+RF_BEGIN=10
 RF_END=100
 RF_STEP=1
 
@@ -53,15 +60,16 @@ USER_DEFINED_RF="1 2 4 5 8 16 40 80 125 200 250"
 # ==============================================================================
 
 # Max execution time.
+# 1h = 3600s
+# 2h = 7200s
 # 3h = 10800s
+# 4h = 14400s
 # 5h = 18000s
 # 6h = 21600s
-#MAX_TIME=10800
-MAX_TIME=18000
-#MAX_TIME=21600
+TIMEOUT_TIME=21600
 
 # Run at most THREADS instances of Vivado HLS / Vivado.
-THREADS=8
+THREADS=6
 
 # ==============================================================================
 # HLS, Logic Synthesis, Reports
@@ -121,17 +129,44 @@ RESULT_FILE=RF_stress_results_$MODEL.csv
 print_info ()
 {
     if [ $EXPLORATION_MODE == 0 ]; then # best-candidate mode
+        echo "INFO: ==============================================================================="
+        echo "INFO: Best-Candidate Mode"
+        echo "INFO: ==============================================================================="
         echo "INFO: Network dimensions: N_IN=$N_IN, N_OUT=$N_OUT"
-        candidates=$(get_candidate_reuse_factors | tr '\n' ' ')
-        echo "INFO: Best-candidate RF: $candidates"
-        echo "INFO: Total count: $(echo $candidates | wc -w)"
     elif [ $EXPLORATION_MODE == 1 ]; then # brute-force mode
-        echo "INFO: Brute force RF: RF_BEGIN=$RF_BEGIN, RF_END=$RF_END, RF_STEP=$RF_STEP, RF_COUNT=$(((RF_END - RF_BEGIN) / RF_STEP))"
-        candidates=$(get_candidate_reuse_factors | tr '\n' ' ')
-        echo "INFO: Brute-force-candidate RF: $candidates"
+        echo "INFO: ==============================================================================="
+        echo "INFO: Brute-Force Mode"
+        echo "INFO: ==============================================================================="
+        echo "INFO: RF: begin $RF_BEGIN, end $RF_END, step $RF_STEP"
     else # user-defined mode
-        candidates=$(get_candidate_reuse_factors | tr '\n' ' ')
-        echo "INFO: User-defined-candidate RF: $candidates"
+        echo "INFO: ==============================================================================="
+        echo "INFO: User-Defined Mode"
+        echo "INFO: ==============================================================================="
+    fi
+    candidates=$(get_candidate_reuse_factors | tr '\n' ' ')
+    candidate_count=$(echo $candidates | wc -w)
+    cpus=$(lscpu | grep -E '^CPU\(' | awk '{print $2}')
+    memory_kb=$(vmstat -s | grep "total memory" | awk '{print $1}')
+    memory_mb=$((memory_kb / 1024))
+    # TODO: port to floating-point arithmetics
+    MAX_TIME_HH=$(((TIMEOUT_TIME / 60) / 60))
+    MAX_TIME_MM=$(((TIMEOUT_TIME % 60) / 60))
+    MAX_TIME_SS=$(((TIMEOUT_TIME % 60) % 60))
+    OVERALL_MAX_TIME=$(((TIMEOUT_TIME * candidate_count) / THREADS))
+    OVERALL_MAX_TIME_HH=$(((OVERALL_MAX_TIME / 60) / 60))
+    OVERALL_MAX_TIME_MM=$(((OVERALL_MAX_TIME % 60) / 60))
+    OVERALL_MAX_TIME_SS=$(((OVERALL_MAX_TIME % 60) % 60))
+    echo "INFO: Candidate RFs: $candidates"
+    echo "INFO: Candidate # $candidate_count"
+    echo "INFO: Job # $THREADS on a $cpus-thread CPU"
+    echo "INFO: Maximum available memory: $memory_kb KB (= $memory_mb MB)"
+    echo "INFO: Single-run timeout*: $TIMEOUT_TIME secs (= $MAX_TIME_HH hours, $MAX_TIME_MM mins, $MAX_TIME_SS secs) * Worst case"
+    echo "INFO: Total maximum time*: $OVERALL_MAX_TIME secs (= $OVERALL_MAX_TIME_HH hours, $OVERALL_MAX_TIME_MM mins, $OVERALL_MAX_TIME_SS secs) * Worst case"
+    echo -n "INFO: Do you want to proceed? [yes/NO]: "
+    read answer
+    if [ ! "$answer" == "yes" ]; then
+        echo "INFO: Terminated by the user"
+        exit 0
     fi
 }
 
@@ -192,7 +227,7 @@ run_hls4ml_vivado ()
         # TODO: enable logic synthesis (if disabled)
         #fi
         # Kill Vivado HLS if does not return after 3 hours.
-        timeout -k 30s $MAX_TIME vivado_hls -f build_prj.tcl > /dev/null
+        vivado_hls -f build_prj.tcl > /dev/null
         if [ ! $? -eq 0 ]; then echo "ERROR: Vivado HLS failed. See $DIR/$MODEL\_RF$rf/vivado_hls.log"; cd ../..; return; fi
         cd ..
     fi
@@ -212,10 +247,14 @@ collect_results ()
         # Collect results (it does not check if there were HLS and LS runs).
         # TODO: Report script does not extract LS information.
         if [ $RUN_LOG -eq 1 ]; then
-            ./parse-vivadohls-report.sh ./$DIR/$MODEL\_RF$rf/myproject_prj $MODEL $rf $MAX_TIME $RESULT_FILE
+            ./parse-vivadohls-report.sh ./$DIR/$MODEL\_RF$rf/myproject_prj $MODEL $rf $TIMEOUT_TIME $RESULT_FILE
         fi
     done
 }
+
+# ==============================================================================
+# The top of the hill :-)
+# ==============================================================================
 
 # These exports are necessary for GNU Parallel.
 export -f run_hls4ml_vivado
@@ -224,10 +263,10 @@ export DIR
 export RUN_CLEAN
 export RUN_HLS
 export RUN_LS
-export MAX_TIME
+export TIMEOUT_TIME
 
-# Finally, print some info, run the stress tests in parallel, and collect the
+# Print some info, run the stress tests with GNU parallel, and collect the
 # results.
 print_info
-get_candidate_reuse_factors | parallel --will-cite -j $THREADS $SWAP run_hls4ml_vivado
+get_candidate_reuse_factors | parallel --will-cite --timeout $TIMEOUT_TIME --jobs $THREADS $SWAP run_hls4ml_vivado
 collect_results
