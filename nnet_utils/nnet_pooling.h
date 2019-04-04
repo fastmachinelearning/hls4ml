@@ -133,8 +133,8 @@ constexpr int pool_op_limit(){
 }
 
 template<class data_T, typename CONFIG_T>
-void pooling2d(data_T data[CONFIG_T::in_height][CONFIG_T::in_width][CONFIG_T::n_filt],
-               data_T res[CONFIG_T::out_height][CONFIG_T::out_width][CONFIG_T::n_filt]){
+void pooling2d(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_filt],
+               data_T res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt]){
 
   // TODO partition the arrays according to the reuse factor
   const int limit = pool_op_limit<CONFIG_T>();
@@ -163,7 +163,7 @@ void pooling2d(data_T data[CONFIG_T::in_height][CONFIG_T::in_width][CONFIG_T::n_
               // Add padding
               pool[kk * CONFIG_T::stride_width + ll] = pad_val<data_T, CONFIG_T::pool_op>();
             }else{
-  					  pool[kk * CONFIG_T::stride_width + ll] = data[ii + kk][jj + ll][ff];
+  					  pool[kk * CONFIG_T::stride_width + ll] = data[(ii + kk) * CONFIG_T::in_width * CONFIG_T::n_filt + (jj + ll) * CONFIG_T::n_filt + ff];
               img_overlap++;
             }
 				  }
@@ -171,12 +171,12 @@ void pooling2d(data_T data[CONFIG_T::in_height][CONFIG_T::in_width][CONFIG_T::n_
 			  // do the pooling
         // TODO in the case of average pooling, need to reduce height * width to area of pool window
         // not overlapping padding region
-			  res[ii/CONFIG_T::stride_height][jj/CONFIG_T::stride_width][ff] =
+			  res[(ii/CONFIG_T::stride_height) * CONFIG_T::out_width * CONFIG_T::n_filt + (jj/CONFIG_T::stride_width)* CONFIG_T::n_filt + ff] =
 					  pool_op<data_T, CONFIG_T::pool_height*CONFIG_T::pool_width, CONFIG_T::pool_op>(pool);
         // If the pool op is Average, the zero-padding needs to be removed from the results
         if(CONFIG_T::pool_op == Average){
           data_T rescale = CONFIG_T::pool_height * CONFIG_T::pool_width / img_overlap;
-          res[ii/CONFIG_T::stride_height][jj/CONFIG_T::stride_width][ff] *= rescale;
+          res[(ii/CONFIG_T::stride_height) * CONFIG_T::out_width * CONFIG_T::n_filt + (jj/CONFIG_T::stride_width)* CONFIG_T::n_filt + ff] *= rescale;
         }
 		  }
 	  }
