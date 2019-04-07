@@ -92,6 +92,14 @@ void  hls_stream_debug(hls::stream<data_T> &data, hls::stream<data_T> &res)
     }
 }
 
+constexpr int ceillog2(int x){
+  return (x <= 2) ? 1 : 1 + ceillog2((x+1) / 2);
+}
+
+constexpr int pow2(int x){
+  return x == 0 ? 1 : 2 * pow2(x - 1);
+}
+
 }
 
 #endif

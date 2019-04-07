@@ -51,28 +51,29 @@ void normalize(
     res_T     res[CONFIG_T::n_in],
     typename CONFIG_T::scale_t  scale[CONFIG_T::n_in],
     typename CONFIG_T::beta_t   beta[CONFIG_T::n_in],
-    typename CONFIG_T::mean_t   mean[CONFIG_T::n_in])
+    typename CONFIG_T::mean_t   mean[CONFIG_T::n_in]
+)
 {
     data_T cache;
    
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
     #pragma HLS function_instantiate variable=scale,beta,mean
 
-    if (CONFIG_T::io_type == io_parallel){
+    if (CONFIG_T::io_type == io_parallel) {
         // For parallel inputs:
         //   - completely partition arrays -- target fabric
         //   - if we have an unroll factor, limit number of multipliers
         #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
         // #pragma HLS ARRAY_PARTITION variable=weights complete // remove this line for now, it breaks compression sometimes
-	#pragma HLS ARRAY_PARTITION variable=scale complete
+        #pragma HLS ARRAY_PARTITION variable=scale complete
         #pragma HLS ARRAY_PARTITION variable=beta complete
-	#pragma HLS ARRAY_PARTITION variable=mean complete
+        #pragma HLS ARRAY_PARTITION variable=mean complete
 
         int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_in) / float(CONFIG_T::reuse_factor));
         #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
-    } else if (CONFIG_T::io_type == io_serial){
+    } else if (CONFIG_T::io_type == io_serial) {
         #pragma HLS ARRAY_RESHAPE variable=scale complete dim=1
         #pragma HLS ARRAY_RESHAPE variable=beta complete dim=1
         #pragma HLS ARRAY_RESHAPE variable=mean complete dim=1
@@ -80,18 +81,19 @@ void normalize(
     }            
 
     // Calcuate result
-    Result: for(int ires = 0; ires < CONFIG_T::n_in; ires++){
+    Result: for (int ires = 0; ires < CONFIG_T::n_in; ires++) {
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS UNROLL
             #pragma HLS PIPELINE
         }
-        if(CONFIG_T::n_filt==-1) res[ires] = (res_T) (data[ires]-mean[ires])*scale[ires]+beta[ires];
-	else{
-	 int norm_index = ires%CONFIG_T::n_filt;
-	 res[ires] = (res_T) (data[ires]-mean[norm_index])*scale[norm_index]+beta[norm_index];
+        
+        if (CONFIG_T::n_filt==-1) {
+            res[ires] = (data[ires]-mean[ires])*scale[ires]+beta[ires];
+	    } else {
+            int norm_index = ires%CONFIG_T::n_filt;
+            res[ires] = (data[ires]-mean[norm_index])*scale[norm_index]+beta[norm_index];
+        }
 	}
-    }   
-       
 }
 
 }

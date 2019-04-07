@@ -4,7 +4,7 @@
 #include <complex>
 #include "ap_int.h"
 #include "ap_fixed.h"
-#include "nnet_layer.h"
+#include "nnet_dense.h"
 #include "nnet_activation.h"
 #include "nnet_common.h"
 
@@ -22,7 +22,7 @@ typedef ap_fixed<18,8> result_t;
 typedef ap_fixed<18,8> layer1_t;
 
 //hls-fpga-machine-learning insert layer-config
-struct config1 : nnet::layer_config {
+struct config1 : nnet::dense_config {
         static const unsigned n_in = N_INPUTS;
         static const unsigned n_out = N_LAYER_1;
         static const unsigned io_type = nnet::io_parallel;
@@ -38,7 +38,7 @@ struct relu_config1 : nnet::activ_config {
         static const unsigned table_size = 1024;
         static const unsigned io_type = nnet::io_parallel;
         };
-struct config2 : nnet::layer_config {
+struct config2 : nnet::dense_config {
         static const unsigned n_in = N_LAYER_1;
         static const unsigned n_out = N_OUTPUTS;
         static const unsigned io_type = nnet::io_parallel;

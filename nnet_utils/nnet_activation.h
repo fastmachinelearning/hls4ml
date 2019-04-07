@@ -238,10 +238,10 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
       exp_res[ii] = 0;
     }
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+      if (CONFIG_T::io_type == io_serial){
+          #pragma HLS PIPELINE
+      }
       for (int jj=0; jj<CONFIG_T::n_in; jj++) {
-        if (CONFIG_T::io_type == io_serial){
-            #pragma HLS PIPELINE
-        }
 	if (ii==jj) exp_diff_res = 1;
 	else {
 	  data_round = (data_cache[jj]-data_cache[ii])*CONFIG_T::table_size/16;
@@ -644,6 +644,63 @@ void  prelu(data_T data[CONFIG_T::n_in], data_T alpha[CONFIG_T::n_in], res_T res
         if (datareg > 0) res[ii] = datareg;
         else res[ii] = alpha[ii] * datareg;
     }
+}
+
+// *************************************************
+//       Binary TanH Activation
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void  binary_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
+{
+
+ if (CONFIG_T::io_type == io_parallel){
+     #pragma HLS PIPELINE
+ }
+  
+ data_T datareg;   
+ res_T cache; 
+ for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+
+  if (CONFIG_T::io_type == io_serial){
+      #pragma HLS PIPELINE
+  }
+  datareg = data[ii];	 
+  if( datareg > 0 ) cache = 1;
+  else cache = -1;
+  
+  res[ii] = (res_T) cache;
+ 
+ }
+ 
+}
+
+// *************************************************
+//       Ternary TanH Activation
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void  ternary_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
+{
+
+ if (CONFIG_T::io_type == io_parallel){
+     #pragma HLS PIPELINE
+ }
+  
+ data_T datareg;   
+ res_T cache; 
+ for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+
+  if (CONFIG_T::io_type == io_serial){
+      #pragma HLS PIPELINE
+  }
+  datareg = 2*data[ii];	 
+  if( datareg > 1 ) cache = 1;
+  else if( datareg > -1 && datareg <= 1) cache=0;
+  else cache = -1;
+  
+  res[ii] = (res_T) cache;
+ 
+ }
+ 
 }
 
 }

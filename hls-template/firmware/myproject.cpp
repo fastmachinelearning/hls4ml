@@ -18,29 +18,16 @@
 //
 #include <iostream>
 
-#include "parameters.h"
 #include "myproject.h"
-
-#include "nnet_layer.h"
-#include "nnet_conv.h"
-#include "nnet_conv2d.h"
-#include "nnet_batchnorm.h"
-#include "nnet_activation.h"
 
 //hls-fpga-machine-learning insert weights
 
 void myproject(
-		  input_t data[N_INPUTS],
-		  result_t res[N_OUTPUTS],
-		  unsigned short &const_size_in,
-		  unsigned short &const_size_out)
-{
+	//hls-fpga-machine-learning insert header
+) {
 
     //hls-fpga-machine-learning insert IO
 
-
-    const_size_in   = N_INPUTS;
-    const_size_out  = N_OUTPUTS;
 
     // ****************************************
     // NETWORK INSTANTIATION

@@ -20,7 +20,7 @@
 #include "parameters.h"
 #include "myproject.h"
 
-#include "nnet_layer.h"
+#include "nnet_dense.h"
 #include "nnet_activation.h"
 
 //hls-fpga-machine-learning insert weights
@@ -55,12 +55,12 @@ void myproject(
     #pragma HLS ARRAY_PARTITION variable=layer1_out complete
     layer1_t logits1[N_LAYER_1];
     #pragma HLS ARRAY_PARTITION variable=logits1 complete
-    nnet::compute_layer<input_t, layer1_t, config1>(data, logits1, w1, b1);
+    nnet::dense<input_t, layer1_t, config1>(data, logits1, w1, b1);
     nnet::relu<layer1_t, layer1_t, relu_config1>(logits1, layer1_out);
 
     result_t logits2[N_OUTPUTS];
     #pragma HLS ARRAY_PARTITION variable=logits2 complete
-    nnet::compute_layer<layer1_t, result_t, config2>(layer1_out, logits2, w2, b2);
+    nnet::dense<layer1_t, result_t, config2>(layer1_out, logits2, w2, b2);
     nnet::sigmoid<result_t, result_t, sigmoid_config2>(logits2, res);
 
 

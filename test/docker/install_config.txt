@@ -5,7 +5,7 @@ Edition=Vivado HL Design Edition
 Destination=/opt/Xilinx
 
 # Choose the Products/Devices the you would like to install.
-Modules=Zynq UltraScale+ MPSoC:0,DocNav:0,Kintex-7:1,Virtex UltraScale+:0,Virtex UltraScale+ HBM ES:0,Zynq-7000:0,Kintex UltraScale+:0,Model Composer:0,ARM Cortex-A53:0,Spartan-7:0,Zynq UltraScale+ RFSoC ES:0,Engineering Sample Devices:0,Kintex UltraScale:1,Virtex UltraScale:1,SDK Core Tools:1,Zynq UltraScale+ RFSoC:0,ARM Cortex-A9:0,ARM Cortex R5:1,Virtex-7:1,Virtex UltraScale+ 58G ES:0,Zynq UltraScale+ MPSoC ES:0,MicroBlaze:1,Artix-7:0
+Modules=Zynq UltraScale+ MPSoC:0,DocNav:0,Kintex-7:1,Virtex UltraScale+:0,Virtex UltraScale+ HBM ES:0,Zynq-7000:0,Kintex UltraScale+:0,Model Composer:0,ARM Cortex-A53:0,Spartan-7:0,Zynq UltraScale+ RFSoC ES:0,Engineering Sample Devices:0,Kintex UltraScale:1,Virtex UltraScale:1,SDK Core Tools:1,Zynq UltraScale+ RFSoC:0,ARM Cortex-A9:0,ARM Cortex R5:0,Virtex-7:1,Virtex UltraScale+ 58G ES:0,Zynq UltraScale+ MPSoC ES:0,MicroBlaze:0,Artix-7:0
 
 # Choose the post install scripts you'd like to run as part of the finalization step. Please note that some of these scripts may require user interaction during runtime.
 InstallOptions=Acquire or Manage a License Key:0,Enable WebTalk for SDK to send usage statistics to Xilinx:1,Enable WebTalk for Vivado to send usage statistics to Xilinx (Always enabled for WebPACK license):1
