@@ -109,6 +109,8 @@ def main():
     if model_arch['class_name'] == 'Sequential':
         print('Interpreting Sequential')
         layer_config = model_arch["config"]
+        if 'layers' in layer_config: # Newer Keras versions have 'layers' in 'config' key
+            layer_config = layer_config['layers']
         # Sequential doesn't have InputLayer
         input_layer = {}
         input_layer['name'] = 'input1'
