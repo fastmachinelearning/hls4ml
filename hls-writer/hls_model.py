@@ -312,7 +312,7 @@ class Dense(Layer):
     def initialize(self):
         shape = [self.attributes['n_out']]
         dims = ['N_LAYER_{}'.format(self.index)]
-        quantize = self.get_attr('quantize')
+        quantize = self.get_attr('quantize', default=0)
         self.add_output_variable(shape, dims)
         self.add_weights(quantize=quantize)
         self.add_bias(quantize=quantize)

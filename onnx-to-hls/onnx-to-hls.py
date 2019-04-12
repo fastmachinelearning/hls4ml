@@ -10,56 +10,53 @@ import sys
 from shutil import copyfile
 import math
 from onnx import ModelProto, GraphProto, NodeProto, TensorProto
-from onnx import optimizer, helper, numpy_helper
+from onnx import optimizer, helper, numpy_helper, shape_inference
 
 MAXMULT = 4096
 
 filedir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,os.path.join(filedir, "..", "hls-writer"))
-from hls_writer import parse_config, print_array_to_cpp, hls_writer
+from hls_writer import parse_config, write_hls
+from hls_model import HLSModel
 
-def find_input(graph, inputs, transpose=True, perm=None):
-    weights = None
-    bias = None
-    for i in inputs:
-        tensor = next((x for x in graph.initializer if x.name == i), None)
+class ONNXDataReader:
+    def __init__(self, model):
+        self.model = model
+        self.input_map = {}
+        self.index_map = {
+            # Dense
+            'kernel' : 1,
+            'bias'   : 2,
+            # BatchNormalization
+            'gamma'  : 1,
+            'beta'   : 2,
+            'moving_mean'   : 3,
+            'moving_variance' : 4,
+        }
+
+    def get_weights_data(self, layer_name, var_name):
+        inputs = self.input_map[layer_name]
+        tensor = next((x for x in self.model.graph.initializer if x.name == inputs['inputs'][self.index_map[var_name]]), None)
         if tensor is not None:
-            if len(tensor.dims) > 1: # Weights
-                weights = numpy_helper.to_array(tensor)
-            else: # Bias
-                bias = numpy_helper.to_array(tensor)
-    
-    if transpose:
-        weights = weights.transpose(perm)
-    
-    return weights, bias
+            data = numpy_helper.to_array(tensor)
+            if inputs['transpose']:
+                if inputs['perm'] is not None and len(data.shape) == len(inputs['perm']):
+                    data = data.transpose(inputs['perm'])
+                else:
+                    data = data.transpose()
 
-def find_bn_input(graph, inputs, transpose=True):
-    if len(inputs) != 5:
-        raise Exception('ERROR: Unexpected number of inputs: Expected {}, got {}'.format(5, len(inputs)))
+        return data
     
-    scale = numpy_helper.to_array(next((x for x in graph.initializer if x.name == inputs[1]), None))
-    beta = numpy_helper.to_array(next((x for x in graph.initializer if x.name == inputs[2]), None))
-    mean = numpy_helper.to_array(next((x for x in graph.initializer if x.name == inputs[3]), None))
-    var = numpy_helper.to_array(next((x for x in graph.initializer if x.name == inputs[4]), None))
+    def add_input(self, layer_name, inputs, transpose=True, perm=None):
+        self.input_map[layer_name] = { 'inputs': inputs, 'transpose': transpose, 'perm': perm }
     
-    if transpose:
-        scale = scale.transpose()
-        beta = beta.transpose()
-        mean = mean.transpose()
-        var = var.transpose()
 
-    return scale, beta, mean, var
-
-def find_prelu_input(graph, inputs):
-    alpha = None
-    for i in inputs:
-        tensor = next((x for x in graph.initializer if x.name == i), None)
-        if tensor is not None:
-            if len(tensor.dims) == 1: # Alpha array
-                alpha = numpy_helper.to_array(tensor)
+def sanitize_layer_name(layer):
+    new_name = layer['name']
+    if new_name[0].isdigit():
+        new_name = layer['class_name'].lower() + new_name
     
-    return alpha
+    layer['name'] = new_name
 
 def get_onnx_attribute(operation, name, default=None):
     attr = next((x for x in operation.attribute if x.name == name), None)
@@ -70,6 +67,10 @@ def get_onnx_attribute(operation, name, default=None):
         if isinstance(value, bytes):
             value = value.decode()
     return value
+
+def get_input_shape(model, operation, input_idx=0):
+    value_info_idx = next((i for i, x in enumerate(model.graph.value_info) if x.name == operation.input[input_idx]), 0)
+    return [d.dim_value for d in model.graph.value_info[value_info_idx].type.tensor_type.shape.dim]
 
 ############################################################################################
 ## M A I N
@@ -117,13 +118,32 @@ def main():
     
     #Define layers to skip for conversion to HLS
     skip_layers = ['Squeeze', 'Unsqueeze', 'Dropout', 'Identity', 'Flatten', 'Transpose'] 
+    passes = ['fuse_transpose_into_gemm', 'fuse_matmul_add_bias_into_gemm', 'eliminate_nop_transpose', 'fuse_consecutive_transposes']
+    model = shape_inference.infer_shapes(model) # have to infer shapes before optimizing the model
+    model = optimizer.optimize(model, passes)
+    model = shape_inference.infer_shapes(model) # have to infer shapes before optimizing the model
+    
+    reader = ONNXDataReader(model)
 
     #Loop through layers
     layer_counter = 0
-    input_layer = {}
+    all_inputs = [x.name for x in model.graph.input]
+    all_initializers = [x.name for x in model.graph.initializer]
+    input_layers = [x for x in all_inputs if x not in all_initializers]
+    output_layers = [x.name for x in model.graph.output]
 
-    passes = ['fuse_matmul_add_bias_into_gemm', 'eliminate_nop_transpose', 'fuse_consecutive_transposes', 'fuse_transpose_into_gemm']
-    model = optimizer.optimize(model, passes)
+    for i, inp in enumerate(input_layers):
+        input_layer = {}
+        input_layer['name'] = inp
+        input_layer['class_name'] = 'InputLayer'
+        inp_shape = next((x.type.tensor_type.shape.dim for x in model.graph.input if x.name == inp), None)
+        input_layer['input_shape'] = [x.dim_value for x in inp_shape]
+        if len(input_layer['input_shape']) > 1:
+            input_layer['input_shape'][0] = None
+
+        sanitize_layer_name(input_layer)
+        input_layers[i] = input_layer['name']
+        layer_list.append(input_layer)
 
     # Check for unsupported layer type
     for operation in model.graph.node:
@@ -134,30 +154,10 @@ def main():
     current_shape = [d.dim_value for d in model.graph.input[0].type.tensor_type.shape.dim]
     print('Input shape:', current_shape)
 
-    # Set some variables to make the routine after a bit smoother
-    is_conv2d = False
-    is_dense = False
-    for operation in model.graph.node:
-        if operation.op_type == 'Conv':
-            for i in operation.input:
-                tensor = next((x for x in model.graph.initializer if x.name == i), None)
-                if tensor is not None and tensor.dims == 4:
-                    is_conv2d = True
-                    break
-        if operation.op_type == 'Gemm':
-            is_dense = True
-            break
-
-    transpose_input = False
-    transpose_perm = None
-
     print('Topology:')
-    for op_id, operation in enumerate(model.graph.node):
+    for operation in model.graph.node:
         if operation.op_type == 'Flatten':
             current_shape = [current_shape[0], np.prod(current_shape[1:])]
-        if operation.op_type == 'Transpose':
-            transpose_input = True
-            transpose_perm = get_onnx_attribute(operation, 'perm')
         if operation.op_type in skip_layers:
             continue 
 
@@ -180,62 +180,27 @@ def main():
             if layer_list[-1]['class_name'] != 'BatchNormalization':
                 layer_list[-1]['activation'] = operation.op_type.lower()
         
-        # Skip activation layers if possible
-        skip_layer = False
-        # Default one layer call
-        layer['n_part'] = 1
         #Get number of inputs and outputs
         #(We take it from the weights to avoid dealing with InputLayer and Flatten details)
         if layer['class_name'] == 'Dense':
+            current_shape = get_input_shape(model, operation)
+            layer['n_in'] = next((x.type.tensor_type.shape.dim[-1].dim_value for x in model.graph.input if x.name == operation.input[0]), None)
+            layer['n_out'] = next((x.type.tensor_type.shape.dim[-1].dim_value for x in model.graph.value_info if x.name == operation.output[0]), None)
             tran_weight = get_onnx_attribute(operation, 'transB', 0)
-            weights, biases = find_input(model.graph, operation.input, tran_weight)
-            
-            layer['activation'] = 'linear' # Potentially overriden by the following layer 
-            layer['n_in']=weights.shape[0]
-            layer['n_out']=weights.shape[1]
-            cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
-            print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
-            layer['weights_n_zeros'] = cur_n_zeros
-
-            # if this layer is too big (more than MAXMULT multiplications); 
-            # break it out into chunks!
-            layer['n_subout']=[weights.shape[1]]
-            if layer['n_in']*layer['n_out']>MAXMULT and yamlConfig["IOType"] != "io_serial":
-                n_subout = int(MAXMULT/layer['n_in'])
-                n_totout = 0
-                layer['n_subout'] = []
-                layer['weights_n_subzeros'] = []
-                layer['n_part'] = 0
-                while n_totout < layer['n_out']:
-                    if n_totout + n_subout <= layer['n_out']:
-                        layer['n_subout'].append(n_subout)
-                        n_totout += n_subout                    
-                    else:
-                        layer['n_subout'].append(layer['n_out']-n_totout)
-                        n_totout += layer['n_out']-n_totout
-                    layer['n_part'] += 1
-                for i_part in range(0,layer['n_part']):
-                    i_subout = 0
-                    if i_part>0:
-                        i_subout = sum(layer['n_subout'][0:i_part])
-                    cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'], i_part, layer['n_part'], i_subout, layer['n_subout'][i_part])
-                    print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'], i_part, layer['n_part'], i_subout, layer['n_subout'][i_part])
-                    layer['weights_n_subzeros'].append(cur_n_zeros)
+            reader.add_input(layer['name'], operation.input, tran_weight)
             
             current_shape = [current_shape[0], layer['n_out']]
         elif layer['class_name']=='Conv':
-            weights, biases = find_input(model.graph, operation.input, transpose=False)
-            if len(weights.shape) == 3: # Conv1D
+            current_shape = get_input_shape(model, operation)
+
+            if len(current_shape) == 3: # Conv1D
                 layer['class_name'] = 'Conv1D'
-                weights = weights.transpose([2, 1, 0])
-                if transpose_input:
-                    current_shape = [ current_shape[i] for i in transpose_perm ]
-                    transpose_input = False
-                # weights.shape = (filter_width, n_channels, n_filters)
+                reader.add_input(layer['name'], operation.input)
+
                 layer['y_in']=current_shape[2]
-                layer['y_filt']=weights.shape[0]
-                layer['n_chan']=weights.shape[1] 
-                layer['n_filt']=weights.shape[2]
+                layer['y_filt']=get_onnx_attribute(operation, 'kernel_shape')[0]
+                layer['n_chan']=current_shape[1]
+                layer['n_filt']=next((x.type.tensor_type.shape.dim[1].dim_value for x in model.graph.value_info if x.name == operation.output[0]), None)
                 layer['stride']=get_onnx_attribute(operation, 'strides')[0]
                 auto_pad = get_onnx_attribute(operation, 'auto_pad', 'NOTSET')
                 if auto_pad != 'NOTSET':
@@ -263,18 +228,16 @@ def main():
                     layer['y_out'] = int(math.ceil(float(layer['y_in']) / float(layer['stride'])))
 
                 current_shape=[current_shape[0], layer['n_filt'], layer['y_out']]
-            elif len(weights.shape) == 4: # Conv2D
+            elif len(current_shape) == 4: # Conv2D
                 layer['class_name'] = 'Conv2D'
-                weights = weights.transpose([2, 3, 1, 0])
-                if transpose_input:
-                    current_shape = [ current_shape[i] for i in transpose_perm ]
-                    transpose_input = False
+                reader.add_input(layer['name'], operation.input, transpose=True, perm=[2, 3, 1, 0])
+
                 layer['in_height']=current_shape[2]
                 layer['in_width']=current_shape[3]
-                layer['filt_height']=weights.shape[0]
-                layer['filt_width']=weights.shape[1]
-                layer['n_chan']=weights.shape[2]
-                layer['n_filt']=weights.shape[3]
+                layer['filt_height']=get_onnx_attribute(operation, 'kernel_shape')[0]
+                layer['filt_width']=get_onnx_attribute(operation, 'kernel_shape')[1]
+                layer['n_chan']=current_shape[1]
+                layer['n_filt']=next((x.type.tensor_type.shape.dim[1].dim_value for x in model.graph.value_info if x.name == operation.output[0]), None)
                 strides = get_onnx_attribute(operation, 'strides')
                 layer['stride_height'] = strides[0]
                 layer['stride_width'] = strides[1]
@@ -316,73 +279,42 @@ def main():
                     layer['out_width'] = int(math.ceil(float(layer['in_width']) / float(layer['stride_width'])))
                 
                 current_shape=[current_shape[0], layer['n_filt'], layer['out_height'], layer['out_width']]
-            cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
-            print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
-            layer['weights_n_zeros'] = cur_n_zeros
         elif layer['class_name']=='BatchNormalization':
             layer['epsilon'] = get_onnx_attribute(operation, 'epsilon')
             layer['momentum'] = get_onnx_attribute(operation, 'momentum')
-            scale, beta, mean, var = find_bn_input(model.graph, operation.input)
             
-            scale = scale/np.sqrt(var + layer['epsilon'])
+            reader.add_input(layer['name'], operation.input)
             
-            print_array_to_cpp("scale{}".format(layer_counter), scale, yamlConfig['OutputDir'])
-            print_array_to_cpp("beta{}".format(layer_counter), beta, yamlConfig['OutputDir'])
-            print_array_to_cpp("mean{}".format(layer_counter), mean, yamlConfig['OutputDir'])
-            
-            if is_dense:
-                layer['n_in']=mean.shape[0]
-                layer['n_out']=mean.shape[0]
+            in_size = 1
+            for dim in current_shape[1:]:
+                in_size *= dim
+            layer['n_in'] = in_size
+            layer['n_out'] = layer['n_in']
+            if len(current_shape) == 2:
                 layer['n_filt'] = -1
-                current_shape = [current_shape[0], layer['n_out']]
-            elif is_conv2d:
-                layer['n_in']=current_shape[1]*current_shape[2]*current_shape[3] 
-                layer['n_out']=layer['n_in']
-                layer['in_height']=current_shape[1]
-                layer['in_width']=current_shape[2]
+            elif len(current_shape) == 3:
+                layer['n_filt']=current_shape[2]
+            elif len(current_shape) == 4:
                 layer['n_filt']=current_shape[3]
-                current_shape=[current_shape[0], layer['n_filt'], layer['in_height'], layer['in_width']]
-        elif layer['class_name']=='Activation':
-            if layer_list[-1]['class_name'] != 'BatchNormalization':
-                layer_list[-1]['activation'] = layer['activation']
-                skip_layer = True
-                layer_counter = layer_counter - 1
         elif layer['class_name'] in ['ELU', 'LeakyReLU', 'ThresholdedReLU']:
-            if layer_list[-1]['class_name'] != 'BatchNormalization':
-                layer_list[-1]['activation'] = layer['class_name']
-                layer_list[-1]['activ_param'] = get_onnx_attribute(operation, 'alpha', 0.01)
-                skip_layer = True
-                layer_counter = layer_counter - 1
-            else:
-                layer['activation'] = layer['class_name']
-                layer['activ_param'] = get_onnx_attribute(operation, 'alpha', 0.01)
+            layer['activation'] = layer['class_name']
+            layer['activ_param'] = get_onnx_attribute(operation, 'alpha', 0.01)
         elif layer['class_name']=='PReLU':
-            if layer_list[-1]['class_name'] != 'BatchNormalization':
-                layer_list[-1]['activation'] = layer['class_name']
-                skip_layer = True
-                layer_counter = layer_counter - 1
-            else:
-                layer['activation'] = layer['class_name']
-            
-            #Translate learned alpha array from h5 file
-            alpha = find_prelu_input(model.graph, operation.input)
-            print_array_to_cpp("a{}".format(layer_counter), alpha, yamlConfig['OutputDir'])
+            layer['activation'] = layer['class_name']
 
-        if not skip_layer:
-            print('Layer name: {}, layer type: {}, current shape: {}, number of zeros: {}'.format(layer['name'], layer['class_name'], current_shape, cur_n_zeros))
-            if layer['n_part'] > 1: 
-                print(' -> layer will be divided into {} sublayer calls; output neurons: {} '.format(layer['n_part'], layer['n_subout']))
-            layer_list.append( layer )
+        if operation.output[0] in output_layers:
+            output_layers = [layer['name'] for output in output_layers if output == operation.output[0]]
+        sanitize_layer_name(layer)
+        print('Layer name: {}, layer type: {}, current shape: {}'.format(layer['name'], layer['class_name'], current_shape))
+        layer_list.append( layer )
 
 
     #################
     ## Generate HLS
     #################
 
-    #Weights and biases are already dumped to output directory
-    #Now generate HLS from list of layer dictionaries
-    hls_writer(layer_list, yamlConfig)
-
+    hls_model = HLSModel(yamlConfig, reader, layer_list, input_layers, output_layers)
+    write_hls(hls_model)
 
 if __name__ == "__main__":
     main()
