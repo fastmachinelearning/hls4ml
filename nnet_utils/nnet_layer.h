@@ -84,11 +84,11 @@ void compute_layer(
     // Workaround the above restriction.
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
     #pragma HLS function_instantiate variable=weights,biases
-    #pragma HLS RESOURCE        variable=weights core=ROM_nP_LUTRAM
-    // if(CONFIG_T::store_weights_in_bram) { 
-    // #pragma HLS RESOURCE        variable=weights core=ROM_1P_BRAM
-    // }
-
+    #pragma HLS RESOURCE        variable=weights core=ROM_1P_BRAM
+    //if(CONFIG_T::store_weights_in_bram) { 
+    //#pragma HLS RESOURCE        variable=weights core=ROM_2P_BRAM
+    //}
+    //#pragma HLS RESOURCE variable=weights core=XPM_MEMORY uram
     // #pragma HLS ARRAY_RESHAPE   variable=weights block factor=multiplier_limit
     #pragma HLS ARRAY_RESHAPE   variable=weights block factor=multiplier_limit
     #pragma HLS ARRAY_PARTITION variable=biases complete
@@ -120,21 +120,19 @@ void compute_layer(
     const int ADD_LAT = DIV_ROUNDUP(multiplier_limit,CONFIG_T::n_out);
     printf("rufactor = %i, add latency = %i, multiplier limit = %i \n", rufactor, ADD_LAT, multiplier_limit);
     ReuseLoop: for (int ir = 0; ir < rufactor; ir++){
-
-        #pragma HLS PIPELINE II=1 rewind
+        #pragma HLS PIPELINE II=1 
         ///////// --------------------------------------
-        printf("on this clock tick: %i \n", ir);
+      //printf("on this clock tick: %i \n", ir);
         MultLoop: 
         for (int im = 0; im < multiplier_limit; im++){
             int w_index   = ir + rufactor * im;
-            //int w_index   = ir * multiplier_limit + im;
             int out_index = w_index / CONFIG_T::n_out;
             int  in_index = w_index % CONFIG_T::n_out;
             if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
             mult[im] = data[in_index] * weights[w_index];
             // acc[out_index] += mult[im];
             // acc[out_index] += data[in_index] * weights[w_index];
-            printf("m++ ir = %i, im = %i, w_index = %i, in_index = %i, out_index = %i \n", ir, im, w_index, in_index, out_index);
+            //printf("m++ ir = %i, im = %i, w_index = %i, in_index = %i, out_index = %i \n", ir, im, w_index, in_index, out_index);
         }
         // AccumLoop:
         // for (int im = 0; im < multiplier_limit; im++){
@@ -189,8 +187,8 @@ void compute_layer(
 
         FullAccum: 
         for (int ii = 0; ii < CONFIG_T::n_out; ii++){
+            #pragma HLS UNROLL
             for (int ij= 0; ij < ADD_LAT; ij++){
-                #pragma HLS UNROLL
                 acc[ii] += acc_lat[ii][ij];
             }
         }    

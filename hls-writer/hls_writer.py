@@ -993,7 +993,8 @@ def print_array_to_cpp(name, a, odir, quantize=0, i_part = 0, n_part = 1, i_subo
         for x in np.nditer(a):
             i=i+1
             val=x
-            weights.append([int(i%ncols),int(i/ncols),val])
+            #weights.append([int(i%ncols),int(i/ncols),val])
+            weights.append([int(i/ncols),int(i%ncols),val])
         weights.sort()
         #not including internal brackets for multidimensional case
         i=0
