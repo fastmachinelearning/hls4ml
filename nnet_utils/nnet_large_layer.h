@@ -84,8 +84,8 @@ void compute_large_layer(
     std::cout << "===> " << multiplier_limit << " -- " << CONFIG_T::n_out  << " -- " << multiplier_limit % CONFIG_T::n_out << std::endl;
     if (multiplier_limit % CONFIG_T::n_out != 0) return;
     #pragma HLS function_instantiate variable=weights,biases
-    #pragma HLS RESOURCE         variable=weights core=ROM_2P_BRAM
-    #pragma HLS ARRAY_RESHAPE   variable=weights cyclic factor=block_factor
+    #pragma HLS RESOURCE         variable=weights core=ROM_1P_BRAM
+    #pragma HLS ARRAY_RESHAPE   variable=weights block factor=block_factor
     #pragma HLS ARRAY_PARTITION variable=biases complete
     typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
     #pragma HLS ARRAY_PARTITION variable=acc complete
