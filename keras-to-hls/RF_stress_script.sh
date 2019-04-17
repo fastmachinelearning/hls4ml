@@ -53,7 +53,7 @@ RF_END=100
 RF_STEP=1
 
 # User-defined RF values
-USER_DEFINED_RF="1 2 4 5 8 16 40 80 125 200 250"
+USER_DEFINED_RF="1 100 200 250"
 
 # ==============================================================================
 # Host constraints
@@ -83,15 +83,20 @@ RUN_LOG=1
 # Remove previous intermediate files.
 RUN_CLEAN=1
 
+JOB_LOG="jobs.log"
+
 # ==============================================================================
 # Files and directories
 # ==============================================================================
 
+# TODO: Sanboxing is still under development.
 # Choose a partition where you have a lot of space. You can check it with:
 # $ df -h
-SANDBOX_DIR=$HOME/sandbox1
+#SANDBOX_DIR=$HOME/sandbox1
 #SANDBOX_DIR=$HOME/sandbox2
 #SANDBOX_DIR=$HOME/sandbox3
+
+SANDBOX_DIR=.
 
 # Let's use a working directory in the sandbox.
 WORK_DIR=$SANDBOX_DIR/RF_stress_dir_$MODEL
@@ -215,14 +220,14 @@ run_hls4ml_vivado ()
 
     # Move to the working directory.
     cd $WORK_DIR
-    if [ ! $? -eq 0 ]; then echo "ERROR: Cannot find find directory $WORK_DIR"; return; fi
+    if [ ! $? -eq 0 ]; then echo "ERROR: Cannot find find directory $WORK_DIR"; return 1; fi
 
     # Create HLS4ML configuration file (in the working directory).
     if [ $RUN_CLEAN -eq 1 ]; then
         rm -f keras-config-$rf-$MODEL.yml
     fi
     sed "s/>>>REUSE<<</$rf/g" ../keras-config-REUSE-MODEL.yml | sed "s/>>>MODEL<<</$MODEL/g" > keras-config-$rf-$MODEL.yml
-    if [ ! $? -eq 0 ]; then echo "ERROR: Cannot create HLS4ML configuration file $WORK_DIR/keras-config-$rf-$MODEL.yml"; cd ..; return; fi
+    if [ ! $? -eq 0 ]; then echo "ERROR: Cannot create HLS4ML configuration file $WORK_DIR/keras-config-$rf-$MODEL.yml"; cd ..; return 1; fi
 
     # Run HLS4ML generators.
     if [ $RUN_CLEAN -eq 1 ]; then
@@ -235,13 +240,13 @@ run_hls4ml_vivado ()
     # Run Vivado HLS.
     if [ $RUN_HLS -eq 1 ]; then
         cd $MODEL\_RF$rf
-        if [ ! $? -eq 0 ]; then echo "ERROR: Cannot find find directory $MODEL\_RF$rf"; cd ../..; return; fi
+        if [ ! $? -eq 0 ]; then echo "ERROR: Cannot find find directory $MODEL\_RF$rf"; cd ../..; return 1; fi
         #if [ $RUN_LS -eq 1 ]; then
         # TODO: enable logic synthesis (if disabled)
         #fi
         # Kill Vivado HLS if does not return after 3 hours.
         vivado_hls -f build_prj.tcl > /dev/null
-        if [ ! $? -eq 0 ]; then echo "ERROR: Vivado HLS failed. See $WORK_DIR/$MODEL\_RF$rf/vivado_hls.log"; cd ../..; return; fi
+        if [ ! $? -eq 0 ]; then echo "ERROR: Vivado HLS failed. See $WORK_DIR/$MODEL\_RF$rf/vivado_hls.log"; cd ../..; return 1; fi
         cd ..
     fi
 
@@ -282,5 +287,5 @@ export TIMEOUT_TIME
 # results.
 print_info
 setup_working_directory
-get_candidate_reuse_factors | parallel --progress --will-cite --timeout $TIMEOUT_TIME --jobs $THREADS $SWAP run_hls4ml_vivado
+get_candidate_reuse_factors | parallel --progress --will-cite --timeout $TIMEOUT_TIME --jobs $THREADS $SWAP --joblog $JOB_LOG run_hls4ml_vivado
 collect_results

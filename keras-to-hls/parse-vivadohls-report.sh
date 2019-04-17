@@ -13,7 +13,7 @@ REUSE_FACTOR=$3
 MAX_TIME=$4
 
 CSV_FILE=$5
-if [ ! -f $CSV_FILE ]; then echo "VivadoVersion,FpgaPart,TopModule,TargetClk,EstimatedClk,BestLatency,WorstLatency,IIntervalMin,IIntevalMax,HLSResourceBram,HLSResourceDsp,HLSResourceFf,HLSResourceLut,ResourceBram,ResourceDsp,ResourceFf,ResourceLut,GitRevision,Arch,Model,ReuseFactor,ExecutionTime" > $CSV_FILE; fi
+if [ ! -f $CSV_FILE ]; then echo "VivadoVersion,FpgaPart,TopModule,TargetClk,EstimatedClk,BestLatency,WorstLatency,IIntervalMin,IIntevalMax,HLSResourceBram,HLSResourceDsp,HLSResourceFf,HLSResourceLut,ResourceBram,ResourceDsp,ResourceFf,ResourceLut,GitRevision,Arch,Model,ReuseFactor,TotalExecutionTime,VivadoHlsExecutionTime,VivadoExecutionTime" > $CSV_FILE; fi
 
 #ARCHS=$(cat $APP_FILE | sed -e 's/ xmlns.*=".*"//g' | xmlstarlet sel -t -m "/project/solutions/solution" -v "@name" -n)
 ARCHS="solution1"
@@ -66,7 +66,15 @@ for ARCH in $ARCHS; do
     if [ ! $? -eq 0 ]; then echo "Git Error"; exit 1; fi
 
     TOTAL_EXECUTION_TIME=$(grep "Total elapsed time:" $PROJECT_DIR/../vivado_hls.log | awk '{print $7}')
-    if [ -z "$TOTAL_EXECUTION_TIME" ]; then EXECUTION_TIME=?; fi
+    if [ -z "$TOTAL_EXECUTION_TIME" ]; then EXECUTION_TIME="?"; fi
+
+    VIVADO_HLS_EXECUTION_TIME_STRING=$(grep "C/RTL SYNTHESIS COMPLETED IN" $PROJECT_DIR/../vivado_hls.log | awk '{print $7}')
+    if [ -z "$VIVADO_HLS_EXECUTION_TIME_STRING" ]; then VIVADO_HLS_EXECUTION_TIME="?"; fi
+    VIVADO_HLS_EXECUTION_TIME=$(echo $VIVADO_HLS_EXECUTION_TIME_STRING | awk -F'[h|m|s]' '{ print ($1 * 3600) + ($2 * 60) + $3 }')
+
+    VIVADO_EXECUTION_TIME_STRING=$(grep "EXPORT IP COMPLETED IN" $PROJECT_DIR/../vivado_hls.log | awk '{print $6}')
+    if [ -z "$VIVADO_EXECUTION_TIME_STRING" ]; then VIVADO_EXECUTION_TIME=?; fi
+    VIVADO_EXECUTION_TIME=$(echo $VIVADO_EXECUTION_TIME_STRING | awk -F'[h|m|s]' '{ print ($1 * 3600) + ($2 * 60) + $3 }')
 
     echo "Vivado version: $VIVADO_VERSION"
     echo "FPGA part: $FPGA_PART"
@@ -91,7 +99,9 @@ for ARCH in $ARCHS; do
     echo "Model: $MODEL"
     echo "Reuse Factor: $REUSE_FACTOR"
     echo "Total Execution Time (secs): $TOTAL_EXECUTION_TIME"
+    echo "Vivado HLS Execution Time (secs): $VIVADO_HLS_EXECUTION_TIME"
+    echo "Vivado Execution Time (secs): $VIVADO_EXECUTION_TIME"
 
-    echo "$VIVADO_VERSION,$FPGA_PART,$TOP_MODULE,$TARGET_CLK,$ESTIMATED_CLK,$BEST_LATENCY,$WORST_LATENCY,$IINTERVAL_MIN,$IINTERVAL_MAX,$VIVADO_HLS_RESOURCE_BRAM,$VIVADO_HLS_RESOURCE_DSP,$VIVADO_HLS_RESOURCE_FF,$VIVADO_HLS_RESOURCE_LUT,$VIVADO_RESOURCE_BRAM,$VIVADO_RESOURCE_DSP,$VIVADO_RESOURCE_FF,$VIVADO_RESOURCE_LUT,$GIT_REVISION,$ARCH,$MODEL,$REUSE_FACTOR,$TOTAL_EXECUTION_TIME" >> $CSV_FILE
+    echo "$VIVADO_VERSION,$FPGA_PART,$TOP_MODULE,$TARGET_CLK,$ESTIMATED_CLK,$BEST_LATENCY,$WORST_LATENCY,$IINTERVAL_MIN,$IINTERVAL_MAX,$VIVADO_HLS_RESOURCE_BRAM,$VIVADO_HLS_RESOURCE_DSP,$VIVADO_HLS_RESOURCE_FF,$VIVADO_HLS_RESOURCE_LUT,$VIVADO_RESOURCE_BRAM,$VIVADO_RESOURCE_DSP,$VIVADO_RESOURCE_FF,$VIVADO_RESOURCE_LUT,$GIT_REVISION,$ARCH,$MODEL,$REUSE_FACTOR,$TOTAL_EXECUTION_TIME,$VIVADO_HLS_EXECUTION_TIME,$VIVADO_EXECUTION_TIME" >> $CSV_FILE
 done
 echo "==============================================================================="
