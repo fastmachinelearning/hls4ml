@@ -916,7 +916,7 @@ def parse_config(config_file) :
 
     print("Loading configuration from", config_file)
     config = open(config_file, 'r')
-    return yaml.load(config)
+    return yaml.load(config, Loader=yaml.FullLoader)
 
 #######################################
 ## Print a bias or weight array to C++
