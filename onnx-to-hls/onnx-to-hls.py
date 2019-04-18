@@ -72,6 +72,55 @@ def get_input_shape(model, operation, input_idx=0):
     value_info_idx = next((i for i, x in enumerate(model.graph.value_info) if x.name == operation.input[input_idx]), 0)
     return [d.dim_value for d in model.graph.value_info[value_info_idx].type.tensor_type.shape.dim]
 
+def compute_pads_1d(operation, layer):
+    auto_pad = get_onnx_attribute(operation, 'auto_pad', 'NOTSET')
+    if auto_pad != 'NOTSET':
+        if (layer['y_in'] % layer['stride'] == 0):
+            pad_along_width = max(layer['y_filt'] - layer['stride'], 0)
+        else:
+            pad_along_width = max(layer['y_filt'] - (layer['y_in'] % layer['stride']), 0)
+
+        pads = [pad_along_width // 2, pad_along_width - (pad_along_width // 2)]
+
+        if auto_pad == 'SAME_UPPER':
+            pads = sorted(pads)
+        elif auto_pad == 'SAME_LOWER':
+            pads = sorted(pads, reverse=True)
+        else: # 'VALID' padding
+            pads = [0, 0]
+    else:
+        pads = get_onnx_attribute(operation, 'pads', [0, 0])
+    
+    return pads
+
+def compute_pads_2d(operation, layer):
+    auto_pad = get_onnx_attribute(operation, 'auto_pad', 'NOTSET')
+    if auto_pad != 'NOTSET':
+        #Height
+        if (layer['in_height'] % layer['stride_height'] == 0):
+            pad_along_height = max(layer['filt_height'] - layer['stride_height'], 0)
+        else:
+            pad_along_height = max(layer['filt_height'] - (layer['in_height'] % layer['stride_height']), 0)
+        pad_height = [pad_along_height // 2, pad_along_height - pad_along_height // 2]
+
+        #Width
+        if (layer['in_width'] % layer['stride_width'] == 0):
+            pad_along_width = max(layer['filt_width'] - layer['stride_width'], 0)
+        else:
+            pad_along_width = max(layer['filt_width'] - (layer['in_width'] % layer['stride_width']), 0)
+        pad_width = [pad_along_width // 2, pad_along_width - pad_along_width // 2]
+
+        if auto_pad == 'SAME_UPPER':
+            pads = [min(pad_height), min(pad_width), max(pad_height), max(pad_width)]
+        elif auto_pad == 'SAME_LOWER':
+            pads = [max(pad_height), max(pad_width), min(pad_height), min(pad_width)]
+        else: # 'VALID' padding
+            pads = [0, 0, 0, 0]
+    else:
+        pads = get_onnx_attribute(operation, 'pads', [0, 0, 0, 0])
+    
+    return pads
+
 ############################################################################################
 ## M A I N
 ############################################################################################
@@ -109,7 +158,7 @@ def main():
         model.ParseFromString(fid.read())
     
     #Define supported laers
-    supported_operations = ['Gemm', 'Squeeze', 'Unsqueeze', 'BatchNormalization', 'Conv', 'Transpose', 'Flatten', 'Identity']
+    supported_operations = ['Gemm', 'Squeeze', 'Unsqueeze', 'BatchNormalization', 'Conv', 'Transpose', 'Flatten', 'Identity', 'AveragePool', 'MaxPool']
     activation_operations = ['Relu', 'Tanh', 'Sigmoid', 'LeakyRelu', 'ThresholdedRelu', 'HardSigmoid', 'Elu', 'Selu', 'PRelu', 'Softmax', 'Softsign', 'Softplus']
 
     operation_map = {'Gemm':'Dense', 'Relu':'Activation', 'Tanh':'Activation', 'Sigmoid':'Activation',
@@ -192,33 +241,19 @@ def main():
             current_shape = [current_shape[0], layer['n_out']]
         elif layer['class_name']=='Conv':
             current_shape = get_input_shape(model, operation)
+            strides = get_onnx_attribute(operation, 'strides')
+            kernel_shape = get_onnx_attribute(operation, 'kernel_shape')
 
             if len(current_shape) == 3: # Conv1D
                 layer['class_name'] = 'Conv1D'
                 reader.add_input(layer['name'], operation.input)
 
                 layer['y_in']=current_shape[2]
-                layer['y_filt']=get_onnx_attribute(operation, 'kernel_shape')[0]
+                layer['y_filt']=kernel_shape[0]
                 layer['n_chan']=current_shape[1]
                 layer['n_filt']=next((x.type.tensor_type.shape.dim[1].dim_value for x in model.graph.value_info if x.name == operation.output[0]), None)
-                layer['stride']=get_onnx_attribute(operation, 'strides')[0]
-                auto_pad = get_onnx_attribute(operation, 'auto_pad', 'NOTSET')
-                if auto_pad != 'NOTSET':
-                    if (layer['y_in'] % layer['stride'] == 0):
-                        pad_along_width = max(layer['y_filt'] - layer['stride'], 0)
-                    else:
-                        pad_along_width = max(layer['y_filt'] - (layer['y_in'] % layer['stride']), 0)
-
-                    pads = [pad_along_width // 2, pad_along_width - (pad_along_width // 2)]
-
-                    if auto_pad == 'SAME_UPPER':
-                        pads = sorted(pads)
-                    elif auto_pad == 'SAME_LOWER':
-                        pads = sorted(pads, reverse=True)
-                    else: # 'VALID' padding
-                        pads = [0, 0]
-                else:
-                    pads = get_onnx_attribute(operation, 'pads', [0, 0])
+                layer['stride']=strides[0]
+                pads = compute_pads_1d(operation, layer)
 
                 layer['pad_left'] = pads[0]
                 layer['pad_right'] = pads[1]
@@ -234,37 +269,13 @@ def main():
 
                 layer['in_height']=current_shape[2]
                 layer['in_width']=current_shape[3]
-                layer['filt_height']=get_onnx_attribute(operation, 'kernel_shape')[0]
-                layer['filt_width']=get_onnx_attribute(operation, 'kernel_shape')[1]
+                layer['filt_height']=kernel_shape[0]
+                layer['filt_width']=kernel_shape[1]
                 layer['n_chan']=current_shape[1]
                 layer['n_filt']=next((x.type.tensor_type.shape.dim[1].dim_value for x in model.graph.value_info if x.name == operation.output[0]), None)
-                strides = get_onnx_attribute(operation, 'strides')
                 layer['stride_height'] = strides[0]
                 layer['stride_width'] = strides[1]
-                auto_pad = get_onnx_attribute(operation, 'auto_pad', 'NOTSET')
-                if auto_pad != 'NOTSET':
-                    #Height
-                    if (layer['in_height'] % layer['stride_height'] == 0):
-                        pad_along_height = max(layer['filt_height'] - layer['stride_height'], 0)
-                    else:
-                        pad_along_height = max(layer['filt_height'] - (layer['in_height'] % layer['stride_height']), 0)
-                    pad_height = [pad_along_height // 2, pad_along_height - pad_along_height // 2]
-
-                    #Width
-                    if (layer['in_width'] % layer['stride_width'] == 0):
-                        pad_along_width = max(layer['filt_width'] - layer['stride_width'], 0)
-                    else:
-                        pad_along_width = max(layer['filt_width'] - (layer['in_width'] % layer['stride_width']), 0)
-                    pad_width = [pad_along_width // 2, pad_along_width - pad_along_width // 2]
-
-                    if auto_pad == 'SAME_UPPER':
-                        pads = [min(pad_height), min(pad_width), max(pad_height), max(pad_width)]
-                    elif auto_pad == 'SAME_LOWER':
-                        pads = [max(pad_height), max(pad_width), min(pad_height), min(pad_width)]
-                    else: # 'VALID' padding
-                        pads = [0, 0, 0, 0]
-                else:
-                    pads = get_onnx_attribute(operation, 'pads', [0, 0, 0, 0])
+                pads = compute_pads_2d(operation, layer)
                 
                 layer['pad_top'] = pads[0]
                 layer['pad_bottom'] = pads[2]
@@ -292,10 +303,54 @@ def main():
             layer['n_out'] = layer['n_in']
             if len(current_shape) == 2:
                 layer['n_filt'] = -1
-            elif len(current_shape) == 3:
-                layer['n_filt']=current_shape[2]
-            elif len(current_shape) == 4:
-                layer['n_filt']=current_shape[3]
+            else:
+                layer['n_filt']=current_shape[1]
+        elif layer['class_name'] in ['AveragePool', 'MaxPool']:
+            current_shape = get_input_shape(model, operation)
+            info = layer['class_name'].replace('Pool', '')
+            strides = get_onnx_attribute(operation, 'strides')
+            kernel_shape = get_onnx_attribute(operation, 'kernel_shape')
+            if len(current_shape) == 3: # 1D
+                layer['class_name'] = info + 'Pooling1D'
+                layer['stride'] = strides[0]
+                layer['pool_size'] = layer['y_filt'] = kernel_shape[0]
+                pads = compute_pads_1d(operation, layer)
+                layer['pad_left'] = pads[0]
+                layer['pad_right'] = pads[1]
+
+                if all(x == 0 for x in pads): # No padding, i.e., 'VALID' padding
+                    layer['n_out'] = int(math.ceil(float(layer['y_in'] - layer['y_filt'] + 1) / float(layer['stride'])))
+                else:
+                    layer['n_out'] = int(math.ceil(float(layer['y_in']) / float(layer['stride'])))
+
+                current_shape=[current_shape[0], layer['n_filt'], layer['n_out']]
+            elif len(current_shape) == 4: # 2D
+                layer['class_name'] = info + 'Pooling2D'
+                
+                layer['n_filt'] = current_shape[1]
+                layer['in_height'] = current_shape[2]
+                layer['in_width'] = current_shape[3]
+                
+                layer['stride_height'] = strides[0]
+                layer['stride_width'] = strides[1]
+                layer['pool_height'] = layer['filt_height'] = kernel_shape[0]
+                layer['pool_width'] = layer['filt_width'] = kernel_shape[1]
+                
+                pads = compute_pads_2d(operation, layer)
+                layer['pad_top'] = pads[0]
+                layer['pad_bottom'] = pads[2]
+                layer['pad_left'] = pads[1]
+                layer['pad_right'] = pads[3]
+
+                if all(x == 0 for x in pads): # No padding, i.e., 'VALID' padding in Keras/Tensorflow
+                    layer['out_width'] = int(math.ceil(float(layer['in_width'] - layer['filt_width'] + 1) / float(layer['stride_width'])))
+                    layer['out_height'] = int(math.ceil(float(layer['in_height'] - layer['filt_height'] + 1) / float(layer['stride_height'])))
+                else:
+                    layer['out_height'] = int(math.ceil(float(layer['in_height']) / float(layer['stride_height'])))
+                    layer['out_width'] = int(math.ceil(float(layer['in_width']) / float(layer['stride_width'])))
+
+                layer['n_out'] = layer['out_height'] * layer['out_height'] * layer['n_filt']
+                current_shape=[current_shape[0], layer['n_filt'], layer['out_height'], layer['out_width']]
         elif layer['class_name'] in ['ELU', 'LeakyReLU', 'ThresholdedReLU']:
             layer['activation'] = layer['class_name']
             layer['activ_param'] = get_onnx_attribute(operation, 'alpha', 0.01)
