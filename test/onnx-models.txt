@@ -16,6 +16,7 @@
 conv1d_small_keras
 conv2d_keras
 conv2d_small_keras
+conv2d_small_mp_keras
 dense_big_keras
 three_layer_bn_keras
 three_layer_bn_pytorch

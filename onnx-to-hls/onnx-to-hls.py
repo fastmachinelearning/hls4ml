@@ -157,13 +157,18 @@ def main():
     with open(yamlConfig['OnnxModel'], 'rb') as fid:
         model.ParseFromString(fid.read())
     
-    #Define supported laers
-    supported_operations = ['Gemm', 'Squeeze', 'Unsqueeze', 'BatchNormalization', 'Conv', 'Transpose', 'Flatten', 'Identity', 'AveragePool', 'MaxPool']
+    #Define supported layers
+    core_operations = ['Gemm', 'BatchNormalization', 'Conv']
+    transform_operations = ['Squeeze', 'Unsqueeze', 'Transpose', 'Flatten', 'Identity']
+    pool_operations = ['AveragePool', 'MaxPool']
+    merge_operations = ['Add', 'Sub', 'Mul', 'Average', 'Max', 'Min', 'Concat']
     activation_operations = ['Relu', 'Tanh', 'Sigmoid', 'LeakyRelu', 'ThresholdedRelu', 'HardSigmoid', 'Elu', 'Selu', 'PRelu', 'Softmax', 'Softsign', 'Softplus']
+    supported_operations = core_operations + transform_operations + pool_operations + merge_operations + activation_operations
 
     operation_map = {'Gemm':'Dense', 'Relu':'Activation', 'Tanh':'Activation', 'Sigmoid':'Activation',
     'LeakyRelu':'LeakyReLU', 'ThresholdedRelu':'ThresholdedReLU', 'HardSigmoid':'Activation',
-    'Elu':'ELU', 'Selu':'Activation', 'PRelu':'PReLU', 'Softmax':'Activation', 'Softsign':'Activation', 'Softplus':'Activation'}
+    'Elu':'ELU', 'Selu':'Activation', 'PRelu':'PReLU', 'Softmax':'Activation', 'Softsign':'Activation', 'Softplus':'Activation',
+    'Sum':'Add', 'Sub':'Subtract', 'Max':'Maximum', 'Min':'Minimum', 'Mul':'Multiply', 'Concat':'Concatenate'}
     
     #Define layers to skip for conversion to HLS
     skip_layers = ['Squeeze', 'Unsqueeze', 'Dropout', 'Identity', 'Flatten', 'Transpose'] 
@@ -222,6 +227,8 @@ def main():
         else:
             layer['name'] = operation.op_type + str(layer_counter)
         layer['class_name'] = operation_map.get(operation.op_type, operation.op_type)
+        layer['inputs'] = [operation.input[0]]
+        layer['outputs'] = [x for x in operation.output]
 
         #Extract type of activation
         if operation.op_type in activation_operations:
@@ -305,7 +312,7 @@ def main():
                 layer['n_filt'] = -1
             else:
                 layer['n_filt']=current_shape[1]
-        elif layer['class_name'] in ['AveragePool', 'MaxPool']:
+        elif layer['class_name'] in pool_operations:
             current_shape = get_input_shape(model, operation)
             info = layer['class_name'].replace('Pool', '')
             strides = get_onnx_attribute(operation, 'strides')
@@ -357,8 +364,20 @@ def main():
         elif layer['class_name']=='PReLU':
             layer['activation'] = layer['class_name']
 
-        if operation.output[0] in output_layers:
-            output_layers = [layer['name'] for output in output_layers if output == operation.output[0]]
+        elif layer['class_name'] in [operation_map.get(op, op) for op in merge_operations]:
+            layer['op'] = layer['class_name'].lower()
+            if layer['class_name'] == 'Concatenate':
+                rank = len(current_shape[1:])
+                if rank > 3:
+                    raise Exception('ERROR: Concatenation of tensors with rank > 3 is not yet supported.')
+                layer['op'] = layer['class_name'].lower() + '{}d'.format(rank)
+                layer['axis'] = get_onnx_attribute(operation, 'axis')
+            else:
+                layer['class_name'] = 'Merge'
+            layer['inputs'] = [x for x in operation.input]
+            if len(layer['inputs']) > 2:
+                raise Exception('ERROR: Merging more than two tensors is not yet supported.')
+
         sanitize_layer_name(layer)
         print('Layer name: {}, layer type: {}, current shape: {}'.format(layer['name'], layer['class_name'], current_shape))
         layer_list.append( layer )

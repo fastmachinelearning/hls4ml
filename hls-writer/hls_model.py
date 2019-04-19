@@ -81,7 +81,7 @@ class HLSModel(object):
     def get_output_variables(self):
         variables = []
         for out in self.outputs:
-            variables.append(self.graph[out].get_output_variable())
+            variables.append(self.output_vars[out])
         return variables
 
     def get_layer_output_variable(self, output_name):
