@@ -1,5 +1,5 @@
-KerasJson: ../example-keras-model-files/>>>MODEL<<<.json
-KerasH5:   ../example-keras-model-files/>>>MODEL<<<_weights.h5
+KerasJson: >>>MODEL_DIR<<</>>>MODEL<<<.json
+KerasH5:   >>>MODEL_DIR<<</>>>MODEL<<<_weights.h5
 OutputDir: >>>MODEL<<<_RF>>>REUSE<<<
 ProjectName: myproject
 XilinxPart: xcku115-flvb2104-2-i
