@@ -36,7 +36,12 @@ class ONNXDataReader:
 
     def get_weights_data(self, layer_name, var_name):
         inputs = self.input_map[layer_name]
-        tensor = next((x for x in self.model.graph.initializer if x.name == inputs['inputs'][self.index_map[var_name]]), None)
+        inp_idx = self.index_map[var_name]
+        if inp_idx >= len(inputs['inputs']):
+            # Input not found, likely a bias tensor is not available
+            return None
+
+        tensor = next((x for x in self.model.graph.initializer if x.name == inputs['inputs'][inp_idx]), None)
         if tensor is not None:
             data = numpy_helper.to_array(tensor)
             if inputs['transpose']:
@@ -159,9 +164,9 @@ def main():
     
     #Define supported layers
     core_operations = ['Gemm', 'BatchNormalization', 'Conv']
-    transform_operations = ['Squeeze', 'Unsqueeze', 'Transpose', 'Flatten', 'Identity']
+    transform_operations = ['Squeeze', 'Unsqueeze', 'Transpose', 'Flatten', 'Identity', 'Reshape']
     pool_operations = ['AveragePool', 'MaxPool']
-    merge_operations = ['Add', 'Sub', 'Mul', 'Average', 'Max', 'Min', 'Concat']
+    merge_operations = ['Add', 'Sub', 'Mul', 'Average', 'Max', 'Min', 'Concat', 'Sum']
     activation_operations = ['Relu', 'Tanh', 'Sigmoid', 'LeakyRelu', 'ThresholdedRelu', 'HardSigmoid', 'Elu', 'Selu', 'PRelu', 'Softmax', 'Softsign', 'Softplus']
     supported_operations = core_operations + transform_operations + pool_operations + merge_operations + activation_operations
 
@@ -171,7 +176,10 @@ def main():
     'Sum':'Add', 'Sub':'Subtract', 'Max':'Maximum', 'Min':'Minimum', 'Mul':'Multiply', 'Concat':'Concatenate'}
     
     #Define layers to skip for conversion to HLS
-    skip_layers = ['Squeeze', 'Unsqueeze', 'Dropout', 'Identity', 'Flatten', 'Transpose'] 
+    skip_layers = ['Squeeze', 'Unsqueeze', 'Dropout', 'Identity', 'Flatten', 'Transpose', 'Reshape'] 
+    #Map inputs of skipped layers
+    inputs_map = {}
+
     passes = ['fuse_transpose_into_gemm', 'fuse_matmul_add_bias_into_gemm', 'eliminate_nop_transpose', 'fuse_consecutive_transposes']
     model = shape_inference.infer_shapes(model) # have to infer shapes before optimizing the model
     model = optimizer.optimize(model, passes)
@@ -201,7 +209,7 @@ def main():
 
     # Check for unsupported layer type
     for operation in model.graph.node:
-        if operation.op_type not in supported_operations + activation_operations:
+        if operation.op_type not in supported_operations:
             raise Exception('ERROR: Unsupported operation type: {}'.format(operation.op_type))
     
     # Get input shape
@@ -213,9 +221,14 @@ def main():
         if operation.op_type == 'Flatten':
             current_shape = [current_shape[0], np.prod(current_shape[1:])]
         if operation.op_type in skip_layers:
+            #Currently supported skipped layers have only one input and output
+            #Skipped layers can follow each other (e.g., Dropout -> Flatten)
+            input_name = inputs_map.get(operation.input[0], operation.input[0])
+            output_name = operation.output[0]
+            inputs_map[output_name] = input_name
             continue 
 
-        if operation.op_type in supported_operations + activation_operations:
+        if operation.op_type in supported_operations:
             layer_counter = layer_counter + 1
 
         #Dictionary to fill in and append to layer_list
@@ -227,7 +240,7 @@ def main():
         else:
             layer['name'] = operation.op_type + str(layer_counter)
         layer['class_name'] = operation_map.get(operation.op_type, operation.op_type)
-        layer['inputs'] = [operation.input[0]]
+        layer['inputs'] = [ inputs_map.get(operation.input[0], operation.input[0]) ]
         layer['outputs'] = [x for x in operation.output]
 
         #Extract type of activation
@@ -374,7 +387,7 @@ def main():
                 layer['axis'] = get_onnx_attribute(operation, 'axis')
             else:
                 layer['class_name'] = 'Merge'
-            layer['inputs'] = [x for x in operation.input]
+            layer['inputs'] = [inputs_map.get(x, x) for x in operation.input]
             if len(layer['inputs']) > 2:
                 raise Exception('ERROR: Merging more than two tensors is not yet supported.')
 
