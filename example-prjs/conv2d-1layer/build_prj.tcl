@@ -16,6 +16,6 @@ create_clock -period 5 -name default
 #source "./fir_hls_prj/solution1/directives.tcl"
 csim_design
 csynth_design
-#cosim_design -trace_level all
+cosim_design -trace_level all
 #export_design -format ip_catalog
 exit

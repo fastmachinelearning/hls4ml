@@ -6,17 +6,12 @@ LDFLAGS = -lpthread
 
 BOOST_LDFLAGS=-lboost_thread -lboost_system $(LDFLAGS) 
 
-net_driver = tcp
-
-UNIT_TEST=-I$(GALAPAGOS_PATH)/Catch2/single_include/catch2 
 
 
-all:  galapagos_packet.o galapagos_kernel.o
+all: galapagos myproject.o myproject_galapagos.o kern_send.o hls 
 
-$^:
-	$(CXX) $(CXXFLAGS) -c $^ -o $@ $(BOOST_LDFLAGS)
-
-GALAPAGOS_OBJECTS: $(SRC_LIB)/galapagos_node.o $(SRC_LIB)/galapagos_router.o $(SRC_LIB)/galapagos_kernel.o $(SRC_LIB)/galapagos_net.o $(SRC_LIB)/galapagos_streaming_core.o $(SRC_LIB)/galapagos_stream.o 
+galapagos:
+	$(MAKE) -C $(SRC_LIB)
 
 myproject.o: firmware/myproject.cpp
 	$(CXX) $(CXXFLAGS) -c firmware/myproject.cpp -o $@ $(BOOST_LDFLAGS)
@@ -24,14 +19,15 @@ myproject.o: firmware/myproject.cpp
 myproject_galapagos.o: myproject_galapagos.cpp
 	$(CXX) $(CXXFLAGS) -c myproject_galapagos.cpp -o $@ $(BOOST_LDFLAGS)
 
-test_galapagos.o: test_galapagos.cpp
-	$(CXX) $(CXXFLAGS) -c test_galapagos.cpp -o $@ $(BOOST_LDFLAGS)
+kern_send.o: kern_send.cpp
+	$(CXX) $(CXXFLAGS) -c kern_send.cpp -o $@ $(BOOST_LDFLAGS)
 
-test.exe: $(GALAPAGOS_OBJECTS)  myproject.o myproject_galapagos.o test_galapagos.o main.cpp 
-	$(CXX) $(CXXFLAGS) $(UNIT_TEST)  $(SRC_LIB)/galapagos_node.o $(SRC_LIB)/galapagos_router.o $(SRC_LIB)/galapagos_kernel.o $(SRC_LIB)/galapagos_net.o $(SRC_LIB)/galapagos_streaming_core.o $(SRC_LIB)/galapagos_stream.o $^ -o $@ $(BOOST_LDFLAGS)  
+hls:
+	vivado_hls build_prj.tcl
 
-
+node.exe: $(SRC_LIB)/galapagos_node.o $(SRC_LIB)/galapagos_router.o $(SRC_LIB)/galapagos_router_node.o $(SRC_LIB)/galapagos_router_net.o $(SRC_LIB)/galapagos_net_tcp.o $(SRC_LIB)/galapagos_net_tcp_session.o $(SRC_LIB)/galapagos_net_tcp_server_send.o $(SRC_LIB)/galapagos_net_tcp_accept_server.o $(SRC_LIB)/galapagos_kernel.o  $(SRC_LIB)/galapagos_streaming_core.o $(SRC_LIB)/galapagos_stream.o kern_send.o myproject.o myproject_galapagos.o node.cpp 
+	$(CXX) -I firmware $(CXXFLAGS) -I$(SRC_LIB) -I$(GALAPAGOS_PATH)/util/argparse $^ -o $@ $(BOOST_LDFLAGS)  
 
 clean:
-	rm -rf *.o
+	rm -rf *.o myproject_prj
 	rm -rf *.exe 

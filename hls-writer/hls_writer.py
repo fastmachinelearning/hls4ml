@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import tarfile
 import yaml
 from shutil import copyfile
@@ -332,7 +332,7 @@ def hls_writer(layer_list, yamlConfig):
                     elif d == 2:
                         # Unflatten if needed: if the last layer is activation or batchnorm
                         unflatten = layer_list[i-2]['class_name'] in activation_layers
-                        unflatten |= 'activation' in layer_list[i-2].keys()
+                        unflatten |= 'activation' in list(layer_list[i-2].keys())
                         unflatten |= layer_list[i-2]['class_name'] == 'BatchNormalization'
                         if unflatten:
                             # Add the unflatten layer
@@ -353,7 +353,7 @@ def hls_writer(layer_list, yamlConfig):
                         newline += '    nnet::flatten<{}, {}, {}, {}>(pool2d_layer{}_out, layer{}_out);\n'.format(input_type, out_height, out_width, n_filt, i, i)
                         
                 #Activations
-                if layer_list[i-1]['class_name'] in activation_layers or 'activation' in layer_list[i-1].keys():
+                if layer_list[i-1]['class_name'] in activation_layers or 'activation' in list(layer_list[i-1].keys()):
                     if layer_list[i-1]['class_name'] not in activation_layers:
                         act_input_type = output_type
                         act_input_object = "logits" + str(i)

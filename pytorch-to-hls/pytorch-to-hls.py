@@ -52,6 +52,7 @@ def main():
     modelstr = repr(t).split('\n')
     modeldict = t.state_dict()
 
+    quit()
     #This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
 

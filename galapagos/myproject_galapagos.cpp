@@ -27,17 +27,12 @@
 #include "firmware/parameters.h"
 #include "firmware/myproject.h"
 //#include "nnet_helpers.h"
-#include "galapagos_packet.h"
 
+#include "galapagos_stream.hpp"
 
 #define DEST 0
 
-#ifdef CPU
-#include "galapagos_stream.hpp"
-void myproject_galapagos(galapagos::stream * in, galapagos::stream * out)
-#else
-void myproject_galapagos(hls::stream<galapagos_packet> * in, hls::stream<galapagos_packet> * out)
-#endif
+void myproject_galapagos(galapagos_stream <float> * in, galapagos_stream <float> * out)
 {
 
     input_t data_str[Y_INPUTS][N_CHAN];
@@ -45,11 +40,12 @@ void myproject_galapagos(hls::stream<galapagos_packet> * in, hls::stream<galapag
 
     unsigned short size_in, size_out;
     //galapagos_packet gp;
-    galapagos_packet gp;
+    galapagos_packet <float> gp;
     for(int i=0; i<Y_INPUTS; i++){
         for(int j=0; j<N_CHAN; j++){
             gp = in->read();
             data_str[i][j] = (input_t)gp.data;
+         //   std::cout << "received[ " << i << "][" << j << "]" <<  data_str[i][j] << std::endl;
         }
     }
 

@@ -10,6 +10,23 @@
         <vendor> xilinx.com </vendor>
         <version> 1.0 </version>
         <lib> hls </lib>
+        <num> 1 </num>
+        <rep> 1 </rep>
+        <clk> ap_clk </clk>
+        <aresetn> ap_rst </aresetn>
+        <s_axis>
+            <scope> global </scope>
+            <name> in_V </name>
+        </s_axis>
+        <m_axis>
+            <scope> global </scope>
+            <name> out_V </name>
+        </m_axis>
+    </kernel>
+    <kernel> kern_send 
+        <vendor> xilinx.com </vendor>
+        <version> 1.0 </version>
+        <lib> hls </lib>
         <num> 0 </num>
         <rep> 1 </rep>
         <clk> ap_clk </clk>
@@ -23,16 +40,4 @@
             <name> out_V </name>
         </m_axis>
     </kernel>
-	<kernel> cpu
-        <num> 0 </num>
-        <rep> 1 </rep>
-        <s_axis>
-            <scope> global </scope>
-            <name> stream_in </name>
-        </s_axis>
-        <m_axis>
-            <scope> global </scope>
-            <name> stream_out </name>
-        </m_axis>
-	</kernel>
 </cluster>
