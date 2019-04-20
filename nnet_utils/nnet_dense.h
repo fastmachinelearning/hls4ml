@@ -17,8 +17,8 @@
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef NNET_LAYER_H_
-#define NNET_LAYER_H_
+#ifndef NNET_DENSE_H_
+#define NNET_DENSE_H_
 
 #include "nnet_common.h"
 #include "hls_stream.h"
@@ -26,7 +26,7 @@
 
 namespace nnet {
 
-struct layer_config
+struct dense_config
 {
     // Internal data type definitions
     typedef float bias_t;
@@ -46,7 +46,7 @@ struct layer_config
 };
 
  template<class data_T, class res_T, typename CONFIG_T>
-void compute_layer(
+void dense(
     data_T    data[CONFIG_T::n_in],
     res_T     res[CONFIG_T::n_out],
     typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
@@ -92,7 +92,7 @@ void compute_layer(
             #pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
         }
     }
-    
+
     // Do the matrix-multiply
     Product1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
         if (CONFIG_T::io_type == io_serial){
@@ -104,8 +104,8 @@ void compute_layer(
                 int multiplier_limit  = ceil(float(CONFIG_T::n_out) / float(CONFIG_T::reuse_factor));
                 #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
             }
-	    int index = ii*CONFIG_T::n_out+jj;
-	    mult[index] = cache * weights[index];
+        int index = ii*CONFIG_T::n_out+jj;
+        mult[index] = cache * weights[index];
         }
     }
 
@@ -123,8 +123,8 @@ void compute_layer(
             #pragma HLS PIPELINE
         }
         Accum2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-	    int index = ii*CONFIG_T::n_out+jj;
-	    acc[jj] += mult[index];
+        int index = ii*CONFIG_T::n_out+jj;
+        acc[jj] += mult[index];
         }
     }
 
@@ -134,7 +134,7 @@ void compute_layer(
             #pragma HLS UNROLL
         }
         res[ires] = (res_T) (acc[ires]);
-    }    
+    }
 }
 
 }

@@ -29,18 +29,11 @@
 
 int main(int argc, char **argv)
 {
-
   //hls-fpga-machine-learning insert data
 
+  //hls-fpga-machine-learning insert top-level-function
 
-  result_t res_str[N_OUTPUTS] = {0};
-  unsigned short size_in, size_out;
-  myproject(data_str, res_str, size_in, size_out);
-    
-  for(int i=0; i<N_OUTPUTS; i++){
-    std::cout << res_str[i] << " ";
-  }
-  std::cout << std::endl;
-  
+  //hls-fpga-machine-learning insert output
+
   return 0;
 }
