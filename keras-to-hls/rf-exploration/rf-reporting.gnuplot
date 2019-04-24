@@ -1,10 +1,12 @@
 # Input and output file names
-CSV_FILE =  "reports/2layer_100x100.csv"
-PDF_FILE =  "reports/2layer_100x100.pdf"
+#CSV_FILE =  "reports/2layer_100x100.csv"
+#PDF_FILE =  "reports/2layer_100x100.pdf"
 #CSV_FILE = "reports/RF_stress_results_KERAS_3layer.csv"
 #PDF_FILE = "reports/RF_stress_results_KERAS_3layer.pdf"
 #CSV_FILE = "reports/RF_stress_results_2layer_100x100.csv"
 #PDF_FILE = "reports/RF_stress_results_2layer_100x100.pdf"
+CSV_FILE =  "reports/KERAS_dense_16x200x200x200x200x200x5.csv"
+PDF_FILE =  "reports/KERAS_dense_16x200x200x200x200x200x5.pdf"
 
 # Set Gnuplot output on PDF file
 set terminal pdfcairo enhanced dashed
