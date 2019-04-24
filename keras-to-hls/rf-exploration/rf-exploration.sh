@@ -23,18 +23,18 @@ MODEL_DIR="$BASE_DIR/../example-keras-model-files"
 
 # Model name.
 #MODEL="KERAS_3layer"
-MODEL="2layer_100x100"
+#MODEL="2layer_100x100"
 #MODEL="KERAS_dense_16x100x100x100x100x100x5"
 #MODEL="KERAS_dense_16x200x200x200x200x200x5"
-#MODEL="KERAS_dense_16x500x500x500x500x500x5"
+MODEL="KERAS_dense_16x500x500x500x500x500x5"
 
 # We assume the model files being:
 # KerasJson: ../example-keras-model-files/MODEL.json
 # KerasH5:   ../example-keras-model-files/MODEL_weights.h5
 
 # Network characteristics.
-N_IN=100
-N_OUT=100
+N_IN=500
+N_OUT=500
 
 # ==============================================================================
 # Directories and Files
@@ -108,10 +108,12 @@ USER_DEFINED_RF="100"
 # 4h = 14400s
 # 5h = 18000s
 # 6h = 21600s
-TIMEOUT_TIME=21600
+# 7h = 25200s
+# 8h = 28800s
+TIMEOUT_TIME=28800
 
 # Run at most THREADS instances of Vivado HLS / Vivado.
-THREADS=16
+THREADS=12
 
 # ==============================================================================
 # HLS, Logic Synthesis, Reports
