@@ -50,7 +50,7 @@ set style line 3 \
     pointtype 13 pointsize 0.2
 
 # light-green line and dots (Vivado HLS)
-set style line 10 \
+set style line 11 \
     linecolor rgb '#90ee90' \
     linetype 1 linewidth 1 \
     pointtype 13 pointsize 0.2
@@ -154,8 +154,8 @@ set origin 0.0,0.0 # Bottom-Left
 set key left top
 #set xlabel "Reuse Factor" font ",8"
 #set ylabel "Best Latency" font ",8"
-plot CSV_FILE using ($3 == 0 && $4 == 0 ? $15 : NaN):xtic(2) title "Worst Latency" with linespoints linestyle 10, \
-     CSV_FILE using ($3 == 0 && $4 == 0 ? $14 : NaN):xtic(2) title "Best Latency" with linespoints linestyle 3
+plot CSV_FILE using ($3 == 0 ? $15 : NaN):xtic(2) title "Worst Latency" with linespoints linestyle 11, \
+     CSV_FILE using ($3 == 0 ? $14 : NaN):xtic(2) title "Best Latency" with linespoints linestyle 3
 
 # =============================================================================
 # (Min and Max) II
@@ -165,8 +165,8 @@ set origin 0.5,0.0 # Bottom-Right
 set key left top
 #set xlabel "Reuse Factor" font ",8"
 #set ylabel "II" font ",8"
-plot CSV_FILE using ($3 == 0 && $4 == 0 ? $16 : NaN):xtic(2) title "Min II" with linespoints linestyle 10, \
-     CSV_FILE using ($3 == 0 && $4 == 0 ? $17 : NaN):xtic(2) title "Max II" with linespoints linestyle 3
+plot CSV_FILE using ($3 == 0 ? $16 : NaN):xtic(2) title "Min II" with linespoints linestyle 11, \
+     CSV_FILE using ($3 == 0 ? $17 : NaN):xtic(2) title "Max II" with linespoints linestyle 3
 
 unset multiplot
 
@@ -187,7 +187,7 @@ set size 0.5,0.5
 set origin 0.0,0.5 # Top-Left
 set key right
 plot CSV_FILE using ($3 == 0 ? $19 : NaN):xtic(2) title "DSP (HLS)" with linespoints linestyle 3, \
-     CSV_FILE using ($3 == 0 && $4 == 0 ? $24 : NaN):xtic(2) title "DSP" with linespoints linestyle 2
+     CSV_FILE using ($3 == 0 && $4 == 0 ? $24 : NaN):xtic(2) title "DSP (LS)" with linespoints linestyle 2
 
 # =============================================================================
 # FF
@@ -199,7 +199,7 @@ set key left
 #set xlabel "Reuse Factor" font ",8"
 #set ylabel "FF" offset 5,0 font ",8"
 plot CSV_FILE using ($3 == 0 ? $20 : NaN):xtic(2) title "FF (HLS)" with linespoints linestyle 3, \
-     CSV_FILE using ($3 == 0 && $4 == 0 ? $25 : NaN):xtic(2) title "FF" with linespoints linestyle 2
+     CSV_FILE using ($3 == 0 && $4 == 0 ? $25 : NaN):xtic(2) title "FF (LS)" with linespoints linestyle 2
 
 # =============================================================================
 # LUT
@@ -211,7 +211,7 @@ set key left
 #set xlabel "Reuse Factor" font ",8"
 #set ylabel "LUT" offset 5,0 font ",8"
 plot CSV_FILE using ($3 == 0 ? $21 : NaN):xtic(2) title "LUT (HLS)" with linespoints linestyle 3, \
-     CSV_FILE using ($3 == 0 && $4 == 0 ? $26 : NaN):xtic(2) title "LUT" with linespoints linestyle 2
+     CSV_FILE using ($3 == 0 && $4 == 0 ? $26 : NaN):xtic(2) title "LUT (LS)" with linespoints linestyle 2
 
 # =============================================================================
 # BRAM
@@ -223,6 +223,6 @@ set key left
 #set xlabel "Reuse Factor" font ",8"
 #set ylabel "BRAM" offset 5,0 font ",8"
 plot CSV_FILE using ($3 == 0 ? $18 : NaN):xtic(2) title "BRAM (HLS)" with linespoints linestyle 3, \
-     CSV_FILE using ($3 == 0 && $4 == 0 ? $23 : NaN):xtic(2) title "BRAM" with linespoints linestyle 2
+     CSV_FILE using ($3 == 0 && $4 == 0 ? $23 : NaN):xtic(2) title "BRAM (LS)" with linespoints linestyle 2
 
 unset multiplot
