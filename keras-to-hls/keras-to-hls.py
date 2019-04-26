@@ -260,13 +260,28 @@ def main():
             elif len(current_shape) == 4:
                 layer['n_filt']=current_shape[3]
         elif 'Pooling' in layer['class_name']:
-            info = layer['class_name'].split('Pooling')
-            d = int(info[1].split('D')[0])
-            op = info[0]
-            if d == 1:
-                layer['pool_size']=keras_layer['config']['pool_size']
-                layer['stride']=keras_layer['config']['stride']
-            elif d == 2:
+            if int(layer['class_name'][-2]) == 1:
+                layer['n_in']=current_shape[1]
+                layer['n_filt']=current_shape[2]
+                layer['pool_size']=keras_layer['config']['pool_size'][0]
+                layer['stride']=keras_layer['config']['strides'][0]
+                layer['padding']=keras_layer['config']['padding']
+                if layer['padding']=='same':
+                    in_width = current_shape[1]
+                    layer['n_out'] = int(math.ceil(float(in_width) / float(layer['stride'])))
+                    if (in_width % layer['stride'] == 0):
+                        pad_along_width = max(layer['pool_size'] - layer['stride'], 0)
+                    else:
+                        pad_along_width = max(layer['pool_size'] - (in_width % layer['stride']), 0)
+                    layer['pad_left']  = pad_along_width // 2
+                    layer['pad_right']  = pad_along_width - layer['pad_left']
+                elif layer['padding']=='valid':
+                    in_width = current_shape[1]
+                    layer['n_out'] = int(math.ceil(float(in_width - layer['pool_size'] + 1) / float(layer['stride'])))
+                    layer['pad_left'] = 0
+                    layer['pad_right'] = 0
+                current_shape=[current_shape[0], layer['n_out'], layer['n_filt']]
+            elif int(layer['class_name'][-2]) == 2:
                 layer['in_height']=current_shape[1]
                 layer['in_width']=current_shape[2]
                 layer['n_filt']=current_shape[3]
@@ -275,37 +290,35 @@ def main():
                 layer['pool_height']=keras_layer['config']['pool_size'][0]
                 layer['pool_width']=keras_layer['config']['pool_size'][1]
                 layer['padding']=keras_layer['config']['padding']
-            if layer['padding']=='same':
-                #Height
-                in_height = current_shape[1]
-                layer['out_height'] = int(math.ceil(float(in_height) / float(layer['stride_height'])))
-                if (in_height % layer['stride_height'] == 0):
-                    pad_along_height = max(layer['pool_height'] - layer['stride_height'], 0)
-                else:
-                    pad_along_height = max(layer['pool_height'] - (in_height % layer['stride_height']), 0)
-                layer['pad_top']  = pad_along_height // 2
-                layer['pad_bottom']  = pad_along_height - layer['pad_top']
-                #Width
-                in_width = current_shape[2]
-                layer['out_width'] = int(math.ceil(float(in_width) / float(layer['stride_width'])))
-                if (in_width % layer['stride_width'] == 0):
-                    pad_along_width = max(layer['pool_width'] - layer['stride_width'], 0)
-                else:
-                    pad_along_width = max(layer['pool_width'] - (in_width % layer['stride_width']), 0)
-                layer['pad_left']  = pad_along_width // 2
-                layer['pad_right']  = pad_along_width - layer['pad_left']
-                layer['n_out'] = layer['out_height'] * layer['out_width'] * layer['n_filt']
-            elif layer['padding']=='valid':
-                in_height = current_shape[1]
-                in_width = current_shape[2]
-                layer['out_width'] = int(math.ceil(float(in_width - layer['pool_width'] + 1) / float(layer['stride_width'])))
-                layer['out_height'] = int(math.ceil(float(in_height - layer['pool_height'] + 1) / float(layer['stride_height'])))
-                layer['pad_top'] = 0
-                layer['pad_bottom'] = 0
-                layer['pad_left'] = 0
-                layer['pad_right'] = 0
-                layer['n_out'] = layer['out_height'] * layer['out_height'] * layer['n_filt']
-            current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
+                if layer['padding']=='same':
+                    #Height
+                    in_height = current_shape[1]
+                    layer['out_height'] = int(math.ceil(float(in_height) / float(layer['stride_height'])))
+                    if (in_height % layer['stride_height'] == 0):
+                        pad_along_height = max(layer['pool_height'] - layer['stride_height'], 0)
+                    else:
+                        pad_along_height = max(layer['pool_height'] - (in_height % layer['stride_height']), 0)
+                    layer['pad_top']  = pad_along_height // 2
+                    layer['pad_bottom']  = pad_along_height - layer['pad_top']
+                    #Width
+                    in_width = current_shape[2]
+                    layer['out_width'] = int(math.ceil(float(in_width) / float(layer['stride_width'])))
+                    if (in_width % layer['stride_width'] == 0):
+                        pad_along_width = max(layer['pool_width'] - layer['stride_width'], 0)
+                    else:
+                        pad_along_width = max(layer['pool_width'] - (in_width % layer['stride_width']), 0)
+                    layer['pad_left']  = pad_along_width // 2
+                    layer['pad_right']  = pad_along_width - layer['pad_left']
+                elif layer['padding']=='valid':
+                    in_height = current_shape[1]
+                    in_width = current_shape[2]
+                    layer['out_width'] = int(math.ceil(float(in_width - layer['pool_width'] + 1) / float(layer['stride_width'])))
+                    layer['out_height'] = int(math.ceil(float(in_height - layer['pool_height'] + 1) / float(layer['stride_height'])))
+                    layer['pad_top'] = 0
+                    layer['pad_bottom'] = 0
+                    layer['pad_left'] = 0
+                    layer['pad_right'] = 0
+                current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
 
         elif layer['class_name']=='LeakyReLU':
             layer['activation'] = layer['class_name']

@@ -386,8 +386,8 @@ class Conv2D(Layer):
 
 class Pooling1D(Layer):
     def initialize(self):
-        shape = [self.attributes['y_out'], self.attributes['n_filt']] #TODO complete this
-        dims = ['Y_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+        shape = [self.attributes['n_out'], self.attributes['n_filt']]
+        dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0])
 
