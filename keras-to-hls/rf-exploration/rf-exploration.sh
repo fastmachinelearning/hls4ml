@@ -25,16 +25,16 @@ MODEL_DIR="$BASE_DIR/../example-keras-model-files"
 #MODEL="KERAS_3layer"
 #MODEL="2layer_100x100"
 #MODEL="KERAS_dense_16x100x100x100x100x100x5"
-MODEL="KERAS_dense_16x200x200x200x200x200x5"
-#MODEL="KERAS_dense_16x500x500x500x500x500x5"
+#MODEL="KERAS_dense_16x200x200x200x200x200x5"
+MODEL="KERAS_dense_16x500x500x500x500x500x5"
 
 # We assume the model files being:
 # KerasJson: ../example-keras-model-files/MODEL.json
 # KerasH5:   ../example-keras-model-files/MODEL_weights.h5
 
 # Network characteristics.
-N_IN=200
-N_OUT=200
+N_IN=500
+N_OUT=500
 
 # ==============================================================================
 # Directories and Files
