@@ -1,0 +1,62 @@
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 1
+INFO: Vivado HLS exit value: 1
+ERROR: [XFORM 203-504] Stop unrolling loop 'ReuseLoop' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:100) in function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config5>' because it may cause large runtime and excessive memory usage due to increase in code size. Please avoid unrolling the loop or form sub-functions for code in the loop body.
+ERROR: [HLS 200-70] Pre-synthesis failed.
+
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 2
+INFO: Vivado HLS exit value: 1
+ERROR: [XFORM 203-504] Stop unrolling loop 'Loop-2.1' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105) in function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config5>' because it may cause large runtime and excessive memory usage due to increase in code size. Please avoid unrolling the loop or form sub-functions for code in the loop body.
+ERROR: [HLS 200-70] Pre-synthesis failed.
+
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 4
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 5
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 8
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 10
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 20
+INFO: Vivado HLS exit value: 1
+ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:129:9).
+ERROR: [HLS 200-70] Pre-synthesis failed.
+
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 25
+INFO: Vivado HLS exit value: 1
+ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:129:9).
+ERROR: [HLS 200-70] Pre-synthesis failed.
+
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 40
+INFO: Vivado HLS exit value: 1
+ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:129:9).
+ERROR: [HLS 200-70] Pre-synthesis failed.
+
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 50
+INFO: Vivado HLS exit value: 1
+ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:129:9).
+ERROR: [HLS 200-70] Pre-synthesis failed.
+
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 100
+INFO: Vivado HLS exit value: 1
+ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:129:9).
+ERROR: [HLS 200-70] Pre-synthesis failed.
+
