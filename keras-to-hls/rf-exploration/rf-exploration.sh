@@ -57,6 +57,9 @@ RESULT_DIR="$BASE_DIR/reports"
 # Output CSV file. See the "rf-reporting.sh" script for more details.
 RESULT_FILE="$RESULT_DIR/$MODEL.csv"
 
+# Output error file. See the "rf-error-reporting.sh" script for more details.
+ERROR_FILE="$RESULT_DIR/$MODEL.errors.log"
+
 # GNU parallel job log. See GNU parallel manual for more details.
 # The logfile is in the following TAB separated format:
 # - sequence number,
@@ -110,7 +113,8 @@ USER_DEFINED_RF="100"
 # 6h = 21600s
 # 7h = 25200s
 # 8h = 28800s
-TIMEOUT_TIME=28800
+# 14h = 50400s
+TIMEOUT_TIME=50400
 
 # Run at most THREADS instances of Vivado HLS / Vivado.
 THREADS=12
@@ -302,6 +306,23 @@ collect_results ()
 }
 
 #
+# Parse the Vivado HLS and Vivado (logic synthesis) reports and collect the
+# error logs.
+#
+collect_errors ()
+{
+    # Collect the results.
+    for rf in $(get_candidate_reuse_factors); do
+        # Collect results (it does not check if there were HLS and LS runs).
+        if [ $RUN_LOG -eq 1 ]; then
+            bash rf-error-reporting.sh $JOB_LOG $WORK_DIR/$MODEL\_RF$rf/myproject_prj $MODEL $rf $ERROR_FILE $VERBOSE
+        fi
+    done
+}
+
+
+
+#
 # Compress the Vivado HLS and Vivado project directories to save space.
 #
 compress_project_directories ()
@@ -333,6 +354,7 @@ export RUN_CLEAN
 export MODEL_DIR
 export RESULT_DIR
 export RESULT_FILE
+export ERROR_FILE
 export TIMEOUT_TIME
 export -f run_hls4ml_vivado
 
@@ -342,4 +364,5 @@ print_info
 setup_working_directories
 get_candidate_reuse_factors | parallel --progress --will-cite --timeout $TIMEOUT_TIME --jobs $THREADS $SWAP --joblog $JOB_LOG run_hls4ml_vivado
 collect_results
+collect_errors
 compress_project_directories
