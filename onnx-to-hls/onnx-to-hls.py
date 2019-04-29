@@ -203,6 +203,8 @@ def main():
         if len(input_layer['input_shape']) > 1:
             input_layer['input_shape'][0] = None
 
+        input_layer['outputs'] = [inp]
+
         sanitize_layer_name(input_layer)
         input_layers[i] = input_layer['name']
         layer_list.append(input_layer)
