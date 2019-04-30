@@ -17,8 +17,8 @@
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef NNET_LAYER_H_
-#define NNET_LAYER_H_
+#ifndef NNET_LARGE_LAYER_H_
+#define NNET_LARGE_LAYER_H_
 
 #include "nnet_common.h"
 #include "hls_stream.h"
@@ -82,7 +82,7 @@ void compute_large_layer(
     static const int nin        = CONFIG_T::n_in;
     static const int nout       = CONFIG_T::n_out;
     std::cout << "===> " << multiplier_limit << " -- " << CONFIG_T::n_out  << " -- " << multiplier_limit % CONFIG_T::n_out << std::endl;
-    if (multiplier_limit % CONFIG_T::n_out != 0) return;
+    //if (multiplier_limit % CONFIG_T::n_out != 0) return;
     #pragma HLS function_instantiate variable=weights,biases
     //#pragma HLS RESOURCE         variable=weights core=RAM_2P_BRAM Commenting out the deisgnation HLS seems to choose correctly
     #pragma HLS ARRAY_RESHAPE   variable=weights block factor=block_factor
