@@ -123,8 +123,8 @@ void compute_large_layer(
 	}
        AccumLoop:
        for (int im = 0; im < multiplier_limit; im++){
-        int w_index   = ir + rufactor * im;
-	if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
+        //int w_index   = ir + rufactor * im;
+	    //if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
 	int out_index = im/multscale;//w_index  % CONFIG_T::n_out;//w_index % CONFIG_T::n_out;//im/multscale;
         acc[im] += mult[im];
        }
