@@ -19,52 +19,35 @@ def parse_config(config_file) :
 #######################################
 ## Print weight array to C++
 #######################################
-def print_array_to_cpp(name, a, odir, i_part = 0, n_part = 1, i_subout = 0, n_subout = 1):
+def print_array_to_cpp(var, odir):
 
-    f=open("{}/firmware/weights/{}.h".format(odir,name),"w")
+    f=open("{}/firmware/weights/{}.h".format(odir,var.name),"w")
 
     #count zeros
     zero_ctr = 0
-    for x in np.nditer(a, order='C'):
+    for x in np.nditer(var.data, order='C'):
         if x == 0:
             zero_ctr += 1
 
     #meta data
-    f.write("//Numpy array shape {}\n".format(a.shape))
-    f.write("//Min {:.12f}\n".format(np.min(a)))
-    f.write("//Max {:.12f}\n".format(np.max(a)))
+    f.write("//Numpy array shape {}\n".format(var.data.shape))
+    f.write("//Min {:.12f}\n".format(np.min(var.data)))
+    f.write("//Max {:.12f}\n".format(np.max(var.data)))
     f.write("//Number of zeros {}\n".format(zero_ctr))
     f.write("\n")
 
     #c++ variable
-    if re.match(r"^w\d*$", name) or re.match(r"^a\d*$", name):
-        if n_part > 1:
-            f.write("weight_default_t {}_{}".format(name,i_part))
-        else:
-            f.write("weight_default_t {}".format(name))
-    elif re.match(r"^b\d*$", name):
-        if n_part > 1:
-            f.write("bias_default_t {}_{}".format(name,i_part))
-        else:
-            f.write("bias_default_t {}".format(name))
-    elif re.match(r"^beta\d*$", name):
-        f.write("beta_default_t {}".format(name))
-    elif re.match(r"^mean\d*$", name):
-        f.write("mean_default_t {}".format(name))
-    elif re.match(r"^scale\d*$", name):
-        f.write("scale_default_t {}".format(name))
-    else:
-        raise Exception('ERROR: Unkown weights type')
+    f.write("{} {}".format(var.type, var.name))
 
     #hls doesn't like 3d arrays... unrolling to 1d
     #also doing for all (including 2d) arrays now
-    f.write("[{}]".format(np.prod(a.shape)))
+    f.write("[{}]".format(np.prod(var.data.shape)))
     f.write(" = {")
 
     #fill c++ array.
     #not including internal brackets for multidimensional case
     i=0
-    for x in np.nditer(a, order='C'):
+    for x in np.nditer(var.data, order='C'):
         if i==0:
             f.write("%.12f" % x)
         else:
@@ -204,24 +187,17 @@ def write_parameters(model):
         #Insert numbers
         if '//hls-fpga-machine-learning insert numbers' in line:
             newline = line
-            newline += 'typedef {precision} accum_default_t;\n'.format(precision=model.get_default_precision())
-            newline += 'typedef {precision} weight_default_t;\n'.format(precision=model.get_default_precision())
-            newline += 'typedef {precision} bias_default_t;\n'.format(precision=model.get_default_precision())
-            newline += 'typedef {precision} input_t;\n'.format(precision=model.get_default_precision())
-            newline += 'typedef {precision} result_t;\n'.format(precision=model.get_default_precision())
-            newline += 'typedef {precision} beta_default_t;\n'.format(precision=model.get_default_precision())
-            newline += 'typedef {precision} mean_default_t;\n'.format(precision=model.get_default_precision())
-            newline += 'typedef {precision} scale_default_t;\n'.format(precision=model.get_default_precision())
-
-            newline += '\n'
-
             numbers = OrderedDict.fromkeys([layer.get_numbers_cpp() for layer in model.get_layers()])
             newline += ''.join(numbers)
 
         elif '//hls-fpga-machine-learning insert layer-precision' in line:
             newline = line
+            all_precision = {}
             for layer in model.get_layers():
-                newline += layer.precision_cpp() + '\n'
+                layer_precision = layer.get_layer_precision()
+                all_precision.update(layer_precision)
+            for type_name, precision in all_precision.items():
+                newline += 'typedef {precision} {type_name};\n'.format(type_name=type_name, precision=precision)
 
         elif "//hls-fpga-machine-learning insert layer-config" in line:
             newline = line
@@ -238,7 +214,7 @@ def write_parameters(model):
 def write_weights(model):
     for layer in model.get_layers():
         for weights in layer.get_weights():
-            print_array_to_cpp(weights.name, weights.data, model.get_output_dir())
+            print_array_to_cpp(weights, model.get_output_dir())
 
 def write_test_bench(model):
     ###################
