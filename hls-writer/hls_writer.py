@@ -192,7 +192,7 @@ def write_parameters(model):
 
         elif '//hls-fpga-machine-learning insert layer-precision' in line:
             newline = line
-            all_precision = {}
+            all_precision = OrderedDict()
             for layer in model.get_layers():
                 layer_precision = layer.get_layer_precision()
                 all_precision.update(layer_precision)
