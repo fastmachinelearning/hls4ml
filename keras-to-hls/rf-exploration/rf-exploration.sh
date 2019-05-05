@@ -57,8 +57,10 @@ RESULT_DIR="$BASE_DIR/reports"
 # Output CSV file. See the "rf-reporting.sh" script for more details.
 RESULT_FILE="$RESULT_DIR/$MODEL.csv"
 
-# Output error file. See the "rf-error-reporting.sh" script for more details.
+# Output error and warning files. See the "rf-error-reporting.sh" and
+# "rf-warning-reporting.sh" scripts for more details.
 ERROR_FILE="$RESULT_DIR/$MODEL.errors.log"
+WARNING_FILE="$RESULT_DIR/$MODEL.warnings.log"
 
 # GNU parallel job log. See GNU parallel manual for more details.
 # The logfile is in the following TAB separated format:
@@ -117,7 +119,7 @@ USER_DEFINED_RF="100"
 TIMEOUT_TIME=50400
 
 # Run at most THREADS instances of Vivado HLS / Vivado.
-THREADS=12
+THREADS=6
 
 # ==============================================================================
 # HLS, Logic Synthesis, Reports
@@ -320,7 +322,20 @@ collect_errors ()
     done
 }
 
-
+#
+# Parse the Vivado HLS and Vivado (logic synthesis) reports and collect the
+# warnings and error logs.
+#
+collect_warnings ()
+{
+    # Collect the results.
+    for rf in $(get_candidate_reuse_factors); do
+        # Collect results (it does not check if there were HLS and LS runs).
+        if [ $RUN_LOG -eq 1 ]; then
+            bash rf-warning-reporting.sh $JOB_LOG $WORK_DIR/$MODEL\_RF$rf/myproject_prj $MODEL $rf $WARNING_FILE $VERBOSE
+        fi
+    done
+}
 
 #
 # Compress the Vivado HLS and Vivado project directories to save space.
@@ -355,14 +370,16 @@ export MODEL_DIR
 export RESULT_DIR
 export RESULT_FILE
 export ERROR_FILE
+export WARNING_FILE
 export TIMEOUT_TIME
 export -f run_hls4ml_vivado
 
 # Print some info, run the stress tests with GNU parallel, and collect the
 # results.
-print_info
-setup_working_directories
-get_candidate_reuse_factors | parallel --progress --will-cite --timeout $TIMEOUT_TIME --jobs $THREADS $SWAP --joblog $JOB_LOG run_hls4ml_vivado
-collect_results
-collect_errors
-compress_project_directories
+#print_info
+#setup_working_directories
+#get_candidate_reuse_factors | parallel --progress --will-cite --timeout $TIMEOUT_TIME --jobs $THREADS $SWAP --joblog $JOB_LOG run_hls4ml_vivado
+#collect_results
+#collect_errors
+collect_warnings
+#compress_project_directories
