@@ -21,20 +21,32 @@ BASE_DIR="$PWD"
 # Model directory.
 MODEL_DIR="$BASE_DIR/../example-keras-model-files"
 
-# Model name.
-#MODEL="KERAS_3layer"
-#MODEL="2layer_100x100"
-#MODEL="KERAS_dense_16x100x100x100x100x100x5"
-MODEL="KERAS_dense_16x200x200x200x200x200x5"
-#MODEL="KERAS_dense_16x500x500x500x500x500x5"
-
 # We assume the model files being:
 # KerasJson: ../example-keras-model-files/MODEL.json
 # KerasH5:   ../example-keras-model-files/MODEL_weights.h5
 
-# Network characteristics.
-N_IN=200
-N_OUT=200
+
+
+# Model name and network characteristics.
+#MODEL="KERAS_3layer"
+#N_IN=64
+#N_OUT=32
+
+#MODEL="2layer_100x100"
+#N_IN=100
+#N_OUT=100
+
+#MODEL="KERAS_dense_16x100x100x100x100x100x5"
+#N_IN=100
+#N_OUT=100
+
+#MODEL="KERAS_dense_16x200x200x200x200x200x5"
+#N_IN=200
+#N_OUT=200
+
+MODEL="KERAS_dense_16x500x500x500x500x500x5"
+N_IN=500
+N_OUT=500
 
 # ==============================================================================
 # Directories and Files
@@ -118,8 +130,11 @@ USER_DEFINED_RF="100"
 # 14h = 50400s
 TIMEOUT_TIME=50400
 
-# Run at most THREADS instances of Vivado HLS / Vivado.
-THREADS=6
+# Run at most THREADS instances of Vivado HLS / Vivado. The script fetches the
+# number of cores on the current host and initializes the number of THREADS
+# according to some formula, e.g. if #cores is 32, (#cores -1) / 2 = 15.
+CORES=`grep -c ^processor /proc/cpuinfo`
+THREADS=$(((CORES - 1)/2))
 
 # ==============================================================================
 # HLS, Logic Synthesis, Reports
@@ -376,10 +391,10 @@ export -f run_hls4ml_vivado
 
 # Print some info, run the stress tests with GNU parallel, and collect the
 # results.
-#print_info
-#setup_working_directories
-#get_candidate_reuse_factors | parallel --progress --will-cite --timeout $TIMEOUT_TIME --jobs $THREADS $SWAP --joblog $JOB_LOG run_hls4ml_vivado
-#collect_results
-#collect_errors
+print_info
+setup_working_directories
+get_candidate_reuse_factors | parallel --progress --will-cite --timeout $TIMEOUT_TIME --jobs $THREADS $SWAP --joblog $JOB_LOG run_hls4ml_vivado
+collect_results
+collect_errors
 collect_warnings
-#compress_project_directories
+compress_project_directories
