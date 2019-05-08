@@ -376,10 +376,10 @@ export -f run_hls4ml_vivado
 
 # Print some info, run the stress tests with GNU parallel, and collect the
 # results.
-#print_info
-#setup_working_directories
-#get_candidate_reuse_factors | parallel --progress --will-cite --timeout $TIMEOUT_TIME --jobs $THREADS $SWAP --joblog $JOB_LOG run_hls4ml_vivado
-#collect_results
-#collect_errors
+print_info
+setup_working_directories
+get_candidate_reuse_factors | parallel --progress --will-cite --timeout $TIMEOUT_TIME --jobs $THREADS $SWAP --joblog $JOB_LOG run_hls4ml_vivado
+collect_results
+collect_errors
 collect_warnings
-#compress_project_directories
+compress_project_directories

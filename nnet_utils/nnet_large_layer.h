@@ -126,7 +126,7 @@ void compute_large_layer(
         //int w_index   = ir + rufactor * im;
 	    //if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
 	int out_index = im/multscale;//w_index  % CONFIG_T::n_out;//w_index % CONFIG_T::n_out;//im/multscale;
-        acc[im] += mult[im];
+        acc[im] += mult[out_index];
        }
     }
     // Cast to "res_t" type
