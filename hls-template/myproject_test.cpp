@@ -20,27 +20,62 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <limits.h>
 #include <math.h>
 
 #include "firmware/parameters.h"
 #include "firmware/myproject.h"
 #include "nnet_helpers.h"
 
+#define LOG_FILE "results.log"
+
+std::string get_exe_path()
+{
+  char cwd[PATH_MAX];
+  if (getcwd(cwd, sizeof(cwd)) == NULL) {
+    return "./";
+  } else {
+    return (std::string(cwd) + "/");
+  }
+}
 
 int main(int argc, char **argv)
 {
 
   //hls-fpga-machine-learning insert data
 
+  int retval = 0;
 
   result_t res_str[N_OUTPUTS] = {0};
   unsigned short size_in, size_out;
   myproject(data_str, res_str, size_in, size_out);
-    
+
+  std::ofstream results;
+  results.open(LOG_FILE);
   for(int i=0; i<N_OUTPUTS; i++){
     std::cout << res_str[i] << " ";
+    results << res_str[i] << " ";
   }
   std::cout << std::endl;
-  
-  return 0;
+  results << std::endl;
+  results.close();
+
+  std::string diff_cmd = "diff --brief -w ";
+  diff_cmd += get_exe_path();
+  diff_cmd += LOG_FILE;
+  diff_cmd += " ";
+  diff_cmd += get_exe_path();
+  diff_cmd += "/../../csim/build/";
+  diff_cmd += LOG_FILE;
+
+  retval = system(diff_cmd.c_str());
+  if (retval != 0) {
+      printf("ERROR: test FAILED\n");
+      return retval;
+  } else {
+      printf("INFO: test PASSED\n");
+  }
+
+  return retval;
 }
