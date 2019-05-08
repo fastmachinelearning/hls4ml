@@ -1,5 +1,6 @@
 from __future__ import print_function
 import six
+import re
 import numpy as np
 from enum import Enum
 from collections import OrderedDict
@@ -81,7 +82,7 @@ class HLSModel(object):
     def get_output_variables(self):
         variables = []
         for out in self.outputs:
-            variables.append(self.graph[out].get_output_variable())
+            variables.append(self.output_vars[out])
         return variables
 
     def get_layer_output_variable(self, output_name):
@@ -92,6 +93,7 @@ class Variable(object):
         self.name = var_name.format(**kwargs)
         self.type = type_name.format(**kwargs)
         self.precision = precision
+        self.cppname = re.sub(r'\W|^(?=\d)','_', self.name)
 
 class ArrayVariable(Variable):
     def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, pragma='partition', **kwargs):
@@ -133,7 +135,7 @@ class ArrayVariable(Variable):
 
     def definition_cpp(self):
         array_shape = '*'.join([str(k) for k in self.dim_names])
-        return '{type} {name}[{shape}]'.format(type=self.type, name=self.name, shape=array_shape)
+        return '{type} {name}[{shape}]'.format(type=self.type, name=self.cppname, shape=array_shape)
 
     def size(self):
         nelem = 1
@@ -312,7 +314,7 @@ class Dense(Layer):
     def initialize(self):
         shape = [self.attributes['n_out']]
         dims = ['N_LAYER_{}'.format(self.index)]
-        quantize = self.get_attr('quantize')
+        quantize = self.get_attr('quantize', default=0)
         self.add_output_variable(shape, dims)
         self.add_weights(quantize=quantize)
         self.add_bias(quantize=quantize)
