@@ -105,9 +105,10 @@ void compute_large_layer(
         for (int im = 0; im < block_factor; im++){
             int w_index    = ir + rufactor * im;
 	    int  in_index  = w_index % nin;
-	    //int  out_index = w_index / multfactor;
+	    int  out_index = w_index / nin;
 	    if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
             tmpmult[im] = data[in_index] * weights[w_index];
+	    //std::cout << " === > " <<  in_index << " -- " << out_index  << " -- " << w_index << " --- " << data[in_index] << " -- " << weights[w_index] << std::endl;
         }
         typename CONFIG_T::accum_t mult[multiplier_limit];
         #pragma HLS ARRAY_PARTITION variable=mult complete
@@ -124,11 +125,14 @@ void compute_large_layer(
        AccumLoop:
        for (int im = 0; im < multiplier_limit; im++){
         //int w_index   = ir + rufactor * im;
-	    //if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
+	//if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) std::cout << " ---> " << CONFIG_T::n_in*CONFIG_T::n_out << " -- " << im << " -- " << w_index << " -- " << block_factor << std::endl;
 	int out_index = im/multscale;//w_index  % CONFIG_T::n_out;//w_index % CONFIG_T::n_out;//im/multscale;
-        acc[im] += mult[out_index];
+        acc[out_index] += mult[im];
        }
     }
+    //    for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
+    //    std::cout << "XXXX " << jj << " -- " << acc[jj] << std::endl;
+    //}
     // Cast to "res_t" type
     Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
         #pragma HLS UNROLL
