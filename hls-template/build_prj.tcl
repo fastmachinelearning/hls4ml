@@ -2,9 +2,9 @@
 #    HLS4ML
 #################
 array set opt {
-  csim   0
+  csim   1
   synth  1
-  cosim  0
+  cosim  1
   export 1
 }
 

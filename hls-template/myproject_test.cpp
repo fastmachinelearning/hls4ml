@@ -51,28 +51,35 @@ int main(int argc, char **argv)
   unsigned short size_in, size_out;
   myproject(data_str, res_str, size_in, size_out);
 
+  for(int i=0; i<N_OUTPUTS; i++){
+    std::cout << res_str[i] << " ";
+  }
+  std::cout << std::endl;
+
+
+  // Validation
   std::ofstream results;
   results.open(LOG_FILE);
   for(int i=0; i<N_OUTPUTS; i++){
-    std::cout << res_str[i] << " ";
     results << res_str[i] << " ";
   }
-  std::cout << std::endl;
   results << std::endl;
   results.close();
 
+  std::string current_sim_log = get_exe_path() + LOG_FILE;
+  std::string c_sim_log = get_exe_path() + "../../csim/build/" + LOG_FILE;
+
   std::string diff_cmd = "diff --brief -w ";
-  diff_cmd += get_exe_path();
-  diff_cmd += LOG_FILE;
+  diff_cmd += current_sim_log;
   diff_cmd += " ";
-  diff_cmd += get_exe_path();
-  diff_cmd += "/../../csim/build/";
-  diff_cmd += LOG_FILE;
+  diff_cmd += c_sim_log;
 
   retval = system(diff_cmd.c_str());
   if (retval != 0) {
-      printf("ERROR: test FAILED\n");
-      return retval;
+      std::cout << "ERROR: test FAILED" << std::endl;
+      std::cout << "ERROR:   current sim: " << current_sim_log << std::endl;
+      std::cout << "ERROR:   C/C++   sim: " << c_sim_log << std::endl;
+      retval = 1;
   } else {
       printf("INFO: test PASSED\n");
   }
