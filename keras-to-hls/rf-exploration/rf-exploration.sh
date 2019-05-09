@@ -21,20 +21,32 @@ BASE_DIR="$PWD"
 # Model directory.
 MODEL_DIR="$BASE_DIR/../example-keras-model-files"
 
-# Model name.
-#MODEL="KERAS_3layer"
-MODEL="2layer_100x100"
-#MODEL="KERAS_dense_16x100x100x100x100x100x5"
-#MODEL="KERAS_dense_16x200x200x200x200x200x5"
-#MODEL="KERAS_dense_16x500x500x500x500x500x5"
-
 # We assume the model files being:
 # KerasJson: ../example-keras-model-files/MODEL.json
 # KerasH5:   ../example-keras-model-files/MODEL_weights.h5
 
-# Network characteristics.
-N_IN=100
-N_OUT=100
+
+
+# Model name and network characteristics.
+#MODEL="KERAS_3layer"
+#N_IN=64
+#N_OUT=32
+
+#MODEL="2layer_100x100"
+#N_IN=100
+#N_OUT=100
+
+#MODEL="KERAS_dense_16x100x100x100x100x100x5"
+#N_IN=100
+#N_OUT=100
+
+#MODEL="KERAS_dense_16x200x200x200x200x200x5"
+#N_IN=200
+#N_OUT=200
+
+MODEL="KERAS_dense_16x500x500x500x500x500x5"
+N_IN=500
+N_OUT=500
 
 # ==============================================================================
 # Directories and Files
@@ -56,6 +68,11 @@ RESULT_DIR="$BASE_DIR/reports"
 
 # Output CSV file. See the "rf-reporting.sh" script for more details.
 RESULT_FILE="$RESULT_DIR/$MODEL.csv"
+
+# Output error and warning files. See the "rf-error-reporting.sh" and
+# "rf-warning-reporting.sh" scripts for more details.
+ERROR_FILE="$RESULT_DIR/$MODEL.errors.log"
+WARNING_FILE="$RESULT_DIR/$MODEL.warnings.log"
 
 # GNU parallel job log. See GNU parallel manual for more details.
 # The logfile is in the following TAB separated format:
@@ -108,10 +125,16 @@ USER_DEFINED_RF="100"
 # 4h = 14400s
 # 5h = 18000s
 # 6h = 21600s
-TIMEOUT_TIME=21600
+# 7h = 25200s
+# 8h = 28800s
+# 14h = 50400s
+TIMEOUT_TIME=50400
 
-# Run at most THREADS instances of Vivado HLS / Vivado.
-THREADS=16
+# Run at most THREADS instances of Vivado HLS / Vivado. The script fetches the
+# number of cores on the current host and initializes the number of THREADS
+# according to some formula, e.g. if #cores is 32, (#cores -1) / 2 = 15.
+CORES=`grep -c ^processor /proc/cpuinfo`
+THREADS=$(((CORES - 1)/2))
 
 # ==============================================================================
 # HLS, Logic Synthesis, Reports
@@ -300,6 +323,36 @@ collect_results ()
 }
 
 #
+# Parse the Vivado HLS and Vivado (logic synthesis) reports and collect the
+# error logs.
+#
+collect_errors ()
+{
+    # Collect the results.
+    for rf in $(get_candidate_reuse_factors); do
+        # Collect results (it does not check if there were HLS and LS runs).
+        if [ $RUN_LOG -eq 1 ]; then
+            bash rf-error-reporting.sh $JOB_LOG $WORK_DIR/$MODEL\_RF$rf/myproject_prj $MODEL $rf $ERROR_FILE $VERBOSE
+        fi
+    done
+}
+
+#
+# Parse the Vivado HLS and Vivado (logic synthesis) reports and collect the
+# warnings and error logs.
+#
+collect_warnings ()
+{
+    # Collect the results.
+    for rf in $(get_candidate_reuse_factors); do
+        # Collect results (it does not check if there were HLS and LS runs).
+        if [ $RUN_LOG -eq 1 ]; then
+            bash rf-warning-reporting.sh $JOB_LOG $WORK_DIR/$MODEL\_RF$rf/myproject_prj $MODEL $rf $WARNING_FILE $VERBOSE
+        fi
+    done
+}
+
+#
 # Compress the Vivado HLS and Vivado project directories to save space.
 #
 compress_project_directories ()
@@ -331,6 +384,8 @@ export RUN_CLEAN
 export MODEL_DIR
 export RESULT_DIR
 export RESULT_FILE
+export ERROR_FILE
+export WARNING_FILE
 export TIMEOUT_TIME
 export -f run_hls4ml_vivado
 
@@ -340,4 +395,6 @@ print_info
 setup_working_directories
 get_candidate_reuse_factors | parallel --progress --will-cite --timeout $TIMEOUT_TIME --jobs $THREADS $SWAP --joblog $JOB_LOG run_hls4ml_vivado
 collect_results
+collect_errors
+collect_warnings
 compress_project_directories

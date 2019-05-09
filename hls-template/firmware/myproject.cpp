@@ -21,7 +21,8 @@
 #include "parameters.h"
 #include "myproject.h"
 
-#include "nnet_layer.h"
+//#include "nnet_layer.h"
+#include "nnet_large_layer.h"
 #include "nnet_conv.h"
 #include "nnet_conv2d.h"
 #include "nnet_batchnorm.h"

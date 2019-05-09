@@ -57,7 +57,8 @@ if {$opt(synth)} {
   if {$opt(export)} {
     puts "***** EXPORT IP *****"
     set time_start [clock clicks -milliseconds]
-    export_design -format ip_catalog
+    #export_design -format ip_catalog
+    export_design -flow syn -rtl verilog -format ip_catalog
     set time_end [clock clicks -milliseconds]
     report_time "EXPORT IP" $time_start $time_end
   }
