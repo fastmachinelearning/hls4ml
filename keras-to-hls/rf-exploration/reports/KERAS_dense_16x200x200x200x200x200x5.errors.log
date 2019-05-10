@@ -1,13 +1,13 @@
 INFO: Model: KERAS_dense_16x200x200x200x200x200x5
 INFO: Reuse Factor: 1
 INFO: Vivado HLS exit value: 1
-ERROR: [XFORM 203-504] Stop unrolling loop 'ReuseLoop' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:100) in function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config5>' because it may cause large runtime and excessive memory usage due to increase in code size. Please avoid unrolling the loop or form sub-functions for code in the loop body.
+ERROR: [XFORM 203-504] Stop unrolling loop 'ReuseLoop' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:100) in function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config5>' because it may cause large runtime and excessive memory usage due to increase in code size. Please avoid unrolling the loop or form sub-functions for code in the loop body.
 ERROR: [HLS 200-70] Pre-synthesis failed.
 
 INFO: Model: KERAS_dense_16x200x200x200x200x200x5
 INFO: Reuse Factor: 2
 INFO: Vivado HLS exit value: 1
-ERROR: [XFORM 203-504] Stop unrolling loop 'Loop-2.1' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105) in function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config5>' because it may cause large runtime and excessive memory usage due to increase in code size. Please avoid unrolling the loop or form sub-functions for code in the loop body.
+ERROR: [XFORM 203-504] Stop unrolling loop 'Loop-2.1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105) in function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config5>' because it may cause large runtime and excessive memory usage due to increase in code size. Please avoid unrolling the loop or form sub-functions for code in the loop body.
 ERROR: [HLS 200-70] Pre-synthesis failed.
 
 INFO: Model: KERAS_dense_16x200x200x200x200x200x5
@@ -33,66 +33,124 @@ ERROR: Timeout
 INFO: Model: KERAS_dense_16x200x200x200x200x200x5
 INFO: Reuse Factor: 16
 INFO: Vivado HLS exit value: 1
-ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:129:9).
+ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:130:9).
 ERROR: [HLS 200-70] Pre-synthesis failed.
 
 INFO: Model: KERAS_dense_16x200x200x200x200x200x5
 INFO: Reuse Factor: 20
-INFO: Vivado HLS exit value: 1
-ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:129:9).
-ERROR: [HLS 200-70] Pre-synthesis failed.
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
 
 INFO: Model: KERAS_dense_16x200x200x200x200x200x5
 INFO: Reuse Factor: 25
-INFO: Vivado HLS exit value: 1
-ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:129:9).
-ERROR: [HLS 200-70] Pre-synthesis failed.
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
 
 INFO: Model: KERAS_dense_16x200x200x200x200x200x5
 INFO: Reuse Factor: 32
 INFO: Vivado HLS exit value: 1
-ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:129:9).
+ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:130:9).
 ERROR: [HLS 200-70] Pre-synthesis failed.
 
 INFO: Model: KERAS_dense_16x200x200x200x200x200x5
 INFO: Reuse Factor: 40
-INFO: Vivado HLS exit value: 1
-ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:129:9).
-ERROR: [HLS 200-70] Pre-synthesis failed.
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
 
 INFO: Model: KERAS_dense_16x200x200x200x200x200x5
 INFO: Reuse Factor: 50
-INFO: Vivado HLS exit value: 1
-ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:129:9).
-ERROR: [HLS 200-70] Pre-synthesis failed.
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
 
 INFO: Model: KERAS_dense_16x200x200x200x200x200x5
 INFO: Reuse Factor: 64
 INFO: Vivado HLS exit value: 1
-ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:129:9).
+ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:130:9).
 ERROR: [HLS 200-70] Pre-synthesis failed.
 
 INFO: Model: KERAS_dense_16x200x200x200x200x200x5
 INFO: Reuse Factor: 80
 INFO: Vivado HLS exit value: 1
-ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:129:9).
+ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:130:9).
 ERROR: [HLS 200-70] Pre-synthesis failed.
 
 INFO: Model: KERAS_dense_16x200x200x200x200x200x5
 INFO: Reuse Factor: 100
-INFO: Vivado HLS exit value: 1
-ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:129:9).
-ERROR: [HLS 200-70] Pre-synthesis failed.
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
 
 INFO: Model: KERAS_dense_16x200x200x200x200x200x5
 INFO: Reuse Factor: 125
 INFO: Vivado HLS exit value: 1
-ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:129:9).
-ERROR: [HLS 200-70] Pre-synthesis failed.
+ERROR: [SIM 211-100] CSim failed with errors.
 
 INFO: Model: KERAS_dense_16x200x200x200x200x200x5
 INFO: Reuse Factor: 160
 INFO: Vivado HLS exit value: 1
-ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/project/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:129:9).
+ERROR: [XFORM 203-103] Cannot partition array 'acc.V' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:90): array access out of bound (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:130:9).
 ERROR: [HLS 200-70] Pre-synthesis failed.
+
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 250
+INFO: Vivado HLS exit value: 1
+ERROR: test FAILED
+ERROR:   current sim: /home/giuseppe/sandbox/rf-exploration-dir/KERAS_dense_16x200x200x200x200x200x5/KERAS_dense_16x200x200x200x200x200x5_RF250/myproject_prj/solution1/sim/wrapc_pc/results.log
+ERROR:   golden  sim: /home/giuseppe/sandbox/rf-exploration-dir/KERAS_dense_16x200x200x200x200x200x5/KERAS_dense_16x200x200x200x200x200x5_RF250/myproject_prj/solution1/sim/wrapc_pc/../../csim/build/results.log
+ERROR: [COSIM 212-361] C TB post check failed, nonzero return value '1'.
+
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 320
+INFO: Vivado HLS exit value: 1
+ERROR: test FAILED
+ERROR:   current sim: /home/giuseppe/sandbox/rf-exploration-dir/KERAS_dense_16x200x200x200x200x200x5/KERAS_dense_16x200x200x200x200x200x5_RF320/myproject_prj/solution1/sim/wrapc_pc/results.log
+ERROR:   golden  sim: /home/giuseppe/sandbox/rf-exploration-dir/KERAS_dense_16x200x200x200x200x200x5/KERAS_dense_16x200x200x200x200x200x5_RF320/myproject_prj/solution1/sim/wrapc_pc/../../csim/build/results.log
+ERROR: [COSIM 212-361] C TB post check failed, nonzero return value '1'.
+
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 400
+INFO: Vivado HLS exit value: 1
+ERROR: test FAILED
+ERROR:   current sim: /home/giuseppe/sandbox/rf-exploration-dir/KERAS_dense_16x200x200x200x200x200x5/KERAS_dense_16x200x200x200x200x200x5_RF400/myproject_prj/solution1/sim/wrapc_pc/results.log
+ERROR:   golden  sim: /home/giuseppe/sandbox/rf-exploration-dir/KERAS_dense_16x200x200x200x200x200x5/KERAS_dense_16x200x200x200x200x200x5_RF400/myproject_prj/solution1/sim/wrapc_pc/../../csim/build/results.log
+ERROR: [COSIM 212-361] C TB post check failed, nonzero return value '1'.
+
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 500
+INFO: Vivado HLS exit value: 1
+ERROR: test FAILED
+ERROR:   current sim: /home/giuseppe/sandbox/rf-exploration-dir/KERAS_dense_16x200x200x200x200x200x5/KERAS_dense_16x200x200x200x200x200x5_RF500/myproject_prj/solution1/sim/wrapc_pc/results.log
+ERROR:   golden  sim: /home/giuseppe/sandbox/rf-exploration-dir/KERAS_dense_16x200x200x200x200x200x5/KERAS_dense_16x200x200x200x200x200x5_RF500/myproject_prj/solution1/sim/wrapc_pc/../../csim/build/results.log
+ERROR: [COSIM 212-361] C TB post check failed, nonzero return value '1'.
+
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 625
+INFO: Vivado HLS exit value: 1
+ERROR: test FAILED
+ERROR:   current sim: /home/giuseppe/sandbox/rf-exploration-dir/KERAS_dense_16x200x200x200x200x200x5/KERAS_dense_16x200x200x200x200x200x5_RF625/myproject_prj/solution1/sim/wrapc_pc/results.log
+ERROR:   golden  sim: /home/giuseppe/sandbox/rf-exploration-dir/KERAS_dense_16x200x200x200x200x200x5/KERAS_dense_16x200x200x200x200x200x5_RF625/myproject_prj/solution1/sim/wrapc_pc/../../csim/build/results.log
+ERROR: [COSIM 212-361] C TB post check failed, nonzero return value '1'.
+
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 800
+INFO: Vivado HLS exit value: 1
+ERROR: test FAILED
+ERROR:   current sim: /home/giuseppe/sandbox/rf-exploration-dir/KERAS_dense_16x200x200x200x200x200x5/KERAS_dense_16x200x200x200x200x200x5_RF800/myproject_prj/solution1/sim/wrapc_pc/results.log
+ERROR:   golden  sim: /home/giuseppe/sandbox/rf-exploration-dir/KERAS_dense_16x200x200x200x200x200x5/KERAS_dense_16x200x200x200x200x200x5_RF800/myproject_prj/solution1/sim/wrapc_pc/../../csim/build/results.log
+ERROR: [COSIM 212-361] C TB post check failed, nonzero return value '1'.
+
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 1000
+INFO: Vivado HLS exit value: 1
+ERROR: test FAILED
+ERROR:   current sim: /home/giuseppe/sandbox/rf-exploration-dir/KERAS_dense_16x200x200x200x200x200x5/KERAS_dense_16x200x200x200x200x200x5_RF1000/myproject_prj/solution1/sim/wrapc_pc/results.log
+ERROR:   golden  sim: /home/giuseppe/sandbox/rf-exploration-dir/KERAS_dense_16x200x200x200x200x200x5/KERAS_dense_16x200x200x200x200x200x5_RF1000/myproject_prj/solution1/sim/wrapc_pc/../../csim/build/results.log
+ERROR: [COSIM 212-361] C TB post check failed, nonzero return value '1'.
+
+INFO: Model: KERAS_dense_16x200x200x200x200x200x5
+INFO: Reuse Factor: 1250
+INFO: Vivado HLS exit value: 1
+ERROR: test FAILED
+ERROR:   current sim: /home/giuseppe/sandbox/rf-exploration-dir/KERAS_dense_16x200x200x200x200x200x5/KERAS_dense_16x200x200x200x200x200x5_RF1250/myproject_prj/solution1/sim/wrapc_pc/results.log
+ERROR:   golden  sim: /home/giuseppe/sandbox/rf-exploration-dir/KERAS_dense_16x200x200x200x200x200x5/KERAS_dense_16x200x200x200x200x200x5_RF1250/myproject_prj/solution1/sim/wrapc_pc/../../csim/build/results.log
+ERROR: [COSIM 212-361] C TB post check failed, nonzero return value '1'.
 
