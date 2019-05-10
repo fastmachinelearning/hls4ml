@@ -42,14 +42,15 @@ void compute_compressed_layer(
 
     int multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_nonzeros, CONFIG_T::reuse_factor);
     static const int multiplier_limits = DIV_ROUNDUP(CONFIG_T::n_nonzeros, CONFIG_T::reuse_factor);
+
     typename CONFIG_T::accum_t acc [CONFIG_T::n_out];
     #pragma HLS ARRAY_PARTITION variable=acc    complete
     #pragma HLS ARRAY_PARTITION variable=biases complete
     #pragma HLS ARRAY_RESHAPE   variable=weights block factor=multiplier_limit
-    if (CONFIG_T::store_weights_in_bram){
-     #pragma HLS RESOURCE variable=weights core=ROM_1P_BRAM
-     #pragma HLS data_pack variable=weights struct_level 
-    }
+    //if (CONFIG_T::store_weights_in_bram){
+    // #pragma HLS RESOURCE variable=weights core=ROM_1P_BRAM
+    #pragma HLS data_pack variable=weights struct_level 
+    //}
     ACCUMULATOR_INIT_L:
     for(unsigned i = 0; i < CONFIG_T::n_out; i++) {
       #pragma HLS UNROLL
@@ -79,12 +80,22 @@ void compute_compressed_layer(
 	tmpmult[i]            = (cache)*data_cache;
 	tmpindx[i]            = c;
       }
-      unsigned count=0;
+      typename CONFIG_T::accum_t mult[CONFIG_T::n_out];
+      #pragma HLS ARRAY_PARTITION variable=mult complete
+      #pragma HLS DEPENDENCE variable=mult inter false
+      ResetMult: for(int imult = 0; imult < multiplier_limit; imult++) {
+            #pragma HLS UNROLL
+            mult[imult] = 0;                                                                                                                                                                                                                                                 
+      }
       for(unsigned i = 0; i < multiplier_limit; i++) { 
         #pragma HLS UNROLL 
         typename CONFIG_T::weight_t cache = tmpmult[i];
         typename CONFIG_T::index_t a      = tmpindx[i];
-	fillMult<CONFIG_T>(a,acc,cache);
+	//mult[a] += cache;
+	fillMult<CONFIG_T>(a,mult,cache);
+      }
+      for (int im = 0; im < CONFIG_T::n_out; im++){
+       acc[im] += mult[im];
       }
     }
     // Cast to "res_t" type
