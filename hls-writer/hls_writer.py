@@ -981,7 +981,8 @@ def print_array_to_cpp(name, a, odir, quantize=0, i_part = 0, n_part = 1, i_subo
     f.write("[{}]".format(np.prod(a.shape)))
     f.write(" = {")
 
-    print("!!!!",a.shape,len(a.shape))
+    # TODO(gdg): Reduce console verbosity.
+    #print("!!!!",a.shape,len(a.shape))
     if len(a.shape) > 1:
 
         #fill c++ array.
@@ -1000,7 +1001,8 @@ def print_array_to_cpp(name, a, odir, quantize=0, i_part = 0, n_part = 1, i_subo
         i=0
         for w in weights:
             val=w[2]
-            print("v:",val)
+            # TODO(gdg): Reduce console verbosity.
+            #print("v:",val)
             if i==0:
                 f.write("%.12f" % w[2])
             else:
