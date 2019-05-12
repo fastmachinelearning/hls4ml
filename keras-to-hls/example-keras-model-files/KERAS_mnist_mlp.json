@@ -1,0 +1,119 @@
+{
+    "backend": "tensorflow",
+    "class_name": "Sequential",
+    "config": {
+        "layers": [
+            {
+                "class_name": "Dense",
+                "config": {
+                    "activation": "relu",
+                    "activity_regularizer": null,
+                    "batch_input_shape": [
+                        null,
+                        784
+                    ],
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "bias_regularizer": null,
+                    "dtype": "float32",
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_avg",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": null,
+                    "name": "dense_1",
+                    "trainable": true,
+                    "units": 512,
+                    "use_bias": true
+                }
+            },
+            {
+                "class_name": "Dropout",
+                "config": {
+                    "name": "dropout_1",
+                    "noise_shape": null,
+                    "rate": 0.2,
+                    "seed": null,
+                    "trainable": true
+                }
+            },
+            {
+                "class_name": "Dense",
+                "config": {
+                    "activation": "relu",
+                    "activity_regularizer": null,
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "bias_regularizer": null,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_avg",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": null,
+                    "name": "dense_2",
+                    "trainable": true,
+                    "units": 512,
+                    "use_bias": true
+                }
+            },
+            {
+                "class_name": "Dropout",
+                "config": {
+                    "name": "dropout_2",
+                    "noise_shape": null,
+                    "rate": 0.2,
+                    "seed": null,
+                    "trainable": true
+                }
+            },
+            {
+                "class_name": "Dense",
+                "config": {
+                    "activation": "softmax",
+                    "activity_regularizer": null,
+                    "bias_constraint": null,
+                    "bias_initializer": {
+                        "class_name": "Zeros",
+                        "config": {}
+                    },
+                    "bias_regularizer": null,
+                    "kernel_constraint": null,
+                    "kernel_initializer": {
+                        "class_name": "VarianceScaling",
+                        "config": {
+                            "distribution": "uniform",
+                            "mode": "fan_avg",
+                            "scale": 1.0,
+                            "seed": null
+                        }
+                    },
+                    "kernel_regularizer": null,
+                    "name": "dense_3",
+                    "trainable": true,
+                    "units": 10,
+                    "use_bias": true
+                }
+            }
+        ],
+        "name": "sequential_1"
+    },
+    "keras_version": "2.2.4"
+}

@@ -94,7 +94,12 @@ def main():
     layer_config = None
     if model_arch['class_name'] == 'Sequential':
         print('Interpreting Sequential')
-        layer_config = model_arch["config"]
+        # TODO(gdg): KERAS models from
+        # (https://github.com/keras-team/keras/tree/master/examples)
+        # use the following syntax.
+        # This may break the HLS generation for other models!
+        layer_config = model_arch["config"]["layers"]
+        #layer_config = model_arch["config"]
     elif model_arch['class_name'] == 'Model':
         print('Interpreting Model')
         layer_config = model_arch["config"]["layers"]
