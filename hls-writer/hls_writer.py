@@ -97,11 +97,11 @@ def write_project_cpp(model):
         #Add input/output type
         elif '//hls-fpga-machine-learning insert IO' in line:
             newline = line
-            all_inputs = [i.name for i in model_inputs]
-            all_outputs = [o.name for o in model_outputs]
+            all_inputs = [i.cppname for i in model_inputs]
+            all_outputs = [o.cppname for o in model_outputs]
             if model.get_config_value("IOType") == "io_parallel":
-                for i in model_inputs: newline += indent + '#pragma HLS ARRAY_RESHAPE variable={} complete dim=0 \n'.format(i.name)
-                for o in model_outputs: newline += indent + '#pragma HLS ARRAY_RESHAPE variable={} complete dim=0 \n'.format(o.name)
+                for i in model_inputs: newline += indent + '#pragma HLS ARRAY_RESHAPE variable={} complete dim=0 \n'.format(i.cppname)
+                for o in model_outputs: newline += indent + '#pragma HLS ARRAY_RESHAPE variable={} complete dim=0 \n'.format(o.cppname)
                 newline += indent + '#pragma HLS INTERFACE ap_vld port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
                 newline += indent + '#pragma HLS PIPELINE \n'
             if model.get_config_value("IOType") == "io_serial":
@@ -248,15 +248,15 @@ def write_test_bench(model):
             output_size_vars = ','.join(['size_out{}'.format(o) for o in range(1, len(model.get_output_variables()) + 1)])
             newline += size_str.format(input_size_vars, output_size_vars)
 
-            input_vars = ','.join([i.name for i in model.get_input_variables()])
-            output_vars = ','.join([o.name for o in model.get_output_variables()])
+            input_vars = ','.join([i.cppname for i in model.get_input_variables()])
+            output_vars = ','.join([o.cppname for o in model.get_output_variables()])
             top_level = '  {}({},{},{},{});\n'.format(model.get_project_name(), input_vars, output_vars, input_size_vars, output_size_vars)
             newline += top_level
         elif '//hls-fpga-machine-learning insert output' in line:
             newline = line
             for out in model.get_output_variables():
                 newline += '  for(int i = 0; i < {}; i++) {{\n'.format(out.size_cpp())
-                newline += '    std::cout << {}[i] << " ";\n'.format(out.name)
+                newline += '    std::cout << {}[i] << " ";\n'.format(out.cppname)
                 newline += '  }\n'
                 newline += '  std::cout << std::endl;\n'
         else:
