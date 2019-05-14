@@ -83,7 +83,7 @@ namespace nnet {
             static const int multscale  = multiplier_limit/CONFIG_T::n_out;
             static const int nin        = CONFIG_T::n_in;
             static const int nout       = CONFIG_T::n_out;
-            std::cout << "===> " << multiplier_limit << " -- " << CONFIG_T::n_out  << " -- " << multiplier_limit % CONFIG_T::n_out << std::endl;
+            //std::cout << "===> " << multiplier_limit << " -- " << CONFIG_T::n_out  << " -- " << multiplier_limit % CONFIG_T::n_out << std::endl;
             //if (multiplier_limit % CONFIG_T::n_out != 0) return;
 #pragma HLS function_instantiate variable=weights,biases
             //#pragma HLS RESOURCE         variable=weights core=RAM_2P_BRAM Commenting out the deisgnation HLS seems to choose correctly
@@ -91,56 +91,61 @@ namespace nnet {
 #pragma HLS ARRAY_PARTITION variable=biases complete
             typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
 #pragma HLS ARRAY_PARTITION variable=acc complete
-#pragma HLS DEPENDENCE variable=acc,weights,biases inter false
-ResetAccum: for(int iacc = 0; iacc < nout; iacc++) {
+#pragma HLS DEPENDENCE variable=acc,weights,biases inter false // THIS SERIOUSLY AFFECTS THE CORRECTNESS
+ResetAccum:
+            for(int iacc = 0; iacc < nout; iacc++) {
 #pragma HLS UNROLL
                 acc[iacc] = (typename CONFIG_T::accum_t) biases[iacc];
             }
             static const int rufactor=CONFIG_T::reuse_factor;
             //#pragma HLS stream variable=data  depth=1
             //#pragma HLS stream variable=weights depth=1
-ReuseLoop: for (int ir = 0; ir < rufactor; ir++){
+ReuseLoop:
+            for (int ir = 0; ir < rufactor; ir++){
 #pragma HLS PIPELINE II=1 rewind
-               typename CONFIG_T::accum_t tmpmult[block_factor];
+                typename CONFIG_T::accum_t tmpmult[block_factor];
 #pragma HLS ARRAY_PARTITION variable=tmpmult complete
 #pragma HLS DEPENDENCE variable=tmpmult inter false
-               for (int im = 0; im < block_factor; im++){
-                   int w_index    = ir + rufactor * im;
-                   int  in_index  = w_index % nin;
-                   int  out_index = w_index / nin;
-                   if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
-                   tmpmult[im] = data[in_index] * weights[w_index];
-                   //std::cout << " === > " <<  in_index << " -- " << out_index  << " -- " << w_index << " --- " << data[in_index] << " -- " << weights[w_index] << std::endl;
-               }
-               typename CONFIG_T::accum_t mult[multiplier_limit];
-#pragma HLS ARRAY_PARTITION variable=mult complete
-#pragma HLS DEPENDENCE variable=mult inter false
-ResetMult: for(int imult = 0; imult < multiplier_limit; imult++) {
+                for (int im = 0; im < block_factor; im++){
+                    int w_index    = ir + rufactor * im;
+                    int  in_index  = w_index % nin;
+                    int  out_index = w_index / nin;
+                    if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
+                    tmpmult[im] = data[in_index] * weights[w_index];
+                    //std::cout << " === > " <<  in_index << " -- " << out_index  << " -- " << w_index << " --- " << data[in_index] << " -- " << weights[w_index] << std::endl;
+                }
+                typename CONFIG_T::accum_t mult[multiplier_limit];
+#pragma HLS ARRAY_PARTITION variable=mult complete // THIS AFFECTS A LITTLE THE CORRECTNESS
+#pragma HLS DEPENDENCE variable=mult inter false // THIS AFFECTS A LITTLE THE CORRECTNESS
+ResetMult:
+                for(int imult = 0; imult < multiplier_limit; imult++) {
 #pragma HLS UNROLL
-               mult[imult] = 0;
-           }
-           for (int im = 0; im < block_factor; im++){
-               int w_index    = ir + rufactor * im;
-               int  out_index = w_index / multfactor;
-               mult[out_index] += tmpmult[im];
-           }
+                    mult[imult] = 0;
+                }
+                for (int im = 0; im < block_factor; im++){
+                    int w_index    = ir + rufactor * im;
+                    int  out_index = w_index / multfactor;
+                    assert(out_index < multiplier_limit);
+                    mult[out_index] += tmpmult[im];
+                }
 AccumLoop:
-           for (int im = 0; im < multiplier_limit; im++){
-               //int w_index   = ir + rufactor * im;
-               //if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) std::cout << " ---> " << CONFIG_T::n_in*CONFIG_T::n_out << " -- " << im << " -- " << w_index << " -- " << block_factor << std::endl;
-               int out_index = im/multscale;//w_index  % CONFIG_T::n_out;//w_index % CONFIG_T::n_out;//im/multscale;
-               acc[out_index] += mult[im];
-           }
-           }
-           //    for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-           //    std::cout << "XXXX " << jj << " -- " << acc[jj] << std::endl;
-           //}
-           // Cast to "res_t" type
-Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
+                for (int im = 0; im < multiplier_limit; im++){
+                    //int w_index   = ir + rufactor * im;
+                    //if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) std::cout << " ---> " << CONFIG_T::n_in*CONFIG_T::n_out << " -- " << im << " -- " << w_index << " -- " << block_factor << std::endl;
+                    int out_index = im/multscale;//w_index  % CONFIG_T::n_out;//w_index % CONFIG_T::n_out;//im/multscale;
+                    acc[out_index] += mult[im];
+                }
+            }
+            //    for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
+            //    std::cout << "XXXX " << jj << " -- " << acc[jj] << std::endl;
+            //}
+            // Cast to "res_t" type
+Result:
+            for(int ires = 0; ires < CONFIG_T::n_out; ires++){
 #pragma HLS UNROLL
-            res[ires] = (res_T) (acc[ires]);
-        }
-        //printf("\n");
+                res[ires] = (res_T) (acc[ires]);
+            }
+            //printf("\n");
         }
 
 #if 0
