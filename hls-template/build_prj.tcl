@@ -25,7 +25,7 @@ proc report_time { op_name time_start time_end } {
 open_project -reset myproject_prj
 set_top myproject
 add_files firmware/myproject.cpp -cflags "-I[file normalize nnet_utils] -std=c++0x"
-add_files -tb myproject_test.cpp -cflags "-I[file normalize nnet_utils] -std=c++0x"
+add_files -tb myproject_test.cpp -cflags "-I[file normalize nnet_utils] -std=c++0x -DVALIDATION"
 add_files -tb firmware/weights
 #add_files -tb tb_data
 open_solution -reset "solution1"

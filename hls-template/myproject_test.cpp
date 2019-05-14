@@ -48,7 +48,6 @@
 //   compared with itself (they both sits in "WORK_DIR/../csim/build").
 // - The C simulation has to be run before the RTL simulation.
 //
-#define VALIDATION
 
 #ifdef VALIDATION
 #define LOG_FILE "results.log"
