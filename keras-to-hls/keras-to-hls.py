@@ -14,7 +14,7 @@ MAXMULT = 9999999
 
 filedir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,os.path.join(filedir, "..", "hls-writer"))
-from hls_writer import parse_config, print_array_to_cpp, hls_writer
+from hls_writer import parse_config, print_array_to_cpp, print_array_to_txt, hls_writer
 
 def find_kernel_in_h5(name):
     if 'kernel' in name:
@@ -159,10 +159,12 @@ def main():
             found_weights = h5File[layer['name']].visit(find_kernel_in_h5)
             weights = h5File['/{}/{}'.format(layer['name'],found_weights)][()]
             cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'],quantize)
+            cur_n_zeros_txt = print_array_to_txt("w{}".format(layer_counter), weights, yamlConfig['OutputDir'],quantize)
             found_bias = h5File[layer['name']].visit(find_bias_in_h5)
             if found_bias: biases = h5File['/{}/{}'.format(layer['name'],found_bias)][()]
             else: biases = np.zeros(weights.shape[1])
             print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
+            print_array_to_txt("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
             layer['weights_n_zeros'] = cur_n_zeros
         elif layer['class_name'] == 'BatchNormalization':
             cur_n_zeros = []

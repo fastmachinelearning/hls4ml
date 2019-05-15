@@ -1023,3 +1023,67 @@ def print_array_to_cpp(name, a, odir, quantize=0, i_part = 0, n_part = 1, i_subo
         f.close()
 
     return zero_ctr
+
+# TODO(gdg): This function can be merged with the previous one.
+def print_array_to_txt(name, a, odir, quantize=0, i_part = 0, n_part = 1, i_subout = 0, n_subout = 1):
+    #put output in subdir for tarballing later
+    #check if we're doing sublayer
+    if n_part > 1:
+        f=open("{}/firmware/weights/{}_{}.txt".format(odir,name,i_part),"w")
+        if len(a.shape)==2: # dense weight
+            a = a[:,i_subout:i_subout+n_subout]
+        elif len(a.shape)==1: # bias
+            a = a[i_subout:i_subout+n_subout]
+    else:
+        f=open("{}/firmware/weights/{}.txt".format(odir,name),"w")
+
+    #count zeros
+    zero_ctr = 0
+    for x in np.nditer(a, order='C'):
+        if x == 0:
+            zero_ctr += 1
+
+    #quantize weights if BinaryDense or TernaryDense
+    if quantize == 2:
+        a[a>0] = 1
+        a[a<=0] = -1
+    elif quantize == 3:
+        at = np.where(a > 0.5, ones, np.where(a <= -0.5, -ones, zeros))
+        a = at
+
+    #meta data
+    f.write("{}\n".format(np.prod(a.shape)))
+
+    # TODO(gdg): Reduce console verbosity.
+    #print("!!!!",a.shape,len(a.shape))
+    if len(a.shape) > 1:
+
+        #fill c++ array.
+        nrows = a.shape[0]
+        ncols = a.shape[1]
+        first_element = 1
+        i = -1
+        weights=[]
+        for x in np.nditer(a):
+            i=i+1
+            val=x
+            weights.append([int(i%ncols),int(i/ncols),val])
+            #weights.append([int(i/ncols),int(i%ncols),val])
+        weights.sort()
+        #not including internal brackets for multidimensional case
+        i=0
+        for w in weights:
+            val=w[2]
+            # TODO(gdg): Reduce console verbosity.
+            #print("v:",val)
+            f.write("%.12f " % w[2])
+        f.write("\n")
+        f.close()
+    else:
+        i=0
+        for x in np.nditer(a, order='C'):
+            f.write("%.12f " % x)
+        f.write("\n")
+        f.close()
+
+    return zero_ctr
