@@ -34,13 +34,16 @@ INCDIR += -I$(XILINX_VIVADO)/include
 #INCDIR += -IC:/Xilinx/Vivado/2018.3/include
 
 CXX_FLAGS :=
+CXX_FLAGS += -MMD
 CXX_FLAGS += -Wall
+#CXX_FLAGS += -D__SYNTHESIS__ # With this the compilation will take way longer...
 CXX_FLAGS += -Wno-unknown-pragmas
 CXX_FLAGS += -Wno-unused-label
-#CXX_FLAGS += -Wno-int-in-bool-context # GCC only
 CXX_FLAGS += -Wno-sign-compare
 CXX_FLAGS += -Wno-unused-variable
 CXX_FLAGS += -Wno-mismatched-tags
+#CXX_FLAGS += -Wno-int-in-bool-context # GCC only
+CXX_FLAGS += -DWEIGHTS_DIR=../firmware/weights
 
 release: CXX_FLAGS += -O0
 release: $(TARGET)
@@ -62,16 +65,22 @@ VPATH += ../firmware/weights
 VPATH += ../../../nnet_utils
 
 CXX_SOURCES :=
-CXX_SOURCES += myproject.cpp
-CXX_SOURCES += myproject_test.cpp
+CXX_SOURCES += $(subst ../,,$(wildcard ../*.cpp))
+CXX_SOURCES += $(subst ../firmware/,,$(wildcard ../firmware/*.cpp))
 
-CXX_HEADERS :=
+#CXX_HEADERS :=
+#CXX_HEADERS += $(subst ../,,$(wildcard ../*.h))
+#CXX_HEADERS += $(subst ../firmware/,,$(wildcard ../firmware/*.h))
+#CXX_HEADERS += $(subst ../firmware/weights/,,$(wildcard ../firmware/weights/*.h))
+#CXX_HEADERS += $(subst ../../../nnet_utils/,,$(wildcard ../../../nnet_utils/*.h))
 
 .SUFFIXES: .cpp .h .o
 
 CXX_OBJECTS := $(CXX_SOURCES:.cpp=.o)
+-include $(CXX_OBJECTS:.o=.d)
 
-$(CXX_OBJECTS): $(CXX_HEADERS)
+
+#$(CXX_OBJECTS): $(CXX_HEADERS)
 
 $(TARGET): $(CXX_OBJECTS)
 	$(QUIET_LINK)$(CXX) -o $@ $(CXX_OBJECTS) ${LD_LIBS} ${LD_FLAGS}
@@ -96,5 +105,5 @@ gdb:
 .PHONY: gdb
 
 clean:
-	$(QUIET_CLEAN)rm -f *.o $(TARGET) *.bin *.log *.out
+	$(QUIET_CLEAN)rm -f *.o *.d $(TARGET) *.bin *.log *.out
 .PHONY: clean

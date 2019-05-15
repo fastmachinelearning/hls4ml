@@ -14,19 +14,19 @@
 #include "nnet_pooling.h"
 
 //hls-fpga-machine-learning insert numbers
-typedef ap_fixed<16,6> accum_default_t;
-typedef ap_fixed<16,6> weight_default_t;
-typedef ap_fixed<16,6> bias_default_t;
-typedef ap_fixed<16,6> input_t;
-typedef ap_fixed<16,6> result_t;
+typedef ap_fixed<32,16> accum_default_t;
+typedef ap_fixed<32,16> weight_default_t;
+typedef ap_fixed<32,16> bias_default_t;
+typedef ap_fixed<32,16> input_t;
+typedef ap_fixed<32,16> result_t;
 #define N_INPUTS 784
 #define N_LAYER_1 512
 #define N_LAYER_2 512
 #define N_OUTPUTS 10
 
 //hls-fpga-machine-learning insert layer-precision
-typedef ap_fixed<16,6> layer1_t;
-typedef ap_fixed<16,6> layer2_t;
+typedef ap_fixed<32,16> layer1_t;
+typedef ap_fixed<32,16> layer2_t;
 
 //hls-fpga-machine-learning insert layer-config
 struct config1 : nnet::layer_config {

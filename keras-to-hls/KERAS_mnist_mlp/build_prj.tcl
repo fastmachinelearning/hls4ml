@@ -3,9 +3,9 @@
 #################
 array set opt {
   csim   1
-  synth  1
-  cosim  1
-  export 0 
+  synth  0
+  cosim  0
+  export 0
 }
 
 foreach arg $::argv {
@@ -24,8 +24,8 @@ proc report_time { op_name time_start time_end } {
 
 open_project -reset myproject_prj
 set_top myproject
-add_files firmware/myproject.cpp -cflags "-I[file normalize ../../nnet_utils] -I[file normalize ./py] -std=c++0x"
-add_files -tb myproject_test.cpp -cflags "-I[file normalize ../../nnet_utils] -I[file normalize ./py] -std=c++0x -DVALIDATION"
+add_files firmware/myproject.cpp -cflags "-I[file normalize ../../nnet_utils] -I[file normalize ./py] -DWEIGHTS_DIR=[file normalize ./firmware/weights] -std=c++0x -DVALIDATION"
+add_files -tb myproject_test.cpp -cflags "-I[file normalize ../../nnet_utils] -I[file normalize ./py] -DWEIGHTS_DIR=[file normalize ./firmware/weights] -std=c++0x -DVALIDATION"
 add_files -tb firmware/weights
 #add_files -tb tb_data
 open_solution -reset "solution1"

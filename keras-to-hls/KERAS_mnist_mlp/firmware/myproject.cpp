@@ -50,6 +50,15 @@ void myproject(
     #pragma HLS INTERFACE ap_vld port=data,res 
     #pragma HLS DATAFLOW 
 
+#ifndef __SYNTHESIS__
+    //hls-fpga-machine-learning insert load weights
+    load_txt_file< weight_default_t, config1::n_in * config1::n_out >(w1, "w1.txt");
+    load_txt_file< bias_default_t, config1::n_out >(b1, "b1.txt");
+    load_txt_file< weight_default_t, config2::n_in * config2::n_out >(w2, "w2.txt");
+    load_txt_file< bias_default_t, config2::n_out >(b2, "b2.txt");
+    load_txt_file< weight_default_t, config3::n_in * config3::n_out >(w3, "w3.txt");
+    load_txt_file< bias_default_t, config3::n_out >(b3, "b3.txt");
+#endif
 
     const_size_in   = N_INPUTS;
     const_size_out  = N_OUTPUTS;
