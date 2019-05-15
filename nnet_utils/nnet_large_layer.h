@@ -91,7 +91,7 @@ namespace nnet {
 #pragma HLS ARRAY_PARTITION variable=biases complete
             typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
 #pragma HLS ARRAY_PARTITION variable=acc complete
-#pragma HLS DEPENDENCE variable=acc,weights,biases inter false // THIS SERIOUSLY AFFECTS THE CORRECTNESS
+//#pragma HLS DEPENDENCE variable=acc,weights,biases inter false // THIS SERIOUSLY AFFECTS THE CORRECTNESS
 ResetAccum:
             for(int iacc = 0; iacc < nout; iacc++) {
 #pragma HLS UNROLL
@@ -105,7 +105,7 @@ ReuseLoop:
 #pragma HLS PIPELINE II=1 rewind
                 typename CONFIG_T::accum_t tmpmult[block_factor];
 #pragma HLS ARRAY_PARTITION variable=tmpmult complete
-#pragma HLS DEPENDENCE variable=tmpmult inter false
+//#pragma HLS DEPENDENCE variable=tmpmult inter false
                 for (int im = 0; im < block_factor; im++){
                     int w_index    = ir + rufactor * im;
                     int  in_index  = w_index % nin;
@@ -115,8 +115,8 @@ ReuseLoop:
                     //std::cout << " === > " <<  in_index << " -- " << out_index  << " -- " << w_index << " --- " << data[in_index] << " -- " << weights[w_index] << std::endl;
                 }
                 typename CONFIG_T::accum_t mult[multiplier_limit];
-#pragma HLS ARRAY_PARTITION variable=mult complete // THIS AFFECTS A LITTLE THE CORRECTNESS
-#pragma HLS DEPENDENCE variable=mult inter false // THIS AFFECTS A LITTLE THE CORRECTNESS
+#pragma HLS ARRAY_PARTITION variable=mult complete
+//#pragma HLS DEPENDENCE variable=mult inter false // THIS AFFECTS A LITTLE THE CORRECTNESS
 ResetMult:
                 for(int imult = 0; imult < multiplier_limit; imult++) {
 #pragma HLS UNROLL
@@ -125,7 +125,7 @@ ResetMult:
                 for (int im = 0; im < block_factor; im++){
                     int w_index    = ir + rufactor * im;
                     int  out_index = w_index / multfactor;
-                    assert(out_index < multiplier_limit);
+                    if (out_index >= multiplier_limit) continue; // check out of bounds
                     mult[out_index] += tmpmult[im];
                 }
 AccumLoop:
