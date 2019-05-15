@@ -76,6 +76,23 @@ def hls_writer(layer_list, yamlConfig):
                             newline += '#include "weights/a{}.h"\n'.format(i)
                     elif layer_list[i-1]['class_name'] == 'PReLU':
                         newline += '#include "weights/a{}.h"\n'.format(i)
+        elif '//hls-fpga-machine-learning insert load weights' in line:
+            newline = line
+            for i in range(1,len(layer_list)+1):
+                if layer_list[i-1]['class_name'] == 'BatchNormalization':
+                    pass # TODO:(gdg) TBD
+                elif 'Pooling' in layer_list[i-1]['class_name']:
+                    pass # No weights for pooling
+                else:
+                    if layer_list[i-1]['n_part']>1:
+                        pass # TODO:(gdg) TBD
+                    elif layer_list[i-1]['class_name'] not in activation_layers:
+                        newline += '    load_txt_file< weight_default_t, config{}::n_in * config{}::n_out >(w{}, "w{}.txt");\n'.format(i,i,i,i);
+                        newline += '    load_txt_file< bias_default_t, config{}::n_out >(b{}, "b{}.txt");\n'.format(i,i,i);
+                        if layer_list[i-1].get('activation') == 'PReLU':
+                            pass # TODO:(gdg) TBD
+                    elif layer_list[i-1]['class_name'] == 'PReLU':
+                        pass # TODO:(gdg) TBD
 
         #Add input/output type
         elif '//hls-fpga-machine-learning insert IO' in line:
@@ -956,6 +973,31 @@ def print_array_to_cpp(name, a, odir, quantize=0, i_part = 0, n_part = 1, i_subo
     f.write("//Number of zeros {}\n".format(zero_ctr))
     f.write("\n")
 
+    f.write("#ifndef __SYNTHESIS__\n")
+    #c++ variable
+    if re.match(r"^w\d*$", name) or re.match(r"^a\d*$", name):
+        if n_part > 1:
+            f.write("weight_default_t {}_{}".format(name,i_part))
+        else:
+            f.write("weight_default_t {}".format(name))
+    elif re.match(r"^b\d*$", name):
+        if n_part > 1:
+            f.write("bias_default_t {}_{}".format(name,i_part))
+        else:
+            f.write("bias_default_t {}".format(name))
+    elif re.match(r"^beta\d*$", name):
+        f.write("beta_default_t {}".format(name))
+    elif re.match(r"^mean\d*$", name):
+        f.write("mean_default_t {}".format(name))
+    elif re.match(r"^scale\d*$", name):
+        f.write("scale_default_t {}".format(name))
+    else:
+        raise Exception('ERROR: Unkown weights type')
+
+    #hls doesn't like 3d arrays... unrolling to 1d
+    #also doing for all (including 2d) arrays now
+    f.write("[{}];\n".format(np.prod(a.shape)))
+    f.write("#else\n")
     #c++ variable
     if re.match(r"^w\d*$", name) or re.match(r"^a\d*$", name):
         if n_part > 1:
@@ -1009,6 +1051,7 @@ def print_array_to_cpp(name, a, odir, quantize=0, i_part = 0, n_part = 1, i_subo
                 f.write(", %.12f" % w[2])
             i=i+1
         f.write("};\n")
+        f.write("#endif\n")
         f.close()
 
     else:
@@ -1020,6 +1063,7 @@ def print_array_to_cpp(name, a, odir, quantize=0, i_part = 0, n_part = 1, i_subo
                 f.write(", %.12f" % x)
             i=i+1
         f.write("};\n")
+        f.write("#endif\n")
         f.close()
 
     return zero_ctr

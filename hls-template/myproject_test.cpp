@@ -65,9 +65,11 @@ std::string get_exe_path()
 
 int main(int argc, char **argv)
 {
-
+#if 1
   //hls-fpga-machine-learning insert data
-
+#else
+#include "inputs.h"
+#endif
   int retval = 0;
 
   result_t res_str[N_OUTPUTS] = {0};
@@ -84,7 +86,7 @@ int main(int argc, char **argv)
   std::ofstream results;
   results.open(LOG_FILE);
   for(int i=0; i<N_OUTPUTS; i++){
-    results << res_str[i] << " ";
+    results << res_str[i] << std::endl;
   }
   results << std::endl;
   results.close();

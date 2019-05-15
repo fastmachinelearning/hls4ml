@@ -40,6 +40,9 @@ void myproject(
 
     //hls-fpga-machine-learning insert IO
 
+#ifndef __SYNTHESIS__
+    //hls-fpga-machine-learning insert load weights
+#endif
 
     const_size_in   = N_INPUTS;
     const_size_out  = N_OUTPUTS;
