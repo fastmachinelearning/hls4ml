@@ -1,2 +1,3 @@
 *.o
+*.d
 myproject_test
