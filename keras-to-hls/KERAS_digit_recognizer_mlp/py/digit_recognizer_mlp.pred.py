@@ -29,7 +29,7 @@ x_test /= 255
 y_test = keras.utils.to_categorical(y_test, 10)
 
 # Choose a test image
-index_image = 2
+index_image = 1
 image = x_test[index_image]
 #print("INFO: x_test size", x_test.shape())
 

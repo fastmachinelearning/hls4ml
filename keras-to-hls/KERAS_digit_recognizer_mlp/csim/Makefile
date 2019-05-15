@@ -38,10 +38,11 @@ CXX_FLAGS += -MMD
 CXX_FLAGS += -Wall
 CXX_FLAGS += -Wno-unknown-pragmas
 CXX_FLAGS += -Wno-unused-label
-#CXX_FLAGS += -Wno-int-in-bool-context # GCC only
 CXX_FLAGS += -Wno-sign-compare
 CXX_FLAGS += -Wno-unused-variable
 CXX_FLAGS += -Wno-mismatched-tags
+#CXX_FLAGS += -Wno-int-in-bool-context # GCC only
+CXX_FLAGS += -DWEIGHTS_DIR=../firmware/weights
 
 release: CXX_FLAGS += -O0
 release: $(TARGET)
