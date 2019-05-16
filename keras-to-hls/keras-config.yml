@@ -6,9 +6,9 @@
 #KerasH5:   example-keras-model-files/KERAS_dense_16x100x100x100x100x100x5_weights.h5
 #OutputDir: KERAS_dense_16x100x100x100x100x100x5
 
-KerasJson: example-keras-model-files/KERAS_mnist_mlp.json
-KerasH5:   example-keras-model-files/KERAS_mnist_mlp_weights.h5
-OutputDir: KERAS_mnist_mlp
+#KerasJson: example-keras-model-files/KERAS_mnist_mlp.json
+#KerasH5:   example-keras-model-files/KERAS_mnist_mlp_weights.h5
+#OutputDir: KERAS_mnist_mlp
 
 #KerasJson: example-keras-model-files/KERAS_reuters_mlp.json
 #KerasH5:   example-keras-model-files/KERAS_reuters_mlp_weights.h5
@@ -17,6 +17,10 @@ OutputDir: KERAS_mnist_mlp
 #KerasJson: example-keras-model-files/KERAS_digit_recognizer_mlp.json
 #KerasH5:   example-keras-model-files/KERAS_digit_recognizer_mlp_weights.h5
 #OutputDir: KERAS_digit_recognizer_mlp
+
+KerasJson: example-keras-model-files/KERAS_bcd_mlp.json
+KerasH5:   example-keras-model-files/KERAS_bcd_mlp_weights.h5
+OutputDir: KERAS_bcd_mlp
 
 ProjectName: myproject
 XilinxPart: xcku115-flvb2104-2-i
