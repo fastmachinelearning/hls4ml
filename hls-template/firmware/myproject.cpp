@@ -30,6 +30,7 @@ void myproject(
 
 
 #ifndef __SYNTHESIS__
+    printf("INFO: load weight and bias values from files\n");
     //hls-fpga-machine-learning insert load weights
 #endif
 
