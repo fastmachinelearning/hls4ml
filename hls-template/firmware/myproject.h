@@ -27,6 +27,53 @@
 #include "parameters.h"
 
 
+#ifndef __SYNTHESIS__
+
+#include <fstream>
+#define xstr(a) str(a)
+#define str(a) #a
+template<class T, size_t SIZE>
+void load_txt_file(T *w, const char* fname) {
+
+    std::string full_path = std::string(xstr(WEIGHTS_DIR)) + "/" + std::string(fname);
+    std::ifstream infile(full_path.c_str(), std::ios::binary);
+
+    if (infile.fail()) {
+        std::cerr << "ERROR: file " << std::string(fname);
+        std::cerr << " does not exist" << std::endl;
+        exit(1);
+    }
+
+    size_t i = 0;
+    size_t size;
+    std::string line;
+
+    // The first line of the input file contains the total number of values.
+    if (std::getline(infile, line)) {
+         std::istringstream iss(line);
+         iss >> size;
+         if (size != SIZE) {
+            std::cerr << "ERROR: file " << std::string(fname);
+            std::cerr << " contains an unexpected number of elements (";
+            std::cerr << size << " rather than  "<< SIZE << ")" << std::endl;
+            exit(1);
+        }
+    };
+
+    // The second line of the input file contains all of the values.
+    if (std::getline(infile, line)) {
+        std::istringstream iss(line);
+        for (size_t i = 0; i < size; i++) {
+            double fdata;
+            iss >> fdata;
+            w[i] = T(fdata);
+        }
+    }
+}
+
+#endif
+
+
 // Prototype of top level function for C-synthesis
 void myproject(
     //hls-fpga-machine-learning insert header

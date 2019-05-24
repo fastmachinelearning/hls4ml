@@ -36,6 +36,33 @@ def print_array_to_cpp(name, a, odir, i_part = 0, n_part = 1, i_subout = 0, n_su
     f.write("//Number of zeros {}\n".format(zero_ctr))
     f.write("\n")
 
+    f.write("#ifndef __SYNTHESIS__\n")
+
+    #c++ variable
+    if re.match(r"^w\d*$", name) or re.match(r"^a\d*$", name):
+        if n_part > 1:
+            f.write("weight_default_t {}_{}".format(name,i_part))
+        else:
+            f.write("weight_default_t {}".format(name))
+    elif re.match(r"^b\d*$", name):
+        if n_part > 1:
+            f.write("bias_default_t {}_{}".format(name,i_part))
+        else:
+            f.write("bias_default_t {}".format(name))
+    elif re.match(r"^beta\d*$", name):
+        f.write("beta_default_t {}".format(name))
+    elif re.match(r"^mean\d*$", name):
+        f.write("mean_default_t {}".format(name))
+    elif re.match(r"^scale\d*$", name):
+        f.write("scale_default_t {}".format(name))
+    else:
+        raise Exception('ERROR: Unkown weights type')
+
+    #hls doesn't like 3d arrays... unrolling to 1d
+    #also doing for all (including 2d) arrays now
+    f.write("[{}];\n".format(np.prod(a.shape)))
+    f.write("#else\n")
+
     #c++ variable
     if re.match(r"^w\d*$", name) or re.match(r"^a\d*$", name):
         if n_part > 1:
@@ -71,6 +98,33 @@ def print_array_to_cpp(name, a, odir, i_part = 0, n_part = 1, i_subout = 0, n_su
             f.write(", %.12f" % x)
         i=i+1
     f.write("};\n")
+    f.write("#endif\n")
+    f.close()
+
+    return zero_ctr
+
+# TODO(gdg): This function can be merged with the previous one.
+def print_array_to_txt(name, a, odir, i_part = 0, n_part = 1, i_subout = 0, n_subout = 1):
+
+    f=open("{}/firmware/weights/{}.txt".format(odir,name),"w")
+
+    #count zeros
+    zero_ctr = 0
+    for x in np.nditer(a, order='C'):
+        if x == 0:
+            zero_ctr += 1
+
+    #meta data
+    f.write("{}\n".format(np.prod(a.shape)))
+
+    #fill data array.
+    i=0
+    for x in np.nditer(a, order='C'):
+        if i==0:
+            f.write("%.12f" % x)
+        else:
+            f.write(" %.12f" % x)
+        i=i+1
     f.close()
 
     return zero_ctr
@@ -110,6 +164,13 @@ def write_project_cpp(model):
             for layer in model.get_layers():
                 for w in layer.get_weights():
                     newline += '#include "weights/{}.h"\n'.format(w.name)
+
+        elif '//hls-fpga-machine-learning insert load weights' in line:
+            newline = line
+            for layer in model.get_layers():
+                for w in layer.get_weights():
+                    newline += '    load_txt_file< weight_default_t, config{}::n_in * config{}::n_out >({}, "{}.txt");\n'.format(layer.index, layer.index, w.name, w.name)
+                    newline += '    load_txt_file< bias_default_t, config{}::n_out >({}, "{}.txt");\n'.format(layer.index, w.name, w.name)
 
         #Add input/output type
         elif '//hls-fpga-machine-learning insert IO' in line:
@@ -239,6 +300,7 @@ def write_weights(model):
     for layer in model.get_layers():
         for weights in layer.get_weights():
             print_array_to_cpp(weights.name, weights.data, model.get_output_dir())
+            print_array_to_txt(weights.name, weights.data, model.get_output_dir())
 
 def write_test_bench(model):
     ###################
@@ -264,6 +326,8 @@ def write_test_bench(model):
                 output_str = '  ' + out.definition_cpp() + ' = {};\n'
                 default_val = ','.join(str(o) for o in [0] * out.size())
                 newline += output_str.format('{' + default_val + '}')
+            newline += 'const unsigned short N_INPUTS = ' + str(inp.size()) + ';\n'
+            newline += 'const unsigned short N_OUTPUTS = ' + str(out.size()) + ';\n'
         elif '//hls-fpga-machine-learning insert top-level-function' in line:
             newline = line
 
