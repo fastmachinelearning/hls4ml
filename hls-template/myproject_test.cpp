@@ -63,6 +63,8 @@ std::string get_exe_path()
 
 int main(int argc, char **argv)
 {
+  int retval = 0;
+
   //hls-fpga-machine-learning insert data
 
   //hls-fpga-machine-learning insert top-level-function
@@ -74,7 +76,7 @@ int main(int argc, char **argv)
   std::ofstream results;
   results.open(LOG_FILE);
   for(int i=0; i<N_OUTPUTS; i++){
-    results << res_str[i] << " ";
+    results << layer_out[i] << " ";
   }
   results << std::endl;
   results.close();
@@ -98,5 +100,5 @@ int main(int argc, char **argv)
   }
 #endif
 
-  return 0;
+  return retval;
 }

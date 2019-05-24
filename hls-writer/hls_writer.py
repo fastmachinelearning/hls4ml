@@ -169,8 +169,12 @@ def write_project_cpp(model):
             newline = line
             for layer in model.get_layers():
                 for w in layer.get_weights():
-                    newline += '    load_txt_file< weight_default_t, config{}::n_in * config{}::n_out >({}, "{}.txt");\n'.format(layer.index, layer.index, w.name, w.name)
-                    newline += '    load_txt_file< bias_default_t, config{}::n_out >({}, "{}.txt");\n'.format(layer.index, w.name, w.name)
+                    # TODO(gdg): is there a better way to distinguish between
+                    # weight and bias?
+                    if w.type == 'weight_default_t':
+                        newline += '    load_txt_file< {}, config{}::n_in * config{}::n_out >({}, "{}.txt");\n'.format(w.type, layer.index, layer.index, w.name, w.name)
+                    if w.type == 'bias_default_t':
+                        newline += '    load_txt_file< {}, config{}::n_out >({}, "{}.txt");\n'.format(w.type, layer.index, w.name, w.name)
 
         #Add input/output type
         elif '//hls-fpga-machine-learning insert IO' in line:
@@ -322,12 +326,16 @@ def write_test_bench(model):
                 input_str = '  ' + inp.definition_cpp() + ' = {};\n'
                 default_val = ','.join(str(i) for i in [0] * inp.size())
                 newline += input_str.format('{' + default_val + '}')
+                # TODO(gdg): I am assuming only one input variable!
+                newline += '  const unsigned short N_INPUTS = ' + str(inp.size()) + ';\n'
             for out in model.get_output_variables():
                 output_str = '  ' + out.definition_cpp() + ' = {};\n'
                 default_val = ','.join(str(o) for o in [0] * out.size())
                 newline += output_str.format('{' + default_val + '}')
-            newline += 'const unsigned short N_INPUTS = ' + str(inp.size()) + ';\n'
-            newline += 'const unsigned short N_OUTPUTS = ' + str(out.size()) + ';\n'
+                # TODO(gdg): I am assuming only one output variable!
+                newline += '  const unsigned short N_OUTPUTS = ' + str(out.size()) + ';\n'
+                newline += '  result_t *layer_out = ' + out.name + ';\n'
+
         elif '//hls-fpga-machine-learning insert top-level-function' in line:
             newline = line
 
