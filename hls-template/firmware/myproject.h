@@ -30,12 +30,17 @@
 #ifndef __SYNTHESIS__
 
 #include <fstream>
-#define xstr(a) str(a)
-#define str(a) #a
+
+//
+// Remember to add "add_files -tb firmware/weights"
+// to the configuration script "build_prj.tcl"
+//
+#define WEIGHTS_DIR "weights"
+
 template<class T, size_t SIZE>
 void load_txt_file(T *w, const char* fname) {
 
-    std::string full_path = std::string(xstr(WEIGHTS_DIR)) + "/" + std::string(fname);
+    std::string full_path = std::string(WEIGHTS_DIR) + "/" + std::string(fname);
     std::ifstream infile(full_path.c_str(), std::ios::binary);
 
     if (infile.fail()) {
