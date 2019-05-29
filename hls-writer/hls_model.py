@@ -33,13 +33,42 @@ class HLSModel(object):
             if len(outputs) == 0:
                 outputs = [name]
 
-            node = layer_map[kind](self, name, layer, inputs, outputs)
-            self.graph[name] = node
-            for o in node.outputs:
-                out_var = node.get_output_variable(output_name=o)
-                if o in self.outputs:
-                    out_var.type = 'result_t'
-                self.output_vars[o] = out_var
+            self.graph[name] = self.make_node(kind, name, layer, inputs, outputs)
+
+    def make_node(self, kind, name, attributes, inputs, outputs=None):
+        node = layer_map[kind](self, name, attributes, inputs, outputs)
+        for o in node.outputs:
+            out_var = node.get_output_variable(output_name=o)
+            if o in self.outputs:
+                out_var.type = 'result_t'
+            self.output_vars[o] = out_var
+
+        return node
+
+    def remove_node(self, node, rewire=True):
+        if rewire:
+            if len(node.inputs) > 1 or len(node.outputs) > 1:
+                raise Exception('Cannot rewire a node with multiple inputs/outputs')
+            prev_node = self.graph.get(node.inputs[0])
+            next_node = next((x for x in self.graph.values() if x.inputs[0] == node.outputs[0]), None)
+            if prev_node is not None and next_node is not None:
+                next_node.inputs[0] = prev_node.outputs[0]
+            else:
+                raise Exception('Cannot rewire a node without a parent or child')
+        
+        del self.output_vars[node.outputs[0]]
+        del self.graph[node.name]
+
+    def replace_node(self, old_node, new_node):
+        prev_node = self.graph.get(old_node.inputs[0])
+        next_node = next((x for x in self.graph.values() if x.inputs[0] == old_node.outputs[0]), None)
+        if next_node is not None:
+            next_node.inputs[0] = new_node.outputs[0]
+        if prev_node is not None:
+            if new_node.inputs is None or len(new_node.inputs) == 0: # Check if already rewired
+                new_node.inputs = [prev_node.outputs[0]]
+        
+        self.remove_node(old_node, rewire=False)
 
     def get_weights_data(self, layer_name, var_name):
         return self.reader.get_weights_data(layer_name, var_name)
