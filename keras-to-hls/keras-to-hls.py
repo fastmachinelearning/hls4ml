@@ -15,6 +15,8 @@ MAXMULT = 4096
 filedir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,os.path.join(filedir, "..", "hls-writer"))
 from hls_writer import parse_config, write_hls
+sys.path.insert(0,os.path.join(filedir, "..", "hls-writer/optimizer"))
+from optimizer import optimize_model
 from hls_model import HLSModel
 
 class KerasDataReader:
@@ -368,6 +370,7 @@ def main():
 
     reader = KerasDataReader(yamlConfig)
     hls_model = HLSModel(yamlConfig, reader, layer_list, input_layers, output_layers)
+    optimize_model(hls_model, ['eliminate_linear_activation'])
     write_hls(hls_model)
 
 
