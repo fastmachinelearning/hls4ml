@@ -47,10 +47,10 @@ void compute_compressed_layer(
     #pragma HLS ARRAY_PARTITION variable=acc    complete
     #pragma HLS ARRAY_PARTITION variable=biases complete
     #pragma HLS ARRAY_RESHAPE   variable=weights block factor=multiplier_limit
-    //if (CONFIG_T::store_weights_in_bram){
-    // #pragma HLS RESOURCE variable=weights core=ROM_1P_BRAM
-    //#pragma HLS data_pack variable=weights struct_level 
-    //}
+    if (CONFIG_T::store_weights_in_bram){
+       #pragma HLS RESOURCE variable=weights core=ROM_1P_BRAM
+       #pragma HLS data_pack variable=weights struct_level 
+    }
     ACCUMULATOR_INIT_L:
     for(unsigned i = 0; i < CONFIG_T::n_out; i++) {
       #pragma HLS UNROLL
