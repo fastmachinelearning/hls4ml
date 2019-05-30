@@ -29,9 +29,9 @@
 
 namespace nnet {
   template<typename CONFIG_T>
-  void fillMult(int aindex,
-  	       typename CONFIG_T::accum_t* acc,
-  	       typename CONFIG_T::accum_t weight);
+    void fillMult(typename CONFIG_T::index_t aindex,
+		  typename CONFIG_T::accum_t acc[],
+		  typename CONFIG_T::accum_t weight);
 template<class data_T, class res_T, typename CONFIG_T>
 void compute_compressed_layer(
     data_T    data[CONFIG_T::n_in],
@@ -49,26 +49,23 @@ void compute_compressed_layer(
     #pragma HLS ARRAY_RESHAPE   variable=weights block factor=multiplier_limit
     //if (CONFIG_T::store_weights_in_bram){
     // #pragma HLS RESOURCE variable=weights core=ROM_1P_BRAM
-    #pragma HLS data_pack variable=weights struct_level 
+    //#pragma HLS data_pack variable=weights struct_level 
     //}
     ACCUMULATOR_INIT_L:
     for(unsigned i = 0; i < CONFIG_T::n_out; i++) {
       #pragma HLS UNROLL
       acc[i] = (typename CONFIG_T::accum_t) (biases[i]);
     }
-    #pragma HLS DEPENDENCE variable=weights,acc,biases inter false
     // Do the compressed matrix-multiply
-    int rufactor = CONFIG_T::reuse_factor;
+    static const int rufactor = CONFIG_T::reuse_factor;
     COMPRESSED_MAT_MULT_L:
     for(unsigned ru = 0; ru < rufactor; ru++) {
       #pragma HLS PIPELINE  II=1 rewind
       typename CONFIG_T::accum_t  tmpmult[multiplier_limits];
       #pragma HLS ARRAY_PARTITION variable=tmpmult   complete
-      #pragma HLS DEPENDENCE variable=tmpmult inter false
 
       typename CONFIG_T::index_t  tmpindx[multiplier_limits];
       #pragma HLS ARRAY_PARTITION variable=tmpindx   complete
-      #pragma HLS DEPENDENCE variable=tmpindx inter false
 
       for(unsigned i = 0; i < multiplier_limit; i++) { 
         #pragma HLS UNROLL 
@@ -82,15 +79,14 @@ void compute_compressed_layer(
       }
       typename CONFIG_T::accum_t mult[CONFIG_T::n_out];
       #pragma HLS ARRAY_PARTITION variable=mult complete
-      #pragma HLS DEPENDENCE variable=mult inter false
-      ResetMult: for(int imult = 0; imult < multiplier_limit; imult++) {
+      ResetMult: for(int imult = 0; imult < CONFIG_T::n_out; imult++) {
             #pragma HLS UNROLL
             mult[imult] = 0;                                                                                                                                                                                                                                                 
       }
-      for(unsigned i = 0; i < multiplier_limit; i++) { 
+      for(unsigned ifm = 0; ifm < multiplier_limit; ifm++) { 
         #pragma HLS UNROLL 
-        typename CONFIG_T::weight_t cache = tmpmult[i];
-        typename CONFIG_T::index_t a      = tmpindx[i];
+        typename CONFIG_T::weight_t cache = tmpmult[ifm];
+        typename CONFIG_T::index_t a      = tmpindx[ifm];
 	//mult[a] += cache;
 	fillMult<CONFIG_T>(a,mult,cache);
       }
@@ -105,11 +101,11 @@ void compute_compressed_layer(
         res[i] = (res_T) (acc[i]);
     }
 }
- template<typename CONFIG_T>
- void fillMult(int aindex,
-	typename CONFIG_T::accum_t *mult,
-	typename CONFIG_T::accum_t weight) { 
-  for(int k = 0; k < CONFIG_T::n_out; k++) { 
+template<typename CONFIG_T>
+void fillMult(typename CONFIG_T::index_t aindex,
+    typename CONFIG_T::accum_t mult[],
+    typename CONFIG_T::accum_t weight) { 
+  for(typename CONFIG_T::index_t k = 0; k < CONFIG_T::n_out; k++) { 
    #pragma HLS UNROLL
     if(k==aindex) mult[k] += weight;
   }
