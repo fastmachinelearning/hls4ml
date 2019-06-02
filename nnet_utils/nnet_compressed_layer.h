@@ -30,7 +30,7 @@
 namespace nnet {
   template<typename CONFIG_T>
     void fillMult(typename CONFIG_T::index_t aindex,
-		  typename CONFIG_T::accum_t acc[],
+		  typename CONFIG_T::accum_t *acc,
 		  typename CONFIG_T::accum_t weight);
 template<class data_T, class res_T, typename CONFIG_T>
 void compute_compressed_layer(
@@ -47,17 +47,17 @@ void compute_compressed_layer(
     #pragma HLS ARRAY_PARTITION variable=acc    complete
     #pragma HLS ARRAY_PARTITION variable=biases complete
     #pragma HLS ARRAY_RESHAPE   variable=weights block factor=multiplier_limit
-    if (CONFIG_T::store_weights_in_bram){
-       #pragma HLS RESOURCE variable=weights core=ROM_1P_BRAM
-       #pragma HLS data_pack variable=weights struct_level 
-    }
+    //if (CONFIG_T::store_weights_in_bram){
+    //#pragma HLS RESOURCE variable=weights core=ROM_1P_BRAM
+    #pragma HLS data_pack variable=weights struct_level 
+    //}
     ACCUMULATOR_INIT_L:
     for(unsigned i = 0; i < CONFIG_T::n_out; i++) {
       #pragma HLS UNROLL
       acc[i] = (typename CONFIG_T::accum_t) (biases[i]);
     }
     // Do the compressed matrix-multiply
-    static const int rufactor = CONFIG_T::reuse_factor;
+    const int rufactor = CONFIG_T::reuse_factor;
     COMPRESSED_MAT_MULT_L:
     for(unsigned ru = 0; ru < rufactor; ru++) {
       #pragma HLS PIPELINE  II=1 rewind
@@ -103,9 +103,9 @@ void compute_compressed_layer(
 }
 template<typename CONFIG_T>
 void fillMult(typename CONFIG_T::index_t aindex,
-    typename CONFIG_T::accum_t mult[],
+    typename CONFIG_T::accum_t *mult,
     typename CONFIG_T::accum_t weight) { 
-  for(typename CONFIG_T::index_t k = 0; k < CONFIG_T::n_out; k++) { 
+  for(unsigned  k = 0; k < CONFIG_T::n_out; k++) { 
    #pragma HLS UNROLL
     if(k==aindex) mult[k] += weight;
   }
