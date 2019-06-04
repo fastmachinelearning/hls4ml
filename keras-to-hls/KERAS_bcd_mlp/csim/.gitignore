@@ -1,4 +1,4 @@
-*.d
 *.o
 *.log
+*.d
 myproject_test
