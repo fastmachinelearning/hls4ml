@@ -17,9 +17,8 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
     static const bool store_weights_in_bram = false;
-    typedef {beta_t} beta_t;
+    typedef {bias_t} beta_t;
     typedef {scale_t} scale_t;
-    typedef {mean_t} mean_t;
 }};\n"""
 
 conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
@@ -126,7 +125,7 @@ config_templates = {
 }
 
 dense_function_template = 'nnet::dense<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
-batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {beta}, {mean});'
+batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
 conv1d_function_template = 'nnet::conv_1d<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 conv2d_function_template = 'nnet::conv_2d<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'

@@ -595,19 +595,21 @@ class BatchNormalization(Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
-        var = self.model.get_weights_data(self.name, 'moving_variance')
         gamma = self.model.get_weights_data(self.name, 'gamma')
-        scale_data = gamma / np.sqrt(var + self.get_attr('epsilon'))
+        beta = self.model.get_weights_data(self.name, 'beta')
+        mean = self.model.get_weights_data(self.name, 'moving_mean')
+        var = self.model.get_weights_data(self.name, 'moving_variance')
+        
+        scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
+        bias = beta - gamma * mean / np.sqrt(var + self.get_attr('epsilon'))
 
-        self.add_weights_variable(name='scale', data=scale_data)
-        self.add_weights_variable(name='beta', data='beta')
-        self.add_weights_variable(name='mean', data='moving_mean')
+        self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
+        self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
 
     def function_cpp(self):
         params = self._default_function_params()
         params['scale'] = self.get_weights('scale').name
-        params['beta'] = self.get_weights('beta').name
-        params['mean'] = self.get_weights('mean').name
+        params['bias'] = self.get_weights('bias').name
 
         return [self._function_template.format(**params)]
 
