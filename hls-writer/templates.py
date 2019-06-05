@@ -17,7 +17,7 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
     static const bool store_weights_in_bram = false;
-    typedef {bias_t} beta_t;
+    typedef {bias_t} bias_t;
     typedef {scale_t} scale_t;
 }};\n"""
 
