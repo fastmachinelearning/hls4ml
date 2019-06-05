@@ -29,9 +29,8 @@ namespace nnet {
 struct batchnorm_config
 {
     // Internal data type definitions
-    typedef float beta_t;
+    typedef float bias_t;
     typedef float scale_t;
-    typedef float mean_t;
 
     // Layer Sizes
     static const unsigned n_in = 10;
@@ -50,14 +49,13 @@ void normalize(
     data_T    data[CONFIG_T::n_in],
     res_T     res[CONFIG_T::n_in],
     typename CONFIG_T::scale_t  scale[CONFIG_T::n_in],
-    typename CONFIG_T::beta_t   beta[CONFIG_T::n_in],
-    typename CONFIG_T::mean_t   mean[CONFIG_T::n_in]
+    typename CONFIG_T::bias_t   bias[CONFIG_T::n_in]
 )
 {
     data_T cache;
    
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
-    #pragma HLS function_instantiate variable=scale,beta,mean
+    #pragma HLS function_instantiate variable=scale,bias
 
     if (CONFIG_T::io_type == io_parallel) {
         // For parallel inputs:
@@ -67,16 +65,14 @@ void normalize(
 
         // #pragma HLS ARRAY_PARTITION variable=weights complete // remove this line for now, it breaks compression sometimes
         #pragma HLS ARRAY_PARTITION variable=scale complete
-        #pragma HLS ARRAY_PARTITION variable=beta complete
-        #pragma HLS ARRAY_PARTITION variable=mean complete
+        #pragma HLS ARRAY_PARTITION variable=bias complete
 
         int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_in) / float(CONFIG_T::reuse_factor));
         #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
     } else if (CONFIG_T::io_type == io_serial) {
         #pragma HLS ARRAY_RESHAPE variable=scale complete dim=1
-        #pragma HLS ARRAY_RESHAPE variable=beta complete dim=1
-        #pragma HLS ARRAY_RESHAPE variable=mean complete dim=1
+        #pragma HLS ARRAY_RESHAPE variable=bias complete dim=1
         #pragma HLS DATAFLOW
     }            
 
@@ -88,10 +84,10 @@ void normalize(
         }
         
         if (CONFIG_T::n_filt==-1) {
-            res[ires] = (data[ires]-mean[ires])*scale[ires]+beta[ires];
+            res[ires] = data[ires] * scale[ires] + bias[ires];
 	    } else {
             int norm_index = ires%CONFIG_T::n_filt;
-            res[ires] = (data[ires]-mean[norm_index])*scale[norm_index]+beta[norm_index];
+            res[ires] = data[ires] * scale[norm_index] + bias[norm_index];
         }
 	}
 }

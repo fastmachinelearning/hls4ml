@@ -47,11 +47,7 @@ def print_array_to_cpp(name, a, odir, i_part = 0, n_part = 1, i_subout = 0, n_su
             f.write("bias_default_t {}_{}".format(name,i_part))
         else:
             f.write("bias_default_t {}".format(name))
-    elif re.match(r"^beta\d*$", name):
-        f.write("beta_default_t {}".format(name))
-    elif re.match(r"^mean\d*$", name):
-        f.write("mean_default_t {}".format(name))
-    elif re.match(r"^scale\d*$", name):
+    elif re.match(r"^s\d*$", name):
         f.write("scale_default_t {}".format(name))
     else:
         raise Exception('ERROR: Unkown weights type')
@@ -209,8 +205,6 @@ def write_parameters(model):
             newline += 'typedef {precision} bias_default_t;\n'.format(precision=model.get_default_precision())
             newline += 'typedef {precision} input_t;\n'.format(precision=model.get_default_precision())
             newline += 'typedef {precision} result_t;\n'.format(precision=model.get_default_precision())
-            newline += 'typedef {precision} beta_default_t;\n'.format(precision=model.get_default_precision())
-            newline += 'typedef {precision} mean_default_t;\n'.format(precision=model.get_default_precision())
             newline += 'typedef {precision} scale_default_t;\n'.format(precision=model.get_default_precision())
 
             newline += '\n'
