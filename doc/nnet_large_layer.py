@@ -3,15 +3,20 @@ from __future__ import print_function
 import numpy as np
 from math import ceil
 
-def block_partition(data, n_in, n_out, block_factor):
-    rf = int(ceil((n_in * n_out) / float(block_factor)))
-    return np.resize(weights, (block_factor, rf))
+def DIV_ROUNDUP(n, d):
+    return int(ceil((n / float(d))))
+
+def MIN(a, b):
+    return a if (a < b) else b
 
 n_in = 16
 n_out = 8
 RF = 8
 
-block_factor = int(ceil((n_in * n_out) / float(RF)))
+block_factor = DIV_ROUNDUP(n_in * n_out , RF)
+multfactor = MIN(n_in, RF)
+multiplier_limit = DIV_ROUNDUP(n_in * n_out, multfactor)
+multscale = multiplier_limit / n_out
 
 print("INFO: n_in = ", n_in)
 print("INFO: n_out = ", n_out)
@@ -22,20 +27,53 @@ print("INFO: n_in * n_out = ", n_in * n_out)
 # Create and initialize arrays
 data = np.arange(n_in)
 biases = np.arange(n_out)
-weights = np.arange( n_in * n_out ).reshape(n_in, n_out)
+weights = np.arange( n_in * n_out)
 
+# Python implementation of nnet_utils/nnet_large_layer.h
 def nnet_large_layer(data, weights, biases):
-    #weights = block_partition(weights, n_in, n_out, block_factor)
-    print("INFO: weights.shape = ", weights.shape)
-    imp_in_index = 0
+
+    acc = np.zeros(n_out)
+    for iacc in range(n_out):
+        acc[iacc] = biases[iacc]
+
     for ir in range(RF):
         print("INFO: ir", ir, " =============================")
-        for im in range(block_factor):
-            w_index = ir + (RF * im)
-            d_index = w_index % n_in
-            if (w_index >= n_in * n_out):
-                pass
-            print("INFO: weights[", w_index, "], data[", d_index, "]")
-            #print("INFO: weights[", im, "][", ir, "], weights[", w_index, "], data[", d_index, "]")
+        tmpmult = np.zeros(block_factor)
 
-nnet_large_layer(data, weights, biases)
+        for im in range(block_factor):
+            w_index = ir + RF * im
+            in_index = w_index % n_in
+            if (w_index >= n_in * n_out):
+                continue
+            print("INFO: weights[", w_index, "], data[", in_index, "]")
+            tmpmult[im] = data[in_index] * weights[w_index]
+
+        mult = np.zeros(multiplier_limit)
+
+        for im in range(block_factor):
+            w_index = ir + RF * im
+            out_index = int(w_index / multfactor)
+            if (out_index >= multiplier_limit):
+                continue
+            mult[out_index] = mult[out_index] + tmpmult[im]
+
+        for im in range(multiplier_limit):
+            out_index = int(im / multscale)
+            acc[out_index] = acc[out_index] + mult[im]
+
+    res = np.zeros(n_out)
+
+    for ires in range(n_out):
+        res[ires] = acc[ires]
+
+    return res
+
+# A reference implementation of a FC layer
+def fully_connected_layer(data, weights, biases):
+    return np.matmul(data, weights.reshape(n_in, n_out)) + biases
+
+implementation_results = nnet_large_layer(data, weights, biases)
+reference_results = fully_connected_layer(data, weights, biases)
+
+print("INFO: implementation: ", implementation_results)
+print("INFO: reference     : ", reference_results)
