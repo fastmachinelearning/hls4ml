@@ -6,9 +6,9 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
-    typedef accum_default_t accum_t;
-    typedef bias_default_t bias_t;
-    typedef weight_default_t weight_t;
+    typedef {accum_t} accum_t;
+    typedef {bias_t} bias_t;
+    typedef {weight_t} weight_t;
 }};\n"""
 
 batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
@@ -17,8 +17,8 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
     static const bool store_weights_in_bram = false;
-    typedef bias_default_t bias_t;
-    typedef scale_default_t scale_t;
+    typedef {bias_t} bias_t;
+    typedef {scale_t} scale_t;
 }};\n"""
 
 conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
@@ -33,9 +33,9 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
-    typedef accum_default_t accum_t;
-    typedef bias_default_t bias_t;
-    typedef weight_default_t weight_t;
+    typedef {accum_t} accum_t;
+    typedef {bias_t} bias_t;
+    typedef {weight_t} weight_t;
 }};\n"""
 
 conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
@@ -56,9 +56,9 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
-    typedef accum_default_t accum_t;
-    typedef bias_default_t bias_t;
-    typedef weight_default_t weight_t;
+    typedef {accum_t} accum_t;
+    typedef {bias_t} bias_t;
+    typedef {weight_t} weight_t;
 }};\n"""
 
 activ_config_template = """struct {type}_config{index} : nnet::activ_config {{

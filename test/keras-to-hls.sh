@@ -98,8 +98,10 @@ do
    echo "ClockPeriod: ${clock}" >> ${file}
    echo "" >> ${file}
    echo "IOType: ${io}" >> ${file}
-   echo "ReuseFactor: ${rf}" >> ${file}
-   echo "DefaultPrecision: ${type} " >> ${file}
+   echo "HLSConfig:" >> ${file}
+   echo "  Model:" >> ${file}
+   echo "    ReuseFactor: ${rf}" >> ${file}
+   echo "    Precision: ${type} " >> ${file}
 
    ${pycmd} ../keras-to-hls/keras-to-hls.py -c ${file} || exit 1
    rm ${file}

@@ -6,5 +6,7 @@ XilinxPart: xcku115-flvb2104-2-i
 ClockPeriod: 5
 
 IOType: io_parallel # options: io_serial/io_parallel
-ReuseFactor: 1
-DefaultPrecision: ap_fixed<16,6> 
+HLSConfig:
+  Model:
+    Precision: ap_fixed<16,6>
+    ReuseFactor: 1

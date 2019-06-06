@@ -85,7 +85,7 @@ do
    echo "" >> ${file}
    echo "IOType: ${io}" >> ${file}
    echo "ReuseFactor: ${rf}" >> ${file}
-   echo "DefaultPrecision: ap_fixed<18,8> " >> ${file}
+   echo "Precision: ap_fixed<18,8> " >> ${file}
 
    ${pycmd} ../pytorch-to-hls/pytorch-to-hls.py -c ${file} || exit 1
    rm ${file}

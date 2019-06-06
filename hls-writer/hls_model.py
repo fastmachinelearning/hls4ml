@@ -7,9 +7,112 @@ from collections import OrderedDict
 
 from templates import get_config_template, get_function_template
 
+class HLSConfig(object):
+    def __init__(self, config):
+        self.config = config
+
+        self.model_precision = {}
+        self.layer_type_precision = {}
+        self.layer_name_precision = {}
+
+        self.model_rf = None
+        self.layer_type_rf = {}
+        self.layer_name_rf = {}
+
+        self._parse_hls_config()
+
+    def get_config_value(self, key):
+        return self.config[key]
+
+    def get_project_name(self):
+        return self.get_config_value('ProjectName')
+
+    def get_output_dir(self):
+        return self.get_config_value('OutputDir')
+
+    def get_precision(self, layer, var='default'):
+        precision = self.layer_name_precision.get(layer.name.lower() + '_' + var)
+        type_name = layer.name.lower() + '_' + var + '_t'
+        if precision is None:
+            precision = self.layer_name_precision.get(layer.name.lower() + '_default')
+            type_name = layer.name.lower() + '_default_t'
+
+        if precision is None:
+            precision = self.layer_type_precision.get(layer.__class__.__name__.lower() + '_' + var)
+            type_name = layer.__class__.__name__ + '_' + var + '_t'
+        if precision is None:
+            precision = self.layer_type_precision.get(layer.__class__.__name__.lower() + '_default')
+            type_name = layer.__class__.__name__ + '_default_t'
+
+        if precision is None:
+            precision = self.model_precision.get(var)
+            type_name = var + '_default_t'
+        if precision is None:
+            precision = self.model_precision.get('default')
+            type_name = 'model_default_t'
+
+        if precision is None:
+            raise Exception('No precision for {}->{} found and no default specified.'.format(layer.name, var))
+
+        return (precision, type_name)
+
+    def get_reuse_factor(self, layer):
+        rf = self.layer_name_rf.get(layer.name.lower())
+        if rf is None:
+            rf = self.layer_type_rf.get(layer.__class__.__name__.lower())
+        if rf is None:
+            rf = self.model_rf
+
+        if rf is None:
+            raise Exception('No reuse factor for {} found and no default specified.'.format(layer.name))
+
+        return rf
+
+    def _parse_hls_config(self):
+        hls_config = self.config['HLSConfig']
+        model_cfg = hls_config.get('Model')
+        if model_cfg is not None:
+            precision_cfg = model_cfg.get('Precision')
+            if precision_cfg is not None:
+                if isinstance(precision_cfg, dict):
+                    for var, precision in precision_cfg.items():
+                        self.model_precision[var] = precision
+                else:
+                    self.model_precision['default'] = precision_cfg # Default precision for everything
+
+            self.model_rf = model_cfg.get('ReuseFactor')
+
+        layer_type_cfg = hls_config.get('LayerType')
+        if layer_type_cfg is not None:
+            for layer_type, layer_cfg in layer_type_cfg.items():
+                precision_cfg = layer_cfg.get('Precision')
+                if isinstance(precision_cfg, dict):
+                    for var, precision in precision_cfg.items():
+                        self.layer_type_precision[layer_type.lower() + '_' + var] = precision
+                else:
+                    self.layer_type_precision[layer_type.lower() + '_default'] = precision_cfg
+
+                rf = layer_cfg.get('ReuseFactor')
+                if rf is not None:
+                    self.layer_type_rf[layer_type.lower()] = rf
+
+        layer_name_cfg = hls_config.get('LayerName')
+        if layer_name_cfg is not None:
+            for layer_name, layer_cfg in layer_name_cfg.items():
+                precision_cfg = layer_cfg.get('Precision')
+                if isinstance(precision_cfg, dict):
+                    for var, precision in precision_cfg.items():
+                        self.layer_name_precision[layer_name.lower() + '_' + var] = precision
+                else:
+                    self.layer_name_precision[layer_name.lower() + '_default'] = precision_cfg
+
+                rf = layer_cfg.get('ReuseFactor')
+                if rf is not None:
+                    self.layer_name_rf[layer_name.lower()] = rf
+
 class HLSModel(object):
     def __init__(self, config, data_reader, layer_list, inputs=None, outputs=None):
-        self.config = config
+        self.config = HLSConfig(config)
         self.reader = data_reader
 
         # If not provided, assumes layer_list[0] is input, and layer_list[-1] is output
@@ -35,11 +138,6 @@ class HLSModel(object):
 
             node = layer_map[kind](self, name, layer, inputs, outputs)
             self.graph[name] = node
-            for o in node.outputs:
-                out_var = node.get_output_variable(output_name=o)
-                if o in self.outputs:
-                    out_var.type = 'result_t'
-                self.output_vars[o] = out_var
 
     def get_weights_data(self, layer_name, var_name):
         return self.reader.get_weights_data(layer_name, var_name)
@@ -58,18 +156,6 @@ class HLSModel(object):
         self.index += 1
         return self.index
 
-    def get_config_value(self, key):
-        return self.config[key]
-
-    def get_project_name(self):
-        return self.get_config_value('ProjectName')
-
-    def get_output_dir(self):
-        return self.get_config_value('OutputDir')
-
-    def get_default_precision(self):
-        return self.get_config_value('DefaultPrecision')
-
     def get_layers(self):
         return self.graph.values()
 
@@ -78,6 +164,11 @@ class HLSModel(object):
         for inp in self.inputs:
             variables.append(self.graph[inp].get_output_variable())
         return variables
+
+    def register_output_variable(self, out_name, variable):
+        if out_name in self.outputs:
+            variable.type = 'result_t'
+        self.output_vars[out_name] = variable
 
     def get_output_variables(self):
         variables = []
@@ -174,6 +265,10 @@ class Layer(object):
         self._config_template = get_config_template(self.__class__.__name__)
         self.weights = OrderedDict()
         self.variables = OrderedDict()
+        self.precision = OrderedDict()
+        accum_precision = self.model.config.get_precision(self, 'accum')
+        self.precision[accum_precision[1]] = accum_precision[0]
+        self.set_attr('accum_t', accum_precision[1])
 
         self.initialize()
 
@@ -212,10 +307,10 @@ class Layer(object):
             out_name = self.outputs[0]
 
         if precision is None:
-            precision = self.model.get_default_precision()
+            precision, _ = self.model.config.get_precision(self, var='result')
 
         if pragma == 'auto':
-            if self.model.get_config_value('IOType') == 'io_serial':
+            if self.model.config.get_config_value('IOType') == 'io_serial':
                 pragma = 'stream'
             else:
                 if self.name in self.model.inputs:
@@ -226,11 +321,14 @@ class Layer(object):
         out = ArrayVariable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, pragma=pragma, index=self.index)
 
         self.variables[out_name] = out
+        self.model.register_output_variable(out_name, out)
+
+        self.precision[out.type] = out.precision
 
     def add_weights(self, quantize=0):
         data = self.model.get_weights_data(self.name, 'kernel')
 
-        self.add_weights_variable(name='weight', var_name='w{index}', type_name='weight_default_t', data=data, quantize=quantize)
+        self.add_weights_variable(name='weight', var_name='w{index}', data=data, quantize=quantize)
 
     def add_bias(self, quantize=0):
         data = self.model.get_weights_data(self.name, 'bias')
@@ -238,14 +336,17 @@ class Layer(object):
             data = np.zeros(self.get_output_variable().shape[-1])
             quantize = 0 # Don't quantize non-existant bias
 
-        self.add_weights_variable(name='bias', var_name='b{index}', type_name='bias_default_t', data=data, quantize=quantize)
+        self.add_weights_variable(name='bias', var_name='b{index}', data=data, quantize=quantize)
 
-    def add_weights_variable(self, name, var_name=None, type_name='weight_default_t', precision=None, data=None, quantize=0):
+    def add_weights_variable(self, name, var_name=None, type_name=None, precision=None, data=None, quantize=0):
         if var_name is None:
             var_name = name + '{index}'
 
         if precision is None:
-            precision = self.model.get_default_precision()
+            precision, new_type_name = self.model.config.get_precision(self, var=name)
+
+        if type_name is None:
+            type_name = new_type_name
 
         if data is None:
             data = self.model.get_weights_data(self.name, name)
@@ -258,6 +359,7 @@ class Layer(object):
         var = WeightVariable(var_name, type_name=type_name, precision=precision, data=data, index=self.index)
 
         self.weights[name] = var
+        self.precision[var.type] = var.precision
 
     def _default_function_params(self):
         params = {}
@@ -273,10 +375,17 @@ class Layer(object):
         params = {}
         params.update(self.attributes)
         params['index'] = self.index
-        params['iotype'] = self.model.get_config_value('IOType')
-        params['reuse'] = self.model.get_config_value('ReuseFactor')
+        params['iotype'] = self.model.config.get_config_value('IOType')
+        params['reuse'] = self.model.config.get_reuse_factor(self)
+
+        # data types
+        for weight_name, variable in self.weights.items():
+            params[weight_name + '_t'] = variable.type
 
         return params
+
+    def get_layer_precision(self):
+        return self.precision
 
     # myproject.cpp/h
     def function_cpp(self):
