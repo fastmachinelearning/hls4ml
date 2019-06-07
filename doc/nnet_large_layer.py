@@ -37,7 +37,7 @@ def nnet_large_layer(data, weights, biases):
         acc[iacc] = biases[iacc]
 
     for ir in range(RF):
-        print("INFO: ir", ir, " =============================")
+        print("INFO: --- reuse --- ir", ir, " -----------------------------")
         tmpmult = np.zeros(block_factor)
 
         for im in range(block_factor):
@@ -45,7 +45,7 @@ def nnet_large_layer(data, weights, biases):
             in_index = w_index % n_in
             if (w_index >= n_in * n_out):
                 continue
-            print("INFO: weights[", w_index, "], data[", in_index, "]")
+            print("INFO: data[", in_index, "], weights[", w_index, "]")
             tmpmult[im] = data[in_index] * weights[w_index]
 
         mult = np.zeros(multiplier_limit)
@@ -75,5 +75,6 @@ def fully_connected_layer(data, weights, biases):
 implementation_results = nnet_large_layer(data, weights, biases)
 reference_results = fully_connected_layer(data, weights, biases)
 
+print("INFO:===============================================================================")
 print("INFO: implementation: ", implementation_results)
 print("INFO: reference     : ", reference_results)
