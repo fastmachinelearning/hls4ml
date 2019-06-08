@@ -1,8 +1,21 @@
-dia2pdf: nnet_large_layer.pdf
+PY_FILE=nnet_large_layer.py
+DIA_FILE=nnet_large_layer.dia
+PDF_FILE=nnet_large_layer.pdf
+
+dia2pdf: $(PDF_FILE)
 .PHONY: dia2pdf
 
-nnet_large_layer.pdf: nnet_large_layer.dia
+$(PDF_FILE): $(DIA_FILE)
 	dia -e $@ $<
 
+view-dia: $(DIA_FILE)
+	dia $< &
+.PHONY: view-dia
+
+view-pdf: $(PDF_FILE)
+	evince $< &
+.PHONY: view-pdf
+
 run:
-	python ./nnet_large_layer.py
+	python ./$(PY_FILE)
+.PHONY: run
