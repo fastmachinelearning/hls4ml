@@ -25,9 +25,12 @@ print("INFO: block_factor = ", block_factor)
 print("INFO: n_in * n_out = ", n_in * n_out)
 
 # Create and initialize arrays
-data = np.arange(n_in)
-biases = np.arange(n_out)
-weights = np.arange( n_in * n_out)
+data = np.arange(n_in).astype(float)
+biases = np.arange(n_out).astype(float)
+weights = np.arange( n_in * n_out).astype(float)
+
+# transpose the weights matrix
+weights_T = weights.reshape(n_in, n_out).transpose().reshape(n_in * n_out, 1)
 
 # Python implementation of nnet_utils/nnet_large_layer.h
 def nnet_large_layer(data, weights, biases):
@@ -72,7 +75,7 @@ def nnet_large_layer(data, weights, biases):
 def fully_connected_layer(data, weights, biases):
     return np.matmul(data, weights.reshape(n_in, n_out)) + biases
 
-implementation_results = nnet_large_layer(data, weights, biases)
+implementation_results = nnet_large_layer(data, weights_T, biases)
 reference_results = fully_connected_layer(data, weights, biases)
 
 print("INFO:===============================================================================")
