@@ -13,7 +13,7 @@ make dia2pdf
 
 ### SVG Files
 
-Dia does integrate a formula editor. The solution is to import image files (for the best quality use SVG) from an external editor. For example you can use an [Online LaTeX Equation Editor](https://latex.codecogs.com/eqneditor/editor.php).
+Dia does not integrate a formula editor. The solution is to import image files (for the best quality use SVG) from an external editor. For example you can use an [Online LaTeX Equation Editor](https://latex.codecogs.com/eqneditor/editor.php).
 
 ## Debugging
 
