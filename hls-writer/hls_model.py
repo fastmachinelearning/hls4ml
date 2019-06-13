@@ -681,6 +681,7 @@ layer_map = {
     'ThresholdedReLU'    : ParametrizedActivation,
     'ELU'                : ParametrizedActivation,
     'PReLU'              : PReLU,
+    'PruneLowMagnitude'  : Dense,
     'Dense'              : Dense,
     'BinaryDense'        : Dense,
     'TernaryDense'       : Dense,

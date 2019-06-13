@@ -10,7 +10,7 @@ import sys
 from shutil import copyfile
 import math
 
-MAXMULT = 4096
+MAXMULT = 40960
 
 filedir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0,os.path.join(filedir, "..", "hls-writer"))
@@ -27,9 +27,12 @@ class KerasDataReader:
                 return name
 
         with h5py.File(self.config['KerasH5'], 'r') as h5file:
-            found_data = h5file[layer_name].visit(h5_visitor_func)
+            short_layer_name = "_".join(layer_name.split("_")[-2:])
+            found_data = h5file["model_weights"][short_layer_name].visit(h5_visitor_func)
+            # found_data = h5file[layer_name].visit(h5_visitor_func)
             if found_data:
-                data = h5file['/{}/{}'.format(layer_name,found_data)][()]
+                # data = h5file['/{}/{}'.format(layer_name,found_data)][()]
+                data = h5file['/model_weights/{}/{}'.format(short_layer_name, found_data)][()]
             else:
                 data = None
 
@@ -41,9 +44,18 @@ def get_weights_shape(h5filename, layer_name, var_name='kernel'):
             return name
 
     with h5py.File(h5filename, 'r') as h5file:
-        found_data = h5file[layer_name].visit(h5_visitor_func)
+        # found_data = h5file[layer_name].visit(h5_visitor_func)
+        # print(found_data , h5file.keys(), h5file['/{}/{}'.format(layer_name,found_data)])
+        # if found_data:
+            # shape = h5file['/{}/{}'.format(layer_name,found_data)].shape
+
+        # h5file = h5file["model_weights"]
+        short_layer_name = "_".join(layer_name.split("_")[-2:])
+        print(h5file.keys(), layer_name)
+        found_data = h5file["model_weights"][short_layer_name].visit(h5_visitor_func)
         if found_data:
-            shape = h5file['/{}/{}'.format(layer_name,found_data)].shape
+            shape = h5file['/model_weights/{}/{}'.format(short_layer_name,  found_data)].shape
+            # shape = h5file['/{}/{}'.format(layer_name,found_data)].shape
 
     return shape
 
@@ -86,7 +98,8 @@ def main():
     #print(model_arch)
 
     #Define supported laers
-    core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Dense', 'BinaryDense', 'TernaryDense']
+    core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Dense',
+                   'PruneLowMagnitude', 'BinaryDense', 'TernaryDense']
     conv_layers = ['Conv1D', 'Conv2D']
     pooling_layers = ['MaxPooling1D', 'MaxPooling2D', 'AveragePooling1D', 'AveragePooling2D']
     norm_layers = ['BatchNormalization']
@@ -136,7 +149,7 @@ def main():
     for keras_layer in layer_config:
         if keras_layer["class_name"] is 'Flatten':
             current_shape = [current_shape[0], np.prod(current_shape[1:])]
-        if keras_layer["class_name"] in skip_layers:
+        if keras_layer["class_name"] in skip_layers or "dropout" in keras_layer['config']['name']:
             if 'inbound_nodes' in keras_layer:
                 name = keras_layer['config']['name']
                 #Currently supported skipped layers have only one input
@@ -171,8 +184,10 @@ def main():
         # Default one layer call
         if layer['class_name'] == 'InputLayer':
             layer['input_shape'] = keras_layer['config']['batch_input_shape'][1:]
-        if 'Dense' in layer['class_name']:
+        if 'Dense' in layer['class_name'] or 'PruneLowMagnitude' in layer['class_name']:
+            print(yamlConfig['KerasH5'], layer['name'])
             weights_shape = get_weights_shape(yamlConfig['KerasH5'], layer['name'])
+            print(weights_shape)
             layer['n_in'] = weights_shape[0]
             layer['n_out'] = weights_shape[1]
             if 'Binary' in layer['class_name']:
