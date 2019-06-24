@@ -112,6 +112,7 @@ concat_config_template = """struct config{index} : nnet::concat_config {{
 
 config_templates = {
     'Dense'                  : dense_config_template,
+    'BinaryDense'            : dense_config_template,
     'BatchNormalization'     : batchnorm_config_template,
     'Conv1D'                 : conv1d_config_template,
     'Conv2D'                 : conv2d_config_template,
@@ -136,6 +137,7 @@ merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {co
 
 function_templates = {
     'Dense'                  : dense_function_template,
+    'BinaryDense'            : dense_function_template,
     'BatchNormalization'     : batchnorm_function_template,
     'Conv1D'                 : conv1d_function_template,
     'Conv2D'                 : conv2d_function_template,
@@ -153,3 +155,10 @@ def get_config_template(kind):
 
 def get_function_template(kind):
     return function_templates.get(kind)
+
+def register_templates(name, function_template, config_template):
+    global function_templates
+    global config_templates
+    
+    function_templates[name] = function_template
+    config_templates[name] = config_template

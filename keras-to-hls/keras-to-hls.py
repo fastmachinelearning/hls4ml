@@ -178,7 +178,7 @@ def main():
             layer['n_in'] = weights_shape[0]
             layer['n_out'] = weights_shape[1]
             if 'Binary' in layer['class_name']:
-                layer['quantize'] = 2
+                layer['quantize'] = 1
             elif 'Ternary' in layer['class_name']:
                 layer['quantize'] = 3
             else:
@@ -370,7 +370,7 @@ def main():
 
     reader = KerasDataReader(yamlConfig)
     hls_model = HLSModel(yamlConfig, reader, layer_list, input_layers, output_layers)
-    optimize_model(hls_model, ['eliminate_linear_activation'])
+    optimize_model(hls_model, ['eliminate_linear_activation', 'merge_batch_norm_binary_tanh'])
     write_hls(hls_model)
 
 

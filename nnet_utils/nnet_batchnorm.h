@@ -92,6 +92,47 @@ void normalize(
 	}
 }
 
+// *************************************************
+//       Merged Batch Normalization and Binary Tanh
+// *************************************************
+struct batchnorm_binarytanh_config
+{
+    // Layer Sizes
+    static const unsigned n_in = 10;
+    static const unsigned n_filt = -1;
+    
+    // Resource reuse info
+    static const unsigned io_type = io_parallel;
+    static const unsigned reuse_factor = 1;
+    static const unsigned n_zeros = 0;
+
+    //typedef float threshold_T;
+};
+
+template<class data_T, typename CONFIG_T>
+void  normalize_binary_tanh(data_T data[CONFIG_T::n_in], ap_uint<1> res[CONFIG_T::n_in], data_T threshold[CONFIG_T::n_in])
+{
+    if (CONFIG_T::io_type == io_parallel){
+        #pragma HLS PIPELINE
+        #pragma HLS ARRAY_PARTITION variable=res complete
+    }
+
+    data_T datareg;   
+    ap_uint<1> cache; 
+    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+        if (CONFIG_T::io_type == io_serial){
+            #pragma HLS PIPELINE
+        }
+        datareg = data[ii];	 
+        if( datareg >= threshold[ii] ) cache = 1;
+        else cache = 0;
+
+        res[ii] = (ap_uint<1>) cache;
+ 
+    }   
+}
+
+
 }
 
 #endif

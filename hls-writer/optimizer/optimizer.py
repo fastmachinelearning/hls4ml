@@ -28,8 +28,10 @@ class OptimizerRegistry(object):
         return cls.optimizer_map[name]()
 
 from passes.nop import EliminateLinearActivation
+from passes.bnbinary import BatchNormalizationBinaryTanh, MergeBatchNormAndBinaryTanh
 
 OptimizerRegistry.register_pass('eliminate_linear_activation', EliminateLinearActivation)
+OptimizerRegistry.register_pass('merge_batch_norm_binary_tanh', MergeBatchNormAndBinaryTanh)
 
 def optimize_model(model, passes):
     optimizers = [OptimizerRegistry.get(opt_pass) for opt_pass in passes]

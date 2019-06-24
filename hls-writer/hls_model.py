@@ -148,6 +148,23 @@ class HLSModel(object):
 
         return node
 
+    def insert_node(self, node):
+        if len(node.inputs) > 1:
+            raise Exception('Cannot insert a node with more than one input (for now).')
+        
+        prev_node = self.graph.get(node.inputs[0])
+        next_node = next((x for x in self.graph.values() if x.inputs[0] == prev_node.outputs[0]), None)
+        if next_node is not None:
+            next_node.inputs[0] = node.outputs[0]
+
+        new_graph = OrderedDict()
+        for k, v in self.graph.items():
+            new_graph[k] = v
+            if k == prev_node.name:
+                new_graph[node.name] = node
+                
+        self.graph = new_graph
+
     def remove_node(self, node, rewire=True):
         if rewire:
             if len(node.inputs) > 1 or len(node.outputs) > 1:
@@ -171,18 +188,20 @@ class HLSModel(object):
             if new_node.inputs is None or len(new_node.inputs) == 0: # Check if already rewired
                 new_node.inputs = [prev_node.outputs[0]]
         
-        self.remove_node(old_node, rewire=False)
-
+        self.graph[old_node.name] = new_node
+        
     def get_weights_data(self, layer_name, var_name):
         return self.reader.get_weights_data(layer_name, var_name)
 
     def quantize_data(self, data, quantize):
+        zeros = np.zeros_like(data)
         ones = np.ones_like(data)
         quant_data = data
+        if quantize == 1:
+            quant_data = np.where(data > 0, ones, zeros).astype('int')
         if quantize == 2:
             quant_data = np.where(data > 0, ones, -ones)
         elif quantize == 3:
-            zeros = np.zeros_like(data)
             quant_data = np.where(data > 0.5, ones, np.where(data <= -0.5, -ones, zeros))
         return quant_data
 
@@ -315,6 +334,12 @@ class Layer(object):
     def get_attr(self, key, default=None):
         return self.attributes.get(key, default)
 
+    def get_input_node(self, input_name=None):
+        if input_name is not None:
+            return self.model.graph.get(input_name)
+        else:
+            return self.model.graph.get(self.inputs[0])
+
     def get_input_variable(self, input_name=None):
         if input_name is not None:
             return self.model.get_layer_output_variable(input_name)
@@ -377,10 +402,10 @@ class Layer(object):
             var_name = name + '{index}'
 
         if precision is None:
-            precision, new_type_name = self.model.config.get_precision(self, var=name)
+            precision, _ = self.model.config.get_precision(self, var=name)
 
         if type_name is None:
-            type_name = new_type_name
+            _, type_name = self.model.config.get_precision(self, var=name)
 
         if data is None:
             data = self.model.get_weights_data(self.name, name)
@@ -476,6 +501,23 @@ class Dense(Layer):
         params['nzeros'] = self.get_weights('weight').nzeros
 
         return self._config_template.format(**params)
+
+class BinaryDense(Dense):
+    def initialize(self):
+        shape = [self.attributes['n_out']]
+        dims = ['N_LAYER_{}'.format(self.index)]
+        quantize = self.get_attr('quantize')
+        # Number of bits for output is log2 of number of input nodes
+        # Since this is the number of uint<1>'s which are summed
+        nbits = int(np.ceil(np.log2(self.attributes['n_in'])) + 1)
+        otype = 'ap_int<{}>'.format(nbits)
+        self.add_output_variable(shape, dims, precision=otype)
+        self.add_weights_variable(name='weight', var_name='w{index}', data='kernel', type_name='weights{index}_t', precision='ap_uint<1>', quantize=quantize)
+        self.weights['weight'].nzeros = 0
+        # binary layer has no bias, so initialize a 0 array
+        zeros = np.zeros(shape=(self.attributes['n_out']))
+        self.add_weights_variable(name='bias', data=zeros, type_name='bias{index}_t', precision='ap_uint<1>', quantize=quantize)
+        self.weights['bias'].nzeros = 0
 
 class Conv1D(Layer):
     def initialize(self):
@@ -716,7 +758,7 @@ layer_map = {
     'ELU'                : ParametrizedActivation,
     'PReLU'              : PReLU,
     'Dense'              : Dense,
-    'BinaryDense'        : Dense,
+    'BinaryDense'        : BinaryDense,
     'TernaryDense'       : Dense,
     'Conv1D'             : Conv1D,
     'Conv2D'             : Conv2D,
@@ -728,3 +770,7 @@ layer_map = {
     'Merge'              : Merge,
     'Concatenate'        : Concatenate,
 }
+
+def register_layer(name, clazz):
+    global layer_map
+    layer_map[name] = clazz
