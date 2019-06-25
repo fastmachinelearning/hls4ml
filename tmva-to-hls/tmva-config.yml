@@ -1,0 +1,9 @@
+TMVAxml: example-tmva-model-files/TMVA.xml
+OutputDir: my-hls-test
+ProjectName: myproject
+XilinxPart: xc7vx690tffg1927-2
+ClockPeriod: 5
+
+IOType: io_parallel # options: io_serial/io_parallel
+ReuseFactor: 1
+DefaultPrecision: ap_fixed<18,8> 
