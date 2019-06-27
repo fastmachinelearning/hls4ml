@@ -203,7 +203,7 @@ void dense_latency(
 }
 
  template<class data_T, class res_T, typename CONFIG_T>
-void compute_layer_batch(
+void dense_batch(
     data_T    data[CONFIG_T::n_batch][CONFIG_T::n_in],
     res_T     res[CONFIG_T::n_batch][CONFIG_T::n_out],
     typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
@@ -216,7 +216,7 @@ void compute_layer_batch(
       data_temp[ii] = data[bb][ii];
     }
     //#pragma HLS ALLOCATION instances=compute_layer limit=10 
-    compute_layer<data_T, res_T, CONFIG_T>(data_temp, res_temp, weights, biases);
+    dense<data_T, res_T, CONFIG_T>(data_temp, res_temp, weights, biases);
     for (int ii = 0; ii < CONFIG_T::n_out; ii++) {
       res[bb][ii] = res_temp[ii];
     }

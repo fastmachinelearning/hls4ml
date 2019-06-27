@@ -21,7 +21,7 @@
 #include "parameters.h"
 #include "myproject.h"
 
-#include "nnet_layer.h"
+#include "nnet_dense.h"
 #include "nnet_conv.h"
 #include "nnet_activation.h"
 
@@ -76,7 +76,7 @@ void myproject(
   // input network
   input_t H_logits[N_NODES][N_HIDDEN_FEATURES];
   #pragma HLS ARRAY_PARTITION variable=H_logits complete dim=0
-  nnet::compute_layer_batch<input_t, input_t, layer_config1>(X, H_logits, w1, b1);
+  nnet::dense_batch<input_t, input_t, dense_config1>(X, H_logits, w1, b1);
   /*
   std::cout << "H_logits = " << std::endl;
   for(int i=0; i<N_NODES; i++){
@@ -111,7 +111,7 @@ void myproject(
 
   input_t layer2_logits[N_EDGES][N_HIDDEN_FEATURES];
   #pragma HLS ARRAY_PARTITION variable=layer2_logits complete dim=0
-  nnet::compute_layer_batch<input_t, input_t, layer_config2>(B, layer2_logits, w2, b2);
+  nnet::dense_batch<input_t, input_t, dense_config2>(B, layer2_logits, w2, b2);
 
   input_t layer2_out[N_EDGES][N_HIDDEN_FEATURES];
   #pragma HLS ARRAY_PARTITION variable=layer2_out complete dim=0
@@ -119,7 +119,7 @@ void myproject(
 
   input_t e_logits_temp[N_EDGES][1];
   #pragma HLS ARRAY_PARTITION variable=e_logits_temp complete dim=0
-  nnet::compute_layer_batch<input_t, input_t, layer_config3>(layer2_out, e_logits_temp, w3, b3);
+  nnet::dense_batch<input_t, input_t, dense_config3>(layer2_out, e_logits_temp, w3, b3);
 
   input_t e_temp[N_EDGES][1];
   #pragma HLS ARRAY_PARTITION variable=e_temp complete dim=0
@@ -139,12 +139,12 @@ void myproject(
   
   input_t layer4_logits[N_NODES][N_HIDDEN_FEATURES];
   #pragma HLS ARRAY_PARTITION variable=layer4_logits complete dim=0
-  nnet::compute_layer_batch<input_t, input_t, layer_config4>(M, layer4_logits, w4, b4);
+  nnet::dense_batch<input_t, input_t, dense_config4>(M, layer4_logits, w4, b4);
   
   input_t layer4_out[N_NODES][N_HIDDEN_FEATURES];
   nnet::tanh_batch<input_t, input_t, tanh_config3>(layer4_logits, layer4_out);
 
-  nnet::compute_layer_batch<input_t, input_t, layer_config5>(layer4_out, H_logits, w5, b5);    
+  nnet::dense_batch<input_t, input_t, dense_config5>(layer4_out, H_logits, w5, b5);    
 
   nnet::tanh_batch<input_t, input_t, tanh_config4>(H_logits, H);
   /*
@@ -164,7 +164,7 @@ void myproject(
 
   input_t layer6_logits[N_EDGES][N_HIDDEN_FEATURES];
   #pragma HLS ARRAY_PARTITION variable=layer6_logits complete dim=0
-  nnet::compute_layer_batch<input_t, input_t, layer_config2>(B, layer6_logits, w2, b2);    
+  nnet::dense_batch<input_t, input_t, dense_config2>(B, layer6_logits, w2, b2);    
 
   input_t layer6_out[N_EDGES][N_HIDDEN_FEATURES];
   #pragma HLS ARRAY_PARTITION variable=layer6_out complete dim=0
@@ -172,7 +172,7 @@ void myproject(
 
   input_t e_logits[N_EDGES][1];
   #pragma HLS ARRAY_PARTITION variable=e_logits complete dim=0
-  nnet::compute_layer_batch<input_t, input_t, layer_config3>(layer6_out, e_logits, w3, b3);
+  nnet::dense_batch<input_t, input_t, dense_config3>(layer6_out, e_logits, w3, b3);
 
   nnet::sigmoid_batch<input_t, input_t, sigmoid_config1>(e_logits, e);  
 }

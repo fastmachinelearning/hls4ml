@@ -21,7 +21,7 @@
 #define NNET_GRAPH_H_
 
 #include "nnet_common.h"
-#include "nnet_layer.h"
+#include "nnet_dense.h"
 #include "nnet_conv.h"
 #include "hls_stream.h"
 #include <math.h>

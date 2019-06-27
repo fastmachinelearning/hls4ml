@@ -4,7 +4,7 @@
 #include <complex>
 #include "ap_int.h"
 #include "ap_fixed.h"
-#include "nnet_layer.h"
+#include "nnet_dense.h"
 #include "nnet_conv.h"
 #include "nnet_activation.h"
 #include "nnet_graph.h"
@@ -43,7 +43,7 @@ struct graph_config1 : nnet::graph_config {
   static const unsigned n_zeros = 0;
 };
                                                                                               
-struct layer_config1 : nnet::layer_config {
+struct dense_config1 : nnet::dense_config {
   static const unsigned n_batch = N_NODES;
   static const unsigned n_in = N_FEATURES;
   static const unsigned n_out = N_HIDDEN_FEATURES;
@@ -64,7 +64,7 @@ struct tanh_config1 : nnet::activ_config {
   static const unsigned reuse_factor = REUSE;
 };
 
-struct layer_config2 : nnet::layer_config {
+struct dense_config2 : nnet::dense_config {
   static const unsigned n_batch = N_EDGES;
   static const unsigned n_in = 2*(N_FEATURES+N_HIDDEN_FEATURES);
   static const unsigned n_out = N_HIDDEN_FEATURES;
@@ -85,7 +85,7 @@ struct tanh_config2 : nnet::activ_config {
   static const unsigned reuse_factor = REUSE;
 };
 
-struct layer_config3 : nnet::layer_config {
+struct dense_config3 : nnet::dense_config {
   static const unsigned n_batch = N_EDGES;
   static const unsigned n_in = N_HIDDEN_FEATURES;
   static const unsigned n_out = 1;
@@ -106,7 +106,7 @@ struct sigmoid_config1 : nnet::activ_config {
   static const unsigned reuse_factor = REUSE;
 };
 
-struct layer_config4 : nnet::layer_config {
+struct dense_config4 : nnet::dense_config {
   static const unsigned n_batch = N_NODES;
   static const unsigned n_in = 3*(N_FEATURES+N_HIDDEN_FEATURES);
   static const unsigned n_out = N_HIDDEN_FEATURES;
@@ -135,7 +135,7 @@ struct tanh_config4 : nnet::activ_config {
   static const unsigned reuse_factor = REUSE;
 };
 
-struct layer_config5 : nnet::layer_config {
+struct dense_config5 : nnet::dense_config {
   static const unsigned n_batch = N_NODES;
   static const unsigned n_in = N_HIDDEN_FEATURES;
   static const unsigned n_out = N_HIDDEN_FEATURES;
