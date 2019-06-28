@@ -2,8 +2,11 @@
 
 Three models are committed (`3x3`, `4x4`, and `5x5`). `nxm` = `n` layers, `m` tracks (`n*m` nodes, `n*(n-1)*m` edges).
 
-```
-# setup pytorch environment
+```bash
+# clone hls4ml graph branch
+git clone git@github.com:hls-fpga-machine-learning/hls4ml -b jmgd/graph
+cd hls4ml/example-prjs/graph
+# setup pytorch conda environment (after installing miniconda3: https://docs.conda.io/en/latest/miniconda.html)
 conda create --name pytorch-training --file pytorch-training.txt 
 source activate pytorch-training
 # setup vivado
