@@ -105,8 +105,6 @@ struct batchnorm_binarytanh_config
     static const unsigned io_type = io_parallel;
     static const unsigned reuse_factor = 1;
     static const unsigned n_zeros = 0;
-
-    //typedef float threshold_T;
 };
 
 template<class data_T, typename CONFIG_T>

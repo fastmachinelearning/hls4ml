@@ -45,6 +45,38 @@ struct dense_config
     // partitioning arrays cyclically to go with roll factors?
 };
 
+/* ---
+ * 3 different methods to perform the product of input and weight, depending on the
+ * types of each. Use std::enable_if<>::type for the return type since partial
+ * template specification is not allowed by c++
+ * --- */
+
+template<class data_T, class weight_T, class ret_T>
+inline typename std::enable_if<std::is_same<data_T, ap_uint<1>>::value
+        and std::is_same<weight_T, ap_uint<1>>::value, ap_uint<1>>::type
+product(ap_uint<1> a, ap_uint<1> w){
+    // specialisation for 1-bit weights and incoming data
+    #pragma HLS inline off
+    return a == w;
+}
+
+template<class data_T, class weight_T, class ret_T>
+inline typename std::enable_if<(not std::is_same<data_T, ap_uint<1>>::value)
+        and std::is_same<weight_T, ap_uint<1>>::value, ret_T>::type
+product(data_T a, ap_uint<1> w){
+    // Specialisation for 1-bit weights, arbitrary data
+    #pragma HLS inline off
+    return w == 0 ? (data_T) -a : a;
+}
+
+template<class data_T, class weight_T, class ret_T>
+inline typename std::enable_if<(not std::is_same<data_T, ap_uint<1>>::value)
+        and (not std::is_same<weight_T, ap_uint<1>>::value), ret_T>::type
+product(data_T a, weight_T w){
+    // 'Normal' product
+    #pragma HLS inline off
+    return a * w;
+}
  template<class data_T, class res_T, typename CONFIG_T>
 void dense(
     data_T    data[CONFIG_T::n_in],
@@ -71,7 +103,7 @@ void dense(
         #pragma HLS ARRAY_PARTITION variable=acc complete
 
         int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_out) / float(CONFIG_T::reuse_factor)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
-        #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+        #pragma HLS ALLOCATION instances=product limit=multiplier_limit function
 
     } else if (CONFIG_T::io_type == io_serial){
         // Only reduce cycle_factor if n_out is evenly divisible by reuse_factor
@@ -102,10 +134,10 @@ void dense(
         Product2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
             if (CONFIG_T::io_type == io_serial) {
                 int multiplier_limit  = ceil(float(CONFIG_T::n_out) / float(CONFIG_T::reuse_factor));
-                #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+                #pragma HLS ALLOCATION instances=product limit=multiplier_limit function
             }
         int index = ii*CONFIG_T::n_out+jj;
-        mult[index] = cache * weights[index];
+        mult[index] = product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>(cache, weights[index]);
         }
     }
 

@@ -370,7 +370,7 @@ def main():
 
     reader = KerasDataReader(yamlConfig)
     hls_model = HLSModel(yamlConfig, reader, layer_list, input_layers, output_layers)
-    optimize_model(hls_model, ['eliminate_linear_activation', 'merge_batch_norm_binary_tanh'])
+    optimize_model(hls_model, ['eliminate_linear_activation', 'merge_batch_norm_binary_tanh', 'quantize_binary_dense_output'])
     write_hls(hls_model)
 
 

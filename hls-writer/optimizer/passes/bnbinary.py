@@ -26,7 +26,7 @@ class BatchNormalizationBinaryTanh(hls_model.Layer):
         beta = self.model.get_weights_data(original_name, 'beta')
         epsilon = self.model.get_weights_data(original_name, 'epsilon')
         threshold = mean - beta * variance / gamma
-        self.add_weights_variable(name='threshold', data=threshold, precision=inp.precision)
+        self.add_weights_variable(name='threshold', data=threshold, type_name='threshold{index}_t', precision=inp.precision)
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -78,5 +78,31 @@ class MergeBatchNormAndBinaryTanh(OptimizerPass):
         bnbt_layer = model.make_node('BatchNormalizationBinaryTanh', 'bnbt_' + bn_layer.name, attrs, bn_layer.inputs)
         # Replace the old BatchNormalization layer with this one
         model.replace_node(bn_layer, bnbt_layer)
-        
+
         return True
+
+class QuantizeBinaryDenseOutput(OptimizerPass):
+    def match(self, node):
+        is_match = (node.__class__.__name__ == 'BinaryDense'
+            and node.get_input_node().__class__.__name__ == 'BatchNormalizationBinaryTanh')
+        return is_match
+    
+    def transform(self, model, node):
+        # Compute the required precision and update the variables
+        # Number of bits for output is log2 of number of input nodes
+        # Since this is the number of uint<1>'s which are summed
+        nbits = int(np.ceil(np.log2(node.attributes['n_in'])) + 1)
+        out_type = 'ap_int<{}>'.format(nbits)
+        node.set_attr('accum_t', out_type)
+        out_var = node.get_output_variable()
+        out_var.precision = out_type
+        node.precision[out_var.type] = out_type
+        # If followed by the BatchNormalizationBinaryTanh, update its input
+        bd_out_nodes = node.get_output_nodes()
+        for out_node in bd_out_nodes:
+            if out_node.__class__.__name__ == 'BatchNormalizationBinaryTanh':
+                threshold_var = out_node.weights['threshold']
+                threshold_var.precision = out_type
+                out_node.precision[threshold_var.type] = out_type
+
+        return False

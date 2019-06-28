@@ -188,7 +188,7 @@ class HLSModel(object):
             if new_node.inputs is None or len(new_node.inputs) == 0: # Check if already rewired
                 new_node.inputs = [prev_node.outputs[0]]
         
-        self.graph[old_node.name] = new_node
+        self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
         
     def get_weights_data(self, layer_name, var_name):
         return self.reader.get_weights_data(layer_name, var_name)
@@ -345,6 +345,11 @@ class Layer(object):
             return self.model.get_layer_output_variable(input_name)
         else:
             return self.model.get_layer_output_variable(self.inputs[0])
+
+    def get_output_nodes(self, output_name=None):
+        if output_name is None:
+            output_name = self.outputs[0]
+        return [node for node in self.model.graph.values() if node.inputs[0] == output_name]
 
     def get_output_variable(self, output_name=None):
         if output_name is not None:
@@ -507,11 +512,7 @@ class BinaryDense(Dense):
         shape = [self.attributes['n_out']]
         dims = ['N_LAYER_{}'.format(self.index)]
         quantize = self.get_attr('quantize')
-        # Number of bits for output is log2 of number of input nodes
-        # Since this is the number of uint<1>'s which are summed
-        nbits = int(np.ceil(np.log2(self.attributes['n_in'])) + 1)
-        otype = 'ap_int<{}>'.format(nbits)
-        self.add_output_variable(shape, dims, precision=otype)
+        self.add_output_variable(shape, dims)
         self.add_weights_variable(name='weight', var_name='w{index}', data='kernel', type_name='weights{index}_t', precision='ap_uint<1>', quantize=quantize)
         self.weights['weight'].nzeros = 0
         # binary layer has no bias, so initialize a 0 array
