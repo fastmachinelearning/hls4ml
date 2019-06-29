@@ -260,13 +260,16 @@ void print_res(char *name, float res[N_OUT]){
 }
 
 int main(int argc, char *argv) {
-    float data[N_IN] = {70, 20, 15, 46};//, 28, 71, 54, 96, 94, 98, 61, 89, 16, 55, 38, 79};
+    float data[N_IN];
     float res_master[N_OUT] = {0};
     float res_v4[N_OUT] = {0};
     float res_v6[N_OUT] = {0};
 
     float w[N_IN*N_OUT];
     float wT[N_IN*N_OUT];
+
+    for (int i = 0; i < N_IN; i++)
+        data[i] = i + 0.5;
 
 #ifdef ONES
     for (int i = 0; i < N_IN * N_OUT; i++)
@@ -277,7 +280,8 @@ int main(int argc, char *argv) {
  #endif
 
 #if 0
-    float b[N_OUT] = {71, 67, 77, 21, 4, 91, 1, 64};
+    for (int i = 0; i < N_OUT; i++)
+        b[i] = i * 0.025;
 #else
     float b[N_OUT] = {0};
 #endif
