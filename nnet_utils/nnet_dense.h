@@ -21,6 +21,7 @@
 #define NNET_DENSE_H_
 
 #include "nnet_common.h"
+#include "nnet_helpers.h"
 #include "hls_stream.h"
 #include <math.h>
 
@@ -77,7 +78,21 @@ product(data_T a, weight_T w){
     #pragma HLS inline off
     return a * w;
 }
- template<class data_T, class res_T, typename CONFIG_T>
+
+template<class data_T, class res_T, typename CONFIG_T>
+inline typename std::enable_if<std::is_same<data_T, ap_uint<1>>::value
+        and std::is_same<typename CONFIG_T::weight_t, ap_uint<1>>::value, ap_int<nnet::ceillog2(CONFIG_T::n_in) + 1>>::type
+cast(typename CONFIG_T::accum_t x){
+  return (ap_int<nnet::ceillog2(CONFIG_T::n_in) + 1>) (x - CONFIG_T::n_in / 2) * 2;
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
+inline typename std::enable_if<(not std::is_same<data_T, ap_uint<1>>::value), res_T>::type
+cast(typename CONFIG_T::accum_t x){
+  return (res_T) x;
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
 void dense(
     data_T    data[CONFIG_T::n_in],
     res_T     res[CONFIG_T::n_out],
@@ -165,7 +180,8 @@ void dense(
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS UNROLL
         }
-        res[ires] = (res_T) (acc[ires]);
+        //res[ires] = (res_T) (acc[ires]);
+        res[ires] = cast<data_T, res_T, CONFIG_T>(acc[ires]);
     }
 }
 

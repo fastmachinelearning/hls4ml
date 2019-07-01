@@ -46,3 +46,5 @@ def model_up_to(model, n):
     m.add(layer)
   return m
 
+for n in range(0, len(model.layers)):
+  print(n, model_up_to(model, n).predict(x))
