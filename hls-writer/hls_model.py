@@ -490,6 +490,7 @@ class Dense(Layer):
         quantize = self.get_attr('quantize', default=0)
         self.add_output_variable(shape, dims)
         self.add_weights(quantize=quantize)
+        self.weights['weight'].data = np.transpose(self.weights['weight'].data)
         self.add_bias(quantize=quantize)
 
     def function_cpp(self):
@@ -515,6 +516,7 @@ class BinaryDense(Dense):
         self.add_output_variable(shape, dims)
         self.add_weights_variable(name='weight', var_name='w{index}', data='kernel', type_name='weights{index}_t', precision='ap_uint<1>', quantize=quantize)
         self.weights['weight'].nzeros = 0
+        self.weights['weight'].data = np.transpose(self.weights['weight'].data)
         # binary layer has no bias, so initialize a 0 array
         zeros = np.zeros(shape=(self.attributes['n_out']))
         self.add_weights_variable(name='bias', data=zeros, type_name='bias{index}_t', precision='ap_uint<1>', quantize=quantize)

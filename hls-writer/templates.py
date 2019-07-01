@@ -126,6 +126,7 @@ config_templates = {
 }
 
 dense_function_template = 'nnet::dense<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+dense_large_function_template = 'nnet::dense_large<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
 conv1d_function_template = 'nnet::conv_1d<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 conv2d_function_template = 'nnet::conv_2d<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
@@ -136,8 +137,8 @@ pooling2d_function_template = 'nnet::pooling2d<{input_t}, {config}>({input}, {ou
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
 
 function_templates = {
-    'Dense'                  : dense_function_template,
-    'BinaryDense'            : dense_function_template,
+    'Dense'                  : dense_large_function_template,
+    'BinaryDense'            : dense_large_function_template,
     'BatchNormalization'     : batchnorm_function_template,
     'Conv1D'                 : conv1d_function_template,
     'Conv2D'                 : conv2d_function_template,
