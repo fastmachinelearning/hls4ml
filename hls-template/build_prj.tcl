@@ -22,12 +22,39 @@ proc report_time { op_name time_start time_end } {
   puts "***** ${op_name} COMPLETED IN ${time_h}h${time_m}m${time_s}s *****"
 }
 
+# Compare file content: 1 = same, 0 = different
+proc compare_files {file_1 file_2} {
+    # Check if files exist, error otherwise
+    if {! [file exists $file_1]} {
+        return 0
+    }
+    if {! [file exists $file_2]} {
+        return 0
+    }
+    # Files with different sizes are obviously different
+    if {[file size $file_1] != [file size $file_2]} {
+        return 0
+    }
+
+    # String compare the content of the files
+    set fh_1 [open $file_1 r]
+    set fh_2 [open $file_2 r]
+    set equal [string equal [read $fh_1] [read $fh_2]]
+    close $fh_1
+    close $fh_2
+    return $equal
+}
+
+file mkdir tb_data
+set CSIM_RESULTS "./tb_data/csim_results.log"
+set RTL_COSIM_RESULTS "./tb_data/rtl_cosim_results.log"
+
 open_project -reset myproject_prj
 set_top myproject
 add_files firmware/myproject.cpp -cflags "-I[file normalize nnet_utils] -std=c++0x -DVALIDATION"
 add_files -tb myproject_test.cpp -cflags "-I[file normalize nnet_utils] -std=c++0x -DVALIDATION"
 add_files -tb firmware/weights
-#add_files -tb tb_data
+add_files -tb tb_data
 open_solution -reset "solution1"
 catch {config_array_partition -maximum_size 4096}
 set_part {xc7vx690tffg1927-2}
@@ -38,7 +65,7 @@ if {$opt(csim)} {
   set time_start [clock clicks -milliseconds]
   csim_design
   set time_end [clock clicks -milliseconds]
-  report_time "C SIMULATION" $time_start $time_end  
+  report_time "C SIMULATION" $time_start $time_end
 }
 
 if {$opt(synth)} {
@@ -53,6 +80,15 @@ if {$opt(synth)} {
     cosim_design -trace_level all
     set time_end [clock clicks -milliseconds]
     report_time "C/RTL SIMULATION" $time_start $time_end
+
+    if {[compare_files $CSIM_RESULTS $RTL_COSIM_RESULTS]} {
+        puts "INFO: test PASSED"
+    } else {
+        puts "ERROR: test failed"
+        puts "ERROR: - csim log:      $CSIM_RESULTS"
+        puts "ERROR: - RTL-cosim log: $RTL_COSIM_RESULTS"
+        exit 1
+    }
   }
   if {$opt(export)} {
     puts "***** EXPORT IP *****"
