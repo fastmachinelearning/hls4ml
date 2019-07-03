@@ -69,9 +69,9 @@ def main():
         yamlConfig['KerasH5'] = os.path.join(configDir, yamlConfig['KerasH5'])
     if not os.path.isabs(yamlConfig['KerasJson']):
         yamlConfig['KerasJson'] = os.path.join(configDir, yamlConfig['KerasJson'])
-    if not os.path.isabs(yamlConfig['InputData']):
+    if 'InputData' in yamlConfig and not os.path.isabs(yamlConfig['InputData']):
         yamlConfig['InputData'] = os.path.join(configDir, yamlConfig['InputData'])
-    if not os.path.isabs(yamlConfig['OutputPredictions']):
+    if 'OutputPredictions' in yamlConfig and not os.path.isabs(yamlConfig['OutputPredictions']):
         yamlConfig['OutputPredictions'] = os.path.join(configDir, yamlConfig['OutputPredictions'])
 
     if not (yamlConfig["IOType"] == "io_parallel" or yamlConfig["IOType"] == "io_serial"):
