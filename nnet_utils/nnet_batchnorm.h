@@ -67,7 +67,7 @@ void normalize(
         #pragma HLS ARRAY_PARTITION variable=scale complete
         #pragma HLS ARRAY_PARTITION variable=bias complete
 
-        int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_in) / float(CONFIG_T::reuse_factor));
+        int multiplier_limit  = ceil(float(CONFIG_T::n_in) / float(CONFIG_T::reuse_factor));
         #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
     } else if (CONFIG_T::io_type == io_serial) {
