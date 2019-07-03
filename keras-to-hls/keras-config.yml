@@ -12,3 +12,6 @@ HLSConfig:
   Model:
     Precision: ap_fixed<16,6>
     ReuseFactor: 1
+#  LayerType:
+#    Dense:
+#      Strategy: Resource

@@ -18,6 +18,10 @@ class HLSConfig(object):
         self.model_rf = None
         self.layer_type_rf = {}
         self.layer_name_rf = {}
+        
+        self.model_strategy = 'Latency'
+        self.layer_type_strategy = {}
+        self.layer_name_strategy = {}
 
         self._parse_hls_config()
 
@@ -67,6 +71,15 @@ class HLSConfig(object):
             raise Exception('No reuse factor for {} found and no default specified.'.format(layer.name))
 
         return rf
+    
+    def get_strategy(self, layer):
+        strategy = self.layer_name_strategy.get(layer.name.lower())
+        if strategy is None:
+            strategy = self.layer_type_strategy.get(layer.__class__.__name__.lower())
+        if strategy is None:
+            strategy = self.model_strategy
+
+        return strategy
 
     def _parse_hls_config(self):
         hls_config = self.config['HLSConfig']
@@ -81,6 +94,7 @@ class HLSConfig(object):
                     self.model_precision['default'] = precision_cfg # Default precision for everything
 
             self.model_rf = model_cfg.get('ReuseFactor')
+            self.model_strategy = model_cfg.get('Strategy', 'Latency')
 
         layer_type_cfg = hls_config.get('LayerType')
         if layer_type_cfg is not None:
@@ -95,6 +109,10 @@ class HLSConfig(object):
                 rf = layer_cfg.get('ReuseFactor')
                 if rf is not None:
                     self.layer_type_rf[layer_type.lower()] = rf
+                
+                strategy = layer_cfg.get('Strategy')
+                if strategy is not None:
+                    self.layer_type_strategy[layer_type.lower()] = strategy
 
         layer_name_cfg = hls_config.get('LayerName')
         if layer_name_cfg is not None:
@@ -109,6 +127,10 @@ class HLSConfig(object):
                 rf = layer_cfg.get('ReuseFactor')
                 if rf is not None:
                     self.layer_name_rf[layer_name.lower()] = rf
+                
+                strategy = layer_cfg.get('Strategy')
+                if strategy is not None:
+                    self.layer_name_strategy[layer_name.lower()] = strategy
 
 class HLSModel(object):
     def __init__(self, config, data_reader, layer_list, inputs=None, outputs=None):
@@ -314,7 +336,15 @@ class Layer(object):
             self.outputs = [self.name]
 
         self.attributes = attributes
-        self._function_template = get_function_template(self.__class__.__name__)
+
+        self._function_template = None
+        if self.model.config.get_strategy(self) == 'Resource':
+            self._function_template = get_function_template('Large' + self.__class__.__name__)
+            if self.model.config.get_reuse_factor(self) == 1:
+                print('WARNING: Using ReuseFactor 1 with "Resource" strategy. This may not work.')
+        if self._function_template is None:
+            self._function_template = get_function_template(self.__class__.__name__)
+
         self._config_template = get_config_template(self.__class__.__name__)
         self.weights = OrderedDict()
         self.variables = OrderedDict()
