@@ -110,6 +110,11 @@ void  relu6(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     relu_max<data_T, res_T, 6, CONFIG_T>(data, res);
 }
 
+template<class data_T, class res_T, typename CONFIG_T>
+void  relu1(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
+{
+    relu_max<data_T, res_T, 1, CONFIG_T>(data, res);
+}
 
 // *************************************************
 //       Sigmoid Activation
