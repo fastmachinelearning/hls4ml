@@ -25,8 +25,6 @@ MODEL_DIR="$BASE_DIR/../example-keras-model-files"
 # KerasJson: ../example-keras-model-files/MODEL.json
 # KerasH5:   ../example-keras-model-files/MODEL_weights.h5
 
-
-
 # Model name and network characteristics.
 #MODEL="KERAS_3layer"
 #N_IN=64
@@ -44,9 +42,13 @@ MODEL_DIR="$BASE_DIR/../example-keras-model-files"
 #N_IN=200
 #N_OUT=200
 
-MODEL="KERAS_dense_16x500x500x500x500x500x5"
-N_IN=500
-N_OUT=500
+#MODEL="KERAS_dense_16x500x500x500x500x500x5"
+#N_IN=500
+#N_OUT=500
+
+MODEL="KERAS_digit_recognizer_mlp"
+N_IN=784
+N_OUT=16
 
 # ==============================================================================
 # Directories and Files
@@ -127,8 +129,9 @@ USER_DEFINED_RF="100"
 # 6h = 21600s
 # 7h = 25200s
 # 8h = 28800s
+# 12h = 43200s
 # 14h = 50400s
-TIMEOUT_TIME=50400
+TIMEOUT_TIME=43200
 
 # Run at most THREADS instances of Vivado HLS / Vivado. The script fetches the
 # number of cores on the current host and initializes the number of THREADS

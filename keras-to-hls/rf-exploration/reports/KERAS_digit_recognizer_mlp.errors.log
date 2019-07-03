@@ -1,0 +1,81 @@
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 1
+INFO: Vivado HLS exit value: 1
+ERROR: [XFORM 203-504] Stop unrolling loop 'ReuseLoop' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105) in function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' because it may cause large runtime and excessive memory usage due to increase in code size. Please avoid unrolling the loop or form sub-functions for code in the loop body.
+ERROR: [HLS 200-70] Pre-synthesis failed.
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 2
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 4
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 7
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 8
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 14
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 16
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 28
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 32
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 49
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 56
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 64
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 98
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 112
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 128
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 196
+INFO: Vivado HLS exit value: -1
+ERROR: Timeout
+

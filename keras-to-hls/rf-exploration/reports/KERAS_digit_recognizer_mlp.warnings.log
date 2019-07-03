@@ -1,0 +1,595 @@
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 1
+INFO: Vivado HLS exit value: 1
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-505] Ignore pipeline pragma in Loop whose tripcount is only 1 (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:106) in function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>'.
+WARNING: [XFORM 203-505] Ignore pipeline pragma in Loop whose tripcount is only 1 (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:106) in function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>'.
+ERROR: [XFORM 203-504] Stop unrolling loop 'ReuseLoop' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105) in function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>' because it may cause large runtime and excessive memory usage due to increase in code size. Please avoid unrolling the loop or form sub-functions for code in the loop body.
+ERROR: [HLS 200-70] Pre-synthesis failed.
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 2
+INFO: Vivado HLS exit value: -1
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 4
+INFO: Vivado HLS exit value: -1
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-104] Completely partitioning array 'mult.V' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:121) accessed through non-constant indices on dimension 1 (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:136:21), which may result in long runtime and suboptimal QoR due to large multiplexers. Please consider wrapping the array access into a function or using a register file core instead.
+WARNING: [XFORM 203-104] Completely partitioning array 'mult.V' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:121) accessed through non-constant indices on dimension 1 (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:136:21), which may result in long runtime and suboptimal QoR due to large multiplexers. Please consider wrapping the array access into a function or using a register file core instead.
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 7
+INFO: Vivado HLS exit value: -1
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:45)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:35)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry61' to 'myproject_entry61'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 8
+INFO: Vivado HLS exit value: -1
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-104] Completely partitioning array 'mult.V' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:121) accessed through non-constant indices on dimension 1 (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:136:21), which may result in long runtime and suboptimal QoR due to large multiplexers. Please consider wrapping the array access into a function or using a register file core instead.
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:45)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:35)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry56' to 'myproject_entry56'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 14
+INFO: Vivado HLS exit value: -1
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:45)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:49)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry67' to 'myproject_entry67'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 16
+INFO: Vivado HLS exit value: -1
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-104] Completely partitioning array 'mult.V' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:121) accessed through non-constant indices on dimension 1 (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:136:21), which may result in long runtime and suboptimal QoR due to large multiplexers. Please consider wrapping the array access into a function or using a register file core instead.
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:45)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:35)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry56' to 'myproject_entry56'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 28
+INFO: Vivado HLS exit value: -1
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:17)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:34)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry56' to 'myproject_entry56'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 32
+INFO: Vivado HLS exit value: -1
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-104] Completely partitioning array 'mult.V' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:121) accessed through non-constant indices on dimension 1 (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:136:21), which may result in long runtime and suboptimal QoR due to large multiplexers. Please consider wrapping the array access into a function or using a register file core instead.
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:45)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:35)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry56' to 'myproject_entry56'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 49
+INFO: Vivado HLS exit value: -1
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:17)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:49)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry56' to 'myproject_entry56'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 56
+INFO: Vivado HLS exit value: -1
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:17)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:35)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry56' to 'myproject_entry56'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 64
+INFO: Vivado HLS exit value: -1
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-104] Completely partitioning array 'mult.V' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:121) accessed through non-constant indices on dimension 1 (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:136:21), which may result in long runtime and suboptimal QoR due to large multiplexers. Please consider wrapping the array access into a function or using a register file core instead.
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:17)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:35)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry56' to 'myproject_entry56'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 98
+INFO: Vivado HLS exit value: -1
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:17)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:35)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry56' to 'myproject_entry56'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 112
+INFO: Vivado HLS exit value: -1
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:17)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:35)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry56' to 'myproject_entry56'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 128
+INFO: Vivado HLS exit value: -1
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-104] Completely partitioning array 'mult.V' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:121) accessed through non-constant indices on dimension 1 (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:136:21), which may result in long runtime and suboptimal QoR due to large multiplexers. Please consider wrapping the array access into a function or using a register file core instead.
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:17)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:34)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry61' to 'myproject_entry61'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 196
+INFO: Vivado HLS exit value: -1
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:45)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:35)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry55' to 'myproject_entry55'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+ERROR: Timeout
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 224
+INFO: Vivado HLS exit value: 0
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:45)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:21)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry60' to 'myproject_entry60'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+WARNING: [Constraints 18-5210] No constraints selected for write.
+WARNING: [Netlist 29-43] Netlist 'bd_0_wrapper' is not ideal for floorplanning, since the cellview 'bd_0_hls_inst_0_compute_large_layer_1' defined in file 'bd_0_hls_inst_0.edf' contains large number of primitives.  Please consider enabling hierarchy in synthesis if you want to do floorplanning.
+WARNING: [Timing 38-242] The property HD.CLK_SRC of clock port "ap_clk" is not set. In out-of-context mode, this prevents timing estimation for clock delay/skew
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 256
+INFO: Vivado HLS exit value: 0
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-104] Completely partitioning array 'mult.V' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:121) accessed through non-constant indices on dimension 1 (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:136:21), which may result in long runtime and suboptimal QoR due to large multiplexers. Please consider wrapping the array access into a function or using a register file core instead.
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:45)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:45)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry63' to 'myproject_entry63'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+WARNING: [Constraints 18-5210] No constraints selected for write.
+WARNING: [Timing 38-242] The property HD.CLK_SRC of clock port "ap_clk" is not set. In out-of-context mode, this prevents timing estimation for clock delay/skew
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 392
+INFO: Vivado HLS exit value: 0
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:45)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:45)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry55' to 'myproject_entry55'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+WARNING: [Constraints 18-5210] No constraints selected for write.
+WARNING: [Timing 38-242] The property HD.CLK_SRC of clock port "ap_clk" is not set. In out-of-context mode, this prevents timing estimation for clock delay/skew
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 448
+INFO: Vivado HLS exit value: 0
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:45)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:45)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry60' to 'myproject_entry60'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+WARNING: [Constraints 18-5210] No constraints selected for write.
+WARNING: [Timing 38-242] The property HD.CLK_SRC of clock port "ap_clk" is not set. In out-of-context mode, this prevents timing estimation for clock delay/skew
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 784
+INFO: Vivado HLS exit value: 0
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:45)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:45)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry55' to 'myproject_entry55'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+WARNING: [Constraints 18-5210] No constraints selected for write.
+WARNING: [Timing 38-242] The property HD.CLK_SRC of clock port "ap_clk" is not set. In out-of-context mode, this prevents timing estimation for clock delay/skew
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 896
+INFO: Vivado HLS exit value: 0
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:45)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:45)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry55' to 'myproject_entry55'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+WARNING: [Constraints 18-5210] No constraints selected for write.
+WARNING: [Timing 38-242] The property HD.CLK_SRC of clock port "ap_clk" is not set. In out-of-context mode, this prevents timing estimation for clock delay/skew
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 1568
+INFO: Vivado HLS exit value: 0
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:45)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:45)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry55' to 'myproject_entry55'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+WARNING: [Constraints 18-5210] No constraints selected for write.
+WARNING: [Timing 38-242] The property HD.CLK_SRC of clock port "ap_clk" is not set. In out-of-context mode, this prevents timing estimation for clock delay/skew
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 1792
+INFO: Vivado HLS exit value: 0
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:45)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:21)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry55' to 'myproject_entry55'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+WARNING: [Constraints 18-5210] No constraints selected for write.
+WARNING: [Timing 38-242] The property HD.CLK_SRC of clock port "ap_clk" is not set. In out-of-context mode, this prevents timing estimation for clock delay/skew
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 3136
+INFO: Vivado HLS exit value: 0
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:45)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:21)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry55' to 'myproject_entry55'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+WARNING: [Constraints 18-5210] No constraints selected for write.
+WARNING: [Timing 38-242] The property HD.CLK_SRC of clock port "ap_clk" is not set. In out-of-context mode, this prevents timing estimation for clock delay/skew
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 6272
+INFO: Vivado HLS exit value: 0
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:45)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:21)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry55' to 'myproject_entry55'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+WARNING: [Constraints 18-5210] No constraints selected for write.
+WARNING: [Timing 38-242] The property HD.CLK_SRC of clock port "ap_clk" is not set. In out-of-context mode, this prevents timing estimation for clock delay/skew
+
+INFO: Model: KERAS_digit_recognizer_mlp
+INFO: Reuse Factor: 12544
+INFO: Vivado HLS exit value: 0
+WARNING: [HLS 214-104] Only for-loops and functions support the dataflow: /home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_batchnorm.h:79:9
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region: firmware/myproject.cpp:59:2
+WARNING: [HLS 200-471] Dataflow form checks found 2 issue(s) in file firmware/myproject.cpp
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-135] Cannot reshape array 'w1.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-135] Cannot reshape array 'w2.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-135] Cannot reshape array 'w1.V' : incorrect reshape factor 1.
+WARNING: [XFORM 203-631] Renaming function 'nnet::softmax<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, softmax_config2>' to 'softmax' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:225:4)
+WARNING: [XFORM 203-631] Renaming function 'nnet::relu<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, relu_config1>' to 'relu' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_activation.h:73:1)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config2>.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer.' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:105:45)
+WARNING: [XFORM 203-631] Renaming function 'nnet::compute_large_layer<ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, ap_fixed<16, 6, (ap_q_mode)5, (ap_o_mode)3, 0>, config1>.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0' to 'compute_large_layer..1' (/home/giuseppe/research/hls4ml/hls4ml.git/nnet_utils/nnet_large_layer.h:39:21)
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer..1'.
+WARNING: [XFORM 203-561] Ignored multiple trip count directives for loop 'ReuseLoop' in function 'compute_large_layer.'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry3' to 'myproject_entry3'.
+WARNING: [SYN 201-103] Legalizing function name 'myproject.entry55' to 'myproject_entry55'.
+WARNING: [SYN 201-103] Legalizing function name 'Block__proc' to 'Block_proc'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer..1' to 'compute_large_layer_1'.
+WARNING: [SYN 201-103] Legalizing function name 'compute_large_layer.' to 'compute_large_layer_s'.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by Xilinx, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+WARNING: [BD 41-927] Following properties on pin /hls_inst/ap_clk have been updated from connected ip. They may not be synchronized with cell properties. You can set property on pin directly to confirm the value and resolve the warning.
+WARNING: [Constraints 18-5210] No constraints selected for write.
+WARNING: [Timing 38-242] The property HD.CLK_SRC of clock port "ap_clk" is not set. In out-of-context mode, this prevents timing estimation for clock delay/skew
+
