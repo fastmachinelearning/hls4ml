@@ -6,7 +6,7 @@
             {
                 "class_name": "BinaryDense",
                 "config": {
-                    "H": 0.1369306445121765,
+                    "H": 1,
                     "activation": "linear",
                     "activity_regularizer": null,
                     "batch_input_shape": [
@@ -24,15 +24,15 @@
                     "kernel_constraint": {
                         "class_name": "Clip",
                         "config": {
-                            "max_value": 0.1369306445121765,
-                            "min_value": -0.1369306445121765
+                            "max_value": 1,
+                            "min_value": -1
                         }
                     },
                     "kernel_initializer": {
                         "class_name": "RandomUniform",
                         "config": {
-                            "maxval": 0.1369306445121765,
-                            "minval": -0.1369306445121765,
+                            "maxval": 1,
+                            "minval": -1,
                             "seed": null
                         }
                     },
@@ -79,7 +79,7 @@
             {
                 "class_name": "Activation",
                 "config": {
-                    "activation": "relu_max",
+                    "activation": "relu1",
                     "name": "act1",
                     "trainable": true
                 }
@@ -87,7 +87,7 @@
             {
                 "class_name": "BinaryDense",
                 "config": {
-                    "H": 0.125,
+                    "H": 1,
                     "activation": "linear",
                     "activity_regularizer": null,
                     "bias_constraint": null,
@@ -100,15 +100,15 @@
                     "kernel_constraint": {
                         "class_name": "Clip",
                         "config": {
-                            "max_value": 0.125,
-                            "min_value": -0.125
+                            "max_value": 1,
+                            "min_value": -1
                         }
                     },
                     "kernel_initializer": {
                         "class_name": "RandomUniform",
                         "config": {
-                            "maxval": 0.125,
-                            "minval": -0.125,
+                            "maxval": 1,
+                            "minval": -1,
                             "seed": null
                         }
                     },
@@ -155,7 +155,7 @@
             {
                 "class_name": "Activation",
                 "config": {
-                    "activation": "relu_max",
+                    "activation": "relu1",
                     "name": "act2",
                     "trainable": true
                 }
@@ -163,7 +163,7 @@
             {
                 "class_name": "BinaryDense",
                 "config": {
-                    "H": 0.1530931144952774,
+                    "H": 1,
                     "activation": "linear",
                     "activity_regularizer": null,
                     "bias_constraint": null,
@@ -176,15 +176,15 @@
                     "kernel_constraint": {
                         "class_name": "Clip",
                         "config": {
-                            "max_value": 0.1530931144952774,
-                            "min_value": -0.1530931144952774
+                            "max_value": 1,
+                            "min_value": -1
                         }
                     },
                     "kernel_initializer": {
                         "class_name": "RandomUniform",
                         "config": {
-                            "maxval": 0.1530931144952774,
-                            "minval": -0.1530931144952774,
+                            "maxval": 1,
+                            "minval": -1,
                             "seed": null
                         }
                     },
@@ -231,7 +231,7 @@
             {
                 "class_name": "Activation",
                 "config": {
-                    "activation": "relu_max",
+                    "activation": "relu1",
                     "name": "act3",
                     "trainable": true
                 }
@@ -239,7 +239,7 @@
             {
                 "class_name": "BinaryDense",
                 "config": {
-                    "H": 0.20134681463241577,
+                    "H": 1,
                     "activation": "linear",
                     "activity_regularizer": null,
                     "bias_constraint": null,
@@ -252,15 +252,15 @@
                     "kernel_constraint": {
                         "class_name": "Clip",
                         "config": {
-                            "max_value": 0.20134681463241577,
-                            "min_value": -0.20134681463241577
+                            "max_value": 1,
+                            "min_value": -1
                         }
                     },
                     "kernel_initializer": {
                         "class_name": "RandomUniform",
                         "config": {
-                            "maxval": 0.20134681463241577,
-                            "minval": -0.20134681463241577,
+                            "maxval": 1,
+                            "minval": -1,
                             "seed": null
                         }
                     },
