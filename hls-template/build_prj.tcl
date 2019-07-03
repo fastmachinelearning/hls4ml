@@ -77,10 +77,12 @@ if {$opt(synth)} {
   if {$opt(cosim)} {
     puts "***** C/RTL SIMULATION *****"
     set time_start [clock clicks -milliseconds]
+    # TODO: This is a workaround (Xilinx defines __RTL_SIMULATION__ only for SystemC testbenches).
+    add_files -tb myproject_test.cpp -cflags "-I[file normalize nnet_utils] -std=c++0x -DRTL_SIM"
     cosim_design -trace_level all
     set time_end [clock clicks -milliseconds]
     report_time "C/RTL SIMULATION" $time_start $time_end
-
+    puts "***** C/RTL VALIDATION *****"
     if {[compare_files $CSIM_RESULTS $RTL_COSIM_RESULTS]} {
         puts "INFO: test PASSED"
     } else {

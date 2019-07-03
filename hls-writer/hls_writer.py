@@ -357,14 +357,14 @@ def write_test_bench(model):
                 newline += '  std::cout << std::endl;\n'
         elif '//hls-fpga-machine-learning insert file output' in line:
             newline = line
-            newline += '#ifdef __RTL_SIMULATION__\n'
-            newline += '  std::string OUTPUT_FILE_NAME = "tb_data/rtl_cosim_results.log";\n'
+            newline += '#ifdef RTL_SIM\n'
+            newline += '  std::string RESULTS_LOG = "tb_data/rtl_cosim_results.log";\n'
             newline += '#else\n'
-            newline += '  std::string OUTPUT_FILE_NAME = "tb_data/csim_results.log";\n'
+            newline += '  std::string RESULTS_LOG = "tb_data/csim_results.log";\n'
             newline += '#endif\n'
-            newline += '  std::cout << "INFO: save inference results to file: " << OUTPUT_FILE_NAME << std::endl;\n'
+            newline += '  std::cout << "INFO: save inference results to file: " << RESULTS_LOG << std::endl;\n'
             newline += '  std::ofstream results;\n'
-            newline += '  results.open(OUTPUT_FILE_NAME);\n'
+            newline += '  results.open(RESULTS_LOG);\n'
             for out in model.get_output_variables():
                 newline += '  for(int i = 0; i < {}; i++) {{\n'.format(out.size_cpp())
                 newline += '    results << {}[i] << " ";\n'.format(out.cppname)
