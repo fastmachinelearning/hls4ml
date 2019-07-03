@@ -24,6 +24,7 @@
 #include "nnet_dense.h"
 #include "hls_stream.h"
 #include <math.h>
+#include <assert.h>
 
 // This is a substitute for "ceil(n/(float)d)".
 #define DIV_ROUNDUP(n,d) ((n + d - 1) / d)

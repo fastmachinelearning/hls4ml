@@ -22,7 +22,7 @@ class HLSConfig(object):
         self._parse_hls_config()
 
     def get_config_value(self, key):
-        return self.config[key]
+        return self.config.get(key, None)
 
     def get_project_name(self):
         return self.get_config_value('ProjectName')

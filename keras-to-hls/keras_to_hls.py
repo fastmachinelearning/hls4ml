@@ -69,6 +69,10 @@ def main():
         yamlConfig['KerasH5'] = os.path.join(configDir, yamlConfig['KerasH5'])
     if not os.path.isabs(yamlConfig['KerasJson']):
         yamlConfig['KerasJson'] = os.path.join(configDir, yamlConfig['KerasJson'])
+    if not os.path.isabs(yamlConfig['InputData']):
+        yamlConfig['InputData'] = os.path.join(configDir, yamlConfig['InputData'])
+    if not os.path.isabs(yamlConfig['OutputPredictions']):
+        yamlConfig['OutputPredictions'] = os.path.join(configDir, yamlConfig['OutputPredictions'])
 
     if not (yamlConfig["IOType"] == "io_parallel" or yamlConfig["IOType"] == "io_serial"):
         raise Exception('ERROR: Invalid IO type')
@@ -182,6 +186,7 @@ def keras_to_hls_model(yamlConfig):
             layer['n_out'] = weights_shape[1]
             if 'Binary' in layer['class_name']:
                 layer['quantize'] = 1
+                #layer['quantize'] = 2
             elif 'Ternary' in layer['class_name']:
                 layer['quantize'] = 3
             else:

@@ -26,14 +26,65 @@
 #include "firmware/myproject.h"
 #include "nnet_helpers.h"
 
+#define CHECKPOINT 5000
 
 int main(int argc, char **argv)
 {
-  //hls-fpga-machine-learning insert data
+  //load input data from text file
+  std::ifstream fin("tb_data/tb_input_features.dat");
+  //load predictions from text file
+  std::ifstream fpr("tb_data/tb_output_predictions.dat");
 
-  //hls-fpga-machine-learning insert top-level-function
+  std::string iline;
+  std::string pline;
+  int e = 0;
 
-  //hls-fpga-machine-learning insert output
+  if (fin.is_open() && fpr.is_open()) {
+	  std::ofstream fout;
+	  fout.open("tb_output_data.dat");
+	  while ( std::getline(fin,iline) && std::getline (fpr,pline) ) {
+	    if (e % CHECKPOINT == 0) std::cout << "Processing input " << e << std::endl;
+	    e++;
+      char* cstr=const_cast<char*>(iline.c_str());
+      char* current;
+      std::vector<float> in;
+      current=strtok(cstr," ");
+      while(current!=NULL) {
+        in.push_back(atof(current));
+        current=strtok(NULL," ");
+      }
+      cstr=const_cast<char*>(pline.c_str());
+      std::vector<float> pr;
+      current=strtok(cstr," ");
+      while(current!=NULL) {
+        pr.push_back(atof(current));
+        current=strtok(NULL," ");
+      }
+
+      //hls-fpga-machine-learning insert data
+
+      //hls-fpga-machine-learning insert top-level-function
+
+      //hls-fpga-machine-learning insert tb-output
+
+      if (e % CHECKPOINT == 0) {
+        std::cout << "Predictions" << std::endl;
+        //hls-fpga-machine-learning insert predictions
+        std::cout << "Quantized predictions" << std::endl;
+        //hls-fpga-machine-learning insert quantized
+      }
+    }
+    fin.close();
+    fpr.close();
+    fout.close();
+  } else {
+    std::cout << "Unable to open input/predictions file, using default input." << std::endl;
+    //hls-fpga-machine-learning insert zero
+
+    //hls-fpga-machine-learning insert top-level-function
+
+    //hls-fpga-machine-learning insert output
+  }
 
   return 0;
 }
