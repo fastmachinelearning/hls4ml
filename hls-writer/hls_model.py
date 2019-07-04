@@ -193,10 +193,16 @@ class HLSModel(object):
                 raise Exception('Cannot rewire a node with multiple inputs/outputs')
             prev_node = self.graph.get(node.inputs[0])
             next_node = next((x for x in self.graph.values() if x.inputs[0] == node.outputs[0]), None)
-            if prev_node is not None and next_node is not None:
-                next_node.inputs[0] = prev_node.outputs[0]
+            if prev_node is not None:
+                if next_node is not None:
+                    next_node.inputs[0] = prev_node.outputs[0]
+                else:
+                    if node.outputs[0] in self.outputs:
+                        self.outputs = [prev_node.outputs[0] if x == node.outputs[0] else x for x in self.outputs]
+                    else:
+                        raise Exception('Cannot rewire a node without child')
             else:
-                raise Exception('Cannot rewire a node without a parent or child')
+                raise Exception('Cannot rewire a node without a parent')
         
         del self.output_vars[node.outputs[0]]
         del self.graph[node.name]
