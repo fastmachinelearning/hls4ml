@@ -526,7 +526,8 @@ class Dense(Layer):
         quantize = self.get_attr('quantize', default=0)
         self.add_output_variable(shape, dims)
         self.add_weights(quantize=quantize)
-        self.weights['weight'].data = np.transpose(self.weights['weight'].data)
+        if self.model.config.get_strategy(self) == 'Resource':
+            self.weights['weight'].data = np.transpose(self.weights['weight'].data)
         self.add_bias(quantize=quantize)
 
     def function_cpp(self):
