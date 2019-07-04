@@ -24,8 +24,8 @@ class BatchNormalizationBinaryTanh(hls_model.Layer):
         mean = self.model.get_weights_data(original_name, 'moving_mean')
         gamma = self.model.get_weights_data(original_name, 'gamma')
         beta = self.model.get_weights_data(original_name, 'beta')
-        epsilon = self.model.get_weights_data(original_name, 'epsilon')
-        threshold = mean - beta * variance / gamma
+        epsilon = self.attributes.get('epsilon')
+        threshold = mean - beta * np.sqrt(variance + epsilon) / gamma
         self.add_weights_variable(name='threshold', data=threshold, type_name='threshold{index}_t', precision=inp.precision)
 
     def function_cpp(self):
@@ -74,6 +74,7 @@ class MergeBatchNormAndBinaryTanh(OptimizerPass):
             'n_in' : bn_layer.get_attr('n_in'),
             'n_out' : bn_layer.get_attr('n_in'),
             'n_filt' : bn_layer.get_attr('n_filt'),
+            'epsilon' : bn_layer.get_attr('epsilon')
         }
         bnbt_layer = model.make_node('BatchNormalizationBinaryTanh', 'bnbt_' + bn_layer.name, attrs, bn_layer.inputs)
         # Replace the old BatchNormalization layer with this one
