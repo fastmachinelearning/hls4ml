@@ -44,14 +44,22 @@ def print_array_to_cpp(var, odir):
     f.write("[{}]".format(np.prod(var.data.shape)))
     f.write(" = {")
 
+    if 'int' in var.precision:
+        precision_fmt = '%d'
+    else:
+        precision_bits = re.search('.+<(.+?)>', var.precision).group(1).split(',')
+        decimal_bits = int(precision_bits[0]) - int(precision_bits[1])
+        decimal_spaces = int(np.floor(np.log10(2 ** decimal_bits - 1))) + 1
+        precision_fmt = '%.{}f'.format(decimal_spaces)
+
     #fill c++ array.
     #not including internal brackets for multidimensional case
     i=0
     for x in np.nditer(var.data, order='C'):
         if i==0:
-            f.write("%.12f" % x)
+            f.write(precision_fmt % x)
         else:
-            f.write(", %.12f" % x)
+            f.write(", " + precision_fmt % x)
         i=i+1
     f.write("};\n")
     f.close()

@@ -549,7 +549,7 @@ class BinaryDense(Dense):
         self.weights['weight'].data = np.transpose(self.weights['weight'].data)
         # binary layer has no bias, so initialize a 0 array
         zeros = np.zeros(shape=(self.attributes['n_out']))
-        self.add_weights_variable(name='bias', data=zeros, type_name='bias{index}_t', precision='ap_uint<1>', quantize=quantize)
+        self.add_weights_variable(name='bias', var_name='b{index}', data=zeros, type_name='bias{index}_t', precision='ap_uint<1>', quantize=quantize)
         self.weights['bias'].nzeros = 0
 
 class Conv1D(Layer):
