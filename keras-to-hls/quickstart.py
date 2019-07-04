@@ -21,7 +21,7 @@ get_custom_objects().update({"ZeroSomeWeights": ZeroSomeWeights})
 import yaml
 #from train import parse_config, get_features
 from quantized_layers import Clip, BinaryDense, TernaryDense, QuantizedDense
-from models import binary_tanh, ternary_tanh, quantized_relu
+from models import binary_tanh, ternary_tanh, quantized_relu, relu1
 
 json_file = open(yamlConfig['KerasJson'], 'r')
 loaded_model_json = json_file.read()
@@ -30,6 +30,7 @@ model = keras.models.model_from_json(loaded_model_json, custom_objects={'ZeroSom
                                                            'BinaryDense': BinaryDense,
                                                            'binary_tanh': binary_tanh,
                                                            'quantized_relu': quantized_relu,
+                                                           'relu1' : relu1,
                                                            'Clip': Clip})
 model.load_weights(yamlConfig['KerasH5'])
 
@@ -46,5 +47,5 @@ def model_up_to(model, n):
     m.add(layer)
   return m
 
-for n in range(0, len(model.layers)):
-  print(n, model_up_to(model, n).predict(x))
+#for n in range(0, len(model.layers)):
+#  print(n, model_up_to(model, n).predict(x))

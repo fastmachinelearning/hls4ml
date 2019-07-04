@@ -122,7 +122,7 @@ void  normalize_binary_tanh(data_T data[CONFIG_T::n_in], ap_uint<1> res[CONFIG_T
             #pragma HLS PIPELINE
         }
         datareg = data[ii];	 
-        if( datareg >= threshold[ii] ) cache = 1;
+        if( datareg > threshold[ii] ) cache = 1;
         else cache = 0;
 
         res[ii] = (ap_uint<1>) cache;

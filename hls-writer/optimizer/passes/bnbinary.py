@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+import re
 
 sys.path.insert(0, '../')
 from optimizer import OptimizerPass
@@ -18,14 +19,23 @@ class BatchNormalizationBinaryTanh(hls_model.Layer):
         shape = inp.shape
         dims = inp.dim_names
         self.add_output_variable(shape, dims, precision='ap_uint<1>')
-
+        precision_bits = re.search('.+<(.+?)>', inp.precision).group(1).split(',')
+        if 'ap_int' in inp.precision:
+          W = int(precision_bits[0])
+          I = W
+          F = 0
+        elif 'ap_fixed' in inp.precision:
+          W = int(precision_bits[0])
+          I = int(precision_bits[1])
+          F = W - I
         original_name = self.attributes.get('original_name')
         variance = self.model.get_weights_data(original_name, 'moving_variance')
         mean = self.model.get_weights_data(original_name, 'moving_mean')
         gamma = self.model.get_weights_data(original_name, 'gamma')
         beta = self.model.get_weights_data(original_name, 'beta')
-        epsilon = self.model.get_weights_data(original_name, 'epsilon')
-        threshold = mean - beta * variance / gamma
+        epsilon = self.attributes.get('epsilon')
+        threshold = mean - beta * np.sqrt(variance + epsilon) / gamma
+        threshold = np.floor(threshold * 2**F) / 2**F
         self.add_weights_variable(name='threshold', data=threshold, type_name='threshold{index}_t', precision=inp.precision)
 
     def function_cpp(self):
@@ -74,6 +84,7 @@ class MergeBatchNormAndBinaryTanh(OptimizerPass):
             'n_in' : bn_layer.get_attr('n_in'),
             'n_out' : bn_layer.get_attr('n_in'),
             'n_filt' : bn_layer.get_attr('n_filt'),
+            'epsilon' : bn_layer.get_attr('epsilon')
         }
         bnbt_layer = model.make_node('BatchNormalizationBinaryTanh', 'bnbt_' + bn_layer.name, attrs, bn_layer.inputs)
         # Replace the old BatchNormalization layer with this one
@@ -98,11 +109,22 @@ class QuantizeBinaryDenseOutput(OptimizerPass):
         out_var.precision = out_type
         node.precision[out_var.type] = out_type
         # If followed by the BatchNormalizationBinaryTanh, update its input
+        # Also requantise the weights based on the input type
         bd_out_nodes = node.get_output_nodes()
         for out_node in bd_out_nodes:
             if out_node.__class__.__name__ == 'BatchNormalizationBinaryTanh':
                 threshold_var = out_node.weights['threshold']
                 threshold_var.precision = out_type
+                precision_bits = re.search('.+<(.+?)>', out_type).group(1).split(',')
+                if 'ap_int' in out_type:
+                  W = int(precision_bits[0])
+                  I = W
+                  F = 0
+                elif 'ap_fixed' in out_type:
+                  W = int(precision_bits[0])
+                  I = int(precision_bits[1])
+                  F = W - I
+                threshold_var.data = np.floor(threshold_var.data * 2**F) / 2**F
                 out_node.precision[threshold_var.type] = out_type
 
         return False
