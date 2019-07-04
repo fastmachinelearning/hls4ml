@@ -102,29 +102,20 @@ class QuantizeBinaryDenseOutput(OptimizerPass):
         # Compute the required precision and update the variables
         # Number of bits for output is log2 of number of input nodes
         # Since this is the number of uint<1>'s which are summed
-        nbits = int(np.ceil(np.log2(node.attributes['n_in'])) + 1)
+        nbits = int(np.ceil(np.log2(node.attributes['n_in'])) + 2)
         out_type = 'ap_int<{}>'.format(nbits)
         node.set_attr('accum_t', out_type)
         out_var = node.get_output_variable()
         out_var.precision = out_type
         node.precision[out_var.type] = out_type
         # If followed by the BatchNormalizationBinaryTanh, update its input
-        # Also requantise the weights based on the input type
+        # Also requantise the weights
         bd_out_nodes = node.get_output_nodes()
         for out_node in bd_out_nodes:
             if out_node.__class__.__name__ == 'BatchNormalizationBinaryTanh':
                 threshold_var = out_node.weights['threshold']
                 threshold_var.precision = out_type
-                precision_bits = re.search('.+<(.+?)>', out_type).group(1).split(',')
-                if 'ap_int' in out_type:
-                  W = int(precision_bits[0])
-                  I = W
-                  F = 0
-                elif 'ap_fixed' in out_type:
-                  W = int(precision_bits[0])
-                  I = int(precision_bits[1])
-                  F = W - I
-                threshold_var.data = np.floor(threshold_var.data * 2**F) / 2**F
+                threshold_var.data = np.floor(threshold_var.data)
                 out_node.precision[threshold_var.type] = out_type
 
         return False
