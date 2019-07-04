@@ -1,5 +1,7 @@
-KerasJson: example-keras-model-files/keras_bnn.json
-KerasH5:   example-keras-model-files/keras_bnn_weights.h5
+KerasJson: example-keras-model-files/KERAS_3layer_binary_smaller.json
+KerasH5:   example-keras-model-files/KERAS_3layer_binary_smaller_weights.h5
+#InputData: example-keras-model-files/KERAS_3layer_binary_input_features.dat
+#OutputPredictions: example-keras-model-files/KERAS_3layer_binary_predictions.dat
 OutputDir: my-hls-test
 ProjectName: myproject
 XilinxPart: xcku115-flvb2104-2-i
@@ -10,3 +12,6 @@ HLSConfig:
   Model:
     Precision: ap_fixed<16,6>
     ReuseFactor: 1
+#  LayerType:
+#    Dense:
+#      Strategy: Resource

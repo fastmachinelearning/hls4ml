@@ -137,8 +137,10 @@ pooling2d_function_template = 'nnet::pooling2d<{input_t}, {config}>({input}, {ou
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
 
 function_templates = {
-    'Dense'                  : dense_large_function_template,
-    'BinaryDense'            : dense_large_function_template,
+    'Dense'                  : dense_function_template,
+    'BinaryDense'            : dense_function_template,
+    'LargeDense'             : dense_large_function_template,
+    'LargeBinaryDense'       : dense_large_function_template,
     'BatchNormalization'     : batchnorm_function_template,
     'Conv1D'                 : conv1d_function_template,
     'Conv2D'                 : conv2d_function_template,
