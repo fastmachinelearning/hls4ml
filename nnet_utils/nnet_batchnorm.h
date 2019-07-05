@@ -85,6 +85,8 @@ void normalize(
         
         if (CONFIG_T::n_filt==-1) {
             res[ires] = data[ires] * scale[ires] + bias[ires];
+	    //std::cout << " scale " << scale[ires] << std::endl;
+	    //std::cout << "threshold " << -bias[ires]/scale[ires] <<  std::endl;
 	    } else {
             int norm_index = ires%CONFIG_T::n_filt;
             res[ires] = data[ires] * scale[norm_index] + bias[norm_index];
@@ -130,6 +132,44 @@ void  normalize_binary_tanh(data_T data[CONFIG_T::n_in], ap_uint<1> res[CONFIG_T
     }   
 }
 
+// *************************************************
+//       Merged Batch Normalization and Ternary Tanh
+// *************************************************
+struct batchnorm_ternarytanh_config
+{
+    // Layer Sizes
+    static const unsigned n_in = 10;
+    static const unsigned n_filt = -1;
+    
+    // Resource reuse info
+    static const unsigned io_type = io_parallel;
+    static const unsigned reuse_factor = 1;
+    static const unsigned n_zeros = 0;
+};
+
+template<class data_T, typename CONFIG_T>
+void  normalize_ternary_tanh(data_T data[CONFIG_T::n_in], ap_int<2> res[CONFIG_T::n_in], data_T threshold_1[CONFIG_T::n_in], data_T threshold_2[CONFIG_T::n_in])
+{
+    if (CONFIG_T::io_type == io_parallel){
+        #pragma HLS PIPELINE
+        #pragma HLS ARRAY_PARTITION variable=res complete
+    }
+
+    data_T datareg;   
+    ap_int<2> cache; 
+    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+        if (CONFIG_T::io_type == io_serial){
+            #pragma HLS PIPELINE
+        }
+        datareg = data[ii];
+        if( datareg > threshold_1[ii] ) cache = 1;
+	else if( datareg <= threshold_2[ii]) cache = -1;
+        else cache = 0;
+
+        res[ii] = (ap_int<2>) cache;
+ 
+    }
+}
 
 }
 
