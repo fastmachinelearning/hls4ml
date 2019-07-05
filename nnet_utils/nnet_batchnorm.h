@@ -85,8 +85,6 @@ void normalize(
         
         if (CONFIG_T::n_filt==-1) {
             res[ires] = data[ires] * scale[ires] + bias[ires];
-	    //std::cout << " scale " << scale[ires] << std::endl;
-	    //std::cout << "threshold " << -bias[ires]/scale[ires] <<  std::endl;
 	    } else {
             int norm_index = ires%CONFIG_T::n_filt;
             res[ires] = data[ires] * scale[norm_index] + bias[norm_index];
