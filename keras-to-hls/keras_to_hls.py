@@ -185,8 +185,7 @@ def keras_to_hls_model(yamlConfig):
             layer['n_in'] = weights_shape[0]
             layer['n_out'] = weights_shape[1]
             if 'Binary' in layer['class_name']:
-                layer['quantize'] = 1
-                #layer['quantize'] = 2
+                layer['quantize'] = 2
             elif 'Ternary' in layer['class_name']:
                 layer['quantize'] = 3
             else:

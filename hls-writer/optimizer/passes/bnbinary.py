@@ -94,7 +94,7 @@ class MergeBatchNormAndBinaryTanh(OptimizerPass):
 
 class QuantizeBinaryDenseOutput(OptimizerPass):
     def match(self, node):
-        is_match = (node.__class__.__name__ == 'BinaryDense'
+        is_match = (node.__class__.__name__ == 'Dense' and node.get_attr('quantize') == 2
             and node.get_input_node().__class__.__name__ == 'BatchNormalizationBinaryTanh')
         return is_match
     
@@ -108,6 +108,21 @@ class QuantizeBinaryDenseOutput(OptimizerPass):
         out_var = node.get_output_variable()
         out_var.precision = out_type
         node.precision[out_var.type] = out_type
+        
+        data_1bit = model.quantize_data(node.weights['weight'].data, 1)
+        weights = node.weights['weight']
+        weights.data = data_1bit
+        weights.type = 'weight{index}_t'.format(index=node.index)
+        weights.precision = 'ap_uint<1>'
+        node.precision[weights.type] = weights.precision
+        zeros = np.zeros(shape=(node.get_attr('n_out')))
+        bias = node.weights['bias']
+        bias.data = zeros
+        bias.type = 'bias{index}_t'.format(index=node.index)
+        bias.nzeros = 0
+        bias.precision = 'ap_uint<1>'
+        node.precision[bias.type] = bias.precision
+        
         # If followed by the BatchNormalizationBinaryTanh, update its input
         # Also requantise the weights
         bd_out_nodes = node.get_output_nodes()

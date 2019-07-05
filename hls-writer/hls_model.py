@@ -432,11 +432,15 @@ class Layer(object):
 
     def add_bias(self, quantize=0):
         data = self.model.get_weights_data(self.name, 'bias')
+        precision = None
+        type_name = None
         if data is None:
             data = np.zeros(self.get_output_variable().shape[-1])
+            precision = 'ap_uint<1>'
+            type_name = 'bias{index}_t'
             quantize = 0 # Don't quantize non-existant bias
 
-        self.add_weights_variable(name='bias', var_name='b{index}', data=data, quantize=quantize)
+        self.add_weights_variable(name='bias', var_name='b{index}', type_name=type_name, precision=precision, data=data, quantize=quantize)
 
     def add_weights_variable(self, name, var_name=None, type_name=None, precision=None, data=None, quantize=0):
         if var_name is None:
@@ -455,6 +459,12 @@ class Layer(object):
 
         if quantize > 0:
             data = self.model.quantize_data(data, quantize)
+            if quantize == 1:
+                precision = 'ap_uint<1>'
+                type_name = name + '{index}_t'
+            elif quantize == 2 or quantize == 3:
+                precision = 'ap_int<2>'
+                type_name = name + '{index}_t'
 
         var = WeightVariable(var_name, type_name=type_name, precision=precision, data=data, index=self.index)
 
@@ -544,21 +554,6 @@ class Dense(Layer):
         params['nzeros'] = self.get_weights('weight').nzeros
 
         return self._config_template.format(**params)
-
-class BinaryDense(Dense):
-    def initialize(self):
-        shape = [self.attributes['n_out']]
-        dims = ['N_LAYER_{}'.format(self.index)]
-        quantize = self.get_attr('quantize')
-        self.add_output_variable(shape, dims)
-        self.add_weights_variable(name='weight', var_name='w{index}', data='kernel', type_name='weights{index}_t', precision='ap_uint<1>', quantize=quantize)
-        self.weights['weight'].nzeros = 0
-        if self.model.config.get_strategy(self) == 'Resource':
-            self.weights['weight'].data = np.transpose(self.weights['weight'].data)
-        # binary layer has no bias, so initialize a 0 array
-        zeros = np.zeros(shape=(self.attributes['n_out']))
-        self.add_weights_variable(name='bias', var_name='b{index}', data=zeros, type_name='bias{index}_t', precision='ap_uint<1>', quantize=quantize)
-        self.weights['bias'].nzeros = 0
 
 class Conv1D(Layer):
     def initialize(self):
@@ -799,7 +794,7 @@ layer_map = {
     'ELU'                : ParametrizedActivation,
     'PReLU'              : PReLU,
     'Dense'              : Dense,
-    'BinaryDense'        : BinaryDense,
+    'BinaryDense'        : Dense,
     'TernaryDense'       : Dense,
     'Conv1D'             : Conv1D,
     'Conv2D'             : Conv2D,
