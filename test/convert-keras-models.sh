@@ -72,9 +72,9 @@ do
          if [[ "${model_def[$i]}" == i:* ]] ; then params[4]="-t ${model_def[$i]:2} "; fi
       done
       params[5]=${model_def[0]}
-      
+
       cmd="./keras-to-hls.sh ${py} ${dir} ${params[0]}${params[1]}${params[2]}${params[3]}${params[4]}${params[5]}"
-      
+
       ${exec} "${cmd}"
    fi
 done

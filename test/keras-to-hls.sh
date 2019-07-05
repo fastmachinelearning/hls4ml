@@ -89,7 +89,7 @@ do
    base=`echo "${h5}" | sed -e 's/\(_weights\)*$//g'`
    file="${basedir}/${base}-${pycmd}.yml"
 
-   # This scheme assumes base output directory is one level deep 
+   # This scheme assumes base output directory is one level deep
    echo "KerasJson: ../../keras-to-hls/example-keras-model-files/${name}.json" > ${file}
    echo "KerasH5:   ../../keras-to-hls/example-keras-model-files/${h5}.h5" >> ${file}
    echo "OutputDir: ${base}-${pycmd}-${xilinxpart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}" >> ${file}
@@ -103,7 +103,7 @@ do
    echo "    ReuseFactor: ${rf}" >> ${file}
    echo "    Precision: ${type} " >> ${file}
 
-   ${pycmd} ../keras-to-hls/keras-to-hls.py -c ${file} || exit 1
+   ${pycmd} ../keras-to-hls/keras_to_hls.py -c ${file} || exit 1
    rm ${file}
    echo ""
 done
