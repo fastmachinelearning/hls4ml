@@ -1,6 +1,8 @@
 from __future__ import print_function
 import logging
 
+import sys
+
 import numpy as np
 from math import ceil
 
@@ -14,16 +16,18 @@ logging.basicConfig(level=logging.INFO)
 
 n_in = 16
 n_out = 8
-RF = 4
+RF = 19
 
 block_factor = DIV_ROUNDUP(n_in * n_out , RF)
 multfactor = MIN(n_in, RF)
 multiplier_limit = DIV_ROUNDUP(n_in * n_out, multfactor)
 multscale = multiplier_limit / n_out
 
-if (multiplier_limit % n_out != 0):
-    logging.info("ERROR: RF = %d is not acceptable (multiplier_limit % n_out = %d (!= 0))", RF, multiplier_limit % n_out)
-    exit(1)
+# A reuse-factor value violating this assertion leads to functional errors.
+ASSERT = (multiplier_limit % n_out != 0) or (RF > n_in)
+if (not ASSERT):
+    logging.debug("ERROR: RF = %d is not acceptable (multiplier_limit % n_out = %d (!= 0))", RF, multiplier_limit % n_out)
+    raise SystemExit
 
 logging.info("INFO:===============================================================================")
 logging.info("n_in = %d", n_in)
@@ -39,7 +43,7 @@ data = np.arange(n_in).astype(float)
 biases = np.arange(n_out).astype(float)
 weights = np.arange( n_in * n_out).astype(float)
 
-# transpose the weights matrix
+# Transpose the weights matrix
 weights_T = weights.reshape(n_in, n_out).transpose().reshape(n_in * n_out, 1)
 
 # Python implementation of nnet_utils/nnet_large_layer.h
@@ -98,8 +102,8 @@ reference_results = fully_connected_layer(data, weights, biases)
 validation_result = np.array_equal(implementation_results, reference_results)
 
 logging.info("INFO:===============================================================================")
-print("implementation:", implementation_results)
-print("reference     :", reference_results)
+print("INFO:implementation:", implementation_results)
+print("INFO:reference     :", reference_results)
 if (validation_result):
     logging.info("validation: PASS")
 else:
