@@ -23,6 +23,7 @@
 #include "nnet_common.h"
 #include "hls_stream.h"
 #include <math.h>
+#include <assert.h>
 
 // This is a substitute for "ceil(n/(float)d)".
 #define DIV_ROUNDUP(n,d) ((n + d - 1) / d)
@@ -84,8 +85,7 @@ namespace nnet {
             const int multscale = multiplier_limit/CONFIG_T::n_out;
             const int nin = CONFIG_T::n_in;
             const int nout = CONFIG_T::n_out;
-
-            assert((multiplier_limit % nin == 0) && "The current Reuse Factor is not allowed");
+            assert((multiplier_limit % nout == 0 || rufactor >= nin) && "The current Reuse Factor is not allowed");
 
             //std::cout << "===> " << multiplier_limit << " -- " << CONFIG_T::n_out  << " -- " << multiplier_limit % CONFIG_T::n_out << std::endl;
             //if (multiplier_limit % CONFIG_T::n_out != 0) return;
