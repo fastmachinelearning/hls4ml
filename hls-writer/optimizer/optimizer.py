@@ -42,7 +42,10 @@ def optimize_model(model, passes):
 
 from passes.nop import EliminateLinearActivation
 from passes.bnbinary import MergeBatchNormAndBinaryTanh, QuantizeBinaryDenseOutput
+from passes.tnternary import MergeBatchNormAndTernaryTanh, QuantizeTernaryDenseOutput
 
 register_pass('eliminate_linear_activation', EliminateLinearActivation)
 register_pass('merge_batch_norm_binary_tanh', MergeBatchNormAndBinaryTanh)
 register_pass('quantize_binary_dense_output', QuantizeBinaryDenseOutput)
+register_pass('merge_batch_norm_ternary_tanh', MergeBatchNormAndTernaryTanh)
+register_pass('quantize_ternary_dense_output', QuantizeTernaryDenseOutput)
