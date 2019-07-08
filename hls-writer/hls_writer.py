@@ -111,7 +111,10 @@ def write_project_cpp(model):
                 for i in model_inputs: newline += indent + '#pragma HLS ARRAY_RESHAPE variable={} complete dim=0 \n'.format(i.cppname)
                 for o in model_outputs: newline += indent + '#pragma HLS ARRAY_RESHAPE variable={} complete dim=0 \n'.format(o.cppname)
                 newline += indent + '#pragma HLS INTERFACE ap_vld port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
-                newline += indent + '#pragma HLS PIPELINE \n'
+                if model.config.model_strategy == 'Resource':
+                    newline += indent + '#pragma HLS DATAFLOW \n'
+                else:
+                    newline += indent + '#pragma HLS PIPELINE \n'
             if model.config.get_config_value("IOType") == "io_serial":
                 newline += indent + '#pragma HLS INTERFACE axis port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
                 newline += indent + '#pragma HLS DATAFLOW \n'
