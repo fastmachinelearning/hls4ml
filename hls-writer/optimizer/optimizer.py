@@ -24,7 +24,9 @@ def register_pass(name, opt_cls):
 def get_optimizer(name):
     return optimizer_map[name]()
 
-def optimize_model(model, passes):
+def optimize_model(model, passes=None):
+    if passes is None:
+        passes = optimizer_map.keys()
     optimizers = [get_optimizer(opt_pass) for opt_pass in passes]
     optimization_done = False
     while not optimization_done:
@@ -41,11 +43,8 @@ def optimize_model(model, passes):
             optimization_done = True
 
 from passes.nop import EliminateLinearActivation
-from passes.bnbinary import MergeBatchNormAndBinaryTanh, QuantizeBinaryDenseOutput
-from passes.tnternary import MergeBatchNormAndTernaryTanh, QuantizeTernaryDenseOutput
+from passes.bn_quant import MergeBatchNormAndQuantizedTanh, QuantizeDenseOutput
 
 register_pass('eliminate_linear_activation', EliminateLinearActivation)
-register_pass('merge_batch_norm_binary_tanh', MergeBatchNormAndBinaryTanh)
-register_pass('quantize_binary_dense_output', QuantizeBinaryDenseOutput)
-register_pass('merge_batch_norm_ternary_tanh', MergeBatchNormAndTernaryTanh)
-register_pass('quantize_ternary_dense_output', QuantizeTernaryDenseOutput)
+register_pass('merge_batch_norm_quantized_tanh', MergeBatchNormAndQuantizedTanh)
+register_pass('quantize_dense_output', QuantizeDenseOutput)
