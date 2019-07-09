@@ -257,7 +257,7 @@ for ARCH in $ARCHS; do
         fi
 
     else # HLS Failed or Timeout
-        HLS_RESULTS=$(grep "ERROR:" $VIVADO_HLS_SOLUTION_LOG | wc -l)
+        HLS_RESULTS=$(grep "ERROR:" $VIVADO_HLS_LOG | wc -l)
         if [ $HLS_RESULTS -ge 1 ]; then # Failed
             VIVADO_HLS_EXIT_VAL=1
         else # Timeout
