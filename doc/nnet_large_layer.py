@@ -14,20 +14,14 @@ def MIN(a, b):
 
 logging.basicConfig(level=logging.INFO)
 
-n_in = 16
-n_out = 8
-RF = 19
+n_in = 9
+n_out = 3
+RF = 2
 
 block_factor = DIV_ROUNDUP(n_in * n_out , RF)
 multfactor = MIN(n_in, RF)
 multiplier_limit = DIV_ROUNDUP(n_in * n_out, multfactor)
 multscale = multiplier_limit / n_out
-
-# A reuse-factor value violating this assertion leads to functional errors.
-ASSERT = (multiplier_limit % n_out != 0) or (RF > n_in)
-if (not ASSERT):
-    logging.debug("ERROR: RF = %d is not acceptable (multiplier_limit % n_out = %d (!= 0))", RF, multiplier_limit % n_out)
-    raise SystemExit
 
 logging.info("INFO:===============================================================================")
 logging.info("n_in = %d", n_in)
@@ -36,7 +30,14 @@ logging.info("n_in * n_out = %d", n_in * n_out)
 logging.info("RF = %d", RF)
 logging.info("block_factor = %d", block_factor)
 logging.info("multfactor = %d", multfactor)
+logging.info("multiplier_limit = %d", multiplier_limit)
 logging.debug("INFO:===============================================================================")
+
+# A reuse-factor value violating this assertion leads to functional errors.
+ASSERT = (multiplier_limit % n_out == 0) or (RF > n_in)
+if (not ASSERT):
+    print("ERROR: RF =", RF, "is not acceptable (multiplier_limit % n_out =", multiplier_limit % n_out, "(!= 0))")
+    raise SystemExit
 
 # Create and initialize arrays
 data = np.arange(n_in).astype(float)
