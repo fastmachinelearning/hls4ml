@@ -31,6 +31,7 @@ logging.info("RF = %d", RF)
 logging.info("block_factor = %d", block_factor)
 logging.info("multfactor = %d", multfactor)
 logging.info("multiplier_limit = %d", multiplier_limit)
+logging.info("multscale = %d", multscale)
 logging.debug("INFO:===============================================================================")
 
 # A reuse-factor value violating this assertion leads to functional errors.
@@ -49,13 +50,13 @@ weights_T = weights.reshape(n_in, n_out).transpose().reshape(n_in * n_out, 1)
 
 
 # TODO: REMOVE MODULUS OPERATION
+logging.info("INFO:===============================================================================")
 USE_MODULUS = 0
 
 STEP_IN = RF % n_in
 STEP_OUT = (n_in + block_factor - STEP_IN) % n_in
 logging.info("STEP_IN = %d", STEP_IN)
 logging.info("STEP_OUT = %d", STEP_OUT)
-logging.debug("INFO:===============================================================================")
 # ------------------------------
 
 # Python implementation of nnet_utils/nnet_large_layer.h
@@ -78,13 +79,16 @@ def nnet_large_layer(data, weights, biases):
             # TODO: REMOVE MODULUS OPERATION
             if USE_MODULUS:
                 in_index = w_index % n_in
-            else:
-                in_index = in_index + STEP_IN if (in_index + STEP_IN < n_in) else (in_index + STEP_IN) - n_in
             # ------------------------------
             if (w_index >= n_in * n_out):
                 continue
             logging.debug("  data[ %d ], weights[ %d ]", in_index, w_index)
             tmpmult[im] = data[in_index] * weights[w_index]
+            # TODO: REMOVE MODULUS OPERATION
+            if not USE_MODULUS:
+                in_index = in_index + STEP_IN if (in_index + STEP_IN < n_in) else (in_index + STEP_IN) - n_in
+            # ------------------------------
+
         # TODO: REMOVE MODULUS OPERATION
         if not USE_MODULUS:
             in_index = in_index + STEP_OUT if (in_index + STEP_OUT < n_in) else (in_index + STEP_OUT) - n_in
