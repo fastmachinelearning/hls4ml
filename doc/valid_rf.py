@@ -9,11 +9,13 @@
 
 # For the current nnet_large_layer.h implementation, a reuse factor is valid
 # iff
-#   (multiplier_limit % n_out) == 0 or (rf >= n_in)
+#   ((multiplier_limit % n_out) == 0 or (rf >= n_in))
+#   and
+#   (RF % n_in) == 0 or (rf < n_in)
 # where
 #   multiplier_limit = ceil ((n_in * n_out) / min(n_in, rf))
 #
-# We also enforce
+# We may also consider to enforce [DISABLED]
 #   ((n_in * n_out) % rf) == 0
 # which provides higher chances of a succesful run of Vivado HLS.
 
@@ -36,15 +38,16 @@ from keras.models import model_from_json
 #
 def check_conditions(n_in, n_out, rf):
     multfactor = min(n_in, rf)
-    multiplier_limit = math.ceil((n_in * n_out) / float(multfactor))
+    multiplier_limit = int(math.ceil((n_in * n_out) / float(multfactor)))
     #
     # THIS ASSERTION IS FOR THE FUNCTIONAL CORRECTNESS OF THE LARGE LAYER
     #
-    _assert = ((int(multiplier_limit % n_out) == 0) or (rf >= n_in))
+    _assert = (((multiplier_limit % n_out) == 0) or (rf >= n_in))
+    _assert = _assert and (((rf % n_in) == 0) or (rf < n_in))
     #
     # THIS ASSERTION IS FOR QoR AND EXECUTION TIME OF VIVADO HLS
     #
-    _assert = _assert and (((n_in * n_out) % rf) == 0)
+    #_assert = _assert and (((n_in * n_out) % rf) == 0)
 
     return _assert
 

@@ -14,9 +14,9 @@ def MIN(a, b):
 
 logging.basicConfig(level=logging.INFO)
 
-n_in = 9
-n_out = 3
-RF = 27
+n_in = 16
+n_out = 8
+RF = 31
 
 block_factor = DIV_ROUNDUP(n_in * n_out , RF)
 multfactor = MIN(n_in, RF)
@@ -36,8 +36,13 @@ logging.debug("INFO:============================================================
 
 # A reuse-factor value violating this assertion leads to functional errors.
 ASSERT = (multiplier_limit % n_out == 0) or (RF > n_in)
+ASSERT = ASSERT and ((RF % n_in == 0) or (RF <= n_in))
+
 if (not ASSERT):
-    print("ERROR: RF =", RF, "is not acceptable (multiplier_limit % n_out =", multiplier_limit % n_out, "(!= 0))")
+    print("ERROR: RF =", RF, "is not acceptable")
+    print("ERROR: one of the following conditions must hold")
+    print("ERROR: * (RF < N_IN) => (multiplier_limit % n_out)")
+    print("ERROR: * (RF >= N_IN) => (RF % n_in)")
     raise SystemExit
 
 # Create and initialize arrays
@@ -53,16 +58,21 @@ weights_T = weights.reshape(n_in, n_out).transpose().reshape(n_in * n_out, 1)
 logging.info("INFO:===============================================================================")
 USE_MODULUS = 0
 
-STEP_IN = RF % n_in
-STEP_OUT = (n_in + block_factor - STEP_IN) % n_in
+#STEP_IN = RF % n_in # GDG
+#STEP_LOOP = (n_in + block_factor - STEP_IN) % n_in # GDG
+STEP_IN = RF # VL
+STEP_LOOP = 0 # VL
 logging.info("STEP_IN = %d", STEP_IN)
-logging.info("STEP_OUT = %d", STEP_OUT)
+logging.info("STEP_LOOP = %d", STEP_LOOP)
 # ------------------------------
 
 # Python implementation of nnet_utils/nnet_large_layer.h
 def nnet_large_layer(data, weights, biases):
+    global USE_MODULUS, STEP_IN, STEP_LOOP
+
     # TODO: REMOVE MODULUS OPERATION
-    in_index = 0
+    if not USE_MODULUS:
+        in_index = 0
     # ------------------------------
 
     acc = np.zeros(n_out)
@@ -83,15 +93,23 @@ def nnet_large_layer(data, weights, biases):
             if (w_index >= n_in * n_out):
                 continue
             logging.debug("  data[ %d ], weights[ %d ]", in_index, w_index)
-            tmpmult[im] = data[in_index] * weights[w_index]
+            # TODO: REMOVE MODULUS OPERATION
+            if USE_MODULUS:
+                tmpmult[im] = data[in_index] * weights[w_index]
+            else:
+                #tmpmult[im] = data[in_index] * weights[w_index] # GDG
+                tmpmult[im] = data[STEP_LOOP + in_index] * weights[w_index] # VL
+            # ------------------------------
             # TODO: REMOVE MODULUS OPERATION
             if not USE_MODULUS:
-                in_index = in_index + STEP_IN if (in_index + STEP_IN < n_in) else (in_index + STEP_IN) - n_in
+                #in_index = in_index + STEP_IN if (in_index + STEP_IN < n_in) else (in_index + STEP_IN) - n_in # GDG
+                in_index = in_index + STEP_IN if (in_index + STEP_IN < n_in) else 0
             # ------------------------------
 
         # TODO: REMOVE MODULUS OPERATION
         if not USE_MODULUS:
-            in_index = in_index + STEP_OUT if (in_index + STEP_OUT < n_in) else (in_index + STEP_OUT) - n_in
+            #in_index = in_index + STEP_LOOP if (in_index + STEP_LOOP < n_in) else (in_index + STEP_LOOP) - n_in # GDG
+            STEP_LOOP = 0 if (STEP_LOOP + 1 >= n_in) else STEP_LOOP + 1 # VL
         # ------------------------------
 
         mult = np.zeros(multiplier_limit)
