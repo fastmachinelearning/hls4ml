@@ -16,7 +16,7 @@ typedef ap_fixed<16,6> weight_default_t;
 typedef ap_fixed<16,6> bias_default_t;
 typedef ap_fixed<16,6> input_t;
 typedef ap_fixed<16,6> result_t;
-#define REUSE 1
+#define REUSE 7
 #define N_FEATURES 3
 #define N_HIDDEN_FEATURES 4
 //2x2 example:
