@@ -103,7 +103,7 @@ do
    echo "    ReuseFactor: ${rf}" >> ${file}
    echo "    Precision: ${type} " >> ${file}
 
-   ${pycmd} ../keras-to-hls/keras_to_hls.py -c ${file} || exit 1
+   ${pycmd} ../keras-to-hls/keras-to-hls.py -c ${file} || exit 1
    rm ${file}
    echo ""
 done
