@@ -12,7 +12,8 @@ def ensembleToDict(bdt):
   ensembleDict = {'max_depth' : bdt.max_depth, 'n_trees' : bdt.n_estimators,
                   'n_features' : len(bdt.feature_importances_),
                   'n_classes' : bdt.n_classes_, 'trees' : [],
-                  'init_predict' : bdt.init_.predict(np.array([0]))[0].tolist()}
+                  'init_predict' : bdt.init_.predict(np.array([0]))[0].tolist(),
+                  'norm' : 1}
   for trees in bdt.estimators_:
     treesl = []
     for tree in trees:

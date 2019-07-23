@@ -480,6 +480,8 @@ def bdt_writer(ensemble_dict, yamlConfig):
 
     fout.write("static const BDT::BDT<n_trees, max_depth, n_classes, input_arr_t, score_t, threshold_t> bdt = \n")
     fout.write("{ // The struct\n")
+    newline = "\t" + str(ensemble_dict['norm']) + ", // The normalisation\n"
+    fout.write(newline)
     newline = "\t{"
     for iip, ip in enumerate(ensemble_dict['init_predict']):
         newline += str(ip)

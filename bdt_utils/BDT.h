@@ -110,6 +110,7 @@ template<int n_trees, int max_depth, int n_classes, class input_t, class score_t
 struct BDT{
 
 public:
+    score_t normalisation;
 	score_t init_predict[fn_classes(n_classes)];
 	Tree<max_depth, input_t, score_t, threshold_t> trees[n_trees][fn_classes(n_classes)];
 
@@ -125,6 +126,9 @@ public:
 				score[j] += trees[i][j].decision_function(x);
 			}
 		}
+        for(int j = 0; j < fn_classes(n_classes); j++){
+            score[j] *= normalisation;
+        }
 	}
 
 };

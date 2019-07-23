@@ -21,17 +21,21 @@ def ensembleToDict(bdt):
   ensembleDict = {'max_depth' : max_depth, 'n_trees' : n_trees,
                   'n_features' : n_features,
                   'n_classes' : n_classes, 'trees' : [],
-                  'init_predict' : [0]}
+                  'init_predict' : [0.],
+                  'norm' : 0}
   for trees in bdt.find('Weights'):
     treesl = []
     #for tree in trees:
     # TODO find out how TMVA implements multi-class
     tree = trees
+    weight = float(tree.attrib['boostWeight'])
     tree = treeToDict(bdt, tree)
     tree = padTree(ensembleDict, tree)
     treesl.append(tree)
     ensembleDict['trees'].append(treesl)
-
+    ensembleDict['norm'] += weight
+  # Invert the normalisation so FPGA can do '*' instead of '/'
+  ensembleDict['norm'] = 1. / ensembleDict['norm'] 
   return ensembleDict
 
 def addParentAndDepth(treeDict):
@@ -71,13 +75,16 @@ def treeToDict(bdt, tree):
   children_left = []
   children_right = []
   rootnode = tree[0]
+  useYesNoLeaf = bool(getOptionValue(bdt, 'UseYesNoLeaf'))
   # In the fast pass add an ID
   for i, node in enumerate(recurse(rootnode)):
       node.attrib['ID'] = i
       attrib = node.attrib
       f = int(attrib['IVar']) if int(attrib['IVar']) != -1 else -2 # TMVA uses -1 for leaf, scikit-learn uses -2
       t = float(attrib['Cut'])
-      v = float(attrib['purity']) * float(tree.attrib['boostWeight'])
+      vPurity = float(attrib['purity']) * float(tree.attrib['boostWeight'])
+      vType = float(attrib['nType']) * float(tree.attrib['boostWeight'])
+      v = vType if useYesNoLeaf else vPurity
       feature.append(f)
       threshold.append(t)
       value.append(v)
@@ -86,8 +93,13 @@ def treeToDict(bdt, tree):
   for i, node in enumerate(recurse(rootnode)):
       ch = node.getchildren()
       if len(ch) > 0:
-          l = ch[0].attrib['ID']
-          r = ch[1].attrib['ID']
+          # Swap the order of the left/right child depending on cut type attribute
+          if bool(int(node.attrib['cType'])):
+            l = ch[0].attrib['ID']
+            r = ch[1].attrib['ID']
+          else:
+            l = ch[1].attrib['ID']
+            r = ch[0].attrib['ID']
       else:
           l = -1
           r = -1
