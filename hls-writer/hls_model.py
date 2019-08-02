@@ -344,7 +344,7 @@ class Layer(object):
         self.attributes = attributes
 
         self._function_template = None
-        if self.model.config.get_strategy(self) == 'Resource':
+        if self.model.config.get_strategy(self).lower() == 'resource':
             self._function_template = get_function_template('Large' + self.__class__.__name__)
             if self.model.config.get_reuse_factor(self) == 1:
                 print('WARNING: Using ReuseFactor 1 with "Resource" strategy. This may not work.')
@@ -536,7 +536,7 @@ class Dense(Layer):
         quantize = self.get_attr('quantize', default=0)
         self.add_output_variable(shape, dims)
         self.add_weights(quantize=quantize)
-        if self.model.config.get_strategy(self) == 'Resource':
+        if self.model.config.get_strategy(self).lower() == 'resource':
             self.weights['weight'].data = np.transpose(self.weights['weight'].data)
         self.add_bias(quantize=quantize)
 
