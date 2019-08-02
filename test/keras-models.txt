@@ -28,7 +28,7 @@ KERAS_3layer_ternary_small
 #Fails synthesis due to a problem with loop unrolling
 #jetTagger_Conv2D_Small:jetTagger_Conv2D_Small
 
-KERAS_1layer io:s
-KERAS_3layer io:s
+#KERAS_1layer io:s
+#KERAS_3layer io:s
 
 #KERAS_1layer x:xcku115-flvf1924-2-i
