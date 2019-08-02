@@ -274,11 +274,11 @@
 <p>For basic concepts to understand the tool, please visit the <a href="../CONCEPTS.html">Concepts</a> chapter.<br>Here we give line-by-line instructions on how to build a first project and explain the various steps to producing an HLS4ML IP.</p>
 <h2 id="running-the-tool">Running the tool</h2>
 <p>These instructions are for simply running the tool out-of-the-box and getting a feel for the workflow.  </p>
-<pre><code>git clone https://github.com/hls-fpga-machine-learning/HLS4ML.git -b v0.1.3
-cd HLS4ML/keras-to-hls
-2to3 -w keras-to-hls.py
-cd HLS4ML/hls-writer
-2to3 -w hls_writer.py
+<pre><code>git clone https://github.com/hls-fpga-machine-learning/hls4ml.git -b v0.1.5
+source install_miniconda3.sh
+source install.sh
+cd hls4ml/keras-to-hls
+source activate hls4ml-env
 python keras-to-hls.py -c keras-config.yml
 </code></pre><p>This will create a new HLS project directory with an implementation of a model from the <code>example-keras-model-files</code> directory.
 The model files, along with other configuration parameters, are defined in the <code>keras-config.yml</code> file.
@@ -331,7 +331,7 @@ vivado_hls -f build.tcl
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Quick Start","level":"1.3.2","depth":2,"next":{"title":"Configuration","level":"1.3.3","depth":2,"path":"setup/CONFIGURATION.md","ref":"setup/CONFIGURATION.md","articles":[]},"previous":{"title":"Dependencies","level":"1.3.1","depth":2,"path":"setup/DEPENDENCIES.md","ref":"setup/DEPENDENCIES.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/QUICKSTART.md","mtime":"2019-06-12T09:48:57.526Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2019-06-12T11:41:12.993Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Quick Start","level":"1.3.2","depth":2,"next":{"title":"Configuration","level":"1.3.3","depth":2,"path":"setup/CONFIGURATION.md","ref":"setup/CONFIGURATION.md","articles":[]},"previous":{"title":"Dependencies","level":"1.3.1","depth":2,"path":"setup/DEPENDENCIES.md","ref":"setup/DEPENDENCIES.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/QUICKSTART.md","mtime":"2019-08-02T20:52:37.823Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2019-08-02T20:53:03.632Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
