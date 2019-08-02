@@ -8,11 +8,11 @@ Here we give line-by-line instructions on how to build a first project and expla
 These instructions are for simply running the tool out-of-the-box and getting a feel for the workflow.  
 
 ```
-git clone https://github.com/hls-fpga-machine-learning/HLS4ML.git -b v0.1.3
-cd HLS4ML/keras-to-hls
-2to3 -w keras-to-hls.py
-cd HLS4ML/hls-writer
-2to3 -w hls_writer.py
+git clone https://github.com/hls-fpga-machine-learning/hls4ml.git -b v0.1.5
+source install_miniconda3.sh
+source install.sh
+cd hls4ml/keras-to-hls
+source activate hls4ml-env
 python keras-to-hls.py -c keras-config.yml
 ```
 
