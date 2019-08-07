@@ -5,6 +5,7 @@ xilinxpart="xc7vx690tffg1927-2"
 clock=5
 io=io_parallel
 rf=1
+strategy="Latency"
 type="ap_fixed<18,8>"
 basedir=vivado_prj
 
@@ -30,6 +31,8 @@ function print_usage {
    echo "      Use serial I/O. If not specified uses parallel I/O."
    echo "   -r FACTOR"
    echo "      Reuse factor. Defaults to 1."
+   echo "   -g STRATEGY"
+   echo "      Strategy. 'Latency' or 'Resource'."
    echo "   -t TYPE"
    echo "      Default precision. Defaults to 'ap_fixed<18,8>'."
    echo "   -d DIR"
@@ -49,6 +52,8 @@ while getopts ":p:x:c:sr:t:d:h" opt; do
    s) io=io_serial
       ;;
    r) rf=$OPTARG
+      ;;
+   g) strategy=$OPTARG
       ;;
    t) type=$OPTARG
       ;;
@@ -102,6 +107,7 @@ do
    echo "  Model:" >> ${file}
    echo "    ReuseFactor: ${rf}" >> ${file}
    echo "    Precision: ${type} " >> ${file}
+   echo "    Strategy: ${strategy} " >> ${file}
 
    ${pycmd} ../keras-to-hls/keras-to-hls.py -c ${file} || exit 1
    rm ${file}

@@ -9,6 +9,7 @@
 #    c:CLOCK_PERIOD - Clock period
 #    io:s - User serial I/O, otherwise use parallel I/O
 #    r:REUSE_FACTOR - Reuse factor
+#    s:STRATEGY - Latency-optimized or Resource-optimized strategy
 #    t:AP_TYPE - Default precision
 #
 # Lines starting with "#" are ignored.
@@ -24,6 +25,9 @@ KERAS_conv2d_model
 KERAS_3layer_batch_norm
 KERAS_3layer_binary_smaller
 KERAS_3layer_ternary_small
+
+# Resource strategy
+KERAS_3layer s:Resource
 
 #Fails synthesis due to a problem with loop unrolling
 #jetTagger_Conv2D_Small:jetTagger_Conv2D_Small
