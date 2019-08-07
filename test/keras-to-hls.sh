@@ -41,7 +41,7 @@ function print_usage {
    echo "      Prints this help message."
 }
 
-while getopts ":p:x:c:sr:t:d:h" opt; do
+while getopts ":p:x:c:sr:g:t:d:h" opt; do
    case "$opt" in
    p) pycmd=${pycmd}$OPTARG
       ;;
