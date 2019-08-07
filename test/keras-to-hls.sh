@@ -97,7 +97,7 @@ do
    # This scheme assumes base output directory is one level deep
    echo "KerasJson: ../../keras-to-hls/example-keras-model-files/${name}.json" > ${file}
    echo "KerasH5:   ../../keras-to-hls/example-keras-model-files/${h5}.h5" >> ${file}
-   echo "OutputDir: ${base}-${pycmd}-${xilinxpart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}" >> ${file}
+   echo "OutputDir: ${base}-${pycmd}-${xilinxpart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}" >> ${file}
    echo "ProjectName: myproject" >> ${file}
    echo "XilinxPart: ${xilinxpart}" >> ${file}
    echo "ClockPeriod: ${clock}" >> ${file}
