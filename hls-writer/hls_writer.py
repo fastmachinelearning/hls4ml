@@ -375,7 +375,7 @@ def hls_writer(layer_list, yamlConfig):
 #######################################
 def parse_config(config_file) :
 
-    print "Loading configuration from " + str(config_file)
+    print("Loading configuration from " + str(config_file))
     config = open(config_file, 'r')
     return yaml.load(config)
 
@@ -431,9 +431,130 @@ def print_array_to_cpp(name, a, odir ):
     return zero_ctr
 
 #######################################
-## Print a BDT to C++
+## Print a BDT
 #######################################
 def bdt_writer(ensemble_dict, yamlConfig):
+    if yamlConfig['Backend'] == 'HLS':
+        bdt_writer_hls(ensemble_dict, yamlConfig)
+    elif yamlConfig['Backend'] == 'VHDL':
+        bdt_writer_vhd(ensemble_dict, yamlConfig)
+    else:
+        print("Unsupported Backend: " + yamlConfig['Backend'])
+
+#######################################
+## Print a BDT to VHDL
+#######################################
+def bdt_writer_vhd(ensembleDict, yamlConfig):
+  array_header_text = """library ieee;
+  use ieee.std_logic_1164.all;
+  use ieee.std_logic_misc.all;
+  use ieee.numeric_std.all;
+
+  library BDT;
+  use BDT.Constants.all;
+  use BDT.Types.all;
+  """
+
+  array_cast_text = """    constant value : tyArray2D(nTrees-1 downto 0)(nNodes-1 downto 0) := to_tyArray2D(value_int);
+      constant threshold : txArray2D(nTrees-1 downto 0)(nNodes-1 downto 0) := to_txArray2D(threshold_int);"""
+
+  bdt_instantiation_template = """  BDT{} : entity BDT.BDT
+  generic map(
+    iFeature => {},
+    iChildLeft => {},
+    iChildRight => {},
+    iParent => {},
+    iLeaf => {},
+    threshold => {},
+    value => {},
+    reuse => {}
+  );
+  port map(
+    clk => clk,
+    X => X,
+    y => {}
+  );
+
+  """
+
+  filedir = os.path.dirname(os.path.abspath(__file__))
+
+  # Make a file for all the trees for each class
+  fout = [open('{}/firmware/Arrays{}.vhd'.format(yamlConfig['OutputDir'], i), 'w') for i in range(ensembleDict['n_classes'])]
+  # Write the includes and package header for each file
+  for i in range(ensembleDict['n_classes']):
+    fout[i].write(array_header_text)
+    fout[i].write('package Arrays{} is\n\n'.format(i))
+
+  # Loop over fields (childrenLeft, childrenRight, threshold...)
+  for field in ensembleDict['trees'][0][0].keys():
+    # Write the type for this field to each classes' file
+    for iclass in range(ensembleDict['n_classes']):
+      #dtype = 'txArray2D' if field == 'threshold' else 'tyArray2D' if field == 'value' else 'intArray2D'
+      fieldName = field
+      # The threshold and value arrays are declared as integers, then cast
+      # So need a separate constant
+      if field == 'threshold' or field == 'value':
+        fieldName += '_int'
+      nElem = 'nLeaves' if field == 'iLeaf' else 'nNodes'
+      fout[iclass].write('    constant {} : intArray2D(nTrees-1 downto 0)({}-1 downto 0) := ('.format(fieldName, nElem))
+    # Loop over the trees within the class
+    for itree, trees in enumerate(ensembleDict['trees']):
+      for iclass, tree in enumerate(trees):
+        fout[iclass].write('({})'.format(', '.join(map(str, tree[field]))))
+        if itree < ensembleDict['n_trees'] - 1:
+          fout[iclass].write(',')
+        fout[iclass].write('\n{}'.format(' ' * 16))    
+    for iclass in range(ensembleDict['n_classes']):
+      fout[iclass].write(');\n')
+  for i in range(ensembleDict['n_classes']):
+    fout[i].write(array_cast_text + "\n")
+    fout[i].write('end Arrays{};'.format(i))
+    fout[i].close()
+
+  f = open(os.path.join(filedir,'../bdt_utils/run_bdt_test.sh'),'r')
+  fout = open('{}/run_bdt_test.sh'.format(yamlConfig['OutputDir']),'w')
+  for line in f.readlines():
+    if 'insert arrays' in line:
+      for i in range(ensembleDict['n_classes']):
+        newline = 'vcom -2008 -work BDT ./firmware/Arrays{}.vhd\n'.format(i)
+        fout.write(newline)
+    else:
+      fout.write(line)
+  f.close()
+  fout.close()
+
+  f = open(os.path.join(filedir,'../bdt_utils/BDTTop.vhd'),'r')
+  fout = open('{}/BDTTop.vhd'.format(yamlConfig['OutputDir']),'w')
+  for line in f.readlines():
+    if 'include arrays' in line:
+        for i in range(ensembleDict['n_classes']):
+          newline = 'use BDT.Arrays{};\n'.format(i)
+          fout.write(newline)
+    elif 'instantiate BDTs' in line:
+      for i in range(ensembleDict['n_classes']):
+        arr = 'Arrays{}.'.format(i)
+
+        newline = bdt_instantiation_template.format('{}'.format(i),
+                                                   '{}{}'.format(arr, 'feature'),
+                                                   '{}{}'.format(arr, 'children_left'),
+                                                   '{}{}'.format(arr, 'children_right'),
+                                                   '{}{}'.format(arr, 'parent'),
+                                                   '{}{}'.format(arr, 'leaf'),
+                                                   '{}{}'.format(arr, 'threshold_int'),
+                                                   '{}{}'.format(arr, 'value_int'),
+                                                   yamlConfig['ReuseFactor'],
+                                                   'y({})'.format(i))
+        fout.write(newline)
+    else:
+      fout.write(line)
+  f.close()
+  fout.close()
+
+#######################################
+## Print a BDT to C++
+#######################################
+def bdt_writer_hls(ensemble_dict, yamlConfig):
 
     filedir = os.path.dirname(os.path.abspath(__file__))
 
