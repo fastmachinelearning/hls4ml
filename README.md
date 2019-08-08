@@ -1,4 +1,8 @@
-<div style="text-align: center;"><img src="img/logo.jpg" width="500" /></div>
+<div align="center">
+  <div style="text-align: center;"><img src="img/logo.jpg" width="500" /></div>
+</div>
+
+-------------
 
 A package for machine learning inference in FPGAs.  We create firmware implementations of machine learning algorithms using high level synthesis language (HLS). We translate traditional open-source machine learning package models into HLS that can be configured for your use-case!
 
