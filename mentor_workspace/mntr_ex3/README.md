@@ -118,5 +118,5 @@ Use a new console.
 ```
 cd syn
 source envsetup.sh
-make hls
+make hls-solution1-sh
 ```
