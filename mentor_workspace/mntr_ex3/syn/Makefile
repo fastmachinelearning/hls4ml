@@ -33,6 +33,6 @@ clean:
 .PHONY: clean
 
 distclean: clean
-	rm -rf Catapult*
+	rm -rf Catapult* transcript vivado.jou vivado_*.str
 .PHONY: distclean
 
