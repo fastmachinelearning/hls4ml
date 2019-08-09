@@ -15,7 +15,7 @@ solution file add ../my-hls-test/myproject_test.cpp -type C++ -exclude true
 solution file add ../my-hls-test/firmware/myproject.cpp -type C++
 
 directive set -DESIGN_GOAL area
-directive set -OLD_SCHED false
+#directive set -OLD_SCHED false
 directive set -SPECULATE true
 directive set -MERGEABLE true
 directive set -REGISTER_THRESHOLD 4096
