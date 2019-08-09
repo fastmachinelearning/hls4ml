@@ -11,6 +11,7 @@ export CAD_PATH="/opt/cad"
 
 # We do need licensing for this example.
 export LM_LICENSE_FILE=${LM_LICENSE_FILE}:"1720@bioeecad.ee.columbia.edu"
+export XILINXD_LICENSE_FILE="2177@espdev.cs.columbia.edu"
 
 # This path is host dependent.
 export CATAPULT_PATH="${CAD_PATH}/catapult"

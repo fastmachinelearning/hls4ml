@@ -11,6 +11,7 @@ export CAD_PATH=/opt/cad
 
 # We do not need licensing for this example.
 #export LM_LICENSE_FILE=${LM_LICENSE_FILE}:1720@bioeecad.ee.columbia.edu
+#export XILINXD_LICENSE_FILE="2177@espdev.cs.columbia.edu"
 
 # This path is host dependent.
 export CATAPULT_PATH=${CAD_PATH}/catapult
@@ -22,4 +23,4 @@ export PATH=${CATAPULT_PATH}/bin:${PATH}
 #export PATH=${CAD_PATH}/msim/modeltech/bin/:$PATH
 
 # Let's use the SystemC headers and library provided with Catapult HLS.
-export SYSTEMC=${CATAPULT_PATH}/shared/
+export SYSTEMC=${CATAPULT_PATH}/shared
