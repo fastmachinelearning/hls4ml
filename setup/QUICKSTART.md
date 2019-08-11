@@ -31,10 +31,10 @@ This will create a Vivado HLS project with your model implmentation!
 
 Other examples of various HLS projects with examples of different machine learning algorithm implementations is in the directory: `example-prjs`. We currently provide 4 specific examples (folder names are given in ` `):
 
-1. [1D convolutional neural network: `conv-1layer`](### `conv-1layer`)
-2. [2D convolutional neural network: `conv2d-1layer`](### `conv2d-1layer`)
-3. [`higgs-1layer`](### `higgs-1layer`)
-4. [`sub-layer`](### `sub-layer`)
+1. [1D convolutional neural network: `conv-1layer`](###`conv-1layer`)
+2. [2D convolutional neural network: `conv2d-1layer`](###`conv2d-1layer`)
+3. [`higgs-1layer`](###`higgs-1layer`)
+4. [`sub-layer`](###`sub-layer`)
 
 All example folders have the same file structure. Each folder have 3 files — `build_prj.tcl`, `my_project.tcl`, `myproject_test.cpp` — and a `firmware\` subfolder, which contains the translated network architecture in high level sythesis language and configuration files. 
 
