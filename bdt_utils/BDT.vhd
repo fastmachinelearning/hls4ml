@@ -16,6 +16,7 @@ entity BDT is
     iChildRight : intArray2D(0 to nTrees-1)(0 to nNodes-1);
     iParent : intArray2D(0 to nTrees-1)(0 to nNodes-1);
     iLeaf : intArray2D(0 to nTrees-1)(0 to nLeaves-1);
+    depth : intArray2D(0 to nTrees-1)(0 to nNodes-1);
     threshold : txArray2D(0 to nTrees-1)(0 to nNodes-1);
     value : tyArray2D(0 to nTrees-1)(0 to nNodes-1);
     reuse : integer := 1
@@ -41,6 +42,7 @@ begin
       iChildRight => iChildRight(i),
       iParent => iParent(i),
       iLeaf => iLeaf(i),
+      depth => depth(i),
       threshold => threshold(i),
       value => value(i),
       reuse => reuse

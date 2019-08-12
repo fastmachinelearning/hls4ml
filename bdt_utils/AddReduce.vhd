@@ -62,7 +62,7 @@ GN : if d'length > 2 generate
         process(clk)
         begin
         if rising_edge(clk) then
-            q(q'left) <= d(d'left) + d(d'right);
+            qInt(i) <= d(2*i) + d(2*i+1)
         end if;
         end process;
     end generate;

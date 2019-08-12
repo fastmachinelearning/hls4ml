@@ -465,6 +465,7 @@ def bdt_writer_vhd(ensembleDict, yamlConfig):
     iChildRight => {},
     iParent => {},
     iLeaf => {},
+    depth => {},
     threshold => {},
     value => {},
     reuse => {}
@@ -542,7 +543,8 @@ def bdt_writer_vhd(ensembleDict, yamlConfig):
   fout.close()
 
   f = open('{}/test.tcl'.format(yamlConfig['OutputDir']), 'w')
-  f.write('run 10 ns')
+  f.write('vsim -L BDT -L xil_defaultlib xil_defaultlib.testbench\n')
+  f.write('run 10 ns\n')
   f.close()
 
   f = open(os.path.join(filedir,'../bdt_utils/BDTTop.vhd'),'r')
@@ -562,6 +564,7 @@ def bdt_writer_vhd(ensembleDict, yamlConfig):
                                                    '{}{}'.format(arr, 'children_right'),
                                                    '{}{}'.format(arr, 'parent'),
                                                    '{}{}'.format(arr, 'iLeaf'),
+                                                   '{}{}'.format(arr, 'depth'),
                                                    '{}{}'.format(arr, 'threshold'),
                                                    '{}{}'.format(arr, 'value'),
                                                    yamlConfig['ReuseFactor'],
@@ -576,10 +579,11 @@ def bdt_writer_vhd(ensembleDict, yamlConfig):
   fout = open('{}/firmware/Constants.vhd'.format(yamlConfig['OutputDir']), 'w')
   for line in f.readlines():
     if 'hls4ml' in line:
-      newline =  "  constant nNodes : integer := {};\n".format(2 ** (ensembleDict['max_depth'] + 1) - 1)
+      newline = "  constant nTrees : integer := {};\n".format(ensembleDict['n_trees'])
+      newline += "  constant maxDepth : integer := {};\n".format(ensembleDict['max_depth'])
+      newline +=  "  constant nNodes : integer := {};\n".format(2 ** (ensembleDict['max_depth'] + 1) - 1)
       newline += "  constant nLeaves : integer := {};\n".format(2 ** ensembleDict['max_depth'])
       newline += "  constant nFeatures : integer := {};\n".format(ensembleDict['n_features'])
-      newline += "  constant nTrees : integer := {};\n".format(ensembleDict['n_trees'])
       newline += "  constant nClasses : integer := {};\n\n".format(n_classes)
       newline += "  subtype tx is signed({} downto 0);\n".format(dtype_n - 1)
       newline += "  subtype ty is signed({} downto 0);\n".format(dtype_n - 1)

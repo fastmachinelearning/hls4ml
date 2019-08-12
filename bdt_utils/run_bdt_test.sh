@@ -10,10 +10,10 @@ vcom -2008 -work BDT ../../bdt_utils/AddReduce.vhd
 vcom -2008 -work BDT ../../bdt_utils/BDT.vhd
 vcom -2008 -work BDT ./firmware/BDTTop.vhd
 
-vlib msimbdtlib/work
-vmap work msimbdtlib/work
-vcom -2008 -work work ../../bdt_utils/SimulationInput.vhd
-vcom -2008 -work work ../../bdt_utils/SimulationOutput.vhd
-vcom -2008 -work work ../../bdt_utils/BDTTestbench.vhd
+vlib msimbdtlib/xil_defaultlib
+vmap work msimbdtlib/xil_defaultlib
+vcom -2008 -work xil_defaultlib ../../bdt_utils/SimulationInput.vhd
+vcom -2008 -work xil_defaultlib ../../bdt_utils/SimulationOutput.vhd
+vcom -2008 -work xil_defaultlib ../../bdt_utils/BDTTestbench.vhd
 
-vsim -c test -do test.tcl
+vsim -batch -do test.tcl

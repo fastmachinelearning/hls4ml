@@ -14,13 +14,14 @@ entity Tree is
     iChildRight : intArray(0 to nNodes-1);
     iParent : intArray(0 to nNodes-1);
     iLeaf : intArray(0 to nLeaves-1);
+    depth : intArray(0 to nNodes-1);
     threshold : txArray(0 to nNodes-1);
     value : tyArray(0 to nNodes-1);
     reuse : integer := 1
   );
   port(
     clk : in std_logic;  -- clock
-    X : in txArray(nFeatures-1 downto 0); := (others => to_tx(0))           -- input features
+    X : in txArray(nFeatures-1 downto 0) := (others => to_tx(0));           -- input features
     y : out ty := to_ty(0)           -- output score
   );
 end tree;
@@ -28,6 +29,7 @@ end tree;
 architecture rtl of tree is
 
   signal comparison : boolArray(0 to nNodes-1) := (others => false);
+  signal comparisonPipe : boolArray2D(0 to maxdepth)(0 to nNodes-1) := (others => (others => false));
   signal activation : boolArray(0 to nNodes-1) := (others => false);
   signal counter : natural range 0 to reuse-1 := 0;
 
@@ -55,6 +57,15 @@ begin
     end generate Leaf;
   end generate GenComp;
 
+  -- Pipeline the comparisons
+  comparisonPipe(0) <= comparison;
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      comparisonPipe(1 to maxdepth) <= comparisonPipe(0 to maxdepth-1);
+    end if;
+  end process;
+
   -- do all the node activations
   -- the root node is always active
   activation(0) <= true; 
@@ -66,7 +77,7 @@ begin
       process(clk)
       begin
         if rising_edge(clk) then
-          activation(i) <= comparison(iParent(i)) and activation(iParent(i));
+          activation(i) <= comparisonPipe(depth(i))(iParent(i)) and activation(iParent(i));
         end if;
       end process;    
     end generate LeftChild;
@@ -75,7 +86,7 @@ begin
       process(clk)
       begin
         if rising_edge(clk) then
-          activation(i) <= (not comparison(iParent(i))) and activation(iParent(i));
+          activation(i) <= (not comparisonPipe(depth(i))(iParent(i))) and activation(iParent(i));
         end if;
       end process;    
     end generate RightChild;
