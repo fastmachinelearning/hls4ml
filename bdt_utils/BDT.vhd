@@ -3,10 +3,11 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
-library BDT;
-use BDT.Constants.all;
-use BDT.Types.all;
-use BDT.Tree;
+library work;
+use work.Constants.all;
+use work.Types.all;
+--use libBDT.Tree;
+--use libBDT.AddReduce;
 
 entity BDT is
   generic(
@@ -28,11 +29,12 @@ end BDT;
 
 architecture rtl of BDT is
   signal yTrees : tyArray(nTrees-1 downto 0); -- The score output by each tree
+  signal yV : tyArray(0 downto 0); -- A vector container
 begin
 
   -- Make all the tree instances
   TreeGen: for i in 0 to nTrees-1 generate
-    Treei : entity Tree
+    Treei : entity work.Tree
     generic map(
       iFeature => iFeature(i),
       iChildLeft => iChildLeft(i),
@@ -46,13 +48,8 @@ begin
   end generate;
 
   -- Sum the output scores using the add tree-reduce
-  /* process(clk)
-  begin
-    if rising_edge(clk) then
-      y <= addReduce(yTrees);
-    end if;
-  end process; */
-  
-  AddTree : entity BDT.Adder(clk => clk, yin => yTrees, yout => y);
+  AddTree : entity work.AddReduce
+  port map(clk => clk, d => yTrees, q => yV);
+  y <= yV(0);
 
 end rtl;

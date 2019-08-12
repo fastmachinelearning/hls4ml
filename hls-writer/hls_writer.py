@@ -458,7 +458,7 @@ def bdt_writer_vhd(ensembleDict, yamlConfig):
   array_cast_text = """    constant value : tyArray2D(nTrees-1 downto 0)(nNodes-1 downto 0) := to_tyArray2D(value_int);
       constant threshold : txArray2D(nTrees-1 downto 0)(nNodes-1 downto 0) := to_txArray2D(threshold_int);"""
 
-  bdt_instantiation_template = """  BDT{} : entity BDT.BDT
+  bdt_instantiation_template = """  BDT{} : entity work.BDT
   generic map(
     iFeature => {},
     iChildLeft => {},
@@ -468,7 +468,7 @@ def bdt_writer_vhd(ensembleDict, yamlConfig):
     threshold => {},
     value => {},
     reuse => {}
-  );
+  )
   port map(
     clk => clk,
     X => X,
@@ -479,23 +479,40 @@ def bdt_writer_vhd(ensembleDict, yamlConfig):
 
   filedir = os.path.dirname(os.path.abspath(__file__))
 
+  dtype = yamlConfig['DefaultPrecision']
+  if not 'ap_fixed' in dtype:
+    print "Only ap_fixed is currently supported, exiting"
+    sys.exit()
+  dtype = dtype.replace('ap_fixed<', '').replace('>', '')
+  dtype_n = int(dtype.split(',')[0].strip()) # total number of bits
+  dtype_int = int(dtype.split(',')[1].strip()) # number of integer bits
+  dtype_frac = dtype_n - dtype_int # number of fractional bits
+  mult = 2**dtype_frac
+
+  # binary classification only uses one set of trees
+  n_classes = 1 if ensembleDict['n_classes'] == 2 else ensembleDict['n_classes']
+
   # Make a file for all the trees for each class
-  fout = [open('{}/firmware/Arrays{}.vhd'.format(yamlConfig['OutputDir'], i), 'w') for i in range(ensembleDict['n_classes'])]
+  fout = [open('{}/firmware/Arrays{}.vhd'.format(yamlConfig['OutputDir'], i), 'w') for i in range(n_classes)]
   # Write the includes and package header for each file
-  for i in range(ensembleDict['n_classes']):
+  for i in range(n_classes):
     fout[i].write(array_header_text)
     fout[i].write('package Arrays{} is\n\n'.format(i))
 
   # Loop over fields (childrenLeft, childrenRight, threshold...)
   for field in ensembleDict['trees'][0][0].keys():
     # Write the type for this field to each classes' file
-    for iclass in range(ensembleDict['n_classes']):
+    for iclass in range(n_classes):
       #dtype = 'txArray2D' if field == 'threshold' else 'tyArray2D' if field == 'value' else 'intArray2D'
       fieldName = field
       # The threshold and value arrays are declared as integers, then cast
       # So need a separate constant
       if field == 'threshold' or field == 'value':
         fieldName += '_int'
+        # Convert the floating point values to integers
+        for ii, trees in enumerate(ensembleDict['trees']):
+          for jj, tree in enumerate(trees):
+            ensembleDict['trees'][ii][jj][field] = (np.array(ensembleDict['trees'][ii][jj][field]) * mult).astype('int')
       nElem = 'nLeaves' if field == 'iLeaf' else 'nNodes'
       fout[iclass].write('    constant {} : intArray2D(nTrees-1 downto 0)({}-1 downto 0) := ('.format(fieldName, nElem))
     # Loop over the trees within the class
@@ -505,9 +522,9 @@ def bdt_writer_vhd(ensembleDict, yamlConfig):
         if itree < ensembleDict['n_trees'] - 1:
           fout[iclass].write(',')
         fout[iclass].write('\n{}'.format(' ' * 16))    
-    for iclass in range(ensembleDict['n_classes']):
+    for iclass in range(n_classes):
       fout[iclass].write(');\n')
-  for i in range(ensembleDict['n_classes']):
+  for i in range(n_classes):
     fout[i].write(array_cast_text + "\n")
     fout[i].write('end Arrays{};'.format(i))
     fout[i].close()
@@ -516,7 +533,7 @@ def bdt_writer_vhd(ensembleDict, yamlConfig):
   fout = open('{}/run_bdt_test.sh'.format(yamlConfig['OutputDir']),'w')
   for line in f.readlines():
     if 'insert arrays' in line:
-      for i in range(ensembleDict['n_classes']):
+      for i in range(n_classes):
         newline = 'vcom -2008 -work BDT ./firmware/Arrays{}.vhd\n'.format(i)
         fout.write(newline)
     else:
@@ -524,15 +541,19 @@ def bdt_writer_vhd(ensembleDict, yamlConfig):
   f.close()
   fout.close()
 
+  f = open('{}/test.tcl'.format(yamlConfig['OutputDir']), 'w')
+  f.write('run 10 ns')
+  f.close()
+
   f = open(os.path.join(filedir,'../bdt_utils/BDTTop.vhd'),'r')
-  fout = open('{}/BDTTop.vhd'.format(yamlConfig['OutputDir']),'w')
+  fout = open('{}/firmware/BDTTop.vhd'.format(yamlConfig['OutputDir']),'w')
   for line in f.readlines():
     if 'include arrays' in line:
-        for i in range(ensembleDict['n_classes']):
-          newline = 'use BDT.Arrays{};\n'.format(i)
+        for i in range(n_classes):
+          newline = 'use work.Arrays{};\n'.format(i)
           fout.write(newline)
     elif 'instantiate BDTs' in line:
-      for i in range(ensembleDict['n_classes']):
+      for i in range(n_classes):
         arr = 'Arrays{}.'.format(i)
 
         newline = bdt_instantiation_template.format('{}'.format(i),
@@ -540,12 +561,29 @@ def bdt_writer_vhd(ensembleDict, yamlConfig):
                                                    '{}{}'.format(arr, 'children_left'),
                                                    '{}{}'.format(arr, 'children_right'),
                                                    '{}{}'.format(arr, 'parent'),
-                                                   '{}{}'.format(arr, 'leaf'),
-                                                   '{}{}'.format(arr, 'threshold_int'),
-                                                   '{}{}'.format(arr, 'value_int'),
+                                                   '{}{}'.format(arr, 'iLeaf'),
+                                                   '{}{}'.format(arr, 'threshold'),
+                                                   '{}{}'.format(arr, 'value'),
                                                    yamlConfig['ReuseFactor'],
                                                    'y({})'.format(i))
         fout.write(newline)
+    else:
+      fout.write(line)
+  f.close()
+  fout.close()
+
+  f = open(os.path.join(filedir, '../bdt_utils/Constants.vhd'), 'r')
+  fout = open('{}/firmware/Constants.vhd'.format(yamlConfig['OutputDir']), 'w')
+  for line in f.readlines():
+    if 'hls4ml' in line:
+      newline =  "  constant nNodes : integer := {};\n".format(2 ** (ensembleDict['max_depth'] + 1) - 1)
+      newline += "  constant nLeaves : integer := {};\n".format(2 ** ensembleDict['max_depth'])
+      newline += "  constant nFeatures : integer := {};\n".format(ensembleDict['n_features'])
+      newline += "  constant nTrees : integer := {};\n".format(ensembleDict['n_trees'])
+      newline += "  constant nClasses : integer := {};\n\n".format(n_classes)
+      newline += "  subtype tx is signed({} downto 0);\n".format(dtype_n - 1)
+      newline += "  subtype ty is signed({} downto 0);\n".format(dtype_n - 1)
+      fout.write(newline)
     else:
       fout.write(line)
   f.close()

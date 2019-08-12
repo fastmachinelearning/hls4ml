@@ -1,13 +1,14 @@
 mkdir msimbdtlib
+vlib msimbdtlib/BDT
 vmap BDT msimbdtlib/BDT
 
-vcom -2008 -work BDT ../../bdt_utils/Constants.vhd
+vcom -2008 -work BDT ./firmware/Constants.vhd
 vcom -2008 -work BDT ../../bdt_utils/Types.vhd
-vcom -2008 -work BDT ../../bdt_utils/Arrays.vhd
 vcom -2008 -work BDT ../../bdt_utils/Tree.vhd
+vcom -2008 -work BDT ../../bdt_utils/AddReduce.vhd
 # insert arrays
 vcom -2008 -work BDT ../../bdt_utils/BDT.vhd
-vcom -2008 work BDT ./firmware/BDTTop.vhd
+vcom -2008 -work BDT ./firmware/BDTTop.vhd
 
 vlib msimbdtlib/work
 vmap work msimbdtlib/work

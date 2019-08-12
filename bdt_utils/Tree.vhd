@@ -3,9 +3,9 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
-library BDT;
-use BDT.Constants.all;
-use BDT.Types.all;
+library work;
+use work.Constants.all;
+use work.Types.all;
 
 entity Tree is
   generic(
@@ -20,8 +20,8 @@ entity Tree is
   );
   port(
     clk : in std_logic;  -- clock
-    X : in txArray(nFeatures-1 downto 0);           -- input features
-    y : out ty           -- output score
+    X : in txArray(nFeatures-1 downto 0); := (others => to_tx(0))           -- input features
+    y : out ty := to_ty(0)           -- output score
   );
 end tree;
 
@@ -89,6 +89,7 @@ begin
      for i in 0 to nLeaves-1 loop
         if activation(iLeaf(i)) then
           y <= value(iLeaf(i));
+          exit;
         end if;
       end loop;
     end if;

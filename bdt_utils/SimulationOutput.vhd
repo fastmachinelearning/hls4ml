@@ -20,15 +20,16 @@ use std.textio.all;
 
 library BDT;
 use BDT.Types.all;
+use BDT.Constants.all;
 
 entity SimulationOutput is
   generic(
-    FileName : string;
+    FileName : string := "SimulationOutput.txt";
     FilePath : string := "./"
   );
   port(
     clk    : in std_logic;
-    y : in tyArray
+    y : in tyArray(nClasses - 1 downto 0) := (others => to_ty(0))
   );
 end SimulationOutput;
 -- -------------------------------------------------------------------------
@@ -37,12 +38,13 @@ architecture rtl of SimulationOutput is
 begin
 -- pragma synthesis_off
   process(clk)
-    file f     : text open write_mode is FilePath & FileName & ".txt";
+    file f     : text open write_mode is FilePath & FileName;
     variable s : line;
   begin
   if rising_edge(clk) then
     for i in  y'range loop
-      write(s, to_integer(DataIn(i));
+      write(s, to_integer(y(i)), right, 15);
+      write(s, string'(", "), right, 15);
       writeline( f , s );
     end loop;
   end if;
