@@ -450,9 +450,8 @@ def bdt_writer_vhd(ensembleDict, yamlConfig):
   use ieee.std_logic_misc.all;
   use ieee.numeric_std.all;
 
-  library BDT;
-  use BDT.Constants.all;
-  use BDT.Types.all;
+  use work.Constants.all;
+  use work.Types.all;
   """
 
   array_cast_text = """    constant value : tyArray2D(nTrees-1 downto 0)(nNodes-1 downto 0) := to_tyArray2D(value_int);
@@ -544,8 +543,24 @@ def bdt_writer_vhd(ensembleDict, yamlConfig):
 
   f = open('{}/test.tcl'.format(yamlConfig['OutputDir']), 'w')
   f.write('vsim -L BDT -L xil_defaultlib xil_defaultlib.testbench\n')
-  f.write('run 10 ns\n')
+  f.write('run 100 ns\n')
+  f.write('quit -f\n')
   f.close()
+
+  f = open('{}/SimulationInput.txt'.format(yamlConfig['OutputDir']), 'w')
+  f.write(' '.join(map(str, [0] * ensembleDict['n_features'])))
+  f.close()
+
+  f = open(os.path.join(filedir,'../bdt_utils/synth.tcl'),'r')
+  fout = open('{}/synth.tcl'.format(yamlConfig['OutputDir']), 'w')
+  for line in f.readlines():
+    if 'hls4ml' in line:
+      newline = "synth_design -top BDTTop -part {}\n".format(yamlConfig['XilinxPart'])
+      fout.write(newline)
+    else:
+      fout.write(line)
+  f.close()
+  fout.close()
 
   f = open(os.path.join(filedir,'../bdt_utils/BDTTop.vhd'),'r')
   fout = open('{}/firmware/BDTTop.vhd'.format(yamlConfig['OutputDir']),'w')
