@@ -43,8 +43,8 @@ begin
   begin
   if rising_edge(clk) then
     for i in  y'range loop
-      write(s, to_integer(y(i)), right, 15);
-      write(s, string'(", "), right, 15);
+      write(s, to_integer(y(i)), right, 10);
+      write(s, string'(","), right, 1);
       writeline( f , s );
     end loop;
   end if;

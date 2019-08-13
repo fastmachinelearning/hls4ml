@@ -56,18 +56,18 @@ GN : if d'length > 2 generate
   begin
     dInt(0 to d'length - 1) <= d;
 
-    GNComps:
+    GNSums:
     for i in 0 to qLen - 1 generate
-        Comp:
+        Sum:
         process(clk)
         begin
         if rising_edge(clk) then
-            qInt(i) <= d(2*i) + d(2*i+1)
+            qInt(i) <= dInt(2*i) + dInt(2*i+1);
         end if;
         end process;
     end generate;
 
-    Reduce2 : AddReduce
+    Reduce : AddReduce
     generic map(id => id & "_C")
     port map(clk, qInt, q);
 

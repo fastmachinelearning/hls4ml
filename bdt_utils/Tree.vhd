@@ -102,6 +102,7 @@ begin
           y <= value(iLeaf(i));
           exit;
         end if;
+        y <= to_ty(0);
       end loop;
     end if;
   end process;

@@ -11,8 +11,8 @@ use work.Types.all;
 entity BDTTop is
   port(
     clk : in std_logic;  -- clock
-    X : in txArray(nFeatures-1 downto 0);           -- input features
-    y : out tyArray(nClasses-1 downto 0)            -- output score
+    X : in txArray(nFeatures-1 downto 0) := (others => to_tx(0));           -- input features
+    y : out tyArray(nClasses-1 downto 0) := (others => to_ty(0))            -- output score
   );
 end BDTTop;
 
