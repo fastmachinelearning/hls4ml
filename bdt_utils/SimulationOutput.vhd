@@ -45,8 +45,8 @@ begin
     for i in  y'range loop
       write(s, to_integer(y(i)), right, 10);
       write(s, string'(","), right, 1);
-      writeline( f , s );
     end loop;
+  writeline( f , s );
   end if;
   end process;
 -- pragma synthesis_on    
