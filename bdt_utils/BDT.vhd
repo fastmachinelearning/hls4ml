@@ -19,6 +19,7 @@ entity BDT is
     depth : intArray2D(0 to nTrees-1)(0 to nNodes-1);
     threshold : txArray2D(0 to nTrees-1)(0 to nNodes-1);
     value : tyArray2D(0 to nTrees-1)(0 to nNodes-1);
+    initPredict : ty;
     reuse : integer := 1
   );
   port(
@@ -29,9 +30,11 @@ entity BDT is
 end BDT;
 
 architecture rtl of BDT is
-  signal yTrees : tyArray(nTrees-1 downto 0); -- The score output by each tree
+  signal yTrees : tyArray(nTrees downto 0); -- The score output by each tree (1 extra element for the initial predict)
   signal yV : tyArray(0 downto 0); -- A vector container
 begin
+
+  yTrees(nTrees) <= initPredict;
 
   -- Make all the tree instances
   TreeGen: for i in 0 to nTrees-1 generate

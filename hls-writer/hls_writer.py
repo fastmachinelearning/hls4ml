@@ -467,6 +467,7 @@ def bdt_writer_vhd(ensembleDict, yamlConfig):
     depth => {},
     threshold => {},
     value => {},
+    initPredict => {},
     reuse => {}
   )
   port map(
@@ -498,6 +499,8 @@ def bdt_writer_vhd(ensembleDict, yamlConfig):
   for i in range(n_classes):
     fout[i].write(array_header_text)
     fout[i].write('package Arrays{} is\n\n'.format(i))
+    fout[i].write('    constant initPredict : ty := to_ty({});\n'.format(int(np.round(ensembleDict['init_predict'][i] * mult))))
+
 
   # Loop over fields (childrenLeft, childrenRight, threshold...)
   for field in ensembleDict['trees'][0][0].keys():
@@ -511,8 +514,7 @@ def bdt_writer_vhd(ensembleDict, yamlConfig):
         fieldName += '_int'
         # Convert the floating point values to integers
         for ii, trees in enumerate(ensembleDict['trees']):
-          for jj, tree in enumerate(trees):
-            ensembleDict['trees'][ii][jj][field] = (np.array(ensembleDict['trees'][ii][jj][field]) * mult).astype('int')
+          ensembleDict['trees'][ii][iclass][field] = np.round(np.array(ensembleDict['trees'][ii][iclass][field]) * mult).astype('int')
       nElem = 'nLeaves' if field == 'iLeaf' else 'nNodes'
       fout[iclass].write('    constant {} : intArray2D(nTrees-1 downto 0)({}-1 downto 0) := ('.format(fieldName, nElem))
     # Loop over the trees within the class
@@ -580,8 +582,9 @@ def bdt_writer_vhd(ensembleDict, yamlConfig):
                                                    '{}{}'.format(arr, 'parent'),
                                                    '{}{}'.format(arr, 'iLeaf'),
                                                    '{}{}'.format(arr, 'depth'),
-                                                   '{}{}'.format(arr, 'threshold'),
+                                                   '{}{}'.format(arr, 'threshold') ,
                                                    '{}{}'.format(arr, 'value'),
+                                                   '{}{}'.format(arr, 'initPredict'),
                                                    yamlConfig['ReuseFactor'],
                                                    'y({})'.format(i))
         fout.write(newline)
