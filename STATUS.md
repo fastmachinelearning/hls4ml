@@ -31,3 +31,7 @@ A summary of the on-going status of the `hls4ml` tool is in the table below.
 
 Other random feature notes:
    * There is a known Vivado HLS issue where the large loop unrolls create memory issues during synthesis.  We are working to solve this issue but you may see errors related to this depending on the memory of your machine.  Please feel free to email the `hls4ml` team if you have any further questions.
+
+## Feature Documentation
+
+-  Specific documentations of supported Keras layers and their detailed limitations can be found [here](https://github.com/hls-fpga-machine-learning/models/tree/master/keras-to-hls)
