@@ -47,7 +47,7 @@ struct dense_config
 };
 
 /* ---
- * 3 different methods to perform the product of input and weight, depending on the
+ * 4 different methods to perform the product of input and weight, depending on the
  * types of each. Use std::enable_if<>::type for the return type since partial
  * template specification is not allowed by c++
  * --- */
@@ -68,6 +68,17 @@ product(data_T a, ap_uint<1> w){
     // Specialisation for 1-bit weights, arbitrary data
     #pragma HLS inline off
     return w == 0 ? (data_T) -a : a;
+}
+
+template<class data_T, class weight_T, class ret_T>
+inline typename std::enable_if<(not std::is_same<data_T, ap_uint<2>>::value)
+        and std::is_same<weight_T, ap_int<2>>::value, ret_T>::type
+product(data_T a, ap_int<2> w){
+    // Specialisation for 2-bit weights, arbitrary data
+    #pragma HLS inline off
+    if (w == 0) return (data_T) 0;
+    else if(w == -1) return (data_T) -a;
+    else if(w == 1) return (data_T) a;
 }
 
 template<class data_T, class weight_T, class ret_T>
