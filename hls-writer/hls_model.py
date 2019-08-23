@@ -18,12 +18,17 @@ class HLSConfig(object):
         self.model_rf = None
         self.layer_type_rf = {}
         self.layer_name_rf = {}
-        
+
         self.model_strategy = 'Latency'
         self.layer_type_strategy = {}
         self.layer_name_strategy = {}
 
+        self.model_compression = False
+        self.layer_type_compression = {}
+        self.layer_name_compression = {}
+
         self._parse_hls_config()
+        self._validate_hls_config()
 
     def get_config_value(self, key):
         return self.config.get(key, None)
@@ -71,7 +76,7 @@ class HLSConfig(object):
             raise Exception('No reuse factor for {} found and no default specified.'.format(layer.name))
 
         return rf
-    
+
     def get_strategy(self, layer):
         strategy = self.layer_name_strategy.get(layer.name.lower())
         if strategy is None:
@@ -80,6 +85,18 @@ class HLSConfig(object):
             strategy = self.model_strategy
 
         return strategy
+
+    def is_resource_strategy(self, layer):
+        return self.get_strategy(layer).lower() == 'resource'
+
+    def get_compression(self, layer):
+        compression = self.layer_name_compression.get(layer.name.lower())
+        if compression is None:
+            compression = self.layer_type_compression.get(layer.__class__.__name__.lower())
+        if compression is None:
+            compression = self.model_compression
+
+        return compression
 
     def _parse_hls_config(self):
         hls_config = self.config['HLSConfig']
@@ -95,6 +112,7 @@ class HLSConfig(object):
 
             self.model_rf = model_cfg.get('ReuseFactor')
             self.model_strategy = model_cfg.get('Strategy', 'Latency')
+            self.model_compression = bool(model_cfg.get('Compression', 0))
 
         layer_type_cfg = hls_config.get('LayerType')
         if layer_type_cfg is not None:
@@ -109,10 +127,14 @@ class HLSConfig(object):
                 rf = layer_cfg.get('ReuseFactor')
                 if rf is not None:
                     self.layer_type_rf[layer_type.lower()] = rf
-                
+
                 strategy = layer_cfg.get('Strategy')
                 if strategy is not None:
                     self.layer_type_strategy[layer_type.lower()] = strategy
+
+                compression = layer_cfg.get('Compression')
+                if compression is not None:
+                    self.layer_type_compression[layer_type.lower()] = bool(compression)
 
         layer_name_cfg = hls_config.get('LayerName')
         if layer_name_cfg is not None:
@@ -127,10 +149,40 @@ class HLSConfig(object):
                 rf = layer_cfg.get('ReuseFactor')
                 if rf is not None:
                     self.layer_name_rf[layer_name.lower()] = rf
-                
+
                 strategy = layer_cfg.get('Strategy')
                 if strategy is not None:
                     self.layer_name_strategy[layer_name.lower()] = strategy
+
+                compression = layer_cfg.get('Compression')
+                if compression is not None:
+                    self.layer_name_compression[layer_name.lower()] = bool(compression)
+
+    def _validate_hls_config(self):
+        use_resource = False
+        for layer_type, strategy in self.layer_type_strategy.items():
+            if strategy.lower() == 'resource' and self.model_strategy.lower() == 'latency':
+                print('WARNING: Strategy for layer type {} set to "Resource", while model strategy set to "Latency".'.format(layer_type))
+                use_resource = True
+
+        for layer_name, strategy in self.layer_name_strategy.items():
+            if strategy.lower() == 'resource' and self.model_strategy.lower() == 'latency':
+                print('WARNING: Strategy for layer {} set to "Resource", while model strategy set to "Latency".'.format(layer_name))
+                use_resource = True
+
+        for layer_type, compression in self.layer_type_compression.items():
+            if compression and self.model_strategy.lower() == 'latency':
+                print('WARNING: Compression enabled for layer type {}, while model strategy set to "Latency".'.format(layer_type))
+                use_resource = True
+
+        for layer_name, compression in self.layer_name_compression.items():
+            if compression and self.model_strategy.lower() == 'latency':
+                print('WARNING: Compression enabled for layer {}, while model strategy set to "Latency".'.format(layer_name))
+                use_resource = True
+
+        if use_resource:
+            print('WARNING: Changing model strategy to "Resource"')
+            self.model_strategy = 'Resource'
 
 class HLSModel(object):
     def __init__(self, config, data_reader, layer_list, inputs=None, outputs=None):
@@ -165,7 +217,7 @@ class HLSModel(object):
         for o in node.outputs:
             out_var = node.get_output_variable(output_name=o)
             if o in self.outputs:
-                out_var.type = 'result_t'
+                out_var.type.name = 'result_t'
             self.output_vars[o] = out_var
 
         return node
@@ -173,7 +225,7 @@ class HLSModel(object):
     def insert_node(self, node):
         if len(node.inputs) > 1:
             raise Exception('Cannot insert a node with more than one input (for now).')
-        
+
         prev_node = self.graph.get(node.inputs[0])
         next_node = next((x for x in self.graph.values() if x.inputs[0] == prev_node.outputs[0]), None)
         if next_node is not None:
@@ -184,7 +236,7 @@ class HLSModel(object):
             new_graph[k] = v
             if k == prev_node.name:
                 new_graph[node.name] = node
-                
+
         self.graph = new_graph
 
     def remove_node(self, node, rewire=True):
@@ -203,7 +255,7 @@ class HLSModel(object):
                         raise Exception('Cannot rewire a node without child')
             else:
                 raise Exception('Cannot rewire a node without a parent')
-        
+
         del self.output_vars[node.outputs[0]]
         del self.graph[node.name]
 
@@ -215,9 +267,9 @@ class HLSModel(object):
         if prev_node is not None:
             if new_node.inputs is None or len(new_node.inputs) == 0: # Check if already rewired
                 new_node.inputs = [prev_node.outputs[0]]
-        
+
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
-        
+
     def get_weights_data(self, layer_name, var_name):
         return self.reader.get_weights_data(layer_name, var_name)
 
@@ -248,7 +300,7 @@ class HLSModel(object):
 
     def register_output_variable(self, out_name, variable):
         if out_name in self.outputs:
-            variable.type = 'result_t'
+            variable.type.name = 'result_t'
         self.output_vars[out_name] = variable
 
     def get_output_variables(self):
@@ -260,11 +312,30 @@ class HLSModel(object):
     def get_layer_output_variable(self, output_name):
         return self.output_vars[output_name]
 
+class HLSType(object):
+    def __init__(self, name, precision, **kwargs):
+        self.name = name.format(**kwargs)
+        self.precision = precision
+    
+    def definition_cpp(self):
+        return 'typedef {precision} {name};\n'.format(name=self.name, precision=self.precision)
+
+class CompressedType(HLSType):
+    def __init__(self, name, precision, index_precision, **kwargs):
+        super(CompressedType, self).__init__('compressed_type{index}', precision, **kwargs)
+        self.index_precision = index_precision
+    
+    def definition_cpp(self):
+        cpp_fmt = ('typedef struct {name} {{ '
+               '{index} row_index; '
+               '{index} col_index; '
+               '{precision} weight; }} {name};\n')
+        return cpp_fmt.format(name=self.name, index=self.index_precision, precision=self.precision)
+
 class Variable(object):
     def __init__(self, var_name, type_name, precision, **kwargs):
         self.name = var_name.format(**kwargs)
-        self.type = type_name.format(**kwargs)
-        self.precision = precision
+        self.type = HLSType(type_name, precision, **kwargs)
         self.cppname = re.sub(r'\W|^(?=\d)','_', self.name)
 
 class ArrayVariable(Variable):
@@ -306,8 +377,8 @@ class ArrayVariable(Variable):
         return zip(self.dim_names, self.shape)
 
     def definition_cpp(self):
-        array_shape = '*'.join([str(k) for k in self.dim_names])
-        return '{type} {name}[{shape}]'.format(type=self.type, name=self.cppname, shape=array_shape)
+        array_shape = self.size_cpp()
+        return '{type} {name}[{shape}]'.format(type=self.type.name, name=self.cppname, shape=array_shape)
 
     def size(self):
         nelem = 1
@@ -319,17 +390,83 @@ class ArrayVariable(Variable):
         return '*'.join([str(k) for k in self.dim_names])
 
 class WeightVariable(Variable):
-    def __init__(self, var_name, type_name, precision, data=None, **kwargs):
+    def __init__(self, var_name, type_name, precision, data, **kwargs):
         super(WeightVariable, self).__init__(var_name, type_name, precision, **kwargs)
         self.data = data
         self.nzeros = -1
-        self.shape = None
-        if self.data is not None:
-            self.shape = list(self.data.shape)
-            self.nzeros = 0
-            for x in np.nditer(self.data, order='C'):
-                if x == 0:
-                    self.nzeros += 1
+        self.shape = list(self.data.shape)
+        self.data_length = np.prod(self.data.shape)
+        self.nonzeros = np.count_nonzero(self.data)
+        self.nzeros = self.data_length - self.nonzeros
+        self.min = np.min(self.data)
+        self.max = np.max(self.data)
+        self._iterator = None
+        if 'int' in self.type.precision:
+            self.precision_fmt = '%d'
+        else:
+            precision_bits = re.search('.+<(.+?)>', self.type.precision).group(1).split(',')
+            decimal_bits = int(precision_bits[0]) - int(precision_bits[1])
+            decimal_spaces = int(np.floor(np.log10(2 ** decimal_bits - 1))) + 1
+            self.precision_fmt = '%.{}f'.format(decimal_spaces)
+
+    def __iter__(self):
+        self._iterator = np.nditer(self.data, order='C')
+        return self
+
+    def __next__(self):
+        if not self._iterator.finished:
+            value = self._iterator[0]
+            self._iterator.iternext()
+            return self.precision_fmt % value
+        else:
+            raise StopIteration
+
+    def definition_cpp(self):
+        return '{type} {name}[{size}]'.format(type=self.type.name, name=self.cppname, size=self.data_length)
+
+class CompressedWeightVariable(WeightVariable):
+    def __init__(self, var_name, type_name, precision, data, reuse_factor, **kwargs):
+        super(CompressedWeightVariable, self).__init__(var_name, type_name, precision, data, **kwargs)
+        self.extra_zeros = 0
+        self.data_length = np.prod(data.shape) - self.nzeros
+        while self.data_length % reuse_factor != 0:
+            self.extra_zeros += 1
+            self.data_length += 1
+        self.nonzeros = np.prod(data.shape) - self.nzeros + self.extra_zeros
+
+        # Compress the array
+        weights = []
+        extra_nzero_cnt = self.extra_zeros
+        it = np.nditer(data, order='C', flags=['multi_index'])
+        max_idx = 0
+        while not it.finished:
+            val = it[0]
+            if not (val == 0 and extra_nzero_cnt < 1):
+                if val == 0:
+                    extra_nzero_cnt -= 1
+                if it.multi_index[0] > max_idx:
+                    max_idx = it.multi_index[0]
+                if it.multi_index[1] > max_idx:
+                    max_idx = it.multi_index[1]
+                weights.append([it.multi_index[1], it.multi_index[0], val])
+            it.iternext()
+        weights.sort()
+
+        index_precision = 32
+        if max_idx > 0:
+            index_precision = int(np.log2(max_idx) + 1)
+        self.type = CompressedType(type_name, precision, 'ap_uint<{}>'.format(index_precision), **kwargs)
+
+        self.data = weights
+
+    def __iter__(self):
+        self._iterator = iter(self.data)
+        return self
+
+    def __next__(self):
+        value = next(self._iterator)
+        value_fmt = self.precision_fmt % value[2]
+        return '{ %u, %u, %s }' % (value[1], value[0], value_fmt)
 
 class Layer(object):
     def __init__(self, model, name, attributes, inputs, outputs=None):
@@ -343,21 +480,14 @@ class Layer(object):
 
         self.attributes = attributes
 
-        self._function_template = None
-        if self.model.config.get_strategy(self).lower() == 'resource':
-            self._function_template = get_function_template('Large' + self.__class__.__name__)
-            if self.model.config.get_reuse_factor(self) == 1:
-                print('WARNING: Using ReuseFactor 1 with "Resource" strategy. This may not work.')
-        if self._function_template is None:
-            self._function_template = get_function_template(self.__class__.__name__)
-
+        self._function_template = get_function_template(self.__class__.__name__)
         self._config_template = get_config_template(self.__class__.__name__)
         self.weights = OrderedDict()
         self.variables = OrderedDict()
         self.precision = OrderedDict()
-        accum_precision = self.model.config.get_precision(self, 'accum')
-        self.precision[accum_precision[1]] = accum_precision[0]
-        self.set_attr('accum_t', accum_precision[1])
+        accum_t = HLSType(*reversed(self.model.config.get_precision(self, 'accum')))
+        self.precision[accum_t.name] = accum_t
+        self.set_attr('accum_t', accum_t.precision)
 
         self.initialize()
 
@@ -423,12 +553,12 @@ class Layer(object):
         self.variables[out_name] = out
         self.model.register_output_variable(out_name, out)
 
-        self.precision[out.type] = out.precision
+        self.precision[out.type.name] = out.type
 
-    def add_weights(self, quantize=0):
+    def add_weights(self, quantize=0, compression=False):
         data = self.model.get_weights_data(self.name, 'kernel')
 
-        self.add_weights_variable(name='weight', var_name='w{index}', data=data, quantize=quantize)
+        self.add_weights_variable(name='weight', var_name='w{index}', data=data, quantize=quantize, compression=compression)
 
     def add_bias(self, quantize=0):
         data = self.model.get_weights_data(self.name, 'bias')
@@ -442,7 +572,7 @@ class Layer(object):
 
         self.add_weights_variable(name='bias', var_name='b{index}', type_name=type_name, precision=precision, data=data, quantize=quantize)
 
-    def add_weights_variable(self, name, var_name=None, type_name=None, precision=None, data=None, quantize=0):
+    def add_weights_variable(self, name, var_name=None, type_name=None, precision=None, data=None, quantize=0, compression=False):
         if var_name is None:
             var_name = name + '{index}'
 
@@ -466,16 +596,20 @@ class Layer(object):
                 precision = 'ap_int<2>'
                 type_name = name + '{index}_t'
 
-        var = WeightVariable(var_name, type_name=type_name, precision=precision, data=data, index=self.index)
+        if compression:
+            rf = self.model.config.get_reuse_factor(self)
+            var = CompressedWeightVariable(var_name, type_name=type_name, precision=precision, data=data, reuse_factor=rf, index=self.index)
+        else:
+            var = WeightVariable(var_name, type_name=type_name, precision=precision, data=data, index=self.index)
 
         self.weights[name] = var
-        self.precision[var.type] = var.precision
+        self.precision[var.type.name] = var.type
 
     def _default_function_params(self):
         params = {}
         params['config'] = 'config{}'.format(self.index)
-        params['input_t'] = self.get_input_variable().type
-        params['output_t'] = self.get_output_variable().type
+        params['input_t'] = self.get_input_variable().type.name
+        params['output_t'] = self.get_output_variable().type.name
         params['input'] = self.get_input_variable().name
         params['output'] = self.get_output_variable().name
 
@@ -490,7 +624,7 @@ class Layer(object):
 
         # data types
         for weight_name, variable in self.weights.items():
-            params[weight_name + '_t'] = variable.type
+            params[weight_name + '_t'] = variable.type.name
 
         return params
 
@@ -534,14 +668,28 @@ class Dense(Layer):
         shape = [self.attributes['n_out']]
         dims = ['N_LAYER_{}'.format(self.index)]
         quantize = self.get_attr('quantize', default=0)
+        compression = self.model.config.get_compression(self)
+        if self.model.config.is_resource_strategy(self):
+            if self.model.config.get_reuse_factor(self) == 1:
+                print('WARNING: Using ReuseFactor 1 with "Resource" strategy. This may not work.')
+            if compression:
+                self.set_attr('strategy', 'compressed')
+        else:
+            self.set_attr('strategy', 'latency')
         self.add_output_variable(shape, dims)
-        self.add_weights(quantize=quantize)
-        if self.model.config.get_strategy(self).lower() == 'resource':
-            self.weights['weight'].data = np.transpose(self.weights['weight'].data)
+        self.add_weights(quantize=quantize, compression=compression)
+        index_t = 'ap_uint<1>'
+        if self.model.config.is_resource_strategy(self):
+            if self.model.config.get_compression(self):
+                index_t = self.get_weights('weight').type.index_precision
+            else:
+                self.weights['weight'].data = np.transpose(self.weights['weight'].data)
+        self.set_attr('index_t', index_t)
         self.add_bias(quantize=quantize)
 
     def function_cpp(self):
         params = self._default_function_params()
+        params['strategy'] = self.get_attr('strategy')
         params['w'] = self.get_weights('weight').name
         params['b'] = self.get_weights('bias').name
 
@@ -552,6 +700,7 @@ class Dense(Layer):
         params['n_in'] = self.get_input_variable().size_cpp()
         params['n_out'] = self.get_output_variable().size_cpp()
         params['nzeros'] = self.get_weights('weight').nzeros
+        params['nonzeros'] = self.get_weights('weight').nonzeros
 
         return self._config_template.format(**params)
 
@@ -572,10 +721,12 @@ class Conv1D(Layer):
 
     def config_cpp(self):
         params = self._default_config_params()
-        params['y_in'] = self.get_input_variable().dim_names[0]
+        params['n_in'] = self.get_input_variable().dim_names[0]
         params['n_chan'] = self.get_input_variable().dim_names[1]
+        params['filt_width'] = self.get_attr('y_filt')
+        params['dilation'] = self.get_attr('dilation', 1)
         params['n_filt'] = 'N_FILT_{}'.format(self.index)
-        params['y_out'] = 'Y_OUTPUTS_{}'.format(self.index)
+        params['n_out'] = 'Y_OUTPUTS_{}'.format(self.index)
         params['nzeros'] = self.get_weights('weight').nzeros
 
         return self._config_template.format(**params)
@@ -711,7 +862,7 @@ class BatchNormalization(Layer):
         beta = self.model.get_weights_data(self.name, 'beta')
         mean = self.model.get_weights_data(self.name, 'moving_mean')
         var = self.model.get_weights_data(self.name, 'moving_variance')
-        
+
         scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
         bias = beta - gamma * mean / np.sqrt(var + self.get_attr('epsilon'))
 
@@ -745,9 +896,9 @@ class Merge(Layer):
         params = {}
         params['merge'] = self.get_attr('op').lower()
         params['config'] = 'config{}'.format(self.index)
-        params['input1_t'] = self.get_input_variable(self.inputs[0]).type
-        params['input2_t'] = self.get_input_variable(self.inputs[1]).type
-        params['output_t'] = self.get_output_variable().type
+        params['input1_t'] = self.get_input_variable(self.inputs[0]).type.name
+        params['input2_t'] = self.get_input_variable(self.inputs[1]).type.name
+        params['output_t'] = self.get_output_variable().type.name
         params['input1'] = self.get_input_variable(self.inputs[0]).name
         params['input2'] = self.get_input_variable(self.inputs[1]).name
         params['output'] = self.get_output_variable().name
