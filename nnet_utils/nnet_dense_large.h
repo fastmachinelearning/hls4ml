@@ -107,7 +107,7 @@ void dense_large_rf_gt_nin_rem0(
     typename CONFIG_T::weight_t weights[CONFIG_T::n_in*CONFIG_T::n_out],
     typename CONFIG_T::bias_t   biases[CONFIG_T::n_out]) {
 
-    const int rufactor = CONFIG_T::reuse_factor;
+    const int rufactor = MIN(CONFIG_T::reuse_factor, CONFIG_T::n_in * CONFIG_T::n_out);
     const int multfactor = MIN(CONFIG_T::n_in,CONFIG_T::reuse_factor);
     const int multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in*CONFIG_T::n_out, multfactor);
     const int block_factor = DIV_ROUNDUP(CONFIG_T::n_in*CONFIG_T::n_out, CONFIG_T::reuse_factor);

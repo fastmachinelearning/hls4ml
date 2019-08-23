@@ -5,10 +5,12 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
+    static const unsigned n_nonzeros = {nonzeros};
     static const bool store_weights_in_bram = false;
     typedef {accum_t} accum_t;
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
+    typedef {index_t} index_t;
 }};\n"""
 
 batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
@@ -125,8 +127,7 @@ config_templates = {
     'Concatenate'            : concat_config_template,
 }
 
-dense_function_template = 'nnet::dense<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
-dense_large_function_template = 'nnet::dense_large<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
 conv1d_function_template = 'nnet::conv_1d<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 conv2d_function_template = 'nnet::conv_2d<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
@@ -139,8 +140,6 @@ merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {co
 function_templates = {
     'Dense'                  : dense_function_template,
     'BinaryDense'            : dense_function_template,
-    'LargeDense'             : dense_large_function_template,
-    'LargeBinaryDense'       : dense_large_function_template,
     'BatchNormalization'     : batchnorm_function_template,
     'Conv1D'                 : conv1d_function_template,
     'Conv2D'                 : conv2d_function_template,
@@ -162,6 +161,6 @@ def get_function_template(kind):
 def register_templates(name, function_template, config_template):
     global function_templates
     global config_templates
-    
+
     function_templates[name] = function_template
     config_templates[name] = config_template

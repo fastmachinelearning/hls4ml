@@ -23,48 +23,33 @@ def print_array_to_cpp(var, odir):
 
     f=open("{}/firmware/weights/{}.h".format(odir,var.name),"w")
 
-    #count zeros
-    zero_ctr = 0
-    for x in np.nditer(var.data, order='C'):
-        if x == 0:
-            zero_ctr += 1
-
     #meta data
-    f.write("//Numpy array shape {}\n".format(var.data.shape))
-    f.write("//Min {:.12f}\n".format(np.min(var.data)))
-    f.write("//Max {:.12f}\n".format(np.max(var.data)))
-    f.write("//Number of zeros {}\n".format(zero_ctr))
+    f.write("//Numpy array shape {}\n".format(var.shape))
+    f.write("//Min {:.12f}\n".format(np.min(var.min)))
+    f.write("//Max {:.12f}\n".format(np.max(var.max)))
+    f.write("//Number of zeros {}\n".format(var.nzeros))
     f.write("\n")
 
     #c++ variable
-    f.write("{} {}".format(var.type, var.name))
-
-    #hls doesn't like 3d arrays... unrolling to 1d
-    #also doing for all (including 2d) arrays now
-    f.write("[{}]".format(np.prod(var.data.shape)))
+    f.write(var.definition_cpp())
     f.write(" = {")
 
-    if 'int' in var.precision:
+    if 'int' in var.type.precision:
         precision_fmt = '%d'
     else:
-        precision_bits = re.search('.+<(.+?)>', var.precision).group(1).split(',')
+        precision_bits = re.search('.+<(.+?)>', var.type.precision).group(1).split(',')
         decimal_bits = int(precision_bits[0]) - int(precision_bits[1])
         decimal_spaces = int(np.floor(np.log10(2 ** decimal_bits - 1))) + 1
         precision_fmt = '%.{}f'.format(decimal_spaces)
 
     #fill c++ array.
     #not including internal brackets for multidimensional case
-    i=0
-    for x in np.nditer(var.data, order='C'):
-        if i==0:
-            f.write(precision_fmt % x)
-        else:
-            f.write(", " + precision_fmt % x)
-        i=i+1
+    sep = ''
+    for x in var:
+        f.write(sep + x)
+        sep = ", "
     f.write("};\n")
     f.close()
-
-    return zero_ctr
 
 def write_project_cpp(model):
     ###################
@@ -207,8 +192,8 @@ def write_parameters(model):
             for layer in model.get_layers():
                 layer_precision = layer.get_layer_precision()
                 all_precision.update(layer_precision)
-            for type_name, precision in all_precision.items():
-                newline += 'typedef {precision} {type_name};\n'.format(type_name=type_name, precision=precision)
+            for used_type in all_precision.values():
+                newline += used_type.definition_cpp()
 
         elif "//hls-fpga-machine-learning insert layer-config" in line:
             newline = line

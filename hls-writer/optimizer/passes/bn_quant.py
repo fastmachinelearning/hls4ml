@@ -18,12 +18,12 @@ class BatchNormalizationQuantizedTanh(hls_model.Layer):
         inp = self.get_input_variable()
         shape = inp.shape
         dims = inp.dim_names
-        precision_bits = re.search('.+<(.+?)>', inp.precision).group(1).split(',')
-        if 'ap_int' in inp.precision:
+        precision_bits = re.search('.+<(.+?)>', inp.type.precision).group(1).split(',')
+        if 'ap_int' in inp.type.precision:
             W = int(precision_bits[0])
             I = W
             F = 0
-        elif 'ap_fixed' in inp.precision:
+        elif 'ap_fixed' in inp.type.precision:
             W = int(precision_bits[0])
             I = int(precision_bits[1])
             F = W - I
@@ -37,15 +37,15 @@ class BatchNormalizationQuantizedTanh(hls_model.Layer):
         if self.get_attr('quantize') == 2:
             self.add_output_variable(shape, dims, precision='ap_uint<1>')
             threshold = np.floor(threshold * 2**F) / 2**F
-            self.add_weights_variable(name='threshold', var_name='t{index}', data=threshold, type_name='threshold{index}_t', precision=inp.precision)
+            self.add_weights_variable(name='threshold', var_name='t{index}', data=threshold, type_name='threshold{index}_t', precision=inp.type.precision)
         elif self.get_attr('quantize') == 3:
             self.add_output_variable(shape, dims, precision='ap_int<2>')
             threshold_hi = 0.5/(gamma/np.sqrt(variance + epsilon)) + threshold
             threshold_lo = -0.5/(gamma/np.sqrt(variance + epsilon)) + threshold
             threshold_hi = np.floor(threshold_hi * 2**F) / 2**F
             threshold_lo = np.floor(threshold_lo * 2**F) / 2**F
-            self.add_weights_variable(name='threshold_hi', var_name='th{index}', data=threshold_hi, type_name='threshold_hi_{index}_t', precision=inp.precision)
-            self.add_weights_variable(name='threshold_lo', var_name='tl{index}', data=threshold_lo, type_name='threshold_lo_{index}_t', precision=inp.precision)
+            self.add_weights_variable(name='threshold_hi', var_name='th{index}', data=threshold_hi, type_name='threshold_hi_{index}_t', precision=inp.type.precision)
+            self.add_weights_variable(name='threshold_lo', var_name='tl{index}', data=threshold_lo, type_name='threshold_lo_{index}_t', precision=inp.type.precision)
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -126,8 +126,7 @@ class QuantizeDenseOutput(OptimizerPass):
         out_type = 'ap_int<{}>'.format(nbits)
         node.set_attr('accum_t', out_type)
         out_var = node.get_output_variable()
-        out_var.precision = out_type
-        node.precision[out_var.type] = out_type
+        out_var.type.precision = out_type
 
         quantized_data = None
         quantized_precision = None
@@ -140,16 +139,14 @@ class QuantizeDenseOutput(OptimizerPass):
 
         weights = node.weights['weight']
         weights.data = quantized_data
-        weights.type = 'weight{index}_t'.format(index=node.index)
-        weights.precision = quantized_precision
-        node.precision[weights.type] = weights.precision
-        zeros = np.zeros(shape=(node.get_attr('n_out')))
+        weights.type.name = 'weight{index}_t'.format(index=node.index)
+        weights.type.precision = quantized_precision
+
         bias = node.weights['bias']
-        bias.data = zeros
-        bias.type = 'bias{index}_t'.format(index=node.index)
+        bias.data = np.zeros(shape=(node.get_attr('n_out')))
+        bias.type.name = 'bias{index}_t'.format(index=node.index)
         bias.nzeros = 0
-        bias.precision = quantized_precision
-        node.precision[bias.type] = bias.precision
+        bias.type.precision = quantized_precision
 
         # If followed by the BatchNormalizationBinaryTanh, update its input
         # Also requantise the weights
@@ -164,8 +161,7 @@ class QuantizeDenseOutput(OptimizerPass):
                     var_names.append('threshold_lo')
                 for var_name in var_names:
                     threshold_var = out_node.weights[var_name]
-                    threshold_var.precision = out_type
+                    threshold_var.type.precision = out_type
                     threshold_var.data = np.floor(threshold_var.data)
-                    out_node.precision[threshold_var.type] = out_type
 
         return False

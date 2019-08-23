@@ -6,6 +6,7 @@
 #include "ap_fixed.h"
 #include "nnet_dense.h"
 #include "nnet_dense_large.h"
+#include "nnet_dense_compressed.h"
 #include "nnet_conv.h"
 #include "nnet_conv2d.h"
 #include "nnet_activation.h"

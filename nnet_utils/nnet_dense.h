@@ -104,7 +104,7 @@ cast(typename CONFIG_T::accum_t x){
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-void dense(
+void dense_latency(
     data_T    data[CONFIG_T::n_in],
     res_T     res[CONFIG_T::n_out],
     typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
@@ -134,12 +134,17 @@ void dense(
     } else if (CONFIG_T::io_type == io_serial){
         // Only reduce cycle_factor if n_out is evenly divisible by reuse_factor
         // Otherwise, HLS wont be happy
-        int cycle_factor = CONFIG_T::n_out;
+        int cycle_factor = CONFIG_T::n_out / CONFIG_T::reuse_factor;
+        int reused_cycle = DIV_ROUNDUP(CONFIG_T::n_out, CONFIG_T::reuse_factor);
+        if (cycle_factor != reused_cycle) {
+            cycle_factor = CONFIG_T::n_out;
+        }
+        /*int cycle_factor = CONFIG_T::n_out;
         float reused_cycle = CONFIG_T::n_out / CONFIG_T::reuse_factor;
         if (reused_cycle == ceil(reused_cycle)){
             // Dont use "ceil" here; as of 2018.2, HLS crashes mysteriously
             cycle_factor = cycle_factor / CONFIG_T::reuse_factor;
-        }
+        }*/
         #pragma HLS ARRAY_PARTITION variable=weights cyclic factor=cycle_factor
         #pragma HLS ARRAY_PARTITION variable=mult cyclic factor=cycle_factor
         #pragma HLS ARRAY_PARTITION variable=acc complete
