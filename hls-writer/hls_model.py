@@ -676,6 +676,8 @@ class Dense(Layer):
                 print('WARNING: Using ReuseFactor 1 with "Resource" strategy. This may not work.')
             if compression:
                 self.set_attr('strategy', 'compressed')
+            else:
+                self.set_attr('strategy', 'large')
         else:
             self.set_attr('strategy', 'latency')
         self.add_output_variable(shape, dims)
