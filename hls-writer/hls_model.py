@@ -421,6 +421,8 @@ class WeightVariable(Variable):
         else:
             raise StopIteration
 
+    next = __next__
+
     def definition_cpp(self):
         return '{type} {name}[{size}]'.format(type=self.type.name, name=self.cppname, size=self.data_length)
 
