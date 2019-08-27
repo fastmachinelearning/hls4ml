@@ -24,7 +24,6 @@
 
 #include "firmware/parameters.h"
 #include "firmware/myproject.h"
-#include "nnet_helpers.h"
 
 #define CHECKPOINT 5000
 

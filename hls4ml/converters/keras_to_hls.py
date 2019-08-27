@@ -1,23 +1,13 @@
 from __future__ import print_function
 import numpy as np
 import h5py
-import os
-import tarfile
 import json
-import argparse
-import yaml
-import sys
-from shutil import copyfile
 import math
 
-MAXMULT = 4096
+from hls4ml.model import HLSModel
+from hls4ml.model.optimizer import optimize_model
 
-filedir = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0,os.path.join(filedir, "..", "hls-writer"))
-from hls_writer import parse_config, write_hls
-sys.path.insert(0,os.path.join(filedir, "..", "hls-writer/optimizer"))
-from optimizer import optimize_model
-from hls_model import HLSModel
+MAXMULT = 4096
 
 class KerasDataReader:
     def __init__(self, config):
@@ -49,42 +39,11 @@ def get_weights_shape(h5filename, layer_name, var_name='kernel'):
 
     return shape
 
-############################################################################################
-## M A I N
-############################################################################################
-def main():
-
-    # Parse command line arguments
-    parser = argparse.ArgumentParser(description='')
-    parser.add_argument("-c", action='store', dest='config',
-                        help="Configuration file.")
-    args = parser.parse_args()
-    if not args.config: parser.error('A configuration file needs to be specified.')
-
-    configDir  = os.path.abspath(os.path.dirname(args.config))
-    yamlConfig = parse_config(args.config)
-    if not os.path.isabs(yamlConfig['OutputDir']):
-        yamlConfig['OutputDir'] = os.path.join(configDir, yamlConfig['OutputDir'])
-    if not os.path.isabs(yamlConfig['KerasH5']):
-        yamlConfig['KerasH5'] = os.path.join(configDir, yamlConfig['KerasH5'])
-    if not os.path.isabs(yamlConfig['KerasJson']):
-        yamlConfig['KerasJson'] = os.path.join(configDir, yamlConfig['KerasJson'])
-    if 'InputData' in yamlConfig and not os.path.isabs(yamlConfig['InputData']):
-        yamlConfig['InputData'] = os.path.join(configDir, yamlConfig['InputData'])
-    if 'OutputPredictions' in yamlConfig and not os.path.isabs(yamlConfig['OutputPredictions']):
-        yamlConfig['OutputPredictions'] = os.path.join(configDir, yamlConfig['OutputPredictions'])
-
-    if not (yamlConfig["IOType"] == "io_parallel" or yamlConfig["IOType"] == "io_serial"):
-        raise Exception('ERROR: Invalid IO type')
-    return yamlConfig
-
-def keras_to_hls_model(yamlConfig):
+def keras_to_hls(yamlConfig):
 
     ######################
     ##  Do translation
     ######################
-    if not os.path.isdir("{}/firmware/weights".format(yamlConfig['OutputDir'])):
-        os.makedirs("{}/firmware/weights".format(yamlConfig['OutputDir']))
 
     #This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
@@ -376,14 +335,8 @@ def keras_to_hls_model(yamlConfig):
     #################
 
     reader = KerasDataReader(yamlConfig)
+    print('Creating HLS model')
     hls_model = HLSModel(yamlConfig, reader, layer_list, input_layers, output_layers)
     optimizers = ['eliminate_linear_activation', 'merge_batch_norm_quantized_tanh', 'quantize_dense_output']
     optimize_model(hls_model, optimizers)
-    #write_hls(hls_model)
     return hls_model
-
-
-if __name__ == "__main__":
-    yamlConfig = main()
-    hls_model = keras_to_hls_model(yamlConfig)
-    write_hls(hls_model)

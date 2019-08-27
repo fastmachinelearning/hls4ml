@@ -10,7 +10,7 @@ import yaml
 import hls4ml
 
 def parse_config(config_file):
-    print("Loading configuration from", config_file)
+    print('Loading configuration from', config_file)
     config = open(config_file, 'r')
     return yaml.load(config, Loader=yaml.SafeLoader)
 
@@ -18,9 +18,9 @@ def main():
     parser = argparse.ArgumentParser(description='HLS4ML - Machine learning inference in FPGAs')
     subparsers = parser.add_subparsers()
     
-    config_parser = subparsers.add_parser("config", help='Create a conversion configuration file')
-    convert_parser = subparsers.add_parser("convert", help='Convert Keras or ONNX model to HLS')
-    build_parser = subparsers.add_parser("build")
+    config_parser = subparsers.add_parser('config', help='Create a conversion configuration file')
+    convert_parser = subparsers.add_parser('convert', help='Convert Keras or ONNX model to HLS')
+    build_parser = subparsers.add_parser('build', help='Build generated HLS project')
 
     config_parser.add_argument('-m', '--model', help='Model file to convert (Keras .h5 or .json, or ONNX .onnx file)', default=None)
     config_parser.add_argument('-w', '--weights', help='Optional weights file (if Keras .json file is provided))', default=None)
@@ -51,12 +51,16 @@ def config(args):
 
 def convert(args):
     yamlConfig = parse_config(args.config)
+    model = None
     if 'OnnxModel' in yamlConfig:
-        hls4ml.converters.onnx_to_hls(yamlConfig)
+        model = hls4ml.converters.onnx_to_hls(yamlConfig)
     elif 'PytorchModel' in yamlConfig:
-        hls4ml.converters.pytorch_to_hls(yamlConfig)
+        model = hls4ml.converters.pytorch_to_hls(yamlConfig)
     else:
-        hls4ml.converters.keras_to_hls(yamlConfig)
+        model = hls4ml.converters.keras_to_hls(yamlConfig)
+    
+    if model is not None:
+        hls4ml.writer.vivado_writer.write_hls(model)
 
 def build(args):
     if args.project is None:

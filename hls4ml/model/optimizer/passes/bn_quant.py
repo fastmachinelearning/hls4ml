@@ -1,12 +1,9 @@
 import numpy as np
-import sys
 import re
 
-sys.path.insert(0, '../')
-from optimizer import OptimizerPass
-sys.path.insert(0, '../..')
-import hls_model
-import templates
+from ..optimizer import OptimizerPass
+import hls4ml.model.hls_model as hls_model
+import hls4ml.model.templates as templates
 
 class BatchNormalizationQuantizedTanh(hls_model.Layer):
     ''' Merged Batch Normalization and quantized (binary or ternary) Tanh layer.

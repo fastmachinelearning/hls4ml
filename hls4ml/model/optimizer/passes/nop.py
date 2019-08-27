@@ -1,6 +1,4 @@
-import sys
-sys.path.insert(0, '../')
-from optimizer import OptimizerPass
+from ..optimizer import OptimizerPass
 
 class EliminateLinearActivation(OptimizerPass):
     def match(self, node):

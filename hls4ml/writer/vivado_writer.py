@@ -5,16 +5,8 @@ from shutil import copyfile
 import numpy as np
 import os
 import re
+import glob
 from collections import OrderedDict
-
-#######################################
-## Config module
-#######################################
-def parse_config(config_file) :
-
-    print("Loading configuration from", config_file)
-    config = open(config_file, 'r')
-    return yaml.load(config)
 
 #######################################
 ## Print weight array to C++
@@ -34,14 +26,6 @@ def print_array_to_cpp(var, odir):
     f.write(var.definition_cpp())
     f.write(" = {")
 
-    if 'int' in var.type.precision:
-        precision_fmt = '%d'
-    else:
-        precision_bits = re.search('.+<(.+?)>', var.type.precision).group(1).split(',')
-        decimal_bits = int(precision_bits[0]) - int(precision_bits[1])
-        decimal_spaces = int(np.floor(np.log10(2 ** decimal_bits - 1))) + 1
-        precision_fmt = '%.{}f'.format(decimal_spaces)
-
     #fill c++ array.
     #not including internal brackets for multidimensional case
     sep = ''
@@ -51,13 +35,17 @@ def print_array_to_cpp(var, odir):
     f.write("};\n")
     f.close()
 
+def write_project_dir(model):
+    if not os.path.isdir("{}/firmware/weights".format(model.config.get_output_dir())):
+        os.makedirs("{}/firmware/weights".format(model.config.get_output_dir()))
+
 def write_project_cpp(model):
     ###################
     ## myproject.cpp
     ###################
 
     filedir = os.path.dirname(os.path.abspath(__file__))
-    f = open(os.path.join(filedir,'../hls-template/firmware/myproject.cpp'),'r')
+    f = open(os.path.join(filedir,'../templates/vivado/firmware/myproject.cpp'),'r')
     fout = open('{}/firmware/{}.cpp'.format(model.config.get_output_dir(), model.config.get_project_name()),'w')
 
     model_inputs = model.get_input_variables()
@@ -141,7 +129,7 @@ def write_project_header(model):
     #######################
 
     filedir = os.path.dirname(os.path.abspath(__file__))
-    f = open(os.path.join(filedir,'../hls-template/firmware/myproject.h'),'r')
+    f = open(os.path.join(filedir,'../templates/vivado/firmware/myproject.h'),'r')
     fout = open('{}/firmware/{}.h'.format(model.config.get_output_dir(), model.config.get_project_name()),'w')
 
     model_inputs = model.get_input_variables()
@@ -175,7 +163,7 @@ def write_project_header(model):
 
 def write_parameters(model):
     filedir = os.path.dirname(os.path.abspath(__file__))
-    f = open(os.path.join(filedir,'../hls-template/firmware/parameters.h'),'r')
+    f = open(os.path.join(filedir,'../templates/vivado/firmware/parameters.h'),'r')
     fout = open('{}/firmware/parameters.h'.format(model.config.get_output_dir()),'w')
 
     for line in f.readlines():
@@ -228,7 +216,7 @@ def write_test_bench(model):
     if output_predictions is not None:
         copyfile(output_predictions, '{}/tb_data/tb_output_predictions.dat'.format(model.config.get_output_dir()))
 
-    f = open(os.path.join(filedir,'../hls-template/myproject_test.cpp'),'r')
+    f = open(os.path.join(filedir,'../templates/vivado/myproject_test.cpp'),'r')
     fout = open('{}/{}_test.cpp'.format(model.config.get_output_dir(), model.config.get_project_name()),'w')
 
     for line in f.readlines():
@@ -302,10 +290,10 @@ def write_build_script(model):
     ###################
 
     filedir = os.path.dirname(os.path.abspath(__file__))
-    nnetdir = os.path.abspath(os.path.join(filedir, "../nnet_utils"))
+    nnetdir = os.path.abspath(os.path.join(filedir, "../templates/vivado/nnet_utils"))
     relpath = os.path.relpath(nnetdir, start=model.config.get_output_dir())
 
-    f = open(os.path.join(filedir,'../hls-template/build_prj.tcl'),'r')
+    f = open(os.path.join(filedir,'../templates/vivado/build_prj.tcl'),'r')
     fout = open('{}/build_prj.tcl'.format(model.config.get_output_dir()),'w')
 
     for line in f.readlines():
@@ -322,6 +310,25 @@ def write_build_script(model):
     f.close()
     fout.close()
 
+def write_nnet_utils(model):
+    ###################
+    ## nnet_utils
+    ###################
+
+    filedir = os.path.dirname(os.path.abspath(__file__))
+
+    srcpath = os.path.join(filedir,'../templates/vivado/nnet_utils/')
+    dstpath = '{}/firmware/nnet_utils/'.format(model.config.get_output_dir())
+
+    if not os.path.exists(dstpath):
+        os.mkdir(dstpath)
+
+    headers = [os.path.basename(h) for h in glob.glob(srcpath + '*.h')]
+
+    for h in headers:
+        copyfile(srcpath + h, dstpath + h)
+
+
 def write_tar(model):
     ###################
     # Tarball output
@@ -331,10 +338,14 @@ def write_tar(model):
         archive.add(model.config.get_output_dir(), recursive=True)
 
 def write_hls(model):
+    print('Writing HLS project')
+    write_project_dir(model)
     write_project_cpp(model)
     write_project_header(model)
     write_weights(model)
     write_parameters(model)
     write_test_bench(model)
     write_build_script(model)
+    write_nnet_utils(model)
     write_tar(model)
+    print('Done')

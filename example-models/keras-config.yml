@@ -1,7 +1,7 @@
-KerasJson: example-keras-model-files/KERAS_3layer.json
-KerasH5:   example-keras-model-files/KERAS_3layer_weights.h5
-#InputData: example-keras-model-files/KERAS_3layer_input_features.dat
-#OutputPredictions: example-keras-model-files/KERAS_3layer_predictions.dat
+KerasJson: keras/KERAS_3layer.json
+KerasH5:   keras/KERAS_3layer_weights.h5
+#InputData: keras/KERAS_3layer_input_features.dat
+#OutputPredictions: keras/KERAS_3layer_predictions.dat
 OutputDir: my-hls-test
 ProjectName: myproject
 XilinxPart: xcku115-flvb2104-2-i
