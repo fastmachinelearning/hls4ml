@@ -6,7 +6,7 @@ clock=5
 io=io_parallel
 rf=1
 strategy="Latency"
-type="ap_fixed<18,8>"
+type="ap_fixed<16,6>"
 basedir=vivado_prj
 
 sanitizer="[^A-Za-z0-9._]"
@@ -34,7 +34,7 @@ function print_usage {
    echo "   -g STRATEGY"
    echo "      Strategy. 'Latency' or 'Resource'."
    echo "   -t TYPE"
-   echo "      Default precision. Defaults to 'ap_fixed<18,8>'."
+   echo "      Default precision. Defaults to 'ap_fixed<16,6>'."
    echo "   -d DIR"
    echo "      Output directory."
    echo "   -h"
@@ -94,10 +94,9 @@ do
    base=`echo "${h5}" | sed -e 's/\(_weights\)*$//g'`
    file="${basedir}/${base}-${pycmd}.yml"
 
-   # This scheme assumes base output directory is one level deep
-   echo "KerasJson: ../../keras-to-hls/example-keras-model-files/${name}.json" > ${file}
-   echo "KerasH5:   ../../keras-to-hls/example-keras-model-files/${h5}.h5" >> ${file}
-   echo "OutputDir: ${base}-${pycmd}-${xilinxpart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}" >> ${file}
+   echo "KerasJson: ../example-models/keras/${name}.json" > ${file}
+   echo "KerasH5:   ../example-models/keras/${h5}.h5" >> ${file}
+   echo "OutputDir: ${basedir}/${base}-${pycmd}-${xilinxpart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}" >> ${file}
    echo "ProjectName: myproject" >> ${file}
    echo "XilinxPart: ${xilinxpart}" >> ${file}
    echo "ClockPeriod: ${clock}" >> ${file}
@@ -109,7 +108,7 @@ do
    echo "    Precision: ${type} " >> ${file}
    echo "    Strategy: ${strategy} " >> ${file}
 
-   ${pycmd} ../keras-to-hls/keras-to-hls.py -c ${file} || exit 1
+   ${pycmd} ../scripts/hls4ml convert -c ${file} || exit 1
    rm ${file}
    echo ""
 done
