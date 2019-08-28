@@ -7,7 +7,7 @@ Here we give line-by-line instructions on how to build a first project and expla
 
 These instructions are for simply running the tool out-of-the-box and getting a feel for the workflow.  
 
-**1) First clone our latest version from github and install it from the main directory:** 
+**1) To clone our latest version from github and install it from the main directory:** 
 ```
 git clone https://github.com/hls-fpga-machine-learning/hls4ml.git
 cd hls4ml/
