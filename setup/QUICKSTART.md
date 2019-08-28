@@ -43,6 +43,8 @@ This will create a Vivado HLS project with your model implmentation!
 
 For further information about how to use `hls4ml`, do: `hls4ml --help`
 
+**To uninstall `hls4ml`:** `pip uninstall hls4ml`
+
 ## Existing examples
 
 Other examples of various HLS projects with examples of different machine learning algorithm implementations is in the directory: `example-prjs`.
