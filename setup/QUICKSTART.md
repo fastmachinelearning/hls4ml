@@ -9,7 +9,7 @@ These instructions are for simply running the tool out-of-the-box and getting a 
 
 1) First clone our latest version from github and install it from the main directory: 
 ```
-git clone -b pack6 --single-branch https://github.com/vloncar/hls4ml.git
+git clone https://github.com/hls-fpga-machine-learning/hls4ml.git
 cd hls4ml/
 pip install -U .
 ```
@@ -17,15 +17,20 @@ pip install -U .
 - If you don't have privileges to install in the configured environment, you can also pass `--user` to the `pip` command as well. 
 - In the future, we plan to support `hls4ml` as a package on PyPI. After that you can simply install the software with `pip install hls4ml`
 
-2) Activate 
+2) Translate your model using configuration files (`.yml`): 
 
-The model files, along with other configuration parameters, are defined in the `keras-config.yml` file.
+The model files, along with other configuration parameters, are defined in the `.yml` files.
+We provide some examples of configuration files in `example-models` directory.
 
 In order to create a HLS project:
 
+Go to `example-models/` from the main directory: `cd example-models/`
+
+And use this command to translate a Keras model:
+
 `hls4ml convert -c keras-config.yml`
 
-This will create a new HLS project directory with an implementation of a model from the `example-keras-model-files` directory.
+This will create a new HLS project directory with an implementation of a model from the `example-models` directory.
 To run the HLS project, do:
 
 ```
