@@ -1,9 +1,9 @@
-#Quick start
+# Quick start
 
 For basic concepts to understand the tool, please visit the <a href="../CONCEPTS.html">Concepts</a> chapter.  
 Here we give line-by-line instructions on how to build a first project and explain the various steps to producing an HLS4ML IP.
 
-##Running the tool
+## Running the tool
 
 These instructions are for simply running the tool out-of-the-box and getting a feel for the workflow.  
 
