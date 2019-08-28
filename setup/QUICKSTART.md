@@ -41,7 +41,7 @@ This will create a Vivado HLS project with your model implmentation!
 
 **3) Further help:**
 
-- For further information about how to use `hls4ml`, do: `hls4ml --help`
+- For further information about how to use `hls4ml`, do: `hls4ml --help` or `hls4ml -h`
 
 - If you need help for a particular `command`, `hls4ml command -h` will show help for the requested `command`
 
