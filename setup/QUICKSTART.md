@@ -19,8 +19,13 @@ pip install -U .
 
 2) Activate 
 
-This will create a new HLS project directory with an implementation of a model from the `example-keras-model-files` directory.
 The model files, along with other configuration parameters, are defined in the `keras-config.yml` file.
+
+In order to create a HLS project:
+
+`hls4ml convert -c keras-config.yml`
+
+This will create a new HLS project directory with an implementation of a model from the `example-keras-model-files` directory.
 To run the HLS project, do:
 
 ```
