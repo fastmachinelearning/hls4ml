@@ -84,7 +84,7 @@ do
    base=${model%.*}
    file="${basedir}/${base}-${pycmd}.yml"
 
-   echo "PytorchModel: ../example-models/${model}.pt" > ${file}
+   echo "PytorchModel: ../example-models/pytorch/${model}.pt" > ${file}
    echo "OutputDir: ${basedir}/${base}-${pycmd}-${xilinxpart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}" >> ${file}
    echo "ProjectName: myproject" >> ${file}
    echo "XilinxPart: ${xilinxpart}" >> ${file}

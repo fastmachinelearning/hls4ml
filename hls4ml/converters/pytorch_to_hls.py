@@ -1,114 +1,109 @@
 from __future__ import print_function
 import numpy as np
-import h5py
 import os
-import tarfile
-import json
-import argparse
 import yaml
 import sys
-import torch
+try:
+    import torch # Don't fail the whole hls4ml initialization
+except:
+    pass
 import pickle
 import re
-from shutil import copyfile
 
-filedir = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0,os.path.join(filedir, "..", "hls-writer"))
-from hls_writer import parse_config, print_array_to_cpp, hls_writer
+from hls4ml.model import HLSModel
+from hls4ml.model.optimizer import optimize_model
 
-############################################################################################
-## M A I N
-############################################################################################
-def main():
+class PyTorchDataReader:
+    def __init__(self, config):
+        self.config = config
 
-    # Parse command line arguments
-    parser = argparse.ArgumentParser(description='')
-    parser.add_argument("-c", action='store', dest='config', default="pytorch-config.yml",
-                        help="Configuration file.")
-    args = parser.parse_args()
-    if not args.config: parser.error('A configuration file needs to be specified.')
+        if not torch.cuda.is_available():
+            self.torch_model = torch.load(config['PytorchModel'], map_location=lambda storage, loc: storage)
+        else:
+            self.torch_model = torch.load(config['PytorchModel'])
 
-    configDir  = os.path.abspath(os.path.dirname(args.config))
-    yamlConfig = parse_config(args.config)
-    if not os.path.isabs(yamlConfig['OutputDir']):
-        yamlConfig['OutputDir'] = os.path.join(configDir, yamlConfig['OutputDir'])
-    if not os.path.isabs(yamlConfig['PytorchModel']):
-        yamlConfig['PytorchModel'] = os.path.join(configDir, yamlConfig['PytorchModel'])
+        self.state_dict = self.torch_model.state_dict()
+    
+    def get_weights_data(self, layer_name, var_name):
+        if var_name == 'kernel':
+            var_name = 'weight'
+        data = None
+        if var_name in ['weight', 'bias']:
+            data = self.state_dict[layer_name + '.' + var_name].numpy().transpose()
 
-    if not (yamlConfig["IOType"] == "io_parallel" or yamlConfig["IOType"] == "io_serial"):
-        raise Exception('ERROR: Invalid IO type')
+        return data
+
+def pytorch_to_hls(yamlConfig):
 
     ######################
     ##  Do translation
     ######################
-    if not os.path.isdir("{}/firmware/weights".format(yamlConfig['OutputDir'])):
-        os.makedirs("{}/firmware/weights".format(yamlConfig['OutputDir']))
 
-    if not torch.cuda.is_available():
-      t = torch.load(yamlConfig['PytorchModel'], map_location=lambda storage, loc: storage)
-    else:
-      t = torch.load(yamlConfig['PytorchModel'])
-  
-    modelstr = repr(t).split('\n')
-    modeldict = t.state_dict()
+    print('Interpreting Model')
+    reader = PyTorchDataReader(yamlConfig)
+
+    core_layers = ['Linear']
+    skip_layers = ['Dropout', 'Flatten']
+    activation_layers = ['ReLU', 'Sigmoid', 'Tanh', 'SELU', 'LeakyReLU', 'Softmax', 'Softplus', 'Softsign']
+    supported_layers = core_layers + skip_layers + activation_layers
 
     #This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
 
-    matchlayer = re.compile("^\s*(\d):\s\W*")
     #Loop through layers
-    layer_counter = 1;
-    for i, pytorch_layer in enumerate(modelstr):
-        Nlayer = -1
-        NlayerMatch =re.search("\((\d)\):\s", pytorch_layer)
-        if NlayerMatch is not None:
-            print(pytorch_layer, NlayerMatch.group(1))
-            Nlayer = NlayerMatch.group(1)
-
-        layerFun = pytorch_layer.split(":")[-1]
-
-        matchname = re.match("(\w+)\(in_features=(\d+), out_features=(\d+).*\)", layerFun.strip())
-        if matchname is None:
+    print('Topology:')
+    modelstr = repr(reader.torch_model).split('\n')
+    for pytorch_layer in modelstr:
+        layer_match = re.match(r'\((\d)\): (\w+)\((.*)\)', pytorch_layer.strip())
+        if layer_match is None:
             continue
+        
+        layer_idx  = layer_match.group(1)
+        layer_type = layer_match.group(2)
+        layer_spec = layer_match.group(3)
 
         # #Dictionary to fill in and append to layer_list
         layer={}
 
-        ## Extract name for finding weights and biases
-        ## Only suport Dense network for now. Will update this later for others
-        layer['class_name'] = "Dense"
+        #layer_type = matchname.group(1)
+        if layer_type not in supported_layers:
+            raise Exception('Unsupported layer {}'.format(layer_type))
 
-        # #Get number of inputs and outputs
-        layer["n_in"] =  int(matchname.group(2))
-        layer["n_out"] =  int(matchname.group(3))
+        if layer_type == 'Linear':
+            layer['class_name'] = 'Dense'
+            layer['name'] = layer_idx
 
-        # number of sublayer calls
-        layer["n_part"] = 1
+            dense_spec = re.match(r'in_features=(\d+), out_features=(\d+).*', layer_spec)
+            if dense_spec is None:
+                raise Exception('Unable to interpret Linear layer ({})'.format(layer_spec))
 
-        # #Extract type of activation and number of nodes
-        layer["activation"] = modelstr[i+1].split(":")[-1].strip().lower()[:-2]
+            # #Get number of inputs and outputs
+            layer['n_in'] = int(dense_spec.group(1))
+            layer['n_out'] = int(dense_spec.group(2))
 
-        # Translate weights and biases from tensorfile
-        weights = modeldict[Nlayer+".weight"].numpy().transpose()
-        biases  = modeldict[Nlayer+".bias"].numpy().transpose()
-        cur_n_zeros = print_array_to_cpp("w{}".format(layer_counter), weights, yamlConfig['OutputDir'])
-        print_array_to_cpp("b{}".format(layer_counter), biases, yamlConfig['OutputDir'])
-        layer['weights_n_zeros'] = cur_n_zeros
+            current_shape = [layer['n_in'], layer['n_out']]
+            print('Layer index: {}, layer type: {}, current shape: {}'.format(layer['name'], layer['class_name'], current_shape))
+        elif layer_type in activation_layers:
+            layer['class_name'] = 'Activation'
+            layer['activation'] = layer_type.lower()
+            layer['name'] = layer['activation'] + '_' + str(layer_idx)
 
         layer_list.append(layer)
 
-        NlayerMatch =re.search("\((\d)\):\s", pytorch_layer)
-
-        layer_counter = layer_counter+1
+    input_layer = {}
+    input_layer['name'] = 'input1'
+    input_layer['class_name'] = 'InputLayer'
+    input_layer['input_shape'] = [layer_list[0]['n_in']]
+    layer_list.insert(0, input_layer)
 
 
     #################
     ## Generate HLS
     #################
 
-    #Weights and biases are already dumped to output directory
-    #Now generate HLS from list of layer dictionaries
-    hls_writer(layer_list, yamlConfig)
-
-if __name__ == "__main__":
-    main();
+    reader = PyTorchDataReader(yamlConfig)
+    print('Creating HLS model')
+    hls_model = HLSModel(yamlConfig, reader, layer_list)
+    optimizers = ['eliminate_linear_activation', 'merge_batch_norm_quantized_tanh', 'quantize_dense_output']
+    optimize_model(hls_model, optimizers)
+    return hls_model
