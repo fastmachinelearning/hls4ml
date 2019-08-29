@@ -15,7 +15,11 @@ pip install -U .
 ```
 **NOTE FOR THIS STEP:**
 - If you don't have privileges to install in the configured environment, you can also pass `--user` to the `pip` command as well. 
-- In the future, we plan to support `hls4ml` as a package on PyPI. After that you can simply install the software with `pip install hls4ml`
+- In the future, we plan to support `hls4ml` as a package on PyPI. After that you can simply install the software with:
+
+```
+pip install hls4ml
+```
 
 **2) Translate your model using configuration files (`.yml`):** 
 
@@ -24,10 +28,17 @@ We provide some examples of configuration files in `example-models` directory.
 
 In order to create an example HLS project:
 
-- Go to `example-models/` from the main directory: `cd example-models/`
+- Go to `example-models/` from the main directory: 
+
+```
+cd example-models/
+```
 
 - And use this command to translate a Keras model:
-`hls4ml convert -c keras-config.yml`
+
+```
+hls4ml convert -c keras-config.yml
+```
 
 This will create a new HLS project directory with an implementation of a model from the `example-models` directory.
 To run the HLS project, do:
@@ -45,7 +56,10 @@ This will create a Vivado HLS project with your model implmentation!
 
 - If you need help for a particular `command`, `hls4ml command -h` will show help for the requested `command`
 
-**To uninstall `hls4ml`:** `pip uninstall hls4ml`
+**To uninstall `hls4ml`:** 
+```
+pip uninstall hls4ml
+```
 
 ## Existing examples
 
