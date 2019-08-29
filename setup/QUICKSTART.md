@@ -15,11 +15,8 @@ pip install -U .
 ```
 **NOTE FOR THIS STEP:**
 - If you don't have privileges to install in the configured environment, you can also pass `--user` to the `pip` command as well. 
-- In the future, we plan to support `hls4ml` as a package on PyPI. After that you can simply install the software with:
+- In the future, we plan to support `hls4ml` as a package on PyPI. After that you can simply install the software with: `pip install hls4ml`
 
-```
-pip install hls4ml
-```
 
 **2) Translate your model using configuration files (`.yml`):** 
 
