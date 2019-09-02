@@ -11,29 +11,41 @@ from collections import OrderedDict
 #######################################
 ## Print weight array to C++
 #######################################
-def print_array_to_cpp(var, odir):
+def print_array_to_cpp(var, odir, write_txt_file=True):
 
-    f=open("{}/firmware/weights/{}.h".format(odir,var.name),"w")
+    h_file = open("{}/firmware/weights/{}.h".format(odir,var.name),"w")
+    if write_txt_file:
+        txt_file = open("{}/firmware/weights/{}.txt".format(odir,var.name),"w")
 
     #meta data
-    f.write("//Numpy array shape {}\n".format(var.shape))
-    f.write("//Min {:.12f}\n".format(np.min(var.min)))
-    f.write("//Max {:.12f}\n".format(np.max(var.max)))
-    f.write("//Number of zeros {}\n".format(var.nzeros))
-    f.write("\n")
+    h_file.write("//Numpy array shape {}\n".format(var.shape))
+    h_file.write("//Min {:.12f}\n".format(np.min(var.min)))
+    h_file.write("//Max {:.12f}\n".format(np.max(var.max)))
+    h_file.write("//Number of zeros {}\n".format(var.nzeros))
+    h_file.write("\n")
 
-    #c++ variable
-    f.write(var.definition_cpp())
-    f.write(" = {")
+    if write_txt_file:
+        h_file.write("#ifndef __SYNTHESIS__\n")
+        h_file.write(var.definition_cpp() + ";\n")
+        h_file.write("#else\n")
+
+    h_file.write(var.definition_cpp() + " = {")
 
     #fill c++ array.
     #not including internal brackets for multidimensional case
     sep = ''
+    txt_sep = ''
     for x in var:
-        f.write(sep + x)
+        h_file.write(sep + x)
         sep = ", "
-    f.write("};\n")
-    f.close()
+        if write_txt_file:
+            txt_file.write(txt_sep + x)
+            txt_sep = " "
+    h_file.write("};\n")
+    if write_txt_file:
+        h_file.write("#endif\n")
+        txt_file.close()
+    h_file.close()
 
 def write_project_dir(model):
     if not os.path.isdir("{}/firmware/weights".format(model.config.get_output_dir())):
@@ -75,6 +87,12 @@ def write_project_cpp(model):
                 for w in layer.get_weights():
                     newline += '#include "weights/{}.h"\n'.format(w.name)
 
+        elif '//hls-fpga-machine-learning insert load weights' in line:
+            newline = line
+            for layer in model.get_layers():
+                for w in layer.get_weights():
+                    newline += '    nnet::load_txt_file<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.data_length, w.name, w.name)
+
         #Add input/output type
         elif '//hls-fpga-machine-learning insert IO' in line:
             newline = line
@@ -96,6 +114,7 @@ def write_project_cpp(model):
             outval_str = '\n    '.join(['const_size_out_{} = {};'.format(i, out.size_cpp()) for i, out in enumerate(model_outputs, 1)])
             newline += '\n' + indent + inval_str
             newline += '\n' + indent + outval_str
+            newline += '\n'
 
         elif '//hls-fpga-machine-learning insert layers' in line:
             newline = line + '\n'

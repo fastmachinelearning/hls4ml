@@ -23,9 +23,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <fstream>
 #include "hls_stream.h"
 
 namespace nnet {
+
+#ifndef __SYNTHESIS__
+
+#define WEIGHTS_DIR "weights"
+
+template<class T, size_t SIZE>
+void load_txt_file(T *w, const char* fname) {
+
+    std::string full_path = std::string(WEIGHTS_DIR) + "/" + std::string(fname);
+    std::ifstream infile(full_path.c_str(), std::ios::binary);
+
+    if (infile.fail()) {
+        std::cerr << "ERROR: file " << std::string(fname);
+        std::cerr << " does not exist" << std::endl;
+        exit(1);
+    }
+
+    std::string line;
+    if (std::getline(infile, line)) {
+        std::istringstream iss(line);
+        for (size_t i = 0; i < SIZE; i++) {
+            iss >> w[i];
+        }
+    }
+}
+
+#endif
 
 template <class dataType, unsigned int nrows>
 int read_file_1D(const char * filename, dataType data[nrows])

@@ -14,6 +14,7 @@
 #include "nnet_utils/nnet_batchnorm.h"
 #include "nnet_utils/nnet_pooling.h"
 #include "nnet_utils/nnet_merge.h"
+#include "nnet_utils/nnet_helpers.h"
 
 //hls-fpga-machine-learning insert numbers
 
@@ -21,4 +22,4 @@
 
 //hls-fpga-machine-learning insert layer-config
 
-#endif 
+#endif

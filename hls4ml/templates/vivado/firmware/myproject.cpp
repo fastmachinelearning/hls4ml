@@ -28,11 +28,13 @@ void myproject(
 
     //hls-fpga-machine-learning insert IO
 
+#ifndef __SYNTHESIS__
+    //hls-fpga-machine-learning insert load weights
+#endif
 
     // ****************************************
     // NETWORK INSTANTIATION
     // ****************************************
 
     //hls-fpga-machine-learning insert layers
-
 }
