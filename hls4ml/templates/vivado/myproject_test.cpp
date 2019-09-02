@@ -34,16 +34,21 @@ int main(int argc, char **argv)
   //load predictions from text file
   std::ifstream fpr("tb_data/tb_output_predictions.dat");
 
+#ifdef RTL_SIM
+  std::string RESULTS_LOG = "tb_data/rtl_cosim_results.log";
+#else
+  std::string RESULTS_LOG = "tb_data/csim_results.log";
+#endif
+  std::ofstream fout(RESULTS_LOG);
+
   std::string iline;
   std::string pline;
   int e = 0;
 
   if (fin.is_open() && fpr.is_open()) {
-	  std::ofstream fout;
-	  fout.open("tb_output_data.dat");
-	  while ( std::getline(fin,iline) && std::getline (fpr,pline) ) {
-	    if (e % CHECKPOINT == 0) std::cout << "Processing input " << e << std::endl;
-	    e++;
+    while ( std::getline(fin,iline) && std::getline (fpr,pline) ) {
+      if (e % CHECKPOINT == 0) std::cout << "Processing input " << e << std::endl;
+      e++;
       char* cstr=const_cast<char*>(iline.c_str());
       char* current;
       std::vector<float> in;
@@ -75,15 +80,19 @@ int main(int argc, char **argv)
     }
     fin.close();
     fpr.close();
-    fout.close();
   } else {
-    std::cout << "Unable to open input/predictions file, using default input." << std::endl;
+    std::cout << "INFO: Unable to open input/predictions file, using default input." << std::endl;
     //hls-fpga-machine-learning insert zero
 
     //hls-fpga-machine-learning insert top-level-function
 
     //hls-fpga-machine-learning insert output
+
+    //hls-fpga-machine-learning insert tb-output
   }
+
+  fout.close();
+  std::cout << "INFO: Saved inference results to file: " << RESULTS_LOG << std::endl;
 
   return 0;
 }
