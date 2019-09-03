@@ -96,7 +96,7 @@ def write_project_cpp(model):
             newline = line
             for layer in model.get_layers():
                 for w in layer.get_weights():
-                    newline += '    nnet::load_txt_file<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.data_length, w.name, w.name)
+                    newline += indent + '    nnet::load_txt_file<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.data_length, w.name, w.name)
 
         #Add input/output type
         elif '//hls-fpga-machine-learning insert IO' in line:
