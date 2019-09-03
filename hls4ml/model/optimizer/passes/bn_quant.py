@@ -137,13 +137,13 @@ class QuantizeDenseOutput(OptimizerPass):
         weights = node.weights['weight']
         weights.data = quantized_data
         weights.type.name = 'weight{index}_t'.format(index=node.index)
-        weights.type.precision = quantized_precision
+        weights.update_precision(quantized_precision)
 
         bias = node.weights['bias']
         bias.data = np.zeros(shape=(node.get_attr('n_out')))
         bias.type.name = 'bias{index}_t'.format(index=node.index)
         bias.nzeros = 0
-        bias.type.precision = quantized_precision
+        bias.update_precision(quantized_precision)
 
         # If followed by the BatchNormalizationBinaryTanh, update its input
         # Also requantise the weights
@@ -158,7 +158,7 @@ class QuantizeDenseOutput(OptimizerPass):
                     var_names.append('threshold_lo')
                 for var_name in var_names:
                     threshold_var = out_node.weights[var_name]
-                    threshold_var.type.precision = out_type
+                    threshold_var.update_precision(out_type)
                     threshold_var.data = np.floor(threshold_var.data)
 
         return False

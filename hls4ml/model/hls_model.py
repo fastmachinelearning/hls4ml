@@ -316,7 +316,7 @@ class HLSType(object):
     def __init__(self, name, precision, **kwargs):
         self.name = name.format(**kwargs)
         self.precision = precision
-    
+
     def definition_cpp(self):
         return 'typedef {precision} {name};\n'.format(name=self.name, precision=self.precision)
 
@@ -324,7 +324,7 @@ class CompressedType(HLSType):
     def __init__(self, name, precision, index_precision, **kwargs):
         super(CompressedType, self).__init__('compressed_type{index}', precision, **kwargs)
         self.index_precision = index_precision
-    
+
     def definition_cpp(self):
         cpp_fmt = ('typedef struct {name} {{ '
                '{index} row_index; '
@@ -401,13 +401,7 @@ class WeightVariable(Variable):
         self.min = np.min(self.data)
         self.max = np.max(self.data)
         self._iterator = None
-        if 'int' in self.type.precision:
-            self.precision_fmt = '%d'
-        else:
-            precision_bits = re.search('.+<(.+?)>', self.type.precision).group(1).split(',')
-            decimal_bits = int(precision_bits[0]) - int(precision_bits[1])
-            decimal_spaces = int(np.floor(np.log10(2 ** decimal_bits - 1))) + 1
-            self.precision_fmt = '%.{}f'.format(decimal_spaces)
+        self.update_precision(precision)
 
     def __iter__(self):
         self._iterator = np.nditer(self.data, order='C')
@@ -422,6 +416,16 @@ class WeightVariable(Variable):
             raise StopIteration
 
     next = __next__
+
+    def update_precision(self, new_precision):
+        self.type.precision = new_precision
+        if 'int' in self.type.precision:
+            self.precision_fmt = '%d'
+        else:
+            precision_bits = re.search('.+<(.+?)>', self.type.precision).group(1).split(',')
+            decimal_bits = int(precision_bits[0]) - int(precision_bits[1])
+            decimal_spaces = int(np.floor(np.log10(2 ** decimal_bits - 1))) + 1
+            self.precision_fmt = '%.{}f'.format(decimal_spaces)
 
     def definition_cpp(self):
         return '{type} {name}[{size}]'.format(type=self.type.name, name=self.cppname, size=self.data_length)
