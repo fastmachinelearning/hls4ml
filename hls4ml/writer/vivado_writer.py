@@ -24,6 +24,10 @@ def print_array_to_cpp(var, odir, write_txt_file=True):
     h_file.write("//Number of zeros {}\n".format(var.nzeros))
     h_file.write("\n")
 
+    h_file.write("#ifndef {}_H_\n".format(var.name.upper()))
+    h_file.write("#define {}_H_\n".format(var.name.upper()))
+    h_file.write("\n")
+
     if write_txt_file:
         h_file.write("#ifndef __SYNTHESIS__\n")
         h_file.write(var.definition_cpp() + ";\n")
@@ -45,6 +49,7 @@ def print_array_to_cpp(var, odir, write_txt_file=True):
     if write_txt_file:
         h_file.write("#endif\n")
         txt_file.close()
+    h_file.write("\n#endif\n")
     h_file.close()
 
 def write_project_dir(model):
