@@ -78,7 +78,7 @@ product(data_T a, ap_int<2> w){
     #pragma HLS inline off
     if (w == 0) return (data_T) 0;
     else if(w == -1) return (data_T) -a;
-    else if(w == 1) return (data_T) a;
+    else return (data_T) a; // if(w == 1)
 }
 
 template<class data_T, class weight_T, class ret_T>
