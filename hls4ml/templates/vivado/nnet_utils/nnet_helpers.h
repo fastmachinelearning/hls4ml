@@ -87,7 +87,7 @@ void load_compressed_weights_from_txt(T *w, const char* fname) {
                 token.erase(std::remove(token.begin(), token.end(), c), token.end());
             }
             if (token.back() == ',') {
-                token.pop_back();
+                token.erase(token.end() - 1);
             }
 
             std::replace(token.begin(), token.end(), ',', ' ');
