@@ -33,22 +33,76 @@ namespace nnet {
 #define WEIGHTS_DIR "weights"
 
 template<class T, size_t SIZE>
-void load_txt_file(T *w, const char* fname) {
+void load_weights_from_txt(T *w, const char* fname) {
 
     std::string full_path = std::string(WEIGHTS_DIR) + "/" + std::string(fname);
     std::ifstream infile(full_path.c_str(), std::ios::binary);
 
     if (infile.fail()) {
-        std::cerr << "ERROR: file " << std::string(fname);
-        std::cerr << " does not exist" << std::endl;
+        std::cerr << "ERROR: file " << std::string(fname) << " does not exist" << std::endl;
         exit(1);
     }
 
     std::string line;
     if (std::getline(infile, line)) {
         std::istringstream iss(line);
-        for (size_t i = 0; i < SIZE; i++) {
-            iss >> w[i];
+        std::string token;
+
+        size_t i = 0;
+        while(std::getline(iss, token, ',')) {
+            std::istringstream(token) >> w[i];
+            i++;
+        }
+
+        if (SIZE != i) {
+            std::cerr << "ERROR: Expected " << SIZE << " values";
+            std::cerr << " but read only " << i << " values" << std::endl;
+        }
+    }
+}
+
+template<class T, size_t SIZE>
+void load_compressed_weights_from_txt(T *w, const char* fname) {
+
+    std::string full_path = std::string(WEIGHTS_DIR) + "/" + std::string(fname);
+    std::ifstream infile(full_path.c_str(), std::ios::binary);
+
+    if (infile.fail()) {
+        std::cerr << "ERROR: file " << std::string(fname) << " does not exist" << std::endl;
+        exit(1);
+    }
+
+    std::string line;
+    if (std::getline(infile, line)) {
+        std::istringstream iss(line);
+        std::string token;
+        std::string extra_chars = "} ";
+
+        size_t i = 0;
+        while(std::getline(iss, token, '{')) {
+            if (token.length() == 0) {
+                continue;
+            }
+            for (char c: extra_chars) {
+                token.erase(std::remove(token.begin(), token.end(), c), token.end());
+            }
+            if (token.back() == ',') {
+                token.pop_back();
+            }
+
+            std::replace(token.begin(), token.end(), ',', ' ');
+            std::istringstream structss(token);
+
+            if(!(structss >> w[i].row_index >> w[i].col_index >> w[i].weight)) {
+                std::cerr << "ERROR: Unable to parse file " << std::string(fname);
+                exit(1);
+            }
+            i++;
+        }
+
+        if (SIZE != i) {
+            std::cerr << "ERROR: Expected " << SIZE << " values";
+            std::cerr << " but read only " << i << " values" << std::endl;
         }
     }
 }

@@ -38,13 +38,11 @@ def print_array_to_cpp(var, odir, write_txt_file=True):
     #fill c++ array.
     #not including internal brackets for multidimensional case
     sep = ''
-    txt_sep = ''
     for x in var:
         h_file.write(sep + x)
-        sep = ", "
         if write_txt_file:
-            txt_file.write(txt_sep + x)
-            txt_sep = " "
+            txt_file.write(sep + x)
+        sep = ", "
     h_file.write("};\n")
     if write_txt_file:
         h_file.write("#endif\n")
@@ -96,7 +94,10 @@ def write_project_cpp(model):
             newline = line
             for layer in model.get_layers():
                 for w in layer.get_weights():
-                    newline += indent + '    nnet::load_txt_file<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.data_length, w.name, w.name)
+                    if w.__class__.__name__ == 'CompressedWeightVariable':
+                        newline += indent + '    nnet::load_compressed_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.nonzeros, w.name, w.name)
+                    else:
+                        newline += indent + '    nnet::load_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.data_length, w.name, w.name)
 
         #Add input/output type
         elif '//hls-fpga-machine-learning insert IO' in line:

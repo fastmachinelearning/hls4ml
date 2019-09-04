@@ -160,6 +160,9 @@ class HLSConfig(object):
 
     def _validate_hls_config(self):
         use_resource = False
+        if self.model_strategy.lower() == 'latency' and self.model_compression:
+            print('WARNING: Compression enabled while model strategy set to "Latency".')
+            use_resource = True
         for layer_type, strategy in self.layer_type_strategy.items():
             if strategy.lower() == 'resource' and self.model_strategy.lower() == 'latency':
                 print('WARNING: Strategy for layer type {} set to "Resource", while model strategy set to "Latency".'.format(layer_type))
