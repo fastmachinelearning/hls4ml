@@ -49,7 +49,7 @@ CXX_FLAGS += -Wno-unused-variable
 CXX_FLAGS += -Wno-narrowing
 CXX_FLAGS += -std=c++11
 CXX_FLAGS += -DMNTR_CATAPULT_HLS
-CXX_FLAGS += -D__SYNTHESIS__
+#CXX_FLAGS += -D__SYNTHESIS__
 
 
 release: CXX_FLAGS += -O3

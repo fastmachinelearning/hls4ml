@@ -20,6 +20,10 @@
 #ifndef NNET_HELPERS_H
 #define NNET_HELPERS_H
 
+#ifndef __SYNTHESIS__
+#include <fstream>
+#include <sstream>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -53,7 +57,13 @@ void load_weights_from_txt(T *w, const char* fname) {
 
         size_t i = 0;
         while(std::getline(iss, token, ',')) {
+#ifdef MNTR_CATAPULT_HLS
+            double data;
+            std::istringstream(token) >> data;
+            w[i] = data;
+#else
             std::istringstream(token) >> w[i];
+#endif
             i++;
         }
 
@@ -64,6 +74,8 @@ void load_weights_from_txt(T *w, const char* fname) {
     }
 }
 
+// TODO(gdg): temporary disabled (it does not compile)
+#if 0
 template<class T, size_t SIZE>
 void load_compressed_weights_from_txt(T *w, const char* fname) {
 
@@ -109,7 +121,7 @@ void load_compressed_weights_from_txt(T *w, const char* fname) {
         }
     }
 }
-
+#endif
 #endif
 
 template <class dataType, unsigned int nrows>
