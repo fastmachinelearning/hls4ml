@@ -170,20 +170,15 @@ void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     }
 #endif
     // Index into the lookup table based on data
-#ifndef MNTR_CATAPULT_HLS
     int data_round;
     int index;
-#else
-    ac_int<32> data_round;
-    ac_int<32> index;
-#endif
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
 #ifndef MNTR_CATAPULT_HLS
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS PIPELINE
         }
 #endif
-        data_round = (data[ii]*CONFIG_T::table_size/16).to_int();
+        data_round = data[ii]*CONFIG_T::table_size/16;
         index = data_round + 8*CONFIG_T::table_size/16;
         if (index < 0)   index = 0;
         if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;

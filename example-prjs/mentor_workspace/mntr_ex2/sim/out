@@ -1,0 +1,476 @@
+MAKE: CXX sc_main.o
+In file included from ../../../nnet_utils/nnet_layer.h:23:0,
+                 from ../my-hls-test/firmware/parameters.h:7,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_common.h:31:22: error: wrong number of template arguments (2, should be 4)
+ typedef ap_fixed<16,4>  weight_t_def;
+                      ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../../../nnet_utils/nnet_layer.h:23:0,
+                 from ../my-hls-test/firmware/parameters.h:7,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_common.h:31:37: error: invalid type in declaration before ‘;’ token
+ typedef ap_fixed<16,4>  weight_t_def;
+                                     ^
+../../../nnet_utils/nnet_common.h:32:22: error: wrong number of template arguments (2, should be 4)
+ typedef ap_fixed<16,4>  bias_t_def;
+                      ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../../../nnet_utils/nnet_layer.h:23:0,
+                 from ../my-hls-test/firmware/parameters.h:7,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_common.h:32:35: error: invalid type in declaration before ‘;’ token
+ typedef ap_fixed<16,4>  bias_t_def;
+                                   ^
+../../../nnet_utils/nnet_common.h:33:23: error: wrong number of template arguments (2, should be 4)
+ typedef ap_fixed<32,10> accum_t_def;
+                       ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../../../nnet_utils/nnet_layer.h:23:0,
+                 from ../my-hls-test/firmware/parameters.h:7,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_common.h:33:36: error: invalid type in declaration before ‘;’ token
+ typedef ap_fixed<32,10> accum_t_def;
+                                    ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:46:26: error: wrong number of template arguments (2, should be 4)
+     typedef ap_fixed<18,8> table_t;
+                          ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:188:22: error: wrong number of template arguments (2, should be 4)
+ inline ap_fixed<52,42> exp_fcn_fixed(ap_fixed<10,4> input) {
+                      ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:188:51: error: wrong number of template arguments (2, should be 4)
+ inline ap_fixed<52,42> exp_fcn_fixed(ap_fixed<10,4> input) {
+                                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h: In function ‘int nnet::exp_fcn_fixed(int)’:
+../../../nnet_utils/nnet_activation.h:189:19: error: wrong number of template arguments (2, should be 4)
+     ap_fixed<52,42> result;
+                   ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:189:27: error: invalid type in declaration before ‘;’ token
+     ap_fixed<52,42> result;
+                           ^
+../../../nnet_utils/nnet_activation.h:190:29: error: no matching function for call to ‘mgc_ac_exp(int&, int&)’
+     mgc_ac_exp(input, result);
+                             ^
+../../../nnet_utils/nnet_activation.h:190:29: note: candidate is:
+In file included from /opt/cad/catapult/shared//include/math/mgc_ac_math.h:803:0,
+                 from ../../../nnet_utils/nnet_activation.h:28,
+                 from ../my-hls-test/firmware/parameters.h:10,
+                 from ../my-hls-test/sc_main.cpp:25:
+/opt/cad/catapult/shared//include/math/mgc_ac_hcordic.h:377:6: note: template<int AW, int AI, bool AS, ac_q_mode AQ, ac_o_mode AV, int ZW, int ZI, bool ZS, ac_q_mode ZQ, ac_o_mode ZV> void mgc_ac_exp(const ac_fixed<W, I, S, Q, O>&, ac_fixed<ZW, ZI, ZS, ZQ, ZV>&)
+ void mgc_ac_exp(const ac_fixed<AW,AI,AS,AQ,AV> &x, ac_fixed<ZW,ZI,ZS,ZQ,ZV> &z) {
+      ^
+/opt/cad/catapult/shared//include/math/mgc_ac_hcordic.h:377:6: note:   template argument deduction/substitution failed:
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:190:29: note:   mismatched types ‘const ac_fixed<W, I, S, Q, O>’ and ‘int’
+     mgc_ac_exp(input, result);
+                             ^
+../../../nnet_utils/nnet_activation.h: In function ‘void nnet::init_exp_table(typename CONFIG_T::table_t*)’:
+../../../nnet_utils/nnet_activation.h:205:22: error: wrong number of template arguments (2, should be 4)
+         ap_fixed<18,8> range(2 * 8.0);
+                      ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:205:29: error: invalid type in declaration before ‘(’ token
+         ap_fixed<18,8> range(2 * 8.0);
+                             ^
+../../../nnet_utils/nnet_activation.h:206:23: error: wrong number of template arguments (2, should be 4)
+         ap_fixed<32,30> N_TABLE_HALF(N_TABLE / 2.0);
+                       ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:206:37: error: invalid type in declaration before ‘(’ token
+         ap_fixed<32,30> N_TABLE_HALF(N_TABLE / 2.0);
+                                     ^
+../../../nnet_utils/nnet_activation.h:207:23: error: wrong number of template arguments (2, should be 4)
+         ap_fixed<32,16> in_val;
+                       ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:207:31: error: invalid type in declaration before ‘;’ token
+         ap_fixed<32,16> in_val;
+                               ^
+../../../nnet_utils/nnet_activation.h:208:27: error: wrong number of template arguments (2, should be 4)
+         div(ap_fixed<32,30>(range * ( ii - N_TABLE_HALF )), ap_fixed<32,32>(N_TABLE), in_val);
+                           ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:208:75: error: wrong number of template arguments (2, should be 4)
+         div(ap_fixed<32,30>(range * ( ii - N_TABLE_HALF )), ap_fixed<32,32>(N_TABLE), in_val);
+                                                                           ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h: In function ‘void nnet::init_invert_table(typename CONFIG_T::table_t*)’:
+../../../nnet_utils/nnet_activation.h:232:15: error: wrong number of template arguments (2, should be 4)
+  ap_fixed<18,8> in_val;
+               ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:232:23: error: invalid type in declaration before ‘;’ token
+  ap_fixed<18,8> in_val;
+                       ^
+../../../nnet_utils/nnet_activation.h:233:19: error: wrong number of template arguments (2, should be 4)
+     ap_fixed<32,32> dividend(64.0*ii);
+                   ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:233:29: error: invalid type in declaration before ‘(’ token
+     ap_fixed<32,32> dividend(64.0*ii);
+                             ^
+../../../nnet_utils/nnet_activation.h:234:19: error: wrong number of template arguments (2, should be 4)
+     ap_fixed<32,32> divisor(N_TABLE);
+                   ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:234:28: error: invalid type in declaration before ‘(’ token
+     ap_fixed<32,32> divisor(N_TABLE);
+                            ^
+../../../nnet_utils/nnet_activation.h:235:34: error: no matching function for call to ‘div(int&, int&, int&)’
+     div(dividend, divisor, in_val);
+                                  ^
+../../../nnet_utils/nnet_activation.h:235:34: note: candidates are:
+In file included from /tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/cstdlib:72:0,
+                 from /tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/ext/string_conversions.h:41,
+                 from /tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/bits/basic_string.h:2850,
+                 from /tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/string:52,
+                 from /tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/bits/locale_classes.h:40,
+                 from /tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/bits/ios_base.h:41,
+                 from /tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/ios:42,
+                 from /tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/istream:38,
+                 from /tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/fstream:38,
+                 from ../my-hls-test/sc_main.cpp:19:
+/usr/include/stdlib.h:849:14: note: div_t div(int, int)
+ extern div_t div (int __numer, int __denom)
+              ^
+/usr/include/stdlib.h:849:14: note:   candidate expects 2 arguments, 3 provided
+In file included from /tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/ext/string_conversions.h:41:0,
+                 from /tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/bits/basic_string.h:2850,
+                 from /tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/string:52,
+                 from /tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/bits/locale_classes.h:40,
+                 from /tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/bits/ios_base.h:41,
+                 from /tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/ios:42,
+                 from /tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/istream:38,
+                 from /tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/fstream:38,
+                 from ../my-hls-test/sc_main.cpp:19:
+/tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/cstdlib:214:3: note: lldiv_t __gnu_cxx::div(long long int, long long int)
+   div(long long __n, long long __d)
+   ^
+/tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/cstdlib:214:3: note:   candidate expects 2 arguments, 3 provided
+/tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/cstdlib:169:3: note: ldiv_t std::div(long int, long int)
+   div(long __i, long __j) { return ldiv(__i, __j); }
+   ^
+/tools/Mentor_Graphics/Catapult_Synthesis/10.2b/Mgc_home/pkgs/dcs_gcc/gcc-4.9.2/include/c++/4.9.2/cstdlib:169:3: note:   candidate expects 2 arguments, 3 provided
+In file included from ../../../nnet_utils/nnet_activation.h:28:0,
+                 from ../my-hls-test/firmware/parameters.h:10,
+                 from ../my-hls-test/sc_main.cpp:25:
+/opt/cad/catapult/shared//include/math/mgc_ac_math.h:257:6: note: template<int NW, int DW, int QW, int RW> bool div(ac_int<W, false>, ac_int<YW, false>, ac_int<E, false>&, ac_int<RW, false>&)
+ bool div(
+      ^
+/opt/cad/catapult/shared//include/math/mgc_ac_math.h:257:6: note:   template argument deduction/substitution failed:
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:235:34: note:   mismatched types ‘ac_int<W, false>’ and ‘int’
+     div(dividend, divisor, in_val);
+                                  ^
+In file included from ../../../nnet_utils/nnet_activation.h:28:0,
+                 from ../my-hls-test/firmware/parameters.h:10,
+                 from ../my-hls-test/sc_main.cpp:25:
+/opt/cad/catapult/shared//include/math/mgc_ac_math.h:283:6: note: template<int NW, int DW, int QW> bool div(ac_int<W, false>, ac_int<YW, false>, ac_int<E, false>&)
+ bool div(
+      ^
+/opt/cad/catapult/shared//include/math/mgc_ac_math.h:283:6: note:   template argument deduction/substitution failed:
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:235:34: note:   mismatched types ‘ac_int<W, false>’ and ‘int’
+     div(dividend, divisor, in_val);
+                                  ^
+In file included from ../../../nnet_utils/nnet_activation.h:28:0,
+                 from ../my-hls-test/firmware/parameters.h:10,
+                 from ../my-hls-test/sc_main.cpp:25:
+/opt/cad/catapult/shared//include/math/mgc_ac_math.h:296:6: note: template<int NW, int DW, int QW, int RW> bool div(ac_int<W2, true>, ac_int<YW, true>, ac_int<E, true>&, ac_int<E2, true>&)
+ bool div(
+      ^
+/opt/cad/catapult/shared//include/math/mgc_ac_math.h:296:6: note:   template argument deduction/substitution failed:
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:235:34: note:   mismatched types ‘ac_int<W2, true>’ and ‘int’
+     div(dividend, divisor, in_val);
+                                  ^
+In file included from ../../../nnet_utils/nnet_activation.h:28:0,
+                 from ../my-hls-test/firmware/parameters.h:10,
+                 from ../my-hls-test/sc_main.cpp:25:
+/opt/cad/catapult/shared//include/math/mgc_ac_math.h:318:6: note: template<int NW, int DW, int QW> bool div(ac_int<W2, true>, ac_int<YW, true>, ac_int<E, true>&)
+ bool div(
+      ^
+/opt/cad/catapult/shared//include/math/mgc_ac_math.h:318:6: note:   template argument deduction/substitution failed:
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:235:34: note:   mismatched types ‘ac_int<W2, true>’ and ‘int’
+     div(dividend, divisor, in_val);
+                                  ^
+In file included from ../../../nnet_utils/nnet_activation.h:28:0,
+                 from ../my-hls-test/firmware/parameters.h:10,
+                 from ../my-hls-test/sc_main.cpp:25:
+/opt/cad/catapult/shared//include/math/mgc_ac_math.h:617:6: note: template<int NW, int NI, ac_q_mode NQ, ac_o_mode NO, int DW, int DI, ac_q_mode DQ, ac_o_mode DO, int QW, int QI, ac_q_mode QQ, ac_o_mode QO> bool div(ac_fixed<XW, XI, false, XQ, XO>, ac_fixed<YW, YI, false, YQ, YO>, ac_fixed<QW, QI, false, QQ, QO>&)
+ bool div(
+      ^
+/opt/cad/catapult/shared//include/math/mgc_ac_math.h:617:6: note:   template argument deduction/substitution failed:
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:235:34: note:   mismatched types ‘ac_fixed<XW, XI, false, XQ, XO>’ and ‘int’
+     div(dividend, divisor, in_val);
+                                  ^
+In file included from ../../../nnet_utils/nnet_activation.h:28:0,
+                 from ../my-hls-test/firmware/parameters.h:10,
+                 from ../my-hls-test/sc_main.cpp:25:
+/opt/cad/catapult/shared//include/math/mgc_ac_math.h:671:6: note: template<int NW, int NI, ac_q_mode NQ, ac_o_mode NO, int DW, int DI, ac_q_mode DQ, ac_o_mode DO, int QW, int QI, ac_q_mode QQ, ac_o_mode QO> bool div(ac_fixed<XW, XI, true, XQ, XO>, ac_fixed<YW, YI, true, YQ, YO>, ac_fixed<QW, QI, true, QQ, QO>&)
+ bool div(
+      ^
+/opt/cad/catapult/shared//include/math/mgc_ac_math.h:671:6: note:   template argument deduction/substitution failed:
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:235:34: note:   mismatched types ‘ac_fixed<XW, XI, true, XQ, XO>’ and ‘int’
+     div(dividend, divisor, in_val);
+                                  ^
+In file included from ../../../nnet_utils/nnet_activation.h:28:0,
+                 from ../my-hls-test/firmware/parameters.h:10,
+                 from ../my-hls-test/sc_main.cpp:25:
+/opt/cad/catapult/shared//include/math/mgc_ac_math.h:838:6: note: template<int NW, int NI, int NE, ac_q_mode NQ, int DW, int DI, int DE, ac_q_mode DQ, int QW, int QI, int QE, ac_q_mode QQ> bool div(ac_float<W2, I2, E2, Q2>, ac_float<WR, IR, ER, QR>, ac_float<QW, QI, QE, QQ>&)
+ bool div(
+      ^
+/opt/cad/catapult/shared//include/math/mgc_ac_math.h:838:6: note:   template argument deduction/substitution failed:
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:235:34: note:   mismatched types ‘ac_float<W2, I2, E2, Q2>’ and ‘int’
+     div(dividend, divisor, in_val);
+                                  ^
+In file included from ../../../nnet_utils/nnet_activation.h:28:0,
+                 from ../my-hls-test/firmware/parameters.h:10,
+                 from ../my-hls-test/sc_main.cpp:25:
+/opt/cad/catapult/shared//include/math/mgc_ac_math.h:887:6: note: template<class NT, class DT, class QT> bool div(ac_complex<T2>, ac_complex<T2>, ac_complex<QT>&)
+ bool div(
+      ^
+/opt/cad/catapult/shared//include/math/mgc_ac_math.h:887:6: note:   template argument deduction/substitution failed:
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:235:34: note:   mismatched types ‘ac_complex<T2>’ and ‘int’
+     div(dividend, divisor, in_val);
+                                  ^
+../../../nnet_utils/nnet_activation.h:238:22: error: wrong number of template arguments (2, should be 4)
+         ap_fixed<18,8> one(1.0);
+                      ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:238:27: error: invalid type in declaration before ‘(’ token
+         ap_fixed<18,8> one(1.0);
+                           ^
+../../../nnet_utils/nnet_activation.h: At global scope:
+../../../nnet_utils/nnet_activation.h:465:21: error: wrong number of template arguments (2, should be 4)
+ inline ap_fixed<18,8> softplus_fcn_float(ap_fixed<18,8> input) {
+                     ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:465:55: error: wrong number of template arguments (2, should be 4)
+ inline ap_fixed<18,8> softplus_fcn_float(ap_fixed<18,8> input) {
+                                                       ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h: In function ‘int nnet::softplus_fcn_float(int)’:
+../../../nnet_utils/nnet_activation.h:466:18: error: wrong number of template arguments (2, should be 4)
+     ap_fixed<18,8> _exp; //mgc_ac_exp(input, _exp);
+                  ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:466:24: error: invalid type in declaration before ‘;’ token
+     ap_fixed<18,8> _exp; //mgc_ac_exp(input, _exp);
+                        ^
+../../../nnet_utils/nnet_activation.h:467:18: error: wrong number of template arguments (2, should be 4)
+     ap_fixed<18,8> _log; //mgc_ac_log(_exp, _log);
+                  ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:467:24: error: invalid type in declaration before ‘;’ token
+     ap_fixed<18,8> _log; //mgc_ac_log(_exp, _log);
+                        ^
+../../../nnet_utils/nnet_activation.h:468:32: error: wrong number of template arguments (2, should be 4)
+     return _log + ap_fixed<18,8>(1.);
+                                ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h: In function ‘void nnet::init_softplus_table(typename CONFIG_T::table_t*)’:
+../../../nnet_utils/nnet_activation.h:484:22: error: wrong number of template arguments (2, should be 4)
+         ap_fixed<18,8>in_val; // = 2*8.0*(ii-ap_fixed<18,8>(N_TABLE)/ap_fixed<18,8>(2.0))/ap_fixed<18,8>(N_TABLE);
+                      ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:10:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_activation.h:484:29: error: invalid type in declaration before ‘;’ token
+         ap_fixed<18,8>in_val; // = 2*8.0*(ii-ap_fixed<18,8>(N_TABLE)/ap_fixed<18,8>(2.0))/ap_fixed<18,8>(N_TABLE);
+                             ^
+In file included from ../my-hls-test/firmware/parameters.h:13:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_pooling.h: At global scope:
+../../../nnet_utils/nnet_pooling.h:33:14: error: wrong number of template arguments (2, should be 4)
+ ap_fixed<W, I> avg(ap_fixed<W, I> (&x)[N]){
+              ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:13:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_pooling.h:33:33: error: wrong number of template arguments (2, should be 4)
+ ap_fixed<W, I> avg(ap_fixed<W, I> (&x)[N]){
+                                 ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:13:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_pooling.h: In function ‘int nnet::avg(int (&)[N])’:
+../../../nnet_utils/nnet_pooling.h:35:44: error: wrong number of template arguments (2, should be 4)
+   ap_fixed<W + ceillog2(N), I + ceillog2(N)> tmp = 0;
+                                            ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:13:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_pooling.h:35:50: error: invalid type in declaration before ‘=’ token
+   ap_fixed<W + ceillog2(N), I + ceillog2(N)> tmp = 0;
+                                                  ^
+../../../nnet_utils/nnet_pooling.h:41:16: error: wrong number of template arguments (2, should be 4)
+   ap_fixed<W, I> y = tmp;
+                ^
+In file included from ../my-hls-test/firmware/parameters.h:5:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../inc/ap_int.h:13:35: error: provided for ‘template<int W, int I, sc_dt::sc_q_mode Q, sc_dt::sc_o_mode O> using ap_fixed = sc_dt::sc_fixed<W, I, Q, O>’
+ using ap_fixed = sc_fixed<W,I,Q,O>;
+                                   ^
+In file included from ../my-hls-test/firmware/parameters.h:13:0,
+                 from ../my-hls-test/sc_main.cpp:25:
+../../../nnet_utils/nnet_pooling.h:41:20: error: invalid type in declaration before ‘=’ token
+   ap_fixed<W, I> y = tmp;
+                    ^
+make: *** [sc_main.o] Error 1
