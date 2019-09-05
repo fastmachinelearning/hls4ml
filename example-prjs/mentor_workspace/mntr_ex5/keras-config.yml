@@ -1,0 +1,19 @@
+KerasJson: ../../../example-models/keras/KERAS_mnist_mlp.json
+KerasH5:   ../../../example-models/keras/KERAS_mnist_mlp_weights.h5
+InputData: ../../../example-models/keras/KERAS_mnist_mlp_inputs.dat
+OutputPredictions: ../../../example-models/keras/KERAS_mnist_mlp_outputs.dat
+OutputDir: mnist_mlp
+ProjectName: mnist_mlp
+XilinxPart: xcku115-flvb2104-2-i
+ClockPeriod: 5
+
+IOType: io_parallel # options: io_serial/io_parallel
+HLSConfig:
+  Model:
+    Precision: ap_fixed<18,8>
+    ReuseFactor: 784
+#  LayerType:
+#    Dense:
+#      ReuseFactor: 2
+#      Strategy: Resource
+#      Compression: True

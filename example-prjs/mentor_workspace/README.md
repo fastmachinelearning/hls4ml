@@ -7,3 +7,4 @@ from Mentor Graphics.
 - `mntr_ex2`: porting an *hls4ml* project to Mentor HLS libraries (simulation only)
 - `mntr_ex3`: porting an *hls4ml* project to Mentor Catapult HLS
 - `mntr_ex4`: porting an *hls4ml* project to Mentor Catapult HLS (MNIST Autoencoder)
+- `mntr_ex5`: porting an *hls4ml* project to Mentor Catapult HLS (MNIST Classifier)
