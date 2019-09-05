@@ -1,5 +1,7 @@
 # Synthesis of a HLS4ML Project with Catapult HLS
 
+**==== THIS WORKS WITH THE COMMIT 2d1ecf1 ====**
+
 This **hls4ml** project supports `ac_fixed` and `ac_int` arbitrary-precision
 datatypes provided with Catapult HLS. There are few differences between
 `sc_fixed`, `sc_int` and `ac_fixed`, `ac_int`.
