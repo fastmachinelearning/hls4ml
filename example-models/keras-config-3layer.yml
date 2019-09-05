@@ -1,0 +1,20 @@
+KerasJson: keras/KERAS_3layer.json
+KerasH5:   keras/KERAS_3layer_weights.h5
+InputData: keras/KERAS_3layer_input_features.dat
+OutputPredictions: keras/KERAS_3layer_predictions.dat
+TruthLabels: keras/KERAS_3layer_truth_labels.dat
+OutputDir: my-hls-test-3layer
+ProjectName: myproject
+XilinxPart: xcvu9p-fsgd2104-2-i
+ClockPeriod: 5
+
+IOType: io_parallel # options: io_serial/io_parallel
+HLSConfig:
+  Model:
+    Precision: ap_fixed<16,6>
+    ReuseFactor: 1
+#  LayerType:
+#    Dense:
+#      ReuseFactor: 2
+#      Strategy: Resource
+#      Compression: True
