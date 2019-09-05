@@ -1,0 +1,6 @@
+include LICENSE
+include README.md
+graft example-prjs
+graft example-models
+graft test
+recursive-include hls4ml/templates *

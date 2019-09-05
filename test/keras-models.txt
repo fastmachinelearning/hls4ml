@@ -1,7 +1,7 @@
 # Keras models from examples directory that will be used for testing
 #
 # Synthax:
-#    MODEL_NAME[:WEIGHTS_FILE] [x:XILINXPART] [c:CLOCK_PERIOD] [io:s] [r:REUSE_FACTOR] [t:AP_TYPE]
+#    MODEL_NAME[:WEIGHTS_FILE] [x:XILINXPART] [c:CLOCK_PERIOD] [io:s] [r:REUSE_FACTOR] [t:AP_TYPE] [s:STRATEGY]
 # where
 #    MODEL_NAME - Name of the file containing json model (without ".json")
 #    WEIGHTS_FILE - Name of the HDF5 file containing model weights (without ".h5")
@@ -9,6 +9,7 @@
 #    c:CLOCK_PERIOD - Clock period
 #    io:s - User serial I/O, otherwise use parallel I/O
 #    r:REUSE_FACTOR - Reuse factor
+#    s:STRATEGY - Latency-optimized or Resource-optimized strategy
 #    t:AP_TYPE - Default precision
 #
 # Lines starting with "#" are ignored.
@@ -25,10 +26,13 @@ KERAS_3layer_batch_norm
 KERAS_3layer_binary_smaller
 KERAS_3layer_ternary_small
 
+# Resource strategy
+KERAS_3layer r:2 s:Resource
+
 #Fails synthesis due to a problem with loop unrolling
 #jetTagger_Conv2D_Small:jetTagger_Conv2D_Small
 
-KERAS_1layer io:s
-KERAS_3layer io:s
+#KERAS_1layer io:s
+#KERAS_3layer io:s
 
 #KERAS_1layer x:xcku115-flvf1924-2-i

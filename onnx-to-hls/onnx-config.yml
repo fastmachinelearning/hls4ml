@@ -1,9 +1,0 @@
-OnnxModel: example-onnx-model-files/three_layer_keras.onnx
-OutputDir: my-hls-test
-ProjectName: myproject
-XilinxPart: xcku115-flvb2104-2-i
-ClockPeriod: 5
-
-IOType: io_parallel # options: io_serial/io_parallel
-ReuseFactor: 1
-DefaultPrecision: ap_fixed<16,6> 

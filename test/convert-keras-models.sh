@@ -60,7 +60,7 @@ fi
 
 for line in "${model_line[@]}"
 do
-   params=("" "" "" "" "" "")
+   params=("" "" "" "" "" "" "")
    if [[ ${line} = *[![:space:]]* ]] && ! [[ "${line}" = \#* ]] ; then
       IFS=" " read -ra model_def <<< "${line}"
       for (( i=1; i<"${#model_def[@]}"; i++ ));
@@ -69,12 +69,13 @@ do
          if [[ "${model_def[$i]}" == c:* ]] ; then params[1]="-c ${model_def[$i]:2} "; fi
          if [[ "${model_def[$i]}" == io:s ]] ; then params[2]="-s "; fi
          if [[ "${model_def[$i]}" == r:* ]] ; then params[3]="-r ${model_def[$i]:2} "; fi
-         if [[ "${model_def[$i]}" == i:* ]] ; then params[4]="-t ${model_def[$i]:2} "; fi
+         if [[ "${model_def[$i]}" == s:* ]] ; then params[4]="-g ${model_def[$i]:2} "; fi
+         if [[ "${model_def[$i]}" == i:* ]] ; then params[5]="-t ${model_def[$i]:2} "; fi
       done
-      params[5]=${model_def[0]}
-      
-      cmd="./keras-to-hls.sh ${py} ${dir} ${params[0]}${params[1]}${params[2]}${params[3]}${params[4]}${params[5]}"
-      
+      params[6]=${model_def[0]}
+
+      cmd="./keras-to-hls.sh ${py} ${dir} ${params[0]}${params[1]}${params[2]}${params[3]}${params[4]}${params[5]}${params[6]}"
+
       ${exec} "${cmd}"
    fi
 done

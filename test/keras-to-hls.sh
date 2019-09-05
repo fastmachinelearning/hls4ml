@@ -5,7 +5,8 @@ xilinxpart="xc7vx690tffg1927-2"
 clock=5
 io=io_parallel
 rf=1
-type="ap_fixed<18,8>"
+strategy="Latency"
+type="ap_fixed<16,6>"
 basedir=vivado_prj
 
 sanitizer="[^A-Za-z0-9._]"
@@ -30,15 +31,17 @@ function print_usage {
    echo "      Use serial I/O. If not specified uses parallel I/O."
    echo "   -r FACTOR"
    echo "      Reuse factor. Defaults to 1."
+   echo "   -g STRATEGY"
+   echo "      Strategy. 'Latency' or 'Resource'."
    echo "   -t TYPE"
-   echo "      Default precision. Defaults to 'ap_fixed<18,8>'."
+   echo "      Default precision. Defaults to 'ap_fixed<16,6>'."
    echo "   -d DIR"
    echo "      Output directory."
    echo "   -h"
    echo "      Prints this help message."
 }
 
-while getopts ":p:x:c:sr:t:d:h" opt; do
+while getopts ":p:x:c:sr:g:t:d:h" opt; do
    case "$opt" in
    p) pycmd=${pycmd}$OPTARG
       ;;
@@ -49,6 +52,8 @@ while getopts ":p:x:c:sr:t:d:h" opt; do
    s) io=io_serial
       ;;
    r) rf=$OPTARG
+      ;;
+   g) strategy=$OPTARG
       ;;
    t) type=$OPTARG
       ;;
@@ -89,10 +94,9 @@ do
    base=`echo "${h5}" | sed -e 's/\(_weights\)*$//g'`
    file="${basedir}/${base}-${pycmd}.yml"
 
-   # This scheme assumes base output directory is one level deep 
-   echo "KerasJson: ../../keras-to-hls/example-keras-model-files/${name}.json" > ${file}
-   echo "KerasH5:   ../../keras-to-hls/example-keras-model-files/${h5}.h5" >> ${file}
-   echo "OutputDir: ${base}-${pycmd}-${xilinxpart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}" >> ${file}
+   echo "KerasJson: ../example-models/keras/${name}.json" > ${file}
+   echo "KerasH5:   ../example-models/keras/${h5}.h5" >> ${file}
+   echo "OutputDir: ${basedir}/${base}-${pycmd}-${xilinxpart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}" >> ${file}
    echo "ProjectName: myproject" >> ${file}
    echo "XilinxPart: ${xilinxpart}" >> ${file}
    echo "ClockPeriod: ${clock}" >> ${file}
@@ -102,8 +106,9 @@ do
    echo "  Model:" >> ${file}
    echo "    ReuseFactor: ${rf}" >> ${file}
    echo "    Precision: ${type} " >> ${file}
+   echo "    Strategy: ${strategy} " >> ${file}
 
-   ${pycmd} ../keras-to-hls/keras-to-hls.py -c ${file} || exit 1
+   ${pycmd} ../scripts/hls4ml convert -c ${file} || exit 1
    rm ${file}
    echo ""
 done
