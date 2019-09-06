@@ -20,6 +20,8 @@
 
 #include "mnist_mlp.h"
 
+#define __SYNTHESIS__
+
 //hls-fpga-machine-learning insert weights
 #include "weights/w2.h"
 #include "weights/b2.h"

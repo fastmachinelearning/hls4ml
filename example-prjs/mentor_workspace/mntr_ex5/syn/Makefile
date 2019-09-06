@@ -12,9 +12,9 @@ hls-solution1-gui:
 	catapult -file project_solution1.tcl &
 .PHONY: hls-solution1-gui
 
-hls-solution1-sh:
-	catapult -shell -file project_solution1.tcl
-.PHONY: hls-solution1-sh
+#hls-solution1-sh:
+#	catapult -shell -file project_solution1.tcl
+#.PHONY: hls-solution1-sh
 
 #hls-solution2-gui:
 #	catapult -file project_solution1.tcl &
@@ -32,7 +32,7 @@ clean:
 	rm -rf *log slec_*
 .PHONY: clean
 
-distclean: clean
-	rm -rf Catapult* transcript vivado.jou vivado_*.str
-.PHONY: distclean
+ultraclean: clean
+	rm -rf Catapult* transcript vivado.jou vivado_*.str design_checker_constraints.tcl  design_checker_pre_build.tcl 
+.PHONY: ultraclean
 

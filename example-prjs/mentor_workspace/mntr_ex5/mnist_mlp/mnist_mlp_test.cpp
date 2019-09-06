@@ -22,7 +22,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
+//#include <math.h>
 
 //#include "firmware/parameters.h"
 #include "firmware/mnist_mlp.h"
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
   std::string pline;
   int e = 0;
 
-  if (fin.is_open() && fpr.is_open()) {
+  if (fin.is_open() && fpr.is_open()) {    
     while ( std::getline(fin,iline) && std::getline (fpr,pline) ) {
       if (e % CHECKPOINT == 0) std::cout << "Processing input " << e << std::endl;
       e++;

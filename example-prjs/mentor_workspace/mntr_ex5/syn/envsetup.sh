@@ -40,6 +40,3 @@ source ${CAD_PATH}/vivado/settings64.sh
 
 # Makefiles and scripts from Catapult HLS may rely on this variable.
 #export MGC_HOME=${CATAPULT_PATH}
-
-# Fix an issue on Ubuntu 18.04.
-#export LIBRARY_PATH="/usr/lib/x86_64-linux-gnu":$LIBRARY_PATH

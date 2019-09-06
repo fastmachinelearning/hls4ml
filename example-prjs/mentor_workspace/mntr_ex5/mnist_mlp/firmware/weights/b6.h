@@ -7,9 +7,9 @@
 #define B6_H_
 
 #ifndef __SYNTHESIS__
-model_default_t b6[10];
+static model_default_t b6[10];
 #else
-model_default_t b6[10] = {-0.0210, -0.0649, -0.1134, -0.0589, -0.0830, -0.1005, -0.1278, -0.1111, 0.2181, 0.0662};
+static model_default_t b6[10] = {-0.0210, -0.0649, -0.1134, -0.0589, -0.0830, -0.1005, -0.1278, -0.1111, 0.2181, 0.0662};
 #endif
 
 #endif
