@@ -34,4 +34,4 @@ Other random feature notes:
 
 ## Feature Documentation
 
--  Specific documentations of supported Keras layers and their detailed limitations can be found [here](https://github.com/hls-fpga-machine-learning/models/tree/master/keras-to-hls)
+-  Specific documentations of supported Keras layers and their detailed limitations can be found [here](https://github.com/hls-fpga-machine-learning/models/tree/master/keras)
