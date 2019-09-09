@@ -29,10 +29,10 @@
 
 #define CHECKPOINT 5000
 
+#ifdef MNTR_CATAPULT_HLS
 // SCVerify verification MACROs
 #include "mc_scverify.h"
 
-#ifdef MNTR_CATAPULT_HLS
 CCS_MAIN (int argc, char *argv[])
 {
   std::cout << "Mentor Graphics Catapult HLS" << std::endl;
@@ -83,8 +83,11 @@ int main(int argc, char **argv)
 
       //hls-fpga-machine-learning insert top-level-function
       unsigned short size_in1,size_out1;
+#ifdef MNTR_CATAPULT_HLS
       CCS_DESIGN(mnist_mlp)(input1,layer7_out,size_in1,size_out1);
-
+#else
+      mnist_mlp(input1,layer7_out,size_in1,size_out1);
+#endif
       //hls-fpga-machine-learning insert tb-output
       for(int i = 0; i < N_LAYER_6; i++) {
         fout << layer7_out[i].to_double() << " ";
