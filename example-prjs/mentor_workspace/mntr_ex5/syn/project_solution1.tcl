@@ -106,15 +106,20 @@ go assembly
 directive set /mnist_mlp/input1:rsc -MAP_TO_MODULE ccs_ioport.ccs_in_vld
 directive set /mnist_mlp/layer7_out:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
 
-# Arrays
-##directive set /mnist_mlp/core/nnet::relu<layer1_t,layer1_t,relu_config1>(logits1):rsc -MAP_TO_MODULE {[Register]}
-##directive set /mnist_mlp/core/nnet::compute_layer<layer1_t,layer2_t,config2>(layer1_out):rsc -MAP_TO_MODULE {[Register]}
-##directive set /mnist_mlp/core/nnet::relu<layer2_t,layer2_t,relu_config2>(logits2):rsc -MAP_TO_MODULE {[Register]}
-##directive set /mnist_mlp/core/nnet::compute_layer<layer2_t,layer3_t,config3>(layer2_out):rsc -MAP_TO_MODULE {[Register]}
-##directive set /mnist_mlp/core/nnet::relu<layer3_t,layer3_t,relu_config3>(logits3):rsc -MAP_TO_MODULE {[Register]}
-##directive set /mnist_mlp/core/nnet::compute_layer<layer3_t,result_t,config4>(layer3_out):rsc -MAP_TO_MODULE {[Register]}
-###directive set /mnist_mlp/nnet::softmax<result_t,result_t,softmax_config4>/MgcAcHtrig::hcordic_table.rom:rsc -MAP_TO_MODULE {[Register]}
-###directive set /mnist_mlp/nnet::softmax<result_t,result_t,softmax_config4>/MgcAcHtrig::shift_dist_table.rom:rsc -MAP_TO_MODULE {[Register]}
+## Arrays
+directive set /mnist_mlp/core/layer2_out:rsc -MAP_TO_MODULE {[Register]}
+directive set /mnist_mlp/core/layer3_out:rsc -MAP_TO_MODULE {[Register]}
+directive set /mnist_mlp/core/layer4_out:rsc -MAP_TO_MODULE {[Register]}
+directive set /mnist_mlp/core/layer5_out:rsc -MAP_TO_MODULE {[Register]}
+directive set /mnist_mlp/core/nnet::dense_latency<input_t,layer2_t,config2>:acc:rsc -MAP_TO_MODULE {[Register]}
+directive set /mnist_mlp/core/nnet::dense_latency<layer3_t,layer4_t,config4>:acc:rsc -MAP_TO_MODULE {[Register]}
+#directive set /mnist_mlp/core/nnet::softmax<layer6_t,result_t,softmax_config7>:exp_table:rsc -MAP_TO_MODULE {[Register]}
+#directive set /mnist_mlp/core/nnet::softmax<layer6_t,result_t,softmax_config7>:invert_table:rsc -MAP_TO_MODULE {[Register]}
+#directive set /mnist_mlp/core/nnet::dense_latency<input_t,layer2_t,config2>:mult:rsc -MAP_TO_MODULE Xilinx_RAMS.BLOCK_1R1W_RBW_DUAL
+#directive set /mnist_mlp/core/nnet::dense_latency<input_t,layer2_t,config2>:mult:rsc -GEN_EXTERNAL_ENABLE true
+#directive set /mnist_mlp/core/nnet::dense_latency<layer3_t,layer4_t,config4>:mult:rsc -MAP_TO_MODULE Xilinx_RAMS.BLOCK_1R1W_RBW
+#directive set /mnist_mlp/core/nnet::dense_latency<layer3_t,layer4_t,config4>:mult:rsc -GEN_EXTERNAL_ENABLE true
+
 
 # Loops
 ##directive set /mnist_mlp/core/main -PIPELINE_INIT_INTERVAL 1
@@ -125,6 +130,6 @@ go extract
 
 flow run /SCVerify/launch_make ./scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim
 flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim sim
-##flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim simgui
-
-#flow run /Vivado/synthesize -shell vivado/rtl.v.xv
+###flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim simgui
+#
+##flow run /Vivado/synthesize -shell vivado/rtl.v.xv
