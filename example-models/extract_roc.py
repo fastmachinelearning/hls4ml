@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 def parse_config(config_file) :
     print("Loading configuration from", config_file)
     config = open(config_file, 'r')
-    return yaml.load(config, Loader=yaml.FullLoader)
+    return yaml.load(config, Loader=yaml.Loader)
 
 def extract_roc(yamlConfig,opts):
     print("Extracting ROC")
