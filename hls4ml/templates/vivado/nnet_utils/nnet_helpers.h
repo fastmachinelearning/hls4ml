@@ -35,7 +35,7 @@ namespace nnet {
 #define STRINGIFY(var) STRINGIFY2(var)
 
 #ifndef WEIGHTS_DIR
-#define WEIGHTS_DIR "weights"
+#define WEIGHTS_DIR weights
 #endif
 
 template<class T, size_t SIZE>
