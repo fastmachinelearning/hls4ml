@@ -19,7 +19,7 @@ def extract_roc(yamlConfig,opts):
 
     fpga_output_df = 0
     output_filename = "./{}/{}_prj/solution1/csim/build/tb_data/csim_results.log".format(yamlConfig['OutputDir'], yamlConfig['ProjectName'])
-    output_filename = "./{}/{}_prj/solution1/csim/build/tb_data/rtl_cosim_results.log".format(yamlConfig['OutputDir'], yamlConfig['ProjectName'])
+    #output_filename = "./{}/{}_prj/solution1/csim/build/tb_data/rtl_cosim_results.log".format(yamlConfig['OutputDir'], yamlConfig['ProjectName'])
     
     truth_filename = yamlConfig['TruthLabels']
     predict_filename = yamlConfig['OutputPredictions']
