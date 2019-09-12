@@ -477,6 +477,8 @@ class CompressedWeightVariable(WeightVariable):
         value_fmt = self.precision_fmt % value[2]
         return '{ %u, %u, %s }' % (value[1], value[0], value_fmt)
 
+    next = __next__
+
 class Layer(object):
     def __init__(self, model, name, attributes, inputs, outputs=None):
         self.model = model
