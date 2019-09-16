@@ -8,3 +8,4 @@ from Mentor Graphics.
 - `mntr_ex3`: porting an *hls4ml* project to Mentor Catapult HLS
 - `mntr_ex4`: porting an *hls4ml* project to Mentor Catapult HLS (MNIST Autoencoder)
 - `mntr_ex5`: porting an *hls4ml* project to Mentor Catapult HLS (MNIST Classifier)
+- `mntr_ex6`: porting an *hls4ml* project to Mentor Catapult HLS (1 layer)

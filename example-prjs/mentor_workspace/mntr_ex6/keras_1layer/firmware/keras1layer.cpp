@@ -18,7 +18,7 @@
 //
 #include <iostream>
 
-#include "mnist_mlp.h"
+#include "keras1layer.h"
 
 #define __SYNTHESIS__
 
@@ -27,35 +27,31 @@
 #include "weights/b2.h"
 #include "weights/w4.h"
 #include "weights/b4.h"
-#include "weights/w6.h"
-#include "weights/b6.h"
 
-void mnist_mlp(
-    input_t input1[N_INPUT_1_1],
-    result_t layer7_out[N_LAYER_6],
+void keras1layer(
+    input_t input_1[N_INPUT_1_1],
+    result_t layer5_out[N_LAYER_4],
     unsigned short &const_size_in_1,
     unsigned short &const_size_out_1
 ) {
 #ifndef MNTR_CATAPULT_HLS
     //hls-fpga-machine-learning insert IO
-    #pragma HLS ARRAY_RESHAPE variable=input1 complete dim=0 
-    #pragma HLS ARRAY_RESHAPE variable=layer7_out complete dim=0 
-    #pragma HLS INTERFACE ap_vld port=input1,layer7_out 
+    #pragma HLS ARRAY_RESHAPE variable=input_1 complete dim=0 
+    #pragma HLS ARRAY_RESHAPE variable=layer5_out complete dim=0 
+    #pragma HLS INTERFACE ap_vld port=input_1,layer5_out 
     #pragma HLS DATAFLOW 
 #endif
     const_size_in_1 = N_INPUT_1_1;
-    const_size_out_1 = N_LAYER_6;
+    const_size_out_1 = N_LAYER_4;
 
 #ifndef __SYNTHESIS__
     static bool loaded_weights = false;
     if (!loaded_weights) {
         //hls-fpga-machine-learning insert load weights
-        nnet::load_weights_from_txt<model_default_t, 200704>(w2, "w2.txt");
-        nnet::load_weights_from_txt<model_default_t, 256>(b2, "b2.txt");
-        nnet::load_weights_from_txt<model_default_t, 65536>(w4, "w4.txt");
-        nnet::load_weights_from_txt<model_default_t, 256>(b4, "b4.txt");
-        nnet::load_weights_from_txt<model_default_t, 2560>(w6, "w6.txt");
-        nnet::load_weights_from_txt<model_default_t, 10>(b6, "b6.txt");
+        nnet::load_weights_from_txt<model_default_t, 320>(w2, "w2.txt");
+        nnet::load_weights_from_txt<model_default_t, 32>(b2, "b2.txt");
+        nnet::load_weights_from_txt<model_default_t, 32>(w4, "w4.txt");
+        nnet::load_weights_from_txt<model_default_t, 1>(b4, "b4.txt");
         loaded_weights = true;
     }
 #endif
@@ -70,7 +66,7 @@ void mnist_mlp(
 #ifndef MNTR_CATAPULT_HLS
     #pragma HLS ARRAY_PARTITION variable=layer2_out complete dim=0
 #endif
-    nnet::dense_large<input_t, layer2_t, config2>(input1, layer2_out, w2, b2);
+    nnet::dense_large<input_t, layer2_t, config2>(input_1, layer2_out, w2, b2);
 
     layer3_t layer3_out[N_LAYER_2];
 #ifndef MNTR_CATAPULT_HLS
@@ -84,18 +80,6 @@ void mnist_mlp(
 #endif
     nnet::dense_large<layer3_t, layer4_t, config4>(layer3_out, layer4_out, w4, b4);
 
-    layer5_t layer5_out[N_LAYER_4];
-#ifndef MNTR_CATAPULT_HLS
-    #pragma HLS ARRAY_PARTITION variable=layer5_out complete dim=0
-#endif
-    nnet::relu<layer4_t, layer5_t, relu_config5>(layer4_out, layer5_out);
-
-    layer6_t layer6_out[N_LAYER_6];
-#ifndef MNTR_CATAPULT_HLS
-    #pragma HLS ARRAY_PARTITION variable=layer6_out complete dim=0
-#endif
-    nnet::dense_large<layer5_t, layer6_t, config6>(layer5_out, layer6_out, w6, b6);
-
-    nnet::softmax<layer6_t, result_t, softmax_config7>(layer6_out, layer7_out);
+    nnet::sigmoid<layer4_t, result_t, sigmoid_config5>(layer4_out, layer5_out);
 
 }
