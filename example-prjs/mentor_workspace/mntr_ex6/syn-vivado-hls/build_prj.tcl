@@ -6,7 +6,7 @@ array set opt {
   synth      1
   cosim      1
   validation 0
-  export     0
+  export     1
 }
 
 foreach arg $::argv {
@@ -95,7 +95,7 @@ if {$opt(synth)} {
   if {$opt(export)} {
     puts "***** EXPORT IP *****"
     set time_start [clock clicks -milliseconds]
-    export_design -format ip_catalog
+    export_design -format ip_catalog -flow syn
     set time_end [clock clicks -milliseconds]
     report_time "EXPORT IP" $time_start $time_end
   }
