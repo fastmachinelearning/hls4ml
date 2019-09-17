@@ -233,23 +233,33 @@ fi
 
 if [ $VERBOSE == 2 ]; then
     clear
+    VIVADO_HLS_RESOURCE_BRAM_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_HLS_RESOURCE_BRAM / $TARGET_RESOURCE_BRAM"`
+    VIVADO_RESOURCE_BRAM_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_RESOURCE_BRAM / $TARGET_RESOURCE_BRAM"`
+    VIVADO_HLS_RESOURCE_FF_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_HLS_RESOURCE_FF / $TARGET_RESOURCE_FF"`
+    VIVADO_RESOURCE_FF_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_RESOURCE_FF / $TARGET_RESOURCE_FF"`
+    VIVADO_HLS_RESOURCE_DSP_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_HLS_RESOURCE_DSP / $TARGET_RESOURCE_DSP"`
+    VIVADO_RESOURCE_DSP_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_RESOURCE_DSP / $TARGET_RESOURCE_DSP"`
+    VIVADO_HLS_RESOURCE_LUT_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_HLS_RESOURCE_LUT / $TARGET_RESOURCE_LUT"`
+    VIVADO_RESOURCE_LUT_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_RESOURCE_BRAM / $TARGET_RESOURCE_BRAM"`
+
+    printf "INFO: Xilinx Vivado Report\n"
     printf "INFO: === Info ================================================================\n"
-    printf "INFO: Project   : %-20s | %-20s | %-20s\n" "Dir: $PROJECT_DIR" "Top: $TOP_MODULE" "Arch: $ARCH"
-    printf "INFO: Vivado    : %-20s | %-20s\n" "Ver: $VIVADO_VERSION" "Part: $FPGA_PART"
-    printf "INFO: Git: $GIT_REVISION\n"
+    printf "INFO: Project: %-20s | %-20s | %-20s\n" "Dir: $PROJECT_DIR" "Top: $TOP_MODULE" "Arch: $ARCH"
+    printf "INFO: Vivado : %-20s | %-20s\n" "Ver: $VIVADO_VERSION" "Part: $FPGA_PART"
+    printf "INFO: Git    : $GIT_REVISION\n"
     printf "INFO: === Execution ===========================================================\n"
     printf "INFO: Time (sec): Total: $TOTAL_EXECUTION_TIME\n"
     printf "INFO: Time (sec): %-20s | %-20s | %-20s\n" "HLS: $VIVADO_HLS_EXECUTION_TIME" "LS: $VIVADO_EXECUTION_TIME" "RTL-sim: $RTL_SIMULATION_EXECUTION_TIME"
-    printf "INFO: Exit Value: %-20s | %-20s | %-20s\n" "HLS: $VIVADO_HLS_EXIT_VAL" "LS: $VIVADO_EXIT_VAL" "RTL-sim: $RTL_SIM_EXIT_VAL"
+    printf "INFO: Exit VAL  : %-20s | %-20s | %-20s\n" "HLS: $VIVADO_HLS_EXIT_VAL" "LS: $VIVADO_EXIT_VAL" "RTL-sim: $RTL_SIM_EXIT_VAL"
     printf "INFO: === Timing ==============================================================\n"
-    printf "INFO: Clock (ns)   : %-20s | %-20s | %-20s\n" "Target   : $TARGET_CLK" "HLS: $VIVADO_HLS_ESTIMATED_CLK" "LS: $VIVADO_ACHIEVED_CLK"
-    printf "INFO: Latency (clk): %-20s | %-20s\n" "Best: $VIVADO_HLS_BEST_LATENCY" "Worst: $VIVADO_HLS_WORST_LATENCY"
-    printf "INFO: II (clk)     : %-20s | %-20s\n" "Min: $VIVADO_HLS_IINTERVAL_MIN" "Max: $VIVADO_HLS_IINTERVAL_MAX"
+    printf "INFO: CLK (ns) : %-20s | %-20s | %-20s\n" "Target   : $TARGET_CLK" "HLS: $VIVADO_HLS_ESTIMATED_CLK" "LS: $VIVADO_ACHIEVED_CLK"
+    printf "INFO: LAT (clk): %-20s | %-20s\n" "Best: $VIVADO_HLS_BEST_LATENCY" "Worst: $VIVADO_HLS_WORST_LATENCY"
+    printf "INFO: II (clk) : %-20s | %-20s\n" "Min: $VIVADO_HLS_IINTERVAL_MIN" "Max: $VIVADO_HLS_IINTERVAL_MAX"
     printf "INFO: === Resources ===========================================================\n"
-    printf "INFO: BRAM : %-20s | %-20s | %-20s\n" "Available: $TARGET_RESOURCE_BRAM" "HLS: $VIVADO_HLS_RESOURCE_BRAM" "LS: $VIVADO_RESOURCE_BRAM"
-    printf "INFO: DSP  : %-20s | %-20s | %-20s\n" "Available: $TARGET_RESOURCE_DSP" "HLS: $VIVADO_HLS_RESOURCE_DSP" "LS: $VIVADO_RESOURCE_DSP"
-    printf "INFO: FF   : %-20s | %-20s | %-20s\n" "Available: $TARGET_RESOURCE_FF" "HLS: $VIVADO_HLS_RESOURCE_FF" "LS: $VIVADO_RESOURCE_FF"
-    printf "INFO: LUT  : %-20s | %-20s | %-20s\n" "Available: $TARGET_RESOURCE_LUT" "HLS: $VIVADO_HLS_RESOURCE_LUT" "LS: $VIVADO_RESOURCE_LUT"
+    printf "INFO: BRAM : %-20s | %-20s | %-20s\n" "AVBL: $TARGET_RESOURCE_BRAM" "HLS: $VIVADO_HLS_RESOURCE_BRAM ($VIVADO_HLS_RESOURCE_BRAM_PERC%)" "LS: $VIVADO_RESOURCE_BRAM ($VIVADO_RESOURCE_BRAM_PERC%)"
+    printf "INFO: DSP  : %-20s | %-20s | %-20s\n" "AVBL: $TARGET_RESOURCE_DSP" "HLS: $VIVADO_HLS_RESOURCE_DSP ($VIVADO_HLS_RESOURCE_DSP_PERC%)" "LS: $VIVADO_RESOURCE_DSP ($VIVADO_RESOURCE_DSP_PERC%)"
+    printf "INFO: FF   : %-20s | %-20s | %-20s\n" "AVBL: $TARGET_RESOURCE_FF" "HLS: $VIVADO_HLS_RESOURCE_FF ($VIVADO_HLS_RESOURCE_FF_PERC%)" "LS: $VIVADO_RESOURCE_FF ($VIVADO_RESOURCE_FF_PERC%)"
+    printf "INFO: LUT  : %-20s | %-20s | %-20s\n" "AVBL: $TARGET_RESOURCE_LUT" "HLS: $VIVADO_HLS_RESOURCE_LUT ($VIVADO_HLS_RESOURCE_LUT_PERC%)" "LS: $VIVADO_RESOURCE_LUT ($VIVADO_RESOURCE_LUT_PERC%)"
     printf "INFO: =========================================================================\n"
 fi
 
