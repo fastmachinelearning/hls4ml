@@ -135,4 +135,6 @@ flow run /SCVerify/launch_make ./scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osc
 flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim sim
 ###flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim simgui
 #
-##flow run /Vivado/synthesize -shell vivado/rtl.v.xv
+flow run /Vivado/synthesize -shell vivado/rtl.v.xv
+
+project save

@@ -1,6 +1,5 @@
-*
-!Makefile
-!project_solution2.tcl
-!project_solution1.tcl
-!.gitignore
-!envsetup.sh
+Catapult*.ccs
+Catapult
+catapult.log
+design_checker_constraints.tcl
+design_checker_pre_build.tcl
