@@ -1,4 +1,7 @@
+#
 # Reset the options to the factory defaults
+#
+
 solution new -state initial
 solution options defaults
 
@@ -10,10 +13,6 @@ solution options set /Input/CompilerFlags -DMNTR_CATAPULT_HLS
 solution options set /Input/SearchPath {../inc ../keras1layer/firmware/ ../keras1layer/firmware/weights ../keras1layer/firmware/nnet_utils}
 
 flow package require /SCVerify
-
-solution file add ../keras_1layer/firmware/keras1layer.cpp -type C++
-
-solution file add ../keras_1layer/keras1layer_test.cpp -type C++ -exclude true
 
 directive set -DESIGN_GOAL area
 #directive set -OLD_SCHED false
@@ -61,9 +60,21 @@ directive set -CLUSTER_FAST_MODE false
 directive set -CLUSTER_TYPE combinational
 directive set -COMPGRADE fast
 
+# Add source files.
+solution file add ../keras_1layer/firmware/keras1layer.cpp -type C++
+solution file add ../keras_1layer/keras1layer_test.cpp -type C++ -exclude true
+
 go new
 
+#
+#
+#
+
 go analyze
+
+#
+#
+#
 
 # Set the top module and inline all of the other functions.
 #directive set -DESIGN_HIERARCHY keras1layer
@@ -79,6 +90,10 @@ directive set -DESIGN_HIERARCHY { \
 
 go compile
 
+#
+#
+#
+
 solution library add mgc_Xilinx-KINTEX-u-2_beh -- -rtlsyntool Vivado -manufacturer Xilinx -family KINTEX-u -speed -2 -part xcku115-flva2104-2-i
 solution library add Xilinx_RAMS
 solution library add Xilinx_ROMS
@@ -88,6 +103,10 @@ solution library add Xilinx_FIFO
 #solution library add ccs_sample_mem
 
 go libraries
+
+#
+#
+#
 
 directive set -CLOCKS { \
     clk { \
@@ -119,17 +138,15 @@ directive set /keras1layer/nnet::relu<layer2_t,layer3_t,relu_config3> -CCORE_DEB
 
 go assembly
 
-## I/O
-#directive set /keras1layer/input_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_in_vld
-#directive set /keras1layer/layer5_out:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
 #
-## Arrays
-#directive set /keras1layer/w2.rom:rsc -MAP_TO_MODULE {[Register]}
-#directive set /keras1layer/w4.rom:rsc -MAP_TO_MODULE {[Register]}
-#directive set /keras1layer/MgcAcHtrig::shift_dist_table.rom:rsc -MAP_TO_MODULE {[Register]}
-#directive set /keras1layer/MgcAcHtrig::hcordic_table.rom:rsc -MAP_TO_MODULE {[Register]}
-#directive set /keras1layer/nnet::dense_large_rf_leq_nin<input_t,layer2_t,config2>:acc.rom:rsc -MAP_TO_MODULE {[Register]}
+#
+#
 
+# Top-Module I/O
+directive set /keras1layer/input_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_in_vld
+directive set /keras1layer/layer5_out:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
+
+# Arrays
 directive set /keras1layer/core/nnet::dense_large<input_t,layer2_t,config2>(input_1):rsc -MAP_TO_MODULE {[Register]}
 directive set /keras1layer/core/nnet::relu<layer2_t,layer3_t,relu_config3>(layer2_out):rsc -MAP_TO_MODULE {[Register]}
 directive set /keras1layer/core/nnet::dense_large<layer3_t,layer4_t,config4>(layer3_out):rsc -MAP_TO_MODULE {[Register]}
@@ -143,14 +160,26 @@ directive set /keras1layer/nnet::relu<layer2_t,layer3_t,relu_config3>/core/main 
 
 go architect
 
+#
+#
+#
+
 go allocate
+
+#
+# RTL
+#
 
 go extract
 
-flow run /SCVerify/launch_make ./scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim
-flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim sim
+#
+#
+#
+
+#flow run /SCVerify/launch_make ./scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim
+#flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim sim
 #####flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim simgui
 
-flow run /Vivado/synthesize -shell vivado/rtl.v.xv
+#flow run /Vivado/synthesize -shell vivado/rtl.v.xv
 
 project save
