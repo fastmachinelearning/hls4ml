@@ -12,264 +12,331 @@ fi
 PROJECT=$1
 
 PROJECT_DIR=$PROJECT\_prj
-
 CSV_FILE=$PROJECT.csv
-
-VERBOSE=2
 
 APP_FILE=$PROJECT_DIR/vivado_hls.app
 if [ ! -f $APP_FILE ]; then echo "ERROR: File $APP_FILE does not exist!"; exit 1; fi
 
-echo -n "VivadoHlsExitVal,RTLSimExitVal,VivadoExitVal,TotalExecutionTime,Timeout,TopModule,Arch," > $CSV_FILE
-echo -n "VivadoVersion,FpgaPart,TargetResourceBram,TargetResourceDsp,TargetResourceFf,TargetResourceLut," >> $CSV_FILE
-echo -n "VivadoHlsTargetClk,VivadoHlsEstimatedClk,VivadoHlsBestLatency,VivadoHlsWorstLatency,VivadoHlsIIntervalMin,VivadoHlsIIntevalMax," >> $CSV_FILE
-echo -n "VivadoHlsResourceBram,VivadoHlsResourceDsp,VivadoHlsResourceFf,VivadoHlsResourceLut," >> $CSV_FILE
-echo -n "VivadoClk," >> $CSV_FILE
-echo -n "VivadoResourceBram,VivadoResourceDsp,VivadoResourceFf,VivadoResourceLut," >> $CSV_FILE
-echo -n "VivadoHlsExecutionTime,VivadoExecutionTime,RTLSimulationExecutionTime" >> $CSV_FILE
-echo "" >> $CSV_FILE
+VIVADO_HLS_SOLUTION="solution1"
 
-ARCH="solution1"
+GLOBAL_VIVADO_HLS_REPORT_XML="$PROJECT_DIR/$VIVADO_HLS_SOLUTION/syn/report/csynth.xml"
+GLOBAL_VIVADO_HLS_LOG="$PROJECT_DIR/../vivado_hls.log"
 
-VIVADO_HLS_REPORT_XML="$PROJECT_DIR/$ARCH/syn/report/csynth.xml"
-VIVADO_HLS_LOG="$PROJECT_DIR/../vivado_hls.log"
-VIVADO_REPORT_XML="$PROJECT_DIR/$ARCH/impl/report/verilog/$PROJECT"\_"export.xml"
-VIVADO_LOG="$PROJECT_DIR/$ARCH/impl/report/verilog/autoimpl.log"
-VIVADO_HLS_SOLUTION_LOG="$PROJECT_DIR/$ARCH/solution1.log"
+GLOBAL_VIVADO_REPORT_XML="$PROJECT_DIR/$VIVADO_HLS_SOLUTION/impl/report/verilog/$PROJECT"\_"export.xml"
+GLOBAL_VIVADO_LOG="$PROJECT_DIR/$VIVADO_HLS_SOLUTION/impl/report/verilog/autoimpl.log"
 
 #
-# XML parser on Vivado HLS / Vivado reports
+# XML parser of the Vivado HLS report.
 #
-VIVADO_VERSION=$(xmllint --xpath "/profile/ReportVersion/Version/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then VIVADO_VERSION=?; fi
+function get_vivado_hls_version {
+    local VIVADO_HLS_REPORT_XML=$1
+    local VIVADO_HLS_VERSION=$(xmllint --xpath "/profile/ReportVersion/Version/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_HLS_VERSION=?; fi
+    echo $VIVADO_HLS_VERSION
+}
 
-FPGA_PART=$(xmllint --xpath "/profile/UserAssignments/Part/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then FPGA_PART=?; fi
+function get_vivado_hls_fpga_part {
+    local VIVADO_HLS_REPORT_XML=$1
+    local VIVADO_HLS_FPGA_PART=$(xmllint --xpath "/profile/UserAssignments/Part/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_HLS_FPGA_PART=?; fi
+    echo $VIVADO_HLS_FPGA_PART
+}
 
-TOP_MODULE=$(xmllint --xpath "/profile/UserAssignments/TopModelName/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then TOP_MODULE=?; fi
+function get_vivado_hls_top_module {
+    local VIVADO_HLS_REPORT_XML=$1
+    local VIVADO_HLS_TOP_MODULE=$(xmllint --xpath "/profile/UserAssignments/TopModelName/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_HLS_TOP_MODULE=?; fi
+    echo $VIVADO_HLS_TOP_MODULE
+}
 
-TARGET_CLK=$(xmllint --xpath "/profile/UserAssignments/TargetClockPeriod/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then TARGET_CLK=?; fi
+function get_vivado_hls_target_clk {
+    local VIVADO_HLS_REPORT_XML=$1
+    local VIVADO_HLS_TARGET_CLK=$(xmllint --xpath "/profile/UserAssignments/TargetClockPeriod/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_HLS_TARGET_CLK=?; fi
+    echo $VIVADO_HLS_TARGET_CLK
+}
 
-VIVADO_HLS_ESTIMATED_CLK=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfTimingAnalysis/EstimatedClockPeriod/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then VIVADO_HLS_ESTIMATED_CLK=?; fi
+function get_vivado_hls_estimated_clk {
+    local VIVADO_HLS_REPORT_XML=$1
+    local VIVADO_HLS_ESTIMATED_CLK=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfTimingAnalysis/EstimatedClockPeriod/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_HLS_ESTIMATED_CLK=?; fi
+    echo $VIVADO_HLS_ESTIMATED_CLK
+}
 
-VIVADO_HLS_BEST_LATENCY=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfOverallLatency/Best-caseLatency/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then VIVADO_HLS_BEST_LATENCY=?; fi
+function get_vivado_hls_best_latency {
+    local VIVADO_HLS_REPORT_XML=$1
+    local VIVADO_HLS_BEST_LATENCY=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfOverallLatency/Best-caseLatency/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_HLS_BEST_LATENCY=?; fi
+    echo $VIVADO_HLS_BEST_LATENCY
+}
 
-VIVADO_HLS_WORST_LATENCY=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfOverallLatency/Worst-caseLatency/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then VIVADO_HLS_WORST_LATENCY=?; fi
+function get_vivado_hls_worst_latency {
+    local VIVADO_HLS_REPORT_XML=$1
+    local VIVADO_HLS_WORST_LATENCY=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfOverallLatency/Worst-caseLatency/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_HLS_WORST_LATENCY=?; fi
+    echo $VIVADO_HLS_WORST_LATENCY
+}
 
-VIVADO_HLS_IINTERVAL_MIN=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfOverallLatency/Interval-min/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then VIVADO_HLS_IINTERVAL_MIN=?; fi
+function get_vivado_hls_min_ii {
+    local VIVADO_HLS_REPORT_XML=$1
+    local VIVADO_HLS_MIN_II=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfOverallLatency/Interval-min/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_HLS_MIN_II=?; fi
+    echo $VIVADO_HLS_MIN_II
+}
 
-VIVADO_HLS_IINTERVAL_MAX=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfOverallLatency/Interval-max/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then VIVADO_HLS_IINTERVAL_MAX=?; fi
+function get_vivado_hls_max_ii {
+    local VIVADO_HLS_REPORT_XML=$1
+    local VIVADO_HLS_MAX_II=$(xmllint --xpath "/profile/PerformanceEstimates/SummaryOfOverallLatency/Interval-max/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_HLS_MAX_II=?; fi
+    echo $VIVADO_HLS_MAX_II
+}
 
-VIVADO_HLS_RESOURCE_BRAM=$(xmllint --xpath "/profile/AreaEstimates/Resources/BRAM_18K/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then VIVADO_HLS_RESOURCE_BRAM=?; fi
+function get_vivado_hls_bram {
+    local VIVADO_HLS_REPORT_XML=$1
+    local VIVADO_HLS_BRAM=$(xmllint --xpath "/profile/AreaEstimates/Resources/BRAM_18K/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_HLS_BRAM=?; fi
+    echo $VIVADO_HLS_BRAM
+}
 
-VIVADO_HLS_RESOURCE_DSP=$(xmllint --xpath "/profile/AreaEstimates/Resources/DSP48E/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then VIVADO_HLS_RESOURCE_DSP=?; fi
+function get_vivado_hls_dsp {
+    local VIVADO_HLS_REPORT_XML=$1
+    local VIVADO_HLS_DSP=$(xmllint --xpath "/profile/AreaEstimates/Resources/DSP48E/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_HLS_DSP=?; fi
+    echo $VIVADO_HLS_DSP
+}
 
-VIVADO_HLS_RESOURCE_FF=$(xmllint --xpath "/profile/AreaEstimates/Resources/FF/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then VIVADO_HLS_RESOURCE_FF=?; fi
+function get_vivado_hls_ff {
+    local VIVADO_HLS_REPORT_XML=$1
+    local VIVADO_HLS_FF=$(xmllint --xpath "/profile/AreaEstimates/Resources/FF/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_HLS_FF=?; fi
+    echo $VIVADO_HLS_FF
+}
 
-VIVADO_HLS_RESOURCE_LUT=$(xmllint --xpath "/profile/AreaEstimates/Resources/LUT/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then VIVADO_HLS_RESOURCE_LUT=?; fi
+function get_vivado_hls_lut {
+    local VIVADO_HLS_REPORT_XML=$1
+    local VIVADO_HLS_LUT=$(xmllint --xpath "/profile/AreaEstimates/Resources/LUT/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_HLS_LUT=?; fi
+    echo $VIVADO_HLS_LUT
+}
 
-TARGET_RESOURCE_BRAM=$(xmllint --xpath "/profile/AreaEstimates/AvailableResources/BRAM_18K/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then TARGET_RESOURCE_BRAM=?; fi
+function get_vivado_hls_available_bram {
+    local VIVADO_HLS_REPORT_XML=$1
+    local VIVADO_HLS_AVAILABLE_BRAM=$(xmllint --xpath "/profile/AreaEstimates/AvailableResources/BRAM_18K/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_HLS_AVAILABLE_BRAM=?; fi
+    echo $VIVADO_HLS_AVAILABLE_BRAM
+}
 
-TARGET_RESOURCE_DSP=$(xmllint --xpath "/profile/AreaEstimates/AvailableResources/DSP48E/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then TARGET_RESOURCE_DSP=?; fi
+function get_vivado_hls_available_dsp {
+    local VIVADO_HLS_REPORT_XML=$1
+    local VIVADO_HLS_AVAILABLE_DSP=$(xmllint --xpath "/profile/AreaEstimates/AvailableResources/DSP48E/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_HLS_AVAILABLE_DSP=?; fi
+    echo $VIVADO_HLS_AVAILABLE_DSP
+}
 
-TARGET_RESOURCE_FF=$(xmllint --xpath "/profile/AreaEstimates/AvailableResources/FF/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then TARGET_RESOURCE_FF=?; fi
+function get_vivado_hls_available_ff {
+    local VIVADO_HLS_REPORT_XML=$1
+    local VIVADO_HLS_AVAILABLE_FF=$(xmllint --xpath "/profile/AreaEstimates/AvailableResources/FF/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_HLS_AVAILABLE_FF=?; fi
+    echo $VIVADO_HLS_AVAILABLE_FF
+}
 
-TARGET_RESOURCE_LUT=$(xmllint --xpath "/profile/AreaEstimates/AvailableResources/LUT/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then TARGET_RESOURCE_LUT=?; fi
+function get_vivado_hls_available_lut {
+    local VIVADO_HLS_REPORT_XML=$1
+    local VIVADO_HLS_AVAILABLE_LUT=$(xmllint --xpath "/profile/AreaEstimates/AvailableResources/LUT/text()" $VIVADO_HLS_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_HLS_AVAILABLE_LUT=?; fi
+    echo $VIVADO_HLS_AVAILABLE_LUT
+}
 
-VIVADO_ACHIEVED_CLK=$(xmllint --xpath "/profile/TimingReport/AchievedClockPeriod/text()" $VIVADO_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then VIVADO_ACHIEVED_CLK=?; fi
+#
+# XML parser of the Vivado report.
+#
 
-VIVADO_RESOURCE_BRAM=$(xmllint --xpath "/profile/AreaReport/Resources/BRAM/text()" $VIVADO_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then VIVADO_RESOURCE_BRAM=?; fi
+function get_vivado_achieved_clk {
+    local VIVADO_REPORT_XML=$1
+    local VIVADO_ACHIEVED_CLK=$(xmllint --xpath "/profile/TimingReport/AchievedClockPeriod/text()" $VIVADO_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_ACHIEVED_CLK=?; fi
+    echo $VIVADO_ACHIEVED_CLK
+}
 
-VIVADO_RESOURCE_DSP=$(xmllint --xpath "/profile/AreaReport/Resources/DSP/text()" $VIVADO_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then VIVADO_RESOURCE_DSP=?; fi
+function get_vivado_bram {
+    local VIVADO_REPORT_XML=$1
+    local VIVADO_BRAM=$(xmllint --xpath "/profile/AreaReport/Resources/BRAM/text()" $VIVADO_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_BRAM=?; fi
+    echo $VIVADO_BRAM
+}
 
-VIVADO_RESOURCE_FF=$(xmllint --xpath "/profile/AreaReport/Resources/FF/text()" $VIVADO_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then VIVADO_RESOURCE_FF=?; fi
+function get_vivado_dsp {
+    local VIVADO_REPORT_XML=$1
+    local VIVADO_DSP=$(xmllint --xpath "/profile/AreaReport/Resources/DSP/text()" $VIVADO_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_DSP=?; fi
+    echo $VIVADO_DSP
+}
 
-VIVADO_RESOURCE_LUT=$(xmllint --xpath "/profile/AreaReport/Resources/LUT/text()" $VIVADO_REPORT_XML 2> /dev/null)
-if [ ! $? -eq 0 ]; then VIVADO_RESOURCE_LUT=?; fi
+function get_vivado_ff {
+    local VIVADO_REPORT_XML=$1
+    local VIVADO_FF=$(xmllint --xpath "/profile/AreaReport/Resources/FF/text()" $VIVADO_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_FF=?; fi
+    echo $VIVADO_FF
+}
 
-GIT_REVISION=$(git rev-parse --short HEAD)
-if [ ! $? -eq 0 ]; then GIT_REVISION=?; fi
+function get_vivado_lut {
+    local VIVADO_REPORT_XML=$1
+    local VIVADO_LUT=$(xmllint --xpath "/profile/AreaReport/Resources/LUT/text()" $VIVADO_REPORT_XML 2> /dev/null)
+    if [ ! $? -eq 0 ]; then VIVADO_LUT=?; fi
+    echo $VIVADO_LUT
+}
+
+#
+# Misc.
+#
+
+function get_git_revision {
+    local GIT_REVISION=$(git rev-parse --short HEAD)
+    if [ ! $? -eq 0 ]; then GIT_REVISION=?; fi
+    echo $GIT_REVISION
+}
 
 #
 # AWK on Vivado HLS / Vivado logs
 #
-TOTAL_EXECUTION_TIME=$(grep "Total elapsed time:" $PROJECT_DIR/../vivado_hls.log | awk '{print $7}')
-if [ -z "$TOTAL_EXECUTION_TIME" ]; then EXECUTION_TIME=?; fi
 
-VIVADO_HLS_EXECUTION_TIME_STRING=$(grep "C/RTL SYNTHESIS COMPLETED IN" $VIVADO_HLS_LOG | awk '{print $6}')
-if [ -z "$VIVADO_HLS_EXECUTION_TIME_STRING" ]; then
-    VIVADO_HLS_EXECUTION_TIME=?;
-else
-    VIVADO_HLS_EXECUTION_TIME=$(echo $VIVADO_HLS_EXECUTION_TIME_STRING | awk -F'[h|m|s]' '{ print ($1 * 3600) + ($2 * 60) + $3 }')
-fi
+function get_total_execution_time {
+    local VIVADO_HLS_LOG=$1
+    local TOTAL_EXECUTION_TIME=$(grep "Total elapsed time:" $VIVADO_HLS_LOG | awk '{print $7}')
+    if [ -z "$TOTAL_EXECUTION_TIME" ]; then TOTAL_EXECUTION_TIME=?; fi
+    echo $TOTAL_EXECUTION_TIME
+}
 
-VIVADO_EXECUTION_TIME_STRING=$(grep "EXPORT IP COMPLETED IN" $VIVADO_HLS_LOG | awk '{print $6}')
-if [ -z "$VIVADO_EXECUTION_TIME_STRING" ]; then
-    VIVADO_EXECUTION_TIME=?;
-else
-    VIVADO_EXECUTION_TIME=$(echo $VIVADO_EXECUTION_TIME_STRING | awk -F'[h|m|s]' '{ print ($1 * 3600) + ($2 * 60) + $3 }')
-fi
+function get_vivado_hls_execution_time {
+    local VIVADO_HLS_LOG=$1
+    local VIVADO_HLS_EXECUTION_TIME_STRING=$(grep "C/RTL SYNTHESIS COMPLETED IN" $VIVADO_HLS_LOG | awk '{print $6}')
+    if [ -z "$VIVADO_HLS_EXECUTION_TIME_STRING" ]; then
+        VIVADO_HLS_EXECUTION_TIME=?;
+    else
+        VIVADO_HLS_EXECUTION_TIME=$(echo $VIVADO_HLS_EXECUTION_TIME_STRING | awk -F'[h|m|s]' '{ print ($1 * 3600) + ($2 * 60) + $3 }')
+    fi
+    echo $VIVADO_HLS_EXECUTION_TIME
+}
 
-RTL_SIMULATION_EXECUTION_TIME_STRING=$(grep "C/RTL SIMULATION COMPLETED IN" $VIVADO_HLS_LOG | awk '{print $6}')
-if [ -z "$RTL_SIMULATION_EXECUTION_TIME_STRING" ]; then
-    RTL_SIMULATION_EXECUTION_TIME=?;
-else
-    RTL_SIMULATION_EXECUTION_TIME=$(echo $RTL_SIMULATION_EXECUTION_TIME_STRING | awk -F'[h|m|s]' '{ print ($1 * 3600) + ($2 * 60) + $3 }')
-fi
+function get_vivado_execution_time {
+    local VIVADO_HLS_LOG=$1
+    local VIVADO_EXECUTION_TIME_STRING=$(grep "EXPORT IP COMPLETED IN" $VIVADO_HLS_LOG | awk '{print $6}')
+    if [ -z "$VIVADO_EXECUTION_TIME_STRING" ]; then
+        VIVADO_EXECUTION_TIME=?;
+    else
+        VIVADO_EXECUTION_TIME=$(echo $VIVADO_EXECUTION_TIME_STRING | awk -F'[h|m|s]' '{ print ($1 * 3600) + ($2 * 60) + $3 }')
+    fi
+    echo $VIVADO_EXECUTION_TIME
+}
 
-VIVADO_HLS_EXIT_VAL=?
-RTL_SIM_EXIT_VAL=?
-VIVADO_EXIT_VAL=?
+function get_rtl_simulation_execution_time {
+    local VIVADO_HLS_LOG=$1
+    local RTL_SIMULATION_EXECUTION_TIME_STRING=$(grep "C/RTL SIMULATION COMPLETED IN" $VIVADO_HLS_LOG | awk '{print $6}')
+    if [ -z "$RTL_SIMULATION_EXECUTION_TIME_STRING" ]; then
+        RTL_SIMULATION_EXECUTION_TIME=?;
+    else
+        RTL_SIMULATION_EXECUTION_TIME=$(echo $RTL_SIMULATION_EXECUTION_TIME_STRING | awk -F'[h|m|s]' '{ print ($1 * 3600) + ($2 * 60) + $3 }')
+    fi
+    echo $RTL_SIMULATION_EXECUTION_TIME
+}
 
-#
-# Check HLS results [VIVADO_HLS_EXIT_VAL]
-# - HLS Passed  [0]: XML file exists
-# - HLS Failed  [1]: ERROR in Vivado HLS log file
-# - HLS Timeout [2]: No XML and no ERROR in Vivado log file
-#
-if [ -f "$VIVADO_HLS_REPORT_XML" ]; then
-    VIVADO_HLS_EXIT_VAL=0 # HLS Passed
+function get_vivado_hls_exit_value {
+    local VIVADO_HLS_REPORT_XML=$1
+    if [ -f "$VIVADO_HLS_REPORT_XML" ]; then
+        local VIVADO_HLS_EXIT_VAL=0
+    else
+        local VIVADO_HLS_EXIT_VAL=1
+    fi
+    echo $VIVADO_HLS_EXIT_VAL
+}
 
-    #
-    # Check RTL simulation results [RTL_SIM_EXIT_VAL]
-    # - Simulation Passed  [0]: 1 PASS in Vivado HLS log file.
-    # - Simulation Failed  [1]: 0 PASS in Vivado HLS log file.
-    #
-    SIM_RESULTS=$(grep "C/RTL co-simulation finished: PASS" $VIVADO_HLS_LOG | wc -l)
+function get_vivado_exit_value {
+    local VIVADO_REPORT_XML=$1
+    if [ -f "$VIVADO_REPORT_XML" ]; then
+        VIVADO_EXIT_VAL=0
+    else
+        VIVADO_EXIT_VAL=1
+    fi
+    echo $VIVADO_EXIT_VAL
+}
+
+function get_rtl_simulation_exit_value {
+    local VIVADO_HLS_LOG=$1
+    local SIM_RESULTS=$(grep "C/RTL co-simulation finished: PASS" $VIVADO_HLS_LOG | wc -l)
     if [ $SIM_RESULTS == 1 ]; then # Simulation Passed
-        RTL_SIM_EXIT_VAL=0
-
-        #
-        # Check Logic Synthesis results [VIVADO_EXIT_VAL]
-        # - Logic Synthesis Passed  [0]: XML file exists
-        # - Logic Synthesis Failed  [1]: No XML
-        #
-        if [ -f "$VIVADO_REPORT_XML" ]; then
-            VIVADO_EXIT_VAL=0
-        else # Logic Synthesis Failed or Timeout
-            VIVADO_EXIT_VAL=1
-        fi
-
-    else # Simulation Failed
-        SIM_RESULTS=$(grep "INFO: test FAIL" $VIVADO_HLS_LOG | wc -l)
-        if [ $SIM_RESULTS -eq 1 ]; then # Failed
-            RTL_SIM_EXIT_VAL=1
-        else # Timeout
-            RTL_SIM_EXIT_VAL=2
-        fi
+        local RTL_SIMULATION_EXIT_VAL=0
+    else
+        local RTL_SIMULATION_EXIT_VAL=1
     fi
+    echo $RTL_SIMULATION_EXIT_VAL
+}
 
-else # HLS Failed or Timeout
-    HLS_RESULTS=$(grep "ERROR:" $VIVADO_HLS_LOG | wc -l)
-    if [ $HLS_RESULTS -ge 1 ]; then # Failed
-        VIVADO_HLS_EXIT_VAL=1
-    else # Timeout
-        VIVADO_HLS_EXIT_VAL=2
-    fi
-fi
+VIVADO_HLS_VERSION=$(get_vivado_hls_version $GLOBAL_VIVADO_HLS_REPORT_XML)
+VIVADO_HLS_FPGA_PART=$(get_vivado_hls_fpga_part $GLOBAL_VIVADO_HLS_REPORT_XML)
+VIVADO_HLS_TOP_MODULE=$(get_vivado_hls_top_module $GLOBAL_VIVADO_HLS_REPORT_XML)
 
-if [ $VERBOSE == 1 ]; then
-    echo "INFO: =========================================================================="
-    echo "INFO: Project directory: $PROJECT_DIR"
-#    echo "INFO: Reuse Factor: $REUSE_FACTOR"
-    echo "INFO: Vivado HLS Exit Value: $VIVADO_HLS_EXIT_VAL"
-    echo "INFO: RTL Simulation Exit Value: $RTL_SIM_EXIT_VAL"
-    echo "INFO: Vivado Exit Value: $VIVADO_EXIT_VAL"
-    echo "INFO: Total Execution Time (secs): $TOTAL_EXECUTION_TIME"
-    echo "INFO: Top module: $TOP_MODULE"
-    echo "INFO: Architecture: $ARCH"
+GIT_REVISION=$(get_git_revision)
 
-    echo "INFO: Vivado version: $VIVADO_VERSION"
-    echo "INFO: FPGA part: $FPGA_PART"
-    echo "INFO: Git revision: $GIT_REVISION"
-    echo "INFO: Target BRAM: $TARGET_RESOURCE_BRAM"
-    echo "INFO: Target DSP: $TARGET_RESOURCE_DSP"
-    echo "INFO: Target FF: $TARGET_RESOURCE_FF"
-    echo "INFO: Target LUT: $TARGET_RESOURCE_LUT"
+VIVADO_HLS_TARGET_CLK=$(get_vivado_hls_target_clk $GLOBAL_VIVADO_HLS_REPORT_XML)
+VIVADO_HLS_ESTIMATED_CLK=$(get_vivado_hls_estimated_clk $GLOBAL_VIVADO_HLS_REPORT_XML)
+VIVADO_ACHIEVED_CLK=$(get_vivado_achieved_clk $GLOBAL_VIVADO_REPORT_XML)
 
-    echo "INFO: Target clock: $TARGET_CLK"
-    echo "INFO: Vivado HLS Estimated clock: $VIVADO_HLS_ESTIMATED_CLK"
-    echo "INFO: Vivado HLS Best Latency: $VIVADO_HLS_BEST_LATENCY"
-    echo "INFO: Vivado HLS Worst Latency: $VIVADO_HLS_WORST_LATENCY"
-    echo "INFO: Vivado HLS Min IInterval: $VIVADO_HLS_IINTERVAL_MIN"
-    echo "INFO: Vivado HLS Max IInterval: $VIVADO_HLS_IINTERVAL_MAX"
+VIVADO_HLS_BEST_LATENCY=$(get_vivado_hls_best_latency $GLOBAL_VIVADO_HLS_REPORT_XML)
+VIVADO_HLS_WORST_LATENCY=$(get_vivado_hls_worst_latency $GLOBAL_VIVADO_HLS_REPORT_XML)
+VIVADO_HLS_MIN_II=$(get_vivado_hls_min_ii $GLOBAL_VIVADO_HLS_REPORT_XML)
+VIVADO_HLS_MAX_II=$(get_vivado_hls_max_ii $GLOBAL_VIVADO_HLS_REPORT_XML)
 
-    echo "INFO: Vivado HLS BRAM: $VIVADO_HLS_RESOURCE_BRAM"
-    echo "INFO: Vivado HLS DSP: $VIVADO_HLS_RESOURCE_DSP"
-    echo "INFO: Vivado HLS FF: $VIVADO_HLS_RESOURCE_FF"
-    echo "INFO: Vivado HLS LUT: $VIVADO_HLS_RESOURCE_LUT"
+VIVADO_HLS_BRAM=$(get_vivado_hls_bram $GLOBAL_VIVADO_HLS_REPORT_XML)
+VIVADO_HLS_DSP=$(get_vivado_hls_dsp $GLOBAL_VIVADO_HLS_REPORT_XML)
+VIVADO_HLS_FF=$(get_vivado_hls_ff $GLOBAL_VIVADO_HLS_REPORT_XML)
+VIVADO_HLS_LUT=$(get_vivado_hls_lut $GLOBAL_VIVADO_HLS_REPORT_XML)
 
-    echo "INFO: Vivado Achieved clock: $VIVADO_ACHIEVED_CLK"
+VIVADO_HLS_AVAILABLE_BRAM=$(get_vivado_hls_available_bram $GLOBAL_VIVADO_HLS_REPORT_XML)
+VIVADO_HLS_AVAILABLE_DSP=$(get_vivado_hls_available_dsp $GLOBAL_VIVADO_HLS_REPORT_XML)
+VIVADO_HLS_AVAILABLE_FF=$(get_vivado_hls_available_ff $GLOBAL_VIVADO_HLS_REPORT_XML)
+VIVADO_HLS_AVAILABLE_LUT=$(get_vivado_hls_available_lut $GLOBAL_VIVADO_HLS_REPORT_XML)
 
-    echo "INFO: Vivado BRAM: $VIVADO_RESOURCE_BRAM"
-    echo "INFO: Vivado DSP: $VIVADO_RESOURCE_DSP"
-    echo "INFO: Vivado FF: $VIVADO_RESOURCE_FF"
-    echo "INFO: Vivado LUT: $VIVADO_RESOURCE_LUT"
+VIVADO_BRAM=$(get_vivado_bram $GLOBAL_VIVADO_REPORT_XML)
+VIVADO_DSP=$(get_vivado_dsp $GLOBAL_VIVADO_REPORT_XML)
+VIVADO_FF=$(get_vivado_ff $GLOBAL_VIVADO_REPORT_XML)
+VIVADO_LUT=$(get_vivado_lut $GLOBAL_VIVADO_REPORT_XML)
 
-    echo "INFO: Vivado HLS Execution Time (secs): $VIVADO_HLS_EXECUTION_TIME"
-    echo "INFO: Vivado Execution Time (secs): $VIVADO_EXECUTION_TIME"
-    echo "INFO: RTL Simulation Execution Time (secs): $RTL_SIMULATION_EXECUTION_TIME"
-    echo "INFO: =========================================================================="
-fi
+TOTAL_EXECUTION_TIME=$(get_total_execution_time $GLOBAL_VIVADO_HLS_LOG)
+VIVADO_HLS_EXECUTION_TIME=$(get_vivado_hls_execution_time $GLOBAL_VIVADO_HLS_LOG)
+VIVADO_EXECUTION_TIME=$(get_vivado_execution_time $GLOBAL_VIVADO_HLS_LOG)
+RTL_SIMULATION_EXECUTION_TIME=$(get_rtl_simulation_execution_time $GLOBAL_VIVADO_HLS_LOG)
 
-if [ $VERBOSE == 2 ]; then
-    clear
-    VIVADO_HLS_RESOURCE_BRAM_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_HLS_RESOURCE_BRAM / $TARGET_RESOURCE_BRAM"`
-    VIVADO_RESOURCE_BRAM_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_RESOURCE_BRAM / $TARGET_RESOURCE_BRAM"`
-    VIVADO_HLS_RESOURCE_FF_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_HLS_RESOURCE_FF / $TARGET_RESOURCE_FF"`
-    VIVADO_RESOURCE_FF_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_RESOURCE_FF / $TARGET_RESOURCE_FF"`
-    VIVADO_HLS_RESOURCE_DSP_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_HLS_RESOURCE_DSP / $TARGET_RESOURCE_DSP"`
-    VIVADO_RESOURCE_DSP_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_RESOURCE_DSP / $TARGET_RESOURCE_DSP"`
-    VIVADO_HLS_RESOURCE_LUT_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_HLS_RESOURCE_LUT / $TARGET_RESOURCE_LUT"`
-    VIVADO_RESOURCE_LUT_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_RESOURCE_BRAM / $TARGET_RESOURCE_BRAM"`
+VIVADO_HLS_EXIT_VAL=$(get_vivado_hls_exit_value $GLOBAL_VIVADO_HLS_REPORT_XML)
+VIVADO_EXIT_VAL=$(get_vivado_exit_value $VIVADO_REPORT_XML)
+RTL_SIMULATION_EXIT_VAL=$(get_rtl_simulation_exit_value $GLOBAL_VIVADO_HLS_LOG)
 
-    printf "INFO: Xilinx Vivado Report\n"
-    printf "INFO: === Info ================================================================\n"
-    printf "INFO: Project: %-20s | %-20s | %-20s\n" "Dir: $PROJECT_DIR" "Top: $TOP_MODULE" "Arch: $ARCH"
-    printf "INFO: Vivado : %-20s | %-20s\n" "Ver: $VIVADO_VERSION" "Part: $FPGA_PART"
-    printf "INFO: Git    : $GIT_REVISION\n"
-    printf "INFO: === Execution ===========================================================\n"
-    printf "INFO: Time (sec): Total: $TOTAL_EXECUTION_TIME\n"
-    printf "INFO: Time (sec): %-20s | %-20s | %-20s\n" "HLS: $VIVADO_HLS_EXECUTION_TIME" "LS: $VIVADO_EXECUTION_TIME" "RTL-sim: $RTL_SIMULATION_EXECUTION_TIME"
-    printf "INFO: Exit VAL  : %-20s | %-20s | %-20s\n" "HLS: $VIVADO_HLS_EXIT_VAL" "LS: $VIVADO_EXIT_VAL" "RTL-sim: $RTL_SIM_EXIT_VAL"
-    printf "INFO: === Timing ==============================================================\n"
-    printf "INFO: CLK (ns) : %-20s | %-20s | %-20s\n" "Target   : $TARGET_CLK" "HLS: $VIVADO_HLS_ESTIMATED_CLK" "LS: $VIVADO_ACHIEVED_CLK"
-    printf "INFO: LAT (clk): %-20s | %-20s\n" "Best: $VIVADO_HLS_BEST_LATENCY" "Worst: $VIVADO_HLS_WORST_LATENCY"
-    printf "INFO: II (clk) : %-20s | %-20s\n" "Min: $VIVADO_HLS_IINTERVAL_MIN" "Max: $VIVADO_HLS_IINTERVAL_MAX"
-    printf "INFO: === Resources ===========================================================\n"
-    printf "INFO: BRAM : %-20s | %-20s | %-20s\n" "AVBL: $TARGET_RESOURCE_BRAM" "HLS: $VIVADO_HLS_RESOURCE_BRAM ($VIVADO_HLS_RESOURCE_BRAM_PERC%)" "LS: $VIVADO_RESOURCE_BRAM ($VIVADO_RESOURCE_BRAM_PERC%)"
-    printf "INFO: DSP  : %-20s | %-20s | %-20s\n" "AVBL: $TARGET_RESOURCE_DSP" "HLS: $VIVADO_HLS_RESOURCE_DSP ($VIVADO_HLS_RESOURCE_DSP_PERC%)" "LS: $VIVADO_RESOURCE_DSP ($VIVADO_RESOURCE_DSP_PERC%)"
-    printf "INFO: FF   : %-20s | %-20s | %-20s\n" "AVBL: $TARGET_RESOURCE_FF" "HLS: $VIVADO_HLS_RESOURCE_FF ($VIVADO_HLS_RESOURCE_FF_PERC%)" "LS: $VIVADO_RESOURCE_FF ($VIVADO_RESOURCE_FF_PERC%)"
-    printf "INFO: LUT  : %-20s | %-20s | %-20s\n" "AVBL: $TARGET_RESOURCE_LUT" "HLS: $VIVADO_HLS_RESOURCE_LUT ($VIVADO_HLS_RESOURCE_LUT_PERC%)" "LS: $VIVADO_RESOURCE_LUT ($VIVADO_RESOURCE_LUT_PERC%)"
-    printf "INFO: =========================================================================\n"
-fi
+clear
+VIVADO_HLS_BRAM_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_HLS_BRAM / $VIVADO_HLS_AVAILABLE_BRAM"`
+VIVADO_HLS_FF_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_HLS_FF / $VIVADO_HLS_AVAILABLE_FF"`
+VIVADO_HLS_DSP_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_HLS_DSP / $VIVADO_HLS_AVAILABLE_DSP"`
+VIVADO_HLS_LUT_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_HLS_LUT / $VIVADO_HLS_AVAILABLE_LUT"`
+VIVADO_BRAM_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_BRAM / $VIVADO_HLS_AVAILABLE_BRAM"`
+VIVADO_FF_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_FF / $VIVADO_HLS_AVAILABLE_FF"`
+VIVADO_DSP_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_DSP / $VIVADO_HLS_AVAILABLE_DSP"`
+VIVADO_LUT_PERC=`bc -l <<< "scale=2; 100 * $VIVADO_BRAM / $VIVADO_HLS_AVAILABLE_BRAM"`
 
+printf "INFO: Xilinx Vivado Report\n"
+printf "INFO: === Info ================================================================\n"
+printf "INFO: Project: %-20s | %-20s | %-20s\n" "Dir: $PROJECT_DIR" "Top: $VIVADO_HLS_TOP_MODULE" "Arch: $VIVADO_HLS_SOLUTION"
+printf "INFO: Vivado : %-20s | %-20s\n" "Ver: $VIVADO_HLS_VERSION" "Part: $VIVADO_HLS_FPGA_PART"
+printf "INFO: Git    : $GIT_REVISION\n"
+printf "INFO: === Execution ===========================================================\n"
+printf "INFO: Time (sec): Total: $TOTAL_EXECUTION_TIME\n"
+printf "INFO: Time (sec): %-20s | %-20s | %-20s\n" "HLS: $VIVADO_HLS_EXECUTION_TIME" "LS: $VIVADO_EXECUTION_TIME" "RTL-sim: $RTL_SIMULATION_EXECUTION_TIME"
+printf "INFO: Exit VAL  : %-20s | %-20s | %-20s\n" "HLS: $VIVADO_HLS_EXIT_VAL" "LS: $VIVADO_EXIT_VAL" "RTL-sim: $RTL_SIMULATION_EXIT_VAL"
+printf "INFO: === Timing ==============================================================\n"
+printf "INFO: CLK (ns) : %-20s | %-20s | %-20s\n" "Target   : $VIVADO_HLS_TARGET_CLK" "HLS: $VIVADO_HLS_ESTIMATED_CLK" "LS: $VIVADO_ACHIEVED_CLK"
+printf "INFO: LAT (clk): %-20s | %-20s\n" "Best: $VIVADO_HLS_BEST_LATENCY" "Worst: $VIVADO_HLS_WORST_LATENCY"
+printf "INFO: II (clk) : %-20s | %-20s\n" "Min: $VIVADO_HLS_MIN_II" "Max: $VIVADO_HLS_MAX_II"
+printf "INFO: === Resources ===========================================================\n"
+printf "INFO: BRAM : %-20s | %-20s | %-20s\n" "AVBL: $VIVADO_HLS_AVAILABLE_BRAM" "HLS: $VIVADO_HLS_BRAM ($VIVADO_HLS_BRAM_PERC%)" "LS: $VIVADO_BRAM ($VIVADO_BRAM_PERC%)"
+printf "INFO: DSP  : %-20s | %-20s | %-20s\n" "AVBL: $VIVADO_HLS_AVAILABLE_DSP" "HLS: $VIVADO_HLS_DSP ($VIVADO_HLS_DSP_PERC%)" "LS: $VIVADO_DSP ($VIVADO_DSP_PERC%)"
+printf "INFO: FF   : %-20s | %-20s | %-20s\n" "AVBL: $VIVADO_HLS_AVAILABLE_FF" "HLS: $VIVADO_HLS_FF ($VIVADO_HLS_FF_PERC%)" "LS: $VIVADO_FF ($VIVADO_FF_PERC%)"
+printf "INFO: LUT  : %-20s | %-20s | %-20s\n" "AVBL: $VIVADO_HLS_AVAILABLE_LUT" "HLS: $VIVADO_HLS_LUT ($VIVADO_HLS_LUT_PERC%)" "LS: $VIVADO_LUT ($VIVADO_LUT_PERC%)"
+printf "INFO: =========================================================================\n"
 
-# Append the results to CSV file.
-echo -n "$VIVADO_HLS_EXIT_VAL,$RTL_SIM_EXIT_VAL,$VIVADO_EXIT_VAL,$TOTAL_EXECUTION_TIME,$TIMEOUT,$TOP_MODULE,$ARCH," >> $CSV_FILE
-echo -n "$VIVADO_VERSION,$FPGA_PART,$TARGET_RESOURCE_BRAM,$TARGET_RESOURCE_DSP,$TARGET_RESOURCE_FF,$TARGET_RESOURCE_LUT," >> $CSV_FILE
-echo -n "$TARGET_CLK,$VIVADO_HLS_ESTIMATED_CLK,$VIVADO_HLS_BEST_LATENCY,$VIVADO_HLS_WORST_LATENCY,$VIVADO_HLS_IINTERVAL_MIN,$VIVADO_HLS_IINTERVAL_MAX," >> $CSV_FILE
-echo -n "$VIVADO_HLS_RESOURCE_BRAM,$VIVADO_HLS_RESOURCE_DSP,$VIVADO_HLS_RESOURCE_FF,$VIVADO_HLS_RESOURCE_LUT," >> $CSV_FILE
-echo -n "$VIVADO_ACHIEVED_CLK," >> $CSV_FILE
-echo -n "$VIVADO_RESOURCE_BRAM,$VIVADO_RESOURCE_DSP,$VIVADO_RESOURCE_FF,$VIVADO_RESOURCE_LUT," >> $CSV_FILE
-echo -n "$VIVADO_HLS_EXECUTION_TIME,$VIVADO_EXECUTION_TIME,$RTL_SIMULATION_EXECUTION_TIME" >> $CSV_FILE
-echo "" >> $CSV_FILE
