@@ -15,13 +15,6 @@ solution file add ../keras_1layer/firmware/keras1layer.cpp -type C++
 
 solution file add ../keras_1layer/keras1layer_test.cpp -type C++ -exclude true
 
-#solution file add ../keras1layer/firmware/weights/w4.txt -exclude true
-#solution file add ../keras1layer/firmware/weights/b6.txt -exclude true
-#solution file add ../keras1layer/firmware/weights/b4.txt -exclude true
-#solution file add ../keras1layer/firmware/weights/b2.txt -exclude true
-#solution file add ../keras1layer/firmware/weights/w6.txt -exclude true
-#solution file add ../keras1layer/firmware/weights/w2.txt -exclude true
-
 directive set -DESIGN_GOAL area
 #directive set -OLD_SCHED false
 directive set -SPECULATE true
@@ -72,14 +65,17 @@ go new
 
 go analyze
 
-# Set the top module and set FC, RELU, SOFTMAX as submodules.
-#directive set -DESIGN_HIERARCHY {keras1layer {nnet::compute_layer<input_t, layer1_t, config1>} {nnet::compute_layer<layer1_t, layer2_t, config2>} {nnet::compute_layer<layer2_t, layer3_t, config3>} {nnet::compute_layer<layer3_t, result_t, config4>} {nnet::relu<layer1_t, layer1_t, relu_config1>} {nnet::relu<layer2_t, layer2_t, relu_config2>} {nnet::relu<layer3_t, layer3_t, relu_config3>} {nnet::softmax<result_t, result_t, softmax_config4>}}
-#
-## Set the top module, set FC as submodules, and inline all of the other functions.
-##directive set -DESIGN_HIERARCHY {keras1layer {nnet::compute_layer<input_t, layer1_t, config1>} {nnet::compute_layer<layer1_t, layer2_t, config2>} {nnet::compute_layer<layer2_t, layer3_t, config3>} {nnet::compute_layer<layer3_t, result_t, config4>}}
-#
 # Set the top module and inline all of the other functions.
-directive set -DESIGN_HIERARCHY keras1layer
+#directive set -DESIGN_HIERARCHY keras1layer
+
+# Set the top module and set FC, RELU, Sigmoid as submodules.
+directive set -DESIGN_HIERARCHY { \
+    keras1layer \
+    {nnet::dense_large<ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, config2>} \
+    {nnet::dense_large<ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, config4>} \
+    {nnet::sigmoid<ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, sigmoid_config5>} \
+    {nnet::relu<ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, relu_config3>} \
+}
 
 go compile
 
@@ -93,48 +89,68 @@ solution library add Xilinx_FIFO
 
 go libraries
 
-directive set -CLOCKS {clk {-CLOCK_PERIOD 5.0 -CLOCK_EDGE rising -CLOCK_HIGH_TIME 2.5 -CLOCK_OFFSET 0.000000 -CLOCK_UNCERTAINTY 0.0 -RESET_KIND sync -RESET_SYNC_NAME rst -RESET_SYNC_ACTIVE high -RESET_ASYNC_NAME arst_n -RESET_ASYNC_ACTIVE low -ENABLE_NAME {} -ENABLE_ACTIVE high}}
-##directive set /keras1layer/nnet::compute_layer<input_t,layer1_t,config1> -MAP_TO_MODULE {[CCORE]}
-##directive set /keras1layer/nnet::compute_layer<layer2_t,layer3_t,config3> -MAP_TO_MODULE {[CCORE]}
-##directive set /keras1layer/nnet::relu<layer2_t,layer2_t,relu_config2> -MAP_TO_MODULE {[CCORE]}
-##directive set /keras1layer/nnet::softmax<result_t,result_t,softmax_config4> -MAP_TO_MODULE {[CCORE]}
-##directive set /keras1layer/nnet::compute_layer<layer1_t,layer2_t,config2> -MAP_TO_MODULE {[CCORE]}
-##directive set /keras1layer/nnet::compute_layer<layer3_t,result_t,config4> -MAP_TO_MODULE {[CCORE]}
-##directive set /keras1layer/nnet::relu<layer1_t,layer1_t,relu_config1> -MAP_TO_MODULE {[CCORE]}
-##directive set /keras1layer/nnet::relu<layer3_t,layer3_t,relu_config3> -MAP_TO_MODULE {[CCORE]}
+directive set -CLOCKS { \
+    clk { \
+        -CLOCK_PERIOD 5 \
+        -CLOCK_EDGE rising \
+        -CLOCK_HIGH_TIME 2.5 \
+        -CLOCK_OFFSET 0.000000 \
+        -CLOCK_UNCERTAINTY 0.0 \
+        -RESET_KIND sync \
+        -RESET_SYNC_NAME rst \
+        -RESET_SYNC_ACTIVE high \
+        -RESET_ASYNC_NAME arst_n \
+        -RESET_ASYNC_ACTIVE low \
+        -ENABLE_NAME {} \
+        -ENABLE_ACTIVE high \
+    } \
+}
+
+directive set /keras1layer/nnet::dense_large<input_t,layer2_t,config2> -MAP_TO_MODULE {[CCORE]}
+directive set /keras1layer/nnet::sigmoid<layer4_t,result_t,sigmoid_config5> -MAP_TO_MODULE {[CCORE]}
+directive set /keras1layer/nnet::dense_large<layer3_t,layer4_t,config4> -MAP_TO_MODULE {[CCORE]}
+directive set /keras1layer/nnet::relu<layer2_t,layer3_t,relu_config3> -MAP_TO_MODULE {[CCORE]}
+
+# Add debug views for CCOREs.
+directive set /keras1layer/nnet::dense_large<input_t,layer2_t,config2> -CCORE_DEBUG true
+directive set /keras1layer/nnet::sigmoid<layer4_t,result_t,sigmoid_config5> -CCORE_DEBUG true
+directive set /keras1layer/nnet::dense_large<layer3_t,layer4_t,config4> -CCORE_DEBUG true
+directive set /keras1layer/nnet::relu<layer2_t,layer3_t,relu_config3> -CCORE_DEBUG true
 
 go assembly
 
 ## I/O
-directive set /keras1layer/input_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_in_vld
-directive set /keras1layer/layer5_out:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
-
+#directive set /keras1layer/input_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_in_vld
+#directive set /keras1layer/layer5_out:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
+#
 ## Arrays
-#directive set /keras1layer/core/layer2_out:rsc -MAP_TO_MODULE {[Register]}
-#directive set /keras1layer/core/layer3_out:rsc -MAP_TO_MODULE {[Register]}
-#directive set /keras1layer/core/layer4_out:rsc -MAP_TO_MODULE {[Register]}
-#directive set /keras1layer/core/layer5_out:rsc -MAP_TO_MODULE {[Register]}
-#directive set /keras1layer/core/nnet::dense_large<input_t,layer2_t,config2>:acc:rsc -MAP_TO_MODULE {[Register]}
-#directive set /keras1layer/core/nnet::dense_large<layer3_t,layer4_t,config4>:acc:rsc -MAP_TO_MODULE {[Register]}
-#directive set /keras1layer/core/nnet::softmax<layer6_t,result_t,softmax_config7>:exp_table:rsc -MAP_TO_MODULE {[Register]}
-#directive set /keras1layer/core/nnet::softmax<layer6_t,result_t,softmax_config7>:invert_table:rsc -MAP_TO_MODULE {[Register]}
-#directive set /keras1layer/core/nnet::dense_latency<input_t,layer2_t,config2>:mult:rsc -MAP_TO_MODULE Xilinx_RAMS.BLOCK_1R1W_RBW_DUAL
-#directive set /keras1layer/core/nnet::dense_latency<input_t,layer2_t,config2>:mult:rsc -GEN_EXTERNAL_ENABLE true
-#directive set /keras1layer/core/nnet::dense_latency<layer3_t,layer4_t,config4>:mult:rsc -MAP_TO_MODULE Xilinx_RAMS.BLOCK_1R1W_RBW
-#directive set /keras1layer/core/nnet::dense_latency<layer3_t,layer4_t,config4>:mult:rsc -GEN_EXTERNAL_ENABLE true
+#directive set /keras1layer/w2.rom:rsc -MAP_TO_MODULE {[Register]}
+#directive set /keras1layer/w4.rom:rsc -MAP_TO_MODULE {[Register]}
+#directive set /keras1layer/MgcAcHtrig::shift_dist_table.rom:rsc -MAP_TO_MODULE {[Register]}
+#directive set /keras1layer/MgcAcHtrig::hcordic_table.rom:rsc -MAP_TO_MODULE {[Register]}
+#directive set /keras1layer/nnet::dense_large_rf_leq_nin<input_t,layer2_t,config2>:acc.rom:rsc -MAP_TO_MODULE {[Register]}
 
+directive set /keras1layer/core/nnet::dense_large<input_t,layer2_t,config2>(input_1):rsc -MAP_TO_MODULE {[Register]}
+directive set /keras1layer/core/nnet::relu<layer2_t,layer3_t,relu_config3>(layer2_out):rsc -MAP_TO_MODULE {[Register]}
+directive set /keras1layer/core/nnet::dense_large<layer3_t,layer4_t,config4>(layer3_out):rsc -MAP_TO_MODULE {[Register]}
+directive set /keras1layer/core/nnet::sigmoid<layer4_t,result_t,sigmoid_config5>(layer4_out):rsc -MAP_TO_MODULE {[Register]}
 
 # Loops
-##directive set /keras1layer/core/main -PIPELINE_INIT_INTERVAL 1
+directive set /keras1layer/nnet::dense_large<input_t,layer2_t,config2>/core/main -UNROLL no
+directive set /keras1layer/nnet::sigmoid<layer4_t,result_t,sigmoid_config5>/core/main -UNROLL no
+directive set /keras1layer/nnet::dense_large<layer3_t,layer4_t,config4>/core/main -UNROLL no
+directive set /keras1layer/nnet::relu<layer2_t,layer3_t,relu_config3>/core/main -UNROLL no
 
 go architect
+
+go allocate
 
 go extract
 
 flow run /SCVerify/launch_make ./scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim
 flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim sim
-###flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim simgui
-#
+#####flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim simgui
+
 flow run /Vivado/synthesize -shell vivado/rtl.v.xv
 
 project save

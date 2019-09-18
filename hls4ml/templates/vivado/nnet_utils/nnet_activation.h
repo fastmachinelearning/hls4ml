@@ -130,9 +130,17 @@ void  relu1(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 // *************************************************
 //       Sigmoid Activation
 // *************************************************
+#ifdef MNTR_CATAPULT_HLS
+inline ap_fixed<52,42> sigmoid_fcn_fixed(ap_fixed<10,4> input) {
+    ap_fixed<52,42> tmp;
+    mgc_ac_exp(-input, tmp);
+    return (ap_fixed<52,42>(1.0) / (ap_fixed<52,42>(1) + tmp));
+}
+#else
 inline float sigmoid_fcn_float(float input) {
     return 1.0 / (1 + std::exp(-input));
 }
+#endif
 
 template<typename CONFIG_T, int N_TABLE>
 void init_sigmoid_table(typename CONFIG_T::table_t table_out[N_TABLE])
@@ -143,7 +151,11 @@ void init_sigmoid_table(typename CONFIG_T::table_t table_out[N_TABLE])
         // First, convert from table index to X-value (signed 8-bit, range -8 to +8)
         float in_val = 2*8.0*(ii-float(N_TABLE)/2.0)/float(N_TABLE);
         // Next, compute lookup table function
+#ifdef MNTR_CATAPULT_HLS
+        typename CONFIG_T::table_t real_val = sigmoid_fcn_fixed(in_val);
+#else
         typename CONFIG_T::table_t real_val = sigmoid_fcn_float(in_val);
+#endif
         //std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
         table_out[ii] = real_val;
     }

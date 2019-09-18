@@ -4,6 +4,10 @@ help:
 	@echo "INFO: make <TAB> for usage"
 .PHONY: help
 
+gui:
+	vivado_hls -p keras1layer_prj
+.PHONY: gui
+
 hls:
 	vivado_hls -f ./build_prj.tcl
 .PHONY: hls
