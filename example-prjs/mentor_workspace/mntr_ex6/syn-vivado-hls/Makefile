@@ -16,10 +16,6 @@ report:
 	@./report.sh $(PROJECT) | tee report.log
 .PHONY: report
 
-view-csv: report
-	./csv-viewer.sh $(PROJECT).csv
-.PHONY: view-csv
-
 clean:
 	@echo "INFO: make ultraclean"
 .PHONY: clean

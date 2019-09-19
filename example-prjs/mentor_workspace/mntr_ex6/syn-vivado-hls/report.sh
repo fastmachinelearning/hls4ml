@@ -12,7 +12,6 @@ fi
 PROJECT=$1
 
 PROJECT_DIR=$PROJECT\_prj
-CSV_FILE=$PROJECT.csv
 
 APP_FILE=$PROJECT_DIR/vivado_hls.app
 if [ ! -f $APP_FILE ]; then echo "ERROR: File $APP_FILE does not exist!"; exit 1; fi
