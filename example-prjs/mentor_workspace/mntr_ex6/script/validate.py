@@ -8,6 +8,7 @@ ATOL=5e-02
 RTOL=5e-02
 
 def validate(ref, imp, rtol, atol):
+    TODO(gdg): see https://www.python.org/dev/peps/pep-0485
     return np.allclose(ref, imp, rtol=rtol, atol=atol)
 
 def plot_histogram(absolute_error):
