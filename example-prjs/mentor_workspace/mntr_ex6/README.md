@@ -12,6 +12,47 @@ This **hls4ml** project supports `ac_fixed` and `ac_int` arbitrary-precision dat
 - The Vivado's [hls4ml/templates/vivado/nnet_utils](../../../hls4ml/templates/vivado/nnet_utils) have been modified to support Catapul HLS.
 - In the future we will have `hls4ml/templates/catapult`.
 
+
+## Quick Start
+
+### C simulation
+```
+cd sim
+source envsetup.sh
+make run
+make validate
+```
+
+### Vivado HLS project
+```
+cd ./syn-vivado-hls
+source envsetup.sh
+make hls
+make report
+```
+
+### Catapult HLS project
+```
+cd ./syn-catapult-hls
+source envsetup.sh
+```
+
+Edit `./project.tcl`:
+```
+array set opt {
+    asic       0 # <--- ASIC or FPGA target
+    csim       1 # <--- C simulation
+    rtlsim     1 # <--- RTL simulation
+    lsynth     1 # <--- logic synthesis
+}
+```
+
+Then:
+```
+make hls-sh
+make gui
+```
+
 ## Implementation Notes
 
 - Remapping of `ap_fixed<>` from the Arbitrary Precision datatype library to `ac_fixed<>` from the Algorithmic C datatype library (which has differencies w.r.t. SystemC `sc_fixed<>` and `sc_int<>`). See [inc](./inc) folder.

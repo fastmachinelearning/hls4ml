@@ -1,3 +1,10 @@
+array set opt {
+    asic       0
+    csim       1
+    rtlsim     1
+    lsynth     1
+}
+
 #
 # Reset the options to the factory defaults
 #
@@ -94,13 +101,15 @@ go compile
 #
 #
 
-solution library add mgc_Xilinx-KINTEX-u-2_beh -- -rtlsyntool Vivado -manufacturer Xilinx -family KINTEX-u -speed -2 -part xcku115-flva2104-2-i
-solution library add Xilinx_RAMS
-solution library add Xilinx_ROMS
-solution library add Xilinx_FIFO
-
-#solution library add nangate-45nm_beh -- -rtlsyntool DesignCompiler -vendor Nangate -technology 045nm
-#solution library add ccs_sample_mem
+if {$opt(asic)} {
+    solution library add nangate-45nm_beh -- -rtlsyntool DesignCompiler -vendor Nangate -technology 045nm
+    solution library add ccs_sample_mem
+} else {
+    solution library add mgc_Xilinx-KINTEX-u-2_beh -- -rtlsyntool Vivado -manufacturer Xilinx -family KINTEX-u -speed -2 -part xcku115-flva2104-2-i
+    solution library add Xilinx_RAMS
+    solution library add Xilinx_ROMS
+    solution library add Xilinx_FIFO
+}
 
 go libraries
 
@@ -176,10 +185,24 @@ go extract
 #
 #
 
-flow run /SCVerify/launch_make ./scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim
-flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim sim
-#####flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim simgui
+if {$opt(csim)} {
+    flow run /SCVerify/launch_make ./scverify/Verify_orig_cxx_osci.mk {} SIMTOOL=osci sim
+}
 
-flow run /Vivado/synthesize -shell vivado/rtl.v.xv
+if {$opt(rtlsim)} {
+    flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim sim
+    #####flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim simgui
+}
+
+if {$opt(lsynth)} {
+
+    if {$opt(asic)} {
+        # TODO: DC is not installed yet. This will fail.
+        flow run /DesignCompiler/dc_shell ./rtl.v.dc v
+    } else {
+        flow run /Vivado/synthesize -shell vivado/rtl.v.xv
+    }
+
+}
 
 project save

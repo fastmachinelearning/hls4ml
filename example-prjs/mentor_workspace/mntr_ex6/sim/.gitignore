@@ -1,2 +1,4 @@
 keras1layer
 *.o
+*.log
+*.png

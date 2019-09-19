@@ -114,7 +114,7 @@ run: release
 .PHONY: run
 
 validate:
-	@python validate.py -r ./tb_data/tb_output_predictions.dat -i ./tb_data/csim_results.log
+	@python ../script/validate.py -r ./tb_data/tb_output_predictions.dat -i ./tb_data/csim_results.log | tee validate.log
 .PHONY: validate
 
 valgrind: debug

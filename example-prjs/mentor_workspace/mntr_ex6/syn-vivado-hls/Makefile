@@ -13,7 +13,7 @@ hls:
 .PHONY: hls
 
 report:
-	@./report.sh $(PROJECT)
+	@./report.sh $(PROJECT) | tee report.log
 .PHONY: report
 
 view-csv: report
@@ -25,5 +25,5 @@ clean:
 .PHONY: clean
 
 ultraclean: clean
-	rm -rf *.log *.csv ./*_prj
+	rm -rf *.log *.csv ./*_prj tb_data/csim_results.log
 .PHONY: ultraclean
