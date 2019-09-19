@@ -26,6 +26,8 @@
 
 #ifdef MNTR_CATAPULT_HLS
 #include <math/mgc_ac_math.h>
+// TODO: use the provided functions
+//#include <ac_math/ac_sigmoid_pwl.h>
 #endif
 
 namespace nnet {
@@ -131,10 +133,10 @@ void  relu1(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 //       Sigmoid Activation
 // *************************************************
 #ifdef MNTR_CATAPULT_HLS
-inline ap_fixed<52,42> sigmoid_fcn_fixed(ap_fixed<10,4> input) {
-    ap_fixed<52,42> tmp;
+inline ap_fixed<32,16> sigmoid_fcn_fixed(ap_fixed<10,4> input) {
+    ap_fixed<32,16> tmp;
     mgc_ac_exp(-input, tmp);
-    return (ap_fixed<52,42>(1.0) / (ap_fixed<52,42>(1) + tmp));
+    return (ap_fixed<32,16>(1.0) / (ap_fixed<32,16>(1) + tmp));
 }
 #else
 inline float sigmoid_fcn_float(float input) {

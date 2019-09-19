@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 
   if (fin.is_open() && fpr.is_open()) {
     while ( std::getline(fin,iline) && std::getline (fpr,pline) ) {
-      if (e % CHECKPOINT == 0) std::cout << "Processing input " << e << std::endl;
+      if (e % CHECKPOINT == 0) std::cout << "INFO: Processing input: # " << e << std::endl;
       e++;
       char* cstr=const_cast<char*>(iline.c_str());
       char* current;
@@ -96,16 +96,16 @@ int main(int argc, char **argv)
       fout << std::endl;
 
       if (e % CHECKPOINT == 0) {
-        std::cout << "Predictions" << std::endl;
+        std::cout << "INFO:     Predictions          : ";
         //hls-fpga-machine-learning insert predictions
         for(int i = 0; i < N_LAYER_4; i++) {
           std::cout << pr[i] << " ";
         }
         std::cout << std::endl;
-        std::cout << "Quantized predictions" << std::endl;
+        std::cout << "INFO:     Quantized predictions: ";
         //hls-fpga-machine-learning insert quantized
         for(int i = 0; i < N_LAYER_4; i++) {
-          std::cout << layer5_out[i] << " ";
+          std::cout << layer5_out[i].to_double() << " ";
         }
         std::cout << std::endl;
       }
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
 
     //hls-fpga-machine-learning insert output
     for(int i = 0; i < N_LAYER_4; i++) {
-      std::cout << layer5_out[i].to_double() << " ";
+      std::cout << "INFO: PREDICTION: " << layer5_out[i].to_double() << " ";
     }
     std::cout << std::endl;
 
