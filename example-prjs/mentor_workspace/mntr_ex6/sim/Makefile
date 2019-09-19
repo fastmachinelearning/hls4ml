@@ -17,8 +17,6 @@ ifndef V
 	QUIET_CLEAN         = @echo 'MAKE:' CLEAN ${PWD};
 endif
 
-INPUT =
-
 # Define the main target
 
 TARGET = keras1layer
@@ -111,23 +109,23 @@ $(TARGET): $(CXX_OBJECTS)
 .cpp.o:
 	$(QUIET_CXX)$(CXX) $(CXX_FLAGS) ${INCDIR} -c $<
 
-logs:
-	$(QUIET_RUN)mkdir -p logs
-.PHONY: logs
-
-run: release logs
-	$(QUIET_RUN)./$(TARGET) $(INPUT)
+run: release
+	$(QUIET_RUN)./$(TARGET)
 .PHONY: run
 
-valgrind: debug logs
-	$(QUIET_RUN)valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(TARGET) $(INPUT)
+validate:
+	@python validate.py -r ./tb_data/tb_output_predictions.dat -i ./tb_data/csim_results.log
+.PHONY: validate
+
+valgrind: debug
+	$(QUIET_RUN)valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(TARGET)
 .PHONY: valgrind
 
-gdb: logs
+gdb:
 	$(QUIET_RUN)gdb ./$(TARGET)
 .PHONY: gdb
 
 clean:
-	$(QUIET_CLEAN)rm -rf *.o $(TARGET) logs
+	$(QUIET_CLEAN)rm -rf *.o $(TARGET)
 .PHONY: clean
 

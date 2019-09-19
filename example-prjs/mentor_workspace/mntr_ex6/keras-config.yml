@@ -1,7 +1,7 @@
 KerasJson: ../../../example-models/keras/KERAS_1layer.json
 KerasH5:   ../../../example-models/keras/KERAS_1layer_weights.h5
-#InputData: ../../../example-models/keras/KERAS_mnist_mlp_inputs.dat
-#OutputPredictions: ../../../example-models/keras/KERAS_mnist_mlp_outputs.dat
+InputData: ../../../example-models/keras/KERAS_1layer_input_features.dat
+OutputPredictions: ../../../example-models/keras/KERAS_1layer_predictions.dat
 OutputDir: keras_1layer
 ProjectName: keras1layer
 XilinxPart: xcku115-flvb2104-2-i
