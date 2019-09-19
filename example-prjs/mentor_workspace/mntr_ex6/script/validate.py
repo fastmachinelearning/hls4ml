@@ -17,12 +17,23 @@ def plot_histogram(absolute_error):
     plt.ylabel('Frequency')
     plt.title('abs(ref - imp)')
     maxfreq = n.max()
-    # Set a clean upper y-axis limit.
     plt.ylim(ymax=np.ceil(maxfreq / 10) * 10 if maxfreq % 10 else maxfreq + 10)
 
+    # Maximum
+    plt.axvline(absolute_error.max(), color='#D95F02', linestyle='dashed', linewidth=1)
+    min_ylim, max_ylim = plt.ylim()
+    plt.text(absolute_error.max()*0.9, max_ylim*0.8, 'Max: {:.6f}'.format(absolute_error.max()))
+
+    # Minimum
+    plt.axvline(absolute_error.min(), color='#D95F02', linestyle='dashed', linewidth=1)
+    min_ylim, max_ylim = plt.ylim()
+    plt.text(absolute_error.min()*0.9, max_ylim*0.7, 'Min: {:.6f}'.format(absolute_error.min()))
+
+    # Average
     plt.axvline(absolute_error.mean(), color='#D95F02', linestyle='dashed', linewidth=1)
     min_ylim, max_ylim = plt.ylim()
     plt.text(absolute_error.mean()*1.1, max_ylim*0.9, 'Mean: {:.6f}'.format(absolute_error.mean()))
+
     plt.show()
 
 def main(args):
@@ -47,6 +58,7 @@ def main(args):
     print('INFO:     Absolute difference:', absolute_error)
     print('INFO:     Absolute difference (max):', np.max(absolute_error))
     print('INFO:     Absolute difference (min):', np.min(absolute_error))
+    print('INFO:     Absolute difference (avg):', np.average(absolute_error))
 
     plot_histogram(absolute_error)
 
