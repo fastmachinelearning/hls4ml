@@ -5,7 +5,7 @@ array set opt {
   csim       1
   synth      1
   cosim      1
-  validation 0
+  validation 1
   export     1
 }
 
@@ -50,7 +50,7 @@ set RTL_COSIM_RESULTS "./tb_data/rtl_cosim_results.log"
 open_project -reset keras1layer_prj
 set_top keras1layer
 add_files ../keras_1layer/firmware/keras1layer.cpp -cflags "-std=c++0x"
-add_files -tb ../keras_1layer/keras1layer_test.cpp -cflags "-std=c++0x"
+add_files -tb ../keras_1layer/sc_main.cpp -cflags "-std=c++0x"
 add_files -tb ../keras_1layer/firmware/weights
 add_files -tb tb_data
 open_solution -reset "solution1"
@@ -75,7 +75,7 @@ if {$opt(synth)} {
   if {$opt(cosim)} {
     puts "***** C/RTL SIMULATION *****"
     # TODO: This is a workaround (Xilinx defines __RTL_SIMULATION__ only for SystemC testbenches).
-    add_files -tb ../keras_1layer/keras1layer_test.cpp -cflags "-std=c++0x -DRTL_SIM"
+    add_files -tb ../keras_1layer/sc_main.cpp -cflags "-std=c++0x -DRTL_SIM"
     set time_start [clock clicks -milliseconds]
     cosim_design -trace_level all
     set time_end [clock clicks -milliseconds]
