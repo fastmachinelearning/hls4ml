@@ -24,15 +24,20 @@ report:
 	./report.sh keras1layer | tee report.log
 .PHONY: report
 
-validate:
-	@python ../script/validate.py -r ./tb_data/tb_output_predictions.dat -i ./tb_data/csim_results.log | tee validate.log
-.PHONY: validate
+validate-c:
+	@python ../script/validate.py -r ./tb_data/tb_output_predictions.dat -i ./tb_data/csim_results.log | tee validate-c.log
+.PHONY: validate-c
+
+validate-rtl:
+	@python ../script/validate.py -r ./tb_data/tb_output_predictions.dat -i ./tb_data/rtl_cosim_results.log | tee validate-rtl.log
+.PHONY: validate-rtl
+
 
 clean:
 	@echo "INFO: make ultraclean"
 .PHONY: clean
 
 ultraclean: clean
-	rm -rf Catapult* transcript vivado.jou vivado_*.str design_checker_constraints.tcl  design_checker_pre_build.tcl *.csv *log slec_*
+	rm -rf Catapult* transcript vivado.jou vivado_*.str design_checker_constraints.tcl  design_checker_pre_build.tcl *.csv *.log slec_*
 .PHONY: ultraclean
 

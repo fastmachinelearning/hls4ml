@@ -3,8 +3,32 @@ array set opt {
     csim       1
     hsynth     1
     rtlsim     1
+    validation 1
     lsynth     1
 }
+
+# Compare file content: 1 = same, 0 = different
+proc compare_files {file_1 file_2} {
+    # Check if files exist, error otherwise
+    if {! ([file exists $file_1] && [file exists $file_2])} {
+        return 0
+    }
+    # Files with different sizes are obviously different
+    if {[file size $file_1] != [file size $file_2]} {
+        return 0
+    }
+
+    # String compare the content of the files
+    set fh_1 [open $file_1 r]
+    set fh_2 [open $file_2 r]
+    set equal [string equal [read $fh_1] [read $fh_2]]
+    close $fh_1
+    close $fh_2
+    return $equal
+}
+
+set CSIM_RESULTS "./tb_data/csim_results.log"
+set RTL_COSIM_RESULTS "./tb_data/rtl_cosim_results.log"
 
 #
 # Reset the options to the factory defaults
@@ -67,6 +91,7 @@ directive set -COMPGRADE fast
 
 # Design specific options.
 solution options set /Input/CompilerFlags -DMNTR_CATAPULT_HLS
+solution options set /Flows/QuestaSIM/SCCOM_OPTS {-g -x c++ -Wall -Wno-unused-label -Wno-unknown-pragmas -DRTL_SIM}
 solution options set /Input/SearchPath {../inc ../keras1layer/firmware/ ../keras1layer/firmware/weights ../keras1layer/firmware/nnet_utils}
 
 # Add source files.
@@ -197,7 +222,19 @@ if {$opt(hsynth)} {
 
     if {$opt(rtlsim)} {
         flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim sim
-        #####flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim simgui
+        #flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim simgui
+
+        if {$opt(validation)} {
+          puts "***** C/RTL VALIDATION *****"
+          if {[compare_files $CSIM_RESULTS $RTL_COSIM_RESULTS]} {
+              puts "INFO: Test PASSED"
+          } else {
+              puts "ERROR: Test failed"
+              puts "ERROR: - csim log:      $CSIM_RESULTS"
+              puts "ERROR: - RTL-cosim log: $RTL_COSIM_RESULTS"
+              exit 1
+          }
+        }
     }
 
     if {$opt(lsynth)} {
