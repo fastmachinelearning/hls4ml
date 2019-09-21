@@ -9,11 +9,11 @@ gui:
 .PHONY: gui
 
 hls-gui:
-	catapult -file project.tcl &
+	catapult -file build_prj.tcl &
 .PHONY: hls-gui
 
 hls-sh:
-	catapult -shell -file project.tcl
+	catapult -shell -file build_prj.tcl
 .PHONY: hls-sh
 
 kill-all:
@@ -21,8 +21,12 @@ kill-all:
 .PHONY: kill-all
 
 report:
-	./report.sh keras1layer
+	./report.sh keras1layer | tee report.log
 .PHONY: report
+
+validate:
+	@python ../script/validate.py -r ./tb_data/tb_output_predictions.dat -i ./tb_data/csim_results.log | tee validate.log
+.PHONY: validate
 
 clean:
 	@echo "INFO: make ultraclean"
