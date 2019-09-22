@@ -33,6 +33,6 @@ clean:
 .PHONY: clean
 
 ultraclean: clean
-	rm -rf Catapult* transcript vivado.jou vivado_*.str design_checker_constraints.tcl  design_checker_pre_build.tcl *.csv *log slec_*
+	rm -rf Catapult* transcript vivado.jou vivado_*.str design_checker_constraints.tcl  design_checker_pre_build.tcl *.csv *log slec_* tb_data/*log
 .PHONY: ultraclean
 

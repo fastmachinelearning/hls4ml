@@ -66,6 +66,7 @@ directive set -CLUSTER_TYPE combinational
 directive set -COMPGRADE fast
 
 # Design specific options.
+solution options set Flows/QuestaSIM/SCCOM_OPTS {-g -x c++ -Wall -Wno-unused-label -Wno-unknown-pragmas -DRTL_SIM}
 solution options set /Input/CompilerFlags -DMNTR_CATAPULT_HLS
 solution options set /Input/SearchPath {../inc ../keras1layer/firmware/ ../keras1layer/firmware/weights ../keras1layer/firmware/nnet_utils}
 
