@@ -1,0 +1,20 @@
+KerasJson: ../../../example-models/keras/KERAS_3layer.json
+KerasH5:   ../../../example-models/keras/KERAS_3layer_weights.h5
+InputData: ../../../example-models/keras/KERAS_3layer_input_features.dat
+OutputPredictions: ../../../example-models/keras/KERAS_3layer_predictions.dat
+OutputDir: keras_3layer
+ProjectName: keras3layer
+XilinxPart: xcku115-flvb2104-2-i
+ClockPeriod: 5
+
+IOType: io_parallel # options: io_serial/io_parallel
+HLSConfig:
+  Model:
+    Precision: ap_fixed<18,8>
+    ReuseFactor: 1
+    Strategy: Resource
+#  LayerType:
+#    Dense:
+#      ReuseFactor: 2
+#      Strategy: Resource
+#      Compression: True
