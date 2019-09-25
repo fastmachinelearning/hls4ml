@@ -1,4 +1,3 @@
-
 [submodule "example-prjs/mentor_workspace/mntr_ex8/ac_types"]
 	path = example-prjs/mentor_workspace/mntr_ex8/ac_types
 	url = git@github.com:hlslibs/ac_types.git

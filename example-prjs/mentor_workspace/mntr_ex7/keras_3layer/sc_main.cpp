@@ -36,21 +36,26 @@
 CCS_MAIN (int argc, char *argv[])
 {
   std::cout << "Mentor Graphics Catapult HLS" << std::endl;
+#ifdef RTL_SIM
+  std::string RESULTS_LOG = "tb_data/catapult_rtl_cosim_results.log";
+#else
+  std::string RESULTS_LOG = "tb_data/catapult_csim_results.log";
+#endif
 #else
 int main(int argc, char **argv)
 {
   std::cout << "Xilinx Vivado HLS" << std::endl;
+#ifdef RTL_SIM
+  std::string RESULTS_LOG = "tb_data/vivado_rtl_cosim_results.log";
+#else
+  std::string RESULTS_LOG = "tb_data/vivado_csim_results.log";
+#endif
 #endif
   //load input data from text file
   std::ifstream fin("tb_data/tb_input_features.dat");
   //load predictions from text file
   std::ifstream fpr("tb_data/tb_output_predictions.dat");
 
-#ifdef RTL_SIM
-  std::string RESULTS_LOG = "tb_data/rtl_cosim_results.log";
-#else
-  std::string RESULTS_LOG = "tb_data/csim_results.log";
-#endif
   std::ofstream fout(RESULTS_LOG);
 
   std::string iline;
