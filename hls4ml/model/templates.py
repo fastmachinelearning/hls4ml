@@ -26,19 +26,31 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
 conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     static const unsigned pad_left = {pad_left};
     static const unsigned pad_right = {pad_right};
-    static const unsigned y_in = {y_in};
+    static const unsigned n_in = {n_in};
     static const unsigned n_chan = {n_chan};
-    static const unsigned y_filt = {y_filt};
+    static const unsigned filt_width = {filt_width};
     static const unsigned n_filt = {n_filt};
     static const unsigned stride = {stride};
-    static const unsigned y_out = {y_out};
+    static const unsigned dilation = {dilation};
+    static const unsigned n_out = {n_out};
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
     typedef {accum_t} accum_t;
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
+    typedef {config_t} mult_config;
 }};\n"""
+
+conv1d_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
+    static const unsigned n_in = {n_in};
+    static const unsigned n_out = {n_out};
+    static const unsigned reuse_factor = {reuse};
+    typedef {accum_t} accum_t;
+    typedef {bias_t} bias_t;
+    typedef {weight_t} weight_t;
+}};\n"""
+
 
 conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned pad_top = {pad_top};
@@ -116,7 +128,7 @@ config_templates = {
     'Dense'                  : dense_config_template,
     'BinaryDense'            : dense_config_template,
     'BatchNormalization'     : batchnorm_config_template,
-    'Conv1D'                 : conv1d_config_template,
+    'Conv1D'                 : [conv1d_config_template, conv1d_mult_config_template],
     'Conv2D'                 : conv2d_config_template,
     'Activation'             : activ_config_template,
     'ParametrizedActivation' : activ_config_template,
@@ -129,7 +141,7 @@ config_templates = {
 
 dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
-conv1d_function_template = 'nnet::conv_1d<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+conv1d_function_template = 'nnet::conv_1d_{strategy}_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 conv2d_function_template = 'nnet::conv_2d<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
 param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {param}, {output});'

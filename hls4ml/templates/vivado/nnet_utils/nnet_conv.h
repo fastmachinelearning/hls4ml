@@ -33,14 +33,15 @@ struct conv1d_config
     typedef float accum_t;
 
     // Convolutional parameters
-    static const unsigned pad_left = 4;
-    static const unsigned pad_right = 5;
-    static const unsigned y_in = 128;
-    static const unsigned n_chan = 9;
-    static const unsigned y_filt = 10;
-    static const unsigned n_filt = 4;
+    static const unsigned pad_left = 0;
+    static const unsigned pad_right = 0;
+    static const unsigned n_in = 10;
+    static const unsigned n_chan = 0;
+    static const unsigned filt_width = 1;
+    static const unsigned n_filt = 1;
     static const unsigned stride = 1;
-    static const unsigned y_out = 128;
+    static const unsigned dilation = 1;
+    static const unsigned n_out = 10; //(N_IN + PAD_LEFT * PAD_RIGHT - (DILATION * (FILT_WIDTH - 1) + 1)) / STRIDE + 1
 
     static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
@@ -52,18 +53,18 @@ struct conv1d_config
 //This function should not be synthesized into firmware
 template<typename CONFIG_T>
 int compute_multiplier_limit(
-    typename CONFIG_T::weight_t  weights[CONFIG_T::y_filt * CONFIG_T::n_chan * CONFIG_T::n_filt]
+    typename CONFIG_T::weight_t  weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt]
 )
 {
     int n_mult = 0;
-    for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
+    for(int ii = 0; ii < CONFIG_T::n_out; ii++) {
         for(int ff = 0; ff < CONFIG_T::n_filt; ff++){
             for(int cc = 0; cc < CONFIG_T::n_chan; cc++){
-                for(int jj = 0; jj < CONFIG_T::y_filt; jj++){
+                for(int jj = 0; jj < CONFIG_T::filt_width; jj++){
 
                     int index_weight = jj*CONFIG_T::n_chan*CONFIG_T::n_filt + cc*CONFIG_T::n_filt + ff;
 
-                    if((ii*CONFIG_T::stride+jj) < CONFIG_T::pad_left || (ii*CONFIG_T::stride+jj) >= (CONFIG_T::pad_left + CONFIG_T::y_in)){
+                    if((ii*CONFIG_T::stride+jj) < CONFIG_T::pad_left || (ii*CONFIG_T::stride+jj) >= (CONFIG_T::pad_left + CONFIG_T::n_in)){
                         //padded -- do nothing
                         continue;
                     } else {
@@ -83,16 +84,16 @@ int compute_multiplier_limit(
 
 
 template<class data_T, class res_T, typename CONFIG_T>
-void conv_1d(
-    data_T data[CONFIG_T::y_in * CONFIG_T::n_chan],
-    res_T  res[CONFIG_T::y_out * CONFIG_T::n_filt],
-    typename CONFIG_T::weight_t weights[CONFIG_T::y_filt * CONFIG_T::n_chan * CONFIG_T::n_filt],
+void conv_1d_latency_cl(
+    data_T data[CONFIG_T::n_in * CONFIG_T::n_chan],
+    res_T  res[CONFIG_T::n_out * CONFIG_T::n_filt],
+    typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
     typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt]
 )
 {
 
-    typename CONFIG_T::accum_t mult[CONFIG_T::y_out * CONFIG_T::n_filt * CONFIG_T::n_chan * CONFIG_T::y_filt];
-    typename CONFIG_T::accum_t acc[CONFIG_T::y_out][CONFIG_T::n_filt];
+    typename CONFIG_T::accum_t mult[CONFIG_T::n_out * CONFIG_T::n_filt * CONFIG_T::n_chan * CONFIG_T::filt_width];
+    typename CONFIG_T::accum_t acc[CONFIG_T::n_out][CONFIG_T::n_filt];
 
     #pragma HLS ARRAY_PARTITION variable=mult complete dim=0
     #pragma HLS ARRAY_PARTITION variable=acc complete dim=0
@@ -109,16 +110,16 @@ void conv_1d(
     #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
     // Convolve, saving all multiplication results to accumulate later
-    ConvOut: for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
+    ConvOut: for(int ii = 0; ii < CONFIG_T::n_out; ii++) {
         ConvFilt: for(int ff = 0; ff < CONFIG_T::n_filt; ff++){
             ConvChan: for(int cc = 0; cc < CONFIG_T::n_chan; cc++){
-                ConvMult: for(int jj = 0; jj < CONFIG_T::y_filt; jj++){
+                ConvMult: for(int jj = 0; jj < CONFIG_T::filt_width; jj++){
 
-                    int index_mult   = ii*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::y_filt + ff*CONFIG_T::n_chan*CONFIG_T::y_filt + cc*CONFIG_T::y_filt + jj;
+                    int index_mult   = ii*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::filt_width + ff*CONFIG_T::n_chan*CONFIG_T::filt_width + cc*CONFIG_T::filt_width + jj;
                     int index_weight = jj*CONFIG_T::n_chan*CONFIG_T::n_filt + cc*CONFIG_T::n_filt + ff;
                     int index_data   = (ii*CONFIG_T::stride+jj-CONFIG_T::pad_left) * CONFIG_T::n_chan + cc;
 
-                    if((ii*CONFIG_T::stride+jj) < CONFIG_T::pad_left || (ii*CONFIG_T::stride+jj) >= (CONFIG_T::pad_left + CONFIG_T::y_in)){
+                    if((ii*CONFIG_T::stride+jj) < CONFIG_T::pad_left || (ii*CONFIG_T::stride+jj) >= (CONFIG_T::pad_left + CONFIG_T::n_in)){
                         mult[index_mult] = 0;
                     }
                     else {
@@ -131,7 +132,7 @@ void conv_1d(
 
 
     // Initialize accumulator with input biases
-    for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
+    for(int ii = 0; ii < CONFIG_T::n_out; ii++) {
         for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
             acc[ii][ff]=biases[ff];
         }
@@ -139,12 +140,12 @@ void conv_1d(
 
 
     // Accumulate multiplication result
-    AccumOut: for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
+    AccumOut: for(int ii = 0; ii < CONFIG_T::n_out; ii++) {
         AccumFilt: for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
             //Do "dot product" sum within filter and sum over channels
             AccumChan: for(int cc = 0; cc < CONFIG_T::n_chan; cc++){
-                AccumDot: for(int jj = 0; jj < CONFIG_T::y_filt; jj++){
-                    int index_mult = ii*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::y_filt + ff*CONFIG_T::n_chan*CONFIG_T::y_filt + cc*CONFIG_T::y_filt + jj;
+                AccumDot: for(int jj = 0; jj < CONFIG_T::filt_width; jj++){
+                    int index_mult = ii*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::filt_width + ff*CONFIG_T::n_chan*CONFIG_T::filt_width + cc*CONFIG_T::filt_width + jj;
                     acc[ii][ff] += mult[index_mult];
                 }//end dot product loop
             }//end channel loop
@@ -153,7 +154,7 @@ void conv_1d(
 
 
     // Cast to "res_t" type
-    for(int ii = 0; ii < CONFIG_T::y_out; ii++) {
+    for(int ii = 0; ii < CONFIG_T::n_out; ii++) {
         for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
             res[ii * CONFIG_T::n_filt + ff] = (res_T)(acc[ii][ff]);
         }

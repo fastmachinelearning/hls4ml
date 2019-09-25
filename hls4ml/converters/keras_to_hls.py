@@ -153,27 +153,28 @@ def keras_to_hls(yamlConfig):
         elif layer['class_name']=='Conv1D':
             # weights_shape = (filter_width, n_channels, n_filters)
             weights_shape = get_weights_shape(yamlConfig['KerasH5'], layer['name'])
-            layer['y_in']=current_shape[1]
-            layer['y_filt']=weights_shape[0] # or keras_layer['config']['kernel_size']
+            layer['n_in']=current_shape[1]
+            layer['filt_width']=weights_shape[0] # or keras_layer['config']['kernel_size']
             layer['n_chan']=weights_shape[1]
             layer['n_filt']=weights_shape[2] # or keras_layer['config']['filters']
             layer['stride']=keras_layer['config']['strides'][0]
             layer['padding']=keras_layer['config']['padding']
             if layer['padding']=='same':
                 in_width = current_shape[1]
-                layer['y_out'] = int(math.ceil(float(in_width) / float(layer['stride'])))
+                layer['n_out'] = int(math.ceil(float(in_width) / float(layer['stride'])))
                 if (in_width % layer['stride'] == 0):
-                    pad_along_width = max(layer['y_filt'] - layer['stride'], 0)
+                    pad_along_width = max(layer['filt_width'] - layer['stride'], 0)
                 else:
-                    pad_along_width = max(layer['y_filt'] - (in_width % layer['stride']), 0)
+                    pad_along_width = max(layer['filt_width'] - (in_width % layer['stride']), 0)
                 layer['pad_left']  = pad_along_width // 2
                 layer['pad_right']  = pad_along_width - layer['pad_left']
             elif layer['padding']=='valid':
                 in_width = current_shape[1]
-                layer['y_out'] = int(math.ceil(float(in_width - layer['y_filt'] + 1) / float(layer['stride'])))
+                layer['n_out'] = int(math.ceil(float(in_width - layer['filt_width'] + 1) / float(layer['stride'])))
                 layer['pad_left'] = 0
                 layer['pad_right'] = 0
-            current_shape=[current_shape[0], layer['y_out'], layer['n_filt']]
+            layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
+            current_shape=[current_shape[0], layer['n_out'], layer['n_filt']]
         elif layer['class_name']=='Conv2D':
             # weights_shape = (filter_height, filter_width, n_channels, n_filters)
             weights_shape = get_weights_shape(yamlConfig['KerasH5'], layer['name'])

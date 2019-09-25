@@ -8,6 +8,7 @@
 #include "nnet_utils/nnet_dense_large.h"
 #include "nnet_utils/nnet_dense_compressed.h"
 #include "nnet_utils/nnet_conv.h"
+#include "nnet_utils/nnet_conv_large.h"
 #include "nnet_utils/nnet_conv2d.h"
 #include "nnet_utils/nnet_activation.h"
 #include "nnet_utils/nnet_common.h"
