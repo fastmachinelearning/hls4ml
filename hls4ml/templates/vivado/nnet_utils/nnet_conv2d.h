@@ -33,20 +33,22 @@ struct conv2d_config
     typedef float accum_t;
 
     // Convolutional parameters
-    static const unsigned pad_top = 4;
-    static const unsigned pad_bottom = 5;
-    static const unsigned pad_left = 4;
-    static const unsigned pad_right = 5;
-    static const unsigned in_height = 128;
-    static const unsigned in_width = 128;
-    static const unsigned n_chan = 9;
-    static const unsigned filt_height = 10;
-    static const unsigned filt_width = 10;
-    static const unsigned n_filt = 4;
+    static const unsigned pad_top = 0;
+    static const unsigned pad_bottom = 0;
+    static const unsigned pad_left = 0;
+    static const unsigned pad_right = 0;
+    static const unsigned in_height = 10;
+    static const unsigned in_width = 10;
+    static const unsigned n_chan = 1;
+    static const unsigned filt_height = 1;
+    static const unsigned filt_width = 1;
+    static const unsigned n_filt = 1;
     static const unsigned stride_height = 1;
     static const unsigned stride_width = 1;
-    static const unsigned out_height = 128;
-    static const unsigned out_width = 128;
+    static const unsigned out_height = 10;
+    static const unsigned out_width = 10;
+    static const unsigned dilation_height = 10;
+    static const unsigned dilation_width = 10;
 
     static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
@@ -100,7 +102,7 @@ template<typename CONFIG_T>
 
 
 template<class data_T, class res_T, typename CONFIG_T>
-void conv_2d(
+void conv_2d_latency_cl(
     data_T data[CONFIG_T::in_height*CONFIG_T::in_width*CONFIG_T::n_chan],
     res_T  res[CONFIG_T::out_height*CONFIG_T::out_width*CONFIG_T::n_filt],
     typename CONFIG_T::weight_t weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
@@ -134,15 +136,15 @@ void conv_2d(
 
                             int index_mult = oh*CONFIG_T::out_width*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::filt_height*CONFIG_T::filt_width
                                            + ow*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::filt_height*CONFIG_T::filt_width
-                                                + ff*CONFIG_T::n_chan*CONFIG_T::filt_height*CONFIG_T::filt_width
-                                               + cc*CONFIG_T::filt_height*CONFIG_T::filt_width
+                                           + ff*CONFIG_T::n_chan*CONFIG_T::filt_height*CONFIG_T::filt_width
+                                           + cc*CONFIG_T::filt_height*CONFIG_T::filt_width
                                            + fh*CONFIG_T::filt_width
-                                                + fw;
+                                           + fw;
 
                                 int index_weight = fh*CONFIG_T::filt_width*CONFIG_T::n_chan*CONFIG_T::n_filt
                                                  + fw*CONFIG_T::n_chan*CONFIG_T::n_filt
                                                  + cc*CONFIG_T::n_filt
-                                                  + ff;
+                                                 + ff;
 
                                 if ((oh*CONFIG_T::stride_height+fh) < CONFIG_T::pad_top
                                 || (oh*CONFIG_T::stride_height+fh) >= (CONFIG_T::pad_top+CONFIG_T::in_height)
@@ -185,10 +187,10 @@ void conv_2d(
 
                             int index_mult = oh*CONFIG_T::out_width*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::filt_height*CONFIG_T::filt_width
                                            + ow*CONFIG_T::n_filt*CONFIG_T::n_chan*CONFIG_T::filt_height*CONFIG_T::filt_width
-                                                + ff*CONFIG_T::n_chan*CONFIG_T::filt_height*CONFIG_T::filt_width
-                                               + cc*CONFIG_T::filt_height*CONFIG_T::filt_width
+                                           + ff*CONFIG_T::n_chan*CONFIG_T::filt_height*CONFIG_T::filt_width
+                                           + cc*CONFIG_T::filt_height*CONFIG_T::filt_width
                                            + fh*CONFIG_T::filt_width
-                                                + fw;
+                                           + fw;
                             int index_acc = oh*CONFIG_T::out_width*CONFIG_T::n_filt
                                           + ow*CONFIG_T::n_filt
                                           + ff;

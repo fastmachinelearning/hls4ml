@@ -215,6 +215,7 @@ def keras_to_hls(yamlConfig):
                 layer['pad_bottom'] = 0
                 layer['pad_left'] = 0
                 layer['pad_right'] = 0
+            layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
             current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
         elif layer['class_name']=='BatchNormalization':
             in_size = 1

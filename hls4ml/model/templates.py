@@ -42,7 +42,7 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     typedef {config_t} mult_config;
 }};\n"""
 
-conv1d_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
+conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned reuse_factor = {reuse};
@@ -73,6 +73,7 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     typedef {accum_t} accum_t;
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
+    typedef {config_t} mult_config;
 }};\n"""
 
 activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
@@ -128,8 +129,8 @@ config_templates = {
     'Dense'                  : dense_config_template,
     'BinaryDense'            : dense_config_template,
     'BatchNormalization'     : batchnorm_config_template,
-    'Conv1D'                 : [conv1d_config_template, conv1d_mult_config_template],
-    'Conv2D'                 : conv2d_config_template,
+    'Conv1D'                 : [conv1d_config_template, conv_mult_config_template],
+    'Conv2D'                 : [conv2d_config_template, conv_mult_config_template],
     'Activation'             : activ_config_template,
     'ParametrizedActivation' : activ_config_template,
     'PReLU'                  : activ_config_template,
@@ -142,7 +143,7 @@ config_templates = {
 dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
 conv1d_function_template = 'nnet::conv_1d_{strategy}_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
-conv2d_function_template = 'nnet::conv_2d<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+conv2d_function_template = 'nnet::conv_2d_{strategy}_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
 param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {param}, {output});'
 pooling1d_function_template = 'nnet::pooling1d<{input_t}, {config}>({input}, {output});'

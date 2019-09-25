@@ -4,16 +4,11 @@
 #include "nnet_common.h"
 #include "nnet_conv.h"
 #include "nnet_dense_large.h"
-#include <math.h>
-#include <assert.h>
-
-#define DIV_ROUNDUP(n,d) ((n + d - 1) / d)
-#define MIN(n,d) (n > d ? d : n)
 
 namespace nnet {
 
 template<class data_T, typename CONFIG_T>
-void im2col_1d(data_T data[CONFIG_T::n_in * CONFIG_T::n_chan], data_T col[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_out]) {
+void im2col_1d(data_T data[CONFIG_T::n_in * CONFIG_T::n_chan], data_T data_col[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_out]) {
     //int index = 0;
     for (int channel = CONFIG_T::n_chan; channel--; data += CONFIG_T::n_in) {
         #pragma HLS PIPELINE II=1 rewind
@@ -23,11 +18,11 @@ void im2col_1d(data_T data[CONFIG_T::n_in * CONFIG_T::n_chan], data_T col[CONFIG
             for (int output_col = CONFIG_T::n_out; output_col; output_col--) {
                 #pragma HLS UNROLL
                 if (input_col >= 0 && input_col < CONFIG_T::n_in) {
-                    *(col++) = data[input_col];
-                    //col[index] = data[input_col];
+                    *(data_col++) = data[input_col];
+                    //data_col[index] = data[input_col];
                 } else {
-                    *(col++) = 0;
-                    //col[index] = 0;
+                    *(data_col++) = 0;
+                    //data_col[index] = 0;
                 }
                 //index++;
                 input_col += CONFIG_T::stride;
@@ -59,7 +54,7 @@ void conv_1d_full(
         for (int j = 0; j < CONFIG_T::filt_width * CONFIG_T::n_chan; j++) {
             data_col[j] = data_conv[j * CONFIG_T::n_out + i];
         }
-        conv_mult_1d<data_T, res_T, CONFIG_T>(data_col, res_col, weights, biases);
+        dense_large<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
         for (int j = 0; j < CONFIG_T::n_filt; j++) {
             //res[i * CONFIG_T::n_filt + j] = res_col[j];
             res[j * CONFIG_T::n_out + i] = res_col[j]; // Transposed order
@@ -89,7 +84,7 @@ void im2col_1d_cf_idx(data_T data[CONFIG_T::n_in * CONFIG_T::n_chan], data_T dat
 }
 
 template<class data_T, typename CONFIG_T>
-void im2col_1d_cf(data_T data[CONFIG_T::n_in * CONFIG_T::n_chan], data_T data_col[CONFIG_T::filt_width * CONFIG_T::n_chan], const int col) {
+void im2col_1d_cf(data_T data[CONFIG_T::n_in * CONFIG_T::n_chan], data_T data_col[CONFIG_T::n_chan * CONFIG_T::filt_width], const int col) {
     int index = 0;
     ChannelLoop:
     for (int channel = CONFIG_T::n_chan; channel--; data += CONFIG_T::n_in) {

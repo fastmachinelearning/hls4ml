@@ -770,9 +770,18 @@ class Conv2D(Layer):
         self.add_output_variable(shape, dims)
         self.add_weights()
         self.add_bias()
+        if self.model.config.is_resource_strategy(self):
+            if self.model.config.get_reuse_factor(self) == 1:
+                print('WARNING: Using ReuseFactor 1 with "Resource" strategy in layer "{}". This may not work.'.format(self.name))
+            self.set_attr('strategy', 'large')
+            self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 3, 1, 0])
+        else:
+            self.set_attr('strategy', 'latency')
 
     def function_cpp(self):
         params = self._default_function_params()
+        params['strategy'] = self.get_attr('strategy')
+        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
         params['w'] = self.get_weights('weight').name
         params['b'] = self.get_weights('bias').name
 
@@ -786,9 +795,22 @@ class Conv2D(Layer):
         params['out_height'] = self.get_output_variable().dim_names[0]
         params['out_width'] = self.get_output_variable().dim_names[1]
         params['n_filt'] = self.get_output_variable().dim_names[2]
+        params['dilation'] = self.get_attr('dilation', 1)
         params['nzeros'] = self.get_weights('weight').nzeros
+        params['config_t'] = 'std::nullptr_t'
 
-        return self._config_template.format(**params)
+        if self.model.config.is_resource_strategy(self):
+            params['config_t'] = 'config{}_mult'.format(self.index)
+            conv_config = self._config_template[0].format(**params)
+
+            mult_params = self._default_config_params()
+            mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_width')
+            mult_params['n_out'] = self.get_attr('n_filt')
+            mult_config = self._config_template[1].format(**mult_params)
+
+            return mult_config + '\n' + conv_config
+        else:
+            return self._config_template[0].format(**params)
 
 class Pooling1D(Layer):
     def initialize(self):
