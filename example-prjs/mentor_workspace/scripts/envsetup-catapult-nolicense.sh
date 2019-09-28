@@ -1,7 +1,3 @@
-#
-# Export few environment variables to compile the example with Mentor's
-# provided compiler and libraries.
-#
 # Usage:
 # $ source envsetup.sh
 #

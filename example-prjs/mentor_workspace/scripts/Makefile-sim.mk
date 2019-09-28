@@ -42,7 +42,6 @@ LD_FLAGS :=
 LD_FLAGS += -lm
 
 LD_LIBS :=
-LD_LIBS += -L$(SYSTEMC)/lib
 
 VPATH :=
 VPATH += ../inc
@@ -75,6 +74,7 @@ release-catapult: INCDIR += -I../inc
 release-catapult: INCDIR += -I$(SYSTEMC)/include
 release-catapult: CXX_FLAGS += -O3
 release-catapult: CXX_FLAGS += -DMNTR_CATAPULT_HLS
+release-catapult: LD_LIBS += -L$(SYSTEMC)/lib
 release-catapult: LD_FLAGS += -lsystemc
 release-catapult: LD_FLAGS += -lpthread
 release-catapult: $(MODEL)
@@ -85,6 +85,7 @@ debug-catapult: INCDIR += -I$(SYSTEMC)/include
 debug-catapult: CXX_FLAGS += -g
 debug-catapult: CXX_FLAGS += -O0
 debug-catapult: CXX_FLAGS += -DMNTR_CATAPULT_HLS
+debug-catapult: LD_LIBS += -L$(SYSTEMC)/lib
 debug-catapult: LD_FLAGS += -lsystemc
 debug-catapult: LD_FLAGS += -lpthread
 debug-catapult: $(MODEL)

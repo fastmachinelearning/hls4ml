@@ -1,12 +1,3 @@
-array set opt {
-    asic       0
-    csim       1
-    hsynth     1
-    rtlsim     1
-    validation 1
-    lsynth     1
-}
-
 # Compare file content: 1 = same, 0 = different
 proc compare_files {file_1 file_2} {
     # Check if files exist, error otherwise
@@ -27,8 +18,15 @@ proc compare_files {file_1 file_2} {
     return $equal
 }
 
-set CSIM_RESULTS "./tb_data/csim_results.log"
-set RTL_COSIM_RESULTS "./tb_data/rtl_cosim_results.log"
+if {$opt(asic)} {
+    project new -name Catapult_asic
+    set CSIM_RESULTS "./tb_data/catapult_csim_results.log"
+    set RTL_COSIM_RESULTS "./tb_data/catapult_rtl_cosim_results.log"
+} else {
+    project new -name Catapult_fpga
+    set CSIM_RESULTS "./tb_data/catapult_csim_results.log"
+    set RTL_COSIM_RESULTS "./tb_data/catapult_rtl_cosim_results.log"
+}
 
 #
 # Reset the options to the factory defaults
