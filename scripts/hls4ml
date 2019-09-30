@@ -56,7 +56,6 @@ def config(args):
 
 def convert(args):
     yamlConfig = parse_config(args.config)
-    print(yamlConfig)
     model = None
     if 'OnnxModel' in yamlConfig:
         model = hls4ml.converters.onnx_to_hls(yamlConfig)
@@ -67,12 +66,14 @@ def convert(args):
 
     if yamlConfig['Backend'] not in ['Vivado','Intel','Mentor']:
         raise Exception('Backend values can be [Vivado, Intel, Mentor]')
-    
-    if yamlConfig['Backend'] in ['Intel','Mentor']:
-        raise NotImplementedError
 
-    if model is not None:
-        hls4ml.writer.vivado_writer.write_hls(model)
+    if yamlConfig['Backend'] == 'Vivado':
+        if model is not None:
+            hls4ml.writer.vivado_writer.write_hls(model)
+    elif yamlConfig['Backend'] == 'Intel':
+        raise NotImplementedError
+    elif yamlConfig['Backend'] == 'Mentor':
+        raise NotImplementedError
 
     # Copy the config file to the generated folder
     copyfile(args.config, yamlConfig['OutputDir'] + '/' + config_filename)

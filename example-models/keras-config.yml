@@ -6,6 +6,7 @@ OutputDir: my-hls-test
 ProjectName: myproject
 XilinxPart: xcku115-flvb2104-2-i
 ClockPeriod: 5
+Backend: Vivado
 
 IOType: io_parallel # options: io_serial/io_parallel
 HLSConfig:
