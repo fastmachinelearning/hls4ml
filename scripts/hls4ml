@@ -64,9 +64,6 @@ def convert(args):
     else:
         model = hls4ml.converters.keras_to_hls(yamlConfig)
 
-    if yamlConfig['Backend'] not in ['Vivado','Intel','Mentor']:
-        raise Exception('Backend values can be [Vivado, Intel, Mentor]')
-
     if yamlConfig['Backend'] == 'Vivado':
         if model is not None:
             hls4ml.writer.vivado_writer.write_hls(model)
@@ -74,6 +71,8 @@ def convert(args):
         raise NotImplementedError
     elif yamlConfig['Backend'] == 'Mentor':
         raise NotImplementedError
+    else:
+        raise Exception('Backend values can be [Vivado, Intel, Mentor]')
 
     # Copy the config file to the generated folder
     copyfile(args.config, yamlConfig['OutputDir'] + '/' + config_filename)
