@@ -10,6 +10,10 @@ import sys
 import yaml
 import hls4ml
 
+from shutil import copyfile
+
+config_filename = 'hls4ml_config.yml'
+
 def parse_config(config_file):
     print('Loading configuration from', config_file)
     config = open(config_file, 'r')
@@ -52,6 +56,7 @@ def config(args):
 
 def convert(args):
     yamlConfig = parse_config(args.config)
+    print(yamlConfig)
     model = None
     if 'OnnxModel' in yamlConfig:
         model = hls4ml.converters.onnx_to_hls(yamlConfig)
@@ -59,15 +64,24 @@ def convert(args):
         model = hls4ml.converters.pytorch_to_hls(yamlConfig)
     else:
         model = hls4ml.converters.keras_to_hls(yamlConfig)
+
+    if yamlConfig['Backend'] not in ['Vivado','Intel','Mentor']:
+        raise Exception('Backend values can be [Vivado, Intel, Mentor]')
     
+    if yamlConfig['Backend'] in ['Intel','Mentor']:
+        raise NotImplementedError
+
     if model is not None:
         hls4ml.writer.vivado_writer.write_hls(model)
+
+    # Copy the config file to the generated folder
+    copyfile(args.config, yamlConfig['OutputDir'] + '/' + config_filename)
 
 def build(args):
     if args.project is None:
         print('Project directory (-p or --project) must be provided.')
         sys.exit(1)
-    
+
     csim = synth = cosim = export = 0
     if args.simulation:
         csim = 1
@@ -80,12 +94,20 @@ def build(args):
     if args.all:
         csim = synth = cosim = export = 1
     
+    yamlConfig = parse_config(args.project + '/' + config_filename)
+
     # Check if vivado_hls is available
     if 'linux' in sys.platform or 'darwin' in sys.platform:
-        found = os.system('command -v vivado_hls > /dev/null')
-        if found is not 0:
-            print('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
-            sys.exit(1)
+        backend = yamlConfig['Backend']
+        if backend == 'Vivado':
+            found = os.system('command -v vivado_hls > /dev/null')
+            if found is not 0:
+                print('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
+                sys.exit(1)
+        elif backend in ['Intel','Mentor']:
+            raise NotImplementedError
+        else:
+            raise Exception('Backend values can be [Vivado, Intel, Mentor]')
     
     os.system('cd {dir} && vivado_hls -f build_prj.tcl "csim={csim} synth={synth} cosim={cosim} export={export}"'.format(dir=args.project, csim=csim, synth=synth, cosim=cosim, export=export))
 
