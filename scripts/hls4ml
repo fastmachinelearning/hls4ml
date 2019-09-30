@@ -98,13 +98,14 @@ def build(args):
 
     # Check if vivado_hls is available
     if 'linux' in sys.platform or 'darwin' in sys.platform:
-        backend = yamlConfig['Backend']
-        if backend == 'Vivado':
+        if yamlConfig['Backend'] == 'Vivado':
             found = os.system('command -v vivado_hls > /dev/null')
             if found is not 0:
                 print('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
                 sys.exit(1)
-        elif backend in ['Intel','Mentor']:
+        elif yamlConfig['Backend'] == 'Intel':
+            raise NotImplementedError
+        elif yamlConfig['Backend'] == 'Mentor':
             raise NotImplementedError
         else:
             raise Exception('Backend values can be [Vivado, Intel, Mentor]')
