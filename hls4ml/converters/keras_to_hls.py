@@ -176,10 +176,14 @@ def keras_to_hls(yamlConfig):
             layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
             current_shape=[current_shape[0], layer['n_out'], layer['n_filt']]
         elif layer['class_name']=='Conv2D':
+            layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
             # weights_shape = (filter_height, filter_width, n_channels, n_filters)
             weights_shape = get_weights_shape(yamlConfig['KerasH5'], layer['name'])
             layer['in_height']=current_shape[1]
             layer['in_width']=current_shape[2]
+	    if layer['data_format'] == 'channel_first':
+             layer['in_height']=current_shape[2]
+             layer['in_width']=current_shape[3]
             layer['filt_height']=weights_shape[0]
             layer['filt_width']=weights_shape[1]
             layer['n_chan']=weights_shape[2]
@@ -207,16 +211,16 @@ def keras_to_hls(yamlConfig):
                 layer['pad_left']  = pad_along_width // 2
                 layer['pad_right']  = pad_along_width - layer['pad_left']
             elif layer['padding']=='valid':
-                in_height = current_shape[1]
-                in_width = current_shape[2]
+                in_height = current_shape[2]#1
+                in_width = current_shape[3]#2
                 layer['out_width'] = int(math.ceil(float(in_width - layer['filt_width'] + 1) / float(layer['stride_width'])))
                 layer['out_height'] = int(math.ceil(float(in_height - layer['filt_height'] + 1) / float(layer['stride_height'])))
                 layer['pad_top'] = 0
                 layer['pad_bottom'] = 0
                 layer['pad_left'] = 0
                 layer['pad_right'] = 0
-            layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
-            current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
+	    if layer['data_format'] == 'channel_first': current_shape=[current_shape[0], layer['n_filt'], layer['out_height'], layer['out_width']]
+	    else: current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
         elif layer['class_name']=='BatchNormalization':
             in_size = 1
             for dim in current_shape[1:]:
