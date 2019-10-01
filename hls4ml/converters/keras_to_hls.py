@@ -181,7 +181,7 @@ def keras_to_hls(yamlConfig):
             weights_shape = get_weights_shape(yamlConfig['KerasH5'], layer['name'])
             layer['in_height']=current_shape[1]
             layer['in_width']=current_shape[2]
-	    if layer['data_format'] == 'channel_first':
+            if layer['data_format'] == 'channels_first':
              layer['in_height']=current_shape[2]
              layer['in_width']=current_shape[3]
             layer['filt_height']=weights_shape[0]
@@ -194,6 +194,7 @@ def keras_to_hls(yamlConfig):
             if layer['padding']=='same':
                 #Height
                 in_height = current_shape[1]
+                if layer['data_format'] == 'channels_first': in_height = current_shape[2]
                 layer['out_height'] = int(math.ceil(float(in_height) / float(layer['stride_height'])))
                 if (in_height % layer['stride_height'] == 0):
                     pad_along_height = max(layer['filt_height'] - layer['stride_height'], 0)
@@ -203,6 +204,7 @@ def keras_to_hls(yamlConfig):
                 layer['pad_bottom']  = pad_along_height - layer['pad_top']
                 #Width
                 in_width = current_shape[2]
+                if layer['data_format'] == 'channels_first': in_width = current_shape[3]
                 layer['out_width'] = int(math.ceil(float(in_width) / float(layer['stride_width'])))
                 if (in_width % layer['stride_width'] == 0):
                     pad_along_width = max(layer['filt_width'] - layer['stride_width'], 0)
@@ -211,16 +213,19 @@ def keras_to_hls(yamlConfig):
                 layer['pad_left']  = pad_along_width // 2
                 layer['pad_right']  = pad_along_width - layer['pad_left']
             elif layer['padding']=='valid':
-                in_height = current_shape[2]#1
-                in_width = current_shape[3]#2
+                in_height = current_shape[1]
+                in_width = current_shape[2]
+                if layer['data_format'] == 'channels_first':
+                 in_height = current_shape[2]
+                 in_width = current_shape[3]
                 layer['out_width'] = int(math.ceil(float(in_width - layer['filt_width'] + 1) / float(layer['stride_width'])))
                 layer['out_height'] = int(math.ceil(float(in_height - layer['filt_height'] + 1) / float(layer['stride_height'])))
                 layer['pad_top'] = 0
                 layer['pad_bottom'] = 0
                 layer['pad_left'] = 0
                 layer['pad_right'] = 0
-	    if layer['data_format'] == 'channel_first': current_shape=[current_shape[0], layer['n_filt'], layer['out_height'], layer['out_width']]
-	    else: current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
+            if layer['data_format'] == 'channels_first': current_shape=[current_shape[0], layer['n_filt'], layer['out_height'], layer['out_width']]
+            else: current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
         elif layer['class_name']=='BatchNormalization':
             in_size = 1
             for dim in current_shape[1:]:
