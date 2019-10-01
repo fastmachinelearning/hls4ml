@@ -2,8 +2,9 @@ from ..optimizer import OptimizerPass
 
 class FuseDenseAndBatchNormalization(OptimizerPass):
     def match(self, node):
-        is_match = (node.__class__.__name__ == 'BatchNormalization' and 
-            node.get_input_node().__class__.__name__ == 'Dense')
+        is_match = (node.__class__.__name__ == 'BatchNormalization' and
+            node.get_input_node().__class__.__name__ == 'Dense') and \
+            node.get_input_node().get_attr('quantize') == 0
         return is_match
 
     def transform(self, model, node):
