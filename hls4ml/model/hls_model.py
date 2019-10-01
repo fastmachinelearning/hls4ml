@@ -840,7 +840,7 @@ class Pooling2D(Layer):
 
     def function_cpp(self):
         params = self._default_function_params()
-
+        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
         return [self._function_template.format(**params)]
 
     def config_cpp(self):

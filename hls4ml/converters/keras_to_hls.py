@@ -261,13 +261,11 @@ def keras_to_hls(yamlConfig):
                     layer['pad_right'] = 0
                 current_shape=[current_shape[0], layer['n_out'], layer['n_filt']]
             elif int(layer['class_name'][-2]) == 2:
-                print("layer['class_name'][-2]",layer['class_name'][-2],current_shape)
                 layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
                 layer['in_height']=current_shape[1]
                 layer['in_width']=current_shape[2]
                 layer['n_filt']=current_shape[3]
                 if layer['data_format'] == 'channels_first':
-                 print(layer['data_format'])
                  layer['in_height']=current_shape[2]
                  layer['in_width']=current_shape[3]
                  layer['n_filt']=current_shape[1]

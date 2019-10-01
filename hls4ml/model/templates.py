@@ -147,7 +147,7 @@ conv2d_function_template = 'nnet::conv_2d_{strategy}_{data_format}<{input_t}, {o
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
 param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {param}, {output});'
 pooling1d_function_template = 'nnet::pooling1d<{input_t}, {config}>({input}, {output});'
-pooling2d_function_template = 'nnet::pooling2d<{input_t}, {config}>({input}, {output});'
+pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {config}>({input}, {output});'
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
 
 function_templates = {
