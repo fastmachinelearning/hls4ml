@@ -804,7 +804,7 @@ class Conv2D(Layer):
             conv_config = self._config_template[0].format(**params)
 
             mult_params = self._default_config_params()
-            mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_width')
+            mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_width') * self.get_attr('filt_height')
             mult_params['n_out'] = self.get_attr('n_filt')
             mult_config = self._config_template[1].format(**mult_params)
 
@@ -1003,6 +1003,7 @@ layer_map = {
     'TernaryDense'       : Dense,
     'Conv1D'             : Conv1D,
     'Conv2D'             : Conv2D,
+    'BinaryConv2D'       : Conv2D,
     'BatchNormalization' : BatchNormalization,
     'MaxPooling1D'       : Pooling1D,
     'AveragePooling1D'   : Pooling1D,
