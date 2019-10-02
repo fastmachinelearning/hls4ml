@@ -26,6 +26,7 @@ def main():
     config_parser = subparsers.add_parser('config', help='Create a conversion configuration file')
     convert_parser = subparsers.add_parser('convert', help='Convert Keras or ONNX model to HLS')
     build_parser = subparsers.add_parser('build', help='Build generated HLS project')
+    report_parser = subparsers.add_parser('report', help='Show synthesis report of an HLS project')
 
     config_parser.add_argument('-m', '--model', help='Model file to convert (Keras .h5 or .json, or ONNX .onnx file)', default=None)
     config_parser.add_argument('-w', '--weights', help='Optional weights file (if Keras .json file is provided))', default=None)
@@ -43,6 +44,10 @@ def main():
     build_parser.add_argument('-a', '--all', help='Run C simulation, C/RTL synthesis and co-simulation', action='store_true')
     build_parser.set_defaults(func=build)
     
+    report_parser.add_argument('-p', '--project', help='Project directory', default=None)
+    report_parser.add_argument('-f', '--full', help='Show full report', action='store_true', default=False)
+    report_parser.set_defaults(func=report)
+
     parser.add_argument('--version', action='version', version='%(prog)s {version}'.format(version=__version__))
 
     args = parser.parse_args()
@@ -111,6 +116,13 @@ def build(args):
             raise Exception('Backend values can be [Vivado, Intel, Mentor]')
     
     os.system('cd {dir} && vivado_hls -f build_prj.tcl "csim={csim} synth={synth} cosim={cosim} export={export}"'.format(dir=args.project, csim=csim, synth=synth, cosim=cosim, export=export))
+
+def report(args):
+    if args.project is None:
+        print('Project directory (-p or --project) must be provided.')
+        sys.exit(1)
+    
+    hls4ml.report.read_vivado_report(args.project, args.full)
 
 if __name__== "__main__":
     main()
