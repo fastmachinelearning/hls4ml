@@ -2,8 +2,8 @@ from ..optimizer import OptimizerPass
 
 class FuseDenseAndBatchNormalization(OptimizerPass):
     def match(self, node):
-        is_match = (node.__class__.__name__ == 'BatchNormalization' and
-            node.get_input_node().__class__.__name__ == 'Dense') and \
+        is_match = node.__class__.__name__ == 'BatchNormalization' and \
+            node.get_input_node().__class__.__name__ == 'Dense' and \
             node.get_input_node().get_attr('quantize') == 0
         return is_match
 
@@ -17,7 +17,10 @@ class FuseDenseAndBatchNormalization(OptimizerPass):
         bn_scale = node.weights['scale']
         bn_bias = node.weights['bias']
 
-        fused_weight = bn_scale.data * dense_weight.data
+        if dense_node.get_attr('strategy') != 'large':
+            fused_weight = bn_scale.data * dense_weight.data
+        else:
+            fused_weight = (bn_scale.data * dense_weight.data.T).T
         fused_bias = bn_scale.data * dense_bias.data + bn_bias.data
 
         model.remove_node(node, rewire=True)
