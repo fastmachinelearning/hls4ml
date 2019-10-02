@@ -152,13 +152,12 @@ void im2col_2d_cl(
     const int row,
     const int col)
 {
-    const int channel_size = CONFIG_T::in_height * CONFIG_T::in_width;
     int index = 0;
-    for (int channel = CONFIG_T::n_chan; channel--; data += channel_size) {
+    for (int channel = CONFIG_T::n_chan; channel--; data++) {
         for (int kernel_row = 0; kernel_row < CONFIG_T::filt_height; kernel_row++) {
             int input_row = -CONFIG_T::pad_top + kernel_row * CONFIG_T::dilation_height + row * CONFIG_T::stride_height;
             for (int kernel_col = 0; kernel_col < CONFIG_T::filt_width; kernel_col++) {
-                if (input_row < 0 || input_row > CONFIG_T::in_height) {
+                if (input_row < 0 || input_row >= CONFIG_T::in_height) {
                     data_col[index++] = 0;
                 } else {
                     int input_col = -CONFIG_T::pad_left + kernel_col * CONFIG_T::dilation_width + col * CONFIG_T::stride_width;

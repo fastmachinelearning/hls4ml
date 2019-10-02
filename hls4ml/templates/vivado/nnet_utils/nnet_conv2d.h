@@ -47,8 +47,8 @@ struct conv2d_config
     static const unsigned stride_width = 1;
     static const unsigned out_height = 10;
     static const unsigned out_width = 10;
-    static const unsigned dilation_height = 10;
-    static const unsigned dilation_width = 10;
+    static const unsigned dilation_height = 1;
+    static const unsigned dilation_width = 1;
 
     static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;

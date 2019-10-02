@@ -774,7 +774,7 @@ class Conv2D(Layer):
             if self.model.config.get_reuse_factor(self) == 1:
                 print('WARNING: Using ReuseFactor 1 with "Resource" strategy in layer "{}". This may not work.'.format(self.name))
             self.set_attr('strategy', 'large')
-            self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 3, 1, 0])
+            self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
         else:
             self.set_attr('strategy', 'latency')
 
@@ -804,7 +804,7 @@ class Conv2D(Layer):
             conv_config = self._config_template[0].format(**params)
 
             mult_params = self._default_config_params()
-            mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_width') * self.get_attr('filt_height')
+            mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
             mult_params['n_out'] = self.get_attr('n_filt')
             mult_config = self._config_template[1].format(**mult_params)
 
