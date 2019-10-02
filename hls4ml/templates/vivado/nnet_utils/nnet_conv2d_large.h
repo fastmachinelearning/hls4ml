@@ -85,6 +85,7 @@ void im2col_2d_cf(
     const int channel_size = CONFIG_T::in_height * CONFIG_T::in_width;
     int index = 0;
     for (int channel = CONFIG_T::n_chan; channel--; data += channel_size) {
+        #pragma HLS UNROLL
         for (int kernel_row = 0; kernel_row < CONFIG_T::filt_height; kernel_row++) {
             int input_row = -CONFIG_T::pad_top + kernel_row * CONFIG_T::dilation_height + row * CONFIG_T::stride_height;
             for (int kernel_col = 0; kernel_col < CONFIG_T::filt_width; kernel_col++) {
@@ -134,6 +135,7 @@ void conv_2d_large_cf(
     for (int i = 0; i < CONFIG_T::out_height; i++) {
         WidthLoop:
         for (int j = 0; j < CONFIG_T::out_width; j++) {
+            #pragma HLS PIPELINE
             im2col_2d_cf<data_T, CONFIG_T>(data, data_col, i, j);
             dense_large<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
             FiltLoop:
@@ -154,6 +156,7 @@ void im2col_2d_cl(
 {
     int index = 0;
     for (int channel = CONFIG_T::n_chan; channel--; data++) {
+        #pragma HLS UNROLL
         for (int kernel_row = 0; kernel_row < CONFIG_T::filt_height; kernel_row++) {
             int input_row = -CONFIG_T::pad_top + kernel_row * CONFIG_T::dilation_height + row * CONFIG_T::stride_height;
             for (int kernel_col = 0; kernel_col < CONFIG_T::filt_width; kernel_col++) {
@@ -201,6 +204,7 @@ void conv_2d_large_cl(
     for (int i = 0; i < CONFIG_T::out_height; i++) {
         WidthLoop:
         for (int j = 0; j < CONFIG_T::out_width; j++) {
+            #pragma HLS PIPELINE
             im2col_2d_cl<data_T, CONFIG_T>(data, data_col, i, j);
             dense_large<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
             FiltLoop:
