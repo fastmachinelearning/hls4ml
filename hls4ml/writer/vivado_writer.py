@@ -315,8 +315,6 @@ def write_build_script(model):
     ###################
 
     filedir = os.path.dirname(os.path.abspath(__file__))
-    nnetdir = os.path.abspath(os.path.join(filedir, "../templates/vivado/nnet_utils"))
-    relpath = os.path.relpath(nnetdir, start=model.config.get_output_dir())
 
     f = open(os.path.join(filedir,'../templates/vivado/build_prj.tcl'),'r')
     fout = open('{}/build_prj.tcl'.format(model.config.get_output_dir()),'w')
@@ -324,9 +322,8 @@ def write_build_script(model):
     for line in f.readlines():
 
         line = line.replace('myproject',model.config.get_project_name())
-        line = line.replace('nnet_utils', relpath)
 
-        if 'set_part {xc7vx690tffg1927-2}' in line:
+        if 'set_part {xcku115-flvb2104-2-i}' in line:
             line = 'set_part {{{}}}\n'.format(model.config.get_config_value('XilinxPart'))
         elif 'create_clock -period 5 -name default' in line:
             line = 'create_clock -period {} -name default\n'.format(model.config.get_config_value('ClockPeriod'))
@@ -334,6 +331,23 @@ def write_build_script(model):
         fout.write(line)
     f.close()
     fout.close()
+
+
+    ###################
+    # vivado_synth.tcl
+    ###################
+
+    f = open(os.path.join(filedir,'../templates/vivado/vivado_synth.tcl'),'r')
+    fout = open('{}/vivado_synth.tcl'.format(model.config.get_output_dir()),'w')
+    for line in f.readlines():
+        line = line.replace('myproject', model.config.get_project_name())
+        if '-part' in line:
+            line = 'synth_design -top {} -part {}\n'.format(model.config.get_project_name(), model.config.get_config_value('XilinxPart'))
+
+        fout.write(line)
+    f.close()
+    fout.close()
+
 
 def write_nnet_utils(model):
     ###################

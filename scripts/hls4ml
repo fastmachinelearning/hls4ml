@@ -39,9 +39,12 @@ def main():
     build_parser.add_argument('-p', '--project', help='Project directory', default=None)
     build_parser.add_argument('-c', '--simulation', help='Run C simulation', action='store_true', default=False)
     build_parser.add_argument('-s', '--synthesis', help='Run C/RTL synthesis', action='store_true', default=False)
-    build_parser.add_argument('-r', '--co-simulation', help='Run C/RTL co-simulation (implies -c and -s)', action='store_true', default=False)
+    build_parser.add_argument('-r', '--co-simulation', help='Run C/RTL co-simulation', action='store_true', default=False)
+    build_parser.add_argument('-v', '--validation', help='Run C/RTL validation', action='store_true', default=False)
     build_parser.add_argument('-e', '--export', help='Export IP (implies -s)', action='store_true', default=False)
-    build_parser.add_argument('-a', '--all', help='Run C simulation, C/RTL synthesis and co-simulation', action='store_true')
+    build_parser.add_argument('-l', '--vivado_synthesis', help='Run Vivado synthesis (implies -s)', action='store_true', default=False)
+    build_parser.add_argument('-a', '--all', help='Run C simulation, C/RTL synthesis, C/RTL co-simulation and Vivado synthesis', action='store_true')
+    build_parser.add_argument('--reset', help='Remove any previous builds', action='store_true', default=False)
     build_parser.set_defaults(func=build)
     
     report_parser.add_argument('-p', '--project', help='Project directory', default=None)
@@ -87,17 +90,15 @@ def build(args):
         print('Project directory (-p or --project) must be provided.')
         sys.exit(1)
 
-    csim = synth = cosim = export = 0
-    if args.simulation:
-        csim = 1
-    if args.synthesis:
-        synth = 1
-    if args.co_simulation:
-        synth = cosim = 1
-    if args.export:
-        synth = export = 1
+    reset = int(args.reset)
+    csim = int(args.simulation)
+    synth = int(args.synthesis)
+    cosim = int(args.co_simulation)
+    validation = int(args.validation)
+    export = int(args.export)
+    vsynth = int(args.vivado_synthesis)
     if args.all:
-        csim = synth = cosim = export = 1
+        csim = synth = cosim = validation = export = vsynth = 1
     
     yamlConfig = parse_config(args.project + '/' + config_filename)
 
@@ -115,7 +116,8 @@ def build(args):
         else:
             raise Exception('Backend values can be [Vivado, Intel, Mentor]')
     
-    os.system('cd {dir} && vivado_hls -f build_prj.tcl "csim={csim} synth={synth} cosim={cosim} export={export}"'.format(dir=args.project, csim=csim, synth=synth, cosim=cosim, export=export))
+    os.system('cd {dir} && vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
+        .format(dir=args.project, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
 
 def report(args):
     if args.project is None:
