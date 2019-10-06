@@ -44,8 +44,8 @@ proc compare_files {file_1 file_2} {
 }
 
 file mkdir tb_data
-set CSIM_RESULTS "./tb_data/csim_results.log"
-set RTL_COSIM_RESULTS "./tb_data/rtl_cosim_results.log"
+set CSIM_RESULTS "./tb_data/vivado_csim_results.log"
+set RTL_COSIM_RESULTS "./tb_data/vivado_rtl_cosim_results.log"
 
 open_project -reset keras1layer_prj
 set_top keras1layer

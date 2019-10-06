@@ -15,11 +15,19 @@ report:
 .PHONY: report
 
 validate-c:
-	@python ../../scripts/validate.py -r ./tb_data/tb_output_predictions.dat -i ./tb_data/csim_results.log | tee validate-c.log
+	@set -o pipefail; python ../../scripts/validate.py \
+		-r ./tb_data/tb_output_predictions.dat \
+		-i ./tb_data/vivado_csim_results.log \
+		-t vivado \
+		| tee validate-c.log
 .PHONY: validate-c
 
 validate-rtl:
-	@python ../../scripts/validate.py -r ./tb_data/tb_output_predictions.dat -i ./tb_data/rtl_cosim_results.log | tee validate-rtl.log
+	@set -o pipefail; python ../../scripts/validate.py \
+		-r ./tb_data/tb_output_predictions.dat \
+		-i ./tb_data/vivado_rtl_cosim_results.log \
+		-t vivado \
+		| tee validate-rtl.log
 .PHONY: validate-rtl
 
 clean:

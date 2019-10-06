@@ -1,6 +1,7 @@
 Catapult*.ccs
 Catapult_asic*
 Catapult_fpga*
-catapult*.log
 design_checker_constraints.tcl
 design_checker_pre_build.tcl
+*.log
+*.png

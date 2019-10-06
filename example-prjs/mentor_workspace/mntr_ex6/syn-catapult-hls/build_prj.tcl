@@ -20,12 +20,12 @@ proc compare_files {file_1 file_2} {
 
 if {$opt(asic)} {
     project new -name Catapult_asic
-    set CSIM_RESULTS "./tb_data/catapult_csim_results.log"
-    set RTL_COSIM_RESULTS "./tb_data/catapult_rtl_cosim_results.log"
+    set CSIM_RESULTS "./tb_data/catapult_asic_csim_results.log"
+    set RTL_COSIM_RESULTS "./tb_data/catapult_asic_rtl_cosim_results.log"
 } else {
     project new -name Catapult_fpga
-    set CSIM_RESULTS "./tb_data/catapult_csim_results.log"
-    set RTL_COSIM_RESULTS "./tb_data/catapult_rtl_cosim_results.log"
+    set CSIM_RESULTS "./tb_data/catapult_fpga_csim_results.log"
+    set RTL_COSIM_RESULTS "./tb_data/catapult_fpga_rtl_cosim_results.log"
 }
 
 #
@@ -88,8 +88,13 @@ directive set -CLUSTER_TYPE combinational
 directive set -COMPGRADE fast
 
 # Design specific options.
-solution options set Flows/QuestaSIM/SCCOM_OPTS {-g -x c++ -Wall -Wno-unused-label -Wno-unknown-pragmas -DRTL_SIM}
-solution options set /Input/CompilerFlags -DMNTR_CATAPULT_HLS
+if {$opt(asic)} {
+solution options set Flows/QuestaSIM/SCCOM_OPTS {-g -x c++ -Wall -Wno-unused-label -Wno-unknown-pragmas -DRTL_SIM -D__ASIC__}
+solution options set /Input/CompilerFlags {-DMNTR_CATAPULT_HLS -D__ASIC__}
+} else {
+solution options set Flows/QuestaSIM/SCCOM_OPTS {-g -x c++ -Wall -Wno-unused-label -Wno-unknown-pragmas -DRTL_SIM -D__FPGA__}
+solution options set /Input/CompilerFlags {-DMNTR_CATAPULT_HLS -D__FPGA__}
+}
 solution options set /Input/SearchPath {../inc ../keras1layer/firmware/ ../keras1layer/firmware/weights ../keras1layer/firmware/nnet_utils}
 
 # Add source files.

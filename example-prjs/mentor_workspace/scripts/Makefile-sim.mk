@@ -110,11 +110,19 @@ run-catapult: release-catapult
 .PHONY: run-catapult
 
 validate-catapult:
-	@set -o pipefail; python ../../scripts/validate.py -r ./tb_data/tb_output_predictions.dat -i ./tb_data/catapult_csim_results.log -t catapult | tee validate-catapult.log
+	@set -o pipefail; python ../../scripts/validate.py \
+		-r ./tb_data/tb_output_predictions.dat \
+		-i ./tb_data/catapult_csim_results.log \
+		-t catapult \
+		| tee validate-catapult.log
 .PHONY: validate-catapult
 
 validate-vivado:
-	@set -o pipefail; python ../../scripts/validate.py -r ./tb_data/tb_output_predictions.dat -i ./tb_data/vivado_csim_results.log -t vivado | tee validate-vivado.log
+	@set -o pipefail; python ../../scripts/validate.py \
+		-r ./tb_data/tb_output_predictions.dat \
+		-i ./tb_data/vivado_csim_results.log \
+		-t vivado \
+		| tee validate-vivado.log
 .PHONY: validate-vivado
 
 valgrind:
