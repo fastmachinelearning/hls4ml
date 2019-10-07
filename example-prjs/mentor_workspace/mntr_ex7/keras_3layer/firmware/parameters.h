@@ -40,7 +40,7 @@ struct config2 : nnet::dense_config {
     static const unsigned n_in = N_INPUT_1_1;
     static const unsigned n_out = N_LAYER_2;
     static const unsigned io_type = nnet::io_parallel;
-    static const unsigned reuse_factor = 1;
+    static const unsigned reuse_factor = 32;
     static const unsigned n_zeros = 0;
     static const unsigned n_nonzeros = 1024;
     static const bool store_weights_in_bram = false;
@@ -60,7 +60,7 @@ struct config4 : nnet::dense_config {
     static const unsigned n_in = N_LAYER_2;
     static const unsigned n_out = N_LAYER_4;
     static const unsigned io_type = nnet::io_parallel;
-    static const unsigned reuse_factor = 1;
+    static const unsigned reuse_factor = 32;
     static const unsigned n_zeros = 0;
     static const unsigned n_nonzeros = 2048;
     static const bool store_weights_in_bram = false;
@@ -80,7 +80,7 @@ struct config6 : nnet::dense_config {
     static const unsigned n_in = N_LAYER_4;
     static const unsigned n_out = N_LAYER_6;
     static const unsigned io_type = nnet::io_parallel;
-    static const unsigned reuse_factor = 1;
+    static const unsigned reuse_factor = 32;
     static const unsigned n_zeros = 0;
     static const unsigned n_nonzeros = 1024;
     static const bool store_weights_in_bram = false;
@@ -100,7 +100,7 @@ struct config8 : nnet::dense_config {
     static const unsigned n_in = N_LAYER_6;
     static const unsigned n_out = N_LAYER_8;
     static const unsigned io_type = nnet::io_parallel;
-    static const unsigned reuse_factor = 1;
+    static const unsigned reuse_factor = 32;
     static const unsigned n_zeros = 0;
     static const unsigned n_nonzeros = 160;
     static const bool store_weights_in_bram = false;

@@ -28,6 +28,7 @@
 #include <math/mgc_ac_math.h>
 // TODO: use the provided functions
 //#include <ac_math/ac_sigmoid_pwl.h>
+#include <ac_math/ac_softmax_pwl.h>
 #endif
 
 namespace nnet {
@@ -208,6 +209,7 @@ void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 // *************************************************
 //       Softmax Activation
 // *************************************************
+#ifndef MNTR_CATAPULT_HLS
 #ifdef MNTR_CATAPULT_HLS
 inline ap_fixed<52,42> exp_fcn_fixed(ap_fixed<10,4> input) {
     ap_fixed<52,42> result;
@@ -354,6 +356,29 @@ void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     }
 
 }
+#else
+template<class data_T, class res_T, typename CONFIG_T>
+void  softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
+{
+
+    typedef ac_fixed<18, 6, true, AC_TRN, AC_SAT> input_type_t;
+    typedef ac_fixed<18, 2, false, AC_TRN, AC_SAT> output_type_t;
+
+    input_type_t _data[CONFIG_T::n_in];
+    output_type_t _res[CONFIG_T::n_in];
+
+    for (int i = 0; i < CONFIG_T::n_in; i++) {
+        _data[i] = data[i];
+    }
+
+    ac_math::ac_softmax_pwl(_data, _res);
+
+
+    for (int i = 0; i < CONFIG_T::n_in; i++) {
+        res[i] = _res[i];
+    }
+}
+#endif
 
 // *************************************************
 //       TanH Activation

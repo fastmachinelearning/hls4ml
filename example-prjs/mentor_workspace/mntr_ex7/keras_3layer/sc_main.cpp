@@ -37,9 +37,17 @@ CCS_MAIN (int argc, char *argv[])
 {
   std::cout << "Mentor Graphics Catapult HLS" << std::endl;
 #ifdef RTL_SIM
-  std::string RESULTS_LOG = "tb_data/catapult_rtl_cosim_results.log";
+#ifdef __ASIC__
+  std::string RESULTS_LOG = "tb_data/catapult_asic_rtl_cosim_results.log";
 #else
-  std::string RESULTS_LOG = "tb_data/catapult_csim_results.log";
+  std::string RESULTS_LOG = "tb_data/catapult_fpga_rtl_cosim_results.log";
+#endif
+#else
+#ifdef __ASIC__
+  std::string RESULTS_LOG = "tb_data/catapult_asic_csim_results.log";
+#else
+  std::string RESULTS_LOG = "tb_data/catapult_fpga_csim_results.log";
+#endif
 #endif
 #else
 int main(int argc, char **argv)
@@ -93,7 +101,6 @@ int main(int argc, char **argv)
 #else
       keras3layer(input_1,layer9_out,size_in1,size_out1);
 #endif
-
 
       //hls-fpga-machine-learning insert tb-output
       for(int i = 0; i < N_LAYER_8; i++) {
