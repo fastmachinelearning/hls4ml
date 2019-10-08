@@ -1,5 +1,5 @@
 #
-# Export few environment variables to compile the example with Mentor's
+# Export a few environment variables to compile the example with Mentor's
 # provided compiler and libraries.
 #
 # Usage:
@@ -7,37 +7,40 @@
 #
 
 # Base directory for CAD tools.
-export CAD_PATH="/opt/cad"
-
-# We do need Catapult HLS (high-level synthesis).
-export PATH="${CAD_PATH}/catapult/bin":${PATH}
-
-# Let's use the SystemC headers and library provided with Catapult HLS.
-export SYSTEMC="${CAD_PATH}/catapult/shared"
-
-# We do need Mentor Modelsim (simulator).
-export PATH="${CAD_PATH}/msim/modeltech/bin":$PATH
-
-# We do need Vivado (logic synthesis).
-source ${CAD_PATH}/vivado/settings64.sh
-
-# We do need Synopsys Design Compiler (logic synthesis).
-export PATH="${CAD_PATH}/syn/bin":$PATH
-
-# Makefiles and scripts from Catapult HLS may rely on this variable.
-export MGC_HOME=${CAD_PATH}/catapult
+export CAD_PATH="PATH_TO_YOUR_CAD_TOOLS"
 
 ####
 # We do need licensing for this example.
 ####
 
 # Mentor Graphics
-export LM_LICENSE_FILE=${LM_LICENSE_FILE}:"1720@bioeecad.ee.columbia.edu"
+export LM_LICENSE_FILE=${LM_LICENSE_FILE}:"PORT:SERVER_NAME"
 # Synopsys
-export LM_LICENSE_FILE=${LM_LICENSE_FILE}:"27000@bioeecad.ee.columbia.edu"
+export LM_LICENSE_FILE=${LM_LICENSE_FILE}:"PORT:SERVER_NAME"
 # Cadence
-export LM_LICENSE_FILE=${LM_LICENSE_FILE}:"5280@bioeecad.ee.columbia.edu"
+export LM_LICENSE_FILE=${LM_LICENSE_FILE}:"PORT:SERVER_NAME"
 # Xilinx
-export XILINXD_LICENSE_FILE="2177@espdev.cs.columbia.edu"
+export XILINXD_LICENSE_FILE="PORT:SERVER_NAME"
+
+
+# This path is host dependent.
+export CATAPULT_PATH="${CAD_PATH}/catapult"
+
+# Let's use GCC provided with Catapult HLS.
+export PATH="${CATAPULT_PATH}/bin":${PATH}
+
+# We do need Mentor Modelsim (simulator) for this example.
+export PATH="${CAD_PATH}/msim/modeltech/bin":$PATH
+
+# Let's use the SystemC headers and library provided with Catapult HLS.
+export SYSTEMC="${CATAPULT_PATH}/shared"
+
+# We need Vivado for logic synthesis.
+source ${CAD_PATH}/vivado/settings64.sh
+
+# We need Desing Compiler too. Please export the path to the tool.
+
+# Makefiles and scripts from Catapult HLS may rely on this variable.
+export MGC_HOME=${CATAPULT_PATH}
 
 export PS1="[catapult] $PS1"
