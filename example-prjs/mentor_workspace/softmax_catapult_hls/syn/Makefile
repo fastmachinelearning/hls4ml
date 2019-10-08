@@ -1,30 +1,10 @@
-help:
-	@echo "make <TAB> for usage"
-.PHONY: help
+PROJECT = softmax
 
-CCS := $(shell ls -t Catapult*ccs 2> /dev/null | head -n1)
+-include ../../scripts/Makefile-syn-catapult.mk
 
-gui:
-	catapult $(CCS) &
-.PHONY: gui
-
-hls-gui:
-	catapult -file build_prj.tcl &
-.PHONY: hls-gui
-
-hls-sh:
-	catapult -shell -file build_prj.tcl
-.PHONY: hls-sh
-
-kill-all:
-	pkill -f catapult || pkill -f vsim
-.PHONY: kill-all
-
-clean:
-	@echo "INFO: make ultraclean"
-.PHONY: clean
-
-ultraclean: clean
-	rm -rf Catapult* transcript vivado.jou vivado_*.str design_checker_constraints.tcl  design_checker_pre_build.tcl *.csv *log slec_*
-.PHONY: ultraclean
-
+--init:
+	touch tb_data/catapult_fpga_rtl_cosim_results.log
+	touch tb_data/catapult_asic_rtl_cosim_results.log
+	touch tb_data/catapult_fpga_csim_results.log
+	touch tb_data/catapult_asic_csim_results.log
+.PHONY: --init

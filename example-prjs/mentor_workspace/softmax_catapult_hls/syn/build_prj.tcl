@@ -1,9 +1,7 @@
-array set opt {
-    asic       1
-    csim       1
-    hsynth     1
-    rtlsim     1
-    lsynth     0
+if {$opt(asic)} {
+    project new -name Catapult_asic
+} else {
+    project new -name Catapult_fpga
 }
 
 #
