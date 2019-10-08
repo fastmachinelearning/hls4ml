@@ -39,6 +39,7 @@
             {
                 "class_name": "Dropout",
                 "config": {
+                    "dtype": "float32",
                     "name": "dropout_1",
                     "noise_shape": null,
                     "rate": 0.2,
@@ -57,6 +58,7 @@
                         "config": {}
                     },
                     "bias_regularizer": null,
+                    "dtype": "float32",
                     "kernel_constraint": null,
                     "kernel_initializer": {
                         "class_name": "VarianceScaling",
@@ -77,6 +79,7 @@
             {
                 "class_name": "Dropout",
                 "config": {
+                    "dtype": "float32",
                     "name": "dropout_2",
                     "noise_shape": null,
                     "rate": 0.2,
@@ -95,6 +98,7 @@
                         "config": {}
                     },
                     "bias_regularizer": null,
+                    "dtype": "float32",
                     "kernel_constraint": null,
                     "kernel_initializer": {
                         "class_name": "VarianceScaling",
@@ -115,5 +119,5 @@
         ],
         "name": "sequential_1"
     },
-    "keras_version": "2.2.4"
+    "keras_version": "2.3.0"
 }
