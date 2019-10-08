@@ -11,18 +11,13 @@ In particular, you should set:
 - `PORT` and `SERVER_NAME` to fetch your licenses.
 
 ## Run Catapult HLS
+
 ```
 cd syn
 source envsetup.sh
-make hls-gui
+make hls-[ asic | fpga ]-gui
 # or
-make hls-sh
+make hls-[ asic | fpga ]-sh
 ```
 This will run HLS for ASIC. The design is a simple Sigmoid and the synthesis should really run for few minutes.
 
-
-At the top of `syn/build_prj.tcl` you can set
-```
-    asic       0
-```
-to run HLS for FPGA.
