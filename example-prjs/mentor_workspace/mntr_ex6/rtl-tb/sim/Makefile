@@ -1,7 +1,9 @@
-TARGET=keras1layer
+TARGET = keras1layer
 
-EXE=$(TARGET).x
-VCD=$(TARGET).vcd
+EXE = $(TARGET).x
+
+VCD_FILE = $(TARGET).vcd
+CONFIG_FILE = show.gtkw
 
 VPATH :=
 VPATH += ../src
@@ -27,10 +29,10 @@ run: compile
 .PHONY: run
 
 view: run
-	gtkwave $(VCD)
+	gtkwave $(VCD_FILE) $(CONFIG_FILE) &
 .PHONY: view
 
 clean:
-	rm -rf $(EXE) $(VCD) 
+	rm -rf $(EXE) $(VCD_FILE)
 .PHONY: clean
 
