@@ -190,8 +190,15 @@ if {$opt(hsynth)} {
     #
 
     # Top-Module I/O
-    directive set /keras1layer/input_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_in_vld
-    directive set /keras1layer/layer5_out:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
+
+    ## DEPRECATED
+    ##directive set /keras1layer/input_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_in_vld
+    ##directive set /keras1layer/layer5_out:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
+
+    directive set /keras1layer/input_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_in_wait
+    directive set /keras1layer/layer5_out:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_wait
+    directive set /keras1layer/const_size_in_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
+    directive set /keras1layer/const_size_out_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
 
     # Arrays
     directive set /keras1layer/core/nnet::dense_large<input_t,layer2_t,config2>(input_1):rsc -MAP_TO_MODULE {[Register]}

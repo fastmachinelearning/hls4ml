@@ -5,3 +5,4 @@ design_checker_constraints.tcl
 design_checker_pre_build.tcl
 *.log
 *.png
+*.tgz
