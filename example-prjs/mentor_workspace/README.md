@@ -3,6 +3,8 @@
 Here you can find some experiments to evaluate the migration to Catapult HLS
 from Mentor Graphics.
 
+:+1: It works, :construction_worker: Working on it, :lock: Deprecated
+
 - :+1: `softmax_catapult_hls`: test your Catapult HLS installation
 - :+1: `sigmoid_catapult_hls`: test your Catapult HLS installation
 - :lock: ~`mntr_ex1`: mapping `ap_fixed` to `sc_fixed`~
