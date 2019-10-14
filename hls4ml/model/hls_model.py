@@ -718,8 +718,13 @@ class Dense(Layer):
 
 class Conv1D(Layer):
     def initialize(self):
-        shape = [self.attributes['n_out'], self.attributes['n_filt']]
-        dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['n_out'], self.attributes['n_filt']]
+            dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+        else:
+            shape = [self.attributes['n_filt'], self.attributes['n_out']]
+            dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
+        
         self.add_output_variable(shape, dims)
         self.add_weights()
         self.add_bias()
@@ -727,7 +732,7 @@ class Conv1D(Layer):
             if self.model.config.get_reuse_factor(self) == 1:
                 print('WARNING: Using ReuseFactor 1 with "Resource" strategy in layer "{}". This may not work.'.format(self.name))
             self.set_attr('strategy', 'large')
-            self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 1, 0])
+            self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 1, 0]) #(W,C,F) => (F,C,W)
         else:
             self.set_attr('strategy', 'latency')
 
@@ -742,8 +747,13 @@ class Conv1D(Layer):
 
     def config_cpp(self):
         params = self._default_config_params()
-        params['n_in'] = self.get_input_variable().dim_names[0]
-        params['n_chan'] = self.get_input_variable().dim_names[1]
+        input_dims = self.get_input_variable().dim_names
+        if self.get_attr('data_format') == 'channels_last':
+            params['n_in'] = '*'.join([str(k) for k in input_dims[:-1]])
+            params['n_chan'] = input_dims[-1]
+        else:
+            params['n_in'] = '*'.join([str(k) for k in input_dims[1:]])
+            params['n_chan'] = input_dims[0]
         params['dilation'] = self.get_attr('dilation', 1)
         params['n_filt'] = 'N_FILT_{}'.format(self.index)
         params['n_out'] = 'N_OUTPUTS_{}'.format(self.index)
