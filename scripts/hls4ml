@@ -72,12 +72,13 @@ def convert(args):
     else:
         model = hls4ml.converters.keras_to_hls(yamlConfig)
 
-    if yamlConfig['Backend'] == 'Vivado':
+    backend = yamlConfig.get('Backend', 'Vivado')
+    if backend == 'Vivado':
         if model is not None:
             hls4ml.writer.vivado_writer.write_hls(model)
-    elif yamlConfig['Backend'] == 'Intel':
+    elif backend == 'Intel':
         raise NotImplementedError
-    elif yamlConfig['Backend'] == 'Mentor':
+    elif backend == 'Mentor':
         raise NotImplementedError
     else:
         raise Exception('Backend values can be [Vivado, Intel, Mentor]')
@@ -104,14 +105,15 @@ def build(args):
 
     # Check if vivado_hls is available
     if 'linux' in sys.platform or 'darwin' in sys.platform:
-        if yamlConfig['Backend'] == 'Vivado':
+        backend = yamlConfig.get('Backend', 'Vivado')
+        if backend == 'Vivado':
             found = os.system('command -v vivado_hls > /dev/null')
             if found is not 0:
                 print('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
                 sys.exit(1)
-        elif yamlConfig['Backend'] == 'Intel':
+        elif backend == 'Intel':
             raise NotImplementedError
-        elif yamlConfig['Backend'] == 'Mentor':
+        elif backend == 'Mentor':
             raise NotImplementedError
         else:
             raise Exception('Backend values can be [Vivado, Intel, Mentor]')
