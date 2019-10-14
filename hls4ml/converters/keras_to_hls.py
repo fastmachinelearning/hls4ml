@@ -60,10 +60,11 @@ def keras_to_hls(yamlConfig):
     norm_layers = ['BatchNormalization']
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']
     merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate']
-    supported_layers = core_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers
-
     #Define layers to skip for conversion to HLS
-    skip_layers = ['Dropout', 'Flatten']
+    skip_layers = ['Dropout', 'Flatten', 'Reshape']
+    #All supported layers
+    supported_layers = core_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + skip_layers
+
     #Map inputs of skipped and split (activation) layers
     inputs_map = {}
 
@@ -102,8 +103,10 @@ def keras_to_hls(yamlConfig):
 
     print('Topology:')
     for keras_layer in layer_config:
-        if keras_layer["class_name"] is 'Flatten':
+        if keras_layer["class_name"] == 'Flatten':
             current_shape = [current_shape[0], np.prod(current_shape[1:])]
+        if keras_layer["class_name"] == 'Reshape':
+            current_shape[1:] = keras_layer['config']['target_shape']
         if keras_layer["class_name"] in skip_layers:
             if 'inbound_nodes' in keras_layer:
                 name = keras_layer['config']['name']
