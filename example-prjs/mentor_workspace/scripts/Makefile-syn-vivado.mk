@@ -3,7 +3,7 @@ help:
 .PHONY: help
 
 gui:
-	vivado_hls -p keras1layer_prj
+	vivado_hls -p $(PROJECT)_prj
 .PHONY: gui
 
 hls-sh:

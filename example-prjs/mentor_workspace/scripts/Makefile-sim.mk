@@ -16,7 +16,8 @@ ifndef V
 	QUIET_CLEAN         = @echo 'MAKE:' CLEAN ${PWD};
 endif
 
-all: release-vivado
+all:
+	@echo "INFO: make <TAB> for targets"
 .PHONY: all
 
 CXX          = g++
@@ -37,6 +38,7 @@ CXX_FLAGS += -Wno-sign-compare
 CXX_FLAGS += -Wno-unused-variable
 CXX_FLAGS += -Wno-narrowing
 CXX_FLAGS += -std=c++11
+CXX_FLAGS += -D__WEIGHTS_DIR__="../mnist_mlp/firmware/weights"
 
 LD_FLAGS :=
 LD_FLAGS += -lm
@@ -60,14 +62,14 @@ CXX_SOURCES += $(subst ../$(MODEL_DIR)/firmware/,,$(wildcard ../$(MODEL_DIR)/fir
 release-vivado: CXX_FLAGS += -O3
 release-vivado: INCDIR += -I$(XILINX_VIVADO)/include
 release-vivado: $(MODEL)
-.PHONY: realease-vivado
+.PHONY: release-vivado
 
-debug-vivado: CXX_FLAGS += -O0
-debug-vivado: CXX_FLAGS += -g
-debug-vivado: INCDIR += -I$(XILINX_VIVADO)/include
-debug-vivado: $(MODEL)
-	$(QUIET_INFO)echo "Compiled with debugging flags!"
-.PHONY: debug-vivado
+#debug-vivado: CXX_FLAGS += -O0
+#debug-vivado: CXX_FLAGS += -g
+#debug-vivado: INCDIR += -I$(XILINX_VIVADO)/include
+#debug-vivado: $(MODEL)
+#	$(QUIET_INFO)echo "Compiled with debugging flags!"
+#.PHONY: debug-vivado
 
 # Catapult HLS
 release-catapult: INCDIR += -I../inc
@@ -78,19 +80,19 @@ release-catapult: LD_LIBS += -L$(SYSTEMC)/lib
 release-catapult: LD_FLAGS += -lsystemc
 release-catapult: LD_FLAGS += -lpthread
 release-catapult: $(MODEL)
-.PHONY: realease-catapult
+.PHONY: release-catapult
 
-debug-catapult: INCDIR += -I../inc
-debug-catapult: INCDIR += -I$(SYSTEMC)/include
-debug-catapult: CXX_FLAGS += -g
-debug-catapult: CXX_FLAGS += -O0
-debug-catapult: CXX_FLAGS += -DMNTR_CATAPULT_HLS
-debug-catapult: LD_LIBS += -L$(SYSTEMC)/lib
-debug-catapult: LD_FLAGS += -lsystemc
-debug-catapult: LD_FLAGS += -lpthread
-debug-catapult: $(MODEL)
-	$(QUIET_INFO)echo "Compiled with debugging flags!"
-.PHONY: debug-catapult
+#debug-catapult: INCDIR += -I../inc
+#debug-catapult: INCDIR += -I$(SYSTEMC)/include
+#debug-catapult: CXX_FLAGS += -g
+#debug-catapult: CXX_FLAGS += -O0
+#debug-catapult: CXX_FLAGS += -DMNTR_CATAPULT_HLS
+#debug-catapult: LD_LIBS += -L$(SYSTEMC)/lib
+#debug-catapult: LD_FLAGS += -lsystemc
+#debug-catapult: LD_FLAGS += -lpthread
+#debug-catapult: $(MODEL)
+#	$(QUIET_INFO)echo "Compiled with debugging flags!"
+#.PHONY: debug-catapult
 
 CXX_OBJECTS := $(CXX_SOURCES:.cpp=.o)
 -include $(CXX_OBJECTS:.o=.d)
@@ -112,7 +114,7 @@ run-catapult: release-catapult
 validate-catapult:
 	@set -o pipefail; python ../../scripts/validate.py \
 		-r ./tb_data/tb_output_predictions.dat \
-		-i ./tb_data/catapult_csim_results.log \
+		-i ./tb_data/catapult_fpga_csim_results.log \
 		-t catapult \
 		| tee validate-catapult.log
 .PHONY: validate-catapult
@@ -125,18 +127,18 @@ validate-vivado:
 		| tee validate-vivado.log
 .PHONY: validate-vivado
 
-valgrind:
-	$(QUIET_RUN)valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(MODEL)
-.PHONY: valgrind
+#valgrind:
+#	$(QUIET_RUN)valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(MODEL)
+#.PHONY: valgrind
 
-gdb:
-	$(QUIET_RUN)gdb ./$(MODEL)
-.PHONY: gdb
+#gdb:
+#	$(QUIET_RUN)gdb ./$(MODEL)
+#.PHONY: gdb
 
 clean:
 	$(QUIET_CLEAN)rm -rf $(MODEL) *.o *.d
 .PHONY: clean
 
 ultraclean: clean
-	$(QUIET_CLEAN)rm -rf ./tb_data/csim_results*.log *.log *.png
+	$(QUIET_CLEAN)rm -rf ./tb_data/*.log *.log *.png
 .PHONY: ultraclean
