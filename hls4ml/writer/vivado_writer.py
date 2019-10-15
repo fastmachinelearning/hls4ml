@@ -227,7 +227,7 @@ class VivadoWriter(Writer):
     def write_weights(self, model):
         for layer in model.get_layers():
             for weights in layer.get_weights():
-                print_array_to_cpp(weights, model.config.get_output_dir())
+                self.print_array_to_cpp(weights, model.config.get_output_dir())
 
     def write_test_bench(self, model):
         ###################
@@ -380,13 +380,13 @@ class VivadoWriter(Writer):
 
     def write_hls(self, model):
         print('Writing HLS project')
-        write_project_dir(model)
-        write_project_cpp(model)
-        write_project_header(model)
-        write_weights(model)
-        write_parameters(model)
-        write_test_bench(model)
-        write_build_script(model)
-        write_nnet_utils(model)
-        write_tar(model)
+        self.write_project_dir(model)
+        self.write_project_cpp(model)
+        self.write_project_header(model)
+        self.write_weights(model)
+        self.write_parameters(model)
+        self.write_test_bench(model)
+        self.write_build_script(model)
+        self.write_nnet_utils(model)
+        self.write_tar(model)
         print('Done')
