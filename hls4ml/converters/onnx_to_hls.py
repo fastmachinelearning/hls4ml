@@ -4,7 +4,6 @@ import math
 from onnx import ModelProto, GraphProto, NodeProto, TensorProto
 from onnx import optimizer, helper, numpy_helper, shape_inference
 
-from hls4ml.writer.vivado_writer import write_hls
 from hls4ml.model import HLSModel
 from hls4ml.model.optimizer import optimize_model
 

@@ -4,11 +4,15 @@ import re
 import numpy as np
 from collections import OrderedDict
 
-from .templates import get_config_template, get_function_template
+from ..templates import get_backend
+from ..writer import get_writer
 
 class HLSConfig(object):
     def __init__(self, config):
         self.config = config
+
+        self.backend = get_backend(self.config.get('Backend', 'Vivado'))
+        self.writer = get_writer(self.config.get('Backend', 'Vivado'))
 
         self.model_precision = {}
         self.layer_type_precision = {}
@@ -490,8 +494,8 @@ class Layer(object):
 
         self.attributes = attributes
 
-        self._function_template = get_function_template(self.__class__.__name__)
-        self._config_template = get_config_template(self.__class__.__name__)
+        self._function_template = self.model.config.backend.get_function_template(self.__class__.__name__)
+        self._config_template = self.model.config.backend.get_config_template(self.__class__.__name__)
         self.weights = OrderedDict()
         self.variables = OrderedDict()
         self.precision = OrderedDict()
