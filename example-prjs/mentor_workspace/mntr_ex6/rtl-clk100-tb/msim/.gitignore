@@ -1,0 +1,5 @@
+*.vcd
+transcript
+vsim.wlf
+wave.do
+work

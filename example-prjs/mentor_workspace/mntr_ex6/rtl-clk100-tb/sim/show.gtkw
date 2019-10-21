@@ -1,0 +1,61 @@
+[*]
+[*] GTKWave Analyzer v3.3.61 (w)1999-2014 BSI
+[*] Wed Oct  9 19:20:27 2019
+[*]
+[dumpfile] "/home/giuseppe/research/projects/fastml/hls4ml-mentor.git/example-prjs/mentor_workspace/mntr_ex6/rtl-tb/sim/keras1layer.vcd"
+[dumpfile_mtime] "Wed Oct  9 19:19:55 2019"
+[dumpfile_size] 1987981
+[savefile] "/home/giuseppe/research/projects/fastml/hls4ml-mentor.git/example-prjs/mentor_workspace/mntr_ex6/rtl-tb/sim/show.gtkw"
+[timestart] 0
+[size] 2493 1276
+[pos] -1 -1
+*-4.593230 60 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] keras1layer_tb.
+[sst_width] 229
+[signals_width] 382
+[sst_expanded] 1
+[sst_vpaned_height] 379
+@28
+keras1layer_tb.clk
+[color] 7
+keras1layer_tb.reset
+@200
+-
+@28
+keras1layer_tb.expected_output_data[17:0]
+keras1layer_tb.dut_error
+keras1layer_tb.validate_event
+@200
+-
+@28
+keras1layer_tb.input_data[179:0]
+keras1layer_tb.input_valid
+keras1layer_tb.input_ready
+keras1layer_tb.input_triosy_lz
+@200
+-
+@28
+keras1layer_tb.output_data[17:0]
+@29
+keras1layer_tb.output_valid
+@28
+keras1layer_tb.output_ready
+keras1layer_tb.output_triosy_lz
+@200
+-
+@22
+keras1layer_tb.size_in_data[15:0]
+@28
+keras1layer_tb.size_in_valid
+keras1layer_tb.size_in_triosy_lz
+@200
+-
+@22
+keras1layer_tb.size_out_data[15:0]
+@28
+keras1layer_tb.size_out_valid
+keras1layer_tb.size_out_triosy_lz
+@200
+-
+[pattern_trace] 1
+[pattern_trace] 0
