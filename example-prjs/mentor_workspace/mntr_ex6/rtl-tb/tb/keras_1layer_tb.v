@@ -7,20 +7,16 @@ reg reset;
 reg [179:0] input_data;
 reg input_valid;
 wire input_ready;
-wire input_triosy_lz;
 
 wire [17:0] output_data;
 wire output_valid;
 reg output_ready;
-wire output_triosy_lz;
 
 wire [15:0] size_in_data;
 wire size_in_valid;
-wire size_in_triosy_lz;
 
 wire [15:0] size_out_data;
 wire size_out_ready;
-wire size_out_triosy_lz;
 
 reg [17:0] expected_output_data;
 reg dut_error;
@@ -33,20 +29,16 @@ keras1layer keras1layer_top (
     .input_1_rsc_dat (input_data), // IN
     .input_1_rsc_vld (input_valid), // IN
     .input_1_rsc_rdy (input_ready), // OUT
-    .input_1_rsc_triosy_lz (input_triosy_lz), // OUT
 
     .layer5_out_rsc_dat (output_data), // OUT
     .layer5_out_rsc_vld (output_valid), // OUT
     .layer5_out_rsc_rdy (output_ready), // IN
-    .layer5_out_rsc_triosy_lz (output_triosy_lz), // OUT
 
     .const_size_in_1_rsc_dat(size_in_data), // OUT
     .const_size_in_1_rsc_vld(size_in_valid), // OUT
-    .const_size_in_1_rsc_triosy_lz(size_in_triosy_lz), // OUT
 
     .const_size_out_1_rsc_dat(size_out_data), // OUT
-    .const_size_out_1_rsc_vld(size_out_valid), // OUT
-    .const_size_out_1_rsc_triosy_lz(size_out_triosy_lz) // OUT
+    .const_size_out_1_rsc_vld(size_out_valid) // OUT
 );
 
 // Trace file setup.
