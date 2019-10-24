@@ -11,7 +11,7 @@ run-rc-catapult-hls:
 .PHONY: run-rc-catapult-hls
 
 clean:
-	@echo "INFO: make ultraclean"
+	@echo "INFO: make <TAB> for targets"
 .PHONY: clean
 
 clean-fermi-lab:
@@ -19,11 +19,8 @@ clean-fermi-lab:
 .PHONY: clean-fermi-lab
 
 clean-catapult-hls:
-	rm -rf fv output/catapult_hls/* ./report/catapult_hls/*
+	rm -rf libscore_work fv output/catapult_hls/* ./report/catapult_hls/*
 .PHONY: clean-catapult-hls
 
-
-
-#ultraclean:
-#	rm -rf ./output_catapult_hls/* ./output_fermi_lab/* ./report_cataputl_hls/* ./report_fermi_lab/* rc.*cmd* rc.*log* libscore_work fv
-#.PHONY: ultraclean
+ultraclean: clean-fermi-lab clean-catapult-hls
+.PHONY: ultraclean
