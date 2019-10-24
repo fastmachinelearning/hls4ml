@@ -147,8 +147,8 @@ if {$opt(hsynth)} {
         solution library add nangate-45nm_beh -- -rtlsyntool RTLCompiler -vendor Nangate -technology 045nm
         solution library add ccs_sample_mem
     } elseif {$opt(asic) == 3} {
-#        solution library add nangate-45nm_beh -- -rtlsyntool RTLCompiler -vendor Nangate -technology 045nm
-#        solution library add ccs_sample_mem
+        puts "ERROR: Cadence Genus is not supported"
+        exit 1
     } else {
         solution library add mgc_Xilinx-KINTEX-u-2_beh -- -rtlsyntool Vivado -manufacturer Xilinx -family KINTEX-u -speed -2 -part xcku115-flva2104-2-i
         solution library add Xilinx_RAMS
@@ -189,6 +189,10 @@ if {$opt(hsynth)} {
     directive set /keras1layer/nnet::sigmoid<layer4_t,result_t,sigmoid_config5> -CCORE_DEBUG true
     directive set /keras1layer/nnet::dense_large<layer3_t,layer4_t,config4> -CCORE_DEBUG true
     directive set /keras1layer/nnet::relu<layer2_t,layer3_t,relu_config3> -CCORE_DEBUG true
+
+    # BUGFIX: This prevents the creation of the empty module CGHpart. In the
+    # next releases of Catapult HLS, this may be fixed.
+    directive set /keras1layer -GATE_EFFORT normal
 
     go assembly
 
@@ -259,9 +263,10 @@ if {$opt(hsynth)} {
         if {$opt(asic) == 1} {
             flow run /DesignCompiler/dc_shell ./concat_rtl.v.dc v
         } elseif {$opt(asic) == 2} {
-            flow run /RTLCompiler/rc ./concat_rtl.v.dc v
+            flow run /RTLCompiler/rc ./concat_rtl.v.rc v
         } elseif {$opt(asic) == 3} {
-            flow run /RTLCompiler/rc ./concat_rtl.v.dc v
+            puts "ERROR: Cadence Genus is not supported"
+            exit 1
         } else {
             flow run /Vivado/synthesize -shell vivado/concat_rtl.v.xv
         }

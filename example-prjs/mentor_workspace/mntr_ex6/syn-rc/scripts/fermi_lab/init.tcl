@@ -17,8 +17,8 @@ set ec::start [clock seconds]
 #set ec::outDir          ../output
 #set ec::reportDir       ../report
 set ec::inDir           ./input
-set ec::outDir          ./output
-set ec::reportDir       ./report
+set ec::outDir          ./output/fermi_lab
+set ec::reportDir       ./report/fermi_lab
 
 set ec::SYN_EFFORT      medium
 set ec::MAP_EFFORT      high
@@ -69,7 +69,7 @@ set ec::VHDL_VERSION    1993
 set ec::LEFLIB          "$OPEN45NM_PDK/nangate45nm.lef" 
 
 #set ec::SDC             ../sdc/constraint.sdc
-set ec::SDC             ./constraint.sdc
+set ec::SDC             ./scripts/constraint.sdc
 
 
 set ec::SUPPRESS_MSG    {LBR-30 LBR-31 VLOGPT-35}
