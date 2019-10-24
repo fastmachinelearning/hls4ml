@@ -13,33 +13,44 @@ set ec::start [clock seconds]
 # Setup file, directories, and variables
 #####################################################################
 
-set ec::inDir           ../verilog/syn-catapult-hls-keras1layer/Catapult/keras1layer.v1
-set ec::outDir          ../output
-set ec::reportDir       ../report
+#set ec::inDir           ../verilog/syn-catapult-hls-keras1layer/Catapult/keras1layer.v1
+#set ec::outDir          ../output
+#set ec::reportDir       ../report
+set ec::inDir           ./input
+set ec::outDir          ./output
+set ec::reportDir       ./report
 
 set ec::SYN_EFFORT      medium
 set ec::MAP_EFFORT      high
 set ec::INCR_EFFORT     high
 
-set TSMC_PDK "/asic/cad/Library/tsmc/TSMC65_VCAD/Base_PDK/V1.7A_1/1p9m6x1z1u"
+#set TSMC_PDK "/asic/cad/Library/tsmc/TSMC65_VCAD/Base_PDK/V1.7A_1/1p9m6x1z1u"
+set OPEN45NM_PDK "/opt/cad/catapult/pkgs/siflibs/nangate"
+
+#set_attr library /opt/cad/catapult/pkgs/siflibs/nangate/nangate45nm_nldm.lib
+#set_attr lef_library /opt/cad/catapult/pkgs/siflibs/nangate/nangate45nm.lef
+
 
 set CORE_CHIP 	CHIP
 set DFT OFF
 #set DESIGN keras1layer
 
-set ec::RTL_PATH        ../verilog/syn-catapult-hls-keras1layer/Catapult/keras1layer.v1
-set ec::LIB_PATH        "$TSMC_PDK"
+#set ec::RTL_PATH        ../verilog/syn-catapult-hls-keras1layer/Catapult/keras1layer.v1
+#set ec::LIB_PATH        "$TSMC_PDK"
+set ec::RTL_PATH        ./input
+set ec::LIB_PATH        "$OPEN45NM_PDK"
 
 
-set ec::LIBRARY         "$TSMC_PDK/../../digital/Front_End/timing_power_noise/NLDM/tcbn65lp_200a/tcbn65lpwc.lib \
+#set ec::LIBRARY         "$TSMC_PDK/../../digital/Front_End/timing_power_noise/NLDM/tcbn65lp_200a/tcbn65lpwc.lib \
 						 $TSMC_PDK/../../digital/Front_End/timing_power_noise/NLDM/tpdn65lpnv2od3_200a/tpdn65lpnv2od3wc.lib \
 						 $TSMC_PDK/../../digital/Front_End/timing_power_noise/NLDM/tpan65lpnv2od3_200a/tpan65lpnv2od3wc.lib"
 						 
-set ec::LIBRARY_7THVT   "$TSMC_PDK/../../digital/Front_End/timing_power_noise/NLDM/tcbn65lpbwp7thvt_141a/tcbn65lpbwp7thvtwc.lib \
+#set ec::LIBRARY_7THVT   "$TSMC_PDK/../../digital/Front_End/timing_power_noise/NLDM/tcbn65lpbwp7thvt_141a/tcbn65lpbwp7thvtwc.lib \
 						 $TSMC_PDK/../../digital/Front_End/timing_power_noise/NLDM/tpdn65lpnv2od3_200a/tpdn65lpnv2od3wc.lib"
+set ec::LIBRARY          "$OPEN45NM_PDK/nangate45nm_nldm.lib"
 
-
-set ec::VERILOG_LIST    { dense.v }
+#set ec::VERILOG_LIST    { dense.v }
+set ec::VERILOG_LIST    { concat_rtl.v }
 
 
 
@@ -48,13 +59,17 @@ set ec::VHDL_LIST       {}
 set ec::VHDL_VERSION    1993
 
 #set ec::LEFLIB "/homedir/bonacini/TSMC65/Libraries/tcbn65lp_200b/TSMCHOME/digital/Back_End/lef/tcbn65lp_200a/lef/tcbn65lp_6lmT2.lef "
-set ec::LEFLIB " $TSMC_PDK/../../digital/Back_End/lef/tcbn65lp_200a/lef/tcbn65lp_6lmT1.lef \
+#set ec::LEFLIB " $TSMC_PDK/../../digital/Back_End/lef/tcbn65lp_200a/lef/tcbn65lp_6lmT1.lef \
 				 $TSMC_PDK/../../digital/Back_End/lef/tpdn65lpnv2od3_140b/mt_2/6lm/lef/tpdn65lpnv2od3_6lm.lef \
 				 $TSMC_PDK/../../digital/Back_End/lef/tcbn65lpbwp7thvt_141a/lef/tcbn65lpbwp7thvt_6lmT1.lef "
 				 
 #set ec::CAPTABLE "/homedir/bonacini/TSMC65/Libraries/tcbn65lp_200b/TSMCHOME/digital/Back_End/lef/tcbn65lp_200a/techfiles/captable/cln65lp_1p06m+alrdl_top2_rcworst.captable"
-set ec::CAPTABLE "$TSMC_PDK/../../digital/Back_End/lef/tcbn65lp_200a/techfiles/captable/cln65lp_1p06m+alrdl_top1_cworst.captable"
-set ec::SDC             ../sdc/constraint.sdc
+#set ec::CAPTABLE "$TSMC_PDK/../../digital/Back_End/lef/tcbn65lp_200a/techfiles/captable/cln65lp_1p06m+alrdl_top1_cworst.captable"
+
+set ec::LEFLIB          "$OPEN45NM_PDK/nangate45nm.lef" 
+
+#set ec::SDC             ../sdc/constraint.sdc
+set ec::SDC             ./constraint.sdc
 
 
 set ec::SUPPRESS_MSG    {LBR-30 LBR-31 VLOGPT-35}
@@ -125,16 +140,17 @@ set_attribute hdl_search_path $ec::RTL_PATH /
 set_attribute lib_search_path $ec::LIB_PATH /
 
 # timing libraries
-create_library_domain {sc9t sc7thvt}
-set_attribute library $ec::LIBRARY sc9t
-set_attribute library $ec::LIBRARY_7THVT sc7thvt
+#create_library_domain {sc9t sc7thvt}
+#set_attribute library $ec::LIBRARY sc9t
+#set_attribute library $ec::LIBRARY_7THVT sc7thvt
+set_attribute library $ec::LIBRARY
 
-set_attribute default true sc9t
+#set_attribute default true sc9t
 #set_attribute default true sc7thvt
 
 # lef & captbl
 set_attribute lef_library $ec::LEFLIB /
-set_attribute cap_table_file $ec::CAPTABLE /
+#set_attribute cap_table_file $ec::CAPTABLE /
 
 set_attribute interconnect_mode ple / 
 

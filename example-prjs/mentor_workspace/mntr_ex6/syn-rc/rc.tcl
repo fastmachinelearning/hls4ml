@@ -6,26 +6,36 @@
 
 if {[catch {
 
-	source ../scripts/init.tcl
-	if {$DFT == "ON"} {source ../scripts/dft.tcl}
-	source ../scripts/syn.tcl
-	if {$DFT == "ON"} {source ../scripts/dft2.tcl}
-	source ../scripts/syn2.tcl
+#    source ../scripts/init.tcl
+#    if {$DFT == "ON"} {source ../scripts/dft.tcl}
+#    source ../scripts/syn.tcl
+#    if {$DFT == "ON"} {source ../scripts/dft2.tcl}
+#    source ../scripts/syn2.tcl
+
+	source init.tcl
+	if {$DFT == "ON"} {source dft.tcl}
+	source syn.tcl
+	if {$DFT == "ON"} {source dft2.tcl}
+	source syn2.tcl
 
 	#####################################################################
 	# BEGIN POSTAMBLE: DO NOT EDIT
 
 	# Write the netlist
-	write -m > $ec::outDir/r2g.v
+	#write -m > $ec::outDir/r2g.v
+	write -m > ./output/r2g.v
 
 	# Write SDC file
-	write_sdc > $ec::outDir/r2g.sdc
+	#write_sdc > $ec::outDir/r2g.sdc
+	write_sdc > ./output/r2g.sdc
 
 	# Write RC script file
-	write_script > $ec::outDir/r2g.g
+	#write_script > $ec::outDir/r2g.g
+    write_script > ./output/r2g.g
 
 	# Write LEC file
-	write_do_lec -no_exit -revised_design $ec::outDir/r2g.v  >../../lec/scripts/rtl2map.tcl
+	#write_do_lec -no_exit -revised_design $ec::outDir/r2g.v  >../../lec/scripts/rtl2map.tcl
+	write_do_lec -no_exit -revised_design ./output/r2g.v  > ./output/rtl2map.tcl
 
 	# END POSTAMBLE
 	#####################################################################
