@@ -1,5 +1,4 @@
-*
-!envsetup.sh
-!Makefile
-!.gitignore
-!tb_data
+*.o
+*.d
+*.log
+mnistmlp

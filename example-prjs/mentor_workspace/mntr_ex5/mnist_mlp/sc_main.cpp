@@ -27,7 +27,7 @@
 //#include "firmware/parameters.h"
 #include "firmware/mnist_mlp.h"
 
-#define CHECKPOINT 5000
+#define CHECKPOINT 1
 
 #ifdef MNTR_CATAPULT_HLS
 // SCVerify verification MACROs
@@ -36,30 +36,43 @@
 CCS_MAIN (int argc, char *argv[])
 {
   std::cout << "Mentor Graphics Catapult HLS" << std::endl;
+#ifdef RTL_SIM
+#ifdef __ASIC__
+  std::string RESULTS_LOG = "tb_data/catapult_asic_rtl_cosim_results.log";
+#else
+  std::string RESULTS_LOG = "tb_data/catapult_fpga_rtl_cosim_results.log";
+#endif
+#else
+#ifdef __ASIC__
+  std::string RESULTS_LOG = "tb_data/catapult_asic_csim_results.log";
+#else
+  std::string RESULTS_LOG = "tb_data/catapult_fpga_csim_results.log";
+#endif
+#endif
 #else
 int main(int argc, char **argv)
 {
   std::cout << "Xilinx Vivado HLS" << std::endl;
+#ifdef RTL_SIM
+  std::string RESULTS_LOG = "tb_data/vivado_rtl_cosim_results.log";
+#else
+  std::string RESULTS_LOG = "tb_data/vivado_csim_results.log";
+#endif
 #endif
   //load input data from text file
   std::ifstream fin("tb_data/tb_input_features.dat");
   //load predictions from text file
   std::ifstream fpr("tb_data/tb_output_predictions.dat");
 
-#ifdef RTL_SIM
-  std::string RESULTS_LOG = "tb_data/rtl_cosim_results.log";
-#else
-  std::string RESULTS_LOG = "tb_data/csim_results.log";
-#endif
   std::ofstream fout(RESULTS_LOG);
 
   std::string iline;
   std::string pline;
   int e = 0;
 
-  if (fin.is_open() && fpr.is_open()) {    
+  if (fin.is_open() && fpr.is_open()) {
     while ( std::getline(fin,iline) && std::getline (fpr,pline) ) {
-      if (e % CHECKPOINT == 0) std::cout << "Processing input " << e << std::endl;
+      if (e % CHECKPOINT == 0) std::cout << "INFO: Processing input: # " << e << std::endl;
       e++;
       char* cstr=const_cast<char*>(iline.c_str());
       char* current;
@@ -88,6 +101,7 @@ int main(int argc, char **argv)
 #else
       mnist_mlp(input1,layer7_out,size_in1,size_out1);
 #endif
+
       //hls-fpga-machine-learning insert tb-output
       for(int i = 0; i < N_LAYER_6; i++) {
         fout << layer7_out[i].to_double() << " ";
@@ -95,13 +109,13 @@ int main(int argc, char **argv)
       fout << std::endl;
 
       if (e % CHECKPOINT == 0) {
-        std::cout << "Predictions" << std::endl;
+        std::cout << "INFO:     Predictions          : ";
         //hls-fpga-machine-learning insert predictions
         for(int i = 0; i < N_LAYER_6; i++) {
           std::cout << pr[i] << " ";
         }
         std::cout << std::endl;
-        std::cout << "Quantized predictions" << std::endl;
+        std::cout << "INFO:     Quantized predictions: ";
         //hls-fpga-machine-learning insert quantized
         for(int i = 0; i < N_LAYER_6; i++) {
           std::cout << layer7_out[i].to_double() << " ";
@@ -120,11 +134,15 @@ int main(int argc, char **argv)
 
     //hls-fpga-machine-learning insert top-level-function
     unsigned short size_in1,size_out1;
+#ifdef MNTR_CATAPULT_HLS
+    CCS_DESIGN(mnist_mlp)(input1,layer7_out,size_in1,size_out1);
+#else
     mnist_mlp(input1,layer7_out,size_in1,size_out1);
+#endif
 
     //hls-fpga-machine-learning insert output
     for(int i = 0; i < N_LAYER_6; i++) {
-      std::cout << layer7_out[i].to_double() << " ";
+      std::cout << "INFO: PREDICTION: " << layer7_out[i].to_double() << " ";
     }
     std::cout << std::endl;
 

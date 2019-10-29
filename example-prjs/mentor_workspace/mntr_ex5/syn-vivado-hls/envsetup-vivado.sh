@@ -1,0 +1,1 @@
+../../scripts/envsetup-vivado.sh

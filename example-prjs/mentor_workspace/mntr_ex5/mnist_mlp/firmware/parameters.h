@@ -18,8 +18,8 @@
 
 //hls-fpga-machine-learning insert numbers
 #define N_INPUT_1_1 784
-#define N_LAYER_2 256
-#define N_LAYER_4 256
+#define N_LAYER_2 64
+#define N_LAYER_4 64
 #define N_LAYER_6 10
 
 //hls-fpga-machine-learning insert layer-precision
@@ -37,10 +37,10 @@ struct config2 : nnet::dense_config {
     static const unsigned n_in = N_INPUT_1_1;
     static const unsigned n_out = N_LAYER_2;
     static const unsigned io_type = nnet::io_parallel;
-    static const unsigned reuse_factor = 784;
+    static const unsigned reuse_factor = 12544;
     static const unsigned n_zeros = 0;
-    static const unsigned n_nonzeros = 200704;
-    static const bool store_weights_in_bram = false;
+    static const unsigned n_nonzeros = 50176;
+    static const bool store_weights_in_bram = true;
     typedef ap_fixed<18,8> accum_t;
     typedef model_default_t bias_t;
     typedef model_default_t weight_t;
@@ -57,10 +57,10 @@ struct config4 : nnet::dense_config {
     static const unsigned n_in = N_LAYER_2;
     static const unsigned n_out = N_LAYER_4;
     static const unsigned io_type = nnet::io_parallel;
-    static const unsigned reuse_factor = 784;
+    static const unsigned reuse_factor = 4096;
     static const unsigned n_zeros = 0;
-    static const unsigned n_nonzeros = 65536;
-    static const bool store_weights_in_bram = false;
+    static const unsigned n_nonzeros = 4096;
+    static const bool store_weights_in_bram = true;
     typedef ap_fixed<18,8> accum_t;
     typedef model_default_t bias_t;
     typedef model_default_t weight_t;
@@ -77,10 +77,10 @@ struct config6 : nnet::dense_config {
     static const unsigned n_in = N_LAYER_4;
     static const unsigned n_out = N_LAYER_6;
     static const unsigned io_type = nnet::io_parallel;
-    static const unsigned reuse_factor = 784;
+    static const unsigned reuse_factor = 4096;
     static const unsigned n_zeros = 0;
-    static const unsigned n_nonzeros = 2560;
-    static const bool store_weights_in_bram = false;
+    static const unsigned n_nonzeros = 640;
+    static const bool store_weights_in_bram = true;
     typedef ap_fixed<18,8> accum_t;
     typedef model_default_t bias_t;
     typedef model_default_t weight_t;

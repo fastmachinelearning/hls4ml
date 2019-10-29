@@ -20,7 +20,7 @@
 
 #include "mnist_mlp.h"
 
-#define __SYNTHESIS__
+//#define __SYNTHESIS__
 
 //hls-fpga-machine-learning insert weights
 #include "weights/w2.h"
@@ -50,11 +50,11 @@ void mnist_mlp(
     static bool loaded_weights = false;
     if (!loaded_weights) {
         //hls-fpga-machine-learning insert load weights
-        nnet::load_weights_from_txt<model_default_t, 200704>(w2, "w2.txt");
-        nnet::load_weights_from_txt<model_default_t, 256>(b2, "b2.txt");
-        nnet::load_weights_from_txt<model_default_t, 65536>(w4, "w4.txt");
-        nnet::load_weights_from_txt<model_default_t, 256>(b4, "b4.txt");
-        nnet::load_weights_from_txt<model_default_t, 2560>(w6, "w6.txt");
+        nnet::load_weights_from_txt<model_default_t, 50176>(w2, "w2.txt");
+        nnet::load_weights_from_txt<model_default_t, 64>(b2, "b2.txt");
+        nnet::load_weights_from_txt<model_default_t, 4096>(w4, "w4.txt");
+        nnet::load_weights_from_txt<model_default_t, 64>(b4, "b4.txt");
+        nnet::load_weights_from_txt<model_default_t, 640>(w6, "w6.txt");
         nnet::load_weights_from_txt<model_default_t, 10>(b6, "b6.txt");
         loaded_weights = true;
     }
