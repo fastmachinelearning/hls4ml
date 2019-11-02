@@ -39,6 +39,8 @@ solution options set Flows/ModelSim/VLOG_OPTS {-suppress 12110}
 solution options set Flows/ModelSim/VSIM_OPTS {-t ps -suppress 12110}
 solution options set Flows/DesignCompiler/OutNetlistFormat verilog
 solution options set /Input/CppStandard c++11
+#solution options set /Output/OutputVHDL false
+#solution options set /TextEditor/FontSize 9
 #solution options set /Input/TargetPlatform x86_64
 flow package require /SCVerify
 
@@ -90,11 +92,11 @@ directive set -TRANSACTION_DONE_SIGNAL false
 
 # Design specific options.
 if {$opt(asic) > 0} {
-solution options set Flows/QuestaSIM/SCCOM_OPTS {-g -x c++ -Wall -Wno-unused-label -Wno-unknown-pragmas -DRTL_SIM -D__ASIC__}
-solution options set /Input/CompilerFlags {-DMNTR_CATAPULT_HLS -D__ASIC__}
+    solution options set Flows/QuestaSIM/SCCOM_OPTS {-g -x c++ -Wall -Wno-unused-label -Wno-unknown-pragmas -DRTL_SIM -D__ASIC__}
+    solution options set /Input/CompilerFlags {-DMNTR_CATAPULT_HLS -D__ASIC__}
 } else {
-solution options set Flows/QuestaSIM/SCCOM_OPTS {-g -x c++ -Wall -Wno-unused-label -Wno-unknown-pragmas -DRTL_SIM -D__FPGA__}
-solution options set /Input/CompilerFlags {-DMNTR_CATAPULT_HLS -D__FPGA__}
+    solution options set Flows/QuestaSIM/SCCOM_OPTS {-g -x c++ -Wall -Wno-unused-label -Wno-unknown-pragmas -DRTL_SIM -D__FPGA__}
+    solution options set /Input/CompilerFlags {-DMNTR_CATAPULT_HLS -D__FPGA__}
 }
 solution options set /Input/SearchPath {../inc ../mnist_mlp/firmware/ ../mnist_mlp/firmware/weights ../mnist_mlp/firmware/nnet_utils}
 
@@ -115,18 +117,19 @@ go analyze
 #
 
 # Set the top module and inline all of the other functions.
-#directive set -DESIGN_HIERARCHY mnist_mlp
+directive set -DESIGN_HIERARCHY mnist_mlp
 
 # Set the top module and set FC, RELU, Sigmoid as submodules.
-directive set -DESIGN_HIERARCHY { \
-    mnist_mlp \
-    {nnet::dense_large<ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, config2>} \
-    {nnet::dense_large<ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, config4>} \
-    {nnet::dense_large<ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, config6>} \
-    {nnet::softmax<ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, softmax_config7>} \
-    {nnet::relu<ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, relu_config3>} \
-    {nnet::relu<ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, relu_config5>} \
-}
+# See Chap. 8 of the HLS Bluebook for Hierarchical Design
+#directive set -DESIGN_HIERARCHY { \
+#    mnist_mlp \
+#    {nnet::dense_large<ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, config2>} \
+#    {nnet::dense_large<ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, config4>} \
+#    {nnet::dense_large<ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, config6>} \
+#    {nnet::softmax<ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, softmax_config7>} \
+#    {nnet::relu<ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, relu_config3>} \
+#    {nnet::relu<ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, ac_fixed<18, 8, true, AC_TRN, AC_WRAP>, relu_config5>} \
+#}
 
 go compile
 
@@ -166,9 +169,9 @@ if {$opt(hsynth)} {
 
     directive set -CLOCKS { \
         clk { \
-            -CLOCK_PERIOD 5 \
+            -CLOCK_PERIOD 10.0 \
             -CLOCK_EDGE rising \
-            -CLOCK_HIGH_TIME 2.5 \
+            -CLOCK_HIGH_TIME 5.0 \
             -CLOCK_OFFSET 0.000000 \
             -CLOCK_UNCERTAINTY 0.0 \
             -RESET_KIND sync \
@@ -178,118 +181,173 @@ if {$opt(hsynth)} {
             -RESET_ASYNC_ACTIVE low \
             -ENABLE_NAME {} \
             -ENABLE_ACTIVE high \
-    } \
+        } \
     }
-
-    directive set /mnist_mlp/nnet::dense_large<input_t,layer2_t,config2> -MAP_TO_MODULE {[CCORE]}
-    directive set /mnist_mlp/nnet::dense_large<layer3_t,layer4_t,config4> -MAP_TO_MODULE {[CCORE]}
-    directive set /mnist_mlp/nnet::dense_large<layer5_t,layer6_t,config6> -MAP_TO_MODULE {[CCORE]}
-
-    directive set /mnist_mlp/nnet::relu<layer2_t,layer3_t,relu_config3> -MAP_TO_MODULE {[CCORE]}
-    directive set /mnist_mlp/nnet::relu<layer4_t,layer5_t,relu_config5> -MAP_TO_MODULE {[CCORE]}
-
-    directive set /mnist_mlp/nnet::softmax<layer6_t,result_t,softmax_config7> -MAP_TO_MODULE {[CCORE]}
-
-    # Retains the solution for the CCOREs within the project.
-    directive set /mnist_mlp/nnet::dense_large<input_t,layer2_t,config2> -CCORE_DEBUG true
-    directive set /mnist_mlp/nnet::dense_large<layer3_t,layer4_t,config4> -CCORE_DEBUG true
-    directive set /mnist_mlp/nnet::dense_large<layer5_t,layer6_t,config6> -CCORE_DEBUG true
-   
-    directive set /mnist_mlp/nnet::relu<layer2_t,layer3_t,relu_config3> -CCORE_DEBUG true
-    directive set /mnist_mlp/nnet::relu<layer4_t,layer5_t,relu_config5> -CCORE_DEBUG true
-
-    directive set /mnist_mlp/nnet::softmax<layer6_t,result_t,softmax_config7> -CCORE_DEBUG true
 
     # BUGFIX: This prevents the creation of the empty module CGHpart. In the
     # next releases of Catapult HLS, this may be fixed.
     directive set /mnist_mlp -GATE_EFFORT normal
-
+    
     go assembly
-
-    #
-    #
-    #
-
+    
     # Top-Module I/O
-
-    ## DEPRECATED
-    ##directive set /mnist_mlp/input_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_in_vld
-    ##directive set /mnist_mlp/layer5_out:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
-
-    directive set /mnist_mlp/input_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_in_wait
+    directive set /mnist_mlp/input1:rsc -MAP_TO_MODULE ccs_ioport.ccs_in_wait
+    directive set /mnist_mlp/input1:rsc -PACKING_MODE sidebyside
+    directive set /mnist_mlp/input1 -WORD_WIDTH 14112
+    
     directive set /mnist_mlp/layer7_out:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_wait
-    directive set /mnist_mlp/const_size_in_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
-    directive set /mnist_mlp/const_size_out_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
+    directive set /mnist_mlp/layer7_out:rsc -PACKING_MODE sidebyside
+    directive set /mnist_mlp/layer7_out -WORD_WIDTH 180
+    
+    directive set /mnist_mlp/const_size_in_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_wait
+    
+    directive set /mnist_mlp/const_size_out_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_wait
+    
+    directive set /mnist_mlp/w2:rsc -MAP_TO_MODULE ccs_sample_mem.ccs_ram_sync_dualport
+#    directive set /mnist_mlp/w2:rsc -PACKING_MODE sidebyside
+    directive set /mnist_mlp/w2 -WORD_WIDTH 18
+    #56448
+    
+    directive set /mnist_mlp/w4:rsc -MAP_TO_MODULE ccs_sample_mem.ccs_ram_sync_dualport
+#    directive set /mnist_mlp/w4:rsc -PACKING_MODE sidebyside
+    directive set /mnist_mlp/w4 -WORD_WIDTH 18
+    # 4096
+    
+    directive set /mnist_mlp/w6:rsc -MAP_TO_MODULE ccs_sample_mem.ccs_ram_sync_dualport
+#    directive set /mnist_mlp/w6:rsc -PACKING_MODE sidebyside
+    directive set /mnist_mlp/w6 -WORD_WIDTH 18
+    # 2304
 
-    # Arrays
-    directive set /mnist_mlp/core/nnet::dense_large<input_t,layer2_t,config2>(input_1):rsc -MAP_TO_MODULE {[Register]}
-    directive set /mnist_mlp/core/nnet::dense_large<layer3_t,layer4_t,config4>(layer3_out):rsc -MAP_TO_MODULE {[Register]}
-    directive set /mnist_mlp/core/nnet::dense_large<layer5_t,layer6_t,config6>(layer5_out):rsc -MAP_TO_MODULE {[Register]}
+    directive set /mnist_mlp/b2:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
+    #directive set /mnist_mlp/b2:rsc -MAP_TO_MODULE ccs_sample_mem.ccs_ram_sync_dualport
+    directive set /mnist_mlp/b2 -WORD_WIDTH 1152
 
-    directive set /mnist_mlp/core/nnet::relu<layer2_t,layer3_t,relu_config3>(layer2_out):rsc -MAP_TO_MODULE {[Register]}
-    directive set /mnist_mlp/core/nnet::relu<layer4_t,layer5_t,relu_config5>(layer4_out):rsc -MAP_TO_MODULE {[Register]}
+    directive set /mnist_mlp/b4:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
+    #directive set /mnist_mlp/b4:rsc -MAP_TO_MODULE ccs_sample_mem.ccs_ram_sync_dualport
+    directive set /mnist_mlp/b4 -WORD_WIDTH 1152
 
-    directive set /mnist_mlp/core/nnet::softmax<layer6_t,result_t,softmax_config7>(layer6_out):rsc -MAP_TO_MODULE {[Register]}
+    directive set /mnist_mlp/b6:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
+    #directive set /mnist_mlp/b6:rsc -MAP_TO_MODULE ccs_sample_mem.ccs_ram_sync_dualport
+    directive set /mnist_mlp/b6 -WORD_WIDTH 180
 
-    # Loops
-    directive set /mnist_mlp/nnet::dense_large<input_t,layer2_t,config2>/core/main -UNROLL no
-    directive set /mnist_mlp/nnet::dense_large<layer3_t,layer4_t,config4>/core/main -UNROLL no
-    directive set /mnist_mlp/nnet::dense_large<layer5_t,layer6_t,config6>/core/main -UNROLL no
-
-    directive set /mnist_mlp/nnet::relu<layer2_t,layer3_t,relu_config3>/core/main -UNROLL no
-    directive set /mnist_mlp/nnet::relu<layer4_t,layer5_t,relu_config5>/core/main -UNROLL no
+   # Arrays
    
-    directive set /mnist_mlp/nnet::softmax<layer6_t,result_t, softmax_config7>/core/main -UNROLL no
+   directive set /mnist_mlp/core/nnet::dense_large_rf_gt_nin_rem0<input_t,layer2_t,config2>:acc:rsc -MAP_TO_MODULE {[Register]}
+   directive set /mnist_mlp/core/nnet::dense_large_rf_gt_nin_rem0<layer3_t,layer4_t,config4>:acc:rsc -MAP_TO_MODULE {[Register]}
+   directive set /mnist_mlp/core/nnet::dense_large_rf_gt_nin_rem0<layer5_t,layer6_t,config6>:acc:rsc -MAP_TO_MODULE {[Register]}
+   
+##   directive set /mnist_mlp/nnet::dense_large_rf_gt_nin_rem0<input_t,layer2_t,config2>:outidx.rom:rsc -MAP_TO_MODULE {[Register]}
+#   directive set /mnist_mlp/core/nnet::dense_large_rf_gt_nin_rem0<input_t,layer2_t,config2>:outidx:rsc -MAP_TO_MODULE ccs_sample_mem.ccs_ram_sync_dualport
+#   directive set /mnist_mlp/core/nnet::dense_large_rf_gt_nin_rem0<input_t,layer2_t,config2>:outidx -WORD_WIDTH 32
 
-    go architect
+   directive set /mnist_mlp/nnet::dense_large_rf_gt_nin_rem0<layer3_t,layer4_t,config4>:outidx.rom:rsc -MAP_TO_MODULE {[Register]}
+   directive set /mnist_mlp/nnet::dense_large_rf_gt_nin_rem0<layer3_t,layer4_t,config4>:outidx.rom -WORD_WIDTH 32
 
-    #
-    #
-    #
+   directive set /mnist_mlp/nnet::dense_large_rf_gt_nin_rem0<layer5_t,layer6_t,config6>:outidx.rom:rsc -MAP_TO_MODULE {[Register]}
+   directive set /mnist_mlp/nnet::dense_large_rf_gt_nin_rem0<layer5_t,layer6_t,config6>:outidx.rom -WORD_WIDTH 32
 
-    go allocate
+   
+   directive set /mnist_mlp/ac_math::ac_pow2_pwl<AC_TRN,19,7,true,AC_TRN,AC_SAT,67,47,AC_TRN,AC_WRAP>:c_lut.rom:rsc -MAP_TO_MODULE {[Register]}
+   directive set /mnist_mlp/ac_math::ac_pow2_pwl<AC_TRN,19,7,true,AC_TRN,AC_SAT,67,47,AC_TRN,AC_WRAP>:m_lut.rom:rsc -MAP_TO_MODULE {[Register]}
+   directive set /mnist_mlp/ac_math::ac_reciprocal_pwl<AC_TRN,71,51,false,AC_TRN,AC_WRAP,91,21,false,AC_TRN,AC_WRAP>:m_lut.rom:rsc -MAP_TO_MODULE {[Register]}
+   directive set /mnist_mlp/ac_math::ac_reciprocal_pwl<AC_TRN,71,51,false,AC_TRN,AC_WRAP,91,21,false,AC_TRN,AC_WRAP>:c_lut.rom:rsc -MAP_TO_MODULE {[Register]}
+   directive set /mnist_mlp/core/ac_math::ac_softmax_pwl<AC_TRN,false,0,0,AC_TRN,AC_WRAP,false,0,0,AC_TRN,AC_WRAP,10,18,6,true,AC_TRN,AC_SAT,18,2,AC_TRN,AC_SAT>:exp_arr:rsc -MAP_TO_MODULE {[Register]}
+   
+   directive set /mnist_mlp/core/layer2_out:rsc -MAP_TO_MODULE {[Register]}
+   directive set /mnist_mlp/core/layer2_out:rsc -PACKING_MODE sidebyside
+   directive set /mnist_mlp/core/layer2_out -WORD_WIDTH 1152
+   
+   directive set /mnist_mlp/core/layer3_out:rsc -MAP_TO_MODULE {[Register]}
+   directive set /mnist_mlp/core/layer3_out:rsc -PACKING_MODE sidebyside
+   directive set /mnist_mlp/core/layer3_out -WORD_WIDTH 1152
+   
+   directive set /mnist_mlp/core/layer4_out:rsc -PACKING_MODE sidebyside
+   directive set /mnist_mlp/core/layer4_out:rsc -MAP_TO_MODULE {[Register]}
+   directive set /mnist_mlp/core/layer4_out -WORD_WIDTH 1152
+   
+   directive set /mnist_mlp/core/layer5_out:rsc -MAP_TO_MODULE {[Register]}
+   directive set /mnist_mlp/core/layer5_out:rsc -PACKING_MODE sidebyside
+   directive set /mnist_mlp/core/layer5_out -WORD_WIDTH 1152
+   
+   directive set /mnist_mlp/core/layer6_out:rsc -MAP_TO_MODULE {[Register]}
+   directive set /mnist_mlp/core/layer6_out:rsc -PACKING_MODE sidebyside
+   directive set /mnist_mlp/core/layer6_out -WORD_WIDTH 640
 
-    #
-    # RTL
-    #
+   # Loops
+   directive set /mnist_mlp/core/main -PIPELINE_INIT_INTERVAL 0
 
-    go extract
+   directive set /mnist_mlp/core/ReuseLoop -PIPELINE_INIT_INTERVAL 1
+   directive set /mnist_mlp/core/MultLoop -UNROLL yes
+   directive set /mnist_mlp/core/ResultLoop -UNROLL yes
 
-    #
-    #
-    #
+   directive set /mnist_mlp/core/nnet::relu<layer2_t,layer3_t,relu_config3>:for -UNROLL yes
 
-    if {$opt(rtlsim)} {
-        flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim sim
-        #flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim simgui
+   directive set /mnist_mlp/core/ReuseLoop#1 -PIPELINE_INIT_INTERVAL 1
+   directive set /mnist_mlp/core/MultLoop#1 -UNROLL yes
+   directive set /mnist_mlp/core/ResultLoop#1 -UNROLL yes
 
-        if {$opt(validation)} {
-          puts "***** C/RTL VALIDATION *****"
-          if {[compare_files $CSIM_RESULTS $RTL_COSIM_RESULTS]} {
-              puts "INFO: Test PASSED"
-          } else {
-              puts "ERROR: Test failed"
-              puts "ERROR: - csim log:      $CSIM_RESULTS"
-              puts "ERROR: - RTL-cosim log: $RTL_COSIM_RESULTS"
-              exit 1
-          }
-        }
-    }
+   directive set /mnist_mlp/core/nnet::relu<layer4_t,layer5_t,relu_config5>:for -UNROLL yes
 
-    if {$opt(lsynth)} {
+   directive set /mnist_mlp/core/ReuseLoop#2 -PIPELINE_INIT_INTERVAL 1
+   directive set /mnist_mlp/core/MultLoop#2 -UNROLL yes
+   directive set /mnist_mlp/core/ResultLoop#2 -UNROLL yes
 
-        if {$opt(asic) == 1} {
-            flow run /DesignCompiler/dc_shell ./concat_rtl.v.dc v
-        } elseif {$opt(asic) == 2} {
-            flow run /RTLCompiler/rc ./concat_rtl.v.rc v
-        } elseif {$opt(asic) == 3} {
-            puts "ERROR: Cadence Genus is not supported"
-            exit 1
-        } else {
-            flow run /Vivado/synthesize -shell vivado/concat_rtl.v.xv
-        }
+   directive set /mnist_mlp/core/nnet::softmax<layer6_t,result_t,softmax_config7>:for#1 -PIPELINE_INIT_INTERVAL 1
+   directive set /mnist_mlp/core/nnet::softmax<layer6_t,result_t,softmax_config7>:for -UNROLL yes
 
-    }
+   directive set /mnist_mlp/core/CALC_EXP_LOOP -UNROLL yes
+   directive set /mnist_mlp/core/SUM_EXP_LOOP -UNROLL yes
+   directive set /mnist_mlp/core/CALC_SOFTMAX_LOOP -UNROLL yes
+
+   go architect
+
+   #
+   #
+   #
+
+   go allocate
+
+   #
+   # RTL
+   #
+
+   go extract
+
+   #
+   #
+   #
+
+   if {$opt(rtlsim)} {
+       flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim sim
+       #flow run /SCVerify/launch_make ./scverify/Verify_rtl_v_msim.mk {} SIMTOOL=msim simgui
+
+       if {$opt(validation)} {
+         puts "***** C/RTL VALIDATION *****"
+         if {[compare_files $CSIM_RESULTS $RTL_COSIM_RESULTS]} {
+             puts "INFO: Test PASSED"
+         } else {
+             puts "ERROR: Test failed"
+             puts "ERROR: - csim log:      $CSIM_RESULTS"
+             puts "ERROR: - RTL-cosim log: $RTL_COSIM_RESULTS"
+             exit 1
+         }
+       }
+   }
+
+   if {$opt(lsynth)} {
+
+       if {$opt(asic) == 1} {
+           flow run /DesignCompiler/dc_shell ./concat_rtl.v.dc v
+       } elseif {$opt(asic) == 2} {
+           flow run /RTLCompiler/rc ./concat_rtl.v.rc v
+       } elseif {$opt(asic) == 3} {
+           puts "ERROR: Cadence Genus is not supported"
+           exit 1
+       } else {
+           flow run /Vivado/synthesize -shell vivado_concat_v/concat_rtl.v.xv
+       }
+
+   }
 
 }
 

@@ -29,6 +29,14 @@
 
 #define CHECKPOINT 1
 
+#include "weights/w2.h"
+#include "weights/b2.h"
+#include "weights/w4.h"
+#include "weights/b4.h"
+#include "weights/w6.h"
+#include "weights/b6.h"
+
+
 #ifdef MNTR_CATAPULT_HLS
 // SCVerify verification MACROs
 #include "mc_scverify.h"
@@ -97,9 +105,9 @@ int main(int argc, char **argv)
       //hls-fpga-machine-learning insert top-level-function
       unsigned short size_in1,size_out1;
 #ifdef MNTR_CATAPULT_HLS
-      CCS_DESIGN(mnist_mlp)(input1,layer7_out,size_in1,size_out1);
+      CCS_DESIGN(mnist_mlp)(input1,layer7_out,size_in1,size_out1,w2,b2,w4,b4,w6,b6);
 #else
-      mnist_mlp(input1,layer7_out,size_in1,size_out1);
+      mnist_mlp(input1,layer7_out,size_in1,size_out1,w2,b2,w4,b4,w6,b6);
 #endif
 
       //hls-fpga-machine-learning insert tb-output
@@ -135,9 +143,9 @@ int main(int argc, char **argv)
     //hls-fpga-machine-learning insert top-level-function
     unsigned short size_in1,size_out1;
 #ifdef MNTR_CATAPULT_HLS
-    CCS_DESIGN(mnist_mlp)(input1,layer7_out,size_in1,size_out1);
+    CCS_DESIGN(mnist_mlp)(input1,layer7_out,size_in1,size_out1,w2,b2,w4,b4,w6,b6);
 #else
-    mnist_mlp(input1,layer7_out,size_in1,size_out1);
+    mnist_mlp(input1,layer7_out,size_in1,size_out1,w2,b2,w4,b4,w6,b6);
 #endif
 
     //hls-fpga-machine-learning insert output

@@ -4,11 +4,11 @@ array set opt {
     # = 1 -> Mentor Design Compiler
     # = 2 -> Cadence Encounter RTL Compiler
     # = 3 -> Cadence Genus
-    asic       1
-    csim       1
+    asic       2
+    csim       0
     hsynth     1
-    rtlsim     1
-    validation 1
+    rtlsim     0
+    validation 0
     lsynth     1
 }
 
