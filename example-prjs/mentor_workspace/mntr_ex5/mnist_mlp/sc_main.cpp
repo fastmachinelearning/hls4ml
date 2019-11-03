@@ -29,12 +29,12 @@
 
 #define CHECKPOINT 1
 
-#include "weights/w2.h"
-#include "weights/b2.h"
-#include "weights/w4.h"
-#include "weights/b4.h"
-#include "weights/w6.h"
-#include "weights/b6.h"
+#include "firmware/weights/w2.h"
+#include "firmware/weights/b2.h"
+#include "firmware/weights/w4.h"
+#include "firmware/weights/b4.h"
+#include "firmware/weights/w6.h"
+#include "firmware/weights/b6.h"
 
 
 #ifdef MNTR_CATAPULT_HLS
@@ -67,6 +67,15 @@ int main(int argc, char **argv)
   std::string RESULTS_LOG = "tb_data/vivado_csim_results.log";
 #endif
 #endif
+
+  //hls-fpga-machine-learning insert load weights
+  nnet::load_weights_from_txt<model_default_t, 50176>(w2, "w2.txt");
+  nnet::load_weights_from_txt<model_default_t, 64>(b2, "b2.txt");
+  nnet::load_weights_from_txt<model_default_t, 4096>(w4, "w4.txt");
+  nnet::load_weights_from_txt<model_default_t, 64>(b4, "b4.txt");
+  nnet::load_weights_from_txt<model_default_t, 640>(w6, "w6.txt");
+  nnet::load_weights_from_txt<model_default_t, 10>(b6, "b6.txt");
+
   //load input data from text file
   std::ifstream fin("tb_data/tb_input_features.dat");
   //load predictions from text file

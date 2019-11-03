@@ -43,28 +43,32 @@ void mnist_mlp(
     model_default_t b6[10]
 ) {
 #ifndef MNTR_CATAPULT_HLS
+
     //hls-fpga-machine-learning insert IO
+    #pragma HLS DATAFLOW
     #pragma HLS ARRAY_RESHAPE variable=input1 complete dim=0 
     #pragma HLS ARRAY_RESHAPE variable=layer7_out complete dim=0 
     #pragma HLS INTERFACE ap_vld port=input1,layer7_out 
-    #pragma HLS DATAFLOW 
+
+    const int block_factor_2 = DIV_ROUNDUP(config2::n_in*config2::n_out, config2::reuse_factor);
+    const int block_factor_4 = DIV_ROUNDUP(config4::n_in*config4::n_out, config4::reuse_factor);
+    const int block_factor_6 = DIV_ROUNDUP(config6::n_in*config6::n_out, config6::reuse_factor);
+
+    #pragma HLS ARRAY_RESHAPE variable=w2 block factor=block_factor_2
+    #pragma HLS RESOURCE variable=w2 core=RAM_2P_BRAM
+
+    #pragma HLS ARRAY_RESHAPE variable=w4 block factor=block_factor_4
+    #pragma HLS RESOURCE variable=w4 core=RAM_2P_BRAM
+
+    #pragma HLS ARRAY_RESHAPE variable=w6 block factor=block_factor_6
+    #pragma HLS RESOURCE variable=w6 core=RAM_2P_BRAM
+
+    #pragma HLS ARRAY_PARTITION variable=b2 complete
+    #pragma HLS ARRAY_PARTITION variable=b4 complete
+    #pragma HLS ARRAY_PARTITION variable=b6 complete
 #endif
     const_size_in_1 = N_INPUT_1_1;
     const_size_out_1 = N_LAYER_6;
-
-#ifndef __SYNTHESIS__
-    static bool loaded_weights = false;
-    if (!loaded_weights) {
-        //hls-fpga-machine-learning insert load weights
-        nnet::load_weights_from_txt<model_default_t, 50176>(w2, "w2.txt");
-        nnet::load_weights_from_txt<model_default_t, 64>(b2, "b2.txt");
-        nnet::load_weights_from_txt<model_default_t, 4096>(w4, "w4.txt");
-        nnet::load_weights_from_txt<model_default_t, 64>(b4, "b4.txt");
-        nnet::load_weights_from_txt<model_default_t, 640>(w6, "w6.txt");
-        nnet::load_weights_from_txt<model_default_t, 10>(b6, "b6.txt");
-        loaded_weights = true;
-    }
-#endif
 
     // ****************************************
     // NETWORK INSTANTIATION

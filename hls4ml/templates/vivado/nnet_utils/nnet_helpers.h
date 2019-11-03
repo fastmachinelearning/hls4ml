@@ -37,7 +37,14 @@ namespace nnet {
 
 #ifndef __SYNTHESIS__
 
+#ifndef __WEIGHTS_DIR__
 #define WEIGHTS_DIR "weights"
+# else
+#define STRINGIFY(x) #x
+#define STRING(x) STRINGIFY(x)
+
+#define WEIGHTS_DIR STRING(__WEIGHTS_DIR__)
+#endif
 
 template<class T, size_t SIZE>
 void load_weights_from_txt(T *w, const char* fname) {
