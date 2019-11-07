@@ -132,6 +132,10 @@ def padTree(ensembleDict, treeDict):
         treeDict['children_left'][i] = iLChild
         treeDict['children_right'][i] = iRChild
     n_nodes = len(treeDict['children_left'])
+  treeDict['iLeaf'] = []
+  for i in range(n_nodes):
+    if treeDict['depth'][i] == ensembleDict['max_depth']:
+      treeDict['iLeaf'].append(i)
   return treeDict
 
 def main():
