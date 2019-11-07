@@ -51,21 +51,46 @@ void L1Loss( data_T    data[CONFIG_T::n_in], res_T     res[CONFIG_T::n_in], res2
     res2[0] = cache2;
 }
 
- template<class data_T, class res_T>
-void RateStabilizer(data_T AEout, res_T fire)
+ template<class data_T, class res_T, class res2_T, typename CONFIG_T>
+void deriv_MSELoss( data_T    Expect[CONFIG_T::n_out], res_T     Prediction[CONFIG_T::n_out], res2_T     Loss[CONFIG_T::n_out])
+{
+    typename CONFIG_T::accum_t diff[CONFIG_T::n_out];
+    #pragma HLS ARRAY_PARTITION variable=diff complete
+
+    Diff_Loss: for(int ii = 0; ii < CONFIG_T::n_out; ii++) {
+        #pragma HLS PIPELINE
+        diff[ii] = Prediction[ii] - Expect[ii];
+    }
+
+    // Accumulate multiplication result
+    Accum2_Loss: for(int ii = 0; ii < CONFIG_T::n_out; ii++) {
+          #pragma HLS PIPELINE
+                   Loss[ii] =  2 * diff[ii];
+    }
+
+}
+
+
+ template<class data_T, class res_T, typename CONFIG_T>
+void RateStabilizer(data_T AEout[CONFIG_T::n_in], res_T fire[CONFIG_T::n_in])
 {
 
   // Two bucket for counting events 
   // 2^30= 1073M ~ 1 LS @ 40MHz
 #define N_Bucketsize 15
-#define N_Maxbucket (1<<16 -1)
+#define N_Maxbucket 1000000
 
   static ap_uint<N_Bucketsize> bucket1 = 0;
   static ap_uint<N_Bucketsize> bucket2 = 0;
   // Weight bucket for rate estimation
-  static ap_fixed<16, 6> weightbucket = 0;
+  static ap_fixed<16, 6, AP_TRN, AP_SAT> weightbucket = 0;
   // Init threshol for firing 
-  static ap_fixed<16, 10> threshold = 100;
+  static ap_fixed<16, 6, AP_TRN, AP_SAT> threshold = 10;
+
+  //// Weight bucket for rate estimation
+  //static ap_fixed<16, 6> weightbucket = 0;
+  //// Init threshol for firing 
+  //static ap_fixed<16, 6> threshold = 10;
 
   // fire vs nofire weight, the rate is the expected rate/40MHz
   // 0.0001 ~ 4kHz
@@ -74,7 +99,7 @@ void RateStabilizer(data_T AEout, res_T fire)
 
   bucket1 += 1;
 
-  if (AEout > threshold)
+  if (AEout[0] > threshold)
     weightbucket += fireweight;
   else
     weightbucket += nofireweight;
@@ -92,7 +117,7 @@ void RateStabilizer(data_T AEout, res_T fire)
     weightbucket = 0;
   }
 
-  fire = AEout > threshold;
+  fire[0] = (res_T)( AEout[0] > threshold);
 }
 
 
