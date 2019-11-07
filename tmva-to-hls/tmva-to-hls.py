@@ -18,11 +18,12 @@ def ensembleToDict(bdt):
   n_trees = int(getOptionValue(bdt, 'NTrees'))
   n_features = int(bdt.find('Variables').attrib['NVar'])
   n_classes = int(bdt.find('Classes').attrib['NClass'])
+  BoostType = str(getOptionValue(bdt, 'BoostType'))
   ensembleDict = {'max_depth' : max_depth, 'n_trees' : n_trees,
                   'n_features' : n_features,
                   'n_classes' : n_classes, 'trees' : [],
                   'init_predict' : [0.],
-                  'norm' : 0}
+                  'norm' : 0, 'boost_type' : BoostType}
   for trees in bdt.find('Weights'):
     treesl = []
     #for tree in trees:
@@ -34,8 +35,11 @@ def ensembleToDict(bdt):
     treesl.append(tree)
     ensembleDict['trees'].append(treesl)
     ensembleDict['norm'] += weight
-  # Invert the normalisation so FPGA can do '*' instead of '/'
-  ensembleDict['norm'] = 1. / ensembleDict['norm'] 
+  if BoostType == 'Grad':
+    ensembleDict['norm'] = 1.
+  else:
+    # Invert the normalisation so FPGA can do '*' instead of '/'
+    ensembleDict['norm'] = 1. / ensembleDict['norm'] 
   return ensembleDict
 
 def addParentAndDepth(treeDict):
@@ -76,15 +80,19 @@ def treeToDict(bdt, tree):
   children_right = []
   rootnode = tree[0]
   useYesNoLeaf = bool(getOptionValue(bdt, 'UseYesNoLeaf'))
+  BoostType = str(getOptionValue(bdt, 'BoostType'))
   # In the fast pass add an ID
   for i, node in enumerate(recurse(rootnode)):
       node.attrib['ID'] = i
       attrib = node.attrib
       f = int(attrib['IVar']) if int(attrib['IVar']) != -1 else -2 # TMVA uses -1 for leaf, scikit-learn uses -2
       t = float(attrib['Cut'])
-      vPurity = float(attrib['purity']) * float(tree.attrib['boostWeight'])
-      vType = float(attrib['nType']) * float(tree.attrib['boostWeight'])
-      v = vType if useYesNoLeaf else vPurity
+      if BoostType == 'Grad':
+        v = float(attrib['res'])
+      else:
+        vPurity = float(attrib['purity']) * float(tree.attrib['boostWeight'])
+        vType = float(attrib['nType']) * float(tree.attrib['boostWeight'])
+        v = vType if useYesNoLeaf else vPurity
       feature.append(f)
       threshold.append(t)
       value.append(v)
