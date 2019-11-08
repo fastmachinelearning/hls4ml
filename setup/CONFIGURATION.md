@@ -8,20 +8,29 @@ One important part of hls4ml to remember is that the user is responsible for the
 
 ### Top level configuration
 
-Configuration files are YAML files in hls4ml (`*.yml`). An example configuration file is [here](https://github.com/hls-fpga-machine-learning/HLS4ML/blob/v0.0.2/keras-to-hls/keras-config.yml).
+Configuration files are YAML files in hls4ml (`*.yml`). An example configuration file is [here](https://github.com/hls-fpga-machine-learning/hls4ml/blob/master/example-models/keras-config.yml).
 
 It looks like this:
 ```
-KerasJson: example-keras-model-files/KERAS_1layer.json
-KerasH5:   example-keras-model-files/KERAS_1layer_weights.h5 
+KerasJson: keras/KERAS_3layer.json
+KerasH5:   keras/KERAS_3layer_weights.h5
+#InputData: keras/KERAS_3layer_input_features.dat
+#OutputPredictions: keras/KERAS_3layer_predictions.dat
 OutputDir: my-hls-test
 ProjectName: myproject
-XilinxPart: xc7vx690tffg1927-2
+XilinxPart: xcku115-flvb2104-2-i
 ClockPeriod: 5
 
 IOType: io_parallel # options: io_serial/io_parallel
-ReuseFactor: 1
-DefaultPrecision: ap_fixed<18,8> 
+HLSConfig:
+  Model:
+    Precision: ap_fixed<16,6>
+    ReuseFactor: 1
+#  LayerType:
+#    Dense:
+#      ReuseFactor: 2
+#      Strategy: Resource
+#      Compression: True
 ```
 
 There are a number of configuration options that you have.  Let's go through them.  You have basic setup parameters: 
@@ -33,7 +42,7 @@ There are a number of configuration options that you have.  Let's go through the
 Then you have some optimization parameters for how your algorithm runs:
    * **IOType**: your options are `io_parallel` or `io_serial` where this really defines if you are pipelining your algorithm or not
    * **ReuseFactor**: in the case that you are pipelining, this defines the pipeline interval or initiation interval
-   * **DefaultPrecision**: this defines the precsion of your inputs, outputs, weights and biases.  you have a chance to further configure this more finely
+   * **Precision**: this defines the precsion of your inputs, outputs, weights and biases.  you have a chance to further configure this more finely
 
 For more information on the optimization parameters and what they mean, you can visit the <a href="../CONCEPTS.html">Concepts</a> chapter.
 
@@ -41,6 +50,7 @@ For more information on the optimization parameters and what they mean, you can 
 
 After you create your project, you have the opportunity to do more configuration if you so choose.  
 In your project, the file `<OutputDir>/firmware/<ProjectName>.cpp` is your top level file.  It has the network architecture constructed for you.  An example is [here](https://github.com/hls-fpga-machine-learning/HLS4ML/blob/v0.0.2/example-prjs/higgs-1layer/firmware/myproject.cpp) and the important snippet is:
+
 ```
 layer1_t layer1_out[N_LAYER_1];
 #pragma HLS ARRAY_PARTITION variable=layer1_out complete
