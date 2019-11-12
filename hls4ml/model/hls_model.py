@@ -395,6 +395,23 @@ class ArrayVariable(Variable):
     def size_cpp(self):
         return '*'.join([str(k) for k in self.dim_names])
 
+class InplaceVariable():
+    def __init__(self, shape, dim_names, proxy, **kwargs):
+        self.shape = shape
+        self.dim_names = dim_names
+        self.type = proxy.type
+        self.name = proxy.name
+        self.size = proxy.size
+    
+    def get_shape(self):
+        return zip(self.dim_names, self.shape)
+
+    def definition_cpp(self):
+        return None
+
+    def size_cpp(self):
+        return '*'.join([str(k) for k in self.dim_names])
+
 class WeightVariable(Variable):
     def __init__(self, var_name, type_name, precision, data, **kwargs):
         super(WeightVariable, self).__init__(var_name, type_name, precision, **kwargs)
@@ -428,10 +445,14 @@ class WeightVariable(Variable):
         if 'int' in self.type.precision:
             self.precision_fmt = '%d'
         else:
-            precision_bits = re.search('.+<(.+?)>', self.type.precision).group(1).split(',')
-            decimal_bits = int(precision_bits[0]) - int(precision_bits[1])
-            decimal_spaces = int(np.floor(np.log10(2 ** decimal_bits - 1))) + 1
-            self.precision_fmt = '%.{}f'.format(decimal_spaces)
+            match = re.search('.+<(.+?)>', self.type.precision)
+            if match is not None:
+                precision_bits = match.group(1).split(',')
+                decimal_bits = int(precision_bits[0]) - int(precision_bits[1])
+                decimal_spaces = int(np.floor(np.log10(2 ** decimal_bits - 1))) + 1
+                self.precision_fmt = '%.{}f'.format(decimal_spaces)
+            else:
+                self.precision_fmt = '%f'
 
     def definition_cpp(self):
         return '{type} {name}[{size}]'.format(type=self.type.name, name=self.cppname, size=self.data_length)
@@ -670,6 +691,26 @@ class Input(Layer):
             shape = shape[1:]
         dims = ['N_INPUT_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
         self.add_output_variable(shape, dims, var_name=self.name, type_name='input_t')
+
+    def function_cpp(self):
+        return None
+
+    def config_cpp(self):
+        return None
+
+class Reshape(Layer):
+    def initialize(self):
+        shape = self.attributes['target_shape']
+        if shape[0] is None:
+            shape = shape[1:]
+        dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+
+        out_name = self.outputs[0]
+        proxy = self.get_input_variable()
+        out = InplaceVariable(shape, dims, proxy, index=self.get_input_node().index)
+
+        self.variables[out_name] = out
+        self.model.register_output_variable(out_name, out)
 
     def function_cpp(self):
         return None
@@ -1024,6 +1065,7 @@ layer_map = {
     'ThresholdedReLU'    : ParametrizedActivation,
     'ELU'                : ParametrizedActivation,
     'PReLU'              : PReLU,
+    'Reshape'            : Reshape,
     'Dense'              : Dense,
     'BinaryDense'        : Dense,
     'TernaryDense'       : Dense,

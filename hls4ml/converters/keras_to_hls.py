@@ -54,14 +54,14 @@ def keras_to_hls(yamlConfig):
     #print(model_arch)
 
     #Define supported laers
-    core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Dense', 'BinaryDense', 'TernaryDense']
+    core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Dense', 'BinaryDense', 'TernaryDense', 'Reshape']
     conv_layers = ['Conv1D', 'Conv2D', 'BinaryConv2D']
     pooling_layers = ['MaxPooling1D', 'MaxPooling2D', 'AveragePooling1D', 'AveragePooling2D']
     norm_layers = ['BatchNormalization']
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']
     merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate']
     #Define layers to skip for conversion to HLS
-    skip_layers = ['Dropout', 'Flatten', 'Reshape']
+    skip_layers = ['Dropout', 'Flatten']
     #All supported layers
     supported_layers = core_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + skip_layers
 
@@ -105,8 +105,6 @@ def keras_to_hls(yamlConfig):
     for keras_layer in layer_config:
         if keras_layer["class_name"] == 'Flatten':
             current_shape = [current_shape[0], np.prod(current_shape[1:])]
-        if keras_layer["class_name"] == 'Reshape':
-            current_shape[1:] = keras_layer['config']['target_shape']
         if keras_layer["class_name"] in skip_layers:
             if 'inbound_nodes' in keras_layer:
                 name = keras_layer['config']['name']
@@ -142,6 +140,9 @@ def keras_to_hls(yamlConfig):
         # Default one layer call
         if layer['class_name'] == 'InputLayer':
             layer['input_shape'] = keras_layer['config']['batch_input_shape'][1:]
+        if keras_layer["class_name"] == 'Reshape':
+            layer['target_shape'] = keras_layer['config']['target_shape']
+            current_shape[1:] = keras_layer['config']['target_shape']
         if 'Dense' in layer['class_name']:
             weights_shape = get_weights_shape(yamlConfig['KerasH5'], layer['name'])
             layer['n_in'] = weights_shape[0]

@@ -134,9 +134,11 @@ class VivadoWriter(Writer):
                     vars = layer.get_variables()
                     for var in vars:
                         if var not in inputs and var not in outputs:
-                            newline += '    ' + var.definition_cpp() + ';\n'
-                            if var.pragma:
-                                newline += '    ' + var.pragma + '\n'
+                            def_cpp = var.definition_cpp()
+                            if def_cpp is not None:
+                                newline += '    ' + def_cpp + ';\n'
+                                if var.pragma:
+                                    newline += '    ' + var.pragma + '\n'
                     func = layer.function_cpp()
                     if func:
                         for line in func:
