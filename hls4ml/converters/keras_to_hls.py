@@ -21,7 +21,7 @@ class KerasDataReader:
         with h5py.File(self.config['KerasH5'], 'r') as h5file:
             found_data = h5file[layer_name].visit(h5_visitor_func)
             if found_data:
-                data = h5file['/{}/{}'.format(layer_name,found_data)][()]
+                data = h5file[layer_name][found_data][()]
             else:
                 data = None
 
@@ -35,7 +35,7 @@ def get_weights_shape(h5filename, layer_name, var_name='kernel'):
     with h5py.File(h5filename, 'r') as h5file:
         found_data = h5file[layer_name].visit(h5_visitor_func)
         if found_data:
-            shape = h5file['/{}/{}'.format(layer_name,found_data)].shape
+            shape = h5file[layer_name][found_data].shape
 
     return shape
 
