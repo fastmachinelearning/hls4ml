@@ -81,6 +81,6 @@ def _show_synth_report(synth_file, full_report=False):
     with open(synth_file, 'r') as f:
         print('SYNTHESIS REPORT:')
         for line in f.readlines()[2:]:
-            if not full_report and '* DSP48:' in line:
+            if not full_report and '* DSP48' in line:
                 break
             print(line, end = '')
