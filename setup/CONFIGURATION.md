@@ -49,7 +49,7 @@ For more information on the optimization parameters and what they mean, you can 
 ### Detailed configuration
 
 After you create your project, you have the opportunity to do more configuration if you so choose.  
-In your project, the file `<OutputDir>/firmware/<ProjectName>.cpp` is your top level file.  It has the network architecture constructed for you.  An example is [here](https://github.com/hls-fpga-machine-learning/HLS4ML/blob/v0.0.2/example-prjs/higgs-1layer/firmware/myproject.cpp) and the important snippet is:
+In your project, the file `<OutputDir>/firmware/<ProjectName>.cpp` is your top level file.  It has the network architecture constructed for you.  An example is [here](https://github.com/hls-fpga-machine-learning/hls4ml/blob/master/example-prjs/higgs-1layer/firmware/myproject.cpp) and the important snippet is:
 
 ```
 layer1_t layer1_out[N_LAYER_1];
@@ -68,7 +68,7 @@ nnet::sigmoid<result_t, result_t, sigmoid_config2>(logits2, res);
 You can see, for the simple 1-layer DNN, the computation (`nnet::compute_layer`) and activation (`nnet::relu`/`nnet::sigmoid`) caluclation for each layer.  For each layer, it has its own additional configuration parameters, e.g. `config1`.
 
 In your project, the file `<OutputDir>/firmware/parameters.h` stores all the configuration options for each neural network library.
-An example is [here](https://github.com/hls-fpga-machine-learning/HLS4ML/blob/v0.0.2/example-prjs/higgs-1layer/firmware/parameters.h). So for example, the detailed configuration options for an example DNN layer is:
+An example is [here](https://github.com/hls-fpga-machine-learning/hls4ml/blob/master/example-prjs/higgs-1layer/firmware/parameters.h). So for example, the detailed configuration options for an example DNN layer is:
 ```
 struct config1 : nnet::layer_config {
         static const unsigned n_in = N_INPUTS;

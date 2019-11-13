@@ -53,13 +53,13 @@ This will create a Vivado HLS project with your model implmentation!
 
 ```
 cd my-hls-test
-vivado_hls -f build.tcl
+vivado_hls -f build_prj.tcl
 ```
 
 `vivado_hls` can be controlled with:
 
 ```
-vivado_hls -f build.tcl "csim=1 synth=1 cosim=1 export=1"
+vivado_hls -f build_prj.tcl "csim=1 synth=1 cosim=1 export=1"
 ```
 
 Setting the additional parameters to `1` to `0` disables that step, but disabling `synth` also disables `cosim` and `export`.
@@ -77,4 +77,10 @@ pip uninstall hls4ml
 
 ## Existing examples
 
-Other examples of various HLS projects with examples of different machine learning algorithm implementations is in the directory: `example-prjs`.
+- Examples of model files and weights can be found in [example_models](https://github.com/hls-fpga-machine-learning/hls4ml/tree/master/example-models).
+
+- Training codes and examples of resources needed to train the models can be found [here](https://github.com/hls-fpga-machine-learning/keras-training).
+
+- Other examples of various HLS projects with examples of different machine learning algorithm implementations is in the directory [example-prjs](https://github.com/hls-fpga-machine-learning/hls4ml/tree/master/example-prjs).
+
+
