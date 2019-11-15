@@ -11,6 +11,7 @@ One important part of hls4ml to remember is that the user is responsible for the
 Configuration files are YAML files in hls4ml (`*.yml`). An example configuration file is [here](https://github.com/hls-fpga-machine-learning/hls4ml/blob/master/example-models/keras-config.yml).
 
 It looks like this:
+
 ```
 KerasJson: keras/KERAS_3layer.json
 KerasH5:   keras/KERAS_3layer_weights.h5
@@ -26,6 +27,7 @@ HLSConfig:
   Model:
     Precision: ap_fixed<16,6>
     ReuseFactor: 1
+#   Strategy: Latency 
 #  LayerType:
 #    Dense:
 #      ReuseFactor: 2
@@ -35,6 +37,7 @@ HLSConfig:
 
 There are a number of configuration options that you have.  Let's go through them.  You have basic setup parameters: 
    * **KerasJson/KerasH5**: for Keras, the model architecture and weights are stored in a `json` and `h5` file.  The path to those files are required here.
+   * **InputData/OutputPredictions**: path to your input/predictions of the model. If none is supplied, then hls4ml will create aritificial data for simulation. The data used above in the example can be found [here](https://cernbox.cern.ch/index.php/s/2LTJVVwCYFfkg59). 
    * **OutputDir**: the output directory where you want your HLS project to appear
    * **ProjectName**: the name of the HLS project IP that is produced
    * **XilinxPart**: the particular FPGA part number that you are considering, here it's a Xilinx Virtex-7 FPGA
@@ -42,6 +45,7 @@ There are a number of configuration options that you have.  Let's go through the
 Then you have some optimization parameters for how your algorithm runs:
    * **IOType**: your options are `io_parallel` or `io_serial` where this really defines if you are pipelining your algorithm or not
    * **ReuseFactor**: in the case that you are pipelining, this defines the pipeline interval or initiation interval
+   * **Strategy**: Optimization strategy on FPGA, either "Latency" or "Resource". If none is supplied then hl4ml uses "Latency" as default. 
    * **Precision**: this defines the precsion of your inputs, outputs, weights and biases.  you have a chance to further configure this more finely
 
 For more information on the optimization parameters and what they mean, you can visit the <a href="../CONCEPTS.html">Concepts</a> chapter.

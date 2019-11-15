@@ -291,6 +291,7 @@ HLSConfig:
   Model:
     Precision: ap_fixed&lt;16,6&gt;
     ReuseFactor: 1
+#   Strategy: Latency 
 #  LayerType:
 #    Dense:
 #      ReuseFactor: 2
@@ -299,6 +300,7 @@ HLSConfig:
 </code></pre><p>There are a number of configuration options that you have.  Let&apos;s go through them.  You have basic setup parameters: </p>
 <ul>
 <li><strong>KerasJson/KerasH5</strong>: for Keras, the model architecture and weights are stored in a <code>json</code> and <code>h5</code> file.  The path to those files are required here.</li>
+<li><strong>InputData/OutputPredictions</strong>: path to your input/predictions of the model. If none is supplied, then hls4ml will create aritificial data for simulation. The data used above in the example can be found <a href="https://cernbox.cern.ch/index.php/s/2LTJVVwCYFfkg59" target="_blank">here</a>. </li>
 <li><strong>OutputDir</strong>: the output directory where you want your HLS project to appear</li>
 <li><strong>ProjectName</strong>: the name of the HLS project IP that is produced</li>
 <li><strong>XilinxPart</strong>: the particular FPGA part number that you are considering, here it&apos;s a Xilinx Virtex-7 FPGA</li>
@@ -306,6 +308,7 @@ HLSConfig:
 Then you have some optimization parameters for how your algorithm runs:</li>
 <li><strong>IOType</strong>: your options are <code>io_parallel</code> or <code>io_serial</code> where this really defines if you are pipelining your algorithm or not</li>
 <li><strong>ReuseFactor</strong>: in the case that you are pipelining, this defines the pipeline interval or initiation interval</li>
+<li><strong>Strategy</strong>: Optimization strategy on FPGA, either &quot;Latency&quot; or &quot;Resource&quot;. If none is supplied then hl4ml uses &quot;Latency&quot; as default. </li>
 <li><strong>Precision</strong>: this defines the precsion of your inputs, outputs, weights and biases.  you have a chance to further configure this more finely</li>
 </ul>
 <p>For more information on the optimization parameters and what they mean, you can visit the <a href="../CONCEPTS.html">Concepts</a> chapter.</p>
@@ -380,7 +383,7 @@ An example is <a href="https://github.com/hls-fpga-machine-learning/hls4ml/blob/
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Configuration","level":"1.3.3","depth":2,"next":{"title":"Concepts","level":"1.4","depth":1,"path":"CONCEPTS.md","ref":"CONCEPTS.md","articles":[]},"previous":{"title":"Quick Start","level":"1.3.2","depth":2,"path":"setup/QUICKSTART.md","ref":"setup/QUICKSTART.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/CONFIGURATION.md","mtime":"2019-11-13T04:53:43.438Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2019-11-13T04:57:44.870Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Configuration","level":"1.3.3","depth":2,"next":{"title":"Concepts","level":"1.4","depth":1,"path":"CONCEPTS.md","ref":"CONCEPTS.md","articles":[]},"previous":{"title":"Quick Start","level":"1.3.2","depth":2,"path":"setup/QUICKSTART.md","ref":"setup/QUICKSTART.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/CONFIGURATION.md","mtime":"2019-11-15T15:40:22.578Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2019-11-15T16:28:36.185Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
