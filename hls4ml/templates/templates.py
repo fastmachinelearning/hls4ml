@@ -1,6 +1,7 @@
 
 class Backend(object):
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
         self.config_templates = {}
         self.function_templates = {}
 

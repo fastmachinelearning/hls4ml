@@ -725,8 +725,12 @@ class Dense(Layer):
         quantize = self.get_attr('quantize', default=0)
         compression = self.model.config.get_compression(self)
         if self.model.config.is_resource_strategy(self):
-            if self.model.config.get_reuse_factor(self) == 1:
-                print('WARNING: Using ReuseFactor 1 with "Resource" strategy in layer "{}". This may not work.'.format(self.name))
+            if self.model.config.backend.name == 'Vivado':
+                valid_rf = self.model.config.backend.get_valid_reuse_factors(self)
+                chosen_rf = self.model.config.get_reuse_factor(self)
+                if chosen_rf not in valid_rf:
+                    print('WARNING: Using invalid ReuseFactor={} with "Resource" strategy in layer "{}". Valid ReuseFactor(s): {}'
+                        .format(chosen_rf, self.name, ','.join(map(str, valid_rf))))
             if compression:
                 self.set_attr('strategy', 'compressed')
             else:
@@ -740,7 +744,8 @@ class Dense(Layer):
             if self.model.config.get_compression(self):
                 index_t = self.get_weights('weight').type.index_precision
             else:
-                self.weights['weight'].data = np.transpose(self.weights['weight'].data)
+                if self.model.config.backend.name == 'Vivado':
+                    self.weights['weight'].data = np.transpose(self.weights['weight'].data)
         self.set_attr('index_t', index_t)
         self.add_bias(quantize=quantize)
 
@@ -774,10 +779,15 @@ class Conv1D(Layer):
         self.add_weights()
         self.add_bias()
         if self.model.config.is_resource_strategy(self):
-            if self.model.config.get_reuse_factor(self) == 1:
-                print('WARNING: Using ReuseFactor 1 with "Resource" strategy in layer "{}". This may not work.'.format(self.name))
             self.set_attr('strategy', 'large')
-            self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 1, 0]) #(W,C,F) => (F,C,W)
+            if self.model.config.backend.name == 'Vivado':
+                valid_rf = self.model.config.backend.get_valid_reuse_factors(self)
+                chosen_rf = self.model.config.get_reuse_factor(self)
+                if chosen_rf not in valid_rf:
+                    print('WARNING: Using invalid ReuseFactor={} with "Resource" strategy in layer "{}". Valid ReuseFactor(s): {}'
+                        .format(chosen_rf, self.name, ','.join(map(str, valid_rf))))
+                
+                self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 1, 0]) #(W,C,F) => (F,C,W)
         else:
             self.set_attr('strategy', 'latency')
 
@@ -830,10 +840,14 @@ class Conv2D(Layer):
         self.add_weights()
         self.add_bias()
         if self.model.config.is_resource_strategy(self):
-            if self.model.config.get_reuse_factor(self) == 1:
-                print('WARNING: Using ReuseFactor 1 with "Resource" strategy in layer "{}". This may not work.'.format(self.name))
             self.set_attr('strategy', 'large')
-            self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
+            if self.model.config.backend.name == 'Vivado':
+                valid_rf = self.model.config.backend.get_valid_reuse_factors(self)
+                chosen_rf = self.model.config.get_reuse_factor(self)
+                if chosen_rf not in valid_rf:
+                    print('WARNING: Using invalid ReuseFactor={} with "Resource" strategy in layer "{}". Valid ReuseFactor(s): {}'
+                        .format(chosen_rf, self.name, ','.join(map(str, valid_rf))))
+                self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
         else:
             self.set_attr('strategy', 'latency')
 

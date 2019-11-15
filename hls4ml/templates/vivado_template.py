@@ -1,4 +1,7 @@
 
+import numpy as np
+import math
+
 from .templates import Backend
 
 dense_config_template = """struct config{index} : nnet::dense_config {{
@@ -168,7 +171,7 @@ merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {co
 
 class VivadoBackend(Backend):
     def __init__(self):
-        super(VivadoBackend, self).__init__()
+        super(VivadoBackend, self).__init__('Vivado')
         self.register_templates('Dense', dense_function_template, dense_config_template)
         self.register_templates('BinaryDense'            , dense_function_template,       dense_config_template)
         self.register_templates('BatchNormalization'     , batchnorm_function_template,   batchnorm_config_template)
@@ -181,4 +184,43 @@ class VivadoBackend(Backend):
         self.register_templates('Pooling2D'              , pooling2d_function_template,   pooling2d_config_template)
         self.register_templates('Merge'                  , merge_function_template,       merge_config_template)
         self.register_templates('Concatenate'            , merge_function_template,       concat_config_template)
+    
+    def get_valid_reuse_factors(self, layer):
+        n_in = 0
+        n_out = 0
+        if layer.__class__.__name__ == 'Dense':
+            n_in = layer.get_attr('n_in')
+            n_out = layer.get_attr('n_out')
+        elif layer.__class__.__name__ == 'Conv1D':
+            n_in = layer.get_attr('n_chan') * layer.get_attr('filt_width')
+            n_out = layer.get_attr('n_filt')
+        elif layer.__class__.__name__ == 'Conv2D':
+            n_in = layer.get_attr('n_chan') * layer.get_attr('filt_height') * layer.get_attr('filt_width')
+            n_out = layer.get_attr('n_filt')
+
+        max_rf = n_in * n_out
+        valid_reuse_factors = []
+        for rf in range(1, max_rf):
+            _assert = self._check_conditions(n_in, n_out, rf)
+            if _assert:
+                valid_reuse_factors.append(rf)
+        # Avoid using RF=1
+        if valid_reuse_factors[0] == 1:
+            valid_reuse_factors.pop(0)
+        return valid_reuse_factors
+
+    def _check_conditions(self, n_in, n_out, rf):
+        multfactor = min(n_in, rf)
+        multiplier_limit = int(math.ceil((n_in * n_out) / float(multfactor)))
+        #
+        # THIS ASSERTION IS FOR THE FUNCTIONAL CORRECTNESS OF THE DENSE LAYER
+        #
+        _assert = (((multiplier_limit % n_out) == 0) or (rf >= n_in))
+        _assert = _assert and (((rf % n_in) == 0) or (rf < n_in))
+        #
+        # THIS ASSERTION IS FOR QoR AND EXECUTION TIME OF VIVADO HLS
+        #
+        _assert = _assert and (((n_in * n_out) % rf) == 0)
+
+        return _assert
 
