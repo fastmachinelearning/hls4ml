@@ -1,125 +1,125 @@
-# Synthesis of a HLS4ML Project with Catapult HLS
+# MNIST Classifier - On-Chip Weights 
 
-This **hls4ml** project supports `ac_fixed` and `ac_int` arbitrary-precision datatypes provided with Catapult HLS. There are few differences between `sc_fixed`, `sc_int` and `ac_fixed`, `ac_int`.  
+## Directory Structure
 
-- The project **runs Catapult HLS**.
-- The project has been generated with [keras-config.yml](./keras-config.yml) and manually modified.
-  ```
-  ../../scripts/hls4ml convert -c keras-config.yml
-  ```
-- The model is a simple [MNIST classifier](https://github.com/GiuseppeDiGuglielmo/MLP-examples/tree/master/keras/mnist) (MLP `784x256x256x10`).
-- The generators have not been modified.
-- The Vivado's [hls4ml/templates/vivado/nnet_utils](../../../hls4ml/templates/vivado/nnet_utils) have been modified to support Catapul HLS.
-- In the future we will have `hls4ml/templates/catapult`.
-
-## Implementation Notes
-
-- Remapping of `ap_fixed<>` from the Arbitrary Precision datatype library to `ac_fixed<>` from the Algorithmic C datatype library (which has differencies w.r.t. SystemC `sc_fixed<>` and `sc_int<>`). See [inc](./inc) folder.
-  ```
-  #include <ac_int.h>
-  #include <ac_fixed.h>
-
-  template<int W>
-  using ap_int = ac_int<W, true>;
-
-  template<int W>
-  using ap_uint = ac_int<W, false>;
-
-  template<int W, int I>
-  using ap_fixed = ac_fixed<W,I,true>;
-
-  template<int W, int I>
-  using ap_ufixed = ac_fixed<W,I,false>;
-  ```
-
-- Vivado HLS has a wider support for fixed/floating point arithmetic. Catapult HLS may
-  - not support the synthesis of some operators (e.g. division `/`, it is necessary to use various functions that implement those operators)
-  - have problems with implicit casts (e.g. it is necessary to make everything explicit)
-  - have more *arithmetic functions* for the `ac_fixed` and `ac_int` w.r.t. `sc_fixed` and `sc_int` (e.g. `mgc_ac_exp` and `mgc_ac_log` (CORDIC) are not provided for `sc_fixed`)
-  - have limited support for floating point arithmetic, thus it is necessary to convert the functions from float to fixed point. For example:
-    ```
-    // *************************************************
-    //       Softplus Activation
-    // *************************************************
-    #ifdef MNTR_CATAPULT_HLS
-    inline ac_fixed<18,8,true> softplus_fcn_float(ac_fixed<18,8,true> input) {
-       ac_fixed<18,8,true> _exp; mgc_ac_exp(input, _exp);
-       ac_fixed<18,8,true> _log; mgc_ac_log(_exp, _log);
-       return _log + ac_fixed<18,8,true>(1.);
-     }
-     #else
-     inline float softplus_fcn_float(float input) {
-       return std::log(std::exp(input) + 1.);
-     }
-     #endif
-     ```
-   This porting requires some error propagation analysis to avoid overflow and lost of precision.
-
-- Some headers are included multiple times. This is fine with GCC, but not with Modelsim (simulation). We should fix this in any case also for the standard Xilinx flow.
-  - [my-hls-test/myproject_test.cpp](my-hls-test/myproject_test.cpp)
-  - [my-hls-test/firmware/parameters.h](my-hls-test/firmware/parameters.h)
-  - [my-hls-test/firmware/myproject.h](my-hls-test/firmware/myproject.h)
-  - [my-hls-test/firmware/myproject.cpp](my-hls-test/firmware/myproject.cpp)
-
-- Change the Streaming data interface.
-  ```
-  #include "hls_stream.h"
-  hls::stream< data_T > &data
-  ```
-  to
-  ```
-  #include "ac_channel.h"
-  ac_channel< data_T > &data
-  ```
-  
-- The synthesis time runs a little high for SoftMax layer, but it should be possible to fix it.
-  ```
-  # Info: Running transformation 'schedule' on solution 'nnet__softmax_result_t_result_t_softmax_config4__010e30973ea6d05ff01ff02f57fe4706e9aafd.v1': elapsed time 938.12 seconds, memory usage 3280436kB, peak memory usage 3313584kB (SOL-15)
-  # Info: Running transformation 'dpfsm' on solution 'nnet__softmax_result_t_result_t_softmax_config4__010e30973ea6d05ff01ff02f57fe4706e9aafd.v1': elapsed time 27.38 seconds, memory usage 3345972kB, peak memory usage 3345972kB (SOL-15)
-  ```
-
-- Catapult HLS uses pragma, but TCL directives are preferable
-  - See `directive` in [syn/project.tcl](syn/project.tcl)
-  - Many of the directives that are required in Vivado HLS for [../../keras-to-hls/keras-config.yml](../../keras-to-hls/keras-config.yml) (io_parallel ---> loop unrolls) are a default for Catapult HLS, thus they are not specified in the TCL file [syn/project.tcl](syn/project.tcl)
-  - More in general, have a look at the manual for the Catapult HLS flow and pragmas
-    ![Catapult HLS flow](doc/catapulthls_flow.png)
-
-- Some of these changes are under conditional macros.
-  ```
-  #ifdef MNTR_CATAPULT_HLS
-    // Catapult HLS code
-  #else
-    // Vivado HLS code
-  #endif
-  ```
+- `doc` documentation
+- `inc` header files to port Vivado HLS fixed-point arithmetic to Catapult HLS
+- `keras-config.yml` hls4ml configuration file
+- `mnist_mlp` hls4ml project directory (some files are manually edited to support Catapult HLS)
+- `rtl-tb` RTL testbench
+- `sim` simulation w/out licenses
+- `syn-catapult-hls` Catapult HLS synthesis scripts
+- `syn-rc` RTL Compiler synthesis scripts
+- `syn-vivado-hls` Vivado HLS synthesis scripts
+- `uvm` UVM project (from Catapult HLS, in alpha stage)
 
 ## Simulation (w/out licenses)
 
-You still need Catapult HLS installed on your local machine. Update the
-`sim/envsetup.sh` and to match the installation paths on your local machine.
-Finally:
+You still need Catapult HLS and Vivado HLS installed on your local machine. Update the scripts `sim/envsetup-catapult-nolicense.sh` and `sim/envsetup-vivado-nolicense.sh` to match the installation paths on your local machine.
 
-Use a new console.
+Use a new console for Catapult HLS and Vivado HLS:
 ```
 cd sim
-source envsetup-mntr.sh
+source envsetup-catapult-nolicense.sh
+# or
+# source envsetup-vivado-nolicense.sh
 make clean
-make run
+make run-catapult
+# or
+# make run-vivado
 ```
 
-**Please, note that we are using the `ac_fixed` and `ac_int` datatypes and the
-`g++` compiler in the Catapult HLS installation.**
+## Vivado HLS Synthesis
 
-## Synthesis
-
-You need Catapult HLS installed on your local machine. Update the
-`syn/envsetup.sh` script to match the installation paths on your local machine.
-This script exports also the environment variable for the Mentor licenses.
-Finally:
+You need Vivado HLS installed on your local machine. Update the script `syn-vivado-hls/envsetup-vivado.sh` to match the installation paths on your local machine. This script exports the environment variable for Vivado HLS.
 
 Use a new console.
 ```
-cd syn
-source envsetup.sh
-make hls-solution1-sh
+cd syn-vivado-hls
+source envsetup-vivado.sh
+make hls-sh
+# or for more targets
+# make <TAB>
 ```
+
+Edit `syn-vivado-hls/build_prj.tcl` to configure the Vivado HLS project.
+
+
+## Catapult HLS Synthesis
+
+You need Catapult HLS installed on your local machine. Update the script `syn-catapult-hls/envsetup-catapult.sh` to match the installation paths on your local machine. This script exports the environment variable for Catapult HLS.
+
+Use a new console.
+```
+cd syn-catapult-hls
+source envsetup-catapult.sh
+```
+
+You can target either FPGA or ASIC technology.
+
+- To target FPGA:
+  ```
+  make ultraclean
+  make hls-fpga-sh
+  # or for the GUI mode
+  # make hls-fpga-gui
+  # or for more targets
+  # make <TAB>
+  ```
+  The generated Verilog RTL code is `syn-catapult-hls/Catapult_fpga/mnist_mlp.v1/concat_rtl.v`.
+
+- To target ASIC:
+  ```
+  make ultraclean
+  make hls-asic-sh
+  # or for the GUI mode
+  # make hls-asic-gui
+  # or for more targets
+  # make <TAB>
+  ```
+  The generated Verilog RTL code is `syn-catapult-hls/Catapult_asic/mnist_mlp.v1/concat_rtl.v`. In the same folder, there are few additional files you may interested in.
+
+## RTL Simulation w/ a Verilog Testbench
+
+You can find a simple testbench for `syn-catapult-hls/Catapult_asic/mnist_mlp.v1/concat_rtl.v` in is provided in `rtl-tb/tb/mnist_mlp_tb.v`.
+
+To run the simulation with [Icarus Verilog](http://iverilog.icarus.com) and show the waveform with [GTKWave](http://gtkwave.sourceforge.net):
+```
+cd rtl-tb/sim
+make show
+```
+
+To run the simulation in Modelsim
+```
+cd rtl-tb/msim
+make run
+# Use run -all in the Modelsim console
+```
+
+## RTL Compiler Synthesis
+
+You can run RTL Compiler (`rc`) in the directory `syn-rc`. There are two set of synthesis scripts:
+- From Fermi Lab, see `syn-rc/scripts/fermi_lab`
+- From Catapult HLS, see `syn-rc/script/catapult_hls`
+
+You need RTL Compiler installed on your local machine. Update the script `syn-rc/envsetup-rc.sh` to match the installation paths on your local machine. This script exports the environment variable for RTL Compiler.
+
+Use a new console.
+
+```
+cd syn-rc
+source envsetup-rc.sh 
+```
+
+To run RTL compiler with the Catapul-HLS generated scripts:
+```
+make ultraclean
+make run-rc-catapult-hls
+```
+
+To run RTL compiler with the Fermi Lab scripts:
+```
+make ultraclean
+make run-rc-catapult-hls
+```
+
