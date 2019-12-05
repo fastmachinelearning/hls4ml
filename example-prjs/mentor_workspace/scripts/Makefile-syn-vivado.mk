@@ -35,5 +35,5 @@ clean:
 .PHONY: clean
 
 ultraclean: clean
-	rm -rf *.log *.csv ./*_prj tb_data/*_csim_results.log tb_data/*_rtl_cosim_results.log
+	rm -rf *.log *.csv *.png *.jou ./*_prj tb_data/*_csim_results.log tb_data/*_rtl_cosim_results.log
 .PHONY: ultraclean

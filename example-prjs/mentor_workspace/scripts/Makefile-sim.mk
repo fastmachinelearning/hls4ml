@@ -59,10 +59,10 @@ CXX_SOURCES += $(subst ../$(MODEL_DIR)/firmware/,,$(wildcard ../$(MODEL_DIR)/fir
 .SUFFIXES: .cpp .h .o
 
 # Vivado HLS
-release-vivado: CXX_FLAGS += -O3
-release-vivado: INCDIR += -I$(XILINX_VIVADO)/include
-release-vivado: $(MODEL)
-.PHONY: release-vivado
+vivado: CXX_FLAGS += -O3
+vivado: INCDIR += -I$(XILINX_VIVADO)/include
+vivado: $(MODEL)
+.PHONY: vivado
 
 #debug-vivado: CXX_FLAGS += -O0
 #debug-vivado: CXX_FLAGS += -g
@@ -72,15 +72,15 @@ release-vivado: $(MODEL)
 #.PHONY: debug-vivado
 
 # Catapult HLS
-release-catapult: INCDIR += -I../inc
-release-catapult: INCDIR += -I$(SYSTEMC)/include
-release-catapult: CXX_FLAGS += -O3
-release-catapult: CXX_FLAGS += -DMNTR_CATAPULT_HLS
-release-catapult: LD_LIBS += -L$(SYSTEMC)/lib
-release-catapult: LD_FLAGS += -lsystemc
-release-catapult: LD_FLAGS += -lpthread
-release-catapult: $(MODEL)
-.PHONY: release-catapult
+catapult: INCDIR += -I../inc
+catapult: INCDIR += -I$(SYSTEMC)/include
+catapult: CXX_FLAGS += -O3
+catapult: CXX_FLAGS += -DMNTR_CATAPULT_HLS
+catapult: LD_LIBS += -L$(SYSTEMC)/lib
+catapult: LD_FLAGS += -lsystemc
+catapult: LD_FLAGS += -lpthread
+catapult: $(MODEL)
+.PHONY: catapult
 
 #debug-catapult: INCDIR += -I../inc
 #debug-catapult: INCDIR += -I$(SYSTEMC)/include
@@ -103,11 +103,11 @@ $(MODEL): $(CXX_OBJECTS)
 .cpp.o:
 	$(QUIET_CXX)$(CXX) $(CXX_FLAGS) ${INCDIR} -c $<
 
-run-vivado: release-vivado
+run-vivado: vivado
 	$(QUIET_RUN)set -o pipefail; ./$(MODEL) | tee run-vivado.log
 .PHONY: run-vivado
 
-run-catapult: release-catapult
+run-catapult: catapult
 	$(QUIET_RUN)set -o pipefail; ./$(MODEL) | tee run-catapult.log
 .PHONY: run-catapult
 

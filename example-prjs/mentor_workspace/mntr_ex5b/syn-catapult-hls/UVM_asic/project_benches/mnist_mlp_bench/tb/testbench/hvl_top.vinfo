@@ -1,0 +1,2 @@
+@use $UVMF_PROJECT_DIR/tb/tests/mnist_mlp_bench_tests_pkg.vinfo
+hvl_top.sv

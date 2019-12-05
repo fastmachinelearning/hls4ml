@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svproject>
+  <defines/>
+  <includePaths/>
+  <buildPaths/>
+  <pluginPaths>
+    <pluginPath path="net.sf.sveditor.sv_builtin"/>
+  </pluginPaths>
+  <libraryPaths/>
+  <argFilePaths>
+    <argFilePath path="${project_loc}/mnist_mlp_bench_sve.F"/>
+  </argFilePaths>
+  <sourceCollections/>
+  <projectRefs/>
+  <templatePaths/>
+</svproject>

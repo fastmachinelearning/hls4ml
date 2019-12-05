@@ -1,0 +1,3 @@
+# this file is necessary for some versions of RC that do not terminate the shell upon the receipt of /dev/null
+quit
+

@@ -1,0 +1,59 @@
+[*]
+[*] GTKWave Analyzer v3.3.61 (w)1999-2014 BSI
+[*] Sun Nov  3 03:43:07 2019
+[*]
+[dumpfile] "/home/giuseppe/research/projects/fastml/hls4ml-mentor.git/example-prjs/mentor_workspace/mntr_ex5/rtl-tb/sim/mnist_mlp.vcd"
+[dumpfile_mtime] "Sun Nov  3 03:41:20 2019"
+[dumpfile_size] 526691
+[savefile] "/home/giuseppe/research/projects/fastml/hls4ml-mentor.git/example-prjs/mentor_workspace/mntr_ex5/rtl-tb/sim/show.gtkw"
+[timestart] 0
+[size] 3373 1276
+[pos] -1 -1
+*-8.000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 229
+[signals_width] 246
+[sst_expanded] 1
+[sst_vpaned_height] 379
+@28
+mnist_mlp_tb.clk
+mnist_mlp_tb.reset
+@200
+-
+@28
+mnist_mlp_tb.dut_error
+@22
+mnist_mlp_tb.expected_output_data[179:0]
+@200
+-
+@22
+mnist_mlp_tb.input_data[14111:0]
+@28
+mnist_mlp_tb.input_valid
+mnist_mlp_tb.input_ready
+@200
+-
+@22
+mnist_mlp_tb.output_data[179:0]
+@28
+mnist_mlp_tb.output_valid
+mnist_mlp_tb.output_ready
+@200
+-
+@22
+mnist_mlp_tb.size_in_data[15:0]
+@28
+mnist_mlp_tb.size_in_valid
+@200
+-
+@22
+mnist_mlp_tb.size_out_data[15:0]
+@28
+mnist_mlp_tb.size_out_valid
+@20000
+-
+@23
+mnist_mlp_tb.w2_adr_a[15:0]
+@28
+mnist_mlp_tb.w4_en_b
+[pattern_trace] 1
+[pattern_trace] 0

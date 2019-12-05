@@ -1,0 +1,16 @@
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+// Created by      : giuseppe
+// Creation Date   : 2019 Dec 04
+// Created with uvmf_gen version 2019.1
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+//
+
+,
+Interface Description, Interface Type, Interface Transaction, Interface Name,
+input1_rsc, ccs_driver_bfm ccs_monitor_bfm, ccs_transaction, ccs_pkg_input1_rsc_BFM,
+output1_rsc, ccs_driver_bfm ccs_monitor_bfm, ccs_transaction, ccs_pkg_output1_rsc_BFM,
+const_size_in_1_rsc, ccs_driver_bfm ccs_monitor_bfm, ccs_transaction, ccs_pkg_const_size_in_1_rsc_BFM,
+const_size_out_1_rsc, ccs_driver_bfm ccs_monitor_bfm, ccs_transaction, ccs_pkg_const_size_out_1_rsc_BFM,
+

@@ -1,0 +1,8 @@
+Catapult*\.ccs
+Catapult_fpga*
+design_checker_constraints.tcl
+design_checker_pre_build.tcl
+UVM_fpga
+*.log
+*.png
+*.tgz

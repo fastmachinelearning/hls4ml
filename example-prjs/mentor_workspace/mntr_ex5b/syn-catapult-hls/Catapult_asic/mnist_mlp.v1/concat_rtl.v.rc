@@ -1,0 +1,404 @@
+## HLS RC synthesis script
+
+puts "-- Note: RTL Compiler Started"
+
+set hls_status 0
+
+proc run_cmd { cmd errstr } {
+  upvar hls_status hls_status
+  puts $cmd
+  set retVal {}
+  if { !$hls_status } {
+    if { [catch { set retVal [uplevel 1 [list eval $cmd] ] } ] } {
+      puts "Error: Unable to $errstr."
+      set hls_status 1
+    }
+  } else {
+    puts "Error: $errstr skipped due to previous errors."
+  }
+  set retVal
+}
+
+# Source custom RTLCompiler script for specified stage
+# stage is one of: initial analyze synthesis reports final
+proc source_custom_script { stage } {
+   global env
+   if { [info exists env(RTLCompiler_CustomScriptDirPath)] } {
+      set dir_path $env(RTLCompiler_CustomScriptDirPath)
+      if { $dir_path ne "" } {
+         set script [file join $dir_path rc_${stage}.tcl]
+         if { [file exists $script] } {
+            set cmd "source $script"
+            set msg [list run custom script $script]
+            uplevel 1 [list run_cmd $cmd $msg]
+         }
+      }
+   }
+}
+
+## Set the variable for file path prefixing 
+set RTL_TOOL_SCRIPT_DIR /home/giuseppe/research/projects/fastml/hls4ml-mentor.git/example-prjs/mentor_workspace/mntr_ex5b/syn-catapult-hls/Catapult_asic/mnist_mlp.v1/.
+set RTL_TOOL_SCRIPT_DIR [file dirname [file normalize [info script]]]
+puts "-- RTL_TOOL_SCRIPT_DIR is set to '$RTL_TOOL_SCRIPT_DIR' "
+set MGC_HOME /opt/cad/catapult
+
+puts "Note: Removing old directory gate_synthesis_rc"
+if { [file isdirectory "gate_synthesis_rc"] } {
+  file delete -force -- "gate_synthesis_rc"
+}
+puts "Note: Creating directory gate_synthesis_rc"
+file mkdir "gate_synthesis_rc"
+lcd "gate_synthesis_rc"
+
+## Initialize RC-HLS variables
+set_attr hdl_max_loop_limit 1000
+set hls_status 0
+set_attr delete_unloaded_insts false
+
+# Source potential custom script
+source_custom_script initial
+
+## Configure technology settings
+set_attr library /opt/cad/catapult/pkgs/siflibs/nangate/nangate45nm_nldm.lib
+set_attr lef_library /opt/cad/catapult/pkgs/siflibs/nangate/nangate45nm.lef
+
+## Exclude cells from synthesis
+set_attr avoid true [find /lib*/NangateOpenCellLibrary -libcell CLKBUF_X1]
+set_attr avoid true [find /lib*/NangateOpenCellLibrary -libcell CLKBUF_X2]
+set_attr avoid true [find /lib*/NangateOpenCellLibrary -libcell CLKBUF_X3]
+
+# Source potential custom script
+source_custom_script analyze
+
+## Analyze concat_rtl.v 
+run_cmd {read_hdl -v2001   $RTL_TOOL_SCRIPT_DIR/concat_rtl.v} {analyze file 'concat_rtl.v'}
+
+## Elaborate design mnist_mlp 
+run_cmd {elaborate  "mnist_mlp"} {elaborate mnist_mlp {}}
+
+# INFO: in catapult interconnect_mode has been set to none - interconnect_mode in RTL compiler will be set to wireloads but no wireload settings will be written into the constraints file 
+set_attr interconnect_mode wireload
+
+## Include SDC file
+cd /designs/mnist_mlp
+read_sdc -stop_on_errors $RTL_TOOL_SCRIPT_DIR/concat_rtl.v.rc.sdc
+cd /
+
+puts "[clock format [clock seconds] -format {%a %b %d %H:%M:%S %Z %Y}]"
+
+set digns_with_mul [find /designs* -subdesign mul*]
+if { [llength $digns_with_mul] > 0 } {
+  set_attribute user_sub_arch {non_booth} [find /designs* -subdesign mul*]
+}
+puts "-- Starting synthesis for design 'mnist_mlp'"
+# Source potential custom script
+source_custom_script synthesis
+uniquify mnist_mlp
+synthesize -to_mapped
+
+# Source potential custom script
+source_custom_script reports
+puts "-- Requested 3 fractional digits for design 'mnist_mlp' timing"
+puts "-- Requested  fractional digits for design 'mnist_mlp' capacitance"
+puts "-- Tool output delay factor to nS: 0.001"
+puts "-- Library delay factor to nS: 1.0"
+puts "-- Characterization mode: p2p "
+puts "-- Synthesis area report for design 'mnist_mlp'"
+report area /designs/mnist_mlp
+report gates /designs/mnist_mlp
+puts "-- END Synthesis area report for design 'mnist_mlp'"
+
+cd /designs/mnist_mlp
+ungroup -all
+  if { [llength [find / -clock {*/clk}] ] > 0 } {
+    puts "-- Synthesis input_to_register:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '0' 'INOUT' CLOCK 'clk'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_vld}] -to [find / -clock {*/clk}]
+    puts "-- END Synthesis input_to_register:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '0' 'INOUT' CLOCK 'clk'"
+
+    puts "-- Synthesis input_to_register:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '0' 'INOUT' CLOCK 'clk'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_dat[*]}] -to [find / -clock {*/clk}]
+    puts "-- END Synthesis input_to_register:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '0' 'INOUT' CLOCK 'clk'"
+
+    puts "-- Synthesis input_to_register:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '0' 'INOUT' CLOCK 'clk'"
+    report timing -full_pin_names -from [find / -port {*/output1_rsc_rdy}] -to [find / -clock {*/clk}]
+    puts "-- END Synthesis input_to_register:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '0' 'INOUT' CLOCK 'clk'"
+
+  }
+  if { [llength [find / -clock {*/input1_rsc_vld}] ] > 0 } {
+    puts "-- Synthesis input_to_register:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '1' 'IN' CLOCK 'input1_rsc_vld'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_vld}] -to [find / -clock {*/input1_rsc_vld}]
+    puts "-- END Synthesis input_to_register:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '1' 'IN' CLOCK 'input1_rsc_vld'"
+
+    puts "-- Synthesis input_to_register:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '1' 'IN' CLOCK 'input1_rsc_vld'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_dat[*]}] -to [find / -clock {*/input1_rsc_vld}]
+    puts "-- END Synthesis input_to_register:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '1' 'IN' CLOCK 'input1_rsc_vld'"
+
+    puts "-- Synthesis input_to_register:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '1' 'IN' CLOCK 'input1_rsc_vld'"
+    report timing -full_pin_names -from [find / -port {*/output1_rsc_rdy}] -to [find / -clock {*/input1_rsc_vld}]
+    puts "-- END Synthesis input_to_register:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '1' 'IN' CLOCK 'input1_rsc_vld'"
+
+  }
+  if { [llength [find / -clock {*/output1_rsc_rdy}] ] > 0 } {
+    puts "-- Synthesis input_to_register:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '2' 'OUT' CLOCK 'output1_rsc_rdy'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_vld}] -to [find / -clock {*/output1_rsc_rdy}]
+    puts "-- END Synthesis input_to_register:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '2' 'OUT' CLOCK 'output1_rsc_rdy'"
+
+    puts "-- Synthesis input_to_register:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '2' 'OUT' CLOCK 'output1_rsc_rdy'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_dat[*]}] -to [find / -clock {*/output1_rsc_rdy}]
+    puts "-- END Synthesis input_to_register:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '2' 'OUT' CLOCK 'output1_rsc_rdy'"
+
+    puts "-- Synthesis input_to_register:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '2' 'OUT' CLOCK 'output1_rsc_rdy'"
+    report timing -full_pin_names -from [find / -port {*/output1_rsc_rdy}] -to [find / -clock {*/output1_rsc_rdy}]
+    puts "-- END Synthesis input_to_register:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '2' 'OUT' CLOCK 'output1_rsc_rdy'"
+
+  }
+  if { [llength [find / -clock {*/clk}] ] > 0 && [llength [find / -clock {*/clk}] ] > 0 } {
+    puts "-- Synthesis register_to_register:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '0' 'INOUT' CLOCK 'clk'"
+    report timing -full_pin_names -from [find / -clock {*/clk}] -to [find / -clock {*/clk}]
+    puts "-- END Synthesis register_to_register:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '0' 'INOUT' CLOCK 'clk'"
+  }
+
+  if { [llength [find / -clock {*/clk}] ] > 0 && [llength [find / -clock {*/input1_rsc_vld}] ] > 0 } {
+    puts "-- Synthesis register_to_register:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '1' 'IN' CLOCK 'input1_rsc_vld'"
+    report timing -full_pin_names -from [find / -clock {*/clk}] -to [find / -clock {*/input1_rsc_vld}]
+    puts "-- END Synthesis register_to_register:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '1' 'IN' CLOCK 'input1_rsc_vld'"
+  }
+
+  if { [llength [find / -clock {*/clk}] ] > 0 && [llength [find / -clock {*/output1_rsc_rdy}] ] > 0 } {
+    puts "-- Synthesis register_to_register:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '2' 'OUT' CLOCK 'output1_rsc_rdy'"
+    report timing -full_pin_names -from [find / -clock {*/clk}] -to [find / -clock {*/output1_rsc_rdy}]
+    puts "-- END Synthesis register_to_register:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '2' 'OUT' CLOCK 'output1_rsc_rdy'"
+  }
+
+  if { [llength [find / -clock {*/input1_rsc_vld}] ] > 0 && [llength [find / -clock {*/clk}] ] > 0 } {
+    puts "-- Synthesis register_to_register:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '0' 'INOUT' CLOCK 'clk'"
+    report timing -full_pin_names -from [find / -clock {*/input1_rsc_vld}] -to [find / -clock {*/clk}]
+    puts "-- END Synthesis register_to_register:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '0' 'INOUT' CLOCK 'clk'"
+  }
+
+  if { [llength [find / -clock {*/input1_rsc_vld}] ] > 0 && [llength [find / -clock {*/input1_rsc_vld}] ] > 0 } {
+    puts "-- Synthesis register_to_register:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '1' 'IN' CLOCK 'input1_rsc_vld'"
+    report timing -full_pin_names -from [find / -clock {*/input1_rsc_vld}] -to [find / -clock {*/input1_rsc_vld}]
+    puts "-- END Synthesis register_to_register:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '1' 'IN' CLOCK 'input1_rsc_vld'"
+  }
+
+  if { [llength [find / -clock {*/input1_rsc_vld}] ] > 0 && [llength [find / -clock {*/output1_rsc_rdy}] ] > 0 } {
+    puts "-- Synthesis register_to_register:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '2' 'OUT' CLOCK 'output1_rsc_rdy'"
+    report timing -full_pin_names -from [find / -clock {*/input1_rsc_vld}] -to [find / -clock {*/output1_rsc_rdy}]
+    puts "-- END Synthesis register_to_register:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '2' 'OUT' CLOCK 'output1_rsc_rdy'"
+  }
+
+  if { [llength [find / -clock {*/output1_rsc_rdy}] ] > 0 && [llength [find / -clock {*/clk}] ] > 0 } {
+    puts "-- Synthesis register_to_register:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '0' 'INOUT' CLOCK 'clk'"
+    report timing -full_pin_names -from [find / -clock {*/output1_rsc_rdy}] -to [find / -clock {*/clk}]
+    puts "-- END Synthesis register_to_register:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '0' 'INOUT' CLOCK 'clk'"
+  }
+
+  if { [llength [find / -clock {*/output1_rsc_rdy}] ] > 0 && [llength [find / -clock {*/input1_rsc_vld}] ] > 0 } {
+    puts "-- Synthesis register_to_register:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '1' 'IN' CLOCK 'input1_rsc_vld'"
+    report timing -full_pin_names -from [find / -clock {*/output1_rsc_rdy}] -to [find / -clock {*/input1_rsc_vld}]
+    puts "-- END Synthesis register_to_register:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '1' 'IN' CLOCK 'input1_rsc_vld'"
+  }
+
+  if { [llength [find / -clock {*/output1_rsc_rdy}] ] > 0 && [llength [find / -clock {*/output1_rsc_rdy}] ] > 0 } {
+    puts "-- Synthesis register_to_register:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '2' 'OUT' CLOCK 'output1_rsc_rdy'"
+    report timing -full_pin_names -from [find / -clock {*/output1_rsc_rdy}] -to [find / -clock {*/output1_rsc_rdy}]
+    puts "-- END Synthesis register_to_register:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '2' 'OUT' CLOCK 'output1_rsc_rdy'"
+  }
+
+  if { [llength [find / -clock {*/clk}] ] > 0 } {
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '1' 'IN' port 'input1_rsc_rdy'"
+    report timing -full_pin_names -from [find / -clock {*/clk}] -to [find / -port {*/input1_rsc_rdy}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '1' 'IN' port 'input1_rsc_rdy'"
+
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '2' 'OUT' port 'output1_rsc_vld'"
+    report timing -full_pin_names -from [find / -clock {*/clk}] -to [find / -port {*/output1_rsc_vld}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '2' 'OUT' port 'output1_rsc_vld'"
+
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '2' 'OUT' port 'output1_rsc_dat'"
+    report timing -full_pin_names -from [find / -clock {*/clk}] -to [find / -port {*/output1_rsc_dat[*]}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '2' 'OUT' port 'output1_rsc_dat'"
+
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '3' 'OUT' port 'const_size_in_1_rsc_vld'"
+    report timing -full_pin_names -from [find / -clock {*/clk}] -to [find / -port {*/const_size_in_1_rsc_vld}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '3' 'OUT' port 'const_size_in_1_rsc_vld'"
+
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '3' 'OUT' port 'const_size_in_1_rsc_dat'"
+    report timing -full_pin_names -from [find / -clock {*/clk}] -to [find / -port {*/const_size_in_1_rsc_dat[*]}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '3' 'OUT' port 'const_size_in_1_rsc_dat'"
+
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '4' 'OUT' port 'const_size_out_1_rsc_vld'"
+    report timing -full_pin_names -from [find / -clock {*/clk}] -to [find / -port {*/const_size_out_1_rsc_vld}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '4' 'OUT' port 'const_size_out_1_rsc_vld'"
+
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '4' 'OUT' port 'const_size_out_1_rsc_dat'"
+    report timing -full_pin_names -from [find / -clock {*/clk}] -to [find / -port {*/const_size_out_1_rsc_dat[*]}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '0' 'INOUT' CLOCK 'clk' '4' 'OUT' port 'const_size_out_1_rsc_dat'"
+
+  }
+
+  if { [llength [find / -clock {*/input1_rsc_vld}] ] > 0 } {
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '1' 'IN' port 'input1_rsc_rdy'"
+    report timing -full_pin_names -from [find / -clock {*/input1_rsc_vld}] -to [find / -port {*/input1_rsc_rdy}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '1' 'IN' port 'input1_rsc_rdy'"
+
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '2' 'OUT' port 'output1_rsc_vld'"
+    report timing -full_pin_names -from [find / -clock {*/input1_rsc_vld}] -to [find / -port {*/output1_rsc_vld}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '2' 'OUT' port 'output1_rsc_vld'"
+
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '2' 'OUT' port 'output1_rsc_dat'"
+    report timing -full_pin_names -from [find / -clock {*/input1_rsc_vld}] -to [find / -port {*/output1_rsc_dat[*]}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '2' 'OUT' port 'output1_rsc_dat'"
+
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '3' 'OUT' port 'const_size_in_1_rsc_vld'"
+    report timing -full_pin_names -from [find / -clock {*/input1_rsc_vld}] -to [find / -port {*/const_size_in_1_rsc_vld}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '3' 'OUT' port 'const_size_in_1_rsc_vld'"
+
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '3' 'OUT' port 'const_size_in_1_rsc_dat'"
+    report timing -full_pin_names -from [find / -clock {*/input1_rsc_vld}] -to [find / -port {*/const_size_in_1_rsc_dat[*]}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '3' 'OUT' port 'const_size_in_1_rsc_dat'"
+
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '4' 'OUT' port 'const_size_out_1_rsc_vld'"
+    report timing -full_pin_names -from [find / -clock {*/input1_rsc_vld}] -to [find / -port {*/const_size_out_1_rsc_vld}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '4' 'OUT' port 'const_size_out_1_rsc_vld'"
+
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '4' 'OUT' port 'const_size_out_1_rsc_dat'"
+    report timing -full_pin_names -from [find / -clock {*/input1_rsc_vld}] -to [find / -port {*/const_size_out_1_rsc_dat[*]}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '1' 'IN' CLOCK 'input1_rsc_vld' '4' 'OUT' port 'const_size_out_1_rsc_dat'"
+
+  }
+
+  if { [llength [find / -clock {*/output1_rsc_rdy}] ] > 0 } {
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '1' 'IN' port 'input1_rsc_rdy'"
+    report timing -full_pin_names -from [find / -clock {*/output1_rsc_rdy}] -to [find / -port {*/input1_rsc_rdy}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '1' 'IN' port 'input1_rsc_rdy'"
+
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '2' 'OUT' port 'output1_rsc_vld'"
+    report timing -full_pin_names -from [find / -clock {*/output1_rsc_rdy}] -to [find / -port {*/output1_rsc_vld}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '2' 'OUT' port 'output1_rsc_vld'"
+
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '2' 'OUT' port 'output1_rsc_dat'"
+    report timing -full_pin_names -from [find / -clock {*/output1_rsc_rdy}] -to [find / -port {*/output1_rsc_dat[*]}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '2' 'OUT' port 'output1_rsc_dat'"
+
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '3' 'OUT' port 'const_size_in_1_rsc_vld'"
+    report timing -full_pin_names -from [find / -clock {*/output1_rsc_rdy}] -to [find / -port {*/const_size_in_1_rsc_vld}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '3' 'OUT' port 'const_size_in_1_rsc_vld'"
+
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '3' 'OUT' port 'const_size_in_1_rsc_dat'"
+    report timing -full_pin_names -from [find / -clock {*/output1_rsc_rdy}] -to [find / -port {*/const_size_in_1_rsc_dat[*]}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '3' 'OUT' port 'const_size_in_1_rsc_dat'"
+
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '4' 'OUT' port 'const_size_out_1_rsc_vld'"
+    report timing -full_pin_names -from [find / -clock {*/output1_rsc_rdy}] -to [find / -port {*/const_size_out_1_rsc_vld}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '4' 'OUT' port 'const_size_out_1_rsc_vld'"
+
+    puts "-- Synthesis register_to_output:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '4' 'OUT' port 'const_size_out_1_rsc_dat'"
+    report timing -full_pin_names -from [find / -clock {*/output1_rsc_rdy}] -to [find / -port {*/const_size_out_1_rsc_dat[*]}]
+    puts "-- END Synthesis register_to_output:timing report for design 'mnist_mlp' '2' 'OUT' CLOCK 'output1_rsc_rdy' '4' 'OUT' port 'const_size_out_1_rsc_dat'"
+
+  }
+
+  if { [llength [all_inputs -design mnist_mlp]] != 0 && [llength [all_outputs -design mnist_mlp]] != 0 } {
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '1' 'IN' port 'input1_rsc_rdy'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_vld}] -to [find / -port {*/input1_rsc_rdy}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '1' 'IN' port 'input1_rsc_rdy'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '2' 'OUT' port 'output1_rsc_vld'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_vld}] -to [find / -port {*/output1_rsc_vld}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '2' 'OUT' port 'output1_rsc_vld'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '2' 'OUT' port 'output1_rsc_dat'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_vld}] -to [find / -port {*/output1_rsc_dat[*]}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '2' 'OUT' port 'output1_rsc_dat'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '3' 'OUT' port 'const_size_in_1_rsc_vld'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_vld}] -to [find / -port {*/const_size_in_1_rsc_vld}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '3' 'OUT' port 'const_size_in_1_rsc_vld'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '3' 'OUT' port 'const_size_in_1_rsc_dat'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_vld}] -to [find / -port {*/const_size_in_1_rsc_dat[*]}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '3' 'OUT' port 'const_size_in_1_rsc_dat'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '4' 'OUT' port 'const_size_out_1_rsc_vld'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_vld}] -to [find / -port {*/const_size_out_1_rsc_vld}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '4' 'OUT' port 'const_size_out_1_rsc_vld'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '4' 'OUT' port 'const_size_out_1_rsc_dat'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_vld}] -to [find / -port {*/const_size_out_1_rsc_dat[*]}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_vld' '4' 'OUT' port 'const_size_out_1_rsc_dat'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '1' 'IN' port 'input1_rsc_rdy'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_dat[*]}] -to [find / -port {*/input1_rsc_rdy}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '1' 'IN' port 'input1_rsc_rdy'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '2' 'OUT' port 'output1_rsc_vld'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_dat[*]}] -to [find / -port {*/output1_rsc_vld}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '2' 'OUT' port 'output1_rsc_vld'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '2' 'OUT' port 'output1_rsc_dat'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_dat[*]}] -to [find / -port {*/output1_rsc_dat[*]}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '2' 'OUT' port 'output1_rsc_dat'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '3' 'OUT' port 'const_size_in_1_rsc_vld'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_dat[*]}] -to [find / -port {*/const_size_in_1_rsc_vld}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '3' 'OUT' port 'const_size_in_1_rsc_vld'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '3' 'OUT' port 'const_size_in_1_rsc_dat'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_dat[*]}] -to [find / -port {*/const_size_in_1_rsc_dat[*]}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '3' 'OUT' port 'const_size_in_1_rsc_dat'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '4' 'OUT' port 'const_size_out_1_rsc_vld'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_dat[*]}] -to [find / -port {*/const_size_out_1_rsc_vld}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '4' 'OUT' port 'const_size_out_1_rsc_vld'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '4' 'OUT' port 'const_size_out_1_rsc_dat'"
+    report timing -full_pin_names -from [find / -port {*/input1_rsc_dat[*]}] -to [find / -port {*/const_size_out_1_rsc_dat[*]}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '1' 'IN' port 'input1_rsc_dat' '4' 'OUT' port 'const_size_out_1_rsc_dat'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '1' 'IN' port 'input1_rsc_rdy'"
+    report timing -full_pin_names -from [find / -port {*/output1_rsc_rdy}] -to [find / -port {*/input1_rsc_rdy}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '1' 'IN' port 'input1_rsc_rdy'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '2' 'OUT' port 'output1_rsc_vld'"
+    report timing -full_pin_names -from [find / -port {*/output1_rsc_rdy}] -to [find / -port {*/output1_rsc_vld}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '2' 'OUT' port 'output1_rsc_vld'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '2' 'OUT' port 'output1_rsc_dat'"
+    report timing -full_pin_names -from [find / -port {*/output1_rsc_rdy}] -to [find / -port {*/output1_rsc_dat[*]}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '2' 'OUT' port 'output1_rsc_dat'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '3' 'OUT' port 'const_size_in_1_rsc_vld'"
+    report timing -full_pin_names -from [find / -port {*/output1_rsc_rdy}] -to [find / -port {*/const_size_in_1_rsc_vld}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '3' 'OUT' port 'const_size_in_1_rsc_vld'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '3' 'OUT' port 'const_size_in_1_rsc_dat'"
+    report timing -full_pin_names -from [find / -port {*/output1_rsc_rdy}] -to [find / -port {*/const_size_in_1_rsc_dat[*]}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '3' 'OUT' port 'const_size_in_1_rsc_dat'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '4' 'OUT' port 'const_size_out_1_rsc_vld'"
+    report timing -full_pin_names -from [find / -port {*/output1_rsc_rdy}] -to [find / -port {*/const_size_out_1_rsc_vld}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '4' 'OUT' port 'const_size_out_1_rsc_vld'"
+
+    puts "-- Synthesis input_to_output:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '4' 'OUT' port 'const_size_out_1_rsc_dat'"
+    report timing -full_pin_names -from [find / -port {*/output1_rsc_rdy}] -to [find / -port {*/const_size_out_1_rsc_dat[*]}]
+    puts "-- END Synthesis input_to_output:timing report for design 'mnist_mlp' '2' 'OUT' port 'output1_rsc_rdy' '4' 'OUT' port 'const_size_out_1_rsc_dat'"
+
+  }
+
+if {$hls_status} {
+  puts "Warning: Check transcript for errors hls_status=$hls_status"
+}
+puts "[clock format [clock seconds] -format {%a %b %d %H:%M:%S %Z %Y}]"
+change_names -verilog
+write_hdl mnist_mlp > $RTL_TOOL_SCRIPT_DIR/gate.rc.v.v
+puts "-- Netlist for design 'mnist_mlp' written to $RTL_TOOL_SCRIPT_DIR/gate.rc.v.v"
+write_sdc > $RTL_TOOL_SCRIPT_DIR/gate.rc.v.sdc
+puts "-- SDC for design 'mnist_mlp' written to $RTL_TOOL_SCRIPT_DIR/gate.rc.v.sdc"
+write_sdf > $RTL_TOOL_SCRIPT_DIR/gate.rc.v.sdf
+puts "-- SDF for design 'mnist_mlp' written to $RTL_TOOL_SCRIPT_DIR/gate.rc.v.sdf"
+
+# Source potential custom script
+source_custom_script final
+puts "-- Synthesis finished for design 'mnist_mlp'"
+

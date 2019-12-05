@@ -24,6 +24,12 @@ source ${CAD_PATH}/vivado/settings64.sh
 # We do need Synopsys Design Compiler (logic synthesis).
 export PATH="${CAD_PATH}/syn/bin":$PATH
 
+# We do need Cadence Genus (logic synthesis).
+export PATH="${CAD_PATH}/genus/tools/bin":$PATH
+
+# We do need Cadence Encounter RTL Compiler (logic synthesis).
+export PATH="${CAD_PATH}/encounter/tools/bin":$PATH
+
 # Makefiles and scripts from Catapult HLS may rely on this variable.
 export MGC_HOME=${CAD_PATH}/catapult
 

@@ -1,0 +1,1 @@
+../../scripts/envsetup-catapult-nolicense.sh

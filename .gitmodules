@@ -4,3 +4,6 @@
 [submodule "example-prjs/mentor_workspace/mntr_ex8/ac_math"]
 	path = example-prjs/mentor_workspace/mntr_ex8/ac_math
 	url = git@github.com:hlslibs/ac_math.git
+[submodule "example-prjs/mentor_workspace/memgen"]
+	path = example-prjs/mentor_workspace/memgen
+	url = git@github.com:sld-columbia/memgen.git
