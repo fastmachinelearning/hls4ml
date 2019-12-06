@@ -43,6 +43,13 @@ solution options set /Input/CppStandard c++11
 #solution options set /TextEditor/FontSize 9
 #solution options set /Input/TargetPlatform x86_64
 flow package require /SCVerify
+flow package require /UVM
+
+if {$opt(asic) > 0} {
+    flow package option set /UVM/UVM_DIR UVM_asic
+} else {
+    flow package option set /UVM/UVM_DIR UVM_fpga
+}
 
 #directive set -DESIGN_GOAL area
 ##directive set -OLD_SCHED false
@@ -92,11 +99,11 @@ directive set -TRANSACTION_DONE_SIGNAL false
 
 # Design specific options.
 if {$opt(asic) > 0} {
-    solution options set Flows/QuestaSIM/SCCOM_OPTS {-g -x c++ -Wall -Wno-unused-label -Wno-unknown-pragmas -DRTL_SIM -D__ASIC__}
-    solution options set /Input/CompilerFlags {-DMNTR_CATAPULT_HLS -D__ASIC__}
+    solution options set Flows/QuestaSIM/SCCOM_OPTS {-g -x c++ -std=c++11 -Wall -Wno-unused-label -Wno-unknown-pragmas -DRTL_SIM -D__ASIC__}
+    solution options set /Input/CompilerFlags {-D__ASIC__}
 } else {
-    solution options set Flows/QuestaSIM/SCCOM_OPTS {-g -x c++ -Wall -Wno-unused-label -Wno-unknown-pragmas -DRTL_SIM -D__FPGA__}
-    solution options set /Input/CompilerFlags {-DMNTR_CATAPULT_HLS -D__FPGA__}
+    solution options set Flows/QuestaSIM/SCCOM_OPTS {-g -x c++ -std=c++11 -Wall -Wno-unused-label -Wno-unknown-pragmas -DRTL_SIM -D__FPGA__}
+    solution options set /Input/CompilerFlags {-D__FPGA__}
 }
 solution options set /Input/SearchPath {../inc ../mnist_mlp/firmware/ ../mnist_mlp/firmware/weights ../mnist_mlp/firmware/nnet_utils}
 
@@ -159,7 +166,17 @@ if {$opt(hsynth)} {
         solution library add Xilinx_RAMS
         solution library add Xilinx_ROMS
         solution library add Xilinx_FIFO
+#        source ../mem-libs/memlib/w2_data56448_1w16r.tcl
+#        source ../mem-libs/memlib/w4_data4608_1w16r.tcl
+#        source ../mem-libs/memlib/w6_data2304_1w8r.tcl
     }
+
+    solution options set ComponentLibs/SearchPath memlib -append
+
+#    solution library add mnist_mlp_w2_RAMS
+#    solution library add mnist_mlp_w4_RAMS
+#    solution library add mnist_mlp_w6_RAMS
+
 
     go libraries
 
@@ -187,91 +204,69 @@ if {$opt(hsynth)} {
     # BUGFIX: This prevents the creation of the empty module CGHpart. In the
     # next releases of Catapult HLS, this may be fixed.
     directive set /mnist_mlp -GATE_EFFORT normal
-    
+
     go assembly
-    
+
     # Top-Module I/O
     directive set /mnist_mlp/input1:rsc -MAP_TO_MODULE ccs_ioport.ccs_in_wait
     directive set /mnist_mlp/input1:rsc -PACKING_MODE sidebyside
-    directive set /mnist_mlp/input1 -WORD_WIDTH 14112
-    
-    directive set /mnist_mlp/layer7_out:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_wait
-    directive set /mnist_mlp/layer7_out:rsc -PACKING_MODE sidebyside
-    directive set /mnist_mlp/layer7_out -WORD_WIDTH 180
-    
-    directive set /mnist_mlp/const_size_in_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_wait
-    
-    directive set /mnist_mlp/const_size_out_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_wait
-    
-    directive set /mnist_mlp/w2:rsc -MAP_TO_MODULE ccs_sample_mem.ccs_ram_sync_dualport
-#    directive set /mnist_mlp/w2:rsc -PACKING_MODE sidebyside
-    directive set /mnist_mlp/w2 -WORD_WIDTH 18
-    #56448
-    
-    directive set /mnist_mlp/w4:rsc -MAP_TO_MODULE ccs_sample_mem.ccs_ram_sync_dualport
-#    directive set /mnist_mlp/w4:rsc -PACKING_MODE sidebyside
-    directive set /mnist_mlp/w4 -WORD_WIDTH 18
-    # 4096
-    
-    directive set /mnist_mlp/w6:rsc -MAP_TO_MODULE ccs_sample_mem.ccs_ram_sync_dualport
-#    directive set /mnist_mlp/w6:rsc -PACKING_MODE sidebyside
-    directive set /mnist_mlp/w6 -WORD_WIDTH 18
-    # 2304
+    directive set /mnist_mlp/input1 -WORD_WIDTH 14112; # 784*18
+
+    directive set /mnist_mlp/output1:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_wait
+    directive set /mnist_mlp/output1:rsc -PACKING_MODE sidebyside
+    directive set /mnist_mlp/output1 -WORD_WIDTH 180; #10*18
+
+    directive set /mnist_mlp/const_size_in_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
+    directive set /mnist_mlp/const_size_out_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
+
+    directive set /mnist_mlp/w2:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
+    directive set /mnist_mlp/w2:rsc -PACKING_MODE sidebyside
+    directive set /mnist_mlp/w2 -WORD_WIDTH 14112; #784*18
+
+    directive set /mnist_mlp/w4:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
+    directive set /mnist_mlp/w4:rsc -PACKING_MODE sidebyside
+    directive set /mnist_mlp/w4 -WORD_WIDTH 1152; #64*18
+
+    directive set /mnist_mlp/w6:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
+    directive set /mnist_mlp/w6:rsc -PACKING_MODE sidebyside
+    directive set /mnist_mlp/w6 -WORD_WIDTH 1152; #64*18
 
     directive set /mnist_mlp/b2:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
-    #directive set /mnist_mlp/b2:rsc -MAP_TO_MODULE ccs_sample_mem.ccs_ram_sync_dualport
-    directive set /mnist_mlp/b2 -WORD_WIDTH 1152
+    directive set /mnist_mlp/b2:rsc -PACKING_MODE sidebyside
+    directive set /mnist_mlp/b2 -WORD_WIDTH 1152; #64*18
 
     directive set /mnist_mlp/b4:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
-    #directive set /mnist_mlp/b4:rsc -MAP_TO_MODULE ccs_sample_mem.ccs_ram_sync_dualport
-    directive set /mnist_mlp/b4 -WORD_WIDTH 1152
+    directive set /mnist_mlp/b4:rsc -PACKING_MODE sidebyside
+    directive set /mnist_mlp/b4 -WORD_WIDTH 1152; #64*18
 
     directive set /mnist_mlp/b6:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
-    #directive set /mnist_mlp/b6:rsc -MAP_TO_MODULE ccs_sample_mem.ccs_ram_sync_dualport
-    directive set /mnist_mlp/b6 -WORD_WIDTH 180
+    directive set /mnist_mlp/b6:rsc -PACKING_MODE sidebyside
+    directive set /mnist_mlp/b6 -WORD_WIDTH 1152; #64*18
 
-   # Arrays
-   
-   directive set /mnist_mlp/core/nnet::dense_large_rf_gt_nin_rem0<input_t,layer2_t,config2>:acc:rsc -MAP_TO_MODULE {[Register]}
-   directive set /mnist_mlp/core/nnet::dense_large_rf_gt_nin_rem0<layer3_t,layer4_t,config4>:acc:rsc -MAP_TO_MODULE {[Register]}
-   directive set /mnist_mlp/core/nnet::dense_large_rf_gt_nin_rem0<layer5_t,layer6_t,config6>:acc:rsc -MAP_TO_MODULE {[Register]}
-   
-##   directive set /mnist_mlp/nnet::dense_large_rf_gt_nin_rem0<input_t,layer2_t,config2>:outidx.rom:rsc -MAP_TO_MODULE {[Register]}
-#   directive set /mnist_mlp/core/nnet::dense_large_rf_gt_nin_rem0<input_t,layer2_t,config2>:outidx:rsc -MAP_TO_MODULE ccs_sample_mem.ccs_ram_sync_dualport
-#   directive set /mnist_mlp/core/nnet::dense_large_rf_gt_nin_rem0<input_t,layer2_t,config2>:outidx -WORD_WIDTH 32
+    # Arrays
 
-   directive set /mnist_mlp/nnet::dense_large_rf_gt_nin_rem0<layer3_t,layer4_t,config4>:outidx.rom:rsc -MAP_TO_MODULE {[Register]}
-   directive set /mnist_mlp/nnet::dense_large_rf_gt_nin_rem0<layer3_t,layer4_t,config4>:outidx.rom -WORD_WIDTH 32
+    directive set /mnist_mlp/core/layer2_out:rsc -MAP_TO_MODULE {[Register]}
+    directive set /mnist_mlp/core/layer3_out:rsc -MAP_TO_MODULE {[Register]}
+    directive set /mnist_mlp/core/layer4_out:rsc -MAP_TO_MODULE {[Register]}
+    directive set /mnist_mlp/core/layer5_out:rsc -MAP_TO_MODULE {[Register]}
+    directive set /mnist_mlp/core/layer6_out:rsc -MAP_TO_MODULE {[Register]}
+    directive set /mnist_mlp/core/layer7_out:rsc -MAP_TO_MODULE {[Register]}
 
-   directive set /mnist_mlp/nnet::dense_large_rf_gt_nin_rem0<layer5_t,layer6_t,config6>:outidx.rom:rsc -MAP_TO_MODULE {[Register]}
-   directive set /mnist_mlp/nnet::dense_large_rf_gt_nin_rem0<layer5_t,layer6_t,config6>:outidx.rom -WORD_WIDTH 32
+    directive set /mnist_mlp/core/nnet::dense_large_rf_leq_nin<input_t,layer2_t,config2>:acc:rsc -MAP_TO_MODULE {[Register]}
+    directive set /mnist_mlp/core/nnet::dense_large_rf_leq_nin<layer3_t,layer4_t,config4>:acc:rsc -MAP_TO_MODULE {[Register]}
+    directive set /mnist_mlp/core/nnet::dense_large_rf_leq_nin<layer5_t,layer6_t,config6>:acc:rsc -MAP_TO_MODULE {[Register]}
+    directive set /mnist_mlp/core/nnet::softmax<layer6_t,result_t,softmax_config7>:_data:rsc -MAP_TO_MODULE {[Register]}
+    directive set /mnist_mlp/core/nnet::softmax<layer6_t,result_t,softmax_config7>:_res:rsc -MAP_TO_MODULE {[Register]}
 
-   
-   directive set /mnist_mlp/ac_math::ac_pow2_pwl<AC_TRN,19,7,true,AC_TRN,AC_SAT,67,47,AC_TRN,AC_WRAP>:c_lut.rom:rsc -MAP_TO_MODULE {[Register]}
-   directive set /mnist_mlp/ac_math::ac_pow2_pwl<AC_TRN,19,7,true,AC_TRN,AC_SAT,67,47,AC_TRN,AC_WRAP>:m_lut.rom:rsc -MAP_TO_MODULE {[Register]}
-   directive set /mnist_mlp/ac_math::ac_reciprocal_pwl<AC_TRN,71,51,false,AC_TRN,AC_WRAP,91,21,false,AC_TRN,AC_WRAP>:m_lut.rom:rsc -MAP_TO_MODULE {[Register]}
-   directive set /mnist_mlp/ac_math::ac_reciprocal_pwl<AC_TRN,71,51,false,AC_TRN,AC_WRAP,91,21,false,AC_TRN,AC_WRAP>:c_lut.rom:rsc -MAP_TO_MODULE {[Register]}
-   directive set /mnist_mlp/core/ac_math::ac_softmax_pwl<AC_TRN,false,0,0,AC_TRN,AC_WRAP,false,0,0,AC_TRN,AC_WRAP,10,18,6,true,AC_TRN,AC_SAT,18,2,AC_TRN,AC_SAT>:exp_arr:rsc -MAP_TO_MODULE {[Register]}
-   
-   directive set /mnist_mlp/core/layer2_out:rsc -MAP_TO_MODULE {[Register]}
-   directive set /mnist_mlp/core/layer2_out:rsc -PACKING_MODE sidebyside
-   directive set /mnist_mlp/core/layer2_out -WORD_WIDTH 1152
-   
-   directive set /mnist_mlp/core/layer3_out:rsc -MAP_TO_MODULE {[Register]}
-   directive set /mnist_mlp/core/layer3_out:rsc -PACKING_MODE sidebyside
-   directive set /mnist_mlp/core/layer3_out -WORD_WIDTH 1152
-   
-   directive set /mnist_mlp/core/layer4_out:rsc -PACKING_MODE sidebyside
-   directive set /mnist_mlp/core/layer4_out:rsc -MAP_TO_MODULE {[Register]}
-   directive set /mnist_mlp/core/layer4_out -WORD_WIDTH 1152
-   
-   directive set /mnist_mlp/core/layer5_out:rsc -MAP_TO_MODULE {[Register]}
-   directive set /mnist_mlp/core/layer5_out:rsc -PACKING_MODE sidebyside
-   directive set /mnist_mlp/core/layer5_out -WORD_WIDTH 1152
-   
-   directive set /mnist_mlp/core/layer6_out:rsc -MAP_TO_MODULE {[Register]}
-   directive set /mnist_mlp/core/layer6_out:rsc -PACKING_MODE sidebyside
-   directive set /mnist_mlp/core/layer6_out -WORD_WIDTH 640
+#    directive set /mnist_mlp/nnet::dense_large_rf_leq_nin<input_t,layer2_t,config2>:acc.rom:rsc -MAP_TO_MODULE {[Register]}
+#    directive set /mnist_mlp/nnet::dense_large_rf_leq_nin<layer3_t,layer4_t,config4>:acc.rom:rsc -MAP_TO_MODULE {[Register]}
+#    directive set /mnist_mlp/nnet::dense_large_rf_leq_nin<layer5_t,layer6_t,config6>:acc.rom:rsc -MAP_TO_MODULE {[Register]}
+
+    directive set /mnist_mlp/ac_math::ac_pow2_pwl<AC_TRN,19,7,true,AC_TRN,AC_SAT,67,47,AC_TRN,AC_WRAP>:c_lut.rom:rsc -MAP_TO_MODULE {[Register]}
+    directive set /mnist_mlp/ac_math::ac_pow2_pwl<AC_TRN,19,7,true,AC_TRN,AC_SAT,67,47,AC_TRN,AC_WRAP>:m_lut.rom:rsc -MAP_TO_MODULE {[Register]}
+    directive set /mnist_mlp/ac_math::ac_reciprocal_pwl<AC_TRN,71,51,false,AC_TRN,AC_WRAP,91,21,false,AC_TRN,AC_WRAP>:m_lut.rom:rsc -MAP_TO_MODULE {[Register]}
+    directive set /mnist_mlp/ac_math::ac_reciprocal_pwl<AC_TRN,71,51,false,AC_TRN,AC_WRAP,91,21,false,AC_TRN,AC_WRAP>:c_lut.rom:rsc -MAP_TO_MODULE {[Register]}
+    directive set /mnist_mlp/core/ac_math::ac_softmax_pwl<AC_TRN,false,0,0,AC_TRN,AC_WRAP,false,0,0,AC_TRN,AC_WRAP,10,18,6,true,AC_TRN,AC_SAT,18,2,AC_TRN,AC_SAT>:exp_arr:rsc -MAP_TO_MODULE {[Register]}
 
    # Loops
    directive set /mnist_mlp/core/main -PIPELINE_INIT_INTERVAL 0
@@ -298,6 +293,8 @@ if {$opt(hsynth)} {
    directive set /mnist_mlp/core/CALC_EXP_LOOP -UNROLL yes
    directive set /mnist_mlp/core/SUM_EXP_LOOP -UNROLL yes
    directive set /mnist_mlp/core/CALC_SOFTMAX_LOOP -UNROLL yes
+
+   directive set /mnist_mlp/core/OUTPUT_LOOP -UNROLL yes
 
    go architect
 
@@ -350,5 +347,7 @@ if {$opt(hsynth)} {
    }
 
 }
+
+#flow run /UVM
 
 project save

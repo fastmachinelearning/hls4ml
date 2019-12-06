@@ -1,0 +1,6 @@
+*
+!.gitignore
+!concat_rtl.v
+!concat_rtl.v.rc
+!concat_rtl.v.rc.sdc
+!UVM

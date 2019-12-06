@@ -1,0 +1,5 @@
+@use $UVMF_PROJECT_DIR/rtl/verilog/verilog_dut.vinfo
+@use $UVMF_PROJECT_DIR/tb/parameters/mnist_mlp_bench_parameters_pkg.vinfo
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/ccs_pkg/ccs_bfm.vinfo
+hdl_top.sv

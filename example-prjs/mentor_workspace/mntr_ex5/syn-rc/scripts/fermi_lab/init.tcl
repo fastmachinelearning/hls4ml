@@ -16,7 +16,7 @@ set ec::start [clock seconds]
 #set ec::inDir           ../verilog/syn-catapult-hls-keras1layer/Catapult/keras1layer.v1
 #set ec::outDir          ../output
 #set ec::reportDir       ../report
-set ec::inDir           ./input
+set ec::inDir           ./input-rtl
 set ec::outDir          ./output/fermi_lab
 set ec::reportDir       ./report/fermi_lab
 
@@ -37,7 +37,7 @@ set DFT OFF
 
 #set ec::RTL_PATH        ../verilog/syn-catapult-hls-keras1layer/Catapult/keras1layer.v1
 #set ec::LIB_PATH        "$TSMC_PDK"
-set ec::RTL_PATH        ./input
+set ec::RTL_PATH        ./input-rtl
 set ec::LIB_PATH        "$OPEN45NM_PDK"
 
 

@@ -30,7 +30,7 @@
 // Prototype of top level function for C-synthesis
 void mnist_mlp(
     input_t input1[N_INPUT_1_1],
-    result_t layer7_out[N_LAYER_6],
+    result_t output1[N_LAYER_6],
     unsigned short &const_size_in_1,
     unsigned short &const_size_out_1,
     model_default_t w2[50176],

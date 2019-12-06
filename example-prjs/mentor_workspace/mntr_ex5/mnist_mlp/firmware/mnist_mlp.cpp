@@ -20,8 +20,6 @@
 
 #include "mnist_mlp.h"
 
-//#define __SYNTHESIS__
-
 ////hls-fpga-machine-learning insert weights
 //#include "weights/w2.h"
 //#include "weights/b2.h"
@@ -30,9 +28,21 @@
 //#include "weights/w6.h"
 //#include "weights/b6.h"
 
+
+#include <string>
+#include <limits.h>
+#include <unistd.h>
+
+std::string getexepath()
+{
+  char result[ PATH_MAX ];
+   ssize_t count = readlink( "/proc/self/exe", result, PATH_MAX );
+    return std::string( result, (count > 0) ? count : 0 );
+}
+
 void mnist_mlp(
     input_t input1[N_INPUT_1_1],
-    result_t layer7_out[N_LAYER_6],
+    result_t output1[N_LAYER_6],
     unsigned short &const_size_in_1,
     unsigned short &const_size_out_1,
     model_default_t w2[50176],
@@ -42,30 +52,13 @@ void mnist_mlp(
     model_default_t w6[640],
     model_default_t b6[10]
 ) {
-#ifndef MNTR_CATAPULT_HLS
 
     //hls-fpga-machine-learning insert IO
-    #pragma HLS DATAFLOW
+#ifdef XLNX_VIVADO_HLS
     #pragma HLS ARRAY_RESHAPE variable=input1 complete dim=0 
-    #pragma HLS ARRAY_RESHAPE variable=layer7_out complete dim=0 
-    #pragma HLS INTERFACE ap_vld port=input1,layer7_out 
-
-    const int block_factor_2 = DIV_ROUNDUP(config2::n_in*config2::n_out, config2::reuse_factor);
-    const int block_factor_4 = DIV_ROUNDUP(config4::n_in*config4::n_out, config4::reuse_factor);
-    const int block_factor_6 = DIV_ROUNDUP(config6::n_in*config6::n_out, config6::reuse_factor);
-
-    #pragma HLS ARRAY_RESHAPE variable=w2 block factor=block_factor_2
-    #pragma HLS RESOURCE variable=w2 core=RAM_2P_BRAM
-
-    #pragma HLS ARRAY_RESHAPE variable=w4 block factor=block_factor_4
-    #pragma HLS RESOURCE variable=w4 core=RAM_2P_BRAM
-
-    #pragma HLS ARRAY_RESHAPE variable=w6 block factor=block_factor_6
-    #pragma HLS RESOURCE variable=w6 core=RAM_2P_BRAM
-
-    #pragma HLS ARRAY_PARTITION variable=b2 complete
-    #pragma HLS ARRAY_PARTITION variable=b4 complete
-    #pragma HLS ARRAY_PARTITION variable=b6 complete
+    #pragma HLS ARRAY_RESHAPE variable=output1 complete dim=0 
+    #pragma HLS INTERFACE ap_vld port=input1,output1
+    #pragma HLS DATAFLOW 
 #endif
     const_size_in_1 = N_INPUT_1_1;
     const_size_out_1 = N_LAYER_6;
@@ -77,35 +70,46 @@ void mnist_mlp(
     //hls-fpga-machine-learning insert layers
 
     layer2_t layer2_out[N_LAYER_2];
-#ifndef MNTR_CATAPULT_HLS
+#ifdef XLNX_VIVADO_HLS
     #pragma HLS ARRAY_PARTITION variable=layer2_out complete dim=0
 #endif
     nnet::dense_large<input_t, layer2_t, config2>(input1, layer2_out, w2, b2);
 
     layer3_t layer3_out[N_LAYER_2];
-#ifndef MNTR_CATAPULT_HLS
+#ifdef XLNX_VIVADO_HLS
     #pragma HLS ARRAY_PARTITION variable=layer3_out complete dim=0
 #endif
     nnet::relu<layer2_t, layer3_t, relu_config3>(layer2_out, layer3_out);
 
     layer4_t layer4_out[N_LAYER_4];
-#ifndef MNTR_CATAPULT_HLS
+#ifdef XLNX_VIVADO_HLS
     #pragma HLS ARRAY_PARTITION variable=layer4_out complete dim=0
 #endif
     nnet::dense_large<layer3_t, layer4_t, config4>(layer3_out, layer4_out, w4, b4);
 
     layer5_t layer5_out[N_LAYER_4];
-#ifndef MNTR_CATAPULT_HLS
+#ifdef XLNX_VIVADO_HLS
     #pragma HLS ARRAY_PARTITION variable=layer5_out complete dim=0
 #endif
     nnet::relu<layer4_t, layer5_t, relu_config5>(layer4_out, layer5_out);
 
     layer6_t layer6_out[N_LAYER_6];
-#ifndef MNTR_CATAPULT_HLS
+#ifdef XLNX_VIVADO_HLS
     #pragma HLS ARRAY_PARTITION variable=layer6_out complete dim=0
 #endif
     nnet::dense_large<layer5_t, layer6_t, config6>(layer5_out, layer6_out, w6, b6);
 
+    layer6_t layer7_out[N_LAYER_6];
+#ifdef XLNX_VIVADO_HLS
+    #pragma HLS ARRAY_PARTITION variable=layer7_out complete dim=0
+#endif
     nnet::softmax<layer6_t, result_t, softmax_config7>(layer6_out, layer7_out);
 
+OUTPUT_LOOP:
+    for (unsigned i = 0; i < N_LAYER_6; i++) {
+#ifdef XLNX_VIVADO_HLS
+    #pragma HLS UNROLL
+#endif
+        output1[i] = layer7_out[i]; 
+    }
 }

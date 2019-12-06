@@ -5,16 +5,24 @@ OutputPredictions: ../../../example-models/keras/KERAS_mnist_mlp_outputs.dat
 OutputDir: mnist_mlp
 ProjectName: mnist_mlp
 XilinxPart: xcku115-flvb2104-2-i
-ClockPeriod: 5
+ClockPeriod: 10
 
 IOType: io_parallel # options: io_serial/io_parallel
 HLSConfig:
   Model:
     Precision: ap_fixed<18,8>
-    ReuseFactor: 784
-    Strategy: Resource
-#  LayerType:
-#    Dense:
-#      ReuseFactor: 2
-#      Strategy: Resource
-#      Compression: True
+    ReuseFactor: 1
+    Strategy: Latency
+  LayerName:
+    dense_1:
+      ReuseFactor: 784  
+      Strategy: Resource
+      Compression: True
+    dense_2:
+      ReuseFactor: 64  
+      Strategy: Resource
+      Compression: True
+    dense_3:
+      ReuseFactor: 64  
+      Strategy: Resource
+      Compression: True

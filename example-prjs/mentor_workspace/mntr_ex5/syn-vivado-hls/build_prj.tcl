@@ -49,9 +49,9 @@ set RTL_COSIM_RESULTS "./tb_data/vivado_rtl_cosim_results.log"
 
 open_project -reset mnist_mlp_prj
 set_top mnist_mlp
-add_files ../mnist_mlp/firmware/mnist_mlp.cpp -cflags "-std=c++0x"
-add_files -tb ../mnist_mlp/sc_main.cpp -cflags "-std=c++0x"
-add_files -tb ../mnist_mlp/firmware/weights
+add_files ../mnist_mlp/firmware/mnist_mlp.cpp -cflags "-std=c++0x -DXLNX_VIVADO_HLS"
+add_files -tb ../mnist_mlp/sc_main.cpp -cflags "-std=c++0x -DXLNX_VIVADO_HLS"
+add_files -tb ../mnist_mlp/firmware/weights -cflags "-std=c++0x -DXLNX_VIVADO_HLS"
 add_files -tb tb_data
 open_solution -reset "solution1"
 catch {config_array_partition -maximum_size 4096}
@@ -75,7 +75,7 @@ if {$opt(synth)} {
   if {$opt(cosim)} {
     puts "***** C/RTL SIMULATION *****"
     # TODO: This is a workaround (Xilinx defines __RTL_SIMULATION__ only for SystemC testbenches).
-    add_files -tb ../mnist_mlp/sc_main.cpp -cflags "-std=c++0x -DRTL_SIM"
+    add_files -tb ../mnist_mlp/sc_main.cpp -cflags "-std=c++0x -DRTL_SIM -DXLNX_VIVADO_HLS"
     set time_start [clock clicks -milliseconds]
     cosim_design -trace_level all
     set time_end [clock clicks -milliseconds]
