@@ -1046,6 +1046,20 @@ class Merge(Layer):
 
         return self._config_template.format(**params)
 
+class BiasAdd(Merge): # TensorFlow's operator that gets merged into Dense/Conv
+    def initialize(self):
+        inp = self.get_input_variable(self.inputs[0])
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_bias()
+        self.add_output_variable(shape, dims)
+
+    def function_cpp(self):
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
+
+    def config_cpp(self):
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
+
 class Concatenate(Merge):
     def initialize(self):
         assert(len(self.inputs) == 2)
@@ -1093,6 +1107,8 @@ layer_map = {
     'AveragePooling2D'   : Pooling2D,
     'Merge'              : Merge,
     'Concatenate'        : Concatenate,
+    # TensorFlow-specific layers:
+    'BiasAdd'            : BiasAdd
 }
 
 def register_layer(name, clazz):
