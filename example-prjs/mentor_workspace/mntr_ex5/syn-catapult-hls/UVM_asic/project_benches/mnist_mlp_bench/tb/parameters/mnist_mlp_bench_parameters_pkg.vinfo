@@ -1,2 +1,0 @@
-@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
-mnist_mlp_bench_parameters_pkg.sv

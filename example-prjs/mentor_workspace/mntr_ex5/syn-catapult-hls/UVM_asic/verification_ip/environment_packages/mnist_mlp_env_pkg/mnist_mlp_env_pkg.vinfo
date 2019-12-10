@@ -1,3 +1,0 @@
-@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.vinfo
-@use $UVMF_VIP_LIBRARY_HOME/interface_packages/ccs_pkg/ccs_pkg.vinfo
-mnist_mlp_env_pkg.sv

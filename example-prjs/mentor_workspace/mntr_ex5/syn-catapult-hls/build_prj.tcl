@@ -39,17 +39,17 @@ solution options set Flows/ModelSim/VLOG_OPTS {-suppress 12110}
 solution options set Flows/ModelSim/VSIM_OPTS {-t ps -suppress 12110}
 solution options set Flows/DesignCompiler/OutNetlistFormat verilog
 solution options set /Input/CppStandard c++11
-#solution options set /Output/OutputVHDL false
+solution options set /Output/OutputVHDL false
 #solution options set /TextEditor/FontSize 9
 #solution options set /Input/TargetPlatform x86_64
 flow package require /SCVerify
-flow package require /UVM
+#flow package require /UVM
 
-if {$opt(asic) > 0} {
-    flow package option set /UVM/UVM_DIR UVM_asic
-} else {
-    flow package option set /UVM/UVM_DIR UVM_fpga
-}
+#if {$opt(asic) > 0} {
+#    flow package option set /UVM/UVM_DIR UVM_asic
+#} else {
+#    flow package option set /UVM/UVM_DIR UVM_fpga
+#}
 
 #directive set -DESIGN_GOAL area
 ##directive set -OLD_SCHED false
@@ -166,17 +166,21 @@ if {$opt(hsynth)} {
         solution library add Xilinx_RAMS
         solution library add Xilinx_ROMS
         solution library add Xilinx_FIFO
-#        source ../mem-libs/memlib/w2_data56448_1w16r.tcl
-#        source ../mem-libs/memlib/w4_data4608_1w16r.tcl
-#        source ../mem-libs/memlib/w6_data2304_1w8r.tcl
+
+#        source ../memlib/tcl/fpga/w2_64_14112_2w2r.tcl
+#        source ../memlib/tcl/fpga/w4_64_1152_2w2r.tcl
+#        source ../memlib/tcl/fpga/w6_10_1152_2w2r.tcl
+
+        source ../memlib/tcl/fpga/w2_50176_18_2w2r.tcl
+        source ../memlib/tcl/fpga/w4_4096_18_2w2r.tcl
+        source ../memlib/tcl/fpga/w6_640_18_2w2r.tcl
+
+        solution options set ComponentLibs/SearchPath ./memlib_fpga -append
+
+        solution library add w2_Xilinx_RAMS
+        solution library add w4_Xilinx_RAMS
+        solution library add w6_Xilinx_RAMS
     }
-
-    solution options set ComponentLibs/SearchPath memlib -append
-
-#    solution library add mnist_mlp_w2_RAMS
-#    solution library add mnist_mlp_w4_RAMS
-#    solution library add mnist_mlp_w6_RAMS
-
 
     go libraries
 
@@ -219,27 +223,39 @@ if {$opt(hsynth)} {
     directive set /mnist_mlp/const_size_in_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
     directive set /mnist_mlp/const_size_out_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
 
-    directive set /mnist_mlp/w2:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
-    directive set /mnist_mlp/w2:rsc -PACKING_MODE sidebyside
-    directive set /mnist_mlp/w2 -WORD_WIDTH 14112; #784*18
+    # w2
+#    directive set /mnist_mlp/w2:rsc -MAP_TO_MODULE w2_Xilinx_RAMS.w2_64_14112_2w2r
+#    directive set /mnist_mlp/w2 -WORD_WIDTH 14112
+    directive set /mnist_mlp/w2:rsc -MAP_TO_MODULE w2_Xilinx_RAMS.w2_50176_18_2w2r
+#    directive set /mnist_mlp/w2:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
+#    directive set /mnist_mlp/w2:rsc -PACKING_MODE sidebyside
+#    directive set /mnist_mlp/w2 -WORD_WIDTH 14112; #784*18
 
-    directive set /mnist_mlp/w4:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
-    directive set /mnist_mlp/w4:rsc -PACKING_MODE sidebyside
-    directive set /mnist_mlp/w4 -WORD_WIDTH 1152; #64*18
+    # w4
+#    directive set /mnist_mlp/w4:rsc -MAP_TO_MODULE w4_Xilinx_RAMS.w4_64_1152_2w2r
+#    directive set /mnist_mlp/w4 -WORD_WIDTH 1152
+    directive set /mnist_mlp/w4:rsc -MAP_TO_MODULE w4_Xilinx_RAMS.w4_4096_18_2w2r
+#    directive set /mnist_mlp/w4:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
+#    directive set /mnist_mlp/w4:rsc -PACKING_MODE sidebyside
+#    directive set /mnist_mlp/w4 -WORD_WIDTH 1152; #64*18
 
-    directive set /mnist_mlp/w6:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
-    directive set /mnist_mlp/w6:rsc -PACKING_MODE sidebyside
-    directive set /mnist_mlp/w6 -WORD_WIDTH 1152; #64*18
+    # w6
+#    directive set /mnist_mlp/w6:rsc -MAP_TO_MODULE w6_Xilinx_RAMS.w6_10_1152_2w2r
+#    directive set /mnist_mlp/w6 -WORD_WIDTH 1152
+    directive set /mnist_mlp/w6:rsc -MAP_TO_MODULE w6_Xilinx_RAMS.w6_640_18_2w2r
+#    directive set /mnist_mlp/w6:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
+#    directive set /mnist_mlp/w6:rsc -PACKING_MODE sidebyside
+#    directive set /mnist_mlp/w6 -WORD_WIDTH 1152; #64*18
 
-    directive set /mnist_mlp/b2:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
+    directive set /mnist_mlp/b2:rsc -MAP_TO_MODULE ccs_ioport.ccs_in_vld
     directive set /mnist_mlp/b2:rsc -PACKING_MODE sidebyside
     directive set /mnist_mlp/b2 -WORD_WIDTH 1152; #64*18
 
-    directive set /mnist_mlp/b4:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
+    directive set /mnist_mlp/b4:rsc -MAP_TO_MODULE ccs_ioport.ccs_in_vld
     directive set /mnist_mlp/b4:rsc -PACKING_MODE sidebyside
     directive set /mnist_mlp/b4 -WORD_WIDTH 1152; #64*18
 
-    directive set /mnist_mlp/b6:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
+    directive set /mnist_mlp/b6:rsc -MAP_TO_MODULE ccs_ioport.ccs_in_vld
     directive set /mnist_mlp/b6:rsc -PACKING_MODE sidebyside
     directive set /mnist_mlp/b6 -WORD_WIDTH 1152; #64*18
 
@@ -269,32 +285,32 @@ if {$opt(hsynth)} {
     directive set /mnist_mlp/core/ac_math::ac_softmax_pwl<AC_TRN,false,0,0,AC_TRN,AC_WRAP,false,0,0,AC_TRN,AC_WRAP,10,18,6,true,AC_TRN,AC_SAT,18,2,AC_TRN,AC_SAT>:exp_arr:rsc -MAP_TO_MODULE {[Register]}
 
    # Loops
-   directive set /mnist_mlp/core/main -PIPELINE_INIT_INTERVAL 0
-
-   directive set /mnist_mlp/core/ReuseLoop -PIPELINE_INIT_INTERVAL 1
-   directive set /mnist_mlp/core/MultLoop -UNROLL yes
-   directive set /mnist_mlp/core/ResultLoop -UNROLL yes
-
-   directive set /mnist_mlp/core/nnet::relu<layer2_t,layer3_t,relu_config3>:for -UNROLL yes
-
-   directive set /mnist_mlp/core/ReuseLoop#1 -PIPELINE_INIT_INTERVAL 1
-   directive set /mnist_mlp/core/MultLoop#1 -UNROLL yes
-   directive set /mnist_mlp/core/ResultLoop#1 -UNROLL yes
-
-   directive set /mnist_mlp/core/nnet::relu<layer4_t,layer5_t,relu_config5>:for -UNROLL yes
-
-   directive set /mnist_mlp/core/ReuseLoop#2 -PIPELINE_INIT_INTERVAL 1
-   directive set /mnist_mlp/core/MultLoop#2 -UNROLL yes
-   directive set /mnist_mlp/core/ResultLoop#2 -UNROLL yes
-
-   directive set /mnist_mlp/core/nnet::softmax<layer6_t,result_t,softmax_config7>:for#1 -PIPELINE_INIT_INTERVAL 1
-   directive set /mnist_mlp/core/nnet::softmax<layer6_t,result_t,softmax_config7>:for -UNROLL yes
-
-   directive set /mnist_mlp/core/CALC_EXP_LOOP -UNROLL yes
-   directive set /mnist_mlp/core/SUM_EXP_LOOP -UNROLL yes
-   directive set /mnist_mlp/core/CALC_SOFTMAX_LOOP -UNROLL yes
-
-   directive set /mnist_mlp/core/OUTPUT_LOOP -UNROLL yes
+#   directive set /mnist_mlp/core/main -PIPELINE_INIT_INTERVAL 0
+#
+#   directive set /mnist_mlp/core/ReuseLoop -PIPELINE_INIT_INTERVAL 1
+#   directive set /mnist_mlp/core/MultLoop -UNROLL yes
+#   directive set /mnist_mlp/core/ResultLoop -UNROLL yes
+#
+#   directive set /mnist_mlp/core/nnet::relu<layer2_t,layer3_t,relu_config3>:for -UNROLL yes
+#
+#   directive set /mnist_mlp/core/ReuseLoop#1 -PIPELINE_INIT_INTERVAL 1
+#   directive set /mnist_mlp/core/MultLoop#1 -UNROLL yes
+#   directive set /mnist_mlp/core/ResultLoop#1 -UNROLL yes
+#
+#   directive set /mnist_mlp/core/nnet::relu<layer4_t,layer5_t,relu_config5>:for -UNROLL yes
+#
+#   directive set /mnist_mlp/core/ReuseLoop#2 -PIPELINE_INIT_INTERVAL 1
+#   directive set /mnist_mlp/core/MultLoop#2 -UNROLL yes
+#   directive set /mnist_mlp/core/ResultLoop#2 -UNROLL yes
+#
+#   directive set /mnist_mlp/core/nnet::softmax<layer6_t,result_t,softmax_config7>:for#1 -PIPELINE_INIT_INTERVAL 1
+#   directive set /mnist_mlp/core/nnet::softmax<layer6_t,result_t,softmax_config7>:for -UNROLL yes
+#
+#   directive set /mnist_mlp/core/CALC_EXP_LOOP -UNROLL yes
+#   directive set /mnist_mlp/core/SUM_EXP_LOOP -UNROLL yes
+#   directive set /mnist_mlp/core/CALC_SOFTMAX_LOOP -UNROLL yes
+#
+##   directive set /mnist_mlp/core/OUTPUT_LOOP -UNROLL yes
 
    go architect
 

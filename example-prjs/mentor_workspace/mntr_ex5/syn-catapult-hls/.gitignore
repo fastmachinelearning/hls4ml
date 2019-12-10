@@ -6,3 +6,5 @@ UVM_fpga
 *.log
 *.png
 *.tgz
+memlib_fpga
+memlib_asic

@@ -1,6 +1,0 @@
-@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.vinfo
-@use ../../../../verification_ip/interface_packages/ccs_pkg/ccs_pkg.vinfo
-@use ../../../../verification_ip/environment_packages/mnist_mlp_env_pkg/mnist_mlp_env_pkg.vinfo
-@use ../parameters/mnist_mlp_bench_parameters_pkg.vinfo
-@use ../sequences/mnist_mlp_bench_sequences_pkg.vinfo
-mnist_mlp_bench_test_pkg.sv

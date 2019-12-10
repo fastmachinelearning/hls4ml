@@ -1,5 +1,0 @@
-@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.vinfo
-@use $UVMF_VIP_LIBRARY_HOME/interface_packages/ccs_pkg/ccs_pkg.vinfo
-@use $UVMF_VIP_LIBRARY_HOME/environment_packages/mnist_mlp_env_pkg/mnist_mlp_env_pkg.vinfo
-@use $UVMF_PROJECT_DIR/tb/parameters/mnist_mlp_bench_parameters_pkg.vinfo
-mnist_mlp_bench_sequences_pkg.sv
