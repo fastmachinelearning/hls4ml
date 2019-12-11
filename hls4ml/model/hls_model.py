@@ -523,6 +523,7 @@ class Layer(object):
         accum_t = HLSType(*reversed(self.model.config.get_precision(self, 'accum')))
         self.precision[accum_t.name] = accum_t
         self.set_attr('accum_t', accum_t.precision)
+        self.reuse_factor = self.model.config.get_reuse_factor(self)
 
         self.initialize()
 
@@ -632,8 +633,7 @@ class Layer(object):
                 type_name = name + '{index}_t'
 
         if compression:
-            rf = self.model.config.get_reuse_factor(self)
-            var = CompressedWeightVariable(var_name, type_name=type_name, precision=precision, data=data, reuse_factor=rf, index=self.index)
+            var = CompressedWeightVariable(var_name, type_name=type_name, precision=precision, data=data, reuse_factor=self.reuse_factor, index=self.index)
         else:
             var = WeightVariable(var_name, type_name=type_name, precision=precision, data=data, index=self.index)
 
@@ -655,7 +655,7 @@ class Layer(object):
         params.update(self.attributes)
         params['index'] = self.index
         params['iotype'] = self.model.config.get_config_value('IOType')
-        params['reuse'] = self.model.config.get_reuse_factor(self)
+        params['reuse'] = self.reuse_factor
 
         # data types
         for weight_name, variable in self.weights.items():
@@ -726,11 +726,7 @@ class Dense(Layer):
         compression = self.model.config.get_compression(self)
         if self.model.config.is_resource_strategy(self):
             if self.model.config.backend.name == 'Vivado':
-                valid_rf = self.model.config.backend.get_valid_reuse_factors(self)
-                chosen_rf = self.model.config.get_reuse_factor(self)
-                if chosen_rf not in valid_rf:
-                    print('WARNING: Using invalid ReuseFactor={} with "Resource" strategy in layer "{}". Valid ReuseFactor(s): {}'
-                        .format(chosen_rf, self.name, ','.join(map(str, valid_rf))))
+                self.model.config.backend.set_closest_reuse_factor(self)
             if compression:
                 self.set_attr('strategy', 'compressed')
             else:
@@ -781,12 +777,7 @@ class Conv1D(Layer):
         if self.model.config.is_resource_strategy(self):
             self.set_attr('strategy', 'large')
             if self.model.config.backend.name == 'Vivado':
-                valid_rf = self.model.config.backend.get_valid_reuse_factors(self)
-                chosen_rf = self.model.config.get_reuse_factor(self)
-                if chosen_rf not in valid_rf:
-                    print('WARNING: Using invalid ReuseFactor={} with "Resource" strategy in layer "{}". Valid ReuseFactor(s): {}'
-                        .format(chosen_rf, self.name, ','.join(map(str, valid_rf))))
-                
+                self.model.config.backend.set_closest_reuse_factor(self)
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 1, 0]) #(W,C,F) => (F,C,W)
         else:
             self.set_attr('strategy', 'latency')
@@ -842,11 +833,7 @@ class Conv2D(Layer):
         if self.model.config.is_resource_strategy(self):
             self.set_attr('strategy', 'large')
             if self.model.config.backend.name == 'Vivado':
-                valid_rf = self.model.config.backend.get_valid_reuse_factors(self)
-                chosen_rf = self.model.config.get_reuse_factor(self)
-                if chosen_rf not in valid_rf:
-                    print('WARNING: Using invalid ReuseFactor={} with "Resource" strategy in layer "{}". Valid ReuseFactor(s): {}'
-                        .format(chosen_rf, self.name, ','.join(map(str, valid_rf))))
+                self.model.config.backend.set_closest_reuse_factor(self)
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
         else:
             self.set_attr('strategy', 'latency')

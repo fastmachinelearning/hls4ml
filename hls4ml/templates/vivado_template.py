@@ -1,6 +1,7 @@
 
 import numpy as np
 import math
+from bisect import bisect_left
 
 from .templates import Backend
 
@@ -223,4 +224,30 @@ class VivadoBackend(Backend):
         _assert = _assert and (((n_in * n_out) % rf) == 0)
 
         return _assert
+
+    def get_closest_reuse_factor(self, valid_rf, chosen_rf):
+        """
+        Returns closest value to chosen_rf. valid_rf is sorted (obtained from get_valid_reuse_factors()) 
+        If two numbers are equally close, return the smallest number.
+        """
+        pos = bisect_left(valid_rf, chosen_rf)
+        if pos == 0:
+            return valid_rf[0]
+        if pos == len(valid_rf):
+            return valid_rf[-1]
+        before = valid_rf[pos - 1]
+        after = valid_rf[pos]
+        if after - chosen_rf < chosen_rf - before:
+            return after
+        else:
+            return before
+
+    def set_closest_reuse_factor(self, layer):
+        valid_rf = self.get_valid_reuse_factors(layer)
+        chosen_rf = layer.reuse_factor
+        if chosen_rf not in valid_rf:
+            closest_rf = self.get_closest_reuse_factor(valid_rf, chosen_rf)
+            print('WARNING: Invalid ReuseFactor={} with "Resource" strategy in layer "{}". Using ReuseFactor={} instead. Valid ReuseFactor(s): {}.'
+                .format(chosen_rf, self.name, closest_rf, ','.join(map(str, valid_rf))))
+            layer.reuse_factor = closest_rf
 
