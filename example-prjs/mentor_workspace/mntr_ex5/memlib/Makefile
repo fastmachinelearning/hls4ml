@@ -5,7 +5,7 @@
 #MEMLIBS = ./memlib
 
 FPGA_MEMTECH_PATH = ../../memgen/tech/virtexup
-ASIC_MEMTECH_PATH = ../../memgen/tech/cmos32soi
+ASIC_MEMTECH_PATH = ../../memgen/tech/opencell_45nm
 
 all:
 	@echo "INFO: make <TAB>"
@@ -26,7 +26,7 @@ memlib-asic: memlist.txt
 .PHONY: memlib-asic
 
 clean:
-	@echo "INFO: make clean"
+	@echo "INFO: Use make ultraclean"
 .PHONY: clean
 
 ultraclean:

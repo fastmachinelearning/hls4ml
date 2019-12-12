@@ -38,7 +38,7 @@ CXX_FLAGS += -Wno-sign-compare
 CXX_FLAGS += -Wno-unused-variable
 CXX_FLAGS += -Wno-narrowing
 CXX_FLAGS += -std=c++11
-CXX_FLAGS += -D__WEIGHTS_DIR__="../mnist_mlp/firmware/weights"
+CXX_FLAGS += -D__WEIGHTS_DIR__=$(WEIGHTS_DIR)
 
 LD_FLAGS :=
 LD_FLAGS += -lm
@@ -60,6 +60,7 @@ CXX_SOURCES += $(subst ../$(MODEL_DIR)/firmware/,,$(wildcard ../$(MODEL_DIR)/fir
 
 # Vivado HLS
 vivado: CXX_FLAGS += -O3
+vivado: CXX_FLAGS += -DXLNX_VIVADO_HLS
 vivado: INCDIR += -I$(XILINX_VIVADO)/include
 vivado: $(MODEL)
 .PHONY: vivado
@@ -75,7 +76,6 @@ vivado: $(MODEL)
 catapult: INCDIR += -I../inc
 catapult: INCDIR += -I$(SYSTEMC)/include
 catapult: CXX_FLAGS += -O3
-catapult: CXX_FLAGS += -DMNTR_CATAPULT_HLS
 catapult: LD_LIBS += -L$(SYSTEMC)/lib
 catapult: LD_FLAGS += -lsystemc
 catapult: LD_FLAGS += -lpthread

@@ -166,11 +166,9 @@ if {$opt(hsynth)} {
         solution library add Xilinx_RAMS
         solution library add Xilinx_ROMS
         solution library add Xilinx_FIFO
+    }
 
-#        source ../memlib/tcl/fpga/w2_64_14112_2w2r.tcl
-#        source ../memlib/tcl/fpga/w4_64_1152_2w2r.tcl
-#        source ../memlib/tcl/fpga/w6_10_1152_2w2r.tcl
-
+    if {$opt(asic) == 0} {
         source ../memlib/tcl/fpga/w2_50176_18_2w2r.tcl
         source ../memlib/tcl/fpga/w4_4096_18_2w2r.tcl
         source ../memlib/tcl/fpga/w6_640_18_2w2r.tcl
@@ -180,6 +178,16 @@ if {$opt(hsynth)} {
         solution library add w2_Xilinx_RAMS
         solution library add w4_Xilinx_RAMS
         solution library add w6_Xilinx_RAMS
+    } else {
+        source ../memlib/tcl/asic/w2_50176_18_2w2r.tcl
+        source ../memlib/tcl/asic/w4_4096_18_2w2r.tcl
+        source ../memlib/tcl/asic/w6_640_18_2w2r.tcl
+
+        solution options set ComponentLibs/SearchPath ./memlib_asic -append
+
+        solution library add w2_Nangate_RAMS
+        solution library add w4_Nangate_RAMS
+        solution library add w6_Nangate_RAMS   
     }
 
     go libraries
@@ -224,28 +232,43 @@ if {$opt(hsynth)} {
     directive set /mnist_mlp/const_size_out_1:rsc -MAP_TO_MODULE ccs_ioport.ccs_out_vld
 
     # w2
+    if {$opt(asic) == 0} {
 #    directive set /mnist_mlp/w2:rsc -MAP_TO_MODULE w2_Xilinx_RAMS.w2_64_14112_2w2r
 #    directive set /mnist_mlp/w2 -WORD_WIDTH 14112
-    directive set /mnist_mlp/w2:rsc -MAP_TO_MODULE w2_Xilinx_RAMS.w2_50176_18_2w2r
+        directive set /mnist_mlp/w2:rsc -MAP_TO_MODULE w2_Xilinx_RAMS.w2_50176_18_2w2r
+    } else {
+        directive set /mnist_mlp/w2:rsc -MAP_TO_MODULE w2_Nangate_RAMS.w2_50176_18_2w2r
+#        directive set /mnist_mlp/w2:rsc -MAP_TO_MODULE ccs_sample_mem.ccs_ram_sync_dualport
+    }
 #    directive set /mnist_mlp/w2:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
 #    directive set /mnist_mlp/w2:rsc -PACKING_MODE sidebyside
 #    directive set /mnist_mlp/w2 -WORD_WIDTH 14112; #784*18
 
     # w4
+    if {$opt(asic) == 0} {
 #    directive set /mnist_mlp/w4:rsc -MAP_TO_MODULE w4_Xilinx_RAMS.w4_64_1152_2w2r
 #    directive set /mnist_mlp/w4 -WORD_WIDTH 1152
-    directive set /mnist_mlp/w4:rsc -MAP_TO_MODULE w4_Xilinx_RAMS.w4_4096_18_2w2r
+        directive set /mnist_mlp/w4:rsc -MAP_TO_MODULE w4_Xilinx_RAMS.w4_4096_18_2w2r
+    } else {
+        directive set /mnist_mlp/w4:rsc -MAP_TO_MODULE w4_Nangate_RAMS.w4_4096_18_2w2r
+#        directive set /mnist_mlp/w4:rsc -MAP_TO_MODULE ccs_sample_mem.ccs_ram_sync_dualport
+    }
 #    directive set /mnist_mlp/w4:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
 #    directive set /mnist_mlp/w4:rsc -PACKING_MODE sidebyside
 #    directive set /mnist_mlp/w4 -WORD_WIDTH 1152; #64*18
 
     # w6
+    if {$opt(asic) == 0} {
 #    directive set /mnist_mlp/w6:rsc -MAP_TO_MODULE w6_Xilinx_RAMS.w6_10_1152_2w2r
 #    directive set /mnist_mlp/w6 -WORD_WIDTH 1152
-    directive set /mnist_mlp/w6:rsc -MAP_TO_MODULE w6_Xilinx_RAMS.w6_640_18_2w2r
-#    directive set /mnist_mlp/w6:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
-#    directive set /mnist_mlp/w6:rsc -PACKING_MODE sidebyside
-#    directive set /mnist_mlp/w6 -WORD_WIDTH 1152; #64*18
+        directive set /mnist_mlp/w6:rsc -MAP_TO_MODULE w6_Xilinx_RAMS.w6_640_18_2w2r
+    } else {
+        directive set /mnist_mlp/w6:rsc -MAP_TO_MODULE w6_Nangate_RAMS.w6_640_18_2w2r
+#        directive set /mnist_mlp/w6:rsc -MAP_TO_MODULE ccs_sample_mem.ccs_ram_sync_dualport
+    }
+    directive set /mnist_mlp/w6:rsc -MAP_TO_MODULE ccs_ioport.ccs_in
+    directive set /mnist_mlp/w6:rsc -PACKING_MODE sidebyside
+    directive set /mnist_mlp/w6 -WORD_WIDTH 1152; #64*18
 
     directive set /mnist_mlp/b2:rsc -MAP_TO_MODULE ccs_ioport.ccs_in_vld
     directive set /mnist_mlp/b2:rsc -PACKING_MODE sidebyside
