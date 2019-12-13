@@ -124,7 +124,8 @@ class VivadoWriter(Writer):
 
                 global_pipelining = model.config.get_config_value('GlobalPipelining', None)
                 if global_pipelining:
-                    newline += indent + '#pragma HLS ' + global_pipelining + '\n'
+                    if global_pipelining in ['PIPELINE', 'DATAFLOW']:
+                        newline += indent + '#pragma HLS ' + global_pipelining + '\n'
                 else:
                     if model.config.get_config_value("IOType") == "io_parallel":
                         if model.config.model_strategy == 'Resource':
