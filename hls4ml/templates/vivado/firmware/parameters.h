@@ -11,6 +11,7 @@
 #include "nnet_utils/nnet_conv_large.h"
 #include "nnet_utils/nnet_conv2d.h"
 #include "nnet_utils/nnet_conv2d_large.h"
+#include "nnet_utils/nnet_garnet.h"
 #include "nnet_utils/nnet_activation.h"
 #include "nnet_utils/nnet_common.h"
 #include "nnet_utils/nnet_batchnorm.h"

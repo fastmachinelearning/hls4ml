@@ -108,17 +108,31 @@ class VivadoWriter(Writer):
                 newline = line
                 all_inputs = [i.cppname for i in model_inputs]
                 all_outputs = [o.cppname for o in model_outputs]
-                if model.config.get_config_value("IOType") == "io_parallel":
-                    for i in model_inputs: newline += indent + '#pragma HLS ARRAY_RESHAPE variable={} complete dim=0 \n'.format(i.cppname)
-                    for o in model_outputs: newline += indent + '#pragma HLS ARRAY_RESHAPE variable={} complete dim=0 \n'.format(o.cppname)
-                    newline += indent + '#pragma HLS INTERFACE ap_vld port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
-                    if model.config.model_strategy == 'Resource':
-                        newline += indent + '#pragma HLS DATAFLOW \n'
+
+                if model.config.get_config_value("CustomizeIO", False):
+                    for i in model_inputs: newline += indent + i.pragma + '\n'
+                    for o in model_outputs: newline += indent + o.pragma + '\n'
+                    interface_mode = model.config.get_config_value('InterfaceMode', 'ap_vld')
+                    newline += indent + '#pragma HLS INTERFACE {} port={},{} \n'.format(interface_mode, ','.join(all_inputs), ','.join(all_outputs))
+                else:
+                    if model.config.get_config_value("IOType") == "io_parallel":
+                        for i in model_inputs: newline += indent + '#pragma HLS ARRAY_RESHAPE variable={} complete dim=0 \n'.format(i.cppname)
+                        for o in model_outputs: newline += indent + '#pragma HLS ARRAY_RESHAPE variable={} complete dim=0 \n'.format(o.cppname)
+                        newline += indent + '#pragma HLS INTERFACE ap_vld port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
+                    elif model.config.get_config_value("IOType") == "io_serial":
+                        newline += indent + '#pragma HLS INTERFACE axis port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
+
+                global_pipelining = model.config.get_config_value('GlobalPipelining', None)
+                if global_pipelining:
+                    newline += indent + '#pragma HLS ' + global_pipelining + '\n'
+                else:
+                    if model.config.get_config_value("IOType") == "io_parallel":
+                        if model.config.model_strategy == 'Resource':
+                            newline += indent + '#pragma HLS DATAFLOW \n'
+                        else:
+                            newline += indent + '#pragma HLS PIPELINE \n'
                     else:
-                        newline += indent + '#pragma HLS PIPELINE \n'
-                if model.config.get_config_value("IOType") == "io_serial":
-                    newline += indent + '#pragma HLS INTERFACE axis port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
-                    newline += indent + '#pragma HLS DATAFLOW \n'
+                        newline += indent + '#pragma HLS DATAFLOW \n'
 
                 inval_str = '\n    '.join(['const_size_in_{} = {};'.format(i, inp.size_cpp()) for i, inp in enumerate(model_inputs, 1)])
                 outval_str = '\n    '.join(['const_size_out_{} = {};'.format(i, out.size_cpp()) for i, out in enumerate(model_outputs, 1)])
@@ -258,24 +272,26 @@ class VivadoWriter(Writer):
                 newline = line.replace('myproject', model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert data' in line:
                 newline = line
+                newline += '      std::vector<float>::const_iterator in_begin = in.begin();\n'
+                newline += '      std::vector<float>::const_iterator in_end;\n'
                 for inp in model.get_input_variables():
-                    input_str = '      ' + inp.definition_cpp() + ' = {};\n'
-                    default_val = ','.join('in[{}]'.format(i) for i in range(inp.size()))
-                    newline += input_str.format('{' + default_val + '}')
+                    newline += '      ' + inp.definition_cpp() + ';\n'
+                    newline += '      in_end = in_begin + ({});\n'.format(inp.size_cpp())
+                    newline += '      std::copy(in_begin, in_end, {});\n'.format(inp.cppname)
+                    newline += '      in_begin = in_end;\n'
                 for out in model.get_output_variables():
-                    output_str = '      ' + out.definition_cpp() + ' = {};\n'
-                    default_val = ','.join(str(o) for o in [0] * out.size())
-                    newline += output_str.format('{' + default_val + '}')
+                    # brace-init zeros the array out because we use std=c++0x
+                    newline += '      ' + out.definition_cpp() + '{};\n'
+                    # but we can still explicitly zero out if you want
+                    newline += '      std::fill_n({}, {}, 0.);\n'.format(out.cppname, out.size())
             elif '//hls-fpga-machine-learning insert zero' in line:
                 newline = line
                 for inp in model.get_input_variables():
-                    input_str = '    ' + inp.definition_cpp() + ' = {};\n'
-                    default_val = ','.join(str(i) for i in [0] * inp.size())
-                    newline += input_str.format('{' + default_val + '}')
+                    newline += '    ' + inp.definition_cpp() + ';\n'
+                    newline += '    std::fill_n({}, {}, 0.);\n'.format(inp.cppname, inp.size_cpp())
                 for out in model.get_output_variables():
-                    output_str = '    ' + out.definition_cpp() + ' = {};\n'
-                    default_val = ','.join(str(o) for o in [0] * out.size())
-                    newline += output_str.format('{' + default_val + '}')
+                    newline += '    ' + out.definition_cpp() + '{};\n'
+                    newline += '      std::fill_n({}, {}, 0.);\n'.format(out.cppname, out.size())
             elif '//hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
 

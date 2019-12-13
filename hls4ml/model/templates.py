@@ -125,6 +125,29 @@ concat_config_template = """struct config{index} : nnet::concat_config {{
     static const unsigned axis = {axis};
 }};\n"""
 
+garnet_config_template = """struct config{index} : nnet::garnet_config {{
+    typedef {input_transform_weights_t} input_transform_weights_t;
+    typedef {input_transform_biases_t} input_transform_biases_t;
+    typedef {output_transform_weights_t} output_transform_weights_t;
+    typedef {output_transform_biases_t} output_transform_biases_t;
+    typedef {aggregator_distance_weights_t} aggregator_distance_weights_t;
+    typedef {aggregator_distance_biases_t} aggregator_distance_biases_t;
+
+    typedef {accum_t} accum_t;
+    typedef {edge_weight_t} edge_weight_t;
+    typedef {aggr_t} aggr_t;
+
+    static const unsigned n_vertices = {n_vertices};
+    static const unsigned n_in_features = {n_in_features};
+    static const unsigned n_aggregators = {n_aggregators};
+    static const unsigned n_filters = {n_filters};
+    static const unsigned n_propagate = {n_propagate};
+    static const unsigned distance_bitwidth = 10;
+
+    static const unsigned reuse_factor = {reuse};
+}};
+"""
+
 config_templates = {
     'Dense'                  : dense_config_template,
     'BinaryDense'            : dense_config_template,
@@ -138,6 +161,7 @@ config_templates = {
     'Pooling2D'              : pooling2d_config_template,
     'Merge'                  : merge_config_template,
     'Concatenate'            : concat_config_template,
+    'GarNet'                 : garnet_config_template
 }
 
 dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
@@ -149,6 +173,7 @@ param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {conf
 pooling1d_function_template = 'nnet::pooling1d<{input_t}, {config}>({input}, {output});'
 pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {config}>({input}, {output});'
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
+garnet_function_template = 'nnet::garnet<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output}, {input_transform_weights}, {input_transform_biases}, {aggregator_distance_weights}, {aggregator_distance_biases}, {output_transform_weights}, {output_transform_biases});'
 
 function_templates = {
     'Dense'                  : dense_function_template,
@@ -163,6 +188,7 @@ function_templates = {
     'Pooling2D'              : pooling2d_function_template,
     'Merge'                  : merge_function_template,
     'Concatenate'            : merge_function_template,
+    'GarNet'                 : garnet_function_template
 }
 
 def get_config_template(kind):

@@ -30,6 +30,8 @@ class HLSConfig(object):
         self.layer_type_compression = {}
         self.layer_name_compression = {}
 
+        self.layer_name_output_partitioning = {}
+
         self._parse_hls_config()
         self._validate_hls_config()
 
@@ -101,6 +103,13 @@ class HLSConfig(object):
 
         return compression
 
+    def get_output_partitioning(self, layer):
+        partitioning = self.layer_name_output_partitioning.get(layer.name.lower())
+        if partitioning is None:
+            partitioning = 'auto'
+
+        return partitioning
+
     def _parse_hls_config(self):
         hls_config = self.config['HLSConfig']
         model_cfg = hls_config.get('Model')
@@ -160,6 +169,10 @@ class HLSConfig(object):
                 compression = layer_cfg.get('Compression')
                 if compression is not None:
                     self.layer_name_compression[layer_name.lower()] = bool(compression)
+
+                output_partitioning = layer_cfg.get('OutputPartitioning')
+                if output_partitioning is not None:
+                    self.layer_name_output_partitioning[layer_name.lower()] = output_partitioning
 
     def _validate_hls_config(self):
         use_resource = False
@@ -576,6 +589,9 @@ class Layer(object):
             precision, _ = self.model.config.get_precision(self, var='result')
 
         if pragma == 'auto':
+            pragma = self.model.config.get_output_partitioning(self)
+
+        if pragma == 'auto':
             if self.model.config.get_config_value('IOType') == 'io_serial':
                 pragma = 'stream'
             else:
@@ -690,7 +706,9 @@ class Input(Layer):
         if shape[0] is None:
             shape = shape[1:]
         dims = ['N_INPUT_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
-        self.add_output_variable(shape, dims, var_name=self.name, type_name='input_t')
+        type_name = self.attributes.get('type_name', 'input_t')
+        precision = self.attributes.get('precision', None)
+        self.add_output_variable(shape, dims, var_name=self.name, type_name=type_name, precision=precision)
 
     def function_cpp(self):
         return None
@@ -879,6 +897,67 @@ class Conv2D(Layer):
             return mult_config + '\n' + conv_config
         else:
             return self._config_template[0].format(**params)
+
+class GarNet(Layer):
+    def initialize(self):
+        reuse_factor = self.model.config.get_reuse_factor(self)
+        if self.attributes['n_vertices'] % reuse_factor != 0:
+            raise Exception('GarNet vertex loop has no bound check; number of vertices must be divisible by the reuse factor (%d).' % reuse_factor)
+        
+        if self.attributes['collapse']:
+            shape = [self.attributes['n_filters']]
+            dims = ['OUT_FEATURES_{}'.format(self.index)]
+        else:
+            shape = [self.attributes['n_vertices'], self.attributes['n_filters']]
+            dims = ['VERTICES_{}'.format(self.index),'OUT_FEATURES_{}'.format(self.index)]
+
+        self.add_output_variable(shape, dims)
+
+        for dense_name, suffix in [('input_transform', ''), ('aggregator_distance', '_1'), ('output_transform', '_2')]:
+            data = self.model.get_weights_data(self.name, '%s/kernel%s:0' % (self.name, suffix))
+            self.add_weights_variable(name=('%s_weights' % dense_name), var_name=('%s_weights' % dense_name), data=data, quantize=0, compression=False) #weight index
+
+            data = self.model.get_weights_data(self.name, '%s/bias%s:0' % (self.name, suffix))
+            precision = None
+            quantize = 0
+            type_name = None
+            if data is None:
+                data = np.zeros(self.get_output_variable().shape[-1])
+                precision = 'ap_uint<1>'
+                type_name = 'biases{index}_t'
+                quantize = 0 # Don't quantize non-existant bias
+
+            self.add_weights_variable(name=('%s_biases' % dense_name), var_name=('%s_b{index}' % dense_name), type_name=type_name, precision=precision, data=data, quantize=quantize)
+
+    def function_cpp(self):
+        params = self._default_function_params()
+        params['integer_input_t'] = self.get_input_variable('input_2').type.name
+        params['nvtx'] = self.get_input_variable(self.inputs[1]).name
+        for dense_name in ['input_transform', 'aggregator_distance', 'output_transform']:
+            params['%s_weights' % dense_name] = self.get_weights('%s_weights' % dense_name).name
+            params['%s_biases' % dense_name] = self.get_weights('%s_biases' % dense_name).name
+
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+        params['n_vertices'] = self.get_input_variable().dim_names[0]
+        params['n_in_features'] = self.get_input_variable().dim_names[1]
+        params['n_aggregators'] = self.get_weights('aggregator_distance_biases').shape[0]
+        params['n_filters'] = self.get_weights('output_transform_biases').shape[0]
+        params['n_propogate'] = self.get_weights('input_transform_biases').shape[0]
+        if self.attributes['collapse'] == 'mean':
+            params['collapse_def'] = '#define GARNET_COLLAPSE 1'
+        else:
+            params['collapse_def'] = ''
+        params['edge_weight_t'], type_name = self.model.config.get_precision(self, var='edge_weight')
+        if type_name == 'model_default_t':
+            params['edge_weight_t'] = 'ap_ufixed<64, 32>'
+        params['aggr_t'], type_name = self.model.config.get_precision(self, var='aggr')
+        if type_name == 'model_default_t':
+            params['aggr_t'] = 'ap_fixed<64, 24>'
+
+        return self._config_template.format(**params)
 
 class Pooling1D(Layer):
     def initialize(self):
@@ -1094,6 +1173,7 @@ layer_map = {
     'AveragePooling2D'   : Pooling2D,
     'Merge'              : Merge,
     'Concatenate'        : Concatenate,
+    'GarNet'             : GarNet,
     # TensorFlow-specific layers:
     'BiasAdd'            : BiasAdd
 }
