@@ -126,7 +126,8 @@ compute_garnet_edge_weight(typename CONFIG_T::accum_t distance)
 
 #ifdef __SYNTHESIS__
   typename CONFIG_T::edge_weight_t edge_weights_table[1 << CONFIG_T::distance_bitwidth];
-  #pragma HLS ARRAY_RESHAPE variable=edge_weights_table complete dim=1
+  unsigned const reshape_factor = CONFIG_T::n_aggregators * CONFIG_T::n_in_features * (CONFIG_T::n_vertices / CONFIG_T::reuse_factor);
+  #pragma HLS ARRAY_RESHAPE variable=edge_weights_table cyclic factor=reshape_factor dim=1
   bool initialized = false;
 #else
   static typename CONFIG_T::edge_weight_t edge_weights_table[1 << CONFIG_T::distance_bitwidth];

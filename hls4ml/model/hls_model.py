@@ -107,6 +107,8 @@ class HLSConfig(object):
         partitioning = self.layer_name_output_partitioning.get(layer.name.lower())
         if partitioning is None:
             partitioning = 'auto'
+        elif ',' in partitioning:
+            partitioning = tuple(partitioning.split(','))
 
         return partitioning
 
@@ -363,12 +365,18 @@ class ArrayVariable(Variable):
         self.shape = shape
         self.dim_names = dim_names
 
+        if type(pragma) is tuple:
+            args = pragma[1:]
+            pragma = pragma[0]
+        else:
+            args = tuple()
+
         if pragma == 'partition':
-            self.partition()
+            self.partition(*args)
         elif pragma == 'reshape':
-            self.reshape()
+            self.reshape(*args)
         elif pragma == 'stream':
-            self.stream()
+            self.stream(*args)
         else:
             self.pragma = None
 

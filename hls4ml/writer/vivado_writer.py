@@ -109,10 +109,12 @@ class VivadoWriter(Writer):
                 all_inputs = [i.cppname for i in model_inputs]
                 all_outputs = [o.cppname for o in model_outputs]
 
-                if model.config.get_config_value("CustomizeIO", False):
+                if model.config.get_config_value("CustomizeIO"):
                     for i in model_inputs: newline += indent + i.pragma + '\n'
                     for o in model_outputs: newline += indent + o.pragma + '\n'
-                    interface_mode = model.config.get_config_value('InterfaceMode', 'ap_vld')
+                    interface_mode = model.config.get_config_value('InterfaceMode')
+                    if interface_mode is None:
+                        interface_mode = 'ap_vld'
                     newline += indent + '#pragma HLS INTERFACE {} port={},{} \n'.format(interface_mode, ','.join(all_inputs), ','.join(all_outputs))
                 else:
                     if model.config.get_config_value("IOType") == "io_parallel":
@@ -122,7 +124,7 @@ class VivadoWriter(Writer):
                     elif model.config.get_config_value("IOType") == "io_serial":
                         newline += indent + '#pragma HLS INTERFACE axis port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
 
-                global_pipelining = model.config.get_config_value('GlobalPipelining', None)
+                global_pipelining = model.config.get_config_value('GlobalPipelining')
                 if global_pipelining:
                     if global_pipelining in ['PIPELINE', 'DATAFLOW']:
                         newline += indent + '#pragma HLS ' + global_pipelining + '\n'
