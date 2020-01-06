@@ -18,7 +18,7 @@ git clean -fx _book
 git add .
 
 # commit
-git commit -a -m "Update configuration docs and add link to example data files"
+git commit -a -m "Update per-layer configuration documentation"
 
 # push to the origin
 git push origin gh-pages

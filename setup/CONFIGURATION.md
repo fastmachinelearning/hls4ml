@@ -48,6 +48,24 @@ Then you have some optimization parameters for how your algorithm runs:
    * **Strategy**: Optimization strategy on FPGA, either "Latency" or "Resource". If none is supplied then hl4ml uses "Latency" as default. 
    * **Precision**: this defines the precsion of your inputs, outputs, weights and biases.  you have a chance to further configure this more finely
 
+<details>
+<summary> <b> Per-layer configuration </b></summary>
+<p>
+
+Aside from these parameters, you can also specify per-layer configuration by adding this in the configuration file: 
+
+```
+LayerName:
+  my_first_layer:
+    ReuseFactor: 80
+```
+
+This will have the effect of changing the reuse factor of the first layer to 80. All of the other layers' configuration will be taken from model-level configuration. 
+
+</p>
+</details>
+&nbsp;
+
 For more information on the optimization parameters and what they mean, you can visit the <a href="../CONCEPTS.html">Concepts</a> chapter.
 
 ### Detailed configuration
