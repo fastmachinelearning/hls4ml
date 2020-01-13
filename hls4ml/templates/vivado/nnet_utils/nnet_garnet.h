@@ -20,8 +20,6 @@
 #ifndef NNET_GARNET_H_
 #define NNET_GARNET_H_
 
-#define GARNET_COLLAPSE 1
-
 #include "nnet_common.h"
 #include "hls_stream.h"
 #include "hls_math.h"
@@ -150,11 +148,7 @@ compute_features_weights(
   typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_propagate],
   typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_in_features * CONFIG_T::n_aggregators],
   typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators],
-#ifdef GARNET_COLLAPSE
-  typename CONFIG_T::aggr_t edge_weight_sums[CONFIG_T::n_aggregators],
-#else
   typename CONFIG_T::edge_weight_t edge_weights[CONFIG_T::n_vertices * CONFIG_T::n_aggregators],
-#endif
   typename CONFIG_T::aggr_t aggregation_sums[CONFIG_T::n_aggregators * CONFIG_T::n_propagate]
 )
 {
@@ -199,11 +193,8 @@ compute_features_weights(
       }
 
       typename CONFIG_T::edge_weight_t edge_weight = compute_garnet_edge_weight<CONFIG_T>(distance);
-#ifdef GARNET_COLLAPSE
-      edge_weight_sums[ia] += edge_weight;
-#else
+
       edge_weights[weights_offset + ia] = edge_weight;
-#endif
 
     AccumPropagate:
       for (unsigned ip = 0; ip < CONFIG_T::n_propagate; ++ip) {
@@ -214,26 +205,92 @@ compute_features_weights(
   }
 }
 
-#ifdef GARNET_COLLAPSE
+template<class data_T, class nvtx_T, class CONFIG_T>
+void
+compute_features_weights_collapsed(
+  data_T const data[CONFIG_T::n_vertices * CONFIG_T::n_in_features],
+  nvtx_T nvtx,
+  typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_in_features * CONFIG_T::n_propagate],
+  typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_propagate],
+  typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_in_features * CONFIG_T::n_aggregators],
+  typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators],
+  typename CONFIG_T::aggr_t edge_weight_sums[CONFIG_T::n_aggregators],
+  typename CONFIG_T::aggr_t aggregation_sums[CONFIG_T::n_aggregators * CONFIG_T::n_propagate]
+)
+{
+  // This is a near-identical function to compute_features_weights. Could not find a way to cleanly factorize while keeping the implementation
+  // simple enough for HLS to not get confused.
+  
+  #pragma HLS EXPRESSION_BALANCE
+
+ VerticesCompute:
+  for (unsigned iv = 0; iv < CONFIG_T::n_vertices; ++iv) {
+    unsigned cycle_factor = CONFIG_T::n_vertices / CONFIG_T::reuse_factor;
+    #pragma HLS UNROLL factor=cycle_factor skip_exit_check
+    #pragma HLS PIPELINE
+    
+    if (iv >= nvtx)
+      break;
+    
+    typename CONFIG_T::index_t const data_offset = iv * CONFIG_T::n_in_features;
+    typename CONFIG_T::index_t const features_offset = iv * CONFIG_T::n_propagate;
+    typename CONFIG_T::index_t const weights_offset = iv * CONFIG_T::n_aggregators;
+
+    typename CONFIG_T::accum_t propagated_features[CONFIG_T::n_propagate];
+
+    // keras Dense applies weights as K.dot(inputs, kernel) -> kernel is channels first
+
+  Propagate:
+    for (unsigned ip = 0; ip < CONFIG_T::n_propagate; ++ip) {
+      propagated_features[ip] = input_transform_biases[ip];
+    PropagateMatMul:
+      for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix) {
+        typename CONFIG_T::index_t data_index = data_offset + ix;
+        typename CONFIG_T::index_t weight_index = ix * CONFIG_T::n_propagate + ip;
+        propagated_features[ip] += data[data_index] * input_transform_weights[weight_index];
+      }
+    }
+
+  Accum:
+    for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia) {
+      typename CONFIG_T::accum_t distance = aggregator_distance_biases[ia];
+    AccumMatMul:
+      for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix) {
+        typename CONFIG_T::index_t data_index = data_offset + ix;
+        typename CONFIG_T::index_t weight_index = ix * CONFIG_T::n_aggregators + ia;
+        distance += data[data_index] * aggregator_distance_weights[weight_index];
+      }
+
+      typename CONFIG_T::edge_weight_t edge_weight = compute_garnet_edge_weight<CONFIG_T>(distance);
+
+      edge_weight_sums[ia] += edge_weight;
+
+    AccumPropagate:
+      for (unsigned ip = 0; ip < CONFIG_T::n_propagate; ++ip) {
+        typename CONFIG_T::aggr_t cache = edge_weight * propagated_features[ip];
+        aggregation_sums[ia * CONFIG_T::n_propagate + ip] += cache;
+      }
+    }
+  }
+}
 
 template<class res_T, class nvtx_T, class CONFIG_T>
 void
-set_output(
+set_output_collapsed(
   nvtx_T nvtx,
   typename CONFIG_T::aggr_t const edge_weight_sums[CONFIG_T::n_aggregators],
   typename CONFIG_T::aggr_t const aggregation_sums[CONFIG_T::n_aggregators * CONFIG_T::n_propagate],
   typename CONFIG_T::output_transform_weights_t const output_transform_weights[CONFIG_T::n_aggregators * CONFIG_T::n_propagate * CONFIG_T::n_filters],
   typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_filters],
-  res_T res[CONFIG_T::n_filters]
+  res_T res[CONFIG_T::n_filters],
+  int collapse_type
 )
 {
   #pragma HLS PIPELINE
   #pragma HLS EXPRESSION_BALANCE
 
-  #if GARNET_COLLAPSE == 1
   typename CONFIG_T::aggr_t const vnorm2 = 1. / CONFIG_T::n_vertices / CONFIG_T::n_vertices;
   typename CONFIG_T::aggr_t const nvtx_vnorm = float(nvtx) / CONFIG_T::n_vertices;
-  #endif
 
  Output:
   for (int io = 0; io < CONFIG_T::n_filters; ++io) {
@@ -250,22 +307,17 @@ set_output(
       }
     }
 
-    #if GARNET_COLLAPSE == 1
-    // mean
-    aggr *= vnorm2;
-    aggr += output_transform_biases[io] * nvtx_vnorm;
-    #elif GARNET_COLLAPSE == 2
-    // sum
-    aggr += output_transform_biases[io] * nvtx;
-    #endif
+    if (collapse_type == CONFIG_T::collapse_mean) {
+      aggr *= vnorm2;
+      aggr += output_transform_biases[io] * nvtx_vnorm;
+    }
+    else if (collapse_type == CONFIG_T::collapse_sum) {
+      aggr += output_transform_biases[io] * nvtx;
+    }
 
     res[io] = aggr;
-
-    //std::cout << "res " << io << " = " << aggr << " -> " << res[io] << std::endl;
   }
 }
-
-#else
 
 template<class res_T, class nvtx_T, class CONFIG_T>
 void
@@ -346,17 +398,19 @@ struct garnet_config
 
   // Optimization specs
   static const unsigned reuse_factor = 64;
+
+  enum CollapseType {
+    collapse_mean,
+    collapse_sum,
+    n_collapse_types
+  };
 };
 
 template<class data_T, class nvtx_T, class res_T, typename CONFIG_T>
-void garnet(
+void garnet_passthrough(
     data_T const data[CONFIG_T::n_vertices * CONFIG_T::n_in_features],
     nvtx_T const nvtx[1],
-#ifdef GARNET_COLLAPSE
-    res_T res[CONFIG_T::n_filters],
-#else
     res_T res[CONFIG_T::n_vertices * CONFIG_T::n_filters],
-#endif
     typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_in_features * CONFIG_T::n_propagate],
     typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_propagate],
     typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_in_features * CONFIG_T::n_aggregators],
@@ -370,50 +424,128 @@ void garnet(
   typename CONFIG_T::aggr_t aggregation_sums[CONFIG_T::n_aggregators * CONFIG_T::n_propagate];
   #pragma HLS ARRAY_RESHAPE variable=aggregation_sums complete dim=1
 
-#ifdef GARNET_COLLAPSE
-  typename CONFIG_T::aggr_t edge_weight_sums[CONFIG_T::n_aggregators];
-  #pragma HLS ARRAY_RESHAPE variable=edge_weight_sums complete dim=1
-#else
   typename CONFIG_T::edge_weight_t edge_weights[CONFIG_T::n_vertices * CONFIG_T::n_aggregators];
   unsigned const reshape_factor = CONFIG_T::n_aggregators * (CONFIG_T::n_vertices / CONFIG_T::reuse_factor);
   #pragma HLS ARRAY_RESHAPE variable=edge_weights cyclic factor=reshape_factor dim=1
-#endif
 
   nvtx_T nvtx_local_1 = nvtx[0];
   nvtx_T nvtx_local_2 = nvtx[0];
 
   aggregation_sums_init<CONFIG_T>(aggregation_sums);
 
-#ifdef GARNET_COLLAPSE
-  edge_weight_sums_init<CONFIG_T>(edge_weight_sums);
-#endif
-  
- compute_features_weights<data_T, nvtx_T, CONFIG_T>(
+  compute_features_weights<data_T, nvtx_T, CONFIG_T>(
     data,
     nvtx_local_1,
     input_transform_weights,
     input_transform_biases,
     aggregator_distance_weights,
     aggregator_distance_biases,
-#ifdef GARNET_COLLAPSE
-    edge_weight_sums,
-#else
     edge_weights,
-#endif
     aggregation_sums
   );
 
   set_output<res_T, nvtx_T, CONFIG_T>(
     nvtx_local_2,
-#ifdef GARNET_COLLAPSE
-    edge_weight_sums,
-#else
     edge_weights,
-#endif
     aggregation_sums,
     output_transform_weights,
     output_transform_biases,
     res
+  );
+}
+
+template<class data_T, class nvtx_T, class res_T, typename CONFIG_T>
+void garnet_collapsed(
+    data_T const data[CONFIG_T::n_vertices * CONFIG_T::n_in_features],
+    nvtx_T const nvtx[1],
+    res_T res[CONFIG_T::n_filters],
+    typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_in_features * CONFIG_T::n_propagate],
+    typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_propagate],
+    typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_in_features * CONFIG_T::n_aggregators],
+    typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators],
+    typename CONFIG_T::output_transform_weights_t const output_transform_weights[CONFIG_T::n_aggregators * CONFIG_T::n_propagate * CONFIG_T::n_filters],
+    typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_filters],
+    int collapse_type
+)
+{
+  #pragma HLS DATAFLOW
+  
+  typename CONFIG_T::aggr_t aggregation_sums[CONFIG_T::n_aggregators * CONFIG_T::n_propagate];
+  #pragma HLS ARRAY_RESHAPE variable=aggregation_sums complete dim=1
+
+  typename CONFIG_T::aggr_t edge_weight_sums[CONFIG_T::n_aggregators];
+  #pragma HLS ARRAY_RESHAPE variable=edge_weight_sums complete dim=1
+
+  nvtx_T nvtx_local_1 = nvtx[0];
+  nvtx_T nvtx_local_2 = nvtx[0];
+
+  aggregation_sums_init<CONFIG_T>(aggregation_sums);
+
+  edge_weight_sums_init<CONFIG_T>(edge_weight_sums);
+  
+  compute_features_weights_collapsed<data_T, nvtx_T, CONFIG_T>(
+    data,
+    nvtx_local_1,
+    input_transform_weights,
+    input_transform_biases,
+    aggregator_distance_weights,
+    aggregator_distance_biases,
+    edge_weight_sums,
+    aggregation_sums
+  );
+
+  set_output_collapsed<res_T, nvtx_T, CONFIG_T>(
+    nvtx_local_2,
+    edge_weight_sums,
+    aggregation_sums,
+    output_transform_weights,
+    output_transform_biases,
+    res,
+    collapse_type
+  );
+}
+
+template<class data_T, class nvtx_T, class res_T, typename CONFIG_T>
+void garnet_collapsed_mean(
+    data_T const data[CONFIG_T::n_vertices * CONFIG_T::n_in_features],
+    nvtx_T const nvtx[1],
+    res_T res[CONFIG_T::n_filters],
+    typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_in_features * CONFIG_T::n_propagate],
+    typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_propagate],
+    typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_in_features * CONFIG_T::n_aggregators],
+    typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators],
+    typename CONFIG_T::output_transform_weights_t const output_transform_weights[CONFIG_T::n_aggregators * CONFIG_T::n_propagate * CONFIG_T::n_filters],
+    typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_filters]
+)
+{
+  garnet_collapsed(
+    data, nvtx, res,
+    input_transform_weights, input_transform_biases,
+    aggregator_distance_weights, aggregator_distance_biases,
+    output_transform_weights, output_transform_biases,
+    CONFIG_T::collapse_mean
+  );
+}
+
+template<class data_T, class nvtx_T, class res_T, typename CONFIG_T>
+void garnet_collapsed_sum(
+    data_T const data[CONFIG_T::n_vertices * CONFIG_T::n_in_features],
+    nvtx_T const nvtx[1],
+    res_T res[CONFIG_T::n_filters],
+    typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_in_features * CONFIG_T::n_propagate],
+    typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_propagate],
+    typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_in_features * CONFIG_T::n_aggregators],
+    typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators],
+    typename CONFIG_T::output_transform_weights_t const output_transform_weights[CONFIG_T::n_aggregators * CONFIG_T::n_propagate * CONFIG_T::n_filters],
+    typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_filters]
+)
+{
+  garnet_collapsed(
+    data, nvtx, res,
+    input_transform_weights, input_transform_biases,
+    aggregator_distance_weights, aggregator_distance_biases,
+    output_transform_weights, output_transform_biases,
+    CONFIG_T::collapse_sum
   );
 }
 

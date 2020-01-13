@@ -945,6 +945,11 @@ class GarNet(Layer):
             params['%s_weights' % dense_name] = self.get_weights('%s_weights' % dense_name).name
             params['%s_biases' % dense_name] = self.get_weights('%s_biases' % dense_name).name
 
+        if self.attributes['collapse'] == 'mean':
+            params['structure'] = 'mean'
+        else:
+            params['structure'] = 'passthrough'
+
         return [self._function_template.format(**params)]
 
     def config_cpp(self):
@@ -954,10 +959,6 @@ class GarNet(Layer):
         params['n_aggregators'] = self.get_weights('aggregator_distance_biases').shape[0]
         params['n_filters'] = self.get_weights('output_transform_biases').shape[0]
         params['n_propogate'] = self.get_weights('input_transform_biases').shape[0]
-        if self.attributes['collapse'] == 'mean':
-            params['collapse_def'] = '#define GARNET_COLLAPSE 1'
-        else:
-            params['collapse_def'] = ''
         params['edge_weight_t'], type_name = self.model.config.get_precision(self, var='edge_weight')
         if type_name == 'model_default_t':
             params['edge_weight_t'] = 'ap_ufixed<64, 32>'

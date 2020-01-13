@@ -173,7 +173,7 @@ param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {conf
 pooling1d_function_template = 'nnet::pooling1d<{input_t}, {config}>({input}, {output});'
 pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {config}>({input}, {output});'
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
-garnet_function_template = 'nnet::garnet<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output}, {input_transform_weights}, {input_transform_biases}, {aggregator_distance_weights}, {aggregator_distance_biases}, {output_transform_weights}, {output_transform_biases});'
+garnet_function_template = 'nnet::garnet_{structure}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output}, {input_transform_weights}, {input_transform_biases}, {aggregator_distance_weights}, {aggregator_distance_biases}, {output_transform_weights}, {output_transform_biases});'
 
 function_templates = {
     'Dense'                  : dense_function_template,
