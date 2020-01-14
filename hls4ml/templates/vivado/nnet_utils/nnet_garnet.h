@@ -276,51 +276,6 @@ compute_features_weights_collapsed(
 
 template<class res_T, class nvtx_T, class CONFIG_T>
 void
-set_output_collapsed(
-  nvtx_T nvtx,
-  typename CONFIG_T::aggr_t const edge_weight_sums[CONFIG_T::n_aggregators],
-  typename CONFIG_T::aggr_t const aggregation_sums[CONFIG_T::n_aggregators * CONFIG_T::n_propagate],
-  typename CONFIG_T::output_transform_weights_t const output_transform_weights[CONFIG_T::n_aggregators * CONFIG_T::n_propagate * CONFIG_T::n_filters],
-  typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_filters],
-  res_T res[CONFIG_T::n_filters],
-  int collapse_type
-)
-{
-  #pragma HLS PIPELINE
-  #pragma HLS EXPRESSION_BALANCE
-
-  typename CONFIG_T::aggr_t const vnorm2 = 1. / CONFIG_T::n_vertices / CONFIG_T::n_vertices;
-  typename CONFIG_T::aggr_t const nvtx_vnorm = float(nvtx) / CONFIG_T::n_vertices;
-
- Output:
-  for (int io = 0; io < CONFIG_T::n_filters; ++io) {
-    typename CONFIG_T::aggr_t aggr = 0.;
-
-  OutputAggr:
-    for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia) {
-    OutputProp:
-      for (unsigned ip = 0; ip < CONFIG_T::n_propagate; ++ip) {
-        typename CONFIG_T::index_t il = ia * CONFIG_T::n_propagate + ip;
-        typename CONFIG_T::index_t weight_index = il * CONFIG_T::n_filters + io;
-          
-        aggr += edge_weight_sums[ia] * aggregation_sums[il] * output_transform_weights[weight_index];
-      }
-    }
-
-    if (collapse_type == CONFIG_T::collapse_mean) {
-      aggr *= vnorm2;
-      aggr += output_transform_biases[io] * nvtx_vnorm;
-    }
-    else if (collapse_type == CONFIG_T::collapse_sum) {
-      aggr += output_transform_biases[io] * nvtx;
-    }
-
-    res[io] = aggr;
-  }
-}
-
-template<class res_T, class nvtx_T, class CONFIG_T>
-void
 set_output(
   nvtx_T nvtx,
   typename CONFIG_T::accum_t const edge_weights[CONFIG_T::n_vertices * CONFIG_T::n_aggregators],
@@ -370,7 +325,50 @@ set_output(
   }
 }
 
-#endif
+template<class res_T, class nvtx_T, class CONFIG_T>
+void
+set_output_collapsed(
+  nvtx_T nvtx,
+  typename CONFIG_T::aggr_t const edge_weight_sums[CONFIG_T::n_aggregators],
+  typename CONFIG_T::aggr_t const aggregation_sums[CONFIG_T::n_aggregators * CONFIG_T::n_propagate],
+  typename CONFIG_T::output_transform_weights_t const output_transform_weights[CONFIG_T::n_aggregators * CONFIG_T::n_propagate * CONFIG_T::n_filters],
+  typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_filters],
+  res_T res[CONFIG_T::n_filters],
+  int collapse_type
+)
+{
+  #pragma HLS PIPELINE
+  #pragma HLS EXPRESSION_BALANCE
+
+  typename CONFIG_T::aggr_t const vnorm2 = 1. / CONFIG_T::n_vertices / CONFIG_T::n_vertices;
+  typename CONFIG_T::aggr_t const nvtx_vnorm = float(nvtx) / CONFIG_T::n_vertices;
+
+ Output:
+  for (int io = 0; io < CONFIG_T::n_filters; ++io) {
+    typename CONFIG_T::aggr_t aggr = 0.;
+
+  OutputAggr:
+    for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia) {
+    OutputProp:
+      for (unsigned ip = 0; ip < CONFIG_T::n_propagate; ++ip) {
+        typename CONFIG_T::index_t il = ia * CONFIG_T::n_propagate + ip;
+        typename CONFIG_T::index_t weight_index = il * CONFIG_T::n_filters + io;
+          
+        aggr += edge_weight_sums[ia] * aggregation_sums[il] * output_transform_weights[weight_index];
+      }
+    }
+
+    if (collapse_type == CONFIG_T::collapse_mean) {
+      aggr *= vnorm2;
+      aggr += output_transform_biases[io] * nvtx_vnorm;
+    }
+    else if (collapse_type == CONFIG_T::collapse_sum) {
+      aggr += output_transform_biases[io] * nvtx;
+    }
+
+    res[io] = aggr;
+  }
+}
 
 struct garnet_config
 {
