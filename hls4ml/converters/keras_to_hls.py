@@ -367,16 +367,16 @@ def keras_to_hls(yamlConfig):
                 raise NotImplementedError('Cannot use GarNet with deduce_nvert=True')
 
             layer['n_aggregators'] = keras_layer['config']['n_aggregators']
-            layer['n_filters'] = keras_layer['config']['n_filters'] # number of output features
+            layer['n_out_features'] = keras_layer['config']['n_out_features'] # number of output features
             layer['n_propagate'] = keras_layer['config']['n_propagate'] # number of latent features
             layer['collapse'] = keras_layer['config']['collapse']
 
             layer['vertex_unroll_factor'] = 4
 
             if layer['collapse'] in ['mean', 'sum', 'max']:
-                output_shape = [input_shapes[0][0], layer['n_filters']]
+                output_shape = [input_shapes[0][0], layer['n_out_features']]
             else:
-                output_shape = input_shapes[0][:2] + [layer['n_filters']]
+                output_shape = input_shapes[0][:2] + [layer['n_out_features']]
 
         print('Layer name: {}, layer type: {}, current shape: {}'.format(layer['name'], layer['class_name'], input_shapes))
         layer_list.append( layer )

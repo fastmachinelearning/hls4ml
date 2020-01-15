@@ -913,10 +913,10 @@ class GarNet(Layer):
             raise Exception('GarNet vertex loop has no bound check; number of vertices must be divisible by the reuse factor (%d).' % reuse_factor)
         
         if self.attributes['collapse']:
-            shape = [self.attributes['n_filters']]
+            shape = [self.attributes['n_out_features']]
             dims = ['OUT_FEATURES_{}'.format(self.index)]
         else:
-            shape = [self.attributes['n_vertices'], self.attributes['n_filters']]
+            shape = [self.attributes['n_vertices'], self.attributes['n_out_features']]
             dims = ['VERTICES_{}'.format(self.index),'OUT_FEATURES_{}'.format(self.index)]
 
         self.add_output_variable(shape, dims)
@@ -924,19 +924,19 @@ class GarNet(Layer):
         # Due to linearity of the input transform, input weights and biases can be contracted away at conversion time
         n_in_features = self.attributes['n_in_features']
         n_aggregators = self.attributes['n_aggregators']
-        n_filters = self.attributes['n_filters']
+        n_out_features = self.attributes['n_out_features']
         n_propagate = self.attributes['n_propagate']
 
-        output_transform_kernel = self.model.get_weights_data(self.name, '%s/kernel_2:0' % self.name) # [(n_aggregators, n_propagate), n_filters]
-        output_transform_kernel = output_transform_kernel.reshape(n_aggregators, n_propagate, n_filters)
+        output_transform_kernel = self.model.get_weights_data(self.name, '%s/kernel_2:0' % self.name) # [(n_aggregators, n_propagate), n_out_features]
+        output_transform_kernel = output_transform_kernel.reshape(n_aggregators, n_propagate, n_out_features)
 
         input_transform_kernel = self.model.get_weights_data(self.name, '%s/kernel:0' % self.name) # [n_in_features, n_propagate]
-        data = np.dot(input_transform_kernel, output_transform_kernel) # [n_in_features, n_aggregators, n_filters]
-        data = data.transpose((1, 0, 2)).reshape((n_aggregators * n_in_features, n_filters))
+        data = np.dot(input_transform_kernel, output_transform_kernel) # [n_in_features, n_aggregators, n_out_features]
+        data = data.transpose((1, 0, 2)).reshape((n_aggregators * n_in_features, n_out_features))
         self.add_weights_variable(name='input_transform_weights', var_name='input_transform_w{index}', data=data, quantize=0, compression=False)
 
         input_transform_bias = self.model.get_weights_data(self.name, '%s/bias:0' % self.name) # [n_propagate]
-        data = np.dot(input_transform_bias, output_transform_kernel) # [n_aggregators, n_filters]
+        data = np.dot(input_transform_bias, output_transform_kernel) # [n_aggregators, n_out_features]
         self.add_weights_variable(name='input_transform_biases', var_name='input_transform_b{index}', data=data, quantize=0, compression=False)
 
         for vname, typ, suffix in [('aggregator_distance', 'kernel', '_1'), ('aggregator_distance', 'bias', '_1'), ('output_transform', 'bias', '_2')]:
@@ -972,7 +972,7 @@ class GarNet(Layer):
         params['n_vertices'] = self.get_input_variable().dim_names[0]
         params['n_in_features'] = self.get_input_variable().dim_names[1]
         params['n_aggregators'] = self.get_weights('aggregator_distance_biases').shape[0]
-        params['n_filters'] = self.get_weights('output_transform_biases').shape[0]
+        params['n_out_features'] = self.get_weights('output_transform_biases').shape[0]
         params['edge_weight_t'], type_name = self.model.config.get_precision(self, var='edge_weight')
         if type_name == 'model_default_t':
             params['edge_weight_t'] = 'ap_ufixed<64, 32>'

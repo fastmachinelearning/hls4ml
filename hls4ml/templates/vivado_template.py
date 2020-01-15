@@ -144,7 +144,7 @@ garnet_config_template = """struct config{index} : nnet::garnet_config {{
     static const unsigned n_vertices = {n_vertices};
     static const unsigned n_in_features = {n_in_features};
     static const unsigned n_aggregators = {n_aggregators};
-    static const unsigned n_filters = {n_filters};
+    static const unsigned n_out_features = {n_out_features};
     static const unsigned distance_bitwidth = 10;
 
     static const unsigned reuse_factor = {reuse};
