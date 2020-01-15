@@ -27,28 +27,6 @@
 namespace nnet {
 
 template<class CONFIG_T>
-inline void
-edge_weight_sums_init(typename CONFIG_T::aggr_t edge_weight_sums[CONFIG_T::n_aggregators])
-{
-  #pragma HLS PIPELINE
- EdgeWeightSumInit:
-  for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia) {
-    edge_weight_sums[ia] = 0.;
-  }
-}
-
-template<class CONFIG_T>
-inline void
-aggregation_sums_init(typename CONFIG_T::aggr_t aggregation_sums[CONFIG_T::n_aggregators * CONFIG_T::n_propagate])
-{
-  #pragma HLS PIPELINE
- AggregationInit:
-  for (unsigned il = 0; il < CONFIG_T::n_aggregators * CONFIG_T::n_propagate; ++il) {
-    aggregation_sums[il] = 0.;
-  }
-}
-
-template<class CONFIG_T>
 inline typename std::enable_if<std::is_class<typename CONFIG_T::accum_t>::value>::type
 initialize_edge_weights_table(typename CONFIG_T::edge_weight_t edge_weights_table[])
 {
@@ -119,8 +97,6 @@ inline typename CONFIG_T::edge_weight_t
 compute_garnet_edge_weight(typename CONFIG_T::accum_t distance)
 {
   #pragma HLS PIPELINE
-  // typename CONFIG_T::edge_weight_t edge_weight = 1.;
-  // return edge_weight >> distance.to_int();
 
 #ifdef __SYNTHESIS__
   typename CONFIG_T::edge_weight_t edge_weights_table[1 << CONFIG_T::distance_bitwidth];
@@ -139,91 +115,24 @@ compute_garnet_edge_weight(typename CONFIG_T::accum_t distance)
   return get_edge_weight<CONFIG_T>(distance, edge_weights_table);
 }
 
-template<class data_T, class nvtx_T, class CONFIG_T>
+template<class data_T, class nvtx_T, class CONFIG_T, unsigned COLLAPSE>
 void
-compute_features_weights(
+vertices_first_pass(
   data_T const data[CONFIG_T::n_vertices * CONFIG_T::n_in_features],
   nvtx_T nvtx,
-  typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_in_features * CONFIG_T::n_propagate],
-  typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_propagate],
   typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_in_features * CONFIG_T::n_aggregators],
   typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators],
-  typename CONFIG_T::edge_weight_t edge_weights[CONFIG_T::n_vertices * CONFIG_T::n_aggregators],
-  typename CONFIG_T::aggr_t aggregation_sums[CONFIG_T::n_aggregators * CONFIG_T::n_propagate]
+  typename CONFIG_T::edge_weight_t* edge_weights, //[CONFIG_T::n_vertices * CONFIG_T::n_aggregators],
+  typename CONFIG_T::edge_weight_t edge_weight_sums[CONFIG_T::n_aggregators],
+  typename CONFIG_T::aggr_t weighted_features_sums[CONFIG_T::n_in_features * CONFIG_T::n_aggregators],
 )
 {
-  #pragma HLS EXPRESSION_BALANCE
-
- VerticesCompute:
-  for (unsigned iv = 0; iv < CONFIG_T::n_vertices; ++iv) {
-    unsigned cycle_factor = CONFIG_T::n_vertices / CONFIG_T::reuse_factor;
-    #pragma HLS UNROLL factor=cycle_factor skip_exit_check
-    #pragma HLS PIPELINE
-    
-    if (iv >= nvtx)
-      break;
-    
-    typename CONFIG_T::index_t const data_offset = iv * CONFIG_T::n_in_features;
-    typename CONFIG_T::index_t const features_offset = iv * CONFIG_T::n_propagate;
-    typename CONFIG_T::index_t const weights_offset = iv * CONFIG_T::n_aggregators;
-
-    typename CONFIG_T::accum_t propagated_features[CONFIG_T::n_propagate];
-
-    // keras Dense applies weights as K.dot(inputs, kernel) -> kernel is channels first
-
-  Propagate:
-    for (unsigned ip = 0; ip < CONFIG_T::n_propagate; ++ip) {
-      propagated_features[ip] = input_transform_biases[ip];
-    PropagateMatMul:
-      for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix) {
-        typename CONFIG_T::index_t data_index = data_offset + ix;
-        typename CONFIG_T::index_t weight_index = ix * CONFIG_T::n_propagate + ip;
-        propagated_features[ip] += data[data_index] * input_transform_weights[weight_index];
-      }
-    }
-
-  Accum:
-    for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia) {
-      typename CONFIG_T::accum_t distance = aggregator_distance_biases[ia];
-    AccumMatMul:
-      for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix) {
-        typename CONFIG_T::index_t data_index = data_offset + ix;
-        typename CONFIG_T::index_t weight_index = ix * CONFIG_T::n_aggregators + ia;
-        distance += data[data_index] * aggregator_distance_weights[weight_index];
-      }
-
-      typename CONFIG_T::edge_weight_t edge_weight = compute_garnet_edge_weight<CONFIG_T>(distance);
-
-      edge_weights[weights_offset + ia] = edge_weight;
-
-    AccumPropagate:
-      for (unsigned ip = 0; ip < CONFIG_T::n_propagate; ++ip) {
-        typename CONFIG_T::aggr_t cache = edge_weight * propagated_features[ip];
-        aggregation_sums[ia * CONFIG_T::n_propagate + ip] += cache;
-      }
-    }
+  for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia) {
+    #pragma HLS UNROLL
+    edge_weight_sums[ia] = 0.;
   }
-}
 
-template<class data_T, class nvtx_T, class CONFIG_T>
-void
-compute_features_weights_collapsed(
-  data_T const data[CONFIG_T::n_vertices * CONFIG_T::n_in_features],
-  nvtx_T nvtx,
-  typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_in_features * CONFIG_T::n_propagate],
-  typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_propagate],
-  typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_in_features * CONFIG_T::n_aggregators],
-  typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators],
-  typename CONFIG_T::aggr_t edge_weight_sums[CONFIG_T::n_aggregators],
-  typename CONFIG_T::aggr_t aggregation_sums[CONFIG_T::n_aggregators * CONFIG_T::n_propagate]
-)
-{
-  // This is a near-identical function to compute_features_weights. Could not find a way to cleanly factorize while keeping the implementation
-  // simple enough for HLS to not get confused.
-  
-  #pragma HLS EXPRESSION_BALANCE
-
- VerticesCompute:
+ VerticesFirstPass:
   for (unsigned iv = 0; iv < CONFIG_T::n_vertices; ++iv) {
     unsigned cycle_factor = CONFIG_T::n_vertices / CONFIG_T::reuse_factor;
     #pragma HLS UNROLL factor=cycle_factor skip_exit_check
@@ -233,140 +142,144 @@ compute_features_weights_collapsed(
       break;
     
     typename CONFIG_T::index_t const data_offset = iv * CONFIG_T::n_in_features;
-    typename CONFIG_T::index_t const features_offset = iv * CONFIG_T::n_propagate;
     typename CONFIG_T::index_t const weights_offset = iv * CONFIG_T::n_aggregators;
 
-    typename CONFIG_T::accum_t propagated_features[CONFIG_T::n_propagate];
-
     // keras Dense applies weights as K.dot(inputs, kernel) -> kernel is channels first
-
-  Propagate:
-    for (unsigned ip = 0; ip < CONFIG_T::n_propagate; ++ip) {
-      propagated_features[ip] = input_transform_biases[ip];
-    PropagateMatMul:
-      for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix) {
-        typename CONFIG_T::index_t data_index = data_offset + ix;
-        typename CONFIG_T::index_t weight_index = ix * CONFIG_T::n_propagate + ip;
-        propagated_features[ip] += data[data_index] * input_transform_weights[weight_index];
-      }
-    }
 
   Accum:
     for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia) {
       typename CONFIG_T::accum_t distance = aggregator_distance_biases[ia];
     AccumMatMul:
-      for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix) {
-        typename CONFIG_T::index_t data_index = data_offset + ix;
-        typename CONFIG_T::index_t weight_index = ix * CONFIG_T::n_aggregators + ia;
-        distance += data[data_index] * aggregator_distance_weights[weight_index];
-      }
+      for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix)
+        distance += data[data_offset + ix] * aggregator_distance_weights[ix * CONFIG_T::n_aggregators + ia];
 
       typename CONFIG_T::edge_weight_t edge_weight = compute_garnet_edge_weight<CONFIG_T>(distance);
+
+      if (COLLAPSE == CONFIG_T::no_collapse)
+        edge_weights[weights_offset + ia] = edge_weight;
 
       edge_weight_sums[ia] += edge_weight;
 
-    AccumPropagate:
-      for (unsigned ip = 0; ip < CONFIG_T::n_propagate; ++ip) {
-        typename CONFIG_T::aggr_t cache = edge_weight * propagated_features[ip];
-        aggregation_sums[ia * CONFIG_T::n_propagate + ip] += cache;
-      }
+    WeightedFeatures:
+      for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix)
+        weighted_features_sums[ix * CONFIG_T::n_aggregators + ia] += data[data_offset + ix] * edge_weight;
     }
   }
 }
 
-template<class res_T, class nvtx_T, class CONFIG_T>
+template<class nvtx_T, class CONFIG_T>
 void
-set_output(
-  nvtx_T nvtx,
-  typename CONFIG_T::accum_t const edge_weights[CONFIG_T::n_vertices * CONFIG_T::n_aggregators],
-  typename CONFIG_T::aggr_t const aggregation_sums[CONFIG_T::n_aggregators * CONFIG_T::n_propagate],
-  typename CONFIG_T::output_transform_weights_t const output_transform_weights[CONFIG_T::n_aggregators * CONFIG_T::n_propagate * CONFIG_T::n_filters],
+transform_aggregated(
+  typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_aggregators * CONFIG_T::n_in_features * CONFIG_T::n_filters],
+  typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_aggregators * CONFIG_T::n_filters],
+  typename CONFIG_T::edge_weight_t const edge_weight_sums[CONFIG_T::n_aggregators],
+  typename CONFIG_T::aggr_t const weighted_features_sums[CONFIG_T::n_in_features * CONFIG_T::n_aggregators],
   typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_filters],
-  res_T res[CONFIG_T::n_vertices * CONFIG_T::n_filters]
-)
-{ 
-  #pragma HLS PIPELINE
-  #pragma HLS EXPRESSION_BALANCE
-
-  typename CONFIG_T::aggr_t const vnorm = 1. / CONFIG_T::n_vertices;
-
- AggrSumNormalize:
-  for (unsigned il = 0; il < n_latent; ++il) {
-    aggregation_sums[il] *= vnorm;
-  }
-
- Output:
-  for (unsigned iv = 0; iv < CONFIG_T::n_vertices; ++iv) {
-    if (iv >= nvtx)
-      break;
-
-    typename CONFIG_T::index_t res_offset = iv * CONFIG_T::n_filters;
-    typename CONFIG_T::index_t edge_weight_offset = iv * CONFIG_T::n_aggregators;
-
-  OutputFilt:
-    for (unsigned io = 0; io < CONFIG_T::n_filters; ++io) {
-      typename CONFIG_T::aggr_t aggr = output_transform_biases[io];
-
-    OutputAggr:
-      for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia) {
-        typename CONFIG_T::edge_weight_t edge_weight = edge_weights[edge_weight_offset + ia];
-
-      OutputProp:
-        for (unsigned ip = 0; ip < CONFIG_T::n_propagate; ++ip) {
-          typename CONFIG_T::index_t il = ia * CONFIG_T::n_propagate + ip;
-          typename CONFIG_T::index_t weight_index = il * CONFIG_T::n_filters + io;
-        
-          aggr += edge_weight * aggregation_sums[il] * output_transform_weights[weight_index];
-        }
-      }
-
-      res[res_offset + io] = aggr;
-    }
-  }
-}
-
-template<class res_T, class nvtx_T, class CONFIG_T>
-void
-set_output_collapsed(
   nvtx_T nvtx,
-  typename CONFIG_T::aggr_t const edge_weight_sums[CONFIG_T::n_aggregators],
-  typename CONFIG_T::aggr_t const aggregation_sums[CONFIG_T::n_aggregators * CONFIG_T::n_propagate],
-  typename CONFIG_T::output_transform_weights_t const output_transform_weights[CONFIG_T::n_aggregators * CONFIG_T::n_propagate * CONFIG_T::n_filters],
-  typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_filters],
-  res_T res[CONFIG_T::n_filters],
-  int collapse_type
+  typename CONFIG_T::aggr_t aggregated_weights[CONFIG_T::n_aggregators * CONFIG_T::n_filters],
+  typename CONFIG_T::aggr_t aggregated_biases[CONFIG_T::n_filters]
 )
 {
   #pragma HLS PIPELINE
-  #pragma HLS EXPRESSION_BALANCE
+  
+  typename CONFIG_T::accum_t nvtx_norm = 1. / nvtx;
+  
+  for (unsigned io = 0; io < CONFIG_T::n_filters; ++io) {
 
-  typename CONFIG_T::aggr_t const vnorm2 = 1. / CONFIG_T::n_vertices / CONFIG_T::n_vertices;
-  typename CONFIG_T::aggr_t const nvtx_vnorm = float(nvtx) / CONFIG_T::n_vertices;
+    aggregated_biases[io] = 0.;
 
- Output:
-  for (int io = 0; io < CONFIG_T::n_filters; ++io) {
-    typename CONFIG_T::aggr_t aggr = 0.;
-
-  OutputAggr:
     for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia) {
-    OutputProp:
-      for (unsigned ip = 0; ip < CONFIG_T::n_propagate; ++ip) {
-        typename CONFIG_T::index_t il = ia * CONFIG_T::n_propagate + ip;
-        typename CONFIG_T::index_t weight_index = il * CONFIG_T::n_filters + io;
-          
-        aggr += edge_weight_sums[ia] * aggregation_sums[il] * output_transform_weights[weight_index];
-      }
+      typename CONFIG_T::index_t const weight_index = ia * CONFIG_T::n_filters + io;
+
+      aggregated_biases[io] += input_transform_biases[weight_index] * edge_weight_sums[ia];
+
+      aggregated_weights[weight_index] = 0.;
+
+      for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix)
+        aggregated_weights[weight_index] +=
+          input_transform_weights[(ia * CONFIG_T::n_in_features + ix) * CONFIG_T::n_filters + io] *
+          weighted_features_sums[ix * CONFIG_T::n_aggregators + ia];
+
+      aggregated_weights[weight_index] *= nvtx_norm;
     }
 
-    if (collapse_type == CONFIG_T::collapse_mean) {
-      aggr *= vnorm2;
-      aggr += output_transform_biases[io] * nvtx_vnorm;
-    }
-    else if (collapse_type == CONFIG_T::collapse_sum) {
-      aggr += output_transform_biases[io] * nvtx;
-    }
+    aggregated_biases[io] *= nvtx_norm;
+    aggregated_biases[io] += output_transform_biases[io];
+  }
+}
 
-    res[io] = aggr;
+template<class nvtx_T, class res_T, class CONFIG_T>
+void
+vertices_second_pass(
+  nvtx_T nvtx,
+  typename CONFIG_T::edge_weight_t const edge_weights[CONFIG_T::n_vertices * CONFIG_T::n_aggregators],
+  typename CONFIG_T::aggr_t const aggregated_weights[CONFIG_T::n_aggregators * CONFIG_T::n_filters],
+  typename CONFIG_T::aggr_t const aggregated_biases[CONFIG_T::n_filters],
+  res_T res[CONFIG_T::n_vertices * CONFIG_T::n_filters]
+)
+{
+ VerticesSecondPass:
+  for (unsigned iv = 0; iv < CONFIG_T::n_vertices; ++iv) {
+    unsigned cycle_factor = CONFIG_T::n_vertices / CONFIG_T::reuse_factor;
+    #pragma HLS UNROLL factor=cycle_factor skip_exit_check
+    #pragma HLS PIPELINE
+    
+    if (iv >= nvtx)
+      break;
+
+    for (unsigned io = 0; io < CONFIG_T::n_filters; ++io) {
+      typename CONFIG_T::index_t const res_index = iv * CONFIG_T::n_filters + io;
+
+      res[res_index] = aggregated_biases[io];
+
+      for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia)
+        res[res_index] += edge_weights[iv * CONFIG_T::n_aggregators + ia] * aggregated_weights[ia * CONFIG_T::n_filters + io];
+    }
+  }
+}
+
+template<class nvtx_T, class res_T, class CONFIG_T>
+void
+set_output_mean(
+  nvtx_T nvtx,
+  typename CONFIG_T::edge_weight_t const edge_weight_sums[CONFIG_T::n_aggregators],
+  typename CONFIG_T::aggr_t const aggregated_weights[CONFIG_T::n_aggregators * CONFIG_T::n_filters],
+  typename CONFIG_T::aggr_t const aggregated_biases[CONFIG_T::n_filters],
+  res_T res[CONFIG_T::n_filters]
+)
+{
+  #pragma HLS PIPELINE
+
+  typename CONFIG_T::accum_t nvtx_norm = 1. / nvtx;  
+
+ Collapse:
+  for (unsigned io = 0; io < CONFIG_T::n_filters; ++io) {
+    res[io] = aggregated_biases[io];
+
+    for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia)
+      res[io] += edge_weight_sums[ia] * aggregated_weights[ia * CONFIG_T::n_filters + io];
+
+    res[io] *= nvtx_norm;
+  }
+}
+
+template<class res_T, class CONFIG_T>
+void
+set_output_sum(
+  typename CONFIG_T::edge_weight_t const edge_weight_sums[CONFIG_T::n_aggregators],
+  typename CONFIG_T::aggr_t const aggregated_weights[CONFIG_T::n_aggregators * CONFIG_T::n_filters],
+  typename CONFIG_T::aggr_t const aggregated_biases[CONFIG_T::n_filters],
+  res_T res[CONFIG_T::n_filters]
+)
+{
+  #pragma HLS PIPELINE
+
+ Collapse:
+  for (unsigned io = 0; io < CONFIG_T::n_filters; ++io) {
+    res[io] = aggregated_biases[io];
+
+    for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia)
+      res[io] += edge_weight_sums[ia] * aggregated_weights[ia * CONFIG_T::n_filters + io];
   }
 }
 
@@ -375,7 +288,7 @@ struct garnet_config
   // Internal data type definitions
   typedef float input_transform_weights_t;
   typedef float input_transform_biases_t;
-  typedef float output_transform_weights_t;
+  //typedef float output_transform_weights_t;
   typedef float output_transform_biases_t;
   typedef float aggregator_distance_weights_t;
   typedef float aggregator_distance_biases_t;
@@ -391,7 +304,6 @@ struct garnet_config
   static const unsigned n_in_features = 4;
   static const unsigned n_aggregators = 4;
   static const unsigned n_filters = 4;
-  static const unsigned n_propagate = 4;
   static const unsigned distance_bitwidth = 10;
 
   // Optimization specs
@@ -400,7 +312,7 @@ struct garnet_config
   enum CollapseType {
     collapse_mean,
     collapse_sum,
-    n_collapse_types
+    no_collapse
   };
 };
 
@@ -409,142 +321,122 @@ void garnet_passthrough(
     data_T const data[CONFIG_T::n_vertices * CONFIG_T::n_in_features],
     nvtx_T const nvtx[1],
     res_T res[CONFIG_T::n_vertices * CONFIG_T::n_filters],
-    typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_in_features * CONFIG_T::n_propagate],
-    typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_propagate],
+    typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_in_features * CONFIG_T::n_aggregators * CONFIG_T::n_filters],
+    typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_aggregators * CONFIG_T::n_filters],
     typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_in_features * CONFIG_T::n_aggregators],
     typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators],
-    typename CONFIG_T::output_transform_weights_t const output_transform_weights[CONFIG_T::n_aggregators * CONFIG_T::n_propagate * CONFIG_T::n_filters],
     typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_filters]
 )
 {
   #pragma HLS DATAFLOW
   
-  typename CONFIG_T::aggr_t aggregation_sums[CONFIG_T::n_aggregators * CONFIG_T::n_propagate];
-  #pragma HLS ARRAY_RESHAPE variable=aggregation_sums complete dim=1
-
   typename CONFIG_T::edge_weight_t edge_weights[CONFIG_T::n_vertices * CONFIG_T::n_aggregators];
   unsigned const reshape_factor = CONFIG_T::n_aggregators * (CONFIG_T::n_vertices / CONFIG_T::reuse_factor);
   #pragma HLS ARRAY_RESHAPE variable=edge_weights cyclic factor=reshape_factor dim=1
 
-  nvtx_T nvtx_local_1 = nvtx[0];
-  nvtx_T nvtx_local_2 = nvtx[0];
+  typename CONFIG_T::aggr_t weighted_features_sums[CONFIG_T::n_in_features * CONFIG_T::n_aggregators];
+  #pragma HLS ARRAY_RESHAPE variable=weighted_features_sums complete
 
-  aggregation_sums_init<CONFIG_T>(aggregation_sums);
+  nvtx_T nvtx_local = nvtx[0];
 
-  compute_features_weights<data_T, nvtx_T, CONFIG_T>(
+  typename CONFIG_T::edge_weight_t edge_weight_sums[CONFIG_T::n_aggregators];
+  #pragma HLS ARRAY_RESHAPE variable=edge_weight_sums complete dim=1
+
+  vertices_first_pass<data_T, nvtx_T, CONFIG_T, CONFIG_T::no_collapse>(
     data,
-    nvtx_local_1,
-    input_transform_weights,
-    input_transform_biases,
+    nvtx[0],
     aggregator_distance_weights,
     aggregator_distance_biases,
     edge_weights,
-    aggregation_sums
+    edge_weight_sums,
+    weighted_features_sums
   );
 
-  set_output<res_T, nvtx_T, CONFIG_T>(
-    nvtx_local_2,
-    edge_weights,
-    aggregation_sums,
-    output_transform_weights,
+  typename CONFIG_T::aggr_t aggregated_weights[CONFIG_T::n_aggregators * CONFIG_T::n_filters];
+  #pragma HLS ARRAY_RESHAPE variable=aggregated_weights complete
+  typename CONFIG_T::aggr_t aggregated_biases[CONFIG_T::n_filters];
+  #pragma HLS ARRAY_RESHAPE variable=aggregated_biases complete
+
+  transform_aggregated<nvtx_T, CONFIG_T>(
+    input_transform_weights,
+    input_transform_biases,
+    edge_weight_sums,
+    weighted_features_sums,
     output_transform_biases,
-    res
+    nvtx_local,
+    aggregated_weights,
+    aggregated_biases
+  );
+
+  vertices_second_pass<nvtx_T, res_T, CONFIG_T>(
+    nvtx_local,
+    edge_weights,
+    aggregated_weights,
+    aggregated_biases,
+    res    
   );
 }
 
-template<class data_T, class nvtx_T, class res_T, typename CONFIG_T>
-void garnet_collapsed(
+template<class data_T, class nvtx_T, class res_T, typename CONFIG_T, unsigned COLLAPSE>
+void garnet_collapse(
     data_T const data[CONFIG_T::n_vertices * CONFIG_T::n_in_features],
     nvtx_T const nvtx[1],
     res_T res[CONFIG_T::n_filters],
-    typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_in_features * CONFIG_T::n_propagate],
-    typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_propagate],
+    typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_in_features * CONFIG_T::n_aggregators * CONFIG_T::n_filters],
+    typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_aggregators * CONFIG_T::n_filters],
     typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_in_features * CONFIG_T::n_aggregators],
     typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators],
-    typename CONFIG_T::output_transform_weights_t const output_transform_weights[CONFIG_T::n_aggregators * CONFIG_T::n_propagate * CONFIG_T::n_filters],
-    typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_filters],
-    int collapse_type
+    typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_filters]
 )
 {
   #pragma HLS DATAFLOW
-  
-  typename CONFIG_T::aggr_t aggregation_sums[CONFIG_T::n_aggregators * CONFIG_T::n_propagate];
-  #pragma HLS ARRAY_RESHAPE variable=aggregation_sums complete dim=1
 
-  typename CONFIG_T::aggr_t edge_weight_sums[CONFIG_T::n_aggregators];
+  typename CONFIG_T::aggr_t weighted_features_sums[CONFIG_T::n_in_features * CONFIG_T::n_aggregators];
+  #pragma HLS ARRAY_RESHAPE variable=weighted_features_sums complete
+
+  nvtx_T nvtx_local = nvtx[0];
+
+  typename CONFIG_T::edge_weight_t edge_weight_sums[CONFIG_T::n_aggregators];
   #pragma HLS ARRAY_RESHAPE variable=edge_weight_sums complete dim=1
 
-  nvtx_T nvtx_local_1 = nvtx[0];
-  nvtx_T nvtx_local_2 = nvtx[0];
-
-  aggregation_sums_init<CONFIG_T>(aggregation_sums);
-
-  edge_weight_sums_init<CONFIG_T>(edge_weight_sums);
-  
-  compute_features_weights_collapsed<data_T, nvtx_T, CONFIG_T>(
+  vertices_first_pass<data_T, nvtx_T, CONFIG_T, COLLAPSE>(
     data,
-    nvtx_local_1,
-    input_transform_weights,
-    input_transform_biases,
+    nvtx[0],
     aggregator_distance_weights,
     aggregator_distance_biases,
+    nullptr,
     edge_weight_sums,
-    aggregation_sums
+    weighted_features_sums
   );
 
-  set_output_collapsed<res_T, nvtx_T, CONFIG_T>(
-    nvtx_local_2,
+  typename CONFIG_T::aggr_t aggregated_weights[CONFIG_T::n_aggregators * CONFIG_T::n_filters];
+  #pragma HLS ARRAY_RESHAPE variable=aggregated_weights complete
+  typename CONFIG_T::aggr_t aggregated_biases[CONFIG_T::n_filters];
+  #pragma HLS ARRAY_RESHAPE variable=aggregated_biases complete
+
+  transform_aggregated<nvtx_T, CONFIG_T>(
+    input_transform_weights,
+    input_transform_biases,
     edge_weight_sums,
-    aggregation_sums,
-    output_transform_weights,
+    weighted_features_sums,
     output_transform_biases,
-    res,
-    collapse_type
+    nvtx_local,
+    aggregated_weights,
+    aggregated_biases
   );
-}
 
-template<class data_T, class nvtx_T, class res_T, typename CONFIG_T>
-void garnet_collapsed_mean(
-    data_T const data[CONFIG_T::n_vertices * CONFIG_T::n_in_features],
-    nvtx_T const nvtx[1],
-    res_T res[CONFIG_T::n_filters],
-    typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_in_features * CONFIG_T::n_propagate],
-    typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_propagate],
-    typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_in_features * CONFIG_T::n_aggregators],
-    typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators],
-    typename CONFIG_T::output_transform_weights_t const output_transform_weights[CONFIG_T::n_aggregators * CONFIG_T::n_propagate * CONFIG_T::n_filters],
-    typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_filters]
-)
-{
-  garnet_collapsed(
-    data, nvtx, res,
-    input_transform_weights, input_transform_biases,
-    aggregator_distance_weights, aggregator_distance_biases,
-    output_transform_weights, output_transform_biases,
-    CONFIG_T::collapse_mean
-  );
-}
+  switch (COLLAPSE) {
+  case CONFIG_T::collapse_mean:
+    set_output_mean<nvtx_T, res_T, CONFIG_T>(
+      nvtx_local,
+      edge_weight_sums,
+      aggregated_weights,
+      aggregated_biases,
+      res
+    );
+    break;
 
-template<class data_T, class nvtx_T, class res_T, typename CONFIG_T>
-void garnet_collapsed_sum(
-    data_T const data[CONFIG_T::n_vertices * CONFIG_T::n_in_features],
-    nvtx_T const nvtx[1],
-    res_T res[CONFIG_T::n_filters],
-    typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_in_features * CONFIG_T::n_propagate],
-    typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_propagate],
-    typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_in_features * CONFIG_T::n_aggregators],
-    typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators],
-    typename CONFIG_T::output_transform_weights_t const output_transform_weights[CONFIG_T::n_aggregators * CONFIG_T::n_propagate * CONFIG_T::n_filters],
-    typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_filters]
-)
-{
-  garnet_collapsed(
-    data, nvtx, res,
-    input_transform_weights, input_transform_biases,
-    aggregator_distance_weights, aggregator_distance_biases,
-    output_transform_weights, output_transform_biases,
-    CONFIG_T::collapse_sum
-  );
+  case CONFIG_T::collapse_sum:
 }
 
 }

@@ -199,7 +199,7 @@ def keras_to_hls(yamlConfig):
                 layer['pad_left'] = 0
                 layer['pad_right'] = 0
             layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
-            output_shape=[input_shapes[0][0], layer['y_out'], layer['n_filt']]
+            output_shape=[input_shapes[0][0], layer['n_out'], layer['n_filt']]
         elif 'Conv2D' in layer['class_name']:
             layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
             # weights_shape = (filter_height, filter_width, n_channels, n_filters)

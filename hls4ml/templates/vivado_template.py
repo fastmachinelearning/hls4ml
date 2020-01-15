@@ -133,7 +133,6 @@ concat_config_template = """struct config{index} : nnet::concat_config {{
 garnet_config_template = """struct config{index} : nnet::garnet_config {{
     typedef {input_transform_weights_t} input_transform_weights_t;
     typedef {input_transform_biases_t} input_transform_biases_t;
-    typedef {output_transform_weights_t} output_transform_weights_t;
     typedef {output_transform_biases_t} output_transform_biases_t;
     typedef {aggregator_distance_weights_t} aggregator_distance_weights_t;
     typedef {aggregator_distance_biases_t} aggregator_distance_biases_t;
@@ -146,7 +145,6 @@ garnet_config_template = """struct config{index} : nnet::garnet_config {{
     static const unsigned n_in_features = {n_in_features};
     static const unsigned n_aggregators = {n_aggregators};
     static const unsigned n_filters = {n_filters};
-    static const unsigned n_propagate = {n_propagate};
     static const unsigned distance_bitwidth = 10;
 
     static const unsigned reuse_factor = {reuse};
@@ -170,14 +168,14 @@ garnet_config_template = """struct config{index} : nnet::garnet_config {{
 
 dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
-conv1d_function_template = 'nnet::conv_1d_{strategy}_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+conv1d_function_template = 'nnet::conv_1d_{strategy}_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b}, nnet::compute_multiplier_limit<{config}>({w}));'
 conv2d_function_template = 'nnet::conv_2d_{strategy}_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
 param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {param}, {output});'
 pooling1d_function_template = 'nnet::pooling1d<{input_t}, {config}>({input}, {output});'
 pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {config}>({input}, {output});'
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
-garnet_function_template = 'nnet::garnet<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output}, {input_transform_weights}, {input_transform_biases}, {aggregator_distance_weights}, {aggregator_distance_biases}, {output_transform_weights}, {output_transform_biases});'
+garnet_function_template = 'nnet::garnet_{structure}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output}, {input_transform_weights}, {input_transform_biases}, {aggregator_distance_weights}, {aggregator_distance_biases}, {output_transform_biases});'
 
 '''function_templates = {
     'Dense'                  : dense_function_template,

@@ -921,29 +921,44 @@ class GarNet(Layer):
 
         self.add_output_variable(shape, dims)
 
-        for dense_name, suffix in [('input_transform', ''), ('aggregator_distance', '_1'), ('output_transform', '_2')]:
-            data = self.model.get_weights_data(self.name, '%s/kernel%s:0' % (self.name, suffix))
-            self.add_weights_variable(name=('%s_weights' % dense_name), var_name=('%s_weights' % dense_name), data=data, quantize=0, compression=False) #weight index
+        # Due to linearity of the input transform, input weights and biases can be contracted away at conversion time
+        n_in_features = self.attributes['n_in_features']
+        n_aggregators = self.attributes['n_aggregators']
+        n_filters = self.attributes['n_filters']
+        n_propagate = self.attributes['n_propagate']
 
-            data = self.model.get_weights_data(self.name, '%s/bias%s:0' % (self.name, suffix))
-            precision = None
-            quantize = 0
-            type_name = None
-            if data is None:
-                data = np.zeros(self.get_output_variable().shape[-1])
-                precision = 'ap_uint<1>'
-                type_name = 'biases{index}_t'
-                quantize = 0 # Don't quantize non-existant bias
+        output_transform_kernel = self.model.get_weights_data(self.name, '%s/kernel_2:0' % self.name) # [(n_aggregators, n_propagate), n_filters]
+        output_transform_kernel = output_transform_kernel.reshape(n_aggregators, n_propagate, n_filters)
 
-            self.add_weights_variable(name=('%s_biases' % dense_name), var_name=('%s_b{index}' % dense_name), type_name=type_name, precision=precision, data=data, quantize=quantize)
+        input_transform_kernel = self.model.get_weights_data(self.name, '%s/kernel:0' % self.name) # [n_in_features, n_propagate]
+        data = np.dot(input_transform_kernel, output_transform_kernel) # [n_in_features, n_aggregators, n_filters]
+        data = data.transpose((1, 0, 2)).reshape((n_aggregators * n_in_features, n_filters))
+        self.add_weights_variable(name='input_transform_weights', var_name='input_transform_w{index}', data=data, quantize=0, compression=False)
+
+        input_transform_bias = self.model.get_weights_data(self.name, '%s/bias:0' % self.name) # [n_propagate]
+        data = np.dot(input_transform_bias, output_transform_kernel) # [n_aggregators, n_filters]
+        self.add_weights_variable(name='input_transform_biases', var_name='input_transform_b{index}', data=data, quantize=0, compression=False)
+
+        for vname, typ, suffix in [('aggregator_distance', 'kernel', '_1'), ('aggregator_distance', 'bias', '_1'), ('output_transform', 'bias', '_2')]:
+            data = self.model.get_weights_data(self.name, '%s/%s%s:0' % (self.name, typ, suffix))
+
+            if typ == 'kernel':
+                out_typ = 'weights'
+                out_suffix = 'w'
+            else:
+                out_typ = 'biases'
+                out_suffix = 'b'
+
+            self.add_weights_variable(name=('%s_%s' % (vname, out_typ)), var_name=('%s_%s{index}' % (vname, out_suffix)), data=data, quantize=0, compression=False)
 
     def function_cpp(self):
         params = self._default_function_params()
         params['integer_input_t'] = self.get_input_variable('input_2').type.name
         params['nvtx'] = self.get_input_variable(self.inputs[1]).name
-        for dense_name in ['input_transform', 'aggregator_distance', 'output_transform']:
+        for dense_name in ['input_transform', 'aggregator_distance']:
             params['%s_weights' % dense_name] = self.get_weights('%s_weights' % dense_name).name
             params['%s_biases' % dense_name] = self.get_weights('%s_biases' % dense_name).name
+        params['output_transform_biases'] = self.get_weights('output_transform_biases').name
 
         if self.attributes['collapse'] == 'mean':
             params['structure'] = 'mean'
@@ -958,7 +973,6 @@ class GarNet(Layer):
         params['n_in_features'] = self.get_input_variable().dim_names[1]
         params['n_aggregators'] = self.get_weights('aggregator_distance_biases').shape[0]
         params['n_filters'] = self.get_weights('output_transform_biases').shape[0]
-        params['n_propogate'] = self.get_weights('input_transform_biases').shape[0]
         params['edge_weight_t'], type_name = self.model.config.get_precision(self, var='edge_weight')
         if type_name == 'model_default_t':
             params['edge_weight_t'] = 'ap_ufixed<64, 32>'
