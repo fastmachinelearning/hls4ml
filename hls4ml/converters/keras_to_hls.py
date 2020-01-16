@@ -19,21 +19,17 @@ class KerasDataReader:
                 return name
 
         with h5py.File(self.config['KerasH5'], 'r') as h5file:
-            #If the h5 file is the whole model saved with model.save()
-            if 'model_weights' in list(h5file.keys()):
-                found_data = h5file['model_weights/{}'.format(layer_name)].visit(h5_visitor_func)
-                if found_data:
-                    data = h5file['model_weights/{}'.format(layer_name)][found_data][()]
-                else:
-                    data = None
-                    
-            else:       
-                found_data = h5file[layer_name].visit(h5_visitor_func)
-                if found_data:
-                    data = h5file[layer_name][found_data][()]
-                else:
-                    data = None
-
+            if 'model_weights' in list(h5file.keys()): # h5 file comes from model.save()
+                layer_path = 'model_weights/{}'.format(layer_name)
+            else:
+                layer_path = layer_name
+            
+            found_data = h5file[layer_path].visit(h5_visitor_func)
+            if found_data:
+                data = h5file[layer_path][found_data][()]
+            else:
+                data = None
+                                                                        
         return data
 
 def get_weights_shape(h5filename, layer_name, var_name='kernel'): 
@@ -42,18 +38,14 @@ def get_weights_shape(h5filename, layer_name, var_name='kernel'):
             return name
 
     with h5py.File(h5filename, 'r') as h5file:
-        
-        #If the h5 file is the whole model saved with model.save()
         if 'model_weights' in list(h5file.keys()):
-            found_data = h5file['model_weights/{}'.format(layer_name)].visit(h5_visitor_func)
-            if found_data:
-                shape = h5file['model_weights/{}/{}'.format(layer_name, found_data)].shape
-            
-        #If not then treat it with regular h5 weights file
+            layer_path = 'model_weights/{}'.format(layer_name)
         else:
-            found_data = h5file[layer_name].visit(h5_visitor_func)
-            if found_data:
-                shape = h5file['/{}/{}'.format(layer_name,found_data)].shape
+            layer_path = layer_name
+            
+        found_data = h5file[layer_path].visit(h5_visitor_func)
+        if found_data:
+            shape = h5file['/{}/{}'.format(layer_path, found_data)].shape
 
     return shape
 
@@ -67,7 +59,7 @@ def keras_to_hls(yamlConfig):
     layer_list = []
     
     #If the json file is not provided, interpret this as the full model is saved in KerasH5 with model.save()
-    if  not yamlConfig['KerasJson']:
+    if yamlConfig.get('KerasJson', None) is None:
             #Load the model's info and add them in a dict
             filepath = yamlConfig['KerasH5']
 
