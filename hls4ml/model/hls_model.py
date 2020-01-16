@@ -538,6 +538,7 @@ class Layer(object):
 
         self._function_template = self.model.config.backend.get_function_template(self.__class__.__name__)
         self._config_template = self.model.config.backend.get_config_template(self.__class__.__name__)
+        self.include_list = self.model.config.backend.get_include_list(self.__class__.__name__)
         self.weights = OrderedDict()
         self.variables = OrderedDict()
         self.precision = OrderedDict()
@@ -951,19 +952,26 @@ class GarNet(Layer):
 
             self.add_weights_variable(name=('%s_%s' % (vname, out_typ)), var_name=('%s_%s{index}' % (vname, out_suffix)), data=data, quantize=0, compression=False)
 
+        #input_shape = [self.attributes['n_vertices'], self.attributes['n_in_features']]
+        #input_dims = ['VERTICES_{}'.format(self.index), self.get_input_variable().dim_names[1]]
+        #self.variables['packed'] = ArrayVariable(shape=input_shape, dim_names=input_dims, var_name='layer{index}_packed', index=self.index)
+        #self.variables['packed'].pragma = self.get_input_variable().pragma
+
+        #input_shape = [self.attributes['n_vertices']]
+        #input_dims = ['VERTICES_{}'.format(self.index)]
+        #self.variables['igraph'] = ArrayVariable(shape=input_shape, dim_names=input_dims, var_name='layer{index}_igraph', precision='ap_int<4>', index=self.index)
+        #self.variables['igraph'].pragma = self.get_input_variable().pragma
+
     def function_cpp(self):
         params = self._default_function_params()
         params['integer_input_t'] = self.get_input_variable('input_2').type.name
         params['nvtx'] = self.get_input_variable(self.inputs[1]).name
+        #params['packed'] = self.variables['packed'].name
+        #params['igraph'] = self.variables['igraph'].name
         for dense_name in ['input_transform', 'aggregator_distance']:
             params['%s_weights' % dense_name] = self.get_weights('%s_weights' % dense_name).name
             params['%s_biases' % dense_name] = self.get_weights('%s_biases' % dense_name).name
         params['output_transform_biases'] = self.get_weights('output_transform_biases').name
-
-        if self.attributes['collapse'] == 'mean':
-            params['structure'] = 'mean'
-        else:
-            params['structure'] = 'passthrough'
 
         return [self._function_template.format(**params)]
 
@@ -979,6 +987,10 @@ class GarNet(Layer):
         params['aggr_t'], type_name = self.model.config.get_precision(self, var='aggr')
         if type_name == 'model_default_t':
             params['aggr_t'] = 'ap_fixed<64, 24>'
+        if self.attributes['collapse'] in ['mean', 'sum']:
+            params['collapse_type'] = 'collapse_%s' % self.attributes['collapse']
+        else:
+            params['collapse_type'] = 'no_collapse'
 
         return self._config_template.format(**params)
 

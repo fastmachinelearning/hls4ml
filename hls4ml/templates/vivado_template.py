@@ -146,6 +146,7 @@ garnet_config_template = """struct config{index} : nnet::garnet_config {{
     static const unsigned n_aggregators = {n_aggregators};
     static const unsigned n_out_features = {n_out_features};
     static const unsigned distance_bitwidth = 10;
+    static const unsigned collapse_type = {collapse_type};
 
     static const unsigned reuse_factor = {reuse};
 }};
@@ -175,7 +176,11 @@ param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {conf
 pooling1d_function_template = 'nnet::pooling1d<{input_t}, {config}>({input}, {output});'
 pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {config}>({input}, {output});'
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
-garnet_function_template = 'nnet::garnet_{structure}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output}, {input_transform_weights}, {input_transform_biases}, {aggregator_distance_weights}, {aggregator_distance_biases}, {output_transform_biases});'
+#garnet_function_template = '''static nnet::VertexPacker<{input_t}, {config}> vertex_packer;
+#    if (!vertex_packer.pack_vertices({input}, {nvtx}[0], {packed}, {igraph}))
+#      return;
+#    nnet::garnet_{structure}<{input_t}, {output_t}, {config}>({packed}, {igraph}, {output}, {input_transform_weights}, {input_transform_biases}, {aggregator_distance_weights}, {aggregator_distance_biases}, {output_transform_biases});'''
+garnet_function_template = 'nnet::garnet_single<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output}, {input_transform_weights}, {input_transform_biases}, {aggregator_distance_weights}, {aggregator_distance_biases}, {output_transform_biases});'
 
 '''function_templates = {
     'Dense'                  : dense_function_template,
@@ -192,22 +197,31 @@ garnet_function_template = 'nnet::garnet_{structure}<{input_t}, {integer_input_t
     'Concatenate'            : merge_function_template,
 }'''
 
+dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_large.h']
+batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h']
+conv1d_include_list = ['nnet_utils/nnet_conv.h', 'nnet_utils/nnet_conv_large.h']
+conv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_large.h']
+activ_include_list = ['nnet_utils/nnet_activation.h']
+pooling_include_list = ['nnet_utils/nnet_pooling.h']
+merge_include_list = ['nnet_utils/nnet_merge.h']
+garnet_include_list = ['nnet_utils/nnet_garnet.h']
+
 class VivadoBackend(Backend):
     def __init__(self):
         super(VivadoBackend, self).__init__('Vivado')
-        self.register_templates('Dense', dense_function_template, dense_config_template)
-        self.register_templates('BinaryDense'            , dense_function_template,       dense_config_template)
-        self.register_templates('BatchNormalization'     , batchnorm_function_template,   batchnorm_config_template)
-        self.register_templates('Conv1D'                 , conv1d_function_template,      [conv1d_config_template, conv_mult_config_template])
-        self.register_templates('Conv2D'                 , conv2d_function_template,      [conv2d_config_template, conv_mult_config_template])
-        self.register_templates('Activation'             , activ_function_template,       activ_config_template)
-        self.register_templates('ParametrizedActivation' , param_activ_function_template, activ_config_template)
-        self.register_templates('PReLU'                  , param_activ_function_template, activ_config_template)
-        self.register_templates('Pooling1D'              , pooling1d_function_template,   pooling1d_config_template)
-        self.register_templates('Pooling2D'              , pooling2d_function_template,   pooling2d_config_template)
-        self.register_templates('Merge'                  , merge_function_template,       merge_config_template)
-        self.register_templates('Concatenate'            , merge_function_template,       concat_config_template)
-        self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template)
+        self.register_templates('Dense', dense_function_template, dense_config_template, dense_include_list)
+        self.register_templates('BinaryDense'            , dense_function_template,       dense_config_template, dense_include_list)
+        self.register_templates('BatchNormalization'     , batchnorm_function_template,   batchnorm_config_template, batchnorm_include_list)
+        self.register_templates('Conv1D'                 , conv1d_function_template,      [conv1d_config_template, conv_mult_config_template], conv1d_include_list)
+        self.register_templates('Conv2D'                 , conv2d_function_template,      [conv2d_config_template, conv_mult_config_template], conv2d_include_list)
+        self.register_templates('Activation'             , activ_function_template,       activ_config_template, activ_include_list)
+        self.register_templates('ParametrizedActivation' , param_activ_function_template, activ_config_template, activ_include_list)
+        self.register_templates('PReLU'                  , param_activ_function_template, activ_config_template, activ_include_list)
+        self.register_templates('Pooling1D'              , pooling1d_function_template,   pooling1d_config_template, pooling_include_list)
+        self.register_templates('Pooling2D'              , pooling2d_function_template,   pooling2d_config_template, pooling_include_list)
+        self.register_templates('Merge'                  , merge_function_template,       merge_config_template, merge_include_list)
+        self.register_templates('Concatenate'            , merge_function_template,       concat_config_template, merge_include_list)
+        self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
     
     def get_valid_reuse_factors(self, layer):
         n_in = 0

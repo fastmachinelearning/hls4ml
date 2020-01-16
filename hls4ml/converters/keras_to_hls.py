@@ -367,7 +367,7 @@ def keras_to_hls(yamlConfig):
                 raise NotImplementedError('Cannot use GarNet with deduce_nvert=True')
 
             layer['n_aggregators'] = keras_layer['config']['n_aggregators']
-            layer['n_out_features'] = keras_layer['config']['n_out_features'] # number of output features
+            layer['n_out_features'] = keras_layer['config']['n_filters'] # number of output features
             layer['n_propagate'] = keras_layer['config']['n_propagate'] # number of latent features
             layer['collapse'] = keras_layer['config']['collapse']
 

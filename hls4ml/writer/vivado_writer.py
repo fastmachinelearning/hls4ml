@@ -216,8 +216,13 @@ class VivadoWriter(Writer):
 
         for line in f.readlines():
 
+            if '//hls-fpga-machine-learning insert includes' in line:
+                newline = line
+                for include in sorted(set(sum(layer.get_include_list(), []) for layer in model.get_layers())):
+                    newline += '#include "%s"\n' % include
+
             #Insert numbers
-            if '//hls-fpga-machine-learning insert numbers' in line:
+            elif '//hls-fpga-machine-learning insert numbers' in line:
                 newline = line
                 numbers = OrderedDict.fromkeys([layer.get_numbers_cpp() for layer in model.get_layers()])
                 newline += ''.join(numbers)
