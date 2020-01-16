@@ -3,11 +3,11 @@ from ..optimizer import OptimizerPass
 import hls4ml.model.hls_model as hls_model
 
 class FuseBiasAdd(OptimizerPass):
-    ''' Fuses BiasAdd into Dense layer (common in TF models). '''
-    #TODO extend for Conv layers
+    ''' Fuses BiasAdd into Dense/Conv2D layer (common in TF models). '''
     def match(self, node):
         is_match = node.__class__.__name__ == 'BiasAdd' and \
-            node.get_input_node().__class__.__name__ == 'Dense'
+            (node.get_input_node().__class__.__name__ == 'Dense' or
+            node.get_input_node().__class__.__name__ == 'Conv2D')
         return is_match
 
     def transform(self, model, node):

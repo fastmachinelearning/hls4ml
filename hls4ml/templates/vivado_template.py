@@ -130,20 +130,20 @@ concat_config_template = """struct config{index} : nnet::concat_config {{
     static const unsigned axis = {axis};
 }};\n"""
 
-'''config_templates = {
-    'Dense'                  : dense_config_template,
-    'BinaryDense'            : dense_config_template,
-    'BatchNormalization'     : batchnorm_config_template,
-    'Conv1D'                 : [conv1d_config_template, conv_mult_config_template],
-    'Conv2D'                 : [conv2d_config_template, conv_mult_config_template],
-    'Activation'             : activ_config_template,
-    'ParametrizedActivation' : activ_config_template,
-    'PReLU'                  : activ_config_template,
-    'Pooling1D'              : pooling1d_config_template,
-    'Pooling2D'              : pooling2d_config_template,
-    'Merge'                  : merge_config_template,
-    'Concatenate'            : concat_config_template,
-}'''
+resize_config_template = """struct config{index} : nnet::resize_config {{
+    static const unsigned height = {height};
+    static const unsigned width = {width};
+    static const unsigned n_chan = {n_chan};
+    static const unsigned new_height = {new_height};
+    static const unsigned new_width = {new_width};
+}};\n"""
+
+transpose_config_template = """struct config{index} : nnet::transpose_config {{
+    static const unsigned depth = {depth};
+    static const unsigned height = {height};
+    static const unsigned width = {width};
+    static const unsigned perm[3] = {{{perm_str}}};
+}};\n"""
 
 dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
@@ -154,21 +154,8 @@ param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {conf
 pooling1d_function_template = 'nnet::pooling1d<{input_t}, {config}>({input}, {output});'
 pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {config}>({input}, {output});'
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
-
-'''function_templates = {
-    'Dense'                  : dense_function_template,
-    'BinaryDense'            : dense_function_template,
-    'BatchNormalization'     : batchnorm_function_template,
-    'Conv1D'                 : conv1d_function_template,
-    'Conv2D'                 : conv2d_function_template,
-    'Activation'             : activ_function_template,
-    'ParametrizedActivation' : param_activ_function_template,
-    'PReLU'                  : param_activ_function_template,
-    'Pooling1D'              : pooling1d_function_template,
-    'Pooling2D'              : pooling2d_function_template,
-    'Merge'                  : merge_function_template,
-    'Concatenate'            : merge_function_template,
-}'''
+resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
+transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}, {output});'
 
 class VivadoBackend(Backend):
     def __init__(self):
@@ -185,6 +172,8 @@ class VivadoBackend(Backend):
         self.register_templates('Pooling2D'              , pooling2d_function_template,   pooling2d_config_template)
         self.register_templates('Merge'                  , merge_function_template,       merge_config_template)
         self.register_templates('Concatenate'            , merge_function_template,       concat_config_template)
+        self.register_templates('Resize'                 , resize_function_template,      resize_config_template)
+        self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template)
     
     def get_valid_reuse_factors(self, layer):
         n_in = 0

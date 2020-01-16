@@ -930,7 +930,7 @@ class Activation(Layer):
 
     def function_cpp(self):
         params = self._default_function_params()
-        params['activation'] = self.get_attr('activation')
+        params['activation'] = self.get_attr('activation').lower()
         params['config'] = '{}_config{}'.format(self.get_attr('activation'), self.index)
 
         return [self._function_template.format(**params)]
@@ -1033,20 +1033,6 @@ class Merge(Layer):
 
         return self._config_template.format(**params)
 
-class BiasAdd(Merge): # TensorFlow's operator that gets merged into Dense/Conv
-    def initialize(self):
-        inp = self.get_input_variable(self.inputs[0])
-        shape = inp.shape
-        dims = inp.dim_names
-        self.add_bias()
-        self.add_output_variable(shape, dims)
-
-    def function_cpp(self):
-        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
-
-    def config_cpp(self):
-        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
-
 class Concatenate(Merge):
     def initialize(self):
         assert(len(self.inputs) == 2)
@@ -1073,6 +1059,69 @@ class Concatenate(Merge):
 
         return self._config_template.format(**params)
 
+class BiasAdd(Merge): # TensorFlow's operator that gets merged into Dense/Conv
+    def initialize(self):
+        inp = self.get_input_variable(self.inputs[0])
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_bias()
+        self.add_output_variable(shape, dims)
+
+    def function_cpp(self):
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
+
+    def config_cpp(self):
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
+
+class Resize(Layer):
+    def initialize(self):
+        shape = [self.get_attr('new_height'), self.get_attr('new_width'), self.get_attr('n_chan')]
+        dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
+        self.add_output_variable(shape, dims)
+
+    def function_cpp(self):
+        params = self._default_function_params()
+        params['algorithm'] = self.get_attr('algorithm')
+
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+
+        return self._config_template.format(**params)
+
+class Transpose(Layer):
+    def initialize(self):
+        inp = self.get_input_variable(self.inputs[0])
+        perm = self.get_attr('perm')
+        self.set_attr('dim', '{}d'.format(len(inp.shape)))
+        if len(perm) == 4 and perm[0] == 0:
+            perm = [i - 1 for i in perm[1:]]
+        shape = [inp.shape[i] for i in perm]
+        self.set_attr('perm_str', ','.join([str(i) for i in perm]))
+        if len(shape) == 2:
+            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+            self.set_attr('depth', 1)
+            self.set_attr('height', shape[0])
+            self.set_attr('width', shape[1])
+        else:
+            dims = ['OUT_DEPTH_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+            self.set_attr('depth', shape[0])
+            self.set_attr('height', shape[1])
+            self.set_attr('width', shape[2])
+        self.add_output_variable(shape, dims)
+
+    def function_cpp(self):
+        params = self._default_function_params()
+        params['dim'] = self.get_attr('dim')
+
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+
+        return self._config_template.format(**params)
+
 layer_map = {
     'InputLayer'         : Input,
     'Activation'         : Activation,
@@ -1094,8 +1143,10 @@ layer_map = {
     'AveragePooling2D'   : Pooling2D,
     'Merge'              : Merge,
     'Concatenate'        : Concatenate,
+    'Resize'             : Resize,
+    'Transpose'          : Transpose,
     # TensorFlow-specific layers:
-    'BiasAdd'            : BiasAdd
+    'BiasAdd'            : BiasAdd,
 }
 
 def register_layer(name, clazz):
