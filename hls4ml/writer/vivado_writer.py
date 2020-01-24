@@ -218,7 +218,7 @@ class VivadoWriter(Writer):
 
             if '//hls-fpga-machine-learning insert includes' in line:
                 newline = line
-                for include in sorted(set(sum(layer.get_include_list(), []) for layer in model.get_layers())):
+                for include in sorted(set(sum((layer.include_list for layer in model.get_layers()), []))):
                     newline += '#include "%s"\n' % include
 
             #Insert numbers

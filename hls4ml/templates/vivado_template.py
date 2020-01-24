@@ -131,22 +131,26 @@ concat_config_template = """struct config{index} : nnet::concat_config {{
 }};\n"""
 
 garnet_config_template = """struct config{index} : nnet::garnet_config {{
-    typedef {input_transform_weights_t} input_transform_weights_t;
-    typedef {input_transform_biases_t} input_transform_biases_t;
-    typedef {output_transform_biases_t} output_transform_biases_t;
-    typedef {aggregator_distance_weights_t} aggregator_distance_weights_t;
-    typedef {aggregator_distance_biases_t} aggregator_distance_biases_t;
-
-    typedef {accum_t} accum_t;
-    typedef {edge_weight_t} edge_weight_t;
-    typedef {aggr_t} aggr_t;
-
     static const unsigned n_vertices = {n_vertices};
+    static const unsigned n_vertices_width = {n_vertices_width};
     static const unsigned n_in_features = {n_in_features};
+    static const unsigned n_propagate = {n_propagate};
     static const unsigned n_aggregators = {n_aggregators};
     static const unsigned n_out_features = {n_out_features};
-    static const unsigned distance_bitwidth = 10;
+    static const unsigned distance_width = {distance_width};
     static const unsigned collapse_type = {collapse_type};
+
+    typedef {input_transform_weights_t} input_transform_weights_t;
+    typedef {input_transform_biases_t} input_transform_biases_t;
+    typedef {aggregator_distance_weights_t} aggregator_distance_weights_t;
+    typedef {aggregator_distance_biases_t} aggregator_distance_biases_t;
+    typedef {output_transform_weights_t} output_transform_weights_t;
+    typedef {output_transform_biases_t} output_transform_biases_t;
+
+    typedef {norm_t} norm_t;
+    typedef ap_fixed<{distance_width}, {distance_nint}, AP_TRN, AP_SAT> distance_t;
+    typedef {edge_weight_t} edge_weight_t;
+    typedef {aggr_t} aggr_t;
 
     static const unsigned reuse_factor = {reuse};
 }};
@@ -180,7 +184,7 @@ merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {co
 #    if (!vertex_packer.pack_vertices({input}, {nvtx}[0], {packed}, {igraph}))
 #      return;
 #    nnet::garnet_{structure}<{input_t}, {output_t}, {config}>({packed}, {igraph}, {output}, {input_transform_weights}, {input_transform_biases}, {aggregator_distance_weights}, {aggregator_distance_biases}, {output_transform_biases});'''
-garnet_function_template = 'nnet::garnet_single<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output}, {input_transform_weights}, {input_transform_biases}, {aggregator_distance_weights}, {aggregator_distance_biases}, {output_transform_biases});'
+garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output}, {input_transform_weights}, {input_transform_biases}, {aggregator_distance_weights}, {aggregator_distance_biases}, {output_transform});'
 
 '''function_templates = {
     'Dense'                  : dense_function_template,

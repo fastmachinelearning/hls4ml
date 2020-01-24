@@ -13,7 +13,7 @@ class Backend(object):
         return self.function_templates.get(kind)
 
     def get_include_list(self, kind):
-        return self.include_lists.get(kind)
+        return self.include_lists.get(kind, [])
 
     def register_templates(self, name, function_template, config_template, include_list=[]):
         self.function_templates[name] = function_template

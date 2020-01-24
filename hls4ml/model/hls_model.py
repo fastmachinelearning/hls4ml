@@ -1,6 +1,7 @@
 from __future__ import print_function
 import six
 import re
+import math
 import numpy as np
 from collections import OrderedDict
 
@@ -908,6 +909,8 @@ class Conv2D(Layer):
             return self._config_template[0].format(**params)
 
 class GarNet(Layer):
+    ref_impl = False
+    
     def initialize(self):
         reuse_factor = self.model.config.get_reuse_factor(self)
         if self.attributes['n_vertices'] % reuse_factor != 0:
@@ -928,29 +931,51 @@ class GarNet(Layer):
         n_out_features = self.attributes['n_out_features']
         n_propagate = self.attributes['n_propagate']
 
-        output_transform_kernel = self.model.get_weights_data(self.name, '%s/kernel_2:0' % self.name) # [(n_aggregators, n_propagate), n_out_features]
-        output_transform_kernel = output_transform_kernel.reshape(n_aggregators, n_propagate, n_out_features)
+        if self.ref_impl:
+            weights_source = [
+                ('input_transform', 'kernel', ''),
+                ('input_transform', 'bias', ''),
+                ('aggregator_distance', 'kernel', '_1'),
+                ('aggregator_distance', 'bias', '_1'),
+                ('output_transform', 'kernel', '_2'),
+                ('output_transform', 'bias', '_2')
+            ]
+        else:
+            output_transform_kernel = self.model.get_weights_data(self.name, '%s/kernel_2:0' % self.name) # [(n_aggregators, n_propagate), n_out_features]
+            output_transform_kernel = output_transform_kernel.reshape(n_aggregators, n_propagate, n_out_features)
+    
+            input_transform_kernel = self.model.get_weights_data(self.name, '%s/kernel:0' % self.name) # [n_in_features, n_propagate]
+            data = np.dot(input_transform_kernel, output_transform_kernel) # [n_in_features, n_aggregators, n_out_features]
+            data = data.transpose((2, 1, 0))
+            self.add_weights_variable(name='input_transform_weights', var_name='input_transform_w{index}', data=data, quantize=0, compression=False)
+    
+            input_transform_bias = self.model.get_weights_data(self.name, '%s/bias:0' % self.name) # [n_propagate]
+            data = np.dot(input_transform_bias, output_transform_kernel) # [n_aggregators, n_out_features]
+            data = data.transpose((1, 0))
+            self.add_weights_variable(name='input_transform_biases', var_name='input_transform_b{index}', data=data, quantize=0, compression=False)
 
-        input_transform_kernel = self.model.get_weights_data(self.name, '%s/kernel:0' % self.name) # [n_in_features, n_propagate]
-        data = np.dot(input_transform_kernel, output_transform_kernel) # [n_in_features, n_aggregators, n_out_features]
-        data = data.transpose((1, 0, 2)).reshape((n_aggregators * n_in_features, n_out_features))
-        self.add_weights_variable(name='input_transform_weights', var_name='input_transform_w{index}', data=data, quantize=0, compression=False)
+            weights_source = [
+                ('aggregator_distance', 'kernel', '_1'),
+                ('aggregator_distance', 'bias', '_1'),
+                ('output_transform', 'bias', '_2')
+            ]
 
-        input_transform_bias = self.model.get_weights_data(self.name, '%s/bias:0' % self.name) # [n_propagate]
-        data = np.dot(input_transform_bias, output_transform_kernel) # [n_aggregators, n_out_features]
-        self.add_weights_variable(name='input_transform_biases', var_name='input_transform_b{index}', data=data, quantize=0, compression=False)
+        for vname, vtype, suffix in weights_source:
+            data = self.model.get_weights_data(self.name, '%s/%s%s:0' % (self.name, vtype, suffix))
+            if vtype == 'kernel':
+                data = data.transpose((1, 0))
 
-        for vname, typ, suffix in [('aggregator_distance', 'kernel', '_1'), ('aggregator_distance', 'bias', '_1'), ('output_transform', 'bias', '_2')]:
-            data = self.model.get_weights_data(self.name, '%s/%s%s:0' % (self.name, typ, suffix))
-
-            if typ == 'kernel':
-                out_typ = 'weights'
+            if vtype == 'kernel':
+                out_vtype = 'weights'
                 out_suffix = 'w'
             else:
-                out_typ = 'biases'
+                out_vtype = 'biases'
                 out_suffix = 'b'
 
-            self.add_weights_variable(name=('%s_%s' % (vname, out_typ)), var_name=('%s_%s{index}' % (vname, out_suffix)), data=data, quantize=0, compression=False)
+            name = '%s_%s' % (vname, out_vtype)
+            var_name = '%s_%s{index}' % (vname, out_suffix)
+
+            self.add_weights_variable(name=name, var_name=var_name, data=data, quantize=0, compression=False)
 
         #input_shape = [self.attributes['n_vertices'], self.attributes['n_in_features']]
         #input_dims = ['VERTICES_{}'.format(self.index), self.get_input_variable().dim_names[1]]
@@ -968,25 +993,43 @@ class GarNet(Layer):
         params['nvtx'] = self.get_input_variable(self.inputs[1]).name
         #params['packed'] = self.variables['packed'].name
         #params['igraph'] = self.variables['igraph'].name
+        if self.ref_impl:
+            params['output_transform'] = '%s, %s' % (self.get_weights('output_transform_weights').name, self.get_weights('output_transform_biases').name)
+        else:
+            params['output_transform'] = self.get_weights('output_transform_biases').name
+            
         for dense_name in ['input_transform', 'aggregator_distance']:
             params['%s_weights' % dense_name] = self.get_weights('%s_weights' % dense_name).name
             params['%s_biases' % dense_name] = self.get_weights('%s_biases' % dense_name).name
-        params['output_transform_biases'] = self.get_weights('output_transform_biases').name
+
+        if self.ref_impl:
+            params['impl'] = '_ref'
+        else:
+            params['impl'] = '_single'
 
         return [self._function_template.format(**params)]
 
     def config_cpp(self):
         params = self._default_config_params()
+        if not self.ref_impl:
+            params['output_transform_weights_t'] = params['output_transform_biases_t']
         params['n_vertices'] = self.get_input_variable().dim_names[0]
+        params['n_vertices_width'] = int(math.log2(self.attributes['n_vertices']))
         params['n_in_features'] = self.get_input_variable().dim_names[1]
+        params['n_propagate'] = self.attributes['n_propagate']
         params['n_aggregators'] = self.get_weights('aggregator_distance_biases').shape[0]
         params['n_out_features'] = self.get_weights('output_transform_biases').shape[0]
+        params['distance_width'] = 12
+        params['distance_nint'] = min(4, params['distance_width'] - 6) # this is tuned
         params['edge_weight_t'], type_name = self.model.config.get_precision(self, var='edge_weight')
         if type_name == 'model_default_t':
-            params['edge_weight_t'] = 'ap_ufixed<64, 32>'
+            params['edge_weight_t'] = 'ap_ufixed<10, 0>'
         params['aggr_t'], type_name = self.model.config.get_precision(self, var='aggr')
         if type_name == 'model_default_t':
-            params['aggr_t'] = 'ap_fixed<64, 24>'
+            params['aggr_t'] = 'ap_fixed<18, 8>'
+        params['norm_t'], type_name = self.model.config.get_precision(self, var='norm')
+        if type_name == 'model_default_t':
+            params['norm_t'] = 'ap_fixed<10, 0>'
         if self.attributes['collapse'] in ['mean', 'sum']:
             params['collapse_type'] = 'collapse_%s' % self.attributes['collapse']
         else:
