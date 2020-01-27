@@ -5,17 +5,21 @@ import seaborn as sb
 import matplotlib.pyplot as plt
 
 def violinplot(data):
-    vp = sb.violinplot(x='weight', y='x', hue='layer', data=data)
-    vp.set_xticklabels(vp.get_xticklabels(), rotation=45)
+    vp = sb.violinplot(x='x', y='weight', hue='layer', data=data)
+    vp.set_yticklabels(vp.get_yticklabels(), rotation=45, ha='right')
     vp.get_legend().remove()
-    vp.set_yscale('log', basey=2)
+    vp.set_xscale('log', basex=2)
+    plt.title('Distribution of weights')
+    plt.tight_layout()
     return vp
 
 def boxplot(data):
-    vp = sb.boxplot(x='weight', y='x', hue='layer', data=data)
-    vp.set_xticklabels(vp.get_xticklabels(), rotation=45)
+    vp = sb.boxplot(x='x', y='weight', hue='layer', data=data, showfliers=False)
+    vp.set_yticklabels(vp.get_yticklabels(), rotation=45, ha='right')
     vp.get_legend().remove()
-    vp.set_yscale('log', basey=2)
+    vp.set_xscale('log', basex=2)
+    plt.title('Distribution of weights')
+    plt.tight_layout()
     return vp
 
 def FacetGrid(data):
@@ -26,7 +30,7 @@ def FacetGrid(data):
     vp.fig.subplots_adjust(hspace=-.25)
     return vp
 
-def numerical(model, X=None, plot='violinplot'):
+def numerical(model, X=None, plot='boxplot'):
     data = {'x' : [], 'layer' : [], 'weight' : []}
     print("Profiling weights")
     for layer in model.layers:
@@ -35,7 +39,7 @@ def numerical(model, X=None, plot='violinplot'):
         for i, w in enumerate(weights):
             w = w.flatten()
             n = len(w)
-            data['x'].extend(w.tolist())
+            data['x'].extend(abs(w).tolist())
             data['layer'].extend([name for j in range(n)])
             #data['weight'].extend([i for j in range(len(w))])
             data['weight'].extend(['{}/{}'.format(name, i) for j in range(n)])
@@ -46,9 +50,9 @@ def numerical(model, X=None, plot='violinplot'):
              'boxplot' : boxplot,
              'FacetGrid' : FacetGrid}
 
-    vp = plots[plot](data)
+    wp = plots[plot](data) # weight plot
 
-    act_plot = None
+    ap = None
     if X is not None:
         print("Profiling activations")
         # test layer by layer on data
@@ -60,14 +64,15 @@ def numerical(model, X=None, plot='violinplot'):
             partial_model.compile(optimizer='adam', loss='mse')
             if not isinstance(layer, keras.layers.InputLayer):
                 y = partial_model.predict(X).flatten()
-                data['x'].extend(y.tolist())
+                data['x'].extend(abs(y).tolist())
                 data['layer'].extend([layer.name for i in range(len(y))])
 
         plt.figure()
         data = pandas.DataFrame(data)
-        act_plot = sb.violinplot(x='layer', y='x', data=data)
-        act_plot.set_xticklabels(act_plot.get_xticklabels(), rotation=45)
-        act_plot.set_yscale('log', basey=2)
+        ap = sb.violinplot(x='x', y='layer', data=data)
+        ap.set_yticklabels(ap.get_yticklabels(), rotation=45, ha='right')
+        ap.set_xscale('log', basex=2)
+        plt.title('Distribution of activations')
 
-    return vp, act_plot
+    return wp, ap
 
