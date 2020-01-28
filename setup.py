@@ -29,7 +29,6 @@ setup(name='hls4ml',
             'pandas',
             'seaborn',
             'matplotlib',
-            'keras',
             'tensorflow'
         ]
       },
