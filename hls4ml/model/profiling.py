@@ -1,8 +1,16 @@
-import numpy as np
-import pandas
-import keras
-import seaborn as sb
-import matplotlib.pyplot as plt
+import importlib
+libs = [('numpy', 'np'), ('pandas', 'pandas'), ('keras', 'keras'),
+        ('seaborn', 'sb'), ('matplotlib.pyplot', 'plt')]
+for (name, short) in libs:
+    try:
+        lib = importlib.import_module(name)
+    except ImportError as error:
+        print(error)
+        print('Install hls4ml[profiling] extra depencies.')
+    except Exception as exception:
+        print(exception)
+    else:
+        globals()[short] = lib
 
 def violinplot(data):
     vp = sb.violinplot(x='x', y='weight', hue='layer', data=data)
