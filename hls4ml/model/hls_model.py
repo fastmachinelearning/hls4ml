@@ -404,9 +404,12 @@ class ArrayVariable(Variable):
     def get_shape(self):
         return zip(self.dim_names, self.shape)
 
-    def definition_cpp(self):
+    def definition_cpp(self, const=False):
         array_shape = self.size_cpp()
-        return '{type} {name}[{shape}]'.format(type=self.type.name, name=self.cppname, shape=array_shape)
+        if const:
+            return '{type} const {name}[{shape}]'.format(type=self.type.name, name=self.cppname, shape=array_shape)
+        else:
+            return '{type} {name}[{shape}]'.format(type=self.type.name, name=self.cppname, shape=array_shape)
 
     def size(self):
         nelem = 1
@@ -476,8 +479,11 @@ class WeightVariable(Variable):
             else:
                 self.precision_fmt = '%f'
 
-    def definition_cpp(self):
-        return '{type} {name}[{size}]'.format(type=self.type.name, name=self.cppname, size=self.data_length)
+    def definition_cpp(self, const=False):
+        if const:
+            return '{type} const {name}[{size}]'.format(type=self.type.name, name=self.cppname, size=self.data_length)
+        else:
+            return '{type} {name}[{size}]'.format(type=self.type.name, name=self.cppname, size=self.data_length)
 
 class CompressedWeightVariable(WeightVariable):
     def __init__(self, var_name, type_name, precision, data, reuse_factor, **kwargs):
@@ -716,7 +722,11 @@ class Input(Layer):
         if shape[0] is None:
             shape = shape[1:]
         dims = ['N_INPUT_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
-        type_name = self.attributes.get('type_name', 'input_t')
+        if self.index == 1:
+            default_type_name = 'input_t'
+        else:
+            default_type_name = 'input%d_t' % self.index
+        type_name = self.attributes.get('type_name', default_type_name)
         precision = self.attributes.get('precision', None)
         self.add_output_variable(shape, dims, var_name=self.name, type_name=type_name, precision=precision)
 
@@ -925,8 +935,6 @@ class GarNet(Layer):
 
         self.add_output_variable(shape, dims)
 
-        # Due to linearity of the input transform, input weights and biases can be contracted away at conversion time
-        n_in_features = self.attributes['n_in_features']
         n_aggregators = self.attributes['n_aggregators']
         n_out_features = self.attributes['n_out_features']
         n_propagate = self.attributes['n_propagate']
@@ -941,6 +949,8 @@ class GarNet(Layer):
                 ('output_transform', 'bias', '_2')
             ]
         else:
+            # Due to linearity of the input transform, input weights and biases can be contracted away at conversion time
+
             output_transform_kernel = self.model.get_weights_data(self.name, '%s/kernel_2:0' % self.name) # [(n_aggregators, n_propagate), n_out_features]
             output_transform_kernel = output_transform_kernel.reshape(n_aggregators, n_propagate, n_out_features)
     
@@ -989,8 +999,14 @@ class GarNet(Layer):
 
     def function_cpp(self):
         params = self._default_function_params()
-        params['integer_input_t'] = self.get_input_variable('input_2').type.name
-        params['nvtx'] = self.get_input_variable(self.inputs[1]).name
+        if self.attributes['input_format'] == 'xn':
+            integer_input = 'input_2'
+        elif self.attributes['input_format'] == 'xen':
+            params['input_t'] = 'input_t, input2_t'
+            params['input'] = 'input_1, input_2'
+            integer_input = 'input_3'
+        params['integer_input_t'] = self.get_input_variable(integer_input).type.name
+        params['nvtx'] = self.get_input_variable(self.inputs[-1]).name
         #params['packed'] = self.variables['packed'].name
         #params['igraph'] = self.variables['igraph'].name
         if self.ref_impl:
@@ -1013,27 +1029,32 @@ class GarNet(Layer):
         params = self._default_config_params()
         if not self.ref_impl:
             params['output_transform_weights_t'] = params['output_transform_biases_t']
-        params['n_vertices'] = self.get_input_variable().dim_names[0]
+        params['n_vertices'] = self.attributes['n_vertices']
         params['n_vertices_width'] = int(math.log2(self.attributes['n_vertices']))
-        params['n_in_features'] = self.get_input_variable().dim_names[1]
+        params['n_in_features'] = self.attributes['n_in_features']
         params['n_propagate'] = self.attributes['n_propagate']
         params['n_aggregators'] = self.get_weights('aggregator_distance_biases').shape[0]
         params['n_out_features'] = self.get_weights('output_transform_biases').shape[0]
         params['distance_width'] = 12
         params['distance_nint'] = min(4, params['distance_width'] - 6) # this is tuned
         params['edge_weight_t'], type_name = self.model.config.get_precision(self, var='edge_weight')
-        if type_name == 'model_default_t':
+        if type_name.endswith('default_t'):
             params['edge_weight_t'] = 'ap_ufixed<10, 0>'
         params['aggr_t'], type_name = self.model.config.get_precision(self, var='aggr')
-        if type_name == 'model_default_t':
-            params['aggr_t'] = 'ap_fixed<18, 8>'
+        if type_name.endswith('default_t'):
+            if self.ref_impl:
+                params['aggr_t'] = 'ap_fixed<24, 12>' # ref_impl does the normalization at the end
+            else:
+                params['aggr_t'] = 'ap_fixed<18, 9>'
         params['norm_t'], type_name = self.model.config.get_precision(self, var='norm')
-        if type_name == 'model_default_t':
-            params['norm_t'] = 'ap_fixed<10, 0>'
+        if type_name.endswith('default_t'):
+            params['norm_t'] = 'ap_ufixed<10, 0>'
         if self.attributes['collapse'] in ['mean', 'sum']:
             params['collapse_type'] = 'collapse_%s' % self.attributes['collapse']
         else:
             params['collapse_type'] = 'no_collapse'
+
+        params['log2_reuse'] = int(math.log2(params['reuse']))
 
         return self._config_template.format(**params)
 

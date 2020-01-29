@@ -153,6 +153,7 @@ garnet_config_template = """struct config{index} : nnet::garnet_config {{
     typedef {aggr_t} aggr_t;
 
     static const unsigned reuse_factor = {reuse};
+    static const unsigned log2_reuse_factor = {log2_reuse};
 }};
 """
 
