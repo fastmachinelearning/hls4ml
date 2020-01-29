@@ -1,4 +1,6 @@
 import importlib
+from hls4ml.model.hls_model import HLSModel
+
 libs = [('numpy', 'np'), ('pandas', 'pandas'), ('tensorflow', 'tensorflow'),
         ('seaborn', 'sb'), ('matplotlib.pyplot', 'plt')]
 for (name, short) in libs:
@@ -68,6 +70,33 @@ plots = {'violinplot' : violinplot,
          'FacetGrid' : FacetGrid,
          'histogram' : histogram}
 
+def weights_hlsmodel(model):
+    data = {'x' : [], 'layer' : [], 'weight' : []}
+    for layer in model.get_layers():
+        for iw, weight in enumerate(layer.get_weights()):
+            w = weight.data.flatten()
+            data['x'].extend(abs(w).tolist())
+            data['layer'].extend([layer.name for i in range(len(w))])
+            data['weight'].extend(['{}/{}'.format(layer.name, iw) for i in range(len(w))])
+
+    data = pandas.DataFrame(data)
+    return data
+
+def weights_keras(model):
+    data = {'x' : [], 'layer' : [], 'weight' : []}
+    for layer in model.layers:
+        name = layer.name
+        weights = layer.get_weights()
+        for i, w in enumerate(weights):
+            w = w.flatten()
+            n = len(w)
+            data['x'].extend(abs(w).tolist())
+            data['layer'].extend([name for j in range(n)])
+            data['weight'].extend(['{}/{}'.format(name, i) for j in range(n)])
+
+    data = pandas.DataFrame(data)
+    return data
+
 def numerical(model, X=None, plot='boxplot'):
     """
     Perform numerical profiling of a model
@@ -90,24 +119,20 @@ def numerical(model, X=None, plot='boxplot'):
     """
 
     print("Profiling weights")
-    data = {'x' : [], 'layer' : [], 'weight' : []}
-    for layer in model.layers:
-        name = layer.name
-        weights = layer.get_weights()
-        for i, w in enumerate(weights):
-            w = w.flatten()
-            n = len(w)
-            data['x'].extend(abs(w).tolist())
-            data['layer'].extend([name for j in range(n)])
-            data['weight'].extend(['{}/{}'.format(name, i) for j in range(n)])
+    if isinstance(model, HLSModel):
+        data = weights_hlsmodel(model)
+    elif isinstance(model, keras.Model):
+        data = weights_keras(model)
+    else:
+        print("Only keras and HLSModel models can currently be profiled")
+        return False, False
 
-    data = pandas.DataFrame(data)
     wp = plots[plot](data) # weight plot
     plt.title("Distribution of (non-zero) weights")
     plt.tight_layout()
 
     ap = None
-    if X is not None:
+    if X is not None and isinstance(model, keras.Model):
         print("Profiling activations")
         # test layer by layer on data
         data = {'x' : [], 'weight' : []}
