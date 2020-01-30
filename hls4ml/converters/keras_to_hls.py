@@ -49,6 +49,19 @@ def get_weights_shape(h5filename, layer_name, var_name='kernel'):
 
     return shape
 
+def get_qkeras_quantization(layer, keras_layer):
+    kernel_quantizer = keras_layer['config']['kernel_quantizer']['class_name']
+    bias_quantizer = keras_layer['config']['bias_quantizer']['class_name']
+    
+    if kernel_quantizer != bias_quantizer:
+        raise Exception('Mixing quantizers within QKeras layers is not supported')
+    if kernel_quantizer == 'binary':
+        layer['quantize'] = 2
+    elif kernel_quantizer == 'ternary':
+        layer['quantize'] = 3
+    else:
+        raise Exception('Unsupported quantizer {} in {} layer {}'.format(kernel_quantizer, layer['class_name'], layer['name']))
+
 def keras_to_hls(yamlConfig):
 
     ######################
@@ -92,10 +105,11 @@ def keras_to_hls(yamlConfig):
     norm_layers = ['BatchNormalization']
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']
     merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate']
+    qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D']
     #Define layers to skip for conversion to HLS
     skip_layers = ['Dropout', 'Flatten']
     #All supported layers
-    supported_layers = core_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + skip_layers
+    supported_layers = core_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + skip_layers
 
     #Map inputs of skipped and split (activation) layers
     inputs_map = {}
@@ -183,6 +197,8 @@ def keras_to_hls(yamlConfig):
                 layer['quantize'] = 2
             elif 'Ternary' in layer['class_name']:
                 layer['quantize'] = 3
+            elif layer['class_name'] == 'QDense':
+                get_qkeras_quantization(layer, keras_layer)
             else:
                 layer['quantize'] = 0
             current_shape = [current_shape[0], layer['n_out']]
@@ -210,6 +226,7 @@ def keras_to_hls(yamlConfig):
                 layer['pad_left'] = 0
                 layer['pad_right'] = 0
             layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
+            get_qkeras_quantization(layer, keras_layer)
             current_shape=[current_shape[0], layer['n_out'], layer['n_filt']]
         elif 'Conv2D' in layer['class_name']:
             layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
@@ -218,8 +235,8 @@ def keras_to_hls(yamlConfig):
             layer['in_height']=current_shape[1]
             layer['in_width']=current_shape[2]
             if layer['data_format'] == 'channels_first':
-             layer['in_height']=current_shape[2]
-             layer['in_width']=current_shape[3]
+                layer['in_height']=current_shape[2]
+                layer['in_width']=current_shape[3]
             layer['filt_height']=weights_shape[0]
             layer['filt_width']=weights_shape[1]
             layer['n_chan']=weights_shape[2]
@@ -252,14 +269,15 @@ def keras_to_hls(yamlConfig):
                 in_height = current_shape[1]
                 in_width = current_shape[2]
                 if layer['data_format'] == 'channels_first':
-                 in_height = current_shape[2]
-                 in_width = current_shape[3]
+                    in_height = current_shape[2]
+                    in_width = current_shape[3]
                 layer['out_width'] = int(math.ceil(float(in_width - layer['filt_width'] + 1) / float(layer['stride_width'])))
                 layer['out_height'] = int(math.ceil(float(in_height - layer['filt_height'] + 1) / float(layer['stride_height'])))
                 layer['pad_top'] = 0
                 layer['pad_bottom'] = 0
                 layer['pad_left'] = 0
                 layer['pad_right'] = 0
+            get_qkeras_quantization(layer, keras_layer)
             if layer['data_format'] == 'channels_first': current_shape=[current_shape[0], layer['n_filt'], layer['out_height'], layer['out_width']]
             else: current_shape=[current_shape[0], layer['out_height'], layer['out_width'], layer['n_filt']]
         elif layer['class_name']=='BatchNormalization':
@@ -357,6 +375,13 @@ def keras_to_hls(yamlConfig):
             layer['activ_param'] = keras_layer["config"].get('alpha', 1.)
         elif layer['class_name']=='PReLU':
             layer['activation'] = layer['class_name']
+        elif layer['class_name']=='QActivation':
+            if 'quantized_relu' in layer['activation']:
+                layer['activation'] = 'relu'
+            elif 'quantized_tanh' in layer['activation']:
+                layer['activation'] = 'tanh'
+            else:
+                raise Exception('Unsupported activation {} in layer {}'.format(layer['activation'], layer['name']))
 
         elif layer['class_name'] in merge_layers:
             layer['op'] = layer['class_name'].lower()
@@ -373,7 +398,7 @@ def keras_to_hls(yamlConfig):
 
         print('Layer name: {}, layer type: {}, current shape: {}'.format(layer['name'], layer['class_name'], current_shape))
         layer_list.append( layer )
-        if 'activation' in layer and layer['class_name'] not in activation_layers:
+        if 'activation' in layer and layer['class_name'] not in activation_layers + qkeras_layers:
             act_layer = {}
             act_layer['name'] = layer['name'] + '_' + layer['activation']
             act_layer['activation'] = layer['activation']
