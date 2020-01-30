@@ -3,10 +3,7 @@ import numpy as np
 import os
 import yaml
 import sys
-try:
-    import torch # Don't fail the whole hls4ml initialization
-except:
-    pass
+import torch
 import pickle
 import re
 
