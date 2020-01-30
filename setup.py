@@ -24,6 +24,14 @@ setup(name='hls4ml',
                         'pyyaml',
                         'h5py',
                         'onnx>=1.4.0'],
+      extras_require={
+        'profiling': [
+            'pandas',
+            'seaborn',
+            'matplotlib',
+            'tensorflow'
+        ]
+      },
       scripts=['scripts/hls4ml'],
       include_package_data=True,
       classifiers=[
