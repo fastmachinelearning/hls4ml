@@ -18,7 +18,7 @@ git clean -fx _book
 git add .
 
 # commit
-git commit -a -m "Update per-layer configuration documentation"
+git commit -a -m "Fix some html formatting error and add more details on how to use strategy"
 
 # push to the origin
 git push origin gh-pages
