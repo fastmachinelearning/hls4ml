@@ -18,7 +18,7 @@ git clean -fx _book
 git add .
 
 # commit
-git commit -a -m "Fix some html formatting error and add more details on how to use strategy"
+git commit -a -m "Add note about additional protobuf dependency for onnx and add link to detailed installation"
 
 # push to the origin
 git push origin gh-pages

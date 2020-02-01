@@ -1,6 +1,6 @@
 # Dependencies
 
-_numpy,h5py_: required for the translation of keras model files <br/>
+_numpy, h5py_: required for the translation of keras model files <br/>
 http://www.numpy.org <br/>
 http://www.h5py.org <br/>
 
@@ -13,7 +13,7 @@ https://pytorch.org/ <br/>
 _scikit-learn_: for BDT architectures, includes dependencies on numpy, etc. <br/>
 https://scikit-learn.org <br/>
 
-_onnx_: <br/>
-https://onnx.ai <br/>
+_onnx_: note that you need an install of protobuf and numpy to build onnx. Detailed instructions are included in the link.<br>
+https://github.com/onnx/onnx <br/>
 
 _Xilinx Vivado license_: the package currently is only for Xilinx devices, a license is required for the simulation and synthesis of HLS code
