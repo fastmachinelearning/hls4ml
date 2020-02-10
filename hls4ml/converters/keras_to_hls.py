@@ -50,6 +50,8 @@ def get_weights_shape(h5filename, layer_name, var_name='kernel'):
     return shape
 
 def get_qkeras_quantization(layer, keras_layer):
+    if not layer['class_name'].startswith('Q'): # Not a QKeras layer, nothing to do
+        return
     kernel_quantizer = keras_layer['config']['kernel_quantizer']['class_name']
     bias_quantizer = keras_layer['config']['bias_quantizer']['class_name']
     
