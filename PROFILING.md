@@ -15,10 +15,12 @@ from hls4ml.model.profiling import numerical
 from hls4ml.converters import keras_to_hls
 import matplotlib.pyplot as plt
 
-# pseudo-code:
+# pseudo code:
 model = load_model()
 X = load_data()
 config = load_config() # load your hls4ml .yml config file with yaml
+
+# real code:
 hls_model = keras_to_hls(config)
 
 # produce an activation profile (ap)
@@ -29,8 +31,9 @@ plt.show()
 
 Calling the `hls4ml.model.profiling.numerical` method with these three objects provided will produce two figures as below:
 
-![Profiling Plot](/img/activations.png)
-![Profiling Plot](/img/weights.png)
+<img src="img/activations.png" width=415 align=left>
+<img src="img/weights.png" width=415 align=right>
+<br/>
 
 Different plots styles are available with the `plot` keyword argument. Valid options are `boxplot` (default), `histogram`, `violinplot`.
 In the default boxplot style, each variable in the neural network is evaluated using the given test data and the distribution of (non-zero) values is shown with a box and whisker diagram.
