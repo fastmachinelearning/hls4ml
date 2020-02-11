@@ -33,14 +33,27 @@ class HLSConfig(object):
         self._parse_hls_config()
         self._validate_hls_config()
 
-    def get_config_value(self, key):
-        return self.config.get(key, None)
+    def get_config_value(self, key, default=None):
+        return self.config.get(key, default)
 
     def get_project_name(self):
         return self.get_config_value('ProjectName')
 
     def get_output_dir(self):
         return self.get_config_value('OutputDir')
+
+    def get_layer_config_value(self, layer, key, default=None):
+        hls_config = self.config['HLSConfig']
+
+        name_config = hls_config.get('LayerName', {}).get(layer.name.lower(), None)
+        if name_config is not None:
+            return name_config.get(key, default)
+        
+        type_config = hls_config.get('LayerType', {}).get(layer.__class__.__name__, None)
+        if type_config is not None:
+            return type_config.get(key, default)
+        
+        return default
 
     def get_precision(self, layer, var='default'):
         precision = self.layer_name_precision.get(layer.name.lower() + '_' + var)
@@ -927,6 +940,9 @@ class Activation(Layer):
         shape = inp.shape
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
+        if self.model.config.backend.name == 'Vivado':
+            self.set_attr('table_t', self.model.config.get_layer_config_value(self, 'table_t', 'ap_fixed<18,8>'))
+            self.set_attr('table_size', self.model.config.get_layer_config_value(self, 'table_size', 1024))
 
     def function_cpp(self):
         params = self._default_function_params()
