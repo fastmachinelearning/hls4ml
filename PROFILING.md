@@ -40,9 +40,13 @@ Calling the `hls4ml.model.profiling.numerical` method with these three objects p
 Different plots styles are available with the `plot` keyword argument. Valid options are `boxplot` (default), `histogram`, `violinplot`. In the default boxplot style, each variable in the neural network is evaluated using the given test data and the distribution of (non-zero) values is shown with a box and whisker diagram.
 
 When different combinations of the input objects are given, different plots will be produced:
+
 1) Only Keras model: only the weights profile plot will be produced, the activation profile will be `None`. No grey boxes representing the data types will be shown.
+
 2) Only HLSModel (or HLSModel and Keras model): only the weights profile plot will be produced, with grey boxes indicating the data types from the HLSModel. 
+
 3) Keras model and data (`X`): both the weights profile and activation profile will be produced. No grey boxes representing the data types will be shown.
+
 4) Keras model, HLSModel, and data: both weights and activation profiles are produced, with grey boxes indicating the data types from the HLSModel.
 
 Each box shows the median and quartiles of the distribution. The grey shaded boxes show the range which can be represented with the hls4ml config file used.

@@ -18,7 +18,7 @@ git clean -fx _book
 git add .
 
 # commit
-git commit -a -m "fix formatting"
+git commit -a -m "formatting tweaks"
 
 # push to the origin
 git push origin gh-pages

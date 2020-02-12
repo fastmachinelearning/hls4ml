@@ -22,4 +22,5 @@ If you are using the package please cite:
    * Mark Neubauer [University of Illinois Urbana-Champaign]
    * Shih-Chieh Hsu [University of Washington]
    * Giuseppe Di Guglielmo [Columbia University]
+   * Duc Hoang [Rhodes College]
 
