@@ -18,7 +18,7 @@ git clean -fx _book
 git add .
 
 # commit
-git commit -a -m "fix bugs and compile website"
+git commit -a -m "fix formatting"
 
 # push to the origin
 git push origin gh-pages
