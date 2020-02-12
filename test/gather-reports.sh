@@ -62,7 +62,7 @@ for dir in */ ; do
    if [ -d "$prjdir" ]; then
       echo "Synthesis report for ${dir%/}"
       if [ "${brief}" -eq 1 ]; then
-         sed "/* DSP48:/Q" "${prjdir}/${prjname}_csynth.rpt"
+         sed "/* DSP48/Q" "${prjdir}/${prjname}_csynth.rpt"
       else
          cat "${prjdir}/${prjname}_csynth.rpt"
       fi
