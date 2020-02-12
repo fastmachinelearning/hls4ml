@@ -57,7 +57,7 @@
     <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="../CONCEPTS.html" />
+    <link rel="next" href="../PROFILING.html" />
     
     
     <link rel="prev" href="QUICKSTART.html" />
@@ -94,7 +94,7 @@
                 <a href="../">
             
                     
-                    hls4ml
+                    HLS4ML
             
                 </a>
             
@@ -102,20 +102,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.2" data-path="../STATUS.html">
-            
-                <a href="../STATUS.html">
-            
-                    
-                    Status and Features
-            
-                </a>
-            
-
-            
-        </li>
-    
-        <li class="chapter " data-level="1.3" data-path="../SETUP.html">
+        <li class="chapter " data-level="1.2" data-path="../SETUP.html">
             
                 <a href="../SETUP.html">
             
@@ -129,7 +116,7 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.3.1" data-path="DEPENDENCIES.html">
+        <li class="chapter " data-level="1.2.1" data-path="DEPENDENCIES.html">
             
                 <a href="DEPENDENCIES.html">
             
@@ -142,7 +129,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.3.2" data-path="QUICKSTART.html">
+        <li class="chapter " data-level="1.2.2" data-path="QUICKSTART.html">
             
                 <a href="QUICKSTART.html">
             
@@ -155,7 +142,7 @@
             
         </li>
     
-        <li class="chapter active" data-level="1.3.3" data-path="CONFIGURATION.html">
+        <li class="chapter active" data-level="1.2.3" data-path="CONFIGURATION.html">
             
                 <a href="CONFIGURATION.html">
             
@@ -173,6 +160,19 @@
             
         </li>
     
+        <li class="chapter " data-level="1.3" data-path="../PROFILING.html">
+            
+                <a href="../PROFILING.html">
+            
+                    
+                    Profiling
+            
+                </a>
+            
+
+            
+        </li>
+    
         <li class="chapter " data-level="1.4" data-path="../CONCEPTS.html">
             
                 <a href="../CONCEPTS.html">
@@ -186,20 +186,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5" data-path="../RELEASENOTES.html">
-            
-                <a href="../RELEASENOTES.html">
-            
-                    
-                    Release Notes
-            
-                </a>
-            
-
-            
-        </li>
-    
-        <li class="chapter " data-level="1.6" data-path="../REFERENCE.html">
+        <li class="chapter " data-level="1.5" data-path="../REFERENCE.html">
             
                 <a href="../REFERENCE.html">
             
@@ -212,7 +199,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.7" >
+        <li class="chapter " data-level="1.6" >
             
                 <a target="_blank" href="https://github.com/hls-fpga-machine-learning/HLS4ML">
             
@@ -271,14 +258,16 @@
                                 <section class="normal markdown-section">
                                 
                                 <h1 id="configuration">Configuration</h1>
+<hr>
 <p>Now that you have a run a quick example workflow of hls4ml, let&apos;s go through the various configuration options that you have for the translation of your machine learning algorithm.  </p>
 <p>One important part of hls4ml to remember is that the user is responsible for the format of the inputs.  There is no automatic formatting or normalization so this must be done in the training. </p>
+<hr>
 <h2 id="keras-translation">Keras translation</h2>
 <h3 id="top-level-configuration">Top level configuration</h3>
 <p>Configuration files are YAML files in hls4ml (<code>*.yml</code>). An example configuration file is <a href="https://github.com/hls-fpga-machine-learning/hls4ml/blob/master/example-models/keras-config.yml" target="_blank">here</a>.</p>
 <p>It looks like this:</p>
 <pre><code>KerasJson: keras/KERAS_3layer.json
-KerasH5:   keras/KERAS_3layer_weights.h5
+KerasH5:   keras/KERAS_3layer_weights.h5 #You can also use h5 file from Keras&apos;s model.save() and leave KerasJson blank.
 #InputData: keras/KERAS_3layer_input_features.dat
 #OutputPredictions: keras/KERAS_3layer_predictions.dat
 OutputDir: my-hls-test
@@ -299,8 +288,9 @@ HLSConfig:
 #      Compression: True
 </code></pre><p>There are a number of configuration options that you have.  Let&apos;s go through them.  You have basic setup parameters: </p>
 <ul>
-<li><strong>KerasJson/KerasH5</strong>: for Keras, the model architecture and weights are stored in a <code>json</code> and <code>h5</code> file.  The path to those files are required here.</li>
-<li><strong>InputData/OutputPredictions</strong>: path to your input/predictions of the model. If none is supplied, then hls4ml will create aritificial data for simulation. The data used above in the example can be found <a href="https://cernbox.cern.ch/index.php/s/2LTJVVwCYFfkg59" target="_blank">here</a>. </li>
+<li><strong>KerasJson/KerasH5</strong>: for Keras, the model architecture and weights are stored in a <code>json</code> and <code>h5</code> file.  The path to those files are required here. 
+We also support keras model&apos;s file obtained just from <code>model.save()</code>. In this case you can just leave the <code>KerasJson:</code> field blank. </li>
+<li><strong>InputData/OutputPredictions</strong>: path to your input/predictions of the model. If none is supplied, then hls4ml will create aritificial data for simulation. The data used above in the example can be found <a href="https://cernbox.cern.ch/index.php/s/2LTJVVwCYFfkg59" target="_blank">here</a>. We also support <code>npy</code> data files. We welcome suggestions on more input data types to support. </li>
 <li><strong>OutputDir</strong>: the output directory where you want your HLS project to appear</li>
 <li><strong>ProjectName</strong>: the name of the HLS project IP that is produced</li>
 <li><strong>XilinxPart</strong>: the particular FPGA part number that you are considering, here it&apos;s a Xilinx Virtex-7 FPGA</li>
@@ -312,12 +302,49 @@ Then you have some optimization parameters for how your algorithm runs:</li>
 <li><strong>Precision</strong>: this defines the precsion of your inputs, outputs, weights and biases.  you have a chance to further configure this more finely</li>
 </ul>
 <p><strong>Per-layer configuration:</strong>
-Aside from these parameters, you can also specify per-layer configuration by adding this in the configuration file: </p>
-<pre><code>LayerName:
-  my_first_layer:
-    ReuseFactor: 80
-</code></pre><p>This will have the effect of changing the reuse factor of the first layer to 80. All of the other layers&apos; configuration will be taken from model-level configuration. </p>
-<p>For more information on the optimization parameters and what they mean, you can visit the <a href="../CONCEPTS.html">Concepts</a> chapter.</p>
+In the hls4ml configuration file, it is possible to specify the model <em>Precision</em> and <em>ReuseFactor</em> with finer granularity.</p>
+<p>Under the <code>HLSConfig</code> heading, these can be set for the <code>Model</code>, per <code>LayerType</code>, per <code>LayerName</code>, and for named variables within the layer (for precision only). The most basic configuration may look like this:</p>
+<pre><code>HLSConfig:
+  Model:
+    Precision: ap_fixed&lt;16,6&gt;
+    ReuseFactor: 1
+</code></pre><p>This configuration use <code>ap_fixed&lt;16,6&gt;</code> for every variable and a ReuseFactor of 1 throughout.</p>
+<p>Specify all <code>Dense</code> layers to use a different precision like this:</p>
+<pre><code>HLSConfig:
+  Model:
+    Precision: ap_fixed&lt;16,6&gt;
+    ReuseFactor: 1
+  LayerType:
+    Dense:
+      Precision: ap_fixed&lt;14,5&gt;
+</code></pre><p>In this case, all variables in any <code>Dense</code> layers will be represented with <code>ap_fixed&lt;14,5&gt;</code> while any other layer types will use <code>ap_fixed&lt;16,6&gt;</code>.</p>
+<p>A specific layer can be targeted like this:</p>
+<pre><code> HLSConfig:
+    Model:
+      Precision: ap_fixed&lt;16,6&gt;
+      ReuseFactor: 16
+    LayerName:
+      dense1:
+        Precision: 
+          weight: ap_fixed&lt;14,2&gt;
+          bias: ap_fixed&lt;14,4&gt;
+          result: ap_fixed&lt;16,6&gt;
+        ReuseFactor: 12
+        Strategy: Resource
+</code></pre><p>In this case, the default model configuration will use <code>ap_fixed&lt;16,6&gt;</code> and a <code>ReuseFactor</code> of 16. The layer named <code>dense1</code> (defined in the user provided model architecture file) will instead use different precision for the <code>weight</code>, <code>bias</code>, and <code>result</code> (output) variables, a <code>ReuseFactor</code> of 12, and the <code>Resource</code> strategy (while the model default is <code>Latency</code> strategy.</p>
+<p>More than one layer can have a configuration specified, e.g.:</p>
+<pre><code>HLSConfig:
+  Model:
+   ...
+  LayerName:
+    dense1:
+       ...
+    batchnormalization1:
+       ...
+    dense2:
+       ...
+</code></pre><p>For more information on the optimization parameters and what they mean, you can visit the <a href="../CONCEPTS.html">Concepts</a> chapter.</p>
+<hr>
 <h3 id="detailed-configuration">Detailed configuration</h3>
 <p>After you create your project, you have the opportunity to do more configuration if you so choose.<br>In your project, the file <code>&lt;OutputDir&gt;/firmware/&lt;ProjectName&gt;.cpp</code> is your top level file.  It has the network architecture constructed for you.  An example is <a href="https://github.com/hls-fpga-machine-learning/hls4ml/blob/master/example-prjs/higgs-1layer/firmware/myproject.cpp" target="_blank">here</a> and the important snippet is:</p>
 <pre><code>layer1_t layer1_out[N_LAYER_1];
@@ -378,7 +405,7 @@ An example is <a href="https://github.com/hls-fpga-machine-learning/hls4ml/blob/
                 </a>
                 
                 
-                <a href="../CONCEPTS.html" class="navigation navigation-next " aria-label="Next page: Concepts">
+                <a href="../PROFILING.html" class="navigation navigation-next " aria-label="Next page: Profiling">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -389,7 +416,7 @@ An example is <a href="https://github.com/hls-fpga-machine-learning/hls4ml/blob/
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Configuration","level":"1.3.3","depth":2,"next":{"title":"Concepts","level":"1.4","depth":1,"path":"CONCEPTS.md","ref":"CONCEPTS.md","articles":[]},"previous":{"title":"Quick Start","level":"1.3.2","depth":2,"path":"setup/QUICKSTART.md","ref":"setup/QUICKSTART.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/CONFIGURATION.md","mtime":"2020-01-30T04:32:08.744Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-02-01T17:38:03.663Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Configuration","level":"1.2.3","depth":2,"next":{"title":"Profiling","level":"1.3","depth":1,"path":"PROFILING.md","ref":"PROFILING.md","articles":[]},"previous":{"title":"Quick Start","level":"1.2.2","depth":2,"path":"setup/QUICKSTART.md","ref":"setup/QUICKSTART.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/CONFIGURATION.md","mtime":"2020-02-12T20:59:42.051Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-02-12T21:02:52.010Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
