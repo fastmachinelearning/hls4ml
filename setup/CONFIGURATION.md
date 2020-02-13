@@ -48,7 +48,7 @@ Then you have some optimization parameters for how your algorithm runs:
    * **IOType**: your options are `io_parallel` or `io_serial` where this really defines if you are pipelining your algorithm or not
    * **ReuseFactor**: in the case that you are pipelining, this defines the pipeline interval or initiation interval
    * **Strategy**: Optimization strategy on FPGA, either "Latency" or "Resource". If none is supplied then hl4ml uses "Latency" as default. Note that a reuse factor larger than 1 should be specified when using "resource" strategy. An example of using larger reuse factor can be found [here.](https://github.com/hls-fpga-machine-learning/models/tree/master/keras/KERAS_dense)
-   * **Precision**: this defines the precsion of your inputs, outputs, weights and biases.  you have a chance to further configure this more finely
+   * **Precision**: this defines the precsion of your inputs, outputs, weights and biases. It is denoted by `<X,Y>`, where `Y` is the number of bits representing the signed number above the binary point (i.e. the integer part), and X is the total number of bits. You have a chance to further configure this more finely with per-layer configuration described below.
 
 
 **Per-layer configuration:**
