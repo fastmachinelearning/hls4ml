@@ -134,11 +134,13 @@ garnet_config_template = """struct config{index} : nnet::garnet_config {{
     static const unsigned n_vertices = {n_vertices};
     static const unsigned n_vertices_width = {n_vertices_width};
     static const unsigned n_in_features = {n_in_features};
+    static const unsigned n_in_ufeatures = {n_in_ufeatures};
+    static const unsigned n_in_sfeatures = n_in_features - n_in_ufeatures;
     static const unsigned n_propagate = {n_propagate};
     static const unsigned n_aggregators = {n_aggregators};
     static const unsigned n_out_features = {n_out_features};
     static const unsigned distance_width = {distance_width};
-    static const unsigned collapse_type = {collapse_type};
+    static const unsigned output_collapse = {collapse_type};
 
     typedef {input_transform_weights_t} input_transform_weights_t;
     typedef {input_transform_biases_t} input_transform_biases_t;
@@ -150,7 +152,9 @@ garnet_config_template = """struct config{index} : nnet::garnet_config {{
     typedef {norm_t} norm_t;
     typedef ap_fixed<{distance_width}, {distance_nint}, AP_TRN, AP_SAT> distance_t;
     typedef {edge_weight_t} edge_weight_t;
+    typedef {edge_weight_aggr_t} edge_weight_aggr_t;
     typedef {aggr_t} aggr_t;
+    typedef {uaggr_t} uaggr_t;
 
     static const unsigned reuse_factor = {reuse};
     static const unsigned log2_reuse_factor = {log2_reuse};
@@ -181,10 +185,6 @@ param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {conf
 pooling1d_function_template = 'nnet::pooling1d<{input_t}, {config}>({input}, {output});'
 pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {config}>({input}, {output});'
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
-#garnet_function_template = '''static nnet::VertexPacker<{input_t}, {config}> vertex_packer;
-#    if (!vertex_packer.pack_vertices({input}, {nvtx}[0], {packed}, {igraph}))
-#      return;
-#    nnet::garnet_{structure}<{input_t}, {output_t}, {config}>({packed}, {igraph}, {output}, {input_transform_weights}, {input_transform_biases}, {aggregator_distance_weights}, {aggregator_distance_biases}, {output_transform_biases});'''
 garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output}, {input_transform_weights}, {input_transform_biases}, {aggregator_distance_weights}, {aggregator_distance_biases}, {output_transform});'
 
 '''function_templates = {

@@ -987,16 +987,6 @@ class GarNet(Layer):
 
             self.add_weights_variable(name=name, var_name=var_name, data=data, quantize=0, compression=False)
 
-        #input_shape = [self.attributes['n_vertices'], self.attributes['n_in_features']]
-        #input_dims = ['VERTICES_{}'.format(self.index), self.get_input_variable().dim_names[1]]
-        #self.variables['packed'] = ArrayVariable(shape=input_shape, dim_names=input_dims, var_name='layer{index}_packed', index=self.index)
-        #self.variables['packed'].pragma = self.get_input_variable().pragma
-
-        #input_shape = [self.attributes['n_vertices']]
-        #input_dims = ['VERTICES_{}'.format(self.index)]
-        #self.variables['igraph'] = ArrayVariable(shape=input_shape, dim_names=input_dims, var_name='layer{index}_igraph', precision='ap_int<4>', index=self.index)
-        #self.variables['igraph'].pragma = self.get_input_variable().pragma
-
     def function_cpp(self):
         params = self._default_function_params()
         if self.attributes['input_format'] == 'xn':
@@ -1007,8 +997,7 @@ class GarNet(Layer):
             integer_input = 'input_3'
         params['integer_input_t'] = self.get_input_variable(integer_input).type.name
         params['nvtx'] = self.get_input_variable(self.inputs[-1]).name
-        #params['packed'] = self.variables['packed'].name
-        #params['igraph'] = self.variables['igraph'].name
+
         if self.ref_impl:
             params['output_transform'] = '%s, %s' % (self.get_weights('output_transform_weights').name, self.get_weights('output_transform_biases').name)
         else:
@@ -1021,7 +1010,7 @@ class GarNet(Layer):
         if self.ref_impl:
             params['impl'] = '_ref'
         else:
-            params['impl'] = '_single'
+            params['impl'] = ''
 
         return [self._function_template.format(**params)]
 
@@ -1030,31 +1019,37 @@ class GarNet(Layer):
         if not self.ref_impl:
             params['output_transform_weights_t'] = params['output_transform_biases_t']
         params['n_vertices'] = self.attributes['n_vertices']
-        params['n_vertices_width'] = int(math.log2(self.attributes['n_vertices']))
+        params['n_vertices_width'] = int(math.log2(params['n_vertices']))
+        params['n_graphs'] = 1
         params['n_in_features'] = self.attributes['n_in_features']
+        if self.attributes['input_format'] == 'xn':
+            params['n_in_ufeatures'] = 0
+        elif self.attributes['input_format'] == 'xen':
+            params['n_in_ufeatures'] = 1
         params['n_propagate'] = self.attributes['n_propagate']
         params['n_aggregators'] = self.get_weights('aggregator_distance_biases').shape[0]
         params['n_out_features'] = self.get_weights('output_transform_biases').shape[0]
         params['distance_width'] = 12
         params['distance_nint'] = min(4, params['distance_width'] - 6) # this is tuned
-        params['edge_weight_t'], type_name = self.model.config.get_precision(self, var='edge_weight')
-        if type_name.endswith('default_t'):
-            params['edge_weight_t'] = 'ap_ufixed<10, 0>'
-        params['aggr_t'], type_name = self.model.config.get_precision(self, var='aggr')
-        if type_name.endswith('default_t'):
-            if self.ref_impl:
-                params['aggr_t'] = 'ap_fixed<24, 12>' # ref_impl does the normalization at the end
-            else:
-                params['aggr_t'] = 'ap_fixed<18, 9>'
-        params['norm_t'], type_name = self.model.config.get_precision(self, var='norm')
-        if type_name.endswith('default_t'):
-            params['norm_t'] = 'ap_ufixed<10, 0>'
-        if self.attributes['collapse'] in ['mean', 'sum']:
+        params['log2_reuse'] = int(math.log2(params['reuse']))
+        vspecs = [
+            ('edge_weight', 'ap_ufixed<10, 0>'),
+            ('edge_weight_aggr', 'ap_ufixed<%d, %d>' % (10 + params['log2_reuse'], params['log2_reuse'])),
+            ('aggr', 'ap_fixed<24, 12>' if self.ref_impl else 'ap_fixed<18, 9>'),
+            ('uaggr', 'ap_ufixed<24, 12>' if self.ref_impl else 'ap_ufixed<18, 9>'),
+            ('norm', 'ap_ufixed<14, 4>')
+        ]
+        for vname, default in vspecs:
+            params['%s_t' % vname], type_name = self.model.config.get_precision(self, var=vname)
+            if type_name.endswith('default_t'):
+                params['%s_t' % vname] = default
+
+        params['graph_index_t'] = 'ap_int<%d>' % (int(math.log2(params['n_graphs'])) + 1)
+
+        if self.attributes['collapse'] in ['mean', 'max']:
             params['collapse_type'] = 'collapse_%s' % self.attributes['collapse']
         else:
             params['collapse_type'] = 'no_collapse'
-
-        params['log2_reuse'] = int(math.log2(params['reuse']))
 
         return self._config_template.format(**params)
 
