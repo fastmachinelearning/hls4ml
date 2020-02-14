@@ -297,7 +297,78 @@
                                 <section class="normal markdown-section">
                                 
                                 <h1 id="command-help">Command help</h1>
+<p>This page documents all the commands that <code>hls4ml</code> supports.</p>
 <hr>
+<h3 id="overview">Overview</h3>
+<p>To start you can just type in <code>hls4ml -h</code> or <code>hls4ml  --help</code> in your command line, a messege will show up like below: </p>
+<pre><code>usage: hls4ml [-h] [--version] {config,convert,build,report} ...
+
+HLS4ML - Machine learning inference in FPGAs
+
+positional arguments:
+  {config,convert,build,report}
+    config              Create a conversion configuration file
+    convert             Convert Keras or ONNX model to HLS
+    build               Build generated HLS project
+    report              Show synthesis report of an HLS project
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --version             show program&apos;s version number and exit
+</code></pre><p>To get help about any particular <code>command</code>, you can just do:</p>
+<pre><code>hls4ml command -h
+</code></pre><p>For example, to get help about the <code>config</code> command, you can just type the followings:</p>
+<pre><code>hls4ml config -h
+</code></pre><hr>
+<h4 id="hls4ml-config">hls4ml config</h4>
+<pre><code>hls4ml config [-h] [-m MODEL] [-w WEIGHTS] [-o OUTPUT]
+</code></pre><p>This creates a conversion configuration file. Visit <a href="setup/CONFIGURATION.html">configuration section</a> for more details on how to write a configuration file.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><code>-h, --help</code>: show help message and exit</li>
+<li><code>-m MODEL</code>, or <code>--model MODEL</code>: model file to convert (we currently support Keras&apos;s <code>.h5</code> or <code>.json</code> file, ONNX&apos;s <code>.onnx</code>, Tensorflow&apos;s <code>pb</code>, Pytorch&apos;s <code>pt</code>)</li>
+<li><code>-w WEIGHT</code>, or <code>--weights WEIGHTS</code>: optional weights file (if Keras&apos;s <code>.json</code> file is provided))</li>
+<li><code>-o OUTPUT</code>, or <code>--output OUTPUT</code>: output file name</li>
+</ul>
+<hr>
+<h4 id="hls4ml-convert">hls4ml convert</h4>
+<pre><code>hls4ml convert [-h] [-c CONFIG]
+</code></pre><p>Suppose you have a configuration file called <code>keras-config.yml</code>. You can use this command with the configuration file like the following:</p>
+<pre><code>hls4ml convert -c keras-config.yml
+</code></pre><p><strong>Arguments</strong></p>
+<ul>
+<li><code>-h, --help</code>: show help message and exit</li>
+<li><code>-c CONFIG</code>, or <code>--config CONFIG</code>: configuration file</li>
+</ul>
+<hr>
+<h4 id="hls4ml-build">hls4ml build</h4>
+<pre><code>hls4ml build [-h] [-p PROJECT] [-c] [-s] [-r] [-v] [-e] [-l] [-a] [--reset]
+</code></pre><p>Build your HLS project. Suppose that you have a project directory called <code>my-hls-test</code>, you can often do the following to build the whole project with all the steps described in the arguments section:</p>
+<pre><code>hls4ml build -p my-hls-test -a
+</code></pre><p><strong>Arguments</strong></p>
+<ul>
+<li><code>-h, --help</code>: show help message and exit.</li>
+<li><code>-p PROJECT</code>, or <code>--project PROJECT</code>: project directory.</li>
+<li><code>-c, --csimulation</code>: run C simulation.</li>
+<li><code>-s, --synthesis</code>: run C/RTL synthesis</li>
+<li><code>-r, --co-simulation</code>: run C/RTL co-simulation.</li>
+<li><code>-v, --validation</code>: run C/RTL validation.</li>
+<li><code>-e, --export</code>: export IP (implies -s)</li>
+<li><code>-l, --vivado_synthesis</code>: run Vivado synthesis (implies -s).</li>
+<li><code>-a, --all</code>: run C simulation, C/RTL synthesis, C/RTL co-simulation and Vivado synthesis.</li>
+<li><code>--reset</code>: remove any previous builds</li>
+</ul>
+<hr>
+<h4 id="hls4ml-report">hls4ml report</h4>
+<pre><code>hls4ml report [-h] [-p PROJECT] [-f]
+</code></pre><p>Suppose that you have a project directory called <code>my-hls-test</code>, you can get the full report about the project by doing the following:</p>
+<pre><code>hls4ml report my-hls-test -f
+</code></pre><p><strong>Arguments</strong></p>
+<ul>
+<li><code>-h, --help</code>: show help message and exit.</li>
+<li><code>-p PROJECT</code>, or <code>--project PROJECT</code>: project directory.</li>
+<li><code>-f, --full</code>: show full report</li>
+</ul>
 
                                 
                                 </section>
@@ -341,7 +412,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Command help","level":"1.5","depth":1,"next":{"title":"Profiling","level":"1.6","depth":1,"path":"PROFILING.md","ref":"PROFILING.md","articles":[]},"previous":{"title":"Configuration","level":"1.4.3","depth":2,"path":"setup/CONFIGURATION.md","ref":"setup/CONFIGURATION.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"COMMAND.md","mtime":"2020-02-14T21:41:03.424Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-02-14T21:46:24.932Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Command help","level":"1.5","depth":1,"next":{"title":"Profiling","level":"1.6","depth":1,"path":"PROFILING.md","ref":"PROFILING.md","articles":[]},"previous":{"title":"Configuration","level":"1.4.3","depth":2,"path":"setup/CONFIGURATION.md","ref":"setup/CONFIGURATION.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"COMMAND.md","mtime":"2020-02-14T22:58:57.856Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-02-14T23:00:10.138Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>

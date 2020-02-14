@@ -8,7 +8,7 @@ Contact: [hls4ml.help@gmail.com](mailto:hls4ml.help@gmail.com)
 
 ## Project status
 
-For the latest status including current and planned features, see the <a href="STATUS.html">Status and Features</a> page. 
+For the latest status including current and planned features, see the [Status and Features](STATUS.md) page. 
 
 
 

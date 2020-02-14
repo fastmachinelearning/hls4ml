@@ -1,4 +1,4 @@
-**v0.1.6:** We just release a new version of `hls4ml`, which includes the following new features:
+**[14/2/2020]** We just added the following new features to the `master` branch:
 
 - `tf_to_hls` tool for converting tensorflow models (protobufs)
 
@@ -17,6 +17,15 @@
 - Fused Batch Normalisation into Dense layer optimsation.
 
 ---
+**v0.1.6:**
+
+- Support for larger Dense layers (enabled with Strategy: Resource in the configuration file)
+- Binary/Ternary NN refinements
+- Built-in optimization framework
+- Optional C/RTL validation
+
+
+---
 **v0.1.5**: Per-layer precision and reuse factor
 
 ---
@@ -25,6 +34,7 @@
 --- 
 **v0.1.2**: First beta release
    * some bug fixes for pipelining and support for layer types
+
 ---
 **v0.0.2**: first alpha release
    * full translation of DNNs from Keras 

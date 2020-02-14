@@ -18,7 +18,7 @@ git clean -fx _book
 git add .
 
 # commit
-git commit -a -m "More details in config, release notes, add command help section"
+git commit -a -m "formatting, documented all commands"
 
 # push to the origin
 git push origin gh-pages
