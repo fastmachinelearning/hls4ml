@@ -7,7 +7,7 @@ Using a low precision can help reduce the FPGA resource usage of a model, but ma
 
 Profiling uses some extra dependencies, to install these, run `pip install .[profiling]` from the `hls4ml` root. The profiling tools are provided as a `Python` module which you can use.
 
-Three types of objects can be provided: a Keras model object, test data, and an HLSModel object.
+Three types of objects can be provided: **a Keras model object**, **test data**, and an **HLSModel object**.
 You will need to initialise these objects by using a trained model, loading a model from a file, and loading your data. The Keras model and data each need to be in the format that would normally allow you to run, e.g. `model.predict(X)`.
 
 ```

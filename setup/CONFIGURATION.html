@@ -57,7 +57,7 @@
     <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="../PROFILING.html" />
+    <link rel="next" href="../COMMAND.html" />
     
     
     <link rel="prev" href="QUICKSTART.html" />
@@ -102,7 +102,20 @@
             
         </li>
     
-        <li class="chapter " data-level="1.2" data-path="../STATUS.html">
+        <li class="chapter " data-level="1.2" data-path="../RELEASENOTES.html">
+            
+                <a href="../RELEASENOTES.html">
+            
+                    
+                    Release Notes
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="../STATUS.html">
             
                 <a href="../STATUS.html">
             
@@ -115,7 +128,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.3" data-path="../SETUP.html">
+        <li class="chapter " data-level="1.4" data-path="../SETUP.html">
             
                 <a href="../SETUP.html">
             
@@ -129,7 +142,7 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.3.1" data-path="DEPENDENCIES.html">
+        <li class="chapter " data-level="1.4.1" data-path="DEPENDENCIES.html">
             
                 <a href="DEPENDENCIES.html">
             
@@ -142,7 +155,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.3.2" data-path="QUICKSTART.html">
+        <li class="chapter " data-level="1.4.2" data-path="QUICKSTART.html">
             
                 <a href="QUICKSTART.html">
             
@@ -155,7 +168,7 @@
             
         </li>
     
-        <li class="chapter active" data-level="1.3.3" data-path="CONFIGURATION.html">
+        <li class="chapter active" data-level="1.4.3" data-path="CONFIGURATION.html">
             
                 <a href="CONFIGURATION.html">
             
@@ -173,7 +186,20 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4" data-path="../PROFILING.html">
+        <li class="chapter " data-level="1.5" data-path="../COMMAND.html">
+            
+                <a href="../COMMAND.html">
+            
+                    
+                    Command help
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="../PROFILING.html">
             
                 <a href="../PROFILING.html">
             
@@ -186,7 +212,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5" data-path="../CONCEPTS.html">
+        <li class="chapter " data-level="1.7" data-path="../CONCEPTS.html">
             
                 <a href="../CONCEPTS.html">
             
@@ -199,7 +225,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.6" data-path="../REFERENCE.html">
+        <li class="chapter " data-level="1.8" data-path="../REFERENCE.html">
             
                 <a href="../REFERENCE.html">
             
@@ -212,7 +238,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.7" >
+        <li class="chapter " data-level="1.9" >
             
                 <a target="_blank" href="https://github.com/hls-fpga-machine-learning/HLS4ML">
             
@@ -281,8 +307,8 @@
 <p>It looks like this:</p>
 <pre><code>KerasJson: keras/KERAS_3layer.json
 KerasH5:   keras/KERAS_3layer_weights.h5 #You can also use h5 file from Keras&apos;s model.save() and leave KerasJson blank.
-#InputData: keras/KERAS_3layer_input_features.dat
-#OutputPredictions: keras/KERAS_3layer_predictions.dat
+InputData: keras/KERAS_3layer_input_features.dat
+OutputPredictions: keras/KERAS_3layer_predictions.dat
 OutputDir: my-hls-test
 ProjectName: myproject
 XilinxPart: xcku115-flvb2104-2-i
@@ -293,12 +319,12 @@ HLSConfig:
   Model:
     Precision: ap_fixed&lt;16,6&gt;
     ReuseFactor: 1
-#   Strategy: Latency 
-#  LayerType:
-#    Dense:
-#      ReuseFactor: 2
-#      Strategy: Resource
-#      Compression: True
+    Strategy: Latency 
+  LayerType:
+    Dense:
+      ReuseFactor: 2
+      Strategy: Resource
+      Compression: True
 </code></pre><p>There are a number of configuration options that you have.  Let&apos;s go through them.  You have basic setup parameters: </p>
 <ul>
 <li><strong>KerasJson/KerasH5</strong>: for Keras, the model architecture and weights are stored in a <code>json</code> and <code>h5</code> file.  The path to those files are required here. 
@@ -312,7 +338,8 @@ Then you have some optimization parameters for how your algorithm runs:</li>
 <li><strong>IOType</strong>: your options are <code>io_parallel</code> or <code>io_serial</code> where this really defines if you are pipelining your algorithm or not</li>
 <li><strong>ReuseFactor</strong>: in the case that you are pipelining, this defines the pipeline interval or initiation interval</li>
 <li><strong>Strategy</strong>: Optimization strategy on FPGA, either &quot;Latency&quot; or &quot;Resource&quot;. If none is supplied then hl4ml uses &quot;Latency&quot; as default. Note that a reuse factor larger than 1 should be specified when using &quot;resource&quot; strategy. An example of using larger reuse factor can be found <a href="https://github.com/hls-fpga-machine-learning/models/tree/master/keras/KERAS_dense" target="_blank">here.</a></li>
-<li><strong>Precision</strong>: this defines the precsion of your inputs, outputs, weights and biases. It is denoted by <code>&lt;X,Y&gt;</code>, where <code>Y</code> is the number of bits representing the signed number above the binary point (i.e. the integer part), and X is the total number of bits. You have a chance to further configure this more finely with per-layer configuration described below.</li>
+<li><strong>Precision</strong>: this defines the precsion of your inputs, outputs, weights and biases. It is denoted by <code>ap_fixed&lt;X,Y&gt;</code>, where <code>Y</code> is the number of bits representing the signed number above the binary point (i.e. the integer part), and <code>X</code> is the total number of bits.
+Additionally, integers in fixed precision data type (<code>ap_int&lt;N&gt;</code>, where <code>N</code> is a bit-size from 1 to 1024) can also be used. You have a chance to further configure this more finely with per-layer configuration described below.</li>
 </ul>
 <p><strong>Per-layer configuration:</strong>
 In the hls4ml configuration file, it is possible to specify the model <em>Precision</em> and <em>ReuseFactor</em> with finer granularity.</p>
@@ -418,7 +445,7 @@ An example is <a href="https://github.com/hls-fpga-machine-learning/hls4ml/blob/
                 </a>
                 
                 
-                <a href="../PROFILING.html" class="navigation navigation-next " aria-label="Next page: Profiling">
+                <a href="../COMMAND.html" class="navigation navigation-next " aria-label="Next page: Command help">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -429,7 +456,7 @@ An example is <a href="https://github.com/hls-fpga-machine-learning/hls4ml/blob/
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Configuration","level":"1.3.3","depth":2,"next":{"title":"Profiling","level":"1.4","depth":1,"path":"PROFILING.md","ref":"PROFILING.md","articles":[]},"previous":{"title":"Quick Start","level":"1.3.2","depth":2,"path":"setup/QUICKSTART.md","ref":"setup/QUICKSTART.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/CONFIGURATION.md","mtime":"2020-02-13T16:39:19.006Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-02-13T16:40:10.958Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Configuration","level":"1.4.3","depth":2,"next":{"title":"Command help","level":"1.5","depth":1,"path":"COMMAND.md","ref":"COMMAND.md","articles":[]},"previous":{"title":"Quick Start","level":"1.4.2","depth":2,"path":"setup/QUICKSTART.md","ref":"setup/QUICKSTART.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/CONFIGURATION.md","mtime":"2020-02-13T18:05:21.359Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-02-14T21:46:24.932Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>

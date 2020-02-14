@@ -18,7 +18,7 @@ git clean -fx _book
 git add .
 
 # commit
-git commit -a -m "Explain precision notation"
+git commit -a -m "More details in config, release notes, add command help section"
 
 # push to the origin
 git push origin gh-pages

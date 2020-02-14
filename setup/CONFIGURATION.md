@@ -16,8 +16,8 @@ It looks like this:
 ```
 KerasJson: keras/KERAS_3layer.json
 KerasH5:   keras/KERAS_3layer_weights.h5 #You can also use h5 file from Keras's model.save() and leave KerasJson blank.
-#InputData: keras/KERAS_3layer_input_features.dat
-#OutputPredictions: keras/KERAS_3layer_predictions.dat
+InputData: keras/KERAS_3layer_input_features.dat
+OutputPredictions: keras/KERAS_3layer_predictions.dat
 OutputDir: my-hls-test
 ProjectName: myproject
 XilinxPart: xcku115-flvb2104-2-i
@@ -28,12 +28,12 @@ HLSConfig:
   Model:
     Precision: ap_fixed<16,6>
     ReuseFactor: 1
-#   Strategy: Latency 
-#  LayerType:
-#    Dense:
-#      ReuseFactor: 2
-#      Strategy: Resource
-#      Compression: True
+    Strategy: Latency 
+  LayerType:
+    Dense:
+      ReuseFactor: 2
+      Strategy: Resource
+      Compression: True
 ```
 
 There are a number of configuration options that you have.  Let's go through them.  You have basic setup parameters: 
@@ -48,7 +48,8 @@ Then you have some optimization parameters for how your algorithm runs:
    * **IOType**: your options are `io_parallel` or `io_serial` where this really defines if you are pipelining your algorithm or not
    * **ReuseFactor**: in the case that you are pipelining, this defines the pipeline interval or initiation interval
    * **Strategy**: Optimization strategy on FPGA, either "Latency" or "Resource". If none is supplied then hl4ml uses "Latency" as default. Note that a reuse factor larger than 1 should be specified when using "resource" strategy. An example of using larger reuse factor can be found [here.](https://github.com/hls-fpga-machine-learning/models/tree/master/keras/KERAS_dense)
-   * **Precision**: this defines the precsion of your inputs, outputs, weights and biases. It is denoted by `<X,Y>`, where `Y` is the number of bits representing the signed number above the binary point (i.e. the integer part), and X is the total number of bits. You have a chance to further configure this more finely with per-layer configuration described below.
+   * **Precision**: this defines the precsion of your inputs, outputs, weights and biases. It is denoted by `ap_fixed<X,Y>`, where `Y` is the number of bits representing the signed number above the binary point (i.e. the integer part), and `X` is the total number of bits.
+   Additionally, integers in fixed precision data type (`ap_int<N>`, where `N` is a bit-size from 1 to 1024) can also be used. You have a chance to further configure this more finely with per-layer configuration described below.
 
 
 **Per-layer configuration:**
@@ -109,8 +110,6 @@ HLSConfig:
     dense2:
        ...
 ```
-
-
 
 For more information on the optimization parameters and what they mean, you can visit the <a href="../CONCEPTS.html">Concepts</a> chapter.
 

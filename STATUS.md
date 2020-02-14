@@ -1,6 +1,6 @@
 # Status
 
-The latest stable release is [**v0.1.6**](https://github.com/hls-fpga-machine-learning/hls4ml/releases), including a validated Boosted Decision Tree model based on our paper, [arXiv:2002.02534](https://arxiv.org/abs/2002.02534).
+The latest stable release is [v0.1.6](RELEASENOTES.md), including a validated Boosted Decision Tree model based on our paper, [arXiv:2002.02534](https://arxiv.org/abs/2002.02534).
 
 # Features
 
