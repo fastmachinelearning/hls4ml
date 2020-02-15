@@ -14,11 +14,15 @@ You will need to initialise these objects by using a trained model, loading a mo
 from hls4ml.model.profiling import numerical
 from hls4ml.converters import keras_to_hls
 import matplotlib.pyplot as plt
+import yaml
 
 # pseudo code:
 model = load_model()
 X = load_data()
-config = load_config() # load your hls4ml .yml config file with yaml
+
+# load your hls4ml .yml config file with yaml
+with open("keras-config.yml", 'r') as ymlfile:
+    config = yaml.load(ymlfile)
 
 # real code:
 hls_model = keras_to_hls(config)

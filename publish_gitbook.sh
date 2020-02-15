@@ -18,7 +18,7 @@ git clean -fx _book
 git add .
 
 # commit
-git commit -a -m "formatting, documented all commands"
+git commit -a -m "add more details in profiling's example code"
 
 # push to the origin
 git push origin gh-pages
