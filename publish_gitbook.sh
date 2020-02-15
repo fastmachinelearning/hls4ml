@@ -18,7 +18,7 @@ git clean -fx _book
 git add .
 
 # commit
-git commit -a -m "add more details in profiling's example code"
+git commit -a -m "fix bug in profiling code, numerical() does not accept hls_model as an argument"
 
 # push to the origin
 git push origin gh-pages

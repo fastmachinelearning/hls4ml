@@ -29,7 +29,7 @@ hls_model = keras_to_hls(config)
 
 # produce an activation profile (ap)
 # and weights profile (wp)
-ap, wp = numerical(keras_model=model, hls_model=hls_model, X=X)
+ap, wp = numerical(keras_model=model, X=X)
 plt.show()
 ```
 
