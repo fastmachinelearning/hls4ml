@@ -991,10 +991,13 @@ class GarNet(Layer):
         params = self._default_function_params()
         if self.attributes['input_format'] == 'xn':
             integer_input = 'input_2'
+            params['uinput_t'] = 'input_t'
+            params['uinput'] = 'nullptr'
         elif self.attributes['input_format'] == 'xen':
-            params['input_t'] = 'input_t, input2_t'
-            params['input'] = 'input_1, input_2'
             integer_input = 'input_3'
+            params['uinput_t'] = 'input2_t'
+            params['uinput'] = 'input_2'
+
         params['integer_input_t'] = self.get_input_variable(integer_input).type.name
         params['nvtx'] = self.get_input_variable(self.inputs[-1]).name
 
