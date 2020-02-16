@@ -990,16 +990,19 @@ class GarNet(Layer):
     def function_cpp(self):
         params = self._default_function_params()
         if self.attributes['input_format'] == 'xn':
-            integer_input = 'input_2'
-            params['uinput_t'] = 'input_t'
-            params['uinput'] = 'nullptr'
+            sdata = self.get_input_variable(self.inputs[0])
+            integer_input = self.get_input_variable(self.inputs[1])
+            params['input_t'] = sdata.type.name
+            params['input'] = sdata.name
         elif self.attributes['input_format'] == 'xen':
-            integer_input = 'input_3'
-            params['uinput_t'] = 'input2_t'
-            params['uinput'] = 'input_2'
+            sdata = self.get_input_variable(self.inputs[0])
+            udata = self.get_input_variable(self.inputs[1])
+            integer_input = self.get_input_variable(self.inputs[2])
+            params['input_t'] = '%s, %s' % (sdata.type.name, udata.type.name)
+            params['input'] = '%s, %s' % (sdata.name, udata.name)
 
-        params['integer_input_t'] = self.get_input_variable(integer_input).type.name
-        params['nvtx'] = self.get_input_variable(self.inputs[-1]).name
+        params['integer_input_t'] = integer_input.type.name
+        params['nvtx'] = integer_input.name
 
         if self.ref_impl:
             params['output_transform'] = '%s, %s' % (self.get_weights('output_transform_weights').name, self.get_weights('output_transform_biases').name)
