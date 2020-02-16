@@ -18,7 +18,7 @@ git clean -fx _book
 git add .
 
 # commit
-git commit -a -m "fix bug in profiling code, numerical() does not accept hls_model as an argument"
+git commit -a -m "Changed documentation for detailed hls configuration, add link to new hls project converted using hack7"
 
 # push to the origin
 git push origin gh-pages

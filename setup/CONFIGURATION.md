@@ -115,41 +115,48 @@ For more information on the optimization parameters and what they mean, you can 
 
 ---
 
-### Detailed configuration
+### Detailed configuration in converted hls codes
+
+**NOTE**: this section is developer-oriented.
 
 After you create your project, you have the opportunity to do more configuration if you so choose.  
-In your project, the file `<OutputDir>/firmware/<ProjectName>.cpp` is your top level file.  It has the network architecture constructed for you.  An example is [here](https://github.com/hls-fpga-machine-learning/hls4ml/blob/master/example-prjs/higgs-1layer/firmware/myproject.cpp) and the important snippet is:
+In your project, the file `<OutputDir>/firmware/<ProjectName>.cpp` is your top level file.  It has the network architecture constructed for you.  An example is [here](https://github.com/hls-fpga-machine-learning/models/blob/master/HLS_projects/KERAS-1layer-hls/firmware/myproject.cpp) and the important snippet is:
 
 ```
-layer1_t layer1_out[N_LAYER_1];
-#pragma HLS ARRAY_PARTITION variable=layer1_out complete
-layer1_t logits1[N_LAYER_1];
-#pragma HLS ARRAY_PARTITION variable=logits1 complete
-nnet::compute_layer<input_t, layer1_t, config1>(data, logits1, w1, b1);
-nnet::relu<layer1_t, layer1_t, relu_config1>(logits1, layer1_out);
+layer2_t layer2_out[N_LAYER_2];
+#pragma HLS ARRAY_PARTITION variable=layer2_out complete dim=0
+nnet::dense_latency<input_t, layer2_t, config2>(input_1, layer2_out, w2, b2);
 
-result_t logits2[N_OUTPUTS];
-#pragma HLS ARRAY_PARTITION variable=logits2 complete
-nnet::compute_layer<layer1_t, result_t, config2>(layer1_out, logits2, w2, b2);
-nnet::sigmoid<result_t, result_t, sigmoid_config2>(logits2, res);
+layer3_t layer3_out[N_LAYER_2];
+#pragma HLS ARRAY_PARTITION variable=layer3_out complete dim=0
+nnet::relu<layer2_t, layer3_t, relu_config3>(layer2_out, layer3_out);
+
+layer4_t layer4_out[N_LAYER_4];
+#pragma HLS ARRAY_PARTITION variable=layer4_out complete dim=0
+nnet::dense_latency<layer3_t, layer4_t, config4>(layer3_out, layer4_out, w4, b4);
+
+nnet::sigmoid<layer4_t, result_t, sigmoid_config5>(layer4_out, layer5_out);
 ```
 
-You can see, for the simple 1-layer DNN, the computation (`nnet::compute_layer`) and activation (`nnet::relu`/`nnet::sigmoid`) caluclation for each layer.  For each layer, it has its own additional configuration parameters, e.g. `config1`.
+You can see, for the simple 1-layer DNN, the computation (`nnet::dense_latency`) and activation (`nnet::relu`/`nnet::sigmoid`) caluclation for each layer.  For each layer, it has its own additional configuration parameters, e.g. `config2`.
 
 In your project, the file `<OutputDir>/firmware/parameters.h` stores all the configuration options for each neural network library.
-An example is [here](https://github.com/hls-fpga-machine-learning/hls4ml/blob/master/example-prjs/higgs-1layer/firmware/parameters.h). So for example, the detailed configuration options for an example DNN layer is:
+An example is [here](https://github.com/hls-fpga-machine-learning/models/blob/master/HLS_projects/KERAS-1layer-hls/firmware/parameters.h). So for example, the detailed configuration options for an example DNN layer is:
 ```
-struct config1 : nnet::layer_config {
-        static const unsigned n_in = N_INPUTS;
-        static const unsigned n_out = N_LAYER_1;
-        static const unsigned io_type = nnet::io_parallel;
-        static const unsigned reuse_factor = 1;
-        static const unsigned n_zeros = 0;
-        static const bool store_weights_in_bram = false;
-        typedef accum_default_t accum_t;
-        typedef bias_default_t bias_t;
-        typedef weight_default_t weight_t;
-        };
+//hls-fpga-machine-learning insert layer-config
+struct config2 : nnet::dense_config {
+    static const unsigned n_in = N_INPUT_1_1;
+    static const unsigned n_out = N_LAYER_2;
+    static const unsigned io_type = nnet::io_parallel;
+    static const unsigned reuse_factor = 1;
+    static const unsigned n_zeros = 0;
+    static const unsigned n_nonzeros = 320;
+    static const bool store_weights_in_bram = false;
+    typedef ap_fixed<16,6> accum_t;
+    typedef model_default_t bias_t;
+    typedef model_default_t weight_t;
+    typedef ap_uint<1> index_t;
+};
 ```
 It is at this stage that a user can even further configure their network HLS implementation in finer detail.
 
