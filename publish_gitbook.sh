@@ -18,7 +18,7 @@ git clean -fx _book
 git add .
 
 # commit
-git commit -a -m "Changed documentation for detailed hls configuration, add link to new hls project converted using hack7"
+git commit -a -m "update profiling example code"
 
 # push to the origin
 git push origin gh-pages

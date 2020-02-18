@@ -15,7 +15,7 @@ It looks like this:
 
 ```
 KerasJson: keras/KERAS_3layer.json
-KerasH5:   keras/KERAS_3layer_weights.h5 #You can also use h5 file from Keras's model.save() and leave KerasJson blank.
+KerasH5:   keras/KERAS_3layer_weights.h5 #You can also use h5 file from Keras's model.save() without supplying json file.
 InputData: keras/KERAS_3layer_input_features.dat
 OutputPredictions: keras/KERAS_3layer_predictions.dat
 OutputDir: my-hls-test
@@ -38,7 +38,7 @@ HLSConfig:
 
 There are a number of configuration options that you have.  Let's go through them.  You have basic setup parameters: 
    * **KerasJson/KerasH5**: for Keras, the model architecture and weights are stored in a `json` and `h5` file.  The path to those files are required here. 
-   We also support keras model's file obtained just from `model.save()`. In this case you can just leave the `KerasJson:` field blank. 
+   We also support keras model's file obtained just from `model.save()`. In this case you can just supply the `h5` file in `KerasH5:` field.
    * **InputData/OutputPredictions**: path to your input/predictions of the model. If none is supplied, then hls4ml will create aritificial data for simulation. The data used above in the example can be found [here](https://cernbox.cern.ch/index.php/s/2LTJVVwCYFfkg59). We also support `npy` data files. We welcome suggestions on more input data types to support. 
    * **OutputDir**: the output directory where you want your HLS project to appear
    * **ProjectName**: the name of the HLS project IP that is produced
