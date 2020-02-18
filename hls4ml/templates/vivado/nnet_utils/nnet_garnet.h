@@ -157,14 +157,13 @@ namespace nnet {
     void
     normalize_output_biases(
       nvtx_T const nvtx,
-      typename CONFIG_T::output_transform_biases_t const original[CONFIG_T::n_out_features],
       typename CONFIG_T::output_transform_biases_t normalized[CONFIG_T::n_out_features]
     )
     {
      OutFeatures:
       for (unsigned io = 0; io < CONFIG_T::n_out_features; ++io) {
         #pragma HLS UNROLL
-        typename CONFIG_T::aggr_t bias = original[io];
+        typename CONFIG_T::aggr_t bias = CONFIG_T::output_transform_biases[io];
         bias *= nvtx;
         bias = normalize_log2(bias, CONFIG_T::n_vertices_width);
         normalized[io] = bias;
@@ -233,8 +232,6 @@ namespace nnet {
     compute_edges_aggregates(
       data_T const data[CONFIG_T::n_vertices * CONFIG_T::n_in_features],
       nvtx_T const nvtx,
-      typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_aggregators * CONFIG_T::n_in_features],
-      typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators],
       typename CONFIG_T::edge_weight_t edge_weights[CONFIG_T::n_vertices * CONFIG_T::n_aggregators],
       typename CONFIG_T::edge_weight_t edge_weight_mean[CONFIG_T::n_aggregators],
       data_T weighted_feature_mean[CONFIG_T::n_aggregators * CONFIG_T::n_in_features]
@@ -276,14 +273,14 @@ namespace nnet {
     
          Aggregators1:
           for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia) {
-            typename CONFIG_T::distance_t distance = aggregator_distance_biases[ia];
+            typename CONFIG_T::distance_t distance = CONFIG_T::aggregator_distance_biases[ia];
     
            InFeatures1:
             for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix) {
               unsigned const iax = ia * CONFIG_T::n_in_features + ix;
               unsigned const ivx = iv * CONFIG_T::n_in_features + ix;
     
-              typename CONFIG_T::distance_t incr = data[ivx] * aggregator_distance_weights[iax];
+              typename CONFIG_T::distance_t incr = data[ivx] * CONFIG_T::aggregator_distance_weights[iax];
     
               distance += incr;
             }
@@ -330,8 +327,6 @@ namespace nnet {
     compute_aggregates(
       data_T const data[CONFIG_T::n_vertices * CONFIG_T::n_in_features],
       nvtx_T const nvtx,
-      typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_aggregators * CONFIG_T::n_in_features],
-      typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators],
       typename CONFIG_T::edge_weight_t edge_weight_mean[CONFIG_T::n_aggregators],
       data_T weighted_feature_mean[CONFIG_T::n_aggregators * CONFIG_T::n_in_features]
     )
@@ -372,14 +367,14 @@ namespace nnet {
     
          Aggregators1:
           for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia) {
-            typename CONFIG_T::distance_t distance = aggregator_distance_biases[ia];
+            typename CONFIG_T::distance_t distance = CONFIG_T::aggregator_distance_biases[ia];
     
            InFeatures1:
             for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix) {
               unsigned const iax = ia * CONFIG_T::n_in_features + ix;
               unsigned const ivx = iv * CONFIG_T::n_in_features + ix;
     
-              typename CONFIG_T::distance_t incr = data[ivx] * aggregator_distance_weights[iax];
+              typename CONFIG_T::distance_t incr = data[ivx] * CONFIG_T::aggregator_distance_weights[iax];
     
               distance += incr;
             }
@@ -421,9 +416,6 @@ namespace nnet {
     void
     set_vertex_output(
       nvtx_T const nvtx,
-      typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_out_features * CONFIG_T::n_aggregators * CONFIG_T::n_in_features],
-      typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_out_features * CONFIG_T::n_aggregators],
-      typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_out_features],
       typename CONFIG_T::edge_weight_t const edge_weights[CONFIG_T::n_vertices * CONFIG_T::n_aggregators],
       typename CONFIG_T::edge_weight_t const edge_weight_mean[CONFIG_T::n_aggregators],
       data_T const weighted_feature_mean[CONFIG_T::n_aggregators * CONFIG_T::n_in_features],
@@ -441,7 +433,7 @@ namespace nnet {
           #pragma HLS UNROLL
           unsigned const ioa = io * CONFIG_T::n_aggregators + ia;
 
-          typename CONFIG_T::aggr_t aggregated_weight = edge_weight_mean[ia] * input_transform_biases[ioa];
+          typename CONFIG_T::aggr_t aggregated_weight = edge_weight_mean[ia] * CONFIG_T::input_transform_biases[ioa];
     
          InFeatures:
           for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix) {
@@ -449,7 +441,7 @@ namespace nnet {
             unsigned const ioax = ioa * CONFIG_T::n_in_features + ix;
             unsigned const iax = ia * CONFIG_T::n_in_features + ix;
 
-            aggregated_weight += weighted_feature_mean[iax] * input_transform_weights[ioax];
+            aggregated_weight += weighted_feature_mean[iax] * CONFIG_T::input_transform_weights[ioax];
           }
 
           aggregated_weights[ioa] = aggregated_weight;
@@ -477,7 +469,7 @@ namespace nnet {
           for (unsigned io = 0; io < CONFIG_T::n_out_features; ++io) {
             unsigned const ivo = iv * CONFIG_T::n_out_features + io;
     
-            res_T acc = output_transform_biases[io];
+            res_T acc = CONFIG_T::output_transform_biases[io];
     
            Aggregators2:
             for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia) {
@@ -496,8 +488,6 @@ namespace nnet {
     template<class CONFIG_T, class data_T = float, class res_T = float>
     void
     set_aggregate_output(
-      typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_out_features * CONFIG_T::n_aggregators * CONFIG_T::n_in_features],
-      typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_out_features * CONFIG_T::n_aggregators],
       typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_out_features],
       typename CONFIG_T::edge_weight_t const edge_weight_mean[CONFIG_T::n_aggregators],
       data_T const weighted_feature_mean[CONFIG_T::n_aggregators * CONFIG_T::n_in_features],
@@ -514,14 +504,14 @@ namespace nnet {
         for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia) {
           unsigned const ioa = io * CONFIG_T::n_aggregators + ia;
     
-          typename CONFIG_T::aggr_t aggregated_weight = edge_weight_mean[ia] * input_transform_biases[ioa];
+          typename CONFIG_T::aggr_t aggregated_weight = edge_weight_mean[ia] * CONFIG_T::input_transform_biases[ioa];
     
          InFeatures:
           for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix) {
             unsigned const ioax = ioa * CONFIG_T::n_in_features + ix;
             unsigned const iax = ia * CONFIG_T::n_in_features + ix;
 
-            aggregated_weight += weighted_feature_mean[iax] * input_transform_weights[ioax];
+            aggregated_weight += weighted_feature_mean[iax] * CONFIG_T::input_transform_weights[ioax];
           }
 
           acc += edge_weight_mean[ia] * aggregated_weight;
@@ -681,14 +671,9 @@ namespace nnet {
     typename std::enable_if<std::is_same<this_layer_t, last_layer>::value>::type
     compute_aggregates_stack(
       nvtx_T const nvtx,
-      typename this_layer_t::input_transform_weights_t const input_transform_weights[prev_layer_t::n_out_features * prev_layer_t::n_aggregators * prev_layer_t::n_in_features],
-      typename this_layer_t::input_transform_biases_t const input_transform_biases[prev_layer_t::n_out_features * prev_layer_t::n_aggregators],
-      typename this_layer_t::output_transform_biases_t const output_transform_biases[prev_layer_t::n_out_features],
       typename this_layer_t::edge_weight_t const edge_weights[this_layer_t::n_vertices * prev_layer_t::n_aggregators],
       typename this_layer_t::edge_weight_t const edge_weight_mean[prev_layer_t::n_aggregators],
       data_T const weighted_feature_mean[prev_layer_t::n_aggregators * prev_layer_t::n_in_features],
-      typename this_layer_t::aggregator_distance_weights_t const aggregator_distance_weights[this_layer_t::n_aggregators * this_layer_t::n_in_features],
-      typename this_layer_t::aggregator_distance_biases_t const aggregator_distance_biases[this_layer_t::n_aggregators],
       typename this_layer_t::edge_weight_t edge_weight_mean_out[last_layer::n_aggregators],
       data_T weighted_feature_mean_out[last_layer::n_aggregators * last_layer::n_in_features]
     )
@@ -706,7 +691,7 @@ namespace nnet {
           #pragma HLS UNROLL
           unsigned const ioa = io * prev_layer_t::n_aggregators + ia;
 
-          typename this_layer_t::aggr_t aggregated_weight = edge_weight_mean[ia] * input_transform_biases[ioa];
+          typename this_layer_t::aggr_t aggregated_weight = edge_weight_mean[ia] * prev_layer_t::input_transform_biases[ioa];
     
          InFeatures:
           for (unsigned ix = 0; ix < prev_layer_t::n_in_features; ++ix) {
@@ -714,7 +699,7 @@ namespace nnet {
             unsigned const ioax = ioa * prev_layer_t::n_in_features + ix;
             unsigned const iax = ia * prev_layer_t::n_in_features + ix;
 
-            aggregated_weight += weighted_feature_mean[iax] * input_transform_weights[ioax];
+            aggregated_weight += weighted_feature_mean[iax] * prev_layer_t::input_transform_weights[ioax];
           }
 
           aggregated_weights[ioa] = aggregated_weight;
@@ -725,9 +710,9 @@ namespace nnet {
       unsigned const log2_unroll_factor = this_layer_t::n_vertices_width - this_layer_t::log2_reuse_factor;
 
       typename this_layer_t::edge_weight_aggr_t edge_weight_accum[this_layer_t::n_aggregators];
-      #pragma HLS ARRAY_RESHAPE variable=edge_weight_accum complete      
+      #pragma HLS ARRAY_RESHAPE variable=edge_weight_accum complete
       typename this_layer_t::aggr_t weighted_feature_accum[this_layer_t::n_aggregators * this_layer_t::n_in_features];
-      #pragma HLS ARRAY_RESHAPE variable=weighted_feature_accum complete 
+      #pragma HLS ARRAY_RESHAPE variable=weighted_feature_accum complete
 
       garnet_utils::initialize_sums<this_layer_t::n_aggregators, this_layer_t::n_in_features>(edge_weight_accum, weighted_feature_accum);
       
@@ -760,7 +745,7 @@ namespace nnet {
           for (unsigned io = 0; io < prev_layer_t::n_out_features; ++io) {
             unsigned const ivo = iv * prev_layer_t::n_out_features + io;
     
-            data_T acc = output_transform_biases[io];
+            data_T acc = prev_layer_t::output_transform_biases[io];
     
            Aggregators2:
             for (unsigned ia = 0; ia < prev_layer_t::n_aggregators; ++ia) {
@@ -775,14 +760,14 @@ namespace nnet {
     
          Aggregators3:
           for (unsigned ia = 0; ia < this_layer_t::n_aggregators; ++ia) {
-            typename this_layer_t::distance_t distance = aggregator_distance_biases[ia];
+            typename this_layer_t::distance_t distance = this_layer_t::aggregator_distance_biases[ia];
     
            InFeatures1:
             for (unsigned ix = 0; ix < this_layer_t::n_in_features; ++ix) {
               unsigned const iax = ia * this_layer_t::n_in_features + ix;
               unsigned const ivx = iv * this_layer_t::n_in_features + ix;
     
-              typename this_layer_t::distance_t incr = data[ix] * aggregator_distance_weights[iax];
+              typename this_layer_t::distance_t incr = data[ix] * this_layer_t::aggregator_distance_weights[iax];
     
               distance += incr;
             }
@@ -824,14 +809,9 @@ namespace nnet {
     typename std::enable_if<not std::is_same<this_layer_t, last_layer>::value>::type
     compute_aggregates_stack(
       nvtx_T const nvtx,
-      typename this_layer_t::input_transform_weights_t const input_transform_weights[prev_layer_t::n_out_features * prev_layer_t::n_aggregators * prev_layer_t::n_in_features],
-      typename this_layer_t::input_transform_biases_t const input_transform_biases[prev_layer_t::n_out_features * prev_layer_t::n_aggregators],
-      typename this_layer_t::output_transform_biases_t const output_transform_biases[prev_layer_t::n_out_features],
       typename this_layer_t::edge_weight_t const edge_weights[this_layer_t::n_vertices * prev_layer_t::n_aggregators],
       typename this_layer_t::edge_weight_t const edge_weight_mean[prev_layer_t::n_aggregators],
       data_T const weighted_feature_mean[prev_layer_t::n_aggregators * prev_layer_t::n_in_features],
-      typename this_layer_t::aggregator_distance_weights_t const aggregator_distance_weights[this_layer_t::n_aggregators * this_layer_t::n_in_features],
-      typename this_layer_t::aggregator_distance_biases_t const aggregator_distance_biases[this_layer_t::n_aggregators],
       typename this_layer_t::edge_weight_t edge_weight_mean_out[last_layer::n_aggregators],
       data_T weighted_feature_mean_out[last_layer::n_aggregators * last_layer::n_in_features]
     )
@@ -848,14 +828,9 @@ namespace nnet {
 
       aggregates_stack_propagate<prev_layer_t, this_layer_t>(
         nvtx,
-        input_transform_weights,
-        input_transform_biases,
-        output_transform_biases,
         edge_weights,
         edge_weight_mean,
         weighted_feature_mean,
-        aggregator_distance_weights,
-        aggregator_distance_biases,
         edge_weights_next,
         edge_weight_mean_next,
         weighted_feature_mean_next
@@ -863,14 +838,9 @@ namespace nnet {
 
       compute_aggregates_stack<this_layer_t, typename this_layer_t::next_layer_t, last_layer>(
         nvtx,
-        input_transform_weights + (prev_layer_t::n_out_features * prev_layer_t::n_aggregators * prev_layer_t::n_in_features),
-        input_transform_biases + (prev_layer_t::n_out_features * prev_layer_t::n_aggregators),
-        output_transform_biases + (prev_layer_t::n_out_features),
         edge_weights,
         edge_weight_mean_next,
         weighted_feature_mean_next,
-        aggregator_distance_weights + (this_layer_t::n_aggregators * this_layer_t::n_in_features),
-        aggregator_distance_biases + (this_layer_t::n_aggregators),
         edge_weight_mean_out,
         weighted_feature_mean_out
       );
@@ -904,7 +874,13 @@ namespace nnet {
     typedef float edge_weight_aggr_t;
     typedef float aggr_t;
     typedef float uaggr_t;
-  
+
+    /* static const input_transform_weights_t (&input_transform_weights)[n_out_features * n_aggregators * n_in_features]; */
+    /* static const input_transform_biases_t (&input_transform_biases)[n_out_features * n_aggregators]; */
+    /* static const aggregator_distance_weights_t (&aggregator_distance_weights)[n_aggregators * n_in_features]; */
+    /* static const aggregator_distance_biases_t (&aggregator_distance_biases)[n_aggregators]; */
+    /* static const output_transform_biases_t (&output_transform_biases)[n_out_features]; */
+
     enum OutputCollapse {
       no_collapse,
       collapse_mean,
@@ -918,8 +894,6 @@ namespace nnet {
     // Optimization specs
     static const unsigned reuse_factor = 64;
     static const unsigned log2_reuse_factor = 6;
-
-    static constexpr unsigned tmp[5] = {0, 1, 2, 3, 4};
   };
 
   // vertices -> vertices
@@ -928,12 +902,7 @@ namespace nnet {
   garnet(
     data_T const data[CONFIG_T::n_vertices * CONFIG_T::n_in_features],
     nvtx_T const nvtx[1],
-    res_T res[CONFIG_T::n_vertices * CONFIG_T::n_out_features],
-    typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_out_features * CONFIG_T::n_aggregators * CONFIG_T::n_in_features],
-    typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_out_features * CONFIG_T::n_aggregators],
-    typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_aggregators * CONFIG_T::n_in_features],
-    typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators],
-    typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_out_features]
+    res_T res[CONFIG_T::n_vertices * CONFIG_T::n_out_features]
   )
   {
     #pragma HLS DATAFLOW
@@ -951,8 +920,6 @@ namespace nnet {
     garnet_utils::compute_edges_aggregates<CONFIG_T>(
       data,
       nvtx[0],
-      aggregator_distance_weights,
-      aggregator_distance_biases,
       edge_weights,
       edge_weight_mean,
       weighted_feature_mean
@@ -960,9 +927,6 @@ namespace nnet {
   
     garnet_utils::set_vertex_output<CONFIG_T>(
       nvtx[0],
-      input_transform_weights,
-      input_transform_biases,
-      output_transform_biases,
       edge_weights,
       edge_weight_mean,
       weighted_feature_mean,
@@ -976,12 +940,7 @@ namespace nnet {
   garnet(
     data_T const data[CONFIG_T::n_vertices * CONFIG_T::n_in_features],
     nvtx_T const nvtx[1],
-    res_T res[CONFIG_T::n_out_features],
-    typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_out_features * CONFIG_T::n_aggregators * CONFIG_T::n_in_features],
-    typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_out_features * CONFIG_T::n_aggregators],
-    typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_aggregators * CONFIG_T::n_in_features],
-    typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators],
-    typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_out_features]
+    res_T res[CONFIG_T::n_out_features]
   )
   {
     #pragma HLS DATAFLOW
@@ -995,8 +954,6 @@ namespace nnet {
     garnet_utils::compute_aggregates<CONFIG_T>(
       data,
       nvtx[0],
-      aggregator_distance_weights,
-      aggregator_distance_biases,
       edge_weight_mean,
       weighted_feature_mean
     );
@@ -1004,15 +961,13 @@ namespace nnet {
     typename CONFIG_T::output_transform_biases_t normalized_output_biases[CONFIG_T::n_out_features];
     typename CONFIG_T::output_transform_biases_t const* output_biases;
     if (CONFIG_T::mean_by_nvert)
-      output_biases = output_transform_biases;
+      output_biases = CONFIG_T::output_transform_biases;
     else {
-      garnet_utils::normalize_output_biases<CONFIG_T>(nvtx[0], output_transform_biases, normalized_output_biases);
+      garnet_utils::normalize_output_biases<CONFIG_T>(nvtx[0], normalized_output_biases);
       output_biases = normalized_output_biases;
     }
 
     garnet_utils::set_aggregate_output<CONFIG_T>(
-      input_transform_weights,
-      input_transform_biases,
       output_biases,
       edge_weight_mean,
       weighted_feature_mean,
@@ -1021,17 +976,12 @@ namespace nnet {
   }
 
   // vertices -> out features
-  template<class data_T, class nvtx_T, class res_T, typename CONFIG_T>
+  template<class data_T, class nvtx_T, class res_T, class CONFIG_T>
   typename std::enable_if<CONFIG_T::output_collapse == CONFIG_T::collapse_mean>::type
   garnet_stack(
     data_T const data[CONFIG_T::n_vertices * CONFIG_T::n_in_features],
     nvtx_T const nvtx[1],
-    res_T res[CONFIG_T::n_out_features],
-    typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_input_transform_weights],
-    typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_input_transform_biases],
-    typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_aggregator_distance_weights],
-    typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregator_distance_biases],
-    typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_output_transform_biases]
+    res_T res[CONFIG_T::n_out_features]
   )
   {
     #pragma HLS DATAFLOW
@@ -1059,8 +1009,6 @@ namespace nnet {
     garnet_utils::compute_edges_aggregates<first_layer_t>(
       data,
       nvtx[0],
-      aggregator_distance_weights,
-      aggregator_distance_biases,
       edge_weights_first,
       edge_weight_mean_first,
       weighted_feature_mean_first
@@ -1068,14 +1016,9 @@ namespace nnet {
 
     garnet_utils::compute_aggregates_stack<first_layer_t, typename first_layer_t::next_layer_t, last_layer_t>(
       nvtx[0],
-      input_transform_weights,
-      input_transform_biases,
-      output_transform_biases,
       edge_weights_first,
       edge_weight_mean_first,
       weighted_feature_mean_first,
-      aggregator_distance_weights + (first_layer_t::n_aggregators * first_layer_t::n_in_features),
-      aggregator_distance_biases + (first_layer_t::n_aggregators),
       edge_weight_mean_last,
       weighted_feature_mean_last
     );
@@ -1083,15 +1026,13 @@ namespace nnet {
     typename CONFIG_T::output_transform_biases_t normalized_output_biases[last_layer_t::n_out_features];
     typename CONFIG_T::output_transform_biases_t const* output_biases;
     if (CONFIG_T::mean_by_nvert)
-      output_biases = output_transform_biases + (CONFIG_T::n_output_transform_biases - last_layer_t::n_out_features);
+      output_biases = last_layer_t::output_transform_biases;
     else {
-      garnet_utils::normalize_output_biases<CONFIG_T>(nvtx[0], output_transform_biases + (CONFIG_T::n_output_transform_biases - last_layer_t::n_out_features), normalized_output_biases);
+      garnet_utils::normalize_output_biases<last_layer_t>(nvtx[0], normalized_output_biases);
       output_biases = normalized_output_biases;
     }
 
     garnet_utils::set_aggregate_output<last_layer_t>(
-      input_transform_weights + (CONFIG_T::n_input_transform_weights - last_layer_t::n_out_features * last_layer_t::n_aggregators * last_layer_t::n_in_features),
-      input_transform_biases + (CONFIG_T::n_input_transform_biases - last_layer_t::n_out_features * last_layer_t::n_aggregators),
       output_biases,
       edge_weight_mean_last,
       weighted_feature_mean_last,
@@ -1105,13 +1046,7 @@ namespace nnet {
   garnet_ref(
     data_T const data[CONFIG_T::n_vertices * CONFIG_T::n_in_features],
     nvtx_T const nvtx[1],
-    res_T res[CONFIG_T::n_vertices * CONFIG_T::n_out_features],
-    typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_propagate * CONFIG_T::n_in_features],
-    typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_propagate],
-    typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_aggregators * CONFIG_T::n_in_features],
-    typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators],
-    typename CONFIG_T::output_transform_weights_t const output_transform_weights[CONFIG_T::n_out_features * CONFIG_T::n_aggregators * CONFIG_T::n_propagate],
-    typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_out_features]
+    res_T res[CONFIG_T::n_vertices * CONFIG_T::n_out_features]
   )
   {
     typename CONFIG_T::edge_weight_t edge_weights[CONFIG_T::n_vertices * CONFIG_T::n_aggregators];
@@ -1124,26 +1059,26 @@ namespace nnet {
       for (unsigned ip = 0; ip < CONFIG_T::n_propagate; ++ip) {
         unsigned const ivp = iv * CONFIG_T::n_propagate + ip;
   
-        propagated_features[ivp] = input_transform_biases[ip];
+        propagated_features[ivp] = CONFIG_T::input_transform_biases[ip];
   
         for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix) {
           unsigned const ivx = iv * CONFIG_T::n_in_features + ix;
           unsigned const ipx = ip * CONFIG_T::n_in_features + ix;
   
-          propagated_features[ivp] += data[ivx] * input_transform_weights[ipx];
+          propagated_features[ivp] += data[ivx] * CONFIG_T::input_transform_weights[ipx];
         }
       }
   
       for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia) {
         unsigned const iva = iv * CONFIG_T::n_aggregators + ia;
   
-        typename CONFIG_T::aggr_t distance = aggregator_distance_biases[ia];
+        typename CONFIG_T::aggr_t distance = CONFIG_T::aggregator_distance_biases[ia];
   
         for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix) {
           unsigned const ivx = iv * CONFIG_T::n_in_features + ix;
           unsigned const iax = ia * CONFIG_T::n_in_features + ix;
   
-          distance += data[ivx] * aggregator_distance_weights[iax];
+          distance += data[ivx] * CONFIG_T::aggregator_distance_weights[iax];
         }
   
         edge_weights[iva] = garnet_utils::compute_edge_weight<CONFIG_T>(distance);
@@ -1190,7 +1125,7 @@ namespace nnet {
       for (unsigned io = 0; io < CONFIG_T::n_out_features; ++io) {
         unsigned const ivo = iv * CONFIG_T::n_out_features + io;
   
-        typename CONFIG_T::aggr_t acc = output_transform_biases[io];
+        typename CONFIG_T::aggr_t acc = CONFIG_T::output_transform_biases[io];
   
         for (unsigned ia = 0; ia < CONFIG_T::n_aggregators; ++ia) {
           unsigned const iva = iv * CONFIG_T::n_aggregators + ia;
@@ -1202,7 +1137,7 @@ namespace nnet {
             unsigned const iap = ia * CONFIG_T::n_propagate + ip;
             unsigned const ioap = ioa * CONFIG_T::n_propagate + ip;
   
-            aggr += output_transform_weights[ioap] * aggregated_features[iap];
+            aggr += CONFIG_T::output_transform_weights[ioap] * aggregated_features[iap];
           }
   
           acc += edge_weights[iva] * aggr;
@@ -1219,13 +1154,7 @@ namespace nnet {
   garnet_ref(
     data_T const data[CONFIG_T::n_vertices * CONFIG_T::n_in_features],
     nvtx_T const nvtx[1],
-    res_T res[CONFIG_T::n_out_features],
-    typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_propagate * CONFIG_T::n_in_features],
-    typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_propagate],
-    typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_aggregators * CONFIG_T::n_in_features],
-    typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators],
-    typename CONFIG_T::output_transform_weights_t const output_transform_weights[CONFIG_T::n_out_features * CONFIG_T::n_aggregators * CONFIG_T::n_propagate],
-    typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_out_features]
+    res_T res[CONFIG_T::n_out_features]
   )
   {
     typename CONFIG_T::aggr_t vertex_res[CONFIG_T::n_vertices * CONFIG_T::n_out_features];
@@ -1233,13 +1162,7 @@ namespace nnet {
     garnet_ref<CONFIG_T>(
       data,
       nvtx,
-      vertex_res,
-      input_transform_weights,
-      input_transform_biases,
-      aggregator_distance_weights,
-      aggregator_distance_biases,
-      output_transform_weights,
-      output_transform_biases
+      vertex_res
     );
   
     for (unsigned io = 0; io < CONFIG_T::n_out_features; ++io) {

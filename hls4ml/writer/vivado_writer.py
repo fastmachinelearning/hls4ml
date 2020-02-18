@@ -88,12 +88,6 @@ class VivadoWriter(Writer):
                 newline += indent + insize_str + ',\n'
                 newline += indent + outsize_str + '\n'
 
-            elif '//hls-fpga-machine-learning insert weights' in line:
-                newline = line
-                for layer in model.get_layers():
-                    for w in layer.get_weights():
-                        newline += '#include "weights/{}.h"\n'.format(w.name)
-
             elif '//hls-fpga-machine-learning insert load weights' in line:
                 newline = line
                 for layer in model.get_layers():
@@ -209,20 +203,15 @@ class VivadoWriter(Writer):
         f.close()
         fout.close()
 
-    def write_parameters(self, model):
+    def write_defines(self, model):
         filedir = os.path.dirname(os.path.abspath(__file__))
-        f = open(os.path.join(filedir,'../templates/vivado/firmware/parameters.h'),'r')
-        fout = open('{}/firmware/parameters.h'.format(model.config.get_output_dir()),'w')
+        f = open(os.path.join(filedir,'../templates/vivado/firmware/defines.h'),'r')
+        fout = open('{}/firmware/defines.h'.format(model.config.get_output_dir()),'w')
 
         for line in f.readlines():
 
-            if '//hls-fpga-machine-learning insert includes' in line:
-                newline = line
-                for include in sorted(set(sum((layer.include_list for layer in model.get_layers()), []))):
-                    newline += '#include "%s"\n' % include
-
             #Insert numbers
-            elif '//hls-fpga-machine-learning insert numbers' in line:
+            if '//hls-fpga-machine-learning insert numbers' in line:
                 newline = line
                 numbers = OrderedDict.fromkeys([layer.get_numbers_cpp() for layer in model.get_layers()])
                 newline += ''.join(numbers)
@@ -235,6 +224,30 @@ class VivadoWriter(Writer):
                     all_precision.update(layer_precision)
                 for used_type in all_precision.values():
                     newline += used_type.definition_cpp()
+
+            else:
+                newline = line
+            fout.write(newline)
+        f.close()
+        fout.close()
+
+    def write_parameters(self, model):
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        f = open(os.path.join(filedir,'../templates/vivado/firmware/parameters.h'),'r')
+        fout = open('{}/firmware/parameters.h'.format(model.config.get_output_dir()),'w')
+
+        for line in f.readlines():
+
+            if '//hls-fpga-machine-learning insert includes' in line:
+                newline = line
+                for include in sorted(set(sum((layer.include_list for layer in model.get_layers()), []))):
+                    newline += '#include "%s"\n' % include
+
+            elif '//hls-fpga-machine-learning insert weights' in line:
+                newline = line
+                for layer in model.get_layers():
+                    for w in layer.get_weights():
+                        newline += '#include "weights/{}.h"\n'.format(w.name)
 
             elif "//hls-fpga-machine-learning insert layer-config" in line:
                 newline = line
@@ -410,6 +423,7 @@ class VivadoWriter(Writer):
         self.write_project_cpp(model)
         self.write_project_header(model)
         self.write_weights(model)
+        self.write_defines(model)
         self.write_parameters(model)
         self.write_test_bench(model)
         self.write_build_script(model)

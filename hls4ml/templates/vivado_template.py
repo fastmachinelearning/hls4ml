@@ -156,9 +156,21 @@ garnet_config_template = """struct config{index} : nnet::garnet_config {{
     typedef {aggr_t} aggr_t;
     typedef {uaggr_t} uaggr_t;
 
+    static const input_transform_weights_t (&input_transform_weights)[n_out_features * n_aggregators * n_in_features];
+    static const input_transform_biases_t (&input_transform_biases)[n_out_features * n_aggregators];
+    static const aggregator_distance_weights_t (&aggregator_distance_weights)[n_aggregators * n_in_features];
+    static const aggregator_distance_biases_t (&aggregator_distance_biases)[n_aggregators];
+    static const output_transform_biases_t (&output_transform_biases)[n_out_features];
+
     static const unsigned reuse_factor = {reuse};
     static const unsigned log2_reuse_factor = {log2_reuse};
 }};
+
+const config{index}::input_transform_weights_t (&config{index}::input_transform_weights)[config{index}::n_out_features * config{index}::n_aggregators * config{index}::n_in_features] = {input_transform_weights};
+const config{index}::input_transform_biases_t (&config{index}::input_transform_biases)[config{index}::n_out_features * config{index}::n_aggregators] = {input_transform_biases};
+const config{index}::aggregator_distance_weights_t (&config{index}::aggregator_distance_weights)[config{index}::n_aggregators * config{index}::n_in_features] = {aggregator_distance_weights};
+const config{index}::aggregator_distance_biases_t (&config{index}::aggregator_distance_biases)[config{index}::n_aggregators] = {aggregator_distance_biases};
+const config{index}::output_transform_biases_t (&config{index}::output_transform_biases)[config{index}::n_out_features] = {output_transform_biases};
 """
 
 garnet_stack_config_template = """struct config{index}_base : nnet::garnet_config {{
@@ -175,12 +187,6 @@ garnet_stack_config_template = """struct config{index}_base : nnet::garnet_confi
     typedef {aggregator_distance_biases_t} aggregator_distance_biases_t;
     typedef {output_transform_weights_t} output_transform_weights_t;
     typedef {output_transform_biases_t} output_transform_biases_t;
-
-    static const unsigned n_input_transform_weights = {n_input_transform_weights};
-    static const unsigned n_input_transform_biases = {n_input_transform_biases};
-    static const unsigned n_aggregator_distance_weights = {n_aggregator_distance_weights};
-    static const unsigned n_aggregator_distance_biases = {n_aggregator_distance_biases};
-    static const unsigned n_output_transform_biases = {n_output_transform_biases};
 
     typedef {norm_t} norm_t;
     typedef ap_fixed<{distance_width}, {distance_nint}, AP_TRN, AP_SAT> distance_t;
@@ -225,8 +231,8 @@ param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {conf
 pooling1d_function_template = 'nnet::pooling1d<{input_t}, {config}>({input}, {output});'
 pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {config}>({input}, {output});'
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
-garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output}, {input_transform_weights}, {input_transform_biases}, {aggregator_distance_weights}, {aggregator_distance_biases}, {output_transform});'
-garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output}, {input_transform_weights}, {input_transform_biases}, {aggregator_distance_weights}, {aggregator_distance_biases}, {output_transform});'
+garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
+garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
 
 '''function_templates = {
     'Dense'                  : dense_function_template,

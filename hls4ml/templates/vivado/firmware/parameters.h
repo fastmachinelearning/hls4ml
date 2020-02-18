@@ -8,9 +8,7 @@
 #include "nnet_utils/nnet_helpers.h"
 //hls-fpga-machine-learning insert includes
 
-//hls-fpga-machine-learning insert numbers
-
-//hls-fpga-machine-learning insert layer-precision
+//hls-fpga-machine-learning insert weights
 
 //hls-fpga-machine-learning insert layer-config
 
