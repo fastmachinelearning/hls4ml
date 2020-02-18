@@ -525,14 +525,9 @@ namespace nnet {
     void
     aggregates_stack_propagate(
       nvtx_T const nvtx,
-      typename this_layer_t::input_transform_weights_t const input_transform_weights[prev_layer_t::n_out_features * prev_layer_t::n_aggregators * prev_layer_t::n_in_features],
-      typename this_layer_t::input_transform_biases_t const input_transform_biases[prev_layer_t::n_out_features * prev_layer_t::n_aggregators],
-      typename this_layer_t::output_transform_biases_t const output_transform_biases[prev_layer_t::n_out_features],
-      typename this_layer_t::edge_weight_t const edge_weights[this_layer_t::n_vertices * prev_layer_t::n_aggregators],
-      typename this_layer_t::edge_weight_t const edge_weight_mean[prev_layer_t::n_aggregators],
+      typename prev_layer_t::edge_weight_t const edge_weights[prev_layer_t::n_vertices * prev_layer_t::n_aggregators],
+      typename prev_layer_t::edge_weight_t const edge_weight_mean[prev_layer_t::n_aggregators],
       data_T const weighted_feature_mean[prev_layer_t::n_aggregators * prev_layer_t::n_in_features],
-      typename this_layer_t::aggregator_distance_weights_t const aggregator_distance_weights[this_layer_t::n_aggregators * this_layer_t::n_in_features],
-      typename this_layer_t::aggregator_distance_biases_t const aggregator_distance_biases[this_layer_t::n_aggregators],
       typename this_layer_t::edge_weight_t edge_weights_next[this_layer_t::n_vertices * this_layer_t::n_aggregators],
       typename this_layer_t::edge_weight_t edge_weight_mean_next[this_layer_t::n_aggregators],
       data_T weighted_feature_mean_next[this_layer_t::n_aggregators * this_layer_t::n_in_features]
@@ -549,7 +544,7 @@ namespace nnet {
           #pragma HLS UNROLL
           unsigned const ioa = io * prev_layer_t::n_aggregators + ia;
 
-          typename this_layer_t::aggr_t aggregated_weight = edge_weight_mean[ia] * input_transform_biases[ioa];
+          typename this_layer_t::aggr_t aggregated_weight = edge_weight_mean[ia] * prev_layer_t::input_transform_biases[ioa];
     
          InFeatures:
           for (unsigned ix = 0; ix < prev_layer_t::n_in_features; ++ix) {
@@ -557,7 +552,7 @@ namespace nnet {
             unsigned const ioax = ioa * prev_layer_t::n_in_features + ix;
             unsigned const iax = ia * prev_layer_t::n_in_features + ix;
 
-            aggregated_weight += weighted_feature_mean[iax] * input_transform_weights[ioax];
+            aggregated_weight += weighted_feature_mean[iax] * prev_layer_t::input_transform_weights[ioax];
           }
 
           aggregated_weights[ioa] = aggregated_weight;
@@ -568,9 +563,9 @@ namespace nnet {
       unsigned const log2_unroll_factor = this_layer_t::n_vertices_width - this_layer_t::log2_reuse_factor;
 
       typename this_layer_t::edge_weight_aggr_t edge_weight_accum[this_layer_t::n_aggregators];
-      #pragma HLS ARRAY_RESHAPE variable=edge_weight_accum complete      
+      #pragma HLS ARRAY_RESHAPE variable=edge_weight_accum complete
       typename this_layer_t::aggr_t weighted_feature_accum[this_layer_t::n_aggregators * this_layer_t::n_in_features];
-      #pragma HLS ARRAY_RESHAPE variable=weighted_feature_accum complete 
+      #pragma HLS ARRAY_RESHAPE variable=weighted_feature_accum complete
 
       garnet_utils::initialize_sums<this_layer_t::n_aggregators, this_layer_t::n_in_features>(edge_weight_accum, weighted_feature_accum);
       
@@ -603,14 +598,14 @@ namespace nnet {
           for (unsigned io = 0; io < prev_layer_t::n_out_features; ++io) {
             unsigned const ivo = iv * prev_layer_t::n_out_features + io;
     
-            data_T acc = output_transform_biases[io];
+            data_T acc = prev_layer_t::output_transform_biases[io];
     
            Aggregators2:
             for (unsigned ia = 0; ia < prev_layer_t::n_aggregators; ++ia) {
               unsigned const iva = iv * prev_layer_t::n_aggregators + ia;
               unsigned const ioa = io * prev_layer_t::n_aggregators + ia;
     
-               acc += edge_weights[iva] * aggregated_weights[ioa];
+              acc += edge_weights[iva] * aggregated_weights[ioa];
             }
     
             data[io] = acc;
@@ -618,19 +613,19 @@ namespace nnet {
     
          Aggregators3:
           for (unsigned ia = 0; ia < this_layer_t::n_aggregators; ++ia) {
-            typename this_layer_t::distance_t distance = aggregator_distance_biases[ia];
+            typename this_layer_t::distance_t distance = this_layer_t::aggregator_distance_biases[ia];
     
            InFeatures1:
             for (unsigned ix = 0; ix < this_layer_t::n_in_features; ++ix) {
               unsigned const iax = ia * this_layer_t::n_in_features + ix;
               unsigned const ivx = iv * this_layer_t::n_in_features + ix;
     
-              typename this_layer_t::distance_t incr = data[ix] * aggregator_distance_weights[iax];
+              typename this_layer_t::distance_t incr = data[ix] * this_layer_t::aggregator_distance_weights[iax];
     
               distance += incr;
             }
     
-            typename this_layer_t::edge_weight_t edge_weight = garnet_utils::compute_edge_weight<this_layer_t>(distance);
+            typename this_layer_t::edge_weight_t edge_weight = garnet_utils::compute_edge_weight<typename this_layer_t::base_t>(distance);
     
             edge_weight_mean_local[ia] += edge_weight;
     
@@ -671,8 +666,8 @@ namespace nnet {
     typename std::enable_if<std::is_same<this_layer_t, last_layer>::value>::type
     compute_aggregates_stack(
       nvtx_T const nvtx,
-      typename this_layer_t::edge_weight_t const edge_weights[this_layer_t::n_vertices * prev_layer_t::n_aggregators],
-      typename this_layer_t::edge_weight_t const edge_weight_mean[prev_layer_t::n_aggregators],
+      typename prev_layer_t::edge_weight_t const edge_weights[prev_layer_t::n_vertices * prev_layer_t::n_aggregators],
+      typename prev_layer_t::edge_weight_t const edge_weight_mean[prev_layer_t::n_aggregators],
       data_T const weighted_feature_mean[prev_layer_t::n_aggregators * prev_layer_t::n_in_features],
       typename this_layer_t::edge_weight_t edge_weight_mean_out[last_layer::n_aggregators],
       data_T weighted_feature_mean_out[last_layer::n_aggregators * last_layer::n_in_features]
@@ -752,7 +747,7 @@ namespace nnet {
               unsigned const iva = iv * prev_layer_t::n_aggregators + ia;
               unsigned const ioa = io * prev_layer_t::n_aggregators + ia;
     
-               acc += edge_weights[iva] * aggregated_weights[ioa];
+              acc += edge_weights[iva] * aggregated_weights[ioa];
             }
     
             data[io] = acc;
@@ -772,7 +767,7 @@ namespace nnet {
               distance += incr;
             }
     
-            typename this_layer_t::edge_weight_t edge_weight = garnet_utils::compute_edge_weight<this_layer_t>(distance);
+            typename this_layer_t::edge_weight_t edge_weight = garnet_utils::compute_edge_weight<typename this_layer_t::base_t>(distance);
     
             edge_weight_mean_local[ia] += edge_weight;
     
@@ -809,8 +804,8 @@ namespace nnet {
     typename std::enable_if<not std::is_same<this_layer_t, last_layer>::value>::type
     compute_aggregates_stack(
       nvtx_T const nvtx,
-      typename this_layer_t::edge_weight_t const edge_weights[this_layer_t::n_vertices * prev_layer_t::n_aggregators],
-      typename this_layer_t::edge_weight_t const edge_weight_mean[prev_layer_t::n_aggregators],
+      typename prev_layer_t::edge_weight_t const edge_weights[prev_layer_t::n_vertices * prev_layer_t::n_aggregators],
+      typename prev_layer_t::edge_weight_t const edge_weight_mean[prev_layer_t::n_aggregators],
       data_T const weighted_feature_mean[prev_layer_t::n_aggregators * prev_layer_t::n_in_features],
       typename this_layer_t::edge_weight_t edge_weight_mean_out[last_layer::n_aggregators],
       data_T weighted_feature_mean_out[last_layer::n_aggregators * last_layer::n_in_features]
@@ -838,7 +833,7 @@ namespace nnet {
 
       compute_aggregates_stack<this_layer_t, typename this_layer_t::next_layer_t, last_layer>(
         nvtx,
-        edge_weights,
+        edge_weights_next,
         edge_weight_mean_next,
         weighted_feature_mean_next,
         edge_weight_mean_out,
