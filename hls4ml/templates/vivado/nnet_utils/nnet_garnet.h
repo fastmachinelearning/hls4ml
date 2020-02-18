@@ -531,43 +531,41 @@ namespace nnet {
       }
     }
 
-    template<class CONFIG_T, unsigned isubl, class data_T = float, class nvtx_T = unsigned>
+    template<class prev_layer_t, class this_layer_t, class data_T = float, class nvtx_T = unsigned>
     void
     aggregates_stack_propagate(
       nvtx_T const nvtx,
-      typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_out_features[isubl - 1] * CONFIG_T::n_aggregators[isubl - 1] * CONFIG_T::n_in_features[isubl - 1]],
-      typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_out_features[isubl - 1] * CONFIG_T::n_aggregators[isubl - 1]],
-      typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_out_features[isubl - 1]],
-      typename CONFIG_T::edge_weight_t const edge_weights[CONFIG_T::n_vertices * CONFIG_T::n_aggregators[isubl - 1]],
-      typename CONFIG_T::edge_weight_t const edge_weight_mean[CONFIG_T::n_aggregators[isubl - 1]],
-      data_T const weighted_feature_mean[CONFIG_T::n_aggregators[isubl - 1] * CONFIG_T::n_in_features[isubl - 1]],
-      typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_aggregators[isubl] * CONFIG_T::n_in_features[isubl]],
-      typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators[isubl]],
-      typename CONFIG_T::edge_weight_t edge_weights_next[CONFIG_T::n_vertices * CONFIG_T::n_aggregators[isubl]],
-      typename CONFIG_T::edge_weight_t edge_weight_mean_next[CONFIG_T::n_aggregators[isubl]],
-      data_T weighted_feature_mean_next[CONFIG_T::n_aggregators[isubl] * CONFIG_T::n_in_features[isubl]]
+      typename this_layer_t::input_transform_weights_t const input_transform_weights[prev_layer_t::n_out_features * prev_layer_t::n_aggregators * prev_layer_t::n_in_features],
+      typename this_layer_t::input_transform_biases_t const input_transform_biases[prev_layer_t::n_out_features * prev_layer_t::n_aggregators],
+      typename this_layer_t::output_transform_biases_t const output_transform_biases[prev_layer_t::n_out_features],
+      typename this_layer_t::edge_weight_t const edge_weights[this_layer_t::n_vertices * prev_layer_t::n_aggregators],
+      typename this_layer_t::edge_weight_t const edge_weight_mean[prev_layer_t::n_aggregators],
+      data_T const weighted_feature_mean[prev_layer_t::n_aggregators * prev_layer_t::n_in_features],
+      typename this_layer_t::aggregator_distance_weights_t const aggregator_distance_weights[this_layer_t::n_aggregators * this_layer_t::n_in_features],
+      typename this_layer_t::aggregator_distance_biases_t const aggregator_distance_biases[this_layer_t::n_aggregators],
+      typename this_layer_t::edge_weight_t edge_weights_next[this_layer_t::n_vertices * this_layer_t::n_aggregators],
+      typename this_layer_t::edge_weight_t edge_weight_mean_next[this_layer_t::n_aggregators],
+      data_T weighted_feature_mean_next[this_layer_t::n_aggregators * this_layer_t::n_in_features]
     )
     {
-      unsigned const iprev = isubl - 1;
-     
-      typename CONFIG_T::aggr_t aggregated_weights[CONFIG_T::n_out_features[iprev] * CONFIG_T::n_aggregators[iprev]];
+      typename this_layer_t::aggr_t aggregated_weights[prev_layer_t::n_out_features * prev_layer_t::n_aggregators];
       #pragma HLS ARRAY_RESHAPE variable=aggregated_weights complete
     
      OutFeatures1:
-      for (unsigned io = 0; io < CONFIG_T::n_out_features[iprev]; ++io) {
+      for (unsigned io = 0; io < prev_layer_t::n_out_features; ++io) {
         #pragma HLS UNROLL
        Aggregators1:
-        for (unsigned ia = 0; ia < CONFIG_T::n_aggregators[iprev]; ++ia) {
+        for (unsigned ia = 0; ia < prev_layer_t::n_aggregators; ++ia) {
           #pragma HLS UNROLL
-          unsigned const ioa = io * CONFIG_T::n_aggregators[iprev] + ia;
+          unsigned const ioa = io * prev_layer_t::n_aggregators + ia;
 
-          typename CONFIG_T::aggr_t aggregated_weight = edge_weight_mean[ia] * input_transform_biases[ioa];
+          typename this_layer_t::aggr_t aggregated_weight = edge_weight_mean[ia] * input_transform_biases[ioa];
     
          InFeatures:
-          for (unsigned ix = 0; ix < CONFIG_T::n_in_features[iprev]; ++ix) {
+          for (unsigned ix = 0; ix < prev_layer_t::n_in_features; ++ix) {
             #pragma HLS UNROLL
-            unsigned const ioax = ioa * CONFIG_T::n_in_features[iprev] + ix;
-            unsigned const iax = ia * CONFIG_T::n_in_features[iprev] + ix;
+            unsigned const ioax = ioa * prev_layer_t::n_in_features + ix;
+            unsigned const iax = ia * prev_layer_t::n_in_features + ix;
 
             aggregated_weight += weighted_feature_mean[iax] * input_transform_weights[ioax];
           }
@@ -576,30 +574,30 @@ namespace nnet {
         }
       }
   
-      unsigned const unroll_factor = CONFIG_T::n_vertices >> CONFIG_T::log2_reuse_factor;
-      unsigned const log2_unroll_factor = CONFIG_T::n_vertices_width - CONFIG_T::log2_reuse_factor;
+      unsigned const unroll_factor = this_layer_t::n_vertices >> this_layer_t::log2_reuse_factor;
+      unsigned const log2_unroll_factor = this_layer_t::n_vertices_width - this_layer_t::log2_reuse_factor;
 
-      typename CONFIG_T::edge_weight_aggr_t edge_weight_accum[CONFIG_T::n_aggregators[isubl]];
+      typename this_layer_t::edge_weight_aggr_t edge_weight_accum[this_layer_t::n_aggregators];
       #pragma HLS ARRAY_RESHAPE variable=edge_weight_accum complete      
-      typename CONFIG_T::aggr_t weighted_feature_accum[CONFIG_T::n_aggregators[isubl] * CONFIG_T::n_in_features[isubl]];
+      typename this_layer_t::aggr_t weighted_feature_accum[this_layer_t::n_aggregators * this_layer_t::n_in_features];
       #pragma HLS ARRAY_RESHAPE variable=weighted_feature_accum complete 
 
-      garnet_utils::initialize_sums<CONFIG_T::n_aggregators[isubl], CONFIG_T::n_in_features[isubl]>(edge_weight_accum, weighted_feature_accum);
+      garnet_utils::initialize_sums<this_layer_t::n_aggregators, this_layer_t::n_in_features>(edge_weight_accum, weighted_feature_accum);
       
      VerticesOuter:
-      for (unsigned ivv = 0; ivv < CONFIG_T::reuse_factor; ++ivv) {
+      for (unsigned ivv = 0; ivv < this_layer_t::reuse_factor; ++ivv) {
         // II will depend on the precision of data types - revisit
         #pragma HLS PIPELINE
 
         if (ivv * unroll_factor >= nvtx)
           break;
     
-        typename CONFIG_T::edge_weight_aggr_t edge_weight_mean_local[CONFIG_T::n_aggregators[isubl]];
+        typename this_layer_t::edge_weight_aggr_t edge_weight_mean_local[this_layer_t::n_aggregators];
         #pragma HLS ARRAY_RESHAPE variable=edge_weight_mean_local complete
-        typename CONFIG_T::aggr_t weighted_feature_mean_local[CONFIG_T::n_aggregators[isubl] * CONFIG_T::n_in_features[isubl]];
+        typename this_layer_t::aggr_t weighted_feature_mean_local[this_layer_t::n_aggregators * this_layer_t::n_in_features];
         #pragma HLS ARRAY_RESHAPE variable=weighted_feature_mean_local complete
 
-        garnet_utils::initialize_sums<CONFIG_T::n_aggregators[isubl], CONFIG_T::n_in_features[isubl]>(edge_weight_mean_local, weighted_feature_mean_local);
+        garnet_utils::initialize_sums<this_layer_t::n_aggregators, this_layer_t::n_in_features>(edge_weight_mean_local, weighted_feature_mean_local);
 
        VerticesInner:
         for (unsigned ir = 0; ir < unroll_factor; ++ir) {
@@ -608,19 +606,19 @@ namespace nnet {
           if (iv >= nvtx)
             break;
 
-          data_T data[CONFIG_T::n_out_features[iprev]];
+          data_T data[prev_layer_t::n_out_features];
           #pragma HLS ARRAY_RESHAPE variable=data complete
 
         OutFeatures2:
-          for (unsigned io = 0; io < CONFIG_T::n_out_features[iprev]; ++io) {
-            unsigned const ivo = iv * CONFIG_T::n_out_features[iprev] + io;
+          for (unsigned io = 0; io < prev_layer_t::n_out_features; ++io) {
+            unsigned const ivo = iv * prev_layer_t::n_out_features + io;
     
-            res_T acc = output_transform_biases[io];
+            data_T acc = output_transform_biases[io];
     
            Aggregators2:
-            for (unsigned ia = 0; ia < CONFIG_T::n_aggregators[iprev]; ++ia) {
-              unsigned const iva = iv * CONFIG_T::n_aggregators[iprev] + ia;
-              unsigned const ioa = io * CONFIG_T::n_aggregators[iprev] + ia;
+            for (unsigned ia = 0; ia < prev_layer_t::n_aggregators; ++ia) {
+              unsigned const iva = iv * prev_layer_t::n_aggregators + ia;
+              unsigned const ioa = io * prev_layer_t::n_aggregators + ia;
     
                acc += edge_weights[iva] * aggregated_weights[ioa];
             }
@@ -628,95 +626,93 @@ namespace nnet {
             data[io] = acc;
           }
     
-         Aggregators1:
-          for (unsigned ia = 0; ia < CONFIG_T::n_aggregators[isubl]; ++ia) {
-            typename CONFIG_T::distance_t distance = aggregator_distance_biases[ia];
+         Aggregators3:
+          for (unsigned ia = 0; ia < this_layer_t::n_aggregators; ++ia) {
+            typename this_layer_t::distance_t distance = aggregator_distance_biases[ia];
     
            InFeatures1:
-            for (unsigned ix = 0; ix < CONFIG_T::n_in_features[isubl]; ++ix) {
-              unsigned const iax = ia * CONFIG_T::n_in_features[isubl] + ix;
-              unsigned const ivx = iv * CONFIG_T::n_in_features[isubl] + ix;
+            for (unsigned ix = 0; ix < this_layer_t::n_in_features; ++ix) {
+              unsigned const iax = ia * this_layer_t::n_in_features + ix;
+              unsigned const ivx = iv * this_layer_t::n_in_features + ix;
     
-              typename CONFIG_T::distance_t incr = data[ix] * aggregator_distance_weights[iax];
+              typename this_layer_t::distance_t incr = data[ix] * aggregator_distance_weights[iax];
     
               distance += incr;
             }
     
-            typename CONFIG_T::edge_weight_t edge_weight = garnet_utils::compute_edge_weight<CONFIG_T>(distance);
+            typename this_layer_t::edge_weight_t edge_weight = garnet_utils::compute_edge_weight<this_layer_t>(distance);
     
             edge_weight_mean_local[ia] += edge_weight;
     
            InFeatures2:
-            for (unsigned ix = 0; ix < CONFIG_T::n_in_features[isubl]; ++ix) {
-              unsigned const iax = ia * CONFIG_T::n_in_features[isubl] + ix;
-              unsigned const ivx = iv * CONFIG_T::n_in_features[isubl] + ix;
+            for (unsigned ix = 0; ix < this_layer_t::n_in_features; ++ix) {
+              unsigned const iax = ia * this_layer_t::n_in_features + ix;
+              unsigned const ivx = iv * this_layer_t::n_in_features + ix;
     
               data_T incr = data[ix] * edge_weight;
     
               weighted_feature_mean_local[iax] += incr;
             }
 
-            unsigned const iva = iv * CONFIG_T::n_aggregators[isubl] + ia;
+            unsigned const iva = iv * this_layer_t::n_aggregators + ia;
 
             edge_weights_next[iva] = edge_weight;
           }
         }
     
        Normalize1:
-        for (unsigned ia = 0; ia < CONFIG_T::n_aggregators[isubl]; ++ia) {
+        for (unsigned ia = 0; ia < this_layer_t::n_aggregators; ++ia) {
           edge_weight_accum[ia] += normalize_log2(edge_weight_mean_local[ia], log2_unroll_factor);
          Normalize2:
-          for (unsigned ix = 0; ix < CONFIG_T::n_in_features[isubl]; ++ix) {
-            unsigned const iax = ia * CONFIG_T::n_in_features[isubl] + ix;
+          for (unsigned ix = 0; ix < this_layer_t::n_in_features; ++ix) {
+            unsigned const iax = ia * this_layer_t::n_in_features + ix;
             weighted_feature_accum[iax] += normalize_log2(weighted_feature_mean_local[iax], log2_unroll_factor);
           }
         }
       }
 
-      if (CONFIG_T::mean_by_nvert)
-        normalize_sums<CONFIG_T, CONFIG_T::n_aggregators[isubl], CONFIG_T::n_in_features[isubl]>(nvtx, edge_weight_accum, weighted_feature_accum, edge_weight_mean_next, weighted_feature_mean_next);
+      if (this_layer_t::mean_by_nvert)
+        normalize_sums<this_layer_t, this_layer_t::n_aggregators, this_layer_t::n_in_features>(nvtx, edge_weight_accum, weighted_feature_accum, edge_weight_mean_next, weighted_feature_mean_next);
       else
-        normalize_sums<CONFIG_T, CONFIG_T::n_aggregators[isubl], CONFIG_T::n_in_features[isubl]>(edge_weight_accum, weighted_feature_accum, edge_weight_mean_next, weighted_feature_mean_next);
+        normalize_sums<this_layer_t, this_layer_t::n_aggregators, this_layer_t::n_in_features>(edge_weight_accum, weighted_feature_accum, edge_weight_mean_next, weighted_feature_mean_next);
     }
 
-    template<class CONFIG_T, unsigned isubl, class data_T = float, class nvtx_T = unsigned>
-    typename std::enable_if<isubl == CONFIG_T::n_sublayers - 1>::type
+    template<class prev_layer_t, class this_layer_t, class last_layer, class data_T = float, class nvtx_T = unsigned>
+    typename std::enable_if<std::is_same<this_layer_t, last_layer>::value>::type
     compute_aggregates_stack(
       nvtx_T const nvtx,
-      typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_out_features[isubl - 1] * CONFIG_T::n_aggregators[isubl - 1] * CONFIG_T::n_in_features[isubl - 1]],
-      typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_out_features[isubl - 1] * CONFIG_T::n_aggregators[isubl - 1]],
-      typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_out_features[isubl - 1]],
-      typename CONFIG_T::edge_weight_t const edge_weights[CONFIG_T::n_vertices * CONFIG_T::n_aggregators[isubl - 1]],
-      typename CONFIG_T::edge_weight_t const edge_weight_mean[CONFIG_T::n_aggregators[isubl - 1]],
-      data_T const weighted_feature_mean[CONFIG_T::n_aggregators[isubl - 1] * CONFIG_T::n_in_features[isubl - 1]],
-      typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_aggregators[isubl] * CONFIG_T::n_in_features[isubl]],
-      typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators[isubl]],
-      typename CONFIG_T::edge_weight_t edge_weight_mean_out[CONFIG_T::n_aggregators[CONFIG_T::n_sublayers - 1]],
-      data_T weighted_feature_mean_out[CONFIG_T::n_aggregators[CONFIG_T::n_sublayers - 1] * CONFIG_T::n_in_features[CONFIG_T::n_sublayers - 1]]
+      typename this_layer_t::input_transform_weights_t const input_transform_weights[prev_layer_t::n_out_features * prev_layer_t::n_aggregators * prev_layer_t::n_in_features],
+      typename this_layer_t::input_transform_biases_t const input_transform_biases[prev_layer_t::n_out_features * prev_layer_t::n_aggregators],
+      typename this_layer_t::output_transform_biases_t const output_transform_biases[prev_layer_t::n_out_features],
+      typename this_layer_t::edge_weight_t const edge_weights[this_layer_t::n_vertices * prev_layer_t::n_aggregators],
+      typename this_layer_t::edge_weight_t const edge_weight_mean[prev_layer_t::n_aggregators],
+      data_T const weighted_feature_mean[prev_layer_t::n_aggregators * prev_layer_t::n_in_features],
+      typename this_layer_t::aggregator_distance_weights_t const aggregator_distance_weights[this_layer_t::n_aggregators * this_layer_t::n_in_features],
+      typename this_layer_t::aggregator_distance_biases_t const aggregator_distance_biases[this_layer_t::n_aggregators],
+      typename this_layer_t::edge_weight_t edge_weight_mean_out[last_layer::n_aggregators],
+      data_T weighted_feature_mean_out[last_layer::n_aggregators * last_layer::n_in_features]
     )
     {
-      garnet_utils::initialize_sums<CONFIG_T::n_aggregators[isubl], CONFIG_T::n_in_features[isubl]>(edge_weight_mean_out, weighted_feature_mean_out);
+      garnet_utils::initialize_sums<this_layer_t::n_aggregators, this_layer_t::n_in_features>(edge_weight_mean_out, weighted_feature_mean_out);
 
-      unsigned const iprev = isubl - 1;
-
-      typename CONFIG_T::aggr_t aggregated_weights[CONFIG_T::n_out_features[iprev] * CONFIG_T::n_aggregators[iprev]];
+      typename this_layer_t::aggr_t aggregated_weights[prev_layer_t::n_out_features * prev_layer_t::n_aggregators];
       #pragma HLS ARRAY_RESHAPE variable=aggregated_weights complete
     
      OutFeatures1:
-      for (unsigned io = 0; io < CONFIG_T::n_out_features[iprev]; ++io) {
+      for (unsigned io = 0; io < prev_layer_t::n_out_features; ++io) {
         #pragma HLS UNROLL
        Aggregators1:
-        for (unsigned ia = 0; ia < CONFIG_T::n_aggregators[iprev]; ++ia) {
+        for (unsigned ia = 0; ia < prev_layer_t::n_aggregators; ++ia) {
           #pragma HLS UNROLL
-          unsigned const ioa = io * CONFIG_T::n_aggregators[iprev] + ia;
+          unsigned const ioa = io * prev_layer_t::n_aggregators + ia;
 
-          typename CONFIG_T::aggr_t aggregated_weight = edge_weight_mean[ia] * input_transform_biases[ioa];
+          typename this_layer_t::aggr_t aggregated_weight = edge_weight_mean[ia] * input_transform_biases[ioa];
     
          InFeatures:
-          for (unsigned ix = 0; ix < CONFIG_T::n_in_features[iprev]; ++ix) {
+          for (unsigned ix = 0; ix < prev_layer_t::n_in_features; ++ix) {
             #pragma HLS UNROLL
-            unsigned const ioax = ioa * CONFIG_T::n_in_features[iprev] + ix;
-            unsigned const iax = ia * CONFIG_T::n_in_features[iprev] + ix;
+            unsigned const ioax = ioa * prev_layer_t::n_in_features + ix;
+            unsigned const iax = ia * prev_layer_t::n_in_features + ix;
 
             aggregated_weight += weighted_feature_mean[iax] * input_transform_weights[ioax];
           }
@@ -725,30 +721,30 @@ namespace nnet {
         }
       }
   
-      unsigned const unroll_factor = CONFIG_T::n_vertices >> CONFIG_T::log2_reuse_factor;
-      unsigned const log2_unroll_factor = CONFIG_T::n_vertices_width - CONFIG_T::log2_reuse_factor;
+      unsigned const unroll_factor = this_layer_t::n_vertices >> this_layer_t::log2_reuse_factor;
+      unsigned const log2_unroll_factor = this_layer_t::n_vertices_width - this_layer_t::log2_reuse_factor;
 
-      typename CONFIG_T::edge_weight_aggr_t edge_weight_accum[CONFIG_T::n_aggregators[isubl]];
+      typename this_layer_t::edge_weight_aggr_t edge_weight_accum[this_layer_t::n_aggregators];
       #pragma HLS ARRAY_RESHAPE variable=edge_weight_accum complete      
-      typename CONFIG_T::aggr_t weighted_feature_accum[CONFIG_T::n_aggregators[isubl] * CONFIG_T::n_in_features[isubl]];
+      typename this_layer_t::aggr_t weighted_feature_accum[this_layer_t::n_aggregators * this_layer_t::n_in_features];
       #pragma HLS ARRAY_RESHAPE variable=weighted_feature_accum complete 
 
-      garnet_utils::initialize_sums<CONFIG_T::n_aggregators[isubl], CONFIG_T::n_in_features[isubl]>(edge_weight_accum, weighted_feature_accum);
+      garnet_utils::initialize_sums<this_layer_t::n_aggregators, this_layer_t::n_in_features>(edge_weight_accum, weighted_feature_accum);
       
      VerticesOuter:
-      for (unsigned ivv = 0; ivv < CONFIG_T::reuse_factor; ++ivv) {
+      for (unsigned ivv = 0; ivv < this_layer_t::reuse_factor; ++ivv) {
         // II will depend on the precision of data types - revisit
         #pragma HLS PIPELINE
 
         if (ivv * unroll_factor >= nvtx)
           break;
     
-        typename CONFIG_T::edge_weight_aggr_t edge_weight_mean_local[CONFIG_T::n_aggregators[isubl]];
+        typename this_layer_t::edge_weight_aggr_t edge_weight_mean_local[this_layer_t::n_aggregators];
         #pragma HLS ARRAY_RESHAPE variable=edge_weight_mean_local complete
-        typename CONFIG_T::aggr_t weighted_feature_mean_local[CONFIG_T::n_aggregators[isubl] * CONFIG_T::n_in_features[isubl]];
+        typename this_layer_t::aggr_t weighted_feature_mean_local[this_layer_t::n_aggregators * this_layer_t::n_in_features];
         #pragma HLS ARRAY_RESHAPE variable=weighted_feature_mean_local complete
 
-        garnet_utils::initialize_sums<CONFIG_T::n_aggregators[isubl], CONFIG_T::n_in_features[isubl]>(edge_weight_mean_local, weighted_feature_mean_local);
+        garnet_utils::initialize_sums<this_layer_t::n_aggregators, this_layer_t::n_in_features>(edge_weight_mean_local, weighted_feature_mean_local);
 
        VerticesInner:
         for (unsigned ir = 0; ir < unroll_factor; ++ir) {
@@ -757,19 +753,19 @@ namespace nnet {
           if (iv >= nvtx)
             break;
 
-          data_T data[CONFIG_T::n_out_features[iprev]];
+          data_T data[prev_layer_t::n_out_features];
           #pragma HLS ARRAY_RESHAPE variable=data complete
 
         OutFeatures2:
-          for (unsigned io = 0; io < CONFIG_T::n_out_features[iprev]; ++io) {
-            unsigned const ivo = iv * CONFIG_T::n_out_features[iprev] + io;
+          for (unsigned io = 0; io < prev_layer_t::n_out_features; ++io) {
+            unsigned const ivo = iv * prev_layer_t::n_out_features + io;
     
-            res_T acc = output_transform_biases[io];
+            data_T acc = output_transform_biases[io];
     
            Aggregators2:
-            for (unsigned ia = 0; ia < CONFIG_T::n_aggregators[iprev]; ++ia) {
-              unsigned const iva = iv * CONFIG_T::n_aggregators[iprev] + ia;
-              unsigned const ioa = io * CONFIG_T::n_aggregators[iprev] + ia;
+            for (unsigned ia = 0; ia < prev_layer_t::n_aggregators; ++ia) {
+              unsigned const iva = iv * prev_layer_t::n_aggregators + ia;
+              unsigned const ioa = io * prev_layer_t::n_aggregators + ia;
     
                acc += edge_weights[iva] * aggregated_weights[ioa];
             }
@@ -777,28 +773,28 @@ namespace nnet {
             data[io] = acc;
           }
     
-         Aggregators1:
-          for (unsigned ia = 0; ia < CONFIG_T::n_aggregators[isubl]; ++ia) {
-            typename CONFIG_T::distance_t distance = aggregator_distance_biases[ia];
+         Aggregators3:
+          for (unsigned ia = 0; ia < this_layer_t::n_aggregators; ++ia) {
+            typename this_layer_t::distance_t distance = aggregator_distance_biases[ia];
     
            InFeatures1:
-            for (unsigned ix = 0; ix < CONFIG_T::n_in_features[isubl]; ++ix) {
-              unsigned const iax = ia * CONFIG_T::n_in_features[isubl] + ix;
-              unsigned const ivx = iv * CONFIG_T::n_in_features[isubl] + ix;
+            for (unsigned ix = 0; ix < this_layer_t::n_in_features; ++ix) {
+              unsigned const iax = ia * this_layer_t::n_in_features + ix;
+              unsigned const ivx = iv * this_layer_t::n_in_features + ix;
     
-              typename CONFIG_T::distance_t incr = data[ix] * aggregator_distance_weights[iax];
+              typename this_layer_t::distance_t incr = data[ix] * aggregator_distance_weights[iax];
     
               distance += incr;
             }
     
-            typename CONFIG_T::edge_weight_t edge_weight = garnet_utils::compute_edge_weight<CONFIG_T>(distance);
+            typename this_layer_t::edge_weight_t edge_weight = garnet_utils::compute_edge_weight<this_layer_t>(distance);
     
             edge_weight_mean_local[ia] += edge_weight;
     
            InFeatures2:
-            for (unsigned ix = 0; ix < CONFIG_T::n_in_features[isubl]; ++ix) {
-              unsigned const iax = ia * CONFIG_T::n_in_features[isubl] + ix;
-              unsigned const ivx = iv * CONFIG_T::n_in_features[isubl] + ix;
+            for (unsigned ix = 0; ix < this_layer_t::n_in_features; ++ix) {
+              unsigned const iax = ia * this_layer_t::n_in_features + ix;
+              unsigned const ivx = iv * this_layer_t::n_in_features + ix;
     
               data_T incr = data[ix] * edge_weight;
     
@@ -808,51 +804,49 @@ namespace nnet {
         }
     
        Normalize1:
-        for (unsigned ia = 0; ia < CONFIG_T::n_aggregators[isubl]; ++ia) {
+        for (unsigned ia = 0; ia < this_layer_t::n_aggregators; ++ia) {
           edge_weight_accum[ia] += normalize_log2(edge_weight_mean_local[ia], log2_unroll_factor);
          Normalize2:
-          for (unsigned ix = 0; ix < CONFIG_T::n_in_features[isubl]; ++ix) {
-            unsigned const iax = ia * CONFIG_T::n_in_features[isubl] + ix;
+          for (unsigned ix = 0; ix < this_layer_t::n_in_features; ++ix) {
+            unsigned const iax = ia * this_layer_t::n_in_features + ix;
             weighted_feature_accum[iax] += normalize_log2(weighted_feature_mean_local[iax], log2_unroll_factor);
           }
         }
       }
 
-      if (CONFIG_T::mean_by_nvert)
-        normalize_sums<CONFIG_T, CONFIG_T::n_aggregators[isubl], CONFIG_T::n_in_features[isubl]>(nvtx, edge_weight_accum, weighted_feature_accum, edge_weight_mean_out, weighted_feature_mean_out);
+      if (this_layer_t::mean_by_nvert)
+        normalize_sums<this_layer_t, this_layer_t::n_aggregators, this_layer_t::n_in_features>(nvtx, edge_weight_accum, weighted_feature_accum, edge_weight_mean_out, weighted_feature_mean_out);
       else
-        normalize_sums<CONFIG_T, CONFIG_T::n_aggregators[isubl], CONFIG_T::n_in_features[isubl]>(edge_weight_accum, weighted_feature_accum, edge_weight_mean_out, weighted_feature_mean_out);
+        normalize_sums<this_layer_t, this_layer_t::n_aggregators, this_layer_t::n_in_features>(edge_weight_accum, weighted_feature_accum, edge_weight_mean_out, weighted_feature_mean_out);
     }
       
-    template<class CONFIG_T, unsigned isubl, class data_T = float, class nvtx_T = unsigned>
-    typename std::enable_if<isubl != CONFIG_T::n_sublayers - 1>::type
+    template<class prev_layer_t, class this_layer_t, class last_layer, class data_T = float, class nvtx_T = unsigned>
+    typename std::enable_if<not std::is_same<this_layer_t, last_layer>::value>::type
     compute_aggregates_stack(
       nvtx_T const nvtx,
-      typename CONFIG_T::input_transform_weights_t const input_transform_weights[CONFIG_T::n_out_features[isubl - 1] * CONFIG_T::n_aggregators[isubl - 1] * CONFIG_T::n_in_features[isubl - 1]],
-      typename CONFIG_T::input_transform_biases_t const input_transform_biases[CONFIG_T::n_out_features[isubl - 1] * CONFIG_T::n_aggregators[isubl - 1]],
-      typename CONFIG_T::output_transform_biases_t const output_transform_biases[CONFIG_T::n_out_features[isubl - 1]],
-      typename CONFIG_T::edge_weight_t const edge_weights[CONFIG_T::n_vertices * CONFIG_T::n_aggregators[isubl - 1]],
-      typename CONFIG_T::edge_weight_t const edge_weight_mean[CONFIG_T::n_aggregators[isubl - 1]],
-      data_T const weighted_feature_mean[CONFIG_T::n_aggregators[isubl - 1] * CONFIG_T::n_in_features[isubl - 1]],
-      typename CONFIG_T::aggregator_distance_weights_t const aggregator_distance_weights[CONFIG_T::n_aggregators[isubl] * CONFIG_T::n_in_features[isubl]],
-      typename CONFIG_T::aggregator_distance_biases_t const aggregator_distance_biases[CONFIG_T::n_aggregators[isubl]],
-      typename CONFIG_T::edge_weight_t edge_weight_mean_out[CONFIG_T::n_aggregators[CONFIG_T::n_sublayers - 1]],
-      data_T weighted_feature_mean_out[CONFIG_T::n_aggregators[CONFIG_T::n_sublayers - 1] * CONFIG_T::n_in_features[CONFIG_T::n_sublayers - 1]]
+      typename this_layer_t::input_transform_weights_t const input_transform_weights[prev_layer_t::n_out_features * prev_layer_t::n_aggregators * prev_layer_t::n_in_features],
+      typename this_layer_t::input_transform_biases_t const input_transform_biases[prev_layer_t::n_out_features * prev_layer_t::n_aggregators],
+      typename this_layer_t::output_transform_biases_t const output_transform_biases[prev_layer_t::n_out_features],
+      typename this_layer_t::edge_weight_t const edge_weights[this_layer_t::n_vertices * prev_layer_t::n_aggregators],
+      typename this_layer_t::edge_weight_t const edge_weight_mean[prev_layer_t::n_aggregators],
+      data_T const weighted_feature_mean[prev_layer_t::n_aggregators * prev_layer_t::n_in_features],
+      typename this_layer_t::aggregator_distance_weights_t const aggregator_distance_weights[this_layer_t::n_aggregators * this_layer_t::n_in_features],
+      typename this_layer_t::aggregator_distance_biases_t const aggregator_distance_biases[this_layer_t::n_aggregators],
+      typename this_layer_t::edge_weight_t edge_weight_mean_out[last_layer::n_aggregators],
+      data_T weighted_feature_mean_out[last_layer::n_aggregators * last_layer::n_in_features]
     )
     {
       #pragma HLS INLINE
 
-      unsigned const iprev = isubl - 1;
-
-      typename CONFIG_T::edge_weight_t edge_weights_next[CONFIG_T::n_vertices * CONFIG_T::n_aggregators[isubl]];
-      unsigned const reshape_factor = CONFIG_T::n_aggregators[isubl] * (CONFIG_T::n_vertices / CONFIG_T::reuse_factor);
+      typename this_layer_t::edge_weight_t edge_weights_next[this_layer_t::n_vertices * this_layer_t::n_aggregators];
+      unsigned const reshape_factor = this_layer_t::n_aggregators * (this_layer_t::n_vertices / this_layer_t::reuse_factor);
       #pragma HLS ARRAY_RESHAPE variable=edge_weights_next cyclic factor=reshape_factor dim=1
-      typename CONFIG_T::edge_weight_t edge_weight_mean_next[CONFIG_T::n_aggregators[isubl]];
+      typename this_layer_t::edge_weight_t edge_weight_mean_next[this_layer_t::n_aggregators];
       #pragma HLS ARRAY_RESHAPE variable=edge_weight_mean_next complete
-      data_T weighted_feature_mean_next[CONFIG_T::n_aggregators[isubl] * CONFIG_T::n_in_features[isubl]];
+      data_T weighted_feature_mean_next[this_layer_t::n_aggregators * this_layer_t::n_in_features];
       #pragma HLS ARRAY_RESHAPE variable=weighted_feature_mean_next complete
 
-      aggregates_stack_propagate<CONFIG_T, isubl>(
+      aggregates_stack_propagate<prev_layer_t, this_layer_t>(
         nvtx,
         input_transform_weights,
         input_transform_biases,
@@ -864,19 +858,19 @@ namespace nnet {
         aggregator_distance_biases,
         edge_weights_next,
         edge_weight_mean_next,
-        weighted_features_mean_next
+        weighted_feature_mean_next
       );
 
-      compute_aggregates_stack<CONFIG_T, isubl + 1>(
+      compute_aggregates_stack<this_layer_t, typename this_layer_t::next_layer_t, last_layer>(
         nvtx,
-        input_transform_weights + (CONFIG_T::n_out_features[iprev] * CONFIG_T::n_aggregators[iprev] * CONFIG_T::n_in_features[iprev]),
-        input_transform_biases + (CONFIG_T::n_out_features[iprev] * CONFIG_T::n_aggregators[iprev]),
-        output_transform_biases + (CONFIG_T::n_out_features[iprev]),
+        input_transform_weights + (prev_layer_t::n_out_features * prev_layer_t::n_aggregators * prev_layer_t::n_in_features),
+        input_transform_biases + (prev_layer_t::n_out_features * prev_layer_t::n_aggregators),
+        output_transform_biases + (prev_layer_t::n_out_features),
         edge_weights,
         edge_weight_mean_next,
         weighted_feature_mean_next,
-        aggregator_distance_weights + (CONFIG_T::n_aggregators[isubl] * CONFIG_T::n_in_features[isubl]),
-        aggregator_distance_biases + (CONFIG_T::n_aggregators[isubl]),
+        aggregator_distance_weights + (this_layer_t::n_aggregators * this_layer_t::n_in_features),
+        aggregator_distance_biases + (this_layer_t::n_aggregators),
         edge_weight_mean_out,
         weighted_feature_mean_out
       );
@@ -1042,25 +1036,27 @@ namespace nnet {
   {
     #pragma HLS DATAFLOW
 
-    typename CONFIG_T::edge_weight_t edge_weights_first[CONFIG_T::n_vertices * CONFIG_T::n_aggregators[0]];
-    unsigned const reshape_factor = CONFIG_T::n_aggregators * (CONFIG_T::n_vertices / CONFIG_T::reuse_factor);
+    typedef typename CONFIG_T::template sublayer<0> first_layer_t;
+    unsigned const ilast = CONFIG_T::n_sublayers - 1;
+    typedef typename CONFIG_T::template sublayer<ilast> last_layer_t;
+
+    typename CONFIG_T::edge_weight_t edge_weights_first[CONFIG_T::n_vertices * first_layer_t::n_aggregators];
+    unsigned const reshape_factor = first_layer_t::n_aggregators * (CONFIG_T::n_vertices / CONFIG_T::reuse_factor);
     #pragma HLS ARRAY_RESHAPE variable=edge_weights_first cyclic factor=reshape_factor dim=1
 
-    typename CONFIG_T::edge_weight_t edge_weight_mean_first[CONFIG_T::n_aggregators[0]];
+    typename CONFIG_T::edge_weight_t edge_weight_mean_first[first_layer_t::n_aggregators];
     #pragma HLS ARRAY_RESHAPE variable=edge_weight_mean_first complete
     
-    data_T weighted_feature_mean_first[CONFIG_T::n_aggregators[0] * CONFIG_T::n_in_features[0]];
+    data_T weighted_feature_mean_first[first_layer_t::n_aggregators * first_layer_t::n_in_features];
     #pragma HLS ARRAY_RESHAPE variable=weighted_feature_mean_first complete
 
-    unsigned const ilast = CONFIG_T::n_sublayers - 1;
-
-    typename CONFIG_T::edge_weight_t edge_weight_mean_last[CONFIG_T::n_aggregators[ilast]];
-    #pragma HLS ARRAY_RESHAPE variable=edge_weight_mean_ladt complete
+    typename CONFIG_T::edge_weight_t edge_weight_mean_last[last_layer_t::n_aggregators];
+    #pragma HLS ARRAY_RESHAPE variable=edge_weight_mean_last complete
     
-    data_T weighted_feature_mean_last[CONFIG_T::n_aggregators[ilast] * CONFIG_T::n_in_features[ilast]];
+    data_T weighted_feature_mean_last[last_layer_t::n_aggregators * last_layer_t::n_in_features];
     #pragma HLS ARRAY_RESHAPE variable=weighted_feature_mean_last complete
 
-    garnet_utils::compute_edges_aggregates<CONFIG_T>(
+    garnet_utils::compute_edges_aggregates<first_layer_t>(
       data,
       nvtx[0],
       aggregator_distance_weights,
@@ -1070,7 +1066,7 @@ namespace nnet {
       weighted_feature_mean_first
     );
 
-    garnet_utils::compute_aggregates_stack<CONFIG_T, 1>(
+    garnet_utils::compute_aggregates_stack<first_layer_t, typename first_layer_t::next_layer_t, last_layer_t>(
       nvtx[0],
       input_transform_weights,
       input_transform_biases,
@@ -1078,24 +1074,24 @@ namespace nnet {
       edge_weights_first,
       edge_weight_mean_first,
       weighted_feature_mean_first,
-      aggregator_distance_weights + (CONFIG_T::n_aggregators[0] * CONFIG_T::n_in_features[0]),
-      aggregator_distance_biases + (CONFIG_T::n_aggregators[0]),
+      aggregator_distance_weights + (first_layer_t::n_aggregators * first_layer_t::n_in_features),
+      aggregator_distance_biases + (first_layer_t::n_aggregators),
       edge_weight_mean_last,
       weighted_feature_mean_last
     );
 
-    typename CONFIG_T::output_transform_biases_t normalized_output_biases[CONFIG_T::n_out_features[ilast]];
+    typename CONFIG_T::output_transform_biases_t normalized_output_biases[last_layer_t::n_out_features];
     typename CONFIG_T::output_transform_biases_t const* output_biases;
     if (CONFIG_T::mean_by_nvert)
-      output_biases = output_transform_biases + (CONFIG_T::n_output_transform_biases - CONFIG_T::n_out_features[ilast]);
+      output_biases = output_transform_biases + (CONFIG_T::n_output_transform_biases - last_layer_t::n_out_features);
     else {
-      garnet_utils::normalize_output_biases<CONFIG_T>(nvtx[0], output_transform_biases + (CONFIG_T::n_output_transform_biases - CONFIG_T::n_out_features[ilast]);, normalized_output_biases);
+      garnet_utils::normalize_output_biases<CONFIG_T>(nvtx[0], output_transform_biases + (CONFIG_T::n_output_transform_biases - last_layer_t::n_out_features), normalized_output_biases);
       output_biases = normalized_output_biases;
     }
 
-    garnet_utils::set_aggregate_output<CONFIG_T>(
-      input_transform_weights + (CONFIG_T::n_input_transform_weights - CONFIG_T::n_out_features[ilast] * CONFIG_T::n_aggregators[ilast] * CONFIG_T::n_in_features[ilast]),
-      input_transform_biases + (CONFIG_T::n_input_transform_biases - CONFIG_T::n_out_features[ilast] * CONFIG_T::n_aggregators[ilast]),
+    garnet_utils::set_aggregate_output<last_layer_t>(
+      input_transform_weights + (CONFIG_T::n_input_transform_weights - last_layer_t::n_out_features * last_layer_t::n_aggregators * last_layer_t::n_in_features),
+      input_transform_biases + (CONFIG_T::n_input_transform_biases - last_layer_t::n_out_features * last_layer_t::n_aggregators),
       output_biases,
       edge_weight_mean_last,
       weighted_feature_mean_last,

@@ -161,6 +161,46 @@ garnet_config_template = """struct config{index} : nnet::garnet_config {{
 }};
 """
 
+garnet_stack_config_template = """struct config{index}_base : nnet::garnet_config {{
+    static const unsigned n_vertices = {n_vertices};
+    static const unsigned n_vertices_width = {n_vertices_width};
+    static const unsigned n_sublayers = {n_sublayers};
+    static const unsigned n_in_ufeatures = 0;
+    static const unsigned distance_width = {distance_width};
+    static const unsigned output_collapse = {collapse_type};
+
+    typedef {input_transform_weights_t} input_transform_weights_t;
+    typedef {input_transform_biases_t} input_transform_biases_t;
+    typedef {aggregator_distance_weights_t} aggregator_distance_weights_t;
+    typedef {aggregator_distance_biases_t} aggregator_distance_biases_t;
+    typedef {output_transform_weights_t} output_transform_weights_t;
+    typedef {output_transform_biases_t} output_transform_biases_t;
+
+    static const unsigned n_input_transform_weights = {n_input_transform_weights};
+    static const unsigned n_input_transform_biases = {n_input_transform_biases};
+    static const unsigned n_aggregator_distance_weights = {n_aggregator_distance_weights};
+    static const unsigned n_aggregator_distance_biases = {n_aggregator_distance_biases};
+    static const unsigned n_output_transform_biases = {n_output_transform_biases};
+
+    typedef {norm_t} norm_t;
+    typedef ap_fixed<{distance_width}, {distance_nint}, AP_TRN, AP_SAT> distance_t;
+    typedef {edge_weight_t} edge_weight_t;
+    typedef {edge_weight_aggr_t} edge_weight_aggr_t;
+    typedef {aggr_t} aggr_t;
+    typedef {uaggr_t} uaggr_t;
+
+    static const unsigned reuse_factor = {reuse};
+    static const unsigned log2_reuse_factor = {log2_reuse};
+}};
+
+struct config{index} : config{index}_base {{
+    template<int L>
+    struct sublayer : config{index}_base {{}};
+}};
+
+{sublayer_configs}
+"""
+
 '''config_templates = {
     'Dense'                  : dense_config_template,
     'BinaryDense'            : dense_config_template,
@@ -186,6 +226,7 @@ pooling1d_function_template = 'nnet::pooling1d<{input_t}, {config}>({input}, {ou
 pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {config}>({input}, {output});'
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
 garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output}, {input_transform_weights}, {input_transform_biases}, {aggregator_distance_weights}, {aggregator_distance_biases}, {output_transform});'
+garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output}, {input_transform_weights}, {input_transform_biases}, {aggregator_distance_weights}, {aggregator_distance_biases}, {output_transform});'
 
 '''function_templates = {
     'Dense'                  : dense_function_template,
@@ -209,7 +250,7 @@ conv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_large
 activ_include_list = ['nnet_utils/nnet_activation.h']
 pooling_include_list = ['nnet_utils/nnet_pooling.h']
 merge_include_list = ['nnet_utils/nnet_merge.h']
-garnet_include_list = ['nnet_utils/nnet_garnet.h']
+garnet_include_list = ['nnet_utils/nnet_garnet.h', 'nnet_utils/nnet_garnet_unsigned.h']
 
 class VivadoBackend(Backend):
     def __init__(self):
@@ -227,6 +268,7 @@ class VivadoBackend(Backend):
         self.register_templates('Merge'                  , merge_function_template,       merge_config_template, merge_include_list)
         self.register_templates('Concatenate'            , merge_function_template,       concat_config_template, merge_include_list)
         self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
+        self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)
     
     def get_valid_reuse_factors(self, layer):
         n_in = 0
