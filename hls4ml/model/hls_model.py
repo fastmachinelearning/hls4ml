@@ -1136,7 +1136,7 @@ class GarNetStack(GarNet):
             config += '    static const aggregator_distance_biases_t (&aggregator_distance_biases)[n_aggregators];\n'
             config += '    static const output_transform_biases_t (&output_transform_biases)[n_out_features];\n'
 
-            config += '    typedef config{index}_base base_t;\n'
+            config += '    typedef config{}_base base_t;\n'.format(self.index)
             if il != self.attributes['n_sublayers'] - 1:
                 config += '    typedef config{index}::sublayer<{n}> next_layer_t;\n'.format(index=self.index, n=(il + 1))
 

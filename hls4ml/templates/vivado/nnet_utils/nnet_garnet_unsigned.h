@@ -19,6 +19,7 @@
 
 #ifndef NNET_GARNET_UNSIGNED_H_
 #define NNET_GARNET_UNSIGNED_H_
+#ifdef NNET_GARNET_TODO_FIX_THIS_
 
 // Precision-optimizing GarNet by separating signed and unsigned features
 
@@ -628,4 +629,5 @@ namespace nnet {
   
 }
 
+#endif
 #endif
