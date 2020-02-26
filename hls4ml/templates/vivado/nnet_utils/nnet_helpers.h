@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <fstream>
+#include <algorithm>
 #include "hls_stream.h"
 
 namespace nnet {
@@ -104,6 +105,13 @@ void load_compressed_weights_from_txt(T *w, const char* fname) {
             std::cerr << "ERROR: Expected " << SIZE << " values";
             std::cerr << " but read only " << i << " values" << std::endl;
         }
+    }
+}
+
+template<class srcType, class dstType, size_t SIZE>
+void convert_data(srcType *src, dstType *dst) {
+    for (size_t i = 0; i < SIZE; i++) {
+        dst[i] = dstType(src[i]);
     }
 }
 

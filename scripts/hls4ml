@@ -75,7 +75,7 @@ def convert(args):
         model = hls4ml.converters.keras_to_hls(yamlConfig)
 
     if model is not None:
-        model.config.writer.write_hls(model)
+        model.write()
 
     # Copy the config file to the generated folder
     copyfile(args.config, yamlConfig['OutputDir'] + '/' + config_filename)

@@ -1,7 +1,10 @@
 from __future__ import print_function
 import six
+import os
+import ctypes
 import re
 import numpy as np
+import numpy.ctypeslib as npc
 from collections import OrderedDict
 
 from ..templates import get_backend
@@ -216,6 +219,8 @@ class HLSModel(object):
         self.graph = OrderedDict()
         self.output_vars = {}
 
+        self._top_function_lib = None
+
         self._make_graph(layer_list)
 
     def _make_graph(self, layer_list):
@@ -330,6 +335,51 @@ class HLSModel(object):
 
     def get_layer_output_variable(self, output_name):
         return self.output_vars[output_name]
+
+    def write(self):
+        self.config.writer.write_hls(self)
+    
+    def compile(self):
+        self.write()
+        os.system('cd {dir} && sh build_lib.sh'.format(dir=self.config.get_output_dir()))
+        self._top_function_lib = ctypes.cdll.LoadLibrary('{}/firmware/{}.so'.format(self.config.get_output_dir(), self.config.get_project_name()))
+
+    def predict(self, x):
+        if self._top_function_lib is None:
+            raise Exception('Model not compiled')
+        if len(self.get_input_variables()) > 1 or len(self.get_input_variables()) > 1:
+            raise Exception('Calling "predict" on models with multiple inputs or outputs is not supported (yet)')
+
+        if not isinstance(x, np.ndarray):
+            raise Exception('Expected numpy.ndarray, but got {}'.format(type(x)))
+        if not x.flags['C_CONTIGUOUS']:
+            raise Exception('Array must be c_contiguous, try using numpy.ascontiguousarray(x)')
+        
+        if x.dtype in [np.single, np.float32]:
+            top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_float')
+            ctype = ctypes.c_float
+        elif x.dtype in [np.double, np.float64, np.float_]:
+            top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_double')
+            ctype = ctypes.c_double
+        else:
+            raise Exception('Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(x.dtype))
+
+        predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
+        size_in = ctypes.c_ushort()
+        size_out = ctypes.c_ushort()
+        
+        top_function.restype = None
+        top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS"), npc.ndpointer(ctype, flags="C_CONTIGUOUS"),
+            ctypes.POINTER(ctypes.c_ushort), ctypes.POINTER(ctypes.c_ushort)]
+
+        curr_dir = os.getcwd()
+        os.chdir(self.config.get_output_dir() + '/firmware')
+
+        top_function(x, predictions, ctypes.byref(size_in), ctypes.byref(size_out))
+
+        os.chdir(curr_dir)
+
+        return predictions
 
 class HLSType(object):
     def __init__(self, name, precision, **kwargs):
