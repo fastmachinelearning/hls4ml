@@ -15,89 +15,81 @@ for (name, short) in libs:
         globals()[short] = lib
 globals()['keras'] = tensorflow.keras
 
-def violinplot(data):
-    f = plt.figure()
-    hue = 'layer' if 'layer' in data.keys() else None
-    vp = sb.violinplot(x='x', y='weight', hue=hue, data=data[data['x'] > 0])
-    vp.set_yticklabels(vp.get_yticklabels(), rotation=45, ha='right')
-    if hue is not None:
-        vp.get_legend().remove()
-    vp.set_xscale('log', basex=2)
-    return f
-
-def boxplot(data):
-    from matplotlib.ticker import MaxNLocator
-    f = plt.figure()
-    hue = 'layer' if 'layer' in data.keys() else None
-    vp = sb.boxplot(x='x', y='weight', hue=hue, data=data[data['x'] > 0], showfliers=False)
-    vp.set_yticklabels(vp.get_yticklabels(), rotation=45, ha='right')
-    if hue is not None:
-        vp.get_legend().remove()
-    vp.set_xscale('log', basex=2)
-    return f
-
-def histogram(data):
-    from matplotlib.ticker import MaxNLocator
-    # Power of 2 bins covering data range
-    high = np.ceil(np.log2(max(data['x']))) + 1
-    low = np.floor(np.log2(min(data[data['x'] > 0]['x']))) - 1
-    bits = np.arange(low, high, 1)
-    bins = 2 ** bits
-    f = plt.figure()
-    colors = sb.color_palette("husl", len(data['weight'].unique()))
-    for i, weight in enumerate(data['weight'].unique()):
-        x = data[data['weight'] == weight]['x']
+def array_to_summary(x, fmt='boxplot'):
+    if fmt == 'boxplot':
+        y = {'med' : np.median(x),
+             'q1' : np.percentile(x, 25),
+             'q3' : np.percentile(x, 75),
+             'whislo' : min(x),
+             'whishi' : max(x)
+        }
+    elif fmt == 'histogram':
+        # Power of 2 bins covering data range
+        high = np.ceil(np.log2(max(x))) + 1
+        low = np.floor(np.log2(min(x))) - 1
+        bits = np.arange(low, high, 1)
+        bins = 2 ** bits
         h, b = np.histogram(x, bins=bins)
         h = h * 1. / float(sum(h)) # normalize
-        plt.bar(bits[:-1], h, width=1, fill=False, label=weight, edgecolor=colors[i])
+        y = {'h' : h,
+             'b' : np.log2(b)}
+    return y
+
+def boxplot(data, fmt='longform'):
+    if fmt == 'longform':
+        f = plt.figure() #figsize=(3, 3))
+        hue = 'layer' if 'layer' in data.keys() else None
+        vp = sb.boxplot(x='x', y='weight', hue=hue, data=data[data['x'] > 0], showfliers=False)
+        vp.set_yticklabels(vp.get_yticklabels(), rotation=45, ha='right')
+        if hue is not None:
+            vp.get_legend().remove()
+        vp.set_xscale('log', basex=2)
+        return f
+    elif fmt == 'summary':
+        from matplotlib.patches import Rectangle
+        medianprops = dict(linestyle='-', color='k')
+        f, ax = plt.subplots(1, 1)
+        data.reverse()
+        colors = sb.color_palette("Blues", len(data))
+        bp = ax.bxp(data, showfliers=False, vert=False, medianprops=medianprops)
+        # add colored boxes
+        for line, color in zip(bp['boxes'], colors):
+            x = line.get_xdata()
+            xl, xh = min(x), max(x)
+            y = line.get_ydata()
+            yl, yh = min(y), max(y)
+            rect = Rectangle((xl, yl), (xh-xl), (yh-yl), fill=True, color=color)
+            ax.add_patch(rect)
+        ax.set_yticklabels([d['weight'] for d in data])
+        ax.set_xscale('log', basex=2)
+        plt.xlabel('x')
+        return f
+    else:
+        return None
+
+def histogram(data, fmt='longform'):
+    f = plt.figure()
+    from matplotlib.ticker import MaxNLocator
+    n = len(data) if fmt == 'summary' else len(data['weight'].unique())
+    colors = sb.color_palette("husl", n)
+    if fmt == 'longform':
+        for i, weight in enumerate(data['weight'].unique()):
+            y = array_to_summary(data[data['weight'] == weight]['x'], fmt='histogram')
+            plt.bar(y['b'][:-1], y['h'], width=1, fill=False, label=weight, edgecolor=colors[i])
+    elif fmt == 'summary':
+        for i, weight in enumerate(data):
+            plt.bar(weight['b'][:-1], weight['h'], width=1, fill=False, label=weight['weight'], edgecolor=colors[i])
+
     plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.xlabel('log2(x)')
     plt.ylabel('frequency')
     plt.legend()
     return f
 
-def FacetGrid(data):
-    hue = 'layer' if 'layer' in data.keys() else None
-    vp = sb.FacetGrid(data[data['x'] > 0], row='weight', hue=hue)
-    vp.map(sb.kdeplot, "x", clip_on=False, shade=True, alpha=1, lw=1.5, bw=.2)
-    vp.map(sb.kdeplot, "x", clip_on=False, color="w", lw=2, bw=.2)
-    vp.map(plt.axhline, y=0, lw=2, clip_on=False)
-    vp.fig.subplots_adjust(hspace=-.25)
-    return vp.fig
-
-plots = {'violinplot' : violinplot,
-         'boxplot' : boxplot,
-         'FacetGrid' : FacetGrid,
+plots = {'boxplot' : boxplot,
          'histogram' : histogram}
 
-def weights_hlsmodel(model):
-    data = {'x' : [], 'layer' : [], 'weight' : []}
-    for layer in model.get_layers():
-        for iw, weight in enumerate(layer.get_weights()):
-            w = weight.data.flatten()
-            data['x'].extend(abs(w).tolist())
-            data['layer'].extend([layer.name for i in range(len(w))])
-            data['weight'].extend(['{}/{}'.format(layer.name, iw) for i in range(len(w))])
-
-    data = pandas.DataFrame(data)
-    return data
-
-def weights_keras(model):
-    data = {'x' : [], 'layer' : [], 'weight' : []}
-    for layer in model.layers:
-        name = layer.name
-        weights = layer.get_weights()
-        for i, w in enumerate(weights):
-            w = w.flatten()
-            n = len(w)
-            data['x'].extend(abs(w).tolist())
-            data['layer'].extend([name for j in range(n)])
-            data['weight'].extend(['{}/{}'.format(name, i) for j in range(n)])
-
-    data = pandas.DataFrame(data)
-    return data
-
-def types_boxplot(data):
+def types_boxplot(data, fmt='longform'):
     from matplotlib.patches import PathPatch
     from matplotlib.patches import Rectangle
     ax = plt.gca()
@@ -109,16 +101,20 @@ def types_boxplot(data):
     # Plot the custom precisions
     ticks = np.array([tick.get_text() for tick in plt.yticks()[1]])
     # Get the coordinates of the boxes to place the markers
-    boxes = [c.get_extents().inverse_transformed(ax.transData) for c in ax.get_children() if isinstance(c, PathPatch)]
-    ys = [(box.y0 + box.y1) / 2 for box in boxes]
-    ys = [(y, y) for y in ys]
+    if fmt == 'longform':
+        # seaborn adjusts the box positions slightly in groups
+        boxes = [c.get_extents().inverse_transformed(ax.transData) for c in ax.get_children() if isinstance(c, PathPatch)]
+        ys = [(box.y0 + box.y1) / 2 for box in boxes]
+        ys = [(y, y) for y in ys]
+    elif fmt == 'summary':
+        ys = [(y, y) for y in plt.yticks()[0]]
     for irow, row in data[data['layer'] != 'model'].iterrows():
         if row['layer'] in ticks:
             iy = np.argwhere(ticks == row['layer'])[0][0] # Determine which layer in the plot
             rectangle = Rectangle((row['low'], ys[iy][0]-0.4), row['high']-row['low'], 0.8, fill=True, color='grey', alpha=0.2)
             ax.add_patch(rectangle)
 
-def types_histogram(data):
+def types_histogram(data, fmt='longform'):
     ax = plt.gca()
     layers = np.array(ax.get_legend_handles_labels()[1])
     colors = sb.color_palette("husl", len(layers))
@@ -184,9 +180,69 @@ def activation_types_hlsmodel(model):
     data = pandas.DataFrame(data)
     return data
 
-def activations_keras(model, X):
+def weights_hlsmodel(model, fmt='longform', plot='boxplot'):
+    if fmt == 'longform':
+        data = {'x' : [], 'layer' : [], 'weight' : []}
+    elif fmt == 'summary':
+        data = []
+    for layer in model.get_layers():
+        for iw, weight in enumerate(layer.get_weights()):
+            w = weight.data.flatten()
+            w = abs(w[w != 0])
+            n = len(w)
+            if n == 0:
+                break
+            if fmt == 'longform':
+                data['x'].extend(w.tolist())
+                data['layer'].extend([layer.name for i in range(len(w))])
+                data['weight'].extend(['{}/{}'.format(layer.name, iw) for i in range(len(w))])
+            elif fmt == 'summary':
+                data.append(array_to_summary(w, fmt=plot))
+                data[-1]['layer'] = layer.name
+                data[-1]['weight'] = '{}/{}'.format(layer.name, iw)
+
+    if fmt == 'longform':
+        data = pandas.DataFrame(data)
+    return data
+
+def weights_keras(model, fmt='longform', plot='boxplot'):
+    if fmt == 'longform':
+        data = {'x' : [], 'layer' : [], 'weight' : []}
+    elif fmt == 'summary':
+        data = []
+    for layer in model.layers:
+        name = layer.name
+        weights = layer.get_weights()
+        for i, w in enumerate(weights):
+            w = w.flatten()
+            w = abs(w[w != 0])
+            n = len(w)
+            if n == 0:
+                break
+            if fmt == 'longform':
+                data['x'].extend(w.tolist())
+                data['layer'].extend([name for j in range(n)])
+                data['weight'].extend(['{}/{}'.format(name, i) for j in range(n)])
+            elif fmt == 'summary':
+                data.append(array_to_summary(w, fmt=plot))
+                data[-1]['layer'] = name
+                data[-1]['weight'] = '{}/{}'.format(name, i)
+
+    if fmt == 'longform':
+        data = pandas.DataFrame(data)
+    return data
+
+def activations_keras(model, X, fmt='longform', plot='boxplot'):
     # test layer by layer on data
-    data = {'x' : [], 'weight' : []}
+    if fmt == 'longform':
+        # return long form pandas dataframe for
+        # seaborn boxplot
+        data = {'x' : [], 'weight' : []}
+    elif fmt == 'summary':
+        # return summary statistics for matplotlib.axes.Axes.bxp
+        # or histogram bin edges and heights
+        data = []
+
     partial_model = keras.models.Sequential()
     for layer in model.layers:
         print("   {}".format(layer.name))
@@ -194,20 +250,28 @@ def activations_keras(model, X):
         partial_model.compile(optimizer='adam', loss='mse')
         if not isinstance(layer, keras.layers.InputLayer):
             y = partial_model.predict(X).flatten()
-            data['x'].extend(abs(y).tolist())
-            data['weight'].extend([layer.name for i in range(len(y))])
+            y = abs(y[y != 0])
+            if fmt == 'longform':
+                data['x'].extend(y.tolist())
+                data['weight'].extend([layer.name for i in range(len(y))])
+            elif fmt == 'summary':
+                data.append(array_to_summary(y, fmt=plot))
+                data[-1]['weight'] = layer.name
 
-    data = pandas.DataFrame(data)
+    if fmt == 'longform':
+        data = pandas.DataFrame(data)
     return data
 
-def numerical(keras_model=None, hlsmodel=None, X=None, plot='boxplot'):
+def numerical(keras_model=None, hls_model=None, X=None, plot='boxplot'):
     """
     Perform numerical profiling of a model
 
     Parameters
     ----------
-    model : keras model
+    keras_model : keras model
         The keras model to profile
+    hls_model : HLSModel
+        The HLSModel to profile
     X : array-like, optional
         Test data on which to evaluate the model to profile activations
         Must be formatted suitably for the model.predict(X) method
@@ -222,18 +286,18 @@ def numerical(keras_model=None, hlsmodel=None, X=None, plot='boxplot'):
     """
 
     print("Profiling weights")
-    if hlsmodel is not None and isinstance(hlsmodel, HLSModel):
-        data = weights_hlsmodel(hlsmodel)
+    if hls_model is not None and isinstance(hls_model, HLSModel):
+        data = weights_hlsmodel(hls_model, fmt='summary', plot=plot)
     elif keras_model is not None and isinstance(keras_model, keras.Model):
-        data = weights_keras(keras_model)
+        data = weights_keras(keras_model, fmt='summary', plot=plot)
     else:
         print("Only keras and HLSModel models can currently be profiled")
         return False, False
 
-    wp = plots[plot](data) # weight plot
-    if isinstance(hlsmodel, HLSModel) and plot in types_plots:
-        t_data = types_hlsmodel(hlsmodel)
-        types_plots[plot](t_data)
+    wp = plots[plot](data, fmt='summary') # weight plot
+    if isinstance(hls_model, HLSModel) and plot in types_plots:
+        t_data = types_hlsmodel(hls_model)
+        types_plots[plot](t_data, fmt='summary')
 
     plt.title("Distribution of (non-zero) weights")
     plt.tight_layout()
@@ -241,14 +305,14 @@ def numerical(keras_model=None, hlsmodel=None, X=None, plot='boxplot'):
     ap = None
     if X is not None and isinstance(keras_model, keras.Model):
         print("Profiling activations")
-        data = activations_keras(keras_model, X)
-        ap = plots[plot](data) # activation plot
+        data = activations_keras(keras_model, X, fmt='summary', plot=plot)
+        ap = plots[plot](data, fmt='summary') # activation plot
         plt.title("Distribution of (non-zero) activations")
         plt.tight_layout()
 
-    if X is not None and isinstance(hlsmodel, HLSModel):
-        t_data = activation_types_hlsmodel(hlsmodel)
-        types_plots[plot](t_data)
+    if X is not None and isinstance(hls_model, HLSModel):
+        t_data = activation_types_hlsmodel(hls_model)
+        types_plots[plot](t_data, fmt='summary')
 
     return wp, ap
 
