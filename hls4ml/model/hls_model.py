@@ -364,7 +364,12 @@ class HLSModel(object):
         else:
             raise Exception('Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(x.dtype))
 
-        predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
+        expected_size = self.get_input_variables()[0].size()
+        x_size = np.prod(x.shape)
+        n_samples, rem = divmod(x_size, expected_size)
+        if rem != 0:
+            raise Exception('Input size mismatch, got {}, expected {}'.format(x_size.shape, self.get_input_variables()[0].shape))
+        
         size_in = ctypes.c_ushort()
         size_out = ctypes.c_ushort()
         
@@ -375,11 +380,18 @@ class HLSModel(object):
         curr_dir = os.getcwd()
         os.chdir(self.config.get_output_dir() + '/firmware')
 
-        top_function(x, predictions, ctypes.byref(size_in), ctypes.byref(size_out))
+        output = []
+        for _ in range(n_samples):
+            predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
+            top_function(x, predictions, ctypes.byref(size_in), ctypes.byref(size_out))
+            output.append(predictions)
 
         os.chdir(curr_dir)
 
-        return predictions
+        if n_samples == 1:
+            return output[0]
+        else:
+            return output
 
 class HLSType(object):
     def __init__(self, name, precision, **kwargs):
