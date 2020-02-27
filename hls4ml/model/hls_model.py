@@ -1,6 +1,7 @@
 from __future__ import print_function
 import six
 import os
+import sys
 import ctypes
 import re
 import numpy as np
@@ -392,6 +393,25 @@ class HLSModel(object):
             return output[0]
         else:
             return output
+
+    def build(self, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
+        if 'linux' in sys.platform:
+            backend = self.config.get_config_value('Backend', 'Vivado')
+            if backend == 'Vivado':
+                found = os.system('command -v vivado_hls > /dev/null')
+                if found is not 0:
+                    raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
+                    
+            elif backend == 'Intel':
+                raise NotImplementedError
+            elif backend == 'Mentor':
+                raise NotImplementedError
+            else:
+                raise Exception('Backend values can be [Vivado, Intel, Mentor]')
+    
+        os.system('cd {dir} && vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
+            .format(dir=self.config.get_output_dir(), reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
+
 
 class HLSType(object):
     def __init__(self, name, precision, **kwargs):
@@ -909,7 +929,8 @@ class Conv2D(Layer):
             self.set_attr('strategy', 'large')
             if self.model.config.backend.name == 'Vivado':
                 self.model.config.backend.set_closest_reuse_factor(self)
-                self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
+                #self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
+                #self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[0, 1, 2, 3]) #(H,W,C,F) for kn2row
         else:
             self.set_attr('strategy', 'latency')
 
