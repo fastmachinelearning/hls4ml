@@ -132,9 +132,8 @@ def tf_to_hls(yamlConfig):
 
     #Extract model architecture from pb
     try:
-        #with tf.io.gfile.GFile(yamlConfig['TensorFlowModel'], "rb") as f:
-        with tf.gfile.GFile(yamlConfig['TensorFlowModel'], "rb") as f:
-            graph_def = tf.GraphDef()
+        with tf.io.gfile.GFile(yamlConfig['TensorFlowModel'], "rb") as f:
+            graph_def = tf.compat.v1.GraphDef()
             graph_def.ParseFromString(f.read())
     except BaseException as e:
         raise Exception('Error loading the graph definition: {}'.format(str(e)))
