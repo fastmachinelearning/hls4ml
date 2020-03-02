@@ -10,6 +10,10 @@ import sys
 import yaml
 import hls4ml
 
+from shutil import copyfile
+
+config_filename = 'hls4ml_config.yml'
+
 def parse_config(config_file):
     print('Loading configuration from', config_file)
     config = open(config_file, 'r')
@@ -22,6 +26,7 @@ def main():
     config_parser = subparsers.add_parser('config', help='Create a conversion configuration file')
     convert_parser = subparsers.add_parser('convert', help='Convert Keras or ONNX model to HLS')
     build_parser = subparsers.add_parser('build', help='Build generated HLS project')
+    report_parser = subparsers.add_parser('report', help='Show synthesis report of an HLS project')
 
     config_parser.add_argument('-m', '--model', help='Model file to convert (Keras .h5 or .json, or ONNX .onnx file)', default=None)
     config_parser.add_argument('-w', '--weights', help='Optional weights file (if Keras .json file is provided))', default=None)
@@ -34,11 +39,18 @@ def main():
     build_parser.add_argument('-p', '--project', help='Project directory', default=None)
     build_parser.add_argument('-c', '--simulation', help='Run C simulation', action='store_true', default=False)
     build_parser.add_argument('-s', '--synthesis', help='Run C/RTL synthesis', action='store_true', default=False)
-    build_parser.add_argument('-r', '--co-simulation', help='Run C/RTL co-simulation (implies -c and -s)', action='store_true', default=False)
+    build_parser.add_argument('-r', '--co-simulation', help='Run C/RTL co-simulation', action='store_true', default=False)
+    build_parser.add_argument('-v', '--validation', help='Run C/RTL validation', action='store_true', default=False)
     build_parser.add_argument('-e', '--export', help='Export IP (implies -s)', action='store_true', default=False)
-    build_parser.add_argument('-a', '--all', help='Run C simulation, C/RTL synthesis and co-simulation', action='store_true')
+    build_parser.add_argument('-l', '--vivado_synthesis', help='Run Vivado synthesis (implies -s)', action='store_true', default=False)
+    build_parser.add_argument('-a', '--all', help='Run C simulation, C/RTL synthesis, C/RTL co-simulation and Vivado synthesis', action='store_true')
+    build_parser.add_argument('--reset', help='Remove any previous builds', action='store_true', default=False)
     build_parser.set_defaults(func=build)
     
+    report_parser.add_argument('-p', '--project', help='Project directory', default=None)
+    report_parser.add_argument('-f', '--full', help='Show full report', action='store_true', default=False)
+    report_parser.set_defaults(func=report)
+
     parser.add_argument('--version', action='version', version='%(prog)s {version}'.format(version=__version__))
 
     args = parser.parse_args()
@@ -54,40 +66,73 @@ def convert(args):
     yamlConfig = parse_config(args.config)
     model = None
     if 'OnnxModel' in yamlConfig:
-        model = hls4ml.converters.onnx_to_hls(yamlConfig)
+        if hls4ml.converters.__onnx_enabled__:
+            model = hls4ml.converters.onnx_to_hls(yamlConfig)
+        else:
+            print("ONNX not found. Please install ONNX.")
+            sys.exit(1)
     elif 'PytorchModel' in yamlConfig:
-        model = hls4ml.converters.pytorch_to_hls(yamlConfig)
+        if hls4ml.converters.__pytorch_enabled__:
+            model = hls4ml.converters.pytorch_to_hls(yamlConfig)
+        else:
+            print("PyTorch not found. Please install PyTorch.")
+            sys.exit(1)
+    elif 'TensorFlowModel' in yamlConfig:
+        if hls4ml.converters.__tensorflow_enabled__:
+            model = hls4ml.converters.tf_to_hls(yamlConfig)
+        else:
+            print("TensorFlow not found. Please install TensorFlow.")
+            sys.exit(1)
     else:
         model = hls4ml.converters.keras_to_hls(yamlConfig)
-    
+
     if model is not None:
-        hls4ml.writer.vivado_writer.write_hls(model)
+        model.config.writer.write_hls(model)
+
+    # Copy the config file to the generated folder
+    copyfile(args.config, yamlConfig['OutputDir'] + '/' + config_filename)
 
 def build(args):
     if args.project is None:
         print('Project directory (-p or --project) must be provided.')
         sys.exit(1)
-    
-    csim = synth = cosim = export = 0
-    if args.simulation:
-        csim = 1
-    if args.synthesis:
-        synth = 1
-    if args.co_simulation:
-        synth = cosim = 1
-    if args.export:
-        synth = export = 1
+
+    reset = int(args.reset)
+    csim = int(args.simulation)
+    synth = int(args.synthesis)
+    cosim = int(args.co_simulation)
+    validation = int(args.validation)
+    export = int(args.export)
+    vsynth = int(args.vivado_synthesis)
     if args.all:
-        csim = synth = cosim = export = 1
+        csim = synth = cosim = validation = export = vsynth = 1
     
+    yamlConfig = parse_config(args.project + '/' + config_filename)
+
     # Check if vivado_hls is available
     if 'linux' in sys.platform or 'darwin' in sys.platform:
-        found = os.system('command -v vivado_hls > /dev/null')
-        if found is not 0:
-            print('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
-            sys.exit(1)
+        backend = yamlConfig.get('Backend', 'Vivado')
+        if backend == 'Vivado':
+            found = os.system('command -v vivado_hls > /dev/null')
+            if found is not 0:
+                print('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
+                sys.exit(1)
+        elif backend == 'Intel':
+            raise NotImplementedError
+        elif backend == 'Mentor':
+            raise NotImplementedError
+        else:
+            raise Exception('Backend values can be [Vivado, Intel, Mentor]')
     
-    os.system('cd {dir} && vivado_hls -f build_prj.tcl "csim={csim} synth={synth} cosim={cosim} export={export}"'.format(dir=args.project, csim=csim, synth=synth, cosim=cosim, export=export))
+    os.system('cd {dir} && vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
+        .format(dir=args.project, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
+
+def report(args):
+    if args.project is None:
+        print('Project directory (-p or --project) must be provided.')
+        sys.exit(1)
+    
+    hls4ml.report.read_vivado_report(args.project, args.full)
 
 if __name__== "__main__":
     main()

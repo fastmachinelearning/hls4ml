@@ -1,5 +1,4 @@
-KerasJson: keras/KERAS_3layer.json
-KerasH5:   keras/KERAS_3layer_weights.h5
+TensorFlowModel: tensorflow/3layer.pb
 #InputData: keras/KERAS_3layer_input_features.dat
 #OutputPredictions: keras/KERAS_3layer_predictions.dat
 OutputDir: my-hls-test

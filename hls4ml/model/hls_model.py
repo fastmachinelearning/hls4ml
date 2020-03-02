@@ -2,14 +2,17 @@ from __future__ import print_function
 import six
 import re
 import numpy as np
-from enum import Enum
 from collections import OrderedDict
 
-from .templates import get_config_template, get_function_template
+from ..templates import get_backend
+from ..writer import get_writer
 
 class HLSConfig(object):
     def __init__(self, config):
         self.config = config
+
+        self.backend = get_backend(self.config.get('Backend', 'Vivado'))
+        self.writer = get_writer(self.config.get('Backend', 'Vivado'))
 
         self.model_precision = {}
         self.layer_type_precision = {}
@@ -30,14 +33,27 @@ class HLSConfig(object):
         self._parse_hls_config()
         self._validate_hls_config()
 
-    def get_config_value(self, key):
-        return self.config.get(key, None)
+    def get_config_value(self, key, default=None):
+        return self.config.get(key, default)
 
     def get_project_name(self):
         return self.get_config_value('ProjectName')
 
     def get_output_dir(self):
         return self.get_config_value('OutputDir')
+
+    def get_layer_config_value(self, layer, key, default=None):
+        hls_config = self.config['HLSConfig']
+
+        name_config = hls_config.get('LayerName', {}).get(layer.name.lower(), None)
+        if name_config is not None:
+            return name_config.get(key, default)
+        
+        type_config = hls_config.get('LayerType', {}).get(layer.__class__.__name__, None)
+        if type_config is not None:
+            return type_config.get(key, default)
+        
+        return default
 
     def get_precision(self, layer, var='default'):
         precision = self.layer_name_precision.get(layer.name.lower() + '_' + var)
@@ -392,6 +408,23 @@ class ArrayVariable(Variable):
     def size_cpp(self):
         return '*'.join([str(k) for k in self.dim_names])
 
+class InplaceVariable():
+    def __init__(self, shape, dim_names, proxy, **kwargs):
+        self.shape = shape
+        self.dim_names = dim_names
+        self.type = proxy.type
+        self.name = proxy.name
+        self.size = proxy.size
+    
+    def get_shape(self):
+        return zip(self.dim_names, self.shape)
+
+    def definition_cpp(self):
+        return None
+
+    def size_cpp(self):
+        return '*'.join([str(k) for k in self.dim_names])
+
 class WeightVariable(Variable):
     def __init__(self, var_name, type_name, precision, data, **kwargs):
         super(WeightVariable, self).__init__(var_name, type_name, precision, **kwargs)
@@ -425,10 +458,14 @@ class WeightVariable(Variable):
         if 'int' in self.type.precision:
             self.precision_fmt = '%d'
         else:
-            precision_bits = re.search('.+<(.+?)>', self.type.precision).group(1).split(',')
-            decimal_bits = int(precision_bits[0]) - int(precision_bits[1])
-            decimal_spaces = int(np.floor(np.log10(2 ** decimal_bits - 1))) + 1
-            self.precision_fmt = '%.{}f'.format(decimal_spaces)
+            match = re.search('.+<(.+?)>', self.type.precision)
+            if match is not None:
+                precision_bits = match.group(1).split(',')
+                decimal_bits = int(precision_bits[0]) - int(precision_bits[1])
+                decimal_spaces = int(np.floor(np.log10(2 ** decimal_bits - 1))) + 1
+                self.precision_fmt = '%.{}f'.format(decimal_spaces)
+            else:
+                self.precision_fmt = '%f'
 
     def definition_cpp(self):
         return '{type} {name}[{size}]'.format(type=self.type.name, name=self.cppname, size=self.data_length)
@@ -491,14 +528,15 @@ class Layer(object):
 
         self.attributes = attributes
 
-        self._function_template = get_function_template(self.__class__.__name__)
-        self._config_template = get_config_template(self.__class__.__name__)
+        self._function_template = self.model.config.backend.get_function_template(self.__class__.__name__)
+        self._config_template = self.model.config.backend.get_config_template(self.__class__.__name__)
         self.weights = OrderedDict()
         self.variables = OrderedDict()
         self.precision = OrderedDict()
         accum_t = HLSType(*reversed(self.model.config.get_precision(self, 'accum')))
         self.precision[accum_t.name] = accum_t
         self.set_attr('accum_t', accum_t.precision)
+        self.reuse_factor = self.model.config.get_reuse_factor(self)
 
         self.initialize()
 
@@ -608,8 +646,7 @@ class Layer(object):
                 type_name = name + '{index}_t'
 
         if compression:
-            rf = self.model.config.get_reuse_factor(self)
-            var = CompressedWeightVariable(var_name, type_name=type_name, precision=precision, data=data, reuse_factor=rf, index=self.index)
+            var = CompressedWeightVariable(var_name, type_name=type_name, precision=precision, data=data, reuse_factor=self.reuse_factor, index=self.index)
         else:
             var = WeightVariable(var_name, type_name=type_name, precision=precision, data=data, index=self.index)
 
@@ -631,7 +668,7 @@ class Layer(object):
         params.update(self.attributes)
         params['index'] = self.index
         params['iotype'] = self.model.config.get_config_value('IOType')
-        params['reuse'] = self.model.config.get_reuse_factor(self)
+        params['reuse'] = self.reuse_factor
 
         # data types
         for weight_name, variable in self.weights.items():
@@ -674,6 +711,26 @@ class Input(Layer):
     def config_cpp(self):
         return None
 
+class Reshape(Layer):
+    def initialize(self):
+        shape = self.attributes['target_shape']
+        if shape[0] is None:
+            shape = shape[1:]
+        dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+
+        out_name = self.outputs[0]
+        proxy = self.get_input_variable()
+        out = InplaceVariable(shape, dims, proxy, index=self.get_input_node().index)
+
+        self.variables[out_name] = out
+        self.model.register_output_variable(out_name, out)
+
+    def function_cpp(self):
+        return None
+
+    def config_cpp(self):
+        return None
+
 class Dense(Layer):
     def initialize(self):
         shape = [self.attributes['n_out']]
@@ -681,8 +738,8 @@ class Dense(Layer):
         quantize = self.get_attr('quantize', default=0)
         compression = self.model.config.get_compression(self)
         if self.model.config.is_resource_strategy(self):
-            if self.model.config.get_reuse_factor(self) == 1:
-                print('WARNING: Using ReuseFactor 1 with "Resource" strategy. This may not work.')
+            if self.model.config.backend.name == 'Vivado':
+                self.model.config.backend.set_closest_reuse_factor(self)
             if compression:
                 self.set_attr('strategy', 'compressed')
             else:
@@ -696,7 +753,8 @@ class Dense(Layer):
             if self.model.config.get_compression(self):
                 index_t = self.get_weights('weight').type.index_precision
             else:
-                self.weights['weight'].data = np.transpose(self.weights['weight'].data)
+                if self.model.config.backend.name == 'Vivado':
+                    self.weights['weight'].data = np.transpose(self.weights['weight'].data)
         self.set_attr('index_t', index_t)
         self.add_bias(quantize=quantize)
 
@@ -719,14 +777,28 @@ class Dense(Layer):
 
 class Conv1D(Layer):
     def initialize(self):
-        shape = [self.attributes['y_out'], self.attributes['n_filt']]
-        dims = ['Y_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['n_out'], self.attributes['n_filt']]
+            dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+        else:
+            shape = [self.attributes['n_filt'], self.attributes['n_out']]
+            dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
+        
         self.add_output_variable(shape, dims)
         self.add_weights()
         self.add_bias()
+        if self.model.config.is_resource_strategy(self):
+            self.set_attr('strategy', 'large')
+            if self.model.config.backend.name == 'Vivado':
+                self.model.config.backend.set_closest_reuse_factor(self)
+                self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 1, 0]) #(W,C,F) => (F,C,W)
+        else:
+            self.set_attr('strategy', 'latency')
 
     def function_cpp(self):
         params = self._default_function_params()
+        params['strategy'] = self.get_attr('strategy')
+        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
         params['w'] = self.get_weights('weight').name
         params['b'] = self.get_weights('bias').name
 
@@ -734,26 +806,55 @@ class Conv1D(Layer):
 
     def config_cpp(self):
         params = self._default_config_params()
-        params['n_in'] = self.get_input_variable().dim_names[0]
-        params['n_chan'] = self.get_input_variable().dim_names[1]
-        params['filt_width'] = self.get_attr('y_filt')
+        input_dims = self.get_input_variable().dim_names
+        if self.get_attr('data_format') == 'channels_last':
+            params['n_in'] = '*'.join([str(k) for k in input_dims[:-1]])
+            params['n_chan'] = input_dims[-1]
+        else:
+            params['n_in'] = '*'.join([str(k) for k in input_dims[1:]])
+            params['n_chan'] = input_dims[0]
         params['dilation'] = self.get_attr('dilation', 1)
         params['n_filt'] = 'N_FILT_{}'.format(self.index)
-        params['n_out'] = 'Y_OUTPUTS_{}'.format(self.index)
+        params['n_out'] = 'N_OUTPUTS_{}'.format(self.index)
         params['nzeros'] = self.get_weights('weight').nzeros
+        params['config_t'] = 'std::nullptr_t'
 
-        return self._config_template.format(**params)
+        if self.model.config.is_resource_strategy(self):
+            params['config_t'] = 'config{}_mult'.format(self.index)
+            conv_config = self._config_template[0].format(**params)
+
+            mult_params = self._default_config_params()
+            mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_width')
+            mult_params['n_out'] = self.get_attr('n_filt')
+            mult_config = self._config_template[1].format(**mult_params)
+
+            return mult_config + '\n' + conv_config
+        else:
+            return self._config_template[0].format(**params)
 
 class Conv2D(Layer):
     def initialize(self):
-        shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
-        dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
+            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+        else:
+            shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
+            dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.add_weights()
         self.add_bias()
+        if self.model.config.is_resource_strategy(self):
+            self.set_attr('strategy', 'large')
+            if self.model.config.backend.name == 'Vivado':
+                self.model.config.backend.set_closest_reuse_factor(self)
+                self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
+        else:
+            self.set_attr('strategy', 'latency')
 
     def function_cpp(self):
         params = self._default_function_params()
+        params['strategy'] = self.get_attr('strategy')
+        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
         params['w'] = self.get_weights('weight').name
         params['b'] = self.get_weights('bias').name
 
@@ -761,15 +862,36 @@ class Conv2D(Layer):
 
     def config_cpp(self):
         params = self._default_config_params()
-        params['in_height'] = self.get_input_variable().dim_names[0]
-        params['in_width'] = self.get_input_variable().dim_names[1]
-        params['n_chan'] = self.get_input_variable().dim_names[2]
-        params['out_height'] = self.get_output_variable().dim_names[0]
-        params['out_width'] = self.get_output_variable().dim_names[1]
-        params['n_filt'] = self.get_output_variable().dim_names[2]
+        if self.get_attr('data_format') == 'channels_last':
+            params['in_height'] = self.get_input_variable().dim_names[0]
+            params['in_width'] = self.get_input_variable().dim_names[1]
+            params['n_chan'] = self.get_input_variable().dim_names[2]
+            params['out_height'] = self.get_output_variable().dim_names[0]
+            params['out_width'] = self.get_output_variable().dim_names[1]
+            params['n_filt'] = self.get_output_variable().dim_names[2]
+        else:
+            params['n_chan'] = self.get_input_variable().dim_names[0]
+            params['in_height'] = self.get_input_variable().dim_names[1]
+            params['in_width'] = self.get_input_variable().dim_names[2]
+            params['n_filt'] = self.get_output_variable().dim_names[0]
+            params['out_height'] = self.get_output_variable().dim_names[1]
+            params['out_width'] = self.get_output_variable().dim_names[2]
+        params['dilation'] = self.get_attr('dilation', 1)
         params['nzeros'] = self.get_weights('weight').nzeros
+        params['config_t'] = 'std::nullptr_t'
 
-        return self._config_template.format(**params)
+        if self.model.config.is_resource_strategy(self):
+            params['config_t'] = 'config{}_mult'.format(self.index)
+            conv_config = self._config_template[0].format(**params)
+
+            mult_params = self._default_config_params()
+            mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
+            mult_params['n_out'] = self.get_attr('n_filt')
+            mult_config = self._config_template[1].format(**mult_params)
+
+            return mult_config + '\n' + conv_config
+        else:
+            return self._config_template[0].format(**params)
 
 class Pooling1D(Layer):
     def initialize(self):
@@ -799,7 +921,7 @@ class Pooling2D(Layer):
 
     def function_cpp(self):
         params = self._default_function_params()
-
+        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
         return [self._function_template.format(**params)]
 
     def config_cpp(self):
@@ -818,10 +940,13 @@ class Activation(Layer):
         shape = inp.shape
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
+        if self.model.config.backend.name == 'Vivado':
+            self.set_attr('table_t', self.model.config.get_layer_config_value(self, 'table_t', 'ap_fixed<18,8>'))
+            self.set_attr('table_size', self.model.config.get_layer_config_value(self, 'table_size', 1024))
 
     def function_cpp(self):
         params = self._default_function_params()
-        params['activation'] = self.get_attr('activation')
+        params['activation'] = self.get_attr('activation').lower()
         params['config'] = '{}_config{}'.format(self.get_attr('activation'), self.index)
 
         return [self._function_template.format(**params)]
@@ -950,18 +1075,87 @@ class Concatenate(Merge):
 
         return self._config_template.format(**params)
 
+class BiasAdd(Merge): # TensorFlow's operator that gets merged into Dense/Conv
+    def initialize(self):
+        inp = self.get_input_variable(self.inputs[0])
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_bias()
+        self.add_output_variable(shape, dims)
+
+    def function_cpp(self):
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
+
+    def config_cpp(self):
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
+
+class Resize(Layer):
+    def initialize(self):
+        shape = [self.get_attr('new_height'), self.get_attr('new_width'), self.get_attr('n_chan')]
+        dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
+        self.add_output_variable(shape, dims)
+
+    def function_cpp(self):
+        params = self._default_function_params()
+        params['algorithm'] = self.get_attr('algorithm')
+
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+
+        return self._config_template.format(**params)
+
+class Transpose(Layer):
+    def initialize(self):
+        inp = self.get_input_variable(self.inputs[0])
+        perm = self.get_attr('perm')
+        self.set_attr('dim', '{}d'.format(len(inp.shape)))
+        if len(perm) == 4 and perm[0] == 0:
+            perm = [i - 1 for i in perm[1:]]
+        shape = [inp.shape[i] for i in perm]
+        self.set_attr('perm_str', ','.join([str(i) for i in perm]))
+        if len(shape) == 2:
+            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+            self.set_attr('depth', 1)
+            self.set_attr('height', shape[0])
+            self.set_attr('width', shape[1])
+        else:
+            dims = ['OUT_DEPTH_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+            self.set_attr('depth', shape[0])
+            self.set_attr('height', shape[1])
+            self.set_attr('width', shape[2])
+        self.add_output_variable(shape, dims)
+
+    def function_cpp(self):
+        params = self._default_function_params()
+        params['dim'] = self.get_attr('dim')
+
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+
+        return self._config_template.format(**params)
+
 layer_map = {
     'InputLayer'         : Input,
     'Activation'         : Activation,
+    'QActivation'        : Activation,
     'LeakyReLU'          : ParametrizedActivation,
     'ThresholdedReLU'    : ParametrizedActivation,
     'ELU'                : ParametrizedActivation,
     'PReLU'              : PReLU,
+    'Reshape'            : Reshape,
     'Dense'              : Dense,
     'BinaryDense'        : Dense,
     'TernaryDense'       : Dense,
+    'QDense'             : Dense,
     'Conv1D'             : Conv1D,
+    'QConv1D'            : Conv1D,
     'Conv2D'             : Conv2D,
+    'BinaryConv2D'       : Conv2D,
+    'QConv2D'            : Conv2D,
     'BatchNormalization' : BatchNormalization,
     'MaxPooling1D'       : Pooling1D,
     'AveragePooling1D'   : Pooling1D,
@@ -969,6 +1163,10 @@ layer_map = {
     'AveragePooling2D'   : Pooling2D,
     'Merge'              : Merge,
     'Concatenate'        : Concatenate,
+    'Resize'             : Resize,
+    'Transpose'          : Transpose,
+    # TensorFlow-specific layers:
+    'BiasAdd'            : BiasAdd,
 }
 
 def register_layer(name, clazz):

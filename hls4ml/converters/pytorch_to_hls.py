@@ -3,10 +3,7 @@ import numpy as np
 import os
 import yaml
 import sys
-try:
-    import torch # Don't fail the whole hls4ml initialization
-except:
-    pass
+import torch
 import pickle
 import re
 
@@ -104,6 +101,6 @@ def pytorch_to_hls(yamlConfig):
     reader = PyTorchDataReader(yamlConfig)
     print('Creating HLS model')
     hls_model = HLSModel(yamlConfig, reader, layer_list)
-    optimizers = ['eliminate_linear_activation', 'merge_batch_norm_quantized_tanh', 'quantize_dense_output']
+    optimizers = ['eliminate_linear_activation', 'merge_batch_norm_quantized_tanh', 'quantize_dense_output', 'fuse_dense_batch_norm']
     optimize_model(hls_model, optimizers)
     return hls_model

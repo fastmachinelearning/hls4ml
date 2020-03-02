@@ -8,12 +8,16 @@
 #include "nnet_utils/nnet_dense_large.h"
 #include "nnet_utils/nnet_dense_compressed.h"
 #include "nnet_utils/nnet_conv.h"
+#include "nnet_utils/nnet_conv_large.h"
 #include "nnet_utils/nnet_conv2d.h"
+#include "nnet_utils/nnet_conv2d_large.h"
 #include "nnet_utils/nnet_activation.h"
 #include "nnet_utils/nnet_common.h"
 #include "nnet_utils/nnet_batchnorm.h"
 #include "nnet_utils/nnet_pooling.h"
 #include "nnet_utils/nnet_merge.h"
+#include "nnet_utils/nnet_array.h"
+#include "nnet_utils/nnet_image.h"
 #include "nnet_utils/nnet_helpers.h"
 
 //hls-fpga-machine-learning insert numbers
