@@ -18,7 +18,7 @@ git clean -fx _book
 git add .
 
 # commit
-git commit -a -m "Add note about additional protobuf dependency for onnx and add link to detailed installation"
+git commit -a -m "update profiling example code"
 
 # push to the origin
 git push origin gh-pages

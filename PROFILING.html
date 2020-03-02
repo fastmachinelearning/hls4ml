@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <title>HLS4ML · GitBook</title>
+        <title>Profiling · GitBook</title>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="description" content="">
         <meta name="generator" content="GitBook 3.2.3">
@@ -57,8 +57,10 @@
     <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="RELEASENOTES.html" />
+    <link rel="next" href="CONCEPTS.html" />
     
+    
+    <link rel="prev" href="COMMAND.html" />
     
 
     </head>
@@ -87,7 +89,7 @@
         
         
     
-        <li class="chapter active" data-level="1.1" data-path="./">
+        <li class="chapter " data-level="1.1" data-path="./">
             
                 <a href="./">
             
@@ -197,7 +199,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.6" data-path="PROFILING.html">
+        <li class="chapter active" data-level="1.6" data-path="PROFILING.html">
             
                 <a href="PROFILING.html">
             
@@ -279,7 +281,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href="." >HLS4ML</a>
+        <a href="." >Profiling</a>
     </h1>
 </div>
 
@@ -294,13 +296,46 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <div style="text-align: center;"><img src="img/logo.jpg" width="500"></div>
+                                <h1 id="profiling">Profiling</h1>
+<hr>
+<p>In the <code>hls4ml</code> configuration file, it is possible to specify the model <em>Precision</em> and <em>ReuseFactor</em> with fine granularity.</p>
+<p>Using a low precision can help reduce the FPGA resource usage of a model, but may result in loss of model performance if chosen inappropriately. The profiling tools in <code>hls4ml</code> help you to decide the appropriate model precision.</p>
+<p>Profiling uses some extra dependencies, to install these, run <code>pip install .[profiling]</code> from the <code>hls4ml</code> root. The profiling tools are provided as a <code>Python</code> module which you can use.</p>
+<p>Three types of objects can be provided: <strong>a Keras model object</strong>, <strong>test data</strong>, and an <strong>HLSModel object</strong>.
+You will need to initialise these objects by using a trained model, loading a model from a file, and loading your data. The Keras model and data each need to be in the format that would normally allow you to run, e.g. <code>model.predict(X)</code>.</p>
+<pre><code>from hls4ml.model.profiling import numerical
+from hls4ml.converters import keras_to_hls
+import matplotlib.pyplot as plt
+import yaml
 
-<p>A package for machine learning inference in FPGAs.  We create firmware implementations of machine learning algorithms using high level synthesis language (HLS). We translate traditional open-source machine learning package models into HLS that can be configured for your use-case!</p>
-<p>The project is currently in development, so please let us know if you are interested, your experiences with the package, and if you would like new features to be added.</p>
-<p>Contact: <a href="mailto:hls4ml.help@gmail.com" target="_blank">hls4ml.help@gmail.com</a></p>
-<h2 id="project-status">Project status</h2>
-<p>For the latest status including current and planned features, see the <a href="STATUS.html">Status and Features</a> page. </p>
+# pseudo code:
+model = load_model()
+X = load_data()
+
+# real code:
+# load your hls4ml .yml config file with yaml
+with open(&quot;keras-config.yml&quot;, &apos;r&apos;) as ymlfile:
+    config = yaml.load(ymlfile)
+
+hls_model = keras_to_hls(config)
+
+# produce an activation profile (ap)
+# and weights profile (wp)
+ap, wp = numerical(keras_model=model, hls_model = hls_model, X=X)
+plt.show()
+</code></pre><p>Calling the <code>hls4ml.model.profiling.numerical</code> method with these three objects provided will produce two figures as below:</p>
+<p><img src="img/activations.png" width="350" align="left">
+<img src="img/weights.png" width="350" align="right"></p>
+<p><br><br><br><br><br><br><br><br><br><br><br><br></p>
+<p>Different plots styles are available with the <code>plot</code> keyword argument. Valid options are <code>boxplot</code> (default), <code>histogram</code>, <code>violinplot</code>. In the default boxplot style, each variable in the neural network is evaluated using the given test data and the distribution of (non-zero) values is shown with a box and whisker diagram.</p>
+<p>When different combinations of the input objects are given, different plots will be produced:</p>
+<p>1) Only Keras model: only the weights profile plot will be produced, the activation profile will be <code>None</code>. No grey boxes representing the data types will be shown.</p>
+<p>2) Only HLSModel (or HLSModel and Keras model): only the weights profile plot will be produced, with grey boxes indicating the data types from the HLSModel. </p>
+<p>3) Keras model and data (<code>X</code>): both the weights profile and activation profile will be produced. No grey boxes representing the data types will be shown.</p>
+<p>4) Keras model, HLSModel, and data: both weights and activation profiles are produced, with grey boxes indicating the data types from the HLSModel.</p>
+<p>Each box shows the median and quartiles of the distribution. The grey shaded boxes show the range which can be represented with the hls4ml config file used.</p>
+<p>As a starting point, a good configuration would at least cover the box and whisker for each variable with the grey box. Make sure the box and whisker is contained to the right by using sufficient integer bits to avoid overflow. It might be that more precision is needed (grey boxes extend further to the left) to achieve satisfactory performance. In some cases, it is safe to barely cover the values and still achieve good accuracy.</p>
+<p>To establish whether the configuration gives good performance, run C Simulation with test data and compare the results to your model evaluated on the CPU with floating point.</p>
 
                                 
                                 </section>
@@ -328,8 +363,12 @@
 
             
                 
+                <a href="COMMAND.html" class="navigation navigation-prev " aria-label="Previous page: Command help">
+                    <i class="fa fa-angle-left"></i>
+                </a>
                 
-                <a href="RELEASENOTES.html" class="navigation navigation-next navigation-unique" aria-label="Next page: Release Notes">
+                
+                <a href="CONCEPTS.html" class="navigation navigation-next " aria-label="Next page: Concepts">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -340,7 +379,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"HLS4ML","level":"1.1","depth":1,"next":{"title":"Release Notes","level":"1.2","depth":1,"path":"RELEASENOTES.md","ref":"RELEASENOTES.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"README.md","mtime":"2020-02-14T22:16:07.368Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-02-18T13:59:39.568Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Profiling","level":"1.6","depth":1,"next":{"title":"Concepts","level":"1.7","depth":1,"path":"CONCEPTS.md","ref":"CONCEPTS.md","articles":[]},"previous":{"title":"Command help","level":"1.5","depth":1,"path":"COMMAND.md","ref":"COMMAND.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"PROFILING.md","mtime":"2020-02-18T13:58:12.471Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-02-18T13:59:39.568Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>
