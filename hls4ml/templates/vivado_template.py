@@ -130,15 +130,12 @@ concat_config_template = """struct config{index} : nnet::concat_config {{
     static const unsigned axis = {axis};
 }};\n"""
 
-garnet_config_template = """struct config{index} : nnet::garnet_config {{
+garnet_common_config_template = """
     static const unsigned n_vertices = {n_vertices};
     static const unsigned n_vertices_width = {n_vertices_width};
     static const unsigned n_in_features = {n_in_features};
     static const unsigned n_in_ufeatures = {n_in_ufeatures};
     static const unsigned n_in_sfeatures = n_in_features - n_in_ufeatures;
-    static const unsigned n_propagate = {n_propagate};
-    static const unsigned n_aggregators = {n_aggregators};
-    static const unsigned n_out_features = {n_out_features};
     static const unsigned distance_width = {distance_width};
     static const unsigned output_collapse = {collapse_type};
 
@@ -155,6 +152,18 @@ garnet_config_template = """struct config{index} : nnet::garnet_config {{
     typedef {edge_weight_aggr_t} edge_weight_aggr_t;
     typedef {aggr_t} aggr_t;
     typedef {uaggr_t} uaggr_t;
+    typedef {output_t} output_t;
+
+    static const unsigned reuse_factor = {reuse};
+    static const unsigned log2_reuse_factor = {log2_reuse};
+"""
+
+garnet_config_template = """struct config{index} : nnet::garnet_config {{"""
+garnet_config_template += garnet_common_config_template
+garnet_config_template += """
+    static const unsigned n_propagate = {n_propagate};
+    static const unsigned n_aggregators = {n_aggregators};
+    static const unsigned n_out_features = {n_out_features};
 
     static const input_transform_weights_t (&input_transform_weights)[n_out_features * n_aggregators * n_in_features];
     static const input_transform_biases_t (&input_transform_biases)[n_out_features * n_aggregators];
@@ -162,8 +171,7 @@ garnet_config_template = """struct config{index} : nnet::garnet_config {{
     static const aggregator_distance_biases_t (&aggregator_distance_biases)[n_aggregators];
     static const output_transform_biases_t (&output_transform_biases)[n_out_features];
 
-    static const unsigned reuse_factor = {reuse};
-    static const unsigned log2_reuse_factor = {log2_reuse};
+    typedef config{index} base_t;
 }};
 
 const config{index}::input_transform_weights_t (&config{index}::input_transform_weights)[config{index}::n_out_features * config{index}::n_aggregators * config{index}::n_in_features] = {input_transform_weights};
@@ -173,35 +181,19 @@ const config{index}::aggregator_distance_biases_t (&config{index}::aggregator_di
 const config{index}::output_transform_biases_t (&config{index}::output_transform_biases)[config{index}::n_out_features] = {output_transform_biases};
 """
 
-garnet_stack_config_template = """struct config{index}_base : nnet::garnet_config {{
-    static const unsigned n_vertices = {n_vertices};
-    static const unsigned n_vertices_width = {n_vertices_width};
-    static const unsigned n_sublayers = {n_sublayers};
-    static const unsigned n_in_ufeatures = 0;
-    static const unsigned distance_width = {distance_width};
-    static const unsigned output_collapse = {collapse_type};
+garnet_stack_config_template = """struct config{index}_base : nnet::garnet_config {{"""
+garnet_stack_config_template += garnet_common_config_template
+garnet_stack_config_template += """
+    static const bool is_stack = true;
 
-    typedef {input_transform_weights_t} input_transform_weights_t;
-    typedef {input_transform_biases_t} input_transform_biases_t;
-    typedef {aggregator_distance_weights_t} aggregator_distance_weights_t;
-    typedef {aggregator_distance_biases_t} aggregator_distance_biases_t;
-    typedef {output_transform_weights_t} output_transform_weights_t;
-    typedef {output_transform_biases_t} output_transform_biases_t;
-
-    typedef {norm_t} norm_t;
-    typedef ap_fixed<{distance_width}, {distance_nint}, AP_TRN, AP_SAT> distance_t;
-    typedef {edge_weight_t} edge_weight_t;
-    typedef {edge_weight_aggr_t} edge_weight_aggr_t;
-    typedef {aggr_t} aggr_t;
-    typedef {uaggr_t} uaggr_t;
-
-    static const unsigned reuse_factor = {reuse};
-    static const unsigned log2_reuse_factor = {log2_reuse};
+    typedef config{index}_base base_t;
 }};
 
 struct config{index} : config{index}_base {{
+    static const unsigned n_sublayers = {n_sublayers};
+
     template<int L>
-    struct sublayer : config{index}_base {{}};
+    struct sublayer_t : config{index}_base {{}};
 }};
 
 {sublayer_configs}
