@@ -265,6 +265,32 @@ class VivadoWriter(Writer):
         for layer in model.get_layers():
             for weights in layer.get_weights():
                 self.print_array_to_cpp(weights, model.config.get_output_dir())
+    
+    def __make_dat_file(self, original_path, project_path): 
+        """
+        Convert other input/output data types into a dat file, which is
+        a text file with the falttened matrix printed out. Note that ' ' is
+        assumed to be the delimiter. 
+        """
+
+        #Take in data from current supported data files
+        if original_path[-3:] == "npy":
+            data = np.load(original_path)
+        else:
+            raise Exception("Unsupported input/output data files.")
+
+        #Faltten data, just keep first dimension
+        data = data.reshape(data.shape[0], -1)
+
+        def print_data(f):
+            for i in range(data.shape[0]):
+                for j in range(data.shape[1]):
+                    f.write(str(data[i][j]) + " ")
+                f.write("\n")
+
+        #Print out in dat file
+        with open(project_path, "w" ) as f:
+            print_data(f)
 
     def write_test_bench(self, model):
         ###################
@@ -275,12 +301,21 @@ class VivadoWriter(Writer):
 
         if not os.path.exists('{}/tb_data/'.format(model.config.get_output_dir())):
             os.mkdir('{}/tb_data/'.format(model.config.get_output_dir()))
+        
         input_data = model.config.get_config_value('InputData')
         output_predictions = model.config.get_config_value('OutputPredictions')
-        if input_data is not None:
-            copyfile(input_data, '{}/tb_data/tb_input_features.dat'.format(model.config.get_output_dir()))
-        if output_predictions is not None:
-            copyfile(output_predictions, '{}/tb_data/tb_output_predictions.dat'.format(model.config.get_output_dir()))
+        
+        if input_data:
+            if input_data[-3:] == "dat":
+                copyfile(input_data, '{}/tb_data/tb_input_features.dat'.format(model.config.get_output_dir()))
+            else:
+                self.__make_dat_file(input_data,'{}/tb_data/tb_input_features.dat'.format(model.config.get_output_dir()))
+        
+        if output_predictions:
+            if output_predictions[-3:] == "dat":
+                copyfile(output_predictions, '{}/tb_data/tb_output_predictions.dat'.format(model.config.get_output_dir()))
+            else:
+                self.__make_dat_file(output_predictions,'{}/tb_data/tb_output_predictions.dat'.format(model.config.get_output_dir()))
 
         f = open(os.path.join(filedir,'../templates/vivado/myproject_test.cpp'),'r')
         fout = open('{}/{}_test.cpp'.format(model.config.get_output_dir(), model.config.get_project_name()),'w')

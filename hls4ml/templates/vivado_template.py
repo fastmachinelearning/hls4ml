@@ -83,8 +83,10 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
 
 activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned n_in = {n_in};
-    static const unsigned table_size = 1024;
+    static const unsigned table_size = {table_size};
     static const unsigned io_type = nnet::{iotype};
+    static const unsigned reuse_factor = {reuse};
+    typedef {table_t} table_t;
 }};\n"""
 
 pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
@@ -128,6 +130,21 @@ concat_config_template = """struct config{index} : nnet::concat_config {{
     static const unsigned n_elem2_2 = {n_elem2_2};
 
     static const unsigned axis = {axis};
+}};\n"""
+
+resize_config_template = """struct config{index} : nnet::resize_config {{
+    static const unsigned height = {height};
+    static const unsigned width = {width};
+    static const unsigned n_chan = {n_chan};
+    static const unsigned new_height = {new_height};
+    static const unsigned new_width = {new_width};
+}};\n"""
+
+transpose_config_template = """struct config{index} : nnet::transpose_config {{
+    static const unsigned depth = {depth};
+    static const unsigned height = {height};
+    static const unsigned width = {width};
+    static const unsigned perm[3] = {{{perm_str}}};
 }};\n"""
 
 garnet_common_config_template = """
@@ -199,21 +216,6 @@ struct config{index} : config{index}_base {{
 {sublayer_configs}
 """
 
-'''config_templates = {
-    'Dense'                  : dense_config_template,
-    'BinaryDense'            : dense_config_template,
-    'BatchNormalization'     : batchnorm_config_template,
-    'Conv1D'                 : [conv1d_config_template, conv_mult_config_template],
-    'Conv2D'                 : [conv2d_config_template, conv_mult_config_template],
-    'Activation'             : activ_config_template,
-    'ParametrizedActivation' : activ_config_template,
-    'PReLU'                  : activ_config_template,
-    'Pooling1D'              : pooling1d_config_template,
-    'Pooling2D'              : pooling2d_config_template,
-    'Merge'                  : merge_config_template,
-    'Concatenate'            : concat_config_template,
-}'''
-
 dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
 conv1d_function_template = 'nnet::conv_1d_{strategy}_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b}, nnet::compute_multiplier_limit<{config}>({w}));'
@@ -223,23 +225,10 @@ param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {conf
 pooling1d_function_template = 'nnet::pooling1d<{input_t}, {config}>({input}, {output});'
 pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {config}>({input}, {output});'
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
+resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
+transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}, {output});'
 garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
 garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
-
-'''function_templates = {
-    'Dense'                  : dense_function_template,
-    'BinaryDense'            : dense_function_template,
-    'BatchNormalization'     : batchnorm_function_template,
-    'Conv1D'                 : conv1d_function_template,
-    'Conv2D'                 : conv2d_function_template,
-    'Activation'             : activ_function_template,
-    'ParametrizedActivation' : param_activ_function_template,
-    'PReLU'                  : param_activ_function_template,
-    'Pooling1D'              : pooling1d_function_template,
-    'Pooling2D'              : pooling2d_function_template,
-    'Merge'                  : merge_function_template,
-    'Concatenate'            : merge_function_template,
-}'''
 
 dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_large.h']
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h']
@@ -248,6 +237,8 @@ conv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_large
 activ_include_list = ['nnet_utils/nnet_activation.h']
 pooling_include_list = ['nnet_utils/nnet_pooling.h']
 merge_include_list = ['nnet_utils/nnet_merge.h']
+resize_include_list = ['nnet_utils/nnet_image.h']
+transpose_include_list = ['nnet_utils/nnet_array.h']
 garnet_include_list = ['nnet_utils/nnet_garnet.h', 'nnet_utils/nnet_garnet_unsigned.h']
 
 class VivadoBackend(Backend):
@@ -265,6 +256,8 @@ class VivadoBackend(Backend):
         self.register_templates('Pooling2D'              , pooling2d_function_template,   pooling2d_config_template, pooling_include_list)
         self.register_templates('Merge'                  , merge_function_template,       merge_config_template, merge_include_list)
         self.register_templates('Concatenate'            , merge_function_template,       concat_config_template, merge_include_list)
+        self.register_templates('Resize'                 , resize_function_template,      resize_config_template, resize_include_list)
+        self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template, transpose_include_list)
         self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
         self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)
     

@@ -8,7 +8,10 @@ parallel=1
 csim="csim=0"
 synth="synth=0"
 cosim="cosim=0"
+validation="validation=0"
+vsynth="vsynth=0"
 export="export=0"
+reset="reset=0"
 
 function print_usage {
    echo "Usage: `basename $0` [OPTION]"
@@ -29,9 +32,15 @@ function print_usage {
    echo "   -s"
    echo "      Run C/RTL synthesis."
    echo "   -r"
-   echo "      Run C/RTL cosimulation. Implies -s."
+   echo "      Run C/RTL cosimulation."
+   echo "   -t"
+   echo "      Run C/RTL validation."
+   echo "   -l"
+   echo "      Run Vivado (logic) synthesis."
    echo "   -e"
-   echo "      Export IP. Implies -s."
+   echo "      Export IP."
+   echo "   -n"
+   echo "      Create new project (reset any existing)."
    echo "   -h"
    echo "      Prints this help message."
 }
@@ -63,7 +72,7 @@ function check_status {
    cd ..
 }
 
-while getopts ":d:i:v:p:csreh" opt; do
+while getopts ":d:i:v:p:csrtlenh" opt; do
    case "$opt" in
    d) basedir=$OPTARG
       ;;
@@ -78,10 +87,14 @@ while getopts ":d:i:v:p:csreh" opt; do
    s) synth="synth=1"
       ;;
    r) cosim="cosim=1"
-      synth="synth=1"
+      ;;
+   t) validation="validation=1"
+      ;;
+   l) vsynth="vsynth=1"
       ;;
    e) export="export=1"
-      synth="synth=1"
+      ;;
+   n) reset="reset=1"
       ;;
    h)
       print_usage
@@ -114,7 +127,7 @@ done
 
 source ${vivadodir}/Vivado/${vivadover}/settings64.sh
 
-opt="${csim} ${synth} ${cosim} ${export}"
+opt="${reset} ${csim} ${synth} ${cosim} ${validation} ${vsynth} ${export}"
 
 if [ "${parallel}" -gt 1 ]; then
    # Run in parallel

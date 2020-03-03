@@ -36,14 +36,27 @@ class HLSConfig(object):
         self._parse_hls_config()
         self._validate_hls_config()
 
-    def get_config_value(self, key):
-        return self.config.get(key, None)
+    def get_config_value(self, key, default=None):
+        return self.config.get(key, default)
 
     def get_project_name(self):
         return self.get_config_value('ProjectName')
 
     def get_output_dir(self):
         return self.get_config_value('OutputDir')
+
+    def get_layer_config_value(self, layer, key, default=None):
+        hls_config = self.config['HLSConfig']
+
+        name_config = hls_config.get('LayerName', {}).get(layer.name.lower(), None)
+        if name_config is not None:
+            return name_config.get(key, default)
+        
+        type_config = hls_config.get('LayerType', {}).get(layer.__class__.__name__, None)
+        if type_config is not None:
+            return type_config.get(key, default)
+        
+        return default
 
     def get_precision(self, layer, var='default'):
         precision = self.layer_name_precision.get(layer.name.lower() + '_' + var)
@@ -1213,10 +1226,13 @@ class Activation(Layer):
         shape = inp.shape
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
+        if self.model.config.backend.name == 'Vivado':
+            self.set_attr('table_t', self.model.config.get_layer_config_value(self, 'table_t', 'ap_fixed<18,8>'))
+            self.set_attr('table_size', self.model.config.get_layer_config_value(self, 'table_size', 1024))
 
     def function_cpp(self):
         params = self._default_function_params()
-        params['activation'] = self.get_attr('activation')
+        params['activation'] = self.get_attr('activation').lower()
         params['config'] = '{}_config{}'.format(self.get_attr('activation'), self.index)
 
         return [self._function_template.format(**params)]
@@ -1319,20 +1335,6 @@ class Merge(Layer):
 
         return self._config_template.format(**params)
 
-class BiasAdd(Merge): # TensorFlow's operator that gets merged into Dense/Conv
-    def initialize(self):
-        inp = self.get_input_variable(self.inputs[0])
-        shape = inp.shape
-        dims = inp.dim_names
-        self.add_bias()
-        self.add_output_variable(shape, dims)
-
-    def function_cpp(self):
-        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
-
-    def config_cpp(self):
-        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
-
 class Concatenate(Merge):
     def initialize(self):
         assert(len(self.inputs) == 2)
@@ -1359,9 +1361,73 @@ class Concatenate(Merge):
 
         return self._config_template.format(**params)
 
+class BiasAdd(Merge): # TensorFlow's operator that gets merged into Dense/Conv
+    def initialize(self):
+        inp = self.get_input_variable(self.inputs[0])
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_bias()
+        self.add_output_variable(shape, dims)
+
+    def function_cpp(self):
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
+
+    def config_cpp(self):
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
+
+class Resize(Layer):
+    def initialize(self):
+        shape = [self.get_attr('new_height'), self.get_attr('new_width'), self.get_attr('n_chan')]
+        dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
+        self.add_output_variable(shape, dims)
+
+    def function_cpp(self):
+        params = self._default_function_params()
+        params['algorithm'] = self.get_attr('algorithm')
+
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+
+        return self._config_template.format(**params)
+
+class Transpose(Layer):
+    def initialize(self):
+        inp = self.get_input_variable(self.inputs[0])
+        perm = self.get_attr('perm')
+        self.set_attr('dim', '{}d'.format(len(inp.shape)))
+        if len(perm) == 4 and perm[0] == 0:
+            perm = [i - 1 for i in perm[1:]]
+        shape = [inp.shape[i] for i in perm]
+        self.set_attr('perm_str', ','.join([str(i) for i in perm]))
+        if len(shape) == 2:
+            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+            self.set_attr('depth', 1)
+            self.set_attr('height', shape[0])
+            self.set_attr('width', shape[1])
+        else:
+            dims = ['OUT_DEPTH_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+            self.set_attr('depth', shape[0])
+            self.set_attr('height', shape[1])
+            self.set_attr('width', shape[2])
+        self.add_output_variable(shape, dims)
+
+    def function_cpp(self):
+        params = self._default_function_params()
+        params['dim'] = self.get_attr('dim')
+
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+
+        return self._config_template.format(**params)
+
 layer_map = {
     'InputLayer'         : Input,
     'Activation'         : Activation,
+    'QActivation'        : Activation,
     'LeakyReLU'          : ParametrizedActivation,
     'ThresholdedReLU'    : ParametrizedActivation,
     'ELU'                : ParametrizedActivation,
@@ -1370,9 +1436,12 @@ layer_map = {
     'Dense'              : Dense,
     'BinaryDense'        : Dense,
     'TernaryDense'       : Dense,
+    'QDense'             : Dense,
     'Conv1D'             : Conv1D,
+    'QConv1D'            : Conv1D,
     'Conv2D'             : Conv2D,
     'BinaryConv2D'       : Conv2D,
+    'QConv2D'            : Conv2D,
     'BatchNormalization' : BatchNormalization,
     'MaxPooling1D'       : Pooling1D,
     'AveragePooling1D'   : Pooling1D,
@@ -1380,10 +1449,12 @@ layer_map = {
     'AveragePooling2D'   : Pooling2D,
     'Merge'              : Merge,
     'Concatenate'        : Concatenate,
+    'Resize'             : Resize,
+    'Transpose'          : Transpose,
     'GarNet'             : GarNet,
     'GarNetStack'        : GarNetStack,
     # TensorFlow-specific layers:
-    'BiasAdd'            : BiasAdd
+    'BiasAdd'            : BiasAdd,
 }
 
 def register_layer(name, clazz):

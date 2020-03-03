@@ -87,7 +87,7 @@ pipeline {
           steps {
             dir(path: 'test') {
               sh '''#!/bin/bash
-                 ./build-prj.sh -i /opt/Xilinx -v 2017.2 -r -p 2'''
+                 ./build-prj.sh -i /opt/Xilinx -v 2017.2 -s -r -p 2'''
             }
           }
         }
@@ -101,7 +101,7 @@ pipeline {
           steps {
             dir(path: 'test') {
               sh '''#!/bin/bash
-                 ./build-prj.sh -i /opt/Xilinx -v 2018.2 -r -p 2'''
+                 ./build-prj.sh -i /opt/Xilinx -v 2018.2 -s -r -p 2'''
             }
           }
         }

@@ -66,7 +66,7 @@ for i in ${!py2dirs[*]}; do
    py2dir="${py2dirs[$i]}"
    py3dir="${py3dirs[$i]}"
    echo "Checking ${py2dir%/} and ${py3dir%/}:"
-   diff -rq "${py2dir}" "${py3dir}"
+   diff -rq -x hls4ml_config.yml "${py2dir}" "${py3dir}"
    if [ $? -eq 0 ]; then
       echo "No differences found."
       rm -rf "${py2dir}" "${py3dir}" 
@@ -79,7 +79,7 @@ for i in ${!py2dirs[*]}; do
          echo "Removed ${py2dir%/}"
       fi
    else
-      diff -r "${py2dir}" "${py3dir}"
+      diff -r -x hls4ml_config.yml "${py2dir}" "${py3dir}"
       failed=1
    fi
    echo ""
