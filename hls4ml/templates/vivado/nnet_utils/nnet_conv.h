@@ -88,8 +88,7 @@ void conv_1d_latency_cl(
     data_T data[CONFIG_T::n_in * CONFIG_T::n_chan],
     res_T  res[CONFIG_T::n_out * CONFIG_T::n_filt],
     typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
-    typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt],
-    const int multiplier_limit
+    typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt]
 )
 {
 
@@ -107,6 +106,7 @@ void conv_1d_latency_cl(
     #pragma HLS ARRAY_PARTITION variable=biases complete dim=0
 
     // Limit multipliers to control parallelization
+    const int multiplier_limit = compute_multiplier_limit<CONFIG_T>(weights);
     #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
     // Convolve, saving all multiplication results to accumulate later
