@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CC=g++
-CFLAGS="-O3 -fPIC -std=c++11"
+CFLAGS="-O3 -fPIC -std=c++11 -fno-gnu-unique"
 LDFLAGS=
 INCFLAGS="-Ifirmware/ap_types/"
 PROJECT=myproject

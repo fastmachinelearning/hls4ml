@@ -34,6 +34,8 @@ class HLSConfig(object):
         self.layer_type_compression = {}
         self.layer_name_compression = {}
 
+        self.trace_output = self.get_config_value('TraceOutput', False)
+
         self._parse_hls_config()
         self._validate_hls_config()
 
@@ -52,11 +54,11 @@ class HLSConfig(object):
         name_config = hls_config.get('LayerName', {}).get(layer.name.lower(), None)
         if name_config is not None:
             return name_config.get(key, default)
-        
+
         type_config = hls_config.get('LayerType', {}).get(layer.__class__.__name__, None)
         if type_config is not None:
             return type_config.get(key, default)
-        
+
         return default
 
     def get_precision(self, layer, var='default'):
@@ -339,13 +341,19 @@ class HLSModel(object):
 
     def write(self):
         self.config.writer.write_hls(self)
-    
+
     def compile(self):
         self.write()
         os.system('cd {dir} && sh build_lib.sh'.format(dir=self.config.get_output_dir()))
-        self._top_function_lib = ctypes.cdll.LoadLibrary('{}/firmware/{}.so'.format(self.config.get_output_dir(), self.config.get_project_name()))
+        lib_name = '{}/firmware/{}.so'.format(self.config.get_output_dir(), self.config.get_project_name())
+        if self._top_function_lib is not None:
+            dlclose_func = ctypes.CDLL('libdl.so').dlclose
+            dlclose_func.argtypes = [ctypes.c_void_p]
+            dlclose_func.restype = ctypes.c_int
+            dlclose_func(self._top_function_lib._handle)    
+        self._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
 
-    def predict(self, x):
+    def _get_top_function(self, x):
         if self._top_function_lib is None:
             raise Exception('Model not compiled')
         if len(self.get_input_variables()) > 1 or len(self.get_input_variables()) > 1:
@@ -355,7 +363,7 @@ class HLSModel(object):
             raise Exception('Expected numpy.ndarray, but got {}'.format(type(x)))
         if not x.flags['C_CONTIGUOUS']:
             raise Exception('Array must be c_contiguous, try using numpy.ascontiguousarray(x)')
-        
+
         if x.dtype in [np.single, np.float32]:
             top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_float')
             ctype = ctypes.c_float
@@ -365,26 +373,34 @@ class HLSModel(object):
         else:
             raise Exception('Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(x.dtype))
 
+        top_function.restype = None
+        top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS"), npc.ndpointer(ctype, flags="C_CONTIGUOUS"),
+            ctypes.POINTER(ctypes.c_ushort), ctypes.POINTER(ctypes.c_ushort)]
+
+        return top_function, ctype
+
+    def _compute_n_samples(self, x):
         expected_size = self.get_input_variables()[0].size()
         x_size = np.prod(x.shape)
         n_samples, rem = divmod(x_size, expected_size)
         if rem != 0:
             raise Exception('Input size mismatch, got {}, expected {}'.format(x_size.shape, self.get_input_variables()[0].shape))
-        
-        size_in = ctypes.c_ushort()
-        size_out = ctypes.c_ushort()
-        
-        top_function.restype = None
-        top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS"), npc.ndpointer(ctype, flags="C_CONTIGUOUS"),
-            ctypes.POINTER(ctypes.c_ushort), ctypes.POINTER(ctypes.c_ushort)]
+
+        return n_samples
+
+    def predict(self, x):
+        top_function, ctype = self._get_top_function(x)
+        n_samples = self._compute_n_samples(x)
 
         curr_dir = os.getcwd()
         os.chdir(self.config.get_output_dir() + '/firmware')
 
         output = []
-        for _ in range(n_samples):
+        if n_samples == 1:
+            x = [x]
+        for i in range(n_samples):
             predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
-            top_function(x, predictions, ctypes.byref(size_in), ctypes.byref(size_out))
+            top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
             output.append(predictions)
 
         os.chdir(curr_dir)
@@ -394,6 +410,69 @@ class HLSModel(object):
         else:
             return output
 
+    def trace(self, x):
+        print('Recompiling {} with tracing'.format(self.config.get_project_name()))
+        self.config.trace_output = True
+        self.compile()
+
+        top_function, ctype = self._get_top_function(x)
+        n_samples = self._compute_n_samples(x)
+
+        class TraceData(ctypes.Structure):
+            _fields_ = [('name', ctypes.c_char_p),
+                        ('data', ctypes.c_void_p)]
+
+        trace_output = {}
+        layer_sizes = {}
+        n_traced = 0
+        for layer in self.get_layers():
+            if layer.function_cpp() and self.config.get_layer_config_value(layer, 'Trace', False):
+                n_traced += len(layer.get_variables())
+                trace_output[layer.name] = []
+                layer_sizes[layer.name] = layer.get_output_variable().shape
+
+        collect_func = self._top_function_lib.collect_trace_output
+        collect_func.argtypes = [ctypes.POINTER(TraceData)]
+        collect_func.restype = None
+        trace_data = (TraceData * n_traced)()
+        
+        alloc_func = self._top_function_lib.allocate_trace_storage
+        alloc_func.argtypes = [ctypes.c_size_t]
+        alloc_func.restype = None
+
+        free_func = self._top_function_lib.free_trace_storage
+        free_func.argtypes = None
+        free_func.restype = None
+
+        curr_dir = os.getcwd()
+        os.chdir(self.config.get_output_dir() + '/firmware')
+
+        alloc_func(ctypes.sizeof(ctype))
+
+        output = []
+        
+        if n_samples == 1:
+            x = [x]
+        for i in range(n_samples):
+            predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
+            top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
+            output.append(predictions)
+            collect_func(trace_data)
+            for trace in trace_data:
+                layer_name = str(trace.name, 'utf-8')
+                layer_data = ctypes.cast(trace.data, ctypes.POINTER(ctype))
+                np_array = np.ctypeslib.as_array(layer_data, shape=layer_sizes[layer_name])
+                trace_output[layer_name].append(np.copy(np_array))
+
+        free_func()
+
+        os.chdir(curr_dir)
+
+        if n_samples == 1:
+            return output[0], trace_output
+        else:
+            return output, trace_output
+
     def build(self, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
         if 'linux' in sys.platform:
             backend = self.config.get_config_value('Backend', 'Vivado')
@@ -401,14 +480,14 @@ class HLSModel(object):
                 found = os.system('command -v vivado_hls > /dev/null')
                 if found is not 0:
                     raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
-                    
+
             elif backend == 'Intel':
                 raise NotImplementedError
             elif backend == 'Mentor':
                 raise NotImplementedError
             else:
                 raise Exception('Backend values can be [Vivado, Intel, Mentor]')
-    
+
         os.system('cd {dir} && vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
             .format(dir=self.config.get_output_dir(), reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
 
@@ -497,7 +576,7 @@ class InplaceVariable():
         self.type = proxy.type
         self.name = proxy.name
         self.size = proxy.size
-    
+
     def get_shape(self):
         return zip(self.dim_names, self.shape)
 
@@ -865,7 +944,7 @@ class Conv1D(Layer):
         else:
             shape = [self.attributes['n_filt'], self.attributes['n_out']]
             dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
-        
+
         self.add_output_variable(shape, dims)
         self.add_weights()
         self.add_bias()
@@ -929,8 +1008,7 @@ class Conv2D(Layer):
             self.set_attr('strategy', 'large')
             if self.model.config.backend.name == 'Vivado':
                 self.model.config.backend.set_closest_reuse_factor(self)
-                #self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
-                #self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[0, 1, 2, 3]) #(H,W,C,F) for kn2row
+                self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
         else:
             self.set_attr('strategy', 'latency')
 
