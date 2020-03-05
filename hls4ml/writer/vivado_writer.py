@@ -143,6 +143,11 @@ class VivadoWriter(Writer):
                     if func:
                         for line in func:
                             newline += '    ' + line + '\n'
+                        if model.config.trace_output and model.config.get_layer_config_value(layer, 'Trace', False):
+                            newline += '#ifndef __SYNTHESIS__\n'
+                            for var in vars:
+                                newline += '    nnet::save_layer_output<{}>({}, "{}", {});\n'.format(var.type.name, var.name, layer.name, var.size_cpp())
+                            newline += '#endif\n'
                         newline += '\n'
 
             #Just copy line
@@ -406,6 +411,14 @@ class VivadoWriter(Writer):
 
                 for o in model_outputs:
                     newline += indent + 'nnet::convert_data<{}, {}, {}>({}_ap, {});\n'.format(o.type.name, dtype, o.size_cpp(), o.cppname, o.cppname)
+            elif '//hls-fpga-machine-learning insert trace_outputs' in line:
+                newline = ''
+                for layer in model.get_layers():
+                    if layer.function_cpp() and model.config.trace_output and model.config.get_layer_config_value(layer, 'Trace', False):
+                            vars = layer.get_variables()
+                            for var in vars:
+                                newline += indent + 'nnet::trace_outputs->insert(std::pair<std::string, void *>("{}", (void *) malloc({} * element_size)));\n'.format(layer.name, var.size_cpp())
+                    
             else:
                 newline = line
             fout.write(newline)

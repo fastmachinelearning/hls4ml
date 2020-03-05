@@ -27,6 +27,12 @@
 
 #define CHECKPOINT 5000
 
+namespace nnet {
+    bool trace_enabled = true;
+    std::map<std::string, void *> *trace_outputs = NULL;
+    size_t trace_type_size = sizeof(double);
+}
+
 int main(int argc, char **argv)
 {
   //load input data from text file
