@@ -132,9 +132,8 @@ def tf_to_hls(yamlConfig):
 
     #Extract model architecture from pb
     try:
-        #with tf.io.gfile.GFile(yamlConfig['TensorFlowModel'], "rb") as f:
-        with tf.gfile.GFile(yamlConfig['TensorFlowModel'], "rb") as f:
-            graph_def = tf.GraphDef()
+        with tf.io.gfile.GFile(yamlConfig['TensorFlowModel'], "rb") as f:
+            graph_def = tf.compat.v1.GraphDef()
             graph_def.ParseFromString(f.read())
     except BaseException as e:
         raise Exception('Error loading the graph definition: {}'.format(str(e)))
@@ -156,7 +155,7 @@ def tf_to_hls(yamlConfig):
     array_ops = ['ConcatV2', 'StridedSlice', 'Transpose']
     core_ops = ['Const', 'Identity', 'Placeholder']
     image_ops = ['ResizeNearestNeighbor']
-    math_ops = ['Add', 'Mul', 'Sigmoid']
+    math_ops = ['Add', 'MatMul', 'Mul', 'Sigmoid']
     nn_ops = ['AvgPool', 'BiasAdd', 'Conv2D', 'Elu', 'FusedBatchNorm', 'MaxPool', 'Relu', 'Selu', 'Softmax']
     supported_ops = array_ops + core_ops + image_ops + math_ops + nn_ops
 

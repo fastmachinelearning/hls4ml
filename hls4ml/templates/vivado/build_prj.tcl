@@ -117,10 +117,15 @@ if {$opt(export)} {
 
 if {$opt(vsynth)} {
   puts "***** VIVADO SYNTHESIS *****"
-  set time_start [clock clicks -milliseconds]
-  exec vivado -mode batch -source vivado_synth.tcl >@ stdout
-  set time_end [clock clicks -milliseconds]
-  report_time "VIVADO SYNTHESIS" $time_start $time_end
+  if {[file exist myproject_prj/solution1/syn/vhdl]} {
+    set time_start [clock clicks -milliseconds]
+    exec vivado -mode batch -source vivado_synth.tcl >@ stdout
+    set time_end [clock clicks -milliseconds]
+    report_time "VIVADO SYNTHESIS" $time_start $time_end
+  } else {
+    puts "ERROR: Cannot find generated VHDL files. Did you run C synthesis?"
+    exit 1
+  }
 }
 
 exit
