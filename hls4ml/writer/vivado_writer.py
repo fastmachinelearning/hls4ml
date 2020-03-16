@@ -60,6 +60,13 @@ class VivadoWriter(Writer):
 
     @staticmethod
     def _make_array_pragma(variable):
+        """
+        Layers in hls_model.py can specify output array partitioning through the `pragma` attribute.
+        If `pragma` is a string: options are 'partition', 'reshape', or 'stream'.
+        If `pragma` is a tuple: (mode, type, factor) where mode is 'partition' or 'reshape', type is
+        'complete', 'cyclic', or 'block', and factor is an integer only used when the type is not 'complete'.
+        """
+        
         config = variable.pragma
         if type(config) is tuple:
             mode = config[0]
@@ -130,24 +137,18 @@ class VivadoWriter(Writer):
                 all_inputs = [i.cppname for i in model_inputs]
                 all_outputs = [o.cppname for o in model_outputs]
 
-                for i in model_inputs: newline += indent + self._make_array_pragma(i) + '\n'
-                for o in model_outputs: newline += indent + self._make_array_pragma(o) + '\n'
-
-                interface_mode = model.config.get_config_value('InterfaceMode')
-                if interface_mode is None:
-                    if model.config.get_config_value('IOType') == 'io_parallel':
-                        interface_mode = 'ap_vld'
-                    elif model.config.get_config_value('IOType') == 'io_serial':
-                        interface_mode = 'axis'
-                        
-                newline += indent + '#pragma HLS INTERFACE {} port={},{} \n'.format(interface_mode, ','.join(all_inputs), ','.join(all_outputs))
-
                 if model.config.get_config_value("IOType") == "io_parallel":
+                    for i in model_inputs: newline += indent + self._make_array_pragma(i) + '\n'
+                    for o in model_outputs: newline += indent + self._make_array_pragma(o) + '\n'
+                    # TODO discussed adding a handle for setting the interface mode for individual input and output arrays (16.03.2020)
+                    # Probably the handle doesn't need to be exposed to the user but should be just set in hls_model.py
+                    newline += indent + '#pragma HLS INTERFACE ap_vld port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
                     if model.config.model_strategy == 'Resource':
                         newline += indent + '#pragma HLS DATAFLOW \n'
                     else:
                         newline += indent + '#pragma HLS PIPELINE \n'
-                elif model.config.get_config_value('IOType') == 'io_serial':
+                if model.config.get_config_value("IOType") == "io_serial":
+                    newline += indent + '#pragma HLS INTERFACE axis port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
                     newline += indent + '#pragma HLS DATAFLOW \n'
 
                 inval_str = '\n    '.join(['const_size_in_{} = {};'.format(i, inp.size_cpp()) for i, inp in enumerate(model_inputs, 1)])
