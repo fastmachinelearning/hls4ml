@@ -108,10 +108,11 @@ def keras_to_hls(yamlConfig):
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']
     merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate']
     qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D']
+    graph_layers = ['GarNet', 'GarNetStack']
     #Define layers to skip for conversion to HLS
     skip_layers = ['Dropout', 'Flatten']
     #All supported layers
-    supported_layers = core_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + skip_layers
+    supported_layers = core_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + graph_layers + skip_layers
 
     #Map inputs of skipped and split (activation) layers
     inputs_map = {}
@@ -410,6 +411,44 @@ def keras_to_hls(yamlConfig):
                 layer['class_name'] = 'Merge'
             if len(layer['inputs']) > 2:
                 raise Exception('ERROR: Merging more than two tensors is not yet supported.')
+
+        elif layer['class_name'] in ['GarNet', 'GarNetStack']:
+            layer['input_format'] = keras_layer['config']['input_format']
+            if layer['input_format'] == 'x':
+                raise NotImplementedError('Cannot use GarNet with input_format="x"')
+
+            layer['n_vertices'] = input_shapes[0][1]
+            layer['collapse'] = keras_layer['config']['collapse']
+
+            layer['n_aggregators'] = keras_layer['config']['n_aggregators']
+            layer['n_out_features'] = keras_layer['config']['n_filters'] # number of output features
+            layer['n_propagate'] = keras_layer['config']['n_propagate'] # number of latent features
+
+            if layer['class_name'] == 'GarNet':
+                if layer['input_format'] == 'xn':
+                    layer['n_in_features'] = input_shapes[0][2]
+                elif layer['input_format'] == 'xen':
+                    layer['n_in_features'] = input_shapes[0][2] + 1
+    
+                n_out_features = layer['n_out_features']
+
+            elif layer['class_name'] == 'GarNetStack':
+                layer['n_sublayers'] = keras_layer['config']['n_sublayers']
+
+                if layer['input_format'] == 'xn':
+                    layer['n_in_features'] = [input_shapes[0][2]]
+                elif layer['input_format'] == 'xen':
+                    layer['n_in_features'] = [input_shapes[0][2] + 1]
+
+                for il in range(1, layer['n_sublayers']):
+                    layer['n_in_features'].append(layer['n_out_features'][il - 1])
+
+                n_out_features = layer['n_out_features'][-1]
+                
+            if layer['collapse'] in ['mean', 'sum', 'max']:
+                output_shape = [input_shapes[0][0], n_out_features]
+            else:
+                output_shape = input_shapes[0][:2] + [n_out_features]
 
         print('Layer name: {}, layer type: {}, current shape: {}'.format(layer['name'], layer['class_name'], input_shapes))
         layer_list.append( layer )

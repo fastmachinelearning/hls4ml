@@ -1,6 +1,7 @@
 from __future__ import print_function
 import six
 import re
+import math
 import numpy as np
 from collections import OrderedDict
 
@@ -872,6 +873,252 @@ class Conv2D(Layer):
         else:
             return self._config_template[0].format(**params)
 
+class GarNet(Layer):
+    ref_impl = False
+
+    def initialize(self):
+        reuse_factor = self.model.config.get_reuse_factor(self)
+        if self.attributes['n_vertices'] % reuse_factor != 0:
+            raise Exception('GarNet vertex loop has no bound check; number of vertices must be divisible by the reuse factor ({}).'.format(reuse_factor))
+
+        self._initialize_transforms()
+
+        # A bit controvertial but we are going to reshape the input variable here
+        input_array = self.get_input_variable(self.inputs[0])
+        partition_factor = input_array.shape[1] * (input_array.shape[0] // reuse_factor)
+        input_array.pragma = ('partition', 'cyclic', partition_factor)
+        
+        if self.attributes['collapse']:
+            shape = [self._output_features]
+            dims = ['OUT_FEATURES_{}'.format(self.index)]
+            pragma = 'partition'
+        else:
+            shape = [self.attributes['n_vertices'], self._output_features]
+            dims = ['VERTICES_{}'.format(self.index),'OUT_FEATURES_{}'.format(self.index)]
+            partition_factor = self._output_features * (self.attributes['n_vertices'] // reuse_factor)
+            pragma = ('partition', 'cyclic' , partition_factor)
+
+        self.add_output_variable(shape, dims, pragma=pragma)
+
+    def _initialize_transforms(self):
+        if self.ref_impl:
+            weights_source = [
+                ('input_transform', 'FLR_kernel'),
+                ('input_transform', 'FLR_bias'),
+                ('aggregator_distance', 'S_kernel'),
+                ('aggregator_distance', 'S_bias'),
+                ('output_transform', 'Fout_kernel'),
+                ('output_transform', 'Fout_bias')
+            ]
+        else:
+            n_propagate = self.attributes['n_propagate']
+            n_aggregators = self.attributes['n_aggregators']
+            n_out_features = self.attributes['n_out_features']
+
+            kernel, bias = self._make_input_transform_weights(n_propagate, n_aggregators, n_out_features)
+
+            self.add_weights_variable(name='input_transform_weights', var_name='input_transform_w{index}', data=kernel, quantize=0, compression=False)
+            self.add_weights_variable(name='input_transform_biases', var_name='input_transform_b{index}', data=bias, quantize=0, compression=False)
+
+            weights_source = [
+                ('aggregator_distance', 'S_kernel'),
+                ('aggregator_distance', 'S_bias'),
+                ('output_transform', 'Fout_bias')
+            ]
+
+        for op_name, wname in weights_source:
+            data = self.model.get_weights_data(self.name, '{name}/{wname}:0'.format(name=self.name, wname=wname))
+            if 'kernel' in wname:
+                data = data.transpose((1, 0))
+                vtype = 'weights'
+                suffix = 'w'
+            else:
+                vtype = 'biases'
+                suffix = 'b'
+
+            name = '{}_{}'.format(op_name, vtype)
+            var_name = '{}_{}{{index}}'.format(op_name, suffix)
+
+            self.add_weights_variable(name=name, var_name=var_name, data=data, quantize=0, compression=False)
+
+        self._output_features = self.attributes['n_out_features']
+
+    def _make_input_transform_weights(self, n_propagate, n_aggregators, n_out_features, sublayer=''):
+        # Due to linearity of the input transform, input weights and biases can be contracted away at conversion time
+
+        output_transform_kernel = self.model.get_weights_data(self.name, '{name}/Fout{sublayer}_kernel:0'.format(name=self.name, sublayer=sublayer)) # [(n_aggregators, n_propagate), n_out_features]
+        output_transform_kernel = output_transform_kernel.reshape(n_aggregators, n_propagate, n_out_features)
+
+        input_transform_kernel = self.model.get_weights_data(self.name, '{name}/FLR{sublayer}_kernel:0'.format(name=self.name, sublayer=sublayer)) # [n_in_features, n_propagate]
+        data = np.dot(input_transform_kernel, output_transform_kernel) # [n_in_features, n_aggregators, n_out_features]
+        kernel = data.transpose((2, 1, 0))
+
+        input_transform_bias = self.model.get_weights_data(self.name, '{name}/FLR{sublayer}_bias:0'.format(name=self.name, sublayer=sublayer)) # [n_propagate]
+        data = np.dot(input_transform_bias, output_transform_kernel) # [n_aggregators, n_out_features]
+        bias = data.transpose((1, 0))
+
+        return kernel, bias
+
+    def function_cpp(self):
+        params = self._default_function_params()
+
+        if self.attributes['input_format'] == 'xn':
+            sdata = self.get_input_variable(self.inputs[0])
+            integer_input = self.get_input_variable(self.inputs[1])
+            params['input_t'] = sdata.type.name
+            params['input'] = sdata.name
+        elif self.attributes['input_format'] == 'xen':
+            sdata = self.get_input_variable(self.inputs[0])
+            udata = self.get_input_variable(self.inputs[1])
+            integer_input = self.get_input_variable(self.inputs[2])
+            params['input_t'] = '{}, {}'.format(sdata.type.name, udata.type.name)
+            params['input'] = '{}, {}'.format(sdata.name, udata.name)
+
+        params['integer_input_t'] = integer_input.type.name
+        params['nvtx'] = integer_input.name
+
+        if self.ref_impl:
+            params['impl'] = '_ref'
+        else:
+            params['impl'] = ''
+
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+
+        params['n_vertices'] = self.attributes['n_vertices']
+        params['n_vertices_width'] = int(math.log2(params['n_vertices']))
+        params['distance_width'] = 12
+        params['distance_nint'] = min(4, params['distance_width'] - 6) # this is tuned
+        params['log2_reuse'] = int(math.log2(params['reuse']))
+
+        vspecs = [
+            ('edge_weight', 'ap_ufixed<10, 0>'),
+            ('edge_weight_aggr', 'ap_ufixed<{}, {}>'.format(10 + params['log2_reuse'], params['log2_reuse'])),
+            ('aggr', 'ap_fixed<24, 12>' if self.ref_impl else 'ap_fixed<18, 9>'),
+            ('uaggr', 'ap_ufixed<24, 12>' if self.ref_impl else 'ap_ufixed<18, 9>'),
+            ('norm', 'ap_ufixed<14, 4>')
+        ]
+        for vname, default in vspecs:
+            params['{}_t'.format(vname)], type_name = self.model.config.get_precision(self, var=vname)
+            if type_name.endswith('default_t'):
+                params['{}_t'.format(vname)] = default
+
+        params['output_t'] = self.get_output_variable().type.name
+
+        if self.attributes['collapse'] in ['mean', 'max']:
+            params['collapse_type'] = 'collapse_{}'.format(self.attributes['collapse'])
+        else:
+            params['collapse_type'] = 'no_collapse'
+
+        self._get_transforms_config(params)
+
+        if not self.ref_impl:
+            params['output_transform_weights_t'] = params['output_transform_biases_t']
+
+        return self._config_template.format(**params)
+
+    def _get_transforms_config(self, params):
+        params['n_in_features'] = self.attributes['n_in_features']
+        if self.attributes['input_format'] == 'xn':
+            params['n_in_ufeatures'] = 0
+        elif self.attributes['input_format'] == 'xen':
+            params['n_in_ufeatures'] = 1
+        params['n_propagate'] = self.attributes['n_propagate']
+        params['n_aggregators'] = self.get_weights('aggregator_distance_biases').shape[0]
+        params['n_out_features'] = self.get_weights('output_transform_biases').shape[0]
+
+        for var_name, weights in self.weights.items():
+            params[var_name] = weights.name
+
+class GarNetStack(GarNet):
+    def _initialize_transforms(self):
+        for il in range(self.attributes['n_sublayers']):
+            n_aggregators = self.attributes['n_aggregators'][il]
+            n_out_features = self.attributes['n_out_features'][il]
+            n_propagate = self.attributes['n_propagate'][il]
+
+            kernel, bias = self._make_input_transform_weights(n_propagate, n_aggregators, n_out_features, sublayer=il)
+
+            self.add_weights_variable(name='input_transform_{}_weights'.format(il), var_name='input_transform_{}_w{{index}}'.format(il), data=kernel, quantize=0, compression=False)
+            self.add_weights_variable(name='input_transform_{}_biases'.format(il), var_name='input_transform_{}_b{{index}}'.format(il), data=bias, quantize=0, compression=False)
+    
+            weights_source = [
+                ('aggregator_distance', 'S{}_kernel'.format(il)),
+                ('aggregator_distance', 'S{}_bias'.format(il)),
+                ('output_transform', 'Fout{}_bias'.format(il))
+            ]
+    
+            for op_name, wname in weights_source:
+                data = self.model.get_weights_data(self.name, '{name}/{wname}:0'.format(name=self.name, wname=wname))
+                if 'kernel' in wname:
+                    data = data.transpose((1, 0))
+                    vtype = '{}_weights'.format(il)
+                    suffix = '{}_w'.format(il)
+                else:
+                    vtype = '{}_biases'.format(il)
+                    suffix = '{}_b'.format(il)
+
+                name = '{}_{}'.format(op_name, vtype)
+                var_name = '{}_{}{{index}}'.format(op_name, suffix)
+
+                self.add_weights_variable(name=name, var_name=var_name, data=data, quantize=0, compression=False)
+
+        self._output_features = self.attributes['n_out_features'][-1]
+
+    def _get_transforms_config(self, params):
+        params['n_sublayers'] = self.attributes['n_sublayers']
+        params['n_in_features'] = self.attributes['n_in_features'][0]
+        if self.attributes['input_format'] == 'xen':
+            params['n_in_ufeatures'] = 1
+        else:
+            params['n_in_ufeatures'] = 0
+        params['n_out_features'] = self.attributes['n_out_features'][-1]
+
+        for op_name in ['input_transform', 'aggregator_distance']:
+            for vtype in ['weights', 'biases']:
+                params['{}_{}_t'.format(op_name, vtype)] = self.weights['{}_0_{}'.format(op_name, vtype)].type.name
+
+        params['output_transform_biases_t'] = self.weights['output_transform_0_biases'].type.name
+        if self.ref_impl:
+            params['output_transform_weights_t'] = self.weights['output_transform_0_weights'].type.name
+        else:
+            params['output_transform_weights_t'] = self.weights['output_transform_0_biases'].type.name
+
+        sublayer_configs = []
+        for il in range(self.attributes['n_sublayers'] - 1, -1, -1):
+            config = 'template<>\nstruct config{index}::sublayer_t<{il}> : config{index}_base {{\n'.format(index=self.index, il=il)
+            for p in ['n_in_features', 'n_propagate', 'n_aggregators', 'n_out_features']:
+                config += '    static const unsigned {p} = {v};\n'.format(p=p, v=self.attributes[p][il])
+
+            if il == 0 and self.attributes['input_format'] == 'xen':
+                config += '    static const unsigned n_in_ufeatures = 1;\n'
+            else:
+                config += '    static const unsigned n_in_ufeatures = 0;\n'
+            config += '    static const unsigned n_in_sfeatures = n_in_features - n_in_ufeatures;\n'
+
+            config += '    static const input_transform_weights_t (&input_transform_weights)[n_out_features * n_aggregators * n_in_features];\n'
+            config += '    static const input_transform_biases_t (&input_transform_biases)[n_out_features * n_aggregators];\n'
+            config += '    static const aggregator_distance_weights_t (&aggregator_distance_weights)[n_aggregators * n_in_features];\n'
+            config += '    static const aggregator_distance_biases_t (&aggregator_distance_biases)[n_aggregators];\n'
+            config += '    static const output_transform_biases_t (&output_transform_biases)[n_out_features];\n'
+
+            if il != self.attributes['n_sublayers'] - 1:
+                config += '    typedef config{index}::sublayer_t<{n}> next_layer_t;\n'.format(index=self.index, n=(il + 1))
+
+            config += '};\n\n'
+
+            config += 'const config{index}_base::input_transform_weights_t (&config{index}::sublayer_t<{il}>::input_transform_weights)[config{index}::sublayer_t<{il}>::n_out_features * config{index}::sublayer_t<{il}>::n_aggregators * config{index}::sublayer_t<{il}>::n_in_features] = {vname};\n'.format(index=self.index, il=il, vname=self.weights['input_transform_{}_weights'.format(il)].name)
+            config += 'const config{index}_base::input_transform_biases_t (&config{index}::sublayer_t<{il}>::input_transform_biases)[config{index}::sublayer_t<{il}>::n_out_features * config{index}::sublayer_t<{il}>::n_aggregators] = {vname};\n'.format(index=self.index, il=il, vname=self.weights['input_transform_{}_biases'.format(il)].name)
+            config += 'const config{index}_base::aggregator_distance_weights_t (&config{index}::sublayer_t<{il}>::aggregator_distance_weights)[config{index}::sublayer_t<{il}>::n_aggregators * config{index}::sublayer_t<{il}>::n_in_features] = {vname};\n'.format(index=self.index, il=il, vname=self.weights['aggregator_distance_{}_weights'.format(il)].name)
+            config += 'const config{index}_base::aggregator_distance_biases_t (&config{index}::sublayer_t<{il}>::aggregator_distance_biases)[config{index}::sublayer_t<{il}>::n_aggregators] = {vname};\n'.format(index=self.index, il=il, vname=self.weights['aggregator_distance_{}_biases'.format(il)].name)
+            config += 'const config{index}_base::output_transform_biases_t (&config{index}::sublayer_t<{il}>::output_transform_biases)[config{index}::sublayer_t<{il}>::n_out_features] = {vname};\n'.format(index=self.index, il=il, vname=self.weights['output_transform_{}_biases'.format(il)].name)
+
+            sublayer_configs.append(config)
+
+        params['sublayer_configs'] = '\n'.join(sublayer_configs)
+
 class Pooling1D(Layer):
     def initialize(self):
         shape = [self.attributes['n_out'], self.attributes['n_filt']]
@@ -1144,6 +1391,8 @@ layer_map = {
     'Concatenate'        : Concatenate,
     'Resize'             : Resize,
     'Transpose'          : Transpose,
+    'GarNet'             : GarNet,
+    'GarNetStack'        : GarNetStack,
     # TensorFlow-specific layers:
     'BiasAdd'            : BiasAdd,
 }
