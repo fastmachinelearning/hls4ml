@@ -413,6 +413,11 @@ def keras_to_hls(yamlConfig):
                 raise Exception('ERROR: Merging more than two tensors is not yet supported.')
 
         elif layer['class_name'] in ['GarNet', 'GarNetStack']:
+            if not keras_layer['config']['simplified']:
+                raise Exception('HLS GarNet is compatible only with keras GarNet with simplified=True')
+            if keras_layer['config']['output_activation']:
+                raise Exception('HLS GarNet does not have output activation')
+            
             layer['input_format'] = keras_layer['config']['input_format']
             if layer['input_format'] == 'x':
                 raise NotImplementedError('Cannot use GarNet with input_format="x"')

@@ -42,7 +42,7 @@ namespace nnet {
       for (unsigned iw = 0; iw < table_size; ++iw) {
         index = iw;
         distance.range(CONFIG_T::distance_width - 1, 0) = index.range(CONFIG_T::distance_width - 1, 0);
-        edge_weights_table[iw] = hls::pow(2., -distance * distance);
+        edge_weights_table[iw] = hls::exp(-distance * distance);
       }
     }
 
@@ -56,7 +56,7 @@ namespace nnet {
 
       typename CONFIG_T::distance_t v = -32.;
       for (unsigned iw = 0; iw < table_size; ++iw) {
-        edge_weights_table[iw] = std::pow(2., -v * v);
+        edge_weights_table[iw] = std::exp(-v * v);
         v += step;
       }
     }
