@@ -348,7 +348,7 @@ class VivadoWriter(Writer):
                 newline = line.replace('myproject', model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert data' in line:
                 newline = line
-                newline += '      std::vector<float>::const_iterator in_begin = in.begin();\n'
+                newline += '      std::vector<float>::const_iterator in_begin = in.cbegin();\n'
                 newline += '      std::vector<float>::const_iterator in_end;\n'
                 for inp in model.get_input_variables():
                     newline += '      ' + inp.definition_cpp() + ';\n'
