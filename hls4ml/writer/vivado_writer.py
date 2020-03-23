@@ -58,6 +58,40 @@ class VivadoWriter(Writer):
         if not os.path.isdir("{}/firmware/weights".format(model.config.get_output_dir())):
             os.makedirs("{}/firmware/weights".format(model.config.get_output_dir()))
 
+    @staticmethod
+    def _make_array_pragma(variable):
+        """
+        Layers in hls_model.py can specify output array partitioning through the `pragma` attribute.
+        If `pragma` is a string: options are 'partition', 'reshape', or 'stream'.
+        If `pragma` is a tuple: (mode, type, factor) where mode is 'partition' or 'reshape', type is
+        'complete', 'cyclic', or 'block', and factor is an integer only used when the type is not 'complete'.
+        """
+        
+        config = variable.pragma
+        if type(config) is tuple:
+            mode = config[0]
+            if mode in ['partition', 'reshape']:
+                typ = config[1]
+                if typ != 'complete':
+                    factor = config[2]
+            elif mode == 'stream':
+                depth = config[1]
+        else:
+            mode = config
+            typ = 'complete'
+            factor = 0
+
+        if mode in ['partition', 'reshape']:
+            if typ == 'complete':
+                template = '#pragma HLS ARRAY_{mode} variable={name} {type} dim={dim}'
+            else:
+                template = '#pragma HLS ARRAY_{mode} variable={name} {type} factor={factor} dim={dim}'
+
+            return template.format(mode=mode.upper(), name=variable.name, type=typ, factor=factor, dim=0)
+
+        elif mode == 'stream':
+            return '#pragma HLS STREAM variable={name} depth={depth} dim={dim}'.format(name=variable.name, depth=depth, dim=0)
+
     def write_project_cpp(self, model):
         ###################
         ## myproject.cpp
@@ -88,12 +122,6 @@ class VivadoWriter(Writer):
                 newline += indent + insize_str + ',\n'
                 newline += indent + outsize_str + '\n'
 
-            elif '//hls-fpga-machine-learning insert weights' in line:
-                newline = line
-                for layer in model.get_layers():
-                    for w in layer.get_weights():
-                        newline += '#include "weights/{}.h"\n'.format(w.name)
-
             elif '//hls-fpga-machine-learning insert load weights' in line:
                 newline = line
                 for layer in model.get_layers():
@@ -108,9 +136,12 @@ class VivadoWriter(Writer):
                 newline = line
                 all_inputs = [i.cppname for i in model_inputs]
                 all_outputs = [o.cppname for o in model_outputs]
+
                 if model.config.get_config_value("IOType") == "io_parallel":
-                    for i in model_inputs: newline += indent + '#pragma HLS ARRAY_RESHAPE variable={} complete dim=0 \n'.format(i.cppname)
-                    for o in model_outputs: newline += indent + '#pragma HLS ARRAY_RESHAPE variable={} complete dim=0 \n'.format(o.cppname)
+                    for i in model_inputs: newline += indent + self._make_array_pragma(i) + '\n'
+                    for o in model_outputs: newline += indent + self._make_array_pragma(o) + '\n'
+                    # TODO discussed adding a handle for setting the interface mode for individual input and output arrays (16.03.2020)
+                    # Probably the handle doesn't need to be exposed to the user but should be just set in hls_model.py
                     newline += indent + '#pragma HLS INTERFACE ap_vld port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
                     if model.config.model_strategy == 'Resource':
                         newline += indent + '#pragma HLS DATAFLOW \n'
@@ -138,7 +169,7 @@ class VivadoWriter(Writer):
                             if def_cpp is not None:
                                 newline += '    ' + def_cpp + ';\n'
                                 if var.pragma:
-                                    newline += '    ' + var.pragma + '\n'
+                                    newline += '    ' + self._make_array_pragma(var) + '\n'
                     func = layer.function_cpp()
                     if func:
                         for line in func:
@@ -192,10 +223,10 @@ class VivadoWriter(Writer):
         f.close()
         fout.close()
 
-    def write_parameters(self, model):
+    def write_defines(self, model):
         filedir = os.path.dirname(os.path.abspath(__file__))
-        f = open(os.path.join(filedir,'../templates/vivado/firmware/parameters.h'),'r')
-        fout = open('{}/firmware/parameters.h'.format(model.config.get_output_dir()),'w')
+        f = open(os.path.join(filedir,'../templates/vivado/firmware/defines.h'),'r')
+        fout = open('{}/firmware/defines.h'.format(model.config.get_output_dir()),'w')
 
         for line in f.readlines():
 
@@ -213,6 +244,30 @@ class VivadoWriter(Writer):
                     all_precision.update(layer_precision)
                 for used_type in all_precision.values():
                     newline += used_type.definition_cpp()
+
+            else:
+                newline = line
+            fout.write(newline)
+        f.close()
+        fout.close()
+
+    def write_parameters(self, model):
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        f = open(os.path.join(filedir,'../templates/vivado/firmware/parameters.h'),'r')
+        fout = open('{}/firmware/parameters.h'.format(model.config.get_output_dir()),'w')
+
+        for line in f.readlines():
+
+            if '//hls-fpga-machine-learning insert includes' in line:
+                newline = line
+                for include in sorted(set(sum((layer.include_list for layer in model.get_layers()), []))):
+                    newline += '#include "%s"\n' % include
+
+            elif '//hls-fpga-machine-learning insert weights' in line:
+                newline = line
+                for layer in model.get_layers():
+                    for w in layer.get_weights():
+                        newline += '#include "weights/{}.h"\n'.format(w.name)
 
             elif "//hls-fpga-machine-learning insert layer-config" in line:
                 newline = line
@@ -293,24 +348,26 @@ class VivadoWriter(Writer):
                 newline = line.replace('myproject', model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert data' in line:
                 newline = line
+                newline += '      std::vector<float>::const_iterator in_begin = in.cbegin();\n'
+                newline += '      std::vector<float>::const_iterator in_end;\n'
                 for inp in model.get_input_variables():
-                    input_str = '      ' + inp.definition_cpp() + ' = {};\n'
-                    default_val = ','.join('in[{}]'.format(i) for i in range(inp.size()))
-                    newline += input_str.format('{' + default_val + '}')
+                    newline += '      ' + inp.definition_cpp() + ';\n'
+                    newline += '      in_end = in_begin + ({});\n'.format(inp.size_cpp())
+                    newline += '      std::copy(in_begin, in_end, {});\n'.format(inp.cppname)
+                    newline += '      in_begin = in_end;\n'
                 for out in model.get_output_variables():
-                    output_str = '      ' + out.definition_cpp() + ' = {};\n'
-                    default_val = ','.join(str(o) for o in [0] * out.size())
-                    newline += output_str.format('{' + default_val + '}')
+                    # brace-init zeros the array out because we use std=c++0x
+                    newline += '      ' + out.definition_cpp() + '{};\n'
+                    # but we can still explicitly zero out if you want
+                    newline += '      std::fill_n({}, {}, 0.);\n'.format(out.cppname, out.size())
             elif '//hls-fpga-machine-learning insert zero' in line:
                 newline = line
                 for inp in model.get_input_variables():
-                    input_str = '    ' + inp.definition_cpp() + ' = {};\n'
-                    default_val = ','.join(str(i) for i in [0] * inp.size())
-                    newline += input_str.format('{' + default_val + '}')
+                    newline += '    ' + inp.definition_cpp() + ';\n'
+                    newline += '    std::fill_n({}, {}, 0.);\n'.format(inp.cppname, inp.size_cpp())
                 for out in model.get_output_variables():
-                    output_str = '    ' + out.definition_cpp() + ' = {};\n'
-                    default_val = ','.join(str(o) for o in [0] * out.size())
-                    newline += output_str.format('{' + default_val + '}')
+                    newline += '    ' + out.definition_cpp() + '{};\n'
+                    newline += '      std::fill_n({}, {}, 0.);\n'.format(out.cppname, out.size())
             elif '//hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
 
@@ -421,6 +478,7 @@ class VivadoWriter(Writer):
         self.write_project_cpp(model)
         self.write_project_header(model)
         self.write_weights(model)
+        self.write_defines(model)
         self.write_parameters(model)
         self.write_test_bench(model)
         self.write_build_script(model)

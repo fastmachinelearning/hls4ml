@@ -362,35 +362,7 @@ class ArrayVariable(Variable):
         super(ArrayVariable, self).__init__(var_name, type_name, precision, **kwargs)
         self.shape = shape
         self.dim_names = dim_names
-
-        if pragma == 'partition':
-            self.partition()
-        elif pragma == 'reshape':
-            self.reshape()
-        elif pragma == 'stream':
-            self.stream()
-        else:
-            self.pragma = None
-
-    def partition(self, type='complete', factor=None, dim=0):
-        if factor:
-            pragma = '#pragma HLS ARRAY_PARTITION variable={name} {type} factor={factor} dim={dim}'
-        else:
-            pragma = '#pragma HLS ARRAY_PARTITION variable={name} {type} dim={dim}'
-
-        self.pragma = pragma.format(name=self.name, type=type, factor=factor, dim=dim)
-
-    def reshape(self, type='complete', factor=None, dim=0):
-        if factor:
-            pragma = '#pragma HLS ARRAY_RESHAPE variable={name} {type} factor={factor} dim={dim}'
-        else:
-            pragma = '#pragma HLS ARRAY_RESHAPE variable={name} {type} dim={dim}'
-
-        self.pragma = pragma.format(name=self.name, type=type, factor=factor, dim=dim)
-
-    def stream(self, depth=1, dim=1):
-        pragma = '#pragma HLS STREAM variable={name} depth={depth} dim={dim}'
-        self.pragma = pragma.format(name=self.name, depth=depth, dim=dim)
+        self.pragma = pragma
 
     def get_shape(self):
         return zip(self.dim_names, self.shape)
@@ -530,6 +502,7 @@ class Layer(object):
 
         self._function_template = self.model.config.backend.get_function_template(self.__class__.__name__)
         self._config_template = self.model.config.backend.get_config_template(self.__class__.__name__)
+        self.include_list = self.model.config.backend.get_include_list(self.__class__.__name__)
         self.weights = OrderedDict()
         self.variables = OrderedDict()
         self.precision = OrderedDict()
@@ -703,7 +676,13 @@ class Input(Layer):
         if shape[0] is None:
             shape = shape[1:]
         dims = ['N_INPUT_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
-        self.add_output_variable(shape, dims, var_name=self.name, type_name='input_t')
+        if self.index == 1:
+            default_type_name = 'input_t'
+        else:
+            default_type_name = 'input{}_t'.format(self.index)
+        type_name = self.attributes.get('type_name', default_type_name)
+        precision = self.attributes.get('precision', None)
+        self.add_output_variable(shape, dims, var_name=self.name, type_name=type_name, precision=precision)
 
     def function_cpp(self):
         return None
