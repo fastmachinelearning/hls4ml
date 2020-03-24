@@ -59,6 +59,10 @@ class HLSConfig(object):
         if type_config is not None:
             return type_config.get(key, default)
 
+        model_config = hls_config.get('Model', None)
+        if model_config is not None:
+            return model_config.get(key, default)
+
         return default
 
     def get_precision(self, layer, var='default'):
