@@ -64,27 +64,7 @@ def config(args):
 
 def convert(args):
     yamlConfig = parse_config(args.config)
-    model = None
-    if 'OnnxModel' in yamlConfig:
-        if hls4ml.converters.__onnx_enabled__:
-            model = hls4ml.converters.onnx_to_hls(yamlConfig)
-        else:
-            print("ONNX not found. Please install ONNX.")
-            sys.exit(1)
-    elif 'PytorchModel' in yamlConfig:
-        if hls4ml.converters.__pytorch_enabled__:
-            model = hls4ml.converters.pytorch_to_hls(yamlConfig)
-        else:
-            print("PyTorch not found. Please install PyTorch.")
-            sys.exit(1)
-    elif 'TensorFlowModel' in yamlConfig:
-        if hls4ml.converters.__tensorflow_enabled__:
-            model = hls4ml.converters.tf_to_hls(yamlConfig)
-        else:
-            print("TensorFlow not found. Please install TensorFlow.")
-            sys.exit(1)
-    else:
-        model = hls4ml.converters.keras_to_hls(yamlConfig)
+    model = hls4ml.converters.convert_from_yaml_config(yamlConfig)
 
     if model is not None:
         model.write()

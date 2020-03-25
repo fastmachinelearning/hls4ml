@@ -9,30 +9,69 @@ from hls4ml.model.optimizer import optimize_model
 
 MAXMULT = 4096
 
-class KerasDataReader:
+class KerasFileReader:
     def __init__(self, config):
         self.config = config
+        self.h5file = h5py.File(config['KerasH5'], mode='r')
 
-    def get_weights_data(self, layer_name, var_name):
+    def __del__(self):
+        if self.h5file:
+            self.h5file.close()
+
+    def _find_data(self, layer_name, var_name):
         def h5_visitor_func(name):
             if var_name in name:
                 return name
 
-        with h5py.File(self.config['KerasH5'], 'r') as h5file:
-            if 'model_weights' in list(h5file.keys()): # h5 file comes from model.save()
-                layer_path = 'model_weights/{}'.format(layer_name)
-            else:
-                layer_path = layer_name
-            
-            found_data = h5file[layer_path].visit(h5_visitor_func)
-            if found_data:
-                data = h5file[layer_path][found_data][()]
-            else:
-                data = None
-                                                                        
-        return data
+        if 'model_weights' in list(self.h5file.keys()): # h5 file comes from model.save()
+            layer_path = 'model_weights/{}'.format(layer_name)
+        else:
+            layer_path = layer_name
 
-def get_weights_shape(h5filename, layer_name, var_name='kernel'): 
+        data_path = self.h5file[layer_path].visit(h5_visitor_func)
+        if data_path:
+            return self.h5file['/{}/{}'.format(layer_path, data_path)]
+        else:
+            return None
+
+    def get_weights_data(self, layer_name, var_name):
+        data = self._find_data(layer_name, var_name)
+        if data:
+            return data[()]
+        else:
+            return None
+
+    def get_weights_shape(self, layer_name, var_name):
+        data = self._find_data(layer_name, var_name)
+        if data is not None:
+            return data.shape
+        else:
+            return None
+
+class KerasModelReader:
+    def __init__(self, keras_model):
+        self.model = keras_model
+
+    def get_weights_data(self, layer_name, var_name):
+        layer = self.model.get_layer(layer_name)
+        for i, w in enumerate(layer.weights):
+            if var_name in w.name:
+                try:
+                    return w.numpy() # TF 2.x
+                except:
+                    return layer.get_weights()[i] # TF 1.x
+
+        return None
+
+    def get_weights_shape(self, layer_name, var_name):
+        layer = self.model.get_layer(layer_name)
+        for w in layer.weights:
+            if var_name in w.name:
+                return w.shape.as_list()
+
+        return None
+
+def get_weights_shape(h5filename, layer_name, var_name='kernel'):
     def h5_visitor_func(name):
         if var_name in name:
             return name
@@ -42,10 +81,10 @@ def get_weights_shape(h5filename, layer_name, var_name='kernel'):
             layer_path = 'model_weights/{}'.format(layer_name)
         else:
             layer_path = layer_name
-            
-        found_data = h5file[layer_path].visit(h5_visitor_func)
-        if found_data:
-            shape = h5file['/{}/{}'.format(layer_path, found_data)].shape
+
+        data_path = h5file[layer_path].visit(h5_visitor_func)
+        if data_path:
+            shape = h5file['/{}/{}'.format(layer_path, data_path)].shape
 
     return shape
 
@@ -54,7 +93,7 @@ def get_qkeras_quantization(layer, keras_layer):
         return
     kernel_quantizer = keras_layer['config']['kernel_quantizer']['class_name']
     bias_quantizer = keras_layer['config']['bias_quantizer']['class_name']
-    
+
     if kernel_quantizer != bias_quantizer:
         raise Exception('Mixing quantizers within QKeras layers is not supported')
     if kernel_quantizer == 'binary':
@@ -72,32 +111,29 @@ def keras_to_hls(yamlConfig):
 
     #This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
-    
-    #If the json file is not provided, interpret this as the full model is saved in KerasH5 with model.save()
-    if yamlConfig.get('KerasJson', None) is None:
-            #Load the model's info and add them in a dict
-            filepath = yamlConfig['KerasH5']
 
-            #Open file
-            opened_new_file = not isinstance(filepath, h5py.File)
-            if opened_new_file:
-                f = h5py.File(filepath, mode='r')
-            else:
-                f = filepath
-
-            #Load the configuration from h5 using json's decode
-            # instantiate model
-            model_arch = f.attrs.get('model_config')
+    if 'KerasModel' in yamlConfig:
+        # Model instance passed in config from API
+        model_arch = json.loads(yamlConfig['KerasModel'].to_json())
+        reader = KerasModelReader(yamlConfig['KerasModel'])
+    elif 'KerasJson' in yamlConfig:
+        # Extract model architecture from json
+        with open( yamlConfig['KerasJson'] ) as json_file:
+            model_arch = json.load(json_file)
+        reader = KerasFileReader(yamlConfig)
+    elif 'KerasH5' in yamlConfig:
+        # Model arch and weights are in H5 file (from model.save() function)
+        with h5py.File(yamlConfig['KerasH5'], mode='r') as h5file:
+            # Load the configuration from h5 using json's decode
+            model_arch = h5file.attrs.get('model_config')
             if model_arch is None:
                 raise ValueError('No model found in config file.')
             else:
                 model_arch = json.loads(model_arch.decode('utf-8'))
-
+        reader = KerasFileReader(yamlConfig)
     else:
-        #Extract model architecture from json
-        with open( yamlConfig['KerasJson'] ) as json_file:
-            model_arch = json.load(json_file)
-    
+        raise ValueError('No model found in config file.')
+
     #print(model_arch)
 
     #Define supported laers
@@ -192,7 +228,7 @@ def keras_to_hls(yamlConfig):
             layer['target_shape'] = keras_layer['config']['target_shape']
             current_shape[1:] = keras_layer['config']['target_shape']
         if 'Dense' in layer['class_name']:
-            weights_shape = get_weights_shape(yamlConfig['KerasH5'], layer['name'])
+            weights_shape = reader.get_weights_shape(layer['name'], 'kernel')
             layer['n_in'] = weights_shape[0]
             layer['n_out'] = weights_shape[1]
             if 'Binary' in layer['class_name']:
@@ -206,7 +242,7 @@ def keras_to_hls(yamlConfig):
             current_shape = [current_shape[0], layer['n_out']]
         elif layer['class_name']=='Conv1D':
             # weights_shape = (filter_width, n_channels, n_filters)
-            weights_shape = get_weights_shape(yamlConfig['KerasH5'], layer['name'])
+            weights_shape = reader.get_weights_shape(layer['name'], 'kernel')
             layer['n_in']=current_shape[1]
             layer['filt_width']=weights_shape[0] # or keras_layer['config']['kernel_size']
             layer['n_chan']=weights_shape[1]
@@ -233,7 +269,7 @@ def keras_to_hls(yamlConfig):
         elif 'Conv2D' in layer['class_name']:
             layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
             # weights_shape = (filter_height, filter_width, n_channels, n_filters)
-            weights_shape = get_weights_shape(yamlConfig['KerasH5'], layer['name'])
+            weights_shape = reader.get_weights_shape(layer['name'], 'kernel')
             layer['in_height']=current_shape[1]
             layer['in_width']=current_shape[2]
             if layer['data_format'] == 'channels_first':
@@ -419,7 +455,6 @@ def keras_to_hls(yamlConfig):
     ## Generate HLS
     #################
 
-    reader = KerasDataReader(yamlConfig)
     print('Creating HLS model')
     hls_model = HLSModel(yamlConfig, reader, layer_list, input_layers, output_layers)
     optimizers = ['eliminate_linear_activation', 'merge_batch_norm_quantized_tanh', 'quantize_dense_output', 'fuse_dense_batch_norm']
