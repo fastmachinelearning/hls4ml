@@ -132,6 +132,41 @@ namespace nnet {
       return dividend / std::pow(2., exponent);
     }
 
+    template<class operand_T, class weight_T, class ret_T = operand_T>
+    inline
+    typename std::enable_if<std::is_same<weight_T, ap_uint<1>>::value, ret_T>::type
+    weight_multiply(operand_T const& o, weight_T const& w)
+    {
+      #pragma HLS INLINE off
+      return (ret_T) (w == 0 ? -o : o);
+    }
+
+    template<class operand_T, class weight_T, class ret_T = operand_T>
+    inline
+    typename std::enable_if<std::is_same<weight_T, ap_uint<2>>::value, ret_T>::type
+    weight_multiply(operand_T const& o, weight_T const& w)
+    {
+      #pragma HLS INLINE off
+      switch (w) {
+      case -1:
+        return (ret_T) -o;
+      case 0:
+        return (ret_T) 0;
+      case 1:
+      default:
+        return (ret_T) o;
+      }
+    }
+
+    template<class operand_T, class weight_T, class ret_T = operand_T>
+    inline
+    typename std::enable_if<(not std::is_same<weight_T, ap_uint<1>>::value) and (not std::is_same<weight_T, ap_uint<2>>::value), ret_T>::type
+    weight_multiply(operand_T const& o, weight_T const& w)
+    {
+      #pragma HLS INLINE off
+      return (ret_T) o * w;
+    }
+
     template<class CONFIG_T, class E = typename CONFIG_T::edge_weight_t>
     struct Means {
       typedef E edge_weight_t;
@@ -693,6 +728,7 @@ namespace nnet {
 
     static const bool mean_by_nvert = false;
     static const bool is_stack = false;
+    static const bool quantize_transforms = false;
  
     // Optimization specs
     static const unsigned reuse_factor = 64;

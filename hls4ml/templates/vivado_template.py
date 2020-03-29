@@ -174,6 +174,8 @@ garnet_common_config_template = """
 
     static const unsigned reuse_factor = {reuse};
     static const unsigned log2_reuse_factor = {log2_reuse};
+
+    static const unsigned quantize_transforms = {quantize_transforms};
 """
 
 garnet_config_template = """struct config{index} : nnet::garnet_config {{"""
