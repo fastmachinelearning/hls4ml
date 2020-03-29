@@ -155,6 +155,7 @@ garnet_common_config_template = """
     static const unsigned n_in_sfeatures = n_in_features - n_in_ufeatures;
     static const unsigned distance_width = {distance_width};
     static const unsigned output_collapse = {collapse_type};
+    static const bool mean_by_nvert = {mean_by_nvert};
 
     typedef {input_transform_weights_t} input_transform_weights_t;
     typedef {input_transform_biases_t} input_transform_biases_t;

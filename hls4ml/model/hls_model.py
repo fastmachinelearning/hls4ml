@@ -1012,6 +1012,8 @@ class GarNet(Layer):
         else:
             params['collapse_type'] = 'no_collapse'
 
+        params['mean_by_nvert'] = self.attributes['mean_by_nvert']
+
         self._get_transforms_config(params)
 
         if not self.ref_impl:

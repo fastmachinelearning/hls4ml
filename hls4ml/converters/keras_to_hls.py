@@ -424,6 +424,8 @@ def keras_to_hls(yamlConfig):
 
             layer['n_vertices'] = input_shapes[0][1]
             layer['collapse'] = keras_layer['config']['collapse']
+            layer['mean_by_nvert'] = keras_layer['config']['mean_by_nvert']
+            layer['quantize'] = keras_layer['config']['quantize_transforms']
 
             layer['n_aggregators'] = keras_layer['config']['n_aggregators']
             layer['n_out_features'] = keras_layer['config']['n_filters'] # number of output features
