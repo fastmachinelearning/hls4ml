@@ -154,7 +154,11 @@ def keras_to_hls(yamlConfig):
         if 'batch_input_shape' in keras_layer['config']:
             input_shapes = [keras_layer['config']['batch_input_shape']]
         else:
-            input_shapes = [output_shapes[inbound_node[0][0]] for inbound_node in keras_layer['inbound_nodes']]
+            if 'inbound_nodes' in keras_layer:
+                input_shapes = [output_shapes[inbound_node[0][0]] for inbound_node in keras_layer['inbound_nodes']]
+            else:
+                # Sequential model, so output_shape from the previous layer is still valid 
+                input_shapes = [output_shape]
 
         if keras_layer["class_name"] in skip_layers:
             if 'inbound_nodes' in keras_layer:
@@ -429,7 +433,7 @@ def keras_to_hls(yamlConfig):
 
         assert(output_shape is not None)
         
-        output_shapes[keras_layer['name']] = output_shape
+        output_shapes[layer['name']] = output_shape
 
     #################
     ## Generate HLS
