@@ -8,6 +8,8 @@ import argparse
 import os
 import sys
 import yaml
+import json
+import h5py
 import hls4ml
 
 from shutil import copyfile
@@ -28,8 +30,15 @@ def main():
     build_parser = subparsers.add_parser('build', help='Build generated HLS project')
     report_parser = subparsers.add_parser('report', help='Show synthesis report of an HLS project')
 
-    config_parser.add_argument('-m', '--model', help='Model file to convert (Keras .h5 or .json, or ONNX .onnx file)', default=None)
+    config_parser.add_argument('-m', '--model', help='Model file to convert (Keras .h5 or .json file, ONNX .onnx file, or TensorFlow .pb file)', default=None)
     config_parser.add_argument('-w', '--weights', help='Optional weights file (if Keras .json file is provided))', default=None)
+    config_parser.add_argument('-p', '--project', help='Project name', default='myproject')
+    config_parser.add_argument('-d', '--dir', help='Project output directory', default='my-hls-test')
+    config_parser.add_argument('-f', '--fpga', help='FPGA part', default='xcku115-flvb2104-2-i')
+    config_parser.add_argument('-c', '--clock', help='Clock frequency (ns)', type=int, default=5)
+    config_parser.add_argument('-g', '--granularity', help='Granularity of configuration. One of "model", "type" or "name"', default='model')
+    config_parser.add_argument('-x', '--precision', help='Default precision', default='ap_fixed<16,6>')
+    config_parser.add_argument('-r', '--reuse-factor', help='Default reuse factor', type=int, default=1)
     config_parser.add_argument('-o', '--output', help='Output file name', default=None)
     config_parser.set_defaults(func=config)
     
@@ -42,7 +51,7 @@ def main():
     build_parser.add_argument('-r', '--co-simulation', help='Run C/RTL co-simulation', action='store_true', default=False)
     build_parser.add_argument('-v', '--validation', help='Run C/RTL validation', action='store_true', default=False)
     build_parser.add_argument('-e', '--export', help='Export IP (implies -s)', action='store_true', default=False)
-    build_parser.add_argument('-l', '--vivado_synthesis', help='Run Vivado synthesis (implies -s)', action='store_true', default=False)
+    build_parser.add_argument('-l', '--vivado-synthesis', help='Run Vivado synthesis (implies -s)', action='store_true', default=False)
     build_parser.add_argument('-a', '--all', help='Run C simulation, C/RTL synthesis, C/RTL co-simulation and Vivado synthesis', action='store_true')
     build_parser.add_argument('--reset', help='Remove any previous builds', action='store_true', default=False)
     build_parser.set_defaults(func=build)
@@ -60,7 +69,67 @@ def main():
         parser.print_usage()
 
 def config(args):
-    raise NotImplementedError
+    if args.model is None:
+        print('Model file (-m or --model) must be provided.')
+        sys.exit(1)
+    
+    config = hls4ml.utils.config.create_vivado_config(
+        output_dir=args.dir,
+        project_name=args.project,
+        fpga_part=args.fpga,
+        clock_period=args.clock
+    )
+
+    if args.model.endswith('.h5'):
+        config['KerasH5'] = args.model
+
+        with h5py.File(args.model, mode='r') as h5file:
+            # Load the configuration from h5 using json's decode
+            model_arch = h5file.attrs.get('model_config')
+            if model_arch is None:
+                print('No model found in the provided h5 file.')
+                sys.exit(1)
+            else:
+                model_arch = json.loads(model_arch.decode('utf-8'))
+            
+            config['HLSConfig'] = hls4ml.utils.config_from_keras_model(
+                model_arch,
+                granularity=args.granularity,
+                default_precision=args.precision,
+                default_reuse_factor=args.reuse_factor
+            )
+    elif args.model.endswith('.json'):
+        if args.weights is None:
+            print('Weights file (-w or --weights) must be provided when parsing from JSON file.')
+            sys.exit(1)
+        config['KerasJson'] = args.model
+        config['KerasH5'] = args.weights
+
+        with open(args.model) as json_file:
+            model_arch = json.load(json_file)
+            config['HLSConfig'] = hls4ml.utils.config_from_keras_model(
+                model_arch,
+                granularity=args.granularity,
+                default_precision=args.precision,
+                default_reuse_factor=args.reuse_factor
+            )
+    elif args.model.endswith('.onnx'):
+        print('Creating configuration for ONNX mdoels is not supported yet.')
+        sys.exit(1)
+    elif args.model.endswith('.pb'):
+        print('Creating configuration for Tensorflow mdoels is not supported yet.')
+        sys.exit(1)
+    
+    if args.output is not None:
+        outname = args.output
+        if not outname.endswith('.yml'):
+            outname += '.yml'
+        print('Writing config to {}'.format(outname))
+        with open(outname, 'w') as outfile:
+            yaml.dump(config, outfile, default_flow_style=False, sort_keys=False)
+    else:
+        print('Config output:')
+        yaml.dump(config, sys.stdout, default_flow_style=False, sort_keys=False)
 
 def convert(args):
     yamlConfig = parse_config(args.config)

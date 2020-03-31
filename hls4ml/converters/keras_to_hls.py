@@ -71,23 +71,6 @@ class KerasModelReader:
 
         return None
 
-def get_weights_shape(h5filename, layer_name, var_name='kernel'):
-    def h5_visitor_func(name):
-        if var_name in name:
-            return name
-
-    with h5py.File(h5filename, 'r') as h5file:
-        if 'model_weights' in list(h5file.keys()):
-            layer_path = 'model_weights/{}'.format(layer_name)
-        else:
-            layer_path = layer_name
-
-        data_path = h5file[layer_path].visit(h5_visitor_func)
-        if data_path:
-            shape = h5file['/{}/{}'.format(layer_path, data_path)].shape
-
-    return shape
-
 def get_qkeras_quantization(layer, keras_layer):
     if not layer['class_name'].startswith('Q'): # Not a QKeras layer, nothing to do
         return

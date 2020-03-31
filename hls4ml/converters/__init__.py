@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from .keras_to_hls import keras_to_hls
+from ..utils.config import create_vivado_config
 
 try:
     from .pytorch_to_hls import pytorch_to_hls
@@ -46,21 +47,13 @@ def convert_from_yaml_config(yamlConfig):
 def convert_from_keras_model(model, output_dir='my-hls-test', project_name='myproject',
     fpga_part='xcku115-flvb2104-2-i', clock_period=5, hls_config={}):
     
-    config = {}
+    config = create_vivado_config(output_dir=output_dir,
+        project_name=project_name, fpga_part=fpga_part, clock_period=clock_period)
     config['KerasModel'] = model
-    config['OutputDir'] = output_dir
-    config['ProjectName'] = project_name
-    config['XilinxPart'] = fpga_part
-    config['ClockPeriod'] = clock_period
-    config['Backend'] = 'Vivado' # For now
-    config['IOType'] = 'io_parallel' # To become obsolete in the future
-    config['HLSConfig'] = {}
 
     model_config = hls_config.get('Model', None)
     if model_config is not None:
-        if all(k in model_config for k in ('Precision', 'ReuseFactor')):
-            config['Model'] = model_config
-        else:
+        if not all(k in model_config for k in ('Precision', 'ReuseFactor')):
             raise Exception('Precision and ReuseFactor must be provided in the hls_config')
     else:
         model_config = {}

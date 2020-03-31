@@ -3,29 +3,30 @@ import numpy as np
 import h5py
 import json
 import math
-import six
+from collections import OrderedDict
 
-def get_qkeras_quantization(layer, keras_layer):
-    if not layer['class_name'].startswith('Q'): # Not a QKeras layer, nothing to do
-        return
-    kernel_quantizer = keras_layer['config']['kernel_quantizer']['class_name']
-    bias_quantizer = keras_layer['config']['bias_quantizer']['class_name']
 
-    if kernel_quantizer != bias_quantizer:
-        raise Exception('Mixing quantizers within QKeras layers is not supported')
-    if kernel_quantizer == 'binary':
-        layer['quantize'] = 2
-    elif kernel_quantizer == 'ternary':
-        layer['quantize'] = 3
-    else:
-        raise Exception('Unsupported quantizer {} in {} layer {}'.format(kernel_quantizer, layer['class_name'], layer['name']))
+def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
+    fpga_part='xcku115-flvb2104-2-i', clock_period=5):
+    
+    config = {}
+    
+    config['OutputDir'] = output_dir
+    config['ProjectName'] = project_name
+    config['XilinxPart'] = fpga_part
+    config['ClockPeriod'] = clock_period
+    config['Backend'] = 'Vivado'
+    config['IOType'] = 'io_parallel' # To become obsolete in the future
+    config['HLSConfig'] = {}
+
+    return config
 
 def config_from_keras_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1):
 
     #This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
 
-    if isinstance(model, six.string_types):
+    if isinstance(model, dict):
         model_arch = model
     else:
         model_arch = json.loads(model.to_json())
