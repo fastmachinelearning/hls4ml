@@ -414,7 +414,41 @@ namespace nnet {
 
     template<class CONFIG_T, class arrays_T>
     inline
-    typename CONFIG_T::aggr_t
+    typename std::enable_if<CONFIG_T::quantize_transforms, typename CONFIG_T::aggr_t>::type
+    compute_output_base_core(
+      arrays_T const& arrays,
+      unsigned io,
+      unsigned ia
+    )
+    {
+      #pragma HLS INLINE
+      #pragma HLS UNROLL region
+
+      typename CONFIG_T::aggr_t aggr = 0.;
+
+     InTransform:
+      for (unsigned ip = 0; ip < CONFIG_T::n_propagate; ++ip) {
+        typename CONFIG_T::aggr_t aggr_p = weight_multiply(arrays.edge_weight_mean[ia], CONFIG_T::input_transform_biases[ip]);
+
+       InFeatures:
+        for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix) {
+          unsigned const ipx = ip * CONFIG_T::n_in_features + ix;
+          unsigned const iax = ia * CONFIG_T::n_in_features + ix;
+
+          aggr_p += weight_multiply(arrays.weighted_feature_mean[iax], CONFIG_T::input_transform_weights[ipx]);
+        }
+
+        unsigned const ioap = (io * CONFIG_T::n_aggregators + ia) * CONFIG_T::n_propagate + ip;
+
+        aggr += weight_multiply(aggr_p, CONFIG_T::output_transform_weights[ioap]);
+      }
+
+      return aggr;
+    }
+
+    template<class CONFIG_T, class arrays_T>
+    inline
+    typename std::enable_if<not CONFIG_T::quantize_transforms, typename CONFIG_T::aggr_t>::type
     compute_output_base_core(
       arrays_T const& arrays,
       unsigned io,
