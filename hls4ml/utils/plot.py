@@ -38,10 +38,10 @@ def model_to_dot(model,
                  rankdir='TB',
                  dpi=96,
                  subgraph=False):
-    """Convert a Keras model to dot format.
+    """Convert a HLS model to dot format.
 
     Arguments:
-        model: A Keras model instance.
+        model: A HLS model instance.
         show_shapes: whether to display shape information.
         show_layer_names: whether to display layer names.
         show_precision: whether to display precision of layer's variables.
@@ -53,7 +53,7 @@ def model_to_dot(model,
         subgraph: whether to return a `pydot.Cluster` instance.
 
     Returns:
-        A `pydot.Dot` instance representing the Keras model or
+        A `pydot.Dot` instance representing the HLS model or
         a `pydot.Cluster` instance representing nested model if
         `subgraph=True`.
 
@@ -185,10 +185,10 @@ def plot_model(model,
                show_precision=False,
                rankdir='TB',
                dpi=96):
-    """Converts a Keras model to dot format and save to a file.
+    """Converts a HLS model to dot format and save to a file.
   
     Arguments:
-        model: A Keras model instance
+        model: A HLS model instance
         to_file: File name of the plot image.
         show_shapes: whether to display shape information.
         show_layer_names: whether to display layer names.
