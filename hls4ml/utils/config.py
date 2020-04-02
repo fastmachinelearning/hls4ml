@@ -21,6 +21,28 @@ def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
 
     return config
 
+def _get_precision_from_quantizer(quantizer):
+    supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh']
+    if quantizer['class_name'] in supported_quantizers:
+        bits = int(quantizer['config']['bits'])
+        integer = int(quantizer['config']['integer'])
+        
+    elif quantizer['class_name'] == 'binary':
+        bits = 2
+        integer = 2
+    
+    elif quantizer['class_name'] == 'ternary':
+        bits = 2
+        integer = 2
+    else:
+        raise Exception('ERROR: Unsupported quantizer: {}'.format(quantizer['class_name']))
+
+    decimal = bits - integer
+    if decimal > 0:
+        return 'ap_fixed<{},{}>'.format(bits, integer)
+    else:
+        return 'ap_int<{}>'.format(bits)
+
 def config_from_keras_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1):
 
     #This is a list of dictionaries to hold all the layer info we need to generate HLS
@@ -31,7 +53,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     else:
         model_arch = json.loads(model.to_json())
 
-    #print(model_arch)
+    print(model_arch)
 
     #Define supported laers
     core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Reshape']
@@ -58,7 +80,6 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
         input_layer['name'] = 'input1'
         input_layer['class_name'] = 'InputLayer'
         layer_list.append(input_layer)
-        print('Input shape:', input_layer['input_shape'])
     elif model_arch['class_name'] == 'Model':
         print('Interpreting Model')
         keras_layer_config = model_arch['config']['layers']
@@ -77,6 +98,18 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
         layer['name'] = keras_layer['config']['name']
         layer['class_name'] = keras_layer['class_name']
         layer['config'] = keras_layer['config']
+
+        if layer['class_name'] in qkeras_layers:
+            layer['precision'] = {}
+            for qname, qclass in layer['config'].items():
+                if 'quantizer' in qname.lower():
+                    pname = qname.split('_quantizer')[0]
+                    if pname == 'kernel': pname = 'weight'
+                    precision = _get_precision_from_quantizer(qclass)
+                    layer['precision'][pname] = precision
+                elif qname == 'activation' and layer['class_name'] == 'QActivation':
+                    precision = _get_precision_from_quantizer(qclass)
+                    layer['precision']['result'] = precision
 
         print('Layer name: {}, layer type: {}'.format(layer['name'], layer['class_name']))
         layer_list.append( layer )
@@ -109,6 +142,15 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             layer_config['Precision']['bias'] = default_precision
             layer_config['ReuseFactor'] = default_reuse_factor
         
+        elif layer['class_name'] in qkeras_layers:
+            if 'precision' in layer:
+                layer_config['Precision'] = {}
+                for name, precision in layer['precision'].items():
+                    layer_config['Precision'][name] = precision
+            else:
+                print('WARNING: Found no precision information in QKeras layer {} ({})'.format(layer['name'], layer['class_name']))
+                layer_config['Precision'] = default_precision
+            layer_config['ReuseFactor'] = default_reuse_factor
         else:
             layer_config['Precision'] = default_precision
         
