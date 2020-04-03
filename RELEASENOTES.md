@@ -1,18 +1,20 @@
-**[14/2/2020]** We just added the following new features to the `master` branch:
+Go to [here](https://github.com/hls-fpga-machine-learning/hls4ml/releases) for official releases on Github.
 
-- `tf_to_hls` tool for converting tensorflow models (protobufs)
+**v0.2.0:**
 
--  Experimental support for larger `Conv1D/2D` layers
+- `tf_to_hls` tool for converting tensorflow models (protobufs `.pb`)
 
-- [QKeras](https://github.com/google/qkeras) support (limited to binary/ternary for now)
+-  Support for larger `Conv1D/2D` layers
+
+-  Support for binary and ternary layers from [QKeras](https://github.com/google/qkeras).
 
 - API enhancements (custom layers, multiple backends)
 
 - [Profiling](PROFILING) support
 
-- `hls4ml report`command, `hls4ml build -l` for Logic Synthesis
+- `hls4ml report`command to gather HLS build reports, `hls4ml build -l` for Logic Synthesis
 
-- Support for all-in-one Keras's `h5` files (obtained with Keras's `save()` function, without the need for separate json).
+- Support for all-in-one Keras's `.h5` files (obtained with Keras's `save()` function, without the need for separate `.json` and `.h5` weight file).
 
 - Fused Batch Normalisation into Dense layer optimsation.
 
