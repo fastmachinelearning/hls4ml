@@ -135,7 +135,7 @@ namespace nnet {
     template<class operand_T, class weight_T, class ret_T = operand_T>
     inline
     typename std::enable_if<std::is_same<weight_T, ap_uint<1>>::value, ret_T>::type
-    weight_multiply(operand_T const& o, weight_T const& w)
+    quantized_prod(operand_T const& o, weight_T const& w)
     {
       #pragma HLS INLINE off
       return (ret_T) (w == 0 ? -o : o);
@@ -143,8 +143,8 @@ namespace nnet {
 
     template<class operand_T, class weight_T, class ret_T = operand_T>
     inline
-    typename std::enable_if<std::is_same<weight_T, ap_uint<2>>::value, ret_T>::type
-    weight_multiply(operand_T const& o, weight_T const& w)
+    typename std::enable_if<std::is_same<weight_T, ap_int<2>>::value, ret_T>::type
+    quantized_prod(operand_T const& o, weight_T const& w)
     {
       #pragma HLS INLINE off
       switch (w) {
@@ -156,15 +156,6 @@ namespace nnet {
       default:
         return (ret_T) o;
       }
-    }
-
-    template<class operand_T, class weight_T, class ret_T = operand_T>
-    inline
-    typename std::enable_if<(not std::is_same<weight_T, ap_uint<1>>::value) and (not std::is_same<weight_T, ap_uint<2>>::value), ret_T>::type
-    weight_multiply(operand_T const& o, weight_T const& w)
-    {
-      #pragma HLS INLINE off
-      return (ret_T) o * w;
     }
 
     template<class CONFIG_T, class E = typename CONFIG_T::edge_weight_t>
@@ -428,19 +419,19 @@ namespace nnet {
 
      InTransform:
       for (unsigned ip = 0; ip < CONFIG_T::n_propagate; ++ip) {
-        typename CONFIG_T::aggr_t aggr_p = weight_multiply(arrays.edge_weight_mean[ia], CONFIG_T::input_transform_biases[ip]);
+        typename CONFIG_T::aggr_t aggr_p = quantized_prod(arrays.edge_weight_mean[ia], CONFIG_T::input_transform_biases[ip]);
 
        InFeatures:
         for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix) {
           unsigned const ipx = ip * CONFIG_T::n_in_features + ix;
           unsigned const iax = ia * CONFIG_T::n_in_features + ix;
 
-          aggr_p += weight_multiply(arrays.weighted_feature_mean[iax], CONFIG_T::input_transform_weights[ipx]);
+          aggr_p += quantized_prod(arrays.weighted_feature_mean[iax], CONFIG_T::input_transform_weights[ipx]);
         }
 
         unsigned const ioap = (io * CONFIG_T::n_aggregators + ia) * CONFIG_T::n_propagate + ip;
 
-        aggr += weight_multiply(aggr_p, CONFIG_T::output_transform_weights[ioap]);
+        aggr += quantized_prod(aggr_p, CONFIG_T::output_transform_weights[ioap]);
       }
 
       return aggr;

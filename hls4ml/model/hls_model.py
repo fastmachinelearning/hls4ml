@@ -999,7 +999,7 @@ class GarNet(Layer):
         params['distance_width'] = 12
         params['distance_nint'] = min(4, params['distance_width'] - 6) # this is tuned
         params['log2_reuse'] = int(math.log2(params['reuse']))
-        params['quantize_transforms'] = 'true' if self.attributes['quantize'] else 'false';
+        params['quantize_transforms'] = str(self.attributes['quantize']).lower()
 
         vspecs = [
             ('edge_weight', 'ap_ufixed<10, 0>'),
@@ -1020,12 +1020,9 @@ class GarNet(Layer):
         else:
             params['collapse_type'] = 'no_collapse'
 
-        params['mean_by_nvert'] = self.attributes['mean_by_nvert']
+        params['mean_by_nvert'] = str(self.attributes['mean_by_nvert']).lower()
 
         self._get_transforms_config(params)
-
-        if not self.ref_impl:
-            params['output_transform_weights_t'] = params['output_transform_biases_t']
 
         return self._config_template.format(**params)
 
@@ -1041,6 +1038,9 @@ class GarNet(Layer):
 
         for var_name, weights in self.weights.items():
             params[var_name] = weights.name
+
+        if not self.ref_impl and not self.attributes['quantize']:
+            params['output_transform_weights_t'] = params['output_transform_biases_t']
 
 class GarNetStack(GarNet):
     def _initialize_transforms(self):
@@ -1086,7 +1086,7 @@ class GarNetStack(GarNet):
 
                 if self.attributes['quantize'] and \
                    (op_name, wtype) in [('input_transform', 'kernel'), ('input_transform', 'bias'), ('output_transform', 'kernel')]:
-                    quantize = 2
+                    quantize = 3
                 else:
                     quantize = 0
 
@@ -1108,7 +1108,7 @@ class GarNetStack(GarNet):
                 params['{}_{}_t'.format(op_name, vtype)] = self.weights['{}_0_{}'.format(op_name, vtype)].type.name
 
         params['output_transform_biases_t'] = self.weights['output_transform_0_biases'].type.name
-        if self.ref_impl or self.attributes['quantize'] != 0:
+        if self.ref_impl or self.attributes['quantize']:
             params['output_transform_weights_t'] = self.weights['output_transform_0_weights'].type.name
         else:
             params['output_transform_weights_t'] = self.weights['output_transform_0_biases'].type.name
@@ -1131,7 +1131,7 @@ class GarNetStack(GarNet):
                     ('input_transform', 'biases', ('n_propagate',)),
                     ('aggregator_distance', 'weights', ('n_aggregators', 'n_in_features')),
                     ('aggregator_distance', 'biases', ('n_aggregators',)),
-                    ('output_transform', 'weights', ('n_out_features', 'n_aggregators', 'n_in_features')),
+                    ('output_transform', 'weights', ('n_out_features', 'n_aggregators', 'n_propagate')),
                     ('output_transform', 'biases', ('n_out_features',))
                 ]
             else:
@@ -1153,7 +1153,7 @@ class GarNetStack(GarNet):
 
             for op_name, vtype, factors in weight_arrays:
                 size = ' * '.join('config{}::sublayer_t<{}>::{}'.format(self.index, il, factor) for factor in factors)
-                config += 'const config{index}_base::{name}_{vtype}_t (&config{index}::sublayer_t<{il}>::{name}_{vtype})[{size}] = {vname};\n'.format(index=self.index, il=il, name=op_name, vtype=vtype, size=size, vname=self.weights['{}_{}_{}'.format(name, il, vtype)].name)
+                config += 'const config{index}_base::{name}_{vtype}_t (&config{index}::sublayer_t<{il}>::{name}_{vtype})[{size}] = {vname};\n'.format(index=self.index, il=il, name=op_name, vtype=vtype, size=size, vname=self.weights['{}_{}_{}'.format(op_name, il, vtype)].name)
 
             sublayer_configs.append(config)
 
