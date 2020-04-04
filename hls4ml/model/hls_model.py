@@ -901,7 +901,11 @@ class GarNet(Layer):
         self.add_output_variable(shape, dims, pragma=pragma)
 
     def _initialize_transforms(self):
-        if self.ref_impl or self.attributes['quantize']:
+        n_propagate = self.attributes['n_propagate']
+        n_aggregators = self.attributes['n_aggregators']
+        n_out_features = self.attributes['n_out_features']
+
+        if self.ref_impl:
             weights_source = [
                 ('input_transform', 'FLR', 'kernel'),
                 ('input_transform', 'FLR', 'bias'),
@@ -911,15 +915,23 @@ class GarNet(Layer):
                 ('output_transform', 'Fout', 'bias')
             ]
 
-        else:
-            n_propagate = self.attributes['n_propagate']
-            n_aggregators = self.attributes['n_aggregators']
-            n_out_features = self.attributes['n_out_features']
+        elif self.attributes['quantize']:
+            kernel, bias = self._make_quantized_input_transform_weights(n_propagate, n_aggregators, n_out_features)
 
+            self.add_weights_variable(name='input_transform_weights', var_name='input_transform_w{index}', data=kernel, quantize=3)
+            self.add_weights_variable(name='input_transform_biases', var_name='input_transform_b{index}', data=bias, quantize=3)
+
+            weights_source = [
+                ('aggregator_distance', 'S', 'kernel'),
+                ('aggregator_distance', 'S', 'bias'),
+                ('output_transform', 'Fout', 'bias')
+            ]
+
+        else:
             kernel, bias = self._make_input_transform_weights(n_propagate, n_aggregators, n_out_features)
 
-            self.add_weights_variable(name='input_transform_weights', var_name='input_transform_w{index}', data=kernel, quantize=0, compression=False)
-            self.add_weights_variable(name='input_transform_biases', var_name='input_transform_b{index}', data=bias, quantize=0, compression=False)
+            self.add_weights_variable(name='input_transform_weights', var_name='input_transform_w{index}', data=kernel)
+            self.add_weights_variable(name='input_transform_biases', var_name='input_transform_b{index}', data=bias)
 
             weights_source = [
                 ('aggregator_distance', 'S', 'kernel'),
@@ -940,13 +952,7 @@ class GarNet(Layer):
             name = '{}_{}'.format(op_name, vtype)
             var_name = '{}_{}{{index}}'.format(op_name, suffix)
 
-            if self.attributes['quantize'] and \
-               (op_name, wtype) in [('input_transform', 'kernel'), ('input_transform', 'bias'), ('output_transform', 'kernel')]:
-                quantize = 2
-            else:
-                quantize = 0
-
-            self.add_weights_variable(name=name, var_name=var_name, data=data, quantize=quantize, compression=False)
+            self.add_weights_variable(name=name, var_name=var_name, data=data)
 
         self._output_features = self.attributes['n_out_features']
 
@@ -954,7 +960,7 @@ class GarNet(Layer):
         # Due to linearity of the input transform, input weights and biases can be contracted away at conversion time
 
         output_transform_kernel = self.model.get_weights_data(self.name, '{name}/Fout{sublayer}_kernel:0'.format(name=self.name, sublayer=sublayer)) # [(n_aggregators, n_propagate), n_out_features]
-        output_transform_kernel = output_transform_kernel.reshape(n_aggregators, n_propagate, n_out_features)
+        output_transform_kernel = output_transform_kernel.reshape((n_aggregators, n_propagate, n_out_features))
 
         input_transform_kernel = self.model.get_weights_data(self.name, '{name}/FLR{sublayer}_kernel:0'.format(name=self.name, sublayer=sublayer)) # [n_in_features, n_propagate]
         data = np.dot(input_transform_kernel, output_transform_kernel) # [n_in_features, n_aggregators, n_out_features]
@@ -963,6 +969,26 @@ class GarNet(Layer):
         input_transform_bias = self.model.get_weights_data(self.name, '{name}/FLR{sublayer}_bias:0'.format(name=self.name, sublayer=sublayer)) # [n_propagate]
         data = np.dot(input_transform_bias, output_transform_kernel) # [n_aggregators, n_out_features]
         bias = data.transpose((1, 0))
+
+        return kernel, bias
+
+    def _make_quantized_input_transform_weights(self, n_propagate, n_aggregators, n_out_features, sublayer=''):
+        # Due to linearity of the input transform, input weights and biases can be contracted away at conversion time
+
+        data = self.model.get_weights_data(self.name, '{name}/Fout{sublayer}_kernel:0'.format(name=self.name, sublayer=sublayer)) # [(n_aggregators, n_propagate), n_out_features]
+        data = data.transpose((1, 0)).reshape((n_out_features, n_aggregators, n_propagate))
+        output_transform_kernel = self.model.quantize_data(data, 3)
+
+        data = self.model.get_weights_data(self.name, '{name}/FLR{sublayer}_kernel:0'.format(name=self.name, sublayer=sublayer)) # [n_in_features, n_propagate]
+        data = data.transpose((1, 0))
+        input_transform_kernel = self.model.quantize_data(data, 3)
+
+        kernel = np.expand_dims(output_transform_kernel, -1) * input_transform_kernel # [n_out_features, n_aggregators, n_propagate, n_in_features]
+
+        data = self.model.get_weights_data(self.name, '{name}/FLR{sublayer}_bias:0'.format(name=self.name, sublayer=sublayer)) # [n_propagate]
+        input_transform_bias = self.model.quantize_data(data, 3)
+
+        bias = output_transform_kernel * input_transform_bias # [n_out_features, n_aggregators, n_propagate]
 
         return kernel, bias
 
@@ -1004,8 +1030,8 @@ class GarNet(Layer):
         vspecs = [
             ('edge_weight', 'ap_ufixed<10, 0>'),
             ('edge_weight_aggr', 'ap_ufixed<{}, {}>'.format(10 + params['log2_reuse'], params['log2_reuse'])),
-            ('aggr', 'ap_fixed<24, 12>' if self.ref_impl else 'ap_fixed<18, 9>'),
-            ('uaggr', 'ap_ufixed<24, 12>' if self.ref_impl else 'ap_ufixed<18, 9>'),
+            ('aggr', 'ap_fixed<24, 12>' if self.ref_impl else 'ap_fixed<20, 10>'),
+            ('uaggr', 'ap_ufixed<24, 12>' if self.ref_impl else 'ap_ufixed<20, 10>'),
             ('norm', 'ap_ufixed<14, 4>')
         ]
         for vname, default in vspecs:
@@ -1050,26 +1076,22 @@ class GarNetStack(GarNet):
             n_propagate = self.attributes['n_propagate'][il]
             
             if self.attributes['quantize']:
-                weights_source = [
-                    ('input_transform', 'FLR{}'.format(il), 'kernel'),
-                    ('input_transform', 'FLR{}'.format(il), 'bias'),
-                    ('aggregator_distance', 'S{}'.format(il), 'kernel'),
-                    ('aggregator_distance', 'S{}'.format(il), 'bias'),
-                    ('output_transform', 'Fout{}'.format(il), 'kernel'),
-                    ('output_transform', 'Fout{}'.format(il), 'bias')
-                ]
+                kernel, bias = self._make_quantized_input_transform_weights(n_propagate, n_aggregators, n_out_features, sublayer=il)
+
+                self.add_weights_variable(name='input_transform_{}_weights'.format(il), var_name='input_transform_{}_w{{index}}'.format(il), data=kernel, quantize=3)
+                self.add_weights_variable(name='input_transform_{}_biases'.format(il), var_name='input_transform_{}_b{{index}}'.format(il), data=bias, quantize=3)
 
             else:
                 kernel, bias = self._make_input_transform_weights(n_propagate, n_aggregators, n_out_features, sublayer=il)
     
-                self.add_weights_variable(name='input_transform_{}_weights'.format(il), var_name='input_transform_{}_w{{index}}'.format(il), data=kernel, quantize=0, compression=False)
-                self.add_weights_variable(name='input_transform_{}_biases'.format(il), var_name='input_transform_{}_b{{index}}'.format(il), data=bias, quantize=0, compression=False)
+                self.add_weights_variable(name='input_transform_{}_weights'.format(il), var_name='input_transform_{}_w{{index}}'.format(il), data=kernel)
+                self.add_weights_variable(name='input_transform_{}_biases'.format(il), var_name='input_transform_{}_b{{index}}'.format(il), data=bias)
         
-                weights_source = [
-                    ('aggregator_distance', 'S{}'.format(il), 'kernel'),
-                    ('aggregator_distance', 'S{}'.format(il), 'bias'),
-                    ('output_transform', 'Fout{}'.format(il), 'bias')
-                ]
+            weights_source = [
+                ('aggregator_distance', 'S{}'.format(il), 'kernel'),
+                ('aggregator_distance', 'S{}'.format(il), 'bias'),
+                ('output_transform', 'Fout{}'.format(il), 'bias')
+            ]
     
             for op_name, lname, wtype in weights_source:
                 data = self.model.get_weights_data(self.name, '{name}/{lname}_{wtype}:0'.format(name=self.name, lname=lname, wtype=wtype))
@@ -1084,13 +1106,7 @@ class GarNetStack(GarNet):
                 name = '{}_{}'.format(op_name, vtype)
                 var_name = '{}_{}{{index}}'.format(op_name, suffix)
 
-                if self.attributes['quantize'] and \
-                   (op_name, wtype) in [('input_transform', 'kernel'), ('input_transform', 'bias'), ('output_transform', 'kernel')]:
-                    quantize = 3
-                else:
-                    quantize = 0
-
-                self.add_weights_variable(name=name, var_name=var_name, data=data, quantize=quantize, compression=False)
+                self.add_weights_variable(name=name, var_name=var_name, data=data)
 
         self._output_features = self.attributes['n_out_features'][-1]
 
@@ -1108,7 +1124,7 @@ class GarNetStack(GarNet):
                 params['{}_{}_t'.format(op_name, vtype)] = self.weights['{}_0_{}'.format(op_name, vtype)].type.name
 
         params['output_transform_biases_t'] = self.weights['output_transform_0_biases'].type.name
-        if self.ref_impl or self.attributes['quantize']:
+        if self.ref_impl:
             params['output_transform_weights_t'] = self.weights['output_transform_0_weights'].type.name
         else:
             params['output_transform_weights_t'] = self.weights['output_transform_0_biases'].type.name
@@ -1127,11 +1143,10 @@ class GarNetStack(GarNet):
 
             if self.ref_impl or self.attributes['quantize']:
                 weight_arrays = [
-                    ('input_transform', 'weights', ('n_propagate', 'n_in_features')),
-                    ('input_transform', 'biases', ('n_propagate',)),
+                    ('input_transform', 'weights', ('n_out_features', 'n_aggregators', 'n_propagate', 'n_in_features')),
+                    ('input_transform', 'biases', ('n_out_features', 'n_aggregators', 'n_propagate')),
                     ('aggregator_distance', 'weights', ('n_aggregators', 'n_in_features')),
                     ('aggregator_distance', 'biases', ('n_aggregators',)),
-                    ('output_transform', 'weights', ('n_out_features', 'n_aggregators', 'n_propagate')),
                     ('output_transform', 'biases', ('n_out_features',))
                 ]
             else:

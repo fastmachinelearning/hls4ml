@@ -137,8 +137,9 @@ namespace nnet {
     typename std::enable_if<std::is_same<weight_T, ap_uint<1>>::value, ret_T>::type
     quantized_prod(operand_T const& o, weight_T const& w)
     {
+      // Binary is currently not used
       #pragma HLS INLINE off
-      return (ret_T) (w == 0 ? -o : o);
+      return w == 0 ? -(ret_T)o : (ret_T)o;
     }
 
     template<class operand_T, class weight_T, class ret_T = operand_T>
@@ -149,12 +150,12 @@ namespace nnet {
       #pragma HLS INLINE off
       switch (w) {
       case -1:
-        return (ret_T) -o;
+        return -(ret_T)o;
       case 0:
-        return (ret_T) 0;
+        return 0.;
       case 1:
       default:
-        return (ret_T) o;
+        return (ret_T)o;
       }
     }
 
@@ -415,23 +416,25 @@ namespace nnet {
       #pragma HLS INLINE
       #pragma HLS UNROLL region
 
+      unsigned const ioa = io * CONFIG_T::n_aggregators + ia;
+
       typename CONFIG_T::aggr_t aggr = 0.;
 
      InTransform:
       for (unsigned ip = 0; ip < CONFIG_T::n_propagate; ++ip) {
-        typename CONFIG_T::aggr_t aggr_p = quantized_prod(arrays.edge_weight_mean[ia], CONFIG_T::input_transform_biases[ip]);
+        unsigned const ioap = ioa * CONFIG_T::n_propagate + ip;
+
+        typename CONFIG_T::aggr_t aggr_p = quantized_prod<typename arrays_T::edge_weight_t, typename CONFIG_T::input_transform_biases_t, typename CONFIG_T::aggr_t>(arrays.edge_weight_mean[ia], CONFIG_T::input_transform_biases[ioap]);
 
        InFeatures:
         for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix) {
-          unsigned const ipx = ip * CONFIG_T::n_in_features + ix;
+          unsigned const ioapx = ioap * CONFIG_T::n_in_features + ix;
           unsigned const iax = ia * CONFIG_T::n_in_features + ix;
 
-          aggr_p += quantized_prod(arrays.weighted_feature_mean[iax], CONFIG_T::input_transform_weights[ipx]);
+          aggr_p += quantized_prod(arrays.weighted_feature_mean[iax], CONFIG_T::input_transform_weights[ioapx]);
         }
 
-        unsigned const ioap = (io * CONFIG_T::n_aggregators + ia) * CONFIG_T::n_propagate + ip;
-
-        aggr += quantized_prod(aggr_p, CONFIG_T::output_transform_weights[ioap]);
+        aggr += aggr_p;
       }
 
       return aggr;
@@ -720,7 +723,7 @@ namespace nnet {
     static const unsigned n_aggregators = 4;
     static const unsigned n_out_features = 4;
     static const unsigned distance_width = 12;
-  
+
     // Internal data type definitions
     typedef float input_transform_weights_t;
     typedef float input_transform_biases_t;
