@@ -1027,11 +1027,19 @@ class GarNet(Layer):
         params['log2_reuse'] = int(math.log2(params['reuse']))
         params['quantize_transforms'] = str(self.attributes['quantize']).lower()
 
+        # Integral precision for aggr_t depends on how large the temporary sum for weighed feature mean will be
+        aggr_int_digits = max(params['log2_reuse'], params['n_vertices_width'] - params['log2_reuse']) + 3 # safety factor 2**3
+        # We always give 10 digits for the subintegral part
+        aggr_digits = aggr_int_digits + 10
+        # edge_weight_aggr_t does not need the safety factor
+        edge_weight_aggr_int_digits = aggr_int_digits - 3
+        edge_weight_aggr_digits = aggr_digits - 3
+
         vspecs = [
             ('edge_weight', 'ap_ufixed<10, 0>'),
-            ('edge_weight_aggr', 'ap_ufixed<{}, {}>'.format(10 + params['log2_reuse'], params['log2_reuse'])),
-            ('aggr', 'ap_fixed<24, 12>' if self.ref_impl else 'ap_fixed<20, 10>'),
-            ('uaggr', 'ap_ufixed<24, 12>' if self.ref_impl else 'ap_ufixed<20, 10>'),
+            ('edge_weight_aggr', 'ap_ufixed<{}, {}>'.format(edge_weight_aggr_digits, edge_weight_aggr_int_digits)),
+            ('aggr', 'ap_fixed<24, 12>' if self.ref_impl else 'ap_fixed<{}, {}>'.format(aggr_digits, aggr_int_digits)),
+            ('uaggr', 'ap_ufixed<24, 12>' if self.ref_impl else 'ap_ufixed<{}, {}>'.format(aggr_digits, aggr_int_digits)),
             ('norm', 'ap_ufixed<14, 4>')
         ]
         for vname, default in vspecs:
