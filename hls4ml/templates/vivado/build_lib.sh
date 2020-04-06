@@ -1,7 +1,11 @@
 #!/bin/bash
 
 CC=g++
-CFLAGS="-O3 -fPIC -std=c++11 -fno-gnu-unique"
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    CFLAGS="-O3 -fPIC -std=c++11 -fno-gnu-unique"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    CFLAGS="-O3 -fPIC -std=c++11"
+fi
 LDFLAGS=
 INCFLAGS="-Ifirmware/ap_types/"
 PROJECT=myproject

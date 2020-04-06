@@ -1,9 +1,9 @@
 #ifndef PARAMETERS_H_
 #define PARAMETERS_H_
 
-#include <complex>
 #include "ap_int.h"
 #include "ap_fixed.h"
+
 #include "nnet_utils/nnet_dense.h"
 #include "nnet_utils/nnet_dense_large.h"
 #include "nnet_utils/nnet_dense_compressed.h"
