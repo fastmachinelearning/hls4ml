@@ -317,28 +317,6 @@ def numerical(keras_model=None, hls_model=None, X=None, plot='boxplot'):
     return wp, ap
 
 ########COMPARE OUTPUT IMPLEMENTATION########
-def get_ysim_from_hls(hls_model, X):
-    """
-    Get each layer's output from converted hls project. Note that the project
-    has to be complied prior to using this method in Trace mode (i.e specify Trace: True in config file for the whole model).
-
-    Params:
-    ------
-    hls_model : converted HLS model, with "Trace:True" in the configuration file.
-    layer_names : list
-        A list of layer's names in the model. (Obtained via ymodel.keys()) 
-    Return:
-    ------
-        A dictionary in the form {"layer_name": ouput array of layer in hls model}
-    """
-
-    ysim = {}
-
-    print("Processing outputs in HLS model...")
-    _, ysim= hls_model.trace(X)
-
-    return ysim
-
 def _is_ignored_layer(layer):
     """Some layers need to be ingored during inference"""
     if isinstance(layer, (keras.layers.InputLayer,
@@ -483,7 +461,7 @@ def compare(keras_model, hls_model, X, plot_type = "dist_diff"):
     #Take in output from both models
     #Note that each y is a dictionary with structure {"layer_name": flattened ouput array}
     ymodel = get_ymodel_keras(keras_model, X)
-    ysim = get_ysim_from_hls(hls_model, X)
+    _, ysim = hls_model.trace(X)
     
     print("Plotting difference...")
     f = plt.figure()
