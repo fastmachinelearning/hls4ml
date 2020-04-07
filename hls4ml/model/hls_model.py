@@ -915,20 +915,8 @@ class GarNet(Layer):
                 ('output_transform', 'Fout', 'bias')
             ]
 
-        elif self.attributes['quantize']:
-            kernel, bias = self._make_quantized_input_transform_weights(n_propagate, n_aggregators, n_out_features)
-
-            self.add_weights_variable(name='input_transform_weights', var_name='input_transform_w{index}', data=kernel, quantize=3)
-            self.add_weights_variable(name='input_transform_biases', var_name='input_transform_b{index}', data=bias, quantize=3)
-
-            weights_source = [
-                ('aggregator_distance', 'S', 'kernel'),
-                ('aggregator_distance', 'S', 'bias'),
-                ('output_transform', 'Fout', 'bias')
-            ]
-
         else:
-            kernel, bias = self._make_input_transform_weights(n_propagate, n_aggregators, n_out_features)
+            kernel, bias = self._make_input_transform_weights(n_propagate, n_aggregators, n_out_features, quantize=self.attributes['quantize'])
 
             self.add_weights_variable(name='input_transform_weights', var_name='input_transform_w{index}', data=kernel)
             self.add_weights_variable(name='input_transform_biases', var_name='input_transform_b{index}', data=bias)
@@ -956,39 +944,25 @@ class GarNet(Layer):
 
         self._output_features = self.attributes['n_out_features']
 
-    def _make_input_transform_weights(self, n_propagate, n_aggregators, n_out_features, sublayer=''):
+    def _make_input_transform_weights(self, n_propagate, n_aggregators, n_out_features, quantize=False, sublayer=''):
         # Due to linearity of the input transform, input weights and biases can be contracted away at conversion time
 
         output_transform_kernel = self.model.get_weights_data(self.name, '{name}/Fout{sublayer}_kernel:0'.format(name=self.name, sublayer=sublayer)) # [(n_aggregators, n_propagate), n_out_features]
         output_transform_kernel = output_transform_kernel.reshape((n_aggregators, n_propagate, n_out_features))
+        if quantize:
+            output_transform_kernel = self.model.quantize_data(output_transform_kernel, 3)
 
         input_transform_kernel = self.model.get_weights_data(self.name, '{name}/FLR{sublayer}_kernel:0'.format(name=self.name, sublayer=sublayer)) # [n_in_features, n_propagate]
+        if quantize:
+            input_transform_kernel = self.model.quantize_data(input_transform_kernel, 3)
         data = np.dot(input_transform_kernel, output_transform_kernel) # [n_in_features, n_aggregators, n_out_features]
         kernel = data.transpose((2, 1, 0))
 
         input_transform_bias = self.model.get_weights_data(self.name, '{name}/FLR{sublayer}_bias:0'.format(name=self.name, sublayer=sublayer)) # [n_propagate]
+        if quantize:
+            input_transform_bias = self.model.quantize_data(input_transform_bias, 3)
         data = np.dot(input_transform_bias, output_transform_kernel) # [n_aggregators, n_out_features]
         bias = data.transpose((1, 0))
-
-        return kernel, bias
-
-    def _make_quantized_input_transform_weights(self, n_propagate, n_aggregators, n_out_features, sublayer=''):
-        # Due to linearity of the input transform, input weights and biases can be contracted away at conversion time
-
-        data = self.model.get_weights_data(self.name, '{name}/Fout{sublayer}_kernel:0'.format(name=self.name, sublayer=sublayer)) # [(n_aggregators, n_propagate), n_out_features]
-        data = data.transpose((1, 0)).reshape((n_out_features, n_aggregators, n_propagate))
-        output_transform_kernel = self.model.quantize_data(data, 3)
-
-        data = self.model.get_weights_data(self.name, '{name}/FLR{sublayer}_kernel:0'.format(name=self.name, sublayer=sublayer)) # [n_in_features, n_propagate]
-        data = data.transpose((1, 0))
-        input_transform_kernel = self.model.quantize_data(data, 3)
-
-        kernel = np.expand_dims(output_transform_kernel, -1) * input_transform_kernel # [n_out_features, n_aggregators, n_propagate, n_in_features]
-
-        data = self.model.get_weights_data(self.name, '{name}/FLR{sublayer}_bias:0'.format(name=self.name, sublayer=sublayer)) # [n_propagate]
-        input_transform_bias = self.model.quantize_data(data, 3)
-
-        bias = output_transform_kernel * input_transform_bias # [n_out_features, n_aggregators, n_propagate]
 
         return kernel, bias
 
@@ -1025,7 +999,6 @@ class GarNet(Layer):
         params['distance_width'] = 12
         params['distance_nint'] = min(4, params['distance_width'] - 6) # this is tuned
         params['log2_reuse'] = int(math.log2(params['reuse']))
-        params['quantize_transforms'] = str(self.attributes['quantize']).lower()
 
         # Integral precision for aggr_t depends on how large the temporary sum for weighed feature mean will be
         aggr_int_digits = max(params['log2_reuse'], params['n_vertices_width'] - params['log2_reuse']) + 3 # safety factor 2**3
@@ -1073,7 +1046,7 @@ class GarNet(Layer):
         for var_name, weights in self.weights.items():
             params[var_name] = weights.name
 
-        if not self.ref_impl and not self.attributes['quantize']:
+        if not self.ref_impl:
             params['output_transform_weights_t'] = params['output_transform_biases_t']
 
 class GarNetStack(GarNet):
@@ -1083,17 +1056,10 @@ class GarNetStack(GarNet):
             n_out_features = self.attributes['n_out_features'][il]
             n_propagate = self.attributes['n_propagate'][il]
             
-            if self.attributes['quantize']:
-                kernel, bias = self._make_quantized_input_transform_weights(n_propagate, n_aggregators, n_out_features, sublayer=il)
+            kernel, bias = self._make_input_transform_weights(n_propagate, n_aggregators, n_out_features, quantize=self.attributes['quantize'], sublayer=il)
 
-                self.add_weights_variable(name='input_transform_{}_weights'.format(il), var_name='input_transform_{}_w{{index}}'.format(il), data=kernel, quantize=3)
-                self.add_weights_variable(name='input_transform_{}_biases'.format(il), var_name='input_transform_{}_b{{index}}'.format(il), data=bias, quantize=3)
-
-            else:
-                kernel, bias = self._make_input_transform_weights(n_propagate, n_aggregators, n_out_features, sublayer=il)
-    
-                self.add_weights_variable(name='input_transform_{}_weights'.format(il), var_name='input_transform_{}_w{{index}}'.format(il), data=kernel)
-                self.add_weights_variable(name='input_transform_{}_biases'.format(il), var_name='input_transform_{}_b{{index}}'.format(il), data=bias)
+            self.add_weights_variable(name='input_transform_{}_weights'.format(il), var_name='input_transform_{}_w{{index}}'.format(il), data=kernel)
+            self.add_weights_variable(name='input_transform_{}_biases'.format(il), var_name='input_transform_{}_b{{index}}'.format(il), data=bias)
         
             weights_source = [
                 ('aggregator_distance', 'S{}'.format(il), 'kernel'),
@@ -1149,7 +1115,7 @@ class GarNetStack(GarNet):
                 config += '    static const unsigned n_in_ufeatures = 0;\n'
             config += '    static const unsigned n_in_sfeatures = n_in_features - n_in_ufeatures;\n'
 
-            if self.ref_impl or self.attributes['quantize']:
+            if self.ref_impl:
                 weight_arrays = [
                     ('input_transform', 'weights', ('n_out_features', 'n_aggregators', 'n_propagate', 'n_in_features')),
                     ('input_transform', 'biases', ('n_out_features', 'n_aggregators', 'n_propagate')),

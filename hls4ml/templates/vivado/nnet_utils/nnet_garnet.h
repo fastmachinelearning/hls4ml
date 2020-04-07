@@ -135,33 +135,6 @@ namespace nnet {
       return dividend / std::pow(2., exponent);
     }
 
-    template<class operand_T, class weight_T, class ret_T = operand_T>
-    inline
-    typename std::enable_if<std::is_same<weight_T, ap_uint<1>>::value, ret_T>::type
-    quantized_prod(operand_T const& o, weight_T const& w)
-    {
-      // Binary is currently not used
-      #pragma HLS INLINE off
-      return w == 0 ? -(ret_T)o : (ret_T)o;
-    }
-
-    template<class operand_T, class weight_T, class ret_T = operand_T>
-    inline
-    typename std::enable_if<std::is_same<weight_T, ap_int<2>>::value, ret_T>::type
-    quantized_prod(operand_T const& o, weight_T const& w)
-    {
-      #pragma HLS INLINE off
-      switch (w) {
-      case -1:
-        return -(ret_T)o;
-      case 0:
-        return 0.;
-      case 1:
-      default:
-        return (ret_T)o;
-      }
-    }
-
     template<class CONFIG_T, class E = typename CONFIG_T::edge_weight_t>
     struct Means {
       typedef E edge_weight_t;
@@ -409,43 +382,7 @@ namespace nnet {
 
     template<class CONFIG_T, class arrays_T>
     inline
-    typename std::enable_if<CONFIG_T::quantize_transforms, typename CONFIG_T::aggr_t>::type
-    compute_output_base_core(
-      arrays_T const& arrays,
-      unsigned io,
-      unsigned ia
-    )
-    {
-      #pragma HLS INLINE
-      #pragma HLS UNROLL region
-
-      unsigned const ioa = io * CONFIG_T::n_aggregators + ia;
-
-      typename CONFIG_T::aggr_t aggr = 0.;
-
-     InTransform:
-      for (unsigned ip = 0; ip < CONFIG_T::n_propagate; ++ip) {
-        unsigned const ioap = ioa * CONFIG_T::n_propagate + ip;
-
-        typename CONFIG_T::aggr_t aggr_p = quantized_prod<typename arrays_T::edge_weight_t, typename CONFIG_T::input_transform_biases_t, typename CONFIG_T::aggr_t>(arrays.edge_weight_mean[ia], CONFIG_T::input_transform_biases[ioap]);
-
-       InFeatures:
-        for (unsigned ix = 0; ix < CONFIG_T::n_in_features; ++ix) {
-          unsigned const ioapx = ioap * CONFIG_T::n_in_features + ix;
-          unsigned const iax = ia * CONFIG_T::n_in_features + ix;
-
-          aggr_p += quantized_prod(arrays.weighted_feature_mean[iax], CONFIG_T::input_transform_weights[ioapx]);
-        }
-
-        aggr += aggr_p;
-      }
-
-      return aggr;
-    }
-
-    template<class CONFIG_T, class arrays_T>
-    inline
-    typename std::enable_if<not CONFIG_T::quantize_transforms, typename CONFIG_T::aggr_t>::type
+    typename CONFIG_T::aggr_t
     compute_output_base_core(
       arrays_T const& arrays,
       unsigned io,
@@ -759,7 +696,6 @@ namespace nnet {
 
     static const bool mean_by_nvert = false;
     static const bool is_stack = false;
-    static const bool quantize_transforms = false;
  
     // Optimization specs
     static const unsigned reuse_factor = 64;
