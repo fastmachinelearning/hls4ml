@@ -157,13 +157,6 @@ garnet_common_config_template = """
     static const unsigned output_collapse = {collapse_type};
     static const bool mean_by_nvert = {mean_by_nvert};
 
-    typedef {input_transform_weights_t} input_transform_weights_t;
-    typedef {input_transform_biases_t} input_transform_biases_t;
-    typedef {aggregator_distance_weights_t} aggregator_distance_weights_t;
-    typedef {aggregator_distance_biases_t} aggregator_distance_biases_t;
-    typedef {output_transform_weights_t} output_transform_weights_t;
-    typedef {output_transform_biases_t} output_transform_biases_t;
-
     typedef {norm_t} norm_t;
     typedef ap_fixed<{distance_width}, {distance_nint}, AP_TRN, AP_SAT> distance_t;
     typedef {edge_weight_t} edge_weight_t;
@@ -183,20 +176,14 @@ garnet_config_template += """
     static const unsigned n_aggregators = {n_aggregators};
     static const unsigned n_out_features = {n_out_features};
 
-    static const input_transform_weights_t (&input_transform_weights)[n_out_features * n_aggregators * n_in_features];
-    static const input_transform_biases_t (&input_transform_biases)[n_out_features * n_aggregators];
-    static const aggregator_distance_weights_t (&aggregator_distance_weights)[n_aggregators * n_in_features];
-    static const aggregator_distance_biases_t (&aggregator_distance_biases)[n_aggregators];
-    static const output_transform_biases_t (&output_transform_biases)[n_out_features];
+    {typedefs}
+
+    {arraydecls}
 
     typedef config{index} base_t;
 }};
 
-const config{index}::input_transform_weights_t (&config{index}::input_transform_weights)[config{index}::n_out_features * config{index}::n_aggregators * config{index}::n_in_features] = {input_transform_weights};
-const config{index}::input_transform_biases_t (&config{index}::input_transform_biases)[config{index}::n_out_features * config{index}::n_aggregators] = {input_transform_biases};
-const config{index}::aggregator_distance_weights_t (&config{index}::aggregator_distance_weights)[config{index}::n_aggregators * config{index}::n_in_features] = {aggregator_distance_weights};
-const config{index}::aggregator_distance_biases_t (&config{index}::aggregator_distance_biases)[config{index}::n_aggregators] = {aggregator_distance_biases};
-const config{index}::output_transform_biases_t (&config{index}::output_transform_biases)[config{index}::n_out_features] = {output_transform_biases};
+{arraydefs}
 """
 
 garnet_stack_config_template = """struct config{index}_base : nnet::garnet_config {{"""

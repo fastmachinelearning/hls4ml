@@ -601,6 +601,9 @@ class Layer(object):
 
         if precision is None:
             precision, _ = self.model.config.get_precision(self, var=name)
+        elif type_name is None:
+            # if precision is specified but no type name is given, assign a dedicated type name made from variable name and layer index
+            type_name = name + '{index}_t'
 
         if type_name is None:
             _, type_name = self.model.config.get_precision(self, var=name)
@@ -918,8 +921,10 @@ class GarNet(Layer):
         else:
             kernel, bias = self._make_input_transform_weights(n_propagate, n_aggregators, n_out_features, quantize=self.attributes['quantize'])
 
-            self.add_weights_variable(name='input_transform_weights', var_name='input_transform_w{index}', data=kernel)
-            self.add_weights_variable(name='input_transform_biases', var_name='input_transform_b{index}', data=bias)
+            precision = self.weights_precision(kernel, 'ap_int')
+            self.add_weights_variable(name='input_transform_weights', var_name='input_transform_w{index}', data=kernel, precision=precision)
+            precision = self.weights_precision(bias, 'ap_int')
+            self.add_weights_variable(name='input_transform_biases', var_name='input_transform_b{index}', data=bias, precision=precision)
 
             weights_source = [
                 ('aggregator_distance', 'S', 'kernel'),
@@ -932,15 +937,14 @@ class GarNet(Layer):
             if wtype == 'kernel':
                 data = data.transpose((1, 0))
                 vtype = 'weights'
-                suffix = 'w'
             else:
                 vtype = 'biases'
-                suffix = 'b'
 
             name = '{}_{}'.format(op_name, vtype)
-            var_name = '{}_{}{{index}}'.format(op_name, suffix)
+            var_name = '{}_{}{{index}}'.format(op_name, vtype[0])
 
-            self.add_weights_variable(name=name, var_name=var_name, data=data)
+            precision = self.weights_precision(data, 'ap_fixed', subint=10, qmode='AP_RND', omode='AP_SAT')
+            self.add_weights_variable(name=name, var_name=var_name, data=data, precision=precision)
 
         self._output_features = self.attributes['n_out_features']
 
@@ -1043,11 +1047,64 @@ class GarNet(Layer):
         params['n_aggregators'] = self.get_weights('aggregator_distance_biases').shape[0]
         params['n_out_features'] = self.get_weights('output_transform_biases').shape[0]
 
-        for var_name, weights in self.weights.items():
-            params[var_name] = weights.name
+        if self.ref_impl:
+            weight_arrays = [
+                ('input_transform', 'weights', ('n_propagate', 'n_in_features')),
+                ('input_transform', 'biases', ('n_propagate',)),
+                ('aggregator_distance', 'weights', ('n_aggregators', 'n_in_features')),
+                ('aggregator_distance', 'biases', ('n_aggregators',)),
+                ('output_transform', 'weights', ('n_out_features', 'n_aggregators', 'n_propagate'))
+                ('output_transform', 'biases', ('n_out_features',))
+            ]
+        else:
+            weight_arrays = [
+                ('input_transform', 'weights', ('n_out_features', 'n_aggregators', 'n_in_features')),
+                ('input_transform', 'biases', ('n_out_features', 'n_aggregators')),
+                ('aggregator_distance', 'weights', ('n_aggregators', 'n_in_features')),
+                ('aggregator_distance', 'biases', ('n_aggregators',)),
+                ('output_transform', 'biases', ('n_out_features',))
+            ]
 
-        if not self.ref_impl:
-            params['output_transform_weights_t'] = params['output_transform_biases_t']
+        typedefs = ''
+        for op_name, vtype, _ in weight_arrays:
+            global_type_name = self.weights['{}_{}'.format(op_name, vtype)].type.name
+            typedefs += '    typedef {} {}_{}_t;\n'.format(global_type_name, op_name, vtype)
+
+        arraydecls = ''
+        for op_name, vtype, factors in weight_arrays:
+            arraydecls += '    static const {name}_{vtype}_t (&{name}_{vtype})[{size}];\n'.format(name=op_name, vtype=vtype, size=(' * '.join(factors)))
+
+        arraydefs = ''
+        for op_name, vtype, factors in weight_arrays:
+            global_vname = self.weights['{}_{}'.format(op_name, vtype)].name
+            size = ' * '.join('config{}::{}'.format(self.index, factor) for factor in factors)
+            arraydefs += 'const config{index}::{name}_{vtype}_t (&config{index}::{name}_{vtype})[{size}] = {vname};\n'.format(index=self.index, name=op_name, vtype=vtype, size=size, vname=global_vname)
+
+        params['typedefs'] = typedefs
+        params['arraydecls'] = arraydecls
+        params['arraydefs'] = arraydefs
+
+    @staticmethod
+    def weights_precision(weights, vtype, subint=0, qmode=None, omode=None):
+        log2max = math.log2(np.amax(np.abs(weights)))
+        int_bits = math.ceil(log2max)
+        if int_bits == math.floor(log2max): # is a power-of-two integer
+            int_bits += 1
+        has_negative = (np.amin(weights) < 0.)
+        if has_negative and (vtype == 'ap_int' or vtype == 'ap_fixed'):
+            int_bits += 1
+
+        if 'int' in vtype:
+            return '{}<{}>'.format(vtype, int_bits)
+        else:
+            flags = ''
+            if qmode is not None:
+                flags += ', {}'.format(qmode)
+                if omode is not None:
+                    flags += ', {}'.format(omode)
+
+            return '{}<{}, {}{}>'.format(vtype, int_bits + subint, int_bits, flags)
+
 
 class GarNetStack(GarNet):
     def _initialize_transforms(self):
@@ -1058,8 +1115,10 @@ class GarNetStack(GarNet):
             
             kernel, bias = self._make_input_transform_weights(n_propagate, n_aggregators, n_out_features, quantize=self.attributes['quantize'], sublayer=il)
 
-            self.add_weights_variable(name='input_transform_{}_weights'.format(il), var_name='input_transform_{}_w{{index}}'.format(il), data=kernel)
-            self.add_weights_variable(name='input_transform_{}_biases'.format(il), var_name='input_transform_{}_b{{index}}'.format(il), data=bias)
+            precision = self.weights_precision(kernel, 'ap_int')
+            self.add_weights_variable(name='input_transform_{}_weights'.format(il), var_name='input_transform_{}_w{{index}}'.format(il), data=kernel, precision=precision)
+            precision = self.weights_precision(bias, 'ap_int')
+            self.add_weights_variable(name='input_transform_{}_biases'.format(il), var_name='input_transform_{}_b{{index}}'.format(il), data=bias, precision=precision)
         
             weights_source = [
                 ('aggregator_distance', 'S{}'.format(il), 'kernel'),
@@ -1071,16 +1130,15 @@ class GarNetStack(GarNet):
                 data = self.model.get_weights_data(self.name, '{name}/{lname}_{wtype}:0'.format(name=self.name, lname=lname, wtype=wtype))
                 if wtype == 'kernel':
                     data = data.transpose((1, 0))
-                    vtype = '{}_weights'.format(il)
-                    suffix = '{}_w'.format(il)
+                    suffix = '{}_weights'.format(il)
                 else:
-                    vtype = '{}_biases'.format(il)
-                    suffix = '{}_b'.format(il)
+                    suffix = '{}_biases'.format(il)
 
-                name = '{}_{}'.format(op_name, vtype)
-                var_name = '{}_{}{{index}}'.format(op_name, suffix)
+                name = '{}_{}'.format(op_name, suffix)
+                var_name = '{}_{}{{index}}'.format(op_name, suffix[:suffix.find('_') + 2])
 
-                self.add_weights_variable(name=name, var_name=var_name, data=data)
+                precision = self.weights_precision(data, 'ap_fixed', subint=10, qmode='AP_RND', omode='AP_SAT')
+                self.add_weights_variable(name=name, var_name=var_name, data=data, precision=precision)
 
         self._output_features = self.attributes['n_out_features'][-1]
 
@@ -1092,16 +1150,6 @@ class GarNetStack(GarNet):
         else:
             params['n_in_ufeatures'] = 0
         params['n_out_features'] = self.attributes['n_out_features'][-1]
-
-        for op_name in ['input_transform', 'aggregator_distance']:
-            for vtype in ['weights', 'biases']:
-                params['{}_{}_t'.format(op_name, vtype)] = self.weights['{}_0_{}'.format(op_name, vtype)].type.name
-
-        params['output_transform_biases_t'] = self.weights['output_transform_0_biases'].type.name
-        if self.ref_impl:
-            params['output_transform_weights_t'] = self.weights['output_transform_0_weights'].type.name
-        else:
-            params['output_transform_weights_t'] = self.weights['output_transform_0_biases'].type.name
 
         sublayer_configs = []
         for il in range(self.attributes['n_sublayers'] - 1, -1, -1):
@@ -1115,25 +1163,24 @@ class GarNetStack(GarNet):
                 config += '    static const unsigned n_in_ufeatures = 0;\n'
             config += '    static const unsigned n_in_sfeatures = n_in_features - n_in_ufeatures;\n'
 
-            if self.ref_impl:
-                weight_arrays = [
-                    ('input_transform', 'weights', ('n_out_features', 'n_aggregators', 'n_propagate', 'n_in_features')),
-                    ('input_transform', 'biases', ('n_out_features', 'n_aggregators', 'n_propagate')),
-                    ('aggregator_distance', 'weights', ('n_aggregators', 'n_in_features')),
-                    ('aggregator_distance', 'biases', ('n_aggregators',)),
-                    ('output_transform', 'biases', ('n_out_features',))
-                ]
-            else:
-                weight_arrays = [
-                    ('input_transform', 'weights', ('n_out_features', 'n_aggregators', 'n_in_features')),
-                    ('input_transform', 'biases', ('n_out_features', 'n_aggregators')),
-                    ('aggregator_distance', 'weights', ('n_aggregators', 'n_in_features')),
-                    ('aggregator_distance', 'biases', ('n_aggregators',)),
-                    ('output_transform', 'biases', ('n_out_features',))
-                ]
+            weight_arrays = [
+                ('input_transform', 'weights', ('n_out_features', 'n_aggregators', 'n_in_features')),
+                ('input_transform', 'biases', ('n_out_features', 'n_aggregators')),
+                ('aggregator_distance', 'weights', ('n_aggregators', 'n_in_features')),
+                ('aggregator_distance', 'biases', ('n_aggregators',)),
+                ('output_transform', 'biases', ('n_out_features',))
+            ]
+
+            for op_name, vtype, _ in weight_arrays:
+                global_type_name = self.weights['{}_{}_{}'.format(op_name, il, vtype)].type.name
+                config += '    typedef {} {}_{}_t;\n'.format(global_type_name, op_name, vtype)
+
+            config += '\n'
 
             for op_name, vtype, factors in weight_arrays:
                 config += '    static const {name}_{vtype}_t (&{name}_{vtype})[{size}];\n'.format(name=op_name, vtype=vtype, size=(' * '.join(factors)))
+
+            config += '\n'
 
             if il != self.attributes['n_sublayers'] - 1:
                 config += '    typedef config{index}::sublayer_t<{n}> next_layer_t;\n'.format(index=self.index, n=(il + 1))
@@ -1141,8 +1188,9 @@ class GarNetStack(GarNet):
             config += '};\n\n'
 
             for op_name, vtype, factors in weight_arrays:
+                global_vname = self.weights['{}_{}_{}'.format(op_name, il, vtype)].name
                 size = ' * '.join('config{}::sublayer_t<{}>::{}'.format(self.index, il, factor) for factor in factors)
-                config += 'const config{index}_base::{name}_{vtype}_t (&config{index}::sublayer_t<{il}>::{name}_{vtype})[{size}] = {vname};\n'.format(index=self.index, il=il, name=op_name, vtype=vtype, size=size, vname=self.weights['{}_{}_{}'.format(op_name, il, vtype)].name)
+                config += 'const config{index}::sublayer_t<{il}>::{name}_{vtype}_t (&config{index}::sublayer_t<{il}>::{name}_{vtype})[{size}] = {vname};\n'.format(index=self.index, il=il, name=op_name, vtype=vtype, size=size, vname=global_vname)
 
             sublayer_configs.append(config)
 
