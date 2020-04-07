@@ -23,6 +23,9 @@ class Backend(object):
     def register_source(self, file_name, source, destination_dir='nnet_utils'):
         raise NotImplementedError
 
+    def get_precision(self, vtype, iwidth=0, fwidth=0, data=None, optimize_signed=False, options=[]):
+        raise NotImplementedError
+
 backend_map = {}
 
 def register_backend(name, backend_cls):

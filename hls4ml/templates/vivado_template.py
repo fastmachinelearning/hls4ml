@@ -176,19 +176,34 @@ garnet_config_template += """
     static const unsigned n_aggregators = {n_aggregators};
     static const unsigned n_out_features = {n_out_features};
 
-    {typedefs}
+    typedef {input_transform_weights_t} input_transform_weights_t;
+    typedef {input_transform_biases_t} input_transform_biases_t;
+    typedef {aggregator_distance_weights_t} aggregator_distance_weights_t;
+    typedef {aggregator_distance_biases_t} aggregator_distance_biases_t;
+    typedef {output_transform_weights_t} output_transform_weights_t;
+    typedef {output_transform_biases_t} output_transform_biases_t;
 
-    {arraydecls}
+    static const input_transform_weights_t (&input_transform_weights)[{input_transform_weights_size}];
+    static const input_transform_biases_t (&input_transform_biases)[{input_transform_biases_size}];
+    static const aggregator_distance_weights_t (&aggregator_distance_weights)[{aggregator_distance_weights_size}];
+    static const aggregator_distance_biases_t (&aggregator_distance_biases)[{aggregator_distance_biases_size}];
+    static const output_transform_weights_t (&output_transform_weights)[{output_transform_weights_size}];
+    static const output_transform_biases_t (&output_transform_biases)[{output_transform_biases_size}];
 
     typedef config{index} base_t;
 }};
 
-{arraydefs}
+const config{index}::input_transform_weights_t (&config{index}::input_transform_weights)[{input_transform_weights_size}] = {input_transform_weights};
+const config{index}::input_transform_biases_t (&config{index}::input_transform_biases)[{input_transform_biases_size}] = {input_transform_biases};
+const config{index}::aggregator_distance_weights_t (&config{index}::aggregator_distance_weights)[{aggregator_distance_weights_size}] = {aggregator_distance_weights};
+const config{index}::aggregator_distance_biases_t (&config{index}::aggregator_distance_biases)[{aggregator_distance_biases_size}] = {aggregator_distance_biases};
+const config{index}::output_transform_weights_t (&config{index}::output_transform_weights)[{output_transform_weights_size}] = {output_transform_weights};
+const config{index}::output_transform_biases_t (&config{index}::output_transform_biases)[{output_transform_biases_size}] = {output_transform_biases};
 """
 
-garnet_stack_config_template = """struct config{index}_base : nnet::garnet_config {{"""
-garnet_stack_config_template += garnet_common_config_template
-garnet_stack_config_template += """
+garnet_stack_base_config_template = """struct config{index}_base : nnet::garnet_config {{"""
+garnet_stack_base_config_template += garnet_common_config_template
+garnet_stack_base_config_template += """
     static const bool is_stack = true;
 
     typedef config{index}_base base_t;
@@ -203,6 +218,40 @@ struct config{index} : config{index}_base {{
 
 {sublayer_configs}
 """
+
+garnet_stack_sublayer_config_template = """template<>
+struct config{index}::sublayer_t<{il}> : config{index}_base {{
+    static const unsigned n_in_features = {n_in_features};
+    static const unsigned n_propagate = {n_propagate};
+    static const unsigned n_aggregators = {n_aggregators};
+    static const unsigned n_out_features = {n_out_features};
+    static const unsigned n_in_ufeatures = {n_in_ufeatures};
+    static const unsigned n_in_sfeatures = n_in_features - n_in_ufeatures;
+
+    typedef {input_transform_weights_t} input_transform_weights_t;
+    typedef {input_transform_biases_t} input_transform_biases_t;
+    typedef {aggregator_distance_weights_t} aggregator_distance_weights_t;
+    typedef {aggregator_distance_biases_t} aggregator_distance_biases_t;
+    typedef {output_transform_biases_t} output_transform_biases_t;
+
+    static const input_transform_weights_t (&input_transform_weights)[{input_transform_weights_size}];
+    static const input_transform_biases_t (&input_transform_biases)[{input_transform_biases_size}];
+    static const aggregator_distance_weights_t (&aggregator_distance_weights)[{aggregator_distance_weights_size}];
+    static const aggregator_distance_biases_t (&aggregator_distance_biases)[{aggregator_distance_biases_size}];
+    static const output_transform_biases_t (&output_transform_biases)[{output_transform_biases_size}];
+
+    typedef config{index}::sublayer_t<{next}> next_layer_t;
+}};
+
+const config{index}::sublayer_t<{il}>::input_transform_weights_t (&config{index}::sublayer_t<{il}>::input_transform_weights)[{input_transform_weights_size}] = {input_transform_weights};
+const config{index}::sublayer_t<{il}>::input_transform_biases_t (&config{index}::sublayer_t<{il}>::input_transform_biases)[{input_transform_biases_size}] = {input_transform_biases};
+const config{index}::sublayer_t<{il}>::aggregator_distance_weights_t (&config{index}::sublayer_t<{il}>::aggregator_distance_weights)[{aggregator_distance_weights_size}] = {aggregator_distance_weights};
+const config{index}::sublayer_t<{il}>::aggregator_distance_biases_t (&config{index}::sublayer_t<{il}>::aggregator_distance_biases)[{aggregator_distance_biases_size}] = {aggregator_distance_biases};
+const config{index}::sublayer_t<{il}>::output_transform_biases_t (&config{index}::sublayer_t<{il}>::output_transform_biases)[{output_transform_biases_size}] = {output_transform_biases};
+"""
+
+garnet_stack_config_template = (garnet_stack_base_config_template, garnet_stack_sublayer_config_template)
+
 
 dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
@@ -314,3 +363,34 @@ class VivadoBackend(Backend):
                 .format(chosen_rf, layer.name, closest_rf, ','.join(map(str, valid_rf))))
             layer.reuse_factor = closest_rf
 
+    def get_precision(self, vtype, iwidth=0, fwidth=0, data=None, optimize_signed=False, options=[]):
+        if data is not None:
+            # determine the minimal precision from data
+            log2max = math.log2(np.amax(np.abs(data)))
+            iwidth = max(0, math.ceil(log2max))
+            if iwidth == math.floor(log2max): # is a power-of-two integer
+                iwidth += 1
+            if vtype in ['i', 'f']:
+                if optimize_signed and np.amin(data) >= 0.:
+                    vtype = 'u' + vtype
+                else:
+                    iwidth += 1
+
+        if vtype == 'i':
+            template = 'ap_int'
+        elif vtype == 'ui':
+            template = 'ap_uint'
+        elif vtype == 'f':
+            template = 'ap_fixed'
+        elif vtype == 'uf':
+            template = 'ap_ufixed'
+
+        if vtype in ['i', 'ui']:
+            return '{}<{}>'.format(template, iwidth)
+        else:
+            if 'saturate' in options:
+                flags = ', AP_RND, AP_SAT'
+            else:
+                flags = ''
+
+            return '{}<{}, {}{}>'.format(template, iwidth + fwidth, iwidth, flags)

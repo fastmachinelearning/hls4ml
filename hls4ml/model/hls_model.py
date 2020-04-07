@@ -921,10 +921,14 @@ class GarNet(Layer):
         else:
             kernel, bias = self._make_input_transform_weights(n_propagate, n_aggregators, n_out_features, quantize=self.attributes['quantize'])
 
-            precision = self.weights_precision(kernel, 'ap_int')
+            vtype = 'i' if self.attributes['quantize'] else 'f'
+
+            precision = self.model.config.backend.get_precision(vtype, fwidth=10, data=kernel, optimize_signed=True, options=['saturate'])
             self.add_weights_variable(name='input_transform_weights', var_name='input_transform_w{index}', data=kernel, precision=precision)
-            precision = self.weights_precision(bias, 'ap_int')
+            precision = self.model.config.backend.get_precision(vtype, fwidth=10, data=bias, optimize_signed=True, options=['saturate'])
             self.add_weights_variable(name='input_transform_biases', var_name='input_transform_b{index}', data=bias, precision=precision)
+            #dummy
+            self.add_weights_variable(name='output_transform_weights', var_name='output_transform_w{index}', data=np.ones(1))
 
             weights_source = [
                 ('aggregator_distance', 'S', 'kernel'),
@@ -943,7 +947,7 @@ class GarNet(Layer):
             name = '{}_{}'.format(op_name, vtype)
             var_name = '{}_{}{{index}}'.format(op_name, vtype[0])
 
-            precision = self.weights_precision(data, 'ap_fixed', subint=10, qmode='AP_RND', omode='AP_SAT')
+            precision = self.model.config.backend.get_precision('f', fwidth=10, data=data, optimize_signed=True, options=['saturate'])
             self.add_weights_variable(name=name, var_name=var_name, data=data, precision=precision)
 
         self._output_features = self.attributes['n_out_features']
@@ -1006,18 +1010,17 @@ class GarNet(Layer):
 
         # Integral precision for aggr_t depends on how large the temporary sum for weighed feature mean will be
         aggr_int_digits = max(params['log2_reuse'], params['n_vertices_width'] - params['log2_reuse']) + 3 # safety factor 2**3
-        # We always give 10 digits for the subintegral part
-        aggr_digits = aggr_int_digits + 10
         # edge_weight_aggr_t does not need the safety factor
         edge_weight_aggr_int_digits = aggr_int_digits - 3
-        edge_weight_aggr_digits = aggr_digits - 3
+        # We always give 10 digits for the subintegral part
+        fwidth = 10
 
         vspecs = [
-            ('edge_weight', 'ap_ufixed<10, 0>'),
-            ('edge_weight_aggr', 'ap_ufixed<{}, {}>'.format(edge_weight_aggr_digits, edge_weight_aggr_int_digits)),
-            ('aggr', 'ap_fixed<24, 12>' if self.ref_impl else 'ap_fixed<{}, {}>'.format(aggr_digits, aggr_int_digits)),
-            ('uaggr', 'ap_ufixed<24, 12>' if self.ref_impl else 'ap_ufixed<{}, {}>'.format(aggr_digits, aggr_int_digits)),
-            ('norm', 'ap_ufixed<14, 4>')
+            ('edge_weight', self.model.config.backend.get_precision('uf', iwidth=0, fwidth=fwidth)),
+            ('edge_weight_aggr', self.model.config.backend.get_precision('uf', iwidth=edge_weight_aggr_int_digits, fwidth=fwidth)),
+            ('aggr', self.model.config.backend.get_precision('f', iwidth=aggr_int_digits, fwidth=10)),
+            ('uaggr', self.model.config.backend.get_precision('uf', iwidth=aggr_int_digits, fwidth=10)),
+            ('norm', self.model.config.backend.get_precision('uf', iwidth=4, fwidth=10))
         ]
         for vname, default in vspecs:
             params['{}_t'.format(vname)], type_name = self.model.config.get_precision(self, var=vname)
@@ -1047,78 +1050,36 @@ class GarNet(Layer):
         params['n_aggregators'] = self.get_weights('aggregator_distance_biases').shape[0]
         params['n_out_features'] = self.get_weights('output_transform_biases').shape[0]
 
-        if self.ref_impl:
-            weight_arrays = [
-                ('input_transform', 'weights', ('n_propagate', 'n_in_features')),
-                ('input_transform', 'biases', ('n_propagate',)),
-                ('aggregator_distance', 'weights', ('n_aggregators', 'n_in_features')),
-                ('aggregator_distance', 'biases', ('n_aggregators',)),
-                ('output_transform', 'weights', ('n_out_features', 'n_aggregators', 'n_propagate'))
-                ('output_transform', 'biases', ('n_out_features',))
-            ]
-        else:
-            weight_arrays = [
-                ('input_transform', 'weights', ('n_out_features', 'n_aggregators', 'n_in_features')),
-                ('input_transform', 'biases', ('n_out_features', 'n_aggregators')),
-                ('aggregator_distance', 'weights', ('n_aggregators', 'n_in_features')),
-                ('aggregator_distance', 'biases', ('n_aggregators',)),
-                ('output_transform', 'biases', ('n_out_features',))
-            ]
-
-        typedefs = ''
-        for op_name, vtype, _ in weight_arrays:
-            global_type_name = self.weights['{}_{}'.format(op_name, vtype)].type.name
-            typedefs += '    typedef {} {}_{}_t;\n'.format(global_type_name, op_name, vtype)
-
-        arraydecls = ''
-        for op_name, vtype, factors in weight_arrays:
-            arraydecls += '    static const {name}_{vtype}_t (&{name}_{vtype})[{size}];\n'.format(name=op_name, vtype=vtype, size=(' * '.join(factors)))
-
-        arraydefs = ''
-        for op_name, vtype, factors in weight_arrays:
-            global_vname = self.weights['{}_{}'.format(op_name, vtype)].name
-            size = ' * '.join('config{}::{}'.format(self.index, factor) for factor in factors)
-            arraydefs += 'const config{index}::{name}_{vtype}_t (&config{index}::{name}_{vtype})[{size}] = {vname};\n'.format(index=self.index, name=op_name, vtype=vtype, size=size, vname=global_vname)
-
-        params['typedefs'] = typedefs
-        params['arraydecls'] = arraydecls
-        params['arraydefs'] = arraydefs
-
-    @staticmethod
-    def weights_precision(weights, vtype, subint=0, qmode=None, omode=None):
-        log2max = math.log2(np.amax(np.abs(weights)))
-        int_bits = math.ceil(log2max)
-        if int_bits == math.floor(log2max): # is a power-of-two integer
-            int_bits += 1
-        has_negative = (np.amin(weights) < 0.)
-        if has_negative and (vtype == 'ap_int' or vtype == 'ap_fixed'):
-            int_bits += 1
-
-        if 'int' in vtype:
-            return '{}<{}>'.format(vtype, int_bits)
-        else:
-            flags = ''
-            if qmode is not None:
-                flags += ', {}'.format(qmode)
-                if omode is not None:
-                    flags += ', {}'.format(omode)
-
-            return '{}<{}, {}{}>'.format(vtype, int_bits + subint, int_bits, flags)
+        for wname, weights in self.weights.items():
+            params[wname] = weights.name
+            params['{}_t'.format(wname)] = weights.type.name
+            params['{}_size'.format(wname)] = weights.data_length
 
 
 class GarNetStack(GarNet):
     def _initialize_transforms(self):
+        self._sublayer_weights = []
+
         for il in range(self.attributes['n_sublayers']):
+            sublayer_weights = {}
+
             n_aggregators = self.attributes['n_aggregators'][il]
             n_out_features = self.attributes['n_out_features'][il]
             n_propagate = self.attributes['n_propagate'][il]
             
             kernel, bias = self._make_input_transform_weights(n_propagate, n_aggregators, n_out_features, quantize=self.attributes['quantize'], sublayer=il)
 
-            precision = self.weights_precision(kernel, 'ap_int')
-            self.add_weights_variable(name='input_transform_{}_weights'.format(il), var_name='input_transform_{}_w{{index}}'.format(il), data=kernel, precision=precision)
-            precision = self.weights_precision(bias, 'ap_int')
-            self.add_weights_variable(name='input_transform_{}_biases'.format(il), var_name='input_transform_{}_b{{index}}'.format(il), data=bias, precision=precision)
+            vtype = 'i' if self.attributes['quantize'] else 'f'
+
+            name = 'input_transform_{}_weights'.format(il)
+            precision = self.model.config.backend.get_precision(vtype, fwidth=10, data=kernel, optimize_signed=True, options=['saturate'])
+            self.add_weights_variable(name=name, var_name='input_transform_{}_w{{index}}'.format(il), data=kernel, precision=precision)
+            sublayer_weights['input_transform_weights'] = self.weights[name]
+
+            name = 'input_transform_{}_biases'.format(il)
+            precision = self.model.config.backend.get_precision(vtype, fwidth=10, data=bias, optimize_signed=True, options=['saturate'])
+            self.add_weights_variable(name=name, var_name='input_transform_{}_b{{index}}'.format(il), data=bias, precision=precision)
+            sublayer_weights['input_transform_biases'] = self.weights[name]
         
             weights_source = [
                 ('aggregator_distance', 'S{}'.format(il), 'kernel'),
@@ -1130,19 +1091,25 @@ class GarNetStack(GarNet):
                 data = self.model.get_weights_data(self.name, '{name}/{lname}_{wtype}:0'.format(name=self.name, lname=lname, wtype=wtype))
                 if wtype == 'kernel':
                     data = data.transpose((1, 0))
-                    suffix = '{}_weights'.format(il)
+                    vtype = 'weights'
                 else:
-                    suffix = '{}_biases'.format(il)
+                    vtype = 'biases'
 
-                name = '{}_{}'.format(op_name, suffix)
-                var_name = '{}_{}{{index}}'.format(op_name, suffix[:suffix.find('_') + 2])
+                name = '{}_{}_{}'.format(op_name, il, vtype)
+                var_name = '{}_{}_{}{{index}}'.format(op_name, il, vtype[0])
 
-                precision = self.weights_precision(data, 'ap_fixed', subint=10, qmode='AP_RND', omode='AP_SAT')
+                precision = self.model.config.backend.get_precision('f', fwidth=10, data=data, optimize_signed=True, options=['saturate'])
                 self.add_weights_variable(name=name, var_name=var_name, data=data, precision=precision)
+                sublayer_weights['{}_{}'.format(op_name, vtype)] = self.weights[name]
+
+            self._sublayer_weights.append(sublayer_weights)
 
         self._output_features = self.attributes['n_out_features'][-1]
 
     def _get_transforms_config(self, params):
+        base_template, sublayer_template = self._config_template
+        self._config_template = base_template
+
         params['n_sublayers'] = self.attributes['n_sublayers']
         params['n_in_features'] = self.attributes['n_in_features'][0]
         if self.attributes['input_format'] == 'xen':
@@ -1153,48 +1120,30 @@ class GarNetStack(GarNet):
 
         sublayer_configs = []
         for il in range(self.attributes['n_sublayers'] - 1, -1, -1):
-            config = 'template<>\nstruct config{index}::sublayer_t<{il}> : config{index}_base {{\n'.format(index=self.index, il=il)
+            sub_params = {'index': self.index, 'il': il}
+
             for p in ['n_in_features', 'n_propagate', 'n_aggregators', 'n_out_features']:
-                config += '    static const unsigned {p} = {v};\n'.format(p=p, v=self.attributes[p][il])
+                sub_params[p] = self.attributes[p][il]
 
             if il == 0 and self.attributes['input_format'] == 'xen':
-                config += '    static const unsigned n_in_ufeatures = 1;\n'
+                sub_params['n_in_ufeatures'] = 1
             else:
-                config += '    static const unsigned n_in_ufeatures = 0;\n'
-            config += '    static const unsigned n_in_sfeatures = n_in_features - n_in_ufeatures;\n'
+                sub_params['n_in_ufeatures'] = 0
 
-            weight_arrays = [
-                ('input_transform', 'weights', ('n_out_features', 'n_aggregators', 'n_in_features')),
-                ('input_transform', 'biases', ('n_out_features', 'n_aggregators')),
-                ('aggregator_distance', 'weights', ('n_aggregators', 'n_in_features')),
-                ('aggregator_distance', 'biases', ('n_aggregators',)),
-                ('output_transform', 'biases', ('n_out_features',))
-            ]
-
-            for op_name, vtype, _ in weight_arrays:
-                global_type_name = self.weights['{}_{}_{}'.format(op_name, il, vtype)].type.name
-                config += '    typedef {} {}_{}_t;\n'.format(global_type_name, op_name, vtype)
-
-            config += '\n'
-
-            for op_name, vtype, factors in weight_arrays:
-                config += '    static const {name}_{vtype}_t (&{name}_{vtype})[{size}];\n'.format(name=op_name, vtype=vtype, size=(' * '.join(factors)))
-
-            config += '\n'
+            for wname, weights in self._sublayer_weights[il].items():
+                sub_params[wname] = weights.name
+                sub_params['{}_t'.format(wname)] = weights.type.name
+                sub_params['{}_size'.format(wname)] = weights.data_length
 
             if il != self.attributes['n_sublayers'] - 1:
-                config += '    typedef config{index}::sublayer_t<{n}> next_layer_t;\n'.format(index=self.index, n=(il + 1))
+                sub_params['next'] = il + 1
+            else:
+                sub_params['next'] = 0
 
-            config += '};\n\n'
-
-            for op_name, vtype, factors in weight_arrays:
-                global_vname = self.weights['{}_{}_{}'.format(op_name, il, vtype)].name
-                size = ' * '.join('config{}::sublayer_t<{}>::{}'.format(self.index, il, factor) for factor in factors)
-                config += 'const config{index}::sublayer_t<{il}>::{name}_{vtype}_t (&config{index}::sublayer_t<{il}>::{name}_{vtype})[{size}] = {vname};\n'.format(index=self.index, il=il, name=op_name, vtype=vtype, size=size, vname=global_vname)
-
-            sublayer_configs.append(config)
+            sublayer_configs.append(sublayer_template.format(**sub_params))
 
         params['sublayer_configs'] = '\n'.join(sublayer_configs)
+
 
 class Pooling1D(Layer):
     def initialize(self):
