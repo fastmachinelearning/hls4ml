@@ -53,8 +53,6 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     else:
         model_arch = json.loads(model.to_json())
 
-    print(model_arch)
-
     #Define supported laers
     core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Reshape']
     dense_layers = ['Dense', 'BinaryDense', 'TernaryDense']

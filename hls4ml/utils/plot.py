@@ -226,6 +226,10 @@ def plot_model(model,
         # notebook, and thus we always return the Image if Jupyter is available.
         try:
             from IPython import display
-            return display.Image(filename=to_file)
+            import tempfile
+
+            temp = tempfile.NamedTemporaryFile(suffix='.png')
+            dot.write(temp.name, format='png')
+            return display.Image(filename=temp.name)
         except ImportError:
             pass
