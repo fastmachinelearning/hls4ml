@@ -320,16 +320,18 @@ def numerical(keras_model=None, hls_model=None, X=None, plot='boxplot'):
 def _is_ignored_layer(layer):
     """Some layers need to be ingored during inference"""
     if isinstance(layer, (keras.layers.InputLayer,
-                        keras.layers.Dropout, 
-                        keras.layers.Flatten)):
+                        keras.layers.Dropout)):
         return True
     return False
 
-def _add_layer_get_ouput(partial_model, layer, X):
-    copy_model = keras.models.clone_model(partial_model) #Make a copy to avoid modify the original model
-    copy_model.add(layer)
-    copy_model.compile(optimizer='adam', loss='mse')
-    y = copy_model.predict(X)
+def _get_output(ymodel, layer, X):
+    
+    #If there is no layer in the model just take that layer's output
+    if len(ymodel.keys()) == 0:
+        y = layer(X)
+    else:
+        #If there are already layers then calculate next output based on last layer's output
+        y = layer(ymodel[list(ymodel.keys())[-1]])
     return y
 
 def get_ymodel_keras(keras_model, X):
@@ -358,20 +360,22 @@ def get_ymodel_keras(keras_model, X):
                 if layer.activation:
                     
                     if layer.activation.__name__ == "linear":
-                        ymodel[layer.name] = _add_layer_get_ouput(partial_model, layer, X)
+                        ymodel[layer.name] = _get_output(ymodel, layer, X)
                     
                     else:
                         temp_activation = layer.activation
                         layer.activation = None
                         #Get output for layer without activation
-                        ymodel[layer.name] = _add_layer_get_ouput(partial_model, layer, X)
+                        ymodel[layer.name] = _get_output(ymodel, layer, X)
+
                         #Get ouput for activation
-                        ymodel[layer.name + "_{}".format(temp_activation.__name__)] = temp_activation(ymodel[layer.name])
-                        
+                        ymodel[layer.name + "_{}".format(temp_activation.__name__)] =  _get_output(ymodel, temp_activation, X)
+
                         #Add the activation back
                         layer.activation = temp_activation
+                                     
             else:    
-                ymodel[layer.name] = _add_layer_get_ouput(partial_model, layer, X)
+                ymodel[layer.name] = _get_output(ymodel, layer, X)
         
         #Add the layer for later processing
         partial_model.add(layer)
@@ -382,7 +386,7 @@ def _norm_diff(ymodel, ysim):
     """Calculate the square root of the sum of the squares of the differences"""
     diff = {}
     
-    for key in list(ymodel.keys()):
+    for key in list(ysim.keys()):
         diff[key] = np.linalg.norm(ysim[key]-ymodel[key])
     
     #---Bar Plot---
@@ -406,7 +410,7 @@ def _dist_diff(ymodel, ysim):
 
     diff = {}
 
-    for key in list(ymodel.keys()):
+    for key in list(ysim.keys()):
         flattened_ysim = ysim[key].flatten()
         flattened_ymodel = np.array(ymodel[key]).flatten()
 
