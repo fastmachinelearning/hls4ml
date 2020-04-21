@@ -159,23 +159,33 @@ merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {co
 resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
 transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}, {output});'
 
+dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_large.h']
+batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h']
+conv1d_include_list = ['nnet_utils/nnet_conv.h', 'nnet_utils/nnet_conv_large.h']
+conv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_large.h']
+activ_include_list = ['nnet_utils/nnet_activation.h']
+pooling_include_list = ['nnet_utils/nnet_pooling.h']
+merge_include_list = ['nnet_utils/nnet_merge.h']
+resize_include_list = ['nnet_utils/nnet_image.h']
+transpose_include_list = ['nnet_utils/nnet_array.h']
+
 class VivadoBackend(Backend):
     def __init__(self):
         super(VivadoBackend, self).__init__('Vivado')
-        self.register_templates('Dense', dense_function_template, dense_config_template)
-        self.register_templates('BinaryDense'            , dense_function_template,       dense_config_template)
-        self.register_templates('BatchNormalization'     , batchnorm_function_template,   batchnorm_config_template)
-        self.register_templates('Conv1D'                 , conv1d_function_template,      [conv1d_config_template, conv_mult_config_template])
-        self.register_templates('Conv2D'                 , conv2d_function_template,      [conv2d_config_template, conv_mult_config_template])
-        self.register_templates('Activation'             , activ_function_template,       activ_config_template)
-        self.register_templates('ParametrizedActivation' , param_activ_function_template, activ_config_template)
-        self.register_templates('PReLU'                  , param_activ_function_template, activ_config_template)
-        self.register_templates('Pooling1D'              , pooling1d_function_template,   pooling1d_config_template)
-        self.register_templates('Pooling2D'              , pooling2d_function_template,   pooling2d_config_template)
-        self.register_templates('Merge'                  , merge_function_template,       merge_config_template)
-        self.register_templates('Concatenate'            , merge_function_template,       concat_config_template)
-        self.register_templates('Resize'                 , resize_function_template,      resize_config_template)
-        self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template)
+        self.register_templates('Dense', dense_function_template, dense_config_template, dense_include_list)
+        self.register_templates('BinaryDense'            , dense_function_template,       dense_config_template, dense_include_list)
+        self.register_templates('BatchNormalization'     , batchnorm_function_template,   batchnorm_config_template, batchnorm_include_list)
+        self.register_templates('Conv1D'                 , conv1d_function_template,      [conv1d_config_template, conv_mult_config_template], conv1d_include_list)
+        self.register_templates('Conv2D'                 , conv2d_function_template,      [conv2d_config_template, conv_mult_config_template], conv2d_include_list)
+        self.register_templates('Activation'             , activ_function_template,       activ_config_template, activ_include_list)
+        self.register_templates('ParametrizedActivation' , param_activ_function_template, activ_config_template, activ_include_list)
+        self.register_templates('PReLU'                  , param_activ_function_template, activ_config_template, activ_include_list)
+        self.register_templates('Pooling1D'              , pooling1d_function_template,   pooling1d_config_template, pooling_include_list)
+        self.register_templates('Pooling2D'              , pooling2d_function_template,   pooling2d_config_template, pooling_include_list)
+        self.register_templates('Merge'                  , merge_function_template,       merge_config_template, merge_include_list)
+        self.register_templates('Concatenate'            , merge_function_template,       concat_config_template, merge_include_list)
+        self.register_templates('Resize'                 , resize_function_template,      resize_config_template, resize_include_list)
+        self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template, transpose_include_list)
     
     def get_valid_reuse_factors(self, layer):
         n_in = 0

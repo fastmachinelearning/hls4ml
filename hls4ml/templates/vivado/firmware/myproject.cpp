@@ -19,8 +19,7 @@
 #include <iostream>
 
 #include "myproject.h"
-
-//hls-fpga-machine-learning insert weights
+#include "parameters.h"
 
 void myproject(
 	//hls-fpga-machine-learning insert header

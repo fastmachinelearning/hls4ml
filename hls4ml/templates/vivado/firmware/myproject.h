@@ -23,7 +23,7 @@
 #include "ap_int.h"
 #include "ap_fixed.h"
 
-#include "parameters.h"
+#include "defines.h"
 
 
 // Prototype of top level function for C-synthesis
