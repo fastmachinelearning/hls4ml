@@ -419,8 +419,8 @@ def keras_to_hls(yamlConfig):
         elif layer['class_name'] in ['GarNet', 'GarNetStack']:
             if not keras_layer['config']['simplified']:
                 raise Exception('HLS GarNet is compatible only with keras GarNet with simplified=True')
-            if keras_layer['config']['output_activation']:
-                raise Exception('HLS GarNet does not have output activation')
+            if keras_layer['config']['output_activation'] is not None:
+                raise Exception('HLS GarNet cannot have output activation')
             
             layer['input_format'] = keras_layer['config']['input_format']
             if layer['input_format'] == 'x':
