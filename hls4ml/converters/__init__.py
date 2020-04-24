@@ -1,7 +1,20 @@
 from __future__ import absolute_import
+import os
+import importlib
 
-from .keras_to_hls import keras_to_hls
 from ..utils.config import create_vivado_config
+
+from .keras_to_hls import keras_to_hls, get_supported_keras_layers, register_keras_layer_handler
+
+for module in os.listdir(os.path.dirname(__file__) + '/keras'):
+    if module == '__init__.py' or module[-3:] != '.py':
+        continue
+    lib = importlib.import_module(__name__ + '.keras.' + module[:-3])
+    for name, func in list(lib.__dict__.items()):
+        if callable(func) and hasattr(func, 'handles'):
+            for layer in func.handles:
+                register_keras_layer_handler(layer, func)
+
 
 try:
     from .pytorch_to_hls import pytorch_to_hls
