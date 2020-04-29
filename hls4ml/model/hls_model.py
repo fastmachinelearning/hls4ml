@@ -305,18 +305,6 @@ class HLSModel(object):
     def get_weights_data(self, layer_name, var_name):
         return self.reader.get_weights_data(layer_name, var_name)
 
-    def quantize_data(self, data, quantize):
-        zeros = np.zeros_like(data)
-        ones = np.ones_like(data)
-        quant_data = data
-        if quantize == 1:
-            quant_data = np.where(data > 0, ones, zeros).astype('int')
-        if quantize == 2:
-            quant_data = np.where(data > 0, ones, -ones)
-        elif quantize == 3:
-            quant_data = np.where(data > 0.5, ones, np.where(data <= -0.5, -ones, zeros))
-        return quant_data
-
     def next_layer(self):
         self.index += 1
         return self.index
@@ -511,6 +499,31 @@ class HLSModel(object):
             .format(dir=self.config.get_output_dir(), reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
 
 
+class Quantizer(object):
+    def __init__(self, bits, hls_type):
+        self.bits = bits
+        self.hls_type = hls_type
+    
+    def __call__(self, data):
+        raise NotImplementedError
+
+class IntegerPrecisionType(object):
+    def __init__(self, width=16, signed=True):
+        self.width = width
+        self.signed = signed
+    
+    def __str__(self):
+        return 'ap_{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
+
+class FixedPrecisionType(object):
+    def __init__(self, width=16, integer=6, signed=True):
+        self.width = width
+        self.integer = integer
+        self.signed = signed
+    
+    def __str__(self):
+        return 'ap_{signed}fixed<{width}, {integer}>'.format(signed='u' if not self.signed else '', width=self.width, integer=self.integer)
+
 class HLSType(object):
     def __init__(self, name, precision, **kwargs):
         self.name = name.format(**kwargs)
@@ -607,10 +620,11 @@ class WeightVariable(Variable):
 
     def update_precision(self, new_precision):
         self.type.precision = new_precision
-        if 'int' in self.type.precision:
+        precision_str = str(self.type.precision)
+        if 'int' in precision_str:
             self.precision_fmt = '%d'
         else:
-            match = re.search('.+<(.+?)>', self.type.precision)
+            match = re.search('.+<(.+?)>', precision_str)
             if match is not None:
                 precision_bits = match.group(1).split(',')
                 decimal_bits = int(precision_bits[0]) - int(precision_bits[1])
@@ -653,7 +667,7 @@ class CompressedWeightVariable(WeightVariable):
         index_precision = 32
         if max_idx > 0:
             index_precision = int(np.log2(max_idx) + 1)
-        self.type = CompressedType(type_name, precision, 'ap_uint<{}>'.format(index_precision), **kwargs)
+        self.type = CompressedType(type_name, precision, IntegerPrecisionType(width=index_precision, signed=False), **kwargs)
 
         self.data = weights
 
@@ -757,24 +771,24 @@ class Layer(object):
 
         self.precision[out.type.name] = out.type
 
-    def add_weights(self, quantize=0, compression=False):
+    def add_weights(self, quantizer=None, compression=False):
         data = self.model.get_weights_data(self.name, 'kernel')
 
-        self.add_weights_variable(name='weight', var_name='w{index}', data=data, quantize=quantize, compression=compression)
+        self.add_weights_variable(name='weight', var_name='w{index}', data=data, quantizer=quantizer, compression=compression)
 
-    def add_bias(self, quantize=0):
+    def add_bias(self, quantizer=None):
         data = self.model.get_weights_data(self.name, 'bias')
         precision = None
         type_name = None
         if data is None:
             data = np.zeros(self.get_output_variable().shape[-1])
-            precision = 'ap_uint<1>'
+            precision = IntegerPrecisionType(width=1, signed=False)
             type_name = 'bias{index}_t'
-            quantize = 0 # Don't quantize non-existant bias
+            quantizer = None # Don't quantize non-existant bias
 
-        self.add_weights_variable(name='bias', var_name='b{index}', type_name=type_name, precision=precision, data=data, quantize=quantize)
+        self.add_weights_variable(name='bias', var_name='b{index}', type_name=type_name, precision=precision, data=data, quantizer=quantizer)
 
-    def add_weights_variable(self, name, var_name=None, type_name=None, precision=None, data=None, quantize=0, compression=False):
+    def add_weights_variable(self, name, var_name=None, type_name=None, precision=None, data=None, quantizer=None, compression=False):
         if var_name is None:
             var_name = name + '{index}'
 
@@ -789,14 +803,10 @@ class Layer(object):
         elif isinstance(data, six.string_types):
             data = self.model.get_weights_data(self.name, data)
 
-        if quantize > 0:
-            data = self.model.quantize_data(data, quantize)
-            if quantize == 1:
-                precision = 'ap_uint<1>'
-                type_name = name + '{index}_t'
-            elif quantize == 2 or quantize == 3:
-                precision = 'ap_int<2>'
-                type_name = name + '{index}_t'
+        if quantizer is not None:
+            precision = quantizer.hls_type
+            type_name = name + '{index}_t'
+            data = quantizer(data)
 
         if compression:
             var = CompressedWeightVariable(var_name, type_name=type_name, precision=precision, data=data, reuse_factor=self.reuse_factor, index=self.index)
@@ -894,7 +904,8 @@ class Dense(Layer):
     def initialize(self):
         shape = [self.attributes['n_out']]
         dims = ['N_LAYER_{}'.format(self.index)]
-        quantize = self.get_attr('quantize', default=0)
+        weight_quantizer = self.get_attr('weight_quantizer')
+        bias_quantizer = self.get_attr('bias_quantizer')
         compression = self.model.config.get_compression(self)
         if self.model.config.is_resource_strategy(self):
             if self.model.config.backend.name == 'Vivado':
@@ -906,8 +917,8 @@ class Dense(Layer):
         else:
             self.set_attr('strategy', 'latency')
         self.add_output_variable(shape, dims)
-        self.add_weights(quantize=quantize, compression=compression)
-        index_t = 'ap_uint<1>'
+        self.add_weights(quantizer=weight_quantizer, compression=compression)
+        index_t = IntegerPrecisionType(width=1, signed=False)
         if self.model.config.is_resource_strategy(self):
             if self.model.config.get_compression(self):
                 index_t = self.get_weights('weight').type.index_precision
@@ -915,7 +926,7 @@ class Dense(Layer):
                 if self.model.config.backend.name == 'Vivado':
                     self.weights['weight'].data = np.transpose(self.weights['weight'].data)
         self.set_attr('index_t', index_t)
-        self.add_bias(quantize=quantize)
+        self.add_bias(quantizer=bias_quantizer)
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1100,7 +1111,7 @@ class Activation(Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
         if self.model.config.backend.name == 'Vivado':
-            self.set_attr('table_t', self.model.config.get_layer_config_value(self, 'table_t', 'ap_fixed<18,8>'))
+            self.set_attr('table_t', self.model.config.get_layer_config_value(self, 'table_t', FixedPrecisionType(width=18, integer=8)))
             self.set_attr('table_size', self.model.config.get_layer_config_value(self, 'table_size', 1024))
 
     def function_cpp(self):

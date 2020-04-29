@@ -11,7 +11,10 @@ for module in os.listdir(os.path.dirname(__file__) + '/keras'):
         continue
     lib = importlib.import_module(__name__ + '.keras.' + module[:-3])
     for name, func in list(lib.__dict__.items()):
-        if callable(func) and hasattr(func, 'handles'):
+        # if 'func' is callable (i.e., function, class...)
+        # and has 'handles' attribute
+        # and is defined in this module (i.e., not imported)
+        if callable(func) and hasattr(func, 'handles') and func.__module__ == lib.__name__:
             for layer in func.handles:
                 register_keras_layer_handler(layer, func)
 

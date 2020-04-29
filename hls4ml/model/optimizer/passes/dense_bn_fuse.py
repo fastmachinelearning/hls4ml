@@ -4,7 +4,8 @@ class FuseDenseAndBatchNormalization(OptimizerPass):
     def match(self, node):
         is_match = node.__class__.__name__ == 'BatchNormalization' and \
             node.get_input_node().__class__.__name__ == 'Dense' and \
-            node.get_input_node().get_attr('quantize') == 0
+            node.get_input_node().get_attr('weight_quantizer') is None and \
+            node.get_input_node().get_attr('bias_quantizer') is None
         return is_match
 
     def transform(self, model, node):

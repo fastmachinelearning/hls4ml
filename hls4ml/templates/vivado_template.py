@@ -1,4 +1,3 @@
-
 import numpy as np
 import math
 from bisect import bisect_left
