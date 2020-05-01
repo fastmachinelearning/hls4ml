@@ -337,7 +337,7 @@ class HLSModel(object):
 
     def compile(self):
         self.write()
-        os.system('cd {dir} && sh build_lib.sh'.format(dir=self.config.get_output_dir()))
+        os.system('cd {dir} && bash build_lib.sh'.format(dir=self.config.get_output_dir()))
         lib_name = '{}/firmware/{}.so'.format(self.config.get_output_dir(), self.config.get_project_name())
         if self._top_function_lib is not None:
             
