@@ -26,7 +26,7 @@ class QKerasQuantizer(Quantizer):
 def get_type(quantizer_config):
     width = quantizer_config['config']['bits']
     integer = quantizer_config['config'].get('integer', 0)
-    if integer == 0:
+    if width == integer:
         if width == 1:
             return IntegerPrecisionType(width=1, signed=False)
         else:
