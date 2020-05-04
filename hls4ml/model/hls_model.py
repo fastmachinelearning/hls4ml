@@ -427,14 +427,23 @@ class WeightVariable(Variable):
 
     def update_precision(self, new_precision):
         self.type.precision = new_precision
-        if 'int' in self.type.precision:
+        precision_str = str(self.type.precision)
+        if 'int' in precision_str:
             self.precision_fmt = '%d'
         else:
-            match = re.search('.+<(.+?)>', self.type.precision)
+            match = re.search('.+<(.+?)>', precision_str)
             if match is not None:
                 precision_bits = match.group(1).split(',')
-                decimal_bits = int(precision_bits[0]) - int(precision_bits[1])
-                decimal_spaces = int(np.floor(np.log10(2 ** decimal_bits - 1))) + 1
+                width_bits = int(precision_bits[0])
+                integer_bits = int(precision_bits[1])
+                fractional_bits = integer_bits - width_bits
+                lsb = 2 ** fractional_bits
+                if lsb < 1:
+                    # Use str to represent the float with digits, get the length
+                    # to right of decimal point
+                    decimal_spaces = len(str(lsb).split('.')[1])
+                else:
+                    decimal_spaces = len(str(2**integer_bits)) 
                 self.precision_fmt = '%.{}f'.format(decimal_spaces)
             else:
                 self.precision_fmt = '%f'
