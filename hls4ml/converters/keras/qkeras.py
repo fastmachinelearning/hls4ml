@@ -32,7 +32,7 @@ def get_type(quantizer_config):
         else:
             return IntegerPrecisionType(width=width, signed=True)
     else:
-        return FixedPrecisionType(width=width, integer=integer+1, signed=True)
+        return FixedPrecisionType(width=width+1, integer=integer+1, signed=True)
 
 def get_quantizer_from_config(keras_layer, quantizer_var):
     quantizer_config = keras_layer['config']['{}_quantizer'.format(quantizer_var)]
@@ -81,8 +81,8 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader,
 
     layer['class_name'] = 'Activation'
     layer['activation'] = act_class.replace('quantized_', '')
-    layer['bits'] = activation_config['config']['bits']
-    layer['integer'] = activation_config['config']['integer']
+    layer['bits'] = activation_config['config']['bits'] + 1
+    layer['integer'] = activation_config['config']['integer'] + 1
     #TODO this needs extra work in HLS model and HLS templates
 
     return layer, [shape for shape in input_shapes[0]]
