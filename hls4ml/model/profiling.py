@@ -359,7 +359,7 @@ def get_ymodel_keras(keras_model, X):
             if hasattr(layer, 'activation') and not isinstance(layer,keras.layers.Activation):
                 if layer.activation:
                     
-                    if layer.activation.__name__ == "linear":
+                    if layer.activation.__class__.__name__ == "linear":
                         ymodel[layer.name] = _get_output(ymodel, layer, X)
                     
                     else:
@@ -369,7 +369,7 @@ def get_ymodel_keras(keras_model, X):
                         ymodel[layer.name] = _get_output(ymodel, layer, X)
 
                         #Get ouput for activation
-                        ymodel[layer.name + "_{}".format(temp_activation.__name__)] =  _get_output(ymodel, temp_activation, X)
+                        ymodel[layer.name + "_{}".format(temp_activation.__class__.__name__)] =  _get_output(ymodel, temp_activation, X)
 
                         #Add the activation back
                         layer.activation = temp_activation
