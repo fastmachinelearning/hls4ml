@@ -8,7 +8,6 @@ import tensorflow as tf
 from tensorflow.python.framework import tensor_util
 
 from hls4ml.model import HLSModel
-from hls4ml.model.optimizer import optimize_model
 
 MAXMULT = 4096
 
@@ -371,6 +370,4 @@ def tf_to_hls(yamlConfig):
     reader = TFDataReader(graph)
     print('Creating HLS model')
     hls_model = HLSModel(yamlConfig, reader, layer_list, input_layers, output_layers)
-    optimizers = ['eliminate_linear_activation', 'merge_batch_norm_quantized_tanh', 'quantize_dense_output', 'fuse_biasadd', 'fuse_dense_batch_norm']
-    optimize_model(hls_model, optimizers)
     return hls_model

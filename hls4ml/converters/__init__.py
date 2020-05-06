@@ -62,7 +62,6 @@ def convert_from_yaml_config(yamlConfig):
 
 def convert_from_keras_model(model, output_dir='my-hls-test', project_name='myproject',
     fpga_part='xcku115-flvb2104-2-i', clock_period=5, hls_config={}):
-    
     config = create_vivado_config(output_dir=output_dir,
         project_name=project_name, fpga_part=fpga_part, clock_period=clock_period)
     config['KerasModel'] = model
@@ -82,5 +81,8 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
     
     if 'LayerType' in hls_config:
         config['HLSConfig']['LayerType'] = hls_config['LayerType']
+
+    if 'Optimizers' in hls_config:
+        config['HLSConfig']['Optimizers'] = hls_config['Optimizers']
     
     return keras_to_hls(config)

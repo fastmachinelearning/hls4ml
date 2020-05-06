@@ -5,7 +5,6 @@ import json
 import math
 
 from hls4ml.model import HLSModel
-from hls4ml.model.optimizer import optimize_model
 
 MAXMULT = 4096
 
@@ -478,8 +477,6 @@ def keras_to_hls_old(yamlConfig):
 
     print('Creating HLS model')
     hls_model = HLSModel(yamlConfig, reader, layer_list, input_layers, output_layers)
-    optimizers = ['eliminate_linear_activation', 'merge_batch_norm_quantized_tanh', 'quantize_dense_output', 'fuse_dense_batch_norm']
-    optimize_model(hls_model, optimizers)
     return hls_model
 
 def parse_default_keras_layer(keras_layer, input_names):
@@ -638,6 +635,4 @@ def keras_to_hls(config):
 
     print('Creating HLS model')
     hls_model = HLSModel(config, reader, layer_list, input_layers, output_layers)
-    optimizers = ['eliminate_linear_activation', 'merge_batch_norm_quantized_tanh', 'quantize_dense_output', 'fuse_dense_batch_norm']
-    optimize_model(hls_model, optimizers)
     return hls_model
