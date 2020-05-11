@@ -68,6 +68,20 @@ class HLSConfig(object):
 
         return default
 
+    def get_layer_config(self, layer):
+        hls_config = self.config['HLSConfig']
+        layer_config = {}
+
+        type_config = hls_config.get('LayerType', {}).get(layer.__class__.__name__, None)
+        if type_config is not None:
+            layer_config.update(type_config)
+        
+        name_config = hls_config.get('LayerName', {}).get(layer.name.lower(), None)
+        if name_config is not None:
+            layer_config.update(name_config)
+
+        return layer_config
+
     def get_precision(self, layer, var='default'):
         precision = self.layer_name_precision.get(layer.name.lower() + '_' + var)
         type_name = layer.name.lower() + '_' + var + '_t'

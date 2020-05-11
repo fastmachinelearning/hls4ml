@@ -220,6 +220,12 @@ class Layer(object):
         self.set_attr('accum_t', accum_t.precision)
         self.reuse_factor = self.model.config.get_reuse_factor(self)
 
+        layer_config = self.model.config.get_layer_config(self)
+        for config_key, config_value in layer_config.items():
+            if config_key in self.attributes:
+                print('WARNING: Config parameter "{}" overwrites an existing attribute in layer "{}" ({})'.format(config_key, self.name, self.__class__.__name__))
+            self.attributes[config_key] = config_value
+
         self.initialize()
 
     def initialize(self):
@@ -626,8 +632,10 @@ class Activation(Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
         if self.model.config.backend.name == 'Vivado':
-            self.set_attr('table_t', self.model.config.get_layer_config_value(self, 'table_t', FixedPrecisionType(width=18, integer=8)))
-            self.set_attr('table_size', self.model.config.get_layer_config_value(self, 'table_size', 1024))
+            if 'table_t' not in self.attributes:
+                self.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
+            if 'table_size' not in self.attributes:
+                self.set_attr('table_size', 1024)
 
     def function_cpp(self):
         params = self._default_function_params()
