@@ -23,14 +23,12 @@ class OutputRoundingSaturationMode(OptimizerPass):
 
     def transform(self, model, node):
         oldtype = node.get_output_variable().type.precision
-        print(type(oldtype))
         if isinstance(oldtype, IntegerPrecisionType):
             newprecision = IntegerPrecisionType(oldtype.width, oldtype.signed, rounding_mode, saturation_mode)
         elif isinstance(oldtype, FixedPrecisionType):
             newtype = FixedPrecisionType(oldtype.width, oldtype.integer, oldtype.signed, rounding_mode, saturation_mode)
         else: # in case the precision is a string
             newtype = self.precision_string_modify(oldtype)
-        print(type(newtype))
         node.get_output_variable().type.precision = newtype
         if node.get_attr('accum_t') is not None:
             node.set_attr('accum_t', newtype)

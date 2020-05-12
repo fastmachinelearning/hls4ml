@@ -704,7 +704,6 @@ class PReLU(Activation):
 
 class Softmax(Activation):
     def initialize(self):
-        print("SOFTMAX INIT")
         super(Softmax, self).initialize()
         if self.model.config.backend.name == 'Vivado':
             if 'exp_table_t' not in self.attributes:
