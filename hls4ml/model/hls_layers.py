@@ -702,6 +702,16 @@ class PReLU(Activation):
 
         return [self._function_template.format(**params)]
 
+class Softmax(Activation):
+    def initialize(self):
+        print("SOFTMAX INIT")
+        super(Softmax, self).initialize()
+        if self.model.config.backend.name == 'Vivado':
+            if 'exp_table_t' not in self.attributes:
+                self.set_attr('exp_table_t', self.get_attr('table_t'))
+            if 'inv_table_t' not in self.attributes:
+                self.set_attr('inv_table_t', self.get_attr('table_t'))
+
 class BatchNormalization(Layer):
     def initialize(self):
         inp = self.get_input_variable()
@@ -859,6 +869,7 @@ layer_map = {
     'ThresholdedReLU'    : ParametrizedActivation,
     'ELU'                : ParametrizedActivation,
     'PReLU'              : PReLU,
+    'Softmax'            : Softmax,
     'Reshape'            : Reshape,
     'Dense'              : Dense,
     'BinaryDense'        : Dense,
