@@ -24,8 +24,8 @@ def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
 def _get_precision_from_quantizer(quantizer):
     supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh']
     if quantizer['class_name'] in supported_quantizers:
-        bits = int(quantizer['config']['bits'])
-        integer = int(quantizer['config']['integer'])
+        bits = int(quantizer['config']['bits']) + 1
+        integer = int(quantizer['config']['integer']) + 1
         
     elif quantizer['class_name'] == 'binary':
         bits = 2

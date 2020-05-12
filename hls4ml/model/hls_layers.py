@@ -15,21 +15,41 @@ class Quantizer(object):
         raise NotImplementedError
 
 class IntegerPrecisionType(object):
-    def __init__(self, width=16, signed=True):
+    def __init__(self, width=16, signed=True, rounding_mode=None, saturation_mode=None):
         self.width = width
         self.signed = signed
+        self.rounding_mode = rounding_mode
+        self.saturation_mode = saturation_mode
     
     def __str__(self):
-        return 'ap_{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
+        typestring = 'ap_{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
+        mode = ''
+        if self.rounding_mode is not None:
+            mode += ',' + self.rounding_mode
+        if self.saturation_mode is not None:
+            mode += ',' + self.saturation_mode
+            mode += '>'
+        typestring += mode
+        return typestring
 
 class FixedPrecisionType(object):
-    def __init__(self, width=16, integer=6, signed=True):
+    def __init__(self, width=16, integer=6, signed=True, rounding_mode=None, saturation_mode=None):
         self.width = width
         self.integer = integer
         self.signed = signed
+        self.rounding_mode = rounding_mode
+        self.saturation_mode = saturation_mode
     
     def __str__(self):
-        return 'ap_{signed}fixed<{width}, {integer}>'.format(signed='u' if not self.signed else '', width=self.width, integer=self.integer)
+        typestring = 'ap_{signed}fixed<{width}, {integer}>'.format(signed='u' if not self.signed else '', width=self.width, integer=self.integer)
+        mode = ''
+        if self.rounding_mode is not None:
+            mode += ',' + self.rounding_mode
+        if self.saturation_mode is not None:
+            mode += ',' + self.saturation_mode
+            mode += '>'
+        typestring += mode
+        return typestring
 
 class HLSType(object):
     def __init__(self, name, precision, **kwargs):
