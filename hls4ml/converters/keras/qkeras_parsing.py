@@ -16,7 +16,10 @@ def parse_qdense_layer(keras_layer, input_names, input_shapes, data_reader, conf
     layer, output_shape = parse_dense_layer(keras_layer, input_names, input_shapes, data_reader, config)
 
     layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
-    layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
+    if layer['bias_quantizer'] is not None:
+        layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
+    else:
+        layer['bias_quantizer'] = None
 
     return layer, output_shape
 
@@ -31,7 +34,11 @@ def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader, confi
         layer, output_shape = parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader, config)
 
     layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
-    layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
+    layer['use_bias'] = keras_layer['use_bias']
+    if keras_layer['use_bias']:
+        layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
+    else:
+        layer['bias_quantizer'] = None
 
     return layer, output_shape
 
@@ -40,10 +47,18 @@ def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader, confi
 def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader, config):
     assert(keras_layer['class_name'] == 'QActivation')
     supported_activations = ['quantized_relu', 'quantized_tanh']
+    print(keras_layer)
     
     layer = parse_default_keras_layer(keras_layer, input_names)
 
     activation_config = keras_layer['config']['activation']
+    if isinstance(activation_config, str):
+        quantizer_obj = get_quantizer(activation_config)
+        activation_config = {}
+        activation_config['class_name'] = quantizer_obj.__class__.__name__
+        activation_config['config'] = quantizer_obj.get_config()
+
+    print(activation_config)
     
     act_class = activation_config['class_name']
     if act_class not in supported_activations:

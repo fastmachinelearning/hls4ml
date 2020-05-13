@@ -4,7 +4,7 @@ import h5py
 import json
 import math
 from collections import OrderedDict
-
+import qkeras
 
 def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
     fpga_part='xcku115-flvb2104-2-i', clock_period=5):
@@ -22,16 +22,21 @@ def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
     return config
 
 def _get_precision_from_quantizer(quantizer):
+    if isinstance(quantizer, str):
+        quantizer_obj = qkeras.get_quantizer(quantizer)
+        quantizer = {}
+        quantizer['class_name'] = quantizer_obj.__class__.__name__
+        quantizer['config'] = quantizer_obj.get_config()
     supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh']
     if quantizer['class_name'] in supported_quantizers:
         bits = int(quantizer['config']['bits']) + 1
         integer = int(quantizer['config']['integer']) + 1
         
-    elif quantizer['class_name'] == 'binary':
+    elif quantizer['class_name'] in ['binary', 'stochastic_binary']:
         bits = 2
         integer = 2
     
-    elif quantizer['class_name'] == 'ternary':
+    elif quantizer['class_name'] in ['ternary', 'stochastic_ternary']:
         bits = 2
         integer = 2
     else:
@@ -103,8 +108,9 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
                 if 'quantizer' in qname.lower():
                     pname = qname.split('_quantizer')[0]
                     if pname == 'kernel': pname = 'weight'
-                    precision = _get_precision_from_quantizer(qclass)
-                    layer['precision'][pname] = precision
+                    if qclass is not None:
+                        precision = _get_precision_from_quantizer(qclass)
+                        layer['precision'][pname] = precision
                 elif qname == 'activation' and layer['class_name'] == 'QActivation':
                     precision = _get_precision_from_quantizer(qclass)
                     layer['precision']['result'] = precision

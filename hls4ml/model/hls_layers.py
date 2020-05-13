@@ -7,9 +7,10 @@ import numpy as np
 from collections import OrderedDict
 
 class Quantizer(object):
-    def __init__(self, bits, hls_type):
+    def __init__(self, bits, hls_type, alpha):
         self.bits = bits
         self.hls_type = hls_type
+        self.alpha = alpha
     
     def __call__(self, data):
         raise NotImplementedError
