@@ -119,7 +119,7 @@ class InplaceVariable():
         return '*'.join([str(k) for k in self.dim_names])
 
 class WeightVariable(Variable):
-    def __init__(self, var_name, type_name, precision, data, **kwargs):
+    def __init__(self, var_name, type_name, precision, quantizer, data, **kwargs):
         super(WeightVariable, self).__init__(var_name, type_name, precision, **kwargs)
         self.data = data
         self.nzeros = -1
@@ -131,6 +131,7 @@ class WeightVariable(Variable):
         self.max = np.max(self.data)
         self._iterator = None
         self.update_precision(precision)
+        self.quantizer = quantizer
 
     def __iter__(self):
         self._iterator = np.nditer(self.data, order='C')
@@ -173,8 +174,8 @@ class WeightVariable(Variable):
         return '{type} {name}[{size}]'.format(type=self.type.name, name=self.cppname, size=self.data_length)
 
 class CompressedWeightVariable(WeightVariable):
-    def __init__(self, var_name, type_name, precision, data, reuse_factor, **kwargs):
-        super(CompressedWeightVariable, self).__init__(var_name, type_name, precision, data, **kwargs)
+    def __init__(self, var_name, type_name, precision, quantizer, data, reuse_factor, **kwargs):
+        super(CompressedWeightVariable, self).__init__(var_name, type_name, precision, quantizer, data, **kwargs)
         self.extra_zeros = 0
         self.data_length = np.prod(data.shape) - self.nzeros
         while self.data_length % reuse_factor != 0:
@@ -345,16 +346,18 @@ class Layer(object):
         elif isinstance(data, six.string_types):
             data = self.model.get_weights_data(self.name, data)
 
+        data_unquantized = data
         if quantizer is not None:
             precision = quantizer.hls_type
             type_name = name + '{index}_t'
             data = quantizer(data)
 
         if compression:
-            var = CompressedWeightVariable(var_name, type_name=type_name, precision=precision, data=data, reuse_factor=self.reuse_factor, index=self.index)
+            var = CompressedWeightVariable(var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, reuse_factor=self.reuse_factor, index=self.index)
         else:
-            var = WeightVariable(var_name, type_name=type_name, precision=precision, data=data, index=self.index)
+            var = WeightVariable(var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, index=self.index)
 
+            var.data_unquantized = data_unquantized
         self.weights[name] = var
         self.precision[var.type.name] = var.type
 

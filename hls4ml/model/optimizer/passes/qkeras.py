@@ -87,9 +87,9 @@ class QKerasFactorizeAlpha(OptimizerPass):
 
     def transform(self, model, node):
         # The quantizer has to be applied to set the scale attribute
-        # Should work whether the weights have been quantized or not
-        quantizer = node.get_attr('weight_quantizer').quantizer_fn # get quantizer
-        weights = node.weights['weight'].data # get weights
+        # This must be applied to the _unquantized_ weights to obtain the correct scale
+        quantizer = node.weights['weight'].quantizer.quantizer_fn # get QKeras quantizer
+        weights = node.weights['weight'].data_unquantized # get weights
         qweights = quantizer(tf.convert_to_tensor(weights))
         scale = quantizer.scale.numpy()
         unscale = 1. / scale
@@ -99,17 +99,17 @@ class QKerasFactorizeAlpha(OptimizerPass):
         node.weights['weight'].data = new_weights.numpy()
 
         # insert a Batch Normalization layer to apply the alpha scale
-        next_node = next((x for x in model.graph.values() if x.inputs[0] == node.outputs[0]), None)
         attrs = {
             'name' : node.get_attr('name') + '_alpha',
             'class_name' : 'Alpha',
+            'inputs' : node.outputs,
             'n_in' : node.get_attr('n_out'),
             'n_filt' : node.get_attr('n_filt') if node.get_attr('n_filt') is not None else -1,
             'reuse_factor' : node.get_attr('reuse_factor'),
             'bias_t' : 'ap_fixed<16,6>', # TODO automate this
             'scale_t' : 'ap_fixed<16,6>' # TODO automate this
         }
-        alpha_layer = model.make_node('ApplyAlpha', node.name + '_alpha', attrs, node.outputs, next_node.inputs)
+        alpha_layer = model.make_node('ApplyAlpha', node.name + '_alpha', attrs, node.outputs)
         alpha_layer.add_weights(scale, np.zeros(scale.shape))
         model.insert_node(alpha_layer)
 
