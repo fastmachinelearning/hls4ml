@@ -935,7 +935,6 @@ class LSTM(Layer):
 
 class GRU(Layer):
     def initialize(self):
-        print("DEBUG : ", self.attributes['recurr_n_out'])
         shape = [self.attributes['n_sequence'],int(self.attributes['recurr_n_out']/3)]
         dims = ['N_SEQUENCE_{}'.format(self.index), 'N_LAYER_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
