@@ -502,7 +502,8 @@ template<class data_T, class res_T, typename CONFIG_T>
 	    res_T     h_newstate[CONFIG_T::n_state],
 	    typename CONFIG_T::weight_t     param   [CONFIG_T::n_state*3*CONFIG_T::n_in], // TODO - Check the layout of the param weights - refer page in copy!!
 	    typename CONFIG_T::weight_t     param_zr[CONFIG_T::n_state*3*CONFIG_T::n_state],
-	    typename CONFIG_T::bias_t       param_b [CONFIG_T::n_state*3]
+	    typename CONFIG_T::bias_t       param_b [CONFIG_T::n_state*3],
+      typename CONFIG_T::bias_t       param_br [CONFIG_T::n_state*3]
 	    ) {
     // Initialize the state variable -- will maintain state between function calls
     std::cout << "I Input(Pr): [ "; for (int ii = 0; ii < CONFIG_T::n_in; ii++) std::cout << data[ii] << " "; std::cout << "]" << std::endl;
@@ -516,9 +517,6 @@ template<class data_T, class res_T, typename CONFIG_T>
     typename CONFIG_T::accum_t tmpres_h    [CONFIG_T::n_state];   //activated c-matrix (keras notation)
     typename CONFIG_T::accum_t inputacc_zr [CONFIG_T::n_state*2]; //i,f,o matrices (keras notation)
     typename CONFIG_T::accum_t inputacc_h  [CONFIG_T::n_state]; //c-matrix (keras notation)
-
-    typename CONFIG_T::bias_t param_br      [CONFIG_T::n_state*3];
-    for(int ii = 0; ii < (CONFIG_T::n_state*3); ii++) param_br[ii] = 0;
 
     #pragma HLS ARRAY_PARTITION variable=h_newstate      complete
     #pragma HLS ARRAY_PARTITION variable=h_newstate_hin  complete
@@ -589,7 +587,8 @@ template<class data_T, class res_T, typename CONFIG_T>
 	    res_T     h_newstate[CONFIG_T::n_state],
 	    typename CONFIG_T::weight_t     param   [CONFIG_T::n_state*3*CONFIG_T::n_in],
 	    typename CONFIG_T::weight_t     param_zr[CONFIG_T::n_state*3*CONFIG_T::n_state],
-	    typename CONFIG_T::bias_t       param_b [CONFIG_T::n_state*3]
+	    typename CONFIG_T::bias_t       param_b [CONFIG_T::n_state*3],
+      typename CONFIG_T::bias_t       param_br [CONFIG_T::n_state*3]
 	    ) {
     // Initialize the state variable -- will maintain state between function calls
     
@@ -602,9 +601,6 @@ template<class data_T, class res_T, typename CONFIG_T>
     typename CONFIG_T::accum_t tmpres_h    [CONFIG_T::n_state];   //activated c-matrix (keras notation)
     typename CONFIG_T::accum_t inputacc_zr [CONFIG_T::n_state*2]; //i,f,o matrices (keras notation)
     typename CONFIG_T::accum_t inputacc_h  [CONFIG_T::n_state]; //c-matrix (keras notation)
-
-    typename CONFIG_T::bias_t param_br      [CONFIG_T::n_state*3];
-    for(int ii = 0; ii < (CONFIG_T::n_state*3); ii++) param_br[ii] = 0;
 
     #pragma HLS ARRAY_PARTITION variable=h_state         complete
     #pragma HLS ARRAY_PARTITION variable=h_newstate      complete
@@ -677,10 +673,11 @@ template<class data_T, class res_T, typename CONFIG_T>
 template<class data_T, class res_T, typename CONFIG_T>
   void gru_loop(
 	    data_T    data      [CONFIG_T::n_sequence*CONFIG_T::n_in],
-      res_T     h_newstate[CONFIG_T::n_sequence*CONFIG_T::n_state],
+      res_T     h_newstate[CONFIG_T::n_sequence_out*CONFIG_T::n_state],
 	    typename CONFIG_T::weight_t     param   [CONFIG_T::n_state*3*CONFIG_T::n_in],
 	    typename CONFIG_T::weight_t     param_zr[CONFIG_T::n_state*3*CONFIG_T::n_state],
-	    typename CONFIG_T::bias_t       param_b [CONFIG_T::n_state*3]
+	    typename CONFIG_T::bias_t       param_b [CONFIG_T::n_state*3],
+      typename CONFIG_T::bias_t       param_br [CONFIG_T::n_state*3]
 	    ) {
 
       res_T h_state[CONFIG_T::n_state];
@@ -692,11 +689,16 @@ template<class data_T, class res_T, typename CONFIG_T>
       for(int ii = 0; ii < CONFIG_T::n_state; ii++) h_state[ii] = 0;
       for(int iloop = 0; iloop < CONFIG_T::n_sequence; iloop++) {
         for(int j = 0; j < CONFIG_T::n_in; j++){data_in[j] = data[j + iloop*CONFIG_T::n_in];}
-        nnet::gru<data_T, res_T, CONFIG_T>(data_in,h_state,param,param_zr,param_b);
-        for(int i=CONFIG_T::n_state*iloop, j=0; i<(CONFIG_T::n_state*(iloop+1)); i++,j++){
-          h_newstate[i] = h_state[j];
-        }
+        nnet::gru<data_T, res_T, CONFIG_T>(data_in,h_state,param,param_zr,param_b, param_br);
+        if (CONFIG_T::n_sequence_out > 1)
+          for(int i=CONFIG_T::n_state*iloop, j=0; i<(CONFIG_T::n_state*(iloop+1)); i++,j++){
+            h_newstate[i] = h_state[j];
+          }
       }
+      if (CONFIG_T::n_sequence_out == 1)
+        for(int i=0; i<(CONFIG_T::n_state); i++){
+          h_newstate[i] = h_state[i];
+        }
     }
 
 }//end namespace

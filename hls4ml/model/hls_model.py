@@ -935,19 +935,22 @@ class LSTM(Layer):
 
 class GRU(Layer):
     def initialize(self):
-        shape = [self.attributes['n_sequence'],int(self.attributes['recurr_n_out']/3)]
-        dims = ['N_SEQUENCE_{}'.format(self.index), 'N_LAYER_{}'.format(self.index)]
+        shape = [self.attributes['n_sequence_out'],int(self.attributes['recurr_n_out']/3)]
+        dims = ['N_SEQUENCE_OUT_{}'.format(self.index), 'N_LAYER_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.add_weights()
         self.add_bias()
         recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
         self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
+        recurrent_bias = np.zeros(self.get_output_variable().shape[-1]*3)
+        self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
 		
     def function_cpp(self):
         params = self._default_function_params()
         params['w'] = self.get_weights('weight').name
         params['b'] = self.get_weights('bias').name
         params['wr'] = self.get_weights('recurrent_weight').name
+        params['br'] = self.get_weights('recurrent_bias').name
         params['activation'] = self.get_attr('activation')
         params['recurrent_activation'] = self.get_attr('recurrent_activation')
 
@@ -957,6 +960,7 @@ class GRU(Layer):
         params = self._default_config_params()
         params['n_in'] = self.get_input_variable().dim_names[1]
         params['n_sequence'] = self.get_input_variable().dim_names[0]
+        params['n_sequence_out'] = self.attributes['n_sequence_out']
         params['n_state'] = self.get_output_variable().dim_names[1]
         params['n_out'] = self.get_output_variable().dim_names[1]
         params['nzeros'] = self.get_weights('weight').nzeros

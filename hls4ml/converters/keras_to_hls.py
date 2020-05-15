@@ -347,7 +347,9 @@ def keras_to_hls(yamlConfig):
         elif layer['class_name']=='GRU':
             weights_shape = get_weights_shape(yamlConfig['KerasH5'], layer['name'], var_name='kernel')
             recurrent_weights_shape = get_weights_shape(yamlConfig['KerasH5'], layer['name'], var_name='recurrent_kernel')
+            return_sequences_config = keras_layer['config']['return_sequences']
             layer['n_sequence'] = input_shapes[0][1]
+            layer['n_sequence_out'] = layer['n_sequence'] if return_sequences_config else 1
             layer['n_in']=weights_shape[0]
             layer['n_out']=weights_shape[1]
             layer['n_subout']=[weights_shape[1]]
