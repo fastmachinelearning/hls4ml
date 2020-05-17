@@ -1,0 +1,18 @@
+name: 'Gitbook Action Build'
+on:
+  push:
+    branches:
+      - gh-pages  # trigger branch
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout action
+      uses: actions/checkout@v2
+    - name: Gitbook Action
+      uses: zanderzhao/gitbook-action@v1.2.2
+      with:
+        token: ${{ secrets.PERSONAL_TOKEN }}
+	source_repo: gh-pages
+	publish_repo: gh-pages
+	publish_dir: _book
