@@ -1,6 +1,6 @@
 # Status
 
-The latest stable release is [v0.1.6](RELEASENOTES.md), including a validated Boosted Decision Tree model based on our paper, [arXiv:2002.02534](https://arxiv.org/abs/2002.02534).
+The latest stable release is [v0.2.0](RELEASENOTES.md), including a validated boosted decision tree implementation ([arXiv:2002.02534](https://arxiv.org/abs/2002.02534)) and binary/ternary neural networks ([arXiv:2003.06308](https://arxiv.org/abs/2003.06308)).
 
 # Features
 
