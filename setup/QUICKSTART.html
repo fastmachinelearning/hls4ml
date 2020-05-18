@@ -1,0 +1,434 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>Quick Start · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="CONFIGURATION.html" />
+    
+    
+    <link rel="prev" href="DEPENDENCIES.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../">
+            
+                <a href="../">
+            
+                    
+                    hls4ml
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="../RELEASENOTES.html">
+            
+                <a href="../RELEASENOTES.html">
+            
+                    
+                    Release Notes
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="../STATUS.html">
+            
+                <a href="../STATUS.html">
+            
+                    
+                    Status and Features
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="../SETUP.html">
+            
+                <a href="../SETUP.html">
+            
+                    
+                    Setup
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.1" data-path="DEPENDENCIES.html">
+            
+                <a href="DEPENDENCIES.html">
+            
+                    
+                    Dependencies
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.4.2" data-path="QUICKSTART.html">
+            
+                <a href="QUICKSTART.html">
+            
+                    
+                    Quick Start
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.3" data-path="CONFIGURATION.html">
+            
+                <a href="CONFIGURATION.html">
+            
+                    
+                    Configuration
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="../COMMAND.html">
+            
+                <a href="../COMMAND.html">
+            
+                    
+                    Command help
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="../PROFILING.html">
+            
+                <a href="../PROFILING.html">
+            
+                    
+                    Profiling
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7" data-path="../CONCEPTS.html">
+            
+                <a href="../CONCEPTS.html">
+            
+                    
+                    Concepts
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8" data-path="../REFERENCE.html">
+            
+                <a href="../REFERENCE.html">
+            
+                    
+                    Reference and Contributors
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.9" >
+            
+                <a target="_blank" href="https://github.com/hls-fpga-machine-learning/HLS4ML">
+            
+                    
+                    Code Repository
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href=".." >Quick Start</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="quick-start">Quick start</h1>
+<p>For basic concepts to understand the tool, please visit the <a href="../CONCEPTS.html">Concepts</a> chapter.<br>Here we give line-by-line instructions on how to build a first project and explain the various steps to producing an HLS4ML IP.</p>
+<h2 id="running-the-tool">Running the tool</h2>
+<p>These instructions are for simply running the tool out-of-the-box and getting a feel for the workflow.  </p>
+<p><strong>1) To clone our latest version from github and install it from the main directory:</strong> </p>
+<pre><code>git clone https://github.com/hls-fpga-machine-learning/hls4ml.git
+cd hls4ml/
+pip install .
+</code></pre><p><strong>NOTE FOR THIS STEP:</strong></p>
+<ul>
+<li>If you don&apos;t have privileges to install in the configured environment, you can also pass <code>--user</code> to the <code>pip</code> command as well. You can also add <code>-U</code> or <code>--upgrade</code> to update all packages to the newest available version. </li>
+<li>To enable develop mode: <code>pip install -e .</code></li>
+<li>In the future, we plan to support <code>hls4ml</code> as a package on PyPI. After that you can simply install the software with: <code>pip install hls4ml</code></li>
+<li>We are also planning on supporting <code>conda</code> installation for <code>hls4ml</code>.</li>
+</ul>
+<p><strong>2) Translate your model using configuration files (<code>.yml</code>):</strong> </p>
+<p>The model files, along with other configuration parameters, are defined in the <code>.yml</code> files.
+Further information about <code>.yml</code> files can be found in <a href="CONFIGURATION.html">Configuration Section</a>.
+We provide some examples of configuration files in <code>example-models</code> directory.</p>
+<p>In order to create an example HLS project:</p>
+<ul>
+<li>Go to <code>example-models/</code> from the main directory: </li>
+</ul>
+<pre><code>cd example-models/
+</code></pre><ul>
+<li>And use this command to translate a Keras model:</li>
+</ul>
+<pre><code>hls4ml convert -c keras-config.yml
+</code></pre><p>This will create a new HLS project directory with an implementation of a model from the <code>example-models/keras/</code> directory.
+To build the HLS project, do:</p>
+<pre><code>hls4ml build -p my-hls-test -a
+</code></pre><p>This will create a Vivado HLS project with your model implmentation!</p>
+<p><strong>NOTE:</strong> For the last step, you can alternatively do the following to build the HLS project:</p>
+<pre><code>cd my-hls-test
+vivado_hls -f build_prj.tcl
+</code></pre><p><code>vivado_hls</code> can be controlled with:</p>
+<pre><code>vivado_hls -f build_prj.tcl &quot;csim=1 synth=1 cosim=1 export=1&quot;
+</code></pre><p>Setting the additional parameters to <code>1</code> to <code>0</code> disables that step, but disabling <code>synth</code> also disables <code>cosim</code> and <code>export</code>.</p>
+<p><strong>3) Further help:</strong></p>
+<ul>
+<li><p>For further information about how to use <code>hls4ml</code>, do: <code>hls4ml --help</code> or <code>hls4ml -h</code></p>
+</li>
+<li><p>If you need help for a particular <code>command</code>, <code>hls4ml command -h</code> will show help for the requested <code>command</code></p>
+</li>
+</ul>
+<p><strong>To uninstall <code>hls4ml</code>:</strong> </p>
+<pre><code>pip uninstall hls4ml
+</code></pre><h2 id="existing-examples">Existing examples</h2>
+<ul>
+<li><p>Examples of model files and weights can be found in <a href="https://github.com/hls-fpga-machine-learning/hls4ml/tree/master/example-models" target="_blank">example_models</a> directory.</p>
+</li>
+<li><p>Training codes and examples of resources needed to train the models can be found <a href="https://github.com/hls-fpga-machine-learning/keras-training" target="_blank">here</a>.</p>
+</li>
+<li><p>Other examples of various HLS projects with examples of different machine learning algorithm implementations is in the directory <a href="https://github.com/hls-fpga-machine-learning/hls4ml/tree/master/example-prjs" target="_blank">example-prjs</a>.</p>
+</li>
+</ul>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="DEPENDENCIES.html" class="navigation navigation-prev " aria-label="Previous page: Dependencies">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="CONFIGURATION.html" class="navigation navigation-next " aria-label="Next page: Configuration">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Quick Start","level":"1.4.2","depth":2,"next":{"title":"Configuration","level":"1.4.3","depth":2,"path":"setup/CONFIGURATION.md","ref":"setup/CONFIGURATION.md","articles":[]},"previous":{"title":"Dependencies","level":"1.4.1","depth":2,"path":"setup/DEPENDENCIES.md","ref":"setup/DEPENDENCIES.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/QUICKSTART.md","mtime":"2020-05-18T00:46:34.442Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-05-18T00:47:11.842Z"},"basePath":"..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../gitbook/gitbook.js"></script>
+    <script src="../gitbook/theme.js"></script>
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+
