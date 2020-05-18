@@ -1,6 +1,6 @@
 # Summary
 
-* [HLS4ML](README.md)
+* [hls4ml](README.md)
 * [Release Notes](RELEASENOTES.md)
 * [Status and Features](STATUS.md)
 * [Setup](SETUP.md)
