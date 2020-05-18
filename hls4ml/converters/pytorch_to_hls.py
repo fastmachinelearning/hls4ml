@@ -80,8 +80,11 @@ def pytorch_to_hls(yamlConfig):
             current_shape = [layer['n_in'], layer['n_out']]
             print('Layer index: {}, layer type: {}, current shape: {}'.format(layer['name'], layer['class_name'], current_shape))
         elif layer_type in activation_layers:
-            layer['class_name'] = 'Activation'
             layer['activation'] = layer_type.lower()
+            if layer['activation'] == 'Softmax':
+                layer['class_name'] = 'Softmax'
+            else:
+                layer['class_name'] = 'Activation'
             layer['name'] = layer['activation'] + '_' + str(layer_idx)
 
         layer_list.append(layer)

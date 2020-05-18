@@ -25,9 +25,14 @@ class OutputRoundingSaturationMode(OptimizerPass):
     saturation_bits = None
 
     def match(self, node):
-        layer_match = node.__class__.__name__ in self.layers 
+        layer_match = node.__class__.__name__ in self.layers or node.name in self.layers
         t = str(node.get_output_variable().type.precision)
-        rs_match = not ((self.rounding_mode in t) or (self.saturation_mode in t))
+        # check that the type doesn't already contain the rounding mode
+        rs_match = False
+        if self.rounding_mode is not None:
+            rs_match = rs_match or not (self.rounding_mode in t)
+        if self.saturation_mode is not None:
+            rs_match = rs_match or not (self.saturation_mode in t)
         return layer_match and rs_match
 
     def transform(self, model, node):

@@ -210,7 +210,10 @@ def tf_to_hls(yamlConfig):
 
         elif tf_op.type in ['Elu', 'Relu', 'Selu', 'Sigmoid', 'Softmax']:
             output_shape = tf_op.outputs[0].shape.as_list()
-            layer['class_name'] = 'Activation'
+            if tf_op.type == 'Softmax':
+                layer['class_name'] = 'Softmax'
+            else:
+                layer['class_name'] = 'Activation'
             layer['activation'] = tf_op.type
             layer['inputs'] = _parse_tensor_names(tf_op.inputs[0])
             layer['outputs'] = _parse_tensor_names(tf_op.outputs[0])

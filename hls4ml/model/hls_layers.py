@@ -16,17 +16,12 @@ class Quantizer(object):
         raise NotImplementedError
 
 class IntegerPrecisionType(object):
-    def __init__(self, width=16, signed=True, rounding_mode=None, saturation_mode=None, saturation_bits=None):
+    def __init__(self, width=16, signed=True):
         self.width = width
         self.signed = signed
-        self.rounding_mode = rounding_mode
-        self.saturation_mode = saturation_mode
-        self.saturation_bits = saturation_bits
     
     def __str__(self):
-        args = [self.width, self.rounding_mode, self.saturation_mode, self.saturation_bits]
-        args = ','.join([str(arg) for arg in args if arg is not None])
-        typestring = 'ap_{signed}int<{args}>'.format(signed='u' if not self.signed else '', args=args)
+        typestring = 'ap_{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring
 
 class FixedPrecisionType(object):
