@@ -15,4 +15,4 @@ jobs:
         token: ${{ secrets.PERSONAL_TOKEN }}
         source_branch: gh-pages-2
         publish_branch: gh-pages
-        publish_dir: _book
+        publish_dir: /
