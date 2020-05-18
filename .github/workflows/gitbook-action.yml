@@ -2,7 +2,7 @@ name: 'Gitbook Action Build'
 on:
   push:
     branches:
-      - gh-pages  # trigger branch
+      - gh-pages-2  # trigger branch
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,6 +13,6 @@ jobs:
       uses: zanderzhao/gitbook-action@v1.2.2
       with:
         token: ${{ secrets.PERSONAL_TOKEN }}
-        source_branch: gh-pages
+        source_branch: gh-pages-2
         publish_branch: gh-pages
         publish_dir: _book
