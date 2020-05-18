@@ -4,6 +4,7 @@ from ....model.hls_model import IntegerPrecisionType, FixedPrecisionType, regist
 from ....templates import templates
 import tensorflow as tf
 import numpy as np
+from qkeras import get_quantizer
 
 class OutputRoundingSaturationMode(OptimizerPass):
     '''
@@ -21,21 +22,26 @@ class OutputRoundingSaturationMode(OptimizerPass):
     layers = [] 
     rounding_mode = None 
     saturation_mode = None 
+    saturation_bits = None
 
     def match(self, node):
-        return node.__class__.__name__ in self.layers
+        layer_match = node.__class__.__name__ in self.layers 
+        t = str(node.get_output_variable().type.precision)
+        rs_match = not ((self.rounding_mode in t) or (self.saturation_mode in t))
+        return layer_match and rs_match
 
     def transform(self, model, node):
         oldtype = node.get_output_variable().type.precision
         if isinstance(oldtype, IntegerPrecisionType):
-            newprecision = IntegerPrecisionType(oldtype.width, oldtype.signed, rounding_mode, saturation_mode)
+            newprecision = IntegerPrecisionType(oldtype.width, oldtype.signed, self.rounding_mode, self.saturation_mode, self.saturation_bits)
         elif isinstance(oldtype, FixedPrecisionType):
-            newtype = FixedPrecisionType(oldtype.width, oldtype.integer, oldtype.signed, rounding_mode, saturation_mode)
+            newtype = FixedPrecisionType(oldtype.width, oldtype.integer, oldtype.signed, self.rounding_mode, self.saturation_mode, self.saturation_bits)
         else: # in case the precision is a string
             newtype = self.precision_string_modify(oldtype)
         node.get_output_variable().type.precision = newtype
         if node.get_attr('accum_t') is not None:
             node.set_attr('accum_t', newtype)
+        return False
 
     def precision_string_modify(self, pstr):
         # For when the type is a string not an Type
@@ -44,6 +50,8 @@ class OutputRoundingSaturationMode(OptimizerPass):
             mode += ',' + self.rounding_mode
         if self.saturation_mode is not None:
             mode += ',' + self.saturation_mode
+        if self.saturation_bits is not None:
+            mode += ',' + str(self.saturation_bits)
         mode += '>'
         pstr = pstr.replace('>', mode)
         return pstr
@@ -97,6 +105,16 @@ class QKerasFactorizeAlpha(OptimizerPass):
         new_weights = unscale * qweights # use the quantized weights for safety
 
         node.weights['weight'].data = new_weights.numpy()
+        # Set the alpha to 1 to avoid hitting this pass again
+        qcfg = quantizer.get_config()
+        qcfg['alpha'] = 1
+        node.weights['weight'].quantizer.quantizer_fn = quantizer.from_config(qcfg)
+        has_w_quant = node.get_attr('weight_quantizer') is not None 
+        has_b_quant = node.get_attr('bias_quantizer') is not None
+        if has_w_quant: 
+            node.attributes['weight_quantizer'].alpha = 1
+        if has_b_quant:
+            node.attributes['bias_quantizer'].alpha = 1
 
         # insert a Batch Normalization layer to apply the alpha scale
         attrs = {
@@ -112,4 +130,32 @@ class QKerasFactorizeAlpha(OptimizerPass):
         alpha_layer = model.make_node('ApplyAlpha', node.name + '_alpha', attrs, node.outputs)
         alpha_layer.add_weights(scale, np.zeros(scale.shape))
         model.insert_node(alpha_layer)
+        return True
 
+class FuseConsecutiveBatchNormalization(OptimizerPass):
+    '''OptimizerPass to merge consecutive BatchNormalization layers.
+       These may exist in a model after QKerasFactorizeAlpha layer.
+       Scale and Bias of each layer are combined into scale and bias of a single layer.
+    '''
+
+    def match(self, node):
+        return isinstance(node, BatchNormalization) and \
+               isinstance(node.get_input_node(), BatchNormalization)
+
+    def transform(self, model, node):
+        bn0 = node.get_input_node()
+        bn1 = node
+
+        s0 = bn0.weights['scale'].data
+        b0 = bn0.weights['bias'].data
+        s1 = bn1.weights['scale'].data
+        b1 = bn1.weights['bias'].data
+
+        s2 = s0 * s1
+        b2 = s1 * b0 + b1
+
+        bn0.weights['scale'].data = s2
+        bn0.weights['bias'].data = b2
+
+        model.remove_node(node, rewire=True)
+        return True
