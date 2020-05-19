@@ -34,14 +34,14 @@ def parse_reshape_layer(keras_layer, input_names, input_shapes, data_reader, con
 
 
 class BinaryQuantizer(Quantizer):
-    def __init__(self, bits=2):
+    def __init__(self, bits=2, alpha=1):
         if bits == 1:
             hls_type = IntegerPrecisionType(width=1, signed=False)
         elif bits == 2:
             hls_type = IntegerPrecisionType(width=2)
         else:
             raise Exception('BinaryQuantizer suppots 1 or 2 bits, but called with bits={}'.format(bits))
-        super(BinaryQuantizer, self).__init__(bits, hls_type)
+        super(BinaryQuantizer, self).__init__(bits, hls_type, alpha=alpha)
     
     def __call__(self, data):
         zeros = np.zeros_like(data)
@@ -51,12 +51,11 @@ class BinaryQuantizer(Quantizer):
             quant_data = np.where(data > 0, ones, zeros).astype('int')
         if self.bits == 2:
             quant_data = np.where(data > 0, ones, -ones)
-        
         return quant_data
 
 class TernaryQuantizer(Quantizer):
-    def __init__(self):
-        super(TernaryQuantizer, self).__init__(2, IntegerPrecisionType(width=2))
+    def __init__(self, alpha=1):
+        super(TernaryQuantizer, self).__init__(2, IntegerPrecisionType(width=2), alpha=alpha)
     
     def __call__(self, data):
         zeros = np.zeros_like(data)

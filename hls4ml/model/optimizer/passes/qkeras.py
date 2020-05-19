@@ -109,11 +109,16 @@ class QKerasFactorizeAlpha(OptimizerPass):
 
         new_weights = unscale * qweights # use the quantized weights for safety
 
-        node.weights['weight'].data = new_weights.numpy()
+
         # Set the alpha to 1 to avoid hitting this pass again
         qcfg = quantizer.get_config()
         qcfg['alpha'] = 1
         node.weights['weight'].quantizer.quantizer_fn = quantizer.from_config(qcfg)
+
+        # update the weights also applying the hls4ml quantizer
+        # this is only needed for the binary layers which encode -1 as 0
+        node.weights['weight'].data = node.weights['weight'].quantizer(new_weights.numpy())
+
         has_w_quant = node.get_attr('weight_quantizer') is not None 
         has_b_quant = node.get_attr('bias_quantizer') is not None
         if has_w_quant: 
