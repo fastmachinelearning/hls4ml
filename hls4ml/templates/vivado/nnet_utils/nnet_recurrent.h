@@ -250,7 +250,7 @@ struct lstm_config
 
     // Layer Sizes
     static const unsigned n_in =  2;
-    static const unsigned n_parts = 20;
+    static const unsigned n_sequence = 2;
     static const unsigned n_out = 2;
     static const unsigned n_state = 2;
     static const unsigned n_4state = 8;
@@ -278,12 +278,13 @@ template<class data_T, class res_T, typename CONFIG_T>
   void lstm(int       index,
 	    data_T    data      [CONFIG_T::n_in],
 	    res_T     h_newstate[CONFIG_T::n_state],
-	    res_T     s_newstate[CONFIG_T::n_state],
+            res_T     s_newstate[CONFIG_T::n_state],
 	    typename CONFIG_T::weight_t     param  [CONFIG_T::n_state*4*CONFIG_T::n_in],
 	    typename CONFIG_T::weight_t     param_r[CONFIG_T::n_state*4*CONFIG_T::n_state],
 	    typename CONFIG_T::bias_t     param_b[CONFIG_T::n_state*4],
             typename CONFIG_T::bias_t     param_br[CONFIG_T::n_state*4]
 	    ) {
+
   // Initialize the state variable -- will maintain state between function calls
   std::cout << "S Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << s_newstate[ii] << " "; std::cout << "]" << std::endl;
   std::cout << "H Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
@@ -449,25 +450,34 @@ template<class data_T, class res_T, typename CONFIG_T>
 
 template<class data_T, class res_T, typename CONFIG_T>
   void lstm_loop(
-	    data_T    data_lstm      [CONFIG_T::n_in*CONFIG_T::n_parts],
-            res_T     layer2_out_addup[CONFIG_T::n_state*CONFIG_T::n_parts],
-	    typename CONFIG_T::weight_t     param  [CONFIG_T::n_state*4*CONFIG_T::n_in],
-	    typename CONFIG_T::weight_t     param_r[CONFIG_T::n_state*4*CONFIG_T::n_state],
-	    typename CONFIG_T::bias_t     param_b[CONFIG_T::n_state*4],
+      data_T    data      [CONFIG_T::n_sequence*CONFIG_T::n_in],
+      res_T     layer2_out_addup[CONFIG_T::n_sequence_out*CONFIG_T::n_state],
+      typename CONFIG_T::weight_t     param  [CONFIG_T::n_state*4*CONFIG_T::n_in],
+      typename CONFIG_T::weight_t     param_r[CONFIG_T::n_state*4*CONFIG_T::n_state],
+      typename CONFIG_T::bias_t     param_b[CONFIG_T::n_state*4],
             typename CONFIG_T::bias_t     param_br[CONFIG_T::n_state*4]
-	    ) {
+      ) {
 
     res_T     h_newstate[CONFIG_T::n_state];
+    //res_T     s_newstate[CONFIG_T::n_state];
+    data_T data_in[CONFIG_T::n_in];
 
     #pragma HLS ARRAY_PARTITION variable=h_newstate complete
+    //#pragma HLS ARRAY_PARTITION variable=s_newstate complete
 
+    //for(int ii = 0; ii < CONFIG_T::n_state; ii++) s_newstate[ii] = 0;
     for(int ii = 0; ii < CONFIG_T::n_state; ii++) h_newstate[ii] = 0;
-    for(int iloop = 0; iloop < CONFIG_T::n_parts; iloop++) {
-    nnet::lstm_static<data_T, res_T, typename CONFIG_T::config2>(1,data_lstm,h_newstate,param,param_r,param_b, param_br);
-    for(int j = 0; j < CONFIG_T::n_in; j++){data_lstm++;}
-    for(int i=CONFIG_T::n_state*iloop, j=0; i<(CONFIG_T::n_state*(iloop+1)); i++,j++){
-      layer2_out_addup[i] = h_newstate[j];
+    for(int iloop = 0; iloop < CONFIG_T::n_sequence; iloop++) {
+      for(int j = 0; j < CONFIG_T::n_in; j++){data_in[j] =  data[j + iloop*CONFIG_T::n_in];}
+      nnet::lstm_static<data_T, res_T, typename CONFIG_T::config2>(1,data_in,h_newstate, param,param_r,param_b, param_br);
+      if (CONFIG_T::n_sequence_out > 1)
+        for(int i=CONFIG_T::n_state*iloop, j=0; i<(CONFIG_T::n_state*(iloop+1)); i++,j++){
+          layer2_out_addup[i] = h_newstate[j];
     }
+    }
+      if (CONFIG_T::n_sequence_out == 1)
+        for(int i=0; i<(CONFIG_T::n_state); i++){
+           layer2_out_addup[i] = h_newstate[i];
     }
 }
 
@@ -673,7 +683,7 @@ template<class data_T, class res_T, typename CONFIG_T>
 template<class data_T, class res_T, typename CONFIG_T>
   void gru_loop(
 	    data_T    data      [CONFIG_T::n_sequence*CONFIG_T::n_in],
-      res_T     h_newstate[CONFIG_T::n_sequence_out*CONFIG_T::n_state],
+            res_T     h_newstate[CONFIG_T::n_sequence_out*CONFIG_T::n_state],
 	    typename CONFIG_T::weight_t     param   [CONFIG_T::n_state*3*CONFIG_T::n_in],
 	    typename CONFIG_T::weight_t     param_zr[CONFIG_T::n_state*3*CONFIG_T::n_state],
 	    typename CONFIG_T::bias_t       param_b [CONFIG_T::n_state*3],

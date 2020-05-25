@@ -1,5 +1,5 @@
-KerasJson: keras/KERAS_lstm_model.json
-KerasH5:   keras/KERAS_lstm_model_weights.h5
+KerasJson: keras/KERAS_model.json
+KerasH5:   keras/KERAS_check_best_model_weights.h5
 #InputData: keras/KERAS_3layer_input_features.dat
 #OutputPredictions: keras/KERAS_3layer_predictions.dat
 OutputDir: my-hls-test

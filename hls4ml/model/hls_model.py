@@ -873,9 +873,8 @@ class Conv2D(Layer):
 
 class LSTM(Layer):
     def initialize(self):
-        shape = [self.attributes['n_loop'], int(self.attributes['recurr_n_out']*0.25)]
-        dims = ['N_LOOP_{}'.format(self.index), 'N_LAYER_{}'.format(self.index)]
-        self.add_output_variable(shape, dims)
+        shape = [self.attributes['n_sequence_out'], int(self.attributes['recurr_n_out']/4)]
+        dims = ['N_SEQUENCE_OUT_{}'.format(self.index), 'N_LAYER_{}'.format(self.index)]        self.add_output_variable(shape, dims)
         self.add_weights()
         self.add_bias()
         recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
@@ -898,8 +897,9 @@ class LSTM(Layer):
     def config_cpp(self):
         params = self._default_config_params()
         params['n_in'] = self.get_input_variable().dim_names[1]
+        params['n_sequence'] = self.get_input_variable().dim_names[0]
+        params['n_sequence_out'] = self.attributes['n_sequence_out']
         params['n_state'] = self.get_output_variable().dim_names[1]
-        params['n_layer'] = self.get_output_variable().dim_names[1]
         params['n_out'] = self.get_output_variable().dim_names[1]
         params['nzeros'] = self.get_weights('weight').nzeros
 
