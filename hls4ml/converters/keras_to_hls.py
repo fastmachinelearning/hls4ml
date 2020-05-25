@@ -309,7 +309,6 @@ def keras_to_hls(yamlConfig):
             return_sequences_config = keras_layer['config']['return_sequences']
             layer['n_sequence']= input_shapes[0][1]
             layer['n_sequence_out'] = layer['n_sequence'] if return_sequences_config else 1
-            layer['n_loop']=loop
             layer['n_in']=weights_shape[0]
             layer['n_out']=weights_shape[1]
             layer['n_subout']=[weights_shape[1]]

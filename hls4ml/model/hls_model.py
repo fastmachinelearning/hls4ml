@@ -874,7 +874,8 @@ class Conv2D(Layer):
 class LSTM(Layer):
     def initialize(self):
         shape = [self.attributes['n_sequence_out'], int(self.attributes['recurr_n_out']/4)]
-        dims = ['N_SEQUENCE_OUT_{}'.format(self.index), 'N_LAYER_{}'.format(self.index)]        self.add_output_variable(shape, dims)
+        dims = ['N_SEQUENCE_OUT_{}'.format(self.index), 'N_LAYER_{}'.format(self.index)]        
+        self.add_output_variable(shape, dims)
         self.add_weights()
         self.add_bias()
         recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
