@@ -105,7 +105,7 @@ class InplaceVariable():
         return '*'.join([str(k) for k in self.dim_names])
 
 class WeightVariable(Variable):
-    def __init__(self, var_name, type_name, precision, quantizer, data, **kwargs):
+    def __init__(self, var_name, type_name, precision, data, quantizer=None, **kwargs):
         super(WeightVariable, self).__init__(var_name, type_name, precision, **kwargs)
         self.data = data
         self.nzeros = -1
@@ -160,8 +160,8 @@ class WeightVariable(Variable):
         return '{type} {name}[{size}]'.format(type=self.type.name, name=self.cppname, size=self.data_length)
 
 class CompressedWeightVariable(WeightVariable):
-    def __init__(self, var_name, type_name, precision, quantizer, data, reuse_factor, **kwargs):
-        super(CompressedWeightVariable, self).__init__(var_name, type_name, precision, quantizer, data, **kwargs)
+    def __init__(self, var_name, type_name, precision, data, reuse_factor, quantizer=None, **kwargs):
+        super(CompressedWeightVariable, self).__init__(var_name, type_name, precision, data, quantizer=quantizer, **kwargs)
         self.extra_zeros = 0
         self.data_length = np.prod(data.shape) - self.nzeros
         while self.data_length % reuse_factor != 0:

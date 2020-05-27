@@ -21,11 +21,8 @@
 #define NNET_ACTIVATION_H_
 
 #include <cmath>
-#include <iostream>
 #include "ap_fixed.h"
 #include "nnet_common.h"
-
-
 
 namespace nnet {
 
