@@ -92,9 +92,15 @@ class QKerasFactorizeAlpha(OptimizerPass):
         has_b_quant = node.get_attr('bias_quantizer') is not None
         has_w_alpha, has_b_alpha = False, False
         if has_w_quant:
-            has_w_alpha = node.get_attr('weight_quantizer').alpha != 1
+            if hasattr(node.get_attr('weight_quantizer'), 'alpha'):
+                has_w_alpha = node.get_attr('weight_quantizer').alpha != 1
+            else:
+                has_w_alpha = False
         if has_b_quant:
-            has_b_alpha = node.get_attr('bias_quantizer').alpha != 1
+            if hasattr(node.get_attr('bias_quantizer'), 'alpha'):
+                has_b_alpha = node.get_attr('bias_quantizer').alpha != 1
+            else:
+                has_b_alpha = False
         is_match = q_layer and ((has_w_quant and has_w_alpha) or (has_b_quant and has_b_alpha))
         return is_match
 

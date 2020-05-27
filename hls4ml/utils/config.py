@@ -25,18 +25,24 @@ def _get_precision_from_quantizer(quantizer):
     if isinstance(quantizer, str):
         quantizer_obj = qkeras.get_quantizer(quantizer)
         quantizer = {}
-        quantizer['class_name'] = quantizer_obj.__class__.__name__
-        quantizer['config'] = quantizer_obj.get_config()
+        # Some activations are classes with get_config method
+        if hasattr(quantizer_obj, 'get_config'):
+            quantizer['class_name'] = quantizer_obj.__class__.__name__
+            quantizer['config'] = quantizer_obj.get_config()
+        # Some activations are just functions
+        else: 
+            quantizer['class_name'] = quantizer_obj.__name__
+
     supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh']
     if quantizer['class_name'] in supported_quantizers:
         bits = int(quantizer['config']['bits']) + 1
         integer = int(quantizer['config']['integer']) + 1
         
-    elif quantizer['class_name'] in ['binary', 'stochastic_binary']:
+    elif quantizer['class_name'] in ['binary', 'stochastic_binary', 'binary_tanh']:
         bits = 2
         integer = 2
     
-    elif quantizer['class_name'] in ['ternary', 'stochastic_ternary']:
+    elif quantizer['class_name'] in ['ternary', 'stochastic_ternary', 'ternary_tanh']:
         bits = 2
         integer = 2
     else:

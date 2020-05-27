@@ -620,6 +620,8 @@ def keras_to_hls(config):
             if 'activ_param' in layer:
                 act_layer['activ_param'] = layer['activ_param']
                 act_layer['class_name'] = layer['activation']
+            elif layer['activation'] == 'softmax':
+                act_layer['class_name'] = 'Softmax'
             else:
                 act_layer['class_name'] = 'Activation'
             inputs_map[layer['name']] = act_layer['name']

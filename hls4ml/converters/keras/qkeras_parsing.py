@@ -46,29 +46,41 @@ def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader, confi
 @keras_handler('QActivation')
 def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader, config):
     assert(keras_layer['class_name'] == 'QActivation')
-    supported_activations = ['quantized_relu', 'quantized_tanh']
-    print(keras_layer)
+    supported_activations = ['quantized_relu', 'quantized_tanh', 'binary_tanh', 'ternary_tanh']
     
     layer = parse_default_keras_layer(keras_layer, input_names)
 
     activation_config = keras_layer['config']['activation']
     if isinstance(activation_config, str):
         quantizer_obj = get_quantizer(activation_config)
-        activation_config = {}
-        activation_config['class_name'] = quantizer_obj.__class__.__name__
-        activation_config['config'] = quantizer_obj.get_config()
 
-    print(activation_config)
+    if isinstance(activation_config, str):
+        quantizer_obj = get_quantizer(activation_config)
+        activation_config = {}
+        # some activations are classes 
+        if hasattr(quantizer_obj, 'get_config'):
+            print("Name: " + quantizer_obj.__class__.__name__)
+            activation_config['class_name'] = quantizer_obj.__class__.__name__
+            activation_config['config'] = quantizer_obj.get_config()
+        # some activation quantizers are just functions with no config
+        else:
+            activation_config['config'] = {}
+            if quantizer_obj.__name__ == 'binary_tanh':
+                activation_config['class_name'] = 'binary_tanh'
+                activation_config['config']['bits'] = 1
+                activation_config['config']['integer'] = 1
+            elif quantizer_obj.__name__ == 'ternary_tanh':
+                activation_config['class_name'] = 'ternary_tanh'
+                activation_config['config']['bits'] = 2
+                activation_config['config']['integer'] = 2
+            else:
+                activation_config['class_name'] = 'unknown'
     
-    act_class = activation_config['class_name']
-    if act_class not in supported_activations:
-        raise Exception('Unsupported QKeras activation: {}'.format(act_class))
+    if activation_config['class_name'] not in supported_activations:
+        raise Exception('Unsupported QKeras activation: {}'.format(activation_config['class_name']))
+
 
     layer['class_name'] = 'Activation'
-    layer['activation'] = act_class.replace('quantized_', '')
-    layer['bits'] = activation_config['config']['bits'] + 1
-    layer['integer'] = activation_config['config']['integer'] + 1
-    #TODO this needs extra work in HLS model and HLS templates
-
+    layer['activation'] = activation_config['class_name'].replace('quantized_', '')
     return layer, [shape for shape in input_shapes[0]]
 
