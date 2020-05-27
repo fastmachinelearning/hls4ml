@@ -139,7 +139,7 @@ def onnx_to_hls(yamlConfig):
 
     operation_map = {'Gemm':'Dense', 'Relu':'Activation', 'Tanh':'Activation', 'Sigmoid':'Activation',
     'LeakyRelu':'LeakyReLU', 'ThresholdedRelu':'ThresholdedReLU', 'HardSigmoid':'Activation',
-    'Elu':'ELU', 'Selu':'Activation', 'PRelu':'PReLU', 'Softmax':'Activation', 'Softsign':'Activation', 'Softplus':'Activation',
+    'Elu':'ELU', 'Selu':'Activation', 'PRelu':'PReLU', 'Softmax':'Softmax', 'Softsign':'Activation', 'Softplus':'Activation',
     'Sum':'Add', 'Sub':'Subtract', 'Max':'Maximum', 'Min':'Minimum', 'Mul':'Multiply', 'Concat':'Concatenate'}
     
     #Define layers to skip for conversion to HLS

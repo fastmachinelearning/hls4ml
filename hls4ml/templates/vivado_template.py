@@ -88,6 +88,15 @@ activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
     typedef {table_t} table_t;
 }};\n"""
 
+softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
+    static const unsigned n_in = {n_in};
+    static const unsigned table_size = {table_size};
+    static const unsigned io_type = nnet::{iotype};
+    static const unsigned reuse_factor = {reuse};
+    typedef {exp_table_t} exp_table_t;
+    typedef {inv_table_t} inv_table_t;
+}};\n"""
+
 pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
     static const unsigned n_in = {n_in};
     static const unsigned pool_size = {pool_size};
@@ -179,6 +188,7 @@ class VivadoBackend(Backend):
         self.register_templates('Activation'             , activ_function_template,       activ_config_template, activ_include_list)
         self.register_templates('ParametrizedActivation' , param_activ_function_template, activ_config_template, activ_include_list)
         self.register_templates('PReLU'                  , param_activ_function_template, activ_config_template, activ_include_list)
+        self.register_templates('Softmax'                , activ_function_template,       softmax_config_template, activ_include_list)
         self.register_templates('Pooling1D'              , pooling1d_function_template,   pooling1d_config_template, pooling_include_list)
         self.register_templates('Pooling2D'              , pooling2d_function_template,   pooling2d_config_template, pooling_include_list)
         self.register_templates('Merge'                  , merge_function_template,       merge_config_template, merge_include_list)

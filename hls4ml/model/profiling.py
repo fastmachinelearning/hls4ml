@@ -1,5 +1,6 @@
 import importlib
 from hls4ml.model.hls_model import HLSModel
+import qkeras
 
 libs = [('numpy', 'np'), ('pandas', 'pandas'), ('tensorflow', 'tensorflow'),
         ('seaborn', 'sb'), ('matplotlib.pyplot', 'plt')]
@@ -356,7 +357,7 @@ def get_ymodel_keras(keras_model, X):
         if not _is_ignored_layer(layer):
             #If the layer has activation integrated then separate them
             #Note that if the layer is a standalone activation layer then skip this
-            if hasattr(layer, 'activation') and not isinstance(layer,keras.layers.Activation):
+            if hasattr(layer, 'activation') and not (isinstance(layer,keras.layers.Activation) or isinstance(layer, qkeras.qlayers.QActivation)):
                 if layer.activation:
                     
                     if layer.activation.__class__.__name__ == "linear":

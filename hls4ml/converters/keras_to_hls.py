@@ -141,7 +141,7 @@ def keras_to_hls_old(yamlConfig):
     conv_layers = ['Conv1D', 'Conv2D', 'BinaryConv2D']
     pooling_layers = ['MaxPooling1D', 'MaxPooling2D', 'AveragePooling1D', 'AveragePooling2D']
     norm_layers = ['BatchNormalization']
-    activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']
+    activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax']
     merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate']
     qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D']
     #Define layers to skip for conversion to HLS
@@ -430,6 +430,8 @@ def keras_to_hls_old(yamlConfig):
             layer['activ_param'] = keras_layer["config"].get('alpha', 1.)
         elif layer['class_name']=='PReLU':
             layer['activation'] = layer['class_name']
+        elif layer['class_name']=='Activation' and layer['activation']=='softmax':
+            layer['class_name'] = 'Softmax'
         elif layer['class_name']=='QActivation':
             if 'quantized_relu' in layer['activation']:
                 layer['activation'] = 'relu'
@@ -611,13 +613,15 @@ def keras_to_hls(config):
 
         print('Layer name: {}, layer type: {}, current shape: {}'.format(layer['name'], layer['class_name'], input_shapes))
         layer_list.append( layer )
-        if 'activation' in layer and layer['class_name'] not in ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']:# + qkeras_layers:
+        if 'activation' in layer and layer['class_name'] not in ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax']:# + qkeras_layers:
             act_layer = {}
             act_layer['name'] = layer['name'] + '_' + layer['activation']
             act_layer['activation'] = layer['activation']
             if 'activ_param' in layer:
                 act_layer['activ_param'] = layer['activ_param']
                 act_layer['class_name'] = layer['activation']
+            elif layer['activation'] == 'softmax':
+                act_layer['class_name'] = 'Softmax'
             else:
                 act_layer['class_name'] = 'Activation'
             inputs_map[layer['name']] = act_layer['name']
