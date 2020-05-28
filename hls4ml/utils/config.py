@@ -4,7 +4,6 @@ import h5py
 import json
 import math
 from collections import OrderedDict
-import qkeras
 
 def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
     fpga_part='xcku115-flvb2104-2-i', clock_period=5):
@@ -22,6 +21,7 @@ def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
     return config
 
 def _get_precision_from_quantizer(quantizer):
+    import qkeras
     if isinstance(quantizer, str):
         quantizer_obj = qkeras.get_quantizer(quantizer)
         quantizer = {}
