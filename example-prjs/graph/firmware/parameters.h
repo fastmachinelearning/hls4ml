@@ -4,33 +4,27 @@
 #include <complex>
 #include "ap_int.h"
 #include "ap_fixed.h"
-#include "nnet_dense.h"
-#include "nnet_conv.h"
-#include "nnet_activation.h"
-#include "nnet_graph.h"
-#include "nnet_common.h"
 
-//hls-fpga-machine-learning insert numbers
-typedef ap_fixed<16,6> accum_default_t;
-typedef ap_fixed<16,6> weight_default_t;
-typedef ap_fixed<16,6> bias_default_t;
-typedef ap_fixed<16,6> input_t;
-typedef ap_fixed<16,6> result_t;
-#define REUSE 10
-#define N_FEATURES 3
-#define N_HIDDEN_FEATURES 4
-//2x2 example:
-//#define N_NODES 4
-//#define N_EDGES 4
-//3x3 example:
-#define N_NODES 9
-#define N_EDGES 18
-//4x4 example:
-//#define N_NODES 16
-//#define N_EDGES 48
-//5x5 example:
-//#define N_NODES 25
-//#define N_EDGES 100
+#include "nnet_utils/nnet_helpers.h"
+//hls-fpga-machine-learning insert includes
+#include "nnet_utils/nnet_activation.h"
+#include "nnet_utils/nnet_dense.h"
+#include "nnet_utils/nnet_dense_compressed.h"
+#include "nnet_utils/nnet_dense_large.h"
+#include "nnet_utils/nnet_graph.h"
+
+//hls-fpga-machine-learning insert weights
+#include "weights/w1.h"
+#include "weights/b1.h"
+#include "weights/w2.h"
+#include "weights/b2.h"
+#include "weights/w3.h"
+#include "weights/b3.h"
+#include "weights/w4.h"
+#include "weights/b4.h"
+#include "weights/w5.h"
+#include "weights/b5.h"
+
 
 //hls-fpga-machine-learning insert layer-config
 struct graph_config1 : nnet::graph_config {

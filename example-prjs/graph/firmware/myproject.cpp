@@ -18,24 +18,8 @@
 //
 #include <iostream>
 
-#include "parameters.h"
 #include "myproject.h"
-
-#include "nnet_dense.h"
-#include "nnet_conv.h"
-#include "nnet_activation.h"
-
-//hls-fpga-machine-learning insert weights
-#include "weights/w1.h"
-#include "weights/b1.h"
-#include "weights/w2.h"
-#include "weights/b2.h"
-#include "weights/w3.h"
-#include "weights/b3.h"
-#include "weights/w4.h"
-#include "weights/b4.h"
-#include "weights/w5.h"
-#include "weights/b5.h"
+#include "parameters.h"
 
 void myproject(
 	       input_t    X[N_NODES][N_FEATURES],
@@ -58,6 +42,25 @@ void myproject(
   const_size_in   = N_NODES*N_FEATURES+2*N_NODES*N_EDGES;
   const_size_out  = N_EDGES*1;
   
+#ifndef __SYNTHESIS__
+    static bool loaded_weights = false;
+    if (!loaded_weights) {
+        //hls-fpga-machine-learning insert load weights
+        nnet::load_weights_from_txt<model_default_t, 12>(w1, "w1.txt");
+        nnet::load_weights_from_txt<model_default_t, 4>(b1, "b1.txt");
+        nnet::load_weights_from_txt<model_default_t, 56>(w2, "w2.txt");
+        nnet::load_weights_from_txt<model_default_t, 4>(b2, "b2.txt");
+        nnet::load_weights_from_txt<model_default_t, 4>(w3, "w3.txt");
+        nnet::load_weights_from_txt<model_default_t, 1>(b3, "b3.txt");
+        nnet::load_weights_from_txt<model_default_t, 84>(w4, "w4.txt");
+        nnet::load_weights_from_txt<model_default_t, 4>(b4, "b4.txt");
+        nnet::load_weights_from_txt<model_default_t, 16>(w5, "w5.txt");
+        nnet::load_weights_from_txt<model_default_t, 4>(b5, "b5.txt");
+
+        loaded_weights = true;
+    }
+#endif
+
   // ****************************************
   // NETWORK INSTANTIATION
   // ****************************************

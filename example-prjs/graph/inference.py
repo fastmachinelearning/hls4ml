@@ -9,8 +9,7 @@ from graph import load_graphs, SparseGraph, graph_from_sparse
 import os
 import sys
 filedir = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0,os.path.join(filedir, "../../", "hls-writer"))
-from hls_writer import print_array_to_cpp
+import hls4ml
 
 feature_scale = np.array([1000., np.pi/8, 1000.])
 n_features = feature_scale.shape[0]
@@ -59,15 +58,26 @@ print("X", X)
 print("Ri", Ri)
 print("Ro", Ro)
 
-print_array_to_cpp("w00",g.X, './')
-print_array_to_cpp("w01",g.Ri, './')
-print_array_to_cpp("w02",g.Ro, './')
+var = hls4ml.model.hls_model.WeightVariable('w00', type_name='float', precision='float', data=g.X)
+hls4ml.writer.VivadoWriter.print_array_to_cpp(None,var, './')
+var = hls4ml.model.hls_model.WeightVariable('w01', type_name='int', precision='int', data=g.Ri)
+hls4ml.writer.VivadoWriter.print_array_to_cpp(None,var,'./')
+var = hls4ml.model.hls_model.WeightVariable('w02', type_name='int', precision='int', data=g.Ro)
+hls4ml.writer.VivadoWriter.print_array_to_cpp(None,var,'./')
 
-print("w1", model.input_network[0].weight.data.transpose(0,1))
-print("b1", model.input_network[0].bias.data)
+os.system('cp firmware/weights/w00.txt tb_data/tb_input_features.dat')
+os.system('cp firmware/weights/w01.txt tb_data/tb_adjacency_incoming.dat')
+os.system('cp firmware/weights/w02.txt tb_data/tb_adjacency_outgoing.dat')
 
-print_array_to_cpp("w1",torch_to_np(model.input_network[0].weight.transpose(0,1)), './')
-print_array_to_cpp("b1",torch_to_np(model.input_network[0].bias), './')
+w1 = model.input_network[0].weight.data.transpose(0,1)
+b1 = model.input_network[0].bias.data
+print("w1", w1)
+print("b1", b1)
+
+var = hls4ml.model.hls_model.WeightVariable('w1', type_name='ap_fixed<16,6>', precision='<16,6>', data=torch_to_np(w1))
+hls4ml.writer.VivadoWriter.print_array_to_cpp(None,var,'./')
+var = hls4ml.model.hls_model.WeightVariable('b1', type_name='ap_fixed<16,6>', precision='<16,6>', data=torch_to_np(b1))
+hls4ml.writer.VivadoWriter.print_array_to_cpp(None,var,'./')
 
 X = X.view(1, X.shape[0], X.shape[1])
 Ri = Ri.view(1, Ri.shape[0], Ri.shape[1])
@@ -79,37 +89,56 @@ print ("H_logits", H_logits)
 H = model.input_network(X)
 print ("H", H)
 
-print("w2", model.edge_network.network[0].weight.data.transpose(0,1))
-print("b2", model.edge_network.network[0].bias.data)
+w2 = model.edge_network.network[0].weight.data.transpose(0,1)
+b2 = model.edge_network.network[0].bias.data
+print("w2", w2)
+print("b2", b2)
 
-print_array_to_cpp("w2",torch_to_np(model.edge_network.network[0].weight.data.transpose(0,1)), './')
-print_array_to_cpp("b2",torch_to_np(model.edge_network.network[0].bias), './')
+var = hls4ml.model.hls_model.WeightVariable('w2', type_name='ap_fixed<16,6>', precision='<16,6>', data=torch_to_np(w2))
+hls4ml.writer.VivadoWriter.print_array_to_cpp(None,var,'./')
+var = hls4ml.model.hls_model.WeightVariable('b2', type_name='ap_fixed<16,6>', precision='<16,6>', data=torch_to_np(b2))
+hls4ml.writer.VivadoWriter.print_array_to_cpp(None,var,'./')
 
-print("w3", model.edge_network.network[2].weight.data.transpose(0,1))
-print("b3", model.edge_network.network[2].bias.data)
+w3 = model.edge_network.network[2].weight.data.transpose(0,1)
+b3 = model.edge_network.network[2].bias.data
+print("w3", w3)
+print("b3", b3)
 
-print_array_to_cpp("w3",torch_to_np(model.edge_network.network[2].weight.data.transpose(0,1)), './')
-print_array_to_cpp("b3",torch_to_np(model.edge_network.network[2].bias), './')
+var = hls4ml.model.hls_model.WeightVariable('w3', type_name='ap_fixed<16,6>', precision='<16,6>', data=torch_to_np(w3))
+hls4ml.writer.VivadoWriter.print_array_to_cpp(None,var,'./')
+var = hls4ml.model.hls_model.WeightVariable('b3', type_name='ap_fixed<16,6>', precision='<16,6>', data=torch_to_np(b3))
+hls4ml.writer.VivadoWriter.print_array_to_cpp(None,var,'./')
 
 H = torch.cat([H, X], dim=-1)
 e_temp = model.edge_network(H, Ri, Ro) 
 print("e_temp", e_temp)
 
-print("w4", model.node_network.network[0].weight.data.transpose(0,1))
-print("b4", model.node_network.network[0].bias.data)
+w4 = model.node_network.network[0].weight.data.transpose(0,1)
+b4 = model.node_network.network[0].bias.data
+print("w4", w4)
+print("b4", b4)
 
-print_array_to_cpp("w4",torch_to_np(model.node_network.network[0].weight.data.transpose(0,1)), './')
-print_array_to_cpp("b4",torch_to_np(model.node_network.network[0].bias), './')
+var = hls4ml.model.hls_model.WeightVariable('w4', type_name='ap_fixed<16,6>', precision='<16,6>', data=torch_to_np(w4))
+hls4ml.writer.VivadoWriter.print_array_to_cpp(None,var,'./')
+var = hls4ml.model.hls_model.WeightVariable('b4', type_name='ap_fixed<16,6>', precision='<16,6>', data=torch_to_np(b4))
+hls4ml.writer.VivadoWriter.print_array_to_cpp(None,var,'./')
 
-print("w5", model.node_network.network[2].weight.data.transpose(0,1))
-print("b5", model.node_network.network[2].bias.data)
+w5 = model.node_network.network[2].weight.data.transpose(0,1)
+b5 = model.node_network.network[2].bias.data
+print("w5", w5)
+print("b5", b5)
 
-print_array_to_cpp("w5",torch_to_np(model.node_network.network[2].weight.data.transpose(0,1)), './')
-print_array_to_cpp("b5",torch_to_np(model.node_network.network[2].bias), './')
+var = hls4ml.model.hls_model.WeightVariable('w5', type_name='ap_fixed<16,6>', precision='<16,6>', data=torch_to_np(w5))
+hls4ml.writer.VivadoWriter.print_array_to_cpp(None,var,'./')
+var = hls4ml.model.hls_model.WeightVariable('b5', type_name='ap_fixed<16,6>', precision='<16,6>', data=torch_to_np(b5))
+hls4ml.writer.VivadoWriter.print_array_to_cpp(None,var,'./')
 
 H = model.node_network(H, e_temp, Ri, Ro)
 print("H", H)
 
 e = model.forward([X, Ri, Ro]) 
 print("e", e)
-print_array_to_cpp("w03",torch_to_np(e), './')
+
+var = hls4ml.model.hls_model.WeightVariable('w03', type_name='float', precision='float', data=torch_to_np(e))
+hls4ml.writer.VivadoWriter.print_array_to_cpp(None,var,'./')
+os.system('cp firmware/weights/w03.txt tb_data/tb_output_predictions.dat')

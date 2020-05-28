@@ -1,6 +1,15 @@
-//Numpy array shape (4, 1)
-//Min -7.1089982986450195
-//Max 7.1530022621154785
+//Numpy array shape [4, 1]
+//Min -7.108998298645
+//Max 7.153002262115
 //Number of zeros 0
 
-weight_default_t w3[4] = {7.1530022621154785, -4.152222633361816, -7.1089982986450195, -4.080280303955078};
+#ifndef W3_H_
+#define W3_H_
+
+#ifndef __SYNTHESIS__
+ap_fixed<16,6> w3[4];
+#else
+ap_fixed<16,6> w3[4] = {7.153002, -4.152223, -7.108998, -4.080280};
+#endif
+
+#endif

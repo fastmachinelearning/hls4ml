@@ -1,6 +1,15 @@
-//Numpy array shape (4,)
-//Min -0.5908556580543518
-//Max 0.9762835502624512
+//Numpy array shape [4]
+//Min -0.590855658054
+//Max 0.976283550262
 //Number of zeros 0
 
-bias_default_t b1[4] = {-0.5796970725059509, 0.9762835502624512, 0.2752722203731537, -0.5908556580543518};
+#ifndef B1_H_
+#define B1_H_
+
+#ifndef __SYNTHESIS__
+ap_fixed<16,6> b1[4];
+#else
+ap_fixed<16,6> b1[4] = {-0.579697, 0.976284, 0.275272, -0.590856};
+#endif
+
+#endif
