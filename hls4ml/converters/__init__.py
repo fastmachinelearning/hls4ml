@@ -9,15 +9,17 @@ from .keras_to_hls import keras_to_hls, get_supported_keras_layers, register_ker
 for module in os.listdir(os.path.dirname(__file__) + '/keras'):
     if module == '__init__.py' or module[-3:] != '.py':
         continue
-    lib = importlib.import_module(__name__ + '.keras.' + module[:-3])
-    for name, func in list(lib.__dict__.items()):
-        # if 'func' is callable (i.e., function, class...)
-        # and has 'handles' attribute
-        # and is defined in this module (i.e., not imported)
-        if callable(func) and hasattr(func, 'handles') and func.__module__ == lib.__name__:
-            for layer in func.handles:
-                register_keras_layer_handler(layer, func)
-
+    try:
+        lib = importlib.import_module(__name__ + '.keras.' + module[:-3])
+        for name, func in list(lib.__dict__.items()):
+            # if 'func' is callable (i.e., function, class...)
+            # and has 'handles' attribute
+            # and is defined in this module (i.e., not imported)
+            if callable(func) and hasattr(func, 'handles') and func.__module__ == lib.__name__:
+                for layer in func.handles:
+                    register_keras_layer_handler(layer, func)
+    except ImportError:
+        continue
 
 try:
     from .pytorch_to_hls import pytorch_to_hls

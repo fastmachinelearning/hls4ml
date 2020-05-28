@@ -1,20 +1,11 @@
 import importlib
 from hls4ml.model.hls_model import HLSModel
 import qkeras
-
-libs = [('numpy', 'np'), ('pandas', 'pandas'), ('tensorflow', 'tensorflow'),
-        ('seaborn', 'sb'), ('matplotlib.pyplot', 'plt')]
-for (name, short) in libs:
-    try:
-        lib = importlib.import_module(name)
-    except ImportError as error:
-        print(error)
-        print('Install hls4ml[profiling] extra depencies.')
-    except Exception as exception:
-        print(exception)
-    else:
-        globals()[short] = lib
-globals()['keras'] = tensorflow.keras
+import numpy as np
+import pandas
+from tensorflow import keras
+import seaborn as sb
+import matplotlib.pyplot as plt
 
 def array_to_summary(x, fmt='boxplot'):
     if fmt == 'boxplot':
