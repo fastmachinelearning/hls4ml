@@ -200,10 +200,7 @@ void init_exp_table(typename CONFIG_T::exp_table_t table_out[CONFIG_T::table_siz
     // The template data_T is the data type used to address the table
     for(unsigned i = 0; i < CONFIG_T::table_size; i++){
         // Slicing bits for address is going to round towards 0, so take the central value
-        float xL = softmax_real_val_from_idx<data_T, CONFIG_T>(i);
-        //float xR = softmax_real_val_from_idx<data_T, CONFIG_T>(i+1);
-        //float x = (xL + xR) / 2;
-        float x = xL;
+        float x = softmax_real_val_from_idx<data_T, CONFIG_T>(i);
         typename CONFIG_T::exp_table_t exp_x = exp_fcn_float(x);
         table_out[i] = exp_x;
     }
@@ -226,36 +223,38 @@ void softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
     bool initialized = false;
     typename CONFIG_T::exp_table_t exp_table[CONFIG_T::table_size];
     typename CONFIG_T::inv_table_t invert_table[CONFIG_T::table_size];
+	#pragma HLS resource variable=exp_table core=ROM_nP_BRAM
 #else
     static bool initialized = false;
     static typename CONFIG_T::exp_table_t exp_table[CONFIG_T::table_size];
     static typename CONFIG_T::inv_table_t invert_table[CONFIG_T::table_size];
+
 #endif
     if (!initialized) {
-        // Note we are exponentiating the inputs, which have type data_T
-        init_exp_table<data_T, CONFIG_T>(exp_table);
-        // Note we are inverting the exponentials, which have type exp_table_t
-        init_invert_table<typename CONFIG_T::exp_table_t, CONFIG_T>(invert_table);
+		// Note we are exponentiating the inputs, which have type data_T
+		init_exp_table<data_T, CONFIG_T>(exp_table);
+		// Note we are inverting the exponentials, which have type exp_table_t
+		init_invert_table<typename CONFIG_T::exp_table_t, CONFIG_T>(invert_table);
         initialized = true;
     }
 
-    if (CONFIG_T::io_type == io_parallel){
-        #pragma HLS PIPELINE
-    }
 
-    // Calculate all the e^x's, and accumulate
+    // Calculate all the e^x's
     typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
+	#pragma HLS array_partition variable=exp_res complete
     typename CONFIG_T::exp_table_t exp_sum(0);
     for(unsigned i = 0; i < CONFIG_T::n_in; i++){
         #pragma HLS unroll
-        exp_res[i] = exp_table[softmax_idx_from_real_val<data_T, CONFIG_T>(data[i])];
-        //std::cout << exp_res[i] << ", ";
-        exp_sum += exp_res[i];
+    	unsigned x = softmax_idx_from_real_val<data_T, CONFIG_T>(data[i]);
+        exp_res[i] = exp_table[x];
     }
-    //std::cout << std::endl;
-    // Invert the sum of e^x
+
+    // Explicitly sum the results with an adder tree.
+    // Rounding & Saturation mode, which improve accuracy, prevent Vivado from expression balancing
+    Op_add<typename CONFIG_T::exp_table_t> op_add;
+    exp_sum = reduce<typename CONFIG_T::exp_table_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::exp_table_t>>(exp_res, op_add);
+
     typename CONFIG_T::inv_table_t inv_exp_sum = invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
-    //std::cout << exp_sum << ", " << inv_exp_sum << std::endl;
     for(unsigned i = 0; i < CONFIG_T::n_in; i++){
         #pragma HLS unroll
         res[i] = exp_res[i] * inv_exp_sum;
