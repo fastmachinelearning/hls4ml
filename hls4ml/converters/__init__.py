@@ -2,9 +2,9 @@ from __future__ import absolute_import
 import os
 import importlib
 
-from ..utils.config import create_vivado_config
+from hls4ml.utils.config import create_vivado_config
 
-from .keras_to_hls import keras_to_hls, get_supported_keras_layers, register_keras_layer_handler
+from hls4ml.converters.keras_to_hls import keras_to_hls, get_supported_keras_layers, register_keras_layer_handler
 
 for module in os.listdir(os.path.dirname(__file__) + '/keras'):
     if module == '__init__.py' or module[-3:] != '.py':
@@ -22,19 +22,19 @@ for module in os.listdir(os.path.dirname(__file__) + '/keras'):
         continue
 
 try:
-    from .pytorch_to_hls import pytorch_to_hls
+    from hls4ml.converters.pytorch_to_hls import pytorch_to_hls
     __pytorch_enabled__ = True
 except ImportError:
     __pytorch_enabled__ = False
 
 try:
-    from .onnx_to_hls import onnx_to_hls
+    from hls4ml.converters.onnx_to_hls import onnx_to_hls
     __onnx_enabled__ = True
 except ImportError:
     __onnx_enabled__ = False
 
 try:
-    from .tf_to_hls import tf_to_hls
+    from hls4ml.converters.tf_to_hls import tf_to_hls
     __tensorflow_enabled__ = True
 except ImportError:
     __tensorflow_enabled__ = False

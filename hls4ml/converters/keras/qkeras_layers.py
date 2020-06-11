@@ -1,10 +1,10 @@
-from ..keras_to_hls import parse_default_keras_layer
-from ..keras_to_hls import keras_handler
+from hls4ml.converters.keras_to_hls import parse_default_keras_layer
+from hls4ml.converters.keras_to_hls import keras_handler
 
-from .core import parse_dense_layer
-from .convolution import parse_conv1d_layer
-from .convolution import parse_conv2d_layer
-from .qkeras import *
+from hls4ml.converters.keras.core import parse_dense_layer
+from hls4ml.converters.keras.convolution import parse_conv1d_layer
+from hls4ml.converters.keras.convolution import parse_conv2d_layer
+from hls4ml.converters.keras.qkeras import *
 
 import tensorflow as tf
 

@@ -9,10 +9,10 @@ import numpy as np
 import numpy.ctypeslib as npc
 from collections import OrderedDict
 
-from .hls_layers import *
-from ..templates import get_backend
-from ..writer import get_writer
-from .optimizer import optimize_model
+from hls4ml.model.hls_layers import *
+from hls4ml.templates import get_backend
+from hls4ml.writer import get_writer
+from hls4ml.model.optimizer import optimize_model
 
 class HLSConfig(object):
     def __init__(self, config):

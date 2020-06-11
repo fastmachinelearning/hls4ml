@@ -2,7 +2,7 @@ import numpy as np
 import math
 from bisect import bisect_left
 
-from .templates import Backend
+from hls4ml.templates.templates import Backend
 
 dense_config_template = """struct config{index} : nnet::dense_config {{
     static const unsigned n_in = {n_in};

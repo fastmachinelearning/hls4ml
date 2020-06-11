@@ -1,16 +1,16 @@
 from __future__ import absolute_import
 
-from .optimizer import OptimizerPass, register_pass, get_optimizer, optimize_model
+from hls4ml.model.optimizer.optimizer import OptimizerPass, register_pass, get_optimizer, optimize_model
 
 
-from .passes.nop import EliminateLinearActivation
-from .passes.bn_quant import MergeBatchNormAndQuantizedTanh, QuantizeDenseOutput
-from .passes.dense_bn_fuse import FuseDenseAndBatchNormalization
-from .passes.fuse_biasadd import FuseBiasAdd
+from hls4ml.model.optimizer.passes.nop import EliminateLinearActivation
+from hls4ml.model.optimizer.passes.bn_quant import MergeBatchNormAndQuantizedTanh, QuantizeDenseOutput
+from hls4ml.model.optimizer.passes.dense_bn_fuse import FuseDenseAndBatchNormalization
+from hls4ml.model.optimizer.passes.fuse_biasadd import FuseBiasAdd
 try:
-    from .passes.qkeras import OutputRoundingSaturationMode
-    from .passes.qkeras import QKerasFactorizeAlpha
-    from .passes.qkeras import FuseConsecutiveBatchNormalization
+    from hls4ml.model.optimizer.passes.qkeras import OutputRoundingSaturationMode
+    from hls4ml.model.optimizer.passes.qkeras import QKerasFactorizeAlpha
+    from hls4ml.model.optimizer.passes.qkeras import FuseConsecutiveBatchNormalization
     __qkeras_optimizers__ = True
 except ImportError:
     __qkeras_optimizers__ = False

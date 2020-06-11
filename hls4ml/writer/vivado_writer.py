@@ -8,7 +8,7 @@ import re
 import glob
 from collections import OrderedDict
 
-from .writers import Writer
+from hls4ml.writer.writers import Writer
 
 class VivadoWriter(Writer):
 

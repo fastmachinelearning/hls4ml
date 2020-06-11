@@ -1,4 +1,4 @@
-from ..optimizer import OptimizerPass
+from hls4ml.model.optimizer import OptimizerPass
 
 class EliminateLinearActivation(OptimizerPass):
     def match(self, node):

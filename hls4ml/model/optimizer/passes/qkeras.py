@@ -1,7 +1,7 @@
-from ..optimizer import OptimizerPass
-from ....model.hls_layers import BatchNormalization
-from ....model.hls_model import IntegerPrecisionType, FixedPrecisionType, register_layer
-from ....templates import templates
+from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.model.hls_layers import BatchNormalization
+from hls4ml.model.hls_model import IntegerPrecisionType, FixedPrecisionType, register_layer
+from hls4ml.templates import templates
 import tensorflow as tf
 import numpy as np
 from qkeras import get_quantizer

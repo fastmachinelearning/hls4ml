@@ -1,5 +1,5 @@
-from ..keras_to_hls import parse_default_keras_layer
-from ..keras_to_hls import keras_handler
+from hls4ml.converters.keras_to_hls import parse_default_keras_layer
+from hls4ml.converters.keras_to_hls import keras_handler
 
 merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate']
 @keras_handler(*merge_layers)

@@ -1,9 +1,9 @@
 import numpy as np
 import re
 
-from ..optimizer import OptimizerPass
-from ....model.hls_model import Layer, IntegerPrecisionType, register_layer
-from ....templates import templates
+from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.model.hls_model import Layer, IntegerPrecisionType, register_layer
+from hls4ml.templates import templates
 
 class BatchNormalizationQuantizedTanh(Layer):
     ''' Merged Batch Normalization and quantized (binary or ternary) Tanh layer.
