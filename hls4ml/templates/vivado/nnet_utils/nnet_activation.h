@@ -223,7 +223,6 @@ void softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
     bool initialized = false;
     typename CONFIG_T::exp_table_t exp_table[CONFIG_T::table_size];
     typename CONFIG_T::inv_table_t invert_table[CONFIG_T::table_size];
-	#pragma HLS resource variable=exp_table core=ROM_nP_BRAM
 #else
     static bool initialized = false;
     static typename CONFIG_T::exp_table_t exp_table[CONFIG_T::table_size];
@@ -231,10 +230,10 @@ void softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
 
 #endif
     if (!initialized) {
-		// Note we are exponentiating the inputs, which have type data_T
-		init_exp_table<data_T, CONFIG_T>(exp_table);
-		// Note we are inverting the exponentials, which have type exp_table_t
-		init_invert_table<typename CONFIG_T::exp_table_t, CONFIG_T>(invert_table);
+        // Note we are exponentiating the inputs, which have type data_T
+        init_exp_table<data_T, CONFIG_T>(exp_table);
+        // Note we are inverting the exponentials, which have type exp_table_t
+        init_invert_table<typename CONFIG_T::exp_table_t, CONFIG_T>(invert_table);
         initialized = true;
     }
 
