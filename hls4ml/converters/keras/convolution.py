@@ -1,6 +1,6 @@
 import math
-from ..keras_to_hls import parse_default_keras_layer
-from ..keras_to_hls import keras_handler
+from hls4ml.converters.keras_to_hls import parse_default_keras_layer
+from hls4ml.converters.keras_to_hls import keras_handler
 
 
 @keras_handler('Conv1D')

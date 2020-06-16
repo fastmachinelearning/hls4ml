@@ -1,6 +1,6 @@
 import math
-from ..keras_to_hls import parse_default_keras_layer
-from ..keras_to_hls import keras_handler
+from hls4ml.converters.keras_to_hls import parse_default_keras_layer
+from hls4ml.converters.keras_to_hls import keras_handler
 
 
 pooling_layers = ['MaxPooling1D', 'MaxPooling2D', 'AveragePooling1D', 'AveragePooling2D']

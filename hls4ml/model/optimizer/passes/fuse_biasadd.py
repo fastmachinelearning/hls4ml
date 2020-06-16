@@ -1,6 +1,6 @@
-from ..optimizer import OptimizerPass
+from hls4ml.model.optimizer import OptimizerPass
 
-from ....model import hls_model
+from hls4ml.model import hls_model
 
 class FuseBiasAdd(OptimizerPass):
     ''' Fuses BiasAdd into Dense/Conv2D layer (common in TF models). '''

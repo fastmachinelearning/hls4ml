@@ -1,5 +1,5 @@
 from __future__ import absolute_import
 
-from . import converters
-from . import report
-from . import utils
+from hls4ml import converters
+from hls4ml import report
+from hls4ml import utils
