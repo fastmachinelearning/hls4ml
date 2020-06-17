@@ -205,9 +205,9 @@ def keras_to_hls_old(yamlConfig):
                 inputs_map[name] = inputs_map.get(parent_input, parent_input)
 
             if keras_layer["class_name"] == 'Flatten':
-                output_shapes[keras_layer['name']] = [input_shapes[0][0], np.prod(input_shapes[0][1:])]
+                output_shapes[keras_layer['config']['name']] = [input_shapes[0][0], np.prod(input_shapes[0][1:])]
             else:
-                output_shapes[keras_layer['name']] = input_shapes[0]
+                output_shapes[keras_layer['config']['name']] = input_shapes[0]
 
             continue
 
