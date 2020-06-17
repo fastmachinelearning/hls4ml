@@ -75,7 +75,7 @@ class HLSConfig(object):
         type_config = hls_config.get('LayerType', {}).get(layer.__class__.__name__, None)
         if type_config is not None:
             layer_config.update(type_config)
-        
+
         name_config = hls_config.get('LayerName', {}).get(layer.name.lower(), None)
         if name_config is not None:
             layer_config.update(name_config)
@@ -359,19 +359,28 @@ class HLSModel(object):
 
     def compile(self):
         self.write()
-        os.system('cd {dir} && bash build_lib.sh'.format(dir=self.config.get_output_dir()))
-        lib_name = '{}/firmware/{}.so'.format(self.config.get_output_dir(), self.config.get_project_name())
-        if self._top_function_lib is not None:
-            
-            if platform.system() == "Linux":
-                dlclose_func = ctypes.CDLL('libdl.so').dlclose
-            elif platform.system() == "Darwin":
-                dlclose_func = ctypes.CDLL('libc.dylib').dlclose
 
-            dlclose_func.argtypes = [ctypes.c_void_p]
-            dlclose_func.restype = ctypes.c_int
-            dlclose_func(self._top_function_lib._handle)    
-        self._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
+        curr_dir = os.getcwd()
+        os.chdir(self.config.get_output_dir())
+
+        try:
+            ret_val = os.system('bash build_lib.sh')
+            if ret_val != 0:
+                raise Exception('Failed to compile project "{}"'.format(self.config.get_project_name()))
+            lib_name = 'firmware/{}.so'.format(self.config.get_project_name())
+            if self._top_function_lib is not None:
+
+                if platform.system() == "Linux":
+                    dlclose_func = ctypes.CDLL('libdl.so').dlclose
+                elif platform.system() == "Darwin":
+                    dlclose_func = ctypes.CDLL('libc.dylib').dlclose
+
+                dlclose_func.argtypes = [ctypes.c_void_p]
+                dlclose_func.restype = ctypes.c_int
+                dlclose_func(self._top_function_lib._handle)
+            self._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
+        finally:
+            os.chdir(curr_dir)
 
     def _get_top_function(self, x):
         if self._top_function_lib is None:
@@ -418,15 +427,17 @@ class HLSModel(object):
         output = []
         if n_samples == 1:
             x = [x]
-        for i in range(n_samples):
-            predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
-            top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
-            output.append(predictions)
 
-        os.chdir(curr_dir)
+        try:
+            for i in range(n_samples):
+                predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
+                top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
+                output.append(predictions)
 
-        #Convert to numpy array
-        output = np.asarray(output)
+            #Convert to numpy array
+            output = np.asarray(output)
+        finally:
+            os.chdir(curr_dir)
 
         if n_samples == 1:
             return output[0]
@@ -458,7 +469,7 @@ class HLSModel(object):
         collect_func.argtypes = [ctypes.POINTER(TraceData)]
         collect_func.restype = None
         trace_data = (TraceData * n_traced)()
-        
+
         alloc_func = self._top_function_lib.allocate_trace_storage
         alloc_func.argtypes = [ctypes.c_size_t]
         alloc_func.restype = None
@@ -470,32 +481,33 @@ class HLSModel(object):
         curr_dir = os.getcwd()
         os.chdir(self.config.get_output_dir() + '/firmware')
 
-        alloc_func(ctypes.sizeof(ctype))
-
         output = []
-        
         if n_samples == 1:
             x = [x]
-        for i in range(n_samples):
-            predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
-            top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
-            output.append(predictions)
-            collect_func(trace_data)
-            for trace in trace_data:
-                layer_name = str(trace.name, 'utf-8')
-                layer_data = ctypes.cast(trace.data, ctypes.POINTER(ctype))
-                np_array = np.ctypeslib.as_array(layer_data, shape=layer_sizes[layer_name])
-                trace_output[layer_name].append(np.copy(np_array))
 
-        for key in trace_output.keys():
-            trace_output[key] = np.asarray(trace_output[key])
+        try:
+            alloc_func(ctypes.sizeof(ctype))
 
-        #Convert to numpy array
-        output = np.asarray(output)
+            for i in range(n_samples):
+                predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
+                top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
+                output.append(predictions)
+                collect_func(trace_data)
+                for trace in trace_data:
+                    layer_name = str(trace.name, 'utf-8')
+                    layer_data = ctypes.cast(trace.data, ctypes.POINTER(ctype))
+                    np_array = np.ctypeslib.as_array(layer_data, shape=layer_sizes[layer_name])
+                    trace_output[layer_name].append(np.copy(np_array))
 
-        free_func()
+            for key in trace_output.keys():
+                trace_output[key] = np.asarray(trace_output[key])
 
-        os.chdir(curr_dir)
+            #Convert to numpy array
+            output = np.asarray(output)
+
+            free_func()
+        finally:
+            os.chdir(curr_dir)
 
         if n_samples == 1:
             return output[0], trace_output
@@ -517,6 +529,9 @@ class HLSModel(object):
             else:
                 raise Exception('Backend values can be [Vivado, Intel, Mentor]')
 
-        os.system('cd {dir} && vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
-            .format(dir=self.config.get_output_dir(), reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
+        curr_dir = os.getcwd()
+        os.chdir(self.config.get_output_dir())
+        os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
+            .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
+        os.chdir(curr_dir)
 
