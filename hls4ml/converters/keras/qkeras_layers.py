@@ -16,7 +16,7 @@ def parse_qdense_layer(keras_layer, input_names, input_shapes, data_reader, conf
     layer, output_shape = parse_dense_layer(keras_layer, input_names, input_shapes, data_reader, config)
 
     layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
-    if layer['bias_quantizer'] is not None:
+    if keras_layer['config']['bias_quantizer'] is not None:
         layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
     else:
         layer['bias_quantizer'] = None
@@ -34,19 +34,18 @@ def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader, confi
         layer, output_shape = parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader, config)
 
     layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
-    layer['use_bias'] = keras_layer['use_bias']
-    if keras_layer['use_bias']:
+    if keras_layer['config']['bias_quantizer'] is not None:
         layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
     else:
         layer['bias_quantizer'] = None
-
+    
     return layer, output_shape
 
 
 @keras_handler('QActivation')
 def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader, config):
     assert(keras_layer['class_name'] == 'QActivation')
-    supported_activations = ['quantized_relu', 'quantized_tanh', 'binary_tanh', 'ternary_tanh']
+    supported_activations = ['quantized_relu', 'quantized_tanh', 'binary_tanh', 'ternary_tanh', 'quantized_bits']
     
     layer = parse_default_keras_layer(keras_layer, input_names)
 
@@ -81,6 +80,8 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader,
 
 
     layer['class_name'] = 'Activation'
+    if activation_config['class_name'] == 'quantized_bits':
+        activation_config['class_name'] = 'linear'
     layer['activation'] = activation_config['class_name'].replace('quantized_', '')
     return layer, [shape for shape in input_shapes[0]]
 

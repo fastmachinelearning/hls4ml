@@ -435,8 +435,6 @@ class Dense(Layer):
     def initialize(self):
         shape = [self.attributes['n_out']]
         dims = ['N_LAYER_{}'.format(self.index)]
-        weight_quantizer = self.get_attr('weight_quantizer')
-        bias_quantizer = self.get_attr('bias_quantizer')
         compression = self.model.config.get_compression(self)
         if self.model.config.is_resource_strategy(self):
             if self.model.config.backend.name == 'Vivado':
@@ -448,7 +446,7 @@ class Dense(Layer):
         else:
             self.set_attr('strategy', 'latency')
         self.add_output_variable(shape, dims)
-        self.add_weights(quantizer=weight_quantizer, compression=compression)
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=compression)
         index_t = IntegerPrecisionType(width=1, signed=False)
         if self.model.config.is_resource_strategy(self):
             if self.model.config.get_compression(self):
@@ -457,7 +455,7 @@ class Dense(Layer):
                 if self.model.config.backend.name == 'Vivado':
                     self.weights['weight'].data = np.transpose(self.weights['weight'].data)
         self.set_attr('index_t', index_t)
-        self.add_bias(quantizer=bias_quantizer)
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -486,8 +484,8 @@ class Conv1D(Layer):
             dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
 
         self.add_output_variable(shape, dims)
-        self.add_weights()
-        self.add_bias()
+        self.add_weights(quantizer = self.get_attr('weight_quantizer'))
+        self.add_bias(quantizer = self.get_attr('bias_quantizer'))
         if self.model.config.is_resource_strategy(self):
             self.set_attr('strategy', 'large')
             if self.model.config.backend.name == 'Vivado':
@@ -542,8 +540,8 @@ class Conv2D(Layer):
             shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
             dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
-        self.add_weights()
-        self.add_bias()
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'))
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
         if self.model.config.is_resource_strategy(self):
             self.set_attr('strategy', 'large')
             if self.model.config.backend.name == 'Vivado':
