@@ -10,36 +10,13 @@ pipeline {
 
   stages {
     stage('Keras to HLS') {
-      parallel {
-        stage('py36') {
-          steps {
-            dir(path: 'test') {
-              sh '''#!/bin/bash
-                 . activate hls4ml-py36
-                 pip install -U ../ --user
-                 ./convert-keras-models.sh -p 3 -x -f keras-models.txt
-                 pip uninstall hls4ml -y'''
-            }
-          }
-        }
-        stage('py27') {
-          steps {
-            dir(path: 'test') {
-              sh '''#!/bin/bash
-                 . activate hls4ml-py27
-                 pip install -U ../ --user
-                 ./convert-keras-models.sh -p 2 -x -f keras-models.txt
-                 pip uninstall hls4ml -y'''
-            }
-          }
-        }
-      }
-      post {
-        success {
-          dir(path: 'test') {
-              sh '''#!/bin/bash
-                 ./py-diff.sh -r 2'''
-          }
+      steps {
+        dir(path: 'test') {
+          sh '''#!/bin/bash
+              . activate hls4ml-py36
+              pip install -U ../ --user
+              ./convert-keras-models.sh -p 3 -x -f keras-models.txt
+              pip uninstall hls4ml -y'''
         }
       }
     }
