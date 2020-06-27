@@ -9,7 +9,7 @@ These instructions are for simply running the tool out-of-the-box and getting a 
 
 **1) To clone our latest version from github and install it from the main directory:**
 
-```bash
+```Bash
 git clone https://github.com/hls-fpga-machine-learning/hls4ml.git
 cd hls4ml/
 pip install .
@@ -32,7 +32,7 @@ In order to create an example HLS project:
 
 - Go to `example-models/` from the main directory: 
 
-```bash
+```Bash
 cd example-models/
 ```
 
@@ -53,7 +53,7 @@ This will create a Vivado HLS project with your model implmentation!
 
 **NOTE:** For the last step, you can alternatively do the following to build the HLS project:
 
-```bash
+```Bash
 cd my-hls-test
 vivado_hls -f build_prj.tcl
 ```
@@ -74,7 +74,7 @@ Setting the additional parameters to `1` to `0` disables that step, but disablin
 
 **To uninstall `hls4ml`:** 
 
-```
+```Bash
 pip uninstall hls4ml
 ```
 

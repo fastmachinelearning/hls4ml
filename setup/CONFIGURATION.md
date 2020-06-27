@@ -13,7 +13,7 @@ Configuration files are YAML files in hls4ml (`*.yml`). An example configuration
 
 It looks like this:
 
-```yaml
+```YAML
 KerasJson: keras/KERAS_3layer.json
 KerasH5:   keras/KERAS_3layer_weights.h5 #You can also use h5 file from Keras's model.save() without supplying json file.
 InputData: keras/KERAS_3layer_input_features.dat
@@ -57,7 +57,7 @@ In the hls4ml configuration file, it is possible to specify the model *Precision
 
 Under the `HLSConfig` heading, these can be set for the `Model`, per `LayerType`, per `LayerName`, and for named variables within the layer (for precision only). The most basic configuration may look like this:
 
-```yaml
+```YAML
 HLSConfig:
   Model:
     Precision: ap_fixed<16,6>
@@ -67,7 +67,7 @@ This configuration use `ap_fixed<16,6>` for every variable and a ReuseFactor of 
 
 Specify all `Dense` layers to use a different precision like this:
 
-```yaml
+```YAML
 HLSConfig:
   Model:
     Precision: ap_fixed<16,6>
@@ -80,7 +80,8 @@ HLSConfig:
 In this case, all variables in any `Dense` layers will be represented with `ap_fixed<14,5>` while any other layer types will use `ap_fixed<16,6>`.
 
 A specific layer can be targeted like this:
-```yaml
+
+```YAML
  HLSConfig:
     Model:
       Precision: ap_fixed<16,6>
@@ -98,7 +99,8 @@ A specific layer can be targeted like this:
 In this case, the default model configuration will use `ap_fixed<16,6>` and a `ReuseFactor` of 16. The layer named `dense1` (defined in the user provided model architecture file) will instead use different precision for the `weight`, `bias`, and `result` (output) variables, a `ReuseFactor` of 12, and the `Resource` strategy (while the model default is `Latency` strategy.
 
 More than one layer can have a configuration specified, e.g.:
-```yaml
+
+```YAML
 HLSConfig:
   Model:
    ...
@@ -122,7 +124,7 @@ For more information on the optimization parameters and what they mean, you can 
 After you create your project, you have the opportunity to do more configuration if you so choose.  
 In your project, the file `<OutputDir>/firmware/<ProjectName>.cpp` is your top level file.  It has the network architecture constructed for you.  An example is [here](https://github.com/hls-fpga-machine-learning/models/blob/master/HLS_projects/KERAS-1layer-hls/firmware/myproject.cpp) and the important snippet is:
 
-```c++
+```C++
 layer2_t layer2_out[N_LAYER_2];
 #pragma HLS ARRAY_PARTITION variable=layer2_out complete dim=0
 nnet::dense_latency<input_t, layer2_t, config2>(input_1, layer2_out, w2, b2);
@@ -142,7 +144,8 @@ You can see, for the simple 1-layer DNN, the computation (`nnet::dense_latency`)
 
 In your project, the file `<OutputDir>/firmware/parameters.h` stores all the configuration options for each neural network library.
 An example is [here](https://github.com/hls-fpga-machine-learning/models/blob/master/HLS_projects/KERAS-1layer-hls/firmware/parameters.h). So for example, the detailed configuration options for an example DNN layer is:
-```c++
+
+```C++
 //hls-fpga-machine-learning insert layer-config
 struct config2 : nnet::dense_config {
     static const unsigned n_in = N_INPUT_1_1;

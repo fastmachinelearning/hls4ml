@@ -3,6 +3,7 @@
 If you are using the package please cite:
    * [![DOI](https://zenodo.org/badge/108329371.svg)](https://zenodo.org/badge/latestdoi/108329371)
    * J. Duarte _et al._, "Fast inference of deep neural networks in FPGAs for particle physics", [JINST 13 P07027 (2018)](https://dx.doi.org/10.1088/1748-0221/13/07/P07027), [arXiv:1804.06913](https://arxiv.org/abs/1804.06913).
+
 If you are using the boosted decision tree implementation, please cite also:   
    * S. Summers _et al._, "Fast inference of boosted decision trees in FPGAs for particle physics", [arXiv:2002.02534](https://arxiv.org/abs/2002.02534).
 If you are using the binary or ternary neural network implementation, please also cite:
