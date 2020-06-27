@@ -305,7 +305,7 @@
 <h3 id="top-level-configuration">Top level configuration</h3>
 <p>Configuration files are YAML files in hls4ml (<code>*.yml</code>). An example configuration file is <a href="https://github.com/hls-fpga-machine-learning/hls4ml/blob/master/example-models/keras-config.yml" target="_blank">here</a>.</p>
 <p>It looks like this:</p>
-<pre><code class="lang-yaml"><span class="hljs-attr">KerasJson:</span> keras/KERAS_3layer.json
+<pre><code class="lang-YAML"><span class="hljs-attr">KerasJson:</span> keras/KERAS_3layer.json
 <span class="hljs-attr">KerasH5:</span>   keras/KERAS_3layer_weights.h5 <span class="hljs-comment">#You can also use h5 file from Keras&apos;s model.save() without supplying json file.</span>
 <span class="hljs-attr">InputData:</span> keras/KERAS_3layer_input_features.dat
 <span class="hljs-attr">OutputPredictions:</span> keras/KERAS_3layer_predictions.dat
@@ -345,14 +345,14 @@ Additionally, integers in fixed precision data type (<code>ap_int&lt;N&gt;</code
 <p><strong>Per-layer configuration:</strong>
 In the hls4ml configuration file, it is possible to specify the model <em>Precision</em> and <em>ReuseFactor</em> with finer granularity.</p>
 <p>Under the <code>HLSConfig</code> heading, these can be set for the <code>Model</code>, per <code>LayerType</code>, per <code>LayerName</code>, and for named variables within the layer (for precision only). The most basic configuration may look like this:</p>
-<pre><code class="lang-yaml"><span class="hljs-attr">HLSConfig:</span>
+<pre><code class="lang-YAML"><span class="hljs-attr">HLSConfig:</span>
 <span class="hljs-attr">  Model:</span>
 <span class="hljs-attr">    Precision:</span> ap_fixed&lt;<span class="hljs-number">16</span>,<span class="hljs-number">6</span><span class="hljs-string">&gt;
 </span><span class="hljs-attr">    ReuseFactor:</span> <span class="hljs-number">1</span>
 </code></pre>
 <p>This configuration use <code>ap_fixed&lt;16,6&gt;</code> for every variable and a ReuseFactor of 1 throughout.</p>
 <p>Specify all <code>Dense</code> layers to use a different precision like this:</p>
-<pre><code class="lang-yaml"><span class="hljs-attr">HLSConfig:</span>
+<pre><code class="lang-YAML"><span class="hljs-attr">HLSConfig:</span>
 <span class="hljs-attr">  Model:</span>
 <span class="hljs-attr">    Precision:</span> ap_fixed&lt;<span class="hljs-number">16</span>,<span class="hljs-number">6</span><span class="hljs-string">&gt;
 </span><span class="hljs-attr">    ReuseFactor:</span> <span class="hljs-number">1</span>
@@ -362,7 +362,7 @@ In the hls4ml configuration file, it is possible to specify the model <em>Precis
 </span></code></pre>
 <p>In this case, all variables in any <code>Dense</code> layers will be represented with <code>ap_fixed&lt;14,5&gt;</code> while any other layer types will use <code>ap_fixed&lt;16,6&gt;</code>.</p>
 <p>A specific layer can be targeted like this:</p>
-<pre><code class="lang-yaml"><span class="hljs-attr"> HLSConfig:</span>
+<pre><code class="lang-YAML"><span class="hljs-attr"> HLSConfig:</span>
 <span class="hljs-attr">    Model:</span>
 <span class="hljs-attr">      Precision:</span> ap_fixed&lt;<span class="hljs-number">16</span>,<span class="hljs-number">6</span><span class="hljs-string">&gt;
 </span><span class="hljs-attr">      ReuseFactor:</span> <span class="hljs-number">16</span>
@@ -377,7 +377,7 @@ In the hls4ml configuration file, it is possible to specify the model <em>Precis
 </code></pre>
 <p>In this case, the default model configuration will use <code>ap_fixed&lt;16,6&gt;</code> and a <code>ReuseFactor</code> of 16. The layer named <code>dense1</code> (defined in the user provided model architecture file) will instead use different precision for the <code>weight</code>, <code>bias</code>, and <code>result</code> (output) variables, a <code>ReuseFactor</code> of 12, and the <code>Resource</code> strategy (while the model default is <code>Latency</code> strategy.</p>
 <p>More than one layer can have a configuration specified, e.g.:</p>
-<pre><code class="lang-yaml"><span class="hljs-attr">HLSConfig:</span>
+<pre><code class="lang-YAML"><span class="hljs-attr">HLSConfig:</span>
 <span class="hljs-attr">  Model:</span>
    ...
 <span class="hljs-attr">  LayerName:</span>
@@ -393,7 +393,7 @@ In the hls4ml configuration file, it is possible to specify the model <em>Precis
 <h3 id="detailed-configuration-in-converted-hls-codes">Detailed configuration in converted hls codes</h3>
 <p><strong>NOTE</strong>: this section is developer-oriented.</p>
 <p>After you create your project, you have the opportunity to do more configuration if you so choose.<br>In your project, the file <code>&lt;OutputDir&gt;/firmware/&lt;ProjectName&gt;.cpp</code> is your top level file.  It has the network architecture constructed for you.  An example is <a href="https://github.com/hls-fpga-machine-learning/models/blob/master/HLS_projects/KERAS-1layer-hls/firmware/myproject.cpp" target="_blank">here</a> and the important snippet is:</p>
-<pre><code class="lang-c++"><span class="hljs-keyword">layer2_t</span> layer2_out[N_LAYER_2];
+<pre><code class="lang-C++"><span class="hljs-keyword">layer2_t</span> layer2_out[N_LAYER_2];
 <span class="hljs-meta">#<span class="hljs-meta-keyword">pragma</span> HLS ARRAY_PARTITION variable=layer2_out complete dim=0</span>
 nnet::dense_latency&lt;<span class="hljs-keyword">input_t</span>, <span class="hljs-keyword">layer2_t</span>, config2&gt;(input_1, layer2_out, w2, b2);
 
@@ -410,7 +410,7 @@ nnet::sigmoid&lt;<span class="hljs-keyword">layer4_t</span>, <span class="hljs-k
 <p>You can see, for the simple 1-layer DNN, the computation (<code>nnet::dense_latency</code>) and activation (<code>nnet::relu</code>/<code>nnet::sigmoid</code>) caluclation for each layer.  For each layer, it has its own additional configuration parameters, e.g. <code>config2</code>.</p>
 <p>In your project, the file <code>&lt;OutputDir&gt;/firmware/parameters.h</code> stores all the configuration options for each neural network library.
 An example is <a href="https://github.com/hls-fpga-machine-learning/models/blob/master/HLS_projects/KERAS-1layer-hls/firmware/parameters.h" target="_blank">here</a>. So for example, the detailed configuration options for an example DNN layer is:</p>
-<pre><code class="lang-c++"><span class="hljs-comment">//hls-fpga-machine-learning insert layer-config</span>
+<pre><code class="lang-C++"><span class="hljs-comment">//hls-fpga-machine-learning insert layer-config</span>
 <span class="hljs-keyword">struct</span> config2 : nnet::dense_config {
     <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-keyword">unsigned</span> n_in = N_INPUT_1_1;
     <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-keyword">unsigned</span> n_out = N_LAYER_2;
@@ -469,7 +469,7 @@ An example is <a href="https://github.com/hls-fpga-machine-learning/models/blob/
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Configuration","level":"1.4.3","depth":2,"next":{"title":"Command help","level":"1.5","depth":1,"path":"COMMAND.md","ref":"COMMAND.md","articles":[]},"previous":{"title":"Quick Start","level":"1.4.2","depth":2,"path":"setup/QUICKSTART.md","ref":"setup/QUICKSTART.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/CONFIGURATION.md","mtime":"2020-06-27T00:17:13.275Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-06-27T00:17:58.872Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Configuration","level":"1.4.3","depth":2,"next":{"title":"Command help","level":"1.5","depth":1,"path":"COMMAND.md","ref":"COMMAND.md","articles":[]},"previous":{"title":"Quick Start","level":"1.4.2","depth":2,"path":"setup/QUICKSTART.md","ref":"setup/QUICKSTART.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/CONFIGURATION.md","mtime":"2020-06-27T13:05:19.220Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-06-27T13:05:58.555Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>

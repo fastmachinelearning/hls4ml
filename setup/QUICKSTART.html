@@ -301,7 +301,7 @@
 <h2 id="running-the-tool">Running the tool</h2>
 <p>These instructions are for simply running the tool out-of-the-box and getting a feel for the workflow.  </p>
 <p><strong>1) To clone our latest version from github and install it from the main directory:</strong></p>
-<pre><code class="lang-bash">git <span class="hljs-built_in">clone</span> https://github.com/hls-fpga-machine-learning/hls4ml.git
+<pre><code class="lang-Bash">git <span class="hljs-built_in">clone</span> https://github.com/hls-fpga-machine-learning/hls4ml.git
 <span class="hljs-built_in">cd</span> hls4ml/
 pip install .
 </code></pre>
@@ -320,7 +320,7 @@ We provide some examples of configuration files in <code>example-models</code> d
 <ul>
 <li>Go to <code>example-models/</code> from the main directory: </li>
 </ul>
-<pre><code class="lang-bash"><span class="hljs-built_in">cd</span> example-models/
+<pre><code class="lang-Bash"><span class="hljs-built_in">cd</span> example-models/
 </code></pre>
 <ul>
 <li>And use this command to translate a Keras model:</li>
@@ -331,7 +331,7 @@ To build the HLS project, do:</p>
 <pre><code>hls4ml build -p my-hls-test -a
 </code></pre><p>This will create a Vivado HLS project with your model implmentation!</p>
 <p><strong>NOTE:</strong> For the last step, you can alternatively do the following to build the HLS project:</p>
-<pre><code class="lang-bash"><span class="hljs-built_in">cd</span> my-hls-test
+<pre><code class="lang-Bash"><span class="hljs-built_in">cd</span> my-hls-test
 vivado_hls <span class="hljs-_">-f</span> build_prj.tcl
 </code></pre>
 <p><code>vivado_hls</code> can be controlled with:</p>
@@ -345,8 +345,9 @@ vivado_hls <span class="hljs-_">-f</span> build_prj.tcl
 </li>
 </ul>
 <p><strong>To uninstall <code>hls4ml</code>:</strong> </p>
-<pre><code>pip uninstall hls4ml
-</code></pre><h2 id="existing-examples">Existing examples</h2>
+<pre><code class="lang-Bash">pip uninstall hls4ml
+</code></pre>
+<h2 id="existing-examples">Existing examples</h2>
 <ul>
 <li><p>Examples of model files and weights can be found in <a href="https://github.com/hls-fpga-machine-learning/hls4ml/tree/master/example-models" target="_blank">example_models</a> directory.</p>
 </li>
@@ -398,7 +399,7 @@ vivado_hls <span class="hljs-_">-f</span> build_prj.tcl
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Quick Start","level":"1.4.2","depth":2,"next":{"title":"Configuration","level":"1.4.3","depth":2,"path":"setup/CONFIGURATION.md","ref":"setup/CONFIGURATION.md","articles":[]},"previous":{"title":"Dependencies","level":"1.4.1","depth":2,"path":"setup/DEPENDENCIES.md","ref":"setup/DEPENDENCIES.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/QUICKSTART.md","mtime":"2020-06-27T00:17:13.275Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-06-27T00:17:58.872Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Quick Start","level":"1.4.2","depth":2,"next":{"title":"Configuration","level":"1.4.3","depth":2,"path":"setup/CONFIGURATION.md","ref":"setup/CONFIGURATION.md","articles":[]},"previous":{"title":"Dependencies","level":"1.4.1","depth":2,"path":"setup/DEPENDENCIES.md","ref":"setup/DEPENDENCIES.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/QUICKSTART.md","mtime":"2020-06-27T13:05:19.220Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-06-27T13:05:58.555Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
