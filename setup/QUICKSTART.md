@@ -7,12 +7,14 @@ Here we give line-by-line instructions on how to build a first project and expla
 
 These instructions are for simply running the tool out-of-the-box and getting a feel for the workflow.  
 
-**1) To clone our latest version from github and install it from the main directory:** 
-```
+**1) To clone our latest version from github and install it from the main directory:**
+
+```bash
 git clone https://github.com/hls-fpga-machine-learning/hls4ml.git
 cd hls4ml/
 pip install .
 ```
+
 **NOTE FOR THIS STEP:**
 - If you don't have privileges to install in the configured environment, you can also pass `--user` to the `pip` command as well. You can also add `-U` or `--upgrade` to update all packages to the newest available version. 
 - To enable develop mode: `pip install -e .`
@@ -30,7 +32,7 @@ In order to create an example HLS project:
 
 - Go to `example-models/` from the main directory: 
 
-```
+```bash
 cd example-models/
 ```
 
@@ -51,7 +53,7 @@ This will create a Vivado HLS project with your model implmentation!
 
 **NOTE:** For the last step, you can alternatively do the following to build the HLS project:
 
-```
+```bash
 cd my-hls-test
 vivado_hls -f build_prj.tcl
 ```
@@ -71,6 +73,7 @@ Setting the additional parameters to `1` to `0` disables that step, but disablin
 - If you need help for a particular `command`, `hls4ml command -h` will show help for the requested `command`
 
 **To uninstall `hls4ml`:** 
+
 ```
 pip uninstall hls4ml
 ```
