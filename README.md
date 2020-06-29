@@ -16,8 +16,6 @@ For more information visit the webpage: [https://fastmachinelearning.org/hls4ml/
 
 Detailed tutorials on how to use `hls4ml`'s various functionalities can be found [here](https://github.com/thesps/hls4ml-tutorial).
 
-----
-
 # Installation
 ```
 pip install hls4ml
