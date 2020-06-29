@@ -5,7 +5,6 @@ from onnx import ModelProto, GraphProto, NodeProto, TensorProto
 from onnx import optimizer, helper, numpy_helper, shape_inference
 
 from hls4ml.model import HLSModel
-from hls4ml.model.optimizer import optimize_model
 
 MAXMULT = 4096
 
@@ -140,7 +139,7 @@ def onnx_to_hls(yamlConfig):
 
     operation_map = {'Gemm':'Dense', 'Relu':'Activation', 'Tanh':'Activation', 'Sigmoid':'Activation',
     'LeakyRelu':'LeakyReLU', 'ThresholdedRelu':'ThresholdedReLU', 'HardSigmoid':'Activation',
-    'Elu':'ELU', 'Selu':'Activation', 'PRelu':'PReLU', 'Softmax':'Activation', 'Softsign':'Activation', 'Softplus':'Activation',
+    'Elu':'ELU', 'Selu':'Activation', 'PRelu':'PReLU', 'Softmax':'Softmax', 'Softsign':'Activation', 'Softplus':'Activation',
     'Sum':'Add', 'Sub':'Subtract', 'Max':'Maximum', 'Min':'Minimum', 'Mul':'Multiply', 'Concat':'Concatenate'}
     
     #Define layers to skip for conversion to HLS
@@ -374,6 +373,4 @@ def onnx_to_hls(yamlConfig):
 
     print('Creating HLS model')
     hls_model = HLSModel(yamlConfig, reader, layer_list, input_layers, output_layers)
-    optimizers = ['eliminate_linear_activation', 'merge_batch_norm_quantized_tanh', 'quantize_dense_output', 'fuse_dense_batch_norm']
-    optimize_model(hls_model, optimizers)
     return hls_model

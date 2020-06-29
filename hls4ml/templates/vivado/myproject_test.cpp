@@ -20,6 +20,7 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
+#include <map>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -27,6 +28,12 @@
 #include "firmware/myproject.h"
 
 #define CHECKPOINT 5000
+
+namespace nnet {
+    bool trace_enabled = true;
+    std::map<std::string, void *> *trace_outputs = NULL;
+    size_t trace_type_size = sizeof(double);
+}
 
 int main(int argc, char **argv)
 {

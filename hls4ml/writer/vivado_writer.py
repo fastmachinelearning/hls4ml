@@ -1,14 +1,14 @@
 from __future__ import print_function
 import tarfile
 import yaml
-from shutil import copyfile
+from shutil import copyfile, copytree, rmtree
 import numpy as np
 import os
 import re
 import glob
 from collections import OrderedDict
 
-from .writers import Writer
+from hls4ml.writer.writers import Writer
 
 class VivadoWriter(Writer):
 
@@ -174,6 +174,11 @@ class VivadoWriter(Writer):
                     if func:
                         for line in func:
                             newline += '    ' + line + '\n'
+                        if model.config.trace_output and model.config.get_layer_config_value(layer, 'Trace', False):
+                            newline += '#ifndef __SYNTHESIS__\n'
+                            for var in vars:
+                                newline += '    nnet::save_layer_output<{}>({}, "{}", {});\n'.format(var.type.name, var.name, layer.name, var.size_cpp())
+                            newline += '#endif\n'
                         newline += '\n'
 
             #Just copy line
@@ -407,6 +412,77 @@ class VivadoWriter(Writer):
         f.close()
         fout.close()
 
+    def write_bridge(self, model):
+        ###################
+        # c++-python bridge
+        ###################
+
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        f = open(os.path.join(filedir,'../templates/vivado/myproject_bridge.cpp'),'r')
+        fout = open('{}/{}_bridge.cpp'.format(model.config.get_output_dir(), model.config.get_project_name()),'w')
+
+        model_inputs = model.get_input_variables()
+        model_outputs = model.get_output_variables()
+
+        indent = '    '
+
+        for line in f.readlines():
+
+            if 'MYPROJECT' in line:
+                newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
+            elif 'myproject' in line:
+                newline = line.replace('myproject', format(model.config.get_project_name()))
+            elif '//hls-fpga-machine-learning insert header' in line:
+                dtype = line.split('#', 1)[1].strip()
+                inputs_str = ', '.join(['{type} {name}[{shape}]'.format(type=dtype, name=i.cppname, shape=i.size_cpp()) for i in model_inputs])
+                outputs_str = ', '.join(['{type} {name}[{shape}]'.format(type=dtype, name=o.cppname, shape=o.size_cpp()) for o in model_outputs])
+                insize_str = ', '.join(['unsigned short &const_size_in_{}'.format(i) for i in range(1, len(model_inputs) + 1)])
+                outsize_str = ', '.join(['unsigned short &const_size_out_{}'.format(o) for o in range(1, len(model_outputs) + 1)])
+
+                newline = ''
+                newline += indent + inputs_str + ',\n'
+                newline += indent + outputs_str + ',\n'
+                newline += indent + insize_str + ',\n'
+                newline += indent + outsize_str + '\n'
+            elif '//hls-fpga-machine-learning insert wrapper' in line:
+                dtype = line.split('#', 1)[1].strip()
+                newline = ''
+                for i in model_inputs:
+                    newline += indent + '{type} {name}_ap[{shape}];\n'.format(type=i.type.name, name=i.cppname, shape=i.size_cpp())
+                    newline += indent + 'nnet::convert_data<{}, {}, {}>({}, {}_ap);\n'.format(dtype, i.type.name, i.size_cpp(), i.cppname, i.cppname)
+                newline += '\n'
+                
+                for o in model_outputs:
+                    newline += indent + '{type} {name}_ap[{shape}];\n'.format(type=o.type.name, name=o.cppname, shape=o.size_cpp())
+                
+                newline += '\n'
+
+                input_size_vars = ','.join(['const_size_in_{}'.format(i) for i in range(1, len(model.get_input_variables()) + 1)])
+                output_size_vars = ','.join(['const_size_out_{}'.format(o) for o in range(1, len(model.get_output_variables()) + 1)])
+                input_vars = ','.join([i.cppname + '_ap' for i in model.get_input_variables()])
+                output_vars = ','.join([o.cppname + '_ap' for o in model.get_output_variables()])
+                top_level = indent + '{}({}, {}, {}, {});\n'.format(model.config.get_project_name(), input_vars, output_vars, input_size_vars, output_size_vars)
+                newline += top_level
+
+                newline += '\n'
+
+                for o in model_outputs:
+                    newline += indent + 'nnet::convert_data<{}, {}, {}>({}_ap, {});\n'.format(o.type.name, dtype, o.size_cpp(), o.cppname, o.cppname)
+            elif '//hls-fpga-machine-learning insert trace_outputs' in line:
+                newline = ''
+                for layer in model.get_layers():
+                    if layer.function_cpp() and model.config.trace_output and model.config.get_layer_config_value(layer, 'Trace', False):
+                            vars = layer.get_variables()
+                            for var in vars:
+                                newline += indent + 'nnet::trace_outputs->insert(std::pair<std::string, void *>("{}", (void *) malloc({} * element_size)));\n'.format(layer.name, var.size_cpp())
+                    
+            else:
+                newline = line
+            fout.write(newline)
+
+        f.close()
+        fout.close()
+
     def write_build_script(self, model):
         ###################
         # build_prj.tcl
@@ -446,6 +522,20 @@ class VivadoWriter(Writer):
         f.close()
         fout.close()
 
+        ###################
+        # build_lib.sh
+        ###################
+
+        f = open(os.path.join(filedir,'../templates/vivado/build_lib.sh'),'r')
+        fout = open('{}/build_lib.sh'.format(model.config.get_output_dir()),'w')
+
+        for line in f.readlines():
+            line = line.replace('myproject', model.config.get_project_name())
+
+            fout.write(line)
+        f.close()
+        fout.close()
+
     def write_nnet_utils(self, model):
         ###################
         ## nnet_utils
@@ -464,6 +554,20 @@ class VivadoWriter(Writer):
         for h in headers:
             copyfile(srcpath + h, dstpath + h)
 
+        ###################
+        ## ap_types
+        ###################
+
+        filedir = os.path.dirname(os.path.abspath(__file__))
+
+        srcpath = os.path.join(filedir,'../templates/vivado/ap_types/')
+        dstpath = '{}/firmware/ap_types/'.format(model.config.get_output_dir())
+
+        if os.path.exists(dstpath):
+            rmtree(dstpath)
+
+        copytree(srcpath, dstpath)
+
     def write_tar(self, model):
         ###################
         # Tarball output
@@ -481,6 +585,7 @@ class VivadoWriter(Writer):
         self.write_defines(model)
         self.write_parameters(model)
         self.write_test_bench(model)
+        self.write_bridge(model)
         self.write_build_script(model)
         self.write_nnet_utils(model)
         self.write_tar(model)

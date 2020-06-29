@@ -1,9 +1,8 @@
-
 import numpy as np
 import math
 from bisect import bisect_left
 
-from .templates import Backend
+from hls4ml.templates.templates import Backend
 
 dense_config_template = """struct config{index} : nnet::dense_config {{
     static const unsigned n_in = {n_in};
@@ -87,6 +86,15 @@ activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
     typedef {table_t} table_t;
+}};\n"""
+
+softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
+    static const unsigned n_in = {n_in};
+    static const unsigned table_size = {table_size};
+    static const unsigned io_type = nnet::{iotype};
+    static const unsigned reuse_factor = {reuse};
+    typedef {exp_table_t} exp_table_t;
+    typedef {inv_table_t} inv_table_t;
 }};\n"""
 
 pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
@@ -180,6 +188,7 @@ class VivadoBackend(Backend):
         self.register_templates('Activation'             , activ_function_template,       activ_config_template, activ_include_list)
         self.register_templates('ParametrizedActivation' , param_activ_function_template, activ_config_template, activ_include_list)
         self.register_templates('PReLU'                  , param_activ_function_template, activ_config_template, activ_include_list)
+        self.register_templates('Softmax'                , activ_function_template,       softmax_config_template, activ_include_list)
         self.register_templates('Pooling1D'              , pooling1d_function_template,   pooling1d_config_template, pooling_include_list)
         self.register_templates('Pooling2D'              , pooling2d_function_template,   pooling2d_config_template, pooling_include_list)
         self.register_templates('Merge'                  , merge_function_template,       merge_config_template, merge_include_list)
@@ -249,6 +258,6 @@ class VivadoBackend(Backend):
         if chosen_rf not in valid_rf:
             closest_rf = self.get_closest_reuse_factor(valid_rf, chosen_rf)
             print('WARNING: Invalid ReuseFactor={} with "Resource" strategy in layer "{}". Using ReuseFactor={} instead. Valid ReuseFactor(s): {}.'
-                .format(chosen_rf, self.name, closest_rf, ','.join(map(str, valid_rf))))
+                .format(chosen_rf, layer.name, closest_rf, ','.join(map(str, valid_rf))))
             layer.reuse_factor = closest_rf
 

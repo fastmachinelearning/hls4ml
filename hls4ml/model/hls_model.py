@@ -1,11 +1,18 @@
 from __future__ import print_function
 import six
+import os
+import sys
+import platform
+import ctypes
 import re
 import numpy as np
+import numpy.ctypeslib as npc
 from collections import OrderedDict
 
-from ..templates import get_backend
-from ..writer import get_writer
+from hls4ml.model.hls_layers import *
+from hls4ml.templates import get_backend
+from hls4ml.writer import get_writer
+from hls4ml.model.optimizer import optimize_model
 
 class HLSConfig(object):
     def __init__(self, config):
@@ -30,6 +37,8 @@ class HLSConfig(object):
         self.layer_type_compression = {}
         self.layer_name_compression = {}
 
+        self.trace_output = self.get_config_value('TraceOutput', False)
+
         self._parse_hls_config()
         self._validate_hls_config()
 
@@ -48,12 +57,30 @@ class HLSConfig(object):
         name_config = hls_config.get('LayerName', {}).get(layer.name.lower(), None)
         if name_config is not None:
             return name_config.get(key, default)
-        
+
         type_config = hls_config.get('LayerType', {}).get(layer.__class__.__name__, None)
         if type_config is not None:
             return type_config.get(key, default)
-        
+
+        model_config = hls_config.get('Model', None)
+        if model_config is not None:
+            return model_config.get(key, default)
+
         return default
+
+    def get_layer_config(self, layer):
+        hls_config = self.config['HLSConfig']
+        layer_config = {}
+
+        type_config = hls_config.get('LayerType', {}).get(layer.__class__.__name__, None)
+        if type_config is not None:
+            layer_config.update(type_config)
+
+        name_config = hls_config.get('LayerName', {}).get(layer.name.lower(), None)
+        if name_config is not None:
+            layer_config.update(name_config)
+
+        return layer_config
 
     def get_precision(self, layer, var='default'):
         precision = self.layer_name_precision.get(layer.name.lower() + '_' + var)
@@ -116,6 +143,7 @@ class HLSConfig(object):
 
     def _parse_hls_config(self):
         hls_config = self.config['HLSConfig']
+        self.optimizers = hls_config.get('Optimizers')
         model_cfg = hls_config.get('Model')
         if model_cfg is not None:
             precision_cfg = model_cfg.get('Precision')
@@ -216,7 +244,11 @@ class HLSModel(object):
         self.graph = OrderedDict()
         self.output_vars = {}
 
+        self._top_function_lib = None
+
         self._make_graph(layer_list)
+
+        self._optimize_model(self.config.optimizers)
 
     def _make_graph(self, layer_list):
         for layer in layer_list:
@@ -230,6 +262,9 @@ class HLSModel(object):
                 outputs = [name]
 
             self.graph[name] = self.make_node(kind, name, layer, inputs, outputs)
+
+    def _optimize_model(self, optimizers):
+        optimize_model(self, optimizers)
 
     def make_node(self, kind, name, attributes, inputs, outputs=None):
         node = layer_map[kind](self, name, attributes, inputs, outputs)
@@ -292,18 +327,6 @@ class HLSModel(object):
     def get_weights_data(self, layer_name, var_name):
         return self.reader.get_weights_data(layer_name, var_name)
 
-    def quantize_data(self, data, quantize):
-        zeros = np.zeros_like(data)
-        ones = np.ones_like(data)
-        quant_data = data
-        if quantize == 1:
-            quant_data = np.where(data > 0, ones, zeros).astype('int')
-        if quantize == 2:
-            quant_data = np.where(data > 0, ones, -ones)
-        elif quantize == 3:
-            quant_data = np.where(data > 0.5, ones, np.where(data <= -0.5, -ones, zeros))
-        return quant_data
-
     def next_layer(self):
         self.index += 1
         return self.index
@@ -331,832 +354,184 @@ class HLSModel(object):
     def get_layer_output_variable(self, output_name):
         return self.output_vars[output_name]
 
-class HLSType(object):
-    def __init__(self, name, precision, **kwargs):
-        self.name = name.format(**kwargs)
-        self.precision = precision
+    def write(self):
+        self.config.writer.write_hls(self)
 
-    def definition_cpp(self):
-        return 'typedef {precision} {name};\n'.format(name=self.name, precision=self.precision)
+    def compile(self):
+        self.write()
 
-class CompressedType(HLSType):
-    def __init__(self, name, precision, index_precision, **kwargs):
-        super(CompressedType, self).__init__('compressed_type{index}', precision, **kwargs)
-        self.index_precision = index_precision
+        curr_dir = os.getcwd()
+        os.chdir(self.config.get_output_dir())
 
-    def definition_cpp(self):
-        cpp_fmt = ('typedef struct {name} {{ '
-               '{index} row_index; '
-               '{index} col_index; '
-               '{precision} weight; }} {name};\n')
-        return cpp_fmt.format(name=self.name, index=self.index_precision, precision=self.precision)
+        try:
+            ret_val = os.system('bash build_lib.sh')
+            if ret_val != 0:
+                raise Exception('Failed to compile project "{}"'.format(self.config.get_project_name()))
+            lib_name = 'firmware/{}.so'.format(self.config.get_project_name())
+            if self._top_function_lib is not None:
 
-class Variable(object):
-    def __init__(self, var_name, type_name, precision, **kwargs):
-        self.name = var_name.format(**kwargs)
-        self.type = HLSType(type_name, precision, **kwargs)
-        self.cppname = re.sub(r'\W|^(?=\d)','_', self.name)
+                if platform.system() == "Linux":
+                    dlclose_func = ctypes.CDLL('libdl.so').dlclose
+                elif platform.system() == "Darwin":
+                    dlclose_func = ctypes.CDLL('libc.dylib').dlclose
 
-class ArrayVariable(Variable):
-    def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, pragma='partition', **kwargs):
-        super(ArrayVariable, self).__init__(var_name, type_name, precision, **kwargs)
-        self.shape = shape
-        self.dim_names = dim_names
-        self.pragma = pragma
+                dlclose_func.argtypes = [ctypes.c_void_p]
+                dlclose_func.restype = ctypes.c_int
+                dlclose_func(self._top_function_lib._handle)
+            self._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
+        finally:
+            os.chdir(curr_dir)
 
-    def get_shape(self):
-        return zip(self.dim_names, self.shape)
+    def _get_top_function(self, x):
+        if self._top_function_lib is None:
+            raise Exception('Model not compiled')
+        if len(self.get_input_variables()) > 1 or len(self.get_input_variables()) > 1:
+            raise Exception('Calling "predict" on models with multiple inputs or outputs is not supported (yet)')
 
-    def definition_cpp(self):
-        array_shape = self.size_cpp()
-        return '{type} {name}[{shape}]'.format(type=self.type.name, name=self.cppname, shape=array_shape)
+        if not isinstance(x, np.ndarray):
+            raise Exception('Expected numpy.ndarray, but got {}'.format(type(x)))
+        if not x.flags['C_CONTIGUOUS']:
+            raise Exception('Array must be c_contiguous, try using numpy.ascontiguousarray(x)')
 
-    def size(self):
-        nelem = 1
-        for dim in self.shape:
-            nelem *= dim
-        return nelem
-
-    def size_cpp(self):
-        return '*'.join([str(k) for k in self.dim_names])
-
-class InplaceVariable():
-    def __init__(self, shape, dim_names, proxy, **kwargs):
-        self.shape = shape
-        self.dim_names = dim_names
-        self.type = proxy.type
-        self.name = proxy.name
-        self.size = proxy.size
-    
-    def get_shape(self):
-        return zip(self.dim_names, self.shape)
-
-    def definition_cpp(self):
-        return None
-
-    def size_cpp(self):
-        return '*'.join([str(k) for k in self.dim_names])
-
-class WeightVariable(Variable):
-    def __init__(self, var_name, type_name, precision, data, **kwargs):
-        super(WeightVariable, self).__init__(var_name, type_name, precision, **kwargs)
-        self.data = data
-        self.nzeros = -1
-        self.shape = list(self.data.shape)
-        self.data_length = np.prod(self.data.shape)
-        self.nonzeros = np.count_nonzero(self.data)
-        self.nzeros = self.data_length - self.nonzeros
-        self.min = np.min(self.data)
-        self.max = np.max(self.data)
-        self._iterator = None
-        self.update_precision(precision)
-
-    def __iter__(self):
-        self._iterator = np.nditer(self.data, order='C')
-        return self
-
-    def __next__(self):
-        if not self._iterator.finished:
-            value = self._iterator[0]
-            self._iterator.iternext()
-            return self.precision_fmt % value
+        if x.dtype in [np.single, np.float32]:
+            top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_float')
+            ctype = ctypes.c_float
+        elif x.dtype in [np.double, np.float64, np.float_]:
+            top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_double')
+            ctype = ctypes.c_double
         else:
-            raise StopIteration
+            raise Exception('Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(x.dtype))
 
-    next = __next__
+        top_function.restype = None
+        top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS"), npc.ndpointer(ctype, flags="C_CONTIGUOUS"),
+            ctypes.POINTER(ctypes.c_ushort), ctypes.POINTER(ctypes.c_ushort)]
 
-    def update_precision(self, new_precision):
-        self.type.precision = new_precision
-        precision_str = str(self.type.precision)
-        if 'int' in precision_str:
-            self.precision_fmt = '%d'
+        return top_function, ctype
+
+    def _compute_n_samples(self, x):
+        expected_size = self.get_input_variables()[0].size()
+        x_size = np.prod(x.shape)
+        n_samples, rem = divmod(x_size, expected_size)
+        if rem != 0:
+            raise Exception('Input size mismatch, got {}, expected {}'.format(x_size.shape, self.get_input_variables()[0].shape))
+
+        return n_samples
+
+    def predict(self, x):
+        top_function, ctype = self._get_top_function(x)
+        n_samples = self._compute_n_samples(x)
+
+        curr_dir = os.getcwd()
+        os.chdir(self.config.get_output_dir() + '/firmware')
+
+        output = []
+        if n_samples == 1:
+            x = [x]
+
+        try:
+            for i in range(n_samples):
+                predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
+                top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
+                output.append(predictions)
+
+            #Convert to numpy array
+            output = np.asarray(output)
+        finally:
+            os.chdir(curr_dir)
+
+        if n_samples == 1:
+            return output[0]
         else:
-            match = re.search('.+<(.+?)>', precision_str)
-            if match is not None:
-                precision_bits = match.group(1).split(',')
-                width_bits = int(precision_bits[0])
-                integer_bits = int(precision_bits[1])
-                fractional_bits = integer_bits - width_bits
-                lsb = 2 ** fractional_bits
-                if lsb < 1:
-                    # Use str to represent the float with digits, get the length
-                    # to right of decimal point
-                    decimal_spaces = len(str(lsb).split('.')[1])
-                else:
-                    decimal_spaces = len(str(2**integer_bits)) 
-                self.precision_fmt = '%.{}f'.format(decimal_spaces)
+            return output
+
+    def trace(self, x):
+        print('Recompiling {} with tracing'.format(self.config.get_project_name()))
+        self.config.trace_output = True
+        self.compile()
+
+        top_function, ctype = self._get_top_function(x)
+        n_samples = self._compute_n_samples(x)
+
+        class TraceData(ctypes.Structure):
+            _fields_ = [('name', ctypes.c_char_p),
+                        ('data', ctypes.c_void_p)]
+
+        trace_output = {}
+        layer_sizes = {}
+        n_traced = 0
+        for layer in self.get_layers():
+            if layer.function_cpp() and self.config.get_layer_config_value(layer, 'Trace', False):
+                n_traced += len(layer.get_variables())
+                trace_output[layer.name] = []
+                layer_sizes[layer.name] = layer.get_output_variable().shape
+
+        collect_func = self._top_function_lib.collect_trace_output
+        collect_func.argtypes = [ctypes.POINTER(TraceData)]
+        collect_func.restype = None
+        trace_data = (TraceData * n_traced)()
+
+        alloc_func = self._top_function_lib.allocate_trace_storage
+        alloc_func.argtypes = [ctypes.c_size_t]
+        alloc_func.restype = None
+
+        free_func = self._top_function_lib.free_trace_storage
+        free_func.argtypes = None
+        free_func.restype = None
+
+        curr_dir = os.getcwd()
+        os.chdir(self.config.get_output_dir() + '/firmware')
+
+        output = []
+        if n_samples == 1:
+            x = [x]
+
+        try:
+            alloc_func(ctypes.sizeof(ctype))
+
+            for i in range(n_samples):
+                predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
+                top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
+                output.append(predictions)
+                collect_func(trace_data)
+                for trace in trace_data:
+                    layer_name = str(trace.name, 'utf-8')
+                    layer_data = ctypes.cast(trace.data, ctypes.POINTER(ctype))
+                    np_array = np.ctypeslib.as_array(layer_data, shape=layer_sizes[layer_name])
+                    trace_output[layer_name].append(np.copy(np_array))
+
+            for key in trace_output.keys():
+                trace_output[key] = np.asarray(trace_output[key])
+
+            #Convert to numpy array
+            output = np.asarray(output)
+
+            free_func()
+        finally:
+            os.chdir(curr_dir)
+
+        if n_samples == 1:
+            return output[0], trace_output
+        else:
+            return output, trace_output
+
+    def build(self, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
+        if 'linux' in sys.platform:
+            backend = self.config.get_config_value('Backend', 'Vivado')
+            if backend == 'Vivado':
+                found = os.system('command -v vivado_hls > /dev/null')
+                if found is not 0:
+                    raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
+
+            elif backend == 'Intel':
+                raise NotImplementedError
+            elif backend == 'Mentor':
+                raise NotImplementedError
             else:
-                self.precision_fmt = '%f'
+                raise Exception('Backend values can be [Vivado, Intel, Mentor]')
 
-    def definition_cpp(self):
-        return '{type} {name}[{size}]'.format(type=self.type.name, name=self.cppname, size=self.data_length)
+        curr_dir = os.getcwd()
+        os.chdir(self.config.get_output_dir())
+        os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
+            .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
+        os.chdir(curr_dir)
 
-class CompressedWeightVariable(WeightVariable):
-    def __init__(self, var_name, type_name, precision, data, reuse_factor, **kwargs):
-        super(CompressedWeightVariable, self).__init__(var_name, type_name, precision, data, **kwargs)
-        self.extra_zeros = 0
-        self.data_length = np.prod(data.shape) - self.nzeros
-        while self.data_length % reuse_factor != 0:
-            self.extra_zeros += 1
-            self.data_length += 1
-        self.nonzeros = np.prod(data.shape) - self.nzeros + self.extra_zeros
-
-        # Compress the array
-        weights = []
-        extra_nzero_cnt = self.extra_zeros
-        it = np.nditer(data, order='C', flags=['multi_index'])
-        max_idx = 0
-        while not it.finished:
-            val = it[0]
-            if not (val == 0 and extra_nzero_cnt < 1):
-                if val == 0:
-                    extra_nzero_cnt -= 1
-                if it.multi_index[0] > max_idx:
-                    max_idx = it.multi_index[0]
-                if it.multi_index[1] > max_idx:
-                    max_idx = it.multi_index[1]
-                weights.append([it.multi_index[1], it.multi_index[0], val])
-            it.iternext()
-        weights.sort()
-
-        index_precision = 32
-        if max_idx > 0:
-            index_precision = int(np.log2(max_idx) + 1)
-        self.type = CompressedType(type_name, precision, 'ap_uint<{}>'.format(index_precision), **kwargs)
-
-        self.data = weights
-
-    def __iter__(self):
-        self._iterator = iter(self.data)
-        return self
-
-    def __next__(self):
-        value = next(self._iterator)
-        value_fmt = self.precision_fmt % value[2]
-        return '{ %u, %u, %s }' % (value[1], value[0], value_fmt)
-
-    next = __next__
-
-class Layer(object):
-    def __init__(self, model, name, attributes, inputs, outputs=None):
-        self.model = model
-        self.name = name
-        self.index = model.next_layer()
-        self.inputs = inputs
-        self.outputs = outputs
-        if self.outputs is None:
-            self.outputs = [self.name]
-
-        self.attributes = attributes
-
-        self._function_template = self.model.config.backend.get_function_template(self.__class__.__name__)
-        self._config_template = self.model.config.backend.get_config_template(self.__class__.__name__)
-        self.include_list = self.model.config.backend.get_include_list(self.__class__.__name__)
-        self.weights = OrderedDict()
-        self.variables = OrderedDict()
-        self.precision = OrderedDict()
-        accum_t = HLSType(*reversed(self.model.config.get_precision(self, 'accum')))
-        self.precision[accum_t.name] = accum_t
-        self.set_attr('accum_t', accum_t.precision)
-        self.reuse_factor = self.model.config.get_reuse_factor(self)
-
-        self.initialize()
-
-    def initialize(self):
-        raise NotImplementedError
-
-    def set_attr(self, key, value):
-        self.attributes[key] = value
-
-    def get_attr(self, key, default=None):
-        return self.attributes.get(key, default)
-
-    def get_input_node(self, input_name=None):
-        if input_name is not None:
-            return self.model.graph.get(input_name)
-        else:
-            return self.model.graph.get(self.inputs[0])
-
-    def get_input_variable(self, input_name=None):
-        if input_name is not None:
-            return self.model.get_layer_output_variable(input_name)
-        else:
-            return self.model.get_layer_output_variable(self.inputs[0])
-
-    def get_output_nodes(self, output_name=None):
-        if output_name is None:
-            output_name = self.outputs[0]
-        return [node for node in self.model.graph.values() if node.inputs[0] == output_name]
-
-    def get_output_variable(self, output_name=None):
-        if output_name is not None:
-            return self.variables[output_name]
-        else:
-            return next(iter(self.variables.values()))
-
-    def get_weights(self, var_name=None):
-        if var_name:
-            return self.weights[var_name]
-
-        return self.weights.values()
-
-    def get_variables(self):
-        return self.variables.values()
-
-    def add_output_variable(self, shape, dim_names, out_name=None, var_name='layer{index}_out', type_name='layer{index}_t', precision=None, pragma='auto'):
-        if out_name is None:
-            out_name = self.outputs[0]
-
-        if precision is None:
-            precision, _ = self.model.config.get_precision(self, var='result')
-
-        if pragma == 'auto':
-            if self.model.config.get_config_value('IOType') == 'io_serial':
-                pragma = 'stream'
-            else:
-                if self.name in self.model.inputs:
-                    pragma = 'reshape'
-                else:
-                    pragma = 'partition'
-
-        out = ArrayVariable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, pragma=pragma, index=self.index)
-
-        self.variables[out_name] = out
-        self.model.register_output_variable(out_name, out)
-
-        self.precision[out.type.name] = out.type
-
-    def add_weights(self, quantize=0, compression=False):
-        data = self.model.get_weights_data(self.name, 'kernel')
-
-        self.add_weights_variable(name='weight', var_name='w{index}', data=data, quantize=quantize, compression=compression)
-
-    def add_bias(self, quantize=0):
-        data = self.model.get_weights_data(self.name, 'bias')
-        precision = None
-        type_name = None
-        if data is None:
-            data = np.zeros(self.get_output_variable().shape[-1])
-            precision = 'ap_uint<1>'
-            type_name = 'bias{index}_t'
-            quantize = 0 # Don't quantize non-existant bias
-
-        self.add_weights_variable(name='bias', var_name='b{index}', type_name=type_name, precision=precision, data=data, quantize=quantize)
-
-    def add_weights_variable(self, name, var_name=None, type_name=None, precision=None, data=None, quantize=0, compression=False):
-        if var_name is None:
-            var_name = name + '{index}'
-
-        if precision is None:
-            precision, _ = self.model.config.get_precision(self, var=name)
-
-        if type_name is None:
-            _, type_name = self.model.config.get_precision(self, var=name)
-
-        if data is None:
-            data = self.model.get_weights_data(self.name, name)
-        elif isinstance(data, six.string_types):
-            data = self.model.get_weights_data(self.name, data)
-
-        if quantize > 0:
-            data = self.model.quantize_data(data, quantize)
-            if quantize == 1:
-                precision = 'ap_uint<1>'
-                type_name = name + '{index}_t'
-            elif quantize == 2 or quantize == 3:
-                precision = 'ap_int<2>'
-                type_name = name + '{index}_t'
-
-        if compression:
-            var = CompressedWeightVariable(var_name, type_name=type_name, precision=precision, data=data, reuse_factor=self.reuse_factor, index=self.index)
-        else:
-            var = WeightVariable(var_name, type_name=type_name, precision=precision, data=data, index=self.index)
-
-        self.weights[name] = var
-        self.precision[var.type.name] = var.type
-
-    def _default_function_params(self):
-        params = {}
-        params['config'] = 'config{}'.format(self.index)
-        params['input_t'] = self.get_input_variable().type.name
-        params['output_t'] = self.get_output_variable().type.name
-        params['input'] = self.get_input_variable().name
-        params['output'] = self.get_output_variable().name
-
-        return params
-
-    def _default_config_params(self):
-        params = {}
-        params.update(self.attributes)
-        params['index'] = self.index
-        params['iotype'] = self.model.config.get_config_value('IOType')
-        params['reuse'] = self.reuse_factor
-
-        # data types
-        for weight_name, variable in self.weights.items():
-            params[weight_name + '_t'] = variable.type.name
-
-        return params
-
-    def get_layer_precision(self):
-        return self.precision
-
-    # myproject.cpp/h
-    def function_cpp(self):
-        raise NotImplementedError
-
-    # parameters.h
-    def config_cpp(self):
-        raise NotImplementedError
-
-    def get_numbers_cpp(self):
-        numbers = ''
-        for k, v in self.get_output_variable().get_shape():
-            numbers += '#define {} {}\n'.format(k,v)
-
-        return numbers
-
-    def precision_cpp(self):
-        return 'typedef {precision} layer{index}_t;'.format(precision=self.get_output_variable().precision, index=self.index)
-
-class Input(Layer):
-    def initialize(self):
-        shape = self.attributes['input_shape']
-        if shape[0] is None:
-            shape = shape[1:]
-        dims = ['N_INPUT_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
-        if self.index == 1:
-            default_type_name = 'input_t'
-        else:
-            default_type_name = 'input{}_t'.format(self.index)
-        type_name = self.attributes.get('type_name', default_type_name)
-        precision = self.attributes.get('precision', None)
-        self.add_output_variable(shape, dims, var_name=self.name, type_name=type_name, precision=precision)
-
-    def function_cpp(self):
-        return None
-
-    def config_cpp(self):
-        return None
-
-class Reshape(Layer):
-    def initialize(self):
-        shape = self.attributes['target_shape']
-        if shape[0] is None:
-            shape = shape[1:]
-        dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
-
-        out_name = self.outputs[0]
-        proxy = self.get_input_variable()
-        out = InplaceVariable(shape, dims, proxy, index=self.get_input_node().index)
-
-        self.variables[out_name] = out
-        self.model.register_output_variable(out_name, out)
-
-    def function_cpp(self):
-        return None
-
-    def config_cpp(self):
-        return None
-
-class Dense(Layer):
-    def initialize(self):
-        shape = [self.attributes['n_out']]
-        dims = ['N_LAYER_{}'.format(self.index)]
-        quantize = self.get_attr('quantize', default=0)
-        compression = self.model.config.get_compression(self)
-        if self.model.config.is_resource_strategy(self):
-            if self.model.config.backend.name == 'Vivado':
-                self.model.config.backend.set_closest_reuse_factor(self)
-            if compression:
-                self.set_attr('strategy', 'compressed')
-            else:
-                self.set_attr('strategy', 'large')
-        else:
-            self.set_attr('strategy', 'latency')
-        self.add_output_variable(shape, dims)
-        self.add_weights(quantize=quantize, compression=compression)
-        index_t = 'ap_uint<1>'
-        if self.model.config.is_resource_strategy(self):
-            if self.model.config.get_compression(self):
-                index_t = self.get_weights('weight').type.index_precision
-            else:
-                if self.model.config.backend.name == 'Vivado':
-                    self.weights['weight'].data = np.transpose(self.weights['weight'].data)
-        self.set_attr('index_t', index_t)
-        self.add_bias(quantize=quantize)
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['strategy'] = self.get_attr('strategy')
-        params['w'] = self.get_weights('weight').name
-        params['b'] = self.get_weights('bias').name
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        params['n_in'] = self.get_input_variable().size_cpp()
-        params['n_out'] = self.get_output_variable().size_cpp()
-        params['nzeros'] = self.get_weights('weight').nzeros
-        params['nonzeros'] = self.get_weights('weight').nonzeros
-
-        return self._config_template.format(**params)
-
-class Conv1D(Layer):
-    def initialize(self):
-        if self.get_attr('data_format') == 'channels_last':
-            shape = [self.attributes['n_out'], self.attributes['n_filt']]
-            dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
-        else:
-            shape = [self.attributes['n_filt'], self.attributes['n_out']]
-            dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
-        
-        self.add_output_variable(shape, dims)
-        self.add_weights()
-        self.add_bias()
-        if self.model.config.is_resource_strategy(self):
-            self.set_attr('strategy', 'large')
-            if self.model.config.backend.name == 'Vivado':
-                self.model.config.backend.set_closest_reuse_factor(self)
-                self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 1, 0]) #(W,C,F) => (F,C,W)
-        else:
-            self.set_attr('strategy', 'latency')
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['strategy'] = self.get_attr('strategy')
-        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
-        params['w'] = self.get_weights('weight').name
-        params['b'] = self.get_weights('bias').name
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        input_dims = self.get_input_variable().dim_names
-        if self.get_attr('data_format') == 'channels_last':
-            params['n_in'] = '*'.join([str(k) for k in input_dims[:-1]])
-            params['n_chan'] = input_dims[-1]
-        else:
-            params['n_in'] = '*'.join([str(k) for k in input_dims[1:]])
-            params['n_chan'] = input_dims[0]
-        params['dilation'] = self.get_attr('dilation', 1)
-        params['n_filt'] = 'N_FILT_{}'.format(self.index)
-        params['n_out'] = 'N_OUTPUTS_{}'.format(self.index)
-        params['nzeros'] = self.get_weights('weight').nzeros
-        params['config_t'] = 'std::nullptr_t'
-
-        if self.model.config.is_resource_strategy(self):
-            params['config_t'] = 'config{}_mult'.format(self.index)
-            conv_config = self._config_template[0].format(**params)
-
-            mult_params = self._default_config_params()
-            mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_width')
-            mult_params['n_out'] = self.get_attr('n_filt')
-            mult_config = self._config_template[1].format(**mult_params)
-
-            return mult_config + '\n' + conv_config
-        else:
-            return self._config_template[0].format(**params)
-
-class Conv2D(Layer):
-    def initialize(self):
-        if self.get_attr('data_format') == 'channels_last':
-            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
-            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
-        else:
-            shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
-            dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
-        self.add_output_variable(shape, dims)
-        self.add_weights()
-        self.add_bias()
-        if self.model.config.is_resource_strategy(self):
-            self.set_attr('strategy', 'large')
-            if self.model.config.backend.name == 'Vivado':
-                self.model.config.backend.set_closest_reuse_factor(self)
-                self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
-        else:
-            self.set_attr('strategy', 'latency')
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['strategy'] = self.get_attr('strategy')
-        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
-        params['w'] = self.get_weights('weight').name
-        params['b'] = self.get_weights('bias').name
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        if self.get_attr('data_format') == 'channels_last':
-            params['in_height'] = self.get_input_variable().dim_names[0]
-            params['in_width'] = self.get_input_variable().dim_names[1]
-            params['n_chan'] = self.get_input_variable().dim_names[2]
-            params['out_height'] = self.get_output_variable().dim_names[0]
-            params['out_width'] = self.get_output_variable().dim_names[1]
-            params['n_filt'] = self.get_output_variable().dim_names[2]
-        else:
-            params['n_chan'] = self.get_input_variable().dim_names[0]
-            params['in_height'] = self.get_input_variable().dim_names[1]
-            params['in_width'] = self.get_input_variable().dim_names[2]
-            params['n_filt'] = self.get_output_variable().dim_names[0]
-            params['out_height'] = self.get_output_variable().dim_names[1]
-            params['out_width'] = self.get_output_variable().dim_names[2]
-        params['dilation'] = self.get_attr('dilation', 1)
-        params['nzeros'] = self.get_weights('weight').nzeros
-        params['config_t'] = 'std::nullptr_t'
-
-        if self.model.config.is_resource_strategy(self):
-            params['config_t'] = 'config{}_mult'.format(self.index)
-            conv_config = self._config_template[0].format(**params)
-
-            mult_params = self._default_config_params()
-            mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
-            mult_params['n_out'] = self.get_attr('n_filt')
-            mult_config = self._config_template[1].format(**mult_params)
-
-            return mult_config + '\n' + conv_config
-        else:
-            return self._config_template[0].format(**params)
-
-class Pooling1D(Layer):
-    def initialize(self):
-        shape = [self.attributes['n_out'], self.attributes['n_filt']]
-        dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
-        self.add_output_variable(shape, dims)
-        self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0])
-
-    def function_cpp(self):
-        params = self._default_function_params()
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        params['n_in'] = self.get_input_variable().size_cpp()
-        params['n_out'] = self.get_output_variable().size_cpp()
-
-        return self._config_template.format(**params)
-
-class Pooling2D(Layer):
-    def initialize(self):
-        shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
-        dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
-        self.add_output_variable(shape, dims)
-        self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0])
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        params['n_in'] = self.get_input_variable().dim_names[0]
-        params['in_width'] = self.get_input_variable().dim_names[1]
-        params['out_height'] = self.get_output_variable().dim_names[0]
-        params['out_width'] = self.get_output_variable().dim_names[1]
-        params['n_filt'] = self.get_output_variable().dim_names[2]
-
-        return self._config_template.format(**params)
-
-class Activation(Layer):
-    def initialize(self):
-        inp = self.get_input_variable()
-        shape = inp.shape
-        dims = inp.dim_names
-        self.add_output_variable(shape, dims)
-        if self.model.config.backend.name == 'Vivado':
-            self.set_attr('table_t', self.model.config.get_layer_config_value(self, 'table_t', 'ap_fixed<18,8>'))
-            self.set_attr('table_size', self.model.config.get_layer_config_value(self, 'table_size', 1024))
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['activation'] = self.get_attr('activation').lower()
-        params['config'] = '{}_config{}'.format(self.get_attr('activation'), self.index)
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        params['type'] = self.get_attr('activation')
-        params['n_in'] = self.get_input_variable().size_cpp()
-
-        return self._config_template.format(**params)
-
-class ParametrizedActivation(Activation):
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['activation'] = self._get_act_function_name()
-        params['param'] = self.get_attr('activ_param', 1.0)
-        params['config'] = '{}_config{}'.format(self.get_attr('activation'), self.index)
-
-        return [self._function_template.format(**params)]
-
-    def _get_act_function_name(self):
-        act = self.get_attr('activation').lower()
-        if act == 'leakyrelu':
-            return 'leaky_relu'
-        elif act == 'thresholdedrelu':
-            return 'thresholded_relu'
-        else:
-            return act # ELU activation
-
-class PReLU(Activation):
-    def initialize(self):
-        super(PReLU, self).initialize()
-        self.add_weights_variable(name='alpha', var_name='a{index}')
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['activation'] = self.get_attr('activation').lower()
-        params['param'] = self.get_weights('alpha').name
-        params['config'] = '{}_config{}'.format(self.get_attr('activation'), self.index)
-
-        return [self._function_template.format(**params)]
-
-class BatchNormalization(Layer):
-    def initialize(self):
-        inp = self.get_input_variable()
-        shape = inp.shape
-        dims = inp.dim_names
-        self.add_output_variable(shape, dims)
-
-        gamma = self.model.get_weights_data(self.name, 'gamma')
-        beta = self.model.get_weights_data(self.name, 'beta')
-        mean = self.model.get_weights_data(self.name, 'moving_mean')
-        var = self.model.get_weights_data(self.name, 'moving_variance')
-
-        scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
-        bias = beta - gamma * mean / np.sqrt(var + self.get_attr('epsilon'))
-
-        self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
-        self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['scale'] = self.get_weights('scale').name
-        params['bias'] = self.get_weights('bias').name
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        params['n_in'] = self.get_input_variable().size_cpp()
-
-        return self._config_template.format(**params)
-
-class Merge(Layer):
-    def initialize(self):
-        assert(len(self.inputs) == 2)
-        inp1 = self.get_input_variable(self.inputs[0])
-        inp2 = self.get_input_variable(self.inputs[1])
-        shape = inp1.shape
-        assert(inp1.shape == inp2.shape)
-        dims = inp1.dim_names
-        self.add_output_variable(shape, dims)
-
-    def function_cpp(self):
-        params = {}
-        params['merge'] = self.get_attr('op').lower()
-        params['config'] = 'config{}'.format(self.index)
-        params['input1_t'] = self.get_input_variable(self.inputs[0]).type.name
-        params['input2_t'] = self.get_input_variable(self.inputs[1]).type.name
-        params['output_t'] = self.get_output_variable().type.name
-        params['input1'] = self.get_input_variable(self.inputs[0]).name
-        params['input2'] = self.get_input_variable(self.inputs[1]).name
-        params['output'] = self.get_output_variable().name
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        params['n_elem'] = self.get_input_variable(self.inputs[0]).size_cpp()
-
-        return self._config_template.format(**params)
-
-class Concatenate(Merge):
-    def initialize(self):
-        assert(len(self.inputs) == 2)
-        inp1 = self.get_input_variable(self.inputs[0])
-        inp2 = self.get_input_variable(self.inputs[1])
-        shape = [sum(x) for x in zip(inp1.shape, inp2.shape)]
-        rank = len(shape)
-        if rank > 1:
-            dims = ['OUT_CONCAT_{}_{}'.format(i, self.index) for i in range(rank)]
-        else:
-            dims = ['OUT_CONCAT_{}'.format(self.index)]
-        self.add_output_variable(shape, dims)
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        for i in range(3):
-            params.setdefault('n_elem1_{}'.format(i), 0)
-            params.setdefault('n_elem2_{}'.format(i), 0)
-        inp1 = self.get_input_variable(self.inputs[0])
-        inp2 = self.get_input_variable(self.inputs[1])
-        for i, (s1, s2) in enumerate(zip(inp1.shape, inp2.shape)):
-            params['n_elem1_{}'.format(i)] = s1
-            params['n_elem2_{}'.format(i)] = s2
-
-        return self._config_template.format(**params)
-
-class BiasAdd(Merge): # TensorFlow's operator that gets merged into Dense/Conv
-    def initialize(self):
-        inp = self.get_input_variable(self.inputs[0])
-        shape = inp.shape
-        dims = inp.dim_names
-        self.add_bias()
-        self.add_output_variable(shape, dims)
-
-    def function_cpp(self):
-        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
-
-    def config_cpp(self):
-        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
-
-class Resize(Layer):
-    def initialize(self):
-        shape = [self.get_attr('new_height'), self.get_attr('new_width'), self.get_attr('n_chan')]
-        dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
-        self.add_output_variable(shape, dims)
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['algorithm'] = self.get_attr('algorithm')
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-
-        return self._config_template.format(**params)
-
-class Transpose(Layer):
-    def initialize(self):
-        inp = self.get_input_variable(self.inputs[0])
-        perm = self.get_attr('perm')
-        self.set_attr('dim', '{}d'.format(len(inp.shape)))
-        if len(perm) == 4 and perm[0] == 0:
-            perm = [i - 1 for i in perm[1:]]
-        shape = [inp.shape[i] for i in perm]
-        self.set_attr('perm_str', ','.join([str(i) for i in perm]))
-        if len(shape) == 2:
-            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
-            self.set_attr('depth', 1)
-            self.set_attr('height', shape[0])
-            self.set_attr('width', shape[1])
-        else:
-            dims = ['OUT_DEPTH_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
-            self.set_attr('depth', shape[0])
-            self.set_attr('height', shape[1])
-            self.set_attr('width', shape[2])
-        self.add_output_variable(shape, dims)
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['dim'] = self.get_attr('dim')
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-
-        return self._config_template.format(**params)
-
-layer_map = {
-    'InputLayer'         : Input,
-    'Activation'         : Activation,
-    'QActivation'        : Activation,
-    'LeakyReLU'          : ParametrizedActivation,
-    'ThresholdedReLU'    : ParametrizedActivation,
-    'ELU'                : ParametrizedActivation,
-    'PReLU'              : PReLU,
-    'Reshape'            : Reshape,
-    'Dense'              : Dense,
-    'BinaryDense'        : Dense,
-    'TernaryDense'       : Dense,
-    'QDense'             : Dense,
-    'Conv1D'             : Conv1D,
-    'QConv1D'            : Conv1D,
-    'Conv2D'             : Conv2D,
-    'BinaryConv2D'       : Conv2D,
-    'QConv2D'            : Conv2D,
-    'BatchNormalization' : BatchNormalization,
-    'MaxPooling1D'       : Pooling1D,
-    'AveragePooling1D'   : Pooling1D,
-    'MaxPooling2D'       : Pooling2D,
-    'AveragePooling2D'   : Pooling2D,
-    'Merge'              : Merge,
-    'Concatenate'        : Concatenate,
-    'Resize'             : Resize,
-    'Transpose'          : Transpose,
-    # TensorFlow-specific layers:
-    'BiasAdd'            : BiasAdd,
-}
-
-def register_layer(name, clazz):
-    global layer_map
-    layer_map[name] = clazz

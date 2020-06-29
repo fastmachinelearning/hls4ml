@@ -8,7 +8,6 @@ import pickle
 import re
 
 from hls4ml.model import HLSModel
-from hls4ml.model.optimizer import optimize_model
 
 class PyTorchDataReader:
     def __init__(self, config):
@@ -81,8 +80,11 @@ def pytorch_to_hls(yamlConfig):
             current_shape = [layer['n_in'], layer['n_out']]
             print('Layer index: {}, layer type: {}, current shape: {}'.format(layer['name'], layer['class_name'], current_shape))
         elif layer_type in activation_layers:
-            layer['class_name'] = 'Activation'
             layer['activation'] = layer_type.lower()
+            if layer['activation'] == 'Softmax':
+                layer['class_name'] = 'Softmax'
+            else:
+                layer['class_name'] = 'Activation'
             layer['name'] = layer['activation'] + '_' + str(layer_idx)
 
         layer_list.append(layer)
@@ -101,6 +103,4 @@ def pytorch_to_hls(yamlConfig):
     reader = PyTorchDataReader(yamlConfig)
     print('Creating HLS model')
     hls_model = HLSModel(yamlConfig, reader, layer_list)
-    optimizers = ['eliminate_linear_activation', 'merge_batch_norm_quantized_tanh', 'quantize_dense_output', 'fuse_dense_batch_norm']
-    optimize_model(hls_model, optimizers)
     return hls_model
