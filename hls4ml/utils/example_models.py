@@ -1,4 +1,5 @@
 import os
+from urllib.request import urlretrieve
 from .config import create_vivado_config
 
 def fetch_example_model(model_name):
@@ -18,7 +19,7 @@ def fetch_example_model(model_name):
         
     #Download the example model
     if model_name == 'keras_3layer':
-        os.system('wget https://raw.githubusercontent.com/hls-fpga-machine-learning/example-models/master/keras/keras_3layer.h5')
+        urlretrieve('https://raw.githubusercontent.com/hls-fpga-machine-learning/example-models/master/keras/keras_3layer.h5', 'keras_3layer.h5')
 
         #Additional configuration parameters
         config['KerasH5'] = 'keras_3layer.h5'
