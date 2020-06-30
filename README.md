@@ -34,6 +34,9 @@ print(config) #You can print it to see some default parameters
 
 #Convert it to a hls project
 hls_model = hls4ml.converters.keras_to_hls(config)
+
+# Print full list of example model if you want to explore mmore
+hls4ml.utils.fetch_example_list()
 ```
 
 ### Building a project with Xilinx Vitis (after downloading and installing from [here](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vitis.html))

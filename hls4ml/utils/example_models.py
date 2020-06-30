@@ -1,5 +1,7 @@
 from urllib.request import urlretrieve
 from .config import create_vivado_config
+import pprint
+import json
 
 def fetch_example_model(model_name):
     """
@@ -49,3 +51,16 @@ def fetch_example_model(model_name):
     config['HLSConfig']['Model']['ReuseFactor'] = '1'
     
     return config
+
+def fetch_example_list():
+    
+    link_to_list = 'https://raw.githubusercontent.com/hls-fpga-machine-learning/example-models/master/available_models.json'
+    
+    temp_file, _ = urlretrieve(link_to_list)
+    
+    # Read data from file:
+    data = json.load(open(temp_file))
+    
+    # Print in fancy format
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(data)
