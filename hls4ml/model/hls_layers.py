@@ -801,7 +801,9 @@ class Concatenate(Merge):
         assert(len(self.inputs) == 2)
         inp1 = self.get_input_variable(self.inputs[0])
         inp2 = self.get_input_variable(self.inputs[1])
-        shape = [sum(x) for x in zip(inp1.shape, inp2.shape)]
+        axis = self.attributes['axis']
+        shape = inp1.shape[:]
+        shape[axis] += inp2.shape[axis]
         rank = len(shape)
         if rank > 1:
             dims = ['OUT_CONCAT_{}_{}'.format(i, self.index) for i in range(rank)]
