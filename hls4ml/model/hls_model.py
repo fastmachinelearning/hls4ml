@@ -143,7 +143,9 @@ class HLSConfig(object):
         return compression
 
     def get_precision_string(self, precision):
-        if not "fixed" in precision and not "int" in precision:
+        if precision is None:
+            precision = self.backend.get_pstring(16, 6, True)
+        elif not "fixed" in precision and not "int" in precision:
             precision = re.findall('\d+',precision)
             if(len(precision) == 1):
                 precision = self.backend.get_pstring(int(precision[0]), int(precision[0]), True)
@@ -177,6 +179,8 @@ class HLSConfig(object):
         if layer_type_cfg is not None:
             for layer_type, layer_cfg in layer_type_cfg.items():
                 precision_cfg = layer_cfg.get('Precision')
+                if precision_cfg is None:
+                    print('Precision not defined for {}, using default <16,6>'.format(layer_type))
                 if isinstance(precision_cfg, dict):
                     for var, precision in precision_cfg.items():
                         self.layer_type_precision[layer_type.lower() + '_' + var] = self.get_precision_string(precision)
@@ -199,6 +203,8 @@ class HLSConfig(object):
         if layer_name_cfg is not None:
             for layer_name, layer_cfg in layer_name_cfg.items():
                 precision_cfg = layer_cfg.get('Precision')
+                if precision_cfg is None:
+                    print('Precision not defined for {}, using default <16,6>'.format(layer_name))
                 if isinstance(precision_cfg, dict):
                     for var, precision in precision_cfg.items():
                         self.layer_name_precision[layer_name.lower() + '_' + var] = self.get_precision_string(precision)
