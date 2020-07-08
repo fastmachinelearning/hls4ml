@@ -10,7 +10,7 @@ class Quantizer(object):
     def __init__(self, bits, hls_type):
         self.bits = bits
         self.hls_type = hls_type
-    
+
     def __call__(self, data):
         raise NotImplementedError
 
@@ -18,10 +18,11 @@ class IntegerPrecisionType(object):
     def __init__(self, width=16, signed=True):
         self.width = width
         self.signed = signed
-    
-    def __str__(self):
+
+        #replaced by a parsing function in the layer class
+    """def __str__(self, backend='Quartus'):
         typestring = 'ap_{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
-        return typestring
+        return typestring"""
 
 class FixedPrecisionType(object):
     def __init__(self, width=16, integer=6, signed=True, rounding_mode=None, saturation_mode=None, saturation_bits=None):
@@ -31,32 +32,37 @@ class FixedPrecisionType(object):
         self.rounding_mode = rounding_mode
         self.saturation_mode = saturation_mode
         self.saturation_bits = saturation_bits
-    
-    def __str__(self):
+
+        #replaced by a parsing function in the layer class
+    """def __str__(self):
         args = [self.width, self.integer, self.rounding_mode, self.saturation_mode, self.saturation_bits]
         args = ','.join([str(arg) for arg in args if arg is not None])
         typestring = 'ap_{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
-        return typestring
+        return typestring"""
 
 class HLSType(object):
     def __init__(self, name, precision, **kwargs):
         self.name = name.format(**kwargs)
         self.precision = precision
 
-    def definition_cpp(self):
-        return 'typedef {precision} {name};\n'.format(name=self.name, precision=self.precision)
+    def get_precision(self):
+        return self.precision
+    def set_precision(self, precision):
+        self.precision = precision
+    """def definition_cpp(self):
+        return 'typedef {precision} {name};\n'.format(name=self.name, precision=self.precision)"""
 
 class CompressedType(HLSType):
     def __init__(self, name, precision, index_precision, **kwargs):
         super(CompressedType, self).__init__('compressed_type{index}', precision, **kwargs)
         self.index_precision = index_precision
 
-    def definition_cpp(self):
+    """def definition_cpp(self):
         cpp_fmt = ('typedef struct {name} {{ '
                '{index} row_index; '
                '{index} col_index; '
                '{precision} weight; }} {name};\n')
-        return cpp_fmt.format(name=self.name, index=self.index_precision, precision=self.precision)
+        return cpp_fmt.format(name=self.name, index=self.index_precision, precision=self.precision)"""
 
 class Variable(object):
     def __init__(self, var_name, type_name, precision, **kwargs):
@@ -77,6 +83,12 @@ class ArrayVariable(Variable):
     def definition_cpp(self):
         array_shape = self.size_cpp()
         return '{type} {name}[{shape}]'.format(type=self.type.name, name=self.cppname, shape=array_shape)
+
+    def definition_cpp_name(self):
+        return '{name}'.format(name=self.name)
+
+    def definition_cpp_type(self):
+        return '{type}'.format(type=self.type.name)
 
     def size(self):
         nelem = 1
@@ -151,7 +163,7 @@ class WeightVariable(Variable):
                     # to right of decimal point
                     decimal_spaces = len(str(lsb).split('.')[1])
                 else:
-                    decimal_spaces = len(str(2**integer_bits)) 
+                    decimal_spaces = len(str(2**integer_bits))
                 self.precision_fmt = '%.{}f'.format(decimal_spaces)
             else:
                 self.precision_fmt = '%f'
@@ -371,7 +383,25 @@ class Layer(object):
         return params
 
     def get_layer_precision(self):
+        for obj in self.precision:
+            self.precision[obj].set_precision(precision=self.get_precision_string(self.precision[obj].get_precision()))
         return self.precision
+
+    def get_precision_string(self, precision):
+        return self.model.config.backend.get_precision_string_backend(precision)
+
+    def var_definition_cpp(self, var):
+        if isinstance(var, CompressedType):
+            cpp_fmt = ('typedef struct {name} {{'
+                   '{index} row_index; '
+                   '{index} col_index; '
+                   '{precision} weight;}} {name};\n')
+            typestring = cpp_fmt.format(name=var.name, index=self.get_precision_string(var.index_precision), precision=self.get_precision_string(var.precision))
+        elif isinstance(var, HLSType):
+            typestring = 'typedef {precision} {name};\n'.format(name=var.name, precision=self.get_precision_string(var.precision))
+        else:
+            typestring = var
+        return typestring
 
     # myproject.cpp/h
     def function_cpp(self):
@@ -436,24 +466,17 @@ class Dense(Layer):
         shape = [self.attributes['n_out']]
         dims = ['N_LAYER_{}'.format(self.index)]
         compression = self.model.config.get_compression(self)
-        if self.model.config.is_resource_strategy(self):
-            if self.model.config.backend.name == 'Vivado':
-                self.model.config.backend.set_closest_reuse_factor(self)
-            if compression:
-                self.set_attr('strategy', 'compressed')
-            else:
-                self.set_attr('strategy', 'large')
-        else:
-            self.set_attr('strategy', 'latency')
+        self.model.config.backend.set_strategy(self)
         self.add_output_variable(shape, dims)
         self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=compression)
         index_t = IntegerPrecisionType(width=1, signed=False)
+
+        self.model.config.backend.configure_weights(self)
+
         if self.model.config.is_resource_strategy(self):
             if self.model.config.get_compression(self):
                 index_t = self.get_weights('weight').type.index_precision
-            else:
-                if self.model.config.backend.name == 'Vivado':
-                    self.weights['weight'].data = np.transpose(self.weights['weight'].data)
+
         self.set_attr('index_t', index_t)
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
@@ -465,12 +488,22 @@ class Dense(Layer):
 
         return [self._function_template.format(**params)]
 
+    def binary_check(self):
+        params = self._default_config_params()
+        return self.get_layer_precision()[params['weight_t']].get_precision() == 'ac_int<2, true>' or self.get_layer_precision()[params['weight_t']].get_precision() == 'ap_int<2>'
+
+    def ternary_check(self):
+        params = self._default_config_params()
+        return self.get_layer_precision()[params['weight_t']].get_precision() == 'ac_int<1, false>' or self.get_layer_precision()[params['weight_t']].get_precision() == 'ac_uint<1>'
+
     def config_cpp(self):
         params = self._default_config_params()
         params['n_in'] = self.get_input_variable().size_cpp()
         params['n_out'] = self.get_output_variable().size_cpp()
         params['nzeros'] = self.get_weights('weight').nzeros
         params['nonzeros'] = self.get_weights('weight').nonzeros
+        params['index_t'] = self.get_precision_string(self.get_attr('index_t'))
+        params['accum_t'] = self.get_precision_string(self.get_attr('accum_t'))
 
         return self._config_template.format(**params)
 
@@ -517,6 +550,7 @@ class Conv1D(Layer):
         params['n_out'] = 'N_OUTPUTS_{}'.format(self.index)
         params['nzeros'] = self.get_weights('weight').nzeros
         params['config_t'] = 'std::nullptr_t'
+        params['accum_t'] = self.get_precision_string(self.get_attr('accum_t'))
 
         if self.model.config.is_resource_strategy(self):
             params['config_t'] = 'config{}_mult'.format(self.index)
@@ -578,6 +612,7 @@ class Conv2D(Layer):
         params['dilation'] = self.get_attr('dilation', 1)
         params['nzeros'] = self.get_weights('weight').nzeros
         params['config_t'] = 'std::nullptr_t'
+        params['accum_t'] = self.get_precision_string(self.get_attr('accum_t'))
 
         if self.model.config.is_resource_strategy(self):
             params['config_t'] = 'config{}_mult'.format(self.index)
@@ -639,11 +674,11 @@ class Activation(Layer):
         shape = inp.shape
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
-        if self.model.config.backend.name == 'Vivado':
-            if 'table_t' not in self.attributes:
-                self.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
-            if 'table_size' not in self.attributes:
-                self.set_attr('table_size', 1024)
+        #if self.model.config.backend.name == 'Vivado' or self.model.config.backend.name == 'Quartus':
+        if 'table_t' not in self.attributes:
+            self.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
+        if 'table_size' not in self.attributes:
+            self.set_attr('table_size', 1024)
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -656,6 +691,7 @@ class Activation(Layer):
         params = self._default_config_params()
         params['type'] = self.get_attr('activation')
         params['n_in'] = self.get_input_variable().size_cpp()
+        params['table_t'] = self.get_precision_string(self.get_attr('table_t'))
 
         return self._config_template.format(**params)
 
@@ -693,11 +729,20 @@ class PReLU(Activation):
 class Softmax(Activation):
     def initialize(self):
         super(Softmax, self).initialize()
-        if self.model.config.backend.name == 'Vivado':
-            if 'exp_table_t' not in self.attributes:
-                self.set_attr('exp_table_t', self.get_attr('table_t'))
-            if 'inv_table_t' not in self.attributes:
-                self.set_attr('inv_table_t', self.get_attr('table_t'))
+        #if self.model.config.backend.name == 'Vivado' or self.model.config.backend.name == 'Quartus':
+        if 'exp_table_t' not in self.attributes:
+            self.set_attr('exp_table_t', self.get_attr('table_t'))
+        if 'inv_table_t' not in self.attributes:
+            self.set_attr('inv_table_t', self.get_attr('table_t'))
+
+    def config_cpp(self):
+        params = self._default_config_params()
+        params['type'] = self.get_attr('activation')
+        params['n_in'] = self.get_input_variable().size_cpp()
+        params['exp_table_t'] = self.get_precision_string(self.get_attr('exp_table_t'))
+        params['inv_table_t'] = self.get_precision_string(self.get_attr('inv_table_t'))
+
+        return self._config_template.format(**params)
 
 class BatchNormalization(Layer):
     def initialize(self):
@@ -764,9 +809,7 @@ class Concatenate(Merge):
         assert(len(self.inputs) == 2)
         inp1 = self.get_input_variable(self.inputs[0])
         inp2 = self.get_input_variable(self.inputs[1])
-        axis = self.attributes['axis']
-        shape = inp1.shape[:]
-        shape[axis] += inp2.shape[axis]
+        shape = [sum(x) for x in zip(inp1.shape, inp2.shape)]
         rank = len(shape)
         if rank > 1:
             dims = ['OUT_CONCAT_{}_{}'.format(i, self.index) for i in range(rank)]

@@ -28,7 +28,7 @@ backend_map = {}
 def register_backend(name, backend_cls):
     if name in backend_map:
         raise Exception('Backend {} already registered'.format(name))
-    
+
     backend_map[name] = backend_cls()
 
 def get_backend(name):

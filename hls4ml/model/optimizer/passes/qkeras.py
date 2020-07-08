@@ -19,9 +19,9 @@ class OutputRoundingSaturationMode(OptimizerPass):
     hls4ml.model.optimizer.OutputRoundingSaturationMode.saturation_mode = 'AP_SAT'
     '''
 
-    layers = [] 
-    rounding_mode = None 
-    saturation_mode = None 
+    layers = []
+    rounding_mode = None
+    saturation_mode = None
     saturation_bits = None
 
     def match(self, node):
@@ -78,8 +78,10 @@ class ApplyAlpha(BatchNormalization):
 # register the layer and its templates
 register_layer('ApplyAlpha', ApplyAlpha)
 # TODO ideally: for backend in backends
-temps = templates.get_backend('Vivado')
-temps.register_templates('ApplyAlpha', temps.get_function_template('BatchNormalization'), temps.get_config_template('BatchNormalization'), temps.get_include_list('BatchNormalization'))
+#temps = templates.get_backend('Vivado')
+for backend in templates.backend_map:
+    temp = templates.get_backend(backend)
+    temp.register_templates('ApplyAlpha', temp.get_function_template('BatchNormalization'), temp.get_config_template('BatchNormalization'), temp.get_include_list('BatchNormalization'))
 
 class QKerasFactorizeAlpha(OptimizerPass):
     '''OptimizerPass for extracting alpha "scale" from QKeras quantized layer.
@@ -88,7 +90,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
     '''
     def match(self, node):
         q_layer = node.__class__.__name__ in ["Dense", "Conv1D", "Conv2D"]
-        has_w_quant = node.get_attr('weight_quantizer') is not None 
+        has_w_quant = node.get_attr('weight_quantizer') is not None
         has_b_quant = node.get_attr('bias_quantizer') is not None
         has_w_alpha, has_b_alpha = False, False
         if has_w_quant:
@@ -125,9 +127,9 @@ class QKerasFactorizeAlpha(OptimizerPass):
         # this is only needed for the binary layers which encode -1 as 0
         node.weights['weight'].data = node.weights['weight'].quantizer(new_weights.numpy())
 
-        has_w_quant = node.get_attr('weight_quantizer') is not None 
+        has_w_quant = node.get_attr('weight_quantizer') is not None
         has_b_quant = node.get_attr('bias_quantizer') is not None
-        if has_w_quant: 
+        if has_w_quant:
             node.attributes['weight_quantizer'].alpha = 1
         if has_b_quant:
             node.attributes['bias_quantizer'].alpha = 1

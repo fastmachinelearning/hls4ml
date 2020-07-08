@@ -244,9 +244,9 @@ input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate3d(
-    input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
-	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
-    res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2])
+    input1_T data1[CONFIG_T::n_elem1[0] * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2], 
+	input2_T data2[CONFIG_T::n_elem2[0] * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
+    res_T res[CONFIG_T::n_elem1[0] * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2[0] * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2])
 {
     if (CONFIG_T::axis == 2 || CONFIG_T::axis == -1) {
         concatenate3d_2<input1_T, input2_T, res_T, CONFIG_T>(data1, data2, res);

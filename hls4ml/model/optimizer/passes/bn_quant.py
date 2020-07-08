@@ -15,15 +15,11 @@ class BatchNormalizationQuantizedTanh(Layer):
         inp = self.get_input_variable()
         shape = inp.shape
         dims = inp.dim_names
-        precision_bits = re.search('.+<(.+?)>', inp.type.precision).group(1).split(',')
-        if 'int' in str(inp.type.precision):
-            W = int(precision_bits[0])
-            I = W
-            F = 0
-        elif 'fixed' in str(inp.type.precision):
-            W = int(precision_bits[0])
-            I = int(precision_bits[1])
-            F = W - I
+        precision_bits = re.findall('\d+',inp.type.precision)
+        W = int(precision_bits[0])
+        I = int(precision_bits[0]) if (len(precision_bits) == 1) else int(precision_bits[1])
+        F = W - I
+
         original_name = self.attributes.get('original_name')
         variance = self.model.get_weights_data(original_name, 'moving_variance')
         mean = self.model.get_weights_data(original_name, 'moving_mean')
@@ -74,7 +70,10 @@ batchnorm_quantized_tanh_function_template = 'nnet::normalize_{quantize}_tanh<{i
 register_layer('BatchNormalizationQuantizedTanh', BatchNormalizationQuantizedTanh)
 
 # Register the templates for config and function
-templates.get_backend('Vivado').register_templates('BatchNormalizationQuantizedTanh', batchnorm_quantized_tanh_function_template, batchnorm_quantized_tanh_config_template)
+for backend in templates.backend_map:
+    temp = templates.get_backend(backend)
+    temp.register_templates('BatchNormalizationQuantizedTanh', batchnorm_quantized_tanh_function_template, batchnorm_quantized_tanh_config_template)
+
 
 class MergeBatchNormAndQuantizedTanh(OptimizerPass):
     def match(self, node):

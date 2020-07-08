@@ -11,6 +11,7 @@ from collections import OrderedDict
 
 from hls4ml.model.hls_layers import *
 from hls4ml.templates import get_backend
+from hls4ml.templates import templates
 from hls4ml.writer import get_writer
 from hls4ml.model.optimizer import optimize_model
 
@@ -141,6 +142,20 @@ class HLSConfig(object):
 
         return compression
 
+    def get_precision_string(self, precision):
+        if not "fixed" in precision and not "int" in precision:
+            precision = re.findall('\d+',precision)
+            if(len(precision) == 1):
+                precision = self.backend.get_pstring(int(precision[0]), int(precision[0]), True)
+            elif(len(precision) == 2):
+                precision = self.backend.get_pstring(int(precision[0]), int(precision[1]), True)
+            elif(len(precision) == 3):
+                precision = self.backend.get_pstring(int(precision[0]), int(precision[1]), int(precision[2]))
+            else:
+                print('Precision not defined properly')
+                sys.exit(1)
+        return precision
+
     def _parse_hls_config(self):
         hls_config = self.config['HLSConfig']
         self.optimizers = hls_config.get('Optimizers')
@@ -150,9 +165,9 @@ class HLSConfig(object):
             if precision_cfg is not None:
                 if isinstance(precision_cfg, dict):
                     for var, precision in precision_cfg.items():
-                        self.model_precision[var] = precision
+                        self.model_precision[var] =  self.get_precision_string(precision)
                 else:
-                    self.model_precision['default'] = precision_cfg # Default precision for everything
+                    self.model_precision['default'] = self.get_precision_string(precision_cfg) # Default precision for everything
 
             self.model_rf = model_cfg.get('ReuseFactor')
             self.model_strategy = model_cfg.get('Strategy', 'Latency')
@@ -164,9 +179,9 @@ class HLSConfig(object):
                 precision_cfg = layer_cfg.get('Precision')
                 if isinstance(precision_cfg, dict):
                     for var, precision in precision_cfg.items():
-                        self.layer_type_precision[layer_type.lower() + '_' + var] = precision
+                        self.layer_type_precision[layer_type.lower() + '_' + var] = self.get_precision_string(precision)
                 else:
-                    self.layer_type_precision[layer_type.lower() + '_default'] = precision_cfg
+                    self.layer_type_precision[layer_type.lower() + '_default'] = self.get_precision_string(precision_cfg)
 
                 rf = layer_cfg.get('ReuseFactor')
                 if rf is not None:
@@ -186,9 +201,9 @@ class HLSConfig(object):
                 precision_cfg = layer_cfg.get('Precision')
                 if isinstance(precision_cfg, dict):
                     for var, precision in precision_cfg.items():
-                        self.layer_name_precision[layer_name.lower() + '_' + var] = precision
+                        self.layer_name_precision[layer_name.lower() + '_' + var] = self.get_precision_string(precision)
                 else:
-                    self.layer_name_precision[layer_name.lower() + '_default'] = precision_cfg
+                    self.layer_name_precision[layer_name.lower() + '_default'] = self.get_precision_string(precision_cfg)
 
                 rf = layer_cfg.get('ReuseFactor')
                 if rf is not None:
@@ -203,37 +218,12 @@ class HLSConfig(object):
                     self.layer_name_compression[layer_name.lower()] = bool(compression)
 
     def _validate_hls_config(self):
-        use_resource = False
-        if self.model_strategy.lower() == 'latency' and self.model_compression:
-            print('WARNING: Compression enabled while model strategy set to "Latency".')
-            use_resource = True
-        for layer_type, strategy in self.layer_type_strategy.items():
-            if strategy.lower() == 'resource' and self.model_strategy.lower() == 'latency':
-                print('WARNING: Strategy for layer type {} set to "Resource", while model strategy set to "Latency".'.format(layer_type))
-                use_resource = True
-
-        for layer_name, strategy in self.layer_name_strategy.items():
-            if strategy.lower() == 'resource' and self.model_strategy.lower() == 'latency':
-                print('WARNING: Strategy for layer {} set to "Resource", while model strategy set to "Latency".'.format(layer_name))
-                use_resource = True
-
-        for layer_type, compression in self.layer_type_compression.items():
-            if compression and self.model_strategy.lower() == 'latency':
-                print('WARNING: Compression enabled for layer type {}, while model strategy set to "Latency".'.format(layer_type))
-                use_resource = True
-
-        for layer_name, compression in self.layer_name_compression.items():
-            if compression and self.model_strategy.lower() == 'latency':
-                print('WARNING: Compression enabled for layer {}, while model strategy set to "Latency".'.format(layer_name))
-                use_resource = True
-
-        if use_resource:
-            print('WARNING: Changing model strategy to "Resource"')
-            self.model_strategy = 'Resource'
+        self.backend.validate_hls(self)
 
 class HLSModel(object):
     def __init__(self, config, data_reader, layer_list, inputs=None, outputs=None):
         self.config = HLSConfig(config)
+        self.backend = get_backend(config.get('Backend', 'Vivado'))
         self.reader = data_reader
 
         # If not provided, assumes layer_list[0] is input, and layer_list[-1] is output
@@ -364,21 +354,8 @@ class HLSModel(object):
         os.chdir(self.config.get_output_dir())
 
         try:
-            ret_val = os.system('bash build_lib.sh')
-            if ret_val != 0:
-                raise Exception('Failed to compile project "{}"'.format(self.config.get_project_name()))
-            lib_name = 'firmware/{}.so'.format(self.config.get_project_name())
-            if self._top_function_lib is not None:
+            self.backend.compile(self)
 
-                if platform.system() == "Linux":
-                    dlclose_func = ctypes.CDLL('libdl.so').dlclose
-                elif platform.system() == "Darwin":
-                    dlclose_func = ctypes.CDLL('libc.dylib').dlclose
-
-                dlclose_func.argtypes = [ctypes.c_void_p]
-                dlclose_func.restype = ctypes.c_int
-                dlclose_func(self._top_function_lib._handle)
-            self._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
         finally:
             os.chdir(curr_dir)
 
@@ -516,22 +493,8 @@ class HLSModel(object):
 
     def build(self, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
         if 'linux' in sys.platform:
-            backend = self.config.get_config_value('Backend', 'Vivado')
-            if backend == 'Vivado':
-                found = os.system('command -v vivado_hls > /dev/null')
-                if found is not 0:
-                    raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
-
-            elif backend == 'Intel':
-                raise NotImplementedError
-            elif backend == 'Mentor':
-                raise NotImplementedError
+            if self.config.get_config_value('Backend', 'Vivado') in templates.backend_map:
+                curr_dir = os.getcwd()
+                self.backend.build(dir=curr_dir, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
             else:
-                raise Exception('Backend values can be [Vivado, Intel, Mentor]')
-
-        curr_dir = os.getcwd()
-        os.chdir(self.config.get_output_dir())
-        os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
-            .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
-        os.chdir(curr_dir)
-
+                raise Exception('Backend not Implemented try [Vivado, Quartus]')

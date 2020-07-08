@@ -1,8 +1,12 @@
 import numpy as np
 import math
+import os
+import ctypes
+import platform
 from bisect import bisect_left
 
 from hls4ml.templates.templates import Backend
+from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
 
 dense_config_template = """struct config{index} : nnet::dense_config {{
     static const unsigned n_in = {n_in};
@@ -195,7 +199,7 @@ class VivadoBackend(Backend):
         self.register_templates('Concatenate'            , merge_function_template,       concat_config_template, merge_include_list)
         self.register_templates('Resize'                 , resize_function_template,      resize_config_template, resize_include_list)
         self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template, transpose_include_list)
-    
+
     def get_valid_reuse_factors(self, layer):
         n_in = 0
         n_out = 0
@@ -237,7 +241,7 @@ class VivadoBackend(Backend):
 
     def get_closest_reuse_factor(self, valid_rf, chosen_rf):
         """
-        Returns closest value to chosen_rf. valid_rf is sorted (obtained from get_valid_reuse_factors()) 
+        Returns closest value to chosen_rf. valid_rf is sorted (obtained from get_valid_reuse_factors())
         If two numbers are equally close, return the smallest number.
         """
         pos = bisect_left(valid_rf, chosen_rf)
@@ -261,3 +265,133 @@ class VivadoBackend(Backend):
                 .format(chosen_rf, layer.name, closest_rf, ','.join(map(str, valid_rf))))
             layer.reuse_factor = closest_rf
 
+    def get_precision_string_backend(self, precision):
+        if isinstance(precision, IntegerPrecisionType):
+            typestring = 'ap_{signed}int<{width}>'.format(signed='u' if not precision.signed else '', width=precision.width)
+        elif isinstance(precision, FixedPrecisionType):
+            args = [precision.width, precision.integer, precision.rounding_mode, precision.saturation_mode, precision.saturation_bits]
+            args = ','.join([str(arg) for arg in args if arg is not None])
+            typestring = 'ap_{signed}fixed<{args}>'.format(signed='u' if not precision.signed else '', args=args)
+        else:
+            typestring = precision
+        return typestring
+
+    def set_strategy(self, layer):
+        if layer.model.config.is_resource_strategy(layer):
+            layer.model.config.backend.set_closest_reuse_factor(layer)
+            if layer.model.config.get_compression(layer):
+                layer.set_attr('strategy', 'compressed')
+            else:
+                layer.set_attr('strategy', 'large')
+        else:
+            layer.set_attr('strategy', 'latency')
+
+    def configure_weights(self, layer):
+        if layer.model.config.is_resource_strategy(layer):
+            if not layer.model.config.get_compression(layer):
+                layer.weights['weight'].data = np.transpose(layer.weights['weight'].data)
+
+    def bn_weight_fuse(self, model, node):
+        dense_node = node.get_input_node()
+
+        dense_weight = dense_node.weights['weight']
+        dense_bias = dense_node.weights['bias']
+
+        bn_scale = node.weights['scale']
+        bn_bias = node.weights['bias']
+
+        if dense_node.get_attr('strategy') != 'large':
+            fused_weight = bn_scale.data * dense_weight.data
+        else:
+            fused_weight = (bn_scale.data * dense_weight.data.T).T
+
+        fused_bias = bn_scale.data * dense_bias.data + bn_bias.data
+
+        model.remove_node(node, rewire=True)
+        dense_node.weights['weight'].data = fused_weight
+        dense_node.weights['bias'].data = fused_bias
+
+    def validate_hls(self, config):
+        use_resource = False
+        if config.model_strategy.lower() == 'latency' and config.model_compression:
+            print('WARNING: Compression enabled while model strategy set to "Latency".')
+            use_resource = True
+        for layer_type, strategy in config.layer_type_strategy.items():
+            if strategy.lower() == 'resource' and config.model_strategy.lower() == 'latency':
+                print('WARNING: Strategy for layer type {} set to "Resource", while model strategy set to "Latency".'.format(layer_type))
+                use_resource = True
+
+        for layer_name, strategy in config.layer_name_strategy.items():
+            if strategy.lower() == 'resource' and config.model_strategy.lower() == 'latency':
+                print('WARNING: Strategy for layer {} set to "Resource", while model strategy set to "Latency".'.format(layer_name))
+                use_resource = True
+
+        for layer_type, compression in config.layer_type_compression.items():
+            if compression and config.model_strategy.lower() == 'latency':
+                print('WARNING: Compression enabled for layer type {}, while model strategy set to "Latency".'.format(layer_type))
+                use_resource = True
+
+        for layer_name, compression in config.layer_name_compression.items():
+            if compression and config.model_strategy.lower() == 'latency':
+                print('WARNING: Compression enabled for layer {}, while model strategy set to "Latency".'.format(layer_name))
+                use_resource = True
+
+        if use_resource:
+            print('WARNING: Changing model strategy to "Resource"')
+            config.model_strategy = 'Resource'
+
+    def compile(self, model):
+        ret_val = os.system('bash build_lib.sh')
+        if ret_val != 0:
+            raise Exception('Failed to compile project "{}"'.format(model.config.get_project_name()))
+        lib_name = 'firmware/{}.so'.format(model.config.get_project_name())
+        if model._top_function_lib is not None:
+
+            if platform.system() == "Linux":
+                dlclose_func = ctypes.CDLL('libdl.so').dlclose
+            elif platform.system() == "Darwin":
+                dlclose_func = ctypes.CDLL('libc.dylib').dlclose
+
+            dlclose_func.argtypes = [ctypes.c_void_p]
+            dlclose_func.restype = ctypes.c_int
+            dlclose_func(model._top_function_lib._handle)
+        model._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
+
+    def build(self, dir, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
+        found = os.system('command -v vivado_hls > /dev/null')
+        if found != 0:
+            raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
+        curr_dir = os.getcwd()
+        os.chdir(dir)
+        os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
+            .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
+        os.chdir(curr_dir)
+
+    def get_supportedlayers(self):
+        #Define supported laers
+        core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Reshape']
+        dense_layers = ['Dense', 'BinaryDense', 'TernaryDense']
+        conv_layers = ['Conv1D', 'Conv2D', 'BinaryConv2D']
+        pooling_layers = ['MaxPooling1D', 'MaxPooling2D', 'AveragePooling1D', 'AveragePooling2D']
+        norm_layers = ['BatchNormalization']
+        activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']
+        merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate']
+        qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D']
+        qkeras_dense = ['QDense', 'QActivation']
+        #Define layers to skip for conversion to HLS
+        skip_layers = ['Dropout', 'Flatten']
+        #All supported layers
+        return core_layers + dense_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + skip_layers
+
+    def get_pstring (self, bits, integer, signed=True):
+        decimal = bits - integer
+        if decimal > 0:
+            if signed:
+                return 'ap_fixed<{},{}>'.format(bits, integer)
+            else:
+                return 'ap_ufixed<{},{}>'.format(bits, integer)
+        else:
+            if signed:
+                return 'ap_int<{}>'.format(bits)
+            else:
+                return 'ap_uint<{}>'.format(bits)

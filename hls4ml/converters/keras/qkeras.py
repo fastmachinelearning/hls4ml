@@ -10,6 +10,7 @@ class QKerasQuantizer(Quantizer):
     def __init__(self, config):
         self.quantizer_fn = get_quantizer(config)
         self.alpha = config['config']['alpha']
+
         if config['class_name'] == 'quantized_bits':
             self.bits = config['config']['bits']
             self.hls_type = get_type(config)
@@ -28,7 +29,7 @@ class QKerasQuantizer(Quantizer):
             print("Unsupported quantizer: " + config['class_name'])
             self.bits = 16
             self.hls_type = FixedPrecisionType(width=16, integer=6, signed=True)
-    
+
     def __call__(self, data):
         tf_data = tf.convert_to_tensor(data)
         return self.quantizer_fn(tf_data).numpy()
@@ -70,4 +71,3 @@ def get_quantizer_from_config(keras_layer, quantizer_var):
             return QKerasBinaryQuantizer(quantizer_config, xnor=False)
     else:
         return QKerasQuantizer(quantizer_config)
-

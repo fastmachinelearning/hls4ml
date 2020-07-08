@@ -202,7 +202,7 @@ def keras_to_hls(config):
             if 'inbound_nodes' in keras_layer:
                 input_shapes = [output_shapes[inbound_node[0][0]] for inbound_node in keras_layer['inbound_nodes']]
             else:
-                # Sequential model, so output_shape from the previous layer is still valid 
+                # Sequential model, so output_shape from the previous layer is still valid
                 input_shapes = [output_shape]
 
         keras_class = keras_layer['class_name']
@@ -252,7 +252,7 @@ def keras_to_hls(config):
             layer_list.append(act_layer)
 
         assert(output_shape is not None)
-        
+
         output_shapes[layer['name']] = output_shape
 
     #################

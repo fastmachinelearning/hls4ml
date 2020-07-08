@@ -1,26 +1,30 @@
-from __future__ import print_function
+from __future__ import absolute_import
 import numpy as np
 import h5py
 import json
 import math
 from collections import OrderedDict
 
-def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
+#changed name from create_vivado_config to create_config
+def create_config(output_dir='my-hls-test', project_name='myproject', backend='Vivado',
     fpga_part='xcku115-flvb2104-2-i', clock_period=5):
-    
+
     config = {}
-    
+
     config['OutputDir'] = output_dir
     config['ProjectName'] = project_name
-    config['XilinxPart'] = fpga_part
+    config['Backend'] = backend
+    if(backend == 'Quartus' and fpga_part == 'xcku115-flvb2104-2-i'):
+        config['FPGAPart'] = 'Arria10'
+    else:
+        config['FPGAPart'] = fpga_part
     config['ClockPeriod'] = clock_period
-    config['Backend'] = 'Vivado'
     config['IOType'] = 'io_parallel' # To become obsolete in the future
     config['HLSConfig'] = {}
 
     return config
 
-def _get_precision_from_quantizer(quantizer):
+def _get_precision_from_quantizer(quantizer, backend):
     import qkeras
     if isinstance(quantizer, str):
         quantizer_obj = qkeras.get_quantizer(quantizer)
@@ -30,31 +34,28 @@ def _get_precision_from_quantizer(quantizer):
             quantizer['class_name'] = quantizer_obj.__class__.__name__
             quantizer['config'] = quantizer_obj.get_config()
         # Some activations are just functions
-        else: 
+        else:
             quantizer['class_name'] = quantizer_obj.__name__
 
     supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh']
     if quantizer['class_name'] in supported_quantizers:
         bits = int(quantizer['config']['bits']) + 1
         integer = int(quantizer['config']['integer']) + 1
-        
+
     elif quantizer['class_name'] in ['binary', 'stochastic_binary', 'binary_tanh']:
         bits = 2
         integer = 2
-    
+
     elif quantizer['class_name'] in ['ternary', 'stochastic_ternary', 'ternary_tanh']:
         bits = 2
         integer = 2
     else:
         raise Exception('ERROR: Unsupported quantizer: {}'.format(quantizer['class_name']))
 
-    decimal = bits - integer
-    if decimal > 0:
-        return 'ap_fixed<{},{}>'.format(bits, integer)
-    else:
-        return 'ap_int<{}>'.format(bits)
+    return backend.get_pstring(bits, integer)
 
-def config_from_keras_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1):
+
+def config_from_keras_model(model, backend, granularity='model', default_precision='<16,6>', default_reuse_factor=1):
 
     #This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
@@ -64,7 +65,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     else:
         model_arch = json.loads(model.to_json())
 
-    #Define supported laers
+    #Define all laers
     core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Reshape']
     dense_layers = ['Dense', 'BinaryDense', 'TernaryDense']
     conv_layers = ['Conv1D', 'Conv2D', 'BinaryConv2D']
@@ -73,10 +74,11 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']
     merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate']
     qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D']
+    qkeras_dense = ['QDense', 'QActivation']
     #Define layers to skip for conversion to HLS
     skip_layers = ['Dropout', 'Flatten']
-    #All supported layers
-    supported_layers = core_layers + dense_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + skip_layers
+
+    supported_layers = backend.get_supportedlayers()
 
     keras_layer_config = None
     if model_arch['class_name'] == 'Sequential':
@@ -115,10 +117,10 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
                     pname = qname.split('_quantizer')[0]
                     if pname == 'kernel': pname = 'weight'
                     if qclass is not None:
-                        precision = _get_precision_from_quantizer(qclass)
+                        precision = _get_precision_from_quantizer(qclass, backend)
                         layer['precision'][pname] = precision
                 elif qname == 'activation' and layer['class_name'] == 'QActivation':
-                    precision = _get_precision_from_quantizer(qclass)
+                    precision = _get_precision_from_quantizer(qclass, backend)
                     layer['precision']['result'] = precision
 
         print('Layer name: {}, layer type: {}'.format(layer['name'], layer['class_name']))
@@ -145,17 +147,18 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             layer_config['ReuseFactor'] = default_reuse_factor
             layer_config['table_size'] = 1024
             if layer['class_name'] == 'Softmax':
-               layer_config['exp_table_t'] = 'ap_fixed<18,8>'
-               layer_config['inv_table_t'] = 'ap_fixed<18,8>'
+                layer_config['exp_table_t'] = backend.get_pstring(18,8)
+                layer_config['inv_table_t'] = backend.get_pstring(18,8)
+
             else:
-                layer_config['table_t'] = 'ap_fixed<18,8>'
-        
+                layer_config['table_t'] = backend.get_pstring(18,8)
+
         elif layer['class_name'] in norm_layers:
             layer_config['Precision'] = {}
             layer_config['Precision']['scale'] = default_precision
             layer_config['Precision']['bias'] = default_precision
             layer_config['ReuseFactor'] = default_reuse_factor
-        
+
         elif layer['class_name'] in qkeras_layers:
             if 'precision' in layer:
                 layer_config['Precision'] = {}
@@ -167,7 +170,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             layer_config['ReuseFactor'] = default_reuse_factor
         else:
             layer_config['Precision'] = default_precision
-        
+
         return layer_config
 
     config = {}
@@ -179,9 +182,9 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
         model_config['Strategy'] = 'Latency'
         #model_config['Compression'] = False
         #model_config['Trace'] = False
-        
+
         config['Model'] = model_config
-    
+
     elif granularity.lower() == 'type':
         type_config = {}
         for layer in layer_list:
@@ -189,7 +192,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
                 continue
             layer_config = make_layer_config(layer)
             type_config[layer['class_name']] = layer_config
-        
+
         config['LayerType'] = type_config
 
     elif granularity.lower() == 'name':
@@ -199,7 +202,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
                 continue
             layer_config = make_layer_config(layer)
             name_config[layer['name']] = layer_config
-        
+
         config['LayerName'] = name_config
 
     else:

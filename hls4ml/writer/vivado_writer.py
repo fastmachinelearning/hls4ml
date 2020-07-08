@@ -66,7 +66,7 @@ class VivadoWriter(Writer):
         If `pragma` is a tuple: (mode, type, factor) where mode is 'partition' or 'reshape', type is
         'complete', 'cyclic', or 'block', and factor is an integer only used when the type is not 'complete'.
         """
-        
+
         config = variable.pragma
         if type(config) is tuple:
             mode = config[0]
@@ -247,9 +247,9 @@ class VivadoWriter(Writer):
                 for layer in model.get_layers():
                     layer_precision = layer.get_layer_precision()
                     all_precision.update(layer_precision)
+                    dummy_object = layer
                 for used_type in all_precision.values():
-                    newline += used_type.definition_cpp()
-
+                    newline += dummy_object.var_definition_cpp(used_type)
             else:
                 newline = line
             fout.write(newline)
@@ -290,12 +290,12 @@ class VivadoWriter(Writer):
         for layer in model.get_layers():
             for weights in layer.get_weights():
                 self.print_array_to_cpp(weights, model.config.get_output_dir())
-    
-    def __make_dat_file(self, original_path, project_path): 
+
+    def __make_dat_file(self, original_path, project_path):
         """
         Convert other input/output data types into a dat file, which is
         a text file with the falttened matrix printed out. Note that ' ' is
-        assumed to be the delimiter. 
+        assumed to be the delimiter.
         """
 
         #Take in data from current supported data files
@@ -326,16 +326,16 @@ class VivadoWriter(Writer):
 
         if not os.path.exists('{}/tb_data/'.format(model.config.get_output_dir())):
             os.mkdir('{}/tb_data/'.format(model.config.get_output_dir()))
-        
+
         input_data = model.config.get_config_value('InputData')
         output_predictions = model.config.get_config_value('OutputPredictions')
-        
+
         if input_data:
             if input_data[-3:] == "dat":
                 copyfile(input_data, '{}/tb_data/tb_input_features.dat'.format(model.config.get_output_dir()))
             else:
                 self.__make_dat_file(input_data,'{}/tb_data/tb_input_features.dat'.format(model.config.get_output_dir()))
-        
+
         if output_predictions:
             if output_predictions[-3:] == "dat":
                 copyfile(output_predictions, '{}/tb_data/tb_output_predictions.dat'.format(model.config.get_output_dir()))
@@ -451,10 +451,10 @@ class VivadoWriter(Writer):
                     newline += indent + '{type} {name}_ap[{shape}];\n'.format(type=i.type.name, name=i.cppname, shape=i.size_cpp())
                     newline += indent + 'nnet::convert_data<{}, {}, {}>({}, {}_ap);\n'.format(dtype, i.type.name, i.size_cpp(), i.cppname, i.cppname)
                 newline += '\n'
-                
+
                 for o in model_outputs:
                     newline += indent + '{type} {name}_ap[{shape}];\n'.format(type=o.type.name, name=o.cppname, shape=o.size_cpp())
-                
+
                 newline += '\n'
 
                 input_size_vars = ','.join(['const_size_in_{}'.format(i) for i in range(1, len(model.get_input_variables()) + 1)])
@@ -475,7 +475,7 @@ class VivadoWriter(Writer):
                             vars = layer.get_variables()
                             for var in vars:
                                 newline += indent + 'nnet::trace_outputs->insert(std::pair<std::string, void *>("{}", (void *) malloc({} * element_size)));\n'.format(layer.name, var.size_cpp())
-                    
+
             else:
                 newline = line
             fout.write(newline)

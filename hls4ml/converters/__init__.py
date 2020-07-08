@@ -2,7 +2,7 @@ from __future__ import absolute_import
 import os
 import importlib
 
-from hls4ml.utils.config import create_vivado_config
+from hls4ml.utils.config import create_config
 
 from hls4ml.converters.keras_to_hls import keras_to_hls, get_supported_keras_layers, register_keras_layer_handler
 
@@ -59,13 +59,14 @@ def convert_from_yaml_config(yamlConfig):
             raise Exception("TensorFlow not found. Please install TensorFlow.")
     else:
         model = keras_to_hls(yamlConfig)
-    
+
     return model
 
-def convert_from_keras_model(model, output_dir='my-hls-test', project_name='myproject',
+def convert_from_keras_model(model, backend, output_dir='my-hls-test', project_name='myproject',
     fpga_part='xcku115-flvb2104-2-i', clock_period=5, hls_config={}):
-    config = create_vivado_config(output_dir=output_dir,
-        project_name=project_name, fpga_part=fpga_part, clock_period=clock_period)
+
+    config = create_config(output_dir=output_dir,
+        project_name=project_name, backend=backend.name, fpga_part=fpga_part, clock_period=clock_period)
     config['KerasModel'] = model
 
     model_config = hls_config.get('Model', None)
@@ -74,17 +75,17 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
             raise Exception('Precision and ReuseFactor must be provided in the hls_config')
     else:
         model_config = {}
-        model_config['Precision'] = 'ap_fixed<16,6>'
+        model_config['Precision'] = backend.get_pstring(16,6)
         model_config['ReuseFactor'] = '1'
     config['HLSConfig']['Model'] = model_config
-    
+
     if 'LayerName' in hls_config:
         config['HLSConfig']['LayerName'] = hls_config['LayerName']
-    
+
     if 'LayerType' in hls_config:
         config['HLSConfig']['LayerType'] = hls_config['LayerType']
 
     if 'Optimizers' in hls_config:
         config['HLSConfig']['Optimizers'] = hls_config['Optimizers']
-    
+
     return keras_to_hls(config)

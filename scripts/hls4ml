@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/local/opt/python/bin/python3.7
 from __future__ import absolute_import
 from __future__ import print_function
 
@@ -6,6 +6,7 @@ __version__ = '0.2.0'
 
 import argparse
 import os
+import re
 import sys
 import yaml
 import json
@@ -24,7 +25,7 @@ def parse_config(config_file):
 def main():
     parser = argparse.ArgumentParser(description='HLS4ML - Machine learning inference in FPGAs')
     subparsers = parser.add_subparsers()
-    
+
     config_parser = subparsers.add_parser('config', help='Create a conversion configuration file')
     convert_parser = subparsers.add_parser('convert', help='Convert Keras or ONNX model to HLS')
     build_parser = subparsers.add_parser('build', help='Build generated HLS project')
@@ -34,17 +35,18 @@ def main():
     config_parser.add_argument('-w', '--weights', help='Optional weights file (if Keras .json file is provided))', default=None)
     config_parser.add_argument('-p', '--project', help='Project name', default='myproject')
     config_parser.add_argument('-d', '--dir', help='Project output directory', default='my-hls-test')
+    config_parser.add_argument('-b', '--backend', help='Backend : Vivado (Xilinx) / Quartus (Intel)', default='Vivado')
     config_parser.add_argument('-f', '--fpga', help='FPGA part', default='xcku115-flvb2104-2-i')
     config_parser.add_argument('-c', '--clock', help='Clock frequency (ns)', type=int, default=5)
     config_parser.add_argument('-g', '--granularity', help='Granularity of configuration. One of "model", "type" or "name"', default='model')
-    config_parser.add_argument('-x', '--precision', help='Default precision', default='ap_fixed<16,6>')
+    config_parser.add_argument('-x', '--precision', help='Default precision <Total Bits, Integer Bits, Signed(Optional)> ex: <16,6,1> or <16,6>', default='<16,6>')
     config_parser.add_argument('-r', '--reuse-factor', help='Default reuse factor', type=int, default=1)
     config_parser.add_argument('-o', '--output', help='Output file name', default=None)
     config_parser.set_defaults(func=config)
-    
+
     convert_parser.add_argument('-c', '--config', help='Configuration file', default=None)
     convert_parser.set_defaults(func=convert)
-    
+
     build_parser.add_argument('-p', '--project', help='Project directory', default=None)
     build_parser.add_argument('-c', '--simulation', help='Run C simulation', action='store_true', default=False)
     build_parser.add_argument('-s', '--synthesis', help='Run C/RTL synthesis', action='store_true', default=False)
@@ -55,7 +57,7 @@ def main():
     build_parser.add_argument('-a', '--all', help='Run C simulation, C/RTL synthesis, C/RTL co-simulation and Vivado synthesis', action='store_true')
     build_parser.add_argument('--reset', help='Remove any previous builds', action='store_true', default=False)
     build_parser.set_defaults(func=build)
-    
+
     report_parser.add_argument('-p', '--project', help='Project directory', default=None)
     report_parser.add_argument('-f', '--full', help='Show full report', action='store_true', default=False)
     report_parser.set_defaults(func=report)
@@ -72,13 +74,15 @@ def config(args):
     if args.model is None:
         print('Model file (-m or --model) must be provided.')
         sys.exit(1)
-    
-    config = hls4ml.utils.config.create_vivado_config(
+
+    config = hls4ml.utils.config.create_config(
         output_dir=args.dir,
         project_name=args.project,
+        backend=args.backend,
         fpga_part=args.fpga,
         clock_period=args.clock
     )
+    backend = hls4ml.templates.get_backend(args.backend)
 
     if args.model.endswith('.h5'):
         config['KerasH5'] = args.model
@@ -91,9 +95,10 @@ def config(args):
                 sys.exit(1)
             else:
                 model_arch = json.loads(model_arch.decode('utf-8'))
-            
+
             config['HLSConfig'] = hls4ml.utils.config_from_keras_model(
                 model_arch,
+                backend=backend,
                 granularity=args.granularity,
                 default_precision=args.precision,
                 default_reuse_factor=args.reuse_factor
@@ -109,17 +114,18 @@ def config(args):
             model_arch = json.load(json_file)
             config['HLSConfig'] = hls4ml.utils.config_from_keras_model(
                 model_arch,
+                backend=backend,
                 granularity=args.granularity,
                 default_precision=args.precision,
                 default_reuse_factor=args.reuse_factor
             )
     elif args.model.endswith('.onnx'):
-        print('Creating configuration for ONNX mdoels is not supported yet.')
+        print('Creating configuration for ONNX models is not supported yet.')
         sys.exit(1)
     elif args.model.endswith('.pb'):
-        print('Creating configuration for Tensorflow mdoels is not supported yet.')
+        print('Creating configuration for Tensorflow models is not supported yet.')
         sys.exit(1)
-    
+
     if args.output is not None:
         outname = args.output
         if not outname.endswith('.yml'):
@@ -133,6 +139,7 @@ def config(args):
 
 def convert(args):
     yamlConfig = parse_config(args.config)
+    print('Using Backend:', yamlConfig['Backend'])
     model = hls4ml.converters.convert_from_yaml_config(yamlConfig)
 
     if model is not None:
@@ -155,32 +162,22 @@ def build(args):
     vsynth = int(args.vivado_synthesis)
     if args.all:
         csim = synth = cosim = validation = export = vsynth = 1
-    
+
     yamlConfig = parse_config(args.project + '/' + config_filename)
 
     # Check if vivado_hls is available
     if 'linux' in sys.platform or 'darwin' in sys.platform:
-        backend = yamlConfig.get('Backend', 'Vivado')
-        if backend == 'Vivado':
-            found = os.system('command -v vivado_hls > /dev/null')
-            if found is not 0:
-                print('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
-                sys.exit(1)
-        elif backend == 'Intel':
-            raise NotImplementedError
-        elif backend == 'Mentor':
-            raise NotImplementedError
+        backend = hls4ml.templates.get_backend(yamlConfig.get('Backend', 'Vivado'))
+        if yamlConfig.get('Backend', 'Vivado') in hls4ml.templates.templates.backend_map:
+            backend.build(dir=args.project, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
         else:
-            raise Exception('Backend values can be [Vivado, Intel, Mentor]')
-    
-    os.system('cd {dir} && vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
-        .format(dir=args.project, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
+            raise Exception('Backend not Implemented try [Vivado, Quartus]')
 
 def report(args):
     if args.project is None:
         print('Project directory (-p or --project) must be provided.')
         sys.exit(1)
-    
+
     hls4ml.report.read_vivado_report(args.project, args.full)
 
 if __name__== "__main__":
