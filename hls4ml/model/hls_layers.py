@@ -19,10 +19,7 @@ class IntegerPrecisionType(object):
         self.width = width
         self.signed = signed
 
-        #replaced by a parsing function in the layer class
-    """def __str__(self, backend='Quartus'):
-        typestring = 'ap_{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
-        return typestring"""
+        #replaced __str__ by a parsing function in the backend
 
 class FixedPrecisionType(object):
     def __init__(self, width=16, integer=6, signed=True, rounding_mode=None, saturation_mode=None, saturation_bits=None):
@@ -33,12 +30,7 @@ class FixedPrecisionType(object):
         self.saturation_mode = saturation_mode
         self.saturation_bits = saturation_bits
 
-        #replaced by a parsing function in the layer class
-    """def __str__(self):
-        args = [self.width, self.integer, self.rounding_mode, self.saturation_mode, self.saturation_bits]
-        args = ','.join([str(arg) for arg in args if arg is not None])
-        typestring = 'ap_{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
-        return typestring"""
+        #replaced __str__ by a parsing function in the backend
 
 class HLSType(object):
     def __init__(self, name, precision, **kwargs):
