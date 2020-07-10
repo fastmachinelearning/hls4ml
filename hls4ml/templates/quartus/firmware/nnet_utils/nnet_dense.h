@@ -21,8 +21,6 @@
 #define NNET_DENSE_LARGE_H_
 
 #include "nnet_common.h"
-#include "HLS/hls.h"
-#include "HLS/math.h"
 
 namespace nnet {
 
