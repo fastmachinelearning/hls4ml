@@ -12,6 +12,35 @@ from hls4ml.writer.writers import Writer
 
 class VivadoWriter(Writer):
 
+    def type_definition_cpp(self, model, atype):
+        type_class = atype.__class__.__name__
+        if type_class == 'HLSType':
+            return 'typedef {precision} {name};\n'.format(name=atype.name, precision=atype.precision)
+        elif type_class == 'CompressedType':
+            cpp_fmt = ('typedef struct {name} {{ '
+               '{index} row_index;'
+               '{index} col_index;'
+               '{precision} weight; }} {name};\n')
+            return cpp_fmt.format(name=atype.name, index=atype.index_precision, precision=atype.precision)
+        elif type_class == 'PackedType':
+            return 'typedef hls_array<{precision}, {n_elem}> {name};\n'.format(name=atype.name, precision=atype.precision, n_elem=atype.n_elem)
+        else:
+            raise Exception('Unknown data type class "{}"'.format(type_class))
+
+    def variable_definition_cpp(self, model, var):
+        var_class = var.__class__.__name__
+        if var_class == 'ArrayVariable':
+            array_shape = var.size_cpp()
+            return '{type} {name}[{shape}]'.format(type=var.type.name, name=var.cppname, shape=array_shape)
+        elif var_class == 'StreamVariable':
+            return 'hls::stream<nnet::array<{type}>> {name}'.format(type=var.type.name, name=var.cppname)
+        elif var_class == 'WeightVariable':
+            return '{type} {name}[{size}]'.format(type=var.type.name, name=var.cppname, size=var.data_length)
+        elif var_class == 'InplaceVariable':
+            return None
+        else:
+            raise Exception('Unknown variable class "{}"'.format(var_class))
+
     def print_array_to_cpp(self, var, odir, write_txt_file=True):
         #######################################
         ## Print weight array to C++
@@ -111,8 +140,8 @@ class VivadoWriter(Writer):
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert header' in line:
-                inputs_str = ', '.join([i.definition_cpp() for i in model_inputs])
-                outputs_str = ', '.join([o.definition_cpp() for o in model_outputs])
+                inputs_str = ', '.join([self.variable_definition_cpp(model, i) for i in model_inputs])
+                outputs_str = ', '.join([self.variable_definition_cpp(model, o) for o in model_outputs])
                 insize_str = ', '.join(['unsigned short &const_size_in_{}'.format(i) for i in range(1, len(model_inputs) + 1)])
                 outsize_str = ', '.join(['unsigned short &const_size_out_{}'.format(i) for i in range(1, len(model_outputs) + 1)])
 
@@ -165,7 +194,7 @@ class VivadoWriter(Writer):
                     vars = layer.get_variables()
                     for var in vars:
                         if var not in inputs and var not in outputs:
-                            def_cpp = var.definition_cpp()
+                            def_cpp = self.variable_definition_cpp(model, var)
                             if def_cpp is not None:
                                 newline += '    ' + def_cpp + ';\n'
                                 if var.pragma:
@@ -211,8 +240,8 @@ class VivadoWriter(Writer):
             elif 'void myproject(' in line:
                 newline = 'void {}(\n'.format(model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert header' in line:
-                inputs_str = ', '.join([i.definition_cpp() for i in model_inputs])
-                outputs_str = ', '.join([o.definition_cpp() for o in model_outputs])
+                inputs_str = ', '.join([self.variable_definition_cpp(model, i) for i in model_inputs])
+                outputs_str = ', '.join([self.variable_definition_cpp(model, o) for o in model_outputs])
                 insize_str = ', '.join(['unsigned short &const_size_in_{}'.format(i) for i in range(1, len(model_inputs) + 1)])
                 outsize_str = ', '.join(['unsigned short &const_size_out_{}'.format(o) for o in range(1, len(model_outputs) + 1)])
 
@@ -248,7 +277,7 @@ class VivadoWriter(Writer):
                     layer_precision = layer.get_layer_precision()
                     all_precision.update(layer_precision)
                 for used_type in all_precision.values():
-                    newline += used_type.definition_cpp()
+                    newline += self.type_definition_cpp(model, used_type)
 
             else:
                 newline = line
@@ -356,22 +385,22 @@ class VivadoWriter(Writer):
                 newline += '      std::vector<float>::const_iterator in_begin = in.cbegin();\n'
                 newline += '      std::vector<float>::const_iterator in_end;\n'
                 for inp in model.get_input_variables():
-                    newline += '      ' + inp.definition_cpp() + ';\n'
+                    newline += '      ' + self.variable_definition_cpp(model, inp) + ';\n'
                     newline += '      in_end = in_begin + ({});\n'.format(inp.size_cpp())
                     newline += '      std::copy(in_begin, in_end, {});\n'.format(inp.cppname)
                     newline += '      in_begin = in_end;\n'
                 for out in model.get_output_variables():
                     # brace-init zeros the array out because we use std=c++0x
-                    newline += '      ' + out.definition_cpp() + '{};\n'
+                    newline += '      ' + self.variable_definition_cpp(model, out) + '{};\n'
                     # but we can still explicitly zero out if you want
                     newline += '      std::fill_n({}, {}, 0.);\n'.format(out.cppname, out.size())
             elif '//hls-fpga-machine-learning insert zero' in line:
                 newline = line
                 for inp in model.get_input_variables():
-                    newline += '    ' + inp.definition_cpp() + ';\n'
+                    newline += '    ' + self.variable_definition_cpp(model, inp) + ';\n'
                     newline += '    std::fill_n({}, {}, 0.);\n'.format(inp.cppname, inp.size_cpp())
                 for out in model.get_output_variables():
-                    newline += '    ' + out.definition_cpp() + '{};\n'
+                    newline += '    ' + self.variable_definition_cpp(model, out) + '{};\n'
                     newline += '      std::fill_n({}, {}, 0.);\n'.format(out.cppname, out.size())
             elif '//hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line

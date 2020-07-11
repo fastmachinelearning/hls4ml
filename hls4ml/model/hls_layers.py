@@ -58,15 +58,23 @@ class CompressedType(HLSType):
                '{precision} weight; }} {name};\n')
         return cpp_fmt.format(name=self.name, index=self.index_precision, precision=self.precision)
 
+class PackedType(HLSType):
+    def __init__(self, name, precision, n_elem, **kwargs):
+        super(PackedType, self).__init__(name, precision, **kwargs)
+        self.n_elem = n_elem
+
+    def definition_cpp(self):
+        return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=self.name, precision=self.precision, n_elem=self.n_elem)
+
 class Variable(object):
-    def __init__(self, var_name, type_name, precision, **kwargs):
+    def __init__(self, var_name, atype, **kwargs):
         self.name = var_name.format(**kwargs)
-        self.type = HLSType(type_name, precision, **kwargs)
+        self.type = atype
         self.cppname = re.sub(r'\W|^(?=\d)','_', self.name)
 
 class ArrayVariable(Variable):
     def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, pragma='partition', **kwargs):
-        super(ArrayVariable, self).__init__(var_name, type_name, precision, **kwargs)
+        super(ArrayVariable, self).__init__(var_name, HLSType(type_name, precision, **kwargs), **kwargs)
         self.shape = shape
         self.dim_names = dim_names
         self.pragma = pragma
@@ -77,6 +85,32 @@ class ArrayVariable(Variable):
     def definition_cpp(self):
         array_shape = self.size_cpp()
         return '{type} {name}[{shape}]'.format(type=self.type.name, name=self.cppname, shape=array_shape)
+
+    def size(self):
+        nelem = 1
+        for dim in self.shape:
+            nelem *= dim
+        return nelem
+
+    def size_cpp(self):
+        return '*'.join([str(k) for k in self.dim_names])
+
+class StreamVariable(Variable):
+    def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, n_pack=1, depth=0, **kwargs):
+        n_elem = shape[-1] * n_pack
+        super(StreamVariable, self).__init__(var_name, PackedType(type_name, precision, n_elem, **kwargs), **kwargs)
+        self.shape = shape
+        self.dim_names = dim_names
+        if depth == 0:
+            depth = np.prod(shape) // shape[-1]
+        self.pragma = ('stream', depth)
+
+    def get_shape(self):
+        return zip(self.dim_names, self.shape)
+
+    #def definition_cpp(self):
+    #    array_shape = self.size_cpp()
+    #    return '{type} {name}[{shape}]'.format(type=self.type.name, name=self.cppname, shape=array_shape)
 
     def size(self):
         nelem = 1
@@ -106,7 +140,7 @@ class InplaceVariable():
 
 class WeightVariable(Variable):
     def __init__(self, var_name, type_name, precision, data, quantizer=None, **kwargs):
-        super(WeightVariable, self).__init__(var_name, type_name, precision, **kwargs)
+        super(WeightVariable, self).__init__(var_name, HLSType(type_name, precision, **kwargs), **kwargs)
         self.data = data
         self.nzeros = -1
         self.shape = list(self.data.shape)
@@ -284,6 +318,17 @@ class Layer(object):
         if precision is None:
             precision, _ = self.model.config.get_precision(self, var='result')
 
+        if self.model.config.get_config_value('IOType') == 'io_stream':
+            out = self.make_stream_variable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision)
+        else:
+            out = self.make_array_variable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, pragma=pragma)
+
+        self.variables[out_name] = out
+        self.model.register_output_variable(out_name, out)
+
+        self.precision[out.type.name] = out.type
+
+    def make_array_variable(self, shape, dim_names, var_name='layer{index}_out', type_name='layer{index}_t', precision=None, pragma='auto'):
         if pragma == 'auto':
             if self.model.config.get_config_value('IOType') == 'io_serial':
                 pragma = 'stream'
@@ -293,12 +338,12 @@ class Layer(object):
                 else:
                     pragma = 'partition'
 
-        out = ArrayVariable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, pragma=pragma, index=self.index)
+        return ArrayVariable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, pragma=pragma, index=self.index)
 
-        self.variables[out_name] = out
-        self.model.register_output_variable(out_name, out)
-
-        self.precision[out.type.name] = out.type
+    def make_stream_variable(self, shape, dim_names, var_name='layer{index}_out', type_name='layer{index}_t', precision=None, depth=0):
+        pack_factor = self.model.config.get_layer_config_value(self, 'PackFactor', default=1)
+        
+        return StreamVariable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, pack_factor=pack_factor, depth=depth, index=self.index)
 
     def add_weights(self, quantizer=None, compression=False):
         data = self.model.get_weights_data(self.name, 'kernel')
