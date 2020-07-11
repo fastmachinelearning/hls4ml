@@ -17,7 +17,7 @@
     
             
                 
-                <link rel="stylesheet" href="../gitbook/gitbook-plugin-highlight/website.css">
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-prism/prism-tomorrow.css">
                 
             
                 
@@ -301,9 +301,9 @@
 <h2 id="running-the-tool">Running the tool</h2>
 <p>These instructions are for simply running the tool out-of-the-box and getting a feel for the workflow.  </p>
 <p><strong>1) To clone our latest version from github and install it from the main directory:</strong></p>
-<pre><code class="lang-Bash">git <span class="hljs-built_in">clone</span> https://github.com/hls-fpga-machine-learning/hls4ml.git
-<span class="hljs-built_in">cd</span> hls4ml/
-pip install .
+<pre class="language-"><code class="lang-bash"><span class="token function">git</span> clone https://github.com/hls-fpga-machine-learning/hls4ml.git
+<span class="token builtin class-name">cd</span> hls4ml/
+pip <span class="token function">install</span> <span class="token builtin class-name">.</span>
 </code></pre>
 <p><strong>NOTE FOR THIS STEP:</strong></p>
 <ul>
@@ -320,23 +320,26 @@ We provide some examples of configuration files in <code>example-models</code> d
 <ul>
 <li>Go to <code>example-models/</code> from the main directory: </li>
 </ul>
-<pre><code class="lang-Bash"><span class="hljs-built_in">cd</span> example-models/
+<pre class="language-"><code class="lang-bash"><span class="token builtin class-name">cd</span> example-models/
 </code></pre>
 <ul>
 <li>And use this command to translate a Keras model:</li>
 </ul>
-<pre><code>hls4ml convert -c keras-config.yml
-</code></pre><p>This will create a new HLS project directory with an implementation of a model from the <code>example-models/keras/</code> directory.
+<pre class="language-"><code class="lang-bash">hls4ml convert -c keras-config.yml
+</code></pre>
+<p>This will create a new HLS project directory with an implementation of a model from the <code>example-models/keras/</code> directory.
 To build the HLS project, do:</p>
-<pre><code>hls4ml build -p my-hls-test -a
-</code></pre><p>This will create a Vivado HLS project with your model implmentation!</p>
+<pre class="language-"><code class="lang-bash">hls4ml build -p my-hls-test -a
+</code></pre>
+<p>This will create a Vivado HLS project with your model implmentation!</p>
 <p><strong>NOTE:</strong> For the last step, you can alternatively do the following to build the HLS project:</p>
-<pre><code class="lang-Bash"><span class="hljs-built_in">cd</span> my-hls-test
-vivado_hls <span class="hljs-_">-f</span> build_prj.tcl
+<pre class="language-"><code class="lang-Bash">cd my-hls-test
+vivado_hls -f build_prj.tcl
 </code></pre>
 <p><code>vivado_hls</code> can be controlled with:</p>
-<pre><code>vivado_hls -f build_prj.tcl &quot;csim=1 synth=1 cosim=1 export=1&quot;
-</code></pre><p>Setting the additional parameters to <code>1</code> to <code>0</code> disables that step, but disabling <code>synth</code> also disables <code>cosim</code> and <code>export</code>.</p>
+<pre class="language-"><code class="lang-bash">vivado_hls -f build_prj.tcl <span class="token string">&quot;csim=1 synth=1 cosim=1 export=1&quot;</span>
+</code></pre>
+<p>Setting the additional parameters to <code>1</code> to <code>0</code> disables that step, but disabling <code>synth</code> also disables <code>cosim</code> and <code>export</code>.</p>
 <p><strong>3) Further help:</strong></p>
 <ul>
 <li><p>For further information about how to use <code>hls4ml</code>, do: <code>hls4ml --help</code> or <code>hls4ml -h</code></p>
@@ -345,7 +348,7 @@ vivado_hls <span class="hljs-_">-f</span> build_prj.tcl
 </li>
 </ul>
 <p><strong>To uninstall <code>hls4ml</code>:</strong> </p>
-<pre><code class="lang-Bash">pip uninstall hls4ml
+<pre class="language-"><code class="lang-bash">pip uninstall hls4ml
 </code></pre>
 <h2 id="existing-examples">Existing examples</h2>
 <ul>
@@ -399,7 +402,7 @@ vivado_hls <span class="hljs-_">-f</span> build_prj.tcl
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Quick Start","level":"1.4.2","depth":2,"next":{"title":"Configuration","level":"1.4.3","depth":2,"path":"setup/CONFIGURATION.md","ref":"setup/CONFIGURATION.md","articles":[]},"previous":{"title":"Dependencies","level":"1.4.1","depth":2,"path":"setup/DEPENDENCIES.md","ref":"setup/DEPENDENCIES.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/QUICKSTART.md","mtime":"2020-06-27T13:05:19.220Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-06-27T13:05:58.555Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Quick Start","level":"1.4.2","depth":2,"next":{"title":"Configuration","level":"1.4.3","depth":2,"path":"setup/CONFIGURATION.md","ref":"setup/CONFIGURATION.md","articles":[]},"previous":{"title":"Dependencies","level":"1.4.1","depth":2,"path":"setup/DEPENDENCIES.md","ref":"setup/DEPENDENCIES.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["prism","-highlight"],"pluginsConfig":{"prism":{"css":["prismjs/themes/prism-tomorrow.css"]},"fontSettings":{"theme":"sepia","family":"sans"},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/QUICKSTART.md","mtime":"2020-07-11T14:05:24.055Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-07-11T14:06:12.248Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>

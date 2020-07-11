@@ -17,7 +17,7 @@
     
             
                 
-                <link rel="stylesheet" href="gitbook/gitbook-plugin-highlight/website.css">
+                <link rel="stylesheet" href="gitbook/gitbook-plugin-prism/prism-tomorrow.css">
                 
             
                 
@@ -303,26 +303,26 @@
 <p>Profiling uses some extra dependencies, to install these, run <code>pip install .[profiling]</code> from the <code>hls4ml</code> root. The profiling tools are provided as a <code>Python</code> module which you can use.</p>
 <p>Three types of objects can be provided: <strong>a Keras model object</strong>, <strong>test data</strong>, and an <strong>HLSModel object</strong>.
 You will need to initialise these objects by using a trained model, loading a model from a file, and loading your data. The Keras model and data each need to be in the format that would normally allow you to run, e.g. <code>model.predict(X)</code>.</p>
-<pre><code class="lang-Python"><span class="hljs-keyword">from</span> hls4ml.model.profiling <span class="hljs-keyword">import</span> numerical
-<span class="hljs-keyword">from</span> hls4ml.converters <span class="hljs-keyword">import</span> keras_to_hls
-<span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt
-<span class="hljs-keyword">import</span> yaml
+<pre class="language-"><code class="lang-python"><span class="token keyword">from</span> hls4ml<span class="token punctuation">.</span>model<span class="token punctuation">.</span>profiling <span class="token keyword">import</span> numerical
+<span class="token keyword">from</span> hls4ml<span class="token punctuation">.</span>converters <span class="token keyword">import</span> keras_to_hls
+<span class="token keyword">import</span> matplotlib<span class="token punctuation">.</span>pyplot <span class="token keyword">as</span> plt
+<span class="token keyword">import</span> yaml
 
-<span class="hljs-comment"># pseudo code:</span>
-model = load_model()
-X = load_data()
+<span class="token comment"># pseudo code:</span>
+model <span class="token operator">=</span> load_model<span class="token punctuation">(</span><span class="token punctuation">)</span>
+X <span class="token operator">=</span> load_data<span class="token punctuation">(</span><span class="token punctuation">)</span>
 
-<span class="hljs-comment"># real code:</span>
-<span class="hljs-comment"># load your hls4ml .yml config file with yaml</span>
-<span class="hljs-keyword">with</span> open(<span class="hljs-string">&quot;keras-config.yml&quot;</span>, <span class="hljs-string">&apos;r&apos;</span>) <span class="hljs-keyword">as</span> ymlfile:
-    config = yaml.load(ymlfile)
+<span class="token comment"># real code:</span>
+<span class="token comment"># load your hls4ml .yml config file with yaml</span>
+<span class="token keyword">with</span> <span class="token builtin">open</span><span class="token punctuation">(</span><span class="token string">&quot;keras-config.yml&quot;</span><span class="token punctuation">,</span> <span class="token string">&apos;r&apos;</span><span class="token punctuation">)</span> <span class="token keyword">as</span> ymlfile<span class="token punctuation">:</span>
+    config <span class="token operator">=</span> yaml<span class="token punctuation">.</span>load<span class="token punctuation">(</span>ymlfile<span class="token punctuation">)</span>
 
-hls_model = keras_to_hls(config)
+hls_model <span class="token operator">=</span> keras_to_hls<span class="token punctuation">(</span>config<span class="token punctuation">)</span>
 
-<span class="hljs-comment"># produce an activation profile (ap)</span>
-<span class="hljs-comment"># and weights profile (wp)</span>
-ap, wp = numerical(keras_model=model, hls_model = hls_model, X=X)
-plt.show()
+<span class="token comment"># produce an activation profile (ap)</span>
+<span class="token comment"># and weights profile (wp)</span>
+ap<span class="token punctuation">,</span> wp <span class="token operator">=</span> numerical<span class="token punctuation">(</span>keras_model<span class="token operator">=</span>model<span class="token punctuation">,</span> hls_model <span class="token operator">=</span> hls_model<span class="token punctuation">,</span> X<span class="token operator">=</span>X<span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>show<span class="token punctuation">(</span><span class="token punctuation">)</span>
 </code></pre>
 <p>Calling the <code>hls4ml.model.profiling.numerical</code> method with these three objects provided will produce two figures as below:</p>
 <p><img src="img/activations.png" width="350" align="left">
@@ -380,7 +380,7 @@ plt.show()
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Profiling","level":"1.6","depth":1,"next":{"title":"Concepts","level":"1.7","depth":1,"path":"CONCEPTS.md","ref":"CONCEPTS.md","articles":[]},"previous":{"title":"Command help","level":"1.5","depth":1,"path":"COMMAND.md","ref":"COMMAND.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"PROFILING.md","mtime":"2020-06-27T13:05:19.208Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-06-27T13:05:58.555Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Profiling","level":"1.6","depth":1,"next":{"title":"Concepts","level":"1.7","depth":1,"path":"CONCEPTS.md","ref":"CONCEPTS.md","articles":[]},"previous":{"title":"Command help","level":"1.5","depth":1,"path":"COMMAND.md","ref":"COMMAND.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["prism","-highlight"],"pluginsConfig":{"prism":{"css":["prismjs/themes/prism-tomorrow.css"]},"fontSettings":{"theme":"sepia","family":"sans"},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"PROFILING.md","mtime":"2020-07-11T14:05:24.043Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-07-11T14:06:12.248Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>
