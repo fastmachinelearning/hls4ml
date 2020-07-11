@@ -10,7 +10,7 @@ Profiling uses some extra dependencies, to install these, run `pip install .[pro
 Three types of objects can be provided: **a Keras model object**, **test data**, and an **HLSModel object**.
 You will need to initialise these objects by using a trained model, loading a model from a file, and loading your data. The Keras model and data each need to be in the format that would normally allow you to run, e.g. `model.predict(X)`.
 
-```Python
+```python
 from hls4ml.model.profiling import numerical
 from hls4ml.converters import keras_to_hls
 import matplotlib.pyplot as plt
