@@ -3,13 +3,14 @@ OnnxModel: onnx/three_layer_keras.onnx
 #OutputPredictions: keras/KERAS_3layer_predictions.dat
 OutputDir: my-hls-test
 ProjectName: myproject
-XilinxPart: xcku115-flvb2104-2-i
+FPGAPart: xcku115-flvb2104-2-i
 ClockPeriod: 5
+Backend: Vivado
 
 IOType: io_parallel # options: io_serial/io_parallel
 HLSConfig:
   Model:
-    Precision: ap_fixed<16,6>
+    Precision: <16,6> #<Total Bits, Integer Bits, SIGNED/UNSIGNED, Quantization Mode (Optional), Saturation Mode (Optional), Saturation Bits (Optional)>
     ReuseFactor: 1
 #  LayerType:
 #    Dense:

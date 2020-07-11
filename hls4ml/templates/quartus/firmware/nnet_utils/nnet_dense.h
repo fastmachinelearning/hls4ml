@@ -98,15 +98,6 @@ cast(typename CONFIG_T::accum_t x){
   return (res_T) x;
 }
 
-
-/*template<typename CONFIG_T>
-uint32 fastmod(uint32 n)
-{
-      uint32 div = (n * CONFIG_T::reciprocal) >> 35;
-      uint32 multiple = div * CONFIG_T::n_in
-      return n - multiple;
-}*/
-
 template<class data_T, class res_T, typename CONFIG_T>
 void dense_rf_gt(
    data_T    data[CONFIG_T::n_in],
