@@ -39,7 +39,7 @@ def main():
     config_parser.add_argument('-f', '--fpga', help='FPGA part', default='xcku115-flvb2104-2-i')
     config_parser.add_argument('-c', '--clock', help='Clock frequency (ns)', type=int, default=5)
     config_parser.add_argument('-g', '--granularity', help='Granularity of configuration. One of "model", "type" or "name"', default='model')
-    config_parser.add_argument('-x', '--precision', help='Default precision <Total Bits, Integer Bits, Signed(Optional)> ex: <16,6,1> or <16,6>', default='<16,6>')
+    config_parser.add_argument('-x', '--precision', help='Default precision <Total Bits, Integer Bits, SIGNED/UNSIGNED, Quantization Mode (Optional), Saturation Mode (Optional), Saturation Bits (Optional)> ex: <16,6,UNSIGNED> or <16,6> or <16>', default='<16,6>')
     config_parser.add_argument('-r', '--reuse-factor', help='Default reuse factor', type=int, default=1)
     config_parser.add_argument('-o', '--output', help='Output file name', default=None)
     config_parser.set_defaults(func=config)

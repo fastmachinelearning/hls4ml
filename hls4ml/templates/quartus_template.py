@@ -362,6 +362,7 @@ class QuartusBackend(Backend):
         found = os.system('command -v i++ > /dev/null')
         if found != 0:
             raise Exception('Intel HLS installation not found. Make sure "i++" is on PATH.')
+        curr_dir = os.getcwd()
         os.chdir(dir)
         os.system('make myproject-fpga')
         os.system('./myproject-fpga')
@@ -383,15 +384,11 @@ class QuartusBackend(Backend):
         #All supported layers
         return core_layers + dense_layers + norm_layers + activation_layers + qkeras_dense + skip_layers
 
-    def get_pstring (self, bits, integer, signed=True):
-        decimal = bits - integer
+    def get_pstring (self, width, intbits, signed=True, rounding_mode=None, saturation_mode=None, saturation_bits=None):
+        decimal = width - intbits
         if decimal > 0:
-            if signed:
-                return 'ac_fixed<{},{}>'.format(bits, integer)
-            else:
-                return 'ac_fixed<{},{},false>'.format(bits, integer)
+            args = [width, intbits, 'false' if not signed else 'true', rounding_mode, saturation_mode]
+            args = ', '.join([str(arg) for arg in args if arg is not None])
+            return 'ac_fixed<{args}>'.format(args=args)
         else:
-            if signed:
-                return 'ac_int<{}, true>'.format(bits)
-            else:
-                return 'ac_int<{}, false>'.format(bits)
+            return 'ac_int<{width}, {signed}>'.format(width=width, signed='false' if not signed else 'true')

@@ -383,15 +383,11 @@ class VivadoBackend(Backend):
         #All supported layers
         return core_layers + dense_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + skip_layers
 
-    def get_pstring (self, bits, integer, signed=True):
-        decimal = bits - integer
+    def get_pstring (self, width, intbits, signed=True, rounding_mode=None, saturation_mode=None, saturation_bits=None):
+        decimal = width - intbits
         if decimal > 0:
-            if signed:
-                return 'ap_fixed<{},{}>'.format(bits, integer)
-            else:
-                return 'ap_ufixed<{},{}>'.format(bits, integer)
+            args = [width, intbits, rounding_mode, saturation_mode, saturation_bits]
+            args = ', '.join([str(arg) for arg in args if arg is not None])
+            return 'ap_{signed}fixed<{args}>'.format(signed='u' if not signed else '', args=args)
         else:
-            if signed:
-                return 'ap_int<{}>'.format(bits)
-            else:
-                return 'ap_uint<{}>'.format(bits)
+            return 'ap_{signed}int<{width}>'.format(signed='u' if not signed else '', width=width)

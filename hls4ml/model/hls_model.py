@@ -146,13 +146,27 @@ class HLSConfig(object):
         if precision is None:
             precision = self.backend.get_pstring(16, 6, True)
         elif not "fixed" in precision and not "int" in precision:
-            precision = re.findall('\d+',precision)
+            precision = precision[1:-1].split(",")
             if(len(precision) == 1):
                 precision = self.backend.get_pstring(int(precision[0]), int(precision[0]), True)
             elif(len(precision) == 2):
-                precision = self.backend.get_pstring(int(precision[0]), int(precision[1]), True)
+                if(precision[1].isnumeric()):
+                    precision = self.backend.get_pstring(int(precision[0]), int(precision[1]), True)
+                elif(precision[1] == "SIGNED"):
+                    precision = self.backend.get_pstring(int(precision[0]), int(precision[0]), True)
+                elif(precision[1] == "UNSIGNED"):
+                    precision = self.backend.get_pstring(int(precision[0]), int(precision[0]), False)
+                else:
+                    print('Precision not defined properly')
+                    sys.exit(1)
             elif(len(precision) == 3):
-                precision = self.backend.get_pstring(int(precision[0]), int(precision[1]), int(precision[2]))
+                precision = self.backend.get_pstring(int(precision[0]), int(precision[1]), False if precision[2] == "UNSIGNED" else True)
+            elif(len(precision) == 4):
+                precision = self.backend.get_pstring(int(precision[0]), int(precision[1]), False if precision[2] == "UNSIGNED" else True, precision[3])
+            elif(len(precision) == 5):
+                precision = self.backend.get_pstring(int(precision[0]), int(precision[1]), False if precision[2] == "UNSIGNED" else True, precision[3], precision[4])
+            elif(len(precision) == 6):
+                precision = self.backend.get_pstring(int(precision[0]), int(precision[1]), False if precision[2] == "UNSIGNED" else True, precision[3], precision[4], int(precision[5]))
             else:
                 print('Precision not defined properly')
                 sys.exit(1)
