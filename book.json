@@ -1,12 +1,5 @@
 {
   "pluginsConfig": {
-
-    "prism": {
-      "css": [
-        "prismjs/themes/prism-tomorrow.css"
-      ]
-    },
-
     "fontSettings": {
       "theme": "sepia",
       "family": "sans"
