@@ -1,11 +1,45 @@
 # Configuration
----
-Now that you have a run a quick example workflow of hls4ml, let's go through the various configuration options that you have for the translation of your machine learning algorithm.  
-
-One important part of hls4ml to remember is that the user is responsible for the format of the inputs.  There is no automatic formatting or normalization so this must be done in the training. 
 
 ---
-## Keras translation
+We currently support two ways of setting hls4ml's model configuration:
+
+1. [Through Python API](##1.PythonAPI)
+
+    - [hls4ml.utils.config_from_keras_model](#config_from_keras_model)
+
+2. [Through a YAML configuration file](##2.ThroughYAML)  
+
+This page documents the both methods' usage. 
+
+**NOTE:** One important part of hls4ml to remember is that the user is responsible for the format of the inputs.  There is no automatic formatting or normalization so this must be done in the training. 
+
+---
+## 1. Python API
+
+Using hls4ml, you can quickly generate a simple configuration dictionary from a keras model:
+
+<a name="config_from_keras_model"></a>
+
+```python
+import hls4ml
+config = hls4ml.utils.config_from_keras_model(model, granularity='model')
+```
+
+For more advanced and detailed configuration, you can also set them through the created dictionary. For example, to change the reuse factor:
+
+```python
+config['Model']['ReuseFactor'] = 2
+```
+Or to set the precision of a specific layer's weight:
+
+```python
+config['LayerName']['fc1']['Precision']['weight'] = 'ap_fixed<8,4>'
+```
+
+To better understand how the configuration hierachy works, refer to the next section for more details.
+
+---
+## 2. YAML Configuration file
 
 ### Top level configuration
 
