@@ -54,7 +54,7 @@ void conv_1d_full(
         for (int j = 0; j < CONFIG_T::filt_width * CONFIG_T::n_chan; j++) {
             data_col[j] = data_conv[j * CONFIG_T::n_out + i];
         }
-        dense_large<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
+        dense_resource<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
         for (int j = 0; j < CONFIG_T::n_filt; j++) {
             //res[i * CONFIG_T::n_filt + j] = res_col[j];
             res[j * CONFIG_T::n_out + i] = res_col[j]; // Transposed order
@@ -132,7 +132,7 @@ void conv_1d_large_cf(
     for (int i = 0; i < CONFIG_T::n_out; i++) {
         #pragma HLS PIPELINE
         im2col_1d_cf<data_T, CONFIG_T>(data, data_col, i);
-        dense_large<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
+        dense_resource<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
         for (int j = 0; j < CONFIG_T::n_filt; j++) {
             //res[i * CONFIG_T::n_filt + j] = res_col[j];
             res[j * CONFIG_T::n_out + i] = res_col[j]; // Transposed order
@@ -189,7 +189,7 @@ void conv_1d_large_cl(
     for (int i = 0; i < CONFIG_T::n_out; i++) {
         #pragma HLS PIPELINE
         im2col_1d_cl<data_T, CONFIG_T>(data, data_col, i);
-        dense_large<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
+        dense_resource<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
         for (int j = 0; j < CONFIG_T::n_filt; j++) {
             res[i * CONFIG_T::n_filt + j] = res_col[j];
             //res[j * CONFIG_T::n_out + i] = res_col[j]; // Transposed order

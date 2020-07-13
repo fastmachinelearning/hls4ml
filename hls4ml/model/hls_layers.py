@@ -487,7 +487,7 @@ class Dense(Layer):
             if compression:
                 self.set_attr('strategy', 'compressed')
             else:
-                self.set_attr('strategy', 'large')
+                self.set_attr('strategy', 'resource')
         else:
             self.set_attr('strategy', 'latency')
         self.add_output_variable(shape, dims)
@@ -504,7 +504,6 @@ class Dense(Layer):
 
     def function_cpp(self):
         params = self._default_function_params()
-        params['strategy'] = self.get_attr('strategy')
         params['w'] = self.get_weights('weight').name
         params['b'] = self.get_weights('bias').name
 
@@ -516,6 +515,7 @@ class Dense(Layer):
         params['n_out'] = self.get_output_variable().size_cpp()
         params['nzeros'] = self.get_weights('weight').nzeros
         params['nonzeros'] = self.get_weights('weight').nonzeros
+        params['strategy'] = self.get_attr('strategy')
 
         return self._config_template.format(**params)
 

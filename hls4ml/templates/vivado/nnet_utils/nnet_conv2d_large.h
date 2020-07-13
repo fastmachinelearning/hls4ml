@@ -3,7 +3,7 @@
 
 #include "nnet_common.h"
 #include "nnet_conv2d.h"
-#include "nnet_dense_large.h"
+#include "nnet_dense.h"
 
 namespace nnet {
 
@@ -67,7 +67,7 @@ void conv_2d_full(
         for (int j = 0; j < CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan; j++) {
             data_col[j] = data[j * CONFIG_T::out_height * CONFIG_T::out_width + i];
         }
-        dense_large<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
+        dense_resource<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
         for (int j = 0; j < CONFIG_T::n_filt; j++) {
             //res[i * CONFIG_T::n_filt + j] = res_col[j];
             res[j * CONFIG_T::out_height * CONFIG_T::out_width + i] = res_col[j]; // Transposed order
@@ -137,7 +137,7 @@ void conv_2d_large_cf(
         for (int j = 0; j < CONFIG_T::out_width; j++) {
             #pragma HLS PIPELINE
             im2col_2d_cf<data_T, CONFIG_T>(data, data_col, i, j);
-            dense_large<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
+            dense_resource<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
             FiltLoop:
             for (int k = 0; k < CONFIG_T::n_filt; k++) {
                 //res[i * CONFIG_T::out_width * CONFIG_T::n_filt + j * CONFIG_T::n_filt + k] = res_col[k];
@@ -206,7 +206,7 @@ void conv_2d_large_cl(
         for (int j = 0; j < CONFIG_T::out_width; j++) {
             #pragma HLS PIPELINE
             im2col_2d_cl<data_T, CONFIG_T>(data, data_col, i, j);
-            dense_large<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
+            dense_resource<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
             FiltLoop:
             for (int k = 0; k < CONFIG_T::n_filt; k++) {
                 res[i * CONFIG_T::out_width * CONFIG_T::n_filt + j * CONFIG_T::n_filt + k] = res_col[k];
