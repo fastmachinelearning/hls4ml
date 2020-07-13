@@ -237,6 +237,15 @@ void softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
         initialized = true;
     }
 
+    // Find the max and compute all delta(x_i, x_max)
+    Op_max<data_T> op_max;
+    data_T x_max = reduce<data_T, CONFIG_T::n_in, Op_max<data_T>>(data, op_max);
+
+    ap_fixed<16,6,AP_RND,AP_SAT> d_xi_xmax[CONFIG_T::n_in];
+    for(unsigned i = 0; i < CONFIG_T::n_in; i++){
+        #pragma HLS unroll
+        d_xi_xmax[i] = data[i] - x_max;
+    }
 
     // Calculate all the e^x's
     typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
@@ -244,7 +253,7 @@ void softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
     typename CONFIG_T::exp_table_t exp_sum(0);
     for(unsigned i = 0; i < CONFIG_T::n_in; i++){
         #pragma HLS unroll
-    	unsigned x = softmax_idx_from_real_val<data_T, CONFIG_T>(data[i]);
+    	unsigned x = softmax_idx_from_real_val<data_T, CONFIG_T>(d_xi_xmax[i]);
         exp_res[i] = exp_table[x];
     }
 
