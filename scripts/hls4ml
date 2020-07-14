@@ -53,7 +53,7 @@ def main():
     build_parser.add_argument('-r', '--co-simulation', help='Run C/RTL co-simulation', action='store_true', default=False)
     build_parser.add_argument('-v', '--validation', help='Run C/RTL validation', action='store_true', default=False)
     build_parser.add_argument('-e', '--export', help='Export IP (implies -s)', action='store_true', default=False)
-    build_parser.add_argument('-l', '--vivado-synthesis', help='Run Vivado synthesis (implies -s)', action='store_true', default=False)
+    build_parser.add_argument('-l', '--fpga-synthesis', help='Run Vivado/Quartus synthesis (implies -s)', action='store_true', default=False)
     build_parser.add_argument('-a', '--all', help='Run C simulation, C/RTL synthesis, C/RTL co-simulation and Vivado synthesis', action='store_true')
     build_parser.add_argument('--reset', help='Remove any previous builds', action='store_true', default=False)
     build_parser.set_defaults(func=build)
@@ -159,9 +159,9 @@ def build(args):
     cosim = int(args.co_simulation)
     validation = int(args.validation)
     export = int(args.export)
-    vsynth = int(args.vivado_synthesis)
+    fpgasynth = int(args.fpga_synthesis)
     if args.all:
-        csim = synth = cosim = validation = export = vsynth = 1
+        csim = synth = cosim = validation = export = fpgasynth = 1
 
     yamlConfig = parse_config(args.project + '/' + config_filename)
 
@@ -169,7 +169,7 @@ def build(args):
     if 'linux' in sys.platform or 'darwin' in sys.platform:
         backend = hls4ml.templates.get_backend(yamlConfig.get('Backend', 'Vivado'))
         if yamlConfig.get('Backend', 'Vivado') in hls4ml.templates.templates.backend_map:
-            backend.build(dir=args.project, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
+            backend.build(dir=args.project, prj_config=yamlConfig, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, fpgasynth=fpgasynth)
         else:
             raise Exception('Backend not Implemented try [Vivado, Quartus]')
 

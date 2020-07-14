@@ -359,14 +359,14 @@ class VivadoBackend(Backend):
             dlclose_func(model._top_function_lib._handle)
         model._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
 
-    def build(self, dir, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
+    def build(self, dir, prj_config=None, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, fpgasynth=False):
         found = os.system('command -v vivado_hls > /dev/null')
         if found != 0:
             raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
         curr_dir = os.getcwd()
         os.chdir(dir)
-        os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
-            .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
+        os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={fpgasynth}"'
+            .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, fpgasynth=fpgasynth))
         os.chdir(curr_dir)
 
     def get_supportedlayers(self):
