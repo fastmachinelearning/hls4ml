@@ -171,6 +171,8 @@ class QuartusWriter(Writer):
 
             if 'MYPROJECT' in line:
                 newline = line.replace('MYPROJECT',format(model.config.get_project_name().upper()))
+            elif 'myproject' in line:
+                newline = line.replace('myproject', model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert cpragmas' in line:
                 newline = line
                 newline += 'hls_max_concurrency(0)\n'

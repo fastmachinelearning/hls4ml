@@ -360,14 +360,25 @@ class QuartusBackend(Backend):
             dlclose_func(model._top_function_lib._handle)
         model._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
 
-    def build(self, dir, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
+    def build(self, dir, prj_config=None, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, fpgasynth=False):
         found = os.system('command -v i++ > /dev/null')
         if found != 0:
             raise Exception('Intel HLS installation not found. Make sure "i++" is on PATH.')
+
         curr_dir = os.getcwd()
+
         os.chdir(dir)
-        os.system('make myproject-fpga')
-        os.system('./myproject-fpga')
+        top_func_name = prj_config.get('ProjectName')
+        os.system('make {}-fpga'.format(top_func_name))
+        os.system('./{}-fpga'.format(top_func_name))
+        
+        if(fpgasynth):
+            found = os.system('command -v quartus_sh > /dev/null')
+            if found != 0:
+                raise Exception('Quartus installation not found. Make sure "quartus_sh" is on PATH.')
+            os.chdir(dir + '/' + top_func_name + '-fpga.prj/quartus')
+            os.system('quartus_sh --flow compile quartus_compile')
+
         os.chdir(curr_dir)
 
     def get_supportedlayers(self):
