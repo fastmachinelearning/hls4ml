@@ -178,7 +178,12 @@ def report(args):
         print('Project directory (-p or --project) must be provided.')
         sys.exit(1)
 
-    hls4ml.report.read_vivado_report(args.project, args.full)
+    yamlConfig = parse_config(args.project + '/' + config_filename)
+    backend = hls4ml.templates.get_backend(yamlConfig.get('Backend', 'Vivado'))
+    if yamlConfig.get('Backend', 'Vivado') in hls4ml.templates.templates.backend_map:
+        backend.read_report(args.project, args.full, yamlConfig)
+    else:
+        raise Exception('Backend not Implemented try [Vivado, Quartus]')
 
 if __name__== "__main__":
     main()

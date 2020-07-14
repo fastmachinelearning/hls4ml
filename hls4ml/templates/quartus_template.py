@@ -4,7 +4,9 @@ import os
 import ctypes
 import copy
 import platform
+import yaml
 from bisect import bisect_left
+import webbrowser
 
 from hls4ml.templates.templates import Backend
 from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
@@ -392,3 +394,19 @@ class QuartusBackend(Backend):
             return 'ac_fixed<{args}>'.format(args=args)
         else:
             return 'ac_int<{width}, {signed}>'.format(width=width, signed='false' if not signed else 'true')
+
+    def read_report(self, hls_dir, full_report=False, prj_config=None):
+        if not os.path.exists(hls_dir):
+            print('Path {} does not exist. Exiting.'.format(hls_dir))
+            return
+
+        top_func_name = prj_config.get('ProjectName')
+        prj_dir = top_func_name + '-fpga.prj'
+
+        rpt_file = hls_dir + '/' + prj_dir + '/reports'
+        if not os.path.exists(rpt_file):
+            print('Project {} does not exist. Rerun "hls4ml build -p {} -b Quartus".'.format(prj_dir, hls_dir))
+            return
+
+        url = 'file:' + os.getcwd() + '/' + rpt_file + '/report.html'
+        webbrowser.open(url)
