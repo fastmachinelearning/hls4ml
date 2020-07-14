@@ -371,12 +371,12 @@ class QuartusBackend(Backend):
         top_func_name = prj_config.get('ProjectName')
         os.system('make {}-fpga'.format(top_func_name))
         os.system('./{}-fpga'.format(top_func_name))
-        
+
         if(fpgasynth):
             found = os.system('command -v quartus_sh > /dev/null')
             if found != 0:
                 raise Exception('Quartus installation not found. Make sure "quartus_sh" is on PATH.')
-            os.chdir(dir + '/' + top_func_name + '-fpga.prj/quartus')
+            os.chdir(top_func_name + '-fpga.prj/quartus')
             os.system('quartus_sh --flow compile quartus_compile')
 
         os.chdir(curr_dir)
