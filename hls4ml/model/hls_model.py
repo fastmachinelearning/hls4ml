@@ -379,7 +379,7 @@ class HLSModel(object):
         finally:
             os.chdir(curr_dir)
 
-    def releasedll(self):
+    def release_dll(self):
         handle = self._top_function_lib._handle
         del self._top_function_lib
         #print(os.getcwd())
