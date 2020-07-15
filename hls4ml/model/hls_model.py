@@ -528,11 +528,11 @@ class HLSModel(object):
         else:
             return output, trace_output
 
-    def build(self, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
+    def build(self, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, fpgasynth=False):
         if 'linux' in sys.platform:
             if self.config.get_config_value('Backend', 'Vivado') in templates.backend_map:
                 curr_dir = os.getcwd()
-                self.backend.build(dir=curr_dir, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
+                self.backend.build(dir=curr_dir, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, fpgasynth=fpgasynth)
             else:
                 raise Exception('Backend not Implemented try [Vivado, Quartus]')
 
