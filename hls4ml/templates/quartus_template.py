@@ -373,7 +373,7 @@ class QuartusBackend(Backend):
         curr_dir = os.getcwd()
 
         os.chdir(dir)
-        top_func_name = prj_config.get('ProjectName')
+        top_func_name = prj_config.get_project_name()
         os.system('make {}-fpga'.format(top_func_name))
         os.system('./{}-fpga'.format(top_func_name))
 
