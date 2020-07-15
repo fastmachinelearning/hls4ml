@@ -379,6 +379,23 @@ class HLSModel(object):
         finally:
             os.chdir(curr_dir)
 
+    def releasedll(self):
+        handle = self._top_function_lib._handle
+        del self._top_function_lib
+        #print(os.getcwd())
+        #print ('Unloading {}/firmware/{}.so'.format(self.config.get_output_dir(), self.config.get_project_name()))
+        while self.isLoaded('{}/firmware/{}.so'.format(self.config.get_output_dir(), self.config.get_project_name())):
+            self.dlclose(handle)
+
+    def isLoaded(self, lib):
+       libp = os.path.abspath(lib)
+       ret = os.system("lsof -p %d | grep %s > /dev/null" % (os.getpid(), libp))
+       return (ret == 0)
+
+    def dlclose(self, handle):
+       libdl = ctypes.CDLL("libdl.so")
+       libdl.dlclose(handle)
+
     def _get_top_function(self, x):
         if self._top_function_lib is None:
             raise Exception('Model not compiled')
