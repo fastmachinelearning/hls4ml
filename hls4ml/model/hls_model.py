@@ -535,3 +535,9 @@ class HLSModel(object):
                 self.backend.build(dir=curr_dir, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
             else:
                 raise Exception('Backend not Implemented try [Vivado, Quartus]')
+
+    def report(self, output=False):
+        if self.config.get_config_value('Backend', 'Vivado') in templates.backend_map:
+            return self.backend.report_to_dict(self.config, output=output)
+        else:
+            raise Exception('Backend not Implemented try [Vivado, Quartus]')

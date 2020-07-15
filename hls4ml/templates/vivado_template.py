@@ -394,6 +394,9 @@ class VivadoBackend(Backend):
         else:
             return 'ap_{signed}int<{width}>'.format(signed='u' if not signed else '', width=width)
 
+    def report_to_dict(self, prj_config=None, output=False):
+        raise NotImplementedError
+
     def read_report(self, hls_dir, full_report=False, prj_config=None):
         if not os.path.exists(hls_dir):
             print('Path {} does not exist. Exiting.'.format(hls_dir))

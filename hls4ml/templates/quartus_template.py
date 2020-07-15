@@ -7,6 +7,11 @@ import platform
 import yaml
 from bisect import bisect_left
 import webbrowser
+from slimit import ast
+from slimit.parser import Parser
+from slimit.visitors import nodevisitor
+from tabulate import tabulate
+import json
 
 from hls4ml.templates.templates import Backend
 from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
@@ -406,6 +411,33 @@ class QuartusBackend(Backend):
         else:
             return 'ac_int<{width}, {signed}>'.format(width=width, signed='false' if not signed else 'true')
 
+    def report_to_dict(self, prj_config=None, output=False):
+        hls_dir = prj_config.get_output_dir()
+
+        if not os.path.exists(hls_dir):
+            print('Path {} does not exist. Exiting.'.format(hls_dir))
+            return
+
+        top_func_name = prj_config.get_project_name()
+        prj_dir = top_func_name + '-fpga.prj'
+
+        rpt_file = hls_dir + '/' + prj_dir + '/reports'
+        if not os.path.exists(rpt_file):
+            print('Project {} does not exist. Rerun "hls4ml build -p {} -b Quartus".'.format(prj_dir, hls_dir))
+            return
+
+        report = self._find_reports(rpt_file)
+        if output:
+            print("HLS Resource Summary\n")
+            print(tabulate(list(report.items())[0:10], tablefmt='orgtbl', headers=['Resource', 'Utilization']))
+            print("\n\nHLS Validation Summary\n")
+            print(tabulate(list(report.items())[11:13], tablefmt='orgtbl', headers=['', '[Min, Max, Avg]']))
+            if 'Clock' in report.keys():
+                print("\n\nQuartus Synthesis Summary\n")
+                print(tabulate(list(report.items())[13:], tablefmt='orgtbl', headers=['Resource', 'Utilization']))
+        return report
+
+
     def read_report(self, hls_dir, full_report=False, prj_config=None):
         if not os.path.exists(hls_dir):
             print('Path {} does not exist. Exiting.'.format(hls_dir))
@@ -419,5 +451,109 @@ class QuartusBackend(Backend):
             print('Project {} does not exist. Rerun "hls4ml build -p {} -b Quartus".'.format(prj_dir, hls_dir))
             return
 
+        report = self._find_reports(rpt_file)
+        print("HLS Resource Summary\n")
+        print(tabulate(list(report.items())[0:10], tablefmt='orgtbl', headers=['Resource', 'Utilization']))
+        print("\n\nHLS Validation Summary\n")
+        print(tabulate(list(report.items())[11:13], tablefmt='orgtbl', headers=['', '[Min, Max, Avg]']))
+        if 'Clock' in report.keys():
+            print("\n\nQuartus Synthesis Summary\n")
+            print(tabulate(list(report.items())[13:], tablefmt='orgtbl', headers=['Resource', 'Utilization']))
+
         url = 'file:' + os.getcwd() + '/' + rpt_file + '/report.html'
         webbrowser.open(url)
+
+    def _find_reports(self, sln_dir):
+        def read_js_object(js_script):
+            def visit(node):
+                if isinstance(node, ast.Program):
+                    d = {}
+                    for child in node:
+                        if not isinstance(child, ast.VarStatement):
+                            raise ValueError("All statements should be var statements")
+                        key, val = visit(child)
+                        d[key] = val
+                    return d
+                elif isinstance(node, ast.VarStatement):
+                    return visit(node.children()[0])
+                elif isinstance(node, ast.VarDecl):
+                    return (visit(node.identifier), visit(node.initializer))
+                elif isinstance(node, ast.Object):
+                    d = {}
+                    for property in node:
+                        key = visit(property.left)
+                        value = visit(property.right)
+                        d[key] = value
+                    return d
+                elif isinstance(node, ast.BinOp):
+                    # simple constant folding
+                    if node.op == '+':
+                        if isinstance(node.left, ast.String) and isinstance(node.right, ast.String):
+                            return visit(node.left) + visit(node.right)
+                        elif isinstance(node.left, ast.Number) and isinstance(node.right, ast.Number):
+                            return visit(node.left) + visit(node.right)
+                        else:
+                            raise ValueError("Cannot + on anything other than two literals")
+                    else:
+                        raise ValueError("Cannot do operator '%s'" % node.op)
+         
+                elif isinstance(node, ast.String):
+                    return node.value.strip('"').strip("'")
+                elif isinstance(node, ast.Array):
+                    return [visit(x) for x in node]
+                elif isinstance(node, ast.Number) or isinstance(node, ast.Identifier) or isinstance(node, ast.Boolean) or isinstance(node, ast.Null):
+                    return node.value
+                else:
+                    raise Exception("Unhandled node: %r" % node)
+            return visit(Parser().parse(js_script))
+
+        def _read_quartus_file(filename, results):
+            with open(filename) as dataFile:
+                quartus_data = dataFile.read()
+                quartus_data = read_js_object(quartus_data)
+                
+            if(quartus_data['quartusJSON']['quartusFitClockSummary']['nodes'][0]['clock'] == "TBD"):
+                text = quartus_data['quartusJSON']['quartusFitClockSummary']['nodes'][0]['details'][0]['text']
+                text = text.replace("<br>", "\n")
+                print("Quartus compile data not found! To generate data:")
+                print("\n".join(text.split("\n")[2:]))
+            else:
+                results['Clock'] = quartus_data['quartusJSON']['quartusFitClockSummary']['nodes'][0]['clock']
+                results['Quartus ALM'] = quartus_data['quartusJSON']['quartusFitResourceUsageSummary']['nodes'][-1]['alm']
+                results['Quartus REG'] = quartus_data['quartusJSON']['quartusFitResourceUsageSummary']['nodes'][-1]['reg']
+                results['Quartus DSP'] = quartus_data['quartusJSON']['quartusFitResourceUsageSummary']['nodes'][-1]['dsp']
+                results['Quartus RAM'] = quartus_data['quartusJSON']['quartusFitResourceUsageSummary']['nodes'][-1]['ram']
+                results['Quartus MLAB'] = quartus_data['quartusJSON']['quartusFitResourceUsageSummary']['nodes'][-1]['mlab']
+
+        
+        def _read_report_file(filename, results):
+            with open(filename) as dataFile:
+                report_data = dataFile.read()
+                report_data = report_data[: report_data.rfind('var fileJSON')]
+                report_data = read_js_object(report_data)
+                results['HLS ALUT'], results['HLS FF'], results['HLS RAM'], results['HLS DSP'], results['HLS MLAB'] = report_data['areaJSON']['total']
+                results['HLS ALUT percent'], results['HLS FF percent'], results['HLS RAM percent'], results['HLS DSP percent'], results['HLS MLAB percent'] = report_data['areaJSON']['total_percent']
+                
+                
+            
+        def _read_verification_file(filename, results):
+            if os.path.isfile(filename):
+                with open(filename) as dataFile:
+                    verification_data = dataFile.read()
+                    verification_data = read_js_object(verification_data)
+                results['num_invocation'] = verification_data['verifJSON']['functions'][0]['data'][0]
+                results['Latency'] = verification_data['verifJSON']['functions'][0]['data'][1].split(",")
+                results['ii'] = verification_data['verifJSON']['functions'][0]['data'][2].split(",")
+            else:
+                print('Verification file not found. Run ./[projectname]-fpga to generate.')
+
+
+        results = {}
+        quartus_file = sln_dir + '/lib/quartus_data.js'
+        report_file = sln_dir + '/lib/report_data.js'
+        verification_file = sln_dir + '/lib/verification_data.js'
+        _read_report_file(report_file, results)
+        _read_verification_file(verification_file, results)
+        _read_quartus_file(quartus_file, results)
+        
+        return results
