@@ -374,8 +374,10 @@ class QuartusBackend(Backend):
 
         os.chdir(dir)
         top_func_name = prj_config.get_project_name()
-        os.system('make {}-fpga'.format(top_func_name))
-        os.system('./{}-fpga'.format(top_func_name))
+
+        if(synth):
+            os.system('make {}-fpga'.format(top_func_name))
+            os.system('./{}-fpga'.format(top_func_name))
 
         if(fpgasynth):
             found = os.system('command -v quartus_sh > /dev/null')
@@ -435,6 +437,8 @@ class QuartusBackend(Backend):
             if 'Clock' in report.keys():
                 print("\n\nQuartus Synthesis Summary\n")
                 print(tabulate(list(report.items())[13:], tablefmt='orgtbl', headers=['Resource', 'Utilization']))
+            else:
+                print("Quartus compile data not found! To generate data run 'hls4ml build -l' or MODEL.build(synth=False, fpgasynth=True) if using API.")
         return report
 
 
@@ -459,6 +463,8 @@ class QuartusBackend(Backend):
         if 'Clock' in report.keys():
             print("\n\nQuartus Synthesis Summary\n")
             print(tabulate(list(report.items())[13:], tablefmt='orgtbl', headers=['Resource', 'Utilization']))
+        else:
+            print("Quartus compile data not found! To generate data run 'hls4ml build -l' or MODEL.build(synth=False, fpgasynth=True) if using API.")
 
         url = 'file:' + os.getcwd() + '/' + rpt_file + '/report.html'
         webbrowser.open(url)
@@ -500,7 +506,7 @@ class QuartusBackend(Backend):
                 elif isinstance(node, ast.String):
                     return node.value.strip('"').strip("'")
                 elif isinstance(node, ast.Array):
-                    return [visit(x) for x in node]
+                    return [visit(x) for x in noutputode]
                 elif isinstance(node, ast.Number) or isinstance(node, ast.Identifier) or isinstance(node, ast.Boolean) or isinstance(node, ast.Null):
                     return node.value
                 else:
@@ -512,12 +518,7 @@ class QuartusBackend(Backend):
                 quartus_data = dataFile.read()
                 quartus_data = read_js_object(quartus_data)
                 
-            if(quartus_data['quartusJSON']['quartusFitClockSummary']['nodes'][0]['clock'] == "TBD"):
-                text = quartus_data['quartusJSON']['quartusFitClockSummary']['nodes'][0]['details'][0]['text']
-                text = text.replace("<br>", "\n")
-                print("Quartus compile data not found! To generate data:")
-                print("\n".join(text.split("\n")[2:]))
-            else:
+            if(quartus_data['quartusJSON']['quartusFitClockSummary']['nodes'][0]['clock'] != "TBD"):
                 results['Clock'] = quartus_data['quartusJSON']['quartusFitClockSummary']['nodes'][0]['clock']
                 results['Quartus ALM'] = quartus_data['quartusJSON']['quartusFitResourceUsageSummary']['nodes'][-1]['alm']
                 results['Quartus REG'] = quartus_data['quartusJSON']['quartusFitResourceUsageSummary']['nodes'][-1]['reg']
