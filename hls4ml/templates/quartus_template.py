@@ -506,7 +506,7 @@ class QuartusBackend(Backend):
                 elif isinstance(node, ast.String):
                     return node.value.strip('"').strip("'")
                 elif isinstance(node, ast.Array):
-                    return [visit(x) for x in noutputode]
+                    return [visit(x) for x in node]
                 elif isinstance(node, ast.Number) or isinstance(node, ast.Identifier) or isinstance(node, ast.Boolean) or isinstance(node, ast.Null):
                     return node.value
                 else:
