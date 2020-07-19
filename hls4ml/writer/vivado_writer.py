@@ -23,19 +23,21 @@ class VivadoWriter(Writer):
                '{precision} weight; }} {name};\n')
             return cpp_fmt.format(name=atype.name, index=atype.index_precision, precision=atype.precision)
         elif type_class == 'PackedType':
-            return 'typedef hls_array<{precision}, {n_elem}> {name};\n'.format(name=atype.name, precision=atype.precision, n_elem=atype.n_elem)
+            return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=atype.name, precision=atype.precision, n_elem=atype.n_elem)
         else:
             raise Exception('Unknown data type class "{}"'.format(type_class))
 
-    def variable_definition_cpp(self, model, var):
+    def variable_definition_cpp(self, model, var, name_suffix='', as_reference=False):
         var_class = var.__class__.__name__
         if var_class == 'ArrayVariable':
-            array_shape = var.size_cpp()
-            return '{type} {name}[{shape}]'.format(type=var.type.name, name=var.cppname, shape=array_shape)
+            return '{type} {name}{suffix}[{shape}]'.format(type=var.type.name, name=var.cppname, suffix=name_suffix, shape=var.size_cpp())
         elif var_class == 'StreamVariable':
-            return 'hls::stream<nnet::array<{type}>> {name}'.format(type=var.type.name, name=var.cppname)
+            if as_reference: # Function parameter
+                return 'hls::stream<{type}> &{name}{suffix}'.format(type=var.type.name, name=var.cppname, suffix=name_suffix)
+            else: # Declaration
+                return 'hls::stream<{type}> {name}{suffix}("{name}")'.format(type=var.type.name, name=var.cppname, suffix=name_suffix)
         elif var_class == 'WeightVariable':
-            return '{type} {name}[{size}]'.format(type=var.type.name, name=var.cppname, size=var.data_length)
+            return '{type} {name}{suffix}[{size}]'.format(type=var.type.name, name=var.cppname, suffix=name_suffix, size=var.data_length)
         elif var_class == 'InplaceVariable':
             return None
         else:
@@ -140,8 +142,8 @@ class VivadoWriter(Writer):
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert header' in line:
-                inputs_str = ', '.join([self.variable_definition_cpp(model, i) for i in model_inputs])
-                outputs_str = ', '.join([self.variable_definition_cpp(model, o) for o in model_outputs])
+                inputs_str = ', '.join([self.variable_definition_cpp(model, i, as_reference=True) for i in model_inputs])
+                outputs_str = ', '.join([self.variable_definition_cpp(model, o, as_reference=True) for o in model_outputs])
                 insize_str = ', '.join(['unsigned short &const_size_in_{}'.format(i) for i in range(1, len(model_inputs) + 1)])
                 outsize_str = ', '.join(['unsigned short &const_size_out_{}'.format(i) for i in range(1, len(model_outputs) + 1)])
 
@@ -240,8 +242,8 @@ class VivadoWriter(Writer):
             elif 'void myproject(' in line:
                 newline = 'void {}(\n'.format(model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert header' in line:
-                inputs_str = ', '.join([self.variable_definition_cpp(model, i) for i in model_inputs])
-                outputs_str = ', '.join([self.variable_definition_cpp(model, o) for o in model_outputs])
+                inputs_str = ', '.join([self.variable_definition_cpp(model, i, as_reference=True) for i in model_inputs])
+                outputs_str = ', '.join([self.variable_definition_cpp(model, o, as_reference=True) for o in model_outputs])
                 insize_str = ', '.join(['unsigned short &const_size_in_{}'.format(i) for i in range(1, len(model_inputs) + 1)])
                 outsize_str = ', '.join(['unsigned short &const_size_out_{}'.format(o) for o in range(1, len(model_outputs) + 1)])
 
@@ -477,12 +479,12 @@ class VivadoWriter(Writer):
                 dtype = line.split('#', 1)[1].strip()
                 newline = ''
                 for i in model_inputs:
-                    newline += indent + '{type} {name}_ap[{shape}];\n'.format(type=i.type.name, name=i.cppname, shape=i.size_cpp())
+                    newline += indent + '{var};\n'.format(var=self.variable_definition_cpp(model, i, name_suffix='_ap'))
                     newline += indent + 'nnet::convert_data<{}, {}, {}>({}, {}_ap);\n'.format(dtype, i.type.name, i.size_cpp(), i.cppname, i.cppname)
                 newline += '\n'
                 
                 for o in model_outputs:
-                    newline += indent + '{type} {name}_ap[{shape}];\n'.format(type=o.type.name, name=o.cppname, shape=o.size_cpp())
+                    newline += indent + '{var};\n'.format(var=self.variable_definition_cpp(model, o, name_suffix='_ap'))
                 
                 newline += '\n'
 
