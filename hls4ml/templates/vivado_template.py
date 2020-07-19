@@ -168,11 +168,11 @@ merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {co
 resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
 transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}, {output});'
 
-dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h']
+dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_stream.h']
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h']
 conv1d_include_list = ['nnet_utils/nnet_conv.h', 'nnet_utils/nnet_conv_large.h']
 conv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_large.h']
-activ_include_list = ['nnet_utils/nnet_activation.h']
+activ_include_list = ['nnet_utils/nnet_activation.h', 'nnet_utils/nnet_activation_stream.h']
 pooling_include_list = ['nnet_utils/nnet_pooling.h']
 merge_include_list = ['nnet_utils/nnet_merge.h']
 resize_include_list = ['nnet_utils/nnet_image.h']
