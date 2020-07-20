@@ -384,26 +384,20 @@ class VivadoWriter(Writer):
                 newline = line.replace('myproject', model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert data' in line:
                 newline = line
-                newline += '      std::vector<float>::const_iterator in_begin = in.cbegin();\n'
-                newline += '      std::vector<float>::const_iterator in_end;\n'
+                offset = 0
                 for inp in model.get_input_variables():
                     newline += '      ' + self.variable_definition_cpp(model, inp) + ';\n'
-                    newline += '      in_end = in_begin + ({});\n'.format(inp.size_cpp())
-                    newline += '      std::copy(in_begin, in_end, {});\n'.format(inp.cppname)
-                    newline += '      in_begin = in_end;\n'
+                    newline += '      nnet::copy_data<float, {}, {}, {}>(in, {});\n'.format(inp.type.name, offset, inp.size_cpp(), inp.cppname)
+                    offset += inp.size()
                 for out in model.get_output_variables():
-                    # brace-init zeros the array out because we use std=c++0x
-                    newline += '      ' + self.variable_definition_cpp(model, out) + '{};\n'
-                    # but we can still explicitly zero out if you want
-                    newline += '      std::fill_n({}, {}, 0.);\n'.format(out.cppname, out.size())
+                    newline += '      ' + self.variable_definition_cpp(model, out) + ';\n'
             elif '//hls-fpga-machine-learning insert zero' in line:
                 newline = line
                 for inp in model.get_input_variables():
                     newline += '    ' + self.variable_definition_cpp(model, inp) + ';\n'
-                    newline += '    std::fill_n({}, {}, 0.);\n'.format(inp.cppname, inp.size_cpp())
+                    newline += '    nnet::fill_zero<{}, {}>({});\n'.format(inp.type.name, inp.size_cpp(), inp.cppname)
                 for out in model.get_output_variables():
-                    newline += '    ' + self.variable_definition_cpp(model, out) + '{};\n'
-                    newline += '      std::fill_n({}, {}, 0.);\n'.format(out.cppname, out.size())
+                    newline += '    ' + self.variable_definition_cpp(model, out) + ';\n'
             elif '//hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
 
@@ -426,17 +420,11 @@ class VivadoWriter(Writer):
             elif '//hls-fpga-machine-learning insert tb-output' in line:
                 newline = line
                 for out in model.get_output_variables():
-                    newline += indent + 'for(int i = 0; i < {}; i++) {{\n'.format(out.size_cpp())
-                    newline += indent + '  fout << {}[i] << " ";\n'.format(out.cppname)
-                    newline += indent + '}\n'
-                    newline += indent + 'fout << std::endl;\n'
+                    newline += indent + 'nnet::print_result<{}, {}>({}, fout);\n'.format(out.type.name, out.size_cpp(), out.cppname)
             elif '//hls-fpga-machine-learning insert output' in line or '//hls-fpga-machine-learning insert quantized' in line:
                 newline = line
                 for out in model.get_output_variables():
-                    newline += indent + 'for(int i = 0; i < {}; i++) {{\n'.format(out.size_cpp())
-                    newline += indent + '  std::cout << {}[i] << " ";\n'.format(out.cppname)
-                    newline += indent + '}\n'
-                    newline += indent + 'std::cout << std::endl;\n'
+                    newline += indent + 'nnet::print_result<{}, {}>({}, std::cout);\n'.format(out.type.name, out.size_cpp(), out.cppname)
             else:
                 newline = line
             fout.write(newline)

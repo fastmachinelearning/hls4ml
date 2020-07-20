@@ -228,6 +228,64 @@ void save_layer_output(hls::stream<data_T> &data, const char *layer_name, size_t
 
 #endif
 
+template<class src_T, class dst_T, size_t OFFSET, size_t SIZE>
+void copy_data(std::vector<src_T> src, dst_T dst[SIZE]) {
+    typename std::vector<src_T>::const_iterator in_begin = src.cbegin() + OFFSET;
+    typename std::vector<src_T>::const_iterator in_end = in_begin + SIZE;
+    std::copy(in_begin, in_end, dst);
+}
+
+template<class src_T, class dst_T, size_t OFFSET, size_t SIZE>
+void copy_data(std::vector<src_T> src, hls::stream<dst_T> &dst) {
+    typename std::vector<src_T>::const_iterator in_begin = src.cbegin() + OFFSET;
+    typename std::vector<src_T>::const_iterator in_end = in_begin + SIZE;
+
+    size_t i_pack = 0;
+    dst_T dst_pack;
+    for (typename std::vector<src_T>::const_iterator i = in_begin; i != in_end; ++i) {
+        dst_pack[i_pack++] = typename dst_T::value_type(*i);
+        if (i_pack == dst_T::size) {
+            i_pack = 0;
+            dst.write(dst_pack);
+        }
+    }
+}
+
+template<class res_T, size_t SIZE>
+void print_result(res_T result[SIZE], std::ostream &out) {
+    for(int i = 0; i < SIZE; i++) {
+        out << result[i] << " ";
+    }
+    out << std::endl;
+}
+
+template<class res_T, size_t SIZE>
+void print_result(hls::stream<res_T> &result, std::ostream &out) {
+    for(int i = 0; i < SIZE / res_T::size; i++) {
+        res_T res_pack = result.read();
+        for(int j = 0; j < res_T::size; j++) {
+            out << res_pack[j] << " ";
+        }
+    }
+    out << std::endl;
+}
+
+template<class data_T, size_t SIZE>
+void fill_zero(data_T data[SIZE]) {
+    std::fill_n(data, SIZE, 0.);
+}
+
+template<class data_T, size_t SIZE>
+void fill_zero(hls::stream<data_T> &data) {
+    for(int i = 0; i < SIZE / data_T::size; i++) {
+        data_T data_pack;
+        for(int j = 0; j < data_T::size; j++) {
+            data_pack[j] = 0.;
+        }
+        data.write(data_pack);
+    }
+}
+
 template <class dataType, unsigned int nrows>
 int read_file_1D(const char * filename, dataType data[nrows])
 {

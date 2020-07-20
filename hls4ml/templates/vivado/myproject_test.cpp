@@ -26,6 +26,7 @@
 #include <math.h>
 
 #include "firmware/myproject.h"
+#include "firmware/nnet_utils/nnet_helpers.h"
 
 #define CHECKPOINT 5000
 
