@@ -36,8 +36,8 @@ plt.show()
 Calling the `hls4ml.model.profiling.numerical` method with these three objects provided will produce two figures as below:
 
 
-<img src="img/activations.png" width=350 align=left>
-<img src="img/weights.png" width=350 align=right>
+<img src="../img/activations.png" width=350 align=left>
+<img src="../img/weights.png" width=350 align=right>
 
 <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
 
