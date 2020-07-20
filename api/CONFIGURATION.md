@@ -7,7 +7,7 @@ We currently support two ways of setting hls4ml's model configuration:
 
     - [hls4ml.utils.config_from_keras_model](#config_from_keras_model)
 
-2. [Through a YAML configuration file](##2.ThroughYAML)  
+2. [Through a YAML configuration file](##2.YAMLConfigurationfile)  
 
 This page documents the both methods' usage. 
 

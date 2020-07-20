@@ -16,11 +16,11 @@ hls_model = hls4ml.converters.convert_from_keras_model(keras_model, hls_config=c
 
 After that, you can use several methods in that object. Here is a list of all the methods:
 
-- [write]()
-- [compile]()
-- [predict]()
-- [build]()
-- [trace]()
+- [write](###`write`method)
+- [compile](###`compile`method)
+- [predict](###`predict`method)
+- [build](###`build`method)
+- [trace](###`trace`method)
 
 Similar functionalities are also supported through command line interface. If you prefer using them, please refer to Command Help section. 
 
@@ -63,7 +63,7 @@ This is similar to doing `csim` simulation, but you can get your prediction resu
 hls_model.build()
 
 #You can also read the report of the build 
-hls4ml.report.read_vivado_report('hls4ml_prj') #assuming that 
+hls4ml.report.read_vivado_report('hls4ml_prj')
 ```
 
 ---
