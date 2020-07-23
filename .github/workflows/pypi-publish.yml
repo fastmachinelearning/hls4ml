@@ -1,7 +1,5 @@
 name: 📦 Packaging release to PyPI
-on:
-  release:
-    types: [released]
+on: [release]
 
 jobs:
   release:
