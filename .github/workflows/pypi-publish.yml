@@ -1,5 +1,7 @@
 name: 📦 Packaging release to PyPI
-on: [release]
+on: 
+  release:
+    types: [released]
 
 jobs:
   release:
@@ -18,5 +20,6 @@ jobs:
     - name: Publish 📦 to Test PyPI
       uses: pypa/gh-action-pypi-publish@master
       with:
-        password: ${{ secrets.test_pypi_password }}
+        user: __hls4mlpub__
+        password: ${{ secrets.pypi_password }}
         repository_url: https://test.pypi.org/legacy/
