@@ -1,4 +1,4 @@
-name: 🐍 Automatic release to PyPI
+name: 📦 Packaging release to PyPI
  on:
    release:
      types:
@@ -12,13 +12,15 @@ name: 🐍 Automatic release to PyPI
        - name: Checkout source
          uses: actions/checkout@v2
        - uses: actions/setup-python@v2
-         with:python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+         with:
+           python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
        - name: Install dependencies
-         run: pip install wheel
+         run: python3 -m pip install --user --upgrade setuptools wheel
        - name: Build package
-         run: python setup.py sdist bdist_wheel
-       - name: Upload package
+         run: python3 setup.py sdist bdist_wheel
+       - name: Publish 📦 to Test PyPI
          uses: pypa/gh-action-pypi-publish@master
          with:
            user: __token__
-           password: ${{ secrets.pypi_password }}
+           password: ${{ secrets.test_pypi_password }}
+           repository_url: https://test.pypi.org/project/hls4ml/
