@@ -21,6 +21,6 @@ name: 📦 Packaging release to PyPI
        - name: Publish 📦 to Test PyPI
          uses: pypa/gh-action-pypi-publish@master
          with:
-           user: __token__
+           user: __hls4mlpub__
            password: ${{ secrets.test_pypi_password }}
            repository_url: https://test.pypi.org/project/hls4ml/
