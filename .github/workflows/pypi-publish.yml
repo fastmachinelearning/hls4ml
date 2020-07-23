@@ -20,6 +20,5 @@ jobs:
     - name: Publish 📦 to Test PyPI
       uses: pypa/gh-action-pypi-publish@master
       with:
-        user: __hls4mlpub__
-        password: ${{ secrets.pypi_password }}
+        password: ${{ secrets.PYPI_PASSWORD }}
         repository_url: https://test.pypi.org/legacy/
