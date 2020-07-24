@@ -698,6 +698,8 @@ class Softmax(Activation):
                 self.set_attr('exp_table_t', self.get_attr('table_t'))
             if 'inv_table_t' not in self.attributes:
                 self.set_attr('inv_table_t', self.get_attr('table_t'))
+            if 'implementation' not in self.attributes:
+                self.set_attr('implementation', 'latency')
 
 class BatchNormalization(Layer):
     def initialize(self):
