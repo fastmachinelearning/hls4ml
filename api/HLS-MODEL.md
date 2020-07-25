@@ -16,11 +16,11 @@ hls_model = hls4ml.converters.convert_from_keras_model(keras_model, hls_config=c
 
 After that, you can use several methods in that object. Here is a list of all the methods:
 
-- [write](###`write`method)
-- [compile](###`compile`method)
-- [predict](###`predict`method)
-- [build](###`build`method)
-- [trace](###`trace`method)
+- [write](###`write`-method)
+- [compile](###`compile`-method)
+- [predict](###`predict`-method)
+- [build](###`build`-method)
+- [trace](###`trace`-method)
 
 Similar functionalities are also supported through command line interface. If you prefer using them, please refer to Command Help section. 
 

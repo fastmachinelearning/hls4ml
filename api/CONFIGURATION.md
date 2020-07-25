@@ -3,22 +3,24 @@
 ---
 We currently support two ways of setting hls4ml's model configuration:
 
-1. [Through Python API](##1.PythonAPI)
+1. [Through Python API](##1.-python-api)
 
-    - [hls4ml.utils.config_from_keras_model](#config_from_keras_model)
+2. [Through a YAML configuration file](##2.yaml-configuration-file)
+      [2.1 Top level configuration](###2.1-top-level-configuration)
+      [2.2 Per-layer configuration](###2.2-per-layer-configuration)
 
-2. [Through a YAML configuration file](##2.YAMLConfigurationfile)  
+This page documents both methods' usage. 
 
-This page documents the both methods' usage. 
+**NOTE:** 
+- One important part of hls4ml to remember is that the user is responsible for the format of the inputs.  There is no automatic formatting or normalization so this must be done in the training.
 
-**NOTE:** One important part of hls4ml to remember is that the user is responsible for the format of the inputs.  There is no automatic formatting or normalization so this must be done in the training. 
+- For developers, you might also want to checkout this section: [Detailed configuration in converted hls codes](###detailed-configuration-in-converted-hls-codes).
+
 
 ---
 ## 1. Python API
 
 Using hls4ml, you can quickly generate a simple configuration dictionary from a keras model:
-
-<a name="config_from_keras_model"></a>
 
 ```python
 import hls4ml
@@ -41,7 +43,7 @@ To better understand how the configuration hierachy works, refer to the next sec
 ---
 ## 2. YAML Configuration file
 
-### Top level configuration
+### 2.1 Top level configuration
 
 Configuration files are YAML files in hls4ml (`*.yml`). An example configuration file is [here](https://github.com/hls-fpga-machine-learning/hls4ml/blob/master/example-models/keras-config.yml).
 
@@ -86,7 +88,7 @@ Then you have some optimization parameters for how your algorithm runs:
    Additionally, integers in fixed precision data type (`ap_int<N>`, where `N` is a bit-size from 1 to 1024) can also be used. You have a chance to further configure this more finely with per-layer configuration described below.
 
 
-**Per-layer configuration:**
+### 2.2 Per-layer configuration
 In the hls4ml configuration file, it is possible to specify the model *Precision* and *ReuseFactor* with finer granularity.
 
 Under the `HLSConfig` heading, these can be set for the `Model`, per `LayerType`, per `LayerName`, and for named variables within the layer (for precision only). The most basic configuration may look like this:
