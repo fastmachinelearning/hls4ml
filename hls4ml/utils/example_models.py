@@ -10,7 +10,7 @@ def fetch_example_model(model_name):
     https://github.com/hls-fpga-machine-learning/example-models
 
     Args:
-        - model_name: string, name of the example model in the repo. Example: 'keras_3_layer.h5'
+        - model_name: string, name of the example model in the repo. Example: 'KERAS_3layer.json'
     
     """
 
@@ -20,9 +20,9 @@ def fetch_example_model(model_name):
     model_config = None
 
     #Check for model's type to update link
-    if '.h5' in model_name:
+    if '.json' in model_name:
         model_type = 'keras'
-        model_config = 'KerasH5'
+        model_config = 'KerasJson'
     elif '.pt' in model_name:
         model_type = 'pytorch'
         model_config = 'PytorchModel'
@@ -36,13 +36,22 @@ def fetch_example_model(model_name):
         raise TypeError('Model type is not supported in hls4ml.')
     
 
-    download_link += model_type + '/' + model_name
+    download_link_model = download_link + model_type + '/' + model_name
 
     #Initiate the configuration file
     config = create_vivado_config()
         
     #Download the example model
-    urlretrieve(download_link, model_name)
+    urlretrieve(download_link_model, model_name)
+
+    #If the model is a keras model then have to download its weight file as well
+    if model_type == 'keras':
+        model_weight_name = model_name[:-5] + "_weights.h5"
+
+        download_link_weight = download_link + model_type + '/' + model_weight_name
+        urlretrieve(download_link_weight, model_weight_name)
+
+        config['KerasH5'] =  model_weight_name #Set configuration for the weight file
 
     #Additional configuration parameters
     config[model_config] = model_name

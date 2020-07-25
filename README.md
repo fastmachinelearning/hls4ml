@@ -28,7 +28,7 @@ import hls4ml
 
 #Fetch a keras model from our example repository
 #This will download our example model to your working directory and return an example configuration file
-config = hls4ml.utils.fetch_example_model('keras_3layer.h5')
+config = hls4ml.utils.fetch_example_model('KERAS_3layer.json')
 
 print(config) #You can print it to see some default parameters
 
