@@ -110,7 +110,7 @@ pip uninstall hls4ml
 
 ## Existing examples
 
-- Examples of model files and weights can be found in [example_models](hhttps://github.com/hls-fpga-machine-learning/example-models) directory.
+- Examples of model files and weights can be found in [example_models](https://github.com/hls-fpga-machine-learning/example-models) directory.
 
 - Training codes and examples of resources needed to train the models can be found [here](https://github.com/hls-fpga-machine-learning/keras-training).
 

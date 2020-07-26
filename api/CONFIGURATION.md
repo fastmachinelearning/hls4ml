@@ -3,18 +3,18 @@
 ---
 We currently support two ways of setting hls4ml's model configuration:
 
-1. [Through Python API](##1.-python-api)
+1. [Through Python API](1-python-api)
 
-2. [Through a YAML configuration file](##2.yaml-configuration-file)
-      [2.1 Top level configuration](###2.1-top-level-configuration)
-      [2.2 Per-layer configuration](###2.2-per-layer-configuration)
+2. [Through a YAML configuration file](2-yaml-configuration-file)
+    * [2.1 Top level configuration](21-top-level-configuration)
+    * [2.2 Per-layer configuration](22-per-layer-configuration)
 
 This page documents both methods' usage. 
 
 **NOTE:** 
 - One important part of hls4ml to remember is that the user is responsible for the format of the inputs.  There is no automatic formatting or normalization so this must be done in the training.
 
-- For developers, you might also want to checkout this section: [Detailed configuration in converted hls codes](###detailed-configuration-in-converted-hls-codes).
+- For developers, you might also want to checkout this section: [Detailed configuration in converted hls codes](detailed-configuration-in-converted-hls-codes).
 
 
 ---
@@ -45,7 +45,7 @@ To better understand how the configuration hierachy works, refer to the next sec
 
 ### 2.1 Top level configuration
 
-Configuration files are YAML files in hls4ml (`*.yml`). An example configuration file is [here](https://github.com/hls-fpga-machine-learning/hls4ml/blob/master/example-models/keras-config.yml).
+Configuration files are YAML files in hls4ml (`*.yml`). An example configuration file is [here](https://github.com/hls-fpga-machine-learning/example-models/blob/master/keras-config.yml).
 
 It looks like this:
 
