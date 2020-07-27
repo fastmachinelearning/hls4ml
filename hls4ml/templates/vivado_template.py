@@ -366,10 +366,16 @@ class VivadoBackend(Backend):
     def get_precision(self, vtype, iwidth=0, fwidth=0, data=None, optimize_signed=False, options=[]):
         if data is not None:
             # determine the minimal precision from data
-            log2max = math.log2(np.amax(np.abs(data)))
-            iwidth = max(0, math.ceil(log2max))
-            if iwidth == math.floor(log2max): # is a power-of-two integer
-                iwidth += 1
+            try:
+                log2max = math.log2(np.amax(np.abs(data)))
+            except ValueError:
+                # fringe case (amax(abs(data)) == 0 -> data is uniformly zero)
+                iwidth = 1
+            else:
+                iwidth = max(0, math.ceil(log2max))
+                if iwidth == math.floor(log2max): # is a power-of-two integer
+                    iwidth += 1
+
             if vtype in ['i', 'f']:
                 if optimize_signed and np.amin(data) >= 0.:
                     vtype = 'u' + vtype
