@@ -147,7 +147,6 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             if layer['config']['activation'] == 'softmax':
                layer_config['exp_table_t'] = 'ap_fixed<18,8,AP_RND,AP_SAT>'
                layer_config['inv_table_t'] = 'ap_fixed<18,8,AP_RND,AP_SAT>'
-               layer_config['implementation'] = 'latency'
             else:
                 layer_config['table_t'] = 'ap_fixed<18,8>'
         
