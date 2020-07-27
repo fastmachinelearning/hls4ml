@@ -71,9 +71,11 @@ class ApplyAlpha(BatchNormalization):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
-    def add_weights(self, scale, bias):
-        self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
-        self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
+    def add_weights(self, scale, quantizer=None):
+        self.add_weights_variable(name='scale', var_name='s{index}', data=scale, quantizer=quantizer)
+
+    def add_bias(self, bias, quantizer=None):
+        self.add_weights_variable(name='bias', var_name='b{index}', data=bias, quantizer=quantizer)
 
 # register the layer and its templates
 register_layer('ApplyAlpha', ApplyAlpha)
@@ -125,6 +127,13 @@ class QKerasFactorizeAlpha(OptimizerPass):
         # this is only needed for the binary layers which encode -1 as 0
         node.weights['weight'].data = node.weights['weight'].quantizer(new_weights.numpy())
 
+        # Move the biases from the Dense layer to the ApplyAlpha layer
+        bias = node.weights['bias'].data
+        bias_quantizer = None
+        if hasattr(node.weights['bias'], 'quantizer'):
+            bias_quantizer = node.weights['bias'].quantizer
+        node.weights['bias'].data = np.zeros(bias.shape)
+
         has_w_quant = node.get_attr('weight_quantizer') is not None 
         has_b_quant = node.get_attr('bias_quantizer') is not None
         if has_w_quant: 
@@ -140,11 +149,12 @@ class QKerasFactorizeAlpha(OptimizerPass):
             'n_in' : node.get_attr('n_out'),
             'n_filt' : node.get_attr('n_filt') if node.get_attr('n_filt') is not None else -1,
             'reuse_factor' : node.get_attr('reuse_factor'),
-            'bias_t' : 'ap_fixed<16,6>', # TODO automate this
+            'bias_t' : node.weights['bias'].type, 
             'scale_t' : 'ap_fixed<16,6>' # TODO automate this
         }
         alpha_layer = model.make_node('ApplyAlpha', node.name + '_alpha', attrs, node.outputs)
-        alpha_layer.add_weights(scale, np.zeros(scale.shape))
+        alpha_layer.add_weights(scale, quantizer=None)
+        alpha_layer.add_bias(bias, quantizer=bias_quantizer)
         model.insert_node(alpha_layer)
         return True
 
