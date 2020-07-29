@@ -698,6 +698,11 @@ class Softmax(Activation):
                 self.set_attr('exp_table_t', self.get_attr('table_t'))
             if 'inv_table_t' not in self.attributes:
                 self.set_attr('inv_table_t', self.get_attr('table_t'))
+            if self.model.config.is_resource_strategy(self):
+                # 'resource' strategy = 'latency' for Softmax
+                self.set_attr('implementation', 'latency')
+            else:
+                self.set_attr('implementation', self.model.config.get_strategy(self).lower())
 
 class BatchNormalization(Layer):
     def initialize(self):
