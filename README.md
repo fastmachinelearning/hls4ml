@@ -21,6 +21,12 @@ Detailed tutorials on how to use `hls4ml`'s various functionalities can be found
 pip install hls4ml
 ```
 
+To install the extra dependencies for profiling: 
+
+```
+pip install hls4ml[profiling]
+```
+
 # Getting Started
 ### Creating an HLS project
 ```Python
@@ -44,7 +50,7 @@ hls4ml.utils.fetch_example_list()
 ```Python
 #Use Vivado HLS to synthesize the model
 #This might take several minutes
-hls_model.build(synth=True)
+hls_model.build()
 
 #Print out the report if you want
 hls4ml.report.read_vivado_report('my-hls-test')
