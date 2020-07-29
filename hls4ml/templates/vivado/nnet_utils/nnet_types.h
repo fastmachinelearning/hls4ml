@@ -1,6 +1,8 @@
 #ifndef NNET_TYPES_H_
 #define NNET_TYPES_H_
 
+#include <assert.h>
+
 namespace nnet {
 
 // Fixed-size array
