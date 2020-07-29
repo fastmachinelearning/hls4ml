@@ -150,7 +150,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
             'n_filt' : node.get_attr('n_filt') if node.get_attr('n_filt') is not None else -1,
             'reuse_factor' : node.get_attr('reuse_factor'),
             'bias_t' : node.weights['bias'].type, 
-            'scale_t' : 'ap_fixed<16,6>' # TODO automate this
+            'scale_t' : FixedPrecisionType() # TODO automate this
         }
         alpha_layer = model.make_node('ApplyAlpha', node.name + '_alpha', attrs, node.outputs)
         alpha_layer.add_weights(scale, quantizer=None)
