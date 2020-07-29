@@ -121,7 +121,7 @@ class VivadoWriter(Writer):
             return template.format(mode=mode.upper(), name=variable.name, type=typ, factor=factor, dim=0)
 
         elif mode == 'stream':
-            return '#pragma HLS STREAM variable={name} depth={depth} dim={dim}'.format(name=variable.name, depth=depth, dim=0)
+            return '#pragma HLS STREAM variable={name} depth={depth}'.format(name=variable.name, depth=depth)
 
     def write_project_cpp(self, model):
         ###################
@@ -167,8 +167,9 @@ class VivadoWriter(Writer):
                 newline = line
                 all_inputs = [i.cppname for i in model_inputs]
                 all_outputs = [o.cppname for o in model_outputs]
+                io_type = model.config.get_config_value("IOType")
 
-                if model.config.get_config_value("IOType") == "io_parallel":
+                if io_type == 'io_parallel':
                     for i in model_inputs: newline += indent + self._make_array_pragma(i) + '\n'
                     for o in model_outputs: newline += indent + self._make_array_pragma(o) + '\n'
                     # TODO discussed adding a handle for setting the interface mode for individual input and output arrays (16.03.2020)
@@ -178,7 +179,7 @@ class VivadoWriter(Writer):
                         newline += indent + '#pragma HLS DATAFLOW \n'
                     else:
                         newline += indent + '#pragma HLS PIPELINE \n'
-                if model.config.get_config_value("IOType") == "io_serial":
+                if io_type == 'io_serial' or io_type == 'io_stream':
                     newline += indent + '#pragma HLS INTERFACE axis port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
                     newline += indent + '#pragma HLS DATAFLOW \n'
 
