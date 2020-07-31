@@ -1,5 +1,18 @@
 Go to [here](https://github.com/hls-fpga-machine-learning/hls4ml/releases) for official releases on Github.
 
+**v0.3.0**
+
+- Installing from `PyPI`
+- Create configuration dictionary from model object
+- Run 'C Simulation' from Python with `hls_model.predict(X)`
+- Trace model layer output with `hls_model.trace(X)`
+- Write HLS project, run synthesis flow from Python
+- QKeras support: convert models trained using layers and quantizers from QKeras
+- Example models moved to separate repo, added API to retrieve them
+- New Softmax implementations
+- Minor fixes: weights exported at higher precision, concatenate layer shape corrected
+
+---
 **v0.2.0:**
 
 - `tf_to_hls` tool for converting tensorflow models (protobufs `.pb`)
