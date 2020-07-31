@@ -10,7 +10,6 @@
    * [HLS Model](api/HLS-MODEL.md)
    * [Configuration](api/CONFIGURATION.md)
    * [Profiling](api/PROFILING.md)
-   * [Quantization](api/QUANTIZATION.md)
 * [Command help](COMMAND.md)
 * [Concepts](CONCEPTS.md)
 * [Reference and Contributors](REFERENCE.md)

@@ -8,6 +8,12 @@ For basic concepts to understand the tool, please visit the <a href="../CONCEPTS
 pip install hls4ml
 ```
 
+If you want to use our [profiling](../api/PROFILING.md) toolbox, you might need to install extra dependencies:
+
+```
+pip install hls4ml[profiling]
+```
+
 ## Getting started
 
 To with <span style="color:red">hls4ml</span>, we provide some default example models for conversion:
@@ -33,7 +39,7 @@ After that, you can use <span style="color:red">Vivado HLS</span> to synthesize 
 ```python
 #Use Vivado HLS to synthesize the model
 #This might take several minutes
-hls_model.build(synth=True)
+hls_model.build()
 
 #Print out the report if you want
 hls4ml.report.read_vivado_report('my-hls-test')
@@ -45,8 +51,7 @@ If you want to configure your model further, check out our [Configuration](../ap
 
 Apart from our main API, we also support model conversion using a command line interface, check out our next section to find out more:
 
-### Getting started with hls4ml command (optional)
-
+### Getting started with hls4ml commands (optional)
 
 To follow this tutorial, you must first download our `example-models` repository:
 
