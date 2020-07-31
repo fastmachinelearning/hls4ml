@@ -1,20 +1,16 @@
 from setuptools import setup
 from setuptools import find_packages
 
-long_description = '''
-A package for machine learning inference in FPGAs. We create firmware
-implementations of machine learning algorithms using high level synthesis
-language (HLS). We translate traditional open-source machine learning package
-models into HLS that can be configured for your use-case!
-
-For more information visit the webpage:
-https://hls-fpga-machine-learning.github.io/hls4ml/
-'''
+from os import path
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(name='hls4ml',
-      version='0.2.0',
+      version='0.3.0',
       description='Machine learning in FPGAs using HLS',
       long_description=long_description,
+      long_description_content_type='text/markdown',
       author='HLS4ML Team',
       author_email='hls4ml.help@gmail.com',
       url='https://github.com/hls-fpga-machine-learning/hls4ml',

@@ -1,0 +1,23 @@
+name: 📦 Packaging release to PyPI
+on: 
+  release:
+    types: [released]
+
+jobs:
+  release:
+    name: Upload new release to PyPI
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+    - name: Install dependencies
+      run: python3 -m pip install --user --upgrade setuptools wheel
+    - name: Build package
+      run: python3 setup.py sdist bdist_wheel
+    - name: Publish 📦 to PyPI
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        password: ${{ secrets.PYPI_PASSWORD }}
