@@ -57,10 +57,10 @@
     <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="../COMMAND.html" />
+    <link rel="next" href="PROFILING.html" />
     
     
-    <link rel="prev" href="QUICKSTART.html" />
+    <link rel="prev" href="HLS-MODEL.html" />
     
 
     </head>
@@ -142,9 +142,9 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.4.1" data-path="DEPENDENCIES.html">
+        <li class="chapter " data-level="1.4.1" data-path="../setup/DEPENDENCIES.html">
             
-                <a href="DEPENDENCIES.html">
+                <a href="../setup/DEPENDENCIES.html">
             
                     
                     Dependencies
@@ -155,25 +155,12 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4.2" data-path="QUICKSTART.html">
+        <li class="chapter " data-level="1.4.2" data-path="../setup/QUICKSTART.html">
             
-                <a href="QUICKSTART.html">
+                <a href="../setup/QUICKSTART.html">
             
                     
                     Quick Start
-            
-                </a>
-            
-
-            
-        </li>
-    
-        <li class="chapter active" data-level="1.4.3" data-path="CONFIGURATION.html">
-            
-                <a href="CONFIGURATION.html">
-            
-                    
-                    Configuration
             
                 </a>
             
@@ -186,12 +173,26 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5" data-path="../COMMAND.html">
+        <li class="chapter " data-level="1.5" data-path="../API.html">
             
-                <a href="../COMMAND.html">
+                <a href="../API.html">
             
                     
-                    Command help
+                    hls4ml API reference
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.5.1" data-path="HLS-MODEL.html">
+            
+                <a href="HLS-MODEL.html">
+            
+                    
+                    HLS Model
             
                 </a>
             
@@ -199,12 +200,43 @@
             
         </li>
     
-        <li class="chapter " data-level="1.6" data-path="../PROFILING.html">
+        <li class="chapter active" data-level="1.5.2" data-path="CONFIGURATION.html">
             
-                <a href="../PROFILING.html">
+                <a href="CONFIGURATION.html">
+            
+                    
+                    Configuration
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.3" data-path="PROFILING.html">
+            
+                <a href="PROFILING.html">
             
                     
                     Profiling
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="../COMMAND.html">
+            
+                <a href="../COMMAND.html">
+            
+                    
+                    Command help
             
                 </a>
             
@@ -298,12 +330,42 @@
                                 
                                 <h1 id="configuration">Configuration</h1>
 <hr>
-<p>Now that you have a run a quick example workflow of hls4ml, let&apos;s go through the various configuration options that you have for the translation of your machine learning algorithm.  </p>
-<p>One important part of hls4ml to remember is that the user is responsible for the format of the inputs.  There is no automatic formatting or normalization so this must be done in the training. </p>
+<p>We currently support two ways of setting hls4ml&apos;s model configuration:</p>
+<ol>
+<li><p><a href="#1-python-api">Through Python API</a></p>
+</li>
+<li><p><a href="#2-yaml-configuration-file">Through a YAML configuration file</a></p>
+<ul>
+<li><a href="#21-top-level-configuration">2.1 Top level configuration</a></li>
+<li><a href="#22-per-layer-configuration">2.2 Per-layer configuration</a></li>
+</ul>
+</li>
+</ol>
+<p>This page documents both methods&apos; usage. </p>
+<p><strong>NOTE:</strong> </p>
+<ul>
+<li><p>One important part of hls4ml to remember is that the user is responsible for the format of the inputs.  There is no automatic formatting or normalization so this must be done in the training.</p>
+</li>
+<li><p>For developers, you might also want to checkout this section: <a href="#detailed-configuration-in-converted-hls-codes">Detailed configuration in converted hls codes</a>.</p>
+</li>
+</ul>
 <hr>
-<h2 id="keras-translation">Keras translation</h2>
-<h3 id="top-level-configuration">Top level configuration</h3>
-<p>Configuration files are YAML files in hls4ml (<code>*.yml</code>). An example configuration file is <a href="https://github.com/hls-fpga-machine-learning/hls4ml/blob/master/example-models/keras-config.yml" target="_blank">here</a>.</p>
+<h2 id="1-python-api">1. Python API</h2>
+<p>Using hls4ml, you can quickly generate a simple configuration dictionary from a keras model:</p>
+<pre class="language-"><code class="lang-python"><span class="token keyword">import</span> hls4ml
+config <span class="token operator">=</span> hls4ml<span class="token punctuation">.</span>utils<span class="token punctuation">.</span>config_from_keras_model<span class="token punctuation">(</span>model<span class="token punctuation">,</span> granularity<span class="token operator">=</span><span class="token string">&apos;model&apos;</span><span class="token punctuation">)</span>
+</code></pre>
+<p>For more advanced and detailed configuration, you can also set them through the created dictionary. For example, to change the reuse factor:</p>
+<pre class="language-"><code class="lang-python">config<span class="token punctuation">[</span><span class="token string">&apos;Model&apos;</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token string">&apos;ReuseFactor&apos;</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token number">2</span>
+</code></pre>
+<p>Or to set the precision of a specific layer&apos;s weight:</p>
+<pre class="language-"><code class="lang-python">config<span class="token punctuation">[</span><span class="token string">&apos;LayerName&apos;</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token string">&apos;fc1&apos;</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token string">&apos;Precision&apos;</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token string">&apos;weight&apos;</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token string">&apos;ap_fixed&lt;8,4&gt;&apos;</span>
+</code></pre>
+<p>To better understand how the configuration hierachy works, refer to the next section for more details.</p>
+<hr>
+<h2 id="2-yaml-configuration-file">2. YAML Configuration file</h2>
+<h3 id="21-top-level-configuration">2.1 Top level configuration</h3>
+<p>Configuration files are YAML files in hls4ml (<code>*.yml</code>). An example configuration file is <a href="https://github.com/hls-fpga-machine-learning/example-models/blob/master/keras-config.yml" target="_blank">here</a>.</p>
 <p>It looks like this:</p>
 <pre class="language-"><code class="lang-yaml"><span class="token key atrule">KerasJson</span><span class="token punctuation">:</span> keras/KERAS_3layer.json
 <span class="token key atrule">KerasH5</span><span class="token punctuation">:</span>   keras/KERAS_3layer_weights.h5 <span class="token comment">#You can also use h5 file from Keras&apos;s model.save() without supplying json file.</span>
@@ -342,8 +404,8 @@ Then you have some optimization parameters for how your algorithm runs:</li>
 <li><strong>Precision</strong>: this defines the precsion of your inputs, outputs, weights and biases. It is denoted by <code>ap_fixed<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>X,Y</span><span class="token punctuation">&gt;</span></span></code>, where <code>Y</code> is the number of bits representing the signed number above the binary point (i.e. the integer part), and <code>X</code> is the total number of bits.
 Additionally, integers in fixed precision data type (<code>ap_int<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>N</span><span class="token punctuation">&gt;</span></span></code>, where <code>N</code> is a bit-size from 1 to 1024) can also be used. You have a chance to further configure this more finely with per-layer configuration described below.</li>
 </ul>
-<p><strong>Per-layer configuration:</strong>
-In the hls4ml configuration file, it is possible to specify the model <em>Precision</em> and <em>ReuseFactor</em> with finer granularity.</p>
+<h3 id="22-per-layer-configuration">2.2 Per-layer configuration</h3>
+<p>In the hls4ml configuration file, it is possible to specify the model <em>Precision</em> and <em>ReuseFactor</em> with finer granularity.</p>
 <p>Under the <code>HLSConfig</code> heading, these can be set for the <code>Model</code>, per <code>LayerType</code>, per <code>LayerName</code>, and for named variables within the layer (for precision only). The most basic configuration may look like this:</p>
 <pre class="language-"><code class="lang-yaml"><span class="token key atrule">HLSConfig</span><span class="token punctuation">:</span>
   <span class="token key atrule">Model</span><span class="token punctuation">:</span>
@@ -453,12 +515,12 @@ An example is <a href="https://github.com/hls-fpga-machine-learning/models/blob/
 
             
                 
-                <a href="QUICKSTART.html" class="navigation navigation-prev " aria-label="Previous page: Quick Start">
+                <a href="HLS-MODEL.html" class="navigation navigation-prev " aria-label="Previous page: HLS Model">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
                 
-                <a href="../COMMAND.html" class="navigation navigation-next " aria-label="Next page: Command help">
+                <a href="PROFILING.html" class="navigation navigation-next " aria-label="Next page: Profiling">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -469,7 +531,7 @@ An example is <a href="https://github.com/hls-fpga-machine-learning/models/blob/
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Configuration","level":"1.4.3","depth":2,"next":{"title":"Command help","level":"1.5","depth":1,"path":"COMMAND.md","ref":"COMMAND.md","articles":[]},"previous":{"title":"Quick Start","level":"1.4.2","depth":2,"path":"setup/QUICKSTART.md","ref":"setup/QUICKSTART.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["prism","-highlight"],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"prism":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/CONFIGURATION.md","mtime":"2020-07-11T14:13:38.896Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-07-11T14:14:27.014Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Configuration","level":"1.5.2","depth":2,"next":{"title":"Profiling","level":"1.5.3","depth":2,"path":"api/PROFILING.md","ref":"api/PROFILING.md","articles":[]},"previous":{"title":"HLS Model","level":"1.5.1","depth":2,"path":"api/HLS-MODEL.md","ref":"api/HLS-MODEL.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["prism","-highlight"],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"prism":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"api/CONFIGURATION.md","mtime":"2020-07-31T17:41:25.367Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-07-31T17:42:25.555Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>

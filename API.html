@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <title>Reference and Contributors · GitBook</title>
+        <title>hls4ml API reference · GitBook</title>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="description" content="">
         <meta name="generator" content="GitBook 3.2.3">
@@ -57,8 +57,10 @@
     <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
 
     
+    <link rel="next" href="api/HLS-MODEL.html" />
     
-    <link rel="prev" href="CONCEPTS.html" />
+    
+    <link rel="prev" href="setup/QUICKSTART.html" />
     
 
     </head>
@@ -171,7 +173,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5" data-path="API.html">
+        <li class="chapter active" data-level="1.5" data-path="API.html">
             
                 <a href="API.html">
             
@@ -255,7 +257,7 @@
             
         </li>
     
-        <li class="chapter active" data-level="1.8" data-path="REFERENCE.html">
+        <li class="chapter " data-level="1.8" data-path="REFERENCE.html">
             
                 <a href="REFERENCE.html">
             
@@ -311,7 +313,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href="." >Reference and Contributors</a>
+        <a href="." >hls4ml API reference</a>
     </h1>
 </div>
 
@@ -326,42 +328,8 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h1 id="citation">Citation</h1>
-<p>If you are using the package please cite:</p>
-<ul>
-<li><a href="https://zenodo.org/badge/latestdoi/108329371" target="_blank"><img src="https://zenodo.org/badge/108329371.svg" alt="DOI"></a></li>
-<li>J. Duarte <em>et al.</em>, &quot;Fast inference of deep neural networks in FPGAs for particle physics&quot;, <a href="https://dx.doi.org/10.1088/1748-0221/13/07/P07027" target="_blank">JINST 13 P07027 (2018)</a>, <a href="https://arxiv.org/abs/1804.06913" target="_blank">arXiv:1804.06913</a>.</li>
-</ul>
-<p>If you are using the boosted decision tree implementation, please cite also:   </p>
-<ul>
-<li>S. Summers <em>et al.</em>, &quot;Fast inference of boosted decision trees in FPGAs for particle physics&quot;, <a href="https://arxiv.org/abs/2002.02534" target="_blank">arXiv:2002.02534</a>.
-If you are using the binary or ternary neural network implementation, please also cite:</li>
-<li>G. Di Guglielmo <em>et al.</em>, &quot;Compressing deep neural networks on FPGAs to binary and ternary precision with hls4ml&quot;, <a href="https://arxiv.org/abs/2003.06308" target="_blank">arXiv:2003.06308</a></li>
-</ul>
-<h1 id="additional-talks-and-presentations">Additional talks and presentations</h1>
-<ul>
-<li>eScience 2019: <a href="https://escience2019.sched.com/event/Uuiy/machine-learning-on-fpgas-for-low-latency-and-high-throughput-inference?iframe=yes&amp;w=100%&amp;sidebar=yes&amp;bg=no#" target="_blank">talk</a></li>
-<li>ACAT 2019: <a href="https://indico.cern.ch/event/708041/contributions/3269690/" target="_blank">talk</a></li>
-<li>Zurich Hands-on Course: <a href="https://indico.cern.ch/event/769727/" target="_blank">course</a></li>
-<li>TWEPP 2018: <a href="https://indico.cern.ch/event/697988/contributions/3055990/" target="_blank">talk</a></li>
-<li>CHEP 2018: <a href="https://indico.cern.ch/event/587955/contributions/2937529/" target="_blank">talk</a></li>
-<li>Connecting the Dots 2018: <a href="https://indico.cern.ch/event/658267/contributions/2813688/" target="_blank">talk</a></li>
-<li>Fermilab Research Techniques Seminar: <a href="https://indico.fnal.gov/event/16908/" target="_blank">talk</a></li>
-<li>CERN EP/IT Data Science Seminar: <a href="https://indico.cern.ch/event/721567/" target="_blank">talk</a> </li>
-</ul>
-<h1 id="contributors">Contributors</h1>
-<ul>
-<li>Vladimir Loncar, Jennifer Ngadiuba, Maurizio Pierini, Sioni Summers [CERN]</li>
-<li>Javier Duarte [University of California San Diego]</li>
-<li>Sergo Jindariani, Benjamin Kreis, Ryan Rivera, Nhan Tran [Fermilab]</li>
-<li>Edward Kreinar [Hawkeye360]</li>
-<li>Song Han, Philip Harris, Dylan Rankin [MIT]</li>
-<li>Zhenbin Wu [University of Illinois at Chicago]</li>
-<li>Mark Neubauer [University of Illinois Urbana-Champaign]</li>
-<li>Shih-Chieh Hsu [University of Washington]</li>
-<li>Giuseppe Di Guglielmo [Columbia University]</li>
-<li>Duc Hoang [Rhodes College]</li>
-</ul>
+                                <h1 id="hls4ml-api-reference">Hls4ml API reference</h1>
+<p>This page documents <span style="color:red">hls4ml</span>&apos;s various API functionalities to convert machine learning models to a <span style="color:red">High Level Synthesis (HLS)</span> project.</p>
 
                                 
                                 </section>
@@ -389,10 +357,14 @@ If you are using the binary or ternary neural network implementation, please als
 
             
                 
-                <a href="CONCEPTS.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page: Concepts">
+                <a href="setup/QUICKSTART.html" class="navigation navigation-prev " aria-label="Previous page: Quick Start">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
+                
+                <a href="api/HLS-MODEL.html" class="navigation navigation-next " aria-label="Next page: HLS Model">
+                    <i class="fa fa-angle-right"></i>
+                </a>
                 
             
         
@@ -401,7 +373,7 @@ If you are using the binary or ternary neural network implementation, please als
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Reference and Contributors","level":"1.8","depth":1,"next":{"title":"Code Repository","level":"1.9","depth":1,"url":"https://github.com/hls-fpga-machine-learning/HLS4ML","ref":"https://github.com/hls-fpga-machine-learning/HLS4ML","articles":[]},"previous":{"title":"Concepts","level":"1.7","depth":1,"path":"CONCEPTS.md","ref":"CONCEPTS.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["prism","-highlight"],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"prism":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"REFERENCE.md","mtime":"2020-07-31T17:41:25.367Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-07-31T17:42:25.555Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"hls4ml API reference","level":"1.5","depth":1,"next":{"title":"HLS Model","level":"1.5.1","depth":2,"path":"api/HLS-MODEL.md","ref":"api/HLS-MODEL.md","articles":[]},"previous":{"title":"Quick Start","level":"1.4.2","depth":2,"path":"setup/QUICKSTART.md","ref":"setup/QUICKSTART.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["prism","-highlight"],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"prism":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"API.md","mtime":"2020-07-31T17:41:25.367Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-07-31T17:42:25.555Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>

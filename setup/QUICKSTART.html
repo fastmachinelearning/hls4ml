@@ -57,7 +57,7 @@
     <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="CONFIGURATION.html" />
+    <link rel="next" href="../API.html" />
     
     
     <link rel="prev" href="DEPENDENCIES.html" />
@@ -168,12 +168,57 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4.3" data-path="CONFIGURATION.html">
+
+            </ul>
             
-                <a href="CONFIGURATION.html">
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="../API.html">
+            
+                <a href="../API.html">
+            
+                    
+                    hls4ml API reference
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.5.1" data-path="../api/HLS-MODEL.html">
+            
+                <a href="../api/HLS-MODEL.html">
+            
+                    
+                    HLS Model
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.2" data-path="../api/CONFIGURATION.html">
+            
+                <a href="../api/CONFIGURATION.html">
             
                     
                     Configuration
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.3" data-path="../api/PROFILING.html">
+            
+                <a href="../api/PROFILING.html">
+            
+                    
+                    Profiling
             
                 </a>
             
@@ -186,25 +231,12 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5" data-path="../COMMAND.html">
+        <li class="chapter " data-level="1.6" data-path="../COMMAND.html">
             
                 <a href="../COMMAND.html">
             
                     
                     Command help
-            
-                </a>
-            
-
-            
-        </li>
-    
-        <li class="chapter " data-level="1.6" data-path="../PROFILING.html">
-            
-                <a href="../PROFILING.html">
-            
-                    
-                    Profiling
             
                 </a>
             
@@ -297,25 +329,44 @@
                                 <section class="normal markdown-section">
                                 
                                 <h1 id="quick-start">Quick start</h1>
-<p>For basic concepts to understand the tool, please visit the <a href="../CONCEPTS.html">Concepts</a> chapter.<br>Here we give line-by-line instructions on how to build a first project and explain the various steps to producing an HLS4ML IP.</p>
-<h2 id="running-the-tool">Running the tool</h2>
-<p>These instructions are for simply running the tool out-of-the-box and getting a feel for the workflow.  </p>
-<p><strong>1) To clone our latest version from github and install it from the main directory:</strong></p>
-<pre class="language-"><code class="lang-bash"><span class="token function">git</span> clone https://github.com/hls-fpga-machine-learning/hls4ml.git
-<span class="token builtin class-name">cd</span> hls4ml/
-pip <span class="token function">install</span> <span class="token builtin class-name">.</span>
+<p>For basic concepts to understand the tool, please visit the <a href="../CONCEPTS.html">Concepts</a> chapter. Here we give line-by-line instructions for simply running the tool out-of-the-box and getting a feel for the workflow.  </p>
+<h2 id="installation">Installation</h2>
+<pre class="language-"><code>pip install hls4ml
+</code></pre><p>If you want to use our <a href="../api/PROFILING.html">profiling</a> toolbox, you might need to install extra dependencies:</p>
+<pre class="language-"><code>pip install hls4ml[profiling]
+</code></pre><h2 id="getting-started">Getting started</h2>
+<p>To with <span style="color:red">hls4ml</span>, we provide some default example models for conversion:</p>
+<pre class="language-"><code class="lang-python"><span class="token keyword">import</span> hls4ml
+
+<span class="token comment">#Fetch a keras model from our example repository</span>
+<span class="token comment">#This will download our example model to your working directory and return an example configuration file</span>
+config <span class="token operator">=</span> hls4ml<span class="token punctuation">.</span>utils<span class="token punctuation">.</span>fetch_example_model<span class="token punctuation">(</span><span class="token string">&apos;KERAS_3layer.json&apos;</span><span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span>config<span class="token punctuation">)</span> <span class="token comment">#You can print it to see some default parameters</span>
+
+<span class="token comment">#Convert it to a hls project</span>
+hls_model <span class="token operator">=</span> hls4ml<span class="token punctuation">.</span>converters<span class="token punctuation">.</span>keras_to_hls<span class="token punctuation">(</span>config<span class="token punctuation">)</span>
+
+<span class="token comment"># Print full list of example model if you want to explore more</span>
+hls4ml<span class="token punctuation">.</span>utils<span class="token punctuation">.</span>fetch_example_list<span class="token punctuation">(</span><span class="token punctuation">)</span>
 </code></pre>
-<p><strong>NOTE FOR THIS STEP:</strong></p>
-<ul>
-<li>If you don&apos;t have privileges to install in the configured environment, you can also pass <code>--user</code> to the <code>pip</code> command as well. You can also add <code>-U</code> or <code>--upgrade</code> to update all packages to the newest available version. </li>
-<li>To enable develop mode: <code>pip install -e .</code></li>
-<li>In the future, we plan to support <code>hls4ml</code> as a package on PyPI. After that you can simply install the software with: <code>pip install hls4ml</code></li>
-<li>We are also planning on supporting <code>conda</code> installation for <code>hls4ml</code>.</li>
-</ul>
-<p><strong>2) Translate your model using configuration files (<code>.yml</code>):</strong> </p>
+<p>After that, you can use <span style="color:red">Vivado HLS</span> to synthesize the model:</p>
+<pre class="language-"><code class="lang-python"><span class="token comment">#Use Vivado HLS to synthesize the model</span>
+<span class="token comment">#This might take several minutes</span>
+hls_model<span class="token punctuation">.</span>build<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token comment">#Print out the report if you want</span>
+hls4ml<span class="token punctuation">.</span>report<span class="token punctuation">.</span>read_vivado_report<span class="token punctuation">(</span><span class="token string">&apos;my-hls-test&apos;</span><span class="token punctuation">)</span>
+</code></pre>
+<p>Done! you&apos;ve built your first project using <span style="color:red">hls4ml</span>! To learn more about our various API functionalities, check out our tutorials <a href="https://github.com/hls-fpga-machine-learning/hls4ml-tutorial" target="_blank">here</a>.</p>
+<p>If you want to configure your model further, check out our <a href="../api/CONFIGURATION.html">Configuration</a> page. </p>
+<p>Apart from our main API, we also support model conversion using a command line interface, check out our next section to find out more:</p>
+<h3 id="getting-started-with-hls4ml-commands-optional">Getting started with hls4ml commands (optional)</h3>
+<p>To follow this tutorial, you must first download our <code>example-models</code> repository:</p>
+<pre class="language-"><code class="lang-bash"><span class="token function">git</span> clone https://github.com/hls-fpga-machine-learning/example-models.git
+</code></pre>
 <p>The model files, along with other configuration parameters, are defined in the <code>.yml</code> files.
-Further information about <code>.yml</code> files can be found in <a href="CONFIGURATION.html">Configuration Section</a>.
-We provide some examples of configuration files in <code>example-models</code> directory.</p>
+Further information about <code>.yml</code> files can be found in <a href="../api/CONFIGURATION.html">Configuration</a> page.</p>
 <p>In order to create an example HLS project:</p>
 <ul>
 <li>Go to <code>example-models/</code> from the main directory: </li>
@@ -346,13 +397,15 @@ vivado_hls -f build_prj.tcl
 </li>
 <li><p>If you need help for a particular <code>command</code>, <code>hls4ml command -h</code> will show help for the requested <code>command</code></p>
 </li>
+<li><p>We provide a detailed documentation for each of the command in the <a href="../COMMAND.html">Command Help</a> section</p>
+</li>
 </ul>
 <p><strong>To uninstall <code>hls4ml</code>:</strong> </p>
 <pre class="language-"><code class="lang-bash">pip uninstall hls4ml
 </code></pre>
 <h2 id="existing-examples">Existing examples</h2>
 <ul>
-<li><p>Examples of model files and weights can be found in <a href="https://github.com/hls-fpga-machine-learning/hls4ml/tree/master/example-models" target="_blank">example_models</a> directory.</p>
+<li><p>Examples of model files and weights can be found in <a href="https://github.com/hls-fpga-machine-learning/example-models" target="_blank">example_models</a> directory.</p>
 </li>
 <li><p>Training codes and examples of resources needed to train the models can be found <a href="https://github.com/hls-fpga-machine-learning/keras-training" target="_blank">here</a>.</p>
 </li>
@@ -391,7 +444,7 @@ vivado_hls -f build_prj.tcl
                 </a>
                 
                 
-                <a href="CONFIGURATION.html" class="navigation navigation-next " aria-label="Next page: Configuration">
+                <a href="../API.html" class="navigation navigation-next " aria-label="Next page: hls4ml API reference">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -402,7 +455,7 @@ vivado_hls -f build_prj.tcl
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Quick Start","level":"1.4.2","depth":2,"next":{"title":"Configuration","level":"1.4.3","depth":2,"path":"setup/CONFIGURATION.md","ref":"setup/CONFIGURATION.md","articles":[]},"previous":{"title":"Dependencies","level":"1.4.1","depth":2,"path":"setup/DEPENDENCIES.md","ref":"setup/DEPENDENCIES.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["prism","-highlight"],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"prism":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/QUICKSTART.md","mtime":"2020-07-11T14:13:38.896Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-07-11T14:14:27.014Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Quick Start","level":"1.4.2","depth":2,"next":{"title":"hls4ml API reference","level":"1.5","depth":1,"path":"API.md","ref":"API.md","articles":[{"title":"HLS Model","level":"1.5.1","depth":2,"path":"api/HLS-MODEL.md","ref":"api/HLS-MODEL.md","articles":[]},{"title":"Configuration","level":"1.5.2","depth":2,"path":"api/CONFIGURATION.md","ref":"api/CONFIGURATION.md","articles":[]},{"title":"Profiling","level":"1.5.3","depth":2,"path":"api/PROFILING.md","ref":"api/PROFILING.md","articles":[]}]},"previous":{"title":"Dependencies","level":"1.4.1","depth":2,"path":"setup/DEPENDENCIES.md","ref":"setup/DEPENDENCIES.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["prism","-highlight"],"pluginsConfig":{"fontSettings":{"theme":"sepia","family":"sans"},"prism":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"setup/QUICKSTART.md","mtime":"2020-07-31T17:41:25.383Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-07-31T17:42:25.555Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
