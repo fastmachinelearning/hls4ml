@@ -181,7 +181,7 @@ def keras_to_hls(config):
             input_layer['input_shape'] = layer_config[0]['config']['batch_input_shape'][1:]
             layer_list.append(input_layer)
             print('Input shape:', input_layer['input_shape'])
-    elif model_arch['class_name'] == 'Model':
+    elif model_arch['class_name'] in ['Model', 'Functional']: # TF >= 2.3 calls it 'Funcational' API
         print('Interpreting Model')
         layer_config = model_arch['config']['layers']
         input_layers = [ inp[0] for inp in model_arch['config']['input_layers'] ]
