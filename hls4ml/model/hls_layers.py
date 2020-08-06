@@ -472,6 +472,7 @@ class Dense(Layer):
         self.set_attr('index_t', index_t)
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
+
     def function_cpp(self):
         params = self._default_function_params()
         params['strategy'] = self.get_attr('strategy')

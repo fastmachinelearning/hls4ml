@@ -28,6 +28,7 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     static const unsigned bf_pad = {bfpad};
 
     static const unsigned reuse_factor = {reuse};
+    static const unsigned compressed_block_factor = DIV_ROUNDUP(n_nonzeros, reuse_factor);
     static const unsigned reuse_factor_rounded = reuse_factor + rf_pad;
     static const unsigned block_factor = DIV_ROUNDUP(n_in*n_out, reuse_factor);
     static const unsigned block_factor_rounded = block_factor + bf_pad;
@@ -178,7 +179,7 @@ transpose_config_template = """struct config{index} : nnet::transpose_config {{
     static const unsigned perm[3] = {{{perm_str}}};
 }};\n"""
 
-dense_function_template = 'nnet::dense<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+dense_function_template = 'nnet::dense{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
 #conv1d_function_template = 'nnet::conv_1d_{strategy}_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 #conv2d_function_template = 'nnet::conv_2d_{strategy}_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
@@ -190,7 +191,7 @@ param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {conf
 #resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
 #transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}, {output});'
 
-dense_include_list = ['nnet_utils/nnet_dense.h']
+dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h']
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h']
 #conv1d_include_list = ['nnet_utils/nnet_conv.h', 'nnet_utils/nnet_conv_large.h']
 #conv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_large.h']
@@ -294,16 +295,18 @@ class QuartusBackend(Backend):
         return typestring
 
     def set_strategy(self, layer):
-        layer.model.config.backend.set_closest_reuse_factor(layer)
         if layer.model.config.get_compression(layer):
-            raise Exception('Compression not supported on Quartus backend')
-        layer.set_attr('strategy', 'large')
+            layer.set_attr('strategy', '_compressed')
+        else:
+            layer.model.config.backend.set_closest_reuse_factor(layer)
+            layer.set_attr('strategy', '')
 
     def configure_weights(self, layer):
         layer.set_attr('rfpad', 0)
         layer.set_attr('bfpad', 0)
         layer.weights_original = copy.deepcopy(layer.weights['weight'])
-        self.gen_quartus_weight_array(layer)
+        if not layer.model.config.get_compression(layer):
+            self.gen_quartus_weight_array(layer)
 
     def bn_weight_fuse(self, model, node):
         dense_node = node.get_input_node()
@@ -346,7 +349,10 @@ class QuartusBackend(Backend):
         return
 
     def validate_hls(self, config):
-        pass
+        if config.model_strategy.lower() == 'latency' and config.model_compression:
+            print('WARNING: Compression enabled while model strategy set to "Latency".')
+            print('WARNING: Changing model strategy to "Resource"')
+            config.model_strategy = 'Resource'
 
     def compile(self, model):
         ret_val = os.system('bash build_lib.sh')
