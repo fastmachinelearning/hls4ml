@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from hls4ml.model.optimizer.optimizer import OptimizerPass, register_pass, get_optimizer, optimize_model
+from hls4ml.model.optimizer.optimizer import OptimizerPass, register_pass, get_optimizer, optimize_model, get_available_passes
 
 
 from hls4ml.model.optimizer.passes.nop import EliminateLinearActivation
