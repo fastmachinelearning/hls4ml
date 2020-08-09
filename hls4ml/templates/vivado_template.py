@@ -1,6 +1,7 @@
 import numpy as np
 import math
 from bisect import bisect_left
+from queue import Queue
 
 from hls4ml.templates.templates import Backend
 
@@ -75,11 +76,16 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
+    static const unsigned strategy = nnet::{strategy};
+    static const unsigned in_pack_factor = {in_factor};
+    static const unsigned out_pack_factor = {out_factor};
+    static const ap_uint<filt_height * filt_width> pixels[in_height * in_width];
     typedef {accum_t} accum_t;
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
     typedef {config_t} mult_config;
-}};\n"""
+}};
+const ap_uint<config{index}::filt_height * config{index}::filt_width> config{index}::pixels[] = {{{instructions}}};\n"""
 
 activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned n_in = {n_in};
@@ -124,6 +130,8 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
     static const unsigned pad_right = {pad_right};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     static const unsigned reuse = {reuse};
+    static const unsigned in_pack_factor = {in_factor};
+    static const unsigned out_pack_factor = {out_factor};
 }};\n"""
 
 merge_config_template = """struct config{index} : nnet::merge_config {{
@@ -159,11 +167,11 @@ transpose_config_template = """struct config{index} : nnet::transpose_config {{
 dense_function_template = 'nnet::dense<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
 conv1d_function_template = 'nnet::conv_1d_{strategy}_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
-conv2d_function_template = 'nnet::conv_2d_{strategy}_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+conv2d_function_template = 'nnet::conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
 param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {param}, {output});'
 pooling1d_function_template = 'nnet::pooling1d<{input_t}, {config}>({input}, {output});'
-pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {config}>({input}, {output});'
+pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {input_t}, {config}>({input}, {output});'
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
 resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
 transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}, {output});'
@@ -171,9 +179,9 @@ transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}
 dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_stream.h']
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
 conv1d_include_list = ['nnet_utils/nnet_conv.h', 'nnet_utils/nnet_conv_large.h']
-conv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_large.h']
+conv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_stream.h']
 activ_include_list = ['nnet_utils/nnet_activation.h', 'nnet_utils/nnet_activation_stream.h']
-pooling_include_list = ['nnet_utils/nnet_pooling.h']
+pooling_include_list = ['nnet_utils/nnet_pooling.h', 'nnet_utils/nnet_pooling_stream.h']
 merge_include_list = ['nnet_utils/nnet_merge.h']
 resize_include_list = ['nnet_utils/nnet_image.h']
 transpose_include_list = ['nnet_utils/nnet_array.h']
@@ -262,3 +270,111 @@ class VivadoBackend(Backend):
                 .format(chosen_rf, layer.name, closest_rf, ','.join(map(str, valid_rf))))
             layer.reuse_factor = closest_rf
 
+    def compute_conv2d_instructions(self, in_H, in_W, in_C, kernel_size=3, stride=1, pad=0):
+        assert(pad == 0)
+        assert(stride == 1) #TODO add support for stride > 1
+
+        # Input stream operations
+        def fill_wk():
+            # First element
+            wk_q.put(in_q.get())
+
+            # Fill reuse buffer
+            for _ in range(oW-1):
+                elem = in_q.get()
+                wk_q.put(elem)
+                ow_q.put(elem)
+            
+            # Use from reuse buffer
+            for _ in range(K-2): # K-2 'cause we already prepared one iteration and we'll do the last one as special case
+                wk_q.put(ow_q.get())
+                for _ in range(oW-2): # oW-2 'cause we already used one from ow_q 
+                    elem = ow_q.get()
+                    wk_q.put(elem)
+                    ow_q.put(elem)
+                elem = in_q.get()
+                wk_q.put(elem)
+                ow_q.put(elem)
+
+            # Use and clean-up the reuse buffer
+            for _ in range(oW-1):
+                elem = ow_q.get()
+                wk_q.put(elem)
+            wk_q.put(in_q.get())
+
+
+        def take_new_input(or_iter):
+            if or_iter == oH-1: return
+
+            fill_wk()
+
+        def reuse_input(kr_iter, or_iter, elem):
+            if kr_iter == 0: return
+            if or_iter == oH-1: return
+
+            wk_q.put(elem)
+
+        # Output stream operations
+        def reuse_output(elem):
+            ob_q.put(elem)
+
+        def take_new_output(or_iter):
+            for _ in range(oW):
+                elem = ob_q.get()
+                out_q.put(elem)
+                if or_iter < oH-1:
+                    elem = out_q.get()
+                    ob_q.put(elem)
+
+        H = kernel_size * 2 - 1
+        W = kernel_size * 2 - 1
+        
+        K = kernel_size
+
+        oH = int((H + (pad + pad) - K) // stride + 1)
+        oW = int((W + (pad + pad) - K) // stride + 1)
+        
+        # input streams
+        in_q = Queue(maxsize=H*W)
+        wk_q = Queue(maxsize=oW*K*K)
+        ow_q = Queue(maxsize=oW)
+
+        # output streams
+        out_q = Queue(maxsize=oH*oW)
+        ob_q = Queue(maxsize=oW)
+
+        for i in range(H*W):
+            in_q.put(i)
+
+        for i in range(oH*oW):
+            out_q.put(i)
+
+        # Initial contents of streams
+        for _ in range(oW):
+            ob_q.put(out_q.get())
+
+        for _ in range(K):
+            fill_wk()
+
+        in_out_kk_map = { i : [0 for _ in range(K*K)] for i in range(H*W)}
+
+        for i_or in range(oH):
+            for i_kr in range(K):
+                for i_kc in range(K):
+                    for _ in range(oW):
+                        i_elem = wk_q.get()
+                        o_elem = ob_q.get()
+                        in_out_kk_map[i_elem][i_kr * K + i_kc] = o_elem % (K * oW) + 1
+
+                        reuse_input(i_kr, i_or, i_elem)
+                        reuse_output(o_elem)
+            take_new_input(i_or)
+            take_new_output(i_or)
+
+        instructions = []
+        for i_elem, values in sorted(in_out_kk_map.items()):
+            # 0/1 indices:
+            bin_val = ''.join('1' if o > 0 else '0' for o in values)
+            instructions.append(str(int(bin_val[::-1], 2)))
+
+        return instructions

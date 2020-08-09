@@ -132,9 +132,9 @@ constexpr int pool_op_limit(){
   return (CONFIG_T::out_height * CONFIG_T::out_width) * CONFIG_T::n_filt / CONFIG_T::reuse;
 }
 
-template<class data_T, typename CONFIG_T>
+template<class data_T, class res_T, typename CONFIG_T>
 void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_filt],
-               data_T res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt]){
+               res_T res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt]){
 
   // TODO partition the arrays according to the reuse factor
   const int limit = pool_op_limit<CONFIG_T>();
@@ -183,9 +183,9 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
   }
 }
 
-template<class data_T, typename CONFIG_T>
+template<class data_T, class res_T, typename CONFIG_T>
 void pooling2d_cf(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_filt],
-               data_T res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt]){
+               res_T res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt]){
 
   // TODO partition the arrays according to the reuse factor
   const int limit = pool_op_limit<CONFIG_T>();

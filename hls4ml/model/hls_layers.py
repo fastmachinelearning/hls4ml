@@ -624,6 +624,16 @@ class Conv2D(Layer):
         params['nzeros'] = self.get_weights('weight').nzeros
         params['config_t'] = 'std::nullptr_t'
 
+        if self.model.config.get_config_value('IOType') == 'io_stream':
+            instructions = self.model.config.backend.compute_conv2d_instructions(params['in_height'], params['in_width'], params['n_chan'], params['filt_height'], params['stride_height'])
+            instructions_str = ','.join(str(i) for i in instructions)
+            params['instructions'] = instructions_str
+        else:
+            params['instructions'] = '0'
+
+        params['in_factor'] = self.model.config.get_config_value('PackFactor', 1)
+        params['out_factor'] = 1
+
         if self.model.config.is_resource_strategy(self):
             params['config_t'] = 'config{}_mult'.format(self.index)
             conv_config = self._config_template[0].format(**params)
@@ -675,6 +685,9 @@ class Pooling2D(Layer):
         params['out_height'] = self.get_output_variable().dim_names[0]
         params['out_width'] = self.get_output_variable().dim_names[1]
         params['n_filt'] = self.get_output_variable().dim_names[2]
+
+        params['in_factor'] = self.model.config.get_config_value('PackFactor', 1)
+        params['out_factor'] = 1
 
         return self._config_template.format(**params)
 
