@@ -89,7 +89,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
         input_layer['name'] = 'input1'
         input_layer['class_name'] = 'InputLayer'
         layer_list.append(input_layer)
-    elif model_arch['class_name'] == 'Model':
+    elif model_arch['class_name'] in ['Model', 'Functional']:
         print('Interpreting Model')
         keras_layer_config = model_arch['config']['layers']
 
