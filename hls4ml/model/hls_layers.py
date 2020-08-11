@@ -634,18 +634,15 @@ class Conv2D(Layer):
         params['in_factor'] = self.model.config.get_config_value('PackFactor', 1)
         params['out_factor'] = 1
 
-        if self.model.config.is_resource_strategy(self):
-            params['config_t'] = 'config{}_mult'.format(self.index)
-            conv_config = self._config_template[0].format(**params)
+        params['config_t'] = 'config{}_mult'.format(self.index)
+        conv_config = self._config_template[0].format(**params)
 
-            mult_params = self._default_config_params()
-            mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
-            mult_params['n_out'] = self.get_attr('n_filt')
-            mult_config = self._config_template[1].format(**mult_params)
+        mult_params = self._default_config_params()
+        mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
+        mult_params['n_out'] = self.get_attr('n_filt')
+        mult_config = self._config_template[1].format(**mult_params)
 
-            return mult_config + '\n' + conv_config
-        else:
-            return self._config_template[0].format(**params)
+        return mult_config + '\n' + conv_config
 
 class Pooling1D(Layer):
     def initialize(self):
