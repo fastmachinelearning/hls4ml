@@ -31,21 +31,6 @@ namespace nnet {
 // ****************************************************
 
 template<class data_T, class res_T, typename CONFIG_T>
-void normalize(
-    hls::stream<data_T> &data,
-    hls::stream<res_T>  &res,
-    typename CONFIG_T::scale_t  scale[CONFIG_T::n_filt],
-    typename CONFIG_T::bias_t   bias[CONFIG_T::n_filt]
-)
-{
-    if (CONFIG_T::n_filt==-1) {
-        normalize_no_filt<data_T, res_T, CONFIG_T>(data, res, scale, bias);
-	} else {
-        normalize_filt<data_T, res_T, CONFIG_T>(data, res, scale, bias);
-    }
-}
-
-template<class data_T, class res_T, typename CONFIG_T>
 void normalize_no_filt(
     hls::stream<data_T> &data,
     hls::stream<res_T>  &res,
@@ -96,6 +81,21 @@ void normalize_filt(
             out_part.data[j] = in_part.data[j] * scale[norm_index] + bias[norm_index];
         }
         res.write(out_part);
+    }
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
+void normalize(
+    hls::stream<data_T> &data,
+    hls::stream<res_T>  &res,
+    typename CONFIG_T::scale_t  scale[CONFIG_T::n_filt],
+    typename CONFIG_T::bias_t   bias[CONFIG_T::n_filt]
+)
+{
+    if (CONFIG_T::n_filt==-1) {
+        normalize_no_filt<data_T, res_T, CONFIG_T>(data, res, scale, bias);
+	} else {
+        normalize_filt<data_T, res_T, CONFIG_T>(data, res, scale, bias);
     }
 }
 
