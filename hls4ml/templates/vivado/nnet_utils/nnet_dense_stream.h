@@ -10,21 +10,6 @@
 namespace nnet {
 
 template<class data_T, class res_T, typename CONFIG_T>
-void dense(
-    hls::stream<data_T> &data,
-    hls::stream<res_T> &res,
-    typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
-    typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
-{
-    if (CONFIG_T::strategy == latency) {
-        dense_latency<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-    } else {
-        assert("Streaming for resource strategy is not implemented yet" && false);
-        //dense_resource<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-    }
-}
-
-template<class data_T, class res_T, typename CONFIG_T>
 void dense_latency(
     hls::stream<data_T> &data,
     hls::stream<res_T> &res,
@@ -34,18 +19,12 @@ void dense_latency(
     data_T in_cache;
     res_T out_cache;
 
-    int n_out = CONFIG_T::n_out;
-    #pragma HLS ARRAY_PARTITION variable=weights cyclic factor=n_out
-    //#pragma HLS ARRAY_PARTITION variable=weights complete
+    #pragma HLS ARRAY_PARTITION variable=weights cyclic factor=CONFIG_T::n_out
     #pragma HLS ARRAY_PARTITION variable=biases complete
 
     hls::stream<res_T> out_s;
-    #pragma HLS STREAM variable=out_s depth=n_out
+    #pragma HLS STREAM variable=out_s depth=CONFIG_T::n_out
 
-    /*InitBias: for(int i_bias = 0; i_bias < CONFIG_T::n_out; i_bias++) {
-        #pragma HLS PIPELINE
-        out_s.write(biases[i_bias]);
-    }*/
     constexpr unsigned in_pack_factor = data_T::size;
     constexpr unsigned out_pack_factor = res_T::size;
 
@@ -55,7 +34,7 @@ void dense_latency(
         res_T out_part;
         BiasInner: for (int j = 0; j < out_pack_factor; j++) {
             #pragma HLS UNROLL
-            out_part.data[j] = biases[i * out_pack_factor + j];
+            out_part[j] = biases[i * out_pack_factor + j];
         }
         out_s.write(out_part);
     }
@@ -72,7 +51,7 @@ void dense_latency(
                 out_cache = out_s.read();
                 OutPackLoop: for(int i_out_pack = 0; i_out_pack < out_pack_factor; i_out_pack++) {
                     #pragma HLS UNROLL
-                    out_cache.data[i_out_pack] += in_cache.data[i_in_pack] * weights[w_idx++];
+                    out_cache[i_out_pack] += in_cache[i_in_pack] * weights[w_idx++];
                 }
                 out_s.write(out_cache);
             }
@@ -84,6 +63,72 @@ void dense_latency(
         res.write(out_s.read());
     }
 }
+
+template<class data_T, class res_T, typename CONFIG_T>
+void dense_latency_nout_pack(
+    hls::stream<data_T> &data,
+    hls::stream<res_T> &res,
+    typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
+    typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
+{
+    data_T in_cache;
+    res_T out_cache;
+
+    #pragma HLS ARRAY_PARTITION variable=weights cyclic factor=CONFIG_T::n_out
+    #pragma HLS ARRAY_PARTITION variable=biases complete
+
+    hls::stream<res_T> out_s;
+    #pragma HLS STREAM variable=out_s depth=CONFIG_T::n_out
+
+    constexpr unsigned in_pack_factor = data_T::size;
+    constexpr unsigned out_pack_factor = res_T::size;
+
+    res_T out_part;
+    BiasLoop: for (int i = 0; i < out_pack_factor; i++) {
+        #pragma HLS UNROLL
+        out_part[i] = biases[i];
+    }
+    out_s.write(out_part);
+
+    int w_idx = 0;
+
+    // Do the matrix-multiply
+    ProductLoop: for(int i_in = 0; i_in < CONFIG_T::n_in / in_pack_factor; i_in++) {
+        in_cache = data.read();
+        InPackLoop: for(int i_in_pack = 0; i_in_pack < in_pack_factor; i_in_pack++) {
+            #pragma HLS PIPELINE II=3
+
+            out_cache = out_s.read();
+            OutPackLoop: for(int i_out_pack = 0; i_out_pack < out_pack_factor; i_out_pack++) {
+                #pragma HLS UNROLL
+                out_cache[i_out_pack] += in_cache[i_in_pack] * weights[w_idx++];
+            }
+            out_s.write(out_cache);
+        }
+    }
+
+    res.write(out_s.read());
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
+void dense(
+    hls::stream<data_T> &data,
+    hls::stream<res_T> &res,
+    typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
+    typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
+{
+    if (CONFIG_T::strategy == latency) {
+        if (CONFIG_T::n_out == res_T::size) {
+    		dense_latency_nout_pack<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+    	} else {
+    		dense_latency<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+    	}
+    } else {
+        assert("Streaming for resource strategy is not implemented yet" && false);
+        //dense_resource<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+    }
+}
+
 
 }
 
