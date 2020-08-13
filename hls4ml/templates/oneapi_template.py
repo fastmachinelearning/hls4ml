@@ -1,0 +1,71 @@
+from hls4ml.templates.templates import Backend
+
+
+memory_config_template = """
+        dnnl::memory::dims {layer_name}_{memory_object}_dims = {{{dims}}};
+        auto {layer_name}_{memory_object}_memory = dnnl::memory({{
+                {{{layer_name}_{memory_object}_dims}},
+                dnnl::memory::data_type::{data_type},
+                dnnl::memory::format_tag::{format_tag}}},
+                eng);
+        
+        auto {layer_name}_{memory_object}_md = dnnl::memory::desc({{ 
+                {{{layer_name}_{memory_object}_dims}},
+                dnnl::memory::data_type::{data_type},
+                dnnl::memory::format_tag::any}});\n"""
+
+
+dense_config_template = """
+        dnnl::memory::dims {layer_name}_output_dims = {{{output_dims}}};
+        auto {layer_name}_output_md = dnnl::memory::desc({{ 
+                {{{layer_name}_output_dims}},
+                dnnl::memory::data_type::{data_type},
+                dnnl::memory::format_tag::any}});
+
+        auto {layer_name}_desc = dnnl::inner_product_forward::desc(
+                dnnl::prop_kind::forward_inference,
+                {input_desc}, {layer_name}_weights_md, {layer_name}_bias_md, {layer_name}_output_md);
+        
+        auto {layer_name}_prim_desc = dnnl::inner_product_forward::primitive_desc({layer_name}_desc, eng);
+        
+        dnnl::memory {layer_name}_memory = dnnl::memory({layer_name}_prim_desc.dst_desc(), eng);
+        
+        net.push_back(dnnl::inner_product_forward({layer_name}_prim_desc));
+        net_args.push_back({{{{DNNL_ARG_SRC, {input_memory}}},
+                {{DNNL_ARG_WEIGHTS, {layer_name}_weights_memory}},
+                {{DNNL_ARG_BIAS, {layer_name}_bias_memory}},
+                {{DNNL_ARG_DST, {layer_name}_memory}}}});\n"""
+
+eltwise_config_template = """
+        auto {layer_name}_desc = dnnl::eltwise_forward::desc(
+                dnnl::prop_kind::forward_inference,
+                dnnl::algorithm::eltwise_{type}, {input_desc},
+                {alpha});
+        
+        auto {layer_name}_prim_desc = dnnl::eltwise_forward::primitive_desc({layer_name}_desc, eng);
+        
+        net.push_back(dnnl::eltwise_forward({layer_name}_prim_desc));
+        net_args.push_back({{{{DNNL_ARG_SRC, {input_memory}}},
+                {{DNNL_ARG_DST, {output_memory}}}}});\n"""
+
+softmax_config_template = """
+        auto {layer_name}_desc = dnnl::softmax_forward::desc(dnnl::prop_kind::forward_inference,
+                {input_desc}, {axis});
+                
+        auto {layer_name}_prim_desc = dnnl::softmax_forward::primitive_desc({layer_name}_desc, eng);
+        
+        net.push_back(dnnl::softmax_forward({layer_name}_prim_desc));
+        net_args.push_back({{{{DNNL_ARG_SRC, {input_memory}}},
+                {{DNNL_ARG_DST, {output_memory}}}}});"""
+
+
+class OneAPI(Backend):
+    def __init__(self):
+        super(OneAPI, self).__init__('oneAPI')
+        self.register_config_template('Memory', memory_config_template)
+        self.register_config_template('Dense', dense_config_template)
+        self.register_config_template('Activation', eltwise_config_template)
+        self.register_config_template('Softmax', softmax_config_template)
+
+    def register_config_template(self, name, config_template):
+        self.config_templates[name] = config_template

@@ -8,6 +8,7 @@ import re
 import numpy as np
 import numpy.ctypeslib as npc
 from collections import OrderedDict
+from timeit import default_timer as timer
 
 from hls4ml.model.hls_layers import *
 from hls4ml.templates import get_backend
@@ -20,6 +21,7 @@ class HLSConfig(object):
 
         self.backend = get_backend(self.config.get('Backend', 'Vivado'))
         self.writer = get_writer(self.config.get('Backend', 'Vivado'))
+        self.device = self.config.get('device', 'cpu')
 
         self.model_precision = {}
         self.layer_type_precision = {}
@@ -232,7 +234,7 @@ class HLSConfig(object):
             self.model_strategy = 'Resource'
 
 class HLSModel(object):
-    def __init__(self, config, data_reader, layer_list, inputs=None, outputs=None):
+    def __init__(self, config, data_reader, layer_list, inputs=None, outputs=None, batch_size=1):
         self.config = HLSConfig(config)
         self.reader = data_reader
 
@@ -243,6 +245,7 @@ class HLSModel(object):
         self.index = 0
         self.graph = OrderedDict()
         self.output_vars = {}
+        self.batch_size = batch_size
 
         self._top_function_lib = None
 
@@ -340,6 +343,13 @@ class HLSModel(object):
             variables.append(self.graph[inp].get_output_variable())
         return variables
 
+    def get_input_size(self):
+        input_array = self.get_input_variables()[0]
+        input_size = self.model.batch_size
+        for dim in input_array.shape:
+            input_size *= dim
+        return input_size
+
     def register_output_variable(self, out_name, variable):
         if out_name in self.outputs:
             variable.type.name = 'result_t'
@@ -350,6 +360,13 @@ class HLSModel(object):
         for out in self.outputs:
             variables.append(self.output_vars[out])
         return variables
+
+    def get_output_size(self):
+        output_array = self.get_output_variables()[0]
+        output_size = self.model.batch_size
+        for dim in output_array.shape:
+            output_size *= dim
+        return output_size
 
     def get_layer_output_variable(self, output_name):
         return self.output_vars[output_name]
@@ -378,7 +395,13 @@ class HLSModel(object):
                 dlclose_func.argtypes = [ctypes.c_void_p]
                 dlclose_func.restype = ctypes.c_int
                 dlclose_func(self._top_function_lib._handle)
-            self._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
+            if self.config.backend.name == "oneAPI":
+                print("Loading model lib")
+                model_lib = ctypes.CDLL("firmware/model.so", mode=ctypes.RTLD_GLOBAL)
+                model_compile = getattr(model_lib, "compile_model")
+                model_compile()
+                print("Model lib loaded")
+            self._top_function_lib = ctypes.CDLL(lib_name, mode=ctypes.RTLD_GLOBAL)
         finally:
             os.chdir(curr_dir)
 
@@ -392,11 +415,13 @@ class HLSModel(object):
             raise Exception('Expected numpy.ndarray, but got {}'.format(type(x)))
         if not x.flags['C_CONTIGUOUS']:
             raise Exception('Array must be c_contiguous, try using numpy.ascontiguousarray(x)')
-
+        
         if x.dtype in [np.single, np.float32]:
             top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_float')
             ctype = ctypes.c_float
         elif x.dtype in [np.double, np.float64, np.float_]:
+            if self.config.backend == "oneAPI":
+                raise Exception('Invalid type ({}) of numpy array. Supported types for oneAPI backend are: single, float32'.format(x.dtype))    
             top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_double')
             ctype = ctypes.c_double
         else:
@@ -428,18 +453,24 @@ class HLSModel(object):
         if n_samples == 1:
             x = [x]
 
-        try:
-            for i in range(n_samples):
-                predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
-                top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
-                output.append(predictions)
+        try: #TODO: support batch size for oneAPI
+            if self.config.backend == "oneAPI":
+                predictions = np.zeros((self.batch_size, self.get_output_variables()[0].size()), dtype=ctype)
+                top_function(x, predictions)
+            else:
+                for i in range(n_samples):
+                    predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
+                    top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
+                    output.append(predictions)
 
-            #Convert to numpy array
-            output = np.asarray(output)
+                #Convert to numpy array
+                output = np.asarray(output)
         finally:
             os.chdir(curr_dir)
 
-        if n_samples == 1:
+        if self.config.backend == "oneAPI":
+            return predictions
+        elif n_samples == 1:
             return output[0]
         else:
             return output
