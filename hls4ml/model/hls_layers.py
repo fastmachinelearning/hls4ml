@@ -678,6 +678,7 @@ class Pooling2D(Layer):
     def config_cpp(self):
         params = self._default_config_params()
         params['n_in'] = self.get_input_variable().dim_names[0]
+        params['in_height'] = self.get_input_variable().dim_names[0]
         params['in_width'] = self.get_input_variable().dim_names[1]
         params['out_height'] = self.get_output_variable().dim_names[0]
         params['out_width'] = self.get_output_variable().dim_names[1]

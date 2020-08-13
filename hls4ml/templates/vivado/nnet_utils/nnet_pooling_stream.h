@@ -119,8 +119,8 @@ void pooling2d_cl(
 
     assert(CONFIG_T::pool_op == Max);
 
-    const int in_height = (CONFIG_T::in_height / CONFIG_T::pool_height) * CONFIG_T::pool_height;
-    const int in_width = (CONFIG_T::in_width / CONFIG_T::pool_width) * CONFIG_T::pool_width;
+    constexpr int in_height = (CONFIG_T::in_height / CONFIG_T::pool_height) * CONFIG_T::pool_height;
+    constexpr int in_width = DIV_ROUNDUP((CONFIG_T::in_width / CONFIG_T::pool_width) * CONFIG_T::pool_width, CONFIG_T::in_pack_factor);
 
     res_T res_pack;
     #pragma HLS DATA_PACK variable=res_pack
@@ -136,13 +136,21 @@ void pooling2d_cl(
     ap_uint<CONFIG_T::pool_height * CONFIG_T::pool_width> pixel_idx[CONFIG_T::in_pack_factor];
     #pragma HLS ARRAY_PARTITION variable=pixel_idx complete
 
-    ReadInputHeight: for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
-        ReadInputWidth: for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width / CONFIG_T::in_pack_factor; i_iw++) {
+    ReadInputHeight: for (unsigned i_ih = 0; i_ih < in_height; i_ih++) {
+        ReadInputWidth: for (unsigned i_iw = 0; i_iw < in_width; i_iw++) {
             #pragma HLS LOOP_FLATTEN
             compute_pool_indices<CONFIG_T>(i_ih, i_iw, pixel_idx);
             fill_pool_buffer<data_T, CONFIG_T>(data.read(), pixel_idx, data_window);
             compute_pool<data_T, res_T, CONFIG_T>(data_window, pixel_idx, res, res_pack, outputs_ready);
         }
+        DiscardExtraColumns: for (int i_iw = 0; i_iw < CONFIG_T::in_width - in_width; i_iw++) {
+            // Discard remaining columns
+            data.read();
+        }
+    }
+    DiscardExtraRows: for (int i_ih = 0; i_ih < (CONFIG_T::in_height - in_height) * (CONFIG_T::in_width / CONFIG_T::in_pack_factor); i_ih++) {
+        // Discard remaining rows
+        data.read();
     }
 }
 
