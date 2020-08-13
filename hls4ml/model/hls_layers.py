@@ -460,6 +460,7 @@ class Input(Layer):
         input_params = {}
         input_params["layer_name"] = "input"
         input_params["memory_object"] = "data"
+        input_params["memory_object_type"] = ""
         batch_size = f"{self.model.batch_size}, "
         input_dims = self.attributes['input_shape']
         input_params["dims"] = batch_size + str(input_dims).replace('[','').replace(']','')
@@ -537,6 +538,7 @@ class Dense(Layer):
         """Returns oneAPI definition for Dense Layer"""
         dense_params = {}
         dense_params["layer_name"] = self.name
+        dense_params["memory_object_type"] = "" if "output" in self.name else "auto"
         dense_params["data_type"] = self.get_weights_precision()
         batch_size = f"{self.model.batch_size}, "
         output_dims = self.get_output_variable().shape

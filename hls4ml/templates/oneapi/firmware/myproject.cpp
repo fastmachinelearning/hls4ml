@@ -19,7 +19,19 @@
 
 #include "myproject.h"
 
+//hls4ml init engine 
+std::vector<dnnl::primitive> net; // neural network as a vector
+std::vector<std::unordered_map<int, dnnl::memory>> net_args; // nn arguments
+dnnl::memory input_data_memory;
+dnnl::memory output_memory;
+
 extern "C" {
+
+    void compile_model() {
+
+        //hls4ml insert layers
+
+    }
     
     void myproject_float(float *input_data, float *output_data) {
         //hls4ml init nn stream

@@ -73,7 +73,7 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
     if model_config is not None:
         if not all(k in model_config for k in ('Precision', 'ReuseFactor')):
             raise Exception('Precision and ReuseFactor must be provided in the hls_config')
-        if model_config['Precision'] not in supported_oneapi_data_types:
+        if backend.lower() == "oneapi" and model_config['Precision'] not in supported_oneapi_data_types:
             raise Exception(f"Data type {model_config['Precision']} is not supported in oneAPI project!")
     else:
         model_config = {}

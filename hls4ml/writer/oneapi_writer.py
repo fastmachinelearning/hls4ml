@@ -105,6 +105,30 @@ class OneApiWriter(Writer):
         for line in f.readlines():
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
+            elif '//hls4ml init engine' in line:
+                newline = line
+                engine = f"dnnl::engine eng(dnnl::engine::kind::{model.config.device}, 0);\n"
+                newline += indent + engine
+            elif '//hls4ml insert layers' in line:
+                newline = line
+                for layer in model.get_layers():
+                    dcpp_definition = layer.definition_dcpp()
+                    if dcpp_definition is not None:
+                        newline += indent + dcpp_definition + "\n"
+                    for w in layer.get_weights():
+                        data_type = oneapi_data_types_map_to_cpp[w.type.precision]
+                        weight_type = "weights" if "w" in w.name else "bias"
+                        buffer_name = f'{layer.name}_{weight_type}_buffer'
+                        if w.__class__.__name__ == 'CompressedWeightVariable':
+                            create_buffer = f'std::vector<{data_type}> {buffer_name}({w.nonzeros});\n'
+                            load_weights = f'nnet::load_compressed_weights_from_txt<{data_type}, {w.nonzeros}>({buffer_name}.data(), "{w.name}.txt");\n'
+                        else:
+                            create_buffer = f'std::vector<{data_type}> {buffer_name}({w.data_length});\n'
+                            load_weights = f'nnet::load_weights_from_txt<{data_type}, {w.data_length}>({buffer_name}.data(), "{w.name}.txt");\n'
+                        write_to_dnnl_memory = f"write_to_dnnl_memory({buffer_name}.data(), {layer.name}_{weight_type}_memory);\n"
+                        newline += indent + create_buffer
+                        newline += indent + load_weights
+                        newline += indent + write_to_dnnl_memory + "\n"
             elif '//hls4ml read output data from memory' in line:
                 newline = line
                 last_layer = next(reversed(model.get_layers()))
@@ -169,7 +193,7 @@ class OneApiWriter(Writer):
     def write_hls(self, model):
         print("Writing HLS4ML OneAPI project")
         self.write_project_dir(model)
-        self.write_model_compile(model)
+        # self.write_model_compile(model)
         self.write_project_cpp(model)
         self.write_project_header(model)
         self.write_utils(model)

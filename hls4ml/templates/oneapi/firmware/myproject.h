@@ -26,12 +26,6 @@
 #include "utils/nnet_helpers.h"
 
 extern "C" {
-    //hls4ml init engine
-    extern dnnl::engine eng;
-    extern std::vector<dnnl::primitive> net; // neural network as a vector
-    extern std::vector<std::unordered_map<int, dnnl::memory>> net_args; // nn arguments
-    extern dnnl::memory input_data_memory;
-    extern dnnl::memory output_memory;
     void myproject_float(float *input_data, float *ouput_data);
     void compile_model();
 }

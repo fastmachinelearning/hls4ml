@@ -3,7 +3,7 @@ from hls4ml.templates.templates import Backend
 
 memory_config_template = """
         dnnl::memory::dims {layer_name}_{memory_object}_dims = {{{dims}}};
-        auto {layer_name}_{memory_object}_memory = dnnl::memory({{
+        {memory_object_type} {layer_name}_{memory_object}_memory = dnnl::memory({{
                 {{{layer_name}_{memory_object}_dims}},
                 dnnl::memory::data_type::{data_type},
                 dnnl::memory::format_tag::{format_tag}}},
@@ -28,7 +28,7 @@ dense_config_template = """
         
         auto {layer_name}_prim_desc = dnnl::inner_product_forward::primitive_desc({layer_name}_desc, eng);
         
-        dnnl::memory {layer_name}_memory = dnnl::memory({layer_name}_prim_desc.dst_desc(), eng);
+        {memory_object_type} {layer_name}_memory = dnnl::memory({layer_name}_prim_desc.dst_desc(), eng);
         
         net.push_back(dnnl::inner_product_forward({layer_name}_prim_desc));
         net_args.push_back({{{{DNNL_ARG_SRC, {input_memory}}},

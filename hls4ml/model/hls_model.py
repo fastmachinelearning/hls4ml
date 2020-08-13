@@ -371,12 +371,16 @@ class HLSModel(object):
     def get_layer_output_variable(self, output_name):
         return self.output_vars[output_name]
 
+    def set_batch_size(self, batch_size):
+        self.batch_size = batch_size
+        
     def write(self):
         self.config.writer.write_hls(self)
 
-    def compile(self):
+    def compile(self, batch_size=1):
+        self.set_batch_size(batch_size)
         self.write()
-
+        
         curr_dir = os.getcwd()
         os.chdir(self.config.get_output_dir())
 
@@ -395,13 +399,10 @@ class HLSModel(object):
                 dlclose_func.argtypes = [ctypes.c_void_p]
                 dlclose_func.restype = ctypes.c_int
                 dlclose_func(self._top_function_lib._handle)
+            self._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
             if self.config.backend.name == "oneAPI":
-                print("Loading model lib")
-                model_lib = ctypes.CDLL("firmware/model.so", mode=ctypes.RTLD_GLOBAL)
-                model_compile = getattr(model_lib, "compile_model")
+                model_compile = getattr(self._top_function_lib, "compile_model")
                 model_compile()
-                print("Model lib loaded")
-            self._top_function_lib = ctypes.CDLL(lib_name, mode=ctypes.RTLD_GLOBAL)
         finally:
             os.chdir(curr_dir)
 
@@ -420,7 +421,7 @@ class HLSModel(object):
             top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_float')
             ctype = ctypes.c_float
         elif x.dtype in [np.double, np.float64, np.float_]:
-            if self.config.backend == "oneAPI":
+            if self.config.backend.name == "oneAPI":
                 raise Exception('Invalid type ({}) of numpy array. Supported types for oneAPI backend are: single, float32'.format(x.dtype))    
             top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_double')
             ctype = ctypes.c_double
@@ -428,8 +429,11 @@ class HLSModel(object):
             raise Exception('Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(x.dtype))
 
         top_function.restype = None
-        top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS"), npc.ndpointer(ctype, flags="C_CONTIGUOUS"),
-            ctypes.POINTER(ctypes.c_ushort), ctypes.POINTER(ctypes.c_ushort)]
+        if self.config.backend.name == "oneAPI":
+             top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS"), npc.ndpointer(ctype, flags="C_CONTIGUOUS")]
+        else:
+            top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS"), npc.ndpointer(ctype, flags="C_CONTIGUOUS"),
+                ctypes.POINTER(ctypes.c_ushort), ctypes.POINTER(ctypes.c_ushort)]
 
         return top_function, ctype
 
@@ -450,27 +454,33 @@ class HLSModel(object):
         os.chdir(self.config.get_output_dir() + '/firmware')
 
         output = []
-        if n_samples == 1:
-            x = [x]
-
-        try: #TODO: support batch size for oneAPI
-            if self.config.backend == "oneAPI":
-                predictions = np.zeros((self.batch_size, self.get_output_variables()[0].size()), dtype=ctype)
-                top_function(x, predictions)
+        try:
+            if self.config.backend.name == "oneAPI":
+                nb_full_batches = len(x) // self.batch_size
+                nb_batches = nb_full_batches + 1 if len(x) % self.batch_size else nb_full_batches
+                for i in range(nb_batches):
+                    if i == nb_full_batches:
+                        batch = np.zeros((self.batch_size*self.get_input_variables()[0].size()), dtype=ctype)
+                        batch[:len(x) % self.batch_size] = x[i*self.batch_size:].flatten()
+                    else:
+                        batch = x[i*self.batch_size:(i+1)*self.batch_size].flatten()
+                    predictions = np.zeros(self.batch_size*self.get_output_variables()[0].size(), dtype=ctype)
+                    top_function(batch, predictions)
+                    output.append(predictions)
             else:
+                if n_samples == 1:
+                    x = [x]
                 for i in range(n_samples):
                     predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
                     top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
                     output.append(predictions)
 
-                #Convert to numpy array
-                output = np.asarray(output)
+            #Convert to numpy array
+            output = np.asarray(output)
         finally:
             os.chdir(curr_dir)
 
-        if self.config.backend == "oneAPI":
-            return predictions
-        elif n_samples == 1:
+        if n_samples == 1:
             return output[0]
         else:
             return output
