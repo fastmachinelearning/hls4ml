@@ -20,7 +20,7 @@ clean:
 	-$(RM) $(foreach t,$(TARGETS),$(t).prj $(t) $(t)_time.log)
 
 .PHONY: myproject-fpga
-myproject-fpga: CXXFLAGS := $(CXXFLAGS)
+myproject-fpga: CXXFLAGS := $(CXXFLAGS) 
 myproject-fpga: CXXFLAGS := $(CXXFLAGS)
 #force-dsp: CXXFLAGS := $(CXXFLAGS) --quartus-compile
 

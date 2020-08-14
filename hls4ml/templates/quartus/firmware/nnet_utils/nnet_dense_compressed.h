@@ -42,13 +42,14 @@ void dense_compressed(
     }
 
     hls_register int out_index[CONFIG_T::reuse_factor][CONFIG_T::compressed_block_factor];
-    hls_register int d_index[CONFIG_T::reuse_factor][CONFIG_T::compressed_block_factor];
+    hls_register data_T inputs[CONFIG_T::reuse_factor][CONFIG_T::compressed_block_factor];
+
     #pragma unroll
     for(int ir = 0; ir < CONFIG_T::reuse_factor; ir++) {
         #pragma unroll
         for(int im = 0; im < CONFIG_T::compressed_block_factor ; im++) {
           uint32 w = ir + CONFIG_T::reuse_factor * im;
-          d_index[ir][im] = weights[w].row_index;
+          inputs[ir][im] = data[weights[w].row_index];
           out_index[ir][im] = weights[w].col_index;
         }
     }
@@ -61,9 +62,12 @@ void dense_compressed(
         #pragma unroll
         for(int im = 0; im < CONFIG_T::compressed_block_factor; im++) {
             uint32 w = ir + CONFIG_T::reuse_factor * im;
-            if (w >= CONFIG_T::reuse_factor*CONFIG_T::compressed_block_factor) continue;
-            int row = d_index[ir][im];
-            mult[im] = product<data_T, decltype(weights[w].weight), typename CONFIG_T::accum_t>(data[row], weights[w].weight);
+            //if (w >= CONFIG_T::reuse_factor*CONFIG_T::compressed_block_factor) continue;
+            mult[im] = product<data_T, decltype(weights[w].weight), typename CONFIG_T::accum_t>(inputs[0][im], weights[w].weight);
+            #pragma unroll
+            for (int is = 0; is < CONFIG_T::reuse_factor-1; is++) {
+                inputs[is][im] = inputs[is+1][im];
+            }
         }
         hls_register typename CONFIG_T::accum_t tmp_acc[CONFIG_T::n_out];
         ResetMult:
