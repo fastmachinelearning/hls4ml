@@ -12,6 +12,7 @@ from slimit.parser import Parser
 from slimit.visitors import nodevisitor
 from tabulate import tabulate
 import json
+import uuid
 
 from hls4ml.templates.templates import Backend
 from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
@@ -355,10 +356,11 @@ class QuartusBackend(Backend):
             config.model_strategy = 'Resource'
 
     def compile(self, model):
-        ret_val = os.system('bash build_lib.sh')
+        libname = "{}".format(str(uuid.uuid4().hex))
+        ret_val = os.system('bash build_lib.sh {}'.format(libname))
         if ret_val != 0:
             raise Exception('Failed to compile project "{}"'.format(model.config.get_project_name()))
-        lib_name = 'firmware/{}.so'.format(model.config.get_project_name())
+        lib_name = 'firmware/{}.so'.format(libname)
         if model._top_function_lib is not None:
 
             if platform.system() == "Linux":
