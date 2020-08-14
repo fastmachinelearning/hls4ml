@@ -6,6 +6,7 @@ import ctypes
 import platform
 from bisect import bisect_left
 import xml.etree.ElementTree as ET
+import uuid
 
 from hls4ml.templates.templates import Backend
 from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
@@ -343,10 +344,11 @@ class VivadoBackend(Backend):
             config.model_strategy = 'Resource'
 
     def compile(self, model):
-        ret_val = os.system('bash build_lib.sh')
+        libname = "{}".format(str(uuid.uuid4().hex))
+        ret_val = os.system('bash build_lib.sh {}'.format(libname))
         if ret_val != 0:
             raise Exception('Failed to compile project "{}"'.format(model.config.get_project_name()))
-        lib_name = 'firmware/{}.so'.format(model.config.get_project_name())
+        lib_name = 'firmware/{}.so'.format(libname)
         if model._top_function_lib is not None:
 
             if platform.system() == "Linux":
