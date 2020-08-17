@@ -1,9 +1,10 @@
 from hls4ml.converters.keras_to_hls import parse_default_keras_layer
 from hls4ml.converters.keras_to_hls import keras_handler
+from hls4ml.converters.keras.core import TernaryQuantizer
 
 @keras_handler('GarNet', 'GarNetStack')
 def parse_garnet_layer(keras_layer, input_names, input_shapes, data_reader, config):
-    assert(keras_layer['class_name'] == 'GarNet')
+    assert(keras_layer['class_name'] in ['GarNet', 'GarNetStack'])
 
     if not keras_layer['config']['simplified']:
         raise Exception('HLS GarNet is compatible only with keras GarNet with simplified=True')
@@ -19,7 +20,8 @@ def parse_garnet_layer(keras_layer, input_names, input_shapes, data_reader, conf
     layer['n_vertices'] = input_shapes[0][1]
     layer['collapse'] = keras_layer['config']['collapse']
     layer['mean_by_nvert'] = keras_layer['config']['mean_by_nvert']
-    layer['quantize'] = keras_layer['config']['quantize_transforms']
+    if keras_layer['config']['quantize_transforms']:
+        layer['quantizer'] = TernaryQuantizer()
 
     layer['n_aggregators'] = keras_layer['config']['n_aggregators']
     layer['n_out_features'] = keras_layer['config']['n_filters'] # number of output features
