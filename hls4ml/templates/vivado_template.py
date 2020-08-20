@@ -156,6 +156,108 @@ transpose_config_template = """struct config{index} : nnet::transpose_config {{
     static const unsigned perm[3] = {{{perm_str}}};
 }};\n"""
 
+garnet_common_config_template = """
+    static const unsigned n_vertices = {n_vertices};
+    static const unsigned n_vertices_width = {n_vertices_width};
+    static const unsigned n_in_features = {n_in_features};
+    static const unsigned distance_width = {distance_width};
+    static const unsigned output_collapse = {collapse_type};
+    static const bool mean_by_nvert = {mean_by_nvert};
+
+    typedef {norm_t} norm_t;
+    typedef ap_fixed<{distance_width}, {distance_nint}, AP_TRN, AP_SAT> distance_t;
+    typedef {edge_weight_t} edge_weight_t;
+    typedef {edge_weight_aggr_t} edge_weight_aggr_t;
+    typedef {aggr_t} aggr_t;
+    typedef {output_t} output_t;
+
+    static const unsigned reuse_factor = {reuse};
+    static const unsigned log2_reuse_factor = {log2_reuse};
+"""
+
+garnet_config_template = """struct config{index} : nnet::garnet_config {{"""
+garnet_config_template += garnet_common_config_template
+garnet_config_template += """
+    static const unsigned n_propagate = {n_propagate};
+    static const unsigned n_aggregators = {n_aggregators};
+    static const unsigned n_out_features = {n_out_features};
+
+    typedef {input_transform_weights_t} input_transform_weights_t;
+    typedef {input_transform_biases_t} input_transform_biases_t;
+    typedef {aggregator_distance_weights_t} aggregator_distance_weights_t;
+    typedef {aggregator_distance_biases_t} aggregator_distance_biases_t;
+    typedef {output_transform_weights_t} output_transform_weights_t;
+    typedef {output_transform_biases_t} output_transform_biases_t;
+
+    static const input_transform_weights_t (&input_transform_weights)[{input_transform_weights_size}];
+    static const input_transform_biases_t (&input_transform_biases)[{input_transform_biases_size}];
+    static const aggregator_distance_weights_t (&aggregator_distance_weights)[{aggregator_distance_weights_size}];
+    static const aggregator_distance_biases_t (&aggregator_distance_biases)[{aggregator_distance_biases_size}];
+    static const output_transform_weights_t (&output_transform_weights)[{output_transform_weights_size}];
+    static const output_transform_biases_t (&output_transform_biases)[{output_transform_biases_size}];
+
+    typedef config{index} base_t;
+}};
+
+const config{index}::input_transform_weights_t (&config{index}::input_transform_weights)[{input_transform_weights_size}] = {input_transform_weights};
+const config{index}::input_transform_biases_t (&config{index}::input_transform_biases)[{input_transform_biases_size}] = {input_transform_biases};
+const config{index}::aggregator_distance_weights_t (&config{index}::aggregator_distance_weights)[{aggregator_distance_weights_size}] = {aggregator_distance_weights};
+const config{index}::aggregator_distance_biases_t (&config{index}::aggregator_distance_biases)[{aggregator_distance_biases_size}] = {aggregator_distance_biases};
+const config{index}::output_transform_weights_t (&config{index}::output_transform_weights)[{output_transform_weights_size}] = {output_transform_weights};
+const config{index}::output_transform_biases_t (&config{index}::output_transform_biases)[{output_transform_biases_size}] = {output_transform_biases};
+"""
+
+garnet_stack_base_config_template = """struct config{index}_base : nnet::garnet_config {{"""
+garnet_stack_base_config_template += garnet_common_config_template
+garnet_stack_base_config_template += """
+    static const bool is_stack = true;
+
+    typedef config{index}_base base_t;
+}};
+
+struct config{index} : config{index}_base {{
+    static const unsigned n_sublayers = {n_sublayers};
+
+    template<int L>
+    struct sublayer_t : config{index}_base {{}};
+}};
+
+{sublayer_configs}
+"""
+
+garnet_stack_sublayer_config_template = """template<>
+struct config{index}::sublayer_t<{il}> : config{index}_base {{
+    static const unsigned n_in_features = {n_in_features};
+    static const unsigned n_propagate = {n_propagate};
+    static const unsigned n_aggregators = {n_aggregators};
+    static const unsigned n_out_features = {n_out_features};
+
+    typedef {input_transform_weights_t} input_transform_weights_t;
+    typedef {input_transform_biases_t} input_transform_biases_t;
+    typedef {aggregator_distance_weights_t} aggregator_distance_weights_t;
+    typedef {aggregator_distance_biases_t} aggregator_distance_biases_t;
+    typedef {output_transform_biases_t} output_transform_biases_t;
+
+    static const input_transform_weights_t (&input_transform_weights)[{input_transform_weights_size}];
+    static const input_transform_biases_t (&input_transform_biases)[{input_transform_biases_size}];
+    static const aggregator_distance_weights_t (&aggregator_distance_weights)[{aggregator_distance_weights_size}];
+    static const aggregator_distance_biases_t (&aggregator_distance_biases)[{aggregator_distance_biases_size}];
+    static const output_transform_biases_t (&output_transform_biases)[{output_transform_biases_size}];
+
+    typedef config{index}::sublayer_t<{next}> next_layer_t;
+}};
+
+const config{index}::sublayer_t<{il}>::input_transform_weights_t (&config{index}::sublayer_t<{il}>::input_transform_weights)[{input_transform_weights_size}] = {input_transform_weights};
+const config{index}::sublayer_t<{il}>::input_transform_biases_t (&config{index}::sublayer_t<{il}>::input_transform_biases)[{input_transform_biases_size}] = {input_transform_biases};
+const config{index}::sublayer_t<{il}>::aggregator_distance_weights_t (&config{index}::sublayer_t<{il}>::aggregator_distance_weights)[{aggregator_distance_weights_size}] = {aggregator_distance_weights};
+const config{index}::sublayer_t<{il}>::aggregator_distance_biases_t (&config{index}::sublayer_t<{il}>::aggregator_distance_biases)[{aggregator_distance_biases_size}] = {aggregator_distance_biases};
+const config{index}::sublayer_t<{il}>::output_transform_biases_t (&config{index}::sublayer_t<{il}>::output_transform_biases)[{output_transform_biases_size}] = {output_transform_biases};
+"""
+
+garnet_stack_config_template = (garnet_stack_base_config_template, garnet_stack_sublayer_config_template)
+
+
+
 dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
 conv1d_function_template = 'nnet::conv_1d_{strategy}_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
@@ -167,6 +269,8 @@ pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {config}
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
 resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
 transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}, {output});'
+garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
+garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
 
 dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_large.h']
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h']
@@ -177,6 +281,7 @@ pooling_include_list = ['nnet_utils/nnet_pooling.h']
 merge_include_list = ['nnet_utils/nnet_merge.h']
 resize_include_list = ['nnet_utils/nnet_image.h']
 transpose_include_list = ['nnet_utils/nnet_array.h']
+garnet_include_list = ['nnet_utils/nnet_garnet.h']
 
 class VivadoBackend(Backend):
     def __init__(self):
@@ -196,6 +301,8 @@ class VivadoBackend(Backend):
         self.register_templates('Concatenate'            , merge_function_template,       concat_config_template, merge_include_list)
         self.register_templates('Resize'                 , resize_function_template,      resize_config_template, resize_include_list)
         self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template, transpose_include_list)
+        self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
+        self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)        
     
     def get_valid_reuse_factors(self, layer):
         n_in = 0
