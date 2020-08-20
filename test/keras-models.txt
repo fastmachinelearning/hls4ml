@@ -25,6 +25,9 @@ KERAS_conv2d_model
 KERAS_3layer_batch_norm
 KERAS_3layer_binary_smaller
 KERAS_3layer_ternary_small
+ 
+# GarNet example: Need large reuse factor because input graph has 128 vertices
+garnet_1layer r:16
 
 # Resource strategy
 KERAS_3layer r:2 s:Resource
