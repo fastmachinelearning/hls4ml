@@ -20,7 +20,6 @@ def _load_data_config_avai(model_name):
 
     return data[model_name]
 
-
 def _data_is_available(model_name):
 
     data = _load_data_config_avai(model_name)
@@ -74,7 +73,6 @@ def _load_example_data(model_name):
     urlretrieve(link_to_input, input_file_name)
     urlretrieve(link_to_output, output_file_name)
 
-
 def _load_example_config(model_name):
 
     print("Downloading configuration files ...")
@@ -93,9 +91,6 @@ def _load_example_config(model_name):
         config = yaml.load(ymlfile)
 
     return config
-
-
-
 
 def fetch_example_model(model_name):
     """
