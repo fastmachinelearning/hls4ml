@@ -6,5 +6,5 @@
     }
   },
 
-  "plugins": ["prism", "-highlight"]
+  "plugins": ["prism", "-highlight", "mathjax"]
 }
