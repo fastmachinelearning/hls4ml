@@ -510,7 +510,7 @@ class Dense(Layer):
             if self.model.config.get_compression(self):
                 index_t = self.get_weights('weight').type.index_precision
             elif self.model.config.backend.name == 'Vivado':
-                    self.weights['weight'].data = np.transpose(self.weights['weight'].data)
+                self.weights['weight'].data = np.transpose(self.weights['weight'].data)
         if self.model.config.backend.name == "oneAPI":
             self.weights['weight'].data = np.transpose(self.weights['weight'].data)
         self.set_attr('index_t', index_t)
