@@ -679,6 +679,35 @@ class Conv2D(Layer):
         else:
             return self._config_template[0].format(**params)
 
+    def definition_dcpp(self):
+        """Returns oneAPI definition for Conv2D Layer"""
+        conv2d_params = {}
+        conv2d_params["layer_name"] = self.name
+        conv2d_params["memory_object_type"] = "" if "output" in self.name else "auto"
+        conv2d_params["data_type"] = self.get_weights_precision()
+        batch_size = f"{self.model.batch_size}, "
+        output_dims = self.get_output_variable().shape
+        conv2d_params["output_dims"] = batch_size + str(output_dims).replace('[','').replace(']','')
+        if self.get_input_node().index == 1:
+            conv2d_params["input_desc"] = "input_data_md"
+            conv2d_params["input_memory"] = "input_data_memory"
+        else:
+            input_layer = self.get_input_node_with_mem_desc(self)
+            conv2d_params["input_desc"] = f"{input_layer.name}_memory.get_desc()"
+            conv2d_params["input_memory"] = f"{input_layer.name}_memory"
+        conv2d_params["strides"] = self.get_attr('dilation', {1, 1})
+        conv2d_params["padding"] = self.get_attr('dilation', {2, 2})
+        conv2d_params["dilation"] = self.get_attr('dilation', 1)
+        conv2d_config = self._config_template.format(**conv2d_params)
+
+        weight_params = self._default_weight_params()
+        weight_config = self._memory_template.format(**weight_params)
+
+        bias_params = self._default_bias_params()
+        bias_config = self._memory_template.format(**bias_params)
+
+        return weight_config + bias_config + conv2d_config
+
 class Pooling1D(Layer):
     def initialize(self):
         shape = [self.attributes['n_out'], self.attributes['n_filt']]
