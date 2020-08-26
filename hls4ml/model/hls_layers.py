@@ -664,6 +664,7 @@ class Conv2D(Layer):
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
         else:
             self.set_attr('strategy', 'latency')
+        self.memory_descriptor = True
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -724,7 +725,7 @@ class Conv2D(Layer):
             conv2d_params["input_desc"] = f"{input_layer.name}_memory.get_desc()"
             conv2d_params["input_memory"] = f"{input_layer.name}_memory"
         conv2d_params["strides"] = self.get_attr('strides', {1, 1})
-        conv2d_params["padding"] = self.get_attr('padding', {2, 2})
+        conv2d_params["padding"] = {1, 1}#self.get_attr('padding', {2, 2})
         conv2d_params["dilation"] = self.get_attr('dilation', 1)
         conv2d_config = self._config_template.format(**conv2d_params)
 
@@ -757,18 +758,18 @@ class Pooling1D(Layer):
 
     def definition_dcpp(self):
         """Returns oneAPI definition for Activation Function"""
-        params = {}
-        params["layer_name"] = self.name
+        pool1d_params = {}
+        pool1d_params["layer_name"] = self.name
         input_layer = self.get_input_node_with_mem_desc(self)
-        params["input_desc"] = f"{input_layer.name}_memory.get_desc()"
-        params["memory_object_type"] = "" if "output" in self.name else "auto"
-        params["data_type"] = self.get_weights_precision()
+        pool1d_params["input_desc"] = f"{input_layer.name}_memory.get_desc()"
+        pool1d_params["memory_object_type"] = "" if "output" in self.name else "auto"
+        pool1d_params["data_type"] = self.get_weights_precision()
         batch_size = f"{self.model.batch_size}, "
         output_dims = self.get_output_variable().shape
-        params["output_dims"] = batch_size + str(output_dims).replace('[','').replace(']','')
-        params["input_memory"] = f"{input_layer.name}_memory"
+        pool1d_params["output_dims"] = batch_size + str(output_dims).replace('[','').replace(']','')
+        pool1d_params["input_memory"] = f"{input_layer.name}_memory"
 
-        return self._config_template.format(**params)
+        return pool1d_params
 
 class Pooling2D(Layer):
     def initialize(self):
@@ -795,18 +796,18 @@ class Pooling2D(Layer):
 
     def definition_dcpp(self):
         """Returns oneAPI definition for Activation Function"""
-        params = {}
-        params["layer_name"] = self.name
+        pool2d_params = {}
+        pool2d_params["layer_name"] = self.name
         input_layer = self.get_input_node_with_mem_desc(self)
-        params["input_desc"] = f"{input_layer.name}_memory.get_desc()"
-        params["memory_object_type"] = "" if "output" in self.name else "auto"
-        params["data_type"] = self.get_weights_precision()
+        pool2d_params["input_desc"] = f"{input_layer.name}_memory.get_desc()"
+        pool2d_params["memory_object_type"] = "" if "output" in self.name else "auto"
+        pool2d_params["data_type"] = 'f32' #self.get_weights_precision()
         batch_size = f"{self.model.batch_size}, "
         output_dims = self.get_output_variable().shape
-        params["output_dims"] = batch_size + str(output_dims).replace('[','').replace(']','')
-        params["input_memory"] = f"{input_layer.name}_memory"
+        pool2d_params["output_dims"] = batch_size + str(output_dims).replace('[','').replace(']','')
+        pool2d_params["input_memory"] = f"{input_layer.name}_memory"
 
-        return self._config_template.format(**params)
+        return pool2d_params
 
 class Activation(Layer):
     def initialize(self):
