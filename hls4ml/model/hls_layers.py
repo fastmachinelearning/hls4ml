@@ -560,7 +560,6 @@ class Dense(Layer):
 
         return weight_config + bias_config + dense_config
 
-
 class Conv1D(Layer):
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
@@ -617,6 +616,35 @@ class Conv1D(Layer):
             return mult_config + '\n' + conv_config
         else:
             return self._config_template[0].format(**params)
+    
+    def definition_dcpp(self):
+        """Returns oneAPI definition for Conv1D Layer"""
+        conv1d_params = {}
+        conv1d_params["layer_name"] = self.name
+        conv1d_params["memory_object_type"] = "" if "output" in self.name else "auto"
+        conv1d_params["data_type"] = self.get_weights_precision()
+        batch_size = f"{self.model.batch_size}, "
+        output_dims = self.get_output_variable().shape
+        conv1d_params["output_dims"] = batch_size + str(output_dims).replace('[','').replace(']','')
+        if self.get_input_node().index == 1:
+            conv1d_params["input_desc"] = "input_data_md"
+            conv1d_params["input_memory"] = "input_data_memory"
+        else:
+            input_layer = self.get_input_node_with_mem_desc(self)
+            conv1d_params["input_desc"] = f"{input_layer.name}_memory.get_desc()"
+            conv1d_params["input_memory"] = f"{input_layer.name}_memory"
+        conv1d_params["strides"] = self.get_attr('strides', 1)
+        conv1d_params["padding"] = self.get_attr('padding', 1)
+        conv1d_params["dilation"] = self.get_attr('dilation', 1)
+        conv1d_config = self._config_template.format(**conv1d_params)
+
+        weight_params = self._default_weight_params()
+        weight_config = self._memory_template.format(**weight_params)
+
+        bias_params = self._default_bias_params()
+        bias_config = self._memory_template.format(**bias_params)
+
+        return weight_config + bias_config + conv1d_config
 
 class Conv2D(Layer):
     def initialize(self):
@@ -695,8 +723,8 @@ class Conv2D(Layer):
             input_layer = self.get_input_node_with_mem_desc(self)
             conv2d_params["input_desc"] = f"{input_layer.name}_memory.get_desc()"
             conv2d_params["input_memory"] = f"{input_layer.name}_memory"
-        conv2d_params["strides"] = self.get_attr('dilation', {1, 1})
-        conv2d_params["padding"] = self.get_attr('dilation', {2, 2})
+        conv2d_params["strides"] = self.get_attr('strides', {1, 1})
+        conv2d_params["padding"] = self.get_attr('padding', {2, 2})
         conv2d_params["dilation"] = self.get_attr('dilation', 1)
         conv2d_config = self._config_template.format(**conv2d_params)
 
@@ -727,6 +755,21 @@ class Pooling1D(Layer):
 
         return self._config_template.format(**params)
 
+    def definition_dcpp(self):
+        """Returns oneAPI definition for Activation Function"""
+        params = {}
+        params["layer_name"] = self.name
+        input_layer = self.get_input_node_with_mem_desc(self)
+        params["input_desc"] = f"{input_layer.name}_memory.get_desc()"
+        params["memory_object_type"] = "" if "output" in self.name else "auto"
+        params["data_type"] = self.get_weights_precision()
+        batch_size = f"{self.model.batch_size}, "
+        output_dims = self.get_output_variable().shape
+        params["output_dims"] = batch_size + str(output_dims).replace('[','').replace(']','')
+        params["input_memory"] = f"{input_layer.name}_memory"
+
+        return self._config_template.format(**params)
+
 class Pooling2D(Layer):
     def initialize(self):
         shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
@@ -737,6 +780,7 @@ class Pooling2D(Layer):
     def function_cpp(self):
         params = self._default_function_params()
         params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
+        
         return [self._function_template.format(**params)]
 
     def config_cpp(self):
@@ -746,6 +790,21 @@ class Pooling2D(Layer):
         params['out_height'] = self.get_output_variable().dim_names[0]
         params['out_width'] = self.get_output_variable().dim_names[1]
         params['n_filt'] = self.get_output_variable().dim_names[2]
+
+        return self._config_template.format(**params)
+
+    def definition_dcpp(self):
+        """Returns oneAPI definition for Activation Function"""
+        params = {}
+        params["layer_name"] = self.name
+        input_layer = self.get_input_node_with_mem_desc(self)
+        params["input_desc"] = f"{input_layer.name}_memory.get_desc()"
+        params["memory_object_type"] = "" if "output" in self.name else "auto"
+        params["data_type"] = self.get_weights_precision()
+        batch_size = f"{self.model.batch_size}, "
+        output_dims = self.get_output_variable().shape
+        params["output_dims"] = batch_size + str(output_dims).replace('[','').replace(']','')
+        params["input_memory"] = f"{input_layer.name}_memory"
 
         return self._config_template.format(**params)
 
