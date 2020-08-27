@@ -625,10 +625,19 @@ class Conv2D(Layer):
         params['config_t'] = 'std::nullptr_t'
 
         if self.model.config.get_config_value('IOType') == 'io_stream':
-            instructions = self.model.config.backend.compute_conv2d_instructions(params['in_height'], params['in_width'], params['n_chan'], params['filt_height'], params['stride_height'])
+            min_h, min_w, instructions = self.model.config.backend.compute_conv2d_instructions(
+                self.get_input_variable().shape[0],
+                self.get_input_variable().shape[1],
+                self.get_input_variable().shape[2],
+                params['filt_height'],
+                params['stride_height'])
             instructions_str = ','.join(str(i) for i in instructions)
+            params['min_height'] = min_h
+            params['min_width'] = min_w
             params['instructions'] = instructions_str
         else:
+            params['min_height'] = params['in_height']
+            params['min_width'] = params['in_width']
             params['instructions'] = '0'
 
         params['in_factor'] = self.model.config.get_config_value('PackFactor', 1)

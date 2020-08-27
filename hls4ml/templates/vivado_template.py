@@ -2,6 +2,7 @@ import numpy as np
 import math
 from bisect import bisect_left
 from queue import Queue
+from collections.abc import Iterable
 
 from hls4ml.templates.templates import Backend
 
@@ -79,7 +80,9 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned strategy = nnet::{strategy};
     static const unsigned in_pack_factor = {in_factor};
     static const unsigned out_pack_factor = {out_factor};
-    static const ap_uint<filt_height * filt_width> pixels[in_height * in_width];
+    static const unsigned min_height = {min_height};
+    static const unsigned min_width = {min_width};
+    static const ap_uint<filt_height * filt_width> pixels[min_height * min_width];
     typedef {accum_t} accum_t;
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
@@ -271,110 +274,68 @@ class VivadoBackend(Backend):
             layer.reuse_factor = closest_rf
 
     def compute_conv2d_instructions(self, in_H, in_W, in_C, kernel_size=3, stride=1, pad=0):
-        assert(pad == 0)
-        assert(stride == 1) #TODO add support for stride > 1
 
-        # Input stream operations
-        def fill_wk():
-            # First element
-            wk_q.put(in_q.get())
+        if isinstance(kernel_size, Iterable):
+            kernel_height = kernel_size[0]
+            kernel_width = kernel_size[1]
+        else:
+            kernel_height = kernel_size
+            kernel_width = kernel_size
 
-            # Fill reuse buffer
-            for _ in range(oW-1):
-                elem = in_q.get()
-                wk_q.put(elem)
-                ow_q.put(elem)
-            
-            # Use from reuse buffer
-            for _ in range(K-2): # K-2 'cause we already prepared one iteration and we'll do the last one as special case
-                wk_q.put(ow_q.get())
-                for _ in range(oW-2): # oW-2 'cause we already used one from ow_q 
-                    elem = ow_q.get()
-                    wk_q.put(elem)
-                    ow_q.put(elem)
-                elem = in_q.get()
-                wk_q.put(elem)
-                ow_q.put(elem)
+        if isinstance(stride, Iterable):
+            stride_height = stride[0]
+            stride_width = stride[1]
+        else:
+            stride_height = stride
+            stride_width = stride
 
-            # Use and clean-up the reuse buffer
-            for _ in range(oW-1):
-                elem = ow_q.get()
-                wk_q.put(elem)
-            wk_q.put(in_q.get())
+        # Current limitations
+        assert kernel_height == kernel_width
+        assert stride_height == stride_width
+        assert pad == 0
 
+        min_H = (math.ceil(kernel_height / stride_height) - 1) * stride_height + kernel_height
+        min_W = (math.ceil(kernel_width / stride_width) - 1) * stride_width + kernel_width
+        min_oH = int((min_H - kernel_height) // stride_height + 1)
+        min_oW = int((min_W - kernel_width) // stride_width + 1)
 
-        def take_new_input(or_iter):
-            if or_iter == oH-1: return
+        out_H = int((in_H - kernel_size) // stride_height + 1)
+        out_W = int((in_W - kernel_size) // stride_width + 1)
+        scaled_H = (out_H - 1) * stride_height + kernel_size
+        scaled_W = (out_W - 1) * stride_width + kernel_size
 
-            fill_wk()
+        if scaled_H < in_H:
+            min_H += 1
+        if scaled_W < in_W:
+            min_W += 1
 
-        def reuse_input(kr_iter, or_iter, elem):
-            if kr_iter == 0: return
-            if or_iter == oH-1: return
+        # Let's hardcode a few common cases:
+        if kernel_size == 1 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
+            return (1, 1, map(str, [1]))
+        if kernel_size == 3 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
+            return (5, 5, map(str, [1,3,7,6,4,9,27,63,54,36,73,219,511,438,292,72,216,504,432,288,64,192,448,384,256]))
+        if kernel_size == 5 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
+            return (9, 9, map(str, [1,3,7,15,31,30,28,24,16,33,99,231,495,1023,990,924,792,528,1057,3171,7399,15855,
+                             32767,31710,29596,25368,16912,33825,101475,236775,507375,1048575,1014750,947100,
+                             811800,541200,1082401,3247203,7576807,16236015,33554431,32472030,30307228,25977624,
+                             17318416,1082400,3247200,7576800,16236000,33554400,32472000,30307200,25977600,17318400,
+                             1082368,3247104,7576576,16235520,33553408,32471040,30306304,25976832,17317888,1081344,
+                             3244032,7569408,16220160,33521664,32440320,30277632,25952256,17301504,1048576,3145728,
+                             7340032,15728640,32505856,31457280,29360128,25165824,16777216]))
 
-            wk_q.put(elem)
+        windows_bin = [[0 for _ in range(kernel_height * kernel_width)] for _ in range(min_H * min_W)]
 
-        # Output stream operations
-        def reuse_output(elem):
-            ob_q.put(elem)
+        for i_oh in range(min_oH):
+            for i_ow in range(min_oW):
+                for i_fh in range(kernel_height):
+                    for i_fw in range(kernel_width):
+                        index_data = (i_oh * stride_height + i_fh - pad) * min_W + (i_ow * stride_width + i_fw - pad)
+                        windows_bin[index_data][i_fh * kernel_width + i_fw] = 1
 
-        def take_new_output(or_iter):
-            for _ in range(oW):
-                elem = ob_q.get()
-                out_q.put(elem)
-                if or_iter < oH-1:
-                    elem = out_q.get()
-                    ob_q.put(elem)
+        windows_int = []
 
-        H = kernel_size * 2 - 1
-        W = kernel_size * 2 - 1
+        for i in range(min_H):
+            for j in range(min_W):
+                windows_int.append((int(''.join(str(p) for p in reversed(windows_bin[i * min_W + j])), 2)))
         
-        K = kernel_size
-
-        oH = int((H + (pad + pad) - K) // stride + 1)
-        oW = int((W + (pad + pad) - K) // stride + 1)
-        
-        # input streams
-        in_q = Queue(maxsize=H*W)
-        wk_q = Queue(maxsize=oW*K*K)
-        ow_q = Queue(maxsize=oW)
-
-        # output streams
-        out_q = Queue(maxsize=oH*oW)
-        ob_q = Queue(maxsize=oW)
-
-        for i in range(H*W):
-            in_q.put(i)
-
-        for i in range(oH*oW):
-            out_q.put(i)
-
-        # Initial contents of streams
-        for _ in range(oW):
-            ob_q.put(out_q.get())
-
-        for _ in range(K):
-            fill_wk()
-
-        in_out_kk_map = { i : [0 for _ in range(K*K)] for i in range(H*W)}
-
-        for i_or in range(oH):
-            for i_kr in range(K):
-                for i_kc in range(K):
-                    for _ in range(oW):
-                        i_elem = wk_q.get()
-                        o_elem = ob_q.get()
-                        in_out_kk_map[i_elem][i_kr * K + i_kc] = o_elem % (K * oW) + 1
-
-                        reuse_input(i_kr, i_or, i_elem)
-                        reuse_output(o_elem)
-            take_new_input(i_or)
-            take_new_output(i_or)
-
-        instructions = []
-        for i_elem, values in sorted(in_out_kk_map.items()):
-            # 0/1 indices:
-            bin_val = ''.join('1' if o > 0 else '0' for o in values)
-            instructions.append(str(int(bin_val[::-1], 2)))
-
-        return instructions
+        return (min_H, min_W, windows_int)
