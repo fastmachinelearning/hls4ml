@@ -60,7 +60,7 @@ void fill_pool_buffer(
         #pragma HLS PIPELINE
         CopyDataFilt: for (unsigned c = 0; c < CONFIG_T::n_filt; c++) {
             CopyDataPool: for (unsigned f = 0; f < CONFIG_T::pool_height * CONFIG_T::pool_width; f++) {
-                if (pixel_idx[p][f]) data_window[c * CONFIG_T::pool_height * CONFIG_T::pool_width + f].write(in_elem[p * CONFIG_T::n_filt + c]);
+                if (pixel_idx[p][f]) data_window[c * CONFIG_T::pool_height * CONFIG_T::pool_width + f].write_nb(in_elem[p * CONFIG_T::n_filt + c]);
             }
         }
     }

@@ -56,7 +56,7 @@ void fill_buffer(
         #pragma HLS PIPELINE
         CopyDataFilt: for (unsigned f = 0; f < CONFIG_T::filt_height * CONFIG_T::filt_width; f++) {
             CopyDataChan: for (unsigned c = 0; c < CONFIG_T::n_chan; c++) {
-                if (pixel_idx[p][f]) data_window[f * CONFIG_T::n_chan + c].write(in_elem[p * CONFIG_T::n_chan + c]);
+                if (pixel_idx[p][f]) data_window[f * CONFIG_T::n_chan + c].write_nb(in_elem[p * CONFIG_T::n_chan + c]);
             }
         }
     }
