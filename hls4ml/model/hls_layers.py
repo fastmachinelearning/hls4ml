@@ -7,6 +7,11 @@ import string
 import numpy as np
 from collections import OrderedDict
 
+
+oneapi_padding_map_to_cpp = {
+    "valid": "{0, 0}",
+}
+
 class Quantizer(object):
     def __init__(self, bits, hls_type):
         self.bits = bits
@@ -394,11 +399,33 @@ class Layer(object):
         params["memory_object_type"] = "auto"
         input_dims = self.get_input_variable().shape
         output_dims = self.get_output_variable().shape
-        weight_dims = str(output_dims).replace('[','').replace(']','')
-        weight_dims += ", " + str(input_dims).replace('[','').replace(']','')
+        if self.get_attr('data_format') == 'channels_first':
+            weight_dims = str(output_dims).replace('[','').replace(']','')
+            weight_dims += ", " + str(input_dims).replace('[','').replace(']','')
+        else:
+            weight_dims = str(output_dims[0]) + ", " + str(input_dims[-1])
+            if len(input_dims) > 1:
+                weight_dims += ',' + ','.join(map(str, input_dims[:-1]))
         params["dims"] = weight_dims
         params["data_type"] = self.get_weights_precision()
         params["format_tag"] = string.ascii_lowercase[:len(input_dims)+len(output_dims)]
+
+        return params
+
+    def _conv2d_weight_params(self):
+        """Returns dict with Conv2D weight parameters for oneAPI project"""
+        params = {}
+        params["layer_name"] = self.name
+        params["memory_object"] = "weights"
+        params["memory_object_type"] = "auto"
+        input_dims = self.get_input_variable().shape
+        output_dims = self.get_output_variable().shape
+        weight_dims = str(output_dims[-1]) + ", " + str(input_dims[-1])
+        # TODO: calculate filter shapes (width and height)
+        weight_dims += ", 3, 3" 
+        params["dims"] = weight_dims
+        params["data_type"] = self.get_weights_precision()
+        params["format_tag"] = string.ascii_lowercase[:len(input_dims) + 1]
 
         return params
 
@@ -408,7 +435,10 @@ class Layer(object):
         params["layer_name"] = self.name
         params["memory_object"] = "bias"
         params["memory_object_type"] = "auto"
-        bias_dim = self.get_output_variable().shape[0]
+        if self.get_attr('data_format') == 'channels_first':
+            bias_dim = self.get_output_variable().shape[0]
+        else:
+            bias_dim = self.get_output_variable().shape[-1]
         params["dims"] = bias_dim
         params["data_type"] = self.get_weights_precision()
         params["format_tag"] = "x"
@@ -463,7 +493,12 @@ class Input(Layer):
         input_params["memory_object_type"] = ""
         batch_size = f"{self.model.batch_size}, "
         input_dims = self.attributes['input_shape']
-        input_params["dims"] = batch_size + str(input_dims).replace('[','').replace(']','')
+        if self.get_attr('data_format') == 'channels_first':
+            input_params["dims"] = batch_size + str(input_dims).replace('[','').replace(']','')
+        else:
+            input_params["dims"] = batch_size + str(input_dims[-1])
+            if len(input_dims) > 1:
+                input_params["dims"] += ',' + ','.join(map(str, input_dims[:-1]))
         input_params["data_type"] = "f32"
         input_params["format_tag"] = string.ascii_lowercase[:len(input_dims)+1]
 
@@ -716,7 +751,7 @@ class Conv2D(Layer):
         conv2d_params["data_type"] = self.get_weights_precision()
         batch_size = f"{self.model.batch_size}, "
         output_dims = self.get_output_variable().shape
-        conv2d_params["output_dims"] = batch_size + str(output_dims).replace('[','').replace(']','')
+        conv2d_params["output_dims"] = batch_size + str(output_dims[-1]) + ', ' + str(output_dims[0]) + ', ' + str(output_dims[1])
         if self.get_input_node().index == 1:
             conv2d_params["input_desc"] = "input_data_md"
             conv2d_params["input_memory"] = "input_data_memory"
@@ -724,12 +759,12 @@ class Conv2D(Layer):
             input_layer = self.get_input_node_with_mem_desc(self)
             conv2d_params["input_desc"] = f"{input_layer.name}_memory.get_desc()"
             conv2d_params["input_memory"] = f"{input_layer.name}_memory"
-        conv2d_params["strides"] = self.get_attr('strides', {1, 1})
-        conv2d_params["padding"] = {1, 1}#self.get_attr('padding', {2, 2})
+        conv2d_params["strides"] = self.get_attr('stride', '{1, 1}')
+        conv2d_params["padding"] = oneapi_padding_map_to_cpp[self.get_attr('padding', 'valid')]
         conv2d_params["dilation"] = self.get_attr('dilation', 1)
         conv2d_config = self._config_template.format(**conv2d_params)
 
-        weight_params = self._default_weight_params()
+        weight_params = self._conv2d_weight_params()
         weight_config = self._memory_template.format(**weight_params)
 
         bias_params = self._default_bias_params()
