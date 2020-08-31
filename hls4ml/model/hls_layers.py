@@ -8,8 +8,16 @@ import numpy as np
 from collections import OrderedDict
 
 
-oneapi_padding_map_to_cpp = {
+oneapi_padding1D_map_to_cpp = {
+    "valid": "{0}",
+    "same": "{0}",
+    "casual": "{1}"
+}
+
+oneapi_padding2D_map_to_cpp = {
     "valid": "{0, 0}",
+    "same": "{0, 0}",
+    "casual": "{1, 1}"
 }
 
 class Quantizer(object):
@@ -412,8 +420,8 @@ class Layer(object):
 
         return params
 
-    def _conv2d_weight_params(self):
-        """Returns dict with Conv2D weight parameters for oneAPI project"""
+    def _conv_weight_params(self):
+        """Returns dict with convolutional weight parameters for oneAPI project"""
         params = {}
         params["layer_name"] = self.name
         params["memory_object"] = "weights"
@@ -421,8 +429,9 @@ class Layer(object):
         input_dims = self.get_input_variable().shape
         output_dims = self.get_output_variable().shape
         weight_dims = str(output_dims[-1]) + ", " + str(input_dims[-1])
-        # TODO: calculate filter shapes (width and height)
-        weight_dims += ", 3, 3" 
+        if self.get_attr('filt_height'):
+            weight_dims += ", " + str(self.get_attr('filt_height'))
+        weight_dims += ", " + str(self.get_attr('filt_width'))
         params["dims"] = weight_dims
         params["data_type"] = self.get_weights_precision()
         params["format_tag"] = string.ascii_lowercase[:len(input_dims) + 1]
@@ -614,6 +623,7 @@ class Conv1D(Layer):
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 1, 0]) #(W,C,F) => (F,C,W)
         else:
             self.set_attr('strategy', 'latency')
+        self.memory_descriptor = True
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -660,7 +670,7 @@ class Conv1D(Layer):
         conv1d_params["data_type"] = self.get_weights_precision()
         batch_size = f"{self.model.batch_size}, "
         output_dims = self.get_output_variable().shape
-        conv1d_params["output_dims"] = batch_size + str(output_dims).replace('[','').replace(']','')
+        conv1d_params["output_dims"] = batch_size + str(output_dims[-1]) + ', ' + str(output_dims[0])
         if self.get_input_node().index == 1:
             conv1d_params["input_desc"] = "input_data_md"
             conv1d_params["input_memory"] = "input_data_memory"
@@ -668,12 +678,12 @@ class Conv1D(Layer):
             input_layer = self.get_input_node_with_mem_desc(self)
             conv1d_params["input_desc"] = f"{input_layer.name}_memory.get_desc()"
             conv1d_params["input_memory"] = f"{input_layer.name}_memory"
-        conv1d_params["strides"] = self.get_attr('strides', 1)
-        conv1d_params["padding"] = self.get_attr('padding', 1)
+        conv1d_params["strides"] = self.get_attr('strides', "1")
+        conv1d_params["padding"] = oneapi_padding1D_map_to_cpp[self.get_attr('padding', 'valid')]
         conv1d_params["dilation"] = self.get_attr('dilation', 1)
         conv1d_config = self._config_template.format(**conv1d_params)
 
-        weight_params = self._default_weight_params()
+        weight_params = self._conv_weight_params()
         weight_config = self._memory_template.format(**weight_params)
 
         bias_params = self._default_bias_params()
@@ -760,11 +770,11 @@ class Conv2D(Layer):
             conv2d_params["input_desc"] = f"{input_layer.name}_memory.get_desc()"
             conv2d_params["input_memory"] = f"{input_layer.name}_memory"
         conv2d_params["strides"] = self.get_attr('stride', '{1, 1}')
-        conv2d_params["padding"] = oneapi_padding_map_to_cpp[self.get_attr('padding', 'valid')]
+        conv2d_params["padding"] = oneapi_padding2D_map_to_cpp[self.get_attr('padding', 'valid')]
         conv2d_params["dilation"] = self.get_attr('dilation', 1)
         conv2d_config = self._config_template.format(**conv2d_params)
 
-        weight_params = self._conv2d_weight_params()
+        weight_params = self._conv_weight_params()
         weight_config = self._memory_template.format(**weight_params)
 
         bias_params = self._default_bias_params()

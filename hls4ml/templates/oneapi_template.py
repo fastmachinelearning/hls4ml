@@ -85,9 +85,12 @@ conv2d_config_template = """
 
 conv1d_config_template = """
         dnnl::memory::dims {layer_name}_output_dims = {{{output_dims}}};
-        auto {layer_name}_output_md = dnnl::memory::desc(
+        dnnl::memory::dims {layer_name}_strides = {{{strides}}};
+        dnnl::memory::dims {layer_name}_padding = {padding};
+
+        auto {layer_name}_output_md = dnnl::memory::desc({{ 
                 {{{layer_name}_output_dims}},
-                dnnl::memory::data_type::{data_type},
+                dnnl::memory::data_type::{data_type}, 
                 dnnl::memory::format_tag::any}});
 
         auto {layer_name}_desc = dnnl::convolution_forward::desc(
@@ -103,7 +106,7 @@ conv1d_config_template = """
         net.push_back(dnnl::convolution_forward({layer_name}_prim_desc));
         net_args.push_back({{{{DNNL_ARG_SRC, {input_memory}}},
                 {{DNNL_ARG_WEIGHTS, {layer_name}_weights_memory}},
-                {{DNNL_ARG_BIAS, {layer_name}_user_bias_memory}},
+                {{DNNL_ARG_BIAS, {layer_name}_bias_memory}},
                 {{DNNL_ARG_DST, {layer_name}_memory}}}});\n"""
 
 maxpool2d_config_template = """
