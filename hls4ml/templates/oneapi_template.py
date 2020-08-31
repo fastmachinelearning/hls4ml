@@ -135,12 +135,16 @@ pooling2d_config_template = """
 
 pooling1d_config_template = """
         dnnl::memory::dims {layer_name}_output_dims = {{{output_dims}}};
-        auto {layer_name}_output_md = dnnl::memory::desc(
+        dnnl::memory::dims {layer_name}_kernel = {{{kernel}}};
+        dnnl::memory::dims {layer_name}_strides = {strides};
+        dnnl::memory::dims {layer_name}_padding = {padding};
+
+        auto {layer_name}_output_md = dnnl::memory::desc({{ 
                 {{{layer_name}_output_dims}}, 
                 dnnl::memory::data_type::{data_type}, 
-                dnnl::memory::format_tag::any}});
+                dnnl::memory::format_tag::any}}); 
 
-        auto {layer_name}_desc = dnnl::pooling_forward::desc({{ 
+        auto {layer_name}_desc = dnnl::pooling_forward::desc(
                 dnnl::prop_kind::forward_inference,
                 dnnl::algorithm::pooling_max, {input_desc}, {layer_name}_output_md,
                 {layer_name}_strides, {layer_name}_kernel, {layer_name}_padding, {layer_name}_padding);
