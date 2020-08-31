@@ -109,12 +109,16 @@ conv1d_config_template = """
                 {{DNNL_ARG_BIAS, {layer_name}_bias_memory}},
                 {{DNNL_ARG_DST, {layer_name}_memory}}}});\n"""
 
-maxpool2d_config_template = """
+pooling2d_config_template = """ 
         dnnl::memory::dims {layer_name}_output_dims = {{{output_dims}}};
-        auto {layer_name}_output_md = dnnl::memory::desc(
-                {{{layer_name}_output_md}}, 
+        dnnl::memory::dims {layer_name}_kernel = {{{kernel}}};
+        dnnl::memory::dims {layer_name}_strides = {strides};
+        dnnl::memory::dims {layer_name}_padding = {padding};
+
+        auto {layer_name}_output_md = dnnl::memory::desc({{ 
+                {{{layer_name}_output_dims}}, 
                 dnnl::memory::data_type::{data_type}, 
-                dnnl::memory::format_tag::any}});
+                dnnl::memory::format_tag::any}}); 
 
         auto {layer_name}_desc = dnnl::pooling_forward::desc(
                 dnnl::prop_kind::forward_inference,
@@ -126,17 +130,17 @@ maxpool2d_config_template = """
         {memory_object_type} {layer_name}_memory = dnnl::memory({layer_name}_prim_desc.dst_desc(), eng);
 
         net.push_back(dnnl::pooling_forward({layer_name}_prim_desc));
-        net_args.push_back({{{{DNNL_ARG_SRC, {input_memory}},
-                {DNNL_ARG_DST, {layer_name}_memory}});\n"""
+        net_args.push_back({{{{DNNL_ARG_SRC, {input_memory}}},
+                {{DNNL_ARG_DST, {layer_name}_memory}}}});\n"""
 
-maxpool1d_config_template = """
+pooling1d_config_template = """
         dnnl::memory::dims {layer_name}_output_dims = {{{output_dims}}};
         auto {layer_name}_output_md = dnnl::memory::desc(
-                {{{layer_name}_output_md}}, 
+                {{{layer_name}_output_dims}}, 
                 dnnl::memory::data_type::{data_type}, 
                 dnnl::memory::format_tag::any}});
 
-        auto {layer_name}_desc = dnnl::pooling_forward::desc(
+        auto {layer_name}_desc = dnnl::pooling_forward::desc({{ 
                 dnnl::prop_kind::forward_inference,
                 dnnl::algorithm::pooling_max, {input_desc}, {layer_name}_output_md,
                 {layer_name}_strides, {layer_name}_kernel, {layer_name}_padding, {layer_name}_padding);
@@ -146,8 +150,8 @@ maxpool1d_config_template = """
         {memory_object_type} {layer_name}_memory = dnnl::memory({layer_name}_prim_desc.dst_desc(), eng);
 
         net.push_back(dnnl::pooling_forward({layer_name}_prim_desc));
-        net_args.push_back({{{{DNNL_ARG_SRC, {input_memory}},
-                {DNNL_ARG_DST, {layer_name}_memory}});\n"""
+        net_args.push_back({{{{DNNL_ARG_SRC, {input_memory}}},
+                {{DNNL_ARG_DST, {layer_name}_memory}}}});\n"""
 
 class OneAPI(Backend):
     def __init__(self):
@@ -158,8 +162,8 @@ class OneAPI(Backend):
         self.register_config_template('Softmax', softmax_config_template)
         self.register_config_template('Conv2D', conv2d_config_template)
         self.register_config_template('Conv1D', conv1d_config_template)
-        self.register_config_template('MaxPooling2D', maxpool2d_config_template)
-        self.register_config_template('MaxPooling1D', maxpool1d_config_template)
+        self.register_config_template('Pooling2D', pooling2d_config_template)
+        self.register_config_template('Pooling1D', pooling1d_config_template)
 
     def register_config_template(self, name, config_template):
         self.config_templates[name] = config_template

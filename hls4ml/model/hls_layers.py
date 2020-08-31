@@ -802,7 +802,7 @@ class Pooling1D(Layer):
         return self._config_template.format(**params)
 
     def definition_dcpp(self):
-        """Returns oneAPI definition for Activation Function"""
+        """Returns oneAPI definition for Padding1D"""
         pool1d_params = {}
         pool1d_params["layer_name"] = self.name
         input_layer = self.get_input_node_with_mem_desc(self)
@@ -822,6 +822,7 @@ class Pooling2D(Layer):
         dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0])
+        self.memory_descriptor = True
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -840,19 +841,30 @@ class Pooling2D(Layer):
         return self._config_template.format(**params)
 
     def definition_dcpp(self):
-        """Returns oneAPI definition for Activation Function"""
+        """Returns oneAPI definition for Padding2D"""
         pool2d_params = {}
         pool2d_params["layer_name"] = self.name
         input_layer = self.get_input_node_with_mem_desc(self)
         pool2d_params["input_desc"] = f"{input_layer.name}_memory.get_desc()"
         pool2d_params["memory_object_type"] = "" if "output" in self.name else "auto"
-        pool2d_params["data_type"] = 'f32' #self.get_weights_precision()
+        pool2d_params["data_type"] = input_layer.get_weights_precision()
         batch_size = f"{self.model.batch_size}, "
         output_dims = self.get_output_variable().shape
-        pool2d_params["output_dims"] = batch_size + str(output_dims).replace('[','').replace(']','')
-        pool2d_params["input_memory"] = f"{input_layer.name}_memory"
+        pool2d_params["output_dims"] = batch_size + str(output_dims[-1]) + ', ' + str(output_dims[0]) + ', ' + str(output_dims[1])
+        pool2d_params["strides"] = self.get_attr('stride', '{2, 2}')
+        pool2d_params["padding"] = oneapi_padding2D_map_to_cpp[self.get_attr('padding', 'valid')]
+        pool2d_params["kernel"] = str(self.attributes['out_height']) + ', ' +  str(self.attributes['out_width'])
+        if self.get_input_node().index == 1:
+            pool2d_params["input_desc"] = "input_data_md"
+            pool2d_params["input_memory"] = "input_data_memory"
+        else:
+            input_layer = self.get_input_node_with_mem_desc(self)
+            pool2d_params["input_desc"] = f"{input_layer.name}_memory.get_desc()"
+            pool2d_params["input_memory"] = f"{input_layer.name}_memory"
+        pool2d_config = self._config_template.format(**pool2d_params)
 
-        return pool2d_params
+        return pool2d_config
+
 
 class Activation(Layer):
     def initialize(self):
