@@ -678,7 +678,7 @@ class Conv1D(Layer):
             input_layer = self.get_input_node_with_mem_desc(self)
             conv1d_params["input_desc"] = f"{input_layer.name}_memory.get_desc()"
             conv1d_params["input_memory"] = f"{input_layer.name}_memory"
-        conv1d_params["strides"] = self.get_attr('strides', "1")
+        conv1d_params["strides"] = '{' + str(self.get_attr('strides', "1")) + '}'
         conv1d_params["padding"] = oneapi_padding1D_map_to_cpp[self.get_attr('padding', 'valid')]
         conv1d_params["dilation"] = self.get_attr('dilation', 1)
         conv1d_config = self._config_template.format(**conv1d_params)
@@ -813,9 +813,9 @@ class Pooling1D(Layer):
         batch_size = f"{self.model.batch_size}, "
         output_dims = self.get_output_variable().shape
         pool1d_params["output_dims"] = batch_size + str(output_dims[-1]) + ', ' + str(output_dims[0])
-        pool1d_params["strides"] = self.get_attr('stride', '2')
+        pool1d_params["strides"] = '{' + str(self.get_attr('stride', '2')) + '}'
         pool1d_params["padding"] = oneapi_padding1D_map_to_cpp[self.get_attr('padding', 'valid')]
-        pool1d_params["kernel"] = str(self.attributes['out_width'])
+        pool1d_params["kernel"] = str(self.attributes['n_out'])
         if self.get_input_node().index == 1:
             pool1d_params["input_desc"] = "input_data_md"
             pool1d_params["input_memory"] = "input_data_memory"
@@ -864,7 +864,7 @@ class Pooling2D(Layer):
         pool2d_params["output_dims"] = batch_size + str(output_dims[-1]) + ', ' + str(output_dims[0]) + ', ' + str(output_dims[1])
         pool2d_params["strides"] = self.get_attr('stride', '{2, 2}')
         pool2d_params["padding"] = oneapi_padding2D_map_to_cpp[self.get_attr('padding', 'valid')]
-        pool2d_params["kernel"] = str(self.attributes['out_height']) + ', ' +  str(self.attributes['out_width'])
+        pool2d_params["kernel"] = str(self.attributes['pool_height']) + ', ' +  str(self.attributes['pool_width'])
         if self.get_input_node().index == 1:
             pool2d_params["input_desc"] = "input_data_md"
             pool2d_params["input_memory"] = "input_data_memory"

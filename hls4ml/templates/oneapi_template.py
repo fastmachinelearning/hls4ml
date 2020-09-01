@@ -57,7 +57,7 @@ softmax_config_template = """
         net_args.push_back({{{{DNNL_ARG_SRC, {input_memory}}},
                 {{DNNL_ARG_DST, {output_memory}}}}});"""
 
-conv2d_config_template = """
+conv_config_template = """
         dnnl::memory::dims {layer_name}_output_dims = {{{output_dims}}};
         dnnl::memory::dims {layer_name}_strides = {strides};
         dnnl::memory::dims {layer_name}_padding = {padding};
@@ -83,57 +83,7 @@ conv2d_config_template = """
                 {{DNNL_ARG_BIAS, {layer_name}_bias_memory}},
                 {{DNNL_ARG_DST, {layer_name}_memory}}}});\n"""
 
-conv1d_config_template = """
-        dnnl::memory::dims {layer_name}_output_dims = {{{output_dims}}};
-        dnnl::memory::dims {layer_name}_strides = {{{strides}}};
-        dnnl::memory::dims {layer_name}_padding = {padding};
-
-        auto {layer_name}_output_md = dnnl::memory::desc({{ 
-                {{{layer_name}_output_dims}},
-                dnnl::memory::data_type::{data_type}, 
-                dnnl::memory::format_tag::any}});
-
-        auto {layer_name}_desc = dnnl::convolution_forward::desc(
-                dnnl::prop_kind::forward_inference,
-                dnnl::algorithm::convolution_direct, {input_desc}, {layer_name}_weights_md,
-                {layer_name}_bias_md, {layer_name}_output_md, {layer_name}_strides, {layer_name}_padding,
-                {layer_name}_padding);
-
-        auto {layer_name}_prim_desc = dnnl::convolution_forward::primitive_desc({layer_name}_desc, eng);
-
-        {memory_object_type} {layer_name}_memory = dnnl::memory({layer_name}_prim_desc.dst_desc(), eng);
-
-        net.push_back(dnnl::convolution_forward({layer_name}_prim_desc));
-        net_args.push_back({{{{DNNL_ARG_SRC, {input_memory}}},
-                {{DNNL_ARG_WEIGHTS, {layer_name}_weights_memory}},
-                {{DNNL_ARG_BIAS, {layer_name}_bias_memory}},
-                {{DNNL_ARG_DST, {layer_name}_memory}}}});\n"""
-
-pooling2d_config_template = """ 
-        dnnl::memory::dims {layer_name}_output_dims = {{{output_dims}}};
-        dnnl::memory::dims {layer_name}_kernel = {{{kernel}}};
-        dnnl::memory::dims {layer_name}_strides = {strides};
-        dnnl::memory::dims {layer_name}_padding = {padding};
-
-        auto {layer_name}_output_md = dnnl::memory::desc({{ 
-                {{{layer_name}_output_dims}}, 
-                dnnl::memory::data_type::{data_type}, 
-                dnnl::memory::format_tag::any}}); 
-
-        auto {layer_name}_desc = dnnl::pooling_forward::desc(
-                dnnl::prop_kind::forward_inference,
-                dnnl::algorithm::pooling_max, {input_desc}, {layer_name}_output_md,
-                {layer_name}_strides, {layer_name}_kernel, {layer_name}_padding, {layer_name}_padding);
-
-        auto {layer_name}_prim_desc = dnnl::pooling_forward::primitive_desc({layer_name}_desc, eng);
-
-        {memory_object_type} {layer_name}_memory = dnnl::memory({layer_name}_prim_desc.dst_desc(), eng);
-
-        net.push_back(dnnl::pooling_forward({layer_name}_prim_desc));
-        net_args.push_back({{{{DNNL_ARG_SRC, {input_memory}}},
-                {{DNNL_ARG_DST, {layer_name}_memory}}}});\n"""
-
-pooling1d_config_template = """
+pooling_config_template = """ 
         dnnl::memory::dims {layer_name}_output_dims = {{{output_dims}}};
         dnnl::memory::dims {layer_name}_kernel = {{{kernel}}};
         dnnl::memory::dims {layer_name}_strides = {strides};
@@ -164,10 +114,10 @@ class OneAPI(Backend):
         self.register_config_template('Dense', dense_config_template)
         self.register_config_template('Activation', eltwise_config_template)
         self.register_config_template('Softmax', softmax_config_template)
-        self.register_config_template('Conv2D', conv2d_config_template)
-        self.register_config_template('Conv1D', conv1d_config_template)
-        self.register_config_template('Pooling2D', pooling2d_config_template)
-        self.register_config_template('Pooling1D', pooling1d_config_template)
+        self.register_config_template('Conv2D', conv_config_template)
+        self.register_config_template('Conv1D', conv_config_template)
+        self.register_config_template('Pooling2D', pooling_config_template)
+        self.register_config_template('Pooling1D', pooling_config_template)
 
     def register_config_template(self, name, config_template):
         self.config_templates[name] = config_template
