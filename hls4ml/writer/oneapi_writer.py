@@ -58,43 +58,6 @@ class OneApiWriter(Writer):
         if not os.path.isdir("{}/firmware/weights".format(model.config.get_output_dir())):
             os.makedirs("{}/firmware/weights".format(model.config.get_output_dir()))
 
-    def write_model_compile(self, model):
-        filedir = os.path.dirname(os.path.abspath(__file__))
-        f = open(os.path.join(filedir,'../templates/oneapi/firmware/model.cpp'),'r')
-        fout = open('{}/firmware/model.cpp'.format(model.config.get_output_dir()),'w')
-
-        indent = '        '
-        for line in f.readlines():
-            if '//hls4ml init engine' in line:
-                newline = line
-                engine = f"dnnl::engine eng(dnnl::engine::kind::{model.config.device}, 0);\n"
-                newline += indent + engine
-            elif '//hls4ml insert layers' in line:
-                newline = line
-                for layer in model.get_layers():
-                    dcpp_definition = layer.definition_dcpp()
-                    if dcpp_definition is not None:
-                        newline += indent + dcpp_definition + "\n"
-                    for w in layer.get_weights():
-                        data_type = oneapi_data_types_map_to_cpp[w.type.precision]
-                        weight_type = "weights" if "w" in w.name else "bias"
-                        buffer_name = f'{layer.name}_{weight_type}_buffer'
-                        if w.__class__.__name__ == 'CompressedWeightVariable':
-                            create_buffer = f'std::vector<{data_type}> {buffer_name}({w.nonzeros});\n'
-                            load_weights = f'nnet::load_compressed_weights_from_txt<{data_type}, {w.nonzeros}>({buffer_name}.data(), "{w.name}.txt");\n'
-                        else:
-                            create_buffer = f'std::vector<{data_type}> {buffer_name}({w.data_length});\n'
-                            load_weights = f'nnet::load_weights_from_txt<{data_type}, {w.data_length}>({buffer_name}.data(), "{w.name}.txt");\n'
-                        write_to_dnnl_memory = f"write_to_dnnl_memory({buffer_name}.data(), {layer.name}_{weight_type}_memory);\n"
-                        newline += indent + create_buffer
-                        newline += indent + load_weights
-                        newline += indent + write_to_dnnl_memory + "\n"
-            else:
-                newline = line
-            fout.write(newline)
-        f.close()
-        fout.close()
-
     def write_project_cpp(self, model):
         """ Writes main function for the project """
         filedir = os.path.dirname(os.path.abspath(__file__))
