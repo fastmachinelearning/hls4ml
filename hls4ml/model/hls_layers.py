@@ -706,7 +706,6 @@ class Conv1D(Layer):
             conv1d_params["input_memory"] = f"{input_layer.name}_memory"
         conv1d_params["strides"] = '{' + str(self.get_attr('strides', "1")) + '}'
         conv1d_params["padding"] = oneapi_padding1D_map_to_cpp[self.get_attr('padding', 'valid')]
-        conv1d_params["dilation"] = self.get_attr('dilation', 1)
         conv1d_config = self._config_template.format(**conv1d_params)
 
         weight_params = self._conv_weight_params()
@@ -797,7 +796,6 @@ class Conv2D(Layer):
             conv2d_params["input_memory"] = f"{input_layer.name}_memory"
         conv2d_params["strides"] = self.get_attr('stride', '{1, 1}')
         conv2d_params["padding"] = oneapi_padding2D_map_to_cpp[self.get_attr('padding', 'valid')]
-        conv2d_params["dilation"] = self.get_attr('dilation', 1)
         conv2d_config = self._config_template.format(**conv2d_params)
 
         weight_params = self._conv_weight_params()
