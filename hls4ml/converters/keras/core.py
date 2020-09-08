@@ -87,7 +87,7 @@ def parse_dense_layer(keras_layer, input_names, input_shapes, data_reader, confi
     return layer, output_shape
 
 
-activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']
+activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
 @keras_handler(*activation_layers)
 def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader, config):
     assert(keras_layer['class_name'] in activation_layers)
@@ -105,6 +105,8 @@ def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader, 
 
     if layer['class_name'] == 'Activation' and layer['activation'] == 'softmax':
         layer['class_name'] = 'Softmax'
+    if layer['class_name'] == 'ReLU':
+        layer['class_name'] = 'Activation'
     
     return layer, [shape for shape in input_shapes[0]]
 
