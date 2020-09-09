@@ -3,7 +3,7 @@ from hls4ml.templates.templates import Backend
 
 memory_config_template = """
         dnnl::memory::dims {layer_name}_{memory_object}_dims = {{{dims}}};
-        {memory_object_type} {layer_name}_{memory_object}_memory = dnnl::memory({{
+        {memory_object_type} {layer_name}_{memory_object}_{placeholder}memory = dnnl::memory({{
                 {{{layer_name}_{memory_object}_dims}},
                 dnnl::memory::data_type::{data_type},
                 dnnl::memory::format_tag::{format_tag}}},
@@ -27,6 +27,15 @@ dense_config_template = """
         
         auto {layer_name}_prim_desc = dnnl::inner_product_forward::primitive_desc({layer_name}_desc, eng);
         
+        write_to_dnnl_memory({layer_name}_weights_buffer.data(), {layer_name}_weights_placeholder_memory);
+        write_to_dnnl_memory({layer_name}_bias_buffer.data(), {layer_name}_bias_memory);
+
+        auto {layer_name}_weights_memory = {layer_name}_weights_placeholder_memory;
+        if ({layer_name}_prim_desc.weights_desc() != {layer_name}_weights_placeholder_memory.get_desc()) {{
+        {layer_name}_weights_memory = dnnl::memory({layer_name}_prim_desc.weights_desc(), eng);
+        dnnl::reorder({layer_name}_weights_placeholder_memory, {layer_name}_weights_memory)
+                .execute(engine_stream, {layer_name}_weights_placeholder_memory, {layer_name}_weights_memory);
+        }}
         {memory_object_type} {layer_name}_memory = dnnl::memory({layer_name}_prim_desc.dst_desc(), eng);
         
         net.push_back(dnnl::inner_product_forward({layer_name}_prim_desc));
@@ -74,6 +83,16 @@ conv_config_template = """
                 {layer_name}_padding);
 
         auto {layer_name}_prim_desc = dnnl::convolution_forward::primitive_desc({layer_name}_desc, eng);
+
+        write_to_dnnl_memory({layer_name}_weights_buffer.data(), {layer_name}_weights_placeholder_memory);
+        write_to_dnnl_memory({layer_name}_bias_buffer.data(), {layer_name}_bias_memory);
+        
+        auto {layer_name}_weights_memory = {layer_name}_weights_placeholder_memory;
+        if ({layer_name}_prim_desc.weights_desc() != {layer_name}_weights_placeholder_memory.get_desc()) {{
+        {layer_name}_weights_memory = dnnl::memory({layer_name}_prim_desc.weights_desc(), eng);
+        dnnl::reorder({layer_name}_weights_placeholder_memory, {layer_name}_weights_memory)
+                .execute(engine_stream, {layer_name}_weights_placeholder_memory, {layer_name}_weights_memory);
+        }}
 
         {memory_object_type} {layer_name}_memory = dnnl::memory({layer_name}_prim_desc.dst_desc(), eng);
 

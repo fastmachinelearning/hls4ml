@@ -19,7 +19,9 @@
 
 #include "myproject.h"
 
-//hls4ml init engine 
+//hls4ml init engine
+//hls4ml init nn stream
+dnnl::stream engine_stream(eng); 
 std::vector<dnnl::primitive> net; // neural network as a vector
 std::vector<std::unordered_map<int, dnnl::memory>> net_args; // nn arguments
 dnnl::memory input_data_memory;
@@ -34,8 +36,7 @@ extern "C" {
     }
     
     void myproject_float(float *input_data, float *output_data) {
-        //hls4ml init nn stream
-        dnnl::stream engine_stream(eng);
+
         //hls4ml execute network
         write_to_dnnl_memory(input_data, input_data_memory);
         for (size_t i = 0; i < net.size(); ++i)

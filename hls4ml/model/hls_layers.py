@@ -451,6 +451,7 @@ class Layer(object):
         params = {}
         params["layer_name"] = self.name
         params["memory_object"] = "weights"
+        params["placeholder"] = "placeholder_"
         params["memory_object_type"] = "auto"
         input_dims = self.get_input_variable().shape
         output_dims = self.get_output_variable().shape
@@ -470,6 +471,7 @@ class Layer(object):
         params["layer_name"] = self.name
         params["memory_object"] = "bias"
         params["memory_object_type"] = "auto"
+        params["placeholder"] = ""
         if self.get_attr('data_format') == 'channels_first':
             bias_dim = self.get_output_variable().shape[0]
         else:
@@ -526,6 +528,7 @@ class Input(Layer):
         input_params["layer_name"] = "input"
         input_params["memory_object"] = "data"
         input_params["memory_object_type"] = ""
+        input_params["placeholder"] = ""
         batch_size = f"{self.model.batch_size}, "
         input_dims = self.attributes['input_shape']
         if self.get_attr('data_format') == 'channels_first':
@@ -582,7 +585,12 @@ class Dense(Layer):
             elif self.model.config.backend.name == 'Vivado':
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data)
         if self.model.config.backend.name == "oneAPI":
-            self.weights['weight'].data = np.transpose(self.weights['weight'].data)
+            oneAPI_shape = self.get_input_variable().shape + [self.get_attr('n_out')]
+            reshaped_weights = self.weights['weight'].data.reshape(oneAPI_shape) # there is no Flatten layer in hls4ml model and oneAPI expects different weights format
+            if len(oneAPI_shape) > 3:
+                self.weights['weight'].data = np.transpose(reshaped_weights, axes=[3, 2, 0, 1]) # (H * W * I, O) => (O, I, H, W)
+            else:
+                self.weights['weight'].data = np.transpose(reshaped_weights)
         self.set_attr('index_t', index_t)
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
         self.memory_descriptor = True
@@ -623,6 +631,7 @@ class Dense(Layer):
         dense_config = self._config_template.format(**dense_params)
 
         weight_params = self._default_weight_params()
+        weight_params['placeholder'] = "placeholder_"
         weight_config = self._memory_template.format(**weight_params)
 
         bias_params = self._default_bias_params()
@@ -649,6 +658,8 @@ class Conv1D(Layer):
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 1, 0]) #(W,C,F) => (F,C,W)
         else:
             self.set_attr('strategy', 'latency')
+        if self.model.config.backend.name == "oneAPI":
+            self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 1, 0]) #(W,I,O) => (O,I,W)
         self.memory_descriptor = True
 
     def function_cpp(self):
@@ -734,6 +745,8 @@ class Conv2D(Layer):
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
         else:
             self.set_attr('strategy', 'latency')
+        if self.model.config.backend.name == "oneAPI":
+            self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) # (H,W,I,O) => (O,I,H,W)
         self.memory_descriptor = True
 
     def function_cpp(self):

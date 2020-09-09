@@ -461,11 +461,16 @@ class HLSModel(object):
                 for i in range(nb_batches):
                     if i == nb_full_batches:
                         batch = np.zeros((self.batch_size*self.get_input_variables()[0].size()), dtype=ctype)
-                        batch[:len(x) % self.batch_size] = x[i*self.batch_size:].flatten()
+                        batch[:(len(x) % self.batch_size)*self.get_input_variables()[0].size()] = x[i*self.batch_size:].flatten()
+                        print(f"WARNING! Input data is not divisible by batch size: "
+                        f"{self.batch_size}. {self.batch_size - (len(x) % self.batch_size)} "
+                        "samples in last batch will be filled with zeros and discarded after prediction. Final output of the model may not be stored as one array.")
                     else:
                         batch = x[i*self.batch_size:(i+1)*self.batch_size].flatten()
                     predictions = np.zeros(self.batch_size*self.get_output_variables()[0].size(), dtype=ctype)
                     top_function(batch, predictions)
+                    if i == nb_full_batches:
+                        predictions = predictions[:(len(x) % self.batch_size)*self.get_output_variables()[0].size()]
                     output.append(predictions)
             else:
                 if n_samples == 1:
@@ -474,7 +479,6 @@ class HLSModel(object):
                     predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
                     top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
                     output.append(predictions)
-
             #Convert to numpy array
             output = np.asarray(output)
         finally:
