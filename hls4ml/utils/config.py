@@ -145,8 +145,9 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             layer_config['ReuseFactor'] = default_reuse_factor
             layer_config['table_size'] = 1024
             is_softmax = layer['class_name'] == 'Softmax'
-            if 'activation' in layer['config'].keys():
-                is_softmax = is_softmax or (layer['config']['activation'] == 'softmax')
+            if 'config' in layer.keys():
+                if 'activation' in layer['config'].keys():
+                    is_softmax = is_softmax or (layer['config']['activation'] == 'softmax')
             if is_softmax:
                layer_config['exp_table_t'] = 'ap_fixed<18,8,AP_RND,AP_SAT>'
                layer_config['inv_table_t'] = 'ap_fixed<18,8,AP_RND,AP_SAT>'
