@@ -23,7 +23,7 @@ class VivadoWriter(Writer):
                '{precision} weight; }} {name};\n')
             return cpp_fmt.format(name=atype.name, index=atype.index_precision, precision=atype.precision)
         elif type_class == 'PackedType':
-            return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=atype.name, precision=atype.precision, n_elem=atype.n_elem)
+            return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=atype.name, precision=atype.precision, n_elem=str(atype.n_elem) + '*' + str(atype.n_pack))
         else:
             raise Exception('Unknown data type class "{}"'.format(type_class))
 
@@ -421,7 +421,7 @@ class VivadoWriter(Writer):
             elif '//hls-fpga-machine-learning insert tb-output' in line:
                 newline = line
                 for out in model.get_output_variables():
-                    newline += indent + 'nnet::print_result<{}, {}>({}, fout);\n'.format(out.type.name, out.size_cpp(), out.cppname)
+                    newline += indent + '//nnet::print_result<{}, {}>({}, fout);\n'.format(out.type.name, out.size_cpp(), out.cppname) #TODO enable this
             elif '//hls-fpga-machine-learning insert output' in line or '//hls-fpga-machine-learning insert quantized' in line:
                 newline = line
                 for out in model.get_output_variables():
