@@ -78,8 +78,6 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
     static const unsigned strategy = nnet::{strategy};
-    static const unsigned in_pack_factor = {in_factor};
-    static const unsigned out_pack_factor = {out_factor};
     static const unsigned min_height = {min_height};
     static const unsigned min_width = {min_width};
     static const ap_uint<filt_height * filt_width> pixels[min_height * min_width];
@@ -133,8 +131,6 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
     static const unsigned pad_right = {pad_right};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     static const unsigned reuse = {reuse};
-    static const unsigned in_pack_factor = {in_factor};
-    static const unsigned out_pack_factor = {out_factor};
 }};\n"""
 
 merge_config_template = """struct config{index} : nnet::merge_config {{

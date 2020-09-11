@@ -25,6 +25,7 @@
 #include "hls_stream.h"
 #include "nnet_common.h"
 #include "nnet_types.h"
+#include "nnet_stream.h"
 #include "nnet_activation.h"
 
 namespace nnet {
@@ -34,14 +35,20 @@ namespace nnet {
 // *************************************************
 template<class data_T, class res_T, typename CONFIG_T>
 void linear(hls::stream<data_T> &data, hls::stream<res_T> &res) {
-    for (int i = 0; i < CONFIG_T::n_in; i++) {
+    hls::stream<res_T> data_repack("linear_data_repack");
+    repack_stream<data_T, res_T, CONFIG_T::n_in>(data, data_repack);
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
-        data_T in_data = data.read();
+        res_T in_data = data_repack.read();
         res_T out_data;
         #pragma HLS DATA_PACK variable=out_data
 
-        out_data = in_data;
+        for (int j = 0; j < res_T::size; j++) {
+            #pragma HLS UNROLL
+            out_data[j] = in_data[j];
+        }
+
         res.write(out_data);
     }
 }
@@ -52,14 +59,16 @@ void linear(hls::stream<data_T> &data, hls::stream<res_T> &res) {
 // *************************************************
 template<class data_T, class res_T, typename CONFIG_T>
 void relu(hls::stream<data_T> &data, hls::stream<res_T> &res) {
-    for (int i = 0; i < CONFIG_T::n_in / data_T::size; i++) {
+    hls::stream<res_T> data_repack("relu_data_repack");
+    repack_stream<data_T, res_T, CONFIG_T::n_in>(data, data_repack);
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
-        data_T in_data = data.read();
+        res_T in_data = data_repack.read();
         res_T out_data;
         #pragma HLS DATA_PACK variable=out_data
 
-        for (int j = 0; j < data_T::size; j++) {
+        for (int j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
             if (in_data[j] > 0) out_data[j] = in_data[j];
             else out_data[j] = 0;
@@ -90,18 +99,20 @@ void softmax(hls::stream<data_T> &data, hls::stream<res_T> &res){
         initialized = true;
     }
 
+    hls::stream<res_T> data_repack("softmax_data_repack");
+    repack_stream<data_T, res_T, CONFIG_T::n_in>(data, data_repack);
 
     // Calculate all the e^x's
     typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
-	#pragma HLS array_partition variable=exp_res complete
+    #pragma HLS array_partition variable=exp_res complete
     typename CONFIG_T::exp_table_t exp_sum(0);
-    for(unsigned i = 0; i < CONFIG_T::n_in / data_T::size; i++){
+    for(unsigned i = 0; i < CONFIG_T::n_in / res_T::size; i++){
         #pragma HLS PIPELINE
-        data_T in_pack = data.read();
-        for(unsigned j = 0; j < data_T::size; j++){
+        res_T in_pack = data_repack.read();
+        for(unsigned j = 0; j < res_T::size; j++){
             #pragma HLS UNROLL
-            unsigned x = softmax_idx_from_real_val<typename data_T::value_type, CONFIG_T>(in_pack[j]);
-            exp_res[i * data_T::size + j] = exp_table[x];
+            unsigned x = softmax_idx_from_real_val<typename res_T::value_type, CONFIG_T>(in_pack[j]);
+            exp_res[i * res_T::size + j] = exp_table[x];
         }
     }
 

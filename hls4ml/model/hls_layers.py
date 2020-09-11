@@ -59,12 +59,13 @@ class CompressedType(HLSType):
         return cpp_fmt.format(name=self.name, index=self.index_precision, precision=self.precision)
 
 class PackedType(HLSType):
-    def __init__(self, name, precision, n_elem, **kwargs):
+    def __init__(self, name, precision, n_elem, n_pack, **kwargs):
         super(PackedType, self).__init__(name, precision, **kwargs)
         self.n_elem = n_elem
+        self.n_pack = n_pack
 
     def definition_cpp(self):
-        return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=self.name, precision=self.precision, n_elem=self.n_elem)
+        return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=self.name, precision=self.precision, n_elem=str(self.n_elem) + '*' + str(self.n_pack))
 
 class Variable(object):
     def __init__(self, var_name, atype, **kwargs):
@@ -97,8 +98,7 @@ class ArrayVariable(Variable):
 
 class StreamVariable(Variable):
     def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, n_pack=1, depth=0, **kwargs):
-        n_elem = shape[-1] * n_pack
-        super(StreamVariable, self).__init__(var_name, PackedType(type_name, precision, n_elem, **kwargs), **kwargs)
+        super(StreamVariable, self).__init__(var_name, PackedType(type_name, precision, shape[-1], n_pack, **kwargs), **kwargs)
         self.shape = shape
         self.dim_names = dim_names
         if depth == 0:
@@ -640,9 +640,6 @@ class Conv2D(Layer):
             params['min_width'] = params['in_width']
             params['instructions'] = '0'
 
-        params['in_factor'] = self.model.config.get_config_value('PackFactor', 1)
-        params['out_factor'] = 1
-
         params['config_t'] = 'config{}_mult'.format(self.index)
         conv_config = self._config_template[0].format(**params)
 
@@ -692,9 +689,6 @@ class Pooling2D(Layer):
         params['out_height'] = self.get_output_variable().dim_names[0]
         params['out_width'] = self.get_output_variable().dim_names[1]
         params['n_filt'] = self.get_output_variable().dim_names[2]
-
-        params['in_factor'] = self.model.config.get_config_value('PackFactor', 1)
-        params['out_factor'] = 1
 
         return self._config_template.format(**params)
 
