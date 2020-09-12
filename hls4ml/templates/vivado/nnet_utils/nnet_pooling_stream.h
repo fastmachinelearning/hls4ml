@@ -120,7 +120,7 @@ void pooling2d_cl(
     assert(CONFIG_T::pool_op == Max);
 
     constexpr int in_height = (CONFIG_T::in_height / CONFIG_T::pool_height) * CONFIG_T::pool_height;
-    constexpr int in_width = DIV_ROUNDUP((CONFIG_T::in_width / CONFIG_T::pool_width) * CONFIG_T::pool_width, data_T::size / CONFIG_T::n_filt);
+    constexpr int in_width = DIV_ROUNDUP((CONFIG_T::in_width / CONFIG_T::pool_width) * CONFIG_T::pool_width, (data_T::size / CONFIG_T::n_filt));
 
     res_T res_pack;
     #pragma HLS DATA_PACK variable=res_pack
