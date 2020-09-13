@@ -35,7 +35,7 @@ def boxplot(data, fmt='longform'):
         vp.set_yticklabels(vp.get_yticklabels(), rotation=45, ha='right')
         if hue is not None:
             vp.get_legend().remove()
-        vp.set_xscale('log', basex=2)
+        vp.set_xscale('log', base=2)
         return f
     elif fmt == 'summary':
         from matplotlib.patches import Rectangle
@@ -53,7 +53,7 @@ def boxplot(data, fmt='longform'):
             rect = Rectangle((xl, yl), (xh-xl), (yh-yl), fill=True, color=color)
             ax.add_patch(rect)
         ax.set_yticklabels([d['weight'] for d in data])
-        ax.set_xscale('log', basex=2)
+        ax.set_xscale('log', base=2)
         plt.xlabel('x')
         return f
     else:

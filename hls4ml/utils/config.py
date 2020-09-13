@@ -70,7 +70,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     conv_layers = ['Conv1D', 'Conv2D', 'BinaryConv2D']
     pooling_layers = ['MaxPooling1D', 'MaxPooling2D', 'AveragePooling1D', 'AveragePooling2D']
     norm_layers = ['BatchNormalization']
-    activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']
+    activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
     merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate']
     qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D']
     #Define layers to skip for conversion to HLS
@@ -89,7 +89,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
         input_layer['name'] = 'input1'
         input_layer['class_name'] = 'InputLayer'
         layer_list.append(input_layer)
-    elif model_arch['class_name'] == 'Model':
+    elif model_arch['class_name'] in ['Model', 'Functional']:
         print('Interpreting Model')
         keras_layer_config = model_arch['config']['layers']
 
@@ -144,9 +144,12 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             layer_config['Precision'] = default_precision
             layer_config['ReuseFactor'] = default_reuse_factor
             layer_config['table_size'] = 1024
-            if layer['class_name'] == 'Softmax':
-               layer_config['exp_table_t'] = 'ap_fixed<18,8>'
-               layer_config['inv_table_t'] = 'ap_fixed<18,8>'
+            is_softmax = layer['class_name'] == 'Softmax'
+            if 'activation' in layer['config'].keys():
+                is_softmax = is_softmax or (layer['config']['activation'] == 'softmax')
+            if is_softmax:
+               layer_config['exp_table_t'] = 'ap_fixed<18,8,AP_RND,AP_SAT>'
+               layer_config['inv_table_t'] = 'ap_fixed<18,8,AP_RND,AP_SAT>'
             else:
                 layer_config['table_t'] = 'ap_fixed<18,8>'
         

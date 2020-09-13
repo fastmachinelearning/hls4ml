@@ -542,6 +542,10 @@ class HLSModel(object):
             else:
                 raise Exception('Backend values can be [Vivado, Intel, Mentor]')
 
+        if not os.path.exists(self.config.get_output_dir()):
+            # Assume the project wasn't written before
+            self.write()
+
         curr_dir = os.getcwd()
         os.chdir(self.config.get_output_dir())
         os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
