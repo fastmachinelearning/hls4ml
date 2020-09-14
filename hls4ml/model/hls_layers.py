@@ -84,10 +84,16 @@ class PackedType(HLSType):
     def __init__(self, name, precision, n_elem, n_pack, **kwargs):
         super(PackedType, self).__init__(name, precision, **kwargs)
         self.n_elem = n_elem
-        self.n_pack = n_pack
+        if n_pack < 0:
+            self.n_pack = -n_pack
+            self.unpack = True
+        else:
+            self.n_pack = n_pack
+            self.unpack = False
 
     def definition_cpp(self):
-        return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=self.name, precision=self.precision, n_elem=str(self.n_elem) + '*' + str(self.n_pack))
+        n_elem_expr = '/' if self.unpack else '*'
+        return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=self.name, precision=self.precision, n_elem=str(self.n_elem) + n_elem_expr + str(self.n_pack))
 
 class Variable(object):
     def __init__(self, var_name, atype, **kwargs):
@@ -365,7 +371,7 @@ class Layer(object):
     def make_stream_variable(self, shape, dim_names, var_name='layer{index}_out', type_name='layer{index}_t', precision=None, depth=0):
         pack_factor = self.model.config.get_layer_config_value(self, 'PackFactor', default=1)
         
-        return StreamVariable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, pack_factor=pack_factor, depth=depth, index=self.index)
+        return StreamVariable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, n_pack=pack_factor, depth=depth, index=self.index)
 
     def add_weights(self, quantizer=None, compression=False):
         data = self.model.get_weights_data(self.name, 'kernel')

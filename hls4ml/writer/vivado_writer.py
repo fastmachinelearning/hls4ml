@@ -23,7 +23,8 @@ class VivadoWriter(Writer):
                '{precision} weight; }} {name};\n')
             return cpp_fmt.format(name=atype.name, index=atype.index_precision, precision=atype.precision)
         elif type_class == 'PackedType':
-            return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=atype.name, precision=atype.precision, n_elem=str(atype.n_elem) + '*' + str(atype.n_pack))
+            n_elem_expr = '/' if atype.unpack else '*'
+            return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=atype.name, precision=atype.precision, n_elem=str(atype.n_elem) + n_elem_expr + str(atype.n_pack))
         else:
             raise Exception('Unknown data type class "{}"'.format(type_class))
 
