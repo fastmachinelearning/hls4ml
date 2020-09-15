@@ -28,6 +28,10 @@
 
 namespace nnet {
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// CASE 1
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 template<class data_T, class res_T, typename CONFIG_T>
 void dense_large_rf_leq_nin(
     data_T data[CONFIG_T::n_in],
@@ -43,8 +47,8 @@ void dense_large_rf_leq_nin(
     const int nin = CONFIG_T::n_in;
     const int nout = CONFIG_T::n_out;
 
-    assert((multiplier_limit % nout == 0 || rufactor >= nin) && "The current Reuse Factor is not allowed");
-    assert((multiplier_limit == block_factor) && "This function is correct only for RF <= N_IN");
+    // assert((multiplier_limit % nout == 0 || rufactor >= nin) && "The current Reuse Factor is not allowed");
+    // assert((multiplier_limit == block_factor) && "This function is correct only for RF <= N_IN");
 
     #pragma HLS function_instantiate variable=weights,biases
     //#pragma HLS RESOURCE variable=weights core=RAM_2P_BRAM Commenting out the deisgnation HLS seems to choose correctly
@@ -75,6 +79,8 @@ void dense_large_rf_leq_nin(
 
             acc[out_index] += product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>(data[in_index], weights[w_index]);
 
+            printf("{%i,%i,%i}", in_index, w_index, out_index);
+
             // Increment w_index
             w_index += rufactor;
             // Increment in_index
@@ -89,7 +95,9 @@ void dense_large_rf_leq_nin(
             } else {
                 acc_step++;
             }
+
         }
+        printf("\n finished with block factor...\n");
     }
 
     // Cast to "res_t" type
@@ -99,6 +107,10 @@ void dense_large_rf_leq_nin(
         res[ires] = cast<data_T, res_T, CONFIG_T>(acc[ires]);
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// CASE 2
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<class data_T, class res_T, typename CONFIG_T>
 void dense_large_rf_gt_nin_rem0(
@@ -115,8 +127,8 @@ void dense_large_rf_gt_nin_rem0(
     const int nin = CONFIG_T::n_in;
     const int nout = CONFIG_T::n_out;
 
-    assert((multiplier_limit % nout == 0 || rufactor >= nin) && "The current Reuse Factor is not allowed");
-    assert((rufactor > nin && rufactor % nin == 0) && "This function is correct only for RF > N_IN && RF % N_IN == 0");
+    // assert((multiplier_limit % nout == 0 || rufactor >= nin) && "The current Reuse Factor is not allowed");
+    // assert((rufactor > nin && rufactor % nin == 0) && "This function is correct only for RF > N_IN && RF % N_IN == 0");
 
     #pragma HLS function_instantiate variable=weights,biases
     //#pragma HLS RESOURCE variable=weights core=RAM_2P_BRAM Commenting out the deisgnation HLS seems to choose correctly
@@ -132,43 +144,52 @@ void dense_large_rf_gt_nin_rem0(
         acc[iacc] = (typename CONFIG_T::accum_t) biases[iacc];
     }
 
-    int w_index;
-    int in_index = 0;
-    int out_index;
-    int outstep = 0;
+    // is this part needed???
+    // int w_index;
+    // int in_index = 0;
+    // int out_index;
+    // int outstep = 0;
     const int outscale = rufactor / nin;
 
-    int outidx[rufactor];
-    IndexLoop:
-    for (int ir = 0; ir < rufactor; ir++) {
-        outidx[ir] = outstep;
-        if ((ir + 1) % nin == 0) {
-            outstep++;
-        }
-    }
+    // int outidx[rufactor];
+    // IndexLoop:
+    // for (int ir = 0; ir < rufactor; ir++) {
+    //     outidx[ir] = outstep;
+    //     if ((ir + 1) % nin == 0) {
+    //         outstep++;
+    //     }
+    // }
 
     ReuseLoop:
     for (int ir = 0; ir < rufactor; ir++) {
         #pragma HLS PIPELINE II=1 rewind
 
-        w_index = ir;
-        out_index = outidx[ir]/*outstep*/;
+        int w_index = ir;
+        int in_index = ir % nin;
+        int out_index = ir / nin;
+        // out_index = outidx[ir]/*outstep*/;
+        // out_index = outstep;
 
         MultLoop:
         for (int im = 0; im < block_factor; im++) {
             #pragma HLS UNROLL
             acc[out_index] += product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>(data[in_index], weights[w_index]);
+            printf("{%i,%i,%i,%i,%i}\n", in_index, w_index, out_index,im,ir);
 
             w_index += rufactor;
-            if (w_index >= CONFIG_T::n_in * CONFIG_T::n_out) break; // check out of bounds
+            // if (w_index >= CONFIG_T::n_in * CONFIG_T::n_out){
+            //     printf("I AM OUT OF BOUNDS!!!!!\n");
+            //     break; // check out of bounds  
+            // } 
             out_index += outscale;
         }
 
-        in_index++;
-        if (in_index >= nin) {
-            in_index = 0;
-            //outstep++; // This causes a huge increase in scheduling and RTL generation times, hence the above workaround.
-        }
+        // in_index++;
+        // if (in_index >= nin) {
+        //     in_index = 0;
+        //     outstep++; // This causes a huge increase in scheduling and RTL generation times, hence the above workaround.
+        // }
+        printf("finished with block factor...\n");        
     }
 
     // Cast to "res_t" type
@@ -178,6 +199,10 @@ void dense_large_rf_gt_nin_rem0(
         res[ires] = cast<data_T, res_T, CONFIG_T>(acc[ires]);
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// CASE 3
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<class data_T, class res_T, typename CONFIG_T>
 void dense_large_rf_gt_nin(
@@ -270,13 +295,23 @@ void dense_large(
 
     #pragma HLS INLINE region
 
-    if (CONFIG_T::reuse_factor <= CONFIG_T::n_in) {
-        dense_large_rf_leq_nin<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-    } else if (CONFIG_T::reuse_factor % CONFIG_T::n_in == 0) {
-        dense_large_rf_gt_nin_rem0<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-    } else {
-        dense_large_rf_gt_nin<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-    }
+    // printf("Case 1!\n");
+    // dense_large_rf_leq_nin<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+
+    printf("Case 2!\n");
+    dense_large_rf_gt_nin_rem0<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+
+    // printf("Case 3!\n");
+    // dense_large_rf_gt_nin<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+
+    
+    // if (CONFIG_T::reuse_factor <= CONFIG_T::n_in) {
+    //     dense_large_rf_leq_nin<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+    // } else if (CONFIG_T::reuse_factor % CONFIG_T::n_in == 0) {
+    //     dense_large_rf_gt_nin_rem0<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+    // } else {
+    //     dense_large_rf_gt_nin<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+    // }
 }
 
 }
