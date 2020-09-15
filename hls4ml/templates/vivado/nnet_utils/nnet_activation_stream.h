@@ -36,7 +36,10 @@ namespace nnet {
 template<class data_T, class res_T, typename CONFIG_T>
 void linear(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     hls::stream<res_T> data_repack("linear_data_repack");
+    constexpr unsigned repack_depth = CONFIG_T::n_in / res_T::size;
+    #pragma HLS STREAM variable=data_repack depth=repack_depth
     repack_stream<data_T, res_T, CONFIG_T::n_in>(data, data_repack);
+    
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
@@ -60,7 +63,10 @@ void linear(hls::stream<data_T> &data, hls::stream<res_T> &res) {
 template<class data_T, class res_T, typename CONFIG_T>
 void relu(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     hls::stream<res_T> data_repack("relu_data_repack");
+    constexpr unsigned repack_depth = CONFIG_T::n_in / res_T::size;
+    #pragma HLS STREAM variable=data_repack depth=repack_depth
     repack_stream<data_T, res_T, CONFIG_T::n_in>(data, data_repack);
+    
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
@@ -100,6 +106,8 @@ void softmax(hls::stream<data_T> &data, hls::stream<res_T> &res){
     }
 
     hls::stream<res_T> data_repack("softmax_data_repack");
+    constexpr unsigned repack_depth = CONFIG_T::n_in / res_T::size;
+    #pragma HLS STREAM variable=data_repack depth=repack_depth
     repack_stream<data_T, res_T, CONFIG_T::n_in>(data, data_repack);
 
     // Calculate all the e^x's
