@@ -372,8 +372,8 @@ transpose_include_list = ['nnet_utils/nnet_array.h']
 garnet_include_list = ['nnet_utils/nnet_garnet.h']
 
 class VivadoBackend(Backend):
-    def __init__(self):
-        super(VivadoBackend, self).__init__('Vivado')
+    def __init__(self, name='Vivado'):
+        super(VivadoBackend, self).__init__(name)
         self.register_templates('Dense', dense_function_template, dense_config_template, dense_include_list)
         self.register_templates('BinaryDense'            , dense_function_template,       dense_config_template, dense_include_list)
         self.register_templates('BatchNormalization'     , batchnorm_function_template,   batchnorm_config_template, batchnorm_include_list)

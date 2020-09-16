@@ -31,7 +31,8 @@ repack_include_list = ['nnet_utils/nnet_stream.h']
 register_layer('Repack', Repack)
 
 # Register the templates for config and function
-templates.get_backend('Vivado').register_templates('Repack', repack_function_template, None, repack_include_list)
+for backend in ['Vivado', 'Pynq']:
+    templates.get_backend(backend).register_templates('Repack', repack_function_template, None, repack_include_list)
 
 
 class ReshapeStream(OptimizerPass):
@@ -40,7 +41,7 @@ class ReshapeStream(OptimizerPass):
         return node.__class__.__name__ == 'Reshape'
 
     def transform(self, model, node):
-        if model.config.backend.name != 'Vivado' or \
+        if model.config.backend.name not in ['Vivado', 'Pynq'] or \
             model.config.get_config_value('IOType') != 'io_stream':
             return False
 

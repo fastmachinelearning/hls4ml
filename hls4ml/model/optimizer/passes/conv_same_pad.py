@@ -8,7 +8,7 @@ class InsertZeroPaddingBeforeConv1D(OptimizerPass):
         return is_match
 
     def transform(self, model, node):
-        if model.config.backend.name != 'Vivado' or \
+        if model.config.backend.name not in ['Vivado', 'Pynq'] or \
             model.config.get_config_value('IOType') != 'io_stream':
             return False
         
@@ -48,7 +48,7 @@ class InsertZeroPaddingBeforeConv2D(OptimizerPass):
         return is_match
 
     def transform(self, model, node):
-        if model.config.backend.name != 'Vivado' or \
+        if model.config.backend.name not in ['Vivado', 'Pynq'] or \
             model.config.get_config_value('IOType') != 'io_stream':
             return False
         

@@ -1,5 +1,5 @@
 from urllib.request import urlretrieve
-from .config import create_vivado_config
+from .config import create_backend_config
 import pprint
 import json
 import yaml
@@ -35,7 +35,7 @@ def _config_is_available(model_name):
 def _create_default_config(model_name, model_config):
 
     #Initiate the configuration file
-    config = create_vivado_config()
+    config = create_backend_config()
 
     #Additional configuration parameters
     config[model_config] = model_name
@@ -130,7 +130,7 @@ def fetch_example_model(model_name):
     
 
     download_link_model = download_link + model_type + '/' + model_name
-    
+
     #Download the example model
     print("Downloading example model files ...")
     urlretrieve(download_link_model, model_name)

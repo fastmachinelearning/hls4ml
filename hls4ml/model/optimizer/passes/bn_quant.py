@@ -76,7 +76,8 @@ batchnorm_quantized_tanh_function_template = 'nnet::normalize_{quantize}_tanh<{i
 register_layer('BatchNormalizationQuantizedTanh', BatchNormalizationQuantizedTanh)
 
 # Register the templates for config and function
-templates.get_backend('Vivado').register_templates('BatchNormalizationQuantizedTanh', batchnorm_quantized_tanh_function_template, batchnorm_quantized_tanh_config_template)
+for backend in ['Vivado', 'Pynq']:
+    templates.get_backend(backend).register_templates('BatchNormalizationQuantizedTanh', batchnorm_quantized_tanh_function_template, batchnorm_quantized_tanh_config_template)
 
 class MergeBatchNormAndQuantizedTanh(OptimizerPass):
     def match(self, node):

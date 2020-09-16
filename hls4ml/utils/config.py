@@ -5,8 +5,9 @@ import json
 import math
 from collections import OrderedDict
 
-def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
-    fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
+def create_backend_config(output_dir='my-hls-test', project_name='myproject',
+                          fpga_part='xcku115-flvb2104-2-i', clock_period=5, backend='Vivado',
+                          io_type='io_parallel'):
     
     config = {}
     
@@ -14,7 +15,7 @@ def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
     config['ProjectName'] = project_name
     config['XilinxPart'] = fpga_part
     config['ClockPeriod'] = clock_period
-    config['Backend'] = 'Vivado'
+    config['Backend'] = backend
     config['IOType'] = io_type
     config['HLSConfig'] = {}
 

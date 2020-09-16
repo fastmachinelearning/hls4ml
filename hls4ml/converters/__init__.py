@@ -3,7 +3,7 @@ import os
 import yaml
 import importlib
 
-from hls4ml.utils.config import create_vivado_config
+from hls4ml.utils.config import create_backend_config
 
 from hls4ml.converters.keras_to_hls import keras_to_hls, get_supported_keras_layers, register_keras_layer_handler
 
@@ -118,7 +118,8 @@ def convert_from_config(config):
     return model
 
 def convert_from_keras_model(model, output_dir='my-hls-test', project_name='myproject',
-    fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
+    fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}, 
+    backend='Vivado'):
     """Convert to hls4ml model based on the provided configuration.
 
     Args:
@@ -134,6 +135,8 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
         io_type (str, optional): Type of implementation used. One of
             'io_parallel' or 'io_serial'. Defaults to 'io_parallel'.
         hls_config (dict, optional): The HLS config.
+        backend (str, optional): Name of backend. One of 'Vivado', 'Pynq', 
+        'Intel', or 'Mentor'.
 
     Raises:
         Exception: If precision and reuse factor are not present in 'hls_config'
@@ -142,13 +145,15 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
         HLSModel: hls4ml model.
     """
 
-    config = create_vivado_config(
+    config = create_backend_config(
         output_dir=output_dir,
         project_name=project_name,
         fpga_part=fpga_part,
         clock_period=clock_period,
-        io_type=io_type
+        io_type=io_type,
+        backend=backend
     )
+
     config['KerasModel'] = model
 
     model_config = hls_config.get('Model', None)
