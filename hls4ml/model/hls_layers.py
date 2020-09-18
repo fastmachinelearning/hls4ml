@@ -741,11 +741,18 @@ class ZeroPadding2D(Layer):
 
     def config_cpp(self):
         params = self._default_config_params()
-        params['in_height'] = self.get_input_variable().dim_names[0]
-        params['in_width'] = self.get_input_variable().dim_names[1]
-        params['out_height'] = self.get_output_variable().dim_names[0]
-        params['out_width'] = self.get_output_variable().dim_names[1]
-        params['n_chan'] = self.get_output_variable().dim_names[2]
+        if self.get_attr('data_format') == 'channels_last':
+            params['in_height'] = self.get_input_variable().dim_names[0]
+            params['in_width'] = self.get_input_variable().dim_names[1]
+            params['n_chan'] = self.get_input_variable().dim_names[2]
+            params['out_height'] = self.get_output_variable().dim_names[0]
+            params['out_width'] = self.get_output_variable().dim_names[1]
+        else:
+            params['n_chan'] = self.get_input_variable().dim_names[0]
+            params['in_height'] = self.get_input_variable().dim_names[1]
+            params['in_width'] = self.get_input_variable().dim_names[2]
+            params['out_height'] = self.get_output_variable().dim_names[1]
+            params['out_width'] = self.get_output_variable().dim_names[2]
 
         return self._config_template.format(**params)
 
