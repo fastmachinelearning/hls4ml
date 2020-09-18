@@ -26,7 +26,7 @@ void zeropad2d_cf(
     for(int k = 0; k < CONFIG_T::n_chan; k++) {
 
         for (int i = 0; i < CONFIG_T::pad_top; i++) {
-            for (int j = 0; j < CONFIG_T::pad_left + CONFIG_T::in_width + CONFIG_T::pad_right; j++) {
+            for (int j = 0; j < CONFIG_T::out_width; j++) {
                 *(res++) = 0;
             }
         }
@@ -44,7 +44,7 @@ void zeropad2d_cf(
         }
 
         for (int i = 0; i < CONFIG_T::pad_bottom; i++) {
-            for (int j = 0; j < CONFIG_T::pad_left + CONFIG_T::in_width + CONFIG_T::pad_right; j++) {
+            for (int j = 0; j < CONFIG_T::out_width; j++) {
                 *(res++) = 0;
             }
         }
@@ -57,7 +57,7 @@ void zeropad2d_cl(
     res_T res[CONFIG_T::n_chan * CONFIG_T::out_height * CONFIG_T::out_width]
 ) {
     for (int i = 0; i < CONFIG_T::pad_top; i++) {
-        for (int j = 0; j < CONFIG_T::pad_left + CONFIG_T::in_width + CONFIG_T::pad_right; j++) {
+        for (int j = 0; j < CONFIG_T::out_width; j++) {
             for(int k = 0; k < CONFIG_T::n_chan; k++) {
                 *(res++) = 0;
             }
@@ -83,7 +83,7 @@ void zeropad2d_cl(
     }
 
     for (int i = 0; i < CONFIG_T::pad_bottom; i++) {
-        for (int j = 0; j < CONFIG_T::pad_left + CONFIG_T::in_width + CONFIG_T::pad_right; j++) {
+        for (int j = 0; j < CONFIG_T::out_width; j++) {
             for(int k = 0; k < CONFIG_T::n_chan; k++) {
                 *(res++) = 0;
             }
