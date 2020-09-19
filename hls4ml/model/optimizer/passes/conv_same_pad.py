@@ -7,8 +7,8 @@ class InsertZeroPaddingBeforeConv2D(OptimizerPass):
         return is_match
 
     def transform(self, model, node):
-        if model.config.backend.name != 'Vivado' and \
-            model.config.get_config_value('IOType') == 'io_stream':
+        if model.config.backend.name != 'Vivado' or \
+            model.config.get_config_value('IOType') != 'io_stream':
             return False
         
         # Get the padding parameters from Conv2D layer

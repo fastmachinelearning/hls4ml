@@ -564,7 +564,7 @@ class Conv1D(Layer):
         self.add_weights(quantizer = self.get_attr('weight_quantizer'))
         self.add_bias(quantizer = self.get_attr('bias_quantizer'))
         if self.model.config.is_resource_strategy(self):
-            self.set_attr('strategy', 'large')
+            self.set_attr('strategy', 'resource')
             if self.model.config.backend.name == 'Vivado':
                 self.model.config.backend.set_closest_reuse_factor(self)
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 1, 0]) #(W,C,F) => (F,C,W)
@@ -620,7 +620,7 @@ class Conv2D(Layer):
         self.add_weights(quantizer=self.get_attr('weight_quantizer'))
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
         if self.model.config.is_resource_strategy(self):
-            self.set_attr('strategy', 'large')
+            self.set_attr('strategy', 'resource')
             if self.model.config.backend.name == 'Vivado':
                 self.model.config.backend.set_closest_reuse_factor(self)
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)

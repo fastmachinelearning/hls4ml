@@ -18,7 +18,7 @@ class FuseDenseAndBatchNormalization(OptimizerPass):
         bn_scale = node.weights['scale']
         bn_bias = node.weights['bias']
 
-        if dense_node.get_attr('strategy') != 'large':
+        if dense_node.get_attr('strategy') != 'resource':
             fused_weight = bn_scale.data * dense_weight.data
         else:
             fused_weight = (bn_scale.data * dense_weight.data.T).T
