@@ -7,6 +7,19 @@
 
 namespace nnet {
 
+template <class T, int N, class CONFIG_T>
+T reduce_pool(T x[N]) {
+    #pragma HLS INLINE
+    if (CONFIG_T::pool_op == Max) {
+        Op_max<T> op_max;
+        return reduce<T, N, Op_max<T>>(x, op_max);
+    } else {
+        Op_add<T> op_add;
+        T sum = reduce<T, N, Op_add<T>>(x, op_add);
+        return sum / (CONFIG_T::pool_height * CONFIG_T::pool_width);
+    }
+}
+
 template<typename CONFIG_T>
 void init_pool_tables(
     unsigned table_height[CONFIG_T::in_height],
@@ -62,8 +75,6 @@ void compute_pool(
     typename data_T::value_type pool_window[CONFIG_T::pool_height * CONFIG_T::pool_width];
     #pragma HLS ARRAY_PARTITION variable=pool_window complete
 
-    Op_max<typename data_T::value_type> op_max;
-
     const unsigned sh_idx = pool_table_height[h_idx] * CONFIG_T::pool_width;
     const unsigned wp_idx = w_idx * (data_T::size / CONFIG_T::n_filt);
 
@@ -85,9 +96,9 @@ void compute_pool(
                     pool_window[f] = data_window[c * CONFIG_T::pool_height * CONFIG_T::pool_width + f].read();
                 }
                 if (res_T::size / CONFIG_T::n_filt == 1) { // Saves resources if we don't pack output, compiler will remove the else branch
-                    res_pack[c] = reduce<typename data_T::value_type, CONFIG_T::pool_height * CONFIG_T::pool_width, Op_max<typename data_T::value_type>>(pool_window, op_max);
+                    res_pack[c] = reduce_pool<typename data_T::value_type, CONFIG_T::pool_height * CONFIG_T::pool_width, CONFIG_T>(pool_window);
                 } else {
-                    res_pack[outputs_ready * CONFIG_T::n_filt + c] = reduce<typename data_T::value_type, CONFIG_T::pool_height * CONFIG_T::pool_width, Op_max<typename data_T::value_type>>(pool_window, op_max);
+                    res_pack[outputs_ready * CONFIG_T::n_filt + c] = reduce_pool<typename data_T::value_type, CONFIG_T::pool_height * CONFIG_T::pool_width, CONFIG_T>(pool_window);
                 }
 
             }
@@ -114,8 +125,6 @@ void pooling2d_cl(
 ) {
     assert(CONFIG_T::pad_top == 0 && CONFIG_T::pad_bottom == 0 && CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
     assert(CONFIG_T::pool_height == CONFIG_T::stride_height && CONFIG_T::pool_width == CONFIG_T::stride_width);
-
-    assert(CONFIG_T::pool_op == Max);
 
     res_T res_pack;
     #pragma HLS DATA_PACK variable=res_pack
