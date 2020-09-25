@@ -21,12 +21,24 @@ void init_pool_tables(
     }
 }
 
-template<class data_T, typename CONFIG_T>
-void compute_pool_indices(
+template<class data_T, class res_T, typename CONFIG_T>
+void compute_pool(
     const unsigned h_idx,
     const unsigned w_idx,
-    ap_uint<CONFIG_T::pool_height * CONFIG_T::pool_width> *pixel_idx
+    const data_T& in_elem,
+    hls::stream<typename data_T::value_type> data_window[CONFIG_T::pool_height * CONFIG_T::pool_width * CONFIG_T::n_filt],
+    hls::stream<res_T> &res,
+    res_T &res_pack,
+    unsigned &outputs_ready
 ) {
+    // Nearest H without unused pixels on the right
+    constexpr unsigned nH = ((CONFIG_T::in_height - CONFIG_T::pool_height) / CONFIG_T::stride_height) * CONFIG_T::stride_height + CONFIG_T::pool_height;
+    // Scaled H that behaves like original H
+    constexpr unsigned sH = (DIV_ROUNDUP(CONFIG_T::pool_height, CONFIG_T::stride_height) - 1) * CONFIG_T::stride_height + CONFIG_T::pool_height;
+    // Nearest W without unused pixels on the right
+    constexpr unsigned nW = ((CONFIG_T::in_width - CONFIG_T::pool_width) / CONFIG_T::stride_width) * CONFIG_T::stride_width + CONFIG_T::pool_width;
+    // Scaled W that behaves like original W
+    constexpr unsigned sW = (DIV_ROUNDUP(CONFIG_T::pool_width, CONFIG_T::stride_width) - 1) * CONFIG_T::stride_width + CONFIG_T::pool_width;
 
 #ifdef __SYNTHESIS__
     bool initialized = false;
@@ -42,46 +54,32 @@ void compute_pool_indices(
         initialized = true;
     }
 
-    ComputeIndex: for (unsigned p = 0; p < data_T::size / CONFIG_T::n_filt; p++) {
-        #pragma HLS UNROLL
-        ap_uint<CONFIG_T::pool_height * CONFIG_T::pool_width> filt_mask = 0;
-        filt_mask[pool_table_height[h_idx] * CONFIG_T::pool_width + pool_table_width[w_idx * (data_T::size / CONFIG_T::n_filt) + p]] = 1;
-        pixel_idx[p] = filt_mask;
+    if (data_T::size / CONFIG_T::n_filt > 1) {
+        #pragma HLS ARRAY_PARTITION variable=pool_table_height complete
+        #pragma HLS ARRAY_PARTITION variable=pool_table_width complete
     }
-}
 
-template<class data_T, typename CONFIG_T>
-void fill_pool_buffer(
-    const data_T& in_elem,
-    ap_uint<CONFIG_T::pool_height * CONFIG_T::pool_width> *pixel_idx,
-    hls::stream<typename data_T::value_type> data_window[CONFIG_T::pool_height * CONFIG_T::pool_width * CONFIG_T::n_filt]
-) {
-    CopyDataPack: for (unsigned p = 0; p < data_T::size / CONFIG_T::n_filt; p++) {
-        #pragma HLS PIPELINE
-        CopyDataFilt: for (unsigned c = 0; c < CONFIG_T::n_filt; c++) {
-            CopyDataPool: for (unsigned f = 0; f < CONFIG_T::pool_height * CONFIG_T::pool_width; f++) {
-                if (pixel_idx[p][f]) data_window[c * CONFIG_T::pool_height * CONFIG_T::pool_width + f].write_nb(in_elem[p * CONFIG_T::n_filt + c]);
-            }
-        }
-    }
-}
-
-template<class data_T, class res_T, typename CONFIG_T>
-void compute_pool(
-    hls::stream<typename data_T::value_type> data_window[CONFIG_T::pool_height * CONFIG_T::pool_width * CONFIG_T::n_filt],
-    ap_uint<CONFIG_T::pool_height * CONFIG_T::pool_width> *pixel_idx,
-    hls::stream<res_T> &res,
-    res_T &res_pack,
-    unsigned &outputs_ready
-) {
     typename data_T::value_type pool_window[CONFIG_T::pool_height * CONFIG_T::pool_width];
     #pragma HLS ARRAY_PARTITION variable=pool_window complete
 
     Op_max<typename data_T::value_type> op_max;
 
+    const unsigned sh_idx = pool_table_height[h_idx] * CONFIG_T::pool_width;
+    const unsigned wp_idx = w_idx * (data_T::size / CONFIG_T::n_filt);
+
     PixelLoop: for (unsigned p = 0; p < data_T::size / CONFIG_T::n_filt; p++) {
         #pragma HLS PIPELINE
-        if (pixel_idx[p][CONFIG_T::pool_height * CONFIG_T::pool_width - 1]) {
+
+        ap_uint<CONFIG_T::pool_height * CONFIG_T::pool_width> filt_mask = 0;
+        if ((h_idx < nH) && (wp_idx + p < nW)) {
+            filt_mask = sh_idx + pool_table_width[wp_idx + p] + 1;
+        }
+
+        CopyDataFilt: for (unsigned c = 0; c < CONFIG_T::n_filt; c++) {
+            if (filt_mask > 0) data_window[c * CONFIG_T::pool_height * CONFIG_T::pool_width + filt_mask - 1].write_nb(in_elem[p * CONFIG_T::n_filt + c]);
+        }
+
+        if (filt_mask == CONFIG_T::pool_height * CONFIG_T::pool_width) {
             FiltLoop: for(unsigned c = 0; c < CONFIG_T::n_filt; c++) {
                 PoolLoop: for(unsigned f = 0; f < CONFIG_T::pool_height * CONFIG_T::pool_width; f++) {
                     pool_window[f] = data_window[c * CONFIG_T::pool_height * CONFIG_T::pool_width + f].read();
@@ -103,11 +101,11 @@ void compute_pool(
                     outputs_ready++;
                 }
             }
-
-
         }
     }
 }
+
+
 
 template<class data_T, class res_T, typename CONFIG_T>
 void pooling2d_cl(
@@ -118,9 +116,6 @@ void pooling2d_cl(
     assert(CONFIG_T::pool_height == CONFIG_T::stride_height && CONFIG_T::pool_width == CONFIG_T::stride_width);
 
     assert(CONFIG_T::pool_op == Max);
-
-    constexpr int in_height = (CONFIG_T::in_height / CONFIG_T::pool_height) * CONFIG_T::pool_height;
-    constexpr int in_width = DIV_ROUNDUP((CONFIG_T::in_width / CONFIG_T::pool_width) * CONFIG_T::pool_width, (data_T::size / CONFIG_T::n_filt));
 
     res_T res_pack;
     #pragma HLS DATA_PACK variable=res_pack
@@ -136,21 +131,11 @@ void pooling2d_cl(
     ap_uint<CONFIG_T::pool_height * CONFIG_T::pool_width> pixel_idx[data_T::size / CONFIG_T::n_filt];
     #pragma HLS ARRAY_PARTITION variable=pixel_idx complete
 
-    ReadInputHeight: for (unsigned i_ih = 0; i_ih < in_height; i_ih++) {
-        ReadInputWidth: for (unsigned i_iw = 0; i_iw < in_width; i_iw++) {
+    ReadInputHeight: for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
+        ReadInputWidth: for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width / (data_T::size / CONFIG_T::n_filt); i_iw++) {
             #pragma HLS LOOP_FLATTEN
-            compute_pool_indices<data_T, CONFIG_T>(i_ih, i_iw, pixel_idx);
-            fill_pool_buffer<data_T, CONFIG_T>(data.read(), pixel_idx, data_window);
-            compute_pool<data_T, res_T, CONFIG_T>(data_window, pixel_idx, res, res_pack, outputs_ready);
+            compute_pool<data_T, res_T, CONFIG_T>(i_ih, i_iw, data.read(), data_window, res, res_pack, outputs_ready);
         }
-        DiscardExtraColumns: for (int i_iw = 0; i_iw < CONFIG_T::in_width - in_width; i_iw++) {
-            // Discard remaining columns
-            data.read();
-        }
-    }
-    DiscardExtraRows: for (int i_ih = 0; i_ih < (CONFIG_T::in_height - in_height) * (CONFIG_T::in_width / (data_T::size / CONFIG_T::n_filt)); i_ih++) {
-        // Discard remaining rows
-        data.read();
     }
 }
 

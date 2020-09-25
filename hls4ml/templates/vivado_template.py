@@ -285,8 +285,8 @@ conv2d_function_template = 'nnet::conv_2d_{data_format}<{input_t}, {output_t}, {
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
 param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {param}, {output});'
 pooling1d_function_template = 'nnet::pooling1d<{input_t}, {config}>({input}, {output});'
-pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {input_t}, {config}>({input}, {output});'
-zeropad2d_function_template = 'nnet::zeropad2d_{data_format}<{input_t}, {input_t}, {config}>({input}, {output});'
+pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
+zeropad2d_function_template = 'nnet::zeropad2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
 resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
 transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}, {output});'
@@ -418,10 +418,10 @@ class VivadoBackend(Backend):
         min_oH = int((min_H - kernel_height) // stride_height + 1)
         min_oW = int((min_W - kernel_width) // stride_width + 1)
 
-        out_H = int((in_H - kernel_size) // stride_height + 1)
-        out_W = int((in_W - kernel_size) // stride_width + 1)
-        scaled_H = (out_H - 1) * stride_height + kernel_size
-        scaled_W = (out_W - 1) * stride_width + kernel_size
+        out_H = int((in_H - kernel_height) // stride_height + 1)
+        out_W = int((in_W - kernel_width) // stride_width + 1)
+        scaled_H = (out_H - 1) * stride_height + kernel_height
+        scaled_W = (out_W - 1) * stride_width + kernel_width
 
         if scaled_H < in_H:
             min_H += 1
@@ -429,11 +429,11 @@ class VivadoBackend(Backend):
             min_W += 1
 
         # Let's hardcode a few common cases:
-        if kernel_size == 1 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
+        if kernel_height == 1 and kernel_width == 1 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
             return (1, 1, map(str, [1]))
-        if kernel_size == 3 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
+        if kernel_height == 3 and kernel_width == 3 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
             return (5, 5, map(str, [1,3,7,6,4,9,27,63,54,36,73,219,511,438,292,72,216,504,432,288,64,192,448,384,256]))
-        if kernel_size == 5 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
+        if kernel_height == 5 and kernel_width == 5 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
             return (9, 9, map(str, [1,3,7,15,31,30,28,24,16,33,99,231,495,1023,990,924,792,528,1057,3171,7399,15855,
                              32767,31710,29596,25368,16912,33825,101475,236775,507375,1048575,1014750,947100,
                              811800,541200,1082401,3247203,7576807,16236015,33554431,32472030,30307228,25977624,
