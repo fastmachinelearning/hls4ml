@@ -134,6 +134,23 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
     static const unsigned reuse = {reuse};
 }};\n"""
 
+global_pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
+    static const unsigned n_in = {n_in};
+    static const unsigned n_out = {n_out};
+    static const unsigned pad_left = {pad_left};
+    static const unsigned pad_right = {pad_right};
+    static const unsigned stride = {stride};
+    static const nnet::Pool_Op pool_op = nnet::{pool_op};
+}};\n"""
+
+global_pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
+    static const unsigned in_height = {in_height};
+    static const unsigned in_width = {in_width};
+    static const unsigned n_filt = {n_filt};
+    static const nnet::Pool_Op pool_op = nnet::{pool_op};
+    static const unsigned reuse = {reuse};
+}};\n"""
+
 zeropad2d_config_template = """struct config{index} : nnet::padding2d_config {{
     static const unsigned in_height = {in_height};
     static const unsigned in_width = {in_width};
@@ -286,6 +303,8 @@ activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({
 param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {param}, {output});'
 pooling1d_function_template = 'nnet::pooling1d<{input_t}, {config}>({input}, {output});'
 pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
+global_pooling1d_function_template = 'nnet::global_pooling1d<{input_t}, {config}>({input}, {output});'
+global_pooling2d_function_template = 'nnet::global_pooling2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 zeropad2d_function_template = 'nnet::zeropad2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
 resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
@@ -319,6 +338,8 @@ class VivadoBackend(Backend):
         self.register_templates('Softmax'                , activ_function_template,       softmax_config_template, activ_include_list)
         self.register_templates('Pooling1D'              , pooling1d_function_template,   pooling1d_config_template, pooling_include_list)
         self.register_templates('Pooling2D'              , pooling2d_function_template,   pooling2d_config_template, pooling_include_list)
+        self.register_templates('GlobalPooling1D'        , global_pooling1d_function_template,   global_pooling1d_config_template, pooling_include_list)
+        self.register_templates('GlobalPooling2D'        , global_pooling2d_function_template,   global_pooling2d_config_template, pooling_include_list)
         self.register_templates('ZeroPadding2D'          , zeropad2d_function_template,   zeropad2d_config_template, padding_include_list)
         self.register_templates('Merge'                  , merge_function_template,       merge_config_template, merge_include_list)
         self.register_templates('Concatenate'            , merge_function_template,       concat_config_template, merge_include_list)

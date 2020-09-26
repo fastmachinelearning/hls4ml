@@ -84,3 +84,29 @@ def parse_pooling_layer(keras_layer, input_names, input_shapes, data_reader, con
             output_shape=[input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
     
     return layer, output_shape
+
+pooling_layers = ['GlobalMaxPooling1D', 'GlobalMaxPooling2D', 'GlobalAveragePooling1D', 'GlobalAveragePooling2D']
+@keras_handler(*pooling_layers)
+def parse_global_pooling_layer(keras_layer, input_names, input_shapes, data_reader, config):
+    assert('Pooling' in keras_layer['class_name'])
+
+    layer = parse_default_keras_layer(keras_layer, input_names)
+
+    if int(layer['class_name'][-2]) == 1:
+        layer['n_in']=input_shapes[0][1]
+        layer['n_filt']=input_shapes[0][2]
+        output_shape=[input_shapes[0][0], layer['n_filt']]
+    elif int(layer['class_name'][-2]) == 2:
+        layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
+        
+        if layer['data_format'] == 'channels_last':
+            layer['in_height']=input_shapes[0][1]
+            layer['in_width']=input_shapes[0][2]
+            layer['n_filt']=input_shapes[0][3]
+        elif layer['data_format'] == 'channels_first':
+            layer['in_height']=input_shapes[0][2]
+            layer['in_width']=input_shapes[0][3]
+            layer['n_filt']=input_shapes[0][1]
+        output_shape=[input_shapes[0][0], layer['n_filt']]
+    
+    return layer, output_shape

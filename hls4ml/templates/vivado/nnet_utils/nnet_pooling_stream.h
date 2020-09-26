@@ -1,11 +1,16 @@
 #ifndef NNET_POOLING_STREAM_H_
 #define NNET_POOLING_STREAM_H_
 
+#include "utils/x_hls_utils.h"
 #include "nnet_common.h"
 #include "nnet_pooling.h"
 #include "hls_stream.h"
 
 namespace nnet {
+
+// *************************************************
+//       Max/average pooling
+// *************************************************
 
 template <class T, int N, class CONFIG_T>
 T reduce_pool(T x[N]) {
@@ -116,8 +121,6 @@ void compute_pool(
     }
 }
 
-
-
 template<class data_T, class res_T, typename CONFIG_T>
 void pooling2d_cl(
     hls::stream<data_T> &data,
@@ -146,6 +149,102 @@ void pooling2d_cl(
             compute_pool<data_T, res_T, CONFIG_T>(i_ih, i_iw, data.read(), data_window, res, res_pack, outputs_ready);
         }
     }
+}
+
+
+// *************************************************
+//       Global max/average pooling
+// *************************************************
+
+template <class T, int N, class CONFIG_T>
+T reduce_global_pool(T x, T y[N]) {
+    #pragma HLS INLINE
+    if (CONFIG_T::pool_op == Max) {
+        Op_max<T> op_max;
+        T y_max = reduce<T, N, Op_max<T>>(y, op_max);
+        return (x > y_max) ? x : y_max;
+    } else {
+        Op_add<T> op_add;
+        T y_sum = reduce<T, N, Op_add<T>>(y, op_add);
+        return x + y_sum;
+    }
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
+void compute_global_pool(
+    const unsigned h_idx,
+    const unsigned w_idx,
+    const data_T& in_elem,
+    typename data_T::value_type data_window[CONFIG_T::n_filt]
+) {
+    typename data_T::value_type data_pack[data_T::size / CONFIG_T::n_filt];
+    #pragma HLS ARRAY_PARTITION variable=data_window complete dim=0
+
+    PoolFilt: for (unsigned c = 0; c < CONFIG_T::n_filt; c++) {
+        #pragma HLS UNROLL
+        PixelLoop: for (unsigned p = 0; p < data_T::size / CONFIG_T::n_filt; p++) {
+            #pragma HLS UNROLL
+            data_pack[p] = in_elem[p * CONFIG_T::n_filt + c];
+        }
+        data_window[c] = reduce_global_pool<typename data_T::value_type, data_T::size / CONFIG_T::n_filt, CONFIG_T>(data_window[c], data_pack);
+    }
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
+void global_pooling2d_cl(
+    hls::stream<data_T> &data,
+    hls::stream<res_T> &res
+) {
+    assert(CONFIG_T::pad_top == 0 && CONFIG_T::pad_bottom == 0 && CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
+    assert(CONFIG_T::pool_height == CONFIG_T::stride_height && CONFIG_T::pool_width == CONFIG_T::stride_width);
+
+    typename data_T::value_type data_window[CONFIG_T::n_filt];
+    #pragma HLS ARRAY_PARTITION variable=data_window complete
+
+    typename data_T::value_type init = 0;
+    if (CONFIG_T::pool_op == Max) {
+        init = hls::numeric_limits<typename data_T::value_type>::min();
+    }
+
+    for (unsigned i_init = 0; i_init < CONFIG_T::n_filt; i_init++) {
+        #pragma HLS UNROLL
+        data_window[i_init] = init;
+    }
+
+    ReadInputHeight: for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
+        ReadInputWidth: for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width / (data_T::size / CONFIG_T::n_filt); i_iw++) {
+            #pragma HLS LOOP_FLATTEN
+            #pragma HLS PIPELINE
+            compute_global_pool<data_T, res_T, CONFIG_T>(i_ih, i_iw, data.read(), data_window);
+        }
+    }
+
+    if (CONFIG_T::pool_op == Max) {
+        MaxPoolRes: for (unsigned i_res = 0; i_res < CONFIG_T::n_filt / res_T::size; i_res++) {
+            #pragma HLS PIPELINE
+
+            res_T res_pack;
+            #pragma HLS DATA_PACK variable=res_pack
+            for (unsigned i_pack = 0; i_pack < res_T::size; i_pack++) {
+                #pragma HLS UNROLL
+                res_pack[i_pack] = data_window[i_pack];
+            }
+            res.write(res_pack);
+        }
+    } else {
+        AvgPoolRes: for (unsigned i_res = 0; i_res < CONFIG_T::n_filt / res_T::size; i_res++) {
+            #pragma HLS PIPELINE
+
+            res_T res_pack;
+            #pragma HLS DATA_PACK variable=res_pack
+            for (unsigned i_pack = 0; i_pack < res_T::size; i_pack++) {
+                #pragma HLS UNROLL
+                res_pack[i_pack] = data_window[i_pack] / (CONFIG_T::in_height * CONFIG_T::in_width);
+            }
+            res.write(res_pack);
+        }
+    }
+
 }
 
 }

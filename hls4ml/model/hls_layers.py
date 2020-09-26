@@ -730,6 +730,47 @@ class Pooling2D(Layer):
 
         return self._config_template.format(**params)
 
+class GlobalPooling1D(Layer):
+    def initialize(self):
+        shape = [self.attributes['n_out'], self.attributes['n_filt']]
+        dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+        self.add_output_variable(shape, dims)
+        self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0].replace('Global', ''))
+
+    def function_cpp(self):
+        params = self._default_function_params()
+
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+        params['n_in'] = self.get_input_variable().size_cpp()
+
+        return self._config_template.format(**params)
+
+class GlobalPooling2D(Layer):
+    def initialize(self):
+        shape = [self.attributes['n_filt']]
+        dims = ['N_FILT_{}'.format(self.index)]
+        self.add_output_variable(shape, dims)
+        self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0].replace('Global', ''))
+
+    def function_cpp(self):
+        params = self._default_function_params()
+        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+        if self.get_attr('data_format') == 'channels_last':
+            params['in_height'] = self.get_input_variable().dim_names[0]
+            params['in_width'] = self.get_input_variable().dim_names[1]
+        else:
+            params['in_height'] = self.get_input_variable().dim_names[1]
+            params['in_width'] = self.get_input_variable().dim_names[2]
+
+        return self._config_template.format(**params)
+
 class ZeroPadding2D(Layer):
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
@@ -1247,38 +1288,42 @@ class GarNetStack(GarNet):
         params['sublayer_configs'] = '\n'.join(sublayer_configs)
 
 layer_map = {
-    'InputLayer'         : Input,
-    'Activation'         : Activation,
-    'QActivation'        : Activation,
-    'LeakyReLU'          : ParametrizedActivation,
-    'ThresholdedReLU'    : ParametrizedActivation,
-    'ELU'                : ParametrizedActivation,
-    'PReLU'              : PReLU,
-    'Softmax'            : Softmax,
-    'Reshape'            : Reshape,
-    'Dense'              : Dense,
-    'BinaryDense'        : Dense,
-    'TernaryDense'       : Dense,
-    'QDense'             : Dense,
-    'Conv1D'             : Conv1D,
-    'QConv1D'            : Conv1D,
-    'Conv2D'             : Conv2D,
-    'BinaryConv2D'       : Conv2D,
-    'QConv2D'            : Conv2D,
-    'BatchNormalization' : BatchNormalization,
-    'MaxPooling1D'       : Pooling1D,
-    'AveragePooling1D'   : Pooling1D,
-    'MaxPooling2D'       : Pooling2D,
-    'AveragePooling2D'   : Pooling2D,
-    'ZeroPadding2D'      : ZeroPadding2D,
-    'Merge'              : Merge,
-    'Concatenate'        : Concatenate,
-    'Resize'             : Resize,
-    'Transpose'          : Transpose,
-    'GarNet'             : GarNet,
-    'GarNetStack'        : GarNetStack,
+    'InputLayer'             : Input,
+    'Activation'             : Activation,
+    'QActivation'            : Activation,
+    'LeakyReLU'              : ParametrizedActivation,
+    'ThresholdedReLU'        : ParametrizedActivation,
+    'ELU'                    : ParametrizedActivation,
+    'PReLU'                  : PReLU,
+    'Softmax'                : Softmax,
+    'Reshape'                : Reshape,
+    'Dense'                  : Dense,
+    'BinaryDense'            : Dense,
+    'TernaryDense'           : Dense,
+    'QDense'                 : Dense,
+    'Conv1D'                 : Conv1D,
+    'QConv1D'                : Conv1D,
+    'Conv2D'                 : Conv2D,
+    'BinaryConv2D'           : Conv2D,
+    'QConv2D'                : Conv2D,
+    'BatchNormalization'     : BatchNormalization,
+    'MaxPooling1D'           : Pooling1D,
+    'AveragePooling1D'       : Pooling1D,
+    'MaxPooling2D'           : Pooling2D,
+    'AveragePooling2D'       : Pooling2D,
+    'GlobalMaxPooling1D'     : GlobalPooling1D,
+    'GlobalAveragePooling1D' : GlobalPooling1D,
+    'GlobalMaxPooling2D'     : GlobalPooling2D,
+    'GlobalAveragePooling2D' : GlobalPooling2D,
+    'ZeroPadding2D'          : ZeroPadding2D,
+    'Merge'                  : Merge,
+    'Concatenate'            : Concatenate,
+    'Resize'                 : Resize,
+    'Transpose'              : Transpose,
+    'GarNet'                 : GarNet,
+    'GarNetStack'            : GarNetStack,
     # TensorFlow-specific layers:
-    'BiasAdd'            : BiasAdd,
+    'BiasAdd'                : BiasAdd,
 }
 
 def register_layer(name, clazz):
