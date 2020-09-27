@@ -27,7 +27,9 @@ KERAS_3layer_binary_smaller
 KERAS_3layer_ternary_small
  
 # GarNet example: Need large reuse factor because input graph has 128 vertices
-garnet_1layer r:16
+# Commenting out due to failed synthesis with older vivado versions.
+# Should uncomment after after testing workflow is updated.
+#garnet_1layer r:16
 
 # Resource strategy
 KERAS_3layer r:2 s:Resource
