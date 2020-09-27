@@ -28,7 +28,7 @@ KERAS_3layer_ternary_small
  
 # GarNet example: Need large reuse factor because input graph has 128 vertices
 # Commenting out due to failed synthesis with older vivado versions.
-# Should uncomment after after testing workflow is updated.
+# Uncomment after after testing workflow is updated.
 #garnet_1layer r:16
 
 # Resource strategy
