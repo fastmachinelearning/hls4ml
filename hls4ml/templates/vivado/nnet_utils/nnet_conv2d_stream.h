@@ -108,7 +108,7 @@ void compute_output(
     #pragma HLS INLINE
 
     MultLoop: for (unsigned p = 0; p < data_T::size / CONFIG_T::n_chan; p++) {
-        #pragma HLS PIPELINE
+        #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
         CopyDataFilt: for (unsigned f = 0; f < CONFIG_T::filt_height * CONFIG_T::filt_width; f++) {
             #pragma HLS UNROLL
             CopyDataChan: for (unsigned c = 0; c < CONFIG_T::n_chan; c++) {
@@ -151,7 +151,9 @@ void conv_2d_cl(
     ReadInputHeight: for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
         ReadInputWidth: for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width / (data_T::size / CONFIG_T::n_chan); i_iw++) {
             #pragma HLS LOOP_FLATTEN
-            #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+            if (data_T::size / CONFIG_T::n_chan == 1) {
+                #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+            }
             compute_scaled_indices<data_T, CONFIG_T>(i_ih, i_iw, pixel_idx);
             compute_output<data_T, res_T, CONFIG_T>(data.read(), data_window, res, res_pack, outputs_ready, weights, biases, pixel_idx);
         }
