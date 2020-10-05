@@ -10,125 +10,56 @@
 namespace nnet {
 
 template<class data_T, class res_T, typename CONFIG_T>
-void dense_latency(
-    hls::stream<data_T> &data,
-    hls::stream<res_T> &res,
-    typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
-    typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
-{
-    data_T in_cache;
-    res_T out_cache;
+void dense_wrapper(
+    data_T data[CONFIG_T::n_in],
+    res_T  res[CONFIG_T::n_out],
+    typename CONFIG_T::weight_t weights[CONFIG_T::n_in*CONFIG_T::n_out],
+    typename CONFIG_T::bias_t   biases[CONFIG_T::n_out]
+) {
+    #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
-    #pragma HLS ARRAY_PARTITION variable=weights cyclic factor=CONFIG_T::n_out
-    #pragma HLS ARRAY_PARTITION variable=biases complete
-
-    hls::stream<res_T> out_s;
-    #pragma HLS STREAM variable=out_s depth=CONFIG_T::n_out
-
-    constexpr unsigned in_pack_factor = data_T::size;
-    constexpr unsigned out_pack_factor = res_T::size;
-
-    BiasLoop: for (int i = 0; i < CONFIG_T::n_out / out_pack_factor; i++) {
-        #pragma HLS PIPELINE
-
-        res_T out_part;
-        BiasInner: for (int j = 0; j < out_pack_factor; j++) {
-            #pragma HLS UNROLL
-            out_part[j] = biases[i * out_pack_factor + j];
-        }
-        out_s.write(out_part);
+    #pragma HLS INLINE region
+    if (CONFIG_T::strategy == nnet::latency) {
+        dense_latency<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+    } else {
+        dense_resource<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     }
-
-    int w_idx = 0;
-
-    // Do the matrix-multiply
-    Product1: for(int i_in = 0; i_in < CONFIG_T::n_in / in_pack_factor; i_in++) {
-        in_cache = data.read();
-        InPackLoop: for(int i_in_pack = 0; i_in_pack < in_pack_factor; i_in_pack++) {
-            Product2: for(int i_out = 0; i_out < CONFIG_T::n_out / out_pack_factor; i_out++) {
-                #pragma HLS PIPELINE II=3
-
-                out_cache = out_s.read();
-                OutPackLoop: for(int i_out_pack = 0; i_out_pack < out_pack_factor; i_out_pack++) {
-                    #pragma HLS UNROLL
-                    out_cache[i_out_pack] += in_cache[i_in_pack] * weights[w_idx++];
-                }
-                out_s.write(out_cache);
-            }
-        }
-    }
-
-    CastResult: for(int i_res = 0; i_res < CONFIG_T::n_out / out_pack_factor; i_res++) {
-        #pragma HLS PIPELINE
-        res.write(out_s.read());
-    }
-}
-
-template<class data_T, class res_T, typename CONFIG_T>
-void dense_latency_nout_pack(
-    hls::stream<data_T> &data,
-    hls::stream<res_T> &res,
-    typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
-    typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
-{
-    data_T in_cache;
-    res_T out_cache;
-
-    #pragma HLS ARRAY_PARTITION variable=weights cyclic factor=CONFIG_T::n_out
-    #pragma HLS ARRAY_PARTITION variable=biases complete
-
-    hls::stream<res_T> out_s;
-    #pragma HLS STREAM variable=out_s depth=CONFIG_T::n_out
-
-    constexpr unsigned in_pack_factor = data_T::size;
-    constexpr unsigned out_pack_factor = res_T::size;
-
-    res_T out_part;
-    BiasLoop: for (int i = 0; i < out_pack_factor; i++) {
-        #pragma HLS UNROLL
-        out_part[i] = biases[i];
-    }
-    out_s.write(out_part);
-
-    int w_idx = 0;
-
-    // Do the matrix-multiply
-    ProductLoop: for(int i_in = 0; i_in < CONFIG_T::n_in / in_pack_factor; i_in++) {
-        in_cache = data.read();
-        InPackLoop: for(int i_in_pack = 0; i_in_pack < in_pack_factor; i_in_pack++) {
-            #pragma HLS PIPELINE II=3
-
-            out_cache = out_s.read();
-            OutPackLoop: for(int i_out_pack = 0; i_out_pack < out_pack_factor; i_out_pack++) {
-                #pragma HLS UNROLL
-                out_cache[i_out_pack] += in_cache[i_in_pack] * weights[w_idx++];
-            }
-            out_s.write(out_cache);
-        }
-    }
-
-    res.write(out_s.read());
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
 void dense(
-    hls::stream<data_T> &data,
-    hls::stream<res_T> &res,
-    typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
-    typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
+    hls::stream<data_T> &data_stream,
+    hls::stream<res_T>  &res_stream,
+    typename CONFIG_T::weight_t weights[CONFIG_T::n_in*CONFIG_T::n_out],
+    typename CONFIG_T::bias_t   biases[CONFIG_T::n_out])
 {
-    if (CONFIG_T::strategy == latency) {
-        if (CONFIG_T::n_out == res_T::size) {
-    		dense_latency_nout_pack<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-    	} else {
-    		dense_latency<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-    	}
-    } else {
-        assert("Streaming for resource strategy is not implemented yet" && false);
-        //dense_resource<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+    typename data_T::value_type data[CONFIG_T::n_in];
+    #pragma HLS ARRAY_PARTITION variable=data complete
+
+    typename data_T::value_type res[CONFIG_T::n_out];
+    #pragma HLS ARRAY_PARTITION variable=res complete
+
+    DataPrepare: for(int i_in = 0; i_in < CONFIG_T::n_in / data_T::size; i_in++) {
+        #pragma HLS PIPELINE
+        data_T data_pack = data_stream.read();
+        DataPack: for (int i_pack = 0; i_pack < data_T::size; i_pack++) {
+            #pragma HLS UNROLL
+            data[i_in * data_T::size + i_pack] = data_pack[i_pack];
+        }
+    }
+
+    dense_wrapper<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(data, res, weights, biases);
+
+    ResWrite: for(unsigned i_out = 0; i_out < CONFIG_T::n_out / res_T::size; i_out++) {
+        #pragma HLS PIPELINE
+        res_T res_pack;
+        ResPack: for (int i_pack = 0; i_pack < res_T::size; i_pack++) {
+            #pragma HLS UNROLL
+            res_pack[i_pack] = res[i_out * res_T::size + i_pack];
+        }
+        res_stream.write(res_pack);
     }
 }
-
 
 }
 
