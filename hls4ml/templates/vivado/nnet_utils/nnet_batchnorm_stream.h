@@ -21,6 +21,7 @@
 #define NNET_BATCHNORM_STREAM_H_
 
 #include "nnet_common.h"
+#include "nnet_mult.h"
 #include "hls_stream.h"
 #include <math.h>
 
@@ -31,18 +32,20 @@ namespace nnet {
 // ****************************************************
 
 template<class data_T, class res_T, typename CONFIG_T>
-void normalize_no_filt(
+void normalize(
     hls::stream<data_T> &data,
     hls::stream<res_T>  &res,
-    typename CONFIG_T::scale_t  scale[CONFIG_T::n_filt],
-    typename CONFIG_T::bias_t   bias[CONFIG_T::n_filt]
-)
-{
+    typename CONFIG_T::scale_t scale[CONFIG_T::n_filt],
+    typename CONFIG_T::bias_t  bias[CONFIG_T::n_filt]
+) {
     #pragma HLS ARRAY_PARTITION variable=scale complete
     #pragma HLS ARRAY_PARTITION variable=bias complete
 
+    int multiplier_limit = ceil(float(CONFIG_T::n_in) / float(CONFIG_T::reuse_factor));
+    #pragma HLS ALLOCATION instances=product limit=multiplier_limit function
+
     BatchNormLoop: for (int i = 0; i < CONFIG_T::n_in / data_T::size; i++) {
-        #pragma HLS PIPELINE
+        #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
         data_T in_data = data.read();
         res_T out_data;
@@ -50,52 +53,17 @@ void normalize_no_filt(
 
         for (int j = 0; j < data_T::size; j++) {
             #pragma HLS UNROLL
-            out_data[j] = in_data[j] * scale[i * data_T::size + j] + bias[i * data_T::size + j];
+            int norm_index;
+            if (CONFIG_T::n_filt==-1) {
+                norm_index = i * data_T::size + j;
+            } else {
+                norm_index = j % CONFIG_T::n_filt;
+            }
+            out_data[j] = product<typename data_T::value_type, typename CONFIG_T::scale_t, typename res_T::value_type>(in_data[j], scale[norm_index])
+                    + bias[norm_index];
         }
 
         res.write(out_data);
-    }
-}
-
-template<class data_T, class res_T, typename CONFIG_T>
-void normalize_filt(
-    hls::stream<data_T> &data,
-    hls::stream<res_T>  &res,
-    typename CONFIG_T::scale_t  scale[CONFIG_T::n_filt],
-    typename CONFIG_T::bias_t   bias[CONFIG_T::n_filt]
-)
-{
-    #pragma HLS ARRAY_PARTITION variable=scale complete
-    #pragma HLS ARRAY_PARTITION variable=bias complete
-
-    BatchNormLoop: for (int i = 0; i < CONFIG_T::n_in / data_T::size; i++) {
-        #pragma HLS PIPELINE
-
-        data_T in_part = data.read();
-        res_T out_part;
-        #pragma HLS DATA_PACK variable=out_part
-
-        NormFiltLoop: for (int j = 0; j < data_T::size; j++) {
-            #pragma HLS UNROLL
-            int norm_index = j % CONFIG_T::n_filt;
-            out_part.data[j] = in_part.data[j] * scale[norm_index] + bias[norm_index];
-        }
-        res.write(out_part);
-    }
-}
-
-template<class data_T, class res_T, typename CONFIG_T>
-void normalize(
-    hls::stream<data_T> &data,
-    hls::stream<res_T>  &res,
-    typename CONFIG_T::scale_t  scale[CONFIG_T::n_filt],
-    typename CONFIG_T::bias_t   bias[CONFIG_T::n_filt]
-)
-{
-    if (CONFIG_T::n_filt==-1) {
-        normalize_no_filt<data_T, res_T, CONFIG_T>(data, res, scale, bias);
-	} else {
-        normalize_filt<data_T, res_T, CONFIG_T>(data, res, scale, bias);
     }
 }
 
