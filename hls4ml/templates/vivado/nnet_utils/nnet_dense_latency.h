@@ -42,7 +42,7 @@ void dense_latency(
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
     #pragma HLS function_instantiate variable=weights,biases
 
-    if (CONFIG_T::io_type == io_parallel){
+    if (CONFIG_T::io_type == io_parallel || CONFIG_T::io_type == io_stream){
         // For parallel inputs:
         //   - completely partition arrays -- target fabric
         //   - if we have an unroll factor, limit number of multipliers
