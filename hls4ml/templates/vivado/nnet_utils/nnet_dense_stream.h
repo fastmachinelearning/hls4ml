@@ -36,7 +36,7 @@ void dense(
     typename data_T::value_type data[CONFIG_T::n_in];
     #pragma HLS ARRAY_PARTITION variable=data complete
 
-    typename data_T::value_type res[CONFIG_T::n_out];
+    typename res_T::value_type res[CONFIG_T::n_out];
     #pragma HLS ARRAY_PARTITION variable=res complete
 
     DataPrepare: for(int i_in = 0; i_in < CONFIG_T::n_in / data_T::size; i_in++) {
