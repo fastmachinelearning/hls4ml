@@ -180,11 +180,12 @@ void compute_global_pool(
     const data_T& in_elem,
     typename data_T::value_type data_window[CONFIG_T::n_filt]
 ) {
-    typename data_T::value_type data_pack[data_T::size / CONFIG_T::n_filt];
-    #pragma HLS ARRAY_PARTITION variable=data_window complete dim=0
-
     PoolFilt: for (unsigned c = 0; c < CONFIG_T::n_filt; c++) {
         #pragma HLS UNROLL
+
+        typename data_T::value_type data_pack[data_T::size / CONFIG_T::n_filt];
+        #pragma HLS ARRAY_PARTITION variable=data_pack complete dim=0
+
         PixelLoop: for (unsigned p = 0; p < data_T::size / CONFIG_T::n_filt; p++) {
             #pragma HLS UNROLL
             data_pack[p] = in_elem[p * CONFIG_T::n_filt + c];
@@ -217,7 +218,6 @@ void global_pooling2d_cl(
     ReadInputHeight: for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
         ReadInputWidth: for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width / (data_T::size / CONFIG_T::n_filt); i_iw++) {
             #pragma HLS LOOP_FLATTEN
-            #pragma HLS PIPELINE
             compute_global_pool<data_T, res_T, CONFIG_T>(i_ih, i_iw, data.read(), data_window);
         }
     }
@@ -228,7 +228,7 @@ void global_pooling2d_cl(
 
             res_T res_pack;
             #pragma HLS DATA_PACK variable=res_pack
-            for (unsigned i_pack = 0; i_pack < res_T::size; i_pack++) {
+            MaxPoolPack: for (unsigned i_pack = 0; i_pack < res_T::size; i_pack++) {
                 #pragma HLS UNROLL
                 res_pack[i_pack] = data_window[i_pack];
             }
@@ -240,7 +240,7 @@ void global_pooling2d_cl(
 
             res_T res_pack;
             #pragma HLS DATA_PACK variable=res_pack
-            for (unsigned i_pack = 0; i_pack < res_T::size; i_pack++) {
+            AvgPoolPack: for (unsigned i_pack = 0; i_pack < res_T::size; i_pack++) {
                 #pragma HLS UNROLL
                 res_pack[i_pack] = data_window[i_pack] / (CONFIG_T::in_height * CONFIG_T::in_width);
             }
