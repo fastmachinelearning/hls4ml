@@ -72,6 +72,8 @@ void compute_pool(
         initialized = true;
     }
 
+    #pragma HLS INLINE
+
     if (data_T::size / CONFIG_T::n_filt > 1) {
         #pragma HLS ARRAY_PARTITION variable=pool_table_height complete
         #pragma HLS ARRAY_PARTITION variable=pool_table_width complete
@@ -92,7 +94,7 @@ void compute_pool(
         }
 
         CopyDataFilt: for (unsigned c = 0; c < CONFIG_T::n_filt; c++) {
-            if (filt_mask > 0) data_window[c * CONFIG_T::pool_height * CONFIG_T::pool_width + filt_mask - 1].write_nb(in_elem[p * CONFIG_T::n_filt + c]);
+            if (filt_mask > 0) data_window[c * CONFIG_T::pool_height * CONFIG_T::pool_width + filt_mask.to_uint() - 1].write(in_elem[p * CONFIG_T::n_filt + c]);
         }
 
         if (filt_mask == CONFIG_T::pool_height * CONFIG_T::pool_width) {
@@ -134,18 +136,19 @@ void pooling2d_cl(
     unsigned outputs_ready = 0;
 
     hls::stream<typename data_T::value_type> data_window[CONFIG_T::pool_height * CONFIG_T::pool_width * CONFIG_T::n_filt];
-    #pragma HLS ARRAY_PARTITION variable=data_window complete
     constexpr int win_depth = CONFIG_T::pool_height * CONFIG_T::out_width;
     for (unsigned i_out = 0; i_out < CONFIG_T::pool_height * CONFIG_T::pool_width * CONFIG_T::n_filt; i_out++) {
         #pragma HLS STREAM variable=data_window[i_out] depth=win_depth
     }
 
-    ap_uint<CONFIG_T::pool_height * CONFIG_T::pool_width> pixel_idx[data_T::size / CONFIG_T::n_filt];
-    #pragma HLS ARRAY_PARTITION variable=pixel_idx complete
+    constexpr int pack_factor = data_T::size / CONFIG_T::n_filt;
 
     ReadInputHeight: for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
-        ReadInputWidth: for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width / (data_T::size / CONFIG_T::n_filt); i_iw++) {
+        ReadInputWidth: for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width / (pack_factor); i_iw++) {
             #pragma HLS LOOP_FLATTEN
+            if (res_T::size / CONFIG_T::n_filt == 1) {
+                #pragma HLS PIPELINE II=pack_factor
+            }
             compute_pool<data_T, res_T, CONFIG_T>(i_ih, i_iw, data.read(), data_window, res, res_pack, outputs_ready);
         }
     }
