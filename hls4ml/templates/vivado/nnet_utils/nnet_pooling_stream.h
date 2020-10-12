@@ -210,7 +210,7 @@ void global_pooling2d_cl(
         init = hls::numeric_limits<typename data_T::value_type>::min();
     }
 
-    for (unsigned i_init = 0; i_init < CONFIG_T::n_filt; i_init++) {
+    PoolInitLoop: for (unsigned i_init = 0; i_init < CONFIG_T::n_filt; i_init++) {
         #pragma HLS UNROLL
         data_window[i_init] = init;
     }

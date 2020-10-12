@@ -52,7 +52,7 @@ void normalize(
         res_T out_data;
         #pragma HLS DATA_PACK variable=out_data
 
-        for (int j = 0; j < data_T::size; j++) {
+        BatchNormpack: for (int j = 0; j < data_T::size; j++) {
             #pragma HLS UNROLL
             int norm_index;
             if (CONFIG_T::n_filt==-1) {
@@ -86,7 +86,7 @@ void normalize_binary_tanh(
         nnet::array<ap_uint<1>, CONFIG_T::n_in> out_data;
         #pragma HLS DATA_PACK variable=out_data
 
-        for (int j = 0; j < data_T::size; j++) {
+        BatchNormPack: for (int j = 0; j < data_T::size; j++) {
             #pragma HLS UNROLL
             out_data[j] = (in_data[j] > threshold[i * data_T::size + j]) ? 1 : 0;
         }
@@ -112,7 +112,7 @@ void normalize_ternary_tanh(
         nnet::array<ap_int<2>, CONFIG_T::n_in> out_data;
         #pragma HLS DATA_PACK variable=out_data
 
-        for (int j = 0; j < data_T::size; j++) {
+        BatchNormPack: for (int j = 0; j < data_T::size; j++) {
             #pragma HLS UNROLL
             
             int norm_index = i * data_T::size + j;

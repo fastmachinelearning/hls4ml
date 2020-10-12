@@ -53,10 +53,10 @@ enum strategy { latency, resource };
 		T right[rightN];
 		#pragma HLS array_partition variable=left complete
 		#pragma HLS array_partition variable=right complete
-		for(int i = 0; i < leftN; i++){
+		ReduceLeft: for(int i = 0; i < leftN; i++){
 			left[i] = x[i];
 		}
-		for(int i = 0; i < rightN; i++){
+		ReduceRight: for(int i = 0; i < rightN; i++){
 			right[i] = x[i+leftN];
 		}
 		return op(reduce<T,leftN,Op>(left, op), reduce<T,rightN,Op>(right, op));
