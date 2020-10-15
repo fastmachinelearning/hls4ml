@@ -134,7 +134,7 @@ def model_to_dot(model,
         # Rebuild the label as a table including tensor precision.
         if show_precision:
             def format_precision(precision):
-                return precision.replace('<', '&lt;').replace('>', '&gt;')
+                return str(precision).replace('<', '&lt;').replace('>', '&gt;')
 
             precision_labels = []
             tensors = {}
