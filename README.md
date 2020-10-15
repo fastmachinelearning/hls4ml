@@ -14,7 +14,7 @@ A package for machine learning inference in FPGAs. We create firmware implementa
 
 For more information visit the webpage: [https://fastmachinelearning.org/hls4ml/](https://fastmachinelearning.org/hls4ml/)
 
-Detailed tutorials on how to use `hls4ml`'s various functionalities can be found [here](https://github.com/thesps/hls4ml-tutorial).
+Detailed tutorials on how to use `hls4ml`'s various functionalities can be found [here](https://github.com/hls-fpga-machine-learning/hls4ml-tutorial).
 
 # Installation
 ```
