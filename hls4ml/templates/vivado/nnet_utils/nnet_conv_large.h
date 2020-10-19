@@ -3,7 +3,7 @@
 
 #include "nnet_common.h"
 #include "nnet_conv.h"
-#include "nnet_dense_large.h"
+#include "nnet_dense.h"
 
 namespace nnet {
 
