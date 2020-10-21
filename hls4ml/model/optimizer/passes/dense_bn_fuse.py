@@ -25,7 +25,9 @@ class FuseDenseAndBatchNormalization(OptimizerPass):
         fused_bias = bn_scale.data * dense_bias.data + bn_bias.data
 
         model.remove_node(node, rewire=True)
-        dense_node.weights['weight'].data = fused_weight
-        dense_node.weights['bias'].data = fused_bias
+        dense_weight.data = fused_weight
+        dense_bias.data = fused_bias
+        if not dense_node.get_attr('use_bias', True):
+            dense_bias.update_precision(bn_bias.type.precision)
 
         return True
