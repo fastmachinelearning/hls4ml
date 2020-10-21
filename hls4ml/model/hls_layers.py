@@ -573,7 +573,6 @@ class Conv1D(Layer):
 
     def function_cpp(self):
         params = self._default_function_params()
-        params['strategy'] = self.get_attr('strategy')
         params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
         params['w'] = self.get_weights('weight').name
         params['b'] = self.get_weights('bias').name
@@ -593,7 +592,6 @@ class Conv1D(Layer):
         params['n_filt'] = 'N_FILT_{}'.format(self.index)
         params['n_out'] = 'N_OUTPUTS_{}'.format(self.index)
         params['nzeros'] = self.get_weights('weight').nzeros
-        params['config_t'] = 'std::nullptr_t'
 
         if self.model.config.get_config_value('IOType') == 'io_stream':
             min_w, instructions = self.model.config.backend.compute_conv1d_instructions(
@@ -639,7 +637,6 @@ class Conv2D(Layer):
 
     def function_cpp(self):
         params = self._default_function_params()
-        params['strategy'] = self.get_attr('strategy')
         params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
         params['w'] = self.get_weights('weight').name
         params['b'] = self.get_weights('bias').name
@@ -664,7 +661,6 @@ class Conv2D(Layer):
             params['out_width'] = self.get_output_variable().dim_names[2]
         params['dilation'] = self.get_attr('dilation', 1)
         params['nzeros'] = self.get_weights('weight').nzeros
-        params['config_t'] = 'std::nullptr_t'
 
         if self.model.config.get_config_value('IOType') == 'io_stream':
             min_h, min_w, instructions = self.model.config.backend.compute_conv2d_instructions(
