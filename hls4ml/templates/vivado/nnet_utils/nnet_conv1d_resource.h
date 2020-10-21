@@ -1,5 +1,5 @@
-#ifndef NNET_CONV_LARGE_H_
-#define NNET_CONV_LARGE_H_
+#ifndef NNET_CONV_RESOURCE_H_
+#define NNET_CONV_RESOURCE_H_
 
 #include "nnet_common.h"
 #include "nnet_conv.h"
@@ -105,7 +105,7 @@ void im2col_1d_cf(data_T data[CONFIG_T::n_in * CONFIG_T::n_chan], data_T data_co
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-void conv_1d_large_cf(
+void conv_1d_resource_cf(
     data_T data[CONFIG_T::n_chan * CONFIG_T::n_in],
     res_T  res[CONFIG_T::n_out * CONFIG_T::n_filt],
     typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
@@ -162,7 +162,7 @@ void im2col_1d_cl(data_T data[CONFIG_T::n_in * CONFIG_T::n_chan], data_T data_co
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-void conv_1d_large_cl(
+void conv_1d_resource_cl(
     data_T data[CONFIG_T::n_in * CONFIG_T::n_chan],
     res_T  res[CONFIG_T::n_out * CONFIG_T::n_filt],
     typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
