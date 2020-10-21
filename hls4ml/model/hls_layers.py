@@ -595,18 +595,28 @@ class Conv1D(Layer):
         params['nzeros'] = self.get_weights('weight').nzeros
         params['config_t'] = 'std::nullptr_t'
 
-        if self.model.config.is_resource_strategy(self):
-            params['config_t'] = 'config{}_mult'.format(self.index)
-            conv_config = self._config_template[0].format(**params)
-
-            mult_params = self._default_config_params()
-            mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_width')
-            mult_params['n_out'] = self.get_attr('n_filt')
-            mult_config = self._config_template[1].format(**mult_params)
-
-            return mult_config + '\n' + conv_config
+        if self.model.config.get_config_value('IOType') == 'io_stream':
+            min_w, instructions = self.model.config.backend.compute_conv1d_instructions(
+                self.get_input_variable().shape[0],
+                self.get_input_variable().shape[1],
+                params['filt_width'],
+                params['stride'])
+            instructions_str = ','.join(str(i) for i in instructions)
+            params['min_width'] = min_w
+            params['instructions'] = instructions_str
         else:
-            return self._config_template[0].format(**params)
+            params['min_width'] = params['n_in']
+            params['instructions'] = '0'
+
+        params['config_t'] = 'config{}_mult'.format(self.index)
+        conv_config = self._config_template[0].format(**params)
+
+        mult_params = self._default_config_params()
+        mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_width')
+        mult_params['n_out'] = self.get_attr('n_filt')
+        mult_config = self._config_template[1].format(**mult_params)
+
+        return mult_config + '\n' + conv_config
 
 class Conv2D(Layer):
     def initialize(self):

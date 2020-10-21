@@ -44,11 +44,15 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
+    static const unsigned strategy = nnet::{strategy};
+    static const unsigned min_width = {min_width};
+    static const ap_uint<filt_width> pixels[min_width];
     typedef {accum_t} accum_t;
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
     typedef {config_t} mult_config;
-}};\n"""
+}};
+const ap_uint<config{index}::filt_width> config{index}::pixels[] = {{{instructions}}};\n"""
 
 conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     static const unsigned n_in = {n_in};
@@ -297,7 +301,7 @@ garnet_stack_config_template = (garnet_stack_base_config_template, garnet_stack_
 
 dense_function_template = 'nnet::dense<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
-conv1d_function_template = 'nnet::conv_1d_{strategy}_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+conv1d_function_template = 'nnet::conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 conv2d_function_template = 'nnet::conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
 param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {param}, {output});'
@@ -314,7 +318,7 @@ garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t
 
 dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_stream.h']
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
-conv1d_include_list = ['nnet_utils/nnet_conv.h', 'nnet_utils/nnet_conv_large.h']
+conv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_conv1d_stream.h']
 conv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_stream.h']
 activ_include_list = ['nnet_utils/nnet_activation.h', 'nnet_utils/nnet_activation_stream.h']
 pooling_include_list = ['nnet_utils/nnet_pooling.h', 'nnet_utils/nnet_pooling_stream.h']
@@ -412,6 +416,34 @@ class VivadoBackend(Backend):
             print('WARNING: Invalid ReuseFactor={} with "Resource" strategy in layer "{}". Using ReuseFactor={} instead. Valid ReuseFactor(s): {}.'
                 .format(chosen_rf, layer.name, closest_rf, ','.join(map(str, valid_rf))))
             layer.reuse_factor = closest_rf
+
+    def compute_conv1d_instructions(self, in_W, in_C, kernel_size=3, stride=1, pad=0):
+
+        # Current limitations
+        assert pad == 0
+
+        min_W = (math.ceil(kernel_size / stride) - 1) * stride + kernel_size
+        min_oW = int((min_W - kernel_size) // stride + 1)
+
+        out_W = int((in_W - kernel_size) // stride + 1)
+        scaled_W = (out_W - 1) * stride + kernel_size
+
+        if scaled_W < in_W:
+            min_W += 1
+
+        windows_bin = [[0 for _ in range(kernel_size)] for _ in range(min_W)]
+
+        for i_ow in range(min_oW):
+            for i_fw in range(kernel_size):
+                index_data = i_ow * stride + i_fw - pad
+                windows_bin[index_data][i_fw] = 1
+
+        windows_int = []
+
+        for i in range(min_W):
+            windows_int.append((int(''.join(str(p) for p in reversed(windows_bin[i])), 2)))
+        
+        return (min_W, windows_int)
 
     def compute_conv2d_instructions(self, in_H, in_W, in_C, kernel_size=3, stride=1, pad=0):
 
