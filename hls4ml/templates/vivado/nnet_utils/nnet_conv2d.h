@@ -22,7 +22,7 @@
 
 #include "nnet_common.h"
 #include "nnet_conv2d_latency.h"
-#include "nnet_conv2d_large.h"
+#include "nnet_conv2d_resource.h"
 #include <cstdlib>
 
 namespace nnet {

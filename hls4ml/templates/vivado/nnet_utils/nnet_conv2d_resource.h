@@ -1,5 +1,5 @@
-#ifndef NNET_CONV2D_LARGE_H_
-#define NNET_CONV2D_LARGE_H_
+#ifndef NNET_CONV2D_RESOURCE_H_
+#define NNET_CONV2D_RESOURCE_H_
 
 #include "nnet_common.h"
 #include "nnet_conv2d.h"
