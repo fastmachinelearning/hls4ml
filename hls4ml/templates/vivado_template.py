@@ -112,11 +112,12 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
 
 pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
     static const unsigned n_in = {n_in};
-    static const unsigned pool_size = {pool_size};
     static const unsigned n_out = {n_out};
+    static const unsigned n_filt = {n_filt};
+    static const unsigned pool_width = {pool_width};
     static const unsigned pad_left = {pad_left};
     static const unsigned pad_right = {pad_right};
-    static const unsigned stride = {stride};
+    static const unsigned stride_width = {stride_width};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
 }};\n"""
 
@@ -305,7 +306,7 @@ conv1d_function_template = 'nnet::conv_1d_{data_format}<{input_t}, {output_t}, {
 conv2d_function_template = 'nnet::conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
 param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {param}, {output});'
-pooling1d_function_template = 'nnet::pooling1d<{input_t}, {config}>({input}, {output});'
+pooling1d_function_template = 'nnet::pooling1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 global_pooling1d_function_template = 'nnet::global_pooling1d<{input_t}, {config}>({input}, {output});'
 global_pooling2d_function_template = 'nnet::global_pooling2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'

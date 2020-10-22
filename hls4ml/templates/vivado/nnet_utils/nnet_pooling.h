@@ -86,22 +86,22 @@ T pad_val(){
 struct pooling1d_config{
   // IO size
   static const unsigned n_in = 10;
-  static const unsigned pool_size = 2;
-  static const unsigned n_out = n_in / pool_size;
+  static const unsigned pool_width = 2;
+  static const unsigned n_out = n_in / pool_width;
   static const unsigned pad_left = 0;
   static const unsigned pad_right = 0;
   // Pooling function
   static const Pool_Op pool_op = Max;
 };
 
-template<class data_T, typename CONFIG_T>
-void pooling1d(data_T data[CONFIG_T::n_in], data_T res[CONFIG_T::n_out]){
-  for(int ii = 0; ii < CONFIG_T::n_out; ii ++){
-    data_T pool[CONFIG_T::pool_size];
-    for(int jj = 0; jj < CONFIG_T::pool_size; jj++){
-      pool[jj] = data[ii * CONFIG_T::pool_size + jj]; 
+template<class data_T, class res_T, typename CONFIG_T>
+void pooling1d_cl(data_T data[CONFIG_T::n_in * CONFIG_T::n_filt], res_T res[CONFIG_T::n_out * CONFIG_T::n_filt]){
+  for(int ii = 0; ii < CONFIG_T::n_out * CONFIG_T::n_filt; ii ++){
+    data_T pool[CONFIG_T::pool_width];
+    for(int jj = 0; jj < CONFIG_T::pool_width; jj++){
+      pool[jj] = data[ii * CONFIG_T::pool_width + jj]; 
     }
-    res[ii] = pool_op<data_T, CONFIG_T::pool_size, CONFIG_T::pool_op>(pool);
+    res[ii] = pool_op<data_T, CONFIG_T::pool_width, CONFIG_T::pool_op>(pool);
   }
 }
 

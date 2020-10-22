@@ -697,13 +697,20 @@ class Pooling1D(Layer):
 
     def function_cpp(self):
         params = self._default_function_params()
+        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
 
         return [self._function_template.format(**params)]
 
     def config_cpp(self):
         params = self._default_config_params()
-        params['n_in'] = self.get_input_variable().size_cpp()
-        params['n_out'] = self.get_output_variable().size_cpp()
+        if self.get_attr('data_format') == 'channels_last':
+            params['n_in'] = self.get_input_variable().dim_names[0]
+            params['n_out'] = self.get_output_variable().dim_names[0]
+            params['n_filt'] = self.get_output_variable().dim_names[1]
+        else:
+            params['n_in'] = self.get_input_variable().dim_names[1]
+            params['n_out'] = self.get_input_variable().dim_names[1]
+            params['n_filt'] = self.get_output_variable().dim_names[0]
 
         return self._config_template.format(**params)
 
@@ -717,6 +724,7 @@ class Pooling2D(Layer):
     def function_cpp(self):
         params = self._default_function_params()
         params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
+
         return [self._function_template.format(**params)]
 
     def config_cpp(self):
