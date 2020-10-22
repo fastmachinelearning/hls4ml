@@ -106,6 +106,8 @@ class HLSConfig(object):
         if precision is None:
             raise Exception('No precision for {}->{} found and no default specified.'.format(layer.name, var))
 
+        precision = self.backend.convert_precision_string(precision)
+
         return (precision, type_name)
 
     def get_reuse_factor(self, layer):

@@ -37,7 +37,7 @@ class QKerasQuantizer(Quantizer):
 class QKerasBinaryQuantizer(object):
     def __init__(self, config, xnor=False):
         self.bits = 1 if xnor else 2
-        self.hls_type = IntegerPrecisionType(width=1, signed=False) if xnor else IntegerPrecisionType(width=2, signed=True)
+        self.hls_type = IntegerPrecisionType(width=1, signed=False, xnor=True) if xnor else IntegerPrecisionType(width=2, signed=True)
         self.alpha = config['config']['alpha']
         # Use the QKeras quantizer to handle any stochastic / alpha stuff
         self.quantizer_fn = get_quantizer(config)

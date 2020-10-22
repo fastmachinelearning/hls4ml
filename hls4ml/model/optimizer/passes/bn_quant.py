@@ -15,15 +15,8 @@ class BatchNormalizationQuantizedTanh(Layer):
         inp = self.get_input_variable()
         shape = inp.shape
         dims = inp.dim_names
-        precision_bits = re.search('.+<(.+?)>', inp.type.precision).group(1).split(',')
-        if 'int' in str(inp.type.precision):
-            W = int(precision_bits[0])
-            I = W
-            F = 0
-        elif 'fixed' in str(inp.type.precision):
-            W = int(precision_bits[0])
-            I = int(precision_bits[1])
-            F = W - I
+        precision = self.model.config.backend.convert_precision_string(inp.type.precision)
+        W, I, F = precision.width, precision.integer, precision.fractional
         original_name = self.attributes.get('original_name')
         variance = self.model.get_weights_data(original_name, 'moving_variance')
         mean = self.model.get_weights_data(original_name, 'moving_mean')
@@ -129,7 +122,7 @@ class QuantizeDenseOutput(OptimizerPass):
         quantized_precision = None
         quantizer = node.get_attr('weight_quantizer')
         if quantizer.__class__.__name__ == 'BinaryQuantizer':
-            quantized_precision = IntegerPrecisionType(width=1, signed=False)
+            quantized_precision = IntegerPrecisionType(width=1, signed=False, xnor=True)
         elif quantizer.__class__.__name__ == 'TernaryQuantizer':
             quantized_precision = IntegerPrecisionType(width=2)
         else:

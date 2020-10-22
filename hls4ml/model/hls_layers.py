@@ -15,9 +15,12 @@ class Quantizer(object):
         raise NotImplementedError
 
 class IntegerPrecisionType(object):
-    def __init__(self, width=16, signed=True):
+    def __init__(self, width=16, signed=True, xnor=False):
         self.width = width
+        self.integer = width
+        self.fractional = 0
         self.signed = signed
+        self.xnor = xnor # special case where '0' means '-1'
     
     def __str__(self):
         typestring = 'ap_{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
@@ -27,43 +30,18 @@ class FixedPrecisionType(object):
     def __init__(self, width=16, integer=6, signed=True, rounding_mode=None, saturation_mode=None, saturation_bits=None):
         self.width = width
         self.integer = integer
+        self.fractional = width-integer
         self.signed = signed
         self.rounding_mode = rounding_mode
         self.saturation_mode = saturation_mode
         self.saturation_bits = saturation_bits
+        self.xnor = False # for easier logic evaluating binary specialisations
     
     def __str__(self):
         args = [self.width, self.integer, self.rounding_mode, self.saturation_mode, self.saturation_bits]
         args = ','.join([str(arg) for arg in args if arg is not None])
         typestring = 'ap_{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
         return typestring
-
-def convert_precision_string(precision):
-    assert isinstance(precision, str), "This method converts precision strings to PrecisionTypes. You provided a {}".format(type(precision))
-    bits = re.search('.+<(.+?)>', precision).group(1).split(',')
-    sat_mode = None
-    round_mode = None
-    sat_bits = None
-    if 'fixed' in precision:
-        W = int(bits[0])
-        I = int(bits[1])
-        fields = 2
-        signed = ~('u' in precision)
-    elif 'int' in precision:
-        W = int(bits[0])
-        I = W
-        fields = 1
-        signed = ~('u' in precision)
-    if len(bits) > fields:
-        sat_mode = bits[fields]
-    if len(bits) > fields+1:
-        round_mode = bits[fields+1]
-    if len(bits) > fields+2:
-        sat_bits = int(bits[fields+2])
-    if 'fixed' in precision:
-        return FixedPrecisionType(W, I, signed, round_mode, sat_mode, sat_bits)
-    elif 'int' in precision:
-        return IntegerPrecisionType(W, signed)
 
 def find_minimum_width(data, signed=True):
     """
@@ -524,6 +502,7 @@ class Dense(Layer):
         params['n_out'] = self.get_output_variable().size_cpp()
         params['nzeros'] = self.get_weights('weight').nzeros
         params['nonzeros'] = self.get_weights('weight').nonzeros
+        params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
 
         return self._config_template.format(**params)
 
