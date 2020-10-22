@@ -2,7 +2,6 @@
 #define NNET_CONV1D_LATENCY_H_
 
 #include "nnet_common.h"
-#include "nnet_conv.h"
 #include <cstdlib>
 
 namespace nnet {
