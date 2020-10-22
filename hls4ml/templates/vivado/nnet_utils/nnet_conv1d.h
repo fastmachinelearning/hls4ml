@@ -17,8 +17,8 @@
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef NNET_CONV_H_
-#define NNET_CONV_H_
+#ifndef NNET_CONV1D_H_
+#define NNET_CONV1D_H_
 
 #include "nnet_common.h"
 #include "nnet_conv1d_latency.h"

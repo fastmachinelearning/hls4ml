@@ -2,7 +2,6 @@
 #define NNET_CONV2D_RESOURCE_H_
 
 #include "nnet_common.h"
-#include "nnet_conv2d.h"
 #include "nnet_dense.h"
 
 namespace nnet {
