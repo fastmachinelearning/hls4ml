@@ -1,5 +1,6 @@
 import importlib
 from hls4ml.model.hls_model import HLSModel
+from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType, convert_precision_string
 import qkeras
 import numpy as np
 import pandas
@@ -120,17 +121,14 @@ def types_histogram(data, fmt='longform'):
 types_plots = {'boxplot' : types_boxplot,
                'histogram' : types_histogram}
 
-def ap_fixed_WIF(type_str):
-    if 'ap_fixed' in type_str:
-        W = int(type_str.split(',')[0].split('<')[1])
-        I = int(type_str.split(',')[1].split('>')[0])
+def ap_fixed_WIF(dtype):
+    if isinstance(dtype, str):
+        dtype = convert_precision_string(dtype)
+    if isinstance(dtype, FixedPrecisionType):
+        W, I = dtype.width, dtype.integer
         F = W - I
-    elif 'ap_int' in type_str:
-        W = int(type_str.replace('ap_int<','').replace('>',''))
-        I = W
-        F = 0
-    else:
-        W, I, F = 0, 0, 0
+    elif isinstance(dtype, IntegerPrecisionType):
+        W, I, F = dtype.width, dtype.width, 0
     return W, I, F
 
 def types_hlsmodel(model):

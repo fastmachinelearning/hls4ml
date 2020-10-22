@@ -174,7 +174,7 @@ class VivadoWriter(Writer):
                     if func:
                         for line in func:
                             newline += '    ' + line + '\n'
-                        if model.config.trace_output and model.config.get_layer_config_value(layer, 'Trace', False):
+                        if model.config.trace_output and layer.get_attr('Trace', False):
                             newline += '#ifndef __SYNTHESIS__\n'
                             for var in vars:
                                 newline += '    nnet::save_layer_output<{}>({}, "{}", {});\n'.format(var.type.name, var.name, layer.name, var.size_cpp())
@@ -471,7 +471,7 @@ class VivadoWriter(Writer):
             elif '//hls-fpga-machine-learning insert trace_outputs' in line:
                 newline = ''
                 for layer in model.get_layers():
-                    if layer.function_cpp() and model.config.trace_output and model.config.get_layer_config_value(layer, 'Trace', False):
+                    if layer.function_cpp() and model.config.trace_output and layer.get_attr('Trace', False):
                             vars = layer.get_variables()
                             for var in vars:
                                 newline += indent + 'nnet::trace_outputs->insert(std::pair<std::string, void *>("{}", (void *) malloc({} * element_size)));\n'.format(layer.name, var.size_cpp())

@@ -38,6 +38,33 @@ class FixedPrecisionType(object):
         typestring = 'ap_{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
         return typestring
 
+def convert_precision_string(precision):
+    assert isinstance(precision, str), "This method converts precision strings to PrecisionTypes. You provided a {}".format(type(precision))
+    bits = re.search('.+<(.+?)>', precision).group(1).split(',')
+    sat_mode = None
+    round_mode = None
+    sat_bits = None
+    if 'fixed' in precision:
+        W = int(bits[0])
+        I = int(bits[1])
+        fields = 2
+        signed = ~('u' in precision)
+    elif 'int' in precision:
+        W = int(bits[0])
+        I = W
+        fields = 1
+        signed = ~('u' in precision)
+    if len(bits) > fields:
+        sat_mode = bits[fields]
+    if len(bits) > fields+1:
+        round_mode = bits[fields+1]
+    if len(bits) > fields+2:
+        sat_bits = int(bits[fields+2])
+    if 'fixed' in precision:
+        return FixedPrecisionType(W, I, signed, round_mode, sat_mode, sat_bits)
+    elif 'int' in precision:
+        return IntegerPrecisionType(W, signed)
+
 def find_minimum_width(data, signed=True):
     """
     Helper function to find the minimum integer width to express all entries in the data array
