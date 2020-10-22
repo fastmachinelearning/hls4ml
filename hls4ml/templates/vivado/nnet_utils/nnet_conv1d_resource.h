@@ -1,5 +1,5 @@
-#ifndef NNET_CONV_RESOURCE_H_
-#define NNET_CONV_RESOURCE_H_
+#ifndef NNET_CONV1D_RESOURCE_H_
+#define NNET_CONV1D_RESOURCE_H_
 
 #include "nnet_common.h"
 #include "nnet_dense.h"
