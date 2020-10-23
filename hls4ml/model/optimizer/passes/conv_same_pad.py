@@ -1,5 +1,43 @@
 from hls4ml.model.optimizer import OptimizerPass
 
+class InsertZeroPaddingBeforeConv1D(OptimizerPass):
+    def match(self, node):
+        is_match = node.__class__.__name__ == 'Conv1D' and \
+            node.get_attr('padding') == 'same'
+        return is_match
+
+    def transform(self, model, node):
+        if model.config.backend.name != 'Vivado' or \
+            model.config.get_config_value('IOType') != 'io_stream':
+            return False
+        
+        # Get the padding parameters from Conv1D layer
+        pad_left = node.get_attr('pad_left')
+        pad_right = node.get_attr('pad_right')
+
+        out_width = pad_left + node.get_attr('n_in') + pad_right
+
+        attrs = {
+            'pad_left': pad_left,
+            'pad_right': pad_right,
+            'in_width': node.get_attr('n_in'),
+            'out_width': out_width,
+            'n_chan': node.get_attr('n_chan'),
+            'data_format': node.get_attr('data_format', 'channels_last')
+        }
+
+        # Switch Conv1D layer padding to 'valid'
+        node.set_attr('padding', 'valid')
+        node.set_attr('pad_left', 0)
+        node.set_attr('pad_right', 0)
+        node.set_attr('in_width', out_width)
+
+        # Insert new ZeroPadding1D node above Conv1D
+        padding_layer = model.make_node('ZeroPadding1D', 'zp1d_' + node.name, attrs, node.inputs.copy())
+        model.insert_node(padding_layer)
+
+        return True
+
 class InsertZeroPaddingBeforeConv2D(OptimizerPass):
     def match(self, node):
         is_match = node.__class__.__name__ == 'Conv2D' and \
