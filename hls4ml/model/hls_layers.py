@@ -15,12 +15,11 @@ class Quantizer(object):
         raise NotImplementedError
 
 class IntegerPrecisionType(object):
-    def __init__(self, width=16, signed=True, xnor=False):
+    def __init__(self, width=16, signed=True):
         self.width = width
         self.integer = width
         self.fractional = 0
         self.signed = signed
-        self.xnor = xnor # special case where '0' means '-1'
     
     def __str__(self):
         typestring = 'ap_{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
@@ -35,13 +34,19 @@ class FixedPrecisionType(object):
         self.rounding_mode = rounding_mode
         self.saturation_mode = saturation_mode
         self.saturation_bits = saturation_bits
-        self.xnor = False # for easier logic evaluating binary specialisations
     
     def __str__(self):
         args = [self.width, self.integer, self.rounding_mode, self.saturation_mode, self.saturation_bits]
         args = ','.join([str(arg) for arg in args if arg is not None])
         typestring = 'ap_{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
         return typestring
+
+class XnorPrecisionType(IntegerPrecisionType):
+    '''
+    Convenience class to differentiate 'regular' integers from BNN Xnor ones
+    '''
+    def __init__(self):
+        super().__init__(width=1, signed=False)
 
 def find_minimum_width(data, signed=True):
     """

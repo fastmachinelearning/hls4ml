@@ -2,7 +2,7 @@ import numpy as np
 import re
 
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.hls_model import Layer, IntegerPrecisionType, register_layer
+from hls4ml.model.hls_model import Layer, IntegerPrecisionType, XnorPrecisionType, register_layer
 from hls4ml.templates import templates
 
 class BatchNormalizationQuantizedTanh(Layer):
@@ -25,7 +25,7 @@ class BatchNormalizationQuantizedTanh(Layer):
         epsilon = self.attributes.get('epsilon')
         threshold = mean - beta * np.sqrt(variance + epsilon) / gamma
         if self.get_attr('quantize') == 2:
-            self.add_output_variable(shape, dims, precision=IntegerPrecisionType(width=1, signed=False))
+            self.add_output_variable(shape, dims, precision=XnorPrecisionType())
             threshold = np.floor(threshold * 2**F) / 2**F
             self.add_weights_variable(name='threshold', var_name='t{index}', data=threshold, type_name='threshold{index}_t', precision=inp.type.precision)
         elif self.get_attr('quantize') == 3:
@@ -122,7 +122,7 @@ class QuantizeDenseOutput(OptimizerPass):
         quantized_precision = None
         quantizer = node.get_attr('weight_quantizer')
         if quantizer.__class__.__name__ == 'BinaryQuantizer':
-            quantized_precision = IntegerPrecisionType(width=1, signed=False, xnor=True)
+            quantized_precision = XnorPrecisionType()
         elif quantizer.__class__.__name__ == 'TernaryQuantizer':
             quantized_precision = IntegerPrecisionType(width=2)
         else:

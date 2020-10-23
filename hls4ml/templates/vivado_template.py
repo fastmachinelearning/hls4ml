@@ -408,13 +408,14 @@ class VivadoBackend(Backend):
         '''
         Helper function to determine which product implementation to use during inference
         '''
+        from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType, XnorPrecisionType
         product = 'mult'
         # if binary
-        if weight_T.width == 1 and weight_T.xnor and data_T.width == 1 and data_T.xnor:
+        if isinstance(weight_T, XnorPrecisionType) and isinstance(data_T, XnorPrecisionType):
             product = 'both_binary'
-        elif weight_T.width == 1 and weight_T.xnor: # data is not xnor-binary
+        elif isinstance(weight_T, XnorPrecisionType): # data is not xnor-binary
             product = 'weight_binary'
-        elif weight_T.width == 2 and weight_T.signed:
+        elif isinstance(weight_T, IntegerPrecisionType) and weight_T.width == 2 and weight_T.signed:
             product = 'weight_ternary'
         else:
             product = 'mult'
