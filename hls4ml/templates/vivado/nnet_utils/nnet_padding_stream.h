@@ -17,6 +17,24 @@ void fill_zero(hls::stream<res_T> &res) {
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
+void zeropad1d_cl(
+    hls::stream<data_T> &data,
+    hls::stream<res_T>  &res
+) {
+    PadLeft: for (int i = 0; i < CONFIG_T::pad_left; i++) {
+        fill_zero<res_T, CONFIG_T>(res);
+    }
+
+    CopyMain: for (int i = 0; i < CONFIG_T::in_width; i++) {
+        res.write(data.read());
+    }
+
+    PadRight: for (int i = 0; i < CONFIG_T::pad_right; i++) {
+        fill_zero<res_T, CONFIG_T>(res);
+    }
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
 void zeropad2d_cl(
     hls::stream<data_T> &data,
     hls::stream<res_T>  &res

@@ -156,6 +156,14 @@ global_pooling2d_config_template = """struct config{index} : nnet::pooling2d_con
     static const unsigned reuse = {reuse};
 }};\n"""
 
+zeropad1d_config_template = """struct config{index} : nnet::padding1d_config {{
+    static const unsigned in_width = {in_width};
+    static const unsigned n_chan = {n_chan};
+    static const unsigned out_width = {out_width};
+    static const unsigned pad_left = {pad_left};
+    static const unsigned pad_right = {pad_right};
+}};\n"""
+
 zeropad2d_config_template = """struct config{index} : nnet::padding2d_config {{
     static const unsigned in_height = {in_height};
     static const unsigned in_width = {in_width};
@@ -310,6 +318,7 @@ pooling1d_function_template = 'nnet::pooling1d_{data_format}<{input_t}, {output_
 pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 global_pooling1d_function_template = 'nnet::global_pooling1d<{input_t}, {config}>({input}, {output});'
 global_pooling2d_function_template = 'nnet::global_pooling2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
+zeropad1d_function_template = 'nnet::zeropad1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 zeropad2d_function_template = 'nnet::zeropad2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
 resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
@@ -345,6 +354,7 @@ class VivadoBackend(Backend):
         self.register_templates('Pooling2D'              , pooling2d_function_template,   pooling2d_config_template, pooling_include_list)
         self.register_templates('GlobalPooling1D'        , global_pooling1d_function_template,   global_pooling1d_config_template, pooling_include_list)
         self.register_templates('GlobalPooling2D'        , global_pooling2d_function_template,   global_pooling2d_config_template, pooling_include_list)
+        self.register_templates('ZeroPadding1D'          , zeropad1d_function_template,   zeropad1d_config_template, padding_include_list)
         self.register_templates('ZeroPadding2D'          , zeropad2d_function_template,   zeropad2d_config_template, padding_include_list)
         self.register_templates('Merge'                  , merge_function_template,       merge_config_template, merge_include_list)
         self.register_templates('Concatenate'            , merge_function_template,       concat_config_template, merge_include_list)

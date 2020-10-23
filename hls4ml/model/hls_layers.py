@@ -785,6 +785,34 @@ class GlobalPooling2D(Layer):
 
         return self._config_template.format(**params)
 
+class ZeroPadding1D(Layer):
+    def initialize(self):
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['out_width'], self.attributes['n_chan']]
+            dims = ['OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
+        else:
+            shape = [self.attributes['n_chan'], self.attributes['out_width']]
+            dims = ['N_CHAN_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+        self.add_output_variable(shape, dims)
+
+    def function_cpp(self):
+        params = self._default_function_params()
+        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+        if self.get_attr('data_format') == 'channels_last':
+            params['in_width'] = self.get_input_variable().dim_names[0]
+            params['n_chan'] = self.get_input_variable().dim_names[1]
+            params['out_width'] = self.get_output_variable().dim_names[0]
+        else:
+            params['n_chan'] = self.get_input_variable().dim_names[0]
+            params['in_width'] = self.get_input_variable().dim_names[1]
+            params['out_width'] = self.get_output_variable().dim_names[1]
+
+        return self._config_template.format(**params)
+
 class ZeroPadding2D(Layer):
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
@@ -1329,6 +1357,7 @@ layer_map = {
     'GlobalAveragePooling1D' : GlobalPooling1D,
     'GlobalMaxPooling2D'     : GlobalPooling2D,
     'GlobalAveragePooling2D' : GlobalPooling2D,
+    'ZeroPadding1D'          : ZeroPadding1D,
     'ZeroPadding2D'          : ZeroPadding2D,
     'Merge'                  : Merge,
     'Concatenate'            : Concatenate,
