@@ -368,6 +368,14 @@ class HLSModel(object):
         return self.output_vars[output_name]
 
     def write(self):
+        def make_stamp():
+            from string import hexdigits
+            from random import choice
+            length = 8
+            return ''.join(choice(hexdigits) for m in range(length))
+        
+        self.config.config['Stamp'] = make_stamp()
+
         self.config.writer.write_hls(self)
 
     def compile(self):
@@ -380,7 +388,7 @@ class HLSModel(object):
             ret_val = os.system('bash build_lib.sh')
             if ret_val != 0:
                 raise Exception('Failed to compile project "{}"'.format(self.config.get_project_name()))
-            lib_name = 'firmware/{}.so'.format(self.config.get_project_name())
+            lib_name = 'firmware/{}-{}.so'.format(self.config.get_project_name(), self.config.get_config_value('Stamp'))
             if self._top_function_lib is not None:
 
                 if platform.system() == "Linux":
