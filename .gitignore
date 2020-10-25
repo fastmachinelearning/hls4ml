@@ -2,3 +2,5 @@
 *.DS_Store
 *.swp
 *~
+node_modules
+_book

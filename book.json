@@ -5,6 +5,8 @@
       "family": "sans"
     }
   },
-
-  "plugins": ["prism", "-highlight", "mathjax"]
+  "plugins": [
+    "prism",
+    "-highlight"
+  ]
 }

@@ -24,18 +24,25 @@ With this in mind, let's take a look at how hls4ml helps to achieve such a goal.
 <div style="text-align: center;"><img src="img/nn_map_paper_fig_2.png" width="400" /></div>
 <br><br>
 
-Consider a multi-layered neural network. At each neuron in a layer $m$ (containing $N_m$ neurons), we calculate an output value (part of the output vector $\mathbf{x}_m$ of said layer) using the sum of output values of the previous layer multiplied by independent weights for each of these values and a bias value. An activation function is performed on the result to get the final output value for the neuron. Representing the weights as a $N_m \times N_{m-1}$ matrix $\mathbf{W}_{m,m-1}$, the bias values as $\mathbf{b}_m$, and the activation function as $g_m$, we can express this compactly as $\mathbf{x}_m = g_m(\mathbf{W}_{m,m-1}\mathbf{x}_{m-1}+\mathbf{b}_m)$. With hls4ml, each layer of output values is calculated independently in sequence, using pipelining to speed up the process by accepting new inputs after an initiation interval. The activations, if nontrivial, are precomputed. 
+Consider a multi-layered neural network. At each neuron in a layer  _m_  (containing  _N_<sub>_m_</sub>  neurons), we calculate an output value (part of the output vector  _**x**_<sub>m</sub>  of said layer) using the sum of output values of the previous layer multiplied by independent weights for each of these values and a bias value. An activation function is performed on the result to get the final output value for the neuron. Representing the weights as a  _N_<sub>_m_</sub> by _N_<sub>_m-1_</sub>  matrix  _W_<sub>_m,m-1_</sub> , the bias values as  _**b**_<sub>m</sub>, and the activation function as  _g_<sub>_m_</sub>, we can express this compactly as:
+
+ <p align="center"> <b><i>x</i></b><sub><i>m</i></sub> = <i>g</i><sub><i>m</i></sub>(<i>W</i><sub><i>m,m-1</i></sub> <b><i>x</i></b><sub><i>m-1</i></sub> + <b><i>b</i></b><sub><i>m</i></sub>) </p>
+
+
+With hls4ml, each layer of output values is calculated independently in sequence, using pipelining to speed up the process by accepting new inputs after an initiation interval. The activations, if nontrivial, are precomputed. 
 
 To ensure optimal performance, the user can control aspects of their model, principally:
 
    * **Size/Compression** - Though not explicitly part of the hls4ml package, this is an important optimization to efficiently use the FPGA resources
-   * **Precision** - Define the precision of the calculations in your model
+   * **Precision** - Define the <a href="PROFILING.html"> precision </a> of the calculations in your model
    * **Dataflow/Resource Reuse** - Control parallel or serial model implementations with varying levels of pipelining
+   * **Quantization Aware Training** - Achieve best performance at low precision with tools like QKeras, and benefit automatically during inference with hls4ml parsing of QKeras models
 
 <br>
 <div style="text-align: center;"><img src="img/reuse_factor_paper_fig_8.png" width="500" /></div>
 <br>
 
-Often, these decisions will be hardware dependent to maximize performance. Of note is that simplifying the input network must be done before using hls4ml to generate HLS code, for optimal compression to provide a sizable speedup. Also important to note is the use of fixed point arithmetic in hls4ml. This improves processing speed relative to floating point implementations. The hls4ml package also offers the functionality of configuring binning and output bit width of the precomputed activation functions as necessary. With respect to parallelization and resource reuse, hls4ml offers a "reuse factor" parameter that determines the number of times each multiplier is used in order to compute a layer of neuron's values. Therefore, a reuse factor of one would split the computation so each multiplier had to only perform one multiplication in the computation of the output values of a layer, as shown above.
+Often, these decisions will be hardware dependent to maximize performance. Of note is that simplifying the input network must be done before using hls4ml to generate HLS code, for optimal compression to provide a sizable speedup. Also important to note is the use of fixed point arithmetic in hls4ml. This improves processing speed relative to floating point implementations. The hls4ml package also offers the functionality of configuring binning and output bit width of the precomputed activation functions as necessary. With respect to parallelization and resource reuse, hls4ml offers a "reuse factor" parameter that determines the number of times each multiplier is used in order to compute a layer of neuron's values. Therefore, a reuse factor of one would split the computation so each multiplier had to only perform one multiplication in the computation of the output values of a layer, as shown above. Conversely, a reuse factor of four, in this case, uses a single multiplier four times sequentially. Low reuse factor achieves the lowest latency and highest throughput but uses the most resources, while high reuse factor save resources at the expense of longer latency and lower throughput. The reuse factor can be set using the <a href="setup/CONFIGURATION.html">configuration options</a>.
 
 Thereby, the hls4ml package builds efficient HLS code to implement neural networks on FPGAs for microsecond-scale latency on predictions. For more detailed information, take a look at our <a href="REFERENCE.html">references</a> page. All figures on this page are taken from the following paper: [JINST 13 P07027 (2018)](https://dx.doi.org/10.1088/1748-0221/13/07/P07027).
+
