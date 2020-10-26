@@ -128,6 +128,8 @@ class VivadoWriter(Writer):
                     for w in layer.get_weights():
                         if w.__class__.__name__ == 'CompressedWeightVariable':
                             newline += indent + '    nnet::load_compressed_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.nonzeros, w.name, w.name)
+                        elif w.__class__.__name__ == 'ExponentWeightVariable':
+                            newline += indent + '    nnet::load_exponent_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.data_length, w.name, w.name)
                         else:
                             newline += indent + '    nnet::load_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.data_length, w.name, w.name)
 

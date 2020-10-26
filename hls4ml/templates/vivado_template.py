@@ -16,7 +16,8 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
     typedef {index_t} index_t;
-    static const nnet::product_type product_type = nnet::product_type::{product_type};
+    template<class x_T, class y_T, class res_T>
+    using product = nnet::product::{product_type}<x_T, y_T, res_T>;
 }};\n"""
 
 batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
@@ -408,16 +409,20 @@ class VivadoBackend(Backend):
         '''
         Helper function to determine which product implementation to use during inference
         '''
-        from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType, XnorPrecisionType
+        from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType, XnorPrecisionType, ExponentPrecisionType
+        assert not isinstance(data_T, ExponentPrecisionType), "Only ExponentPrecisionType (aka 'power of 2') weights are currently supported, not data."
         product = 'mult'
-        # if binary
-        if isinstance(weight_T, XnorPrecisionType) and isinstance(data_T, XnorPrecisionType):
-            product = 'both_binary'
-        elif isinstance(weight_T, XnorPrecisionType): # data is not xnor-binary
-            product = 'weight_binary'
-        elif isinstance(weight_T, IntegerPrecisionType) and weight_T.width == 2 and weight_T.signed:
-            product = 'weight_ternary'
+        if isinstance(weight_T, ExponentPrecisionType):
+            product = 'weight_exponential'
         else:
-            product = 'mult'
+            # if binary
+            if isinstance(weight_T, XnorPrecisionType) and isinstance(data_T, XnorPrecisionType):
+                product = 'both_binary'
+            elif isinstance(weight_T, XnorPrecisionType): # data is not xnor-binary
+                product = 'weight_binary'
+            elif isinstance(weight_T, IntegerPrecisionType) and weight_T.width == 2 and weight_T.signed:
+                product = 'weight_ternary'
+            else:
+                product = 'mult'
         return product
 

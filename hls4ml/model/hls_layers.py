@@ -48,6 +48,13 @@ class XnorPrecisionType(IntegerPrecisionType):
     def __init__(self):
         super().__init__(width=1, signed=False)
 
+class ExponentPrecisionType(IntegerPrecisionType):
+    '''
+    Convenience class to differentiate 'regular' integers from those which represent exponents, for QKeras po2 quantizers, for example.
+    '''
+    def __init__(self, width=16, signed=True):
+        super().__init__(width=width, signed=signed)
+
 def find_minimum_width(data, signed=True):
     """
     Helper function to find the minimum integer width to express all entries in the data array
@@ -89,6 +96,16 @@ class CompressedType(HLSType):
                '{index} col_index; '
                '{precision} weight; }} {name};\n')
         return cpp_fmt.format(name=self.name, index=self.index_precision, precision=self.precision)
+
+class ExponentType(HLSType):
+    def __init__(self, name, precision, **kwargs):
+        super(ExponentType, self).__init__('exponent_type{index}', precision, **kwargs)
+
+    def definition_cpp(self):
+        cpp_fmt = ('typedef struct {name} {{ '
+                   '{sign} sign; '
+                   '{precision} weight; }} {name};\n')
+        return cpp_fmt.format(name=self.name, precision=self.precision, sign=str(XnorPrecisionType()))
 
 class Variable(object):
     def __init__(self, var_name, type_name, precision, **kwargs):
@@ -237,6 +254,26 @@ class CompressedWeightVariable(WeightVariable):
 
     next = __next__
 
+class ExponentWeightVariable(WeightVariable):
+    def __init__(self, var_name, type_name, precision, data, quantizer, **kwargs):
+        super(ExponentWeightVariable, self).__init__(var_name, type_name, precision, data, quantizer, **kwargs)
+        '''
+        WeightVariable for Exponent aka po2 data. The data should already by quantized and formatted by the quantizer.
+        '''
+        self.type = ExponentType(type_name, precision, **kwargs)
+        self.shape = list(self.data.shape[:-1])
+
+    def __iter__(self):
+        self._iterator = iter(self.data.reshape((np.product(self.data.shape[:-1]), 2)))
+        return self
+
+    def __next__(self):
+        value = next(self._iterator)
+        value_fmt = self.precision_fmt % value[1]
+        return '{%d, %s}' % (value[0], value_fmt)
+
+    next = __next__
+
 class Layer(object):
     def __init__(self, model, name, attributes, inputs, outputs=None):
         self.model = model
@@ -369,17 +406,22 @@ class Layer(object):
             data = self.model.get_weights_data(self.name, data)
 
         data_unquantized = data
+        exponent_type = False
         if quantizer is not None:
             precision = quantizer.hls_type
             type_name = name + '{index}_t'
             data = quantizer(data)
+            if isinstance(quantizer.hls_type, ExponentPrecisionType):
+                exponent_type = True
 
         if compression:
             var = CompressedWeightVariable(var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, reuse_factor=self.reuse_factor, index=self.index)
+        elif exponent_type:
+            var = ExponentWeightVariable(var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, index=self.index)
         else:
             var = WeightVariable(var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, index=self.index)
 
-            var.data_unquantized = data_unquantized
+        var.data_unquantized = data_unquantized
         self.weights[name] = var
         self.precision[var.type.name] = var.type
 
@@ -769,6 +811,7 @@ class BatchNormalization(Layer):
     def config_cpp(self):
         params = self._default_config_params()
         params['n_in'] = self.get_input_variable().size_cpp()
+        params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('scale').type.precision)
 
         return self._config_template.format(**params)
 

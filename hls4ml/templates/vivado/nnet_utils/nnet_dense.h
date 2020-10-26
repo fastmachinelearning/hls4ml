@@ -27,7 +27,79 @@
 
 namespace nnet {
 
-enum class product_type { both_binary, weight_binary, weight_ternary, mult };
+namespace product{
+
+template<class x_T, class w_T, class y_T>
+class Product{
+    public:
+    static y_T product(x_T a, w_T w){
+        // 'Normal' product
+        #pragma HLS inline off
+        return a * w;
+    }
+};
+
+/* ---
+ * 5 different methods to perform the product of input and weight, depending on the
+ * types of each. 
+ * --- */
+template<class x_T, class w_T, class y_T>
+class both_binary : public Product<x_T, w_T, y_T>{
+    public:
+    static y_T product(x_T a, w_T w){
+        // specialisation for 1-bit weights and incoming data
+        #pragma HLS inline off
+        return a == w;
+    }
+};
+
+template<class x_T, class w_T, class y_T>
+class weight_binary : public Product<x_T, w_T, y_T>{
+    public:
+    static y_T product(x_T a, w_T w){
+        // Specialisation for 1-bit weights, arbitrary data
+        #pragma HLS inline off
+        return w == 0 ? (x_T) -a : a;
+    }
+};
+
+template<class x_T, class w_T, class y_T>
+class weight_ternary : public Product<x_T, w_T, y_T>{
+    public:
+    static y_T product(x_T a, w_T w){
+        // Specialisation for 2-bit weights, arbitrary data
+        #pragma HLS inline off
+        if (w == 0) return (x_T) 0;
+        else if(w == -1) return (x_T) -a;
+        else return (x_T) a; // if(w == 1)
+    }
+};
+
+template<class x_T, class w_T, class y_T>
+class mult : public Product<x_T, w_T, y_T>{
+    public:
+    static y_T product(x_T a, w_T w){
+        // 'Normal' product
+        #pragma HLS inline off
+        return a * w;
+    }
+};
+
+template<class x_T, class w_T, class y_T>
+class weight_exponential : public Product<x_T, w_T, y_T>{
+    public:
+    static y_T product(x_T a, w_T w){
+        // Shift product for exponential weights
+        #pragma HLS inline off
+        // shift by the exponent. Negative weights shift right
+        y_T y = a << w.weight;
+        // negate or not depending on weight sign
+        return w.sign == 1 ? (x_T) y : (x_T) -y;
+    }
+};
+
+} // namespace product_type
+
 
 struct dense_config
 {
@@ -47,66 +119,19 @@ struct dense_config
     static const unsigned n_zeros = 0;
     // partitioning arrays cyclically to go with roll factors?
     // Product function to use
-    static const nnet::product_type product_type = nnet::product_type::mult;
+    template<class x_T, class y_T, class res_T>
+    using product = nnet::product::mult<x_T, y_T, res_T>;
 };
 
-/* ---
- * 4 different methods to perform the product of input and weight, depending on the
- * types of each. 
- * --- */
-template<class data_T, class weight_T, class ret_T>
-ret_T product_both_binary(ap_uint<1> a, ap_uint<1> w){
-    // specialisation for 1-bit weights and incoming data
-    #pragma HLS inline off
-    return a == w;
-}
-
-template<class data_T, class weight_T, class ret_T>
-ret_T product_weight_binary(data_T a, ap_uint<1> w){
-    // Specialisation for 1-bit weights, arbitrary data
-    #pragma HLS inline off
-    return w == 0 ? (data_T) -a : a;
-}
-
-template<class data_T, class weight_T, class ret_T>
-ret_T product_weight_ternary(data_T a, ap_int<2> w){
-    // Specialisation for 2-bit weights, arbitrary data
-    #pragma HLS inline off
-    if (w == 0) return (data_T) 0;
-    else if(w == -1) return (data_T) -a;
-    else return (data_T) a; // if(w == 1)
-}
-
-template<class data_T, class weight_T, class ret_T>
-ret_T product_mult(data_T a, weight_T w){
-    // 'Normal' product
-    #pragma HLS inline off
-    return a * w;
-}
-
-template<class data_T, class weight_T, class ret_T, typename CONFIG_T>
-ret_T product(data_T a, weight_T w){
-    switch(CONFIG_T::product_type){
-    case product_type::both_binary:
-        return product_both_binary<data_T, weight_T, ret_T>(a, w); 
-    case product_type::weight_binary:
-        return product_weight_binary<data_T, weight_T, ret_T>(a, w); 
-    case product_type::weight_ternary:
-        return product_weight_ternary<data_T, weight_T, ret_T>(a, w); 
-    case product_type::mult:
-        return product_mult<data_T, weight_T, ret_T>(a, w); 
-    }
-}
-
 template<class data_T, class res_T, typename CONFIG_T>
-inline typename std::enable_if<CONFIG_T::product_type ==  nnet::product_type::both_binary,
-       ap_int<nnet::ceillog2(CONFIG_T::n_in) + 2>>::type
+inline typename std::enable_if<std::is_same<data_T, ap_uint<1>>::value
+        and std::is_same<typename CONFIG_T::weight_t, ap_uint<1>>::value, ap_int<nnet::ceillog2(CONFIG_T::n_in) + 2>>::type
 cast(typename CONFIG_T::accum_t x){
   return (ap_int<nnet::ceillog2(CONFIG_T::n_in) + 2>) (x - CONFIG_T::n_in / 2) * 2;
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-inline typename std::enable_if<not (CONFIG_T::product_type == product_type::both_binary), res_T>::type
+inline typename std::enable_if<(not std::is_same<data_T, ap_uint<1>>::value), res_T>::type
 cast(typename CONFIG_T::accum_t x){
   return (res_T) x;
 }
@@ -176,7 +201,7 @@ void dense_latency(
                 #pragma HLS ALLOCATION instances=product limit=multiplier_limit function
             }
         int index = ii*CONFIG_T::n_out+jj;
-        mult[index] = product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t, CONFIG_T>(cache, weights[index]);
+        mult[index] = CONFIG_T::template product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>::product(cache, weights[index]);
         }
     }
 

@@ -33,10 +33,11 @@ def _get_precision_from_quantizer(quantizer):
         else: 
             quantizer['class_name'] = quantizer_obj.__name__
 
-    supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh']
+    supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh', 'quantized_po2']
     if quantizer['class_name'] in supported_quantizers:
         bits = int(quantizer['config']['bits']) + 1
-        integer = int(quantizer['config']['integer']) + 1
+        # if integer isn't specified, it should be the same as bits
+        integer = int(quantizer['config'].get('integer', bits-1)) + 1
         
     elif quantizer['class_name'] in ['binary', 'stochastic_binary', 'binary_tanh']:
         bits = 2

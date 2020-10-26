@@ -1,10 +1,9 @@
-from hls4ml.model.hls_model import Quantizer
-from hls4ml.model.hls_model import IntegerPrecisionType
-from hls4ml.model.hls_model import FixedPrecisionType
+from hls4ml.model.hls_model import Quantizer, IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType, XnorPrecisionType
 from hls4ml.converters.keras.core import BinaryQuantizer
 
 from qkeras.quantizers import get_quantizer
 import tensorflow as tf
+import numpy as np
 
 class QKerasQuantizer(Quantizer):
     def __init__(self, config):
@@ -20,10 +19,7 @@ class QKerasQuantizer(Quantizer):
         # ! includes stochastic_binary
         elif 'binary' in config['class_name']:
             self.bits = 1
-            self.hls_type = IntegerPrecisionType(width=1, signed=False)
-        #elif config['class_name'] == 'quantized_po2':
-        #    self.bits = config['config']['bits']
-        #    self.hls_type = Po2Type(width=self.bits, signed=True)
+            self.hls_type = XnorPrecisionType()
         else:
             print("Unsupported quantizer: " + config['class_name'])
             self.bits = 16
@@ -37,7 +33,7 @@ class QKerasQuantizer(Quantizer):
 class QKerasBinaryQuantizer(object):
     def __init__(self, config, xnor=False):
         self.bits = 1 if xnor else 2
-        self.hls_type = IntegerPrecisionType(width=1, signed=False, xnor=True) if xnor else IntegerPrecisionType(width=2, signed=True)
+        self.hls_type = XnorPrecisionType() if xnor else IntegerPrecisionType(width=2, signed=True)
         self.alpha = config['config']['alpha']
         # Use the QKeras quantizer to handle any stochastic / alpha stuff
         self.quantizer_fn = get_quantizer(config)
@@ -49,12 +45,34 @@ class QKerasBinaryQuantizer(object):
         y = self.quantizer_fn(x).numpy()
         return self.binary_quantizer(y)
 
+class QKerasPO2Quantizer(object):
+    def __init__(self, config):
+        self.bits = config['config']['bits']
+        self.quantizer_fn = get_quantizer(config)
+        self.hls_type = ExponentPrecisionType(width=self.bits, signed=True)
+
+    def __call__(self, data):
+        '''
+        Return an array with one extra dimension as data.
+        Weights are quantized to log2(data), and the sign is added as an extra field
+        '''
+        x = tf.convert_to_tensor(data)
+        y = self.quantizer_fn(x)
+        # Use an XnorBinary-like representation for the sign
+        sign = np.where(y < 0, np.zeros_like(y), np.ones_like(y))
+        # Take the logarithm, since this is what we will write to the header
+        # for the optimized product using shifts
+        y = (tf.math.log(tf.math.abs(y)) / tf.math.log(2.)).numpy().astype('int')
+        return np.dstack((sign, y))
+
 def get_type(quantizer_config):
     width = quantizer_config['config']['bits']
     integer = quantizer_config['config'].get('integer', 0)
+    if quantizer_config['class_name'] == 'quantized_po2':
+        return ExponentPrecisionType(width=width, signed=True)
     if width == integer:
         if width == 1:
-            return IntegerPrecisionType(width=1, signed=False)
+            return XnorPrecisionType()
         else:
             return IntegerPrecisionType(width=width, signed=True)
     else:
@@ -63,11 +81,9 @@ def get_type(quantizer_config):
 def get_quantizer_from_config(keras_layer, quantizer_var):
     quantizer_config = keras_layer['config']['{}_quantizer'.format(quantizer_var)]
     if 'binary' in quantizer_config['class_name']:
-        if quantizer_var == 'kernel':
-            return QKerasBinaryQuantizer(quantizer_config, xnor=True)
-        # Captures 'bias' but also other unknown things
-        else:
-            return QKerasBinaryQuantizer(quantizer_config, xnor=False)
+        return QKerasBinaryQuantizer(quantizer_config, xnor=(quantizer_var == 'kernel'))
+    elif quantizer_config['class_name'] == 'quantized_po2':
+        return QKerasPO2Quantizer(quantizer_config)
     else:
         return QKerasQuantizer(quantizer_config)
 
