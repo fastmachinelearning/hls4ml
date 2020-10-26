@@ -56,6 +56,9 @@ def _get_precision_from_quantizer(quantizer):
 
 def config_from_keras_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1):
 
+    if granularity.lower() not in ['model', 'type', 'name']:
+        raise Exception('Invalid configuration granularity specified, expected "model", "type" or "name" got "{}"'.format(granularity))
+
     #This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
 
@@ -176,17 +179,16 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
 
     config = {}
 
-    if granularity.lower() == 'model':
-        model_config = {}
-        model_config['Precision'] = default_precision
-        model_config['ReuseFactor'] = default_reuse_factor
-        model_config['Strategy'] = 'Latency'
-        #model_config['Compression'] = False
-        #model_config['Trace'] = False
-        
-        config['Model'] = model_config
+    model_config = {}
+    model_config['Precision'] = default_precision
+    model_config['ReuseFactor'] = default_reuse_factor
+    model_config['Strategy'] = 'Latency'
+    #model_config['Compression'] = False
+    #model_config['Trace'] = False
+
+    config['Model'] = model_config
     
-    elif granularity.lower() == 'type':
+    if granularity.lower() == 'type':
         type_config = {}
         for layer in layer_list:
             if layer['class_name'] in type_config or layer['class_name'] == 'InputLayer':
@@ -205,8 +207,5 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             name_config[layer['name']] = layer_config
         
         config['LayerName'] = name_config
-
-    else:
-        raise Exception('Invalid configuration granularity specified, expected "model", "type" or "name" got "{}"'.format(granularity))
 
     return config
