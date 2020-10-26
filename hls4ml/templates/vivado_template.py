@@ -28,6 +28,8 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     static const bool store_weights_in_bram = false;
     typedef {bias_t} bias_t;
     typedef {scale_t} scale_t;
+    template<class x_T, class y_T, class res_T>
+    using product = nnet::product::{product_type}<x_T, y_T, res_T>;
 }};\n"""
 
 conv1d_config_template = """struct config{index} : nnet::conv1d_config {{

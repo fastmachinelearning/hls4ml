@@ -1,10 +1,30 @@
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.hls_layers import BatchNormalization
-from hls4ml.model.hls_model import IntegerPrecisionType, FixedPrecisionType, register_layer
+from hls4ml.model.hls_model import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType, register_layer
 from hls4ml.templates import templates
 import tensorflow as tf
 import numpy as np
 from qkeras import get_quantizer
+
+class QKerasPO2Quantizer(object):
+    def __init__(self, config):
+        self.bits = config['config']['bits']
+        self.quantizer_fn = get_quantizer(config)
+        self.hls_type = ExponentPrecisionType(width=self.bits, signed=True)
+
+    def __call__(self, data):
+        '''
+        Return an array with one extra dimension as data.
+        Weights are quantized to log2(data), and the sign is added as an extra field
+        '''
+        x = tf.convert_to_tensor(data)
+        y = self.quantizer_fn(x)
+        # Use an XnorBinary-like representation for the sign
+        sign = np.where(y < 0, np.zeros_like(y), np.ones_like(y))
+        # Take the logarithm, since this is what we will write to the header
+        # for the optimized product using shifts
+        y = (tf.math.log(tf.math.abs(y)) / tf.math.log(2.)).numpy().astype('int')
+        return np.dstack((sign, y))
 
 class OutputRoundingSaturationMode(OptimizerPass):
     '''
@@ -118,8 +138,9 @@ class QKerasFactorizeAlpha(OptimizerPass):
         new_weights = unscale * qweights # use the quantized weights for safety
 
 
-        # Set the alpha to 1 to avoid hitting this pass again
         qcfg = quantizer.get_config()
+        alpha = qcfg['alpha']
+        # Set the alpha to 1 to avoid hitting this pass again
         qcfg['alpha'] = 1
         node.weights['weight'].quantizer.quantizer_fn = quantizer.from_config(qcfg)
 
@@ -142,6 +163,14 @@ class QKerasFactorizeAlpha(OptimizerPass):
             node.attributes['bias_quantizer'].alpha = 1
 
         # insert a Batch Normalization layer to apply the alpha scale
+        if alpha == 'auto_po2':
+            scale_bits = np.abs(np.log2(scale)).max().astype('int') + 1
+            scale_t = ExponentPrecisionType(width=scale_bits, signed=True)
+            scale_q = QKerasPO2Quantizer({'class_name' : 'quantized_po2', 'config': {'bits': scale_bits}})
+        else:
+            scale_t = FixedPrecisionType() # TODO: automate this
+            scale_q = None
+
         attrs = {
             'name' : node.get_attr('name') + '_alpha',
             'class_name' : 'Alpha',
@@ -150,11 +179,12 @@ class QKerasFactorizeAlpha(OptimizerPass):
             'n_filt' : node.get_attr('n_filt', -1),
             'reuse_factor' : node.get_attr('reuse_factor'),
             'bias_t' : node.weights['bias'].type, 
-            'scale_t' : FixedPrecisionType(), # TODO automate this
+            'scale_t' : scale_t,
             'Trace' : node.get_attr('Trace', False) 
         }
         alpha_layer = model.make_node('ApplyAlpha', node.name + '_alpha', attrs, node.outputs)
-        alpha_layer.add_weights(scale, quantizer=None)
+
+        alpha_layer.add_weights(scale, quantizer=scale_q)
         alpha_layer.add_bias(bias, quantizer=bias_quantizer)
         model.insert_node(alpha_layer)
         return True
