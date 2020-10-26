@@ -7,7 +7,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='hls4ml',
-      version='0.3.0',
+      version='0.3.1',
       description='Machine learning in FPGAs using HLS',
       long_description=long_description,
       long_description_content_type='text/markdown',
@@ -36,8 +36,6 @@ setup(name='hls4ml',
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: Apache Software License',
           'Programming Language :: C++',
-          'Programming Language :: Python :: 2',
-          'Programming Language :: Python :: 2.7',
           'Programming Language :: Python :: 3',
           'Programming Language :: Python :: 3.6',
           'Topic :: Software Development :: Libraries',
