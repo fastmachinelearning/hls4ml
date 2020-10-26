@@ -56,7 +56,7 @@ void mult_buffer(
 
     typename data_T::value_type data[CONFIG_T::filt_width * CONFIG_T::n_chan];
     #pragma HLS ARRAY_PARTITION variable=data complete
-    typename data_T::value_type res[CONFIG_T::n_filt];
+    typename res_T::value_type res[CONFIG_T::n_filt];
     #pragma HLS ARRAY_PARTITION variable=res complete
 
     InitData: for (int id = 0; id < CONFIG_T::filt_width * CONFIG_T::n_chan; id++) {
