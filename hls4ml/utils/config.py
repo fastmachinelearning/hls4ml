@@ -33,7 +33,7 @@ def _get_precision_from_quantizer(quantizer):
         else: 
             quantizer['class_name'] = quantizer_obj.__name__
 
-    supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh', 'quantized_po2']
+    supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh', 'quantized_po2', 'quantized_relu_po2']
     if quantizer['class_name'] in supported_quantizers:
         bits = int(quantizer['config']['bits']) + 1
         # if integer isn't specified, it should be the same as bits
@@ -73,7 +73,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     norm_layers = ['BatchNormalization']
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
     merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate']
-    qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D']
+    qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D', 'QBatchNormalization']
     #Define layers to skip for conversion to HLS
     skip_layers = ['Dropout', 'Flatten']
     #All supported layers
