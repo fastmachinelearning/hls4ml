@@ -5,7 +5,7 @@ from hls4ml.model.optimizer.optimizer import OptimizerPass, register_pass, get_o
 
 from hls4ml.model.optimizer.passes.nop import EliminateLinearActivation
 from hls4ml.model.optimizer.passes.bn_quant import MergeBatchNormAndQuantizedTanh, QuantizeDenseOutput
-from hls4ml.model.optimizer.passes.dense_bn_fuse import FuseBatchNormalization
+from hls4ml.model.optimizer.passes.bn_fuse import FuseBatchNormalization
 from hls4ml.model.optimizer.passes.fuse_biasadd import FuseBiasAdd
 from hls4ml.model.optimizer.passes.conv_same_pad import InsertZeroPaddingBeforeConv1D
 from hls4ml.model.optimizer.passes.conv_same_pad import InsertZeroPaddingBeforeConv2D
