@@ -63,7 +63,7 @@ class QKerasPO2Quantizer(object):
         # Take the logarithm, since this is what we will write to the header
         # for the optimized product using shifts
         y = (tf.math.log(tf.math.abs(y)) / tf.math.log(2.)).numpy().astype('int')
-        return np.dstack((sign, y))
+        return np.stack((sign, y), axis=-1)
 
 def get_type(quantizer_config):
     width = quantizer_config['config']['bits']

@@ -24,7 +24,7 @@ class QKerasPO2Quantizer(object):
         # Take the logarithm, since this is what we will write to the header
         # for the optimized product using shifts
         y = (tf.math.log(tf.math.abs(y)) / tf.math.log(2.)).numpy().astype('int')
-        return np.dstack((sign, y))
+        return np.stack((sign, y), axis=-1)
 
 class OutputRoundingSaturationMode(OptimizerPass):
     '''
@@ -58,7 +58,7 @@ class OutputRoundingSaturationMode(OptimizerPass):
     def transform(self, model, node):
         oldtype = node.get_output_variable().type.precision
         if isinstance(oldtype, IntegerPrecisionType):
-            newprecision = IntegerPrecisionType(oldtype.width, oldtype.signed, self.rounding_mode, self.saturation_mode, self.saturation_bits)
+            newtype = IntegerPrecisionType(oldtype.width, oldtype.signed)
         elif isinstance(oldtype, FixedPrecisionType):
             newtype = FixedPrecisionType(oldtype.width, oldtype.integer, oldtype.signed, self.rounding_mode, self.saturation_mode, self.saturation_bits)
         else: # in case the precision is a string
@@ -115,12 +115,14 @@ class QKerasFactorizeAlpha(OptimizerPass):
         has_w_alpha, has_b_alpha = False, False
         if has_w_quant:
             if hasattr(node.get_attr('weight_quantizer'), 'alpha'):
-                has_w_alpha = node.get_attr('weight_quantizer').alpha != 1
+                w_alpha = node.get_attr('weight_quantizer').alpha
+                has_w_alpha = w_alpha != 1 and w_alpha is not None
             else:
                 has_w_alpha = False
         if has_b_quant:
             if hasattr(node.get_attr('bias_quantizer'), 'alpha'):
-                has_b_alpha = node.get_attr('bias_quantizer').alpha != 1
+                b_alpha = node.get_attr('bias_quantizer').alpha
+                has_b_alpha = b_alpha != 1 and b_alpha is not None
             else:
                 has_b_alpha = False
         is_match = q_layer and ((has_w_quant and has_w_alpha) or (has_b_quant and has_b_alpha))
@@ -132,7 +134,10 @@ class QKerasFactorizeAlpha(OptimizerPass):
         quantizer = node.weights['weight'].quantizer.quantizer_fn # get QKeras quantizer
         weights = node.weights['weight'].data_unquantized # get weights
         qweights = quantizer(tf.convert_to_tensor(weights))
-        scale = quantizer.scale.numpy()
+        if isinstance(quantizer.scale, (int, float)):
+            scale = np.ones(shape=node.get_output_variable().shape) * quantizer.scale
+        else:
+            scale = quantizer.scale.numpy()
         unscale = 1. / scale
 
         new_weights = unscale * qweights # use the quantized weights for safety
