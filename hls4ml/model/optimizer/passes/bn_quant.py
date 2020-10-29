@@ -94,7 +94,8 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
             'n_out' : bn_layer.get_attr('n_in'),
             'n_filt' : bn_layer.get_attr('n_filt'),
             'epsilon' : bn_layer.get_attr('epsilon'),
-            'quantize' : quantize
+            'quantize' : quantize,
+            'Trace' : bn_layer.get_attr('Trace')
         }
         bnbt_layer = model.make_node('BatchNormalizationQuantizedTanh', 'bnbt_' + bn_layer.name, attrs, bn_layer.inputs)
         # Replace the old BatchNormalization layer with this one
