@@ -72,9 +72,11 @@ typedef ap_fixed<32,10> accum_t_def;
 		#pragma HLS array_partition variable=left complete
 		#pragma HLS array_partition variable=right complete
 		for(int i = 0; i < leftN; i++){
+            #pragma HLS unroll
 			left[i] = x[i];
 		}
 		for(int i = 0; i < rightN; i++){
+            #pragma HLS unroll
 			right[i] = x[i+leftN];
 		}
 		return op(reduce<T,leftN,Op>(left, op), reduce<T,rightN,Op>(right, op));
