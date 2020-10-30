@@ -86,5 +86,8 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
 
     if 'Optimizers' in hls_config:
         config['HLSConfig']['Optimizers'] = hls_config['Optimizers']
+
+    if 'SkipOptimizers' in hls_config:
+        config['HLSConfig']['SkipOptimizers'] = hls_config['SkipOptimizers']
     
     return keras_to_hls(config)
