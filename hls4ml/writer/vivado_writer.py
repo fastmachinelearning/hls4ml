@@ -531,6 +531,7 @@ class VivadoWriter(Writer):
 
         for line in f.readlines():
             line = line.replace('myproject', model.config.get_project_name())
+            line = line.replace('mystamp', model.config.get_config_value('Stamp'))
 
             fout.write(line)
         f.close()

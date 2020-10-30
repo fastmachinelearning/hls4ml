@@ -12,7 +12,7 @@ from collections import OrderedDict
 from hls4ml.model.hls_layers import *
 from hls4ml.templates import get_backend
 from hls4ml.writer import get_writer
-from hls4ml.model.optimizer import optimize_model
+from hls4ml.model.optimizer import optimize_model, get_available_passes
 
 class HLSConfig(object):
     def __init__(self, config):
@@ -143,7 +143,20 @@ class HLSConfig(object):
 
     def _parse_hls_config(self):
         hls_config = self.config['HLSConfig']
+        
         self.optimizers = hls_config.get('Optimizers')
+        if 'SkipOptimizers' in hls_config:
+            if self.optimizers is not None:
+                raise Exception('Invalid optimizer configuration, please use either "Optimizers" or "SkipOptimizers".')
+            skip_optimizers = hls_config.get('SkipOptimizers')
+            selected_optimizers = get_available_passes()
+            for opt in skip_optimizers:
+                try:
+                    selected_optimizers.remove(opt)
+                except ValueError:
+                    pass                
+            self.optimizers = selected_optimizers
+        
         model_cfg = hls_config.get('Model')
         if model_cfg is not None:
             precision_cfg = model_cfg.get('Precision')
@@ -355,6 +368,14 @@ class HLSModel(object):
         return self.output_vars[output_name]
 
     def write(self):
+        def make_stamp():
+            from string import hexdigits
+            from random import choice
+            length = 8
+            return ''.join(choice(hexdigits) for m in range(length))
+        
+        self.config.config['Stamp'] = make_stamp()
+
         self.config.writer.write_hls(self)
 
     def compile(self):
@@ -367,7 +388,7 @@ class HLSModel(object):
             ret_val = os.system('bash build_lib.sh')
             if ret_val != 0:
                 raise Exception('Failed to compile project "{}"'.format(self.config.get_project_name()))
-            lib_name = 'firmware/{}.so'.format(self.config.get_project_name())
+            lib_name = 'firmware/{}-{}.so'.format(self.config.get_project_name(), self.config.get_config_value('Stamp'))
             if self._top_function_lib is not None:
 
                 if platform.system() == "Linux":

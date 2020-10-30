@@ -56,7 +56,6 @@ int main(int argc, char **argv)
   if (fin.is_open() && fpr.is_open()) {
     while ( std::getline(fin,iline) && std::getline (fpr,pline) ) {
       if (e % CHECKPOINT == 0) std::cout << "Processing input " << e << std::endl;
-      e++;
       char* cstr=const_cast<char*>(iline.c_str());
       char* current;
       std::vector<float> in;
@@ -85,6 +84,7 @@ int main(int argc, char **argv)
         std::cout << "Quantized predictions" << std::endl;
         //hls-fpga-machine-learning insert quantized
       }
+      e++;
     }
     fin.close();
     fpr.close();
