@@ -18,7 +18,6 @@ def parse_zeropadding1d_layer(keras_layer, input_names, input_shapes, data_reade
         layer['pad_left'] = padding[0]
         layer['pad_right'] = padding[1]
         
-    layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
     if layer['data_format'] == 'channels_first':
         output_shape = [
             input_shapes[0][0], # Batch
@@ -65,7 +64,6 @@ def parse_zeropadding2d_layer(keras_layer, input_names, input_shapes, data_reade
             layer['pad_left'] = width_pad
             layer['pad_bottom'] = width_pad
 
-    layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
     if layer['data_format'] == 'channels_first':
         output_shape = [
             input_shapes[0][0], # Batch

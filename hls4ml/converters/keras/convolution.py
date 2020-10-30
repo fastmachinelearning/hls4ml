@@ -31,7 +31,6 @@ def parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader, conf
         layer['n_out'] = int(math.ceil(float(in_width - layer['filt_width'] + 1) / float(layer['stride'])))
         layer['pad_left'] = 0
         layer['pad_right'] = 0
-    layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
     output_shape=[input_shapes[0][0], layer['n_out'], layer['n_filt']]
 
     return layer, output_shape
@@ -43,7 +42,6 @@ def parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader, conf
 
     layer = parse_default_keras_layer(keras_layer, input_names)
 
-    layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
     # weights_shape = (filter_height, filter_width, n_channels, n_filters)
     weights_shape = data_reader.get_weights_shape(layer['name'], 'kernel')
     layer['in_height'] = input_shapes[0][1]

@@ -112,6 +112,8 @@ def parse_default_keras_layer(keras_layer, input_names):
     if input_names is not None:
         layer['inputs'] = input_names
 
+    layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
+
     if 'activation' in keras_layer['config']:
         layer['activation'] = keras_layer['config']['activation']
     if 'epsilon' in keras_layer['config']:

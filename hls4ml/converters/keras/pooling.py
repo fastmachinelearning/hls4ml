@@ -10,8 +10,6 @@ def parse_pooling_layer(keras_layer, input_names, input_shapes, data_reader, con
 
     layer = parse_default_keras_layer(keras_layer, input_names)
 
-    layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
-
     if int(layer['class_name'][-2]) == 1:
         if layer['data_format'] == 'channels_last':
             layer['n_in']=input_shapes[0][1]
@@ -105,8 +103,6 @@ def parse_global_pooling_layer(keras_layer, input_names, input_shapes, data_read
         layer['n_filt']=input_shapes[0][2]
         output_shape=[input_shapes[0][0], layer['n_filt']]
     elif int(layer['class_name'][-2]) == 2:
-        layer['data_format'] = keras_layer['config'].get('data_format', 'channels_last')
-        
         if layer['data_format'] == 'channels_last':
             layer['in_height']=input_shapes[0][1]
             layer['in_width']=input_shapes[0][2]
