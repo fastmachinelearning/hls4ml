@@ -1,6 +1,7 @@
 import math
 from hls4ml.converters.keras_to_hls import parse_default_keras_layer
 from hls4ml.converters.keras_to_hls import keras_handler
+from hls4ml.converters.keras_to_hls import parse_data_format
 from hls4ml.converters.keras_to_hls import compute_padding_1d
 from hls4ml.converters.keras_to_hls import compute_padding_2d
 
@@ -11,12 +12,13 @@ def parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader, conf
 
     layer = parse_default_keras_layer(keras_layer, input_names)
     
-    # weights_shape = (filter_width, n_channels, n_filters)
-    weights_shape = data_reader.get_weights_shape(layer['name'], 'kernel')
-    layer['n_in'] = input_shapes[0][1]
-    layer['filt_width'] = weights_shape[0] # or keras_layer['config']['kernel_size']
-    layer['n_chan'] = weights_shape[1]
-    layer['n_filt'] = weights_shape[2] # or keras_layer['config']['filters']
+    (
+        layer['n_in'],
+        layer['n_chan']
+    ) = parse_data_format(input_shapes[0], layer['data_format'])
+
+    layer['n_filt'] = keras_layer['config']['filters']
+    layer['filt_width'] = keras_layer['config']['kernel_size'][0]
     layer['stride'] = keras_layer['config']['strides'][0]
     layer['padding'] = keras_layer['config']['padding']
 
@@ -30,7 +32,11 @@ def parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader, conf
         layer['stride'],
         layer['filt_width']
     )
-    output_shape=[input_shapes[0][0], layer['n_out'], layer['n_filt']]
+
+    if layer['data_format'] == 'channels_last':
+        output_shape = [input_shapes[0][0], layer['n_out'], layer['n_filt']]
+    elif layer['data_format'] == 'channels_first':
+        output_shape = [input_shapes[0][0], layer['n_filt'], layer['n_out']]
 
     return layer, output_shape
 
@@ -40,18 +46,16 @@ def parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader, conf
     assert('Conv2D' in keras_layer['class_name'])
 
     layer = parse_default_keras_layer(keras_layer, input_names)
+    
+    (
+        layer['in_height'],
+        layer['in_width'],
+        layer['n_chan']
+    ) = parse_data_format(input_shapes[0], layer['data_format'])
 
-    # weights_shape = (filter_height, filter_width, n_channels, n_filters)
-    weights_shape = data_reader.get_weights_shape(layer['name'], 'kernel')
-    layer['in_height'] = input_shapes[0][1]
-    layer['in_width'] = input_shapes[0][2]
-    if layer['data_format'] == 'channels_first':
-        layer['in_height'] = input_shapes[0][2]
-        layer['in_width'] = input_shapes[0][3]
-    layer['filt_height'] = weights_shape[0]
-    layer['filt_width'] = weights_shape[1]
-    layer['n_chan'] = weights_shape[2]
-    layer['n_filt'] = weights_shape[3]
+    layer['n_filt'] = keras_layer['config']['filters']
+    layer['filt_height'] = keras_layer['config']['kernel_size'][0]
+    layer['filt_width'] = keras_layer['config']['kernel_size'][1]
     layer['stride_height'] = keras_layer['config']['strides'][0]
     layer['stride_width'] = keras_layer['config']['strides'][1]
     layer['padding'] = keras_layer['config']['padding']

@@ -123,6 +123,25 @@ def parse_default_keras_layer(keras_layer, input_names):
 
     return layer
 
+def parse_data_format(input_shape, data_format='channels_last'):
+    if input_shape[0] is None:
+        # Ignore batch size
+        input_shape = input_shape[1:]
+    
+    if data_format.lower() == 'channels_last':
+        if len(input_shape) == 2: # 1D, (n_in, n_filt)
+            return (input_shape[0], input_shape[1])
+        elif len(input_shape) == 3: # 2D, (in_height, in_width, n_filt)
+            return (input_shape[0], input_shape[1], input_shape[2])
+        
+    elif data_format.lower() == 'channels_first':
+        if len(input_shape) == 2: # 1D, (n_filt, n_in)
+            return (input_shape[1], input_shape[0])
+        elif len(input_shape) == 3: # 2D, (n_filt, in_height, in_width)
+            return (input_shape[1], input_shape[2], input_shape[0])
+    else:
+        raise Exception('Unknown data format: {}'.format(data_format))
+
 def compute_padding_1d(pad_type, in_size, stride, filt_size):
     if pad_type.lower() == 'same':
         n_out = int(math.ceil(float(in_size) / float(stride)))

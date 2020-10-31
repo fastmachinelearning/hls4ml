@@ -1,6 +1,7 @@
 import math
 from hls4ml.converters.keras_to_hls import parse_default_keras_layer
 from hls4ml.converters.keras_to_hls import keras_handler
+from hls4ml.converters.keras_to_hls import parse_data_format
 from hls4ml.converters.keras_to_hls import compute_padding_1d
 from hls4ml.converters.keras_to_hls import compute_padding_2d
 
@@ -13,12 +14,11 @@ def parse_pooling_layer(keras_layer, input_names, input_shapes, data_reader, con
     layer = parse_default_keras_layer(keras_layer, input_names)
 
     if int(layer['class_name'][-2]) == 1:
-        if layer['data_format'] == 'channels_last':
-            layer['n_in']=input_shapes[0][1]
-            layer['n_filt']=input_shapes[0][2]
-        elif layer['data_format'] == 'channels_first':
-            layer['n_in']=input_shapes[0][2]
-            layer['n_filt']=input_shapes[0][1]
+        (
+            layer['n_in'],
+            layer['n_filt']
+        ) = parse_data_format(input_shapes[0], layer['data_format'])
+        
         layer['pool_width']=keras_layer['config']['pool_size'][0]
         layer['stride_width']=keras_layer['config']['strides'][0]
         layer['padding']=keras_layer['config']['padding']
@@ -39,14 +39,12 @@ def parse_pooling_layer(keras_layer, input_names, input_shapes, data_reader, con
         elif layer['data_format'] == 'channels_first':
             output_shape=[input_shapes[0][0], layer['n_filt'], layer['n_out']]
     elif int(layer['class_name'][-2]) == 2:
-        if layer['data_format'] == 'channels_last':
-            layer['in_height']=input_shapes[0][1]
-            layer['in_width']=input_shapes[0][2]
-            layer['n_filt']=input_shapes[0][3]
-        elif layer['data_format'] == 'channels_first':
-            layer['in_height']=input_shapes[0][2]
-            layer['in_width']=input_shapes[0][3]
-            layer['n_filt']=input_shapes[0][1]
+        (
+            layer['in_height'],
+            layer['in_width'],
+            layer['n_filt']
+        ) = parse_data_format(input_shapes[0], layer['data_format'])
+
         layer['stride_height']=keras_layer['config']['strides'][0]
         layer['stride_width']=keras_layer['config']['strides'][1]
         layer['pool_height']=keras_layer['config']['pool_size'][0]
@@ -85,18 +83,19 @@ def parse_global_pooling_layer(keras_layer, input_names, input_shapes, data_read
     layer = parse_default_keras_layer(keras_layer, input_names)
 
     if int(layer['class_name'][-2]) == 1:
-        layer['n_in']=input_shapes[0][1]
-        layer['n_filt']=input_shapes[0][2]
+        (
+            layer['n_in'],
+            layer['n_filt']
+        ) = parse_data_format(input_shapes[0], layer['data_format'])
+        
         output_shape=[input_shapes[0][0], layer['n_filt']]
     elif int(layer['class_name'][-2]) == 2:
-        if layer['data_format'] == 'channels_last':
-            layer['in_height']=input_shapes[0][1]
-            layer['in_width']=input_shapes[0][2]
-            layer['n_filt']=input_shapes[0][3]
-        elif layer['data_format'] == 'channels_first':
-            layer['in_height']=input_shapes[0][2]
-            layer['in_width']=input_shapes[0][3]
-            layer['n_filt']=input_shapes[0][1]
+        (
+            layer['in_height'],
+            layer['in_width'],
+            layer['n_filt']
+        ) = parse_data_format(input_shapes[0], layer['data_format'])
+
         output_shape=[input_shapes[0][0], layer['n_filt']]
     
     return layer, output_shape
