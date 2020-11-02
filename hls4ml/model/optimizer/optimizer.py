@@ -24,6 +24,9 @@ def register_pass(name, opt_cls):
 def get_optimizer(name):
     return optimizer_map[name]()
 
+def get_available_passes():
+    return list(optimizer_map.keys())
+
 def optimize_model(model, passes=None):
     if passes is None:
         passes = optimizer_map.keys()
