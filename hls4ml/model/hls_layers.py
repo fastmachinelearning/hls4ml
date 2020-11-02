@@ -1198,7 +1198,6 @@ class GarNetStack(GarNet):
         params['sublayer_configs'] = '\n'.join(sublayer_configs)
 
 layer_map = {
-<<<<<<< HEAD
     'InputLayer'          : Input,
     'Activation'          : Activation,
     'QActivation'         : Activation,
