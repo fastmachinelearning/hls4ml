@@ -531,7 +531,11 @@ class Dense(Layer):
                 index_t = self.get_weights('weight').type.index_precision
             else:
                 if self.model.config.backend.name == 'Vivado':
-                    self.weights['weight'].data = np.transpose(self.weights['weight'].data)
+                    if isinstance(self.weights['weight'], ExponentWeightVariable):
+                        self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=(1,0,2))
+                    else:
+                        self.weights['weight'].data = np.transpose(self.weights['weight'].data)
+                    
         self.set_attr('index_t', index_t)
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 

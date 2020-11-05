@@ -92,9 +92,10 @@ class weight_exponential : public Product<x_T, w_T, y_T>{
         // Shift product for exponential weights
         #pragma HLS inline off
         // shift by the exponent. Negative weights shift right
-        y_T y = a << w.weight;
+        y_T ay = a;
+        y_T y = ay << w.weight;
         // negate or not depending on weight sign
-        return w.sign == 1 ? (x_T) y : (x_T) -y;
+        return w.sign == 1 ? (y_T) y : (y_T) -y;
     }
 };
 
