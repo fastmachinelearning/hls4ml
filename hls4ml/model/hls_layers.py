@@ -688,6 +688,162 @@ class Conv2D(Layer):
 
         return mult_config + '\n' + conv_config
 
+class SeparableConv2D(Conv2D):
+    def initialize(self):
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
+            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+        else:
+            shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
+            dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+        self.add_output_variable(shape, dims)
+        
+        depthwise_data = self.model.get_weights_data(self.name, 'depthwise_kernel')
+        pointwise_data = self.model.get_weights_data(self.name, 'pointwise_kernel')
+
+        self.add_weights_variable(name='depthwise', var_name='d{index}', data=depthwise_data, quantizer=self.get_attr('depthwise_quantizer'))
+        self.add_weights_variable(name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer'))
+        
+        zero_bias_data = np.zeros((self.attributes['n_chan'],))
+        self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data)
+
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+        if self.model.config.is_resource_strategy(self):
+            self.set_attr('strategy', 'resource')
+            if self.model.config.backend.name == 'Vivado':
+                self.model.config.backend.set_closest_reuse_factor(self)
+                self.weights['depthwise'].data = np.transpose(self.weights['depthwise'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
+                self.weights['pointwise'].data = np.transpose(self.weights['pointwise'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
+        else:
+            self.set_attr('strategy', 'latency')
+
+    def function_cpp(self):
+        params = self._default_function_params()
+        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
+        params['d'] = self.get_weights('depthwise').name
+        params['p'] = self.get_weights('pointwise').name
+        params['b'] = self.get_weights('bias').name
+        params['z'] = self.get_weights('zero_bias').name
+
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        # Separable master config
+        params = {}
+        params['index'] = self.index
+        params['depthwise_config'] = 'config{}_depthwise'.format(self.index)
+        params['pointwise_config'] = 'config{}_pointwise'.format(self.index)
+        sep_config = self._config_template[0].format(**params)
+
+        # Depthwise config
+        params = self._default_config_params()
+        if self.get_attr('data_format') == 'channels_last':
+            params['in_height'] = self.get_input_variable().dim_names[0]
+            params['in_width'] = self.get_input_variable().dim_names[1]
+            params['n_chan'] = self.get_input_variable().dim_names[2]
+            params['out_height'] = self.get_output_variable().dim_names[0]
+            params['out_width'] = self.get_output_variable().dim_names[1]
+            params['n_filt'] = self.get_input_variable().dim_names[2]
+        else:
+            params['n_chan'] = self.get_input_variable().dim_names[0]
+            params['in_height'] = self.get_input_variable().dim_names[1]
+            params['in_width'] = self.get_input_variable().dim_names[2]
+            params['n_filt'] = self.get_input_variable().dim_names[0]
+            params['out_height'] = self.get_output_variable().dim_names[1]
+            params['out_width'] = self.get_output_variable().dim_names[2]
+
+        params['dilation'] = self.get_attr('dilation', 1)
+        params['nzeros'] = self.get_weights('depthwise').nzeros
+        params['index'] = str(self.index) + '_depthwise'
+        params['weight_t'] = self.get_weights('depthwise').type.name
+
+        if self.model.config.get_config_value('IOType') == 'io_stream':
+            min_h, min_w, instructions = self.model.config.backend.compute_conv2d_instructions(
+                self.get_input_variable().shape[0],
+                self.get_input_variable().shape[1],
+                self.get_input_variable().shape[2],
+                params['filt_height'],
+                params['stride_height'])
+            instructions_str = ','.join(str(i) for i in instructions)
+            params['min_height'] = min_h
+            params['min_width'] = min_w
+            params['instructions'] = instructions_str
+        else:
+            params['min_height'] = params['in_height']
+            params['min_width'] = params['in_width']
+            params['instructions'] = '0'
+
+        params['config_t'] = 'config{}_depthwise_mult'.format(self.index)
+        depthwise_config = self._config_template[1].format(**params)
+
+        # Depthwise mult config
+        mult_params = self._default_config_params()
+        mult_params['index'] = str(self.index) + '_depthwise'
+        mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
+        mult_params['n_out'] = self.get_attr('n_chan')
+        mult_params['weight_t'] = self.get_weights('depthwise').type.name
+        depthwise_mult_config = self._config_template[3].format(**mult_params)
+
+        # Pointwise config
+        params = self._default_config_params()
+        if self.get_attr('data_format') == 'channels_last':
+            params['in_height'] = self.get_output_variable().dim_names[0]
+            params['in_width'] = self.get_output_variable().dim_names[1]
+            params['n_chan'] = self.get_input_variable().dim_names[2]
+            params['out_height'] = self.get_output_variable().dim_names[0]
+            params['out_width'] = self.get_output_variable().dim_names[1]
+            params['n_filt'] = self.get_output_variable().dim_names[2]
+        else:
+            params['n_chan'] = self.get_input_variable().dim_names[0]
+            params['in_height'] = self.get_output_variable().dim_names[1]
+            params['in_width'] = self.get_output_variable().dim_names[2]
+            params['n_filt'] = self.get_output_variable().dim_names[0]
+            params['out_height'] = self.get_output_variable().dim_names[1]
+            params['out_width'] = self.get_output_variable().dim_names[2]
+
+        params['dilation'] = self.get_attr('dilation', 1)
+        params['nzeros'] = self.get_weights('pointwise').nzeros
+        params['index'] = str(self.index) + '_pointwise'
+        params['weight_t'] = self.get_weights('pointwise').type.name
+        params['min_height'] = params['in_height']
+        params['min_width'] = params['in_width']
+        params['instructions'] = '0'
+
+        params['config_t'] = 'config{}_pointwise_mult'.format(self.index)
+        pointwise_config = self._config_template[2].format(**params)
+
+        # Pointwise mult config
+        mult_params = self._default_config_params()
+        mult_params['index'] = str(self.index) + '_pointwise'
+        mult_params['n_in'] = self.get_attr('n_chan')
+        mult_params['n_out'] = self.get_attr('n_filt')
+        mult_params['weight_t'] = self.get_weights('pointwise').type.name
+        pointwise_mult_config = self._config_template[4].format(**mult_params)
+
+        return depthwise_mult_config + '\n' + depthwise_config + '\n' + pointwise_mult_config + '\n' + pointwise_config + sep_config
+
+class DepthwiseConv2D(Conv2D):
+    def initialize(self):
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_chan']]
+            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
+        else:
+            shape = [self.attributes['n_chan'], self.attributes['out_height'], self.attributes['out_width']]
+            dims = ['N_CHAN_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+        self.add_output_variable(shape, dims)
+
+        depthwise_data = self.model.get_weights_data(self.name, 'depthwise_kernel')
+        self.add_weights_variable(name='weight', var_name='w{index}', data=depthwise_data, quantizer=self.get_attr('depthwise_quantizer'))
+
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+        if self.model.config.is_resource_strategy(self):
+            self.set_attr('strategy', 'resource')
+            if self.model.config.backend.name == 'Vivado':
+                self.model.config.backend.set_closest_reuse_factor(self)
+                self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
+        else:
+            self.set_attr('strategy', 'latency')
+
 class Pooling1D(Layer):
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
@@ -1357,6 +1513,8 @@ layer_map = {
     'Conv2D'                 : Conv2D,
     'BinaryConv2D'           : Conv2D,
     'QConv2D'                : Conv2D,
+    'SeparableConv2D'        : SeparableConv2D,
+    'DepthwiseConv2D'        : DepthwiseConv2D,
     'BatchNormalization'     : BatchNormalization,
     'MaxPooling1D'           : Pooling1D,
     'AveragePooling1D'       : Pooling1D,
