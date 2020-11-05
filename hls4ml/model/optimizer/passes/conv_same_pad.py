@@ -2,8 +2,9 @@ from hls4ml.model.optimizer import OptimizerPass
 
 class InsertZeroPaddingBeforeConv1D(OptimizerPass):
     def match(self, node):
-        is_match = node.__class__.__name__ == 'Conv1D' and \
-            node.get_attr('padding') == 'same'
+        is_match = 'Conv1D' in node.__class__.__name__ and \
+            node.get_attr('padding') == 'same' and \
+            node.get_attr('filt_width') != 1
         return is_match
 
     def transform(self, model, node):
@@ -41,8 +42,9 @@ class InsertZeroPaddingBeforeConv1D(OptimizerPass):
 
 class InsertZeroPaddingBeforeConv2D(OptimizerPass):
     def match(self, node):
-        is_match = node.__class__.__name__ == 'Conv2D' and \
-            node.get_attr('padding') == 'same'
+        is_match = 'Conv2D' in node.__class__.__name__ and \
+            node.get_attr('padding') == 'same' and \
+            node.get_attr('filt_height') != 1 and node.get_attr('filt_width') != 1
         return is_match
 
     def transform(self, model, node):
