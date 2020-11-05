@@ -244,6 +244,8 @@ void separable_conv_2d_cl(
     typename CONFIG_T::depthwise_config::bias_t   depthwise_biases[CONFIG_T::depthwise_config::n_chan],
     typename CONFIG_T::pointwise_config::bias_t   pointwise_biases[CONFIG_T::pointwise_config::n_filt]
 ) {
+    #pragma HLS DATAFLOW
+
     hls::stream<data_T> depthwise_res;
     unsigned res_depth = CONFIG_T::depthwise_config::out_height * CONFIG_T::depthwise_config::out_width;
     #pragma HLS STREAM variable=depthwise_res depth=res_depth
