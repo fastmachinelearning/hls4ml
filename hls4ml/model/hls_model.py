@@ -311,10 +311,13 @@ class HLSModel(object):
             if len(node.inputs) > 1 or len(node.outputs) > 1:
                 raise Exception('Cannot rewire a node with multiple inputs/outputs')
             prev_node = self.graph.get(node.inputs[0])
-            next_node = next((x for x in self.graph.values() if x.inputs[0] == node.outputs[0]), None)
+            next_node = next((x for x in self.graph.values() if node.outputs[0] in x.inputs), None)
             if prev_node is not None:
                 if next_node is not None:
-                    next_node.inputs[0] = prev_node.outputs[0]
+                    for i,_ in enumerate(next_node.inputs):
+                        if node.outputs[0] == next_node.inputs[i]:
+                            next_node.inputs[i] = prev_node.outputs[0]
+                            break
                 else:
                     if node.outputs[0] in self.outputs:
                         self.outputs = [prev_node.outputs[0] if x == node.outputs[0] else x for x in self.outputs]
