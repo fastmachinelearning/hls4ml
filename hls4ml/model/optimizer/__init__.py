@@ -9,6 +9,7 @@ from hls4ml.model.optimizer.passes.bn_fuse import FuseBatchNormalization
 from hls4ml.model.optimizer.passes.fuse_biasadd import FuseBiasAdd
 from hls4ml.model.optimizer.passes.conv_same_pad import InsertZeroPaddingBeforeConv1D
 from hls4ml.model.optimizer.passes.conv_same_pad import InsertZeroPaddingBeforeConv2D
+from hls4ml.model.optimizer.passes.pointwise import OptimizePointwiseConv2D
 
 try:
     from hls4ml.model.optimizer.passes.qkeras import OutputRoundingSaturationMode
@@ -25,6 +26,7 @@ register_pass('fuse_batch_norm', FuseBatchNormalization)
 register_pass('fuse_biasadd', FuseBiasAdd)
 register_pass('conv1d_same_pad', InsertZeroPaddingBeforeConv1D)
 register_pass('conv2d_same_pad', InsertZeroPaddingBeforeConv2D)
+register_pass('optimize_pointwise_conv2d', OptimizePointwiseConv2D)
 
 if __qkeras_optimizers__:
     register_pass('output_rounding_saturation_mode', OutputRoundingSaturationMode)
