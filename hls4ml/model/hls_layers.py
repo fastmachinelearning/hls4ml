@@ -554,10 +554,10 @@ class Dense(Layer):
 class Conv1D(Layer):
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
-            shape = [self.attributes['n_out'], self.attributes['n_filt']]
+            shape = [self.attributes['out_width'], self.attributes['n_filt']]
             dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
         else:
-            shape = [self.attributes['n_filt'], self.attributes['n_out']]
+            shape = [self.attributes['n_filt'], self.attributes['out_width']]
             dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
 
         self.add_output_variable(shape, dims)
@@ -590,7 +590,7 @@ class Conv1D(Layer):
             params['n_chan'] = input_dims[0]
         params['dilation'] = self.get_attr('dilation', 1)
         params['n_filt'] = 'N_FILT_{}'.format(self.index)
-        params['n_out'] = 'N_OUTPUTS_{}'.format(self.index)
+        params['out_width'] = 'N_OUTPUTS_{}'.format(self.index)
         params['nzeros'] = self.get_weights('weight').nzeros
 
         if self.model.config.get_config_value('IOType') == 'io_stream':
@@ -598,7 +598,7 @@ class Conv1D(Layer):
                 self.get_input_variable().shape[0],
                 self.get_input_variable().shape[1],
                 params['filt_width'],
-                params['stride'])
+                params['stride_width'])
             instructions_str = ','.join(str(i) for i in instructions)
             params['min_width'] = min_w
             params['instructions'] = instructions_str
@@ -688,7 +688,7 @@ class Conv2D(Layer):
 
         return mult_config + '\n' + conv_config
 
-class SeparableConv2D(Conv2D):
+class SeparableConv2D(Layer):
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
@@ -820,7 +820,7 @@ class SeparableConv2D(Conv2D):
         mult_params['weight_t'] = self.get_weights('pointwise').type.name
         pointwise_mult_config = self._config_template[4].format(**mult_params)
 
-        return depthwise_mult_config + '\n' + depthwise_config + '\n' + pointwise_mult_config + '\n' + pointwise_config + sep_config
+        return depthwise_mult_config + '\n' + depthwise_config + '\n' + pointwise_mult_config + '\n' + pointwise_config + '\n' + sep_config
 
 class DepthwiseConv2D(Conv2D):
     def initialize(self):

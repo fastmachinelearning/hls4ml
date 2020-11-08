@@ -13,30 +13,30 @@ def parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader, conf
     layer = parse_default_keras_layer(keras_layer, input_names)
     
     (
-        layer['n_in'],
+        layer['in_width'],
         layer['n_chan']
     ) = parse_data_format(input_shapes[0], layer['data_format'])
 
     layer['n_filt'] = keras_layer['config']['filters']
     layer['filt_width'] = keras_layer['config']['kernel_size'][0]
-    layer['stride'] = keras_layer['config']['strides'][0]
+    layer['stride_width'] = keras_layer['config']['strides'][0]
     layer['padding'] = keras_layer['config']['padding']
 
     (
-        layer['n_out'],
+        layer['out_width'],
         layer['pad_left'],
         layer['pad_right']
     ) = compute_padding_1d(
         layer['padding'],
-        layer['n_in'],
-        layer['stride'],
+        layer['in_width'],
+        layer['stride_width'],
         layer['filt_width']
     )
 
     if layer['data_format'] == 'channels_last':
-        output_shape = [input_shapes[0][0], layer['n_out'], layer['n_filt']]
+        output_shape = [input_shapes[0][0], layer['out_width'], layer['n_filt']]
     elif layer['data_format'] == 'channels_first':
-        output_shape = [input_shapes[0][0], layer['n_filt'], layer['n_out']]
+        output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_width']]
 
     return layer, output_shape
 

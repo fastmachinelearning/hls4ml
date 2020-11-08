@@ -37,13 +37,14 @@ struct conv1d_config
     // Convolutional parameters
     static const unsigned pad_left = 0;
     static const unsigned pad_right = 0;
-    static const unsigned n_in = 10;
+    static const unsigned in_width = 10;
     static const unsigned n_chan = 0;
     static const unsigned filt_width = 1;
+    static const unsigned kernel_size = filt_width;
     static const unsigned n_filt = 1;
-    static const unsigned stride = 1;
+    static const unsigned stride_width = 1;
     static const unsigned dilation = 1;
-    static const unsigned n_out = 10; //(N_IN + PAD_LEFT * PAD_RIGHT - (DILATION * (FILT_WIDTH - 1) + 1)) / STRIDE + 1
+    static const unsigned out_width = 10; //(N_IN + PAD_LEFT * PAD_RIGHT - (DILATION * (FILT_WIDTH - 1) + 1)) / STRIDE + 1
 
     static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
@@ -52,8 +53,8 @@ struct conv1d_config
 
 template<class data_T, class res_T, typename CONFIG_T>
 void conv_1d_cl(
-    data_T data[CONFIG_T::n_in * CONFIG_T::n_chan],
-    res_T  res[CONFIG_T::n_out * CONFIG_T::n_filt],
+    data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],
+    res_T  res[CONFIG_T::out_width * CONFIG_T::n_filt],
     typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
     typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt])
 {
