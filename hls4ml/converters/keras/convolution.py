@@ -6,7 +6,7 @@ from hls4ml.converters.keras_to_hls import compute_padding_1d
 from hls4ml.converters.keras_to_hls import compute_padding_2d
 
 
-@keras_handler('Conv1D')
+@keras_handler('Conv1D', 'SeparableConv1D')
 def parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader, config):
     assert('Conv1D' in keras_layer['class_name'])
 
