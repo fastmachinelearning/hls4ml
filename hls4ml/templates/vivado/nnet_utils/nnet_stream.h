@@ -4,6 +4,30 @@
 
 #include "hls_stream.h"
 
+namespace nnet {
+
+template<class data_T, class res_T, int N>
+void clone_stream(hls::stream<data_T> &data, hls::stream<res_T> &res1, hls::stream<res_T> &res2) {
+    CloneLoop: for (int i = 0; i < N / data_T::size; i++) {
+        #pragma HLS PIPELINE
+
+        data_T in_data = data.read();
+        res_T out_data1;
+        res_T out_data2;
+        #pragma HLS DATA_PACK variable=out_data1
+        #pragma HLS DATA_PACK variable=out_data2
+
+        ClonePack: for (int j = 0; j < data_T::size; j++) {
+            #pragma HLS UNROLL
+            out_data1[j] = in_data[j];
+            out_data2[j] = in_data[j];
+        }
+
+        res1.write(out_data1);
+        res2.write(out_data2);
+    }
+}
+
 template<class data_T, class res_T, int N>
 void repack_stream(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     if (data_T::size == res_T::size) {
@@ -60,6 +84,8 @@ void repack_stream(hls::stream<data_T> &data, hls::stream<res_T> &res) {
             }
         }
     }
+}
+
 }
 
 #endif
