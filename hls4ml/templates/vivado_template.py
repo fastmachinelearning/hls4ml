@@ -381,13 +381,13 @@ class VivadoBackend(Backend):
     def get_valid_reuse_factors(self, layer):
         n_in = 0
         n_out = 0
-        if layer.__class__.__name__ == 'Dense':
+        if 'Dense' in layer.__class__.__name__:
             n_in = layer.get_attr('n_in')
             n_out = layer.get_attr('n_out')
-        elif layer.__class__.__name__ == 'Conv1D':
+        elif 'Conv1D' in layer.__class__.__name__:
             n_in = layer.get_attr('n_chan') * layer.get_attr('filt_width')
             n_out = layer.get_attr('n_filt')
-        elif layer.__class__.__name__ == 'Conv2D':
+        elif 'Conv2D' in layer.__class__.__name__:
             n_in = layer.get_attr('n_chan') * layer.get_attr('filt_height') * layer.get_attr('filt_width')
             n_out = layer.get_attr('n_filt')
 
