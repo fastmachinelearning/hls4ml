@@ -205,8 +205,12 @@ class VivadoWriter(Writer):
                                     newline += '    ' + self._make_array_pragma(var) + '\n'
                     func = layer.function_cpp()
                     if func:
-                        for line in func:
-                            newline += '    ' + line + '\n'
+                        if len(func) == 1:
+                            newline += '    ' + func[0] + ' // ' + layer.name + '\n'
+                        else:
+                            newline += '// ' + layer.name + '\n'
+                            for line in func:
+                                newline += '    ' + line + '\n'
                         if model.config.trace_output and model.config.get_layer_config_value(layer, 'Trace', False):
                             newline += '#ifndef __SYNTHESIS__\n'
                             for var in vars:
@@ -312,6 +316,7 @@ class VivadoWriter(Writer):
                 for layer in model.get_layers():
                     config = layer.config_cpp()
                     if config:
+                        newline += '// ' + layer.name + '\n'
                         newline += config + '\n'
             else:
                 newline = line
