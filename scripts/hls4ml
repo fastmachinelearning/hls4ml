@@ -16,13 +16,20 @@ from shutil import copyfile
 
 config_filename = 'hls4ml_config.yml'
 
+hls4ml_description = """
+
+        ╔╧╧╧╗────o
+    hls ║ 4 ║ ml   - Machine learning inference in FPGAs
+   o────╚╤╤╤╝
+"""
+
 def parse_config(config_file):
     print('Loading configuration from', config_file)
     config = open(config_file, 'r')
     return yaml.load(config, Loader=yaml.SafeLoader)
 
 def main():
-    parser = argparse.ArgumentParser(description='HLS4ML - Machine learning inference in FPGAs')
+    parser = argparse.ArgumentParser(description=hls4ml_description, formatter_class=argparse.RawDescriptionHelpFormatter)
     subparsers = parser.add_subparsers()
     
     config_parser = subparsers.add_parser('config', help='Create a conversion configuration file')
