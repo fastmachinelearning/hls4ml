@@ -2,8 +2,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-__version__ = '0.2.0'
-
 import argparse
 import os
 import sys
@@ -67,7 +65,7 @@ def main():
     report_parser.add_argument('-f', '--full', help='Show full report', action='store_true', default=False)
     report_parser.set_defaults(func=report)
 
-    parser.add_argument('--version', action='version', version='%(prog)s {version}'.format(version=__version__))
+    parser.add_argument('--version', action='version', version='%(prog)s {version}'.format(version=hls4ml.__version__))
 
     args = parser.parse_args()
     if hasattr(args, 'func'):
