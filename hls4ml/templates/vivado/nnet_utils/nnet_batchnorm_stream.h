@@ -24,7 +24,6 @@
 #include "nnet_mult.h"
 #include "nnet_types.h"
 #include "hls_stream.h"
-#include <math.h>
 
 namespace nnet {
 
@@ -42,11 +41,12 @@ void normalize(
     #pragma HLS ARRAY_PARTITION variable=scale complete
     #pragma HLS ARRAY_PARTITION variable=bias complete
 
-    int multiplier_limit = ceil(float(CONFIG_T::n_in) / float(CONFIG_T::reuse_factor));
-    #pragma HLS ALLOCATION instances=product limit=multiplier_limit function
+    constexpr unsigned multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in, CONFIG_T::reuse_factor);
+    constexpr unsigned ii = CONFIG_T::n_in / multiplier_limit;
+    #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
 
     BatchNormLoop: for (int i = 0; i < CONFIG_T::n_in / data_T::size; i++) {
-        #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+        #pragma HLS PIPELINE II=ii
 
         data_T in_data = data.read();
         res_T out_data;
@@ -60,8 +60,7 @@ void normalize(
             } else {
                 norm_index = j % CONFIG_T::n_filt;
             }
-            out_data[j] = product<typename data_T::value_type, typename CONFIG_T::scale_t, typename res_T::value_type>(in_data[j], scale[norm_index])
-                    + bias[norm_index];
+            out_data[j] = in_data[j] * scale[norm_index] + bias[norm_index];
         }
 
         res.write(out_data);
