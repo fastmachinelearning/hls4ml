@@ -1310,7 +1310,7 @@ class BiasAdd(Merge): # TensorFlow's operator that gets merged into Dense/Conv
 
 class Resize(Layer):
     def initialize(self):
-        shape = [self.get_attr('new_height'), self.get_attr('new_width'), self.get_attr('n_chan')]
+        shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
         dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
 
@@ -1656,6 +1656,7 @@ layer_map = {
     'Merge'                  : Merge,
     'Concatenate'            : Concatenate,
     'Resize'                 : Resize,
+    'UpSampling2D'           : Resize,
     'Transpose'              : Transpose,
     'GarNet'                 : GarNet,
     'GarNetStack'            : GarNetStack,

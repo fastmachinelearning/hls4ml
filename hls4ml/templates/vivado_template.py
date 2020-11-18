@@ -199,11 +199,11 @@ concat_config_template = """struct config{index} : nnet::concat_config {{
 }};\n"""
 
 resize_config_template = """struct config{index} : nnet::resize_config {{
-    static const unsigned height = {height};
-    static const unsigned width = {width};
+    static const unsigned height = {in_height};
+    static const unsigned width = {in_width};
     static const unsigned n_chan = {n_chan};
-    static const unsigned new_height = {new_height};
-    static const unsigned new_width = {new_width};
+    static const unsigned new_height = {out_height};
+    static const unsigned new_width = {out_width};
 }};\n"""
 
 transpose_config_template = """struct config{index} : nnet::transpose_config {{
@@ -346,7 +346,7 @@ activ_include_list = ['nnet_utils/nnet_activation.h', 'nnet_utils/nnet_activatio
 pooling_include_list = ['nnet_utils/nnet_pooling.h', 'nnet_utils/nnet_pooling_stream.h']
 padding_include_list = ['nnet_utils/nnet_padding.h', 'nnet_utils/nnet_padding_stream.h']
 merge_include_list = ['nnet_utils/nnet_merge.h', 'nnet_utils/nnet_merge_stream.h']
-resize_include_list = ['nnet_utils/nnet_image.h']
+resize_include_list = ['nnet_utils/nnet_image.h', 'nnet_utils/nnet_image_stream.h']
 transpose_include_list = ['nnet_utils/nnet_array.h']
 garnet_include_list = ['nnet_utils/nnet_garnet.h']
 
