@@ -14,17 +14,13 @@ class QKerasPO2Quantizer(object):
 
     def __call__(self, data):
         '''
-        Return an array with one extra dimension as data.
-        Weights are quantized to log2(data), and the sign is added as an extra field
+        Weights are rounded to nearest power of 2
         '''
         x = tf.convert_to_tensor(data)
         y = self.quantizer_fn(x)
-        # Use an XnorBinary-like representation for the sign
-        sign = np.where(y < 0, np.zeros_like(y), np.ones_like(y))
-        # Take the logarithm, since this is what we will write to the header
-        # for the optimized product using shifts
-        y = (tf.math.log(tf.math.abs(y)) / tf.math.log(2.)).numpy().astype('int')
-        return np.stack((sign, y), axis=-1)
+        if hasattr(y, 'numpy'):
+            y = y.numpy()
+        return y
 
 class OutputRoundingSaturationMode(OptimizerPass):
     '''

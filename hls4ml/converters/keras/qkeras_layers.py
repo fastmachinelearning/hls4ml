@@ -93,5 +93,10 @@ def parse_qbatchnorm_layer(keras_layer, input_names, input_shapes, data_reader, 
     
     layer, output_shape = parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader, config)
 
+    layer['mean_quantizer'] = get_quantizer_from_config(keras_layer, 'mean')
+    layer['variance_quantizer'] = get_quantizer_from_config(keras_layer, 'variance')
+    layer['beta_quantizer'] = get_quantizer_from_config(keras_layer, 'beta')
+    layer['gamma_quantizer'] = get_quantizer_from_config(keras_layer, 'gamma')
+
     return layer, output_shape
 

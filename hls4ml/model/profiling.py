@@ -359,7 +359,8 @@ def get_ymodel_keras(keras_model, X):
 
                         #Add the activation back
                         layer.activation = temp_activation
-                                     
+                else:
+                    ymodel[layer.name] = _get_output(ymodel, layer, X)
             else:    
                 ymodel[layer.name] = _get_output(ymodel, layer, X)
         

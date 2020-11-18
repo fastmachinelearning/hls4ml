@@ -25,6 +25,14 @@ class IntegerPrecisionType(object):
         typestring = 'ap_{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring
 
+    def __eq__(self, other):
+        eq = self.width == other.width
+        eq = eq and self.signed == other.signed
+        # These are probably unnecessary
+        eq = eq and self.integer == other.integer
+        eq = eq and self.fractional == other.fractional
+        return eq
+
 class FixedPrecisionType(object):
     def __init__(self, width=16, integer=6, signed=True, rounding_mode=None, saturation_mode=None, saturation_bits=None):
         self.width = width
@@ -40,6 +48,17 @@ class FixedPrecisionType(object):
         args = ','.join([str(arg) for arg in args if arg is not None])
         typestring = 'ap_{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
         return typestring
+
+    def __eq__(self, other):
+        eq = self.width == other.width
+        eq = eq and self.integer == other.integer
+        eq = eq and self.fractional == other.fractional
+        eq = eq and self.signed == other.signed
+        eq = eq and self.rounding_mode == other.rounding_mode
+        eq = eq and self.saturation_mode == other.saturation_mode
+        eq = eq and self.saturation_bits == other.saturation_bits
+        return eq
+        return eq
 
 class XnorPrecisionType(IntegerPrecisionType):
     '''
@@ -258,13 +277,23 @@ class ExponentWeightVariable(WeightVariable):
     def __init__(self, var_name, type_name, precision, data, quantizer, **kwargs):
         super(ExponentWeightVariable, self).__init__(var_name, type_name, precision, data, quantizer, **kwargs)
         '''
-        WeightVariable for Exponent aka po2 data. The data should already by quantized and formatted by the quantizer.
+        WeightVariable for Exponent aka po2 data. The data should already by quantized by the quantizer.
         '''
         self.type = ExponentType(type_name, precision, **kwargs)
         self.shape = list(self.data.shape[:-1])
 
+    def _format(self):
+        y = self.data
+        # Use an XnorBinary-like representation for the sign
+        sign = np.where(y < 0, np.zeros_like(y), np.ones_like(y))
+        # Take the logarithm, since this is what we will write to the header
+        # for the optimized product using shifts
+        y = (np.log2(np.abs(y)) / np.log2(2.)).astype('int')
+        return np.stack((sign, y), axis=-1)
+
     def __iter__(self):
-        self._iterator = iter(self.data.reshape((np.product(self.data.shape[:-1]), 2)))
+        data = self._format()
+        self._iterator = iter(data.reshape((np.product(data.shape[:-1]), 2)))
         return self
 
     def __next__(self):
