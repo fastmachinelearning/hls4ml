@@ -767,6 +767,7 @@ class Merge(Layer):
         inp1 = self.get_input_variable(self.inputs[0])
         inp2 = self.get_input_variable(self.inputs[1])
         shape = inp1.shape
+        print('pog, ',shape)
         assert(inp1.shape == inp2.shape)
         dims = inp1.dim_names
         self.add_output_variable(shape, dims)
@@ -790,6 +791,63 @@ class Merge(Layer):
 
         return self._config_template.format(**params)
 
+class Dot(Merge):
+    def initialize(self):
+        assert(len(self.inputs) == 2)
+        inp1 = self.get_input_variable(self.inputs[0])
+        inp2 = self.get_input_variable(self.inputs[1])
+        shape = [1]
+        assert(inp1.shape == inp2.shape)
+        dims = ['OUT_DOT_{}'.format(1)]
+        self.add_output_variable(shape, dims)
+
+    def function_cpp(self):
+        params = {}
+        params['merge'] = self.get_attr('op').lower()
+        params['config'] = 'config{}'.format(self.index)
+        params['input1_t'] = self.get_input_variable(self.inputs[0]).type.name
+        params['input2_t'] = self.get_input_variable(self.inputs[1]).type.name
+        params['output_t'] = self.get_output_variable().type.name
+        params['input1'] = self.get_input_variable(self.inputs[0]).name
+        params['input2'] = self.get_input_variable(self.inputs[1]).name
+        params['output'] = self.get_output_variable().name
+
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+        params.setdefault('n_elem', 0)
+        params.setdefault('n_elem_out', 1)
+        inp1 = self.get_input_variable(self.inputs[0])
+        inp2 = self.get_input_variable(self.inputs[1])
+        params['n_elem_out'] = 1
+        params['n_elem'] = inp1.shape[0]
+
+        return self._config_template.format(**params)
+
+
+#class Dot(Merge):
+#    def initialize(self):
+#        assert(len(self.inputs) == 2)
+#        inp1 = self.get_input_variable(self.inputs[0])
+#        inp2 = self.get_input_variable(self.inputs[1])
+#        shape = [1]
+#        rank = len(shape)
+#        dims = '1'
+#        self.add_output_variable(shape, dims)
+#
+#    def config_cpp(self):
+#        params = self._default_config_params()
+#        params.setdefault('n_elem', 0)
+#        params.setdefault('n_elem_out', 1)
+#        inp1 = self.get_input_variable(self.inputs[0])
+#        inp2 = self.get_input_variable(self.inputs[1])
+#        params['n_elem'] = 1
+#        params['n_elem'] = inp1.shape[0]
+#
+#        return self._config_template.format(**params)
+
+
 class Concatenate(Merge):
     def initialize(self):
         assert(len(self.inputs) == 2)
@@ -798,6 +856,7 @@ class Concatenate(Merge):
         axis = self.attributes['axis']
         shape = inp1.shape[:]
         shape[axis] += inp2.shape[axis]
+        print(shape)
         rank = len(shape)
         if rank > 1:
             dims = ['OUT_CONCAT_{}_{}'.format(i, self.index) for i in range(rank)]
@@ -1169,6 +1228,7 @@ layer_map = {
     'MaxPooling2D'       : Pooling2D,
     'AveragePooling2D'   : Pooling2D,
     'Merge'              : Merge,
+    'Dot'                : Dot,
     'Concatenate'        : Concatenate,
     'Resize'             : Resize,
     'Transpose'          : Transpose,

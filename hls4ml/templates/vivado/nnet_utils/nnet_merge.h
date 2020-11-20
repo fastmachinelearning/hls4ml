@@ -31,6 +31,12 @@ struct merge_config
     static const unsigned n_elem = 10;
 };
 
+
+struct dot_config {
+    static const unsigned n_elem = 10;
+    static const unsigned n_elem_out = 1;
+};
+
 struct concat_config {
     static const unsigned n_elem1_0 = 10;
     static const unsigned n_elem1_1 = 10;
@@ -52,6 +58,7 @@ void add(
         res[ii] = data1[ii] + data2[ii];
     }
 }
+
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void subtract(
@@ -107,6 +114,20 @@ void minimum(
         res[ii] = (data1[ii] < data2[ii]) ? data1[ii] : data2[ii];
     }
 }
+
+template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
+void dot1d(
+    input1_T data1[CONFIG_T::n_elem], 
+	input2_T data2[CONFIG_T::n_elem],
+    res_T res[CONFIG_T::n_elem_out])
+{
+    res[0] = 0;
+    for (int ii=0; ii<CONFIG_T::n_elem; ii++) {
+      res[0] += data1[ii] * data2[ii];
+    }
+
+}
+
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate1d(

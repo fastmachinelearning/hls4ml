@@ -130,6 +130,11 @@ merge_config_template = """struct config{index} : nnet::merge_config {{
     static const unsigned n_elem = {n_elem};
 }};\n"""
 
+dot_config_template = """struct config{index} : nnet::dot_config {{
+    static const unsigned n_elem = {n_elem};
+    static const unsigned n_elem_out = {n_elem_out};
+}};\n"""
+
 concat_config_template = """struct config{index} : nnet::concat_config {{
     static const unsigned n_elem1_0 = {n_elem1_0};
     static const unsigned n_elem1_1 = {n_elem1_1};
@@ -299,6 +304,7 @@ class VivadoBackend(Backend):
         self.register_templates('Pooling2D'              , pooling2d_function_template,   pooling2d_config_template, pooling_include_list)
         self.register_templates('Merge'                  , merge_function_template,       merge_config_template, merge_include_list)
         self.register_templates('Concatenate'            , merge_function_template,       concat_config_template, merge_include_list)
+        self.register_templates('Dot'                    , merge_function_template,       dot_config_template, merge_include_list)
         self.register_templates('Resize'                 , resize_function_template,      resize_config_template, resize_include_list)
         self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template, transpose_include_list)
         self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
