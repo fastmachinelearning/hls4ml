@@ -174,12 +174,15 @@ def activation_types_hlsmodel(model):
     return data
 
 def weights_hlsmodel(model, fmt='longform', plot='boxplot'):
+    suffix = ['w', 'b']
     if fmt == 'longform':
         data = {'x' : [], 'layer' : [], 'weight' : []}
     elif fmt == 'summary':
         data = []
     for layer in model.get_layers():
+        name = layer.name
         for iw, weight in enumerate(layer.get_weights()):
+            l = '{}/{}'.format(name, suffix[iw])
             w = weight.data.flatten()
             w = abs(w[w != 0])
             n = len(w)
@@ -187,18 +190,19 @@ def weights_hlsmodel(model, fmt='longform', plot='boxplot'):
                 break
             if fmt == 'longform':
                 data['x'].extend(w.tolist())
-                data['layer'].extend([layer.name for i in range(len(w))])
-                data['weight'].extend(['{}/{}'.format(layer.name, iw) for i in range(len(w))])
+                data['layer'].extend([name for i in range(len(w))])
+                data['weight'].extend([l for i in range(len(w))])
             elif fmt == 'summary':
                 data.append(array_to_summary(w, fmt=plot))
-                data[-1]['layer'] = layer.name
-                data[-1]['weight'] = '{}/{}'.format(layer.name, iw)
+                data[-1]['layer'] = name
+                data[-1]['weight'] = l
 
     if fmt == 'longform':
         data = pandas.DataFrame(data)
     return data
 
 def weights_keras(model, fmt='longform', plot='boxplot'):
+    suffix = ['w', 'b']
     if fmt == 'longform':
         data = {'x' : [], 'layer' : [], 'weight' : []}
     elif fmt == 'summary':
@@ -207,6 +211,7 @@ def weights_keras(model, fmt='longform', plot='boxplot'):
         name = layer.name
         weights = layer.get_weights()
         for i, w in enumerate(weights):
+            l = '{}/{}'.format(name, suffix[i])
             w = w.flatten()
             w = abs(w[w != 0])
             n = len(w)
@@ -215,11 +220,11 @@ def weights_keras(model, fmt='longform', plot='boxplot'):
             if fmt == 'longform':
                 data['x'].extend(w.tolist())
                 data['layer'].extend([name for j in range(n)])
-                data['weight'].extend(['{}/{}'.format(name, i) for j in range(n)])
+                data['weight'].extend([l for j in range(n)])
             elif fmt == 'summary':
                 data.append(array_to_summary(w, fmt=plot))
                 data[-1]['layer'] = name
-                data[-1]['weight'] = '{}/{}'.format(name, i)
+                data[-1]['weight'] = l
 
     if fmt == 'longform':
         data = pandas.DataFrame(data)
@@ -257,6 +262,7 @@ def activations_keras(model, X, fmt='longform', plot='boxplot'):
 
 
 def weights_torch(model, fmt='longform', plot='boxplot'):
+    suffix = ['w', 'b']
     if fmt == 'longform':
         data = {'x': [], 'layer': [], 'weight': []}
     elif fmt == 'summary':
@@ -266,6 +272,7 @@ def weights_torch(model, fmt='longform', plot='boxplot'):
             name = layer.__class__.__name__
             weights = list(layer.parameters())
             for i, w in enumerate(weights):
+                l = '{}/{}'.format(name, suffix[i])
                 w = weights[i].detach().numpy()
                 w = w.flatten()
                 w = abs(w[w != 0])
@@ -275,12 +282,11 @@ def weights_torch(model, fmt='longform', plot='boxplot'):
                 if fmt == 'longform':
                     data['x'].extend(w.tolist())
                     data['layer'].extend([name for _ in range(n)])
-                    data['weight'].extend(['{}/{}'.format(name, i) for _
-                                           in range(n)])
+                    data['weight'].extend([l for _ in range(n)])
                 elif fmt == 'summary':
                     data.append(array_to_summary(w, fmt=plot))
                     data[-1]['layer'] = name
-                    data[-1]['weight'] = '{}/{}'.format(name, i)
+                    data[-1]['weight'] = l
 
     if fmt == 'longform':
         data = pandas.DataFrame(data)
