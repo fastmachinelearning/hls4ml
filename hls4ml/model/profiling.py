@@ -313,14 +313,14 @@ def activations_torch(model, X, fmt='longform', plot='boxplot'):
         data = pandas.DataFrame(data)
     return data
 
-def numerical(keras_model=None, hls_model=None, X=None, plot='boxplot'):
+def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     """
     Perform numerical profiling of a model
 
     Parameters
     ----------
-    keras_model : keras model
-        The keras model to profile
+    model : keras or pytorch model
+        The model to profile
     hls_model : HLSModel
         The HLSModel to profile
     X : array-like, optional
@@ -339,11 +339,10 @@ def numerical(keras_model=None, hls_model=None, X=None, plot='boxplot'):
     print("Profiling weights")
     if hls_model is not None and isinstance(hls_model, HLSModel):
         data = weights_hlsmodel(hls_model, fmt='summary', plot=plot)
-    elif keras_model is not None and isinstance(keras_model, keras.Model):
-        data = weights_keras(keras_model, fmt='summary', plot=plot)
-    elif keras_model is not None and isinstance(keras_model,
-                                                torch.nn.Sequential):
-        data = weights_torch(keras_model, fmt='summary', plot=plot)
+    elif model is not None and isinstance(model, keras.Model):
+        data = weights_keras(model, fmt='summary', plot=plot)
+    elif model is not None and isinstance(model, torch.nn.Sequential):
+        data = weights_torch(model, fmt='summary', plot=plot)
     else:
         print("Only keras and HLSModel models can currently be profiled")
         return False, False
@@ -357,15 +356,15 @@ def numerical(keras_model=None, hls_model=None, X=None, plot='boxplot'):
     plt.tight_layout()
 
     ap = None
-    if X is not None and isinstance(keras_model, keras.Model):
+    if X is not None and isinstance(model, keras.Model):
         print("Profiling activations")
-        data = activations_keras(keras_model, X, fmt='summary', plot=plot)
+        data = activations_keras(model, X, fmt='summary', plot=plot)
         ap = plots[plot](data, fmt='summary') # activation plot
         plt.title("Distribution of (non-zero) activations")
         plt.tight_layout()
-    elif X is not None and isinstance(keras_model, torch.nn.Sequential):
+    elif X is not None and isinstance(model, torch.nn.Sequential):
         print("Profiling activations")
-        data = activations_torch(keras_model, X, fmt='summary', plot=plot)
+        data = activations_torch(model, X, fmt='summary', plot=plot)
         ap = plots[plot](data, fmt='summary')
         plt.title("Distribution of (non-zero) activations")
         plt.tight_layout()
