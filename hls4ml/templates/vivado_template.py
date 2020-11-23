@@ -131,8 +131,11 @@ merge_config_template = """struct config{index} : nnet::merge_config {{
 }};\n"""
 
 dot_config_template = """struct config{index} : nnet::dot_config {{
-    static const unsigned n_elem = {n_elem};
-    static const unsigned n_elem_out = {n_elem_out};
+    static const unsigned n_in = {n_in};
+    static const unsigned n_out = {n_out};
+    static const unsigned reuse_factor = {reuse};
+    static const unsigned n_zeros = {nzeros};
+    typedef {accum_t} accum_t;
 }};\n"""
 
 concat_config_template = """struct config{index} : nnet::concat_config {{

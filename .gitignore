@@ -8,4 +8,3 @@ vivado_prj
 .vscode
 my-hls-test
 *.tar.gz
-rebuild

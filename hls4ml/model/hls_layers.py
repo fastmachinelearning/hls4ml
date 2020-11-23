@@ -795,6 +795,17 @@ class Dot(Merge):
         assert(len(self.inputs) == 2)
         inp1 = self.get_input_variable(self.inputs[0])
         inp2 = self.get_input_variable(self.inputs[1])
+
+        accum_t = HLSType(*reversed(self.model.config.get_precision(self, 'accum')))
+        self.precision[accum_t.name] = accum_t
+        self.set_attr('accum_t', accum_t.precision)
+
+        self.nzeros = -1
+        self.data_length = 2*np.prod(inp1.shape)
+        self.nonzeros = np.count_nonzero(inp1) + np.count_nonzero(inp2)
+        self.nzeros = self.data_length - self.nonzeros
+
+
         shape = [1]
         assert(inp1.shape == inp2.shape)
         dims = ['OUT_DOT_{}'.format(1)]
@@ -802,17 +813,12 @@ class Dot(Merge):
 
     def config_cpp(self):
         params = self._default_config_params()
-        params.setdefault('n_elem', 0)
-        params.setdefault('n_elem_out', 1)
         inp1 = self.get_input_variable(self.inputs[0])
         inp2 = self.get_input_variable(self.inputs[1])
-        params['n_elem_out'] = 1
-        params['n_elem'] = inp1.shape[0]
-
+        params['n_out'] = 1
+        params['n_in'] = inp1.shape[0]
+        params['nzeros'] = self.nzeros
         return self._config_template.format(**params)
-
-
-
 
 class Concatenate(Merge):
     def initialize(self):
