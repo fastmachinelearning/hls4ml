@@ -255,6 +255,36 @@ def activations_keras(model, X, fmt='longform', plot='boxplot'):
         data = pandas.DataFrame(data)
     return data
 
+
+def weights_torch(model, fmt='longform', plot='boxplot'):
+    if fmt == 'longform':
+        data = {'x': [], 'layer': [], 'weight': []}
+    elif fmt == 'summary':
+        data = []
+    for layer in model.children():
+        if isinstance(layer, torch.nn.Linear):
+            name = layer.__class__.__name__
+            weights = list(layer.parameters())
+            for i, w in enumerate(weights):
+                w = weights[i].detach().numpy()
+                w = w.flatten()
+                w = abs(w[w != 0])
+                n = len(w)
+                if n == 0:
+                    break
+                if fmt == 'longform':
+                    data['x'].extend(w.tolist())
+                    data['layer'].extend([name for _ in range(n)])
+                    data['weight'].extend(['{}/{}'.format(name, i) for _ in range(n)])
+                elif fmt == 'summary':
+                    data.append(array_to_summary(w, fmt=plot))
+                    data[-1]['layer'] = name
+                    data[-1]['weight'] = '{}/{}'.format(name, i)
+
+    if fmt == 'longform':
+        data = pandas.DataFrame(data)
+    return data
+
 def numerical(keras_model=None, hls_model=None, X=None, plot='boxplot'):
     """
     Perform numerical profiling of a model
@@ -285,8 +315,7 @@ def numerical(keras_model=None, hls_model=None, X=None, plot='boxplot'):
         data = weights_keras(keras_model, fmt='summary', plot=plot)
     elif keras_model is not None and isinstance(keras_model,
                                                 torch.nn.Sequential):
-        print("PyTorch models can not currently be profiled")
-        return False, False
+        data = weights_torch(keras_model, fmt='summary', plot=plot)
     else:
         print("Only keras and HLSModel models can currently be profiled")
         return False, False
@@ -307,7 +336,7 @@ def numerical(keras_model=None, hls_model=None, X=None, plot='boxplot'):
         plt.title("Distribution of (non-zero) activations")
         plt.tight_layout()
     elif X is not None and isinstance(keras_model, torch.nn.Sequential):
-        print("PyTorch models can not currently be profiled")
+        print("PyTorch activations can not currently be profiled")
 
     if X is not None and isinstance(hls_model, HLSModel):
         t_data = activation_types_hlsmodel(hls_model)
