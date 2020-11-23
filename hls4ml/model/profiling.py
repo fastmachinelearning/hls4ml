@@ -357,18 +357,16 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     plt.title("Distribution of (non-zero) weights")
     plt.tight_layout()
 
-    if X is not None and isinstance(model, keras.Model):
-        print("Profiling activations")
-        data = activations_keras(model, X, fmt='summary', plot=plot)
-        ap = plots[plot](data, fmt='summary') # activation plot
-        plt.title("Distribution of (non-zero) activations")
-        plt.tight_layout()
-    elif X is not None and isinstance(model, torch.nn.Sequential):
-        print("Profiling activations")
-        data = activations_torch(model, X, fmt='summary', plot=plot)
-        ap = plots[plot](data, fmt='summary')
-        plt.title("Distribution of (non-zero) activations")
-        plt.tight_layout()
+    print("Profiling activations")
+    if X is not None:
+        if isinstance(model, (keras.Model, torch.nn.Sequential)):
+            if isinstance(model, keras.Model):
+                data = activations_keras(model, X, fmt='summary', plot=plot)
+            else:
+                data = activations_torch(model, X, fmt='summary', plot=plot)
+            ap = plots[plot](data, fmt='summary') # activation plot
+            plt.title("Distribution of (non-zero) activations")
+            plt.tight_layout()
 
     if X is not None and isinstance(hls_model, HLSModel):
         t_data = activation_types_hlsmodel(hls_model)
