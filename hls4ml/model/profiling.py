@@ -6,6 +6,7 @@ import pandas
 from tensorflow import keras
 import seaborn as sb
 import matplotlib.pyplot as plt
+import torch
 
 def array_to_summary(x, fmt='boxplot'):
     if fmt == 'boxplot':
@@ -282,6 +283,10 @@ def numerical(keras_model=None, hls_model=None, X=None, plot='boxplot'):
         data = weights_hlsmodel(hls_model, fmt='summary', plot=plot)
     elif keras_model is not None and isinstance(keras_model, keras.Model):
         data = weights_keras(keras_model, fmt='summary', plot=plot)
+    elif keras_model is not None and isinstance(keras_model,
+                                                torch.nn.Sequential):
+        print("PyTorch models can not currently be profiled")
+        return False, False
     else:
         print("Only keras and HLSModel models can currently be profiled")
         return False, False
@@ -301,6 +306,8 @@ def numerical(keras_model=None, hls_model=None, X=None, plot='boxplot'):
         ap = plots[plot](data, fmt='summary') # activation plot
         plt.title("Distribution of (non-zero) activations")
         plt.tight_layout()
+    elif X is not None and isinstance(keras_model, torch.nn.Sequential):
+        print("PyTorch models can not currently be profiled")
 
     if X is not None and isinstance(hls_model, HLSModel):
         t_data = activation_types_hlsmodel(hls_model)
