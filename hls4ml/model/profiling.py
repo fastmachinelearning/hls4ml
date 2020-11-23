@@ -335,6 +335,7 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     tuple
         The pair of produced figures. First weights and biases, then activations
     """
+    wp, ap = None, None
 
     print("Profiling weights")
     if hls_model is not None and isinstance(hls_model, HLSModel):
@@ -345,7 +346,7 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
         data = weights_torch(model, fmt='summary', plot=plot)
     else:
         print("Only keras and HLSModel models can currently be profiled")
-        return False, False
+        return wp, ap
 
     wp = plots[plot](data, fmt='summary') # weight plot
     if isinstance(hls_model, HLSModel) and plot in types_plots:
@@ -355,7 +356,6 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     plt.title("Distribution of (non-zero) weights")
     plt.tight_layout()
 
-    ap = None
     if X is not None and isinstance(model, keras.Model):
         print("Profiling activations")
         data = activations_keras(model, X, fmt='summary', plot=plot)
