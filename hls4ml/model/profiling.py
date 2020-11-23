@@ -275,7 +275,8 @@ def weights_torch(model, fmt='longform', plot='boxplot'):
                 if fmt == 'longform':
                     data['x'].extend(w.tolist())
                     data['layer'].extend([name for _ in range(n)])
-                    data['weight'].extend(['{}/{}'.format(name, i) for _ in range(n)])
+                    data['weight'].extend(['{}/{}'.format(name, i) for _
+                                           in range(n)])
                 elif fmt == 'summary':
                     data.append(array_to_summary(w, fmt=plot))
                     data[-1]['layer'] = name
@@ -313,6 +314,7 @@ def activations_torch(model, X, fmt='longform', plot='boxplot'):
         data = pandas.DataFrame(data)
     return data
 
+
 def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     """
     Perform numerical profiling of a model
@@ -328,12 +330,14 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
         Must be formatted suitably for the model.predict(X) method
     plot : str, optional
         The type of plot to produce.
-        Options are: 'boxplot' (default), 'violinplot', 'histogram', 'FacetGrid'
+        Options are: 'boxplot' (default), 'violinplot', 'histogram',
+        'FacetGrid'
 
     Returns
     -------
     tuple
-        The pair of produced figures. First weights and biases, then activations
+        The pair of produced figures. First weights and biases,
+        then activations
     """
     wp, ap = None, None
 
@@ -345,11 +349,11 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     elif model is not None and isinstance(model, torch.nn.Sequential):
         data = weights_torch(model, fmt='summary', plot=plot)
     else:
-        print("Only keras, PyTorch (Sequential) and HLSModel models " + \
+        print("Only keras, PyTorch (Sequential) and HLSModel models " +
               "can currently be profiled")
         return wp, ap
 
-    wp = plots[plot](data, fmt='summary') # weight plot
+    wp = plots[plot](data, fmt='summary')  # weight plot
     if isinstance(hls_model, HLSModel) and plot in types_plots:
         t_data = types_hlsmodel(hls_model)
         types_plots[plot](t_data, fmt='summary')
@@ -364,7 +368,7 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
                 data = activations_keras(model, X, fmt='summary', plot=plot)
             else:
                 data = activations_torch(model, X, fmt='summary', plot=plot)
-            ap = plots[plot](data, fmt='summary') # activation plot
+            ap = plots[plot](data, fmt='summary')  # activation plot
             plt.title("Distribution of (non-zero) activations")
             plt.tight_layout()
 
@@ -373,6 +377,7 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
         types_plots[plot](t_data, fmt='summary')
 
     return wp, ap
+
 
 ########COMPARE OUTPUT IMPLEMENTATION########
 def _is_ignored_layer(layer):
