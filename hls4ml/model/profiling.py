@@ -345,7 +345,8 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     elif model is not None and isinstance(model, torch.nn.Sequential):
         data = weights_torch(model, fmt='summary', plot=plot)
     else:
-        print("Only keras and HLSModel models can currently be profiled")
+        print("Only keras, PyTorch (Sequential) and HLSModel models " + \
+              "can currently be profiled")
         return wp, ap
 
     wp = plots[plot](data, fmt='summary') # weight plot
