@@ -38,7 +38,7 @@ void linear(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     LinearActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
-        res_T in_data = data.read();
+        data_T in_data = data.read();
         res_T out_data;
         #pragma HLS DATA_PACK variable=out_data
 
@@ -60,7 +60,7 @@ void relu(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     ReLUActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
-        res_T in_data = data.read();
+        data_T in_data = data.read();
         res_T out_data;
         #pragma HLS DATA_PACK variable=out_data
 
@@ -102,15 +102,15 @@ void softmax_latency(hls::stream<data_T> &data, hls::stream<res_T> &res){
     typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
     #pragma HLS array_partition variable=exp_res complete
     typename CONFIG_T::exp_table_t exp_sum(0);
-    SoftmaxExpLoop: for(unsigned i = 0; i < CONFIG_T::n_in / res_T::size; i++){
-        if (CONFIG_T::n_in / res_T::size > 1) {
+    SoftmaxExpLoop: for(unsigned i = 0; i < CONFIG_T::n_in / data_T::size; i++){
+        if (CONFIG_T::n_in / data_T::size > 1) {
             #pragma HLS PIPELINE
         }
-        res_T in_pack = data.read();
-        SoftmaxExpPackLoop: for(unsigned j = 0; j < res_T::size; j++){
+        data_T in_pack = data.read();
+        SoftmaxExpPackLoop: for(unsigned j = 0; j < data_T::size; j++){
             #pragma HLS UNROLL
-            unsigned x = softmax_idx_from_real_val<typename res_T::value_type, CONFIG_T>(in_pack[j]);
-            exp_res[i * res_T::size + j] = exp_table[x];
+            unsigned x = softmax_idx_from_real_val<typename data_T::value_type, CONFIG_T>(in_pack[j]);
+            exp_res[i * data_T::size + j] = exp_table[x];
         }
     }
 
@@ -122,7 +122,9 @@ void softmax_latency(hls::stream<data_T> &data, hls::stream<res_T> &res){
     typename CONFIG_T::inv_table_t inv_exp_sum = invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
     SoftmaxInvLoop: for(unsigned i = 0; i < CONFIG_T::n_in / res_T::size; i++){
         #pragma HLS PIPELINE II=ii
+
         res_T out_pack;
+        #pragma HLS DATA_PACK variable=out_pack
         SoftmaxInvPackLoop: for(unsigned j = 0; j < res_T::size; j++){
             #pragma HLS UNROLL
             #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
@@ -198,7 +200,9 @@ void softmax_stable(hls::stream<data_T> &data, hls::stream<res_T> &res){
     typename CONFIG_T::inv_table_t inv_exp_sum = invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
     SoftmaxInvLoop: for(unsigned i = 0; i < CONFIG_T::n_in / res_T::size; i++){
         #pragma HLS PIPELINE II=ii
+
         res_T out_pack;
+        #pragma HLS DATA_PACK variable=out_pack
         SoftmaxInvPackLoop: for(unsigned j = 0; j < res_T::size; j++){
             #pragma HLS UNROLL
             #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
@@ -262,7 +266,9 @@ void softmax_legacy(hls::stream<data_T> &data, hls::stream<res_T> &res) {
 
     SoftmaxInvLoop: for(unsigned i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
+
         res_T out_pack;
+        #pragma HLS DATA_PACK variable=out_pack
         SoftmaxInvPackLoop: for(unsigned j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
             

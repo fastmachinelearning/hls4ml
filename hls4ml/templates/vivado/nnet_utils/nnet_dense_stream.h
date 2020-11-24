@@ -56,6 +56,7 @@ void dense(
             #pragma HLS PIPELINE
         }
         res_T res_pack;
+        #pragma HLS DATA_PACK variable=res_pack
         ResPack: for (int i_pack = 0; i_pack < res_T::size; i_pack++) {
             #pragma HLS UNROLL
             res_pack[i_pack] = res[i_out * res_T::size + i_pack];
