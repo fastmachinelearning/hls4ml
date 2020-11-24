@@ -676,12 +676,6 @@ class SeparableConv1D(Layer):
             params['n_filt'] = self.get_input_variable().dim_names[0]
             params['out_width'] = self.get_output_variable().dim_names[1]
 
-        # Since we are using conv2d template for depthwise part to simplify things
-        # params['pad_top'] = params['pad_bottom'] = 0
-        # params['in_height'] = params['min_height'] = params['out_height'] = 1
-        # params['filt_height'] = params['stride_height'] = 1
-        # params['stride_width'] = params['stride']
-        
         params['dilation'] = self.get_attr('dilation', 1)
         params['nzeros'] = self.get_weights('depthwise').nzeros
         params['index'] = str(self.index) + '_depthwise'
@@ -720,6 +714,8 @@ class SeparableConv1D(Layer):
         else:
             params['in_width'] = '*'.join([str(k) for k in input_dims[1:]])
             params['n_chan'] = input_dims[0]
+        
+        params['filt_width'] = 1
         params['dilation'] = self.get_attr('dilation', 1)
         params['n_filt'] = 'N_FILT_{}'.format(self.index)
         params['out_width'] = 'N_OUTPUTS_{}'.format(self.index)
@@ -927,6 +923,7 @@ class SeparableConv2D(Layer):
             params['out_height'] = self.get_output_variable().dim_names[1]
             params['out_width'] = self.get_output_variable().dim_names[2]
 
+        params['filt_height'] = params['filt_width'] = 1
         params['dilation'] = self.get_attr('dilation', 1)
         params['nzeros'] = self.get_weights('pointwise').nzeros
         params['index'] = str(self.index) + '_pointwise'
