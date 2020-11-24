@@ -393,7 +393,7 @@ class VivadoBackend(Backend):
 
         max_rf = n_in * n_out
         valid_reuse_factors = []
-        for rf in range(1, max_rf):
+        for rf in range(1, max_rf + 1):
             _assert = self._check_conditions(n_in, n_out, rf)
             if _assert:
                 valid_reuse_factors.append(rf)
