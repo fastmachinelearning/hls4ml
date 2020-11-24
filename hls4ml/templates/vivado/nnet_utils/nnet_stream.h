@@ -48,13 +48,17 @@ void repack_stream(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     } else if (data_T::size > res_T::size) {
         constexpr unsigned pack_diff = data_T::size / res_T::size;
         for (int i = 0; i < N / data_T::size; i++) {
-           #pragma HLS PIPELINE
+            if (N / data_T::size > 1) {
+                #pragma HLS PIPELINE
+            }
 
             data_T in_data = data.read();
             res_T out_data;
             #pragma HLS DATA_PACK variable=out_data
 
             for (int j = 0; j < pack_diff; j++) {
+                #pragma HLS PIPELINE
+
                 res_T out_data;
                 for (int k = 0; k < res_T::size; k++) {
                     #pragma HLS UNROLL
