@@ -1,12 +1,24 @@
 import importlib
-from hls4ml.model.hls_model import HLSModel
-import qkeras
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas
-from tensorflow import keras
 import seaborn as sb
-import matplotlib.pyplot as plt
-import torch
+
+from hls4ml.model.hls_model import HLSModel
+
+try:
+    from tensorflow import keras
+    import qkeras
+    __tf_profiling_enabled__ = True
+except ImportError:
+    __tf_profiling_enabled__ = False
+
+try:
+    import torch
+    __torch_profiling_enabled__ = True
+except ImportError:
+    __torch_profiling_enabled__ = False
+
 
 def array_to_summary(x, fmt='boxplot'):
     if fmt == 'boxplot':
@@ -348,13 +360,16 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     wp, ap = None, None
 
     print("Profiling weights")
+    data = None
     if hls_model is not None and isinstance(hls_model, HLSModel):
         data = weights_hlsmodel(hls_model, fmt='summary', plot=plot)
-    elif model is not None and isinstance(model, keras.Model):
-        data = weights_keras(model, fmt='summary', plot=plot)
-    elif model is not None and isinstance(model, torch.nn.Sequential):
-        data = weights_torch(model, fmt='summary', plot=plot)
-    else:
+    elif model is not None:
+        if __tf_profiling_enabled__ and isinstance(model, keras.Model):
+            data = weights_keras(model, fmt='summary', plot=plot)
+        elif __torch_profiling_enabled__ and \
+                isinstance(model, torch.nn.Sequential):
+            data = weights_torch(model, fmt='summary', plot=plot)
+    if data is None:
         print("Only keras, PyTorch (Sequential) and HLSModel models " +
               "can currently be profiled")
         return wp, ap
@@ -368,15 +383,17 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     plt.tight_layout()
 
     print("Profiling activations")
+    data = None
     if X is not None:
-        if isinstance(model, (keras.Model, torch.nn.Sequential)):
-            if isinstance(model, keras.Model):
-                data = activations_keras(model, X, fmt='summary', plot=plot)
-            else:
-                data = activations_torch(model, X, fmt='summary', plot=plot)
-            ap = plots[plot](data, fmt='summary')  # activation plot
-            plt.title("Distribution of (non-zero) activations")
-            plt.tight_layout()
+        if __tf_profiling_enabled__ and isinstance(model, keras.Model):
+            data = activations_keras(model, X, fmt='summary', plot=plot)
+        elif __torch_profiling_enabled__ and \
+                isinstance(model, torch.nn.Sequential):
+            data = activations_torch(model, X, fmt='summary', plot=plot)
+    if data is not None:
+        ap = plots[plot](data, fmt='summary')  # activation plot
+        plt.title("Distribution of (non-zero) activations")
+        plt.tight_layout()
 
     if X is not None and isinstance(hls_model, HLSModel):
         t_data = activation_types_hlsmodel(hls_model)
