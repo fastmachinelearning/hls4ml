@@ -19,8 +19,8 @@ KERAS_1layer
 KERAS_3layer
 #KERAS_3layer:KERAS_3layer_70pruned_retrained_weights
 #KERAS_conv1d
-KERAS_conv1d_small
-KERAS_conv2d_model
+#KERAS_conv1d_small
+#KERAS_conv2d_model
 #KERAS_dense_16x100x100x100x100x100x5
 KERAS_3layer_batch_norm
 KERAS_3layer_binary_smaller
