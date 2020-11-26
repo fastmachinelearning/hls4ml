@@ -43,6 +43,10 @@ class CloneOutput(OptimizerPass):
         return True
 
     def transform(self, model, node):
+        if model.config.backend.name != 'Vivado' or \
+            model.config.get_config_value('IOType') != 'io_stream':
+            return False
+
         output_map = {}
         for output in node.outputs:
             output_map[output] = []
