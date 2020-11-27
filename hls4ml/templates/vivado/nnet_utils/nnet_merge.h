@@ -21,7 +21,7 @@
 #define NNET_MERGE_H_
 
 #include "nnet_common.h"
-#include "nnet_helpers.h"
+#include "nnet_dense.h"
 #include "hls_stream.h"
 #include <math.h>
 
@@ -32,12 +32,10 @@ struct merge_config
     static const unsigned n_elem = 10;
 };
 
-
 struct dot_config {
     static const unsigned n_in = 10;
     static const unsigned n_out = 1;
     static const unsigned reuse_factor = 1;
-    static const unsigned n_zeros = 0;
     typedef float accum_t;
 };
 
@@ -51,59 +49,6 @@ struct concat_config {
 
     static const unsigned axis = -1;
 };
-
-template<class input1_T, class input2_T, class ret_T>
-inline typename std::enable_if<std::is_same<input1_T, ap_uint<1>>::value
-        and std::is_same<input2_T, ap_uint<1>>::value, ap_uint<1>>::type
-product(ap_uint<1> a, ap_uint<1> w){
-    // specialisation for 1-bit weights and incoming data
-    #pragma HLS inline off
-    return a == w;
-}
-
-template<class input1_T, class input2_T, class ret_T>
-inline typename std::enable_if<(not std::is_same<input1_T, ap_uint<1>>::value)
-        and std::is_same<input2_T, ap_uint<1>>::value, ret_T>::type
-product(input1_T a, ap_uint<1> w){
-    // Specialisation for 1-bit weights, arbitrary data
-    #pragma HLS inline off
-    return w == 0 ? (input1_T) -a : a;
-}
-
-template<class input1_T, class input2_T, class ret_T>
-inline typename std::enable_if<(not std::is_same<input1_T, ap_uint<2>>::value)
-        and std::is_same<input2_T, ap_int<2>>::value, ret_T>::type
-product(input1_T a, ap_int<2> w){
-    // Specialisation for 2-bit weights, arbitrary data
-    #pragma HLS inline off
-    if (w == 0) return (input1_T) 0;
-    else if(w == -1) return (input1_T) -a;
-    else return (input1_T) a; // if(w == 1)
-}
-
-template<class input1_T, class input2_T, class ret_T>
-inline typename std::enable_if<(not std::is_same<input1_T, ap_uint<1>>::value)
-        and (not std::is_same<input2_T, ap_uint<1>>::value), ret_T>::type
-product(input1_T a, input2_T w){
-    // 'Normal' product
-    #pragma HLS inline off
-    return a * w;
-}
-
-template<typename input1_T, typename input2_T, class res_T, typename CONFIG_T>
-inline typename std::enable_if<std::is_same<input1_T, ap_uint<1>>::value
-        and std::is_same<input2_T, ap_uint<1>>::value, ap_int<nnet::ceillog2(CONFIG_T::n_in) + 2>>::type
-cast(typename CONFIG_T::accum_t x){
-  return (ap_int<nnet::ceillog2(CONFIG_T::n_in) + 2>) (x - CONFIG_T::n_in / 2) * 2;
-}
-
-template<typename input1_T, typename input2_T, class res_T, typename CONFIG_T>
-inline typename std::enable_if<(not std::is_same<input1_T, ap_uint<1>>::value) 
-        or (not std::is_same<input2_T, ap_uint<1>>::value), res_T>::type
-cast(typename CONFIG_T::accum_t x){
-  return (res_T) x;
-}
-
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void add(
@@ -174,33 +119,39 @@ void minimum(
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void dot1d(
-    input1_T data1[CONFIG_T::n_in], 
+    input1_T data1[CONFIG_T::n_in],
 	input2_T data2[CONFIG_T::n_in],
     res_T res[CONFIG_T::n_out])
 {
-    typename CONFIG_T::accum_t mult[CONFIG_T::n_in];
-    typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
-    Product: for(int ii=0; ii < CONFIG_T::n_in; ii++){
-                #pragma HLS PIPELINE
-                int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_out) / float(CONFIG_T::reuse_factor)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
-                #pragma HLS ALLOCATION instances=product limit=multiplier_limit function
-                mult[ii] = product<input1_T, input2_T, res_T>(data1[ii], data2[ii]);
-             }
+    #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
-    Accum: for(int ii = 0; ii < CONFIG_T::n_in; ii++){
-              #pragma HLS PIPELINE
-              acc[0] += mult[ii];
-            }
-    Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
-              #pragma HLS_UNROLL
-              res[ires] = cast<input1_T, input2_T, res_T, CONFIG_T>(acc[ires]);
-            }
+    constexpr unsigned multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in, CONFIG_T::reuse_factor);
+    #pragma HLS ALLOCATION instances=product limit=multiplier_limit function
+
+    typename CONFIG_T::accum_t mult[CONFIG_T::n_in];
+    #pragma HLS ARRAY_PARTITION variable=mult complete
+    typename CONFIG_T::accum_t acc = 0;
+
+    Product: for(int i_mult=0; i_mult < CONFIG_T::n_in; i_mult++) {
+        #pragma HLS UNROLL
+        mult[i_mult] = product<input1_T, input2_T, typename CONFIG_T::accum_t>(data1[i_mult], data2[i_mult]);
+    }
+
+    Accum: for(int i_acc = 0; i_acc < CONFIG_T::n_in; i_acc++) {
+        #pragma HLS UNROLL
+        acc += mult[i_acc];
+    }
+
+    Result: for(int i_res = 0; i_res < CONFIG_T::n_out; i_res++) {
+        #pragma HLS_UNROLL
+        res[i_res] = cast<input1_T, res_T, CONFIG_T>(acc);
+    }
 }
 
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate1d(
-    input1_T data1[CONFIG_T::n_elem1_0], 
+    input1_T data1[CONFIG_T::n_elem1_0],
 	input2_T data2[CONFIG_T::n_elem2_0],
     res_T res[CONFIG_T::n_elem1_0 + CONFIG_T::n_elem2_0])
 {
@@ -214,7 +165,7 @@ void concatenate1d(
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate2d_0(
-    input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1], 
+    input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1],
 	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1])
 {
@@ -228,7 +179,7 @@ void concatenate2d_0(
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate2d_1(
-    input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1], 
+    input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1],
 	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1])
 {
@@ -244,7 +195,7 @@ void concatenate2d_1(
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate2d(
-    input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1], 
+    input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1],
 	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1])
 {
@@ -271,7 +222,7 @@ input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate3d_1(
-input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2], 
+input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
 	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2])
 {
@@ -303,7 +254,7 @@ input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate3d_2(
-input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2], 
+input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
 	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2])
 {
