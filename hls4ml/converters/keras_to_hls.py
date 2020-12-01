@@ -269,7 +269,10 @@ def keras_to_hls(config):
     print('Topology:')
     for keras_layer in layer_config:
         if 'batch_input_shape' in keras_layer['config']:
-            input_shapes = [keras_layer['config']['batch_input_shape']]
+            if 'inbound_nodes' in keras_layer and len(keras_layer['inbound_nodes']) > 0:
+                input_shapes = [output_shapes[inbound_node[0][0]] for inbound_node in keras_layer['inbound_nodes']]
+            else:
+                input_shapes = [keras_layer['config']['batch_input_shape']]
         else:
             if 'inbound_nodes' in keras_layer:
                 input_shapes = [output_shapes[inbound_node[0][0]] for inbound_node in keras_layer['inbound_nodes']]
