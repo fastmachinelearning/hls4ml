@@ -35,8 +35,7 @@ setup(name='hls4ml',
         'profiling': [
             'pandas',
             'seaborn',
-            'matplotlib',
-            'tensorflow'
+            'matplotlib'
         ]
       },
       scripts=['scripts/hls4ml'],
