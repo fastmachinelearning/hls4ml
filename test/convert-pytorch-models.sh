@@ -3,7 +3,6 @@
 models_var=HLS4ML_PYTORCH_MODELS
 models_file=
 exec=echo
-py=
 dir=
 
 function print_usage {
@@ -18,21 +17,17 @@ function print_usage {
    echo "      environment variable."
    echo "   -x"
    echo "      Execute the commands instead of just printing them."
-   echo "   -p 2|3"
-   echo "      Python version passed to pytorch-to-hls script (2 or 3)."
    echo "   -d DIR"
    echo "      Output directory passed to pytorch-to-hls script."
    echo "   -h"
    echo "      Prints this help message."
 }
 
-while getopts ":f:xp:d:h" opt; do
+while getopts ":f:xd:h" opt; do
    case "$opt" in
    f) models_file=$OPTARG
       ;;
    x) exec=eval
-      ;;
-   p) py="-p $OPTARG"
       ;;
    d) dir="-d $OPTARG"
       ;;
@@ -74,7 +69,7 @@ do
       done
       params[6]=${model_def[0]}
       
-      cmd="./pytorch-to-hls.sh ${py} ${dir} ${params[0]}${params[1]}${params[2]}${params[3]}${params[4]}${params[5]}${params[6]}"
+      cmd="./pytorch-to-hls.sh ${dir} ${params[0]}${params[1]}${params[2]}${params[3]}${params[4]}${params[5]}${params[6]}"
       
       ${exec} "${cmd}"
    fi

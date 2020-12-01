@@ -21,15 +21,12 @@ function print_usage {
    echo "Multiple models can be specified."
    echo ""
    echo "Options are:"
-   echo "   -p 2|3"
-   echo "      Python version to use (2 or 3). If not specified uses default"
-   echo "      'python' interpreter."
    echo "   -x DEVICE"
    echo "      FPGA device part number. Defaults to 'xc7vx690tffg1927-2'."
    echo "   -c CLOCK"
    echo "      Clock period to use. Defaults to 5."
    echo "   -s"
-   echo "      Use serial I/O. If not specified uses parallel I/O."
+   echo "      Use streaming I/O. If not specified uses parallel I/O."
    echo "   -r FACTOR"
    echo "      Reuse factor. Defaults to 1."
    echo "   -g STRATEGY"
@@ -44,15 +41,13 @@ function print_usage {
    echo "      Prints this help message."
 }
 
-while getopts ":p:x:c:sr:g:t:d:b:h" opt; do
+while getopts ":x:c:sr:g:t:d:b:h" opt; do
    case "$opt" in
-   p) pycmd=${pycmd}$OPTARG
-      ;;
    x) fpgapart=$OPTARG
       ;;
    c) clock=$OPTARG
       ;;
-   s) io=io_serial
+   s) io=io_stream
       ;;
    r) rf=$OPTARG
       ;;
@@ -97,11 +92,12 @@ do
 
    echo "Creating config file for model '${model}'"
    base=`echo "${h5}" | sed -e 's/\(_weights\)*$//g'`
-   file="${basedir}/${base}-${pycmd}.yml"
+   file="${basedir}/${base}.yml"
+   prjdir="${basedir}/${base}-${fpgapart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}"
 
    echo "KerasJson: ../example-models/keras/${name}.json" > ${file}
    echo "KerasH5:   ../example-models/keras/${h5}.h5" >> ${file}
-   echo "OutputDir: ${basedir}/${base}-${pycmd}-${fpgapart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}" >> ${file}
+   echo "OutputDir: ${prjdir}" >> ${file}
    echo "ProjectName: myproject" >> ${file}
    echo "FPGAPart: ${fpgapart}" >> ${file}
    echo "ClockPeriod: ${clock}" >> ${file}
@@ -116,5 +112,6 @@ do
 
    ${pycmd} ../scripts/hls4ml convert -c ${file} || exit 1
    rm ${file}
+   rm -rf "${prjdir}"
    echo ""
 done

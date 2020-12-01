@@ -6,7 +6,7 @@
 #    MODEL_NAME - Name of the file containing the model (without ".pt")
 #    x:XILINXPART - Xilinx part number to use
 #    c:CLOCK_PERIOD - Clock period
-#    io:s - User serial I/O, otherwise use parallel I/O
+#    io:s - User streaming I/O, otherwise use parallel I/O
 #    r:REUSE_FACTOR - Reuse factor
 #    s:STRATEGY - Latency-optimized or Resource-optimized strategy
 #    t:AP_TYPE - Default precision
