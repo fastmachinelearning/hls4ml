@@ -16,12 +16,12 @@ class InsertZeroPaddingBeforeConv1D(OptimizerPass):
         pad_left = node.get_attr('pad_left')
         pad_right = node.get_attr('pad_right')
 
-        out_width = pad_left + node.get_attr('n_in') + pad_right
+        out_width = pad_left + node.get_attr('in_width') + pad_right
 
         attrs = {
             'pad_left': pad_left,
             'pad_right': pad_right,
-            'in_width': node.get_attr('n_in'),
+            'in_width': node.get_attr('in_width'),
             'out_width': out_width,
             'n_chan': node.get_attr('n_chan'),
             'data_format': node.get_attr('data_format', 'channels_last')
