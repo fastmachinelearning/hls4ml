@@ -93,9 +93,6 @@ void sigmoid(hls::stream<data_T> &data, hls::stream<res_T> &res) {
         initialized = true;
     }
 
-    int data_round;
-    int index;
-
     SigmoidActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
@@ -105,8 +102,8 @@ void sigmoid(hls::stream<data_T> &data, hls::stream<res_T> &res) {
 
         SigmoidPackLoop: for (int j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
-            data_round = in_data[j]*CONFIG_T::table_size/16;
-            index = data_round + 8*CONFIG_T::table_size/16;
+            int data_round = in_data[j]*CONFIG_T::table_size/16;
+            int index = data_round + 8*CONFIG_T::table_size/16;
             if (index < 0)   index = 0;
             else if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
             out_data[j] = sigmoid_table[index];
