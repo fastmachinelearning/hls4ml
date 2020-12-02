@@ -1,7 +1,8 @@
 pipeline {
   agent {
     docker {
-      image 'hls4ml-with-vivado:latest'
+      image 'vivado-el7:1'
+      args  '-v /data/Xilinx:/data/Xilinx'
     }
   }
   options {
@@ -12,41 +13,41 @@ pipeline {
     stage('Keras to HLS') {
       steps {
         dir(path: 'test') {
-          sh '''#!/bin/bash
-              . activate hls4ml-py36
+          sh '''#!/bin/bash --login
+              conda activate hls4ml-py36
               pip install -U ../ --user
-              ./convert-keras-models.sh -p 3 -x -f keras-models.txt
+              ./convert-keras-models.sh -x -f keras-models.txt
               pip uninstall hls4ml -y'''
         }
       }
     }
     stage('C Simulation') {
       parallel {
-        stage('2017.2') {
+        stage('2019.2') {
           when {
             allOf {
-              environment name: 'USE_VIVADO_2017', value: '1';
+              environment name: 'USE_VIVADO_2019', value: '1';
               environment name: 'TEST_SIMULATION', value: '1'
             }
           }
           steps {
             dir(path: 'test') {
               sh '''#!/bin/bash
-                 ./build-prj.sh -i /opt/Xilinx -v 2017.2 -c -p 2'''
+                 ./build-prj.sh -i /data/Xilinx -v 2019.2 -c -p 2'''
             }
           }
         }
-        stage('2018.2') {
+        stage('2020.1') {
           when {
             allOf {
-              environment name: 'USE_VIVADO_2018', value: '1';
+              environment name: 'USE_VIVADO_2020', value: '1';
               environment name: 'TEST_SIMULATION', value: '1'
             }
           }
           steps {
             dir(path: 'test') {
               sh '''#!/bin/bash
-                 ./build-prj.sh -i /opt/Xilinx -v 2018.2 -c -p 2'''
+                 ./build-prj.sh -i /data/Xilinx -v 2020.1 -c -p 2'''
             }
           }
         }
@@ -54,31 +55,31 @@ pipeline {
     }
     stage('C/RTL Synthesis') {
       parallel {
-        stage('2017.2') {
+        stage('2019.2') {
           when {
             allOf {
-              environment name: 'USE_VIVADO_2017', value: '1';
+              environment name: 'USE_VIVADO_2019', value: '1';
               environment name: 'TEST_SYNTHESIS', value: '1'
             }
           }
           steps {
             dir(path: 'test') {
               sh '''#!/bin/bash
-                 ./build-prj.sh -i /opt/Xilinx -v 2017.2 -s -r -p 2'''
+                 ./build-prj.sh -i /data/Xilinx -v 2019.2 -s -r -p 2'''
             }
           }
         }
-        stage('2018.2') {
+        stage('2020.1') {
           when {
             allOf {
-              environment name: 'USE_VIVADO_2018', value: '1';
+              environment name: 'USE_VIVADO_2020', value: '1';
               environment name: 'TEST_SYNTHESIS', value: '1'
             }
           }
           steps {
             dir(path: 'test') {
               sh '''#!/bin/bash
-                 ./build-prj.sh -i /opt/Xilinx -v 2018.2 -s -r -p 2'''
+                 ./build-prj.sh -i /data/Xilinx -v 2020.1 -s -r -p 2'''
             }
           }
         }

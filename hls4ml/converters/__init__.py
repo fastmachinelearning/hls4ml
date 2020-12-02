@@ -63,9 +63,15 @@ def convert_from_yaml_config(yamlConfig):
     return model
 
 def convert_from_keras_model(model, output_dir='my-hls-test', project_name='myproject',
-    fpga_part='xcku115-flvb2104-2-i', clock_period=5, hls_config={}):
-    config = create_vivado_config(output_dir=output_dir,
-        project_name=project_name, fpga_part=fpga_part, clock_period=clock_period)
+    fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
+    
+    config = create_vivado_config(
+        output_dir=output_dir,
+        project_name=project_name,
+        fpga_part=fpga_part,
+        clock_period=clock_period,
+        io_type=io_type
+    )
     config['KerasModel'] = model
 
     model_config = hls_config.get('Model', None)

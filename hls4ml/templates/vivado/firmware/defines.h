@@ -3,6 +3,7 @@
 
 #include "ap_int.h"
 #include "ap_fixed.h"
+#include "nnet_utils/nnet_types.h"
 
 //hls-fpga-machine-learning insert numbers
 
