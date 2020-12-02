@@ -74,6 +74,53 @@ void relu(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     }
 }
 
+// *************************************************
+//       Sigmoid Activation
+// *************************************************
+
+template<class data_T, class res_T, typename CONFIG_T>
+void sigmoid(hls::stream<data_T> &data, hls::stream<res_T> &res) {
+    // Initialize the lookup table
+#ifdef __HLS_SYN__
+    bool initialized = false;
+    typename CONFIG_T::table_t sigmoid_table[CONFIG_T::table_size];
+#else
+    static bool initialized = false;
+    static typename CONFIG_T::table_t sigmoid_table[CONFIG_T::table_size];
+#endif
+    if (!initialized) {
+        init_sigmoid_table<CONFIG_T, CONFIG_T::table_size>(sigmoid_table);
+        initialized = true;
+    }
+
+    int data_round;
+    int index;
+
+    SigmoidActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        #pragma HLS PIPELINE
+
+        data_T in_data = data.read();
+        res_T out_data;
+        #pragma HLS DATA_PACK variable=out_data
+
+        SigmoidPackLoop: for (int j = 0; j < res_T::size; j++) {
+            #pragma HLS UNROLL
+            data_round = in_data[j]*CONFIG_T::table_size/16;
+            index = data_round + 8*CONFIG_T::table_size/16;
+            if (index < 0)   index = 0;
+            else if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+            out_data[j] = sigmoid_table[index];
+        }
+
+        res.write(out_data);
+    }
+}
+
+
+// *************************************************
+//       Softmax Activation
+// *************************************************
+
 template <class data_T, class res_T, typename CONFIG_T>
 void softmax_latency(hls::stream<data_T> &data, hls::stream<res_T> &res){
     // Initialize the lookup tables
