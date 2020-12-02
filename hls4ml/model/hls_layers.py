@@ -790,6 +790,23 @@ class Merge(Layer):
 
         return self._config_template.format(**params)
 
+class Dot(Merge):
+    def initialize(self):
+        assert(len(self.inputs) == 2)
+        inp1 = self.get_input_variable(self.inputs[0])
+        inp2 = self.get_input_variable(self.inputs[1])
+        assert(inp1.shape == inp2.shape)
+        if len(inp1.shape) > 1:
+            raise Exception('ERROR: Dot of tensors with rank > 1 is not yet supported.')
+
+        self.add_output_variable(shape=[1], dim_names=['OUT_DOT_{}'.format(self.index)])
+
+    def config_cpp(self):
+        params = self._default_config_params()
+        params['n_out'] = 1
+        params['n_in'] = self.get_input_variable(self.inputs[0]).shape[0]
+        return self._config_template.format(**params)
+
 class Concatenate(Merge):
     def initialize(self):
         assert(len(self.inputs) == 2)
@@ -1169,6 +1186,7 @@ layer_map = {
     'MaxPooling2D'       : Pooling2D,
     'AveragePooling2D'   : Pooling2D,
     'Merge'              : Merge,
+    'Dot'                : Dot,
     'Concatenate'        : Concatenate,
     'Resize'             : Resize,
     'Transpose'          : Transpose,
