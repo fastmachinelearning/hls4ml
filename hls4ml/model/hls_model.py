@@ -13,6 +13,7 @@ from hls4ml.model.hls_layers import *
 from hls4ml.templates import get_backend
 from hls4ml.writer import get_writer
 from hls4ml.model.optimizer import optimize_model, get_available_passes
+from hls4ml.report.vivado_report import parse_vivado_report
 
 class HLSConfig(object):
     def __init__(self, config):
@@ -543,7 +544,7 @@ class HLSModel(object):
             backend = self.config.get_config_value('Backend', 'Vivado')
             if backend == 'Vivado':
                 found = os.system('command -v vivado_hls > /dev/null')
-                if found is not 0:
+                if found != 0:
                     raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
 
             elif backend == 'Intel':
@@ -562,4 +563,6 @@ class HLSModel(object):
         os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
             .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
         os.chdir(curr_dir)
+
+        return parse_vivado_report(self.config.get_output_dir())
 
