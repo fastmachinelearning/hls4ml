@@ -252,7 +252,7 @@ void copy_data(std::vector<src_T> src, hls::stream<dst_T> &dst) {
 }
 
 template<class res_T, size_t SIZE>
-void print_result(res_T result[SIZE], std::ostream &out) {
+void print_result(res_T result[SIZE], std::ostream &out, bool keep = false) {
     for(int i = 0; i < SIZE; i++) {
         out << result[i] << " ";
     }
@@ -260,12 +260,13 @@ void print_result(res_T result[SIZE], std::ostream &out) {
 }
 
 template<class res_T, size_t SIZE>
-void print_result(hls::stream<res_T> &result, std::ostream &out) {
+void print_result(hls::stream<res_T> &result, std::ostream &out, bool keep = false) {
     for(int i = 0; i < SIZE / res_T::size; i++) {
         res_T res_pack = result.read();
         for(int j = 0; j < res_T::size; j++) {
             out << res_pack[j] << " ";
         }
+        if (keep) result.write(res_pack);
     }
     out << std::endl;
 }
