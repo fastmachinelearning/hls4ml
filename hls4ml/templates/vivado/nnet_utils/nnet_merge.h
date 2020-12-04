@@ -21,6 +21,7 @@
 #define NNET_MERGE_H_
 
 #include "nnet_common.h"
+#include "nnet_dense.h"
 #include "hls_stream.h"
 #include <math.h>
 
@@ -29,6 +30,13 @@ namespace nnet {
 struct merge_config
 {
     static const unsigned n_elem = 10;
+};
+
+struct dot_config {
+    static const unsigned n_in = 10;
+    static const unsigned n_out = 1;
+    static const unsigned reuse_factor = 1;
+    typedef float accum_t;
 };
 
 struct concat_config {
@@ -52,6 +60,7 @@ void add(
         res[ii] = data1[ii] + data2[ii];
     }
 }
+
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void subtract(
@@ -109,8 +118,40 @@ void minimum(
 }
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
+void dot1d(
+    input1_T data1[CONFIG_T::n_in],
+	input2_T data2[CONFIG_T::n_in],
+    res_T res[CONFIG_T::n_out])
+{
+    #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+
+    constexpr unsigned multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in, CONFIG_T::reuse_factor);
+    #pragma HLS ALLOCATION instances=product limit=multiplier_limit function
+
+    typename CONFIG_T::accum_t mult[CONFIG_T::n_in];
+    #pragma HLS ARRAY_PARTITION variable=mult complete
+    typename CONFIG_T::accum_t acc = 0;
+
+    Product: for(int i_mult=0; i_mult < CONFIG_T::n_in; i_mult++) {
+        #pragma HLS UNROLL
+        mult[i_mult] = product<input1_T, input2_T, typename CONFIG_T::accum_t>(data1[i_mult], data2[i_mult]);
+    }
+
+    Accum: for(int i_acc = 0; i_acc < CONFIG_T::n_in; i_acc++) {
+        #pragma HLS UNROLL
+        acc += mult[i_acc];
+    }
+
+    Result: for(int i_res = 0; i_res < CONFIG_T::n_out; i_res++) {
+        #pragma HLS_UNROLL
+        res[i_res] = cast<input1_T, res_T, CONFIG_T>(acc);
+    }
+}
+
+
+template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate1d(
-    input1_T data1[CONFIG_T::n_elem1_0], 
+    input1_T data1[CONFIG_T::n_elem1_0],
 	input2_T data2[CONFIG_T::n_elem2_0],
     res_T res[CONFIG_T::n_elem1_0 + CONFIG_T::n_elem2_0])
 {
@@ -124,7 +165,7 @@ void concatenate1d(
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate2d_0(
-    input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1], 
+    input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1],
 	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1])
 {
@@ -138,7 +179,7 @@ void concatenate2d_0(
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate2d_1(
-    input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1], 
+    input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1],
 	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1])
 {
@@ -154,7 +195,7 @@ void concatenate2d_1(
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate2d(
-    input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1], 
+    input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1],
 	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1])
 {
@@ -181,7 +222,7 @@ input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate3d_1(
-input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2], 
+input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
 	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2])
 {
@@ -213,7 +254,7 @@ input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate3d_2(
-input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2], 
+input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
 	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2])
 {
