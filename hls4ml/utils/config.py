@@ -87,10 +87,12 @@ def config_from_keras_model(model, backend, granularity='model', default_precisi
         if 'layers' in keras_layer_config: # Newer Keras versions have 'layers' in 'config' key
             keras_layer_config = keras_layer_config['layers']
         # Sequential doesn't have InputLayer
-        input_layer = {}
-        input_layer['name'] = 'input1'
-        input_layer['class_name'] = 'InputLayer'
-        layer_list.append(input_layer)
+        if keras_layer_config[0]['class_name'] != 'InputLayer':
+            input_layer = {}
+            input_layer['name'] = 'input1'
+            input_layer['class_name'] = 'Input'
+            layer_list.append(input_layer)
+
     elif model_arch['class_name'] in ['Model', 'Functional']:
         print('Interpreting Model')
         keras_layer_config = model_arch['config']['layers']
@@ -109,6 +111,9 @@ def config_from_keras_model(model, backend, granularity='model', default_precisi
         layer['name'] = keras_layer['config']['name']
         layer['class_name'] = keras_layer['class_name']
         layer['config'] = keras_layer['config']
+
+        if layer['class_name'] == 'InputLayer':
+            layer['class_name'] = 'Input'
 
         if layer['class_name'] in qkeras_layers:
             layer['precision'] = {}
@@ -168,6 +173,10 @@ def config_from_keras_model(model, backend, granularity='model', default_precisi
                 print('WARNING: Found no precision information in QKeras layer {} ({})'.format(layer['name'], layer['class_name']))
                 layer_config['Precision'] = default_precision
             layer_config['ReuseFactor'] = default_reuse_factor
+
+        elif layer['class_name'] == 'Input':
+            layer_config['Precision'] = {}
+            layer_config['Precision']['result'] = default_precision
         else:
             layer_config['Precision'] = default_precision
 
@@ -188,7 +197,7 @@ def config_from_keras_model(model, backend, granularity='model', default_precisi
     elif granularity.lower() == 'type':
         type_config = {}
         for layer in layer_list:
-            if layer['class_name'] in type_config or layer['class_name'] == 'InputLayer':
+            if layer['class_name'] in type_config:
                 continue
             layer_config = make_layer_config(layer)
             type_config[layer['class_name']] = layer_config
@@ -198,8 +207,6 @@ def config_from_keras_model(model, backend, granularity='model', default_precisi
     elif granularity.lower() == 'name':
         name_config = {}
         for layer in layer_list:
-            if layer['class_name'] == 'InputLayer': # Skip INputLayer
-                continue
             layer_config = make_layer_config(layer)
             name_config[layer['name']] = layer_config
 

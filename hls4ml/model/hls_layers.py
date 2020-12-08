@@ -889,6 +889,7 @@ class Transpose(Layer):
         return self._config_template.format(**params)
 
 layer_map = {
+    'Input'              : Input,
     'InputLayer'         : Input,
     'Activation'         : Activation,
     'QActivation'        : Activation,
