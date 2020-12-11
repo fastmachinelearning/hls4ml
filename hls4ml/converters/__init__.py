@@ -5,7 +5,9 @@ import importlib
 from hls4ml.utils.config import create_vivado_config
 
 from hls4ml.converters.keras_to_hls import keras_to_hls, get_supported_keras_layers, register_keras_layer_handler
+from hls4ml.converters.pytorch_to_hls import pytorch_to_hls, get_supported_pytorch_layers, register_pytorch_layer_handler
 
+#----------Keras handling----------#
 for module in os.listdir(os.path.dirname(__file__) + '/keras'):
     if module == '__init__.py' or module[-3:] != '.py':
         continue
@@ -21,6 +23,23 @@ for module in os.listdir(os.path.dirname(__file__) + '/keras'):
     except ImportError:
         continue
 
+#----------Pytorch handling----------#
+for module in os.listdir(os.path.dirname(__file__) + '/pytorch'):
+    if module == '__init__.py' or module[-3:] != '.py':
+        continue
+    try:
+        lib = importlib.import_module(__name__ + '.pytorch.' + module[:-3])
+        for name, func in list(lib.__dict__.items()):
+            # if 'func' is callable (i.e., function, class...)
+            # and has 'handles' attribute
+            # and is defined in this module (i.e., not imported)
+            if callable(func) and hasattr(func, 'handles') and func.__module__ == lib.__name__:
+                for layer in func.handles:
+                    register_pytorch_layer_handler(layer, func)
+    except ImportError:
+        continue
+
+#----------Make converters available if the libraries can be imported----------#       
 try:
     from hls4ml.converters.pytorch_to_hls import pytorch_to_hls
     __pytorch_enabled__ = True
