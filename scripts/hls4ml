@@ -2,8 +2,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-__version__ = '0.2.0'
-
 import argparse
 import os
 import sys
@@ -16,13 +14,20 @@ from shutil import copyfile
 
 config_filename = 'hls4ml_config.yml'
 
+hls4ml_description = """
+
+        ╔╧╧╧╗────o
+    hls ║ 4 ║ ml   - Machine learning inference in FPGAs
+   o────╚╤╤╤╝
+"""
+
 def parse_config(config_file):
     print('Loading configuration from', config_file)
     config = open(config_file, 'r')
     return yaml.load(config, Loader=yaml.SafeLoader)
 
 def main():
-    parser = argparse.ArgumentParser(description='HLS4ML - Machine learning inference in FPGAs')
+    parser = argparse.ArgumentParser(description=hls4ml_description, formatter_class=argparse.RawDescriptionHelpFormatter)
     subparsers = parser.add_subparsers()
     
     config_parser = subparsers.add_parser('config', help='Create a conversion configuration file')
@@ -60,7 +65,7 @@ def main():
     report_parser.add_argument('-f', '--full', help='Show full report', action='store_true', default=False)
     report_parser.set_defaults(func=report)
 
-    parser.add_argument('--version', action='version', version='%(prog)s {version}'.format(version=__version__))
+    parser.add_argument('--version', action='version', version='%(prog)s {version}'.format(version=hls4ml.__version__))
 
     args = parser.parse_args()
     if hasattr(args, 'func'):

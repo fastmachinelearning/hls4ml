@@ -1,15 +1,26 @@
 from setuptools import setup
 from setuptools import find_packages
 
-from os import path
-this_directory = path.abspath(path.dirname(__file__))
-with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
+import codecs
+import os.path
+
+def read(rel_path):
+    this_directory = os.path.abspath(os.path.dirname(__file__))
+    with codecs.open(os.path.join(this_directory, rel_path), 'r') as fp:
+        return fp.read()
+
+def get_version(rel_path):
+    for line in read(rel_path).splitlines():
+        if line.startswith('__version__'):
+            delim = '"' if '"' in line else "'"
+            return line.split(delim)[1]
+    else:
+        raise RuntimeError("Unable to find version string.")
 
 setup(name='hls4ml',
-      version='0.4.0',
+      version=get_version("hls4ml/__init__.py"),
       description='Machine learning in FPGAs using HLS',
-      long_description=long_description,
+      long_description=read('README.md'),
       long_description_content_type='text/markdown',
       author='HLS4ML Team',
       author_email='hls4ml.help@gmail.com',

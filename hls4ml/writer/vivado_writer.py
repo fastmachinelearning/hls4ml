@@ -12,6 +12,38 @@ from hls4ml.writer.writers import Writer
 
 class VivadoWriter(Writer):
 
+    def type_definition_cpp(self, model, atype):
+        type_class = atype.__class__.__name__
+        if type_class == 'HLSType':
+            return 'typedef {precision} {name};\n'.format(name=atype.name, precision=atype.precision)
+        elif type_class == 'CompressedType':
+            cpp_fmt = ('typedef struct {name} {{ '
+               '{index} row_index;'
+               '{index} col_index;'
+               '{precision} weight; }} {name};\n')
+            return cpp_fmt.format(name=atype.name, index=atype.index_precision, precision=atype.precision)
+        elif type_class == 'PackedType':
+            n_elem_expr = '/' if atype.unpack else '*'
+            return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=atype.name, precision=atype.precision, n_elem=str(atype.n_elem) + n_elem_expr + str(atype.n_pack))
+        else:
+            raise Exception('Unknown data type class "{}"'.format(type_class))
+
+    def variable_definition_cpp(self, model, var, name_suffix='', as_reference=False):
+        var_class = var.__class__.__name__
+        if var_class == 'ArrayVariable':
+            return '{type} {name}{suffix}[{shape}]'.format(type=var.type.name, name=var.cppname, suffix=name_suffix, shape=var.size_cpp())
+        elif var_class == 'StreamVariable':
+            if as_reference: # Function parameter
+                return 'hls::stream<{type}> &{name}{suffix}'.format(type=var.type.name, name=var.cppname, suffix=name_suffix)
+            else: # Declaration
+                return 'hls::stream<{type}> {name}{suffix}("{name}")'.format(type=var.type.name, name=var.cppname, suffix=name_suffix)
+        elif var_class == 'WeightVariable':
+            return '{type} {name}{suffix}[{size}]'.format(type=var.type.name, name=var.cppname, suffix=name_suffix, size=var.data_length)
+        elif var_class == 'InplaceVariable':
+            return None
+        else:
+            raise Exception('Unknown variable class "{}"'.format(var_class))
+
     def print_array_to_cpp(self, var, odir, write_txt_file=True):
         #######################################
         ## Print weight array to C++
@@ -90,7 +122,7 @@ class VivadoWriter(Writer):
             return template.format(mode=mode.upper(), name=variable.name, type=typ, factor=factor, dim=0)
 
         elif mode == 'stream':
-            return '#pragma HLS STREAM variable={name} depth={depth} dim={dim}'.format(name=variable.name, depth=depth, dim=0)
+            return '#pragma HLS STREAM variable={name} depth={depth}'.format(name=variable.name, depth=depth)
 
     def write_project_cpp(self, model):
         ###################
@@ -111,8 +143,8 @@ class VivadoWriter(Writer):
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert header' in line:
-                inputs_str = ', '.join([i.definition_cpp() for i in model_inputs])
-                outputs_str = ', '.join([o.definition_cpp() for o in model_outputs])
+                inputs_str = ', '.join([self.variable_definition_cpp(model, i, as_reference=True) for i in model_inputs])
+                outputs_str = ', '.join([self.variable_definition_cpp(model, o, as_reference=True) for o in model_outputs])
                 insize_str = ', '.join(['unsigned short &const_size_in_{}'.format(i) for i in range(1, len(model_inputs) + 1)])
                 outsize_str = ', '.join(['unsigned short &const_size_out_{}'.format(i) for i in range(1, len(model_outputs) + 1)])
 
@@ -136,8 +168,9 @@ class VivadoWriter(Writer):
                 newline = line
                 all_inputs = [i.cppname for i in model_inputs]
                 all_outputs = [o.cppname for o in model_outputs]
+                io_type = model.config.get_config_value("IOType")
 
-                if model.config.get_config_value("IOType") == "io_parallel":
+                if io_type == 'io_parallel':
                     for i in model_inputs: newline += indent + self._make_array_pragma(i) + '\n'
                     for o in model_outputs: newline += indent + self._make_array_pragma(o) + '\n'
                     # TODO discussed adding a handle for setting the interface mode for individual input and output arrays (16.03.2020)
@@ -147,7 +180,7 @@ class VivadoWriter(Writer):
                         newline += indent + '#pragma HLS DATAFLOW \n'
                     else:
                         newline += indent + '#pragma HLS PIPELINE \n'
-                if model.config.get_config_value("IOType") == "io_serial":
+                if io_type == 'io_serial' or io_type == 'io_stream':
                     newline += indent + '#pragma HLS INTERFACE axis port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
                     newline += indent + '#pragma HLS DATAFLOW \n'
 
@@ -165,15 +198,19 @@ class VivadoWriter(Writer):
                     vars = layer.get_variables()
                     for var in vars:
                         if var not in inputs and var not in outputs:
-                            def_cpp = var.definition_cpp()
+                            def_cpp = self.variable_definition_cpp(model, var)
                             if def_cpp is not None:
                                 newline += '    ' + def_cpp + ';\n'
                                 if var.pragma:
                                     newline += '    ' + self._make_array_pragma(var) + '\n'
                     func = layer.function_cpp()
                     if func:
-                        for line in func:
-                            newline += '    ' + line + '\n'
+                        if len(func) == 1:
+                            newline += '    ' + func[0] + ' // ' + layer.name + '\n'
+                        else:
+                            newline += '// ' + layer.name + '\n'
+                            for line in func:
+                                newline += '    ' + line + '\n'
                         if model.config.trace_output and model.config.get_layer_config_value(layer, 'Trace', False):
                             newline += '#ifndef __SYNTHESIS__\n'
                             for var in vars:
@@ -211,8 +248,8 @@ class VivadoWriter(Writer):
             elif 'void myproject(' in line:
                 newline = 'void {}(\n'.format(model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert header' in line:
-                inputs_str = ', '.join([i.definition_cpp() for i in model_inputs])
-                outputs_str = ', '.join([o.definition_cpp() for o in model_outputs])
+                inputs_str = ', '.join([self.variable_definition_cpp(model, i, as_reference=True) for i in model_inputs])
+                outputs_str = ', '.join([self.variable_definition_cpp(model, o, as_reference=True) for o in model_outputs])
                 insize_str = ', '.join(['unsigned short &const_size_in_{}'.format(i) for i in range(1, len(model_inputs) + 1)])
                 outsize_str = ', '.join(['unsigned short &const_size_out_{}'.format(o) for o in range(1, len(model_outputs) + 1)])
 
@@ -248,7 +285,7 @@ class VivadoWriter(Writer):
                     layer_precision = layer.get_layer_precision()
                     all_precision.update(layer_precision)
                 for used_type in all_precision.values():
-                    newline += used_type.definition_cpp()
+                    newline += self.type_definition_cpp(model, used_type)
 
             else:
                 newline = line
@@ -279,6 +316,7 @@ class VivadoWriter(Writer):
                 for layer in model.get_layers():
                     config = layer.config_cpp()
                     if config:
+                        newline += '// ' + layer.name + '\n'
                         newline += config + '\n'
             else:
                 newline = line
@@ -353,26 +391,20 @@ class VivadoWriter(Writer):
                 newline = line.replace('myproject', model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert data' in line:
                 newline = line
-                newline += '      std::vector<float>::const_iterator in_begin = in.cbegin();\n'
-                newline += '      std::vector<float>::const_iterator in_end;\n'
+                offset = 0
                 for inp in model.get_input_variables():
-                    newline += '      ' + inp.definition_cpp() + ';\n'
-                    newline += '      in_end = in_begin + ({});\n'.format(inp.size_cpp())
-                    newline += '      std::copy(in_begin, in_end, {});\n'.format(inp.cppname)
-                    newline += '      in_begin = in_end;\n'
+                    newline += '      ' + self.variable_definition_cpp(model, inp) + ';\n'
+                    newline += '      nnet::copy_data<float, {}, {}, {}>(in, {});\n'.format(inp.type.name, offset, inp.size_cpp(), inp.cppname)
+                    offset += inp.size()
                 for out in model.get_output_variables():
-                    # brace-init zeros the array out because we use std=c++0x
-                    newline += '      ' + out.definition_cpp() + '{};\n'
-                    # but we can still explicitly zero out if you want
-                    newline += '      std::fill_n({}, {}, 0.);\n'.format(out.cppname, out.size())
+                    newline += '      ' + self.variable_definition_cpp(model, out) + ';\n'
             elif '//hls-fpga-machine-learning insert zero' in line:
                 newline = line
                 for inp in model.get_input_variables():
-                    newline += '    ' + inp.definition_cpp() + ';\n'
-                    newline += '    std::fill_n({}, {}, 0.);\n'.format(inp.cppname, inp.size_cpp())
+                    newline += '    ' + self.variable_definition_cpp(model, inp) + ';\n'
+                    newline += '    nnet::fill_zero<{}, {}>({});\n'.format(inp.type.name, inp.size_cpp(), inp.cppname)
                 for out in model.get_output_variables():
-                    newline += '    ' + out.definition_cpp() + '{};\n'
-                    newline += '      std::fill_n({}, {}, 0.);\n'.format(out.cppname, out.size())
+                    newline += '    ' + self.variable_definition_cpp(model, out) + ';\n'
             elif '//hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
 
@@ -395,17 +427,11 @@ class VivadoWriter(Writer):
             elif '//hls-fpga-machine-learning insert tb-output' in line:
                 newline = line
                 for out in model.get_output_variables():
-                    newline += indent + 'for(int i = 0; i < {}; i++) {{\n'.format(out.size_cpp())
-                    newline += indent + '  fout << {}[i] << " ";\n'.format(out.cppname)
-                    newline += indent + '}\n'
-                    newline += indent + 'fout << std::endl;\n'
+                    newline += indent + 'nnet::print_result<{}, {}>({}, fout);\n'.format(out.type.name, out.size_cpp(), out.cppname) #TODO enable this
             elif '//hls-fpga-machine-learning insert output' in line or '//hls-fpga-machine-learning insert quantized' in line:
                 newline = line
                 for out in model.get_output_variables():
-                    newline += indent + 'for(int i = 0; i < {}; i++) {{\n'.format(out.size_cpp())
-                    newline += indent + '  std::cout << {}[i] << " ";\n'.format(out.cppname)
-                    newline += indent + '}\n'
-                    newline += indent + 'std::cout << std::endl;\n'
+                    newline += indent + 'nnet::print_result<{}, {}>({}, std::cout, true);\n'.format(out.type.name, out.size_cpp(), out.cppname)
             else:
                 newline = line
             fout.write(newline)
@@ -448,12 +474,12 @@ class VivadoWriter(Writer):
                 dtype = line.split('#', 1)[1].strip()
                 newline = ''
                 for i in model_inputs:
-                    newline += indent + '{type} {name}_ap[{shape}];\n'.format(type=i.type.name, name=i.cppname, shape=i.size_cpp())
+                    newline += indent + '{var};\n'.format(var=self.variable_definition_cpp(model, i, name_suffix='_ap'))
                     newline += indent + 'nnet::convert_data<{}, {}, {}>({}, {}_ap);\n'.format(dtype, i.type.name, i.size_cpp(), i.cppname, i.cppname)
                 newline += '\n'
                 
                 for o in model_outputs:
-                    newline += indent + '{type} {name}_ap[{shape}];\n'.format(type=o.type.name, name=o.cppname, shape=o.size_cpp())
+                    newline += indent + '{var};\n'.format(var=self.variable_definition_cpp(model, o, name_suffix='_ap'))
                 
                 newline += '\n'
 

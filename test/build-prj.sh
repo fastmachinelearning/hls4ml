@@ -2,7 +2,7 @@
 
 basedir=vivado_prj
 vivadodir=/opt/Xilinx
-vivadover=2017.2
+vivadover=2020.1
 parallel=1
 
 csim="csim=0"
@@ -24,7 +24,7 @@ function print_usage {
    echo "   -i DIR"
    echo "      Base directory of Vivado installation. Defaults to '/opt/Xilinx'."
    echo "   -v VERSION"
-   echo "      Vivado HLS version to use. Defaults to '2017.2'."
+   echo "      Vivado HLS version to use. Defaults to '2020.1'."
    echo "   -p N"
    echo "      Run with N parallel tasks. Defaults to 1."
    echo "   -c"

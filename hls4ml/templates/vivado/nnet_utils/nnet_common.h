@@ -29,26 +29,8 @@
 namespace nnet {
 
 // Common type definitions
-enum io_type {io_parallel = 0, io_serial};
-
-// Default data types (??) TODO: Deprecate
-typedef ap_fixed<16,4>  weight_t_def;
-typedef ap_fixed<16,4>  bias_t_def;
-typedef ap_fixed<32,10> accum_t_def;
-
- template<class data_T, int NIN1, int NIN2>
-   void merge(
-	      data_T data1[NIN1], 
-	      data_T data2[NIN2],
-	      data_T res[NIN1+NIN2])
- {
-   for(int ii=0; ii<NIN1; ii++){
-     res[ii] = data1[ii];
-   }
-   for(int ii=0; ii<NIN2; ii++){
-     res[NIN1+ii] = data2[ii];
-   }
- }
+enum io_type {io_parallel = 0, io_serial, io_stream};
+enum strategy { latency, resource };
 
  /* ---
   * Balanced tree reduce implementation.
@@ -71,10 +53,10 @@ typedef ap_fixed<32,10> accum_t_def;
 		T right[rightN];
 		#pragma HLS array_partition variable=left complete
 		#pragma HLS array_partition variable=right complete
-		for(int i = 0; i < leftN; i++){
+		ReduceLeft: for(int i = 0; i < leftN; i++){
 			left[i] = x[i];
 		}
-		for(int i = 0; i < rightN; i++){
+		ReduceRight: for(int i = 0; i < rightN; i++){
 			right[i] = x[i+leftN];
 		}
 		return op(reduce<T,leftN,Op>(left, op), reduce<T,rightN,Op>(right, op));
