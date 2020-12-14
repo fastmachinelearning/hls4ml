@@ -498,7 +498,7 @@ class VivadoWriter(Writer):
             line = line.replace('myproject',model.config.get_project_name())
 
             if 'set_part {xcku115-flvb2104-2-i}' in line:
-                line = 'set_part {{{}}}\n'.format(model.config.get_config_value('XilinxPart'))
+                line = 'set_part {{{}}}\n'.format(model.config.get_config_value('FPGAPart'))
             elif 'create_clock -period 5 -name default' in line:
                 line = 'create_clock -period {} -name default\n'.format(model.config.get_config_value('ClockPeriod'))
 
@@ -516,7 +516,7 @@ class VivadoWriter(Writer):
         for line in f.readlines():
             line = line.replace('myproject', model.config.get_project_name())
             if '-part' in line:
-                line = 'synth_design -top {} -part {}\n'.format(model.config.get_project_name(), model.config.get_config_value('XilinxPart'))
+                line = 'synth_design -top {} -part {}\n'.format(model.config.get_project_name(), model.config.get_config_value('FPGAPart'))
 
             fout.write(line)
         f.close()
