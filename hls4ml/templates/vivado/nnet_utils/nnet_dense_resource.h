@@ -17,11 +17,11 @@
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef NNET_LARGE_LAYER_H_
-#define NNET_LARGE_LAYER_H_
+#ifndef NNET_DENSE_RESOURCE_H_
+#define NNET_DENSE_RESOURCE_H_
 
 #include "nnet_common.h"
-#include "nnet_dense.h"
+#include "nnet_mult.h"
 #include "hls_stream.h"
 #include <math.h>
 #include <assert.h>
@@ -29,7 +29,7 @@
 namespace nnet {
 
 template<class data_T, class res_T, typename CONFIG_T>
-void dense_large_rf_leq_nin(
+void dense_resource_rf_leq_nin(
     data_T data[CONFIG_T::n_in],
     res_T  res[CONFIG_T::n_out],
     typename CONFIG_T::weight_t weights[CONFIG_T::n_in*CONFIG_T::n_out],
@@ -101,7 +101,7 @@ void dense_large_rf_leq_nin(
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-void dense_large_rf_gt_nin_rem0(
+void dense_resource_rf_gt_nin_rem0(
     data_T data[CONFIG_T::n_in],
     res_T  res[CONFIG_T::n_out],
     typename CONFIG_T::weight_t weights[CONFIG_T::n_in*CONFIG_T::n_out],
@@ -180,7 +180,7 @@ void dense_large_rf_gt_nin_rem0(
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-void dense_large_rf_gt_nin(
+void dense_resource_rf_gt_nin(
     data_T data[CONFIG_T::n_in],
     res_T  res[CONFIG_T::n_out],
     typename CONFIG_T::weight_t weights[CONFIG_T::n_in*CONFIG_T::n_out],
@@ -262,7 +262,7 @@ void dense_large_rf_gt_nin(
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-void dense_large(
+void dense_resource(
     data_T data[CONFIG_T::n_in],
     res_T  res[CONFIG_T::n_out],
     typename CONFIG_T::weight_t weights[CONFIG_T::n_in*CONFIG_T::n_out],
@@ -271,11 +271,11 @@ void dense_large(
     #pragma HLS INLINE region
 
     if (CONFIG_T::reuse_factor <= CONFIG_T::n_in) {
-        dense_large_rf_leq_nin<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+        dense_resource_rf_leq_nin<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     } else if (CONFIG_T::reuse_factor % CONFIG_T::n_in == 0) {
-        dense_large_rf_gt_nin_rem0<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+        dense_resource_rf_gt_nin_rem0<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     } else {
-        dense_large_rf_gt_nin<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+        dense_resource_rf_gt_nin<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     }
 }
 
