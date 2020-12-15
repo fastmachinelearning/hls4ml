@@ -92,6 +92,13 @@ def pytorch_to_hls(config):
     input_shapes = [list(reader.input_shape)] #In case there are multiple inputs
     print("Input Shape: ", input_shapes)
     
+    #Add input layer
+    input_layer = {}
+    input_layer['name'] = 'input1'
+    input_layer['class_name'] = 'InputLayer'
+    input_layer['input_shape'] = input_shapes
+    layer_list.insert(0, input_layer)
+    
     #Output shape tracking
     output_shapes = {}
     output_shape = None
@@ -130,14 +137,6 @@ def pytorch_to_hls(config):
         assert(output_shape is not None)
         output_shapes[layer['name']] = output_shape
            
-       
-    #Add input layer
-    input_layer = {}
-    input_layer['name'] = 'input1'
-    input_layer['class_name'] = 'InputLayer'
-    input_layer['input_shape'] = [layer_list[0]['n_in']]
-    layer_list.insert(0, input_layer)
-
 
     #################
     ## Generate HLS

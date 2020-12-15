@@ -18,9 +18,9 @@ def parse_conv1d_layer(pytorch_layer, layer_name, input_shapes, data_reader, con
     layer['stride'] = pytorch_layer.stride[0]
     layer['pad_left'] = layer['pad_right'] = pytorch_layer.padding[0]
     layer['dilation'] = pytorch_layer.dilation[0]
-    layer['n_out'] = int((layer['n_in'] + 2*layer['pad_left'] - layer['dilation']*(layer['filt_width']-1)- 1)/layer['stride'] + 1)
+    layer['out_width'] = int((layer['n_in'] + 2*layer['pad_left'] - layer['dilation']*(layer['filt_width']-1)- 1)/layer['stride'] + 1)
     
-    output_shape=[input_shapes[0][0], layer['n_filt'], layer['n_out']]
+    output_shape=[input_shapes[0][0], layer['n_filt'], layer['out_width']]
     
     return layer, output_shape
     
