@@ -458,13 +458,13 @@ class VivadoBackend(Backend):
     def _find_reports(self, sln_dir, top_func_name, full_report=False):
         csim_file = sln_dir + '/csim/report/{}_csim.log'.format(top_func_name)
         if os.path.isfile(csim_file):
-            _show_csim_report(csim_file)
+            self._show_csim_report(csim_file)
         else:
             print('C simulation report not found.')
 
         syn_file = sln_dir + '/syn/report/{}_csynth.rpt'.format(top_func_name)
         if os.path.isfile(syn_file):
-            _show_synth_report(syn_file, full_report)
+            self._show_synth_report(syn_file, full_report)
         else:
             print('Synthesis report not found.')
 
