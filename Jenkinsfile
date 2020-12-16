@@ -16,7 +16,7 @@ pipeline {
           sh '''#!/bin/bash --login
               conda activate hls4ml-py36
               pip install -U ../ --user
-              ./convert-keras-models.sh -p 3 -x -f keras-models.txt
+              ./convert-keras-models.sh -x -f keras-models.txt
               pip uninstall hls4ml -y'''
         }
       }

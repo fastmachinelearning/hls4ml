@@ -175,7 +175,7 @@ void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 //       Softmax Activation
 // *************************************************
 
-enum softmax_implementation {latency=0, legacy=1, stable=2};
+enum class softmax_implementation {latency=0, legacy=1, stable=2};
 
 inline float exp_fcn_float(float input) {
     return std::exp(input);
@@ -408,13 +408,13 @@ void  softmax_legacy(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 template<class data_T, class res_T, typename CONFIG_T>
 void softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
     switch(CONFIG_T::implementation){
-    case latency:
+    case softmax_implementation::latency:
         softmax_latency<data_T, res_T, CONFIG_T>(data, res);
         break;
-    case stable:
+    case softmax_implementation::stable:
         softmax_stable<data_T, res_T, CONFIG_T>(data, res);
         break;
-    case legacy:
+    case softmax_implementation::legacy:
         softmax_legacy<data_T, res_T, CONFIG_T>(data, res);
         break;
     }    

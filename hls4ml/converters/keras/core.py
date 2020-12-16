@@ -21,18 +21,6 @@ def parse_input_layer(keras_layer, input_names, input_shapes, data_reader, confi
     return layer, output_shape
 
 
-@keras_handler('Reshape')
-def parse_reshape_layer(keras_layer, input_names, input_shapes, data_reader, config):
-    assert(keras_layer["class_name"] == 'Reshape')
-
-    layer = parse_default_keras_layer(keras_layer, input_names)
-    
-    layer['target_shape'] = keras_layer['config']['target_shape']
-    output_shape = input_shapes[0][:1] + keras_layer['config']['target_shape']
-    
-    return layer, output_shape
-
-
 class BinaryQuantizer(Quantizer):
     def __init__(self, bits=2):
         if bits == 1:
@@ -102,6 +90,8 @@ def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader, 
         layer['activ_param'] = keras_layer["config"].get('theta', 1.)
     elif layer['class_name'] == 'ELU':
         layer['activ_param'] = keras_layer["config"].get('alpha', 1.)
+    elif layer['class_name'] == 'ReLU':
+        layer['class_name'] = 'Activation'
 
     if layer['class_name'] == 'Activation' and layer['activation'] == 'softmax':
         layer['class_name'] = 'Softmax'

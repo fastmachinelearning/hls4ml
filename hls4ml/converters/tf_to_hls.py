@@ -344,11 +344,11 @@ def tf_to_hls(yamlConfig):
 
             input_shape = tf_op.inputs[0].shape.as_list() # (B, H, W, C)
             output_shape = tf_op.outputs[0].shape.as_list()
-            layer['height'] = input_shape[1]
-            layer['width'] = input_shape[2]
+            layer['in_height'] = input_shape[1]
+            layer['in_width'] = input_shape[2]
             layer['n_chan'] = input_shape[3]
-            layer['new_height'] = output_shape[1]
-            layer['new_width'] = output_shape[2]
+            layer['out_height'] = output_shape[1]
+            layer['out_width'] = output_shape[2]
 
             # Check for currently unsupported operations
             align_corners = tf_op.get_attr('align_corners')

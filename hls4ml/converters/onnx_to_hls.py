@@ -237,23 +237,23 @@ def onnx_to_hls(yamlConfig):
                 layer['class_name'] = 'Conv1D'
                 reader.add_input(layer['name'], operation.input)
 
-                layer['n_in']=current_shape[2]
+                layer['in_width']=current_shape[2]
                 layer['filt_width']=kernel_shape[0]
                 layer['n_chan']=current_shape[1]
                 layer['n_filt']=next((x.type.tensor_type.shape.dim[1].dim_value for x in model.graph.value_info if x.name == operation.output[0]), None)
-                layer['stride']=strides[0]
+                layer['stride_width']=strides[0]
                 pads = compute_pads_1d(operation, layer)
 
                 layer['pad_left'] = pads[0]
                 layer['pad_right'] = pads[1]
                 if all(x == 0 for x in pads): # No padding, i.e., 'VALID' padding
-                    layer['n_out'] = int(math.ceil(float(layer['n_in'] - layer['filt_width'] + 1) / float(layer['stride'])))
+                    layer['out_width'] = int(math.ceil(float(layer['in_width'] - layer['filt_width'] + 1) / float(layer['stride'])))
                 else:
-                    layer['n_out'] = int(math.ceil(float(layer['n_in']) / float(layer['stride'])))
+                    layer['out_width'] = int(math.ceil(float(layer['in_width']) / float(layer['stride'])))
 
                 layer['data_format'] = 'channels_first'
 
-                current_shape=[current_shape[0], layer['n_filt'], layer['n_out']]
+                current_shape=[current_shape[0], layer['n_filt'], layer['out_width']]
             elif len(current_shape) == 4: # Conv2D
                 layer['class_name'] = 'Conv2D'
                 reader.add_input(layer['name'], operation.input, transpose=True, perm=[2, 3, 1, 0])

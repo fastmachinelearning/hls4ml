@@ -2,11 +2,26 @@ import importlib
 from hls4ml.model.hls_model import HLSModel
 from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
 import qkeras
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas
-from tensorflow import keras
 import seaborn as sb
-import matplotlib.pyplot as plt
+
+from hls4ml.model.hls_model import HLSModel
+
+try:
+    from tensorflow import keras
+    import qkeras
+    __tf_profiling_enabled__ = True
+except ImportError:
+    __tf_profiling_enabled__ = False
+
+try:
+    import torch
+    __torch_profiling_enabled__ = True
+except ImportError:
+    __torch_profiling_enabled__ = False
+
 
 def array_to_summary(x, fmt='boxplot'):
     if fmt == 'boxplot':
@@ -167,12 +182,15 @@ def activation_types_hlsmodel(model):
     return data
 
 def weights_hlsmodel(model, fmt='longform', plot='boxplot'):
+    suffix = ['w', 'b']
     if fmt == 'longform':
         data = {'x' : [], 'layer' : [], 'weight' : []}
     elif fmt == 'summary':
         data = []
     for layer in model.get_layers():
+        name = layer.name
         for iw, weight in enumerate(layer.get_weights()):
+            l = '{}/{}'.format(name, suffix[iw])
             w = weight.data.flatten()
             w = abs(w[w != 0])
             n = len(w)
@@ -180,18 +198,19 @@ def weights_hlsmodel(model, fmt='longform', plot='boxplot'):
                 break
             if fmt == 'longform':
                 data['x'].extend(w.tolist())
-                data['layer'].extend([layer.name for i in range(len(w))])
-                data['weight'].extend(['{}/{}'.format(layer.name, iw) for i in range(len(w))])
+                data['layer'].extend([name for i in range(len(w))])
+                data['weight'].extend([l for i in range(len(w))])
             elif fmt == 'summary':
                 data.append(array_to_summary(w, fmt=plot))
-                data[-1]['layer'] = layer.name
-                data[-1]['weight'] = '{}/{}'.format(layer.name, iw)
+                data[-1]['layer'] = name
+                data[-1]['weight'] = l
 
     if fmt == 'longform':
         data = pandas.DataFrame(data)
     return data
 
 def weights_keras(model, fmt='longform', plot='boxplot'):
+    suffix = ['w', 'b']
     if fmt == 'longform':
         data = {'x' : [], 'layer' : [], 'weight' : []}
     elif fmt == 'summary':
@@ -200,6 +219,7 @@ def weights_keras(model, fmt='longform', plot='boxplot'):
         name = layer.name
         weights = layer.get_weights()
         for i, w in enumerate(weights):
+            l = '{}/{}'.format(name, suffix[i])
             w = w.flatten()
             w = abs(w[w != 0])
             n = len(w)
@@ -208,11 +228,11 @@ def weights_keras(model, fmt='longform', plot='boxplot'):
             if fmt == 'longform':
                 data['x'].extend(w.tolist())
                 data['layer'].extend([name for j in range(n)])
-                data['weight'].extend(['{}/{}'.format(name, i) for j in range(n)])
+                data['weight'].extend([l for j in range(n)])
             elif fmt == 'summary':
                 data.append(array_to_summary(w, fmt=plot))
                 data[-1]['layer'] = name
-                data[-1]['weight'] = '{}/{}'.format(name, i)
+                data[-1]['weight'] = l
 
     if fmt == 'longform':
         data = pandas.DataFrame(data)
@@ -248,14 +268,75 @@ def activations_keras(model, X, fmt='longform', plot='boxplot'):
         data = pandas.DataFrame(data)
     return data
 
-def numerical(keras_model=None, hls_model=None, X=None, plot='boxplot'):
+
+def weights_torch(model, fmt='longform', plot='boxplot'):
+    suffix = ['w', 'b']
+    if fmt == 'longform':
+        data = {'x': [], 'layer': [], 'weight': []}
+    elif fmt == 'summary':
+        data = []
+    for layer in model.children():
+        if isinstance(layer, torch.nn.Linear):
+            name = layer.__class__.__name__
+            weights = list(layer.parameters())
+            for i, w in enumerate(weights):
+                l = '{}/{}'.format(name, suffix[i])
+                w = weights[i].detach().numpy()
+                w = w.flatten()
+                w = abs(w[w != 0])
+                n = len(w)
+                if n == 0:
+                    break
+                if fmt == 'longform':
+                    data['x'].extend(w.tolist())
+                    data['layer'].extend([name for _ in range(n)])
+                    data['weight'].extend([l for _ in range(n)])
+                elif fmt == 'summary':
+                    data.append(array_to_summary(w, fmt=plot))
+                    data[-1]['layer'] = name
+                    data[-1]['weight'] = l
+
+    if fmt == 'longform':
+        data = pandas.DataFrame(data)
+    return data
+
+
+def activations_torch(model, X, fmt='longform', plot='boxplot'):
+    X = torch.Tensor(X)
+    if fmt == 'longform':
+        data = {'x': [], 'weight': []}
+    elif fmt == 'summary':
+        data = []
+
+    partial_model = torch.nn.Sequential
+    layers = []
+    for layer in model.children():
+        lname = layer.__class__.__name__
+        layers.append(layer)
+        pm = partial_model(*layers)
+        print("   {}".format(lname))
+        y = pm(X).flatten().detach().numpy()
+        y = abs(y[y != 0])
+        if fmt == 'longform':
+            data['x'].extend(y.tolist())
+            data['weight'].extend([lname for _ in range(len(y))])
+        elif fmt == 'summary':
+            data.append(array_to_summary(y, fmt=plot))
+            data[-1]['weight'] = lname
+
+    if fmt == 'longform':
+        data = pandas.DataFrame(data)
+    return data
+
+
+def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     """
     Perform numerical profiling of a model
 
     Parameters
     ----------
-    keras_model : keras model
-        The keras model to profile
+    model : keras or pytorch model
+        The model to profile
     hls_model : HLSModel
         The HLSModel to profile
     X : array-like, optional
@@ -263,24 +344,33 @@ def numerical(keras_model=None, hls_model=None, X=None, plot='boxplot'):
         Must be formatted suitably for the model.predict(X) method
     plot : str, optional
         The type of plot to produce.
-        Options are: 'boxplot' (default), 'violinplot', 'histogram', 'FacetGrid'
+        Options are: 'boxplot' (default), 'violinplot', 'histogram',
+        'FacetGrid'
 
     Returns
     -------
     tuple
-        The pair of produced figures. First weights and biases, then activations
+        The pair of produced figures. First weights and biases,
+        then activations
     """
+    wp, ap = None, None
 
     print("Profiling weights")
+    data = None
     if hls_model is not None and isinstance(hls_model, HLSModel):
         data = weights_hlsmodel(hls_model, fmt='summary', plot=plot)
-    elif keras_model is not None and isinstance(keras_model, keras.Model):
-        data = weights_keras(keras_model, fmt='summary', plot=plot)
-    else:
-        print("Only keras and HLSModel models can currently be profiled")
-        return False, False
+    elif model is not None:
+        if __tf_profiling_enabled__ and isinstance(model, keras.Model):
+            data = weights_keras(model, fmt='summary', plot=plot)
+        elif __torch_profiling_enabled__ and \
+                isinstance(model, torch.nn.Sequential):
+            data = weights_torch(model, fmt='summary', plot=plot)
+    if data is None:
+        print("Only keras, PyTorch (Sequential) and HLSModel models " +
+              "can currently be profiled")
+        return wp, ap
 
-    wp = plots[plot](data, fmt='summary') # weight plot
+    wp = plots[plot](data, fmt='summary')  # weight plot
     if isinstance(hls_model, HLSModel) and plot in types_plots:
         t_data = types_hlsmodel(hls_model)
         types_plots[plot](t_data, fmt='summary')
@@ -288,11 +378,16 @@ def numerical(keras_model=None, hls_model=None, X=None, plot='boxplot'):
     plt.title("Distribution of (non-zero) weights")
     plt.tight_layout()
 
-    ap = None
-    if X is not None and isinstance(keras_model, keras.Model):
-        print("Profiling activations")
-        data = activations_keras(keras_model, X, fmt='summary', plot=plot)
-        ap = plots[plot](data, fmt='summary') # activation plot
+    print("Profiling activations")
+    data = None
+    if X is not None:
+        if __tf_profiling_enabled__ and isinstance(model, keras.Model):
+            data = activations_keras(model, X, fmt='summary', plot=plot)
+        elif __torch_profiling_enabled__ and \
+                isinstance(model, torch.nn.Sequential):
+            data = activations_torch(model, X, fmt='summary', plot=plot)
+    if data is not None:
+        ap = plots[plot](data, fmt='summary')  # activation plot
         plt.title("Distribution of (non-zero) activations")
         plt.tight_layout()
 
@@ -301,6 +396,7 @@ def numerical(keras_model=None, hls_model=None, X=None, plot='boxplot'):
         types_plots[plot](t_data, fmt='summary')
 
     return wp, ap
+
 
 ########COMPARE OUTPUT IMPLEMENTATION########
 def _is_ignored_layer(layer):

@@ -7,7 +7,7 @@
 #    WEIGHTS_FILE - Name of the HDF5 file containing model weights (without ".h5")
 #    x:XILINXPART - Xilinx part number to use
 #    c:CLOCK_PERIOD - Clock period
-#    io:s - User serial I/O, otherwise use parallel I/O
+#    io:s - User streaming I/O, otherwise use parallel I/O
 #    r:REUSE_FACTOR - Reuse factor
 #    s:STRATEGY - Latency-optimized or Resource-optimized strategy
 #    t:AP_TYPE - Default precision
@@ -34,7 +34,12 @@ KERAS_3layer r:2 s:Resource
 #Fails synthesis due to a problem with loop unrolling
 #jetTagger_Conv2D_Small:jetTagger_Conv2D_Small
 
+# Streaming IO
 #KERAS_1layer io:s
-#KERAS_3layer io:s
+KERAS_3layer io:s
+KERAS_conv1d_small io:s
+KERAS_conv2d_model io:s
+jetTagger_Conv2D_Small io:s
+jetTagger_Conv2D_Small_NoBatchNorm io:s
 
 #KERAS_1layer x:xcku115-flvf1924-2-i
