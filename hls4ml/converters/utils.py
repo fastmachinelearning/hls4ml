@@ -1,3 +1,5 @@
+import math
+
 def parse_data_format(input_shape, data_format='channels_last'):
     if input_shape[0] is None:
         # Ignore batch size

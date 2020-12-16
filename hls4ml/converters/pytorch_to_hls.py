@@ -27,9 +27,7 @@ class PyTorchDataReader:
         
         #Convert it to a list
         self.input_shape = self.input_shape.strip('(,)').split(',')
-        self.input_shape = [int(n) for n in self.input_shape]
-        #if len(self.input_shape) == 1:  #add dummy channel dimension
-            #self.input_shape += [1]
+        self.input_shape = [None if n == 'None' else int(n) for n in self.input_shape]
 
         self.state_dict = self.torch_model.state_dict()
     
@@ -96,7 +94,7 @@ def pytorch_to_hls(config):
     input_layer = {}
     input_layer['name'] = 'input1'
     input_layer['class_name'] = 'InputLayer'
-    input_layer['input_shape'] = input_shapes
+    input_layer['input_shape'] = input_shapes[0][1:]
     layer_list.insert(0, input_layer)
     
     #Output shape tracking
@@ -131,7 +129,7 @@ def pytorch_to_hls(config):
         #Process the layer
         layer, output_shape = layer_handlers[pytorch_class](pytorch_layer, layer_name, input_shapes, reader, config)
 
-        print('Layer name: {}, layer type: {}, current shape: {}'.format(layer['name'], layer['class_name'], output_shape))
+        print('Layer name: {}, layer type: {}, current shape: {}'.format(layer['name'], layer['class_name'], input_shapes))
         layer_list.append(layer)
         
         assert(output_shape is not None)
