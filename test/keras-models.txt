@@ -30,6 +30,7 @@ garnet_1layer r:16
 
 # Resource strategy
 KERAS_3layer r:2 s:Resource
+qkeras_mnist_dense r:112 s:Resource
 
 #Fails synthesis due to a problem with loop unrolling
 #jetTagger_Conv2D_Small:jetTagger_Conv2D_Small
