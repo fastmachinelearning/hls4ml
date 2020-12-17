@@ -14,8 +14,9 @@ from tabulate import tabulate
 import json
 import uuid
 
-from hls4ml.templates.templates import Backend
+from hls4ml.templates.templates import Backend, cd
 from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
+
 
 dense_config_template = """struct config{index} : nnet::dense_config {{
     static const unsigned n_in = {n_in};
@@ -373,28 +374,41 @@ class QuartusBackend(Backend):
             dlclose_func(model._top_function_lib._handle)
         model._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
 
-    def build(self, dir, prj_config=None, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, fpgasynth=False):
+    def build(self, dir, prj_config, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, fpgasynth=False):
+        """
+        Low level function to build the system. Users should generally not call this function directly
+        but instead use HLSModel.build(...)
+
+        Args:
+            dir (string):  The directory where the project is found
+            prj_config (dict): The project configuration dictionary--note, not HLSConfig
+            reset, optional: Whether to reset the system. (Currently ignored)
+            synth, optional: Whether to run synthesis
+            cosim, optional: Whether to run cosim (currently ignored)
+            validation, optional: Whether to run validation (currently ignored)
+            export, optional: Whether to export the project (currently ignored)
+            fpgasynth, optional:  Whether to run fpga synthesis
+
+        Errors raise exceptions
+        """
         found = os.system('command -v i++ > /dev/null')
         if found != 0:
             raise Exception('Intel HLS installation not found. Make sure "i++" is on PATH.')
 
-        curr_dir = os.getcwd()
+        top_func_name = prj_config["ProjectName"]
 
-        os.chdir(dir)
-        top_func_name = prj_config.get_project_name()
+        # use a context manager for exception safety
+        with cd(dir):
+            if(synth):
+                os.system('make {}-fpga'.format(top_func_name))
+                os.system('./{}-fpga'.format(top_func_name))
 
-        if(synth):
-            os.system('make {}-fpga'.format(top_func_name))
-            os.system('./{}-fpga'.format(top_func_name))
-
-        if(fpgasynth):
-            found = os.system('command -v quartus_sh > /dev/null')
-            if found != 0:
-                raise Exception('Quartus installation not found. Make sure "quartus_sh" is on PATH.')
-            os.chdir(top_func_name + '-fpga.prj/quartus')
-            os.system('quartus_sh --flow compile quartus_compile')
-
-        os.chdir(curr_dir)
+            if(fpgasynth):
+                found = os.system('command -v quartus_sh > /dev/null')
+                if found != 0:
+                    raise Exception('Quartus installation not found. Make sure "quartus_sh" is on PATH.')
+                os.chdir(top_func_name + '-fpga.prj/quartus')
+                os.system('quartus_sh --flow compile quartus_compile')
 
     def get_supportedlayers(self):
         #Define supported laers
@@ -421,20 +435,33 @@ class QuartusBackend(Backend):
         else:
             return 'ac_int<{width}, {signed}>'.format(width=width, signed='false' if not signed else 'true')
 
-    def report_to_dict(self, prj_config=None, output=False):
-        hls_dir = prj_config.get_output_dir()
+    def report_to_dict(self, hls_config, output=False):
+        """
+        Low level function to return the report as a dictionary. Users should generally not call this function directly
+        but should use functions from the HLSModel.
+
+        Args:
+            dir (string):  The directory where the project is found
+            hls_config (HLSConfig): The project configuration
+            output, optional:  whether to pint a summary
+
+        Returns:
+            dict: the report dictionary
+
+        Raises exceptions on errors
+
+        """
+        hls_dir = hls_config.get_output_dir()
 
         if not os.path.exists(hls_dir):
-            print('Path {} does not exist. Exiting.'.format(hls_dir))
-            return
+            raise RuntimeError('Path {} does not exist. Exiting.'.format(hls_dir))
 
-        top_func_name = prj_config.get_project_name()
+        top_func_name = hls_config.get_project_name()
         prj_dir = top_func_name + '-fpga.prj'
 
         rpt_file = hls_dir + '/' + prj_dir + '/reports'
         if not os.path.exists(rpt_file):
-            print('Project {} does not exist. Rerun "hls4ml build -p {} -b Quartus".'.format(prj_dir, hls_dir))
-            return
+            raise RuntimeError('Project {} does not exist. Make sure the project is built.'.format(prj_dir, hls_dir))
 
         report = self._find_reports(rpt_file)
         if output:
@@ -450,12 +477,27 @@ class QuartusBackend(Backend):
         return report
 
 
-    def read_report(self, hls_dir, full_report=False, prj_config=None):
+    def read_report(self, hls_dir, prj_config, full_report=False, open_browser=False):
+        """
+        Low level function to print the report (and open browser). Users should generally not call this function directly
+        but should use functions from the HLSModel.
+
+        Args:
+            dir (string):  The directory where the project is found
+            prj_config (dict): The project configuration dictionary--note, not HLSConfig
+            full_report, optional:  whether to have a full report (currently ignored)
+            open_browser, optional:  whether to open a browser
+        """
         if not os.path.exists(hls_dir):
             print('Path {} does not exist. Exiting.'.format(hls_dir))
             return
 
-        top_func_name = prj_config.get('ProjectName')
+        try:
+            top_func_name = prj_config['ProjectName']
+        except Exception:
+            print("prj_config is not a dictionary or it does not contain the ProjectName key")
+            return
+
         prj_dir = top_func_name + '-fpga.prj'
 
         rpt_file = hls_dir + '/' + prj_dir + '/reports'
@@ -474,8 +516,9 @@ class QuartusBackend(Backend):
         else:
             print("Quartus compile data not found! To generate data run 'hls4ml build -l' or MODEL.build(synth=False, fpgasynth=True) if using API.")
 
-        url = 'file:' + os.getcwd() + '/' + rpt_file + '/report.html'
-        webbrowser.open(url)
+        if open_browser:
+            url = 'file:' + os.getcwd() + '/' + rpt_file + '/report.html'
+            webbrowser.open(url)
 
     def _find_reports(self, sln_dir):
         def read_js_object(js_script):
@@ -510,7 +553,7 @@ class QuartusBackend(Backend):
                             raise ValueError("Cannot + on anything other than two literals")
                     else:
                         raise ValueError("Cannot do operator '%s'" % node.op)
-         
+
                 elif isinstance(node, ast.String):
                     return node.value.strip('"').strip("'")
                 elif isinstance(node, ast.Array):
@@ -525,7 +568,7 @@ class QuartusBackend(Backend):
             with open(filename) as dataFile:
                 quartus_data = dataFile.read()
                 quartus_data = read_js_object(quartus_data)
-                
+
             if(quartus_data['quartusJSON']['quartusFitClockSummary']['nodes'][0]['clock'] != "TBD"):
                 results['Clock'] = quartus_data['quartusJSON']['quartusFitClockSummary']['nodes'][0]['clock']
                 results['Quartus ALM'] = quartus_data['quartusJSON']['quartusFitResourceUsageSummary']['nodes'][-1]['alm']
@@ -534,7 +577,7 @@ class QuartusBackend(Backend):
                 results['Quartus RAM'] = quartus_data['quartusJSON']['quartusFitResourceUsageSummary']['nodes'][-1]['ram']
                 results['Quartus MLAB'] = quartus_data['quartusJSON']['quartusFitResourceUsageSummary']['nodes'][-1]['mlab']
 
-        
+
         def _read_report_file(filename, results):
             with open(filename) as dataFile:
                 report_data = dataFile.read()
@@ -542,9 +585,9 @@ class QuartusBackend(Backend):
                 report_data = read_js_object(report_data)
                 results['HLS ALUT'], results['HLS FF'], results['HLS RAM'], results['HLS DSP'], results['HLS MLAB'] = report_data['areaJSON']['total']
                 results['HLS ALUT percent'], results['HLS FF percent'], results['HLS RAM percent'], results['HLS DSP percent'], results['HLS MLAB percent'] = report_data['areaJSON']['total_percent']
-                
-                
-            
+
+
+
         def _read_verification_file(filename, results):
             if os.path.isfile(filename):
                 with open(filename) as dataFile:
@@ -564,5 +607,5 @@ class QuartusBackend(Backend):
         _read_report_file(report_file, results)
         _read_verification_file(verification_file, results)
         _read_quartus_file(quartus_file, results)
-        
+
         return results
