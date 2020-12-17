@@ -694,6 +694,7 @@ class Conv1D(Layer):
         mult_params = self._default_config_params()
         mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_width')
         mult_params['n_out'] = self.get_attr('n_filt')
+        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
         mult_config = self._config_template[1].format(**mult_params)
 
         return mult_config + '\n' + conv_config
@@ -785,6 +786,7 @@ class SeparableConv1D(Layer):
         mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_width')
         mult_params['n_out'] = self.get_attr('n_chan')
         mult_params['weight_t'] = self.get_weights('depthwise').type.name
+        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('depthwise').type.precision)
         depthwise_mult_config = self._config_template[3].format(**mult_params)
 
         # Pointwise config
@@ -816,6 +818,7 @@ class SeparableConv1D(Layer):
         mult_params['n_in'] = self.get_attr('n_chan')
         mult_params['n_out'] = self.get_attr('n_filt')
         mult_params['weight_t'] = self.get_weights('pointwise').type.name
+        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('pointwise').type.precision)
         pointwise_mult_config = self._config_template[4].format(**mult_params)
 
         return depthwise_mult_config + '\n' + depthwise_config + '\n' + pointwise_mult_config + '\n' + pointwise_config + '\n' + sep_config
@@ -888,6 +891,7 @@ class Conv2D(Layer):
         mult_params = self._default_config_params()
         mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
         mult_params['n_out'] = self.get_attr('n_filt')
+        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
         mult_config = self._config_template[1].format(**mult_params)
 
         return mult_config + '\n' + conv_config
@@ -986,6 +990,7 @@ class SeparableConv2D(Layer):
         mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
         mult_params['n_out'] = self.get_attr('n_chan')
         mult_params['weight_t'] = self.get_weights('depthwise').type.name
+        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('depthwise').type.precision)
         depthwise_mult_config = self._config_template[3].format(**mult_params)
 
         # Pointwise config
@@ -1023,6 +1028,7 @@ class SeparableConv2D(Layer):
         mult_params['n_in'] = self.get_attr('n_chan')
         mult_params['n_out'] = self.get_attr('n_filt')
         mult_params['weight_t'] = self.get_weights('pointwise').type.name
+        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('pointwise').type.precision)
         pointwise_mult_config = self._config_template[4].format(**mult_params)
 
         return depthwise_mult_config + '\n' + depthwise_config + '\n' + pointwise_mult_config + '\n' + pointwise_config + '\n' + sep_config
