@@ -30,5 +30,12 @@ def parse_conv1d_layer(pytorch_layer, layer_name, input_shapes, data_reader, con
     
     output_shape=[input_shapes[0][0], layer['n_filt'], layer['out_width']] #Channel first as default
     
+    #Only 'same' padding is implemented in the streaming algorithm
+    if output_shape == input_shapes[0]:
+        layer['padding'] = 'same'
+    else:
+        raise Exeption('ERROR: Only "same" padding is allowed. (Input shapes must match output shapes in Conv layers)')
+      
+    
     return layer, output_shape
     
