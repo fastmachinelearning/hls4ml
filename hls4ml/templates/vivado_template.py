@@ -8,7 +8,7 @@ from bisect import bisect_left
 import xml.etree.ElementTree as ET
 import uuid
 
-from hls4ml.templates.templates import Backend
+from hls4ml.templates.templates import Backend, cd
 from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
 
 dense_config_template = """struct config{index} : nnet::dense_config {{
@@ -362,14 +362,30 @@ class VivadoBackend(Backend):
         model._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
 
     def build(self, dir, prj_config=None, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, fpgasynth=False):
+        """
+        Low level function to build the system. Users should generally not call this function directly
+        but instead use HLSModel.build(...)
+
+        Args:
+            dir (string):  The directory where the project is found
+            prj_config (dict), optional: The project configuration dictionary (currently ignored)
+            reset, optional: Whether to reset the system.
+            synth, optional: Whether to run synthesis
+            cosim, optional: Whether to run cosim
+            validation, optional: Whether to run validation
+            export, optional: Whether to export the project
+            fpgasynth, optional:  Whether to run fpga synthesis
+
+        Errors raise exceptions
+        """
         found = os.system('command -v vivado_hls > /dev/null')
         if found != 0:
             raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
-        curr_dir = os.getcwd()
-        os.chdir(dir)
-        os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={fpgasynth}"'
-            .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, fpgasynth=fpgasynth))
-        os.chdir(curr_dir)
+
+        # use a contex manager for exception safety
+        with cd(dir):
+            os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={fpgasynth}"'
+                .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, fpgasynth=fpgasynth))
 
     def get_supportedlayers(self):
         #Define supported laers
@@ -396,13 +412,25 @@ class VivadoBackend(Backend):
         else:
             return 'ap_{signed}int<{width}>'.format(signed='u' if not signed else '', width=width)
 
-    def report_to_dict(self, prj_config=None, output=False):
-        """ Return a report to a dictionary
+    def report_to_dict(self, hls_config, output=False):
         """
-        hls_dir = prj_config.get_output_dir()
+        Low level function to return the report as a dictionary. Users should generally not call this function directly
+        but should use functions from the HLSModel.
+
+        Args:
+            dir (string):  The directory where the project is found
+            hls_config (HLSConfig): The project configuration
+            output, optional:  whether to pint a summary
+
+        Returns:
+            dict: the report dictionary
+
+        Raises exceptions on errors
+
+        """
+        hls_dir = hls_config.get_output_dir()
         if not os.path.exists(hls_dir):
-            print('Path {} does not exist. Exiting.'.format(hls_dir))
-            return
+            raise RuntimeError('Path {} does not exist. Exiting.'.format(hls_dir))
 
         prj_dir = None
         top_func_name = None
@@ -411,13 +439,11 @@ class VivadoBackend(Backend):
             prj_dir, top_func_name = self._parse_build_script(hls_dir + '/build_prj.tcl')
 
         if prj_dir is None or top_func_name is None:
-            print('Unable to read project data. Exiting.')
-            return
+            raise RuntimeError('Unable to read project data.')
 
         sln_dir = hls_dir + '/' + prj_dir
         if not os.path.exists(sln_dir):
-            print('Project {} does not exist. Rerun "hls4ml build -p {}".'.format(prj_dir, hls_dir))
-            return
+            raise RuntimeError('Project {} does not exist. Make sure the project is built.'.format(prj_dir, hls_dir))
 
         solutions = self._find_solutions(sln_dir)
         if len(solutions) > 1:
@@ -485,7 +511,17 @@ class VivadoBackend(Backend):
             self.read_report(hls_dir)
         return report
 
-    def read_report(self, hls_dir, full_report=False, prj_config=None):
+    def read_report(self, hls_dir, prj_config=None, full_report=False, open_browser=False):
+        """
+        Low level function to print the report (and open browser). Users should generally not call this function directly
+        but should use functions from the HLSModel.
+
+        Args:
+            dir (string):  The directory where the project is found
+            prj_config (dict), optional: The project configuration dictionary (currently ignored)
+            full_report, optional:  whether to have a full report (currently ignored)
+            open_browser, optional:  currently not supported (ignored)
+        """
         if not os.path.exists(hls_dir):
             print('Path {} does not exist. Exiting.'.format(hls_dir))
             return

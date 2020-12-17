@@ -1,4 +1,4 @@
-#!/usr/local/opt/python/bin/python3.7
+#!/usr/bin/env python
 from __future__ import absolute_import
 from __future__ import print_function
 
@@ -60,6 +60,7 @@ def main():
 
     report_parser.add_argument('-p', '--project', help='Project directory', default=None)
     report_parser.add_argument('-f', '--full', help='Show full report', action='store_true', default=False)
+    report_parser.add_argument('-b', '--browser', help='Open a browser for the report (if supported)', action='store_true', default=False)
     report_parser.set_defaults(func=report)
 
     parser.add_argument('--version', action='version', version='%(prog)s {version}'.format(version=__version__))
@@ -171,7 +172,8 @@ def build(args):
         if yamlConfig.get('Backend', 'Vivado') in hls4ml.templates.templates.backend_map:
             backend.build(dir=args.project, prj_config=yamlConfig, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, fpgasynth=fpgasynth)
         else:
-            raise Exception('Backend not Implemented try [Vivado, Quartus]')
+            print('Backend not Implemented try [Vivado, Quartus]')
+            sys.exit(2)
 
 def report(args):
     if args.project is None:
@@ -181,7 +183,7 @@ def report(args):
     yamlConfig = parse_config(args.project + '/' + config_filename)
     backend = hls4ml.templates.get_backend(yamlConfig.get('Backend', 'Vivado'))
     if yamlConfig.get('Backend', 'Vivado') in hls4ml.templates.templates.backend_map:
-        backend.read_report(args.project, args.full, yamlConfig)
+        backend.read_report(args.project, yamlConfig, args.full, args.browser)
     else:
         raise Exception('Backend not Implemented try [Vivado, Quartus]')
 

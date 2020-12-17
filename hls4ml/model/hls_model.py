@@ -532,12 +532,12 @@ class HLSModel(object):
         if 'linux' in sys.platform:
             if self.config.get_config_value('Backend', 'Vivado') in templates.backend_map:
                 prj_dir = self.config.get_output_dir()
-                self.backend.build(dir=prj_dir, prj_config=self.config, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, fpgasynth=fpgasynth)
+                self.backend.build(dir=prj_dir, prj_config=self.config.config, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, fpgasynth=fpgasynth)
             else:
                 raise Exception('Backend not Implemented try [Vivado, Quartus]')
 
     def report(self, output=False):
         if self.config.get_config_value('Backend', 'Vivado') in templates.backend_map:
-            return self.backend.report_to_dict(prj_config=self.config, output=output)
+            return self.backend.report_to_dict(hls_config=self.config, output=output)
         else:
             raise Exception('Backend not Implemented try [Vivado, Quartus]')
