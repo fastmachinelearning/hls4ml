@@ -4,14 +4,11 @@ import os
 import ctypes
 import copy
 import platform
-import yaml
 from bisect import bisect_left
 import webbrowser
-from slimit import ast
-from slimit.parser import Parser
-from slimit.visitors import nodevisitor
+from calmjs.parse import es5
+from calmjs.parse import asttypes
 from tabulate import tabulate
-import json
 import uuid
 
 from hls4ml.templates.templates import Backend, cd
@@ -522,47 +519,54 @@ class QuartusBackend(Backend):
 
     def _find_reports(self, sln_dir):
         def read_js_object(js_script):
+            """
+            Reads the JS input (js_script, a string), and return a dictionary of
+            variables definded in the JS.
+            """
             def visit(node):
-                if isinstance(node, ast.Program):
+                if isinstance(node, asttypes.Program):
                     d = {}
                     for child in node:
-                        if not isinstance(child, ast.VarStatement):
+                        if not isinstance(child, asttypes.VarStatement):
                             raise ValueError("All statements should be var statements")
                         key, val = visit(child)
                         d[key] = val
                     return d
-                elif isinstance(node, ast.VarStatement):
+                elif isinstance(node, asttypes.VarStatement):
                     return visit(node.children()[0])
-                elif isinstance(node, ast.VarDecl):
+                elif isinstance(node, asttypes.VarDecl):
                     return (visit(node.identifier), visit(node.initializer))
-                elif isinstance(node, ast.Object):
+                elif isinstance(node, asttypes.Object):
                     d = {}
                     for property in node:
                         key = visit(property.left)
                         value = visit(property.right)
                         d[key] = value
                     return d
-                elif isinstance(node, ast.BinOp):
+                elif isinstance(node, asttypes.BinOp):
                     # simple constant folding
                     if node.op == '+':
-                        if isinstance(node.left, ast.String) and isinstance(node.right, ast.String):
+                        if isinstance(node.left, asttypes.String) and isinstance(node.right, asttypes.String):
                             return visit(node.left) + visit(node.right)
-                        elif isinstance(node.left, ast.Number) and isinstance(node.right, ast.Number):
+                        elif isinstance(node.left, asttypes.Number) and isinstance(node.right, asttypes.Number):
                             return visit(node.left) + visit(node.right)
                         else:
                             raise ValueError("Cannot + on anything other than two literals")
                     else:
                         raise ValueError("Cannot do operator '%s'" % node.op)
 
-                elif isinstance(node, ast.String):
+                elif isinstance(node, asttypes.String):
                     return node.value.strip('"').strip("'")
-                elif isinstance(node, ast.Array):
+                elif isinstance(node, asttypes.Array):
                     return [visit(x) for x in node]
-                elif isinstance(node, ast.Number) or isinstance(node, ast.Identifier) or isinstance(node, ast.Boolean) or isinstance(node, ast.Null):
+                elif (isinstance(node, asttypes.Number)
+                      or isinstance(node, asttypes.Identifier)
+                      or isinstance(node, asttypes.Boolean)
+                      or isinstance(node, asttypes.Null)):
                     return node.value
                 else:
                     raise Exception("Unhandled node: %r" % node)
-            return visit(Parser().parse(js_script))
+            return visit(es5(js_script))
 
         def _read_quartus_file(filename, results):
             with open(filename) as dataFile:
