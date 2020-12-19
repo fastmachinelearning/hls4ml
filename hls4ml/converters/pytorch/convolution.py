@@ -41,7 +41,7 @@ def parse_conv1d_layer(pytorch_layer, layer_name, input_shapes, data_reader, con
     return layer, output_shape
 
 @pytorch_handler('Conv2d')
-def parse_conv1d_layer(pytorch_layer, layer_name, input_shapes, data_reader, config):
+def parse_conv2d_layer(pytorch_layer, layer_name, input_shapes, data_reader, config):
     assert('Conv2d' in pytorch_layer.__class__.__name__)
     
     layer = {}
@@ -57,7 +57,7 @@ def parse_conv1d_layer(pytorch_layer, layer_name, input_shapes, data_reader, con
         layer['n_chan']
     ) = parse_data_format(input_shapes[0], 'channels_first') #Keras's default is channels_last
     
-    
+    #Additional parameters
     layer['n_filt'] = pytorch_layer.out_channels
     layer['filt_height'] = pytorch_layer.kernel_size[0]
     layer['filt_width'] = pytorch_layer.kernel_size[1]
@@ -67,6 +67,7 @@ def parse_conv1d_layer(pytorch_layer, layer_name, input_shapes, data_reader, con
     layer['pad_top'] = layer['pad_bottom'] = pytorch_layer.padding[0]
     layer['pad_left'] = layer['pad_right'] = pytorch_layer.padding[1]
     
+    #Ouput info
     layer['out_height']  = int((layer['in_height'] + 2*layer['pad_top'] - layer['dilation']*(layer['filt_height']-1)- 1)/layer['stride_height'] + 1)
     layer['out_width']  = int((layer['in_width'] + 2*layer['pad_left'] - layer['dilation']*(layer['filt_width']-1)- 1)/layer['stride_width'] + 1)
         
