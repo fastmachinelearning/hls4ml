@@ -613,7 +613,7 @@ void selu(hls::stream<data_T> &data, hls::stream<res_T> &res) {
             } else {
                 int index = datareg*CONFIG_T::table_size/-8;
                 if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
-                out_data[j] = alpha * selu_table[index];
+                out_data[j] = selu_table[index];
             }
         }
         res.write(out_data);
