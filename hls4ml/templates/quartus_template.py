@@ -10,6 +10,7 @@ from calmjs.parse import es5
 from calmjs.parse import asttypes
 from tabulate import tabulate
 import uuid
+from ast import literal_eval
 
 from hls4ml.templates.templates import Backend, cd
 from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
@@ -555,14 +556,18 @@ class QuartusBackend(Backend):
                     else:
                         raise ValueError("Cannot do operator '%s'" % node.op)
 
-                elif isinstance(node, asttypes.String):
-                    return node.value.strip('"').strip("'")
+                elif isinstance(node, asttypes.String) or isinstance(node, asttypes.Number):
+                    return literal_eval(node.value)
                 elif isinstance(node, asttypes.Array):
                     return [visit(x) for x in node]
-                elif (isinstance(node, asttypes.Number)
-                      or isinstance(node, asttypes.Identifier)
-                      or isinstance(node, asttypes.Boolean)
-                      or isinstance(node, asttypes.Null)):
+                elif isinstance(node, asttypes.Null):
+                    return None
+                elif isinstance(node, asttypes.Boolean):
+                    if str(node) == "false":
+                        return False
+                    else:
+                        return True
+                elif isinstance(node, asttypes.Identifier):
                     return node.value
                 else:
                     raise Exception("Unhandled node: %r" % node)
