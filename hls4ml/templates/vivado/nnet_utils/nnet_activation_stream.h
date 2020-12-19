@@ -400,7 +400,7 @@ void hard_sigmoid(hls::stream<data_T> &data, hls::stream<res_T> &res) {
 
         HardSigmoidPackLoop: for (int j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
-            data_T datareg = slope * in_data[j] + shift;
+            typename data_T::value_type datareg = slope * in_data[j] + shift;
             if (datareg > 1) datareg = 1;
             else if (datareg < 0) datareg = 0;
             out_data[j] = datareg;
