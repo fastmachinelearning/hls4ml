@@ -343,8 +343,6 @@ void softmax(hls::stream<data_T> &data, hls::stream<res_T> &res){
 
 }
 
-#endif
-
 // *************************************************
 //       TanH Activation
 // *************************************************
@@ -646,3 +644,6 @@ void prelu(hls::stream<data_T> &data, typename data_T::value_type alpha[CONFIG_T
         res.write(out_data);
     }
 }
+
+
+#endif
