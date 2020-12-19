@@ -73,7 +73,7 @@ def pytorch_to_hls(config):
     model = reader.torch_model
 
     #Define layers to skip for conversion to HLS
-    skip_layers = ['Dropout', 'Flatten']
+    skip_layers = ['Dropout', 'Flatten', 'Sequential']
     
     #All supported layers
     supported_layers = get_supported_pytorch_layers() + skip_layers
@@ -101,10 +101,19 @@ def pytorch_to_hls(config):
     output_shapes = {}
     output_shape = None
     
+    #To skip first printout from the whole model class when looping
+    #Can't use layer counter for this
+    model_class = True
+    
     #Loop through layers
     print('Topology:')
     layer_counter = 0
-    for layer_name, pytorch_layer in model.named_children():
+    for layer_name, pytorch_layer in model.named_modules():
+        
+        #First module is the whole model's class
+        if model_class:
+            model_class = False
+            continue
         
         pytorch_class = pytorch_layer.__class__.__name__
         
@@ -117,14 +126,18 @@ def pytorch_to_hls(config):
         
         #Handle skipped layers
         if pytorch_class in skip_layers:
+            if pytorch_class == 'Sequential': #Ignore the mother module's class name
+                continue
+
             if pytorch_class == 'Flatten':
                 output_shapes[layer_name] = [input_shapes[0][0], np.prod(input_shapes[0][1:])]
             else:
                 output_shapes[layer_name] = input_shapes[0]
             continue #!!
-                
+        
+        #Increment the layer counter after initial screenings
         if pytorch_class in supported_layers:
-            layer_counter = layer_counter + 1
+            layer_counter += 1
         
         #Process the layer
         layer, output_shape = layer_handlers[pytorch_class](pytorch_layer, layer_name, input_shapes, reader, config)
