@@ -57,11 +57,11 @@ class PyTorchDataReader:
         elif var_name in list(torch_paramap.keys()):
             var_name = torch_paramap[var_name]
             
-        data = self.state_dict[layer_name + '.' + var_name].numpy().transpose()
+        data = self.state_dict[layer_name + '.' + var_name].numpy().transpose() #Look at transpose when systhesis produce lousy results. Might need to remove it.
         
         return data
 
-####---------------Layer handling------------------######
+####----------------------Layer handling---------------------######
 layer_handlers = {}
 
 def register_pytorch_layer_handler(layer_name, handler_func):
