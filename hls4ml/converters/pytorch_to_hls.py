@@ -32,12 +32,33 @@ class PyTorchDataReader:
         self.state_dict = self.torch_model.state_dict()
     
     def get_weights_data(self, layer_name, var_name):
-        if var_name == 'kernel':
-            var_name = 'weight'
+        """
+        Get weights data from layers.
+        The hls layer classes are based on Keras's default parameters.
+        Thus, this function will also need to account for some differences
+        between Keras and Pytorch terminology.
+        """
+        
         data = None
-        if var_name in ['weight', 'bias']:
-            data = self.state_dict[layer_name + '.' + var_name].numpy().transpose()
-
+        
+        #Parameter mapping from pytorch to keras
+        torch_paramap = {
+        #Conv
+        'kernel': 'weight', 
+        #Batchnorm
+        'gamma': 'weight',
+        'beta': 'bias',
+        'moving_mean':'running_mean',
+        'moving_variance': 'running_var'}
+            
+        if var_name not in list(torch_paramap.keys()) + ['weight', 'bias']:
+            raise Exception('Pytorch parameter not yet supported!')
+        
+        elif var_name in list(torch_paramap.keys()):
+            var_name = torch_paramap[var_name]
+            
+        data = self.state_dict[layer_name + '.' + var_name].numpy().transpose()
+        
         return data
 
 ####---------------Layer handling------------------######
