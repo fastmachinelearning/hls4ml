@@ -17,7 +17,7 @@ jobs:
         pre-build-command: "pip install sphinx-rtd-theme"
     - name: Commit Documentation Changes
       run: |
-        git clone https://github.com/fastmachinelearning/hls4ml.git --branch gh-pages --single-branch gh-pages
+        git clone https://github.com/ngpaladi/hls4ml.git --branch gh-pages --single-branch gh-pages
         cp -r sphinx-docs/_build/html/* gh-pages/
         cd gh-pages
         touch .nojekyll
