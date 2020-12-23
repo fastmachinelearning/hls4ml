@@ -50,4 +50,5 @@ Contributors
 * Shih-Chieh Hsu [University of Washington]
 * Giuseppe Di Guglielmo [Columbia University]
 * Duc Hoang [Rhodes College]
+* Noah Paladino [Rutgers University]
 
