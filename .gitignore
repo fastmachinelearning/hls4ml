@@ -9,3 +9,4 @@ vivado_prj
 my-hls-test
 *.tar.gz
 sphinx-docs/_build
+sphinx-docs/autodoc/*
