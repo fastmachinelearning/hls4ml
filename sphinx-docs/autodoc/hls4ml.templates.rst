@@ -1,0 +1,29 @@
+hls4ml.templates
+========================
+
+Submodules
+----------
+
+hls4ml.templates.templates module
+---------------------------------
+
+.. automodule:: hls4ml.templates.templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.templates.vivado\_template module
+----------------------------------------
+
+.. automodule:: hls4ml.templates.vivado_template
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.templates
+   :members:
+   :undoc-members:
+   :show-inheritance:

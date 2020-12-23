@@ -14,7 +14,7 @@ We currently support two ways of setting hls4ml's model configuration. This page
 
 
 * 
-  One important part of hls4ml to remember is that the user is responsible for the format of the inputs.  There is no automatic formatting or normalization so this must be done in the training.
+  One important part of ``hls4ml`` to remember is that the user is responsible for the format of the inputs.  There is no automatic formatting or normalization so this must be done in the training.
 
 * 
   For developers, you might also want to checkout this section: `Detailed configuration in converted hls codes <#detailed-configuration-in-converted-hls-codes>`_.
@@ -100,7 +100,7 @@ There are a number of configuration options that you have.  Let's go through the
 2.2 Per-Layer Configuration
 ---------------------------
 
-In the hls4ml configuration file, it is possible to specify the model *Precision* and *ReuseFactor* with finer granularity.
+In the ``hls4ml`` configuration file, it is possible to specify the model *Precision* and *ReuseFactor* with finer granularity.
 
 Under the ``HLSConfig`` heading, these can be set for the ``Model``\ , per ``LayerType``\ , per ``LayerName``\ , and for named variables within the layer (for precision only). The most basic configuration may look like this:
 

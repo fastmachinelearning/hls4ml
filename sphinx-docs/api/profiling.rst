@@ -53,7 +53,7 @@ When different combinations of the input objects are given, different plots will
 
 4) Keras model, HLSModel, and data: both weights and activation profiles are produced, with grey boxes indicating the data types from the HLSModel.
 
-Each box shows the median and quartiles of the distribution. The grey shaded boxes show the range which can be represented with the hls4ml config file used.
+Each box shows the median and quartiles of the distribution. The grey shaded boxes show the range which can be represented with the ``hls4ml`` config file used.
 
 As a starting point, a good configuration would at least cover the box and whisker for each variable with the grey box. Make sure the box and whisker is contained to the right by using sufficient integer bits to avoid overflow. It might be that more precision is needed (grey boxes extend further to the left) to achieve satisfactory performance. In some cases, it is safe to barely cover the values and still achieve good accuracy.
 

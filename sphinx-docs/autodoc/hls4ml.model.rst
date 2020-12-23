@@ -1,0 +1,45 @@
+hls4ml.model
+====================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hls4ml.model.optimizer
+
+Submodules
+----------
+
+hls4ml.model.hls\_layers module
+-------------------------------
+
+.. automodule:: hls4ml.model.hls_layers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.hls\_model module
+------------------------------
+
+.. automodule:: hls4ml.model.hls_model
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.profiling module
+-----------------------------
+
+.. automodule:: hls4ml.model.profiling
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.model
+   :members:
+   :undoc-members:
+   :show-inheritance:

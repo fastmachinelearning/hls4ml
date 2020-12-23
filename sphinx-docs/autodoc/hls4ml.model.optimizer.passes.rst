@@ -1,0 +1,85 @@
+hls4ml.model.optimizer.passes
+=====================================
+
+Submodules
+----------
+
+hls4ml.model.optimizer.passes.bn\_fuse module
+---------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.bn_fuse
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.optimizer.passes.bn\_quant module
+----------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.bn_quant
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.optimizer.passes.clone module
+------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.clone
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.optimizer.passes.conv\_same\_pad module
+----------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.conv_same_pad
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.optimizer.passes.fuse\_biasadd module
+--------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.fuse_biasadd
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.optimizer.passes.nop module
+----------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.nop
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.optimizer.passes.pointwise module
+----------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.pointwise
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.optimizer.passes.qkeras module
+-------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.qkeras
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.optimizer.passes.repack\_stream module
+---------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.repack_stream
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.model.optimizer.passes
+   :members:
+   :undoc-members:
+   :show-inheritance:

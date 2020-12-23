@@ -2,7 +2,7 @@
 Setup
 =====
 
-This chapter is dedicated to setting up the tool.  We discuss software dependencies of hls4ml.  There is a quick start guide for beginners to get familiar quickly.  Then we discuss in more detail the features of the tool and user configuration.
+This chapter is dedicated to setting up the tool.  We discuss software dependencies of ``hls4ml``.  There is a quick start guide for beginners to get familiar quickly.  Then we discuss in more detail the features of the tool and user configuration.
 
 Dependencies
 ============
@@ -108,14 +108,14 @@ Further information about ``.yml`` files can be found in :doc:`Configuration <ap
 In order to create an example HLS project:
 
 
-* Go to ``example-models/`` from the main directory: 
+Go to ``example-models/`` from the main directory: 
 
 .. code-block:: bash
 
    cd example-models/
 
 
-* And use this command to translate a Keras model:
+And use this command to translate a Keras model:
 
 .. code-block:: bash
 
@@ -145,7 +145,8 @@ This will create a Vivado HLS project with your model implmentation!
 
 Setting the additional parameters to ``1`` to ``0`` disables that step, but disabling ``synth`` also disables ``cosim`` and ``export``.
 
-**3) Further help:**
+Further help
+^^^^^^^^^^^^^^^^
 
 
 * 
@@ -157,7 +158,10 @@ Setting the additional parameters to ``1`` to ``0`` disables that step, but disa
 * 
   We provide a detailed documentation for each of the command in the :doc:`Command Help <../command>` section
 
-**To uninstall ``hls4ml``\ :** 
+Uninstalling
+^^^^^^^^^^^^^^
+
+To uninstall ``hls4ml``: 
 
 .. code-block:: bash
 
