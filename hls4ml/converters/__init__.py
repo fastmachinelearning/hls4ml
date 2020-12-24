@@ -5,7 +5,25 @@ import importlib
 from hls4ml.utils.config import create_vivado_config
 
 from hls4ml.converters.keras_to_hls import keras_to_hls, get_supported_keras_layers, register_keras_layer_handler
-from hls4ml.converters.pytorch_to_hls import pytorch_to_hls, get_supported_pytorch_layers, register_pytorch_layer_handler
+
+#----------Make converters available if the libraries can be imported----------#       
+try:
+    from hls4ml.converters.pytorch_to_hls import pytorch_to_hls, get_supported_pytorch_layers, register_pytorch_layer_handler
+    __pytorch_enabled__ = True
+except ImportError:
+    __pytorch_enabled__ = False
+
+try:
+    from hls4ml.converters.onnx_to_hls import onnx_to_hls
+    __onnx_enabled__ = True
+except ImportError:
+    __onnx_enabled__ = False
+
+try:
+    from hls4ml.converters.tf_to_hls import tf_to_hls
+    __tensorflow_enabled__ = True
+except ImportError:
+    __tensorflow_enabled__ = False
 
 #----------Keras handling----------#
 for module in os.listdir(os.path.dirname(__file__) + '/keras'):
@@ -39,24 +57,7 @@ for module in os.listdir(os.path.dirname(__file__) + '/pytorch'):
     except ImportError:
         continue
 
-#----------Make converters available if the libraries can be imported----------#       
-try:
-    from hls4ml.converters.pytorch_to_hls import pytorch_to_hls
-    __pytorch_enabled__ = True
-except ImportError:
-    __pytorch_enabled__ = False
 
-try:
-    from hls4ml.converters.onnx_to_hls import onnx_to_hls
-    __onnx_enabled__ = True
-except ImportError:
-    __onnx_enabled__ = False
-
-try:
-    from hls4ml.converters.tf_to_hls import tf_to_hls
-    __tensorflow_enabled__ = True
-except ImportError:
-    __tensorflow_enabled__ = False
 
 
 def convert_from_yaml_config(yamlConfig):
@@ -81,6 +82,7 @@ def convert_from_yaml_config(yamlConfig):
     
     return model
 
+#----------Keras converter----------#
 def convert_from_keras_model(model, output_dir='my-hls-test', project_name='myproject',
     fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
     
@@ -116,3 +118,46 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
         config['HLSConfig']['SkipOptimizers'] = hls_config['SkipOptimizers']
     
     return keras_to_hls(config)
+
+#----------Pytorch converter----------#
+def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', project_name='myproject',
+    fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
+    
+    config = create_vivado_config(
+        output_dir=output_dir,
+        project_name=project_name,
+        fpga_part=fpga_part,
+        clock_period=clock_period,
+        io_type=io_type
+    )
+    
+    config['PytorchAPIModel'] = model
+    config['InputShape'] = input_shape
+
+    model_config = hls_config.get('Model', None)
+    
+    if model_config is not None:
+        if not all(k in model_config for k in ('Precision', 'ReuseFactor')):
+            raise Exception('Precision and ReuseFactor must be provided in hls_config')
+    else:
+        model_config = {}
+        model_config['Precision'] = 'ap_fixed<16,6>'
+        model_config['ReuseFactor'] = '1'
+   
+    config['HLSConfig']['Model'] = model_config
+    
+    if 'LayerName' in hls_config:
+        config['HLSConfig']['LayerName'] = hls_config['LayerName']
+    
+    if 'LayerType' in hls_config:
+        config['HLSConfig']['LayerType'] = hls_config['LayerType']
+
+    if 'Optimizers' in hls_config:
+        config['HLSConfig']['Optimizers'] = hls_config['Optimizers']
+
+    if 'SkipOptimizers' in hls_config:
+        config['HLSConfig']['SkipOptimizers'] = hls_config['SkipOptimizers']
+    
+    return pytorch_to_hls(config)
+
+
