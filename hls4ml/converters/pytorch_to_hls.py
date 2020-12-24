@@ -10,7 +10,7 @@ import re
 from hls4ml.model import HLSModel
 
 ####---------------Initial Data Reader------------------######
-class PyTorchDataReader:
+class PyTorchFileReader:
     def __init__(self, config):
         self.config = config
 
@@ -30,6 +30,41 @@ class PyTorchDataReader:
         self.input_shape = [None if n == 'None' else int(n) for n in self.input_shape]
 
         self.state_dict = self.torch_model.state_dict()
+    
+    def get_weights_data(self, layer_name, var_name):
+        """
+        Get weights data from layers.
+        The hls layer classes are based on Keras's default parameters.
+        Thus, this function will also need to account for some differences
+        between Keras and Pytorch terminology.
+        """
+        
+        data = None
+        
+        #Parameter mapping from pytorch to keras
+        torch_paramap = {
+        #Conv
+        'kernel': 'weight', 
+        #Batchnorm
+        'gamma': 'weight',
+        'beta': 'bias',
+        'moving_mean':'running_mean',
+        'moving_variance': 'running_var'}
+            
+        if var_name not in list(torch_paramap.keys()) + ['weight', 'bias']:
+            raise Exception('Pytorch parameter not yet supported!')
+        
+        elif var_name in list(torch_paramap.keys()):
+            var_name = torch_paramap[var_name]
+            
+        data = self.state_dict[layer_name + '.' + var_name].numpy().transpose() #Look at transpose when systhesis produce lousy results. Might need to remove it.
+        
+        return data
+
+class PyTorchModelReader(object):
+    def __init__(self, model):
+        self.torch_model = model
+        self.state_dict = model.state_dict()
     
     def get_weights_data(self, layer_name, var_name):
         """
@@ -90,7 +125,15 @@ def pytorch_to_hls(config):
     layer_list = []
 
     print('Interpreting Model ...')
-    reader = PyTorchDataReader(config)
+    if 'PytorchAPIModel' in config:
+        # Model instance passed in config from API
+        reader = PyTorchModelReader(config['PytorchAPIModel'])
+        input_shapes = [list(config['InputShape'])]
+    else:
+        #Model instance passed in from "physical" file.
+        reader = PyTorchFileReader(config)
+        input_shapes = [list(reader.input_shape)] #In case there are multiple inputs
+        
     model = reader.torch_model
 
     #Define layers to skip for conversion to HLS
@@ -107,16 +150,13 @@ def pytorch_to_hls(config):
     
     layer_config = None
     
-    #Input shape tracking
-    input_shapes = [list(reader.input_shape)] #In case there are multiple inputs
-    print("Input Shape: ", input_shapes)
-    
     #Add input layer
     input_layer = {}
     input_layer['name'] = 'input1'
     input_layer['class_name'] = 'InputLayer'
     input_layer['input_shape'] = input_shapes[0][1:]
     layer_list.insert(0, input_layer)
+    print("Input Shape: ", input_shapes)
     
     #Output shape tracking
     output_shapes = {}
