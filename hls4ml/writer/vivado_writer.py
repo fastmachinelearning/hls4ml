@@ -7,6 +7,7 @@ import os
 import re
 import glob
 from collections import OrderedDict
+from collections.abc import Iterable
 
 from hls4ml.writer.writers import Writer
 from hls4ml.model.hls_layers import XnorPrecisionType
@@ -166,7 +167,7 @@ class VivadoWriter(Writer):
                 newline = ''
                 newline += indent + inputs_str + ',\n'
                 newline += indent + outputs_str + ',\n'
-                if len(model_brams) > 0: 
+                if len(model_brams) > 0:
                     newline += brams_str + ',\n'
                 newline += indent + insize_str + ',\n'
                 newline += indent + outsize_str + '\n'
@@ -187,7 +188,7 @@ class VivadoWriter(Writer):
                 newline = line
                 all_inputs = [i.cppname for i in model_inputs]
                 all_outputs = [o.cppname for o in model_outputs]
-                all_brams = [b.cppname for b in model_brams] 
+                all_brams = [b.cppname for b in model_brams]
                 io_type = model.config.get_config_value("IOType")
 
                 if io_type == 'io_parallel':
@@ -282,7 +283,7 @@ class VivadoWriter(Writer):
                 newline = ''
                 newline += indent + inputs_str + ',\n'
                 newline += indent + outputs_str + ',\n'
-                if len(model_brams) > 0: 
+                if len(model_brams) > 0:
                     newline += brams_str + ',\n'
                 newline += indent + insize_str + ',\n'
                 newline += indent + outsize_str + '\n'
@@ -452,13 +453,13 @@ class VivadoWriter(Writer):
 
                 input_vars = ','.join([i.cppname for i in model.get_input_variables()])
                 output_vars = ','.join([o.cppname for o in model.get_output_variables()])
-                bram_vars   =','.join([b.cppname for b in model.get_bram_variables()]) 
+                bram_vars   =','.join([b.cppname for b in model.get_bram_variables()])
 
                 # Concatenate the input, output, and bram variables. Filter out empty/null values
                 all_vars = ','.join(filter(None, [input_vars, output_vars, bram_vars]))
 
                 top_level = indent + '{}({},{},{});\n'.format(model.config.get_project_name(), all_vars, input_size_vars, output_size_vars)
-                
+
                 newline += top_level
             elif '//hls-fpga-machine-learning insert predictions' in line:
                 newline = line
@@ -534,9 +535,9 @@ class VivadoWriter(Writer):
                 input_size_vars = ','.join(['const_size_in_{}'.format(i) for i in range(1, len(model.get_input_variables()) + 1)])
                 output_size_vars = ','.join(['const_size_out_{}'.format(o) for o in range(1, len(model.get_output_variables()) + 1)])
                 input_vars = ','.join([i.cppname + '_ap' for i in model.get_input_variables()])
-                bram_vars   =','.join([b.cppname for b in model.get_bram_variables()]) 
+                bram_vars   =','.join([b.cppname for b in model.get_bram_variables()])
                 output_vars = ','.join([o.cppname + '_ap' for o in model.get_output_variables()])
-                
+
                 # Concatenate the input, output, and bram variables. Filter out empty/null values
                 all_vars = ','.join(filter(None, [input_vars, output_vars, bram_vars]))
 
@@ -667,6 +668,32 @@ class VivadoWriter(Writer):
         with open(model.config.get_output_dir() + '/' + config_filename, 'w') as file:
             yaml.dump(model.config.config, file)
 
+    def write_instructions(self, model):
+        ###################
+        ## nnet_instr_gen.h
+        ###################
+
+        path = '{}/firmware/nnet_utils/nnet_instr_gen.h'.format(model.config.get_output_dir())
+        f = open(path,'r')
+        contents = f.readlines()
+        f.close()
+        f = open(path,'w')
+
+        for line in contents:
+            if '//hls4ml insert instructions' in line:
+                newline = line
+                for layer in model.get_layers():
+                    if hasattr(layer, 'generated_code'):
+                        if isinstance(layer.generated_code, Iterable):
+                            for code in layer.generated_code:
+                                newline += code
+                        else:
+                            newline += layer.generated_code
+            else:
+                newline = line
+            f.write(newline)
+        f.close()
+
     def write_tar(self, model):
         ###################
         # Tarball output
@@ -688,5 +715,6 @@ class VivadoWriter(Writer):
         self.write_build_script(model)
         self.write_nnet_utils(model)
         self.write_yml(model)
+        self.write_instructions(model)
         self.write_tar(model)
         print('Done')

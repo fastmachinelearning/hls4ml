@@ -20,7 +20,7 @@ class IntegerPrecisionType(object):
         self.integer = width
         self.fractional = 0
         self.signed = signed
-    
+
     def __str__(self):
         typestring = 'ap_{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring
@@ -42,7 +42,7 @@ class FixedPrecisionType(object):
         self.rounding_mode = rounding_mode
         self.saturation_mode = saturation_mode
         self.saturation_bits = saturation_bits
-    
+
     def __str__(self):
         args = [self.width, self.integer, self.rounding_mode, self.saturation_mode, self.saturation_bits]
         args = ','.join([str(arg) for arg in args if arg is not None])
@@ -258,7 +258,7 @@ class WeightVariable(Variable):
                     # to right of decimal point
                     decimal_spaces = len(str(lsb).split('.')[1])
                 else:
-                    decimal_spaces = len(str(2**integer_bits)) 
+                    decimal_spaces = len(str(2**integer_bits))
                 self.precision_fmt = '%.{}f'.format(decimal_spaces)
             else:
                 self.precision_fmt = '%f'
@@ -446,7 +446,7 @@ class Layer(object):
 
     def make_stream_variable(self, shape, dim_names, var_name='layer{index}_out', type_name='layer{index}_t', precision=None, depth=0):
         pack_factor = self.model.config.get_layer_config_value(self, 'PackFactor', default=1)
-        
+
         return StreamVariable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, n_pack=pack_factor, depth=depth, index=self.index)
 
     def add_weights(self, quantizer=None, compression=False):
@@ -619,7 +619,7 @@ class Dense(Layer):
             else:
                 if self.model.config.backend.name == 'Vivado':
                     self.weights['weight'].data = np.transpose(self.weights['weight'].data)
-                    
+
         self.set_attr('index_t', index_t)
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
@@ -718,13 +718,13 @@ class SeparableConv1D(Layer):
             shape = [self.attributes['n_filt'], self.attributes['out_width']]
             dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
-        
+
         depthwise_data = self.model.get_weights_data(self.name, 'depthwise_kernel')
         pointwise_data = self.model.get_weights_data(self.name, 'pointwise_kernel')
 
         self.add_weights_variable(name='depthwise', var_name='d{index}', data=depthwise_data, quantizer=self.get_attr('depthwise_quantizer'))
         self.add_weights_variable(name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer'))
-        
+
         zero_bias_data = np.zeros((self.attributes['n_chan'],))
         self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data)
 
@@ -738,7 +738,7 @@ class SeparableConv1D(Layer):
         else:
             self.set_attr('strategy', 'latency')
         self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
-        
+
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -810,7 +810,7 @@ class SeparableConv1D(Layer):
         else:
             params['in_width'] = '*'.join([str(k) for k in input_dims[1:]])
             params['n_chan'] = input_dims[0]
-        
+
         params['filt_width'] = 1
         params['dilation'] = self.get_attr('dilation', 1)
         params['n_filt'] = 'N_FILT_{}'.format(self.index)
@@ -852,10 +852,17 @@ class Conv2D(Layer):
         if self.model.config.is_resource_strategy(self):
             self.set_attr('strategy', 'resource')
             if self.model.config.backend.name == 'Vivado':
-                # TODO: compute optimized reuse
-                self.model.config.backend.set_target_reuse_factor(self)
-                self.model.config.backend.set_closest_reuse_factor(self)
-                self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
+                #self.model.config.backend.set_closest_reuse_factor(self)
+                #self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
+                self.generated_code = self.model.config.backend.generate_conv2d_line_buffer_fn(
+                    self.index,
+                    self.get_input_variable().shape[0],
+                    self.get_input_variable().shape[1],
+                    self.get_input_variable().shape[2],
+                    (self.get_attr('filt_height'), self.get_attr('filt_width')),
+                    (self.get_attr('stride_height'), self.get_attr('stride_width')),
+                    (self.get_attr('pad_top'), self.get_attr('pad_bottom'), self.get_attr('pad_left'), self.get_attr('pad_right'))
+                )
         else:
             self.set_attr('strategy', 'latency')
 
@@ -897,10 +904,12 @@ class Conv2D(Layer):
             params['min_height'] = min_h
             params['min_width'] = min_w
             params['instructions'] = instructions_str
+            params['fill_fn'] = 'FillLineBuffer2D'
         else:
             params['min_height'] = params['in_height']
             params['min_width'] = params['in_width']
             params['instructions'] = '0'
+            params['fill_fn'] = 'fill_line_{}'.format(self.index)
 
         params['config_t'] = 'config{}_mult'.format(self.index)
         conv_config = self._config_template[0].format(**params)
@@ -974,13 +983,13 @@ class SeparableConv2D(Layer):
             shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
             dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
-        
+
         depthwise_data = self.model.get_weights_data(self.name, 'depthwise_kernel')
         pointwise_data = self.model.get_weights_data(self.name, 'pointwise_kernel')
 
         self.add_weights_variable(name='depthwise', var_name='d{index}', data=depthwise_data, quantizer=self.get_attr('depthwise_quantizer'))
         self.add_weights_variable(name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer'))
-        
+
         zero_bias_data = np.zeros((self.attributes['n_chan'],))
         self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data)
 
@@ -993,7 +1002,7 @@ class SeparableConv2D(Layer):
                 self.weights['pointwise'].data = np.transpose(self.weights['pointwise'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
         else:
             self.set_attr('strategy', 'latency')
-        
+
         self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
     def function_cpp(self):
@@ -1125,7 +1134,7 @@ class DepthwiseConv2D(Conv2D):
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
         else:
             self.set_attr('strategy', 'latency')
-        
+
         self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
 class Pooling1D(Layer):
@@ -1552,7 +1561,7 @@ class GarNet(Layer):
         input_array = self.get_input_variable(self.inputs[0])
         partition_factor = input_array.shape[1] * (input_array.shape[0] // reuse_factor)
         input_array.pragma = ('partition', 'cyclic', partition_factor)
-        
+
         if self.attributes['collapse']:
             shape = [self._output_features]
             dims = ['OUT_FEATURES_{}'.format(self.index)]
@@ -1637,7 +1646,7 @@ class GarNet(Layer):
 
         # automatically make the variable unsigned if data are all positive
         signed = (np.amin(data) < 0.)
-        
+
         int_width = find_minimum_width(data, signed=signed)
 
         if quantize:
@@ -1645,9 +1654,9 @@ class GarNet(Layer):
         else:
             width = int_width + frac_width
             precision = FixedPrecisionType(width=width, integer=int_width, signed=signed, rounding_mode='AP_RND', saturation_mode='AP_SAT')
-            
+
         self.add_weights_variable(name=name, var_name=var_name, data=data, precision=precision)
-        
+
     def function_cpp(self):
         params = self._default_function_params()
 
@@ -1746,13 +1755,13 @@ class GarNetStack(GarNet):
             name = 'input_transform_{}_biases'.format(il)
             self._add_variable(name, 'input_transform_{}_b{{index}}'.format(il), bias, frac_width=10, quantize=quantize)
             sublayer_weights['input_transform_biases'] = self.weights[name]
-        
+
             weights_source = [
                 ('aggregator_distance', 'S{}'.format(il), 'kernel'),
                 ('aggregator_distance', 'S{}'.format(il), 'bias'),
                 ('output_transform', 'Fout{}'.format(il), 'bias')
             ]
-    
+
             for op_name, lname, wtype in weights_source:
                 data = self.model.get_weights_data(self.name, '{name}/{lname}_{wtype}:0'.format(name=self.name, lname=lname, wtype=wtype))
                 if wtype == 'kernel':
