@@ -147,6 +147,8 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
     padded_width -= padded_width - (padded_width / CONFIG_T::stride_width * CONFIG_T::stride_width);
   }
 
+  #pragma HLS PIPELINE II=CONFIG_T::reuse
+
   for(int ff = 0; ff < CONFIG_T::n_filt; ff++){
 	  // Loop over input image y in steps of stride
 	  for(int ii = 0; ii < padded_height; ii += CONFIG_T::stride_height){
@@ -197,6 +199,8 @@ void pooling2d_cf(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
     padded_height -= padded_height - (padded_height / CONFIG_T::stride_height * CONFIG_T::stride_height);
     padded_width -= padded_width - (padded_width / CONFIG_T::stride_width * CONFIG_T::stride_width);
   }
+
+  #pragma HLS PIPELINE II=CONFIG_T::reuse
 
   for(int ff = 0; ff < CONFIG_T::n_filt; ff++){
 	  // Loop over input image y in steps of stride

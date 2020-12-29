@@ -7,6 +7,7 @@ import os
 import re
 import glob
 from collections import OrderedDict
+from collections.abc import Iterable
 
 from hls4ml.writer.writers import Writer
 
@@ -595,6 +596,33 @@ class VivadoWriter(Writer):
 
         copytree(srcpath, dstpath)
 
+    def write_instructions(self, model):
+        ###################
+        ## nnet_instr_gen.h
+        ###################
+
+        path = '{}/firmware/nnet_utils/nnet_instr_gen.h'.format(model.config.get_output_dir())
+        f = open(path,'r')
+        contents = f.readlines()
+        f.close()
+        f = open(path,'w')
+
+        for line in contents:
+            if '//hls4ml insert instructions' in line:
+                newline = line
+                for layer in model.get_layers():
+                    if hasattr(layer, 'generated_code'):
+                        if isinstance(layer.generated_code, Iterable):
+                            for code in layer.generated_code:
+                                newline += code
+                        else:
+                            newline += layer.generated_code
+            else:
+                newline = line
+            f.write(newline)
+        f.close()
+
+
     def write_tar(self, model):
         ###################
         # Tarball output
@@ -615,5 +643,6 @@ class VivadoWriter(Writer):
         self.write_bridge(model)
         self.write_build_script(model)
         self.write_nnet_utils(model)
+        self.write_instructions(model)
         self.write_tar(model)
         print('Done')

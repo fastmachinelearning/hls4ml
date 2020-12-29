@@ -752,8 +752,17 @@ class Conv2D(Layer):
         if self.model.config.is_resource_strategy(self):
             self.set_attr('strategy', 'resource')
             if self.model.config.backend.name == 'Vivado':
-                self.model.config.backend.set_closest_reuse_factor(self)
-                self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
+                #self.model.config.backend.set_closest_reuse_factor(self)
+                #self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
+                self.generated_code = self.model.config.backend.generate_conv2d_line_buffer_fn(
+                    self.index,
+                    self.get_input_variable().shape[0],
+                    self.get_input_variable().shape[1],
+                    self.get_input_variable().shape[2],
+                    (self.get_attr('filt_height'), self.get_attr('filt_width')),
+                    (self.get_attr('stride_height'), self.get_attr('stride_width')),
+                    (self.get_attr('pad_top'), self.get_attr('pad_bottom'), self.get_attr('pad_left'), self.get_attr('pad_right'))
+                )
         else:
             self.set_attr('strategy', 'latency')
 
@@ -795,10 +804,12 @@ class Conv2D(Layer):
             params['min_height'] = min_h
             params['min_width'] = min_w
             params['instructions'] = instructions_str
+            params['fill_fn'] = 'FillLineBuffer2D'
         else:
             params['min_height'] = params['in_height']
             params['min_width'] = params['in_width']
             params['instructions'] = '0'
+            params['fill_fn'] = 'fill_line_{}'.format(self.index)
 
         params['config_t'] = 'config{}_mult'.format(self.index)
         conv_config = self._config_template[0].format(**params)

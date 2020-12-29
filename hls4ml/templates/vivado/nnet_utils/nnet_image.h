@@ -20,21 +20,22 @@ void resize_nearest(
     data_T image[CONFIG_T::height * CONFIG_T::width * CONFIG_T::n_chan],
     data_T resized[CONFIG_T::new_height * CONFIG_T::new_width * CONFIG_T::n_chan]
 ) {
-    int y_ratio = (int)((CONFIG_T::height << 16) / CONFIG_T::new_height) + 1;
-    int x_ratio = (int)((CONFIG_T::width << 16) / CONFIG_T::new_width) + 1;
-    int x2, y2;
+    assert(CONFIG_T::new_height % CONFIG_T::height == 0);
+    assert(CONFIG_T::new_width % CONFIG_T::width == 0);
+    constexpr unsigned ratio_height = CONFIG_T::new_height / CONFIG_T::height;
+    constexpr unsigned ratio_width = CONFIG_T::new_width / CONFIG_T::width;
 
     #pragma HLS PIPELINE
 
-    for (int i = 0; i < CONFIG_T::new_height; i++) {
-        for (int j = 0; j < CONFIG_T::new_width; j++) {
-            x2 = ((j * x_ratio) >> 16);
-            y2 = ((i * y_ratio) >> 16);
-            for (int k = 0; k < CONFIG_T::n_chan; k++) {
-                resized[(i * CONFIG_T::new_width * CONFIG_T::n_chan) + j * CONFIG_T::n_chan + k] = image[(y2 * CONFIG_T::width * CONFIG_T::n_chan) + x2 * CONFIG_T::n_chan + k];
+    ResizeImage: for (unsigned i = 0; i < CONFIG_T::height * CONFIG_T::width; i++) {
+        ResizeNew: for (unsigned j = 0; j < ratio_height * ratio_width; j++) {
+            #pragma HLS UNROLL
+            ResizeChan: for (unsigned k = 0; k < CONFIG_T::n_chan; k++) {
+                #pragma HLS UNROLL
+                *(resized++) = image[i * CONFIG_T::n_chan + k];
             }
         }
-    }  
+    }
 }
 
 }

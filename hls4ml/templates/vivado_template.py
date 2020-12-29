@@ -91,6 +91,8 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
     typedef {config_t} mult_config;
+    template<class data_T, typename CONFIG_T>
+    using fill_line = nnet::{fill_fn}<data_T, CONFIG_T>;
 }};
 const ap_uint<config{index}::filt_height * config{index}::filt_width> config{index}::pixels[] = {{{instructions}}};\n"""
 
@@ -545,3 +547,83 @@ class VivadoBackend(Backend):
                 windows_int.append((int(''.join(str(p) for p in reversed(windows_bin[i * min_W + j])), 2)))
         
         return (min_H, min_W, windows_int)
+
+    def _compute_conv2d_im2col(self, input_shape, kernel=(3,3), stride=(1,1), pad=(0,0)):
+        H, W, C = input_shape
+        kernel_h, kernel_w = kernel
+        stride_h, stride_w = stride
+        pad_t, pad_b, pad_l, pad_r = pad
+
+        out_h = (H + pad_t + pad_b - kernel_h) // stride_h + 1
+        out_w = (W + pad_l + pad_r - kernel_w) // stride_w + 1
+
+        input_img = np.arange(1, C * H * W + 1).reshape(C, H, W)
+
+        img = np.pad(input_img, [(0,0), (pad_t, pad_b), (pad_l, pad_r)], 'constant')
+        col = np.zeros((C, kernel_h, kernel_w, out_h, out_w))
+
+        for y in range(kernel_h):
+            y_max = y + stride_h * out_h
+            for x in range(kernel_w):
+                x_max = x + stride_w * out_w
+                col[:, y, x, :, :] = img[:, y:y_max:stride_h, x:x_max:stride_w]
+
+        col = col.transpose(3, 4, 0, 1, 2).reshape(out_h * out_w, -1)
+        return col
+
+    def generate_conv2d_line_buffer_fn(self, layer_idx, in_H, in_W, in_C, kernel_size=3, stride=1, pad=0):
+        if isinstance(kernel_size, Iterable):
+            kernel_height = kernel_size[0]
+            kernel_width = kernel_size[1]
+        else:
+            kernel_height = kernel_size
+            kernel_width = kernel_size
+
+        if isinstance(stride, Iterable):
+            stride_height = stride[0]
+            stride_width = stride[1]
+        else:
+            stride_height = stride
+            stride_width = stride
+        
+        if isinstance(pad, Iterable):
+            pad_top = pad[0]
+            pad_bottom = pad[1]
+            pad_left = pad[2]
+            pad_right = pad[3]
+        else:
+            pad_top = pad
+            pad_bottom = pad
+            pad_left = pad
+            pad_right = pad
+
+        generated_code = (
+            "template<class data_T, typename CONFIG_T>\n"
+            "class fill_line_{index} : public FillLineBuffer2D<data_T, CONFIG_T> {{\n"
+            "    public:\n"
+            "    static void fill_line(\n"
+            "        data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],\n"
+            "        data_T line[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan],\n"
+            "        const unsigned pixel_idx\n"
+            "    ) {{\n"
+        ).format(index=layer_idx)
+        indent = '    '
+        im2col_matrix = self._compute_conv2d_im2col(
+            (in_H, in_W, in_C),
+            (kernel_height, kernel_width),
+            (stride_height, stride_width),
+            (pad_top, pad_bottom, pad_left, pad_right)
+        )
+        for i, arr in enumerate(im2col_matrix):
+            generated_code += indent * 2 + 'if (pixel_idx == {:>3}) {{'.format(i)
+            for j, v in enumerate(arr):
+                if v == 0:
+                    val = '0'
+                else:
+                    val = 'data[{}]'.format(int(v-1))
+                generated_code += ' line[{}] = {:>10};'.format(j, val)
+            generated_code += ' }\n'
+        generated_code += indent + '}\n'
+        generated_code += '};\n'
+
+        return generated_code
