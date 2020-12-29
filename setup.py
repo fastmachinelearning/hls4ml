@@ -35,14 +35,7 @@ setup(name='hls4ml',
         'profiling': [
             'pandas',
             'seaborn',
-            'matplotlib'],
-          
-        'pytorch':[
-            'torch-scatter',
-            'torch-sparse',
-            'torch-cluster',
-            'torch-spline-conv',
-            'torch-geometric']
+            'matplotlib']
       },
       scripts=['scripts/hls4ml'],
       include_package_data=True,
