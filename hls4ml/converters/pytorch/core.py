@@ -13,8 +13,13 @@ def parse_linear_layer(pytorch_layer, layer_name, input_shapes, data_reader, con
     
     layer['n_in'] = pytorch_layer.in_features
     layer['n_out'] = pytorch_layer.out_features
-    layer['use_bias'] = pytorch_layer.bias
-
+    
+    #Handling whether bias is used or not
+    if pytorch_layer.bias is None:    
+        layer['use_bias'] = False
+    else:
+        layer['use_bias'] = True
+        
     output_shape = [input_shapes[0][0], layer['n_out']]
     
     return layer, output_shape
