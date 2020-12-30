@@ -10,57 +10,6 @@ import re
 from hls4ml.model import HLSModel
 
 ####---------------Initial Data Reader------------------######
-class PyTorchFileReader:
-    def __init__(self, config):
-        self.config = config
-
-        if not torch.cuda.is_available():
-            self.torch_model = torch.load(config['PytorchModel'], map_location=lambda storage, loc: storage)
-        else:
-            self.torch_model = torch.load(config['PytorchModel'])
-        
-        #Get input tensor's shape
-        self.input_shape = config.get('InputShape')
-        
-        if self.input_shape == None:
-            raise Exception('Must specify input shape ("InputShape") in config!')
-        
-        #Convert it to a list
-        self.input_shape = self.input_shape.strip('(,)').split(',')
-        self.input_shape = [None if n == 'None' else int(n) for n in self.input_shape]
-
-        self.state_dict = self.torch_model.state_dict()
-    
-    def get_weights_data(self, layer_name, var_name):
-        """
-        Get weights data from layers.
-        The hls layer classes are based on Keras's default parameters.
-        Thus, this function will also need to account for some differences
-        between Keras and Pytorch terminology.
-        """
-        
-        data = None
-        
-        #Parameter mapping from pytorch to keras
-        torch_paramap = {
-        #Conv
-        'kernel': 'weight', 
-        #Batchnorm
-        'gamma': 'weight',
-        'beta': 'bias',
-        'moving_mean':'running_mean',
-        'moving_variance': 'running_var'}
-            
-        if var_name not in list(torch_paramap.keys()) + ['weight', 'bias']:
-            raise Exception('Pytorch parameter not yet supported!')
-        
-        elif var_name in list(torch_paramap.keys()):
-            var_name = torch_paramap[var_name]
-            
-        data = self.state_dict[layer_name + '.' + var_name].numpy().transpose() #Look at transpose when systhesis produce lousy results. Might need to remove it.
-        
-        return data
-
 class PyTorchModelReader(object):
     def __init__(self, model):
         self.torch_model = model
@@ -93,6 +42,29 @@ class PyTorchModelReader(object):
             var_name = torch_paramap[var_name]
             
         data = self.state_dict[layer_name + '.' + var_name].numpy().transpose() #Look at transpose when systhesis produce lousy results. Might need to remove it.
+        
+        return data
+    
+class PyTorchFileReader(PyTorchModelReader): #Inherit get_weights_data method
+    def __init__(self, config):
+        self.config = config
+
+        if not torch.cuda.is_available():
+            self.torch_model = torch.load(config['PytorchModel'], map_location=lambda storage, loc: storage)
+        else:
+            self.torch_model = torch.load(config['PytorchModel'])
+        
+        #Get input tensor's shape
+        self.input_shape = config.get('InputShape')
+        
+        if self.input_shape == None:
+            raise Exception('Must specify input shape ("InputShape") in config!')
+        
+        #Convert it to a list
+        self.input_shape = self.input_shape.strip('(,)').split(',')
+        self.input_shape = [None if n == 'None' else int(n) for n in self.input_shape]
+
+        self.state_dict = self.torch_model.state_dict()
         
         return data
 
