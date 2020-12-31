@@ -8,7 +8,7 @@ from bisect import bisect_left
 import xml.etree.ElementTree as ET
 import uuid
 
-from hls4ml.templates.templates import Backend
+from hls4ml.templates.templates import Backend, cd
 from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
 
 dense_config_template = """struct config{index} : nnet::dense_config {{
@@ -362,14 +362,30 @@ class VivadoBackend(Backend):
         model._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
 
     def build(self, dir, prj_config=None, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, fpgasynth=False):
+        """
+        Low level function to build the system. Users should generally not call this function directly
+        but instead use HLSModel.build(...)
+
+        Args:
+            dir (string):  The directory where the project is found
+            prj_config (dict), optional: The project configuration dictionary (currently ignored)
+            reset, optional: Whether to reset the system.
+            synth, optional: Whether to run synthesis
+            cosim, optional: Whether to run cosim
+            validation, optional: Whether to run validation
+            export, optional: Whether to export the project
+            fpgasynth, optional:  Whether to run fpga synthesis
+
+        Errors raise exceptions
+        """
         found = os.system('command -v vivado_hls > /dev/null')
         if found != 0:
             raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
-        curr_dir = os.getcwd()
-        os.chdir(dir)
-        os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={fpgasynth}"'
-            .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, fpgasynth=fpgasynth))
-        os.chdir(curr_dir)
+
+        # use a contex manager for exception safety
+        with cd(dir):
+            os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={fpgasynth}"'
+                .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, fpgasynth=fpgasynth))
 
     def get_supportedlayers(self):
         #Define supported laers
@@ -396,10 +412,116 @@ class VivadoBackend(Backend):
         else:
             return 'ap_{signed}int<{width}>'.format(signed='u' if not signed else '', width=width)
 
-    def report_to_dict(self, prj_config=None, output=False):
-        raise NotImplementedError
+    def report_to_dict(self, hls_config, output=False):
+        """
+        Low level function to return the report as a dictionary. Users should generally not call this function directly
+        but should use functions from the HLSModel.
 
-    def read_report(self, hls_dir, full_report=False, prj_config=None):
+        Args:
+            dir (string):  The directory where the project is found
+            hls_config (HLSConfig): The project configuration
+            output, optional:  whether to pint a summary
+
+        Returns:
+            dict: the report dictionary
+
+        Raises exceptions on errors
+
+        """
+        hls_dir = hls_config.get_output_dir()
+        if not os.path.exists(hls_dir):
+            raise RuntimeError('Path {} does not exist. Exiting.'.format(hls_dir))
+
+        prj_dir = None
+        top_func_name = None
+
+        if os.path.isfile(hls_dir + '/build_prj.tcl'):
+            prj_dir, top_func_name = self._parse_build_script(hls_dir + '/build_prj.tcl')
+
+        if prj_dir is None or top_func_name is None:
+            raise RuntimeError('Unable to read project data.')
+
+        sln_dir = hls_dir + '/' + prj_dir
+        if not os.path.exists(sln_dir):
+            raise RuntimeError('Project {} does not exist. Make sure the project is built.'.format(prj_dir, hls_dir))
+
+        solutions = self._find_solutions(sln_dir)
+        if len(solutions) > 1:
+            print('WARNING: Found {} solution(s) in {}. Using the first solution.'.format(len(solutions), sln_dir))
+
+        report = {}
+
+        sim_file = hls_dir + '/tb_data/csim_results.log'
+        if os.path.isfile(sim_file):
+            csim_results = []
+            with open(sim_file, 'r') as f:
+                for line in f.readlines():
+                    csim_results.append([float(r) for r in line.split()])
+            report['CSimResults'] = csim_results
+
+        sim_file = hls_dir + '/tb_data/rtl_cosim_results.log'
+        if os.path.isfile(sim_file):
+            cosim_results = []
+            with open(sim_file, 'r') as f:
+                for line in f.readlines():
+                    cosim_results.append([float(r) for r in line.split()])
+            report['CosimResults'] = cosim_results
+
+        syn_file = sln_dir + '/' + solutions[0] + '/syn/report/{}_csynth.xml'.format(top_func_name)
+        if os.path.isfile(syn_file):
+            root = ET.parse(syn_file).getroot()
+
+            # Performance
+            perf_node = root.find('./PerformanceEstimates')
+            report['EstimatedClockPeriod'] = perf_node.find('./SummaryOfTimingAnalysis/EstimatedClockPeriod').text
+            report['BestLatency'] = perf_node.find('./SummaryOfOverallLatency/Best-caseLatency').text
+            report['WorstLatency'] = perf_node.find('./SummaryOfOverallLatency/Worst-caseLatency').text
+            report['IntervalMin'] = perf_node.find('./SummaryOfOverallLatency/Interval-min').text
+            report['IntervalMax'] = perf_node.find('./SummaryOfOverallLatency/Interval-max').text
+            # Area
+            area_node = root.find('./AreaEstimates')
+            report["Resources"] = {}
+            report["AvailableResources"] = {}
+            for child in area_node.find('./Resources'):
+                report["Resources"][child.tag] = child.text
+            for child in area_node.find('./AvailableResources'):
+                report["AvailableResources"][child.tag] = child.text
+        else:
+            print('Synthesis report not found.')
+
+        cosim_file = sln_dir + '/' + solutions[0] + '/sim/report/{}_cosim.rpt'.format(top_func_name)
+        if os.path.isfile(cosim_file):
+            with open(cosim_file, 'r') as f:
+                for line in f.readlines():
+                    if re.search('VHDL', line) or re.search('Verilog', line):
+                        result = line[1:].split() # [1:] skips the leading '|'
+                        result = [res[:-1] if res[-1] == '|' else res for res in result]
+                        # RTL, Status, Latency-min, Latency-avg, Latency-max, Interval-min, Interval-avg, Interval-max
+                        if result[1] == 'NA':
+                            continue
+                        else:
+                            report['CosimRTL'] = result[0]
+                            report['CosimStatus'] = result[1]
+                            report['CosimLatencyMin'] = result[2]
+                            report['CosimLatencyMax'] = result[4]
+                            report['CosimIntervalMin'] = result[5]
+                            report['CosimIntervalMax'] = result[7]
+
+        if output:
+            self.read_report(hls_dir)
+        return report
+
+    def read_report(self, hls_dir, prj_config=None, full_report=False, open_browser=False):
+        """
+        Low level function to print the report (and open browser). Users should generally not call this function directly
+        but should use functions from the HLSModel.
+
+        Args:
+            dir (string):  The directory where the project is found
+            prj_config (dict), optional: The project configuration dictionary (currently ignored)
+            full_report, optional:  whether to have a full report (currently ignored)
+            open_browser, optional:  currently not supported (ignored)
+        """
         if not os.path.exists(hls_dir):
             print('Path {} does not exist. Exiting.'.format(hls_dir))
             return
@@ -458,25 +580,39 @@ class VivadoBackend(Backend):
     def _find_reports(self, sln_dir, top_func_name, full_report=False):
         csim_file = sln_dir + '/csim/report/{}_csim.log'.format(top_func_name)
         if os.path.isfile(csim_file):
-            _show_csim_report(csim_file)
+            self._show_csim_report(csim_file)
         else:
             print('C simulation report not found.')
 
         syn_file = sln_dir + '/syn/report/{}_csynth.rpt'.format(top_func_name)
         if os.path.isfile(syn_file):
-            _show_synth_report(syn_file, full_report)
+            self._show_synth_report(syn_file, full_report)
         else:
             print('Synthesis report not found.')
 
-    def _show_csim_report(self, csim_file):
+        cosim_file = sln_dir + '/sim/report/{}_cosim.rpt'.format(top_func_name)
+        if os.path.isfile(cosim_file):
+            self._show_cosim_report(cosim_file)
+        else:
+            print('Co-simulation report not found.')
+
+    @staticmethod
+    def _show_csim_report(csim_file):
         with open(csim_file, 'r') as f:
             print('C SIMULATION RESULT:')
             print(f.read())
 
-    def _show_synth_report(self, synth_file, full_report=False):
+    @staticmethod
+    def _show_synth_report(synth_file, full_report=False):
         with open(synth_file, 'r') as f:
             print('SYNTHESIS REPORT:')
             for line in f.readlines()[2:]:
                 if not full_report and '* DSP48' in line:
                     break
                 print(line, end = '')
+
+    @staticmethod
+    def _show_cosim_report(cosim_file):
+        with open(cosim_file, 'r') as f:
+            print('CO-SIMULATION RESULT:')
+            print(f.read())
