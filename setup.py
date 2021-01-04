@@ -23,6 +23,7 @@ setup(name='hls4ml',
                         'six',
                         'pyyaml',
                         'h5py',
+                        'calmjs.parse',
                         'onnx>=1.4.0'],
       extras_require={
         'profiling': [
