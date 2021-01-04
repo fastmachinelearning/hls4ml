@@ -1,12 +1,13 @@
 #!/bin/bash
 
 pycmd=python
-xilinxpart="xc7vx690tffg1927-2"
+fpgapart="xc7vx690tffg1927-2"
+backend="Vivado"
 clock=5
 io=io_parallel
 rf=1
 strategy="Latency"
-type="ap_fixed<16,6>"
+type="<16,6>"
 basedir=vivado_prj
 
 sanitizer="[^A-Za-z0-9._]"
@@ -24,7 +25,7 @@ function print_usage {
    echo "      Python version to use (2 or 3). If not specified uses default"
    echo "      'python' interpreter."
    echo "   -x DEVICE"
-   echo "      Xilinx device part number. Defaults to 'xc7vx690tffg1927-2'."
+   echo "      FPGA device part number. Defaults to 'xc7vx690tffg1927-2'."
    echo "   -c CLOCK"
    echo "      Clock period to use. Defaults to 5."
    echo "   -s"
@@ -34,18 +35,20 @@ function print_usage {
    echo "   -g STRATEGY"
    echo "      Strategy. 'Latency' or 'Resource'."
    echo "   -t TYPE"
-   echo "      Default precision. Defaults to 'ap_fixed<16,6>'."
+   echo "      Default precision. Defaults to '<16,6>'."
    echo "   -d DIR"
    echo "      Output directory."
+   echo "   -b backend"
+   echo "      Backend. Defalts to Vivado"
    echo "   -h"
    echo "      Prints this help message."
 }
 
-while getopts ":p:x:c:sr:g:t:d:h" opt; do
+while getopts ":p:x:c:sr:g:t:d:b:h" opt; do
    case "$opt" in
    p) pycmd=${pycmd}$OPTARG
       ;;
-   x) xilinxpart=$OPTARG
+   x) fpgapart=$OPTARG
       ;;
    c) clock=$OPTARG
       ;;
@@ -58,6 +61,8 @@ while getopts ":p:x:c:sr:g:t:d:h" opt; do
    t) type=$OPTARG
       ;;
    d) basedir=$OPTARG
+      ;;
+   b) backend=$OPTARG
       ;;
    h)
       print_usage
@@ -96,10 +101,11 @@ do
 
    echo "KerasJson: ../example-models/keras/${name}.json" > ${file}
    echo "KerasH5:   ../example-models/keras/${h5}.h5" >> ${file}
-   echo "OutputDir: ${basedir}/${base}-${pycmd}-${xilinxpart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}" >> ${file}
+   echo "OutputDir: ${basedir}/${base}-${pycmd}-${fpgapart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}" >> ${file}
    echo "ProjectName: myproject" >> ${file}
-   echo "XilinxPart: ${xilinxpart}" >> ${file}
+   echo "FPGAPart: ${fpgapart}" >> ${file}
    echo "ClockPeriod: ${clock}" >> ${file}
+   echo "Backend: ${backend}" >> ${file}
    echo "" >> ${file}
    echo "IOType: ${io}" >> ${file}
    echo "HLSConfig:" >> ${file}
