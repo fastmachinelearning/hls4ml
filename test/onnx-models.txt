@@ -1,7 +1,7 @@
 # ONNX models from examples directory that will be used for testing
 #
 # Synthax:
-#    MODEL_NAME [x:XILINXPART] [c:CLOCK_PERIOD] [io:s] [r:REUSE_FACTOR] [t:AP_TYPE] [s:STRATEGY]
+#    MODEL_NAME [x:XILINXPART] [c:CLOCK_PERIOD] [io:s] [r:REUSE_FACTOR] [t:AP_TYPE] [s:STRATEGY] [b:BACKEND] 
 # where
 #    MODEL_NAME - Name of the file containing the model (without ".onnx")
 #    x:XILINXPART - Xilinx part number to use
@@ -10,6 +10,7 @@
 #    r:REUSE_FACTOR - Reuse factor
 #    s:STRATEGY - Latency-optimized or Resource-optimized strategy
 #    t:AP_TYPE - Default precision
+#    b:BACKEND - The backend to use
 #
 # Lines starting with "#" are ignored.
 #
