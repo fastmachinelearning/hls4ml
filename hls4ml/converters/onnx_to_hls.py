@@ -222,7 +222,8 @@ def onnx_to_hls(yamlConfig):
         #(We take it from the weights to avoid dealing with InputLayer and Flatten details)
         if layer['class_name'] == 'Dense':
             current_shape = get_input_shape(model, operation)
-            layer['n_in'] = next((x.type.tensor_type.shape.dim[-1].dim_value for x in model.graph.input if x.name == operation.input[0]), None)
+            layer['n_in'] = next((x.type.tensor_type.shape.dim[-1].dim_value for x in model.graph.value_info if x.name == operation.input[0]),
+                                 next((x.type.tensor_type.shape.dim[-1].dim_value for x in model.graph.input if x.name == operation.input[0]), None))
             layer['n_out'] = next((x.type.tensor_type.shape.dim[-1].dim_value for x in model.graph.value_info if x.name == operation.output[0]), None)
             tran_weight = get_onnx_attribute(operation, 'transB', 0)
             reader.add_input(layer['name'], operation.input, tran_weight)
