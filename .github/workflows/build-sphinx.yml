@@ -13,12 +13,12 @@ jobs:
     - uses: actions/checkout@v1
     - uses: ammaraskar/sphinx-action@master
       with:
-        docs-folder: "sphinx-docs/"
+        docs-folder: "docs/"
         pre-build-command: "pip install sphinx-rtd-theme"
     - name: Commit Documentation Changes
       run: |
         git clone https://github.com/fastmachinelearning/hls4ml.git --branch gh-pages --single-branch gh-pages
-        cp -r sphinx-docs/_build/html/* gh-pages/
+        cp -r docs/_build/html/* gh-pages/
         cd gh-pages
         touch .nojekyll
         git config --local user.email "action@github.com"
