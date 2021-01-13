@@ -16,19 +16,19 @@
 # Lines starting with "#" are ignored.
 #
 
-KERAS_1layer
-KERAS_3layer
+KERAS_1layer x:Arria10 b:Quartus
+KERAS_3layer x:Arria10 b:Quartus
 #KERAS_3layer:KERAS_3layer_70pruned_retrained_weights
 #KERAS_conv1d
-KERAS_conv1d_small
-KERAS_conv2d_model
+#KERAS_conv1d_small x:Arria10 b:Quartus
+#KERAS_conv2d_model x:Arria10 b:Quartus
 #KERAS_dense_16x100x100x100x100x100x5
-KERAS_3layer_batch_norm
-KERAS_3layer_binary_smaller
-KERAS_3layer_ternary_small
+KERAS_3layer_batch_norm x:Arria10 b:Quartus
+KERAS_3layer_binary_smaller x:Arria10 b:Quartus
+KERAS_3layer_ternary_small x:Arria10 b:Quartus
 
 # Resource strategy
-KERAS_3layer r:2 s:Resource
+KERAS_3layer r:2 s:Resource x:Arria10 b:Quartus
 
 #Fails synthesis due to a problem with loop unrolling
 #jetTagger_Conv2D_Small:jetTagger_Conv2D_Small

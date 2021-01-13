@@ -3,7 +3,6 @@
 models_var=HLS4ML_PYTORCH_MODELS
 models_file=
 exec=echo
-py=
 dir=
 
 function print_usage {
@@ -18,21 +17,17 @@ function print_usage {
    echo "      environment variable."
    echo "   -x"
    echo "      Execute the commands instead of just printing them."
-   echo "   -p 2|3"
-   echo "      Python version passed to keras-to-hls script (2 or 3)."
    echo "   -d DIR"
-   echo "      Output directory passed to keras-to-hls script."
+   echo "      Output directory passed to pytorch-to-hls script."
    echo "   -h"
    echo "      Prints this help message."
 }
 
-while getopts ":f:xp:d:h" opt; do
+while getopts ":f:xd:h" opt; do
    case "$opt" in
    f) models_file=$OPTARG
       ;;
    x) exec=eval
-      ;;
-   p) py="-p $OPTARG"
       ;;
    d) dir="-d $OPTARG"
       ;;
@@ -60,7 +55,7 @@ fi
 
 for line in "${model_line[@]}"
 do
-   params=("" "" "" "" "" "")
+   params=("" "" "" "" "" "" "")
    if [[ ${line} = *[![:space:]]* ]] && ! [[ "${line}" = \#* ]] ; then
       IFS=" " read -ra model_def <<< "${line}"
       for (( i=1; i<"${#model_def[@]}"; i++ ));
@@ -70,10 +65,11 @@ do
          if [[ "${model_def[$i]}" == io:s ]] ; then params[2]="-s "; fi
          if [[ "${model_def[$i]}" == r:* ]] ; then params[3]="-r ${model_def[$i]:2} "; fi
          if [[ "${model_def[$i]}" == i:* ]] ; then params[4]="-t ${model_def[$i]:2} "; fi
+	 if [[ "${model_def[$i]}" == b:* ]] ; then params[5]="-b ${model_def[$i]:2} "; fi
       done
-      params[5]=${model_def[0]}
+      params[6]=${model_def[0]}
       
-      cmd="./pytorch-to-hls.sh ${py} ${dir} ${params[0]}${params[1]}${params[2]}${params[3]}${params[4]}${params[5]}"
+      cmd="./pytorch-to-hls.sh ${dir} ${params[0]}${params[1]}${params[2]}${params[3]}${params[4]}${params[5]}${params[6]}"
       
       ${exec} "${cmd}"
    fi
