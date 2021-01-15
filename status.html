@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Welcome to hls4ml’s documentation! &mdash; hls4ml 0.5.0 documentation</title>
+  <title>Status and Features &mdash; hls4ml 0.5.0 documentation</title>
   
 
   
@@ -40,7 +40,8 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Realease Notes" href="release_notes.html" /> 
+    <link rel="next" title="Setup" href="setup.html" />
+    <link rel="prev" title="Realease Notes" href="release_notes.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -54,7 +55,7 @@
           
 
           
-            <a href="#">
+            <a href="index.html">
           
 
           
@@ -89,9 +90,14 @@
             
             
               <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="release_notes.html">Realease Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="status.html">Status and Features</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Status and Features</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#status">Status</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-models">Example Models</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="command.html">Command Line Interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
@@ -130,7 +136,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">hls4ml</a>
+          <a href="index.html">hls4ml</a>
         
       </nav>
 
@@ -161,9 +167,9 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Welcome to hls4ml’s documentation!</li>
+      <li>Status and Features</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -180,26 +186,91 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="toctree-wrapper compound">
+  <div class="section" id="status-and-features">
+<h1>Status and Features<a class="headerlink" href="#status-and-features" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="status">
+<h2>Status<a class="headerlink" href="#status" title="Permalink to this headline">¶</a></h2>
+<p>The latest stable release is <a class="reference internal" href="release_notes.html"><span class="doc">v0.2.0</span></a>, including a validated boosted decision tree implementation (<a class="reference external" href="https://arxiv.org/abs/2002.02534">arXiv:2002.02534</a>) and binary/ternary neural networks (<a class="reference external" href="https://arxiv.org/abs/2003.06308">arXiv:2003.06308</a>).</p>
 </div>
-<div class="toctree-wrapper compound">
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<p>A list of suppported ML codes and architectures, including a summary table is below.  Dependences are given in the <a class="reference internal" href="setup.html"><span class="doc">Setup</span></a> page.</p>
+<p>ML code support:</p>
+<ul class="simple">
+<li><p>Keras/Tensorflow, PyTorch, scikit-learn</p></li>
+<li><p>Planned: xgboost</p></li>
+</ul>
+<p>Neural network architectures:</p>
+<ul class="simple">
+<li><p>Fully Connected NNs (multi-layer perceptron)</p></li>
+<li><p>Boosted Decision Trees</p></li>
+<li><p>Convolutional NNs (1D/2D), in beta testing</p></li>
+<li><p>Recurrent NN/LSTM, in prototyping</p></li>
+</ul>
+<p>A summary of the on-going status of the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> tool is in the table below.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Architectures/Toolkits</p></th>
+<th class="head"><p>Keras/TensorFlow</p></th>
+<th class="head"><p>PyTorch</p></th>
+<th class="head"><p>scikit-learn</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>MLP</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>Conv1D/Conv2D</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">in</span> <span class="pre">development</span></code></p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><p>BDT</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supported</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>RNN/LSTM</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">in</span> <span class="pre">development</span></code></p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Other random feature notes:</p>
+<ul class="simple">
+<li><p>There is a known Vivado HLS issue where the large loop unrolls create memory issues during synthesis.  We are working to solve this issue but you may see errors related to this depending on the memory of your machine.  Please feel free to email the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> team if you have any further questions.</p></li>
+</ul>
 </div>
-<div class="toctree-wrapper compound">
-</div>
-<div class="section" id="welcome-to-hls4ml-s-documentation">
-<h1>Welcome to hls4ml’s documentation!<a class="headerlink" href="#welcome-to-hls4ml-s-documentation" title="Permalink to this headline">¶</a></h1>
-<a class="reference internal image-reference" href="_images/hls4ml_logo.png"><img alt="_images/hls4ml_logo.png" class="align-center" src="_images/hls4ml_logo.png" style="width: 60%;" /></a>
-<p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> is a Python package for machine learning inference in FPGAs. We create firmware implementations of machine learning algorithms using high level synthesis language (HLS). We translate traditional open-source machine learning package models into HLS that can be configured for your use-case!</p>
-<p>The project is currently in development, so please let us know if you are interested, your experiences with the package, and if you would like new features to be added.</p>
-<p>Contact: <a class="reference external" href="mailto:hls4ml&#46;help&#37;&#52;&#48;gmail&#46;com">hls4ml<span>&#46;</span>help<span>&#64;</span>gmail<span>&#46;</span>com</a></p>
-<div class="section" id="project-status">
-<h2>Project Status<a class="headerlink" href="#project-status" title="Permalink to this headline">¶</a></h2>
-<p>For the latest status including current and planned features, see the <a class="reference internal" href="status.html"><span class="doc">Status and Features</span></a> page.</p>
-</div>
-<div class="section" id="tutorials">
-<h2>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h2>
-<p>Detailed tutorials on how to use <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>’s various functionalities can be found at:</p>
-<p><a class="reference external" href="https://github.com/hls-fpga-machine-learning/hls4ml-tutorial">https://github.com/hls-fpga-machine-learning/hls4ml-tutorial</a></p>
+<div class="section" id="example-models">
+<h2>Example Models<a class="headerlink" href="#example-models" title="Permalink to this headline">¶</a></h2>
+<p>We also provide and documented several example models that have been implemented in <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> in <a class="reference external" href="https://github.com/hls-fpga-machine-learning/models">this Github repository</a>.</p>
 </div>
 </div>
 
@@ -209,7 +280,8 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="release_notes.html" class="btn btn-neutral float-right" title="Realease Notes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="setup.html" class="btn btn-neutral float-right" title="Setup" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="release_notes.html" class="btn btn-neutral float-left" title="Realease Notes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

@@ -1,0 +1,29 @@
+hls4ml.model.optimizer package
+==============================
+
+Subpackages
+-----------
+
+.. toctree::
+
+   hls4ml.model.optimizer.passes
+
+Submodules
+----------
+
+hls4ml.model.optimizer.optimizer module
+---------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.optimizer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.model.optimizer
+   :members:
+   :undoc-members:
+   :show-inheritance:
