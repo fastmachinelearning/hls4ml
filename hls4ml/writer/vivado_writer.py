@@ -9,6 +9,7 @@ import glob
 from collections import OrderedDict
 
 from hls4ml.writer.writers import Writer
+from hls4ml.model.hls_layers import XnorPrecisionType
 
 class VivadoWriter(Writer):
 
@@ -25,6 +26,11 @@ class VivadoWriter(Writer):
         elif type_class == 'PackedType':
             n_elem_expr = '/' if atype.unpack else '*'
             return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=atype.name, precision=atype.precision, n_elem=str(atype.n_elem) + n_elem_expr + str(atype.n_pack))
+        elif type_class == 'ExponentType':
+            cpp_fmt = ('typedef struct {name} {{ '
+                       '{sign} sign; '
+                       '{precision} weight; }} {name};\n')
+            return cpp_fmt.format(name=atype.name, precision=atype.precision, sign=str(XnorPrecisionType()))
         else:
             raise Exception('Unknown data type class "{}"'.format(type_class))
 
@@ -160,6 +166,8 @@ class VivadoWriter(Writer):
                     for w in layer.get_weights():
                         if w.__class__.__name__ == 'CompressedWeightVariable':
                             newline += indent + '    nnet::load_compressed_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.nonzeros, w.name, w.name)
+                        elif w.__class__.__name__ == 'ExponentWeightVariable':
+                            newline += indent + '    nnet::load_exponent_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.data_length, w.name, w.name)
                         else:
                             newline += indent + '    nnet::load_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.data_length, w.name, w.name)
 
@@ -211,7 +219,7 @@ class VivadoWriter(Writer):
                             newline += '// ' + layer.name + '\n'
                             for line in func:
                                 newline += '    ' + line + '\n'
-                        if model.config.trace_output and model.config.get_layer_config_value(layer, 'Trace', False):
+                        if model.config.trace_output and layer.get_attr('Trace', False):
                             newline += '#ifndef __SYNTHESIS__\n'
                             for var in vars:
                                 newline += '    nnet::save_layer_output<{}>({}, "{}", {});\n'.format(var.type.name, var.name, layer.name, var.size_cpp())
@@ -497,7 +505,7 @@ class VivadoWriter(Writer):
             elif '//hls-fpga-machine-learning insert trace_outputs' in line:
                 newline = ''
                 for layer in model.get_layers():
-                    if layer.function_cpp() and model.config.trace_output and model.config.get_layer_config_value(layer, 'Trace', False):
+                    if layer.function_cpp() and model.config.trace_output and layer.get_attr('Trace', False):
                             vars = layer.get_variables()
                             for var in vars:
                                 newline += indent + 'nnet::trace_outputs->insert(std::pair<std::string, void *>("{}", (void *) malloc({} * element_size)));\n'.format(layer.name, var.size_cpp())

@@ -1,4 +1,7 @@
 import importlib
+from hls4ml.model.hls_model import HLSModel
+from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
+import qkeras
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas
@@ -133,17 +136,10 @@ def types_histogram(data, fmt='longform'):
 types_plots = {'boxplot' : types_boxplot,
                'histogram' : types_histogram}
 
-def ap_fixed_WIF(type_str):
-    if 'ap_fixed' in type_str:
-        W = int(type_str.split(',')[0].split('<')[1])
-        I = int(type_str.split(',')[1].split('>')[0])
-        F = W - I
-    elif 'ap_int' in type_str:
-        W = int(type_str.replace('ap_int<','').replace('>',''))
-        I = W
-        F = 0
-    else:
-        W, I, F = 0, 0, 0
+def ap_fixed_WIF(dtype):
+    from hls4ml.templates.vivado_template import VivadoBackend
+    dtype = VivadoBackend.convert_precision_string(None, dtype) 
+    W, I, F = dtype.width, dtype.integer, dtype.fractional
     return W, I, F
 
 def types_hlsmodel(model):
@@ -459,7 +455,8 @@ def get_ymodel_keras(keras_model, X):
 
                         #Add the activation back
                         layer.activation = temp_activation
-                                     
+                else:
+                    ymodel[layer.name] = _get_output(ymodel, layer, X)
             else:    
                 ymodel[layer.name] = _get_output(ymodel, layer, X)
         

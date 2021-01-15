@@ -93,7 +93,7 @@ void dense_latency(
                 #pragma HLS ALLOCATION instances=product limit=multiplier_limit function
             }
         int index = ii*CONFIG_T::n_out+jj;
-        mult[index] = product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>(cache, weights[index]);
+        mult[index] = CONFIG_T::template product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>::product(cache, weights[index]);
         }
     }
 

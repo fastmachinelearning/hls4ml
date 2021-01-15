@@ -17,16 +17,27 @@ class Quantizer(object):
 class IntegerPrecisionType(object):
     def __init__(self, width=16, signed=True):
         self.width = width
+        self.integer = width
+        self.fractional = 0
         self.signed = signed
     
     def __str__(self):
         typestring = 'ap_{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring
 
+    def __eq__(self, other):
+        eq = self.width == other.width
+        eq = eq and self.signed == other.signed
+        # These are probably unnecessary
+        eq = eq and self.integer == other.integer
+        eq = eq and self.fractional == other.fractional
+        return eq
+
 class FixedPrecisionType(object):
     def __init__(self, width=16, integer=6, signed=True, rounding_mode=None, saturation_mode=None, saturation_bits=None):
         self.width = width
         self.integer = integer
+        self.fractional = width-integer
         self.signed = signed
         self.rounding_mode = rounding_mode
         self.saturation_mode = saturation_mode
@@ -37,6 +48,30 @@ class FixedPrecisionType(object):
         args = ','.join([str(arg) for arg in args if arg is not None])
         typestring = 'ap_{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
         return typestring
+
+    def __eq__(self, other):
+        eq = self.width == other.width
+        eq = eq and self.integer == other.integer
+        eq = eq and self.fractional == other.fractional
+        eq = eq and self.signed == other.signed
+        eq = eq and self.rounding_mode == other.rounding_mode
+        eq = eq and self.saturation_mode == other.saturation_mode
+        eq = eq and self.saturation_bits == other.saturation_bits
+        return eq
+
+class XnorPrecisionType(IntegerPrecisionType):
+    '''
+    Convenience class to differentiate 'regular' integers from BNN Xnor ones
+    '''
+    def __init__(self):
+        super().__init__(width=1, signed=False)
+
+class ExponentPrecisionType(IntegerPrecisionType):
+    '''
+    Convenience class to differentiate 'regular' integers from those which represent exponents, for QKeras po2 quantizers, for example.
+    '''
+    def __init__(self, width=16, signed=True):
+        super().__init__(width=width, signed=signed)
 
 def find_minimum_width(data, signed=True):
     """
@@ -79,6 +114,16 @@ class CompressedType(HLSType):
                '{index} col_index; '
                '{precision} weight; }} {name};\n')
         return cpp_fmt.format(name=self.name, index=self.index_precision, precision=self.precision)
+
+class ExponentType(HLSType):
+    def __init__(self, name, precision, **kwargs):
+        super(ExponentType, self).__init__('exponent_type{index}', precision, **kwargs)
+
+    def definition_cpp(self):
+        cpp_fmt = ('typedef struct {name} {{ '
+                   '{sign} sign; '
+                   '{precision} weight; }} {name};\n')
+        return cpp_fmt.format(name=self.name, precision=self.precision, sign=str(XnorPrecisionType()))
 
 class PackedType(HLSType):
     def __init__(self, name, precision, n_elem, n_pack, **kwargs):
@@ -267,6 +312,36 @@ class CompressedWeightVariable(WeightVariable):
 
     next = __next__
 
+class ExponentWeightVariable(WeightVariable):
+    def __init__(self, var_name, type_name, precision, data, quantizer, **kwargs):
+        super(ExponentWeightVariable, self).__init__(var_name, type_name, precision, data, quantizer, **kwargs)
+        '''
+        WeightVariable for Exponent aka po2 data. The data should already by quantized by the quantizer.
+        '''
+        self.type = ExponentType(type_name, precision, **kwargs)
+        self.shape = list(self.data.shape[:-1])
+
+    def _format(self):
+        y = self.data
+        # Use an XnorBinary-like representation for the sign
+        sign = np.where(y < 0, np.zeros_like(y), np.ones_like(y))
+        # Take the logarithm, since this is what we will write to the header
+        # for the optimized product using shifts
+        y = (np.log2(np.abs(y)) / np.log2(2.)).astype('int')
+        return np.stack((sign, y), axis=-1)
+
+    def __iter__(self):
+        data = self._format()
+        self._iterator = iter(data.reshape((np.product(data.shape[:-1]), 2)))
+        return self
+
+    def __next__(self):
+        value = next(self._iterator)
+        value_fmt = self.precision_fmt % value[1]
+        return '{%d, %s}' % (value[0], value_fmt)
+
+    next = __next__
+
 class Layer(object):
     def __init__(self, model, name, attributes, inputs, outputs=None):
         self.model = model
@@ -410,17 +485,22 @@ class Layer(object):
             data = self.model.get_weights_data(self.name, data)
 
         data_unquantized = data
+        exponent_type = False
         if quantizer is not None:
             precision = quantizer.hls_type
             type_name = name + '{index}_t'
             data = quantizer(data)
+            if isinstance(quantizer.hls_type, ExponentPrecisionType):
+                exponent_type = True
 
         if compression:
             var = CompressedWeightVariable(var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, reuse_factor=self.reuse_factor, index=self.index)
+        elif exponent_type:
+            var = ExponentWeightVariable(var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, index=self.index)
         else:
             var = WeightVariable(var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, index=self.index)
 
-            var.data_unquantized = data_unquantized
+        var.data_unquantized = data_unquantized
         self.weights[name] = var
         self.precision[var.type.name] = var.type
 
@@ -531,6 +611,7 @@ class Dense(Layer):
             else:
                 if self.model.config.backend.name == 'Vivado':
                     self.weights['weight'].data = np.transpose(self.weights['weight'].data)
+                    
         self.set_attr('index_t', index_t)
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
@@ -547,6 +628,7 @@ class Dense(Layer):
         params['n_out'] = self.get_output_variable().size_cpp()
         params['nzeros'] = self.get_weights('weight').nzeros
         params['nonzeros'] = self.get_weights('weight').nonzeros
+        params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
         params['strategy'] = self.get_attr('strategy')
 
         return self._config_template.format(**params)
@@ -612,6 +694,7 @@ class Conv1D(Layer):
         mult_params = self._default_config_params()
         mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_width')
         mult_params['n_out'] = self.get_attr('n_filt')
+        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
         mult_config = self._config_template[1].format(**mult_params)
 
         return mult_config + '\n' + conv_config
@@ -703,6 +786,7 @@ class SeparableConv1D(Layer):
         mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_width')
         mult_params['n_out'] = self.get_attr('n_chan')
         mult_params['weight_t'] = self.get_weights('depthwise').type.name
+        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('depthwise').type.precision)
         depthwise_mult_config = self._config_template[3].format(**mult_params)
 
         # Pointwise config
@@ -734,6 +818,7 @@ class SeparableConv1D(Layer):
         mult_params['n_in'] = self.get_attr('n_chan')
         mult_params['n_out'] = self.get_attr('n_filt')
         mult_params['weight_t'] = self.get_weights('pointwise').type.name
+        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('pointwise').type.precision)
         pointwise_mult_config = self._config_template[4].format(**mult_params)
 
         return depthwise_mult_config + '\n' + depthwise_config + '\n' + pointwise_mult_config + '\n' + pointwise_config + '\n' + sep_config
@@ -806,6 +891,7 @@ class Conv2D(Layer):
         mult_params = self._default_config_params()
         mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
         mult_params['n_out'] = self.get_attr('n_filt')
+        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
         mult_config = self._config_template[1].format(**mult_params)
 
         return mult_config + '\n' + conv_config
@@ -904,6 +990,7 @@ class SeparableConv2D(Layer):
         mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
         mult_params['n_out'] = self.get_attr('n_chan')
         mult_params['weight_t'] = self.get_weights('depthwise').type.name
+        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('depthwise').type.precision)
         depthwise_mult_config = self._config_template[3].format(**mult_params)
 
         # Pointwise config
@@ -941,6 +1028,7 @@ class SeparableConv2D(Layer):
         mult_params['n_in'] = self.get_attr('n_chan')
         mult_params['n_out'] = self.get_attr('n_filt')
         mult_params['weight_t'] = self.get_weights('pointwise').type.name
+        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('pointwise').type.precision)
         pointwise_mult_config = self._config_template[4].format(**mult_params)
 
         return depthwise_mult_config + '\n' + depthwise_config + '\n' + pointwise_mult_config + '\n' + pointwise_config + '\n' + sep_config
@@ -1231,6 +1319,7 @@ class BatchNormalization(Layer):
     def config_cpp(self):
         params = self._default_config_params()
         params['n_in'] = self.get_input_variable().size_cpp()
+        params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('scale').type.precision)
 
         return self._config_template.format(**params)
 
@@ -1657,6 +1746,7 @@ layer_map = {
     'SeparableConv2D'        : SeparableConv2D,
     'DepthwiseConv2D'        : DepthwiseConv2D,
     'BatchNormalization'     : BatchNormalization,
+    'QBatchNormalization'    : BatchNormalization,
     'MaxPooling1D'           : Pooling1D,
     'AveragePooling1D'       : Pooling1D,
     'MaxPooling2D'           : Pooling2D,

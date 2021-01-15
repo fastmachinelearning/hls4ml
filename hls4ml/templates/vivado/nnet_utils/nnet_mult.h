@@ -8,49 +8,80 @@
 
 namespace nnet {
 
+namespace product{
+
 /* ---
- * 4 different methods to perform the product of input and weight, depending on the
- * types of each. Use std::enable_if<>::type for the return type since partial
- * template specification is not allowed by c++
+ * 5 different methods to perform the product of input and weight, depending on the
+ * types of each. 
  * --- */
 
-template<class data_T, class weight_T, class ret_T>
-inline typename std::enable_if<std::is_same<data_T, ap_uint<1>>::value
-        and std::is_same<weight_T, ap_uint<1>>::value, ap_uint<1>>::type
-product(ap_uint<1> a, ap_uint<1> w){
-    // specialisation for 1-bit weights and incoming data
-    #pragma HLS inline off
-    return a == w;
-}
+template<class x_T, class w_T, class y_T>
+class Product{
+    public:
+    static y_T product(x_T a, w_T w){
+        // 'Normal' product
+        #pragma HLS inline off
+        return a * w;
+    }
+};
 
-template<class data_T, class weight_T, class ret_T>
-inline typename std::enable_if<(not std::is_same<data_T, ap_uint<1>>::value)
-        and std::is_same<weight_T, ap_uint<1>>::value, ret_T>::type
-product(data_T a, ap_uint<1> w){
-    // Specialisation for 1-bit weights, arbitrary data
-    #pragma HLS inline off
-    return w == 0 ? (data_T) -a : a;
-}
+template<class x_T, class w_T, class y_T>
+class both_binary : public Product<x_T, w_T, y_T>{
+    public:
+    static y_T product(x_T a, w_T w){
+        // specialisation for 1-bit weights and incoming data
+        #pragma HLS inline off
+        return a == w;
+    }
+};
 
-template<class data_T, class weight_T, class ret_T>
-inline typename std::enable_if<(not std::is_same<data_T, ap_uint<2>>::value)
-        and std::is_same<weight_T, ap_int<2>>::value, ret_T>::type
-product(data_T a, ap_int<2> w){
-    // Specialisation for 2-bit weights, arbitrary data
-    #pragma HLS inline off
-    if (w == 0) return (data_T) 0;
-    else if(w == -1) return (data_T) -a;
-    else return (data_T) a; // if(w == 1)
-}
+template<class x_T, class w_T, class y_T>
+class weight_binary : public Product<x_T, w_T, y_T>{
+    public:
+    static y_T product(x_T a, w_T w){
+        // Specialisation for 1-bit weights, arbitrary data
+        #pragma HLS inline off
+        return w == 0 ? (x_T) -a : a;
+    }
+};
 
-template<class data_T, class weight_T, class ret_T>
-inline typename std::enable_if<(not std::is_same<data_T, ap_uint<1>>::value)
-        and (not std::is_same<weight_T, ap_uint<1>>::value), ret_T>::type
-product(data_T a, weight_T w){
-    // 'Normal' product
-    #pragma HLS inline off
-    return a * w;
-}
+template<class x_T, class w_T, class y_T>
+class weight_ternary : public Product<x_T, w_T, y_T>{
+    public:
+    static y_T product(x_T a, w_T w){
+        // Specialisation for 2-bit weights, arbitrary data
+        #pragma HLS inline off
+        if (w == 0) return (x_T) 0;
+        else if(w == -1) return (x_T) -a;
+        else return (x_T) a; // if(w == 1)
+    }
+};
+
+template<class x_T, class w_T, class y_T>
+class mult : public Product<x_T, w_T, y_T>{
+    public:
+    static y_T product(x_T a, w_T w){
+        // 'Normal' product
+        #pragma HLS inline off
+        return a * w;
+    }
+};
+
+template<class x_T, class w_T, class y_T>
+class weight_exponential : public Product<x_T, w_T, y_T>{
+    public:
+    static y_T product(x_T a, w_T w){
+        // Shift product for exponential weights
+        #pragma HLS inline off
+        // shift by the exponent. Negative weights shift right
+        y_T ay = a;
+        y_T y = ay << w.weight;
+        // negate or not depending on weight sign
+        return w.sign == 1 ? (y_T) y : (y_T) -y;
+    }
+};
+
+} // namespace product_type
 
 template<class data_T, class res_T, typename CONFIG_T>
 inline typename std::enable_if<std::is_same<data_T, ap_uint<1>>::value

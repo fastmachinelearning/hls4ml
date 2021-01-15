@@ -19,6 +19,8 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
     typedef {index_t} index_t;
+    template<class x_T, class y_T, class res_T>
+    using product = nnet::product::{product_type}<x_T, y_T, res_T>;
 }};\n"""
 
 batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
@@ -29,6 +31,8 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     static const bool store_weights_in_bram = false;
     typedef {bias_t} bias_t;
     typedef {scale_t} scale_t;
+    template<class x_T, class y_T, class res_T>
+    using product = nnet::product::{product_type}<x_T, y_T, res_T>;
 }};\n"""
 
 conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
@@ -62,6 +66,8 @@ conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     typedef {accum_t} accum_t;
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
+    template<class x_T, class y_T, class res_T>
+    using product = nnet::product::{product_type}<x_T, y_T, res_T>;
 }};\n"""
 
 conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
@@ -450,6 +456,60 @@ class VivadoBackend(Backend):
             print('WARNING: Invalid ReuseFactor={} with "Resource" strategy in layer "{}". Using ReuseFactor={} instead. Valid ReuseFactor(s): {}.'
                 .format(chosen_rf, layer.name, closest_rf, ','.join(map(str, valid_rf))))
             layer.reuse_factor = closest_rf
+
+    def convert_precision_string(self, precision):
+        '''
+        Convert a precision string (e.g. "ap_fixed<16,6>" to the internal IntegerPrecisionTypes etc)
+        '''
+        from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
+        import re
+        if isinstance(precision, IntegerPrecisionType) or isinstance(precision, FixedPrecisionType):
+            return precision
+        bits = re.search('.+<(.+?)>', precision).group(1).split(',')
+        sat_mode = None
+        round_mode = None
+        sat_bits = None
+        if 'fixed' in precision:
+            W = int(bits[0])
+            I = int(bits[1])
+            fields = 2
+            signed = ~('u' in precision)
+        elif 'int' in precision:
+            W = int(bits[0])
+            I = W
+            fields = 1
+            signed = ~('u' in precision)
+        if len(bits) > fields:
+            sat_mode = bits[fields]
+        if len(bits) > fields+1:
+            round_mode = bits[fields+1]
+        if len(bits) > fields+2:
+            sat_bits = int(bits[fields+2])
+        if 'fixed' in precision:
+            return FixedPrecisionType(W, I, signed, round_mode, sat_mode, sat_bits)
+        elif 'int' in precision:
+            return IntegerPrecisionType(W, signed)
+
+    def product_type(self, data_T, weight_T):
+        '''
+        Helper function to determine which product implementation to use during inference
+        '''
+        from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType, XnorPrecisionType, ExponentPrecisionType
+        assert not isinstance(data_T, ExponentPrecisionType), "Only ExponentPrecisionType (aka 'power of 2') weights are currently supported, not data."
+        product = 'mult'
+        if isinstance(weight_T, ExponentPrecisionType):
+            product = 'weight_exponential'
+        else:
+            # if binary
+            if isinstance(weight_T, XnorPrecisionType) and isinstance(data_T, XnorPrecisionType):
+                product = 'both_binary'
+            elif isinstance(weight_T, XnorPrecisionType): # data is not xnor-binary
+                product = 'weight_binary'
+            elif isinstance(weight_T, IntegerPrecisionType) and weight_T.width == 2 and weight_T.signed:
+                product = 'weight_ternary'
+            else:
+                product = 'mult'
+        return product
 
     def compute_conv1d_instructions(self, in_W, in_C, kernel_size=3, stride=1, pad=0):
 

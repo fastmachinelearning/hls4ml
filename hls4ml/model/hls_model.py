@@ -107,6 +107,8 @@ class HLSConfig(object):
         if precision is None:
             raise Exception('No precision for {}->{} found and no default specified.'.format(layer.name, var))
 
+        precision = self.backend.convert_precision_string(precision)
+
         return (precision, type_name)
 
     def get_reuse_factor(self, layer):
@@ -485,7 +487,7 @@ class HLSModel(object):
         layer_sizes = {}
         n_traced = 0
         for layer in self.get_layers():
-            if layer.function_cpp() and self.config.get_layer_config_value(layer, 'Trace', False):
+            if layer.function_cpp() and layer.get_attr('Trace', False):
                 n_traced += len(layer.get_variables())
                 trace_output[layer.name] = []
                 layer_sizes[layer.name] = layer.get_output_variable().shape
