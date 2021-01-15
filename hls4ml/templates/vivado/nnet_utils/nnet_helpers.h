@@ -32,7 +32,9 @@ namespace nnet {
 
 #ifndef __SYNTHESIS__
 
+#ifndef WEIGHTS_DIR
 #define WEIGHTS_DIR "weights"
+#endif
 
 template<class T, size_t SIZE>
 void load_weights_from_txt(T *w, const char* fname) {
