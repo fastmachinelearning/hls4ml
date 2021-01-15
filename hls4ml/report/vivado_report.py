@@ -154,7 +154,7 @@ def parse_vivado_report(hls_dir):
         for child in area_node.find('./Resources'):
             report[child.tag] = child.text
         for child in area_node.find('./AvailableResources'):
-            report[child.tag] = child.text
+            report['Available' + child.tag] = child.text
     else:
         print('Synthesis report not found.')
 
