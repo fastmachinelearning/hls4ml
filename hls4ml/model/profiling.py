@@ -143,6 +143,7 @@ def ap_fixed_WIF(dtype):
     return W, I, F
 
 def types_hlsmodel(model):
+    suffix = ['w', 'b']
     data = {'layer' : [], 'low' : [], 'high' : []}
     # Plot the default precision
     default_precision = model.config.model_precision['default']
@@ -154,7 +155,7 @@ def types_hlsmodel(model):
 
     for layer in model.get_layers():
         for iw, weight in enumerate(layer.get_weights()):
-            wname = '{}/{}'.format(layer.name, iw)
+            wname = '{}/{}'.format(layer.name, suffix[iw])
             T = weight.type
             if T.name != 'model':
                 W, I, F = ap_fixed_WIF(T.precision)
