@@ -20,8 +20,7 @@
 #ifndef NNET_MERGE_H_
 #define NNET_MERGE_H_
 
-#include "nnet_common.h"
-#include "nnet_dense.h"
+#include "nnet_mult.h"
 #include "hls_stream.h"
 #include <math.h>
 
@@ -134,7 +133,7 @@ void dot1d(
 
     Product: for(int i_mult=0; i_mult < CONFIG_T::n_in; i_mult++) {
         #pragma HLS UNROLL
-        mult[i_mult] = product<input1_T, input2_T, typename CONFIG_T::accum_t>(data1[i_mult], data2[i_mult]);
+        mult[i_mult] = nnet::product::mult<input1_T, input2_T, typename CONFIG_T::accum_t>::product(data1[i_mult], data2[i_mult]);
     }
 
     Accum: for(int i_acc = 0; i_acc < CONFIG_T::n_in; i_acc++) {
