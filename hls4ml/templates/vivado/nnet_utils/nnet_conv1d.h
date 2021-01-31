@@ -58,7 +58,7 @@ void conv_1d_cl(
     typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
     typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt])
 {
-    if (CONFIG_T::strategy == latency) {
+    if (CONFIG_T::strategy == nnet::latency) {
         conv_1d_latency_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     } else {
         conv_1d_resource_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
