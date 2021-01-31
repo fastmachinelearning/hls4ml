@@ -32,7 +32,7 @@ void depthwise_product(
     // Do the matrix-multiply
     Product: for(int ii = 0; ii < CONFIG_T::kernel_size * CONFIG_T::n_chan; ii++) {
         #pragma HLS UNROLL
-        mult[ii] = product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>(data[ii], weights[ii]);
+        mult[ii] = CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>::product(data[ii], weights[ii]);
     }
 
     // Initialize accumulator with input biases
