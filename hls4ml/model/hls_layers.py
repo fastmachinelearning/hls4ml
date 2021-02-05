@@ -1364,9 +1364,12 @@ class Dot(Merge):
         self.add_output_variable(shape=[1], dim_names=['OUT_DOT_{}'.format(self.index)])
 
     def config_cpp(self):
+        inp1 = self.get_input_variable(self.inputs[0])
+        inp2 = self.get_input_variable(self.inputs[1])
         params = self._default_config_params()
         params['n_out'] = 1
-        params['n_in'] = self.get_input_variable(self.inputs[0]).shape[0]
+        params['n_in'] = inp1.shape[0]
+        params['product_type'] = self.model.config.backend.product_type(inp1.type.precision, inp2.type.precision)
         return self._config_template.format(**params)
 
 class Concatenate(Merge):
