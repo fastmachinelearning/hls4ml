@@ -14,7 +14,7 @@ except ImportError:
     __pytorch_enabled__ = False
 
 try:
-    from hls4ml.converters.onnx_to_hls import onnx_to_hls
+    from hls4ml.converters.onnx_to_hls import onnx_to_hls, get_supported_onnx_layers, register_onnx_layer_handler
     __onnx_enabled__ = True
 except ImportError:
     __onnx_enabled__ = False
@@ -25,39 +25,31 @@ try:
 except ImportError:
     __tensorflow_enabled__ = False
 
-#----------Keras handling----------#
-for module in os.listdir(os.path.dirname(__file__) + '/keras'):
-    if module == '__init__.py' or module[-3:] != '.py':
-        continue
-    try:
-        lib = importlib.import_module(__name__ + '.keras.' + module[:-3])
-        for name, func in list(lib.__dict__.items()):
-            # if 'func' is callable (i.e., function, class...)
-            # and has 'handles' attribute
-            # and is defined in this module (i.e., not imported)
-            if callable(func) and hasattr(func, 'handles') and func.__module__ == lib.__name__:
-                for layer in func.handles:
-                    register_keras_layer_handler(layer, func)
-    except ImportError:
-        continue
+#----------Layer handling register----------#
+model_types = ['keras', 'pytorch', 'onnx']
 
-#----------Pytorch handling----------#
-for module in os.listdir(os.path.dirname(__file__) + '/pytorch'):
-    if module == '__init__.py' or module[-3:] != '.py':
-        continue
-    try:
-        lib = importlib.import_module(__name__ + '.pytorch.' + module[:-3])
-        for name, func in list(lib.__dict__.items()):
-            # if 'func' is callable (i.e., function, class...)
-            # and has 'handles' attribute
-            # and is defined in this module (i.e., not imported)
-            if callable(func) and hasattr(func, 'handles') and func.__module__ == lib.__name__:
-                for layer in func.handles:
-                    register_pytorch_layer_handler(layer, func)
-    except ImportError:
-        continue
-
-
+for model_type in model_types:
+    for module in os.listdir(os.path.dirname(__file__) + '/{}'.format(model_type)):
+        if module == '__init__.py' or module[-3:] != '.py':
+            continue
+        try:
+            lib = importlib.import_module(__name__ + '.{}.'.format(model_type) + module[:-3])
+            for name, func in list(lib.__dict__.items()):
+                # if 'func' is callable (i.e., function, class...)
+                # and has 'handles' attribute
+                # and is defined in this module (i.e., not imported)
+                if callable(func) and hasattr(func, 'handles') and func.__module__ == lib.__name__:
+                    for layer in func.handles:
+                        
+                        if model_type == 'keras':
+                            register_keras_layer_handler(layer, func)
+                        elif model_type == 'pytorch':
+                            register_pytorch_layer_handler(layer, func)
+                        elif model_type == 'onnx':
+                            register_onnx_layer_handler(layer, func)
+                            
+        except ImportError:
+            continue
 
 
 def convert_from_yaml_config(yamlConfig):
@@ -159,5 +151,45 @@ def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', pro
         config['HLSConfig']['SkipOptimizers'] = hls_config['SkipOptimizers']
     
     return pytorch_to_hls(config)
+
+#----------ONNX converter----------#
+def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='myproject',
+    fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
+    
+    config = create_vivado_config(
+        output_dir=output_dir,
+        project_name=project_name,
+        fpga_part=fpga_part,
+        clock_period=clock_period,
+        io_type=io_type
+    )
+    
+    config['OnnxAPIModel'] = model
+
+    model_config = hls_config.get('Model', None)
+    
+    if model_config is not None:
+        if not all(k in model_config for k in ('Precision', 'ReuseFactor')):
+            raise Exception('Precision and ReuseFactor must be provided in hls_config')
+    else:
+        model_config = {}
+        model_config['Precision'] = 'ap_fixed<16,6>'
+        model_config['ReuseFactor'] = '1'
+   
+    config['HLSConfig']['Model'] = model_config
+    
+    if 'LayerName' in hls_config:
+        config['HLSConfig']['LayerName'] = hls_config['LayerName']
+    
+    if 'LayerType' in hls_config:
+        config['HLSConfig']['LayerType'] = hls_config['LayerType']
+
+    if 'Optimizers' in hls_config:
+        config['HLSConfig']['Optimizers'] = hls_config['Optimizers']
+
+    if 'SkipOptimizers' in hls_config:
+        config['HLSConfig']['SkipOptimizers'] = hls_config['SkipOptimizers']
+    
+    return onnx_to_hls(config)
 
 

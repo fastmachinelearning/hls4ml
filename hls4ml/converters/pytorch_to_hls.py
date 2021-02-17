@@ -122,7 +122,15 @@ def pytorch_to_hls(config):
     
     layer_config = None
     
-    #Add input layer
+    #Output shape tracking
+    output_shapes = {}
+    output_shape = None
+    
+    #Loop through layers
+    print('Topology:')
+    layer_counter = 0
+    
+    #First add input layer
     input_layer = {}
     input_layer['name'] = 'input1'
     input_layer['class_name'] = 'InputLayer'
@@ -130,25 +138,13 @@ def pytorch_to_hls(config):
     layer_list.insert(0, input_layer)
     print("Input Shape: ", input_shapes)
     
-    #Output shape tracking
-    output_shapes = {}
-    output_shape = None
-    
-    #To skip first printout from the whole model class when looping
-    #Can't use layer counter for this
-    model_class = True
-    
-    #Loop through layers
-    print('Topology:')
-    layer_counter = 0
     for layer_name, pytorch_layer in model.named_modules():
         
-        #First module is the whole model's class
-        if model_class:
-            model_class = False
-            continue
-        
         pytorch_class = pytorch_layer.__class__.__name__
+        
+        #First module is the whole model's class
+        if pytorch_class == model.__class__.__name__:
+            continue
         
         if pytorch_class not in supported_layers:
             raise Exception('Unsupported layer {}'.format(pytorch_class))
@@ -175,7 +171,7 @@ def pytorch_to_hls(config):
         #Process the layer
         layer, output_shape = layer_handlers[pytorch_class](pytorch_layer, layer_name, input_shapes, reader, config)
 
-        print('Layer name: {}, layer type: {}, current shape: {}'.format(layer['name'], layer['class_name'], input_shapes))
+        print('Layer name: {}, layer type: {}, input shape: {}'.format(layer['name'], layer['class_name'], input_shapes))
         layer_list.append(layer)
         
         assert(output_shape is not None)
