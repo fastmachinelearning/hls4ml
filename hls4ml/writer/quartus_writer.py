@@ -299,21 +299,21 @@ class QuartusWriter(Writer):
                 newline += '      std::vector<float>::const_iterator in_end;\n'
                 for inp in model.get_input_variables():
                     newline += '      in_end = in_begin + ({});\n'.format(inp.size_cpp())
+                    newline += f'      {inp.cppname}.emplace_back()'
                     newline += '      std::copy(in_begin, in_end, {});\n'.format(inp.cppname+'[e].data')
                     newline += '      in_begin = in_end;\n'
             elif '//hls-fpga-machine-learning insert component-io' in line:
                 newline = line
                 for inp in model.get_input_variables():
-                    newline += indent + 'inputdat ' + inp.definition_cpp_name() + '[num_iterations];\n'
+                    newline += indent + 'std::vector<inputdat> ' + inp.definition_cpp_name() + ';\n'
                 for out in model.get_output_variables():
-                    # brace-init zeros the array out because we use std=c++0x
-                    newline += indent + 'outputdat ' + out.definition_cpp_name() + '[num_iterations];\n'
+                    newline += indent + 'std::vector<outputdat> ' + out.definition_cpp_name() + ';\n'
             elif '//hls-fpga-machine-learning insert zero' in line:
                 newline = line
                 for inp in model.get_input_variables():
-                    newline += '    ' + 'inputdat ' + inp.definition_cpp_name() + '[num_iterations];\n'
+                    newline += '    ' + 'std::vector<inputdat> ' + inp.definition_cpp_name() + '(num_iterations);\n'
                 for out in model.get_output_variables():
-                    newline += '    ' + 'outputdat ' + out.definition_cpp_name() + '[num_iterations];\n'
+                    newline += '    ' + 'std::vector<outputdat> ' + out.definition_cpp_name() + '(num_iterations);\n'
             elif '//hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
 
@@ -340,7 +340,7 @@ class QuartusWriter(Writer):
                 newline = line
                 for out in model.get_output_variables():
                     newline += indent + 'for(int i = 0; i < {}; i++) {{\n'.format(out.size_cpp())
-                    newline += indent + '  std::cout << pr[j][i] << " ";\n'
+                    newline += indent + '  std::cout << predictions[j][i] << " ";\n'
                     newline += indent + '}\n'
                     newline += indent + 'std::cout << std::endl;\n'
             elif '//hls-fpga-machine-learning insert tb-output' in line:
