@@ -41,14 +41,15 @@ int main(int argc, char **argv)
 
   std::string iline;
   std::string pline;
-  int e = 0;
 
   if (fin.is_open() && fpr.is_open()) {
     //hls-fpga-machine-learning insert component-io
     std::vector<std::vector<float> > predictions;
-    while ( std::getline(fin,iline) && std::getline (fpr,pline) ) {
-      if (e % CHECKPOINT == 0) std::cout << "Processing input " << e << std::endl;
-      e++;
+    unsigned int num_iterations = 0;
+    for (; std::getline(fin,iline) && std::getline (fpr,pline); num_iterations++) {
+      if (num_iterations % CHECKPOINT == 0) {
+	std::cout << "Processing input "  << num_iterations << std::endl;
+      }
 
       float entry;
 
@@ -66,9 +67,15 @@ int main(int argc, char **argv)
 
       //hls-fpga-machine-learning insert data
       predictions.push_back(std::move(pr));
+    }
 
-      //hls-fpga-machine-learning insert top-level-function
-    for(int j = 0; j < e; j++) {
+    // Do this separately to avoid vector reallocation
+    //hls-fpga-machine-learning insert top-level-function
+
+    //hls-fpga-machine-learning insert run
+
+
+    for(int j = 0; j < num_iterations; j++) {
       //hls-fpga-machine-learning insert tb-output
       if (j % CHECKPOINT == 0) {
         std::cout << "Predictions" << std::endl;
@@ -84,8 +91,9 @@ int main(int argc, char **argv)
     std::cout << "INFO: Unable to open input/predictions file, using default input with " << num_iterations << " invocations." << std::endl;
     //hls-fpga-machine-learning insert zero
 
-    for (int i = 0; i < num_iterations; i++) {
-      //hls-fpga-machine-learning insert second-top-level-function
+    //hls-fpga-machine-learning insert top-level-function
+
+    //hls-fpga-machine-learning insert run
 
     for (int j = 0; j < num_iterations; j++) {
       //hls-fpga-machine-learning insert output
