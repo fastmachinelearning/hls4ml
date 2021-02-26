@@ -130,6 +130,11 @@ class VivadoWriter(Writer):
         elif mode == 'stream':
             return '#pragma HLS STREAM variable={name} depth={depth}'.format(name=variable.name, depth=depth)
 
+    @staticmethod
+    def _make_stable_pragma(variable):
+        template = '#pragma HLS STABLE variable={name}'
+        return template.format(name=variable.name)
+
     def write_project_cpp(self, model):
         ###################
         ## myproject.cpp
@@ -211,6 +216,8 @@ class VivadoWriter(Writer):
                                 newline += '    ' + def_cpp + ';\n'
                                 if var.pragma:
                                     newline += '    ' + self._make_array_pragma(var) + '\n'
+                                if model.config.model_strategy == 'Resource':
+                                    newline += '    ' + self._make_stable_pragma(var) + '\n'
                     func = layer.function_cpp()
                     if func:
                         if len(func) == 1:

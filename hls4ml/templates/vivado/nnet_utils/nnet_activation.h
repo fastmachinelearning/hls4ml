@@ -221,6 +221,7 @@ void init_invert_table(typename CONFIG_T::inv_table_t table_out[CONFIG_T::table_
 
 template <class data_T, class res_T, typename CONFIG_T>
 void softmax_latency(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
+    #pragma HLS pipeline
     // Initialize the lookup tables
 #ifdef __HLS_SYN__
     bool initialized = false;
@@ -264,6 +265,7 @@ void softmax_latency(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
 
 template <class data_T, class res_T, typename CONFIG_T>
 void softmax_stable(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
+    #pragma HLS pipeline
     // Initialize the lookup tables
 #ifdef __HLS_SYN__
     bool initialized = false;
@@ -407,6 +409,7 @@ void  softmax_legacy(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 
 template<class data_T, class res_T, typename CONFIG_T>
 void softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
+    #pragma HLS inline
     switch(CONFIG_T::implementation){
     case softmax_implementation::latency:
         softmax_latency<data_T, res_T, CONFIG_T>(data, res);
