@@ -74,9 +74,44 @@ def convert_from_yaml_config(yamlConfig):
     
     return model
 
-#----------Keras converter----------#
 def convert_from_keras_model(model, output_dir='my-hls-test', project_name='myproject',
     fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
+    """
+    
+    Convert a Keras model to a hls model.
+    
+    Parameters
+    ----------
+    model : Keras model object.
+        Model to be converted to hls model object.
+    output_dir : string, optional
+        Output directory to write hls codes.
+    project_name : string, optional
+        hls project name.
+    fpga_part : string, optional
+        The particular FPGA part number that you are considering.
+    clock_period : int, optional
+        The clock period, in ns, at which your algorithm runs.
+    io_type : string, optional
+        Your options are 'io_parallel' or 'io_serial' where this really 
+        defines if you are pipelining your algorithm or not.
+    hls_config : dict, optional
+        Additional configuration dictionary for hls model.
+        
+    Returns
+    -------
+    hls_model : hls4ml model object.
+        
+    See Also
+    --------
+    hls4ml.convert_from_pytorch_model, hls4ml.convert_from_onnx_model
+    
+    Examples
+    --------
+    >>> import hls4ml
+    >>> config = hls4ml.utils.config_from_keras_model(model, granularity='model')
+    >>> hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config)
+    """
     
     config = create_vivado_config(
         output_dir=output_dir,
@@ -111,9 +146,45 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
     
     return keras_to_hls(config)
 
-#----------Pytorch converter----------#
+
 def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', project_name='myproject',
     fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
+    """
+    
+    Convert a Pytorch model to a hls model.
+    
+    Parameters
+    ----------
+    model : Pytorch model object.
+        Model to be converted to hls model object.
+    output_dir : string, optional
+        Output directory to write hls codes.
+    project_name : string, optional
+        hls project name.
+    fpga_part : string, optional
+        The particular FPGA part number that you are considering.
+    clock_period : int, optional
+        The clock period, in ns, at which your algorithm runs.
+    io_type : string, optional
+        Your options are 'io_parallel' or 'io_serial' where this really 
+        defines if you are pipelining your algorithm or not.
+    hls_config : dict, optional
+        Additional configuration dictionary for hls model.
+        
+    Returns
+    -------
+    hls_model : hls4ml model object.
+        
+    See Also
+    --------
+    hls4ml.convert_from_keras_model, hls4ml.convert_from_onnx_model
+    
+    Examples
+    --------
+    >>> import hls4ml
+    >>> config = hls4ml.utils.config_from_pytorch_model(model, granularity='model')
+    >>> hls_model = hls4ml.converters.convert_from_pytorch_model(model, hls_config=config)
+    """
     
     config = create_vivado_config(
         output_dir=output_dir,
@@ -152,9 +223,45 @@ def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', pro
     
     return pytorch_to_hls(config)
 
-#----------ONNX converter----------#
+
 def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='myproject',
     fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
+    """
+    
+    Convert an ONNX model to a hls model.
+    
+    Parameters
+    ----------
+    model : ONNX model object.
+        Model to be converted to hls model object.
+    output_dir : string, optional
+        Output directory to write hls codes.
+    project_name : string, optional
+        hls project name.
+    fpga_part : string, optional
+        The particular FPGA part number that you are considering.
+    clock_period : int, optional
+        The clock period, in ns, at which your algorithm runs.
+    io_type : string, optional
+        Your options are 'io_parallel' or 'io_serial' where this really 
+        defines if you are pipelining your algorithm or not.
+    hls_config : dict, optional
+        Additional configuration dictionary for hls model.
+        
+    Returns
+    -------
+    hls_model : hls4ml model object.
+        
+    See Also
+    --------
+    hls4ml.convert_from_keras_model, hls4ml.convert_from_pytorch_model
+    
+    Examples
+    --------
+    >>> import hls4ml
+    >>> config = hls4ml.utils.config_from_onnx_model(model, granularity='model')
+    >>> hls_model = hls4ml.converters.convert_from_onnx_model(model, hls_config=config)
+    """
     
     config = create_vivado_config(
         output_dir=output_dir,
