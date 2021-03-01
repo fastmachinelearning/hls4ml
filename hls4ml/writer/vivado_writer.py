@@ -11,6 +11,8 @@ from collections import OrderedDict
 from hls4ml.writer.writers import Writer
 from hls4ml.model.hls_layers import XnorPrecisionType
 
+config_filename = 'hls4ml_config.yml'
+
 class VivadoWriter(Writer):
 
     def type_definition_cpp(self, model, atype):
@@ -610,6 +612,14 @@ class VivadoWriter(Writer):
 
         copytree(srcpath, dstpath)
 
+    def write_yml(self, model):
+        ###################
+        # YAML config file
+        ###################
+
+        with open(model.config.get_output_dir() + '/' + config_filename, 'w') as file:
+            yaml.dump(model.config.config, file)
+
     def write_tar(self, model):
         ###################
         # Tarball output
@@ -630,5 +640,6 @@ class VivadoWriter(Writer):
         self.write_bridge(model)
         self.write_build_script(model)
         self.write_nnet_utils(model)
+        self.write_yml(model)
         self.write_tar(model)
         print('Done')
