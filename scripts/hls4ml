@@ -168,7 +168,7 @@ def build(args):
         backend = yamlConfig.get('Backend', 'Vivado')
         if backend == 'Vivado':
             found = os.system('command -v vivado_hls > /dev/null')
-            if found is not 0:
+            if found != 0:
                 print('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
                 sys.exit(1)
         elif backend == 'Intel':
