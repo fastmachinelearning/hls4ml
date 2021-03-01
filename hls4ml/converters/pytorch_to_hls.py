@@ -9,18 +9,33 @@ import re
 
 from hls4ml.model import HLSModel
 
-####---------------Initial Data Reader------------------######
 class PyTorchModelReader(object):
+    """
+    Pytorch data reader to be used for extracting relevant information during conversion.
+    """
     def __init__(self, model):
         self.torch_model = model
         self.state_dict = model.state_dict()
     
     def get_weights_data(self, layer_name, var_name):
-        """
-        Get weights data from layers.
+        """Get weights data from layers.
+        
         The hls layer classes are based on Keras's default parameters.
         Thus, this function will also need to account for some differences
         between Keras and Pytorch terminology.
+        
+        Parameters
+        ----------
+        layer_name : string
+            layer's name in the ONNX model
+        var_name : string
+            variable to be extracted
+
+        Returns
+        -------
+        data : numpy array
+            extracted weights data 
+        
         """
         
         data = None
@@ -85,13 +100,21 @@ def pytorch_handler(*args):
         function.handles = [arg for arg in args]
         return function
     return decorator
+####----------------------------------------------------------------
 
-####---------------Main processing function------------------######
 def pytorch_to_hls(config):
-
-    ######################
-    ##  Do translation
-    ######################
+    """ Convert Pytorch model to hls model from configuration.
+    
+    Parameters
+    ----------
+    config: dict
+        pytorch configuration from yaml file or passed through API.
+        
+    Returns
+    -------
+    hls_model : hls4ml model object
+        
+    """
     
     #This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []

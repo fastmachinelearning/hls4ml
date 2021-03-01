@@ -8,8 +8,10 @@ from hls4ml.model import HLSModel
 
 MAXMULT = 4096
 
-####----------------------Data reader---------------------######
 class ONNXDataReader:
+    """
+    ONNX data reader to be used for extracting relevant information during conversion.
+    """
     def __init__(self, model):
         self.model = model
         self.input_map = {}
@@ -25,13 +27,31 @@ class ONNXDataReader:
         }
 
     def get_weights_data(self, layer_name, var_name):
+        """Extract weights data from ONNX model.
+        
+        Parameters
+        ----------
+        layer_name : string
+            layer's name in the ONNX model
+        var_name : string
+            variable to be extracted
+
+        Returns
+        -------
+        data : numpy array
+            extracted weights data 
+        
+        """
+        
         inputs = self.input_map[layer_name]
         inp_idx = self.index_map[var_name]
+        
         if inp_idx >= len(inputs['inputs']):
             # Input not found, likely a bias tensor is not available
             return None
 
         tensor = next((x for x in self.model.graph.initializer if x.name == inputs['inputs'][inp_idx]), None)
+        
         if tensor is not None:
             data = numpy_helper.to_array(tensor)
             if inputs['transpose']:
@@ -116,12 +136,11 @@ def compute_pads_2d(operation, layer):
     
     return pads
 
-####----------------------Optimizer---------------------######
 def _hls4ml_onnx_optimizer(graph):
-    
     """
     Optimize onnx's model graph.
     """
+    
     layer_index = 0
     initializer_list = [x for x in graph.initializer]
     
@@ -174,10 +193,18 @@ def onnx_handler(*args):
 
 ####---------------Main processing function------------------######
 def onnx_to_hls(config):
-
-    ######################
-    ##  Do translation
-    ######################
+    """ Convert onnx model to hls model from configuration.
+    
+    Parameters
+    ----------
+    config: dict
+        onnx configuration from yaml file or passed through API.
+        
+    Returns
+    -------
+    hls_model : hls4ml model object
+        
+    """
 
     #This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
