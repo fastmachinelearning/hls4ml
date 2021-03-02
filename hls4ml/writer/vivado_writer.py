@@ -617,6 +617,17 @@ class VivadoWriter(Writer):
         # YAML config file
         ###################
 
+        def keras_model_representer(dumper, keras_model):
+            model_path = model.config.get_output_dir() + '/keras_model.h5'
+            keras_model.save(model_path)
+            return dumper.represent_scalar(u'!keras_model', model_path)
+
+        try:
+            from tensorflow.keras import Model as KerasModel
+            yaml.add_multi_representer(KerasModel, keras_model_representer)
+        except:
+            pass
+
         with open(model.config.get_output_dir() + '/' + config_filename, 'w') as file:
             yaml.dump(model.config.config, file)
 

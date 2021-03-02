@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import os
+import yaml
 import importlib
 
 from hls4ml.utils.config import create_vivado_config
@@ -39,8 +40,26 @@ try:
 except ImportError:
     __tensorflow_enabled__ = False
 
+def parse_config(config_file):
+    def construct_keras_model(loader, node):
+        from tensorflow.keras.models import load_model
 
-def convert_from_yaml_config(yamlConfig):
+        model_str = loader.construct_scalar(node)
+        return load_model(model_str)
+    
+    yaml.add_constructor(u'!keras_model', construct_keras_model, Loader=yaml.SafeLoader)
+    
+    print('Loading configuration from', config_file)
+    with open(config_file, 'r') as file:
+        parsed_config = yaml.load(file, Loader=yaml.SafeLoader)
+    return parsed_config
+
+def convert_from_config(config):    
+    if isinstance(config, str):
+        yamlConfig = parse_config(config)
+    else:
+        yamlConfig = config
+
     model = None
     if 'OnnxModel' in yamlConfig:
         if __onnx_enabled__:
