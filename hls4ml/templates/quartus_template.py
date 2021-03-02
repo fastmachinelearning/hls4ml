@@ -11,10 +11,20 @@ from calmjs.parse import asttypes
 from tabulate import tabulate
 import uuid
 from ast import literal_eval
+from contextlib import contextmanager
 
-from hls4ml.templates.templates import Backend, cd
+from hls4ml.templates.templates import Backend
 from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
 
+
+@contextmanager
+def cd(newdir):
+    prevdir = os.getcwd()
+    os.chdir(os.path.expanduser(newdir))
+    try:
+        yield
+    finally:
+        os.chdir(prevdir)
 
 dense_config_template = """struct config{index} : nnet::dense_config {{
     static const unsigned n_in = {n_in};
