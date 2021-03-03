@@ -53,7 +53,7 @@ To better understand how the configuration hierachy works, refer to the next sec
 2.1 Top Level Configuration
 ---------------------------
 
-Configuration files are YAML files in hls4ml (\ ``*.yml``\ ). An example configuration file is `here <https://github.com/hls-fpga-machine-learning/example-models/blob/master/keras-config.yml>`_.
+Configuration files are YAML files in hls4ml (\ ``*.yml``\ ). An example configuration file is `here <https://github.com/hls-fpga-machine-learning/example-models/blob/master/keras-config.yml>`__.
 
 It looks like this:
 
@@ -85,7 +85,7 @@ There are a number of configuration options that you have.  Let's go through the
 
 * **KerasJson/KerasH5**\ : for Keras, the model architecture and weights are stored in a ``json`` and ``h5`` file.  The path to those files are required here. 
   We also support keras model's file obtained just from ``model.save()``. In this case you can just supply the ``h5`` file in ``KerasH5:`` field.
-* **InputData/OutputPredictions**\ : path to your input/predictions of the model. If none is supplied, then hls4ml will create aritificial data for simulation. The data used above in the example can be found `here <https://cernbox.cern.ch/index.php/s/2LTJVVwCYFfkg59>`_. We also support ``npy`` data files. We welcome suggestions on more input data types to support. 
+* **InputData/OutputPredictions**\ : path to your input/predictions of the model. If none is supplied, then hls4ml will create aritificial data for simulation. The data used above in the example can be found `here <https://cernbox.cern.ch/index.php/s/2LTJVVwCYFfkg59>`__. We also support ``npy`` data files. We welcome suggestions on more input data types to support. 
 * **OutputDir**\ : the output directory where you want your HLS project to appear
 * **ProjectName**\ : the name of the HLS project IP that is produced
 * **XilinxPart**\ : the particular FPGA part number that you are considering, here it's a Xilinx Virtex-7 FPGA
@@ -93,7 +93,7 @@ There are a number of configuration options that you have.  Let's go through the
   Then you have some optimization parameters for how your algorithm runs:
 * **IOType**\ : your options are ``io_parallel`` or ``io_serial`` where this really defines if you are pipelining your algorithm or not
 * **ReuseFactor**\ : in the case that you are pipelining, this defines the pipeline interval or initiation interval
-* **Strategy**\ : Optimization strategy on FPGA, either "Latency" or "Resource". If none is supplied then hl4ml uses "Latency" as default. Note that a reuse factor larger than 1 should be specified when using "resource" strategy. An example of using larger reuse factor can be found `here. <https://github.com/hls-fpga-machine-learning/models/tree/master/keras/KERAS_dense>`_
+* **Strategy**\ : Optimization strategy on FPGA, either "Latency" or "Resource". If none is supplied then hl4ml uses "Latency" as default. Note that a reuse factor larger than 1 should be specified when using "resource" strategy. An example of using larger reuse factor can be found `here. <https://github.com/hls-fpga-machine-learning/models/tree/master/keras/KERAS_dense>`__
 * **Precision**\ : this defines the precsion of your inputs, outputs, weights and biases. It is denoted by ``ap_fixed<X,Y>``\ , where ``Y`` is the number of bits representing the signed number above the binary point (i.e. the integer part), and ``X`` is the total number of bits.
   Additionally, integers in fixed precision data type (\ ``ap_int<N>``\ , where ``N`` is a bit-size from 1 to 1024) can also be used. You have a chance to further configure this more finely with per-layer configuration described below.
 
@@ -172,7 +172,7 @@ Detailed Configuration in Converted HLS Code
 
 After you create your project, you have the opportunity to do more configuration if you so choose.
 
-In your project, the file ``<OutputDir>/firmware/<ProjectName>.cpp`` is your top level file.  It has the network architecture constructed for you.  An example is `here <https://github.com/hls-fpga-machine-learning/models/blob/master/HLS_projects/KERAS-1layer-hls/firmware/myproject.cpp>`_ and the important snippet is:
+In your project, the file ``<OutputDir>/firmware/<ProjectName>.cpp`` is your top level file.  It has the network architecture constructed for you.  An example is `here <https://github.com/hls-fpga-machine-learning/models/blob/master/HLS_projects/KERAS-1layer-hls/firmware/myproject.cpp>`__ and the important snippet is:
 
 .. code-block:: cpp
 
@@ -193,7 +193,7 @@ In your project, the file ``<OutputDir>/firmware/<ProjectName>.cpp`` is your top
 You can see, for the simple 1-layer DNN, the computation (\ ``nnet::dense_latency``\ ) and activation (\ ``nnet::relu``\ /\ ``nnet::sigmoid``\ ) caluclation for each layer.  For each layer, it has its own additional configuration parameters, e.g. ``config2``.
 
 In your project, the file ``<OutputDir>/firmware/parameters.h`` stores all the configuration options for each neural network library.
-An example is `here <https://github.com/hls-fpga-machine-learning/models/blob/master/HLS_projects/KERAS-1layer-hls/firmware/parameters.h>`_. So for example, the detailed configuration options for an example DNN layer is:
+An example is `here <https://github.com/hls-fpga-machine-learning/models/blob/master/HLS_projects/KERAS-1layer-hls/firmware/parameters.h>`__. So for example, the detailed configuration options for an example DNN layer is:
 
 .. code-block:: cpp
 
