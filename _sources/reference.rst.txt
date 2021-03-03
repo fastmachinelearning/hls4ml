@@ -27,14 +27,14 @@ Additional Talks and Presentations
 ==================================
 
 
-* eScience 2019: `talk <https://escience2019.sched.com/event/Uuiy/machine-learning-on-fpgas-for-low-latency-and-high-throughput-inference?iframe=yes&w=100%&sidebar=yes&bg=no#>`_
-* ACAT 2019: `talk <https://indico.cern.ch/event/708041/contributions/3269690/>`_
-* Zurich Hands-on Course: `course <https://indico.cern.ch/event/769727/>`_
-* TWEPP 2018: `talk <https://indico.cern.ch/event/697988/contributions/3055990/>`_
-* CHEP 2018: `talk <https://indico.cern.ch/event/587955/contributions/2937529/>`_
-* Connecting the Dots 2018: `talk <https://indico.cern.ch/event/658267/contributions/2813688/>`_
-* Fermilab Research Techniques Seminar: `talk <https://indico.fnal.gov/event/16908/>`_
-* CERN EP/IT Data Science Seminar: `talk <https://indico.cern.ch/event/721567/>`_ 
+* eScience 2019: `talk <https://escience2019.sched.com/event/Uuiy/machine-learning-on-fpgas-for-low-latency-and-high-throughput-inference?iframe=yes&w=100%&sidebar=yes&bg=no#>`__
+* ACAT 2019: `talk <https://indico.cern.ch/event/708041/contributions/3269690/>`__
+* Zurich Hands-on Course: `course <https://indico.cern.ch/event/769727/>`__
+* TWEPP 2018: `talk <https://indico.cern.ch/event/697988/contributions/3055990/>`__
+* CHEP 2018: `talk <https://indico.cern.ch/event/587955/contributions/2937529/>`__
+* Connecting the Dots 2018: `talk <https://indico.cern.ch/event/658267/contributions/2813688/>`__
+* Fermilab Research Techniques Seminar: `talk <https://indico.fnal.gov/event/16908/>`__
+* CERN EP/IT Data Science Seminar: `talk <https://indico.cern.ch/event/721567/>`__ 
 
 Contributors
 ============

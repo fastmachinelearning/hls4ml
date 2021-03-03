@@ -115,9 +115,9 @@
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.report.html">hls4ml.report package</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">hls4ml.templates package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-templates-templates-module">hls4ml.templates.templates module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-templates-vivado-template-module">hls4ml.templates.vivado_template module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.templates.templates">hls4ml.templates.templates module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.templates.vivado_template">hls4ml.templates.vivado_template module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.templates">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.utils.html">hls4ml.utils package</a></li>
@@ -194,14 +194,100 @@
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="hls4ml-templates-templates-module">
-<h2>hls4ml.templates.templates module<a class="headerlink" href="#hls4ml-templates-templates-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-hls4ml.templates.templates">
+<span id="hls4ml-templates-templates-module"></span><h2>hls4ml.templates.templates module<a class="headerlink" href="#module-hls4ml.templates.templates" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hls4ml.templates.templates.Backend">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.templates.templates.</code><code class="sig-name descname">Backend</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.templates.Backend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="hls4ml.templates.templates.Backend.get_config_template">
+<code class="sig-name descname">get_config_template</code><span class="sig-paren">(</span><em class="sig-param">kind</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.templates.Backend.get_config_template" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.templates.Backend.get_function_template">
+<code class="sig-name descname">get_function_template</code><span class="sig-paren">(</span><em class="sig-param">kind</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.templates.Backend.get_function_template" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.templates.Backend.get_include_list">
+<code class="sig-name descname">get_include_list</code><span class="sig-paren">(</span><em class="sig-param">kind</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.templates.Backend.get_include_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.templates.Backend.register_source">
+<code class="sig-name descname">register_source</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">source</em>, <em class="sig-param">destination_dir='nnet_utils'</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.templates.Backend.register_source" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.templates.Backend.register_templates">
+<code class="sig-name descname">register_templates</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">function_template</em>, <em class="sig-param">config_template</em>, <em class="sig-param">include_list=[]</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.templates.Backend.register_templates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="hls4ml.templates.templates.get_backend">
+<code class="sig-prename descclassname">hls4ml.templates.templates.</code><code class="sig-name descname">get_backend</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.templates.get_backend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="hls4ml.templates.templates.register_backend">
+<code class="sig-prename descclassname">hls4ml.templates.templates.</code><code class="sig-name descname">register_backend</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">backend_cls</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.templates.register_backend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
-<div class="section" id="hls4ml-templates-vivado-template-module">
-<h2>hls4ml.templates.vivado_template module<a class="headerlink" href="#hls4ml-templates-vivado-template-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-hls4ml.templates.vivado_template">
+<span id="hls4ml-templates-vivado-template-module"></span><h2>hls4ml.templates.vivado_template module<a class="headerlink" href="#module-hls4ml.templates.vivado_template" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hls4ml.templates.vivado_template.VivadoBackend">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.templates.vivado_template.</code><code class="sig-name descname">VivadoBackend</code><a class="headerlink" href="#hls4ml.templates.vivado_template.VivadoBackend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.templates.templates.Backend" title="hls4ml.templates.templates.Backend"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.templates.templates.Backend</span></code></a></p>
+<dl class="method">
+<dt id="hls4ml.templates.vivado_template.VivadoBackend.compute_conv1d_instructions">
+<code class="sig-name descname">compute_conv1d_instructions</code><span class="sig-paren">(</span><em class="sig-param">in_W</em>, <em class="sig-param">in_C</em>, <em class="sig-param">kernel_size=3</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">pad=0</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_template.VivadoBackend.compute_conv1d_instructions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_template.VivadoBackend.compute_conv2d_instructions">
+<code class="sig-name descname">compute_conv2d_instructions</code><span class="sig-paren">(</span><em class="sig-param">in_H</em>, <em class="sig-param">in_W</em>, <em class="sig-param">in_C</em>, <em class="sig-param">kernel_size=3</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">pad=0</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_template.VivadoBackend.compute_conv2d_instructions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_template.VivadoBackend.convert_precision_string">
+<code class="sig-name descname">convert_precision_string</code><span class="sig-paren">(</span><em class="sig-param">precision</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_template.VivadoBackend.convert_precision_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a precision string (e.g. “ap_fixed&lt;16,6&gt;” to the internal IntegerPrecisionTypes etc)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_template.VivadoBackend.get_closest_reuse_factor">
+<code class="sig-name descname">get_closest_reuse_factor</code><span class="sig-paren">(</span><em class="sig-param">valid_rf</em>, <em class="sig-param">chosen_rf</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_template.VivadoBackend.get_closest_reuse_factor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns closest value to chosen_rf. valid_rf is sorted (obtained from get_valid_reuse_factors())
+If two numbers are equally close, return the smallest number.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_template.VivadoBackend.get_valid_reuse_factors">
+<code class="sig-name descname">get_valid_reuse_factors</code><span class="sig-paren">(</span><em class="sig-param">layer</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_template.VivadoBackend.get_valid_reuse_factors" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_template.VivadoBackend.product_type">
+<code class="sig-name descname">product_type</code><span class="sig-paren">(</span><em class="sig-param">data_T</em>, <em class="sig-param">weight_T</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_template.VivadoBackend.product_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to determine which product implementation to use during inference</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_template.VivadoBackend.set_closest_reuse_factor">
+<code class="sig-name descname">set_closest_reuse_factor</code><span class="sig-paren">(</span><em class="sig-param">layer</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_template.VivadoBackend.set_closest_reuse_factor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
-<div class="section" id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-hls4ml.templates">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.templates" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 

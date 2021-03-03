@@ -187,21 +187,21 @@
            <div itemprop="articleBody">
             
   <div class="section" id="configuration">
-<h1><a class="toc-backref" href="#id6">Configuration</a><a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h1>
+<h1><a class="toc-backref" href="#id2">Configuration</a><a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h1>
 <p>We currently support two ways of setting hls4ml’s model configuration. This page documents both methods’ usage.</p>
 <div class="contents topic" id="id1">
 <p class="topic-title"></p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#configuration" id="id6">Configuration</a></p>
+<li><p><a class="reference internal" href="#configuration" id="id2">Configuration</a></p>
 <ul>
-<li><p><a class="reference internal" href="#python-api" id="id7">1. Python API</a></p></li>
-<li><p><a class="reference internal" href="#yaml-configuration-file" id="id8">2. YAML Configuration file</a></p>
+<li><p><a class="reference internal" href="#python-api" id="id3">1. Python API</a></p></li>
+<li><p><a class="reference internal" href="#yaml-configuration-file" id="id4">2. YAML Configuration file</a></p>
 <ul>
-<li><p><a class="reference internal" href="#top-level-configuration" id="id9">2.1 Top Level Configuration</a></p></li>
-<li><p><a class="reference internal" href="#per-layer-configuration" id="id10">2.2 Per-Layer Configuration</a></p></li>
+<li><p><a class="reference internal" href="#top-level-configuration" id="id5">2.1 Top Level Configuration</a></p></li>
+<li><p><a class="reference internal" href="#per-layer-configuration" id="id6">2.2 Per-Layer Configuration</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#detailed-configuration-in-converted-hls-code" id="id11">Detailed Configuration in Converted HLS Code</a></p></li>
+<li><p><a class="reference internal" href="#detailed-configuration-in-converted-hls-code" id="id7">Detailed Configuration in Converted HLS Code</a></p></li>
 </ul>
 </li>
 </ul>
@@ -213,7 +213,7 @@
 </ul>
 <hr class="docutils" />
 <div class="section" id="python-api">
-<h2><a class="toc-backref" href="#id7">1. Python API</a><a class="headerlink" href="#python-api" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id3">1. Python API</a><a class="headerlink" href="#python-api" title="Permalink to this headline">¶</a></h2>
 <p>Using hls4ml, you can quickly generate a simple configuration dictionary from a keras model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">hls4ml</span>
 <span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
@@ -231,9 +231,9 @@
 </div>
 <hr class="docutils" />
 <div class="section" id="yaml-configuration-file">
-<h2><a class="toc-backref" href="#id8">2. YAML Configuration file</a><a class="headerlink" href="#yaml-configuration-file" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id4">2. YAML Configuration file</a><a class="headerlink" href="#yaml-configuration-file" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="top-level-configuration">
-<h3><a class="toc-backref" href="#id9">2.1 Top Level Configuration</a><a class="headerlink" href="#top-level-configuration" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id5">2.1 Top Level Configuration</a><a class="headerlink" href="#top-level-configuration" title="Permalink to this headline">¶</a></h3>
 <p>Configuration files are YAML files in hls4ml (<code class="docutils literal notranslate"><span class="pre">*.yml</span></code>). An example configuration file is <a class="reference external" href="https://github.com/hls-fpga-machine-learning/example-models/blob/master/keras-config.yml">here</a>.</p>
 <p>It looks like this:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">KerasJson</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">keras/KERAS_3layer.json</span>
@@ -276,7 +276,7 @@ Additionally, integers in fixed precision data type (<code class="docutils liter
 </ul>
 </div>
 <div class="section" id="per-layer-configuration">
-<h3><a class="toc-backref" href="#id10">2.2 Per-Layer Configuration</a><a class="headerlink" href="#per-layer-configuration" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id6">2.2 Per-Layer Configuration</a><a class="headerlink" href="#per-layer-configuration" title="Permalink to this headline">¶</a></h3>
 <p>In the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> configuration file, it is possible to specify the model <em>Precision</em> and <em>ReuseFactor</em> with finer granularity.</p>
 <p>Under the <code class="docutils literal notranslate"><span class="pre">HLSConfig</span></code> heading, these can be set for the <code class="docutils literal notranslate"><span class="pre">Model</span></code>, per <code class="docutils literal notranslate"><span class="pre">LayerType</span></code>, per <code class="docutils literal notranslate"><span class="pre">LayerName</span></code>, and for named variables within the layer (for precision only). The most basic configuration may look like this:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">HLSConfig</span><span class="p">:</span>
@@ -331,7 +331,7 @@ Additionally, integers in fixed precision data type (<code class="docutils liter
 </div>
 <hr class="docutils" />
 <div class="section" id="detailed-configuration-in-converted-hls-code">
-<h2><a class="toc-backref" href="#id11">Detailed Configuration in Converted HLS Code</a><a class="headerlink" href="#detailed-configuration-in-converted-hls-code" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id7">Detailed Configuration in Converted HLS Code</a><a class="headerlink" href="#detailed-configuration-in-converted-hls-code" title="Permalink to this headline">¶</a></h2>
 <p><strong>NOTE</strong>: this section is developer-oriented.</p>
 <p>After you create your project, you have the opportunity to do more configuration if you so choose.</p>
 <p>In your project, the file <code class="docutils literal notranslate"><span class="pre">&lt;OutputDir&gt;/firmware/&lt;ProjectName&gt;.cpp</span></code> is your top level file.  It has the network architecture constructed for you.  An example is <a class="reference external" href="https://github.com/hls-fpga-machine-learning/models/blob/master/HLS_projects/KERAS-1layer-hls/firmware/myproject.cpp">here</a> and the important snippet is:</p>

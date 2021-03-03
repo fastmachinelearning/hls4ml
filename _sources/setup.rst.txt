@@ -87,7 +87,7 @@ After that, you can use :code:`Vivado HLS` to synthesize the model:
    #Print out the report if you want
    hls4ml.report.read_vivado_report('my-hls-test')
 
-Done! you've built your first project using ``hls4ml`` ! To learn more about our various API functionalities, check out our tutorials `here <https://github.com/hls-fpga-machine-learning/hls4ml-tutorial>`_.
+Done! you've built your first project using ``hls4ml`` ! To learn more about our various API functionalities, check out our tutorials `here <https://github.com/hls-fpga-machine-learning/hls4ml-tutorial>`__.
 
 If you want to configure your model further, check out our :doc:`Configuration <api/configuration>` page. 
 
@@ -175,7 +175,7 @@ Existing examples
   Examples of model files and weights can be found in `example_models <https://github.com/hls-fpga-machine-learning/example-models>`_ directory.
 
 * 
-  Training codes and examples of resources needed to train the models can be found `here <https://github.com/hls-fpga-machine-learning/keras-training>`_.
+  Training codes and examples of resources needed to train the models can be found `here <https://github.com/hls-fpga-machine-learning/keras-training>`__.
 
 * 
   Other examples of various HLS projects with examples of different machine learning algorithm implementations is in the directory `example-prjs <https://github.com/hls-fpga-machine-learning/hls4ml/tree/master/example-prjs>`_.

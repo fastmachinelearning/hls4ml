@@ -113,16 +113,16 @@
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.model.optimizer.html">hls4ml.model.optimizer package</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">hls4ml.model.optimizer.passes package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-model-optimizer-passes-bn-fuse-module">hls4ml.model.optimizer.passes.bn_fuse module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-model-optimizer-passes-bn-quant-module">hls4ml.model.optimizer.passes.bn_quant module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-model-optimizer-passes-clone-module">hls4ml.model.optimizer.passes.clone module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-model-optimizer-passes-conv-same-pad-module">hls4ml.model.optimizer.passes.conv_same_pad module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-model-optimizer-passes-fuse-biasadd-module">hls4ml.model.optimizer.passes.fuse_biasadd module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-model-optimizer-passes-nop-module">hls4ml.model.optimizer.passes.nop module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-model-optimizer-passes-pointwise-module">hls4ml.model.optimizer.passes.pointwise module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes.bn_fuse">hls4ml.model.optimizer.passes.bn_fuse module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes.bn_quant">hls4ml.model.optimizer.passes.bn_quant module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes.clone">hls4ml.model.optimizer.passes.clone module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes.conv_same_pad">hls4ml.model.optimizer.passes.conv_same_pad module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes.fuse_biasadd">hls4ml.model.optimizer.passes.fuse_biasadd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes.nop">hls4ml.model.optimizer.passes.nop module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes.pointwise">hls4ml.model.optimizer.passes.pointwise module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hls4ml-model-optimizer-passes-qkeras-module">hls4ml.model.optimizer.passes.qkeras module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-model-optimizer-passes-repack-stream-module">hls4ml.model.optimizer.passes.repack_stream module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes.repack_stream">hls4ml.model.optimizer.passes.repack_stream module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.report.html">hls4ml.report package</a></li>
@@ -205,35 +205,280 @@
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="hls4ml-model-optimizer-passes-bn-fuse-module">
-<h2>hls4ml.model.optimizer.passes.bn_fuse module<a class="headerlink" href="#hls4ml-model-optimizer-passes-bn-fuse-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-hls4ml.model.optimizer.passes.bn_fuse">
+<span id="hls4ml-model-optimizer-passes-bn-fuse-module"></span><h2>hls4ml.model.optimizer.passes.bn_fuse module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.bn_fuse" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.bn_fuse.</code><code class="sig-name descname">FuseBatchNormalization</code><a class="headerlink" href="#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.match">
+<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.match" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
-<div class="section" id="hls4ml-model-optimizer-passes-bn-quant-module">
-<h2>hls4ml.model.optimizer.passes.bn_quant module<a class="headerlink" href="#hls4ml-model-optimizer-passes-bn-quant-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-hls4ml.model.optimizer.passes.bn_quant">
+<span id="hls4ml-model-optimizer-passes-bn-quant-module"></span><h2>hls4ml.model.optimizer.passes.bn_quant module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.bn_quant" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hls4ml.model.optimizer.passes.bn_quant.BatchNormalizationQuantizedTanh">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.bn_quant.</code><code class="sig-name descname">BatchNormalizationQuantizedTanh</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">name</em>, <em class="sig-param">attributes</em>, <em class="sig-param">inputs</em>, <em class="sig-param">outputs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bn_quant.BatchNormalizationQuantizedTanh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.hls_layers.Layer" title="hls4ml.model.hls_layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.hls_layers.Layer</span></code></a></p>
+<p>Merged Batch Normalization and quantized (binary or ternary) Tanh layer.
+The mean, variance, beta, gamma parameters are folded into the threshold(s) at which the
+sign of the input flips after the quantized (binary or ternary) Tanh activation.</p>
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.bn_quant.BatchNormalizationQuantizedTanh.config_cpp">
+<code class="sig-name descname">config_cpp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bn_quant.BatchNormalizationQuantizedTanh.config_cpp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.bn_quant.BatchNormalizationQuantizedTanh.function_cpp">
+<code class="sig-name descname">function_cpp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bn_quant.BatchNormalizationQuantizedTanh.function_cpp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.bn_quant.BatchNormalizationQuantizedTanh.initialize">
+<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bn_quant.BatchNormalizationQuantizedTanh.initialize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hls4ml.model.optimizer.passes.bn_quant.MergeBatchNormAndQuantizedTanh">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.bn_quant.</code><code class="sig-name descname">MergeBatchNormAndQuantizedTanh</code><a class="headerlink" href="#hls4ml.model.optimizer.passes.bn_quant.MergeBatchNormAndQuantizedTanh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.bn_quant.MergeBatchNormAndQuantizedTanh.match">
+<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bn_quant.MergeBatchNormAndQuantizedTanh.match" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.bn_quant.MergeBatchNormAndQuantizedTanh.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bn_quant.MergeBatchNormAndQuantizedTanh.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hls4ml.model.optimizer.passes.bn_quant.QuantizeDenseOutput">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.bn_quant.</code><code class="sig-name descname">QuantizeDenseOutput</code><a class="headerlink" href="#hls4ml.model.optimizer.passes.bn_quant.QuantizeDenseOutput" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.bn_quant.QuantizeDenseOutput.match">
+<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bn_quant.QuantizeDenseOutput.match" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.bn_quant.QuantizeDenseOutput.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bn_quant.QuantizeDenseOutput.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
-<div class="section" id="hls4ml-model-optimizer-passes-clone-module">
-<h2>hls4ml.model.optimizer.passes.clone module<a class="headerlink" href="#hls4ml-model-optimizer-passes-clone-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-hls4ml.model.optimizer.passes.clone">
+<span id="hls4ml-model-optimizer-passes-clone-module"></span><h2>hls4ml.model.optimizer.passes.clone module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.clone" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hls4ml.model.optimizer.passes.clone.Clone">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.clone.</code><code class="sig-name descname">Clone</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">name</em>, <em class="sig-param">attributes</em>, <em class="sig-param">inputs</em>, <em class="sig-param">outputs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.clone.Clone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.hls_layers.Layer" title="hls4ml.model.hls_layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.hls_layers.Layer</span></code></a></p>
+<p>Inserted after the layer whose output is used more than once.</p>
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.clone.Clone.config_cpp">
+<code class="sig-name descname">config_cpp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.clone.Clone.config_cpp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.clone.Clone.function_cpp">
+<code class="sig-name descname">function_cpp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.clone.Clone.function_cpp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.clone.Clone.initialize">
+<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.clone.Clone.initialize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hls4ml.model.optimizer.passes.clone.CloneOutput">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.clone.</code><code class="sig-name descname">CloneOutput</code><a class="headerlink" href="#hls4ml.model.optimizer.passes.clone.CloneOutput" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
+<p>Clones streams that are used multiple times</p>
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.clone.CloneOutput.match">
+<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.clone.CloneOutput.match" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.clone.CloneOutput.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.clone.CloneOutput.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
-<div class="section" id="hls4ml-model-optimizer-passes-conv-same-pad-module">
-<h2>hls4ml.model.optimizer.passes.conv_same_pad module<a class="headerlink" href="#hls4ml-model-optimizer-passes-conv-same-pad-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-hls4ml.model.optimizer.passes.conv_same_pad">
+<span id="hls4ml-model-optimizer-passes-conv-same-pad-module"></span><h2>hls4ml.model.optimizer.passes.conv_same_pad module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.conv_same_pad" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hls4ml.model.optimizer.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.conv_same_pad.</code><code class="sig-name descname">InsertZeroPaddingBeforeConv1D</code><a class="headerlink" href="#hls4ml.model.optimizer.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.match">
+<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.match" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hls4ml.model.optimizer.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.conv_same_pad.</code><code class="sig-name descname">InsertZeroPaddingBeforeConv2D</code><a class="headerlink" href="#hls4ml.model.optimizer.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.match">
+<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.match" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
-<div class="section" id="hls4ml-model-optimizer-passes-fuse-biasadd-module">
-<h2>hls4ml.model.optimizer.passes.fuse_biasadd module<a class="headerlink" href="#hls4ml-model-optimizer-passes-fuse-biasadd-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-hls4ml.model.optimizer.passes.fuse_biasadd">
+<span id="hls4ml-model-optimizer-passes-fuse-biasadd-module"></span><h2>hls4ml.model.optimizer.passes.fuse_biasadd module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.fuse_biasadd" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.fuse_biasadd.</code><code class="sig-name descname">FuseBiasAdd</code><a class="headerlink" href="#hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
+<p>Fuses BiasAdd into Dense/Conv2D layer (common in TF models).</p>
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd.match">
+<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd.match" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
-<div class="section" id="hls4ml-model-optimizer-passes-nop-module">
-<h2>hls4ml.model.optimizer.passes.nop module<a class="headerlink" href="#hls4ml-model-optimizer-passes-nop-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-hls4ml.model.optimizer.passes.nop">
+<span id="hls4ml-model-optimizer-passes-nop-module"></span><h2>hls4ml.model.optimizer.passes.nop module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.nop" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hls4ml.model.optimizer.passes.nop.EliminateLinearActivation">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.nop.</code><code class="sig-name descname">EliminateLinearActivation</code><a class="headerlink" href="#hls4ml.model.optimizer.passes.nop.EliminateLinearActivation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.nop.EliminateLinearActivation.match">
+<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.nop.EliminateLinearActivation.match" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.nop.EliminateLinearActivation.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.nop.EliminateLinearActivation.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
-<div class="section" id="hls4ml-model-optimizer-passes-pointwise-module">
-<h2>hls4ml.model.optimizer.passes.pointwise module<a class="headerlink" href="#hls4ml-model-optimizer-passes-pointwise-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-hls4ml.model.optimizer.passes.pointwise">
+<span id="hls4ml-model-optimizer-passes-pointwise-module"></span><h2>hls4ml.model.optimizer.passes.pointwise module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.pointwise" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hls4ml.model.optimizer.passes.pointwise.OptimizePointwiseConv">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.pointwise.</code><code class="sig-name descname">OptimizePointwiseConv</code><a class="headerlink" href="#hls4ml.model.optimizer.passes.pointwise.OptimizePointwiseConv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.pointwise.OptimizePointwiseConv.match">
+<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.pointwise.OptimizePointwiseConv.match" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.pointwise.OptimizePointwiseConv.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.pointwise.OptimizePointwiseConv.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hls4ml.model.optimizer.passes.pointwise.PointwiseConv1D">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.pointwise.</code><code class="sig-name descname">PointwiseConv1D</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">name</em>, <em class="sig-param">attributes</em>, <em class="sig-param">inputs</em>, <em class="sig-param">outputs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.pointwise.PointwiseConv1D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.hls_layers.Conv1D" title="hls4ml.model.hls_layers.Conv1D"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.hls_layers.Conv1D</span></code></a></p>
+<p>Optimized Conv1D implementation for 1x1 kernels.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="hls4ml.model.optimizer.passes.pointwise.PointwiseConv2D">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.pointwise.</code><code class="sig-name descname">PointwiseConv2D</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">name</em>, <em class="sig-param">attributes</em>, <em class="sig-param">inputs</em>, <em class="sig-param">outputs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.pointwise.PointwiseConv2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.hls_layers.Conv2D" title="hls4ml.model.hls_layers.Conv2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.hls_layers.Conv2D</span></code></a></p>
+<p>Optimized Conv2D implementation for 1x1 kernels.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="hls4ml-model-optimizer-passes-qkeras-module">
 <h2>hls4ml.model.optimizer.passes.qkeras module<a class="headerlink" href="#hls4ml-model-optimizer-passes-qkeras-module" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="hls4ml-model-optimizer-passes-repack-stream-module">
-<h2>hls4ml.model.optimizer.passes.repack_stream module<a class="headerlink" href="#hls4ml-model-optimizer-passes-repack-stream-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-hls4ml.model.optimizer.passes.repack_stream">
+<span id="hls4ml-model-optimizer-passes-repack-stream-module"></span><h2>hls4ml.model.optimizer.passes.repack_stream module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.repack_stream" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hls4ml.model.optimizer.passes.repack_stream.Repack">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.repack_stream.</code><code class="sig-name descname">Repack</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">name</em>, <em class="sig-param">attributes</em>, <em class="sig-param">inputs</em>, <em class="sig-param">outputs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.repack_stream.Repack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.hls_layers.Layer" title="hls4ml.model.hls_layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.hls_layers.Layer</span></code></a></p>
+<p>Inserted between layers with different packing factors.</p>
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.repack_stream.Repack.config_cpp">
+<code class="sig-name descname">config_cpp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.repack_stream.Repack.config_cpp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.repack_stream.Repack.function_cpp">
+<code class="sig-name descname">function_cpp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.repack_stream.Repack.function_cpp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.repack_stream.Repack.initialize">
+<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.repack_stream.Repack.initialize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hls4ml.model.optimizer.passes.repack_stream.ReshapeStream">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.repack_stream.</code><code class="sig-name descname">ReshapeStream</code><a class="headerlink" href="#hls4ml.model.optimizer.passes.repack_stream.ReshapeStream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
+<p>Repacks stream for Reshape layer</p>
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.repack_stream.ReshapeStream.match">
+<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.repack_stream.ReshapeStream.match" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.repack_stream.ReshapeStream.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.repack_stream.ReshapeStream.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
-<div class="section" id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-hls4ml.model.optimizer.passes">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.model.optimizer.passes" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 

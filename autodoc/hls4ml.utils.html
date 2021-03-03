@@ -116,10 +116,10 @@
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.templates.html">hls4ml.templates package</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">hls4ml.utils package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-utils-config-module">hls4ml.utils.config module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-utils-example-models-module">hls4ml.utils.example_models module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-utils-plot-module">hls4ml.utils.plot module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.config">hls4ml.utils.config module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.example_models">hls4ml.utils.example_models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.plot">hls4ml.utils.plot module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.writer.html">hls4ml.writer package</a></li>
@@ -195,17 +195,119 @@
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="hls4ml-utils-config-module">
-<h2>hls4ml.utils.config module<a class="headerlink" href="#hls4ml-utils-config-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-hls4ml.utils.config">
+<span id="hls4ml-utils-config-module"></span><h2>hls4ml.utils.config module<a class="headerlink" href="#module-hls4ml.utils.config" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="hls4ml.utils.config.config_from_keras_model">
+<code class="sig-prename descclassname">hls4ml.utils.config.</code><code class="sig-name descname">config_from_keras_model</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">granularity='model'</em>, <em class="sig-param">default_precision='ap_fixed&lt;16</em>, <em class="sig-param">6&gt;'</em>, <em class="sig-param">default_reuse_factor=1</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.config_from_keras_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="hls4ml.utils.config.create_vivado_config">
+<code class="sig-prename descclassname">hls4ml.utils.config.</code><code class="sig-name descname">create_vivado_config</code><span class="sig-paren">(</span><em class="sig-param">output_dir='my-hls-test'</em>, <em class="sig-param">project_name='myproject'</em>, <em class="sig-param">fpga_part='xcku115-flvb2104-2-i'</em>, <em class="sig-param">clock_period=5</em>, <em class="sig-param">io_type='io_parallel'</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.create_vivado_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
-<div class="section" id="hls4ml-utils-example-models-module">
-<h2>hls4ml.utils.example_models module<a class="headerlink" href="#hls4ml-utils-example-models-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-hls4ml.utils.example_models">
+<span id="hls4ml-utils-example-models-module"></span><h2>hls4ml.utils.example_models module<a class="headerlink" href="#module-hls4ml.utils.example_models" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="hls4ml.utils.example_models.fetch_example_list">
+<code class="sig-prename descclassname">hls4ml.utils.example_models.</code><code class="sig-name descname">fetch_example_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.example_models.fetch_example_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="hls4ml.utils.example_models.fetch_example_model">
+<code class="sig-prename descclassname">hls4ml.utils.example_models.</code><code class="sig-name descname">fetch_example_model</code><span class="sig-paren">(</span><em class="sig-param">model_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.example_models.fetch_example_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download an example model (and example data &amp; configuration if available) from github repo to working directory, and return the corresponding configuration:</p>
+<p><a class="reference external" href="https://github.com/hls-fpga-machine-learning/example-models">https://github.com/hls-fpga-machine-learning/example-models</a></p>
+<p>Use fetch_example_list() to see all the available models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model_name</strong> (<em>-</em>) – string, name of the example model in the repo. Example: fetch_example_model(‘KERAS_3layer.json’)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>Dictionary that stores the configuration to the model</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
-<div class="section" id="hls4ml-utils-plot-module">
-<h2>hls4ml.utils.plot module<a class="headerlink" href="#hls4ml-utils-plot-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-hls4ml.utils.plot">
+<span id="hls4ml-utils-plot-module"></span><h2>hls4ml.utils.plot module<a class="headerlink" href="#module-hls4ml.utils.plot" title="Permalink to this headline">¶</a></h2>
+<p>Utilities related to model visualization.</p>
+<dl class="function">
+<dt id="hls4ml.utils.plot.add_edge">
+<code class="sig-prename descclassname">hls4ml.utils.plot.</code><code class="sig-name descname">add_edge</code><span class="sig-paren">(</span><em class="sig-param">dot</em>, <em class="sig-param">src</em>, <em class="sig-param">dst</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.plot.add_edge" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="hls4ml.utils.plot.check_pydot">
+<code class="sig-prename descclassname">hls4ml.utils.plot.</code><code class="sig-name descname">check_pydot</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.plot.check_pydot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if PyDot and Graphviz are available.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="hls4ml.utils.plot.model_to_dot">
+<code class="sig-prename descclassname">hls4ml.utils.plot.</code><code class="sig-name descname">model_to_dot</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">show_shapes=False</em>, <em class="sig-param">show_layer_names=True</em>, <em class="sig-param">show_precision=False</em>, <em class="sig-param">rankdir='TB'</em>, <em class="sig-param">dpi=96</em>, <em class="sig-param">subgraph=False</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.plot.model_to_dot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a HLS model to dot format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – A HLS model instance.</p></li>
+<li><p><strong>show_shapes</strong> – whether to display shape information.</p></li>
+<li><p><strong>show_layer_names</strong> – whether to display layer names.</p></li>
+<li><p><strong>show_precision</strong> – whether to display precision of layer’s variables.</p></li>
+<li><p><strong>rankdir</strong> – <cite>rankdir</cite> argument passed to PyDot,
+a string specifying the format of the plot:
+‘TB’ creates a vertical plot;
+‘LR’ creates a horizontal plot.</p></li>
+<li><p><strong>dpi</strong> – Dots per inch.</p></li>
+<li><p><strong>subgraph</strong> – whether to return a <cite>pydot.Cluster</cite> instance.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <cite>pydot.Dot</cite> instance representing the HLS model or
+a <cite>pydot.Cluster</cite> instance representing nested model if
+<cite>subgraph=True</cite>.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ImportError</strong> – if graphviz or pydot are not available.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="hls4ml.utils.plot.plot_model">
+<code class="sig-prename descclassname">hls4ml.utils.plot.</code><code class="sig-name descname">plot_model</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">to_file='model.png'</em>, <em class="sig-param">show_shapes=False</em>, <em class="sig-param">show_layer_names=True</em>, <em class="sig-param">show_precision=False</em>, <em class="sig-param">rankdir='TB'</em>, <em class="sig-param">dpi=96</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.plot.plot_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a HLS model to dot format and save to a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – A HLS model instance</p></li>
+<li><p><strong>to_file</strong> – File name of the plot image.</p></li>
+<li><p><strong>show_shapes</strong> – whether to display shape information.</p></li>
+<li><p><strong>show_layer_names</strong> – whether to display layer names.</p></li>
+<li><p><strong>show_precision</strong> – whether to display precision of layer’s variables.</p></li>
+<li><p><strong>rankdir</strong> – <cite>rankdir</cite> argument passed to PyDot,
+a string specifying the format of the plot:
+‘TB’ creates a vertical plot;
+‘LR’ creates a horizontal plot.</p></li>
+<li><p><strong>dpi</strong> – Dots per inch.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A Jupyter notebook Image object if Jupyter is installed.
+This enables in-line display of the model plots in notebooks.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
-<div class="section" id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-hls4ml.utils">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.utils" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 
