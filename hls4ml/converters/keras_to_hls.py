@@ -202,8 +202,12 @@ def keras_to_hls(config):
 
     if 'KerasModel' in config:
         # Model instance passed in config from API
-        model_arch = json.loads(config['KerasModel'].to_json())
-        reader = KerasModelReader(config['KerasModel'])
+        keras_model = config['KerasModel']
+        if isinstance(keras_model, str):
+            from tensorflow.keras.models import load_model
+            keras_model = load_model(keras_model)
+        model_arch = json.loads(keras_model.to_json())
+        reader = KerasModelReader(keras_model)
     elif 'KerasJson' in config:
         # Extract model architecture from json
         with open(config['KerasJson']) as json_file:
