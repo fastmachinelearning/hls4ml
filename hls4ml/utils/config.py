@@ -259,8 +259,6 @@ def config_from_pytorch_model(model, granularity='model', default_precision='ap_
     model_config['Precision'] = default_precision
     model_config['ReuseFactor'] = default_reuse_factor
     model_config['Strategy'] = 'Latency'
-    #model_config['Compression'] = False
-    #model_config['Trace'] = False
 
     config['Model'] = model_config
     
@@ -308,8 +306,6 @@ def config_from_onnx_model(model, granularity='model', default_precision='ap_fix
     model_config['Precision'] = default_precision
     model_config['ReuseFactor'] = default_reuse_factor
     model_config['Strategy'] = 'Latency'
-    #model_config['Compression'] = False
-    #model_config['Trace'] = False
 
     config['Model'] = model_config
     
