@@ -3,7 +3,7 @@ Realease Notes
 ========================
 
 
-Go to `here <https://github.com/hls-fpga-machine-learning/hls4ml/releases>`_ for official releases on Github.
+Go to `here <https://github.com/hls-fpga-machine-learning/hls4ml/releases>`__ for official releases on Github.
 
 **v0.3.0**
 
