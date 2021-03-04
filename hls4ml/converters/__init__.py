@@ -46,7 +46,7 @@ def parse_yaml_config(config_file):
     This function parses the conversion configuration contained in the YAML
     file provided as an argument. It ensures proper serialization of hls4ml
     objects and should be called on YAML files created by hls4ml. A minimal
-    valid YAML file may look like this:
+    valid YAML file may look like this::
 
         KerasH5: my_keras_model.h5
         OutputDir: my-hls-test
