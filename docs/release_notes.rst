@@ -1,12 +1,15 @@
 ========================
-Realease Notes
+Release Notes
 ========================
 
+See `here <https://github.com/fastmachinelearning/hls4ml/releases>`__ for official releases on Github.
 
-Go to `here <https://github.com/fastmachinelearning/hls4ml/releases>`__ for official releases on Github.
+----
 
 **v0.5.0 / bartsia**
+
 What's new:
+
 * Streaming IO layer implementations, especially of Convolutional layers, accessed through the config with `IOType: io_stream`. Scales CNN support to much larger models than previously possible (see `arXiv:2101.05108 <https://arxiv.org/abs/2101.05108>`__)
 * New `documentation and API reference <https://fastmachinelearning.org/hls4ml/>`__
 * Further optimizations for QKeras / quantization aware training. A 'shift' operation is now used for `po2` quantizers
@@ -14,14 +17,19 @@ What's new:
 * ``profiling`` for PyTorch models
 
 Deprecated:
+
 * ``IOType : io_serial`` is deprecated, and superceded by new ``IOType: io_stream``
 
 Bugfixes:
+
 * Fix to Initiation Interval and different min/max latency for ``Strategy: Resource``
 * Fix warnings in ``hls4ml`` command line script flow
 * Write yml config from Python API - for mixed API / command line flow
 
+----
+
 **v0.4.0 / aster**
+
 What's new:
 
 * Support for GarNet layer (see `arXiv:2008.03601 <https://arxiv.org/abs/2008.03601>`__)
