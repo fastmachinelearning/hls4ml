@@ -91,7 +91,7 @@
             
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
-<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Realease Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="status.html">Status and Features</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Setup</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
@@ -197,11 +197,9 @@
 <p><a class="reference external" href="https://pypi.python.org/pypi/PyYAML">https://pypi.python.org/pypi/PyYAML</a></p>
 <p><strong>PyTorch</strong>: for reading in Torch models</p>
 <p><a class="reference external" href="https://pytorch.org/">https://pytorch.org/</a></p>
-<p><strong>scikit-learn</strong>: for BDT architectures, includes dependencies on numpy, etc.</p>
-<p><a class="reference external" href="https://scikit-learn.org">https://scikit-learn.org</a></p>
 <p><strong>onnx</strong>: note that you need an install of protobuf and numpy to build onnx. Detailed instructions are included in the link.</p>
 <p><a class="reference external" href="https://github.com/onnx/onnx">https://github.com/onnx/onnx</a></p>
-<p><strong>Xilinx Vivado license</strong>: the package currently is only for Xilinx devices, a license is required for the simulation and synthesis of HLS code</p>
+<p><strong>Xilinx Vivado license</strong>: a license is required for the synthesis of generated RTL IP</p>
 </div>
 <div class="section" id="quick-start">
 <h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
@@ -243,13 +241,13 @@
 <span class="n">hls4ml</span><span class="o">.</span><span class="n">report</span><span class="o">.</span><span class="n">read_vivado_report</span><span class="p">(</span><span class="s1">&#39;my-hls-test&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Done! you’ve built your first project using <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> ! To learn more about our various API functionalities, check out our tutorials <a class="reference external" href="https://github.com/hls-fpga-machine-learning/hls4ml-tutorial">here</a>.</p>
+<p>Done! you’ve built your first project using <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> ! To learn more about our various API functionalities, check out our tutorials <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml-tutorial">here</a>.</p>
 <p>If you want to configure your model further, check out our <a class="reference internal" href="api/configuration.html"><span class="doc">Configuration</span></a> page.</p>
 <p>Apart from our main API, we also support model conversion using a command line interface, check out our next section to find out more:</p>
 <div class="section" id="getting-started-with-hls4ml-commands-optional">
 <h4>Getting started with hls4ml commands (optional)<a class="headerlink" href="#getting-started-with-hls4ml-commands-optional" title="Permalink to this headline">¶</a></h4>
 <p>To follow this tutorial, you must first download our <code class="docutils literal notranslate"><span class="pre">example-models</span></code> repository:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/hls-fpga-machine-learning/example-models.git
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/fastmachinelearning/example-models.git
 </pre></div>
 </div>
 <p>The model files, along with other configuration parameters, are defined in the <code class="docutils literal notranslate"><span class="pre">.yml</span></code> files.
@@ -299,9 +297,9 @@ vivado_hls -f build_prj.tcl
 <div class="section" id="existing-examples">
 <h3>Existing examples<a class="headerlink" href="#existing-examples" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><p>Examples of model files and weights can be found in <a class="reference external" href="https://github.com/hls-fpga-machine-learning/example-models">example_models</a> directory.</p></li>
-<li><p>Training codes and examples of resources needed to train the models can be found <a class="reference external" href="https://github.com/hls-fpga-machine-learning/keras-training">here</a>.</p></li>
-<li><p>Other examples of various HLS projects with examples of different machine learning algorithm implementations is in the directory <a class="reference external" href="https://github.com/hls-fpga-machine-learning/hls4ml/tree/master/example-prjs">example-prjs</a>.</p></li>
+<li><p>Examples of model files and weights can be found in <a class="reference external" href="https://github.com/fastmachinelearning/example-models">example_models</a> directory.</p></li>
+<li><p>Training codes and examples of resources needed to train the models can be found <a class="reference external" href="https://github.com/fastmachinelearning/keras-training">here</a>.</p></li>
+<li><p>Other examples of various HLS projects with examples of different machine learning algorithm implementations is in the directory <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/tree/master/example-prjs">example-prjs</a>.</p></li>
 </ul>
 </div>
 </div>

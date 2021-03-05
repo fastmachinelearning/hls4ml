@@ -24,17 +24,12 @@ https://pypi.python.org/pypi/PyYAML
 https://pytorch.org/
 
 
-**scikit-learn**\ : for BDT architectures, includes dependencies on numpy, etc. 
-
-https://scikit-learn.org
-
-
 **onnx**\ : note that you need an install of protobuf and numpy to build onnx. Detailed instructions are included in the link. 
 
 https://github.com/onnx/onnx 
 
 
-**Xilinx Vivado license**\ : the package currently is only for Xilinx devices, a license is required for the simulation and synthesis of HLS code
+**Xilinx Vivado license**\ : a license is required for the synthesis of generated RTL IP
 
 
 Quick Start
@@ -87,7 +82,7 @@ After that, you can use :code:`Vivado HLS` to synthesize the model:
    #Print out the report if you want
    hls4ml.report.read_vivado_report('my-hls-test')
 
-Done! you've built your first project using ``hls4ml`` ! To learn more about our various API functionalities, check out our tutorials `here <https://github.com/hls-fpga-machine-learning/hls4ml-tutorial>`__.
+Done! you've built your first project using ``hls4ml`` ! To learn more about our various API functionalities, check out our tutorials `here <https://github.com/fastmachinelearning/hls4ml-tutorial>`__.
 
 If you want to configure your model further, check out our :doc:`Configuration <api/configuration>` page. 
 
@@ -100,7 +95,7 @@ To follow this tutorial, you must first download our ``example-models`` reposito
 
 .. code-block:: bash
 
-   git clone https://github.com/hls-fpga-machine-learning/example-models.git
+   git clone https://github.com/fastmachinelearning/example-models.git
 
 The model files, along with other configuration parameters, are defined in the ``.yml`` files.
 Further information about ``.yml`` files can be found in :doc:`Configuration <api/configuration>` page.
@@ -172,10 +167,10 @@ Existing examples
 
 
 * 
-  Examples of model files and weights can be found in `example_models <https://github.com/hls-fpga-machine-learning/example-models>`_ directory.
+  Examples of model files and weights can be found in `example_models <https://github.com/fastmachinelearning/example-models>`_ directory.
 
 * 
-  Training codes and examples of resources needed to train the models can be found `here <https://github.com/hls-fpga-machine-learning/keras-training>`__.
+  Training codes and examples of resources needed to train the models can be found `here <https://github.com/fastmachinelearning/keras-training>`__.
 
 * 
-  Other examples of various HLS projects with examples of different machine learning algorithm implementations is in the directory `example-prjs <https://github.com/hls-fpga-machine-learning/hls4ml/tree/master/example-prjs>`_.
+  Other examples of various HLS projects with examples of different machine learning algorithm implementations is in the directory `example-prjs <https://github.com/fastmachinelearning/hls4ml/tree/master/example-prjs>`_.

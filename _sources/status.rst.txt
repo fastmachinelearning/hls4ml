@@ -5,7 +5,7 @@ Status and Features
 Status
 ========
 
-The latest stable release is :doc:`v0.2.0 <release_notes>`, including a validated boosted decision tree implementation (`arXiv:2002.02534 <https://arxiv.org/abs/2002.02534>`_) and binary/ternary neural networks (\ `arXiv:2003.06308 <https://arxiv.org/abs/2003.06308>`_).
+The latest stable release is :doc:`v0.5.0 <release_notes>`. This release brings the new `IOType: io_stream` and support for larger CNN models, see: <https://arxiv.org/abs/2101.05108>.
 
 
 Features
@@ -15,16 +15,12 @@ A list of suppported ML codes and architectures, including a summary table is be
 
 ML code support: 
 
-
-* Keras/Tensorflow, PyTorch, scikit-learn
-* Planned: xgboost 
+* Keras/Tensorflow/QKeras, PyTorch, Onnx
 
 Neural network architectures:
 
-
 * Fully Connected NNs (multi-layer perceptron)
-* Boosted Decision Trees
-* Convolutional NNs (1D/2D), in beta testing
+* Convolutional NNs (1D/2D)
 * Recurrent NN/LSTM, in prototyping
 
 A summary of the on-going status of the ``hls4ml`` tool is in the table below.
@@ -33,33 +29,31 @@ A summary of the on-going status of the ``hls4ml`` tool is in the table below.
    :header-rows: 1
 
    * - Architectures/Toolkits
-     - Keras/TensorFlow
+     - Keras/TensorFlow/QKeras
      - PyTorch
-     - scikit-learn
+     - ONNX
    * - MLP
      - ``supported``
      - ``supported``
-     - -
+     - ``supported``
    * - Conv1D/Conv2D
      - ``supported``
      - ``in development``
-     - -
-   * - BDT
-     - -
-     - -
-     - ``supported``
+     - ``in development`` 
    * - RNN/LSTM
      - ``in development``
-     - -
-     - -
+     - ``in development``
+     - ``in development``
 
 
-Other random feature notes:
+Other feature notes:
 
+* ``hls4ml`` is tested on Linux, and supports Vivado HLS versions 2018.2 to 2020.1. Vitis HLS is not yet supported. Windows and macOS are not supported.
 
-* There is a known Vivado HLS issue where the large loop unrolls create memory issues during synthesis.  We are working to solve this issue but you may see errors related to this depending on the memory of your machine.  Please feel free to email the ``hls4ml`` team if you have any further questions.
+* BDT support has moved to the `Conifer <https://github.com/thesps/conifer>`__ package
 
 Example Models
 ==============
 
-We also provide and documented several example models that have been implemented in ``hls4ml`` in `this Github repository <https://github.com/hls-fpga-machine-learning/models>`_.
+We also provide and documented several example models that have been implemented in ``hls4ml`` in `this Github repository <https://github.com/fastmachinelearning/example-models>`_.
+
