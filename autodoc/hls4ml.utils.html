@@ -200,7 +200,38 @@
 <dl class="function">
 <dt id="hls4ml.utils.config.config_from_keras_model">
 <code class="sig-prename descclassname">hls4ml.utils.config.</code><code class="sig-name descname">config_from_keras_model</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">granularity='model'</em>, <em class="sig-param">default_precision='ap_fixed&lt;16</em>, <em class="sig-param">6&gt;'</em>, <em class="sig-param">default_reuse_factor=1</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.config_from_keras_model" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Create an HLS conversion config given the Keras model.</p>
+<p>This function serves as the initial step in creating the custom conversion configuration.
+Users are advised to inspect the returned object to tweak the conversion configuration.
+The return object can be passed as <cite>hls_config</cite> parameter to <cite>convert_from_keras_model</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – Keras model</p></li>
+<li><p><strong>granularity</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>Granularity of the created config. Defaults to ‘model’.
+Can be set to ‘model’, ‘type’ and ‘layer’.</p>
+<p>Granularity can be used to generate a more verbose config that can be fine-tuned.
+The default granulrity (‘model’) will generate config keys that apply to the whole
+model, so changes to the keys will affect the entire model. ‘type’ granularity will
+generate config keys that affect all layers of a given type, while the ‘name’ granularity
+will generate config keys for every layer separately, allowing for highly specific
+configuration tweaks.</p>
+</p></li>
+<li><p><strong>default_precision</strong> (<em>str</em><em>, </em><em>optional</em>) – Default precision to use. Defaults to ‘ap_fixed&lt;16,6&gt;’.</p></li>
+<li><p><strong>default_reuse_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – Default reuse factor. Defaults to 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>Exception</strong> – If Keras model has layers not supported by hls4ml.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The created config.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>[dict]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
 <dt id="hls4ml.utils.config.create_vivado_config">

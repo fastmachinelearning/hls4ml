@@ -358,17 +358,87 @@
 <dl class="function">
 <dt id="hls4ml.converters.convert_from_config">
 <code class="sig-prename descclassname">hls4ml.converters.</code><code class="sig-name descname">convert_from_config</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.convert_from_config" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Convert to hls4ml model based on the provided configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> – A string containing the path to the YAML configuration file on
+the filesystem or a dict containig the parsed configuration.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>hls4ml model.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hls4ml.model.html#hls4ml.model.hls_model.HLSModel" title="hls4ml.model.hls_model.HLSModel">HLSModel</a></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
 <dt id="hls4ml.converters.convert_from_keras_model">
 <code class="sig-prename descclassname">hls4ml.converters.</code><code class="sig-name descname">convert_from_keras_model</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">output_dir='my-hls-test'</em>, <em class="sig-param">project_name='myproject'</em>, <em class="sig-param">fpga_part='xcku115-flvb2104-2-i'</em>, <em class="sig-param">clock_period=5</em>, <em class="sig-param">io_type='io_parallel'</em>, <em class="sig-param">hls_config={}</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.convert_from_keras_model" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Convert to hls4ml model based on the provided configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – Keras model to convert</p></li>
+<li><p><strong>output_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – Output directory of the generated HLS
+project. Defaults to ‘my-hls-test’.</p></li>
+<li><p><strong>project_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the HLS project.
+Defaults to ‘myproject’.</p></li>
+<li><p><strong>fpga_part</strong> (<em>str</em><em>, </em><em>optional</em>) – The target FPGA device.
+Defaults to ‘xcku115-flvb2104-2-i’.</p></li>
+<li><p><strong>clock_period</strong> (<em>int</em><em>, </em><em>optional</em>) – Clock period of the design.
+Defaults to 5.</p></li>
+<li><p><strong>io_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Type of implementation used. One of
+‘io_parallel’ or ‘io_serial’. Defaults to ‘io_parallel’.</p></li>
+<li><p><strong>hls_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – The HLS config.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>Exception</strong> – If precision and reuse factor are not present in ‘hls_config’</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>hls4ml model.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="hls4ml.model.html#hls4ml.model.hls_model.HLSModel" title="hls4ml.model.hls_model.HLSModel">HLSModel</a></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
-<dt id="hls4ml.converters.parse_config">
-<code class="sig-prename descclassname">hls4ml.converters.</code><code class="sig-name descname">parse_config</code><span class="sig-paren">(</span><em class="sig-param">config_file</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.parse_config" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="hls4ml.converters.parse_yaml_config">
+<code class="sig-prename descclassname">hls4ml.converters.</code><code class="sig-name descname">parse_yaml_config</code><span class="sig-paren">(</span><em class="sig-param">config_file</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.parse_yaml_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse conversion configuration from the provided YAML file.</p>
+<p>This function parses the conversion configuration contained in the YAML
+file provided as an argument. It ensures proper serialization of hls4ml
+objects and should be called on YAML files created by hls4ml. A minimal
+valid YAML file may look like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">KerasH5</span><span class="p">:</span> <span class="n">my_keras_model</span><span class="o">.</span><span class="n">h5</span>
+<span class="n">OutputDir</span><span class="p">:</span> <span class="n">my</span><span class="o">-</span><span class="n">hls</span><span class="o">-</span><span class="n">test</span>
+<span class="n">ProjectName</span><span class="p">:</span> <span class="n">myproject</span>
+<span class="n">XilinxPart</span><span class="p">:</span> <span class="n">xcku115</span><span class="o">-</span><span class="n">flvb2104</span><span class="o">-</span><span class="mi">2</span><span class="o">-</span><span class="n">i</span>
+<span class="n">ClockPeriod</span><span class="p">:</span> <span class="mi">5</span>
+<span class="n">IOType</span><span class="p">:</span> <span class="n">io_stream</span>
+<span class="n">HLSConfig</span><span class="p">:</span>
+    <span class="n">Model</span><span class="p">:</span>
+    <span class="n">Precision</span><span class="p">:</span> <span class="n">ap_fixed</span><span class="o">&lt;</span><span class="mi">16</span><span class="p">,</span><span class="mi">6</span><span class="o">&gt;</span>
+    <span class="n">ReuseFactor</span><span class="p">:</span> <span class="mi">10</span>
+</pre></div>
+</div>
+<p>Please refer to the docs for more examples of valid YAML configurations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config_file</strong> (<em>str</em>) – Location of the file on the filesystem.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Parsed configuration.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
 
 </div>
 </div>
