@@ -1,7 +1,5 @@
-import importlib
 from hls4ml.model.hls_model import HLSModel
 from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
-import qkeras
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas
