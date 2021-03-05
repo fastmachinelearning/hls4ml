@@ -342,7 +342,7 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
         The HLSModel to profile
     X : array-like, optional
         Test data on which to evaluate the model to profile activations
-        Must be formatted suitably for the model.predict(X) method
+        Must be formatted suitably for the ``model.predict(X)`` method
     plot : str, optional
         The type of plot to produce.
         Options are: 'boxplot' (default), 'violinplot', 'histogram',
@@ -420,14 +420,18 @@ def _get_output(ymodel, layer, X):
 def get_ymodel_keras(keras_model, X):
     """
     Calculate each layer's ouput and put them into a dictionary
-    Params:
-    ------
-    keras_model: a keras model
+
+    Parameters
+    ----------
+    keras_model :
+        a keras model
     X : array-like
-        Test data on which to evaluate the model to profile activations
-        Must be formatted suitably for the model.predict(X) method
-    Return:
-    ------
+        Test data on which to evaluate the model to profile activations.
+        Must be formatted suitably for the ``model.predict(X)`` method.
+
+    Returns
+    -------
+    dictionary
         A dictionary in the form {"layer_name": ouput array of layer}
     """
     
@@ -529,21 +533,28 @@ def _dist_diff(ymodel, ysim):
 def compare(keras_model, hls_model, X, plot_type = "dist_diff"):
     """
     Compare each layer's output in keras and hls model. Note that the hls_model should not be compiled before using this.
-    Params:
-    ------
-    keras_model : original keras model
-    hls_model : converted HLS model, with "Trace:True" in the configuration file.
-    X: numpy array, input for the model. 
-    plot_type : (string) different methods to visualize the y_model and y_sim differences.
-                Possible options include:
-                     - "norm_diff" : square root of the sum of the squares of the differences 
-                                    between each output vectors 
-                     - "dist_diff" : The normalized distribution of the differences of the elements
-                                    between two output vectors
+
+    Parameters
+    ----------
+    keras_model : 
+        original keras model
+    hls_model :
+        converted HLSModel, with "Trace:True" in the configuration file.
+    X : array-like 
+        Input for the model. 
+    plot_type : string
+        different methods to visualize the y_model and y_sim differences.
+        Possible options include:
         
-    Return:
-    ------
-        plot object of the histogram depicting the difference in each layer's ouput
+        - 'norm_diff' : square root of the sum of the squares of the differences 
+          between each output vectors 
+        - 'dist_diff' : The normalized distribution of the differences of the elements
+          between two output vectors
+        
+    Returns
+    -------
+    matplotlib figure
+        plot object of the histogram depicting the difference in each layer's output
     """
     
     #Take in output from both models
