@@ -21,12 +21,33 @@
 #include <algorithm>
 #include <vector>
 #include <string>
-#include <sstream>
+//#include <sstream>
+#include <cctype>
 
 #include "firmware/parameters.h"
 #include "firmware/myproject.h"
 
 #define CHECKPOINT 5000
+
+// This function is written to avoid stringstream, which is
+// not supported in cosim 20.1, and because strtok
+// requires a const_cast or allocation to use with std::strings.
+// This function returns the next float (by argument) at position pos,
+// updating pos. True is returned if conversion done, false if the string
+// has ended, and std::invalid_argument exception if the sting was bad.
+bool nextToken(const std::string& str, std::size_t& pos, float& val)
+{
+  while (pos < str.size() && std::isspace(static_cast<unsigned char>(str[pos]))) {
+    pos++;
+  }
+  if (pos >= str.size()) {
+    return false;
+  }
+  std::size_t offset = 0;
+  val = std::stof(str.substr(pos), &offset);
+  pos += offset;
+  return true;
+}
 
 int main(int argc, char **argv)
 {
@@ -51,18 +72,29 @@ int main(int argc, char **argv)
 	std::cout << "Processing input "  << num_iterations << std::endl;
       }
 
-      float entry;
-
-      std::istringstream iss(iline);
       std::vector<float> in;
-      while(iss >> entry) {
-        in.push_back(entry);
+      std::vector<float> pr;
+      float current;
+
+      // // stringstream not supported in cosim
+      // std::istringstream iss(iline);
+      // while(iss >> current) {
+      //   in.push_back(current);
+      // }
+
+      // std::istringstream pss(pline);
+      // while(pss >> current) {
+      //   pr.push_back(current);
+      // }
+
+      std::size_t pos = 0;
+      while(nextToken(iline, pos, current)) {
+	in.push_back(current);
       }
 
-      std::istringstream pss(pline);
-      std::vector<float> pr;
-      while(pss >> entry) {
-        pr.push_back(entry);
+      pos = 0;
+      while(nextToken(pline, pos, current)) {
+	pr.push_back(current);
       }
 
       //hls-fpga-machine-learning insert data
