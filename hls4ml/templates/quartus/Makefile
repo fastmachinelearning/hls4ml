@@ -21,7 +21,6 @@ clean:
 
 .PHONY: myproject-fpga
 myproject-fpga: CXXFLAGS := $(CXXFLAGS) 
-myproject-fpga: CXXFLAGS := $(CXXFLAGS)
 #force-dsp: CXXFLAGS := $(CXXFLAGS) --quartus-compile
 
 $(TARGETS) : $(SOURCE_FILES) $(HEADER_FILES)
