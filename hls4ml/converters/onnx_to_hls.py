@@ -211,13 +211,9 @@ def onnx_to_hls(config):
 
     #Extract model architecture
     print('Interpreting Model ...')
-    if 'OnnxAPIModel' in config:
-        # Model instance passed in config from API
-        model = config['OnnxAPIModel']
-    else:
-        #Model instance passed in from "physical" file.
-        model = onnx.load(config['OnnxModel'])
     
+    model =  onnx.load(config['OnnxModel']) if isinstance(config['OnnxModel'], str) else config['OnnxModel']
+          
     #Optimizie the model graph's before conversion
     model = shape_inference.infer_shapes(model) # have to infer shapes before optimizing the model
     graph =  _hls4ml_onnx_optimizer(model.graph)

@@ -194,7 +194,7 @@ def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', pro
         io_type=io_type
     )
     
-    config['PytorchAPIModel'] = model
+    config['PytorchModel'] = model
     config['InputShape'] = input_shape
 
     model_config = hls_config.get('Model', None)
@@ -271,7 +271,7 @@ def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='mypro
         io_type=io_type
     )
     
-    config['OnnxAPIModel'] = model
+    config['OnnxModel'] = model
 
     model_config = hls_config.get('Model', None)
     

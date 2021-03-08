@@ -13,9 +13,10 @@ class PyTorchModelReader(object):
     """
     Pytorch data reader to be used for extracting relevant information during conversion.
     """
-    def __init__(self, model):
-        self.torch_model = model
-        self.state_dict = model.state_dict()
+    def __init__(self, config):
+        self.torch_model = config['PytorchModel']
+        self.state_dict = self.torch_model.state_dict()
+        self.input_shape = config['InputShape']
     
     def get_weights_data(self, layer_name, var_name):
         """Get weights data from layers.
@@ -120,14 +121,9 @@ def pytorch_to_hls(config):
     layer_list = []
 
     print('Interpreting Model ...')
-    if 'PytorchAPIModel' in config:
-        # Model instance passed in config from API
-        reader = PyTorchModelReader(config['PytorchAPIModel'])
-        input_shapes = [list(config['InputShape'])]
-    else:
-        #Model instance passed in from "physical" file.
-        reader = PyTorchFileReader(config)
-        input_shapes = [list(reader.input_shape)] #In case there are multiple inputs
+    
+    reader = PyTorchFileReader(config) if isinstance(config['PytorchModel'],str) else PyTorchModelReader(config)
+    input_shapes = [list(reader.input_shape)]
         
     model = reader.torch_model
 
