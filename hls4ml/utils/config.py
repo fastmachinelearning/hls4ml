@@ -76,7 +76,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     norm_layers = ['BatchNormalization']
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
     merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate', 'Dot']
-    qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D', 'QBatchNormalization']
+    qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D', 'QBatchNormalization', 'QConv2DBatchnorm']
     #Define layers to skip for conversion to HLS
     skip_layers = ['Dropout', 'Flatten']
     #All supported layers

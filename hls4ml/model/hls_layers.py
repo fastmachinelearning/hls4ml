@@ -6,6 +6,9 @@ import re
 import numpy as np
 from collections import OrderedDict
 
+from tensorflow.python.ops import math_ops
+
+
 class Quantizer(object):
     def __init__(self, bits, hls_type):
         self.bits = bits
@@ -448,15 +451,17 @@ class Layer(object):
         
         return StreamVariable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, n_pack=pack_factor, depth=depth, index=self.index)
 
-    def add_weights(self, quantizer=None, compression=False):
-        data = self.model.get_weights_data(self.name, 'kernel')
+    def add_weights(self, quantizer=None, compression=False, data=None):
+        if data is None:
+            data = self.model.get_weights_data(self.name, 'kernel')
 
         self.add_weights_variable(name='weight', var_name='w{index}', data=data, quantizer=quantizer, compression=compression)
 
-    def add_bias(self, quantizer=None):
-        data = self.model.get_weights_data(self.name, 'bias')
+    def add_bias(self, quantizer=None, data=None):
         precision = None
         type_name = None
+        if data is None:
+            data = self.model.get_weights_data(self.name, 'bias')
         if data is None:
             data = np.zeros(self.get_output_variable().shape[-1])
             precision = IntegerPrecisionType(width=1, signed=False)
@@ -838,7 +843,114 @@ class Conv2D(Layer):
             self.set_attr('strategy', 'resource')
             if self.model.config.backend.name == 'Vivado':
                 self.model.config.backend.set_closest_reuse_factor(self)
-                self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 2, 0, 1]) #(H,W,C,F) => (F,C,H,W)
+                self.weights['weight'].data = np.transpose(self.weights['weight'].data,
+                                                           axes=[3, 2, 0, 1])  # (H,W,C,F) => (F,C,H,W)
+        else:
+            self.set_attr('strategy', 'latency')
+
+    def function_cpp(self):
+        params = self._default_function_params()
+        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
+        params['w'] = self.get_weights('weight').name
+        params['b'] = self.get_weights('bias').name
+
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+        if self.get_attr('data_format') == 'channels_last':
+            params['in_height'] = self.get_input_variable().dim_names[0]
+            params['in_width'] = self.get_input_variable().dim_names[1]
+            params['n_chan'] = self.get_input_variable().dim_names[2]
+            params['out_height'] = self.get_output_variable().dim_names[0]
+            params['out_width'] = self.get_output_variable().dim_names[1]
+            params['n_filt'] = self.get_output_variable().dim_names[2]
+        else:
+            params['n_chan'] = self.get_input_variable().dim_names[0]
+            params['in_height'] = self.get_input_variable().dim_names[1]
+            params['in_width'] = self.get_input_variable().dim_names[2]
+            params['n_filt'] = self.get_output_variable().dim_names[0]
+            params['out_height'] = self.get_output_variable().dim_names[1]
+            params['out_width'] = self.get_output_variable().dim_names[2]
+        params['dilation'] = self.get_attr('dilation', 1)
+        params['nzeros'] = self.get_weights('weight').nzeros
+
+        if self.model.config.get_config_value('IOType') == 'io_stream':
+            min_h, min_w, instructions = self.model.config.backend.compute_conv2d_instructions(
+                self.get_input_variable().shape[0],
+                self.get_input_variable().shape[1],
+                self.get_input_variable().shape[2],
+                params['filt_height'],
+                params['stride_height'])
+            instructions_str = ','.join(str(i) for i in instructions)
+            params['min_height'] = min_h
+            params['min_width'] = min_w
+            params['instructions'] = instructions_str
+        else:
+            params['min_height'] = params['in_height']
+            params['min_width'] = params['in_width']
+            params['instructions'] = '0'
+
+        params['config_t'] = 'config{}_mult'.format(self.index)
+        conv_config = self._config_template[0].format(**params)
+
+        mult_params = self._default_config_params()
+        mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
+        mult_params['n_out'] = self.get_attr('n_filt')
+        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision,
+                                                                             self.get_weights('weight').type.precision)
+        mult_config = self._config_template[1].format(**mult_params)
+
+        return mult_config + '\n' + conv_config
+
+
+class Conv2DBatchnorm(Layer):
+    def _get_folded_weights(self):
+        """
+        Function to get the batchnorm folded weights.
+        This function converts the weights by folding batchnorm parameters into
+        the weight of QConv2D. The high-level equation:
+        W_fold = gamma * W / sqrt(variance + epsilon)
+        bias_fold = gamma * (bias - moving_mean) / sqrt(variance + epsilon) + beta
+        """
+        kernel = self.model.get_weights_data(self.name, 'kernel')
+        bias = self.model.get_weights_data(self.name, 'bias')
+
+        # get batchnorm weights and moving stats
+        gamma = self.model.get_weights_data(self.name, 'gamma')
+        beta = self.model.get_weights_data(self.name, 'beta')
+        moving_mean = self.model.get_weights_data(self.name, 'moving_mean')
+        moving_variance = self.model.get_weights_data(self.name, 'moving_variance')
+        # get the inversion factor so that we replace division by multiplication
+        inv = math_ops.rsqrt(moving_variance + self.get_attr('epsilon'))
+        if gamma is not None:
+            inv *= gamma
+
+        # wrap conv kernel and bias with bn parameters
+        folded_kernel = inv * kernel
+        folded_bias = inv * (bias - moving_mean) + beta
+
+        return [folded_kernel, folded_bias]
+
+    def initialize(self):
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
+            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index),
+                    'N_FILT_{}'.format(self.index)]
+        else:
+            shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
+            dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index),
+                    'OUT_WIDTH_{}'.format(self.index)]
+        folded_kernel, folded_bias = self._get_folded_weights()
+        self.add_output_variable(shape, dims)
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'), data=folded_kernel)
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'), data=folded_bias)
+        if self.model.config.is_resource_strategy(self):
+            self.set_attr('strategy', 'resource')
+            if self.model.config.backend.name == 'Vivado':
+                self.model.config.backend.set_closest_reuse_factor(self)
+                self.weights['weight'].data = np.transpose(self.weights['weight'].data,
+                                                           axes=[3, 2, 0, 1])  # (H,W,C,F) => (F,C,H,W)
         else:
             self.set_attr('strategy', 'latency')
 
@@ -1726,50 +1838,51 @@ class GarNetStack(GarNet):
         params['sublayer_configs'] = '\n'.join(sublayer_configs)
 
 layer_map = {
-    'Input'                  : Input,
-    'InputLayer'             : Input,
-    'Activation'             : Activation,
-    'QActivation'            : Activation,
-    'LeakyReLU'              : ParametrizedActivation,
-    'ThresholdedReLU'        : ParametrizedActivation,
-    'ELU'                    : ParametrizedActivation,
-    'PReLU'                  : PReLU,
-    'Softmax'                : Softmax,
-    'Reshape'                : Reshape,
-    'Dense'                  : Dense,
-    'BinaryDense'            : Dense,
-    'TernaryDense'           : Dense,
-    'QDense'                 : Dense,
-    'Conv1D'                 : Conv1D,
-    'QConv1D'                : Conv1D,
-    'Conv2D'                 : Conv2D,
-    'BinaryConv2D'           : Conv2D,
-    'QConv2D'                : Conv2D,
-    'SeparableConv1D'        : SeparableConv1D,
-    'SeparableConv2D'        : SeparableConv2D,
-    'DepthwiseConv2D'        : DepthwiseConv2D,
-    'BatchNormalization'     : BatchNormalization,
-    'QBatchNormalization'    : BatchNormalization,
-    'MaxPooling1D'           : Pooling1D,
-    'AveragePooling1D'       : Pooling1D,
-    'MaxPooling2D'           : Pooling2D,
-    'AveragePooling2D'       : Pooling2D,
-    'GlobalMaxPooling1D'     : GlobalPooling1D,
-    'GlobalAveragePooling1D' : GlobalPooling1D,
-    'GlobalMaxPooling2D'     : GlobalPooling2D,
-    'GlobalAveragePooling2D' : GlobalPooling2D,
-    'ZeroPadding1D'          : ZeroPadding1D,
-    'ZeroPadding2D'          : ZeroPadding2D,
-    'Merge'                  : Merge,
-    'Dot'                    : Dot,
-    'Concatenate'            : Concatenate,
-    'Resize'                 : Resize,
-    'UpSampling2D'           : Resize,
-    'Transpose'              : Transpose,
-    'GarNet'                 : GarNet,
-    'GarNetStack'            : GarNetStack,
+    'Input': Input,
+    'InputLayer': Input,
+    'Activation': Activation,
+    'QActivation': Activation,
+    'LeakyReLU': ParametrizedActivation,
+    'ThresholdedReLU': ParametrizedActivation,
+    'ELU': ParametrizedActivation,
+    'PReLU': PReLU,
+    'Softmax': Softmax,
+    'Reshape': Reshape,
+    'Dense': Dense,
+    'BinaryDense': Dense,
+    'TernaryDense': Dense,
+    'QDense': Dense,
+    'Conv1D': Conv1D,
+    'QConv1D': Conv1D,
+    'Conv2D': Conv2D,
+    'BinaryConv2D': Conv2D,
+    'QConv2D': Conv2D,
+    'SeparableConv1D': SeparableConv1D,
+    'SeparableConv2D': SeparableConv2D,
+    'DepthwiseConv2D': DepthwiseConv2D,
+    'BatchNormalization': BatchNormalization,
+    'QBatchNormalization': BatchNormalization,
+    'QConv2DBatchnorm': Conv2DBatchnorm,
+    'MaxPooling1D': Pooling1D,
+    'AveragePooling1D': Pooling1D,
+    'MaxPooling2D': Pooling2D,
+    'AveragePooling2D': Pooling2D,
+    'GlobalMaxPooling1D': GlobalPooling1D,
+    'GlobalAveragePooling1D': GlobalPooling1D,
+    'GlobalMaxPooling2D': GlobalPooling2D,
+    'GlobalAveragePooling2D': GlobalPooling2D,
+    'ZeroPadding1D': ZeroPadding1D,
+    'ZeroPadding2D': ZeroPadding2D,
+    'Merge': Merge,
+    'Dot': Dot,
+    'Concatenate': Concatenate,
+    'Resize': Resize,
+    'UpSampling2D': Resize,
+    'Transpose': Transpose,
+    'GarNet': GarNet,
+    'GarNetStack': GarNetStack,
     # TensorFlow-specific layers:
-    'BiasAdd'                : BiasAdd,
+    'BiasAdd': BiasAdd,
 }
 
 def register_layer(name, clazz):

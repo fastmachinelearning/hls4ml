@@ -12,8 +12,8 @@ import tensorflow as tf
 
 @keras_handler('QDense')
 def parse_qdense_layer(keras_layer, input_names, input_shapes, data_reader, config):
-    
-    
+
+
     layer, output_shape = parse_dense_layer(keras_layer, input_names, input_shapes, data_reader, config)
 
     layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
@@ -28,10 +28,10 @@ def parse_qdense_layer(keras_layer, input_names, input_shapes, data_reader, conf
 @keras_handler('QConv1D', 'QConv2D')
 def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader, config):
     assert('QConv' in keras_layer['class_name'])
-    
-    if int(keras_layer['class_name'][-2]) == 1:
+
+    if "1D" in keras_layer['class_name']:
         layer, output_shape = parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader, config)
-    elif int(keras_layer['class_name'][-2]) == 2:
+    elif "2D" in keras_layer['class_name']:
         layer, output_shape = parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader, config)
 
     layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
@@ -39,7 +39,7 @@ def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader, confi
         layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
     else:
         layer['bias_quantizer'] = None
-    
+
     return layer, output_shape
 
 
@@ -47,7 +47,7 @@ def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader, confi
 def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader, config):
     assert(keras_layer['class_name'] == 'QActivation')
     supported_activations = ['quantized_relu', 'quantized_tanh', 'binary_tanh', 'ternary_tanh', 'quantized_bits', 'binary', 'ternary']
-    
+
     layer = parse_default_keras_layer(keras_layer, input_names)
 
     activation_config = keras_layer['config']['activation']
@@ -77,7 +77,7 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader,
                 activation_config['config']['integer'] = 2
             else:
                 activation_config['class_name'] = 'unknown'
-    
+
     if activation_config['class_name'] not in supported_activations:
         raise Exception('Unsupported QKeras activation: {}'.format(activation_config['class_name']))
 
@@ -90,7 +90,7 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader,
 
 @keras_handler('QBatchNormalization')
 def parse_qbatchnorm_layer(keras_layer, input_names, input_shapes, data_reader, config):
-    
+
     layer, output_shape = parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader, config)
 
     layer['mean_quantizer'] = get_quantizer_from_config(keras_layer, 'mean')
@@ -100,3 +100,9 @@ def parse_qbatchnorm_layer(keras_layer, input_names, input_shapes, data_reader, 
 
     return layer, output_shape
 
+
+@keras_handler('QConv2DBatchnorm')
+def parse_qconv2dbatchnorm_layer(keras_layer, input_names, input_shapes, data_reader, config):
+    conv_layer, intermediate_shape = parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader, config)
+    batch_layer, out_shape = parse_batchnorm_layer(keras_layer, input_names, intermediate_shape, data_reader, config)
+    return {**conv_layer, **batch_layer}, out_shape
