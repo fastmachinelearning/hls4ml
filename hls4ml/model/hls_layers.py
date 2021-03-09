@@ -6,7 +6,6 @@ import re
 import numpy as np
 from collections import OrderedDict
 
-
 class Quantizer(object):
     def __init__(self, bits, hls_type):
         self.bits = bits
