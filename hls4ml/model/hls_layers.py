@@ -6,8 +6,6 @@ import re
 import numpy as np
 from collections import OrderedDict
 
-from tensorflow.python.ops import math_ops
-
 
 class Quantizer(object):
     def __init__(self, bits, hls_type):
@@ -452,16 +450,14 @@ class Layer(object):
         return StreamVariable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, n_pack=pack_factor, depth=depth, index=self.index)
 
     def add_weights(self, quantizer=None, compression=False, data=None):
-        if data is None:
-            data = self.model.get_weights_data(self.name, 'kernel')
+        data = self.model.get_weights_data(self.name, 'kernel')
 
         self.add_weights_variable(name='weight', var_name='w{index}', data=data, quantizer=quantizer, compression=compression)
 
     def add_bias(self, quantizer=None, data=None):
         precision = None
         type_name = None
-        if data is None:
-            data = self.model.get_weights_data(self.name, 'bias')
+        data = self.model.get_weights_data(self.name, 'bias')
         if data is None:
             data = np.zeros(self.get_output_variable().shape[-1])
             precision = IntegerPrecisionType(width=1, signed=False)
@@ -903,7 +899,7 @@ class Conv2D(Layer):
         return mult_config + '\n' + conv_config
 
 
-class Conv2DBatchnorm(Layer):
+class Conv2DBatchnorm(Conv2D):
     def _get_folded_weights(self):
         """
         Function to get the batchnorm folded weights.
@@ -921,7 +917,7 @@ class Conv2DBatchnorm(Layer):
         moving_mean = self.model.get_weights_data(self.name, 'moving_mean')
         moving_variance = self.model.get_weights_data(self.name, 'moving_variance')
         # get the inversion factor so that we replace division by multiplication
-        inv = math_ops.rsqrt(moving_variance + self.get_attr('epsilon'))
+        inv = np.reciprocal(np.sqrt(moving_variance + self.get_attr('epsilon')))
         if gamma is not None:
             inv *= gamma
 
@@ -932,80 +928,23 @@ class Conv2DBatchnorm(Layer):
         return [folded_kernel, folded_bias]
 
     def initialize(self):
-        if self.get_attr('data_format') == 'channels_last':
-            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
-            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index),
-                    'N_FILT_{}'.format(self.index)]
+        super(Conv2DBatchnorm, self).initialize()
+        folded_weights, folded_bias = self._get_folded_weights()
+        if self.model.config.is_resource_strategy(self) and self.model.config.backend.name == 'Vivado':
+            self.weights['weight'].data_unquantized = np.transpose(folded_weights, axes=[3, 2, 0, 1])
+            self.weights['weight'].data = self.get_attr('weight_quantizer')(self.weights['weight'].data_unquantized)
+
         else:
-            shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
-            dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index),
-                    'OUT_WIDTH_{}'.format(self.index)]
-        folded_kernel, folded_bias = self._get_folded_weights()
-        self.add_output_variable(shape, dims)
-        self.add_weights(quantizer=self.get_attr('weight_quantizer'), data=folded_kernel)
-        self.add_bias(quantizer=self.get_attr('bias_quantizer'), data=folded_bias)
-        if self.model.config.is_resource_strategy(self):
-            self.set_attr('strategy', 'resource')
-            if self.model.config.backend.name == 'Vivado':
-                self.model.config.backend.set_closest_reuse_factor(self)
-                self.weights['weight'].data = np.transpose(self.weights['weight'].data,
-                                                           axes=[3, 2, 0, 1])  # (H,W,C,F) => (F,C,H,W)
-        else:
-            self.set_attr('strategy', 'latency')
+            self.weights['weight'].data_unquantized = folded_weights
+            self.weights['weight'].data = self.get_attr('weight_quantizer')(folded_weights)
+        self.weights['bias'].data_unquantized = folded_bias
+        self.weights['bias'].data = self.get_attr('bias_quantizer')(folded_bias)
 
     def function_cpp(self):
-        params = self._default_function_params()
-        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
-        params['w'] = self.get_weights('weight').name
-        params['b'] = self.get_weights('bias').name
-
-        return [self._function_template.format(**params)]
+        return super(Conv2DBatchnorm, self).function_cpp()
 
     def config_cpp(self):
-        params = self._default_config_params()
-        if self.get_attr('data_format') == 'channels_last':
-            params['in_height'] = self.get_input_variable().dim_names[0]
-            params['in_width'] = self.get_input_variable().dim_names[1]
-            params['n_chan'] = self.get_input_variable().dim_names[2]
-            params['out_height'] = self.get_output_variable().dim_names[0]
-            params['out_width'] = self.get_output_variable().dim_names[1]
-            params['n_filt'] = self.get_output_variable().dim_names[2]
-        else:
-            params['n_chan'] = self.get_input_variable().dim_names[0]
-            params['in_height'] = self.get_input_variable().dim_names[1]
-            params['in_width'] = self.get_input_variable().dim_names[2]
-            params['n_filt'] = self.get_output_variable().dim_names[0]
-            params['out_height'] = self.get_output_variable().dim_names[1]
-            params['out_width'] = self.get_output_variable().dim_names[2]
-        params['dilation'] = self.get_attr('dilation', 1)
-        params['nzeros'] = self.get_weights('weight').nzeros
-
-        if self.model.config.get_config_value('IOType') == 'io_stream':
-            min_h, min_w, instructions = self.model.config.backend.compute_conv2d_instructions(
-                self.get_input_variable().shape[0],
-                self.get_input_variable().shape[1],
-                self.get_input_variable().shape[2],
-                params['filt_height'],
-                params['stride_height'])
-            instructions_str = ','.join(str(i) for i in instructions)
-            params['min_height'] = min_h
-            params['min_width'] = min_w
-            params['instructions'] = instructions_str
-        else:
-            params['min_height'] = params['in_height']
-            params['min_width'] = params['in_width']
-            params['instructions'] = '0'
-
-        params['config_t'] = 'config{}_mult'.format(self.index)
-        conv_config = self._config_template[0].format(**params)
-
-        mult_params = self._default_config_params()
-        mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
-        mult_params['n_out'] = self.get_attr('n_filt')
-        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
-        mult_config = self._config_template[1].format(**mult_params)
-
-        return mult_config + '\n' + conv_config
+        return super(Conv2DBatchnorm, self).config_cpp()
 
 class SeparableConv2D(Layer):
     def initialize(self):

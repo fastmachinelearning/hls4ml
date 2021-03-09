@@ -6,7 +6,6 @@ sdist/
 *.egg-info/
 vivado_prj
 .vscode
-my-hls-test
 *.tar.gz
 docs/_build
 docs/autodoc/*
