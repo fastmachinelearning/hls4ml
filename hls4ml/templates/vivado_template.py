@@ -395,7 +395,7 @@ class VivadoBackend(Backend):
         self.register_templates('Resize'                 , resize_function_template,      resize_config_template, resize_include_list)
         self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template, transpose_include_list)
         self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
-        self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)
+        self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)        
     
     def get_valid_reuse_factors(self, layer):
         n_in = 0
