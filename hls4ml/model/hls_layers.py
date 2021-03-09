@@ -449,15 +449,15 @@ class Layer(object):
         
         return StreamVariable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, n_pack=pack_factor, depth=depth, index=self.index)
 
-    def add_weights(self, quantizer=None, compression=False, data=None):
+    def add_weights(self, quantizer=None, compression=False):
         data = self.model.get_weights_data(self.name, 'kernel')
 
         self.add_weights_variable(name='weight', var_name='w{index}', data=data, quantizer=quantizer, compression=compression)
 
-    def add_bias(self, quantizer=None, data=None):
+    def add_bias(self, quantizer=None):
+        data = self.model.get_weights_data(self.name, 'bias')
         precision = None
         type_name = None
-        data = self.model.get_weights_data(self.name, 'bias')
         if data is None:
             data = np.zeros(self.get_output_variable().shape[-1])
             precision = IntegerPrecisionType(width=1, signed=False)
@@ -892,8 +892,7 @@ class Conv2D(Layer):
         mult_params = self._default_config_params()
         mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
         mult_params['n_out'] = self.get_attr('n_filt')
-        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision,
-                                                                             self.get_weights('weight').type.precision)
+        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
         mult_config = self._config_template[1].format(**mult_params)
 
         return mult_config + '\n' + conv_config
