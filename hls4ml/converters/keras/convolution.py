@@ -84,8 +84,4 @@ def parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader, conf
         output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
     else:
         output_shape = [input_shapes[0][0], layer['out_height'], layer['out_width'], layer['n_filt']]
-    if layer['class_name'] == 'QConv2DBatchnorm':
-        intermediate_shape = list()
-        intermediate_shape.append(output_shape)
-        output_shape = intermediate_shape
     return layer, output_shape

@@ -124,7 +124,7 @@ def parse_default_keras_layer(keras_layer, input_names):
     return layer
 
 def parse_data_format(input_shape, data_format='channels_last'):
-    if input_shape[0] is None:
+    if len(input_shape) == 4 or input_shape[0] is None:
         # Ignore batch size
         input_shape = input_shape[1:]
     
