@@ -908,6 +908,8 @@ class Conv2DBatchnorm(Conv2D):
         """
         kernel = self.model.get_weights_data(self.name, 'kernel')
         bias = self.model.get_weights_data(self.name, 'bias')
+        if bias is None:
+            bias = 0
 
         # get batchnorm weights and moving stats
         gamma = self.model.get_weights_data(self.name, 'gamma')
@@ -927,7 +929,6 @@ class Conv2DBatchnorm(Conv2D):
 
     def initialize(self):
         super(Conv2DBatchnorm, self).initialize()
-        '''
         folded_weights, folded_bias = self._get_folded_weights()
         if self.model.config.is_resource_strategy(self) and self.model.config.backend.name == 'Vivado':
             self.weights['weight'].data_unquantized = np.transpose(folded_weights, axes=[3, 2, 0, 1])
@@ -937,8 +938,9 @@ class Conv2DBatchnorm(Conv2D):
             self.weights['weight'].data_unquantized = folded_weights
             self.weights['weight'].data = self.get_attr('weight_quantizer')(folded_weights)
         self.weights['bias'].data_unquantized = folded_bias
-        self.weights['bias'].data = self.get_attr('bias_quantizer')(folded_bias)
-        '''
+        bias_q = self.get_attr('bias_quantizer')
+        if bias_q is not None:
+            self.weights['bias'].data = bias_q(folded_bias)
 
     def function_cpp(self):
         return super(Conv2DBatchnorm, self).function_cpp()
