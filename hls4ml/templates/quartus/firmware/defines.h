@@ -1,6 +1,8 @@
 #ifndef DEFINES_H_
 #define DEFINES_H_
 
+#include "ap_fixed.h"
+#include "ap_int.h"
 #ifdef __INTELFPGA_COMPILER__
 #include "HLS/hls.h"
 #include "HLS/ac_int.h"

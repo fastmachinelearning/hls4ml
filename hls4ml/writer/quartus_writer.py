@@ -9,8 +9,42 @@ import glob
 from collections import OrderedDict
 
 from hls4ml.writer.writers import Writer
+from hls4ml.model.hls_layers import XnorPrecisionType
 
 class QuartusWriter(Writer):
+
+    def type_definition_cpp(self, model, atype):
+        type_class = atype.__class__.__name__
+        if type_class == 'HLSType':
+            return 'typedef {precision} {name};\n'.format(name=atype.name, precision=atype.precision)
+        elif type_class == 'CompressedType':
+            cpp_fmt = ('typedef struct {name} {{ '
+               '{index} row_index;'
+               '{index} col_index;'
+               '{precision} weight; }} {name};\n')
+            return cpp_fmt.format(name=atype.name, index=atype.index_precision, precision=atype.precision)
+        elif type_class == 'PackedType':
+            n_elem_expr = '/' if atype.unpack else '*'
+            return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=atype.name, precision=atype.precision, n_elem=str(atype.n_elem) + n_elem_expr + str(atype.n_pack))
+        elif type_class == 'ExponentType':
+            cpp_fmt = ('typedef struct {name} {{ '
+                       '{sign} sign; '
+                       '{precision} weight; }} {name};\n')
+            return cpp_fmt.format(name=atype.name, precision=atype.precision, sign=str(XnorPrecisionType()))
+
+    def variable_definition_cpp(self, model, var, name_suffix='', as_reference=False):
+        var_class = var.__class__.__name__
+
+        if var_class == 'ArrayVariable':
+            return '{type} {name}{suffix}[{shape}] hls_register'.format(type=var.type.name, name=var.cppname, suffix=name_suffix, shape=var.size_cpp())
+        elif var_class == 'StreamVariable':
+            raise Exception('Streaming is not yet supported by Quartus backend')
+        elif var_class == 'WeightVariable':
+            return '{type} {name}{suffix}[{size}]'.format(type=var.type.name, name=var.cppname, suffix=name_suffix, size=var.data_length)
+        elif var_class == 'InplaceVariable':
+            return None
+        else:
+            raise Exception('Unknown variable class "{}"'.format(var_class))
 
     def next_pow2(self, x):
         return 1<<(x-1).bit_length()
@@ -96,7 +130,7 @@ class QuartusWriter(Writer):
                 newline += 'hls_scheduler_target_fmax_mhz({})\n'.format(np.ceil(clock_mhz).astype(np.int))
 
             elif '//hls-fpga-machine-learning insert header' in line:
-                inputs_str = ', '.join(['inputdat ' + i.definition_cpp_name() for i in model_inputs])
+                inputs_str = ', '.join(['inputdat ' + i.name for i in model_inputs])
 
                 newline = ''
                 newline += indent + inputs_str + '\n'
@@ -115,22 +149,19 @@ class QuartusWriter(Writer):
 
             elif '//hls-fpga-machine-learning insert layers' in line:
                 newline = line + '\n'
-                inputs = model.get_input_variables()
-                outputs = model.get_output_variables()
                 for layer in model.get_layers():
                     vars = layer.get_variables()
                     for var in vars:
-                        if var not in inputs and var not in outputs:
-                            def_cpp = var.definition_cpp()
+                        if var not in model_inputs and var not in model_outputs:
+                            def_cpp = self.variable_definition_cpp(model, var)
                             if def_cpp is not None:
-                                newline += '    ' + def_cpp + ' hls_register;\n'
-                        if var in inputs:
+                                newline += '    ' + def_cpp + ';\n'
+                        if var in model_inputs:
                             var.name += '.data'
-                        if var in outputs:
-                            name = var.definition_cpp_name()
-                            newline += '    ' + 'hls_register outputdat ' + name + ';\n'
+                        if var in model_outputs:
+                            newline += '    ' + 'hls_register outputdat ' + var.cppname + ';\n'
                             var.name += '.data'
-                    if layer.get_attr('activation') == 'tanh':
+                    if layer.get_attr('activation') == 'tanh': #TODO move this to an optimizer
                         layer.set_attr('activation') == 'dense_tanh'
                     func = layer.function_cpp()
                     if func:
@@ -142,7 +173,7 @@ class QuartusWriter(Writer):
                     inp.name = inp.name.replace('.data','')
                 for out in model.get_output_variables():
                     out.name = out.name.replace('.data','')
-                    name = out.definition_cpp_name()
+                    name = out.name
                     newline += indent + 'return ' + name + ';\n'
             #Just copy line
             else:
@@ -182,15 +213,15 @@ class QuartusWriter(Writer):
             elif 'component outputdat myproject(' in line:
                 newline = 'component outputdat {}(\n'.format(model.config.get_project_name())
             elif '//Input Parameters' in line:
-                for input in model.get_input_variables():
+                for inp in model_inputs:
                     newline = ''
-                    newline += indent + input.definition_cpp_type() + ' data' + '[' + input.size_cpp() + ']' + ';\n'
+                    newline += indent + inp.type.name + ' data' + '[' + inp.size_cpp() + ']' + ';\n'
             elif '//Output Parameters' in line:
-                for out in model.get_output_variables():
+                for out in model_outputs:
                     newline = ''
-                    newline += indent + out.definition_cpp_type() + ' data' + '[' + out.size_cpp() + ']' + ';\n'
+                    newline += indent + out.type.name + ' data' + '[' + out.size_cpp() + ']' + ';\n'
             elif '//hls-fpga-machine-learning insert header' in line:
-                inputs_str = ', '.join(['inputdat ' + i.definition_cpp_name() for i in model_inputs])
+                inputs_str = ', '.join(['inputdat ' + i.name for i in model_inputs])
 
                 newline = ''
                 newline += indent + inputs_str + '\n'
@@ -220,9 +251,8 @@ class QuartusWriter(Writer):
                 for layer in model.get_layers():
                     layer_precision = layer.get_layer_precision()
                     all_precision.update(layer_precision)
-                    dummy_layer = layer
                 for used_type in all_precision.values():
-                    newline += dummy_layer.var_definition_cpp(used_type)
+                    newline += self.type_definition_cpp(model, used_type)
             else:
                 newline = line
             fout.write(newline)
@@ -304,16 +334,16 @@ class QuartusWriter(Writer):
             elif '//hls-fpga-machine-learning insert component-io' in line:
                 newline = line
                 for inp in model.get_input_variables():
-                    newline += indent + 'inputdat ' + inp.definition_cpp_name() + '[num_iterations];\n'
+                    newline += indent + 'inputdat ' + inp.name + '[num_iterations];\n'
                 for out in model.get_output_variables():
                     # brace-init zeros the array out because we use std=c++0x
-                    newline += indent + 'outputdat ' + out.definition_cpp_name() + '[num_iterations];\n'
+                    newline += indent + 'outputdat ' + out.name + '[num_iterations];\n'
             elif '//hls-fpga-machine-learning insert zero' in line:
                 newline = line
                 for inp in model.get_input_variables():
-                    newline += '    ' + 'inputdat ' + inp.definition_cpp_name() + '[num_iterations];\n'
+                    newline += '    ' + 'inputdat ' + inp.name + '[num_iterations];\n'
                 for out in model.get_output_variables():
-                    newline += '    ' + 'outputdat ' + out.definition_cpp_name() + '[num_iterations];\n'
+                    newline += '    ' + 'outputdat ' + out.name + '[num_iterations];\n'
             elif '//hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
 
@@ -460,6 +490,7 @@ class QuartusWriter(Writer):
 
         for line in f.readlines():
             line = line.replace('myproject', model.config.get_project_name())
+            line = line.replace('mystamp', model.config.get_config_value('Stamp'))
 
             fout.write(line)
         f.close()
@@ -537,8 +568,8 @@ class QuartusWriter(Writer):
 
         sep = ''
         for i in range(table_size):
-            in_val = -8.0*i/float(table_size);
-            real_val = np.exp(in_val) - 1.;
+            in_val = -8.0*i/float(table_size)
+            real_val = np.exp(in_val) - 1.
             h_file.write(sep + str(real_val))
             sep = ", "
 
@@ -677,8 +708,8 @@ class QuartusWriter(Writer):
 
         sep = ''
         for i in range(table_size):
-            in_val = 2*8.0*(i-float(table_size)/2.0)/float(table_size);
-            real_val = in_val / (np.fabs(in_val) + 1.);
+            in_val = 2*8.0*(i-float(table_size)/2.0)/float(table_size)
+            real_val = in_val / (np.fabs(in_val) + 1.)
             h_file.write(sep + str(real_val))
             sep = ", "
 
@@ -712,8 +743,8 @@ class QuartusWriter(Writer):
 
         sep = ''
         for i in range(table_size):
-            in_val = -8.0*i/float(table_size);
-            real_val = 1.0507009873554804934193349852946 * (1.6732632423543772848170429916717 * (np.exp(in_val) - 1.));
+            in_val = -8.0*i/float(table_size)
+            real_val = 1.0507009873554804934193349852946 * (1.6732632423543772848170429916717 * (np.exp(in_val) - 1.))
             h_file.write(sep + str(real_val))
             sep = ", "
 
@@ -747,8 +778,8 @@ class QuartusWriter(Writer):
 
         sep = ''
         for i in range(table_size):
-            in_val = 2*8.0*(i-float(table_size)/2.0)/float(table_size);
-            real_val = np.exp(in_val);
+            in_val = 2*8.0*(i-float(table_size)/2.0)/float(table_size)
+            real_val = np.exp(in_val)
             h_file.write(sep + str(real_val))
             sep = ", "
 
@@ -783,9 +814,9 @@ class QuartusWriter(Writer):
         sep = ''
         for i in range(table_size):
             real_val = 0
-            in_val = 64.0*i/float(table_size);
+            in_val = 64.0*i/float(table_size)
             if (in_val > 0.0):
-                real_val = 1.0/in_val;
+                real_val = 1.0/in_val
             h_file.write(sep + str(real_val))
             sep = ", "
 
