@@ -1,10 +1,26 @@
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.hls_layers import BatchNormalization
-from hls4ml.model.hls_model import IntegerPrecisionType, FixedPrecisionType, register_layer
+from hls4ml.model.hls_model import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType, register_layer
 from hls4ml.templates import templates
 import tensorflow as tf
 import numpy as np
 from qkeras import get_quantizer
+
+class QKerasPO2Quantizer(object):
+    def __init__(self, config):
+        self.bits = config['config']['bits']
+        self.quantizer_fn = get_quantizer(config)
+        self.hls_type = ExponentPrecisionType(width=self.bits, signed=True)
+
+    def __call__(self, data):
+        '''
+        Weights are rounded to nearest power of 2
+        '''
+        x = tf.convert_to_tensor(data)
+        y = self.quantizer_fn(x)
+        if hasattr(y, 'numpy'):
+            y = y.numpy()
+        return y
 
 class OutputRoundingSaturationMode(OptimizerPass):
     '''
@@ -38,7 +54,7 @@ class OutputRoundingSaturationMode(OptimizerPass):
     def transform(self, model, node):
         oldtype = node.get_output_variable().type.precision
         if isinstance(oldtype, IntegerPrecisionType):
-            newprecision = IntegerPrecisionType(oldtype.width, oldtype.signed, self.rounding_mode, self.saturation_mode, self.saturation_bits)
+            newtype = IntegerPrecisionType(oldtype.width, oldtype.signed)
         elif isinstance(oldtype, FixedPrecisionType):
             newtype = FixedPrecisionType(oldtype.width, oldtype.integer, oldtype.signed, self.rounding_mode, self.saturation_mode, self.saturation_bits)
         else: # in case the precision is a string
@@ -95,12 +111,14 @@ class QKerasFactorizeAlpha(OptimizerPass):
         has_w_alpha, has_b_alpha = False, False
         if has_w_quant:
             if hasattr(node.get_attr('weight_quantizer'), 'alpha'):
-                has_w_alpha = node.get_attr('weight_quantizer').alpha != 1
+                w_alpha = node.get_attr('weight_quantizer').alpha
+                has_w_alpha = w_alpha != 1 and w_alpha is not None
             else:
                 has_w_alpha = False
         if has_b_quant:
             if hasattr(node.get_attr('bias_quantizer'), 'alpha'):
-                has_b_alpha = node.get_attr('bias_quantizer').alpha != 1
+                b_alpha = node.get_attr('bias_quantizer').alpha
+                has_b_alpha = b_alpha != 1 and b_alpha is not None
             else:
                 has_b_alpha = False
         is_match = q_layer and ((has_w_quant and has_w_alpha) or (has_b_quant and has_b_alpha))
@@ -112,14 +130,18 @@ class QKerasFactorizeAlpha(OptimizerPass):
         quantizer = node.weights['weight'].quantizer.quantizer_fn # get QKeras quantizer
         weights = node.weights['weight'].data_unquantized # get weights
         qweights = quantizer(tf.convert_to_tensor(weights))
-        scale = quantizer.scale.numpy()
+        if isinstance(quantizer.scale, (int, float)):
+            scale = np.ones(shape=node.get_output_variable().shape) * quantizer.scale
+        else:
+            scale = quantizer.scale.numpy()
         unscale = 1. / scale
 
         new_weights = unscale * qweights # use the quantized weights for safety
 
 
-        # Set the alpha to 1 to avoid hitting this pass again
         qcfg = quantizer.get_config()
+        alpha = qcfg['alpha']
+        # Set the alpha to 1 to avoid hitting this pass again
         qcfg['alpha'] = 1
         node.weights['weight'].quantizer.quantizer_fn = quantizer.from_config(qcfg)
 
@@ -142,18 +164,28 @@ class QKerasFactorizeAlpha(OptimizerPass):
             node.attributes['bias_quantizer'].alpha = 1
 
         # insert a Batch Normalization layer to apply the alpha scale
+        if alpha == 'auto_po2':
+            scale_bits = np.abs(np.log2(scale)).max().astype('int') + 1
+            scale_t = ExponentPrecisionType(width=scale_bits, signed=True)
+            scale_q = QKerasPO2Quantizer({'class_name' : 'quantized_po2', 'config': {'bits': scale_bits}})
+        else:
+            scale_t = FixedPrecisionType() # TODO: automate this
+            scale_q = None
+
         attrs = {
             'name' : node.get_attr('name') + '_alpha',
             'class_name' : 'Alpha',
             'inputs' : node.outputs,
             'n_in' : node.get_attr('n_out'),
-            'n_filt' : node.get_attr('n_filt') if node.get_attr('n_filt') is not None else -1,
+            'n_filt' : node.get_attr('n_filt', -1),
             'reuse_factor' : node.get_attr('reuse_factor'),
             'bias_t' : node.weights['bias'].type, 
-            'scale_t' : FixedPrecisionType() # TODO automate this
+            'scale_t' : scale_t,
+            'Trace' : node.get_attr('Trace', False) 
         }
         alpha_layer = model.make_node('ApplyAlpha', node.name + '_alpha', attrs, node.outputs)
-        alpha_layer.add_weights(scale, quantizer=None)
+
+        alpha_layer.add_weights(scale, quantizer=scale_q)
         alpha_layer.add_bias(bias, quantizer=bias_quantizer)
         model.insert_node(alpha_layer)
         return True

@@ -43,7 +43,7 @@ void normalize(
 
     constexpr unsigned multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in, CONFIG_T::reuse_factor);
     constexpr unsigned ii = CONFIG_T::n_in / multiplier_limit;
-    #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+    CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::scale_t, typename res_T::value_type>::limit(multiplier_limit);
 
     BatchNormLoop: for (int i = 0; i < CONFIG_T::n_in / data_T::size; i++) {
         #pragma HLS PIPELINE II=ii
@@ -60,7 +60,7 @@ void normalize(
             } else {
                 norm_index = j % CONFIG_T::n_filt;
             }
-            out_data[j] = in_data[j] * scale[norm_index] + bias[norm_index];
+            out_data[j] = CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::scale_t, typename res_T::value_type>::product(in_data[j], scale[norm_index]) + bias[norm_index];
         }
 
         res.write(out_data);

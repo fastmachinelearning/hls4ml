@@ -45,7 +45,8 @@ hls_model = hls4ml.converters.keras_to_hls(config)
 hls4ml.utils.fetch_example_list()
 ```
 
-### Building a project with Xilinx Vitis (after downloading and installing from [here](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vitis.html))
+### Building a project with Xilinx Vivado HLS (after downloading and installing from [here](https://www.xilinx.com/products/design-tools/vivado/integration/esl-design.html))
+Note: Vitis HLS is not yet supported. Vivado HLS versions between 2018.2 and 2020.1 are recommended.
 
 ```Python
 #Use Vivado HLS to synthesize the model

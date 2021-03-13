@@ -54,7 +54,7 @@ void dense_latency(
         #pragma HLS ARRAY_PARTITION variable=acc complete
 
         int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_out) / float(CONFIG_T::reuse_factor)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
-        #pragma HLS ALLOCATION instances=product limit=multiplier_limit function
+        CONFIG_T::template product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>::limit(multiplier_limit);
 
     } else if (CONFIG_T::io_type == io_serial){
         // Only reduce cycle_factor if n_out is evenly divisible by reuse_factor
@@ -90,10 +90,10 @@ void dense_latency(
         Product2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
             if (CONFIG_T::io_type == io_serial) {
                 int multiplier_limit  = ceil(float(CONFIG_T::n_out) / float(CONFIG_T::reuse_factor));
-                #pragma HLS ALLOCATION instances=product limit=multiplier_limit function
+                CONFIG_T::template product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>::limit(multiplier_limit);
             }
         int index = ii*CONFIG_T::n_out+jj;
-        mult[index] = product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>(cache, weights[index]);
+        mult[index] = CONFIG_T::template product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>::product(cache, weights[index]);
         }
     }
 

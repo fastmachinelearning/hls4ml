@@ -2,7 +2,8 @@ import numpy as np
 import re
 
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.hls_model import Layer, IntegerPrecisionType, register_layer
+from hls4ml.model.hls_model import Layer, IntegerPrecisionType, XnorPrecisionType, register_layer
+from hls4ml.model.hls_layers import BatchNormalization
 from hls4ml.templates import templates
 
 class BatchNormalizationQuantizedTanh(Layer):
@@ -15,24 +16,25 @@ class BatchNormalizationQuantizedTanh(Layer):
         inp = self.get_input_variable()
         shape = inp.shape
         dims = inp.dim_names
-        precision_bits = re.search('.+<(.+?)>', inp.type.precision).group(1).split(',')
-        if 'int' in str(inp.type.precision):
-            W = int(precision_bits[0])
-            I = W
-            F = 0
-        elif 'fixed' in str(inp.type.precision):
-            W = int(precision_bits[0])
-            I = int(precision_bits[1])
-            F = W - I
+        precision = self.model.config.backend.convert_precision_string(inp.type.precision)
+        W, I, F = precision.width, precision.integer, precision.fractional
         original_name = self.attributes.get('original_name')
         variance = self.model.get_weights_data(original_name, 'moving_variance')
         mean = self.model.get_weights_data(original_name, 'moving_mean')
         gamma = self.model.get_weights_data(original_name, 'gamma')
         beta = self.model.get_weights_data(original_name, 'beta')
+        mean_quantizer = self.get_attr('mean_quantizer')
+        variance_quantizer = self.get_attr('variance_quantizer')
+        gamma_quantizer = self.get_attr('gamma_quantizer')
+        beta_quantizer = self.get_attr('beta_quantizer')
+        mean = mean_quantizer(mean) if mean_quantizer is not None else mean
+        variance = variance_quantizer(variance) if variance_quantizer is not None else variance
+        gamma = gamma_quantizer(gamma) if gamma_quantizer is not None else gamma
+        beta = beta_quantizer(beta) if beta_quantizer is not None else beta
         epsilon = self.attributes.get('epsilon')
         threshold = mean - beta * np.sqrt(variance + epsilon) / gamma
         if self.get_attr('quantize') == 2:
-            self.add_output_variable(shape, dims, precision=IntegerPrecisionType(width=1, signed=False))
+            self.add_output_variable(shape, dims, precision=XnorPrecisionType())
             threshold = np.floor(threshold * 2**F) / 2**F
             self.add_weights_variable(name='threshold', var_name='t{index}', data=threshold, type_name='threshold{index}_t', precision=inp.type.precision)
         elif self.get_attr('quantize') == 3:
@@ -80,7 +82,7 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
     def match(self, node):
         is_match = (node.__class__.__name__ == 'Activation'
             and node.get_attr('activation') in ['binary_tanh', 'ternary_tanh']
-            and node.get_input_node().__class__.__name__ == 'BatchNormalization')
+            and isinstance(node.get_input_node(), BatchNormalization))
         return is_match
 
     def transform(self, model, node):
@@ -101,7 +103,12 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
             'n_out' : bn_layer.get_attr('n_in'),
             'n_filt' : bn_layer.get_attr('n_filt'),
             'epsilon' : bn_layer.get_attr('epsilon'),
-            'quantize' : quantize
+            'quantize' : quantize,
+            'beta_quantizer' : bn_layer.get_attr('beta_quantizer'),
+            'gamma_quantizer' : bn_layer.get_attr('gamma_quantizer'),
+            'mean_quantizer' : bn_layer.get_attr('mean_quantizer'),
+            'variance_quantizer' : bn_layer.get_attr('variance_quantizer'),
+            'Trace' : bn_layer.get_attr('Trace')
         }
         bnbt_layer = model.make_node('BatchNormalizationQuantizedTanh', 'bnbt_' + bn_layer.name, attrs, bn_layer.inputs)
         # Replace the old BatchNormalization layer with this one
@@ -129,7 +136,7 @@ class QuantizeDenseOutput(OptimizerPass):
         quantized_precision = None
         quantizer = node.get_attr('weight_quantizer')
         if quantizer.__class__.__name__ == 'BinaryQuantizer':
-            quantized_precision = IntegerPrecisionType(width=1, signed=False)
+            quantized_precision = XnorPrecisionType()
         elif quantizer.__class__.__name__ == 'TernaryQuantizer':
             quantized_precision = IntegerPrecisionType(width=2)
         else:

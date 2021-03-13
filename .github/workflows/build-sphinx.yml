@@ -1,0 +1,33 @@
+name: build-sphinx
+on:
+  push:
+    branches:    
+      - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - uses: ammaraskar/sphinx-action@master
+      with:
+        docs-folder: "docs/"
+        pre-build-command: "pip install sphinx-rtd-theme numpy six pyyaml h5py 'onnx>=1.4.0' pandas seaborn matplotlib"
+    - name: Commit Documentation Changes
+      run: |
+        git clone https://github.com/fastmachinelearning/hls4ml.git --branch gh-pages --single-branch gh-pages
+        cp -r docs/_build/html/* gh-pages/
+        cd gh-pages
+        touch .nojekyll
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        git commit -m "Update Sphinx Documentation" -a || true
+    - name: Push Documentation Changes
+      uses: ad-m/github-push-action@master
+      with:
+        branch: gh-pages
+        directory: gh-pages
+        github_token: ${{ secrets.PERSONAL_TOKEN }}
