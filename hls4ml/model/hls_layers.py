@@ -372,6 +372,7 @@ class Layer(object):
             self.attributes[config_key] = config_value
 
         self.initialize()
+        self.model.config.backend.initialize_layer(self)
 
     def initialize(self):
         raise NotImplementedError
@@ -506,6 +507,7 @@ class Layer(object):
 
     def _default_function_params(self):
         params = {}
+        params.update(self.attributes)
         params['config'] = 'config{}'.format(self.index)
         params['input_t'] = self.get_input_variable().type.name
         params['output_t'] = self.get_output_variable().type.name
@@ -592,27 +594,8 @@ class Dense(Layer):
     def initialize(self):
         shape = [self.attributes['n_out']]
         dims = ['N_LAYER_{}'.format(self.index)]
-        compression = self.model.config.get_compression(self)
-        if self.model.config.is_resource_strategy(self):
-            if self.model.config.backend.name == 'Vivado':
-                self.model.config.backend.set_closest_reuse_factor(self)
-            if compression:
-                self.set_attr('strategy', 'compressed')
-            else:
-                self.set_attr('strategy', 'resource')
-        else:
-            self.set_attr('strategy', 'latency')
         self.add_output_variable(shape, dims)
-        self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=compression)
-        index_t = IntegerPrecisionType(width=1, signed=False)
-        if self.model.config.is_resource_strategy(self):
-            if self.model.config.get_compression(self):
-                index_t = self.get_weights('weight').type.index_precision
-            else:
-                if self.model.config.backend.name == 'Vivado':
-                    self.weights['weight'].data = np.transpose(self.weights['weight'].data)
-                    
-        self.set_attr('index_t', index_t)
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=self.model.config.get_compression(self))
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
     def function_cpp(self):
@@ -629,7 +612,6 @@ class Dense(Layer):
         params['nzeros'] = self.get_weights('weight').nzeros
         params['nonzeros'] = self.get_weights('weight').nonzeros
         params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
-        params['strategy'] = self.get_attr('strategy')
 
         return self._config_template.format(**params)
 
@@ -1226,11 +1208,11 @@ class Activation(Layer):
         shape = inp.shape
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
-        if self.model.config.backend.name == 'Vivado':
-            if 'table_t' not in self.attributes:
-                self.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
-            if 'table_size' not in self.attributes:
-                self.set_attr('table_size', 1024)
+
+        if 'table_t' not in self.attributes:
+            self.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
+        if 'table_size' not in self.attributes:
+            self.set_attr('table_size', 1024)
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1280,16 +1262,6 @@ class PReLU(Activation):
 class Softmax(Activation):
     def initialize(self):
         super(Softmax, self).initialize()
-        if self.model.config.backend.name == 'Vivado':
-            if 'exp_table_t' not in self.attributes:
-                self.set_attr('exp_table_t', self.get_attr('table_t'))
-            if 'inv_table_t' not in self.attributes:
-                self.set_attr('inv_table_t', self.get_attr('table_t'))
-            if self.model.config.is_resource_strategy(self):
-                # 'resource' strategy = 'latency' for Softmax
-                self.set_attr('implementation', 'latency')
-            else:
-                self.set_attr('implementation', self.model.config.get_strategy(self).lower())
 
 class BatchNormalization(Layer):
     def initialize(self):

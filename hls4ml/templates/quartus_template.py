@@ -13,8 +13,9 @@ import uuid
 from ast import literal_eval
 from contextlib import contextmanager
 
-from hls4ml.templates.templates import Backend
 from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
+from hls4ml.templates.templates import custom_initializer
+from hls4ml.templates.fpga_template import FPGABackend
 
 
 @contextmanager
@@ -189,7 +190,7 @@ transpose_config_template = """struct config{index} : nnet::transpose_config {{
     static const unsigned perm[3] = {{{perm_str}}};
 }};\n"""
 
-dense_function_template = 'nnet::dense{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
 #conv1d_function_template = 'nnet::conv_1d_{strategy}_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 #conv2d_function_template = 'nnet::conv_2d_{strategy}_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
@@ -211,7 +212,7 @@ activ_include_list = ['nnet_utils/nnet_activation.h']
 #resize_include_list = ['nnet_utils/nnet_image.h']
 #transpose_include_list = ['nnet_utils/nnet_array.h']
 
-class QuartusBackend(Backend):
+class QuartusBackend(FPGABackend):
     def __init__(self):
         super(QuartusBackend, self).__init__('Quartus')
         self.register_templates('Dense'                  , dense_function_template, dense_config_template, dense_include_list)
@@ -229,69 +230,6 @@ class QuartusBackend(Backend):
         #self.register_templates('Concatenate'            , merge_function_template,       concat_config_template, merge_include_list)
         #self.register_templates('Resize'                 , resize_function_template,      resize_config_template, resize_include_list)
         #self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template, transpose_include_list)
-
-    def get_valid_reuse_factors(self, layer):
-        n_in = 0
-        n_out = 0
-        if layer.__class__.__name__ == 'Dense':
-            n_in = layer.get_attr('n_in')
-            n_out = layer.get_attr('n_out')
-        elif layer.__class__.__name__ == 'Conv1D':
-            n_in = layer.get_attr('n_chan') * layer.get_attr('filt_width')
-            n_out = layer.get_attr('n_filt')
-        elif layer.__class__.__name__ == 'Conv2D':
-            n_in = layer.get_attr('n_chan') * layer.get_attr('filt_height') * layer.get_attr('filt_width')
-            n_out = layer.get_attr('n_filt')
-
-        max_rf = n_in * n_out
-        valid_reuse_factors = []
-        for rf in range(1, max_rf):
-            _assert = self._check_conditions(n_in, n_out, rf)
-            if _assert:
-                valid_reuse_factors.append(rf)
-
-        return valid_reuse_factors
-
-    def _check_conditions(self, n_in, n_out, rf):
-        multfactor = min(n_in, rf)
-        multiplier_limit = int(math.ceil((n_in * n_out) / float(multfactor)))
-        #
-        # THIS ASSERTION IS FOR THE FUNCTIONAL CORRECTNESS OF THE DENSE LAYER
-        #
-        _assert = (((multiplier_limit % n_out) == 0) or (rf >= n_in))
-        _assert = _assert and (((rf % n_in) == 0) or (rf < n_in))
-        #
-        # THIS ASSERTION IS FOR QoR AND EXECUTION TIME
-        #
-        _assert = _assert and (((n_in * n_out) % rf) == 0)
-
-        return _assert
-
-    def get_closest_reuse_factor(self, valid_rf, chosen_rf):
-        """
-        Returns closest value to chosen_rf. valid_rf is sorted (obtained from get_valid_reuse_factors())
-        If two numbers are equally close, return the smallest number.
-        """
-        pos = bisect_left(valid_rf, chosen_rf)
-        if pos == 0:
-            return valid_rf[0]
-        if pos == len(valid_rf):
-            return valid_rf[-1]
-        before = valid_rf[pos - 1]
-        after = valid_rf[pos]
-        if after - chosen_rf < chosen_rf - before:
-            return after
-        else:
-            return before
-
-    def set_closest_reuse_factor(self, layer):
-        valid_rf = self.get_valid_reuse_factors(layer)
-        chosen_rf = layer.reuse_factor
-        if chosen_rf not in valid_rf:
-            closest_rf = self.get_closest_reuse_factor(valid_rf, chosen_rf)
-            print('WARNING: Invalid ReuseFactor={} in layer "{}". Using ReuseFactor={} instead. Valid ReuseFactor(s): {}.'
-                .format(chosen_rf, layer.name, closest_rf, ','.join(map(str, valid_rf))))
-            layer.reuse_factor = closest_rf
 
     def get_precision_string_backend(self, precision):
         if isinstance(precision, IntegerPrecisionType):
@@ -628,3 +566,27 @@ class QuartusBackend(Backend):
         _read_quartus_file(quartus_file, results)
 
         return results
+    
+    @custom_initializer('Dense')
+    def init_dense(self, layer):
+        index_t = IntegerPrecisionType(width=1, signed=False)
+
+        compression = layer.model.config.get_compression(layer)
+        if compression:
+            layer.set_attr('strategy', 'compressed')
+            index_t = layer.get_weights('weight').type.index_precision
+        else:
+            layer.set_attr('strategy', 'resource')
+            layer.model.config.backend.set_closest_reuse_factor(layer)
+            self.gen_quartus_weight_array(layer)
+        
+        layer.set_attr('index_t', index_t)
+        layer.set_attr('rfpad', 0)
+        layer.set_attr('bfpad', 0)
+
+    @custom_initializer('Softmax')
+    def init_softmax(self, layer):
+        if 'exp_table_t' not in layer.attributes:
+            layer.set_attr('exp_table_t', layer.get_attr('table_t'))
+        if 'inv_table_t' not in layer.attributes:
+            layer.set_attr('inv_table_t', layer.get_attr('table_t'))

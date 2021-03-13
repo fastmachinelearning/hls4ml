@@ -216,7 +216,7 @@ void dense_rf_lt(
     }
 }
 template<class data_T, class res_T, typename CONFIG_T>
-void dense(
+void dense_resource(
    data_T    data[CONFIG_T::n_in],
    res_T     res[CONFIG_T::n_out],
    const typename CONFIG_T::weight_t  weights[CONFIG_T::reuse_factor_rounded*CONFIG_T::block_factor_rounded],
