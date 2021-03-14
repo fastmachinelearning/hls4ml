@@ -648,8 +648,16 @@ class Conv1D(Layer):
         if self.model.config.is_resource_strategy(self):
             self.set_attr('strategy', 'resource')
             if self.model.config.backend.name == 'Vivado':
-                self.model.config.backend.set_closest_reuse_factor(self)
-                self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 0, 1]) #(W,C,F) => (F,W,C)
+                #self.model.config.backend.set_closest_reuse_factor(self)
+                #self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 0, 1]) #(W,C,F) => (F,W,C)
+                self.generated_code = self.model.config.backend.generate_conv1d_line_buffer_fn(
+                    self.index,
+                    self.get_input_variable().shape[0],
+                    self.get_input_variable().shape[1],
+                    self.get_attr('filt_width'),
+                    self.get_attr('stride_width'),
+                    (self.get_attr('pad_left'), self.get_attr('pad_right'))
+                )
         else:
             self.set_attr('strategy', 'latency')
 
@@ -684,9 +692,14 @@ class Conv1D(Layer):
             instructions_str = ','.join(str(i) for i in instructions)
             params['min_width'] = min_w
             params['instructions'] = instructions_str
+            params['fill_fn'] = 'FillLineBuffer1D'
         else:
             params['min_width'] = params['n_in']
             params['instructions'] = '0'
+            if self.model.config.is_resource_strategy(self):
+                params['fill_fn'] = 'fill_line_{}'.format(self.index)
+            else:
+                params['fill_fn'] = 'FillLineBuffer1D'
 
         params['config_t'] = 'config{}_mult'.format(self.index)
         conv_config = self._config_template[0].format(**params)
@@ -894,7 +907,10 @@ class Conv2D(Layer):
             params['min_height'] = params['in_height']
             params['min_width'] = params['in_width']
             params['instructions'] = '0'
-            params['fill_fn'] = 'fill_line_{}'.format(self.index)
+            if self.model.config.is_resource_strategy(self):
+                params['fill_fn'] = 'fill_line_{}'.format(self.index)
+            else:
+                params['fill_fn'] = 'FillLineBuffer2D'
 
         params['config_t'] = 'config{}_mult'.format(self.index)
         conv_config = self._config_template[0].format(**params)

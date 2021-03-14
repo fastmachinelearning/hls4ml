@@ -56,6 +56,8 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
     typedef {config_t} mult_config;
+    template<class data_T, typename CONFIG_T>
+    using fill_line = nnet::{fill_fn}<data_T, CONFIG_T>;
 }};
 const ap_uint<config{index}::filt_width> config{index}::pixels[] = {{{instructions}}};\n"""
 
@@ -612,6 +614,24 @@ class VivadoBackend(Backend):
         
         return (min_H, min_W, windows_int)
 
+    def _compute_conv1d_im2col(self, input_shape, kernel=3, stride=1, pad=(0,0)):
+        W, C = input_shape
+        pad_l, pad_r = pad
+
+        out_w = (W + pad_l + pad_r - kernel) // stride + 1
+
+        input_img = np.arange(1, W * C + 1).reshape(W, C)
+
+        img = np.pad(input_img, [(pad_l, pad_r), (0,0)], 'constant')
+        col = np.zeros((out_w, kernel, C))
+
+        for x in range(kernel):
+            x_max = x + stride * out_w
+            col[:, x, :] = img[x:x_max:stride, :]
+
+        col = col.reshape(out_w, -1)
+        return col
+
     def _compute_conv2d_im2col(self, input_shape, kernel=(3,3), stride=(1,1), pad=(0,0)):
         H, W, C = input_shape
         kernel_h, kernel_w = kernel
@@ -621,19 +641,64 @@ class VivadoBackend(Backend):
         out_h = (H + pad_t + pad_b - kernel_h) // stride_h + 1
         out_w = (W + pad_l + pad_r - kernel_w) // stride_w + 1
 
-        input_img = np.arange(1, C * H * W + 1).reshape(C, H, W)
+        input_img = np.arange(1, H * W * C + 1).reshape(H, W, C)
 
-        img = np.pad(input_img, [(0,0), (pad_t, pad_b), (pad_l, pad_r)], 'constant')
-        col = np.zeros((C, kernel_h, kernel_w, out_h, out_w))
+        img = np.pad(input_img, [(pad_t, pad_b), (pad_l, pad_r), (0,0)], 'constant')
+        col = np.zeros((out_h, out_w, kernel_h, kernel_w, C))
 
         for y in range(kernel_h):
             y_max = y + stride_h * out_h
             for x in range(kernel_w):
                 x_max = x + stride_w * out_w
-                col[:, y, x, :, :] = img[:, y:y_max:stride_h, x:x_max:stride_w]
+                col[:, :, y, x, :] = img[y:y_max:stride_h, x:x_max:stride_w, :]
 
-        col = col.transpose(3, 4, 0, 1, 2).reshape(out_h * out_w, -1)
+        col = col.reshape(out_h * out_w, -1)
         return col
+
+    def generate_conv1d_line_buffer_fn(self, layer_idx, in_W, in_C, kernel_width=3, stride_width=1, pad=0):
+        if isinstance(pad, Iterable):
+            pad_left = pad[0]
+            pad_right = pad[1]
+        else:
+            pad_left = pad
+            pad_right = pad
+
+        generated_code = (
+            "template<class data_T, typename CONFIG_T>\n"
+            "class fill_line_{index} : public FillLineBuffer1D<data_T, CONFIG_T> {{\n"
+            "    public:\n"
+            "    static void fill_line(\n"
+            "        data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],\n"
+            "        data_T line[CONFIG_T::filt_width * CONFIG_T::n_chan],\n"
+            "        const unsigned pixel_idx\n"
+            "    ) {{\n"
+        ).format(index=layer_idx)
+        indent = '    '
+        im2col_matrix = self._compute_conv1d_im2col(
+            (in_W, in_C),
+            kernel_width,
+            stride_width,
+            (pad_left, pad_right)
+        )
+        #im2col_matrix = self._compute_conv2d_im2col(
+        #    (1, in_W, in_C),
+        #    (1, kernel_width),
+        #    (1, stride_width),
+        #    (0, 0, pad_left, pad_right)
+        #)
+        for i, arr in enumerate(im2col_matrix):
+            generated_code += indent * 2 + 'if (pixel_idx == {:>3}) {{'.format(i)
+            for j, v in enumerate(arr):
+                if v == 0:
+                    val = '0'
+                else:
+                    val = 'data[{}]'.format(int(v-1))
+                generated_code += ' line[{}] = {:>10};'.format(j, val)
+            generated_code += ' }\n'
+        generated_code += indent + '}\n'
+        generated_code += '};\n'
+
+        return generated_code
 
     def generate_conv2d_line_buffer_fn(self, layer_idx, in_H, in_W, in_C, kernel_size=3, stride=1, pad=0):
         if isinstance(kernel_size, Iterable):
