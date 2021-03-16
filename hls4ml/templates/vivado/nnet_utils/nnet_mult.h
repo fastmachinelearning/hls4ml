@@ -20,9 +20,10 @@ class Product{
     public:
     static y_T product(x_T a, w_T w){
         // 'Normal' product
-        #pragma HLS inline off
+        #pragma HLS INLINE
         return a * w;
     }
+    static void limit(unsigned multiplier_limit) {} // Nothing to do here
 };
 
 template<class x_T, class w_T, class y_T>
@@ -30,7 +31,7 @@ class both_binary : public Product<x_T, w_T, y_T>{
     public:
     static y_T product(x_T a, w_T w){
         // specialisation for 1-bit weights and incoming data
-        #pragma HLS inline off
+        #pragma HLS INLINE
         return a == w;
     }
 };
@@ -40,7 +41,7 @@ class weight_binary : public Product<x_T, w_T, y_T>{
     public:
     static y_T product(x_T a, w_T w){
         // Specialisation for 1-bit weights, arbitrary data
-        #pragma HLS inline off
+        #pragma HLS INLINE
         return w == 0 ? (x_T) -a : a;
     }
 };
@@ -50,7 +51,7 @@ class weight_ternary : public Product<x_T, w_T, y_T>{
     public:
     static y_T product(x_T a, w_T w){
         // Specialisation for 2-bit weights, arbitrary data
-        #pragma HLS inline off
+        #pragma HLS INLINE
         if (w == 0) return (x_T) 0;
         else if(w == -1) return (x_T) -a;
         else return (x_T) a; // if(w == 1)
@@ -62,8 +63,12 @@ class mult : public Product<x_T, w_T, y_T>{
     public:
     static y_T product(x_T a, w_T w){
         // 'Normal' product
-        #pragma HLS inline off
+        #pragma HLS INLINE
         return a * w;
+    }
+    static void limit(unsigned multiplier_limit){
+        #pragma HLS INLINE
+        #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
     }
 };
 
@@ -72,7 +77,7 @@ class weight_exponential : public Product<x_T, w_T, y_T>{
     public:
     static y_T product(x_T a, w_T w){
         // Shift product for exponential weights
-        #pragma HLS inline off
+        #pragma HLS INLINE
         // shift by the exponent. Negative weights shift right
         y_T ay = a;
         y_T y = ay << w.weight;

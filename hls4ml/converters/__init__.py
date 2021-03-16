@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import os
+import yaml
 import importlib
 
 from hls4ml.utils.config import create_vivado_config
@@ -39,8 +40,62 @@ try:
 except ImportError:
     __tensorflow_enabled__ = False
 
+def parse_yaml_config(config_file):
+    """Parse conversion configuration from the provided YAML file.
 
-def convert_from_yaml_config(yamlConfig):
+    This function parses the conversion configuration contained in the YAML
+    file provided as an argument. It ensures proper serialization of hls4ml
+    objects and should be called on YAML files created by hls4ml. A minimal
+    valid YAML file may look like this::
+
+        KerasH5: my_keras_model.h5
+        OutputDir: my-hls-test
+        ProjectName: myproject
+        XilinxPart: xcku115-flvb2104-2-i
+        ClockPeriod: 5
+        IOType: io_stream
+        HLSConfig:
+            Model:
+            Precision: ap_fixed<16,6>
+            ReuseFactor: 10
+
+    Please refer to the docs for more examples of valid YAML configurations.
+
+    Arguments:
+        config_file (str): Location of the file on the filesystem.
+
+    Returns:
+        dict: Parsed configuration.
+    """
+    def construct_keras_model(loader, node):
+        from tensorflow.keras.models import load_model
+
+        model_str = loader.construct_scalar(node)
+        return load_model(model_str)
+
+    yaml.add_constructor(u'!keras_model', construct_keras_model, Loader=yaml.SafeLoader)
+
+    print('Loading configuration from', config_file)
+    with open(config_file, 'r') as file:
+        parsed_config = yaml.load(file, Loader=yaml.SafeLoader)
+    return parsed_config
+
+def convert_from_config(config):
+    """Convert to hls4ml model based on the provided configuration.
+
+    Arguments:
+        config: A string containing the path to the YAML configuration file on
+            the filesystem or a dict containig the parsed configuration.
+
+    Returns:
+        HLSModel: hls4ml model.
+    """
+
+    if isinstance(config, str):
+        yamlConfig = parse_yaml_config(config)
+    else:
+        yamlConfig = config
+
     model = None
     if 'OnnxModel' in yamlConfig:
         if __onnx_enabled__:
@@ -59,12 +114,34 @@ def convert_from_yaml_config(yamlConfig):
             raise Exception("TensorFlow not found. Please install TensorFlow.")
     else:
         model = keras_to_hls(yamlConfig)
-    
+
     return model
 
 def convert_from_keras_model(model, output_dir='my-hls-test', project_name='myproject',
     fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
-    
+    """Convert to hls4ml model based on the provided configuration.
+
+    Args:
+        model: Keras model to convert
+        output_dir (str, optional): Output directory of the generated HLS
+            project. Defaults to 'my-hls-test'.
+        project_name (str, optional): Name of the HLS project.
+            Defaults to 'myproject'.
+        fpga_part (str, optional): The target FPGA device.
+            Defaults to 'xcku115-flvb2104-2-i'.
+        clock_period (int, optional): Clock period of the design.
+            Defaults to 5.
+        io_type (str, optional): Type of implementation used. One of
+            'io_parallel' or 'io_serial'. Defaults to 'io_parallel'.
+        hls_config (dict, optional): The HLS config.
+
+    Raises:
+        Exception: If precision and reuse factor are not present in 'hls_config'
+
+    Returns:
+        HLSModel: hls4ml model.
+    """
+
     config = create_vivado_config(
         output_dir=output_dir,
         project_name=project_name,
@@ -83,10 +160,10 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
         model_config['Precision'] = 'ap_fixed<16,6>'
         model_config['ReuseFactor'] = '1'
     config['HLSConfig']['Model'] = model_config
-    
+
     if 'LayerName' in hls_config:
         config['HLSConfig']['LayerName'] = hls_config['LayerName']
-    
+
     if 'LayerType' in hls_config:
         config['HLSConfig']['LayerType'] = hls_config['LayerType']
 
@@ -95,5 +172,5 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
 
     if 'SkipOptimizers' in hls_config:
         config['HLSConfig']['SkipOptimizers'] = hls_config['SkipOptimizers']
-    
+
     return keras_to_hls(config)

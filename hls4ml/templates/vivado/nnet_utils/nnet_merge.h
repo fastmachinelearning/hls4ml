@@ -21,7 +21,7 @@
 #define NNET_MERGE_H_
 
 #include "nnet_common.h"
-#include "nnet_dense.h"
+#include "nnet_mult.h"
 #include "hls_stream.h"
 #include <math.h>
 
@@ -37,6 +37,9 @@ struct dot_config {
     static const unsigned n_out = 1;
     static const unsigned reuse_factor = 1;
     typedef float accum_t;
+    // Product function to use
+    template<class x_T, class y_T, class res_T>
+    using product = nnet::product::mult<x_T, y_T, res_T>;
 };
 
 struct concat_config {
@@ -126,7 +129,7 @@ void dot1d(
     #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
     constexpr unsigned multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in, CONFIG_T::reuse_factor);
-    #pragma HLS ALLOCATION instances=product limit=multiplier_limit function
+    CONFIG_T::template product<input1_T, input2_T, typename CONFIG_T::accum_t>::limit(multiplier_limit);
 
     typename CONFIG_T::accum_t mult[CONFIG_T::n_in];
     #pragma HLS ARRAY_PARTITION variable=mult complete
@@ -134,7 +137,7 @@ void dot1d(
 
     Product: for(int i_mult=0; i_mult < CONFIG_T::n_in; i_mult++) {
         #pragma HLS UNROLL
-        mult[i_mult] = product<input1_T, input2_T, typename CONFIG_T::accum_t>(data1[i_mult], data2[i_mult]);
+        mult[i_mult] = CONFIG_T::template product<input1_T, input2_T, typename CONFIG_T::accum_t>::product(data1[i_mult], data2[i_mult]);
     }
 
     Accum: for(int i_acc = 0; i_acc < CONFIG_T::n_in; i_acc++) {
@@ -142,10 +145,7 @@ void dot1d(
         acc += mult[i_acc];
     }
 
-    Result: for(int i_res = 0; i_res < CONFIG_T::n_out; i_res++) {
-        #pragma HLS_UNROLL
-        res[i_res] = cast<input1_T, res_T, CONFIG_T>(acc);
-    }
+    res[0] = cast<input1_T, res_T, CONFIG_T>(acc);
 }
 
 

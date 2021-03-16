@@ -11,6 +11,8 @@ from collections import OrderedDict
 from hls4ml.writer.writers import Writer
 from hls4ml.model.hls_layers import XnorPrecisionType
 
+config_filename = 'hls4ml_config.yml'
+
 class VivadoWriter(Writer):
 
     def type_definition_cpp(self, model, atype):
@@ -130,6 +132,11 @@ class VivadoWriter(Writer):
         elif mode == 'stream':
             return '#pragma HLS STREAM variable={name} depth={depth}'.format(name=variable.name, depth=depth)
 
+    @staticmethod
+    def _make_stable_pragma(variable):
+        template = '#pragma HLS STABLE variable={name}'
+        return template.format(name=variable.name)
+
     def write_project_cpp(self, model):
         ###################
         ## myproject.cpp
@@ -211,6 +218,8 @@ class VivadoWriter(Writer):
                                 newline += '    ' + def_cpp + ';\n'
                                 if var.pragma:
                                     newline += '    ' + self._make_array_pragma(var) + '\n'
+                                if model.config.model_strategy == 'Resource':
+                                    newline += '    ' + self._make_stable_pragma(var) + '\n'
                     func = layer.function_cpp()
                     if func:
                         if len(func) == 1:
@@ -603,6 +612,25 @@ class VivadoWriter(Writer):
 
         copytree(srcpath, dstpath)
 
+    def write_yml(self, model):
+        ###################
+        # YAML config file
+        ###################
+
+        def keras_model_representer(dumper, keras_model):
+            model_path = model.config.get_output_dir() + '/keras_model.h5'
+            keras_model.save(model_path)
+            return dumper.represent_scalar(u'!keras_model', model_path)
+
+        try:
+            from tensorflow.keras import Model as KerasModel
+            yaml.add_multi_representer(KerasModel, keras_model_representer)
+        except:
+            pass
+
+        with open(model.config.get_output_dir() + '/' + config_filename, 'w') as file:
+            yaml.dump(model.config.config, file)
+
     def write_tar(self, model):
         ###################
         # Tarball output
@@ -623,5 +651,6 @@ class VivadoWriter(Writer):
         self.write_bridge(model)
         self.write_build_script(model)
         self.write_nnet_utils(model)
+        self.write_yml(model)
         self.write_tar(model)
         print('Done')
