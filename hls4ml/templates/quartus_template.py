@@ -19,7 +19,7 @@ from hls4ml.templates.fpga_template import FPGABackend
 
 
 @contextmanager
-def cd(newdir):
+def chdir(newdir):
     prevdir = os.getcwd()
     os.chdir(os.path.expanduser(newdir))
     try:
@@ -302,37 +302,16 @@ class QuartusBackend(FPGABackend):
             print('WARNING: Changing model strategy to "Resource"')
             config.model_strategy = 'Resource'
 
-    def compile(self, model):
-        libname = "{}".format(str(uuid.uuid4().hex))
-        ret_val = os.system('bash build_lib.sh {}'.format(libname))
-        if ret_val != 0:
-            raise Exception('Failed to compile project "{}"'.format(model.config.get_project_name()))
-        lib_name = 'firmware/{}.so'.format(libname)
-        if model._top_function_lib is not None:
-
-            if platform.system() == "Linux":
-                dlclose_func = ctypes.CDLL('libdl.so').dlclose
-            elif platform.system() == "Darwin":
-                dlclose_func = ctypes.CDLL('libc.dylib').dlclose
-
-            dlclose_func.argtypes = [ctypes.c_void_p]
-            dlclose_func.restype = ctypes.c_int
-            dlclose_func(model._top_function_lib._handle)
-        model._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
-
-    def build(self, dir, prj_config, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, fpgasynth=False):
+    def build(self, model, synth=True, fpgasynth=False):
         """
-        Low level function to build the system. Users should generally not call this function directly
-        but instead use HLSModel.build(...)
+        Builds the project using Intel HLS compiler.
+        
+        Users should generally not call this function directly but instead use `HLSModel.build()`.
+        This function assumes the model was written with a call to `HLSModel.write()`
 
         Args:
-            dir (string):  The directory where the project is found
-            prj_config (dict): The project configuration dictionary--note, not HLSConfig
-            reset, optional: Whether to reset the system. (Currently ignored)
+            model (HLSModel): The model to build
             synth, optional: Whether to run synthesis
-            cosim, optional: Whether to run cosim (currently ignored)
-            validation, optional: Whether to run validation (currently ignored)
-            export, optional: Whether to export the project (currently ignored)
             fpgasynth, optional:  Whether to run fpga synthesis
 
         Errors raise exceptions
@@ -341,20 +320,19 @@ class QuartusBackend(FPGABackend):
         if found != 0:
             raise Exception('Intel HLS installation not found. Make sure "i++" is on PATH.')
 
-        top_func_name = prj_config["ProjectName"]
+        with chdir(model.config.get_output_dir()):
+            if synth:
+                os.system('make {}-fpga'.format(model.config.get_project_name()))
+                os.system('./{}-fpga'.format(model.config.get_project_name()))
 
-        # use a context manager for exception safety
-        with cd(dir):
-            if(synth):
-                os.system('make {}-fpga'.format(top_func_name))
-                os.system('./{}-fpga'.format(top_func_name))
-
-            if(fpgasynth):
+            if fpgasynth:
                 found = os.system('command -v quartus_sh > /dev/null')
                 if found != 0:
                     raise Exception('Quartus installation not found. Make sure "quartus_sh" is on PATH.')
-                os.chdir(top_func_name + '-fpga.prj/quartus')
+                os.chdir(model.config.get_project_name() + '-fpga.prj/quartus')
                 os.system('quartus_sh --flow compile quartus_compile')
+        
+        return self.report_to_dict(model.config, output=False)
 
     def get_supportedlayers(self):
         #Define supported laers

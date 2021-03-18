@@ -374,40 +374,43 @@ class HLSModel(object):
         return self.output_vars[output_name]
 
     def write(self):
-        def make_stamp():
+        """Write the generated project to disk.
+
+        This function converts the model to C++ and writes the generated files in the output
+        directory specified in the `config`.
+        """
+
+        def _make_stamp():
+            """ Create a unique identifier for the generated code. This identifier is used to
+            compile a unique library and link it with python. """
             from string import hexdigits
             from random import choice
             length = 8
             return ''.join(choice(hexdigits) for m in range(length))
         
-        self.config.config['Stamp'] = make_stamp()
+        self.config.config['Stamp'] = _make_stamp()
 
         self.config.writer.write_hls(self)
 
     def compile(self):
+        """Compile the generated project and link the library into current environment.
+
+        Users should call this function if they want to use `predict` functionality for simulation.
+        """
         self.write()
 
-        curr_dir = os.getcwd()
-        os.chdir(self.config.get_output_dir())
+        lib_name = self.config.backend.compile(self)
+        if self._top_function_lib is not None:
 
-        try:
-            ret_val = os.system('bash build_lib.sh')
-            if ret_val != 0:
-                raise Exception('Failed to compile project "{}"'.format(self.config.get_project_name()))
-            lib_name = 'firmware/{}-{}.so'.format(self.config.get_project_name(), self.config.get_config_value('Stamp'))
-            if self._top_function_lib is not None:
+            if platform.system() == "Linux":
+                dlclose_func = ctypes.CDLL('libdl.so').dlclose
+            elif platform.system() == "Darwin":
+                dlclose_func = ctypes.CDLL('libc.dylib').dlclose
 
-                if platform.system() == "Linux":
-                    dlclose_func = ctypes.CDLL('libdl.so').dlclose
-                elif platform.system() == "Darwin":
-                    dlclose_func = ctypes.CDLL('libc.dylib').dlclose
-
-                dlclose_func.argtypes = [ctypes.c_void_p]
-                dlclose_func.restype = ctypes.c_int
-                dlclose_func(self._top_function_lib._handle)
-            self._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
-        finally:
-            os.chdir(curr_dir)
+            dlclose_func.argtypes = [ctypes.c_void_p]
+            dlclose_func.restype = ctypes.c_int
+            dlclose_func(self._top_function_lib._handle)
+        self._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
 
     def _get_top_function(self, x):
         if self._top_function_lib is None:
@@ -541,30 +544,13 @@ class HLSModel(object):
         else:
             return output, trace_output
 
-    def build(self, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
-        if 'linux' in sys.platform:
-            backend = self.config.get_config_value('Backend', 'Vivado')
-            if backend == 'Vivado':
-                found = os.system('command -v vivado_hls > /dev/null')
-                if found != 0:
-                    raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
+    def build(self, **kwargs):
+        """ Builds the generated project using HLS compiler.
 
-            elif backend == 'Intel':
-                raise NotImplementedError
-            elif backend == 'Mentor':
-                raise NotImplementedError
-            else:
-                raise Exception('Backend values can be [Vivado, Intel, Mentor]')
-
+        Please see the `build()` function of backends for a list of possible arguments.
+        """
         if not os.path.exists(self.config.get_output_dir()):
             # Assume the project wasn't written before
             self.write()
 
-        curr_dir = os.getcwd()
-        os.chdir(self.config.get_output_dir())
-        os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
-            .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
-        os.chdir(curr_dir)
-
-        return parse_vivado_report(self.config.get_output_dir())
-
+        return self.config.backend.build(self, **kwargs)

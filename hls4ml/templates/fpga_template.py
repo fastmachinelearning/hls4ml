@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import os
 from bisect import bisect_left
 from queue import Queue
 from collections.abc import Iterable
@@ -12,6 +13,21 @@ from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType, Xn
 class FPGABackend(Backend):
     def __init__(self, name):
         super(FPGABackend, self).__init__(name)
+
+    def compile(self, model):
+        curr_dir = os.getcwd()
+        os.chdir(model.config.get_output_dir())
+
+        lib_name = None
+        try:
+            ret_val = os.system('bash build_lib.sh')
+            if ret_val != 0:
+                raise Exception('Failed to compile project "{}"'.format(model.config.get_project_name()))
+            lib_name = '{}/firmware/{}-{}.so'.format(model.config.get_output_dir(), model.config.get_project_name(), model.config.get_config_value('Stamp'))
+        finally:
+            os.chdir(curr_dir)
+        
+        return lib_name
 
     def get_valid_reuse_factors(self, layer):
         n_in = 0

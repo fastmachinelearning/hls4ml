@@ -1,5 +1,7 @@
 import numpy as np
 import math
+import os
+import sys
 from bisect import bisect_left
 from queue import Queue
 from collections.abc import Iterable
@@ -7,6 +9,7 @@ from collections.abc import Iterable
 from hls4ml.model.hls_layers import IntegerPrecisionType
 from hls4ml.templates.templates import custom_initializer
 from hls4ml.templates.fpga_template import FPGABackend
+from hls4ml.report import parse_vivado_report
 
 dense_config_template = """struct config{index} : nnet::dense_config {{
     static const unsigned n_in = {n_in};
@@ -397,6 +400,20 @@ class VivadoBackend(FPGABackend):
         self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template, transpose_include_list)
         self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
         self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)
+
+    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
+        if 'linux' in sys.platform:
+            found = os.system('command -v vivado_hls > /dev/null')
+            if found != 0:
+                raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
+        
+        curr_dir = os.getcwd()
+        os.chdir(model.config.get_output_dir())
+        os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
+            .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
+        os.chdir(curr_dir)
+
+        return parse_vivado_report(model.config.get_output_dir())
 
     @custom_initializer('Dense')
     def init_dense(self, layer):
