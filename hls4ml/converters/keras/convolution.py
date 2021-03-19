@@ -84,4 +84,5 @@ def parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader, conf
         output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
     else:
         output_shape = [input_shapes[0][0], layer['out_height'], layer['out_width'], layer['n_filt']]
+
     return layer, output_shape

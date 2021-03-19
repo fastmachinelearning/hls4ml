@@ -29,9 +29,9 @@ def parse_qdense_layer(keras_layer, input_names, input_shapes, data_reader, conf
 def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader, config):
     assert('QConv' in keras_layer['class_name'])
     
-    if "1D" in keras_layer['class_name']:
+    if '1D' in keras_layer['class_name']:
         layer, output_shape = parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader, config)
-    elif "2D" in keras_layer['class_name']:
+    elif '2D' in keras_layer['class_name']:
         layer, output_shape = parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader, config)
 
     layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
