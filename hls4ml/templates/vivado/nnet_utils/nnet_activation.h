@@ -861,6 +861,36 @@ void  ternary_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
  
 }
 
+template<class data_T, class res_T, typename CONFIG_T>
+void po2(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
+{
+    if (CONFIG_T::io_type == 0)
+    {
+        #pragma HLS PIPELINE
+    }
+    
+    for (int i=0; i < CONFIG_T::n_in; i++)
+    {
+    	res[i] = 0;
+    	short last_1 = -1;
+    	// set MSB to keep the sign
+        res[i][res[i].width - 1] = data[i][data[i].width - 1];
+        loop_po2: for(unsigned short j = 0; j < data[i].width - 1; j++)
+        {
+            //#pragma HLS unroll
+            if(data[i][j] == 1)
+            {
+                last_1 = j;
+            }
+        }
+        // set just the last bit to get the po2 rounding
+        if (last_1 >= 0)
+        {
+            res[i][last_1] = 1;    
+        }
+    }
+}
+
 }
 
 #endif
