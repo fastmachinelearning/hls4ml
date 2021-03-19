@@ -76,7 +76,7 @@ def config(args):
     config = hls4ml.utils.config.create_vivado_config(
         output_dir=args.dir,
         project_name=args.project,
-        fpga_part=args.fpga,
+        device=args.fpga,
         clock_period=args.clock
     )
 
