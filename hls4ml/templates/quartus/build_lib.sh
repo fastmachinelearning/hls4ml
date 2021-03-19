@@ -7,7 +7,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     CFLAGS="-O3 -fPIC -std=c++11"
 fi
 LDFLAGS=
-INCFLAGS="-Ifirmware/ac_types/"
+INCFLAGS="-Ifirmware/ac_types/ -Ifirmware/ap_types/"
 PROJECT=myproject
 LIB_STAMP=mystamp
 
