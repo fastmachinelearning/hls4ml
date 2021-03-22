@@ -1,4 +1,5 @@
-import importlib
+from hls4ml.model.hls_model import HLSModel
+from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas
@@ -133,20 +134,14 @@ def types_histogram(data, fmt='longform'):
 types_plots = {'boxplot' : types_boxplot,
                'histogram' : types_histogram}
 
-def ap_fixed_WIF(type_str):
-    if 'ap_fixed' in type_str:
-        W = int(type_str.split(',')[0].split('<')[1])
-        I = int(type_str.split(',')[1].split('>')[0])
-        F = W - I
-    elif 'ap_int' in type_str:
-        W = int(type_str.replace('ap_int<','').replace('>',''))
-        I = W
-        F = 0
-    else:
-        W, I, F = 0, 0, 0
+def ap_fixed_WIF(dtype):
+    from hls4ml.templates.vivado_template import VivadoBackend
+    dtype = VivadoBackend.convert_precision_string(None, dtype) 
+    W, I, F = dtype.width, dtype.integer, dtype.fractional
     return W, I, F
 
 def types_hlsmodel(model):
+    suffix = ['w', 'b']
     data = {'layer' : [], 'low' : [], 'high' : []}
     # Plot the default precision
     default_precision = model.config.model_precision['default']
@@ -158,7 +153,7 @@ def types_hlsmodel(model):
 
     for layer in model.get_layers():
         for iw, weight in enumerate(layer.get_weights()):
-            wname = '{}/{}'.format(layer.name, iw)
+            wname = '{}/{}'.format(layer.name, suffix[iw])
             T = weight.type
             if T.name != 'model':
                 W, I, F = ap_fixed_WIF(T.precision)
@@ -459,7 +454,8 @@ def get_ymodel_keras(keras_model, X):
 
                         #Add the activation back
                         layer.activation = temp_activation
-                                     
+                else:
+                    ymodel[layer.name] = _get_output(ymodel, layer, X)
             else:    
                 ymodel[layer.name] = _get_output(ymodel, layer, X)
         

@@ -21,11 +21,6 @@ hls4ml_description = """
    o────╚╤╤╤╝
 """
 
-def parse_config(config_file):
-    print('Loading configuration from', config_file)
-    config = open(config_file, 'r')
-    return yaml.load(config, Loader=yaml.SafeLoader)
-
 def main():
     parser = argparse.ArgumentParser(description=hls4ml_description, formatter_class=argparse.RawDescriptionHelpFormatter)
     subparsers = parser.add_subparsers()
@@ -137,14 +132,10 @@ def config(args):
         yaml.dump(config, sys.stdout, default_flow_style=False, sort_keys=False)
 
 def convert(args):
-    yamlConfig = parse_config(args.config)
-    model = hls4ml.converters.convert_from_yaml_config(yamlConfig)
+    model = hls4ml.converters.convert_from_config(args.config)
 
     if model is not None:
         model.write()
-
-    # Copy the config file to the generated folder
-    copyfile(args.config, yamlConfig['OutputDir'] + '/' + config_filename)
 
 def build(args):
     if args.project is None:
@@ -161,14 +152,14 @@ def build(args):
     if args.all:
         csim = synth = cosim = validation = export = vsynth = 1
     
-    yamlConfig = parse_config(args.project + '/' + config_filename)
+    yamlConfig = hls4ml.converters.parse_yaml_config(args.project + '/' + config_filename)
 
     # Check if vivado_hls is available
     if 'linux' in sys.platform or 'darwin' in sys.platform:
         backend = yamlConfig.get('Backend', 'Vivado')
         if backend == 'Vivado':
             found = os.system('command -v vivado_hls > /dev/null')
-            if found is not 0:
+            if found != 0:
                 print('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
                 sys.exit(1)
         elif backend == 'Intel':

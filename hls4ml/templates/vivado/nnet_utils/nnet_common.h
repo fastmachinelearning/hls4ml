@@ -41,27 +41,18 @@ enum strategy { latency, resource };
   * before applying and accumulate the result over the rolled dimension.
   * --- */
  template<class T, int N, class Op>
- T reduce(T* x, Op op){
-	static constexpr int leftN = pow2(floorlog2(N - 1)) > 0 ? pow2(floorlog2(N - 1)) : 0;
-	static constexpr int rightN = N - leftN > 0 ? N - leftN : 0;
-	if(N == 1){
-		return x[0];
-	}else if(N == 2){
-		return op(x[0],x[1]);
-	}else{
-		T left[leftN];
-		T right[rightN];
-		#pragma HLS array_partition variable=left complete
-		#pragma HLS array_partition variable=right complete
-		ReduceLeft: for(int i = 0; i < leftN; i++){
-			left[i] = x[i];
-		}
-		ReduceRight: for(int i = 0; i < rightN; i++){
-			right[i] = x[i+leftN];
-		}
-		return op(reduce<T,leftN,Op>(left, op), reduce<T,rightN,Op>(right, op));
-	}
- }
+ T reduce(const T* x, Op op)
+ {
+     static constexpr int leftN = pow2(floorlog2(N - 1)) > 0 ? pow2(floorlog2(N - 1)) : 0;
+     static constexpr int rightN = N - leftN > 0 ? N - leftN : 0;
+     if (N == 1){
+         return x[0];
+     }
+     if (N == 2){
+         return op(x[0],x[1]);
+     }
+     return op(reduce<T,leftN,Op>(x, op), reduce<T,rightN,Op>(x+leftN, op));
+ } 
 
  template<class T>
  class Op_add{

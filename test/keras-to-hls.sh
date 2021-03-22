@@ -1,12 +1,13 @@
 #!/bin/bash
 
 pycmd=python
-xilinxpart="xc7vx690tffg1927-2"
+xilinxpart="xcvu9p-flgb2104-2-e"
 clock=5
 io=io_parallel
 rf=1
 strategy="Latency"
 type="ap_fixed<16,6>"
+yml=""
 basedir=vivado_prj
 
 sanitizer="[^A-Za-z0-9._]"
@@ -21,7 +22,7 @@ function print_usage {
    echo ""
    echo "Options are:"
    echo "   -x DEVICE"
-   echo "      Xilinx device part number. Defaults to 'xc7vx690tffg1927-2'."
+   echo "      Xilinx device part number. Defaults to 'xcvu9p-flgb2104-2-e'."
    echo "   -c CLOCK"
    echo "      Clock period to use. Defaults to 5."
    echo "   -s"
@@ -34,11 +35,13 @@ function print_usage {
    echo "      Default precision. Defaults to 'ap_fixed<16,6>'."
    echo "   -d DIR"
    echo "      Output directory."
+   echo "   -y FILE"
+   echo "      YAML config file to take HLS config from. If specified, -r, -g and -t are ignored."
    echo "   -h"
    echo "      Prints this help message."
 }
 
-while getopts ":x:c:sr:g:t:d:h" opt; do
+while getopts ":x:c:sr:g:t:d:y:h" opt; do
    case "$opt" in
    x) xilinxpart=$OPTARG
       ;;
@@ -53,6 +56,8 @@ while getopts ":x:c:sr:g:t:d:h" opt; do
    t) type=$OPTARG
       ;;
    d) basedir=$OPTARG
+      ;;
+   y) yml=$OPTARG
       ;;
    h)
       print_usage
@@ -90,6 +95,11 @@ do
    file="${basedir}/${base}.yml"
    prjdir="${basedir}/${base}-${xilinxpart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}"
 
+   hlscfg=""
+   if [ ! -z "${yml}" ]; then
+      hlscfg=`sed -ne '/HLSConfig/,$p' ../example-models/config-files/${yml}`
+   fi
+
    echo "KerasJson: ../example-models/keras/${name}.json" > ${file}
    echo "KerasH5:   ../example-models/keras/${h5}.h5" >> ${file}
    echo "OutputDir: ${prjdir}" >> ${file}
@@ -98,11 +108,17 @@ do
    echo "ClockPeriod: ${clock}" >> ${file}
    echo "" >> ${file}
    echo "IOType: ${io}" >> ${file}
-   echo "HLSConfig:" >> ${file}
-   echo "  Model:" >> ${file}
-   echo "    ReuseFactor: ${rf}" >> ${file}
-   echo "    Precision: ${type} " >> ${file}
-   echo "    Strategy: ${strategy} " >> ${file}
+   
+   if [ -z "${hlscfg}" ]
+   then
+      echo "HLSConfig:" >> ${file}
+      echo "  Model:" >> ${file}
+      echo "    ReuseFactor: ${rf}" >> ${file}
+      echo "    Precision: ${type} " >> ${file}
+      echo "    Strategy: ${strategy} " >> ${file}
+   else
+      echo "${hlscfg}" >> ${file}
+   fi
 
    ${pycmd} ../scripts/hls4ml convert -c ${file} || exit 1
    rm ${file}
