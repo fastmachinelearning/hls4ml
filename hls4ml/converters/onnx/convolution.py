@@ -27,9 +27,14 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
         layer['pad_right'] = pads[1]
         
         if all(x == 0 for x in pads): # No padding, i.e., 'VALID' padding
-            layer['out_width'] = int(math.ceil(float(layer['in_width'] - layer['filt_width'] + 1) / float(layer['stride'])))
+            layer['padding'] = 'valid'
         else:
-            layer['out_width'] = int(math.ceil(float(layer['in_width']) / float(layer['stride'])))
+            layer['padding'] = 'same'
+            
+        (layer['out_width'],_,_) = compute_padding_1d(layer['padding'],
+                                                      layer['in_width'],
+                                                      layer['stride_width'],
+                                                      layer['filt_width'])
 
         output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_width']]
         
@@ -53,11 +58,17 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
         layer['pad_right'] = pads[3]
 
         if all(x == 0 for x in pads): # No padding, i.e., 'VALID' padding in Keras/Tensorflow
-            layer['out_width'] = int(math.ceil(float(layer['in_width'] - layer['filt_width'] + 1) / float(layer['stride_width'])))
-            layer['out_height'] = int(math.ceil(float(layer['in_height'] - layer['filt_height'] + 1) / float(layer['stride_height'])))
-        else:
-            layer['out_height'] = int(math.ceil(float(layer['in_height']) / float(layer['stride_height'])))
-            layer['out_width'] = int(math.ceil(float(layer['in_width']) / float(layer['stride_width'])))
+            layer['padding'] = 'valid'
+        else: #Only 'valid' and 'same' padding are available in Keras
+            layer['padding'] = 'same'
+            
+        (layer['out_height'], layer['out_width'],_,_,_,_) = compute_padding_2d(layer['padding'],
+                                                                               layer['in_height'],
+                                                                               layer['in_width'],
+                                                                               layer['stride_height'],
+                                                                               layer['stride_width'],
+                                                                               layer['filt_height'],
+                                                                               layer['filt_width'])
 
         output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
 

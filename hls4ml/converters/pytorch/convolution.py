@@ -25,18 +25,18 @@ def parse_conv1d_layer(pytorch_layer, layer_name, input_shapes, data_reader, con
     layer['pad_left'] = layer['pad_right'] = pytorch_layer.padding[0]
     layer['dilation'] = pytorch_layer.dilation[0]
     
+    if pytorch_layer.padding[0] == 0: # No padding, i.e., 'VALID' padding in Keras/Tensorflow
+        layer['padding'] = 'valid'
+    else: #Only 'valid' and 'same' padding are available in Keras
+        layer['padding'] = 'same'
+    
     #Ouput info
-    layer['out_width'] = int(
-        (layer['in_width'] + 2*layer['pad_left'] - layer['dilation']*(layer['filt_width']-1)- 1)/layer['stride_width'] + 1)
+    (layer['out_width'],_,_) = compute_padding_1d(layer['padding'],
+                                                  layer['in_width'],
+                                                  layer['stride_width'],
+                                                  layer['filt_width'])
     
     output_shape=[input_shapes[0][0], layer['n_filt'], layer['out_width']] #Channel first as default
-    
-    #Only 'same' padding is implemented in the streaming algorithm
-    if output_shape == input_shapes[0]:
-        layer['padding'] = 'same'
-    else:
-        raise Exeption('ERROR: Only "same" padding is allowed. (Input shapes must match output shapes in Conv layers)')
-      
     
     return layer, output_shape
 
@@ -67,14 +67,20 @@ def parse_conv2d_layer(pytorch_layer, layer_name, input_shapes, data_reader, con
     layer['pad_top'] = layer['pad_bottom'] = pytorch_layer.padding[0]
     layer['pad_left'] = layer['pad_right'] = pytorch_layer.padding[1]
     
-    #Ouput info
-    layer['out_height']  = int((layer['in_height'] + 2*layer['pad_top'] - layer['dilation']*(layer['filt_height']-1)- 1)/layer['stride_height'] + 1)
-    layer['out_width']  = int((layer['in_width'] + 2*layer['pad_left'] - layer['dilation']*(layer['filt_width']-1)- 1)/layer['stride_width'] + 1)
-        
-    #Only 'same' padding is implemented in the streaming algorithm
-    if output_shape == input_shapes[0]:
+    if all(x == 0 for x in pytorch_layer.padding): # No padding, i.e., 'VALID' padding in Keras/Tensorflow
+        layer['padding'] = 'valid'
+    else: #Only 'valid' and 'same' padding are available in Keras
         layer['padding'] = 'same'
-    else:
-        raise Exeption('ERROR: Only "same" padding is allowed. (Input shapes must match output shapes in Conv layers)')
-
+    
+    #Ouput info
+    (layer['out_height'], layer['out_width'],_,_,_,_) = compute_padding_2d(layer['padding'],
+                                                                           layer['in_height'],
+                                                                           layer['in_width'],
+                                                                           layer['stride_height'],
+                                                                           layer['stride_width'],
+                                                                           layer['filt_height'],
+                                                                           layer['filt_width'])
+    
+    output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
+    
     return layer, output_shape
