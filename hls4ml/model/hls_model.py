@@ -292,12 +292,33 @@ class HLSModel(object):
 
         return node
 
-    def insert_node(self, node):
+    def insert_node(self, node, before=None):
+        """ Insert a new node into the model graph.
+
+        The node to be inserted should be created with `make_node()` function. The optional 
+        parameter `before` can be used to specify the node that follows in case of ambiguities.
+
+        Args:
+            node (Layer): Node to insert
+            before (Layer, optional): The next node in sequence before which a
+                new node should be inserted. 
+        Raises:
+            Exception: If an attempt to insert a node with multiple inputs is made or if
+                `before` does not specify a correct node in sequence.
+
+        """
         if len(node.inputs) > 1:
             raise Exception('Cannot insert a node with more than one input (for now).')
 
         prev_node = self.graph.get(node.inputs[0])
-        next_node = next((x for x in self.graph.values() if x.inputs[0] == prev_node.outputs[0]), None)
+        next_nodes = [x for x in self.graph.values() if x.inputs[0] == prev_node.outputs[0]]
+        if before is None:
+            next_node = next((x for x in self.graph.values() if x.inputs[0] == prev_node.outputs[0]), None)
+        else:
+            if before not in next_nodes:
+                raise Exception('Cannot insert a node {} before {} (candidates: {}).'.format(node.name, before.name, ','.join([n.name for n in next_nodes])))
+            next_node = before
+
         if next_node is not None:
             next_node.inputs[0] = node.outputs[0]
 
