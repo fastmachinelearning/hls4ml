@@ -364,6 +364,9 @@ class Layer(object):
         self.precision[accum_t.name] = accum_t
         self.set_attr('accum_t', accum_t.precision)
         self.reuse_factor = self.model.config.get_reuse_factor(self)
+        self.parallelization_factor = self.model.config.get_config_value('ParallelizationFactor')
+        if self.parallelization_factor is None:
+            self.parallelization_factor = self.reuse_factor
 
         layer_config = self.model.config.get_layer_config(self)
         for config_key, config_value in layer_config.items():
@@ -520,6 +523,7 @@ class Layer(object):
         params['index'] = self.index
         params['iotype'] = self.model.config.get_config_value('IOType')
         params['reuse'] = self.reuse_factor
+        params['parallelization_factor'] = self.parallelization_factor
 
         # data types
         for weight_name, variable in self.weights.items():
@@ -861,6 +865,7 @@ class Conv2D(Layer):
                     (self.get_attr('stride_height'), self.get_attr('stride_width')),
                     (self.get_attr('pad_top'), self.get_attr('pad_bottom'), self.get_attr('pad_left'), self.get_attr('pad_right'))
                 )
+                self.model.config.backend.set_closest_parallelization_factor(self)
         else:
             self.set_attr('strategy', 'latency')
 

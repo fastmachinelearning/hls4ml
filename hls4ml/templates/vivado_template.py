@@ -89,7 +89,7 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned stride_width = {stride_width};
     static const unsigned out_height = {out_height};
     static const unsigned out_width = {out_width};
-    static const unsigned reuse_factor = {reuse};
+    static const unsigned reuse_factor = {parallelization_factor};
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
     static const unsigned strategy = nnet::{strategy};
@@ -464,6 +464,30 @@ class VivadoBackend(Backend):
             print('WARNING: Invalid ReuseFactor={} with "Resource" strategy in layer "{}". Using ReuseFactor={} instead. Valid ReuseFactor(s): {}.'
                 .format(chosen_rf, layer.name, closest_rf, ','.join(map(str, valid_rf))))
             layer.reuse_factor = closest_rf
+
+    def divisorGenerator(self, n):
+        large_divisors = []
+        for i in range(1, int(math.sqrt(n) + 1)):
+            if n % i == 0:
+                yield i
+                if i*i != n:
+                    large_divisors.append(n // i)
+        for divisor in reversed(large_divisors):
+            yield divisor
+
+    def set_closest_parallelization_factor(self, layer):
+        if 'Conv1D' in layer.__class__.__name__:
+            n_in = layer.get_attr('out_width')
+        elif 'Conv2D' in layer.__class__.__name__:
+            n_in = layer.get_attr('out_height') * layer.get_attr('out_width')
+
+        valid_pf = list(self.divisorGenerator(n_in))
+        chosen_pf = layer.parallelization_factor
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            print('INFO: Setting ParallelizationFactor={} in layer {}. Valid ParallelizationFactor(s): {}.'
+                .format(closest_pf, layer.name, ','.join(map(str, valid_pf))))
+            layer.parallelization_factor = closest_pf
 
     def convert_precision_string(self, precision):
         '''
