@@ -5,6 +5,16 @@ import json
 import math
 from collections import OrderedDict
 
+# TODO move config creation functions to backends?
+def create_config(output_dir='my-hls-test', project_name='myproject',
+    backend='Vivado', device=None, clock_period=5, io_type='io_parallel'):
+    if backend == 'Vivado':
+        return create_vivado_config(output_dir=output_dir, project_name=project_name, device=device, clock_period=clock_period, io_type=io_type)
+    elif backend == 'Quartus':
+        return create_quartus_config(output_dir=output_dir, project_name=project_name, device=device, clock_period=clock_period, io_type=io_type)
+    else:
+        raise Exception('Unknown backend: {}'.format(backend))
+
 def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
     device='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
     
@@ -12,9 +22,24 @@ def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
     
     config['OutputDir'] = output_dir
     config['ProjectName'] = project_name
-    config['Device'] = device
+    config['Device'] = device if device is not None else 'xcku115-flvb2104-2-i'
     config['ClockPeriod'] = clock_period
     config['Backend'] = 'Vivado'
+    config['IOType'] = io_type
+    config['HLSConfig'] = {}
+
+    return config
+
+def create_quartus_config(output_dir='my-hls-test', project_name='myproject',
+    device='Arria10', clock_period=5, io_type='io_parallel'):
+    
+    config = {}
+    
+    config['OutputDir'] = output_dir
+    config['ProjectName'] = project_name
+    config['Device'] = device if device is not None else 'Arria10'
+    config['ClockPeriod'] = clock_period
+    config['Backend'] = 'Quartus'
     config['IOType'] = io_type
     config['HLSConfig'] = {}
 

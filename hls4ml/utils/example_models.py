@@ -1,5 +1,5 @@
 from urllib.request import urlretrieve
-from .config import create_vivado_config
+from .config import create_config
 import pprint
 import json
 import yaml
@@ -32,10 +32,10 @@ def _config_is_available(model_name):
 
     return data['example_config']
 
-def _create_default_config(model_name, model_config):
+def _create_default_config(model_name, model_config, backend):
 
     #Initiate the configuration file
-    config = create_vivado_config()
+    config = create_config(backend=backend)
 
     #Additional configuration parameters
     config[model_config] = model_name
@@ -92,7 +92,7 @@ def _load_example_config(model_name):
 
     return config
 
-def fetch_example_model(model_name):
+def fetch_example_model(model_name, backend='Vivado'):
     """
     Download an example model (and example data & configuration if available) from github repo to working directory, and return the corresponding configuration:
 
@@ -101,10 +101,11 @@ def fetch_example_model(model_name):
     Use fetch_example_list() to see all the available models.
 
     Args:
-        - model_name: string, name of the example model in the repo. Example: fetch_example_model('KERAS_3layer.json')
+        model_name (str): Name of the example model in the repo. Example: fetch_example_model('KERAS_3layer.json')
+        backend (str, optional): Name of the backend to use for model conversion.
     
     Return:
-        - Dictionary that stores the configuration to the model
+        dict: Dictionary that stores the configuration to the model
     """
 
     #Initilize the download link and model type
@@ -133,7 +134,7 @@ def fetch_example_model(model_name):
     
     #Download the example model
     print("Downloading example model files ...")
-    urlretrieve(download_link_model, model_name)
+    urlretrieve(download_link_model, model_name,)
 
     #Check if the example data and configuration for the model are available
     if _data_is_available(model_name):
@@ -142,7 +143,7 @@ def fetch_example_model(model_name):
     if _config_is_available(model_name):
         config = _load_example_config(model_name)
     else:
-        config = _create_default_config(model_name, model_config)
+        config = _create_default_config(model_name, model_config, backend)
 
     #If the model is a keras model then have to download its weight file as well
     if model_type == 'keras':

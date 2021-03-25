@@ -3,8 +3,8 @@ import os
 import yaml
 import importlib
 
-from hls4ml.utils.config import create_vivado_config
-
+from hls4ml.utils.config import create_config
+from hls4ml.model.hls_model import FixedPrecisionType
 from hls4ml.converters.keras_to_hls import keras_to_hls, get_supported_keras_layers, register_keras_layer_handler
 
 for module in os.listdir(os.path.dirname(__file__) + '/keras'):
@@ -118,7 +118,7 @@ def convert_from_config(config):
     return model
 
 def convert_from_keras_model(model, output_dir='my-hls-test', project_name='myproject',
-    device='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
+    backend='Vivado', device=None, clock_period=5, io_type='io_parallel', hls_config={}):
     """Convert to hls4ml model based on the provided configuration.
 
     Args:
@@ -127,8 +127,10 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
             project. Defaults to 'my-hls-test'.
         project_name (str, optional): Name of the HLS project.
             Defaults to 'myproject'.
-        device (str, optional): The target FPGA device.
-            Defaults to 'xcku115-flvb2104-2-i'.
+        backend (str, optional): Name of the backend to use, e.g., 'Vivado'
+            or 'Quartus'.
+        device (str, optional): The target FPGA device. If set to `None` a default
+            device of a backend will be used. See documentation of the backend used.
         clock_period (int, optional): Clock period of the design.
             Defaults to 5.
         io_type (str, optional): Type of implementation used. One of
@@ -142,9 +144,10 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
         HLSModel: hls4ml model.
     """
 
-    config = create_vivado_config(
+    config = create_config(
         output_dir=output_dir,
         project_name=project_name,
+        backend=backend,
         device=device,
         clock_period=clock_period,
         io_type=io_type
@@ -157,7 +160,7 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
             raise Exception('Precision and ReuseFactor must be provided in the hls_config')
     else:
         model_config = {}
-        model_config['Precision'] = 'ap_fixed<16,6>'
+        model_config['Precision'] = FixedPrecisionType()
         model_config['ReuseFactor'] = '1'
     config['HLSConfig']['Model'] = model_config
 
