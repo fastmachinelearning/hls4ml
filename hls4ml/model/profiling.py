@@ -248,13 +248,10 @@ def activations_keras(model, X, fmt='longform', plot='boxplot'):
         # or histogram bin edges and heights
         data = []
 
-    partial_model = keras.models.Sequential()
     for layer in model.layers:
         print("   {}".format(layer.name))
-        partial_model.add(layer)
-        partial_model.compile(optimizer='adam', loss='mse')
         if not isinstance(layer, keras.layers.InputLayer):
-            y = partial_model.predict(X).flatten()
+            y = _get_output(layer, X, model.input).flatten()
             y = abs(y[y != 0])
             if fmt == 'longform':
                 data['x'].extend(y.tolist())
@@ -405,14 +402,11 @@ def _is_ignored_layer(layer):
         return True
     return False
 
-def _get_output(ymodel, layer, X):
-    
-    #If there is no layer in the model just take that layer's output
-    if len(ymodel.keys()) == 0:
-        y = layer(X)
-    else:
-        #If there are already layers then calculate next output based on last layer's output
-        y = layer(ymodel[list(ymodel.keys())[-1]])
+def _get_output(layer, X, model_input):
+    """Get output of partial model"""
+    partial_model = keras.models.Model(inputs=model_input,
+                                       outputs=layer.output)
+    y = partial_model.predict(X)
     return y
 
 def get_ymodel_keras(keras_model, X):
@@ -429,7 +423,6 @@ def get_ymodel_keras(keras_model, X):
         A dictionary in the form {"layer_name": ouput array of layer}
     """
     
-    partial_model = keras.models.Sequential()
     ymodel = {}
     
     for layer in keras_model.layers:
@@ -441,26 +434,22 @@ def get_ymodel_keras(keras_model, X):
                 if layer.activation:
                     
                     if layer.activation.__class__.__name__ == "linear":
-                        ymodel[layer.name] = _get_output(ymodel, layer, X)
+                        ymodel[layer.name] = _get_output(layer, X, keras_model.input)
                     
                     else:
                         temp_activation = layer.activation
                         layer.activation = None
                         #Get output for layer without activation
-                        ymodel[layer.name] = _get_output(ymodel, layer, X)
+                        ymodel[layer.name] = _get_output(layer, X, keras_model.input)
 
-                        #Get ouput for activation
-                        ymodel[layer.name + "_{}".format(temp_activation.__class__.__name__)] =  _get_output(ymodel, temp_activation, X)
-
-                        #Add the activation back
+                        #Add the activation back 
                         layer.activation = temp_activation
+                        #Get ouput for activation
+                        ymodel[layer.name + "_{}".format(temp_activation.__class__.__name__)] =  _get_output(layer, X, keras_model.input)
                 else:
-                    ymodel[layer.name] = _get_output(ymodel, layer, X)
+                    ymodel[layer.name] = _get_output(layer, X, keras_model.input)
             else:    
-                ymodel[layer.name] = _get_output(ymodel, layer, X)
-        
-        #Add the layer for later processing
-        partial_model.add(layer)
+                ymodel[layer.name] = _get_output(layer, X, keras_model.input)
     print("Done taking outputs for Keras model.")
     return ymodel
 
@@ -483,7 +472,6 @@ def _norm_diff(ymodel, ysim):
 def _dist_diff(ymodel, ysim):
     """
     Calculate the normalized distribution of the differences of the elements
-    of the output vectors 
     of the output vectors. 
     If difference >= original value then the normalized difference will be set to 1,
     meaning "very difference".
