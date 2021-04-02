@@ -19,9 +19,15 @@ T reduce_pool(T x[N]) {
         Op_max<T> op_max;
         return reduce<T, N, Op_max<T>>(x, op_max);
     } else {
-        Op_add<T> op_add;
-        T sum = reduce<T, N, Op_add<T>>(x, op_add);
-        return sum / N;
+        Op_add<typename CONFIG_T::accum_t> op_add;
+        typename CONFIG_T::accum_t x_wide[N];
+	for (int i = 0; i < N; i++){
+            #pragma HLS UNROLL
+	    x_wide[i] = x[i];
+	}
+        typename CONFIG_T::accum_t sum = reduce<typename CONFIG_T::accum_t, N, Op_add<typename CONFIG_T::accum_t>>(x_wide, op_add);
+        T avg = sum/N;
+        return avg;
     }
 }
 
