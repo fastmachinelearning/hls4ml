@@ -163,6 +163,7 @@ global_pooling1d_config_template = """struct config{index} : nnet::pooling1d_con
     static const unsigned pad_right = {pad_right};
     static const unsigned stride = {stride};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
+    typedef {accum_t} accum_t;
 }};\n"""
 
 global_pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
@@ -171,6 +172,7 @@ global_pooling2d_config_template = """struct config{index} : nnet::pooling2d_con
     static const unsigned n_filt = {n_filt};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     static const unsigned reuse = {reuse};
+    typedef {accum_t} accum_t;
 }};\n"""
 
 zeropad1d_config_template = """struct config{index} : nnet::padding1d_config {{
