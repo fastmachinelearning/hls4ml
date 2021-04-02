@@ -489,7 +489,7 @@ def _dist_diff(ymodel, ysim):
         abs_ymodel = np.absolute(flattened_ymodel)
 
         normalized_diff = np.zeros(diff_vector.shape)
-        normalized_diff[diff_vector >= abs_ymodel] = 1
+        normalized_diff[(diff_vector >= abs_ymodel) & (abs_ymodel>0) & (diff_vector>0)] = 1
 
         #Fill out the rest
         index = diff_vector < abs_ymodel
