@@ -360,9 +360,24 @@ class Layer(object):
         self.weights = OrderedDict()
         self.variables = OrderedDict()
         self.precision = OrderedDict()
-        accum_t = HLSType(*reversed(self.model.config.get_precision(self, 'accum')))
+
+        # We set 'accum' precision to match input tensor's precision if 'accum' was not explicitly set
+        def_type_obj, _ = self.model.config.get_precision(self, 'default')
+        acc_type_obj, acc_type_name = self.model.config.get_precision(self, 'accum')
+
+        inp = self.get_input_variable()
+        if inp is not None:
+            inp_type_obj = inp.type.precision
+        else:
+            inp_type_obj = def_type_obj
+
+        if acc_type_obj == def_type_obj: # 'accum' precision not defined in config
+            acc_type_obj = inp_type_obj # use input tensor's precision for 'accum'
+
+        accum_t = HLSType(acc_type_name, acc_type_obj) 
         self.precision[accum_t.name] = accum_t
         self.set_attr('accum_t', accum_t.precision)
+
         self.reuse_factor = self.model.config.get_reuse_factor(self)
 
         layer_config = self.model.config.get_layer_config(self)
@@ -877,6 +892,58 @@ class Conv2D(Layer):
         mult_config = self._config_template[1].format(**mult_params)
 
         return mult_config + '\n' + conv_config
+
+
+class Conv2DBatchnorm(Conv2D):
+    def _get_folded_weights(self):
+        """
+        Function to get the batchnorm folded weights.
+        This function converts the weights by folding batchnorm parameters into
+        the weight of QConv2D. The high-level equation:
+        W_fold = gamma * W / sqrt(variance + epsilon)
+        bias_fold = gamma * (bias - moving_mean) / sqrt(variance + epsilon) + beta
+        """
+        kernel = self.model.get_weights_data(self.name, 'kernel')
+        bias = self.model.get_weights_data(self.name, 'bias')
+        if bias is None:
+            bias = 0
+
+        # get batchnorm weights and moving stats
+        gamma = self.model.get_weights_data(self.name, 'gamma')
+        beta = self.model.get_weights_data(self.name, 'beta')
+        moving_mean = self.model.get_weights_data(self.name, 'moving_mean')
+        moving_variance = self.model.get_weights_data(self.name, 'moving_variance')
+        # get the inversion factor so that we replace division by multiplication
+        inv = np.reciprocal(np.sqrt(moving_variance + self.get_attr('epsilon')))
+        if gamma is not None:
+            inv *= gamma
+
+        # wrap conv kernel and bias with bn parameters
+        folded_kernel = inv * kernel
+        folded_bias = inv * (bias - moving_mean) + beta
+
+        return [folded_kernel, folded_bias]
+
+    def initialize(self):
+        super(Conv2DBatchnorm, self).initialize()
+        folded_weights, folded_bias = self._get_folded_weights()
+        if self.model.config.is_resource_strategy(self) and self.model.config.backend.name == 'Vivado':
+            self.weights['weight'].data_unquantized = np.transpose(folded_weights, axes=[3, 0, 1, 2])
+            self.weights['weight'].data = self.get_attr('weight_quantizer')(self.weights['weight'].data_unquantized)
+
+        else:
+            self.weights['weight'].data_unquantized = folded_weights
+            self.weights['weight'].data = self.get_attr('weight_quantizer')(folded_weights)
+        self.weights['bias'].data_unquantized = folded_bias
+        bias_q = self.get_attr('bias_quantizer')
+        if bias_q is not None:
+            self.weights['bias'].data = bias_q(folded_bias)
+
+    def function_cpp(self):
+        return super(Conv2DBatchnorm, self).function_cpp()
+
+    def config_cpp(self):
+        return super(Conv2DBatchnorm, self).config_cpp()
 
 class SeparableConv2D(Layer):
     def initialize(self):
@@ -1717,6 +1784,7 @@ layer_map = {
     'Conv2D'                 : Conv2D,
     'BinaryConv2D'           : Conv2D,
     'QConv2D'                : Conv2D,
+    'QConv2DBatchnorm'       : Conv2DBatchnorm,
     'SeparableConv1D'        : SeparableConv1D,
     'SeparableConv2D'        : SeparableConv2D,
     'DepthwiseConv2D'        : DepthwiseConv2D,

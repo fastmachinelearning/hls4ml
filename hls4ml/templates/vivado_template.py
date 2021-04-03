@@ -139,6 +139,7 @@ pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
     static const unsigned stride_width = {stride_width};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     static const unsigned reuse = {reuse};
+    typedef {accum_t} accum_t;
 }};\n"""
 
 pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
@@ -157,6 +158,7 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
     static const unsigned pad_right = {pad_right};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     static const unsigned reuse = {reuse};
+    typedef {accum_t} accum_t;
 }};\n"""
 
 global_pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
@@ -166,6 +168,7 @@ global_pooling1d_config_template = """struct config{index} : nnet::pooling1d_con
     static const unsigned pad_right = {pad_right};
     static const unsigned stride = {stride};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
+    typedef {accum_t} accum_t;
 }};\n"""
 
 global_pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
@@ -174,6 +177,7 @@ global_pooling2d_config_template = """struct config{index} : nnet::pooling2d_con
     static const unsigned n_filt = {n_filt};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     static const unsigned reuse = {reuse};
+    typedef {accum_t} accum_t;
 }};\n"""
 
 zeropad1d_config_template = """struct config{index} : nnet::padding1d_config {{
@@ -380,6 +384,7 @@ class VivadoBackend(FPGABackend):
         self.register_templates('BatchNormalization'     , batchnorm_function_template,   batchnorm_config_template, batchnorm_include_list)
         self.register_templates('Conv1D'                 , conv1d_function_template,      [conv1d_config_template, conv_mult_config_template], conv1d_include_list)
         self.register_templates('Conv2D'                 , conv2d_function_template,      [conv2d_config_template, conv_mult_config_template], conv2d_include_list)
+        self.register_templates('Conv2DBatchnorm'        , conv2d_function_template,      [conv2d_config_template, conv_mult_config_template], conv2d_include_list)
         self.register_templates('SeparableConv1D'        , sepconv1d_function_template,   [sepconv_config_template, conv1d_config_template, conv1d_config_template, conv_mult_config_template, conv_mult_config_template], sepconv1d_include_list)
         self.register_templates('SeparableConv2D'        , sepconv2d_function_template,   [sepconv_config_template, conv2d_config_template, conv2d_config_template, conv_mult_config_template, conv_mult_config_template], sepconv2d_include_list)
         self.register_templates('DepthwiseConv2D'        , depthconv2d_function_template, [conv2d_config_template, conv_mult_config_template], sepconv2d_include_list)
