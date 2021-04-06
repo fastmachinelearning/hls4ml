@@ -489,9 +489,9 @@ class VivadoBackend(Backend):
             fields = 1
             signed = ~('u' in precision)
         if len(bits) > fields:
-            sat_mode = bits[fields]
+            round_mode = bits[fields]
         if len(bits) > fields+1:
-            round_mode = bits[fields+1]
+            sat_mode = bits[fields+1]
         if len(bits) > fields+2:
             sat_bits = int(bits[fields+2])
         if 'fixed' in precision:
