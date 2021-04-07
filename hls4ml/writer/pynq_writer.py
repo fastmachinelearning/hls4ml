@@ -108,8 +108,8 @@ class PynqWriter(VivadoWriter):
                 elif model.config.interface == 'm_axi':
                     newline = ''
                     newline += indent + '#pragma HLS INTERFACE s_axilite port=return bundle=CTRL_BUS\n'
-                    newline += indent + '#pragma HLS INTERFACE m_axi depth=in_size port=in offset=slave bundle=IN_BUS\n'
-                    newline += indent + '#pragma HLS INTERFACE m_axi depth=out_size port=out offset=slave bundle=OUT_BUS\n'
+                    newline += indent + '#pragma HLS INTERFACE m_axi depth=N_IN port=in offset=slave bundle=IN_BUS\n'
+                    newline += indent + '#pragma HLS INTERFACE m_axi depth=N_OUT port=out offset=slave bundle=OUT_BUS\n'
             elif '//hls-fpga-machine-learning insert enqueue' in line:
                 io_type = model.config.get_config_value("IOType")
                 if io_type == 'io_parallel':
