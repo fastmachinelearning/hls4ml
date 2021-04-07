@@ -349,32 +349,43 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
         The pair of produced figures. First weights and biases,
         then activations
     """
-    wp, ap = None, None
+    wp, wph, ap = None, None, None
 
-    print("Profiling weights")
+    print("Profiling weights (the original model)")
     data = None
-    if hls_model is not None and isinstance(hls_model, HLSModel):
-        data = weights_hlsmodel(hls_model, fmt='summary', plot=plot)
-    elif model is not None:
+
+    if model is not None:
         if __tf_profiling_enabled__ and isinstance(model, keras.Model):
             data = weights_keras(model, fmt='summary', plot=plot)
         elif __torch_profiling_enabled__ and \
                 isinstance(model, torch.nn.Sequential):
             data = weights_torch(model, fmt='summary', plot=plot)
+
     if data is None:
         print("Only keras, PyTorch (Sequential) and HLSModel models " +
               "can currently be profiled")
-        return wp, ap
+        return wp, wph, ap
 
     wp = plots[plot](data, fmt='summary')  # weight plot
-    if isinstance(hls_model, HLSModel) and plot in types_plots:
-        t_data = types_hlsmodel(hls_model)
-        types_plots[plot](t_data, fmt='summary')
 
-    plt.title("Distribution of (non-zero) weights")
+    plt.title("Distribution of (non-zero) weights (the original model)")
     plt.tight_layout()
 
-    print("Profiling activations")
+    data = None
+    if hls_model is not None and isinstance(hls_model, HLSModel):
+        data = weights_hlsmodel(hls_model, fmt='summary', plot=plot)
+
+    if data is not None:
+        print("Profiling weights (the HLS model)")
+        wph = plots[plot](data, fmt='summary')  # weight plot
+        if isinstance(hls_model, HLSModel) and plot in types_plots:
+            t_data = types_hlsmodel(hls_model)
+            types_plots[plot](t_data, fmt='summary')
+
+        plt.title("Distribution of (non-zero) weights (the HLS model)")
+        plt.tight_layout()
+
+    print("Profiling activations (the original model)")
     data = None
     if X is not None:
         if __tf_profiling_enabled__ and isinstance(model, keras.Model):
@@ -384,14 +395,14 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
             data = activations_torch(model, X, fmt='summary', plot=plot)
     if data is not None:
         ap = plots[plot](data, fmt='summary')  # activation plot
-        plt.title("Distribution of (non-zero) activations")
+        plt.title("Distribution of (non-zero) activations (the original model)")
         plt.tight_layout()
 
-    if X is not None and isinstance(hls_model, HLSModel):
-        t_data = activation_types_hlsmodel(hls_model)
-        types_plots[plot](t_data, fmt='summary')
+    # if X is not None and isinstance(hls_model, HLSModel):
+    #    t_data = activation_types_hlsmodel(hls_model)
+    #    types_plots[plot](t_data, fmt='summary')
 
-    return wp, ap
+    return wp, wph, ap
 
 
 ########COMPARE OUTPUT IMPLEMENTATION########
