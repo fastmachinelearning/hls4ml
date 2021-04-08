@@ -208,6 +208,31 @@ def weights_hlsmodel(model, fmt='longform', plot='boxplot'):
         data = pandas.DataFrame(data)
     return data
 
+
+def activations_hlsmodel(model, X, fmt='summary', plot='boxplot'):
+    if fmt == 'longform':
+        raise NotImplemented
+    elif fmt == 'summary':
+        data = []
+
+    _, trace = model.trace(np.ascontiguousarray(X))
+
+    if len(trace) == 0:
+        raise RuntimeError("HLSModel must have tracing on for at least 1 layer (this can be set in its config)")
+
+    for layer in trace.keys():
+        print("   {}".format(layer))
+
+        if fmt == 'summary':
+            y = trace[layer].flatten()
+            y = abs(y[y != 0])
+
+            data.append(array_to_summary(y, fmt=plot))
+            data[-1]['weight'] = layer
+
+    return data
+
+
 def weights_keras(model, fmt='longform', plot='boxplot'):
     suffix = ['w', 'b']
     if fmt == 'longform':
