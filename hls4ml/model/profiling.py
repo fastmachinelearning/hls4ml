@@ -371,10 +371,12 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     Returns
     -------
     tuple
-        The pair of produced figures. First weights and biases,
-        then activations
+        The quadruple of produced figures. First weights and biases
+        for the original model and HLSModel respectively,
+        then activations for the original model and HLSModel
+        respectively.
     """
-    wp, wph, ap = None, None, None
+    wp, wph, ap, aph = None, None, None, None
 
     print("Profiling weights (the original model)")
     data = None
@@ -389,19 +391,19 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     if data is None:
         print("Only keras, PyTorch (Sequential) and HLSModel models " +
               "can currently be profiled")
-        return wp, wph, ap
+        return wp, wph, ap, aph
 
     wp = plots[plot](data, fmt='summary')  # weight plot
 
     plt.title("Distribution of (non-zero) weights (the original model)")
     plt.tight_layout()
 
+    print("Profiling weights (the HLS model)")
     data = None
     if hls_model is not None and isinstance(hls_model, HLSModel):
         data = weights_hlsmodel(hls_model, fmt='summary', plot=plot)
 
     if data is not None:
-        print("Profiling weights (the HLS model)")
         wph = plots[plot](data, fmt='summary')  # weight plot
         if isinstance(hls_model, HLSModel) and plot in types_plots:
             t_data = types_hlsmodel(hls_model)
@@ -423,11 +425,20 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
         plt.title("Distribution of (non-zero) activations (the original model)")
         plt.tight_layout()
 
-    # if X is not None and isinstance(hls_model, HLSModel):
-    #    t_data = activation_types_hlsmodel(hls_model)
-    #    types_plots[plot](t_data, fmt='summary')
+    print("Profiling activations (the HLS model)")
+    data = None
+    if X is not None and hls_model is not None and isinstance(hls_model, HLSModel):
+        data = activations_hlsmodel(hls_model, X, fmt='summary', plot=plot)
 
-    return wp, wph, ap
+    if data is not None:
+        aph = plots[plot](data, fmt='summary')
+        if X is not None and isinstance(hls_model, HLSModel):
+            t_data = activation_types_hlsmodel(hls_model)
+            types_plots[plot](t_data, fmt='summary')
+        plt.title("Distribution of (non-zero) activations (the HLS model)")
+        plt.tight_layout()
+
+    return wp, wph, ap, aph
 
 
 ########COMPARE OUTPUT IMPLEMENTATION########
