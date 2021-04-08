@@ -4,7 +4,7 @@ import re
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.hls_model import Layer, IntegerPrecisionType, XnorPrecisionType, register_layer
 from hls4ml.model.hls_layers import BatchNormalization
-from hls4ml.templates import templates
+from hls4ml.backends import get_backend
 
 class BatchNormalizationQuantizedTanh(Layer):
     ''' Merged Batch Normalization and quantized (binary or ternary) Tanh layer.
@@ -76,7 +76,7 @@ batchnorm_quantized_tanh_function_template = 'nnet::normalize_{quantize}_tanh<{i
 register_layer('BatchNormalizationQuantizedTanh', BatchNormalizationQuantizedTanh)
 
 # Register the templates for config and function
-templates.get_backend('Vivado').register_templates('BatchNormalizationQuantizedTanh', batchnorm_quantized_tanh_function_template, batchnorm_quantized_tanh_config_template)
+get_backend('Vivado').register_templates('BatchNormalizationQuantizedTanh', batchnorm_quantized_tanh_function_template, batchnorm_quantized_tanh_config_template)
 
 class MergeBatchNormAndQuantizedTanh(OptimizerPass):
     def match(self, node):

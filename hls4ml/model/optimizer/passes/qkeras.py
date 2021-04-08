@@ -1,7 +1,7 @@
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.hls_layers import BatchNormalization
 from hls4ml.model.hls_model import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType, register_layer
-from hls4ml.templates import templates
+from hls4ml.backends import get_backend
 import tensorflow as tf
 import numpy as np
 from qkeras import get_quantizer
@@ -96,8 +96,8 @@ class ApplyAlpha(BatchNormalization):
 # register the layer and its templates
 register_layer('ApplyAlpha', ApplyAlpha)
 # TODO ideally: for backend in backends
-temps = templates.get_backend('Vivado')
-temps.register_templates('ApplyAlpha', temps.get_function_template('BatchNormalization'), temps.get_config_template('BatchNormalization'), temps.get_include_list('BatchNormalization'))
+backend = get_backend('Vivado')
+backend.register_templates('ApplyAlpha', backend.get_function_template('BatchNormalization'), backend.get_config_template('BatchNormalization'), backend.get_include_list('BatchNormalization'))
 
 class QKerasFactorizeAlpha(OptimizerPass):
     '''OptimizerPass for extracting alpha "scale" from QKeras quantized layer.

@@ -10,8 +10,8 @@ from ast import literal_eval
 from contextlib import contextmanager
 
 from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
-from hls4ml.templates.templates import custom_initializer
-from hls4ml.templates.fpga_template import FPGABackend
+from hls4ml.backends.backend import custom_initializer
+from hls4ml.backends import FPGABackend
 from hls4ml.report import parse_quartus_report
 
 @contextmanager

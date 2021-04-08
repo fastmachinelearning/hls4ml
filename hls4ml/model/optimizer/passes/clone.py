@@ -3,7 +3,7 @@ import numpy as np
 from hls4ml.model.optimizer import OptimizerPass
 
 from hls4ml.model.hls_model import Layer, register_layer
-from hls4ml.templates import templates
+from hls4ml.backends import get_backend
 
 class Clone(Layer):
     ''' Inserted after the layer whose output is used more than once.'''
@@ -30,7 +30,7 @@ clone_include_list = ['nnet_utils/nnet_stream.h']
 register_layer('Clone', Clone)
 
 # Register the templates for config and function
-templates.get_backend('Vivado').register_templates('Clone', clone_function_template, None, clone_include_list)
+get_backend('Vivado').register_templates('Clone', clone_function_template, None, clone_include_list)
 
 
 class CloneOutput(OptimizerPass):

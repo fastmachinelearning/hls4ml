@@ -3,7 +3,7 @@ import re
 
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.hls_model import Conv1D, Conv2D, register_layer
-from hls4ml.templates import templates
+from hls4ml.backends import get_backend
 
 class PointwiseConv1D(Conv1D):
     ''' Optimized Conv1D implementation for 1x1 kernels. '''
@@ -28,17 +28,17 @@ register_layer('PointwiseConv1D', PointwiseConv1D)
 register_layer('PointwiseConv2D', PointwiseConv2D)
 
 # Register the templates for config and function
-templates.get_backend('Vivado').register_templates(
+get_backend('Vivado').register_templates(
     'PointwiseConv1D',
     pointwise_conv1d_function_template,
-    templates.get_backend('Vivado').get_config_template('Conv1D'),
+    get_backend('Vivado').get_config_template('Conv1D'),
     sepconv1d_include_list
 )
 
-templates.get_backend('Vivado').register_templates(
+get_backend('Vivado').register_templates(
     'PointwiseConv2D',
     pointwise_conv2d_function_template,
-    templates.get_backend('Vivado').get_config_template('Conv2D'),
+    get_backend('Vivado').get_config_template('Conv2D'),
     sepconv2d_include_list
 )
 

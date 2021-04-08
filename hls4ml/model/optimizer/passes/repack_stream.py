@@ -3,7 +3,7 @@ import numpy as np
 from hls4ml.model.optimizer import OptimizerPass
 
 from hls4ml.model.hls_model import Layer, register_layer
-from hls4ml.templates import templates
+from hls4ml.backends import get_backend
 
 class Repack(Layer):
     ''' Inserted between layers with different packing factors.'''
@@ -31,7 +31,7 @@ repack_include_list = ['nnet_utils/nnet_stream.h']
 register_layer('Repack', Repack)
 
 # Register the templates for config and function
-templates.get_backend('Vivado').register_templates('Repack', repack_function_template, None, repack_include_list)
+get_backend('Vivado').register_templates('Repack', repack_function_template, None, repack_include_list)
 
 
 class ReshapeStream(OptimizerPass):

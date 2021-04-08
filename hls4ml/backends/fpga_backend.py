@@ -6,7 +6,7 @@ from queue import Queue
 from collections.abc import Iterable
 import re
 
-from hls4ml.templates.templates import Backend
+from hls4ml.backends.backend import Backend
 from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType, XnorPrecisionType, ExponentPrecisionType
 
 

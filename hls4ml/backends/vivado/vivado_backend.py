@@ -7,8 +7,8 @@ from queue import Queue
 from collections.abc import Iterable
 
 from hls4ml.model.hls_layers import IntegerPrecisionType
-from hls4ml.templates.templates import custom_initializer
-from hls4ml.templates.fpga_template import FPGABackend
+from hls4ml.backends.backend import custom_initializer
+from hls4ml.backends import FPGABackend
 from hls4ml.report import parse_vivado_report
 
 dense_config_template = """struct config{index} : nnet::dense_config {{

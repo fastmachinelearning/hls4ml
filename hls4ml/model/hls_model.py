@@ -10,7 +10,7 @@ import numpy.ctypeslib as npc
 from collections import OrderedDict
 
 from hls4ml.model.hls_layers import *
-from hls4ml.templates import get_backend
+from hls4ml.backends import get_backend
 from hls4ml.writer import get_writer
 from hls4ml.model.optimizer import optimize_model, get_available_passes
 from hls4ml.report.vivado_report import parse_vivado_report

@@ -135,7 +135,7 @@ types_plots = {'boxplot' : types_boxplot,
                'histogram' : types_histogram}
 
 def ap_fixed_WIF(dtype):
-    from hls4ml.templates.vivado_template import VivadoBackend
+    from hls4ml.backends import VivadoBackend
     dtype = VivadoBackend.convert_precision_string(None, dtype) 
     W, I, F = dtype.width, dtype.integer, dtype.fractional
     return W, I, F
