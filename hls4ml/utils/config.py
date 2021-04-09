@@ -87,6 +87,10 @@ def set_data_types_from_keras_model(model, config, max_bits, test_data=None):
     for weight_info in weight_data:
         layer_name = weight_info['layer']
         suffix = weight_info['weight'].split('/')[1]
+
+        if suffix not in suffix_map:
+            continue
+
         min_value = weight_info['whislo']
         max_value = weight_info['whishi']
 
