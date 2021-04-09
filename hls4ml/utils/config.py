@@ -66,7 +66,23 @@ def set_data_types_from_keras_model(model, config, max_bits, test_data=None):
     }
 
     def find_optimal_a_b(max_val, min_val):
-        raise NotImplementedError
+        a_final = None
+        b_final = None
+
+        distance_to_min = math.inf
+
+        for a in range(1, max_bits + 1):
+            for b in range(0, a + 1):
+                max_possible = 2 ** (b - 1)
+                min_possible = 2 ** (b - a)
+
+                if max_possible >= max_val and abs(min_possible - min_val) < distance_to_min:
+                    a_final = a
+                    b_final = b
+
+                    distance_to_min = abs(min_possible - min_val)
+
+        return a_final, b_final
 
     for weight_info in weight_data:
         layer_name = weight_info['layer']
