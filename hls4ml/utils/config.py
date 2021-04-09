@@ -73,7 +73,7 @@ def set_data_types_from_keras_model(model, config, max_bits, test_data=None):
 
         for a in range(1, max_bits + 1):
             for b in range(0, a + 1):
-                max_possible = 2 ** (b - 1)
+                max_possible = 2 ** b - 2 ** (b - a)
                 min_possible = 2 ** (b - a)
 
                 if max_possible >= max_val and abs(min_possible - min_val) < distance_to_min:
@@ -82,7 +82,8 @@ def set_data_types_from_keras_model(model, config, max_bits, test_data=None):
 
                     distance_to_min = abs(min_possible - min_val)
 
-        return a_final, b_final
+        # An extra integer bit must be added for the number sign
+        return a_final + 1, b_final + 1
 
     for weight_info in weight_data:
         layer_name = weight_info['layer']
