@@ -8,6 +8,7 @@ from collections import OrderedDict
 
 QKERAS_DATA_TYPE_PREFIX = '***'
 
+
 def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
     fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
     
@@ -54,7 +55,7 @@ def _get_precision_from_quantizer(quantizer, auto_precision_on=False):
 
     decimal = bits - integer
 
-    # If precision is to be set automatically (i.e. auto_precision_on is True), return the data types with the "***"
+    # If precision is to be set automatically (i.e. auto_precision_on is True), return the data types with the special
     # prefix so that set_data_types_from_keras_model() can flag them as coming from QKeras and leave them unchanged.
     if auto_precision_on:
         prefix = QKERAS_DATA_TYPE_PREFIX
@@ -67,7 +68,29 @@ def _get_precision_from_quantizer(quantizer, auto_precision_on=False):
         return prefix + 'ap_int<{}>'.format(bits)
 
 
-def set_data_types_from_keras_model(model, config, max_bits, test_data=None):
+def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None):
+    """Adjust data types in a given HLSModel configuration based on a Keras model and test inputs (if supplied).
+
+    The function aims for setting precision of the layers in the configuration to match the distribution of both
+    weights in the model and outputs of the model resulting from the test inputs (if supplied).
+
+    set_data_types_from_keras_model() works in a heuristic way, so the optimal result is not guaranteed and some
+    post-tuning of the data types may therefore be necessary for the best outcome.
+
+    Args:
+        config (dict): HLSModel configuration dictionary to be updated. Its granularity must be 'name'.
+        model: Keras model to be used for adjusting the data types.
+        max_bits (int): The maximum bit width (excluding the sign bit) all data types in the config should have.
+        test_inputs (array-like, optional): Inputs to be used for producing the distribution of model outputs.
+            The type of test_inputs is the same as the type of X in hls4ml.model.profiling.numerical(). If not provided,
+            precision of the layer outputs/activations will not be updated.
+
+    Returns:
+        None. The function makes changes directly to the supplied config.
+    """
+    if 'LayerName' not in config:
+        raise RuntimeError("The granularity of the supplied config is not 'name'.")
+
     weight_data = weights_keras(model, fmt='summary', plot='boxplot')
 
     suffix_map = {
@@ -122,8 +145,8 @@ def set_data_types_from_keras_model(model, config, max_bits, test_data=None):
 
         config['LayerName'][layer_name]['Precision'][suffix_map[suffix]] = data_type
 
-    if test_data is not None:
-        activation_data = activations_keras(model, test_data, fmt='summary', plot='boxplot')
+    if test_inputs is not None:
+        activation_data = activations_keras(model, test_inputs, fmt='summary', plot='boxplot')
 
         for activation_info in activation_data:
             layer_name = activation_info['weight']
