@@ -6,6 +6,8 @@ import math
 from hls4ml.model.profiling import activations_keras, weights_keras
 from collections import OrderedDict
 
+QKERAS_DATA_TYPE_PREFIX = '***'
+
 def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
     fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
     
@@ -21,7 +23,7 @@ def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
 
     return config
 
-def _get_precision_from_quantizer(quantizer):
+def _get_precision_from_quantizer(quantizer, auto_precision_on=False):
     import qkeras
     if isinstance(quantizer, str):
         quantizer_obj = qkeras.get_quantizer(quantizer)
@@ -51,10 +53,18 @@ def _get_precision_from_quantizer(quantizer):
         raise Exception('ERROR: Unsupported quantizer: {}'.format(quantizer['class_name']))
 
     decimal = bits - integer
-    if decimal > 0:
-        return 'ap_fixed<{},{}>'.format(bits, integer)
+
+    # If precision is to be set automatically (i.e. auto_precision_on is True), return the data types with the "***"
+    # prefix so that set_data_types_from_keras_model() can flag them as coming from QKeras and leave them unchanged.
+    if auto_precision_on:
+        prefix = QKERAS_DATA_TYPE_PREFIX
     else:
-        return 'ap_int<{}>'.format(bits)
+        prefix = ''
+
+    if decimal > 0:
+        return prefix + 'ap_fixed<{},{}>'.format(bits, integer)
+    else:
+        return prefix + 'ap_int<{}>'.format(bits)
 
 
 def set_data_types_from_keras_model(model, config, max_bits, test_data=None):
@@ -92,6 +102,14 @@ def set_data_types_from_keras_model(model, config, max_bits, test_data=None):
         if suffix not in suffix_map:
             continue
 
+        current_data_type = config['LayerName'][layer_name]['Precision'][suffix_map[suffix]]
+
+        if current_data_type.startswith(QKERAS_DATA_TYPE_PREFIX):
+            # This data type comes from QKeras, so don't change it (just remove the flag)
+            config['LayerName'][layer_name]['Precision'][suffix_map[suffix]] = \
+                current_data_type[len(QKERAS_DATA_TYPE_PREFIX):]
+            continue
+
         min_value = weight_info['whislo']
         max_value = weight_info['whishi']
 
@@ -109,6 +127,23 @@ def set_data_types_from_keras_model(model, config, max_bits, test_data=None):
 
         for activation_info in activation_data:
             layer_name = activation_info['weight']
+            has_dict = isinstance(config['LayerName'][layer_name]['Precision'], dict)
+
+            if has_dict:
+                current_data_type = config['LayerName'][layer_name]['Precision']['result']
+            else:
+                current_data_type = config['LayerName'][layer_name]['Precision']
+
+            if current_data_type.startswith(QKERAS_DATA_TYPE_PREFIX):
+                # This data type comes from QKeras, so don't change it (just remove the flag)
+                if has_dict:
+                    config['LayerName'][layer_name]['Precision']['result'] = \
+                        current_data_type[len(QKERAS_DATA_TYPE_PREFIX):]
+                else:
+                    config['LayerName'][layer_name]['Precision'] = \
+                        current_data_type[len(QKERAS_DATA_TYPE_PREFIX):]
+                continue
+
             min_value = activation_info['whislo']
             max_value = activation_info['whishi']
 
@@ -119,7 +154,7 @@ def set_data_types_from_keras_model(model, config, max_bits, test_data=None):
 
             data_type = f'ap_fixed<{a},{b}>'
 
-            if isinstance(config['LayerName'][layer_name]['Precision'], dict):
+            if has_dict:
                 config['LayerName'][layer_name]['Precision']['result'] = data_type
             else:
                 config['LayerName'][layer_name]['Precision'] = data_type
