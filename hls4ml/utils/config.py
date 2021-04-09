@@ -3,6 +3,7 @@ import numpy as np
 import h5py
 import json
 import math
+from hls4ml.model.profiling import activations_keras, weights_keras
 from collections import OrderedDict
 
 def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
@@ -54,6 +55,54 @@ def _get_precision_from_quantizer(quantizer):
         return 'ap_fixed<{},{}>'.format(bits, integer)
     else:
         return 'ap_int<{}>'.format(bits)
+
+
+def set_data_types_from_keras_model(model, config, max_bits, test_data=None):
+    weight_data = weights_keras(model, fmt='summary', plot='boxplot')
+
+    suffix_map = {
+        'w': 'weight',
+        'b': 'bias'
+    }
+
+    def find_optimal_a_b(max_val, min_val):
+        raise NotImplementedError
+
+    for weight_info in weight_data:
+        layer_name = weight_info['layer']
+        suffix = weight_info['weight'].split('/')[1]
+        min_value = weight_info['whislo']
+        max_value = weight_info['whishi']
+
+        a, b = find_optimal_a_b(max_value, min_value)
+
+        if a is None or b is None:
+            raise RuntimeError("Could not find an optimal data type for " + layer_name + "/" + suffix)
+
+        data_type = f'ap_fixed<{a},{b}>'
+
+        config['LayerName'][layer_name]['Precision'][suffix_map[suffix]] = data_type
+
+    if test_data is not None:
+        activation_data = activations_keras(model, test_data, fmt='summary', plot='boxplot')
+
+        for activation_info in activation_data:
+            layer_name = activation_info['weight']
+            min_value = activation_info['whislo']
+            max_value = activation_info['whishi']
+
+            a, b = find_optimal_a_b(max_value, min_value)
+
+            if a is None or b is None:
+                raise RuntimeError("Could not find an optimal data type for " + layer_name + " (output)")
+
+            data_type = f'ap_fixed<{a},{b}>'
+
+            if isinstance(config['LayerName'][layer_name]['Precision'], dict):
+                config['LayerName'][layer_name]['Precision']['result'] = data_type
+            else:
+                config['LayerName'][layer_name]['Precision'] = data_type
+
 
 def config_from_keras_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1):
     """Create an HLS conversion config given the Keras model.
