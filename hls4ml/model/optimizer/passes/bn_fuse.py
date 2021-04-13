@@ -18,10 +18,7 @@ class FuseBatchNormalization(OptimizerPass):
         bn_scale = node.weights['scale']
         bn_bias = node.weights['bias']
 
-        if parent_node.get_attr('strategy') != 'resource':
-            fused_weight = bn_scale.data * parent_weight.data
-        else:
-            fused_weight = (bn_scale.data * parent_weight.data.T).T
+        fused_weight = bn_scale.data * parent_weight.data
         fused_bias = bn_scale.data * parent_bias.data + bn_bias.data
 
         model.remove_node(node, rewire=True)
