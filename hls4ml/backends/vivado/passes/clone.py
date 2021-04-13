@@ -26,11 +26,15 @@ class Clone(Layer):
 clone_function_template = 'nnet::clone_stream<{input_t}, {output_t}, {size}>({input}, {output1}, {output2});'
 clone_include_list = ['nnet_utils/nnet_stream.h']
 
-# Register the layer types to the layer map
-register_layer('Clone', Clone)
+def register_clone(backend):
+    # Register the layer types to the layer map
+    register_layer('Clone', Clone)
 
-# Register the templates for config and function
-get_backend('Vivado').register_templates('Clone', clone_function_template, None, clone_include_list)
+    # Register the templates for config and function
+    backend.register_templates('Clone', clone_function_template, None, clone_include_list)
+
+    # Register the optimization passes
+    backend.register_pass('clone_output', CloneOutput)
 
 
 class CloneOutput(OptimizerPass):
@@ -43,8 +47,7 @@ class CloneOutput(OptimizerPass):
         return True
 
     def transform(self, model, node):
-        if model.config.backend.name != 'Vivado' or \
-            model.config.get_config_value('IOType') != 'io_stream':
+        if model.config.get_config_value('IOType') != 'io_stream':
             return False
 
         output_map = {}

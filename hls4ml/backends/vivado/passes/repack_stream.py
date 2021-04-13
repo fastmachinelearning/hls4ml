@@ -27,12 +27,15 @@ class Repack(Layer):
 repack_function_template = 'nnet::repack_stream<{input_t}, {output_t}, {size}>({input}, {output});'
 repack_include_list = ['nnet_utils/nnet_stream.h']
 
-# Register the layer types to the layer map
-register_layer('Repack', Repack)
-
-# Register the templates for config and function
-get_backend('Vivado').register_templates('Repack', repack_function_template, None, repack_include_list)
-
+def register_repack_stream(backend):
+    # Register the layer types to the layer map
+    register_layer('Repack', Repack)
+    
+    # Register the templates for config and function
+    backend.register_templates('Repack', repack_function_template, None, repack_include_list)
+    
+    # Register the optimization passes
+    backend.register_pass('reshape_stream', ReshapeStream)
 
 class ReshapeStream(OptimizerPass):
     ''' Repacks stream for Reshape layer '''
@@ -40,8 +43,7 @@ class ReshapeStream(OptimizerPass):
         return node.__class__.__name__ == 'Reshape'
 
     def transform(self, model, node):
-        if model.config.backend.name != 'Vivado' or \
-            model.config.get_config_value('IOType') != 'io_stream':
+        if model.config.get_config_value('IOType') != 'io_stream':
             return False
 
         attrs = {

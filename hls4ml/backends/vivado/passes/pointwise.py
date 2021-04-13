@@ -3,7 +3,6 @@ import re
 
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.hls_model import Conv1D, Conv2D, register_layer
-from hls4ml.backends import get_backend
 
 class PointwiseConv1D(Conv1D):
     ''' Optimized Conv1D implementation for 1x1 kernels. '''
@@ -23,24 +22,28 @@ pointwise_conv2d_function_template = 'nnet::pointwise_conv_2d_{data_format}<{inp
 sepconv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_sepconv1d_stream.h']
 sepconv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_sepconv2d_stream.h']
 
-# Register the layer types to the layer map
-register_layer('PointwiseConv1D', PointwiseConv1D)
-register_layer('PointwiseConv2D', PointwiseConv2D)
+def register_pointwise(backend):
+    # Register the layer types to the layer map
+    register_layer('PointwiseConv1D', PointwiseConv1D)
+    register_layer('PointwiseConv2D', PointwiseConv2D)
 
-# Register the templates for config and function
-get_backend('Vivado').register_templates(
-    'PointwiseConv1D',
-    pointwise_conv1d_function_template,
-    get_backend('Vivado').get_config_template('Conv1D'),
-    sepconv1d_include_list
-)
+    # Register the templates for config and function
+    backend.register_templates(
+        'PointwiseConv1D',
+        pointwise_conv1d_function_template,
+        backend.get_config_template('Conv1D'),
+        sepconv1d_include_list
+    )
 
-get_backend('Vivado').register_templates(
-    'PointwiseConv2D',
-    pointwise_conv2d_function_template,
-    get_backend('Vivado').get_config_template('Conv2D'),
-    sepconv2d_include_list
-)
+    backend.register_templates(
+        'PointwiseConv2D',
+        pointwise_conv2d_function_template,
+        backend.get_config_template('Conv2D'),
+        sepconv2d_include_list
+    )
+
+    # Register the optimization passes
+    backend.register_pass('optimize_pointwise_conv', OptimizePointwiseConv)
 
 class OptimizePointwiseConv(OptimizerPass):
     def match(self, node):

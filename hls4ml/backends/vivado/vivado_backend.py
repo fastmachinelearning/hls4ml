@@ -7,7 +7,7 @@ from queue import Queue
 from collections.abc import Iterable
 
 from hls4ml.model.hls_layers import IntegerPrecisionType
-from hls4ml.backends.backend import custom_initializer
+from hls4ml.backends.backend import custom_initializer, optimizer_pass
 from hls4ml.backends import FPGABackend
 from hls4ml.report import parse_vivado_report
 
@@ -420,7 +420,7 @@ class VivadoBackend(FPGABackend):
 
         return parse_vivado_report(model.config.get_output_dir())
 
-    @custom_initializer('Dense')
+    @optimizer_pass(condition=lambda node: node.__class__.__name__ == 'Dense')
     def init_dense(self, layer):
         index_t = IntegerPrecisionType(width=1, signed=False)
         compression = layer.model.config.get_compression(layer)

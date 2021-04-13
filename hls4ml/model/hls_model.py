@@ -266,6 +266,8 @@ class HLSModel(object):
 
         self._optimize_model(self.config.optimizers)
 
+        self._optimize_model(self.config.backend.get_optimizers())
+
     def _make_graph(self, layer_list):
         for layer in layer_list:
             kind = layer['class_name']

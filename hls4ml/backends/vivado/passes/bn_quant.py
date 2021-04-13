@@ -72,11 +72,17 @@ batchnorm_quantized_tanh_config_template = """struct config{index} : nnet::batch
 
 batchnorm_quantized_tanh_function_template = 'nnet::normalize_{quantize}_tanh<{input_t}, {config}>({input}, {output}, {threshold});'
 
-# Register the layer types to the layer map
-register_layer('BatchNormalizationQuantizedTanh', BatchNormalizationQuantizedTanh)
+def register_bn_quant(backend):
+    # Register the layer types to the layer map
+    register_layer('BatchNormalizationQuantizedTanh', BatchNormalizationQuantizedTanh)
 
-# Register the templates for config and function
-get_backend('Vivado').register_templates('BatchNormalizationQuantizedTanh', batchnorm_quantized_tanh_function_template, batchnorm_quantized_tanh_config_template)
+    # Register the templates for config and function
+    backend.register_templates('BatchNormalizationQuantizedTanh', batchnorm_quantized_tanh_function_template, batchnorm_quantized_tanh_config_template)
+
+    # Register the optimization passes
+    backend.register_pass('merge_batch_norm_quantized_tanh', MergeBatchNormAndQuantizedTanh)
+    backend.register_pass('quantize_dense_output', QuantizeDenseOutput)
+
 
 class MergeBatchNormAndQuantizedTanh(OptimizerPass):
     def match(self, node):
