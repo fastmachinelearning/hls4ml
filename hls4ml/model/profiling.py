@@ -243,7 +243,12 @@ def weights_keras(model, fmt='longform', plot='boxplot'):
         name = layer.name
         weights = layer.get_weights()
         for i, w in enumerate(weights):
-            l = '{}/{}'.format(name, suffix[i])
+            if len(weights) != 2:
+                suf = i
+            else:
+                suf = suffix[i]
+
+            l = '{}/{}'.format(name, suf)
             w = w.flatten()
             w = abs(w[w != 0])
             n = len(w)
@@ -301,7 +306,12 @@ def weights_torch(model, fmt='longform', plot='boxplot'):
             name = layer.__class__.__name__
             weights = list(layer.parameters())
             for i, w in enumerate(weights):
-                l = '{}/{}'.format(name, suffix[i])
+                if len(weights) != 2:
+                    suf = i
+                else:
+                    suf = suffix[i]
+
+                l = '{}/{}'.format(name, suf)
                 w = weights[i].detach().numpy()
                 w = w.flatten()
                 w = abs(w[w != 0])
