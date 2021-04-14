@@ -7,7 +7,7 @@ from queue import Queue
 from collections.abc import Iterable
 
 from hls4ml.model.hls_layers import IntegerPrecisionType
-from hls4ml.backends.backend import custom_initializer, optimizer_pass
+from hls4ml.backends.backend import custom_initializer, optimizer_pass, layer_optimizer
 from hls4ml.backends import FPGABackend
 from hls4ml.report import parse_vivado_report
 
@@ -420,7 +420,8 @@ class VivadoBackend(FPGABackend):
 
         return parse_vivado_report(model.config.get_output_dir())
 
-    @optimizer_pass(condition=lambda node: node.__class__.__name__ == 'Dense')
+    #@optimizer_pass(condition=lambda node: node.__class__.__name__ == 'Dense')
+    @layer_optimizer('Dense')
     def init_dense(self, layer):
         index_t = IntegerPrecisionType(width=1, signed=False)
         compression = layer.model.config.get_compression(layer)
@@ -435,6 +436,53 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
         layer.set_attr('index_t', index_t)
+
+    @layer_optimizer('Conv1D')
+    def init_conv1d(self, layer):
+        if layer.model.config.is_resource_strategy(layer):
+            layer.set_attr('strategy', 'resource')
+            self.set_closest_reuse_factor(layer)
+            layer.weights['weight'].data = np.transpose(layer.weights['weight'].data, axes=[2, 0, 1]) #(W,C,F) => (F,W,C)
+        else:
+            layer.set_attr('strategy', 'latency')
+
+    @layer_optimizer('SeparableConv1D')
+    def init_sepconv1d(self, layer):
+        if layer.model.config.is_resource_strategy(layer):
+            layer.set_attr('strategy', 'resource')
+            self.set_closest_reuse_factor(layer)
+            layer.weights['depthwise'].data = np.transpose(layer.weights['depthwise'].data, axes=[2, 0, 1]) #(W,C,F) => (F,W,C)
+            layer.weights['pointwise'].data = np.transpose(layer.weights['pointwise'].data, axes=[2, 0, 1]) #(W,C,F) => (F,W,C)
+        else:
+            layer.set_attr('strategy', 'latency')
+
+    @layer_optimizer('Conv2D')
+    def init_conv2d(self, layer):
+        if layer.model.config.is_resource_strategy(layer):
+            layer.set_attr('strategy', 'resource')
+            self.set_closest_reuse_factor(layer)
+            layer.weights['weight'].data = np.transpose(layer.weights['weight'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
+        else:
+            layer.set_attr('strategy', 'latency')
+
+    @layer_optimizer('SeparableConv2D')
+    def init_sepconv2d(self, layer):
+        if layer.model.config.is_resource_strategy(layer):
+            layer.set_attr('strategy', 'resource')
+            self.set_closest_reuse_factor(layer)
+            layer.weights['depthwise'].data = np.transpose(layer.weights['depthwise'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
+            layer.weights['pointwise'].data = np.transpose(layer.weights['pointwise'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
+        else:
+            layer.set_attr('strategy', 'latency')
+
+    @layer_optimizer('DepthwiseConv2D')
+    def init_depconv2d(self, layer):
+        if layer.model.config.is_resource_strategy(layer):
+            layer.set_attr('strategy', 'resource')
+            self.set_closest_reuse_factor(layer)
+            layer.weights['weight'].data = np.transpose(layer.weights['weight'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
+        else:
+            layer.set_attr('strategy', 'latency')
 
     @custom_initializer('Softmax')
     def init_softmax(self, layer):

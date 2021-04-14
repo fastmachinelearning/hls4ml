@@ -10,6 +10,11 @@ def custom_initializer(*args):
         return function
     return decorator
 
+def layer_optimizer(layer):
+    def decorator(function):
+        return optimizer_pass(lambda node: node.__class__.__name__ == layer)(function)
+    return decorator
+
 class Backend(object):
     def __init__(self, name):
         self.name = name
