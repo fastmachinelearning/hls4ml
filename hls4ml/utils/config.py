@@ -74,8 +74,9 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None):
     The function aims for setting precision of the layers in the configuration to match the distribution of both
     weights in the model and outputs of the model resulting from the test inputs (if supplied).
 
-    set_data_types_from_keras_model() works in a heuristic way, so the optimal result is not guaranteed and some
-    post-tuning of the data types may therefore be necessary for the best outcome.
+    set_data_types_from_keras_model() works in a heuristic way and does not account for optimizations that can be
+    subsequently made by hls4ml. Therefore, the optimal result is not guaranteed and it might be necessary to do
+    post-tuning of the data types in order to achieve the best outcome.
 
     Args:
         config (dict): HLSModel configuration dictionary to be updated. Its granularity must be 'name'.
