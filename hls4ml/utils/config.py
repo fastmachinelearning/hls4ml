@@ -125,7 +125,7 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None):
         layer_name = weight_info['layer']
         suffix = weight_info['weight'].split('/')[1]
 
-        if suffix not in suffix_map:
+        if suffix not in suffix_map or suffix_map[suffix] not in config['LayerName'][layer_name]['Precision']:
             continue
 
         current_data_type = config['LayerName'][layer_name]['Precision'][suffix_map[suffix]]
