@@ -10,7 +10,7 @@ from ast import literal_eval
 from contextlib import contextmanager
 
 from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
-from hls4ml.backends.backend import custom_initializer
+from hls4ml.backends.backend import custom_initializer, optimizer_pass, layer_optimizer
 from hls4ml.backends import FPGABackend
 from hls4ml.report import parse_quartus_report
 
@@ -238,36 +238,6 @@ class QuartusBackend(FPGABackend):
             typestring = precision
         return typestring
 
-    def set_strategy(self, layer):
-        if layer.model.config.get_compression(layer):
-            layer.set_attr('strategy', '_compressed')
-        else:
-            layer.model.config.backend.set_closest_reuse_factor(layer)
-            layer.set_attr('strategy', '')
-
-    def configure_weights(self, layer):
-        layer.set_attr('rfpad', 0)
-        layer.set_attr('bfpad', 0)
-        layer.weights_original = copy.deepcopy(layer.weights['weight'])
-        if not layer.model.config.get_compression(layer):
-            self.gen_quartus_weight_array(layer)
-
-    def bn_weight_fuse(self, model, node):
-        dense_node = node.get_input_node()
-        dense_weight = dense_node.weights_original
-        dense_bias = dense_node.weights['bias']
-        bn_scale = node.weights['scale']
-        bn_bias = node.weights['bias']
-
-        fused_weight = (bn_scale.data * dense_weight.data)
-        fused_bias = bn_scale.data * dense_bias.data + bn_bias.data
-
-        model.remove_node(node, rewire=True)
-        dense_node.weights['weight'].data = fused_weight
-        dense_node.weights['bias'].data = fused_bias
-        self.gen_quartus_weight_array(dense_node)
-
-
     def gen_quartus_weight_array(self, layer):
         block_factor = int((layer.attributes['n_in']*layer.attributes['n_out'])/layer.reuse_factor)
         bf_rounded = int(pow(2, np.ceil(np.log(block_factor)/np.log(2))))
@@ -355,24 +325,27 @@ class QuartusBackend(FPGABackend):
         else:
             return 'ac_int<{width}, {signed}>'.format(width=width, signed='false' if not signed else 'true')
 
-    @custom_initializer('Dense')
+    @layer_optimizer('Dense')
     def init_dense(self, layer):
         index_t = IntegerPrecisionType(width=1, signed=False)
 
-        compression = layer.model.config.get_compression(layer)
-        if compression:
-            layer.set_attr('strategy', 'compressed')
-            index_t = layer.get_weights('weight').type.index_precision
-        else:
-            layer.set_attr('strategy', 'resource')
-            layer.model.config.backend.set_closest_reuse_factor(layer)
-            self.gen_quartus_weight_array(layer)
-        
-        layer.set_attr('index_t', index_t)
         layer.set_attr('rfpad', 0)
         layer.set_attr('bfpad', 0)
 
-    @custom_initializer('Softmax')
+        if layer.model.config.get_compression(layer):
+            layer.set_attr('strategy', 'compressed')
+        else:
+            self.set_closest_reuse_factor(layer)
+            self.gen_quartus_weight_array(layer)
+            layer.set_attr('strategy', 'resource')
+
+        if layer.model.config.is_resource_strategy(layer):
+            if layer.model.config.get_compression(layer):
+                index_t = layer.get_weights('weight').type.index_precision
+
+        layer.set_attr('index_t', index_t)
+
+    @layer_optimizer('Softmax')
     def init_softmax(self, layer):
         if 'exp_table_t' not in layer.attributes:
             layer.set_attr('exp_table_t', layer.get_attr('table_t'))
