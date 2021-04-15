@@ -62,6 +62,9 @@ class Backend(object):
             except ImportError:
                 continue
 
+    def create_initial_config(self, **kwargs):
+        raise NotImplementedError
+
     def get_config_template(self, kind):
         return self.config_templates.get(kind)
 
@@ -108,13 +111,13 @@ class Backend(object):
 backend_map = {}
 
 def register_backend(name, backend_cls):
-    if name in backend_map:
+    if name.lower() in backend_map:
         raise Exception('Backend {} already registered'.format(name))
     
-    backend_map[name] = backend_cls()
+    backend_map[name.lower()] = backend_cls()
 
 def get_backend(name):
-    return backend_map[name]
+    return backend_map[name.lower()]
 
 def get_available_backends():
     return list(backend_map.keys())

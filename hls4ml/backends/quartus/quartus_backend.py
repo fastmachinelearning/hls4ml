@@ -227,6 +227,16 @@ class QuartusBackend(FPGABackend):
         #self.register_templates('Resize'                 , resize_function_template,      resize_config_template, resize_include_list)
         #self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template, transpose_include_list)
 
+    def create_initial_config(self, device='Arria10', clock_period=5, io_type='io_parallel'):
+        config = {}
+
+        config['Device'] = device if device is not None else 'Arria10'
+        config['ClockPeriod'] = clock_period
+        config['IOType'] = io_type
+        config['HLSConfig'] = {}
+
+        return config
+
     def get_precision_string_backend(self, precision):
         if isinstance(precision, IntegerPrecisionType):
             typestring = 'ac_int<{width}, {signed}>'.format(width=precision.width, signed='false' if not precision.signed else 'true')
