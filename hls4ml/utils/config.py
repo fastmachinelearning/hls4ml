@@ -115,8 +115,11 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None):
 
                     distance_to_min = abs(min_possible - min_val)
 
-        # An extra integer bit must be added for the number sign
-        return a_final + 1, b_final + 1
+        if a_final is not None and b_final is not None:
+            # An extra integer bit must be added for the number sign
+            return a_final + 1, b_final + 1
+        else:
+            return None, None
 
     for weight_info in weight_data:
         layer_name = weight_info['layer']
@@ -369,4 +372,5 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
         
         config['LayerName'] = name_config
 
+    set_data_types_from_keras_model(config, model, max_bits=10)
     return config
