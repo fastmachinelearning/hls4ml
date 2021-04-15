@@ -373,5 +373,4 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
         
         config['LayerName'] = name_config
 
-    set_data_types_from_keras_model(config, model, max_bits=10)
     return config
