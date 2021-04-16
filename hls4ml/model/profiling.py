@@ -140,7 +140,7 @@ def ap_fixed_WIF(dtype):
     W, I, F = dtype.width, dtype.integer, dtype.fractional
     return W, I, F
 
-def types_hlsmodel(model):
+def types_hlsmodel(model, before_optimization=False):
     suffix = ['w', 'b']
     data = {'layer' : [], 'low' : [], 'high' : []}
     # Plot the default precision
@@ -151,7 +151,7 @@ def types_hlsmodel(model):
     data['low'].append(-F)
     data['high'].append(I-1)
 
-    for layer in model.get_layers():
+    for layer in model.get_layers(before_optimization=before_optimization):
         for iw, weight in enumerate(layer.get_weights()):
             wname = '{}/{}'.format(layer.name, suffix[iw])
             T = weight.type
@@ -163,7 +163,7 @@ def types_hlsmodel(model):
     data = pandas.DataFrame(data)
     return data
 
-def activation_types_hlsmodel(model):
+def activation_types_hlsmodel(model, before_optimization=False):
     data = {'layer' : [], 'low' : [], 'high' : []}
     # Get the default precision
     default_precision = model.config.model_precision['default']
@@ -171,7 +171,7 @@ def activation_types_hlsmodel(model):
     data['layer'].append('model')
     data['low'].append(-F)
     data['high'].append(I-1)
-    for layer in model.get_layers():
+    for layer in model.get_layers(before_optimization=before_optimization):
         T = layer.get_output_variable().type.precision
         W, I, F = ap_fixed_WIF(T)
         data['layer'].append(layer.name)
@@ -180,13 +180,14 @@ def activation_types_hlsmodel(model):
     data = pandas.DataFrame(data)
     return data
 
-def weights_hlsmodel(model, fmt='longform', plot='boxplot'):
+def weights_hlsmodel(model, before_optimization=False, fmt='longform', plot='boxplot'):
     suffix = ['w', 'b']
     if fmt == 'longform':
         data = {'x' : [], 'layer' : [], 'weight' : []}
     elif fmt == 'summary':
         data = []
-    for layer in model.get_layers():
+
+    for layer in model.get_layers(before_optimization=before_optimization):
         name = layer.name
         for iw, weight in enumerate(layer.get_weights()):
             l = '{}/{}'.format(name, suffix[iw])
@@ -382,16 +383,29 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     -------
     tuple
         The quadruple of produced figures. First weights and biases
-        for the original model and HLSModel respectively,
-        then activations for the original model and HLSModel
-        respectively.
+        for the pre- and post-optimization models respectively,
+        then activations for the pre- and post-optimization models
+        respectively. (Optimizations are applied to an HLSModel by hls4ml,
+        a post-optimization HLSModel is a final model)
     """
     wp, wph, ap, aph = None, None, None, None
 
-    print("Profiling weights (the original model)")
+    hls_model_present = hls_model is not None and isinstance(hls_model, HLSModel)
+    model_present = model is not None
+
+    if hls_model_present:
+        before = " (before optimization)"
+        after = " (final / after optimization)"
+    else:
+        before = ""
+        after = ""
+
+    print("Profiling weights" + before)
     data = None
 
-    if model is not None:
+    if hls_model_present:
+        data = weights_hlsmodel(hls_model, before_optimization=True, fmt='summary', plot=plot)
+    elif model_present:
         if __tf_profiling_enabled__ and isinstance(model, keras.Model):
             data = weights_keras(model, fmt='summary', plot=plot)
         elif __torch_profiling_enabled__ and \
@@ -405,48 +419,53 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
 
     wp = plots[plot](data, fmt='summary')  # weight plot
 
-    plt.title("Distribution of (non-zero) weights (the original model)")
+    if hls_model_present and plot in types_plots:
+        t_data = types_hlsmodel(hls_model, before_optimization=True)
+        types_plots[plot](t_data, fmt='summary')
+
+    plt.title("Distribution of (non-zero) weights" + before)
     plt.tight_layout()
 
-    print("Profiling weights (the HLS model)")
-    data = None
-    if hls_model is not None and isinstance(hls_model, HLSModel):
-        data = weights_hlsmodel(hls_model, fmt='summary', plot=plot)
+    if hls_model_present:
+        print("Profiling weights" + after)
 
-    if data is not None:
+        data = weights_hlsmodel(hls_model, fmt='summary', plot=plot)
         wph = plots[plot](data, fmt='summary')  # weight plot
-        if isinstance(hls_model, HLSModel) and plot in types_plots:
+
+        if plot in types_plots:
             t_data = types_hlsmodel(hls_model)
             types_plots[plot](t_data, fmt='summary')
 
-        plt.title("Distribution of (non-zero) weights (the HLS model)")
+        plt.title("Distribution of (non-zero) weights" + after)
         plt.tight_layout()
 
-    print("Profiling activations (the original model)")
-    data = None
     if X is not None:
+        print("Profiling activations" + before)
+        data = None
         if __tf_profiling_enabled__ and isinstance(model, keras.Model):
             data = activations_keras(model, X, fmt='summary', plot=plot)
         elif __torch_profiling_enabled__ and \
                 isinstance(model, torch.nn.Sequential):
             data = activations_torch(model, X, fmt='summary', plot=plot)
-    if data is not None:
-        ap = plots[plot](data, fmt='summary')  # activation plot
-        plt.title("Distribution of (non-zero) activations (the original model)")
-        plt.tight_layout()
 
-    print("Profiling activations (the HLS model)")
-    data = None
-    if X is not None and hls_model is not None and isinstance(hls_model, HLSModel):
-        data = activations_hlsmodel(hls_model, X, fmt='summary', plot=plot)
+        if data is not None:
+            ap = plots[plot](data, fmt='summary')  # activation plot
+            if hls_model_present and plot in types_plots:
+                t_data = activation_types_hlsmodel(hls_model, before_optimization=True)
+                types_plots[plot](t_data, fmt='summary')
+            plt.title("Distribution of (non-zero) activations" + before)
+            plt.tight_layout()
 
-    if data is not None:
-        aph = plots[plot](data, fmt='summary')
-        if X is not None and isinstance(hls_model, HLSModel):
+        if hls_model_present:
+            print("Profiling activations" + after)
+            data = activations_hlsmodel(hls_model, X, fmt='summary', plot=plot)
+            aph = plots[plot](data, fmt='summary')
+
             t_data = activation_types_hlsmodel(hls_model)
             types_plots[plot](t_data, fmt='summary')
-        plt.title("Distribution of (non-zero) activations (the HLS model)")
-        plt.tight_layout()
+
+            plt.title("Distribution of (non-zero) activations (final / after optimization)")
+            plt.tight_layout()
 
     return wp, wph, ap, aph
 
