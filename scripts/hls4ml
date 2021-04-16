@@ -47,18 +47,10 @@ def main():
     convert_parser.set_defaults(func=_convert)
     
     build_parser.add_argument('-p', '--project', help='Project directory', default=None)
-    build_parser.add_argument('-c', '--simulation', help='Run C simulation', action='store_true', default=False)
-    build_parser.add_argument('-s', '--synthesis', help='Run C/RTL synthesis', action='store_true', default=False)
-    build_parser.add_argument('-r', '--co-simulation', help='Run C/RTL co-simulation', action='store_true', default=False)
-    build_parser.add_argument('-v', '--validation', help='Run C/RTL validation', action='store_true', default=False)
-    build_parser.add_argument('-e', '--export', help='Export IP (implies -s)', action='store_true', default=False)
-    build_parser.add_argument('-l', '--vivado-synthesis', help='Run Vivado synthesis (implies -s)', action='store_true', default=False)
-    build_parser.add_argument('-a', '--all', help='Run C simulation, C/RTL synthesis, C/RTL co-simulation and Vivado synthesis', action='store_true')
-    build_parser.add_argument('--reset', help='Remove any previous builds', action='store_true', default=False)
+    build_parser.add_argument('-l', '--list-options', help='List available build options for a given project', action='store_true', default=False)
     build_parser.set_defaults(func=_build)
     
     report_parser.add_argument('-p', '--project', help='Project directory', default=None)
-    #report_parser.add_argument('-f', '--full', help='Show full report', action='store_true', default=False)
     report_parser.add_argument('-l', '--list-options', help='List available report options for a given project', action='store_true', default=False)
     report_parser.set_defaults(func=_report)
 
@@ -146,35 +138,96 @@ def _build(args, extra_args):
         print('Project directory (-p or --project) must be provided.')
         sys.exit(1)
 
-    reset = int(args.reset)
-    csim = int(args.simulation)
-    synth = int(args.synthesis)
-    cosim = int(args.co_simulation)
-    validation = int(args.validation)
-    export = int(args.export)
-    vsynth = int(args.vivado_synthesis)
-    if args.all:
+    try:
+        yamlConfig = hls4ml.converters.parse_yaml_config(args.project + '/' + config_filename)
+    except:
+        print('Project configuration file not found in "{}".'.format(args.project))
+        sys.exit(1)
+
+    backend_map = {}
+    backend_map['vivado'] = _build_vivado
+    backend_map['quartus'] = _build_quartus
+
+    backend = yamlConfig.get('Backend')
+
+    if backend.lower() in backend_map:
+        backend_map[backend.lower()](args, extra_args)
+    else:
+        print('Backend {} does not support building projects.'.format(backend))
+
+def _build_vivado(args, extra_args):
+    vivado_parser = argparse.ArgumentParser(prog='hls4ml build -p {}'.format(args.project), add_help=False)
+    vivado_parser.add_argument('-c', '--simulation', help='Run C simulation', action='store_true', default=False)
+    vivado_parser.add_argument('-s', '--synthesis', help='Run C/RTL synthesis', action='store_true', default=False)
+    vivado_parser.add_argument('-r', '--co-simulation', help='Run C/RTL co-simulation', action='store_true', default=False)
+    vivado_parser.add_argument('-v', '--validation', help='Run C/RTL validation', action='store_true', default=False)
+    vivado_parser.add_argument('-e', '--export', help='Export IP (implies -s)', action='store_true', default=False)
+    vivado_parser.add_argument('-l', '--vivado-synthesis', help='Run Vivado synthesis (implies -s)', action='store_true', default=False)
+    vivado_parser.add_argument('-a', '--all', help='Run C simulation, C/RTL synthesis, C/RTL co-simulation and Vivado synthesis', action='store_true')
+    vivado_parser.add_argument('--reset', help='Remove any previous builds', action='store_true', default=False)
+
+    if args.list_options:
+        vivado_parser.print_help()
+        sys.exit(0)
+
+    vivado_args = vivado_parser.parse_args(extra_args)
+
+    reset = int(vivado_args.reset)
+    csim = int(vivado_args.simulation)
+    synth = int(vivado_args.synthesis)
+    cosim = int(vivado_args.co_simulation)
+    validation = int(vivado_args.validation)
+    export = int(vivado_args.export)
+    vsynth = int(vivado_args.vivado_synthesis)
+    if vivado_args.all:
         csim = synth = cosim = validation = export = vsynth = 1
-    
-    yamlConfig = hls4ml.converters.parse_yaml_config(args.project + '/' + config_filename)
 
     # Check if vivado_hls is available
     if 'linux' in sys.platform or 'darwin' in sys.platform:
-        backend = yamlConfig.get('Backend', 'Vivado')
-        if backend == 'Vivado':
-            found = os.system('command -v vivado_hls > /dev/null')
-            if found != 0:
-                print('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
-                sys.exit(1)
-        elif backend == 'Intel':
-            raise NotImplementedError
-        elif backend == 'Mentor':
-            raise NotImplementedError
-        else:
-            raise Exception('Backend values can be [Vivado, Intel, Mentor]')
-    
+        found = os.system('command -v vivado_hls > /dev/null')
+        if found != 0:
+            print('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
+            sys.exit(1)
+
     os.system('cd {dir} && vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
         .format(dir=args.project, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
+
+def _build_quartus(args, extra_args):
+    quartus_parser = argparse.ArgumentParser(prog='hls4ml build -p {}'.format(args.project), add_help=False)
+    quartus_parser.add_argument('-s', '--synthesis', help='Compile project and run C/RTL synthesis', action='store_true', default=False)
+    quartus_parser.add_argument('-q', '--quartus-synthesis', help='Run Quartus synthesis (implies -s)', action='store_true', default=False)
+    quartus_parser.add_argument('-a', '--all', help='Run C simulation, C/RTL synthesis, Quartus synthesis', action='store_true')
+
+    if args.list_options:
+        quartus_parser.print_help()
+        sys.exit(0)
+
+    quartus_args = quartus_parser.parse_args(extra_args)
+
+    synth = int(quartus_args.synthesis)
+    qsynth = int(quartus_args.quartus_synthesis)
+    if quartus_args.all:
+        synth = qsynth = 1
+
+    yamlConfig = hls4ml.converters.parse_yaml_config(args.project + '/' + config_filename)
+    project_name = yamlConfig['ProjectName']
+
+    curr_dir = os.getcwd()
+    
+    os.chdir(yamlConfig['OutputDir'])
+    if synth:
+        os.system('make {}-fpga'.format(project_name))
+        os.system('./{}-fpga'.format(project_name))
+
+    if qsynth:
+        found = os.system('command -v quartus_sh > /dev/null')
+        if found != 0:
+            print('Quartus installation not found. Make sure "quartus_sh" is on PATH.')
+            sys.exit(1)
+        os.chdir(project_name + '-fpga.prj/quartus')
+        os.system('quartus_sh --flow compile quartus_compile')
+    
+    os.chdir(curr_dir)
 
 def _report(args, extra_args):
     if args.project is None:
@@ -184,12 +237,12 @@ def _report(args, extra_args):
     try:
         yamlConfig = hls4ml.converters.parse_yaml_config(args.project + '/' + config_filename)
     except:
-        print('hls4ml config not found in "{}".'.format(args.project))
-        return
+        print('Project configuration file not found in "{}".'.format(args.project))
+        sys.exit(1)
 
     backend_map = {}
-    backend_map['vivado'] = report_vivado
-    backend_map['quartus'] = report_quartus
+    backend_map['vivado'] = _report_vivado
+    backend_map['quartus'] = _report_quartus
 
     backend = yamlConfig.get('Backend')
 
@@ -198,7 +251,7 @@ def _report(args, extra_args):
     else:
         print('Backend {} does not support reading reports.'.format(backend))
 
-def report_vivado(args, extra_args):
+def _report_vivado(args, extra_args):
     vivado_parser = argparse.ArgumentParser(prog='hls4ml report -p {}'.format(args.project), add_help=False)
     vivado_parser.add_argument('-f', '--full', help='Show full report', action='store_true', default=False)
 
@@ -208,7 +261,7 @@ def report_vivado(args, extra_args):
         vivado_args = vivado_parser.parse_args(extra_args)
         hls4ml.report.read_vivado_report(args.project, vivado_args.full)
 
-def report_quartus(args, extra_args):
+def _report_quartus(args, extra_args):
     quartus_parser = argparse.ArgumentParser(prog='hls4ml report -p {}'.format(args.project), add_help=False)
     quartus_parser.add_argument('-b', '--open-browser', help='Open a web browser with the report', action='store_true', default=False)
 
