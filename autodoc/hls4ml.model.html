@@ -1320,50 +1320,52 @@ to the inputs of the next node</p></li>
 <dl class="function">
 <dt id="hls4ml.model.profiling.compare">
 <code class="sig-prename descclassname">hls4ml.model.profiling.</code><code class="sig-name descname">compare</code><span class="sig-paren">(</span><em class="sig-param">keras_model</em>, <em class="sig-param">hls_model</em>, <em class="sig-param">X</em>, <em class="sig-param">plot_type='dist_diff'</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.profiling.compare" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compare each layer’s output in keras and hls model. Note that the hls_model should not be compiled before using this.
-Params:
-——
-keras_model : original keras model
-hls_model : converted HLS model, with “Trace:True” in the configuration file.
-X: numpy array, input for the model.
-plot_type : (string) different methods to visualize the y_model and y_sim differences.</p>
-<blockquote>
-<div><dl class="simple">
-<dt>Possible options include:</dt><dd><ul class="simple">
-<li><dl class="simple">
-<dt>“norm_diff”<span class="classifier">square root of the sum of the squares of the differences</span></dt><dd><p>between each output vectors</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>“dist_diff”<span class="classifier">The normalized distribution of the differences of the elements</span></dt><dd><p>between two output vectors</p>
-</dd>
-</dl>
-</li>
+<dd><p>Compare each layer’s output in keras and hls model. Note that the hls_model should not be compiled before using this.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>keras_model</strong> – original keras model</p></li>
+<li><p><strong>hls_model</strong> – converted HLSModel, with “Trace:True” in the configuration file.</p></li>
+<li><p><strong>X</strong> (<em>array-like</em>) – Input for the model.</p></li>
+<li><p><strong>plot_type</strong> (<em>string</em>) – <p>different methods to visualize the y_model and y_sim differences.
+Possible options include:</p>
+<ul>
+<li><p>’norm_diff’ : square root of the sum of the squares of the differences
+between each output vectors</p></li>
+<li><p>’dist_diff’ : The normalized distribution of the differences of the elements
+between two output vectors</p></li>
+</ul>
+</p></li>
 </ul>
 </dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>plot object of the histogram depicting the difference in each layer’s output</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>matplotlib figure</p>
+</dd>
 </dl>
-</div></blockquote>
-<blockquote>
-<div><p>plot object of the histogram depicting the difference in each layer’s ouput</p>
-</div></blockquote>
 </dd></dl>
 
 <dl class="function">
 <dt id="hls4ml.model.profiling.get_ymodel_keras">
 <code class="sig-prename descclassname">hls4ml.model.profiling.</code><code class="sig-name descname">get_ymodel_keras</code><span class="sig-paren">(</span><em class="sig-param">keras_model</em>, <em class="sig-param">X</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.profiling.get_ymodel_keras" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate each layer’s ouput and put them into a dictionary
-Params:
-——
-keras_model: a keras model
-X : array-like</p>
-<blockquote>
-<div><p>Test data on which to evaluate the model to profile activations
-Must be formatted suitably for the model.predict(X) method</p>
-</div></blockquote>
-<blockquote>
-<div><p>A dictionary in the form {“layer_name”: ouput array of layer}</p>
-</div></blockquote>
+<dd><p>Calculate each layer’s ouput and put them into a dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>keras_model</strong> – a keras model</p></li>
+<li><p><strong>X</strong> (<em>array-like</em>) – Test data on which to evaluate the model to profile activations.
+Must be formatted suitably for the <code class="docutils literal notranslate"><span class="pre">model.predict(X)</span></code> method.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dictionary in the form {“layer_name”: ouput array of layer}</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
@@ -1381,7 +1383,7 @@ Must be formatted suitably for the model.predict(X) method</p>
 <li><p><strong>model</strong> (<em>keras</em><em> or </em><em>pytorch model</em>) – The model to profile</p></li>
 <li><p><strong>hls_model</strong> (<a class="reference internal" href="#hls4ml.model.hls_model.HLSModel" title="hls4ml.model.hls_model.HLSModel"><em>HLSModel</em></a>) – The HLSModel to profile</p></li>
 <li><p><strong>X</strong> (<em>array-like</em><em>, </em><em>optional</em>) – Test data on which to evaluate the model to profile activations
-Must be formatted suitably for the model.predict(X) method</p></li>
+Must be formatted suitably for the <code class="docutils literal notranslate"><span class="pre">model.predict(X)</span></code> method</p></li>
 <li><p><strong>plot</strong> (<em>str</em><em>, </em><em>optional</em>) – The type of plot to produce.
 Options are: ‘boxplot’ (default), ‘violinplot’, ‘histogram’,
 ‘FacetGrid’</p></li>
