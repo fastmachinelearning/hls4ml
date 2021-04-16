@@ -263,6 +263,7 @@ class HLSModel(object):
         self._top_function_lib = None
 
         self._make_graph(layer_list)
+        self.original_graph = self.graph.copy()
 
         self._optimize_model(self.config.optimizers)
 
@@ -418,8 +419,11 @@ class HLSModel(object):
         self.index += 1
         return self.index
 
-    def get_layers(self):
-        return self.graph.values()
+    def get_layers(self, before_optimization=False):
+        if before_optimization:
+            return self.original_graph.values()
+        else:
+            return self.graph.values()
 
     def get_input_variables(self):
         variables = []
