@@ -158,7 +158,10 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None):
             has_dict = isinstance(config['LayerName'][layer_name]['Precision'], dict)
 
             if has_dict:
-                current_data_type = config['LayerName'][layer_name]['Precision']['result']
+                if 'result' in config['LayerName'][layer_name]['Precision']:
+                    current_data_type = config['LayerName'][layer_name]['Precision']['result']
+                else:
+                    continue
             else:
                 current_data_type = config['LayerName'][layer_name]['Precision']
 
