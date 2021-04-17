@@ -96,6 +96,7 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None):
 
     suffix_map = {
         'w': 'weight',
+        's': 'scale',
         'b': 'bias'
     }
 
