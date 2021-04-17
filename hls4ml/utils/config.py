@@ -190,6 +190,8 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None):
             else:
                 config['LayerName'][layer_name]['Precision'] = data_type
 
+            if layer_name + '_linear' in config['LayerName']:
+                config['LayerName'][layer_name + '_linear']['Precision'] = data_type
 
 def config_from_keras_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1):
     """Create an HLS conversion config given the Keras model.
