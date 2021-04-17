@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas
 import seaborn as sb
+from collections import defaultdict
 
 from hls4ml.model.hls_model import HLSModel
 
@@ -208,15 +209,42 @@ def weights_hlsmodel(model, fmt='longform', plot='boxplot'):
         data = pandas.DataFrame(data)
     return data
 
+
+def _keras_batchnorm(layer):
+    weights = layer.get_weights()
+    epsilon = layer.epsilon
+
+    gamma = weights[0]
+    beta = weights[1]
+    mean = weights[2]
+    var = weights[3]
+
+    scale = gamma / np.sqrt(var + epsilon)
+    bias = beta - gamma * mean / np.sqrt(var + epsilon)
+
+    return [scale, bias], ['s', 'b']
+
+
+def _keras_layer(layer):
+    return layer.get_weights(), ['w', 'b']
+
+
+keras_process_layer_map = defaultdict(lambda: _keras_layer,
+                                      {
+                                          'BatchNormalization': _keras_batchnorm,
+                                          'QBatchNormalization': _keras_batchnorm
+                                      })
+
+
 def weights_keras(model, fmt='longform', plot='boxplot'):
-    suffix = ['w', 'b']
     if fmt == 'longform':
         data = {'x' : [], 'layer' : [], 'weight' : []}
     elif fmt == 'summary':
         data = []
     for layer in model.layers:
         name = layer.name
-        weights = layer.get_weights()
+        weights, suffix = keras_process_layer_map[type(layer).__name__](layer)
+
         for i, w in enumerate(weights):
             l = '{}/{}'.format(name, suffix[i])
             w = w.flatten()
