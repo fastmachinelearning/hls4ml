@@ -68,7 +68,7 @@ def _get_precision_from_quantizer(quantizer, auto_precision_on=False):
         return prefix + 'ap_int<{}>'.format(bits)
 
 
-def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None):
+def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, best_type_algorithm=None):
     """Adjust data types in a given HLSModel configuration based on a Keras model and test inputs (if supplied).
 
     The function aims for setting precision of the layers in the configuration to match the distribution of both
@@ -76,7 +76,8 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None):
 
     set_data_types_from_keras_model() works in a heuristic way and does not account for optimizations that can be
     subsequently made by hls4ml. Therefore, the optimal result is not guaranteed and it might be necessary to do
-    post-tuning of the data types in order to achieve the best outcome.
+    post-tuning of the data types in order to achieve the best outcome. A user-defined algorithm can be passed to
+    this function as best_type_algorithm to help obtain precision types closer to the optimal ones.
 
     Args:
         config (dict): HLSModel configuration dictionary to be updated. Its granularity must be 'name'.
@@ -85,6 +86,17 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None):
         test_inputs (array-like, optional): Inputs to be used for producing the distribution of model outputs.
             The type of test_inputs is the same as the type of X in hls4ml.model.profiling.numerical(). If not provided,
             precision of the layer outputs/activations will not be updated.
+        best_type_algorithm (function (max_val, min_val, median, q1, q3, max_bits) -> (A [int], B [int]), optional):
+            Algorithm to be used for determining the best data type ap_fixed<A, B> for a specific layer, given the
+            following profiling information: maximum value (max_val), minimum value (min_val), median (median),
+            1st quartile (q1), 3rd quartile (q3) and the maximum bit width without the sign bit (max_bits). Because
+            the bit width doesn't include the sign bit, A may exceed max_bits by 1.
+
+            If the algorithm does not find any suitable data type, it should return (None, None).
+
+            If best_type_algorithm is not provided, the default algorithm will be used (using only max_val and min_val
+            to find a data type both covering max_val and with the minimum absolute distance between min_val and the
+            minimum representable number).
 
     Returns:
         None. The function makes changes directly to the supplied config.
@@ -92,15 +104,7 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None):
     if 'LayerName' not in config:
         raise RuntimeError("The granularity of the supplied config is not 'name'.")
 
-    weight_data = weights_keras(model, fmt='summary', plot='boxplot')
-
-    suffix_map = {
-        'w': 'weight',
-        's': 'scale',
-        'b': 'bias'
-    }
-
-    def find_optimal_a_b(max_val, min_val):
+    def find_optimal_a_b(max_val, min_val, median, q1, q3, max_bits):
         a_final = None
         b_final = None
 
@@ -123,6 +127,17 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None):
         else:
             return None, None
 
+    if best_type_algorithm is None:
+        best_type_algorithm = find_optimal_a_b
+
+    weight_data = weights_keras(model, fmt='summary', plot='boxplot')
+
+    suffix_map = {
+        'w': 'weight',
+        's': 'scale',
+        'b': 'bias'
+    }
+
     for weight_info in weight_data:
         layer_name = weight_info['layer']
         suffix = weight_info['weight'].split('/')[1]
@@ -140,8 +155,11 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None):
 
         min_value = weight_info['whislo']
         max_value = weight_info['whishi']
+        median = weight_info['med']
+        q1 = weight_info['q1']
+        q3 = weight_info['q3']
 
-        a, b = find_optimal_a_b(max_value, min_value)
+        a, b = best_type_algorithm(max_value, min_value, median, q1, q3, max_bits)
 
         if a is None or b is None:
             raise RuntimeError("Could not find an optimal data type for " + layer_name + "/" + suffix)
@@ -177,8 +195,11 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None):
 
             min_value = activation_info['whislo']
             max_value = activation_info['whishi']
+            median = activation_info['med']
+            q1 = activation_info['q1']
+            q3 = activation_info['q3']
 
-            a, b = find_optimal_a_b(max_value, min_value)
+            a, b = best_type_algorithm(max_value, min_value, median, q1, q3, max_bits)
 
             if a is None or b is None:
                 raise RuntimeError("Could not find an optimal data type for " + layer_name + " (output)")
@@ -192,6 +213,7 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None):
 
             if layer_name + '_linear' in config['LayerName']:
                 config['LayerName'][layer_name + '_linear']['Precision'] = data_type
+
 
 def config_from_keras_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1):
     """Create an HLS conversion config given the Keras model.
