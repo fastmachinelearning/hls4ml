@@ -364,6 +364,7 @@ class Layer(object):
         self.precision[accum_t.name] = accum_t
         self.set_attr('accum_t', accum_t.precision)
         self.reuse_factor = self.model.config.get_reuse_factor(self)
+        self.target_clock = self.model.config.get_target_latency(self)
 
         layer_config = self.model.config.get_layer_config(self)
         for config_key, config_value in layer_config.items():
@@ -595,6 +596,7 @@ class Dense(Layer):
         compression = self.model.config.get_compression(self)
         if self.model.config.is_resource_strategy(self):
             if self.model.config.backend.name == 'Vivado':
+                self.model.config.backend.set_target_reuse_factor(self)
                 self.model.config.backend.set_closest_reuse_factor(self)
             if compression:
                 self.set_attr('strategy', 'compressed')
@@ -837,6 +839,8 @@ class Conv2D(Layer):
         if self.model.config.is_resource_strategy(self):
             self.set_attr('strategy', 'resource')
             if self.model.config.backend.name == 'Vivado':
+                # TODO: compute optimized reuse
+                self.model.config.backend.set_target_reuse_factor(self)
                 self.model.config.backend.set_closest_reuse_factor(self)
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
         else:

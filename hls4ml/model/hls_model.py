@@ -30,6 +30,10 @@ class HLSConfig(object):
         self.layer_type_rf = {}
         self.layer_name_rf = {}
 
+        self.model_tclk = None
+        self.layer_type_tclk = {}
+        self.layer_name_tclk = {}
+
         self.model_strategy = 'Latency'
         self.layer_type_strategy = {}
         self.layer_name_strategy = {}
@@ -123,6 +127,16 @@ class HLSConfig(object):
 
         return rf
 
+    def get_target_latency(self, layer):
+        tclk = self.layer_name_tclk.get(layer.name.lower())
+        if tclk is None:
+            tclk = self.layer_name_tclk.get(layer.__class__.__name__.lower())
+        if tclk is None:
+            tclk = self.model_tclk
+
+        # Kelvin Lin    
+        return tclk
+
     def get_strategy(self, layer):
         strategy = self.layer_name_strategy.get(layer.name.lower())
         if strategy is None:
@@ -171,6 +185,7 @@ class HLSConfig(object):
                     self.model_precision['default'] = precision_cfg # Default precision for everything
 
             self.model_rf = model_cfg.get('ReuseFactor')
+            self.model_tclk = model_cfg.get('TargetLatency')
             self.model_strategy = model_cfg.get('Strategy', 'Latency')
             self.model_compression = bool(model_cfg.get('Compression', 0))
 
@@ -187,6 +202,10 @@ class HLSConfig(object):
                 rf = layer_cfg.get('ReuseFactor')
                 if rf is not None:
                     self.layer_type_rf[layer_type.lower()] = rf
+                
+                tclk = layer_cfg.get('TargetLatency')
+                if tclk is not None:
+                    self.layer_type_tclk[layer_type.lower()] = tclk
 
                 strategy = layer_cfg.get('Strategy')
                 if strategy is not None:
@@ -209,6 +228,10 @@ class HLSConfig(object):
                 rf = layer_cfg.get('ReuseFactor')
                 if rf is not None:
                     self.layer_name_rf[layer_name.lower()] = rf
+
+                tclk = layer_cfg.get('TargetLatency')
+                if tclk is not None:
+                    self.layer_name_tclk[layer_name.lower()] = tclk
 
                 strategy = layer_cfg.get('Strategy')
                 if strategy is not None:
