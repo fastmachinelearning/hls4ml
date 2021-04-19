@@ -4,6 +4,7 @@ import h5py
 import json
 import math
 from hls4ml.model.profiling import activations_keras, weights_keras
+from hls4ml.model.hls_layers import layer_map
 from collections import OrderedDict
 
 QKERAS_DATA_TYPE_PREFIX = '***'
@@ -86,17 +87,18 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, b
         test_inputs (array-like, optional): Inputs to be used for producing the distribution of model outputs.
             The type of test_inputs is the same as the type of X in hls4ml.model.profiling.numerical(). If not provided,
             precision of the layer outputs/activations will not be updated.
-        best_type_algorithm (function (max_val, min_val, median, q1, q3, max_bits) -> (A [int], B [int]), optional):
+        best_type_algorithm (function (layer_type, max_val, min_val, median, q1, q3, max_bits) -> (A [int], B [int]),
+                             optional):
             Algorithm to be used for determining the best data type ap_fixed<A, B> for a specific layer, given the
-            following profiling information: maximum value (max_val), minimum value (min_val), median (median),
-            1st quartile (q1), 3rd quartile (q3) and the maximum bit width without the sign bit (max_bits). Because
-            the bit width doesn't include the sign bit, A may exceed max_bits by 1.
+            following profiling information: corresponding hls4ml layer class name (layer_type), max value (max_val),
+            min value (min_val), median (median), 1st quartile (q1), 3rd quartile (q3) and the max bit width without
+            the sign bit (max_bits). Because the bit width doesn't include the sign bit, A may exceed max_bits by 1.
 
             If the algorithm does not find any suitable data type, it should return (None, None).
 
-            If best_type_algorithm is not provided, the default algorithm will be used (using only max_val and min_val
-            to find a data type both covering max_val and with the minimum absolute distance between min_val and the
-            minimum representable number).
+            If best_type_algorithm is not provided, the default algorithm will be used for all layers (using only
+            max_val and min_val to find a data type both covering max_val and with the minimum absolute distance
+            between min_val and the minimum representable number).
 
     Returns:
         None. The function makes changes directly to the supplied config.
@@ -104,7 +106,7 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, b
     if 'LayerName' not in config:
         raise RuntimeError("The granularity of the supplied config is not 'name'.")
 
-    def find_optimal_a_b(max_val, min_val, median, q1, q3, max_bits):
+    def find_optimal_a_b(layer_type, max_val, min_val, median, q1, q3, max_bits):
         a_final = None
         b_final = None
 
@@ -159,7 +161,13 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, b
         q1 = weight_info['q1']
         q3 = weight_info['q3']
 
-        a, b = best_type_algorithm(max_value, min_value, median, q1, q3, max_bits)
+        if 'LayerType' in config['LayerName'][layer_name]:
+            layer_type = config['LayerName'][layer_name]['LayerType']
+        else:
+            raise RuntimeError(f"config['LayerName']['{layer_name}'] doesn't have the LayerType key. "
+                               "Make sure that the config has been made by config_from_keras_model().")
+
+        a, b = best_type_algorithm(layer_type, max_value, min_value, median, q1, q3, max_bits)
 
         if a is None or b is None:
             raise RuntimeError("Could not find an optimal data type for " + layer_name + "/" + suffix)
@@ -199,7 +207,13 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, b
             q1 = activation_info['q1']
             q3 = activation_info['q3']
 
-            a, b = best_type_algorithm(max_value, min_value, median, q1, q3, max_bits)
+            if 'LayerType' in config['LayerName'][layer_name]:
+                layer_type = config['LayerName'][layer_name]['LayerType']
+            else:
+                raise RuntimeError(f"config['LayerName']['{layer_name}'] doesn't have the LayerType key. "
+                                   "Make sure that the config has been made by config_from_keras_model().")
+
+            a, b = best_type_algorithm(layer_type, max_value, min_value, median, q1, q3, max_bits)
 
             if a is None or b is None:
                 raise RuntimeError("Could not find an optimal data type for " + layer_name + " (output)")
@@ -326,6 +340,8 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
 
     def make_layer_config(layer):
         layer_config = {}
+        layer_config['LayerType'] = layer_map[layer['class_name']].__name__
+
         if layer['class_name'] in dense_layers + conv_layers:
             layer_config['Precision'] = {}
             layer_config['Precision']['weight'] = default_precision
@@ -342,6 +358,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
                 if 'activation' in layer['config'].keys():
                     is_softmax = is_softmax or (layer['config']['activation'] == 'softmax')
             if is_softmax:
+               layer_config['LayerType'] = 'Softmax'
                layer_config['exp_table_t'] = 'ap_fixed<18,8,AP_RND,AP_SAT>'
                layer_config['inv_table_t'] = 'ap_fixed<18,8,AP_RND,AP_SAT>'
             else:
