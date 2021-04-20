@@ -6,6 +6,7 @@ import pandas
 import seaborn as sb
 
 from hls4ml.model.hls_model import HLSModel
+from hls4ml.converters import convert_from_config
 
 try:
     from tensorflow import keras
@@ -19,6 +20,12 @@ try:
     __torch_profiling_enabled__ = True
 except ImportError:
     __torch_profiling_enabled__ = False
+
+
+def get_unoptimized_hlsmodel(model):
+    new_config = model.config.config.copy()
+    new_config['HLSConfig']['Optimizers'] = []
+    return convert_from_config(new_config)
 
 
 def array_to_summary(x, fmt='boxplot'):
@@ -140,7 +147,7 @@ def ap_fixed_WIF(dtype):
     W, I, F = dtype.width, dtype.integer, dtype.fractional
     return W, I, F
 
-def types_hlsmodel(model, before_optimization=False):
+def types_hlsmodel(model):
     suffix = ['w', 'b']
     data = {'layer' : [], 'low' : [], 'high' : []}
     # Plot the default precision
@@ -151,7 +158,7 @@ def types_hlsmodel(model, before_optimization=False):
     data['low'].append(-F)
     data['high'].append(I-1)
 
-    for layer in model.get_layers(before_optimization=before_optimization):
+    for layer in model.get_layers():
         for iw, weight in enumerate(layer.get_weights()):
             wname = '{}/{}'.format(layer.name, suffix[iw])
             T = weight.type
@@ -163,7 +170,7 @@ def types_hlsmodel(model, before_optimization=False):
     data = pandas.DataFrame(data)
     return data
 
-def activation_types_hlsmodel(model, before_optimization=False):
+def activation_types_hlsmodel(model):
     data = {'layer' : [], 'low' : [], 'high' : []}
     # Get the default precision
     default_precision = model.config.model_precision['default']
@@ -171,7 +178,7 @@ def activation_types_hlsmodel(model, before_optimization=False):
     data['layer'].append('model')
     data['low'].append(-F)
     data['high'].append(I-1)
-    for layer in model.get_layers(before_optimization=before_optimization):
+    for layer in model.get_layers():
         T = layer.get_output_variable().type.precision
         W, I, F = ap_fixed_WIF(T)
         data['layer'].append(layer.name)
@@ -180,14 +187,14 @@ def activation_types_hlsmodel(model, before_optimization=False):
     data = pandas.DataFrame(data)
     return data
 
-def weights_hlsmodel(model, before_optimization=False, fmt='longform', plot='boxplot'):
+def weights_hlsmodel(model, fmt='longform', plot='boxplot'):
     suffix = ['w', 'b']
     if fmt == 'longform':
         data = {'x' : [], 'layer' : [], 'weight' : []}
     elif fmt == 'summary':
         data = []
 
-    for layer in model.get_layers(before_optimization=before_optimization):
+    for layer in model.get_layers():
         name = layer.name
         for iw, weight in enumerate(layer.get_weights()):
             l = '{}/{}'.format(name, suffix[iw])
@@ -396,15 +403,17 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     if hls_model_present:
         before = " (before optimization)"
         after = " (final / after optimization)"
+        hls_model_unoptimized = get_unoptimized_hlsmodel(hls_model)
     else:
         before = ""
         after = ""
+        hls_model_unoptimized = None
 
     print("Profiling weights" + before)
     data = None
 
     if hls_model_present:
-        data = weights_hlsmodel(hls_model, before_optimization=True, fmt='summary', plot=plot)
+        data = weights_hlsmodel(hls_model_unoptimized, fmt='summary', plot=plot)
     elif model_present:
         if __tf_profiling_enabled__ and isinstance(model, keras.Model):
             data = weights_keras(model, fmt='summary', plot=plot)
@@ -420,7 +429,7 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     wp = plots[plot](data, fmt='summary')  # weight plot
 
     if hls_model_present and plot in types_plots:
-        t_data = types_hlsmodel(hls_model, before_optimization=True)
+        t_data = types_hlsmodel(hls_model_unoptimized)
         types_plots[plot](t_data, fmt='summary')
 
     plt.title("Distribution of (non-zero) weights" + before)
@@ -451,7 +460,7 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
         if data is not None:
             ap = plots[plot](data, fmt='summary')  # activation plot
             if hls_model_present and plot in types_plots:
-                t_data = activation_types_hlsmodel(hls_model, before_optimization=True)
+                t_data = activation_types_hlsmodel(hls_model_unoptimized)
                 types_plots[plot](t_data, fmt='summary')
             plt.title("Distribution of (non-zero) activations" + before)
             plt.tight_layout()
