@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas
 import seaborn as sb
+import uuid
+import os
+import shutil
 from collections import defaultdict
 
 from hls4ml.model.hls_model import HLSModel
@@ -25,8 +28,15 @@ except ImportError:
 
 def get_unoptimized_hlsmodel(model):
     new_config = model.config.config.copy()
+    new_output_dir = uuid.uuid4().hex
+
+    while os.path.exists(new_output_dir):
+        new_output_dir = uuid.uuid4().hex
+
     new_config['HLSConfig']['Optimizers'] = []
-    return convert_from_config(new_config)
+    new_config['OutputDir'] = new_output_dir
+
+    return convert_from_config(new_config), new_output_dir
 
 
 def array_to_summary(x, fmt='boxplot'):
@@ -420,11 +430,11 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     if hls_model_present:
         before = " (before optimization)"
         after = " (final / after optimization)"
-        hls_model_unoptimized = get_unoptimized_hlsmodel(hls_model)
+        hls_model_unoptimized, tmp_output_dir = get_unoptimized_hlsmodel(hls_model)
     else:
         before = ""
         after = ""
-        hls_model_unoptimized = None
+        hls_model_unoptimized, tmp_output_dir = None, None
 
     print("Profiling weights" + before)
     data = None
@@ -441,6 +451,10 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     if data is None:
         print("Only keras, PyTorch (Sequential) and HLSModel models " +
               "can currently be profiled")
+
+        if hls_model_present and os.path.exists(tmp_output_dir):
+            shutil.rmtree(tmp_output_dir)
+
         return wp, wph, ap, aph
 
     wp = plots[plot](data, fmt='summary')  # weight plot
@@ -492,6 +506,9 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
 
             plt.title("Distribution of (non-zero) activations (final / after optimization)")
             plt.tight_layout()
+
+    if hls_model_present and os.path.exists(tmp_output_dir):
+        shutil.rmtree(tmp_output_dir)
 
     return wp, wph, ap, aph
 
