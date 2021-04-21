@@ -248,13 +248,10 @@ def activations_keras(model, X, fmt='longform', plot='boxplot'):
         # or histogram bin edges and heights
         data = []
 
-    partial_model = keras.models.Sequential()
     for layer in model.layers:
         print("   {}".format(layer.name))
-        partial_model.add(layer)
-        partial_model.compile(optimizer='adam', loss='mse')
         if not isinstance(layer, keras.layers.InputLayer):
-            y = partial_model.predict(X).flatten()
+            y = _get_output(layer, X, model.input).flatten()
             y = abs(y[y != 0])
             if fmt == 'longform':
                 data['x'].extend(y.tolist())
@@ -340,7 +337,7 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
         The HLSModel to profile
     X : array-like, optional
         Test data on which to evaluate the model to profile activations
-        Must be formatted suitably for the model.predict(X) method
+        Must be formatted suitably for the ``model.predict(X)`` method
     plot : str, optional
         The type of plot to produce.
         Options are: 'boxplot' (default), 'violinplot', 'histogram',
@@ -405,31 +402,31 @@ def _is_ignored_layer(layer):
         return True
     return False
 
-def _get_output(ymodel, layer, X):
-    
-    #If there is no layer in the model just take that layer's output
-    if len(ymodel.keys()) == 0:
-        y = layer(X)
-    else:
-        #If there are already layers then calculate next output based on last layer's output
-        y = layer(ymodel[list(ymodel.keys())[-1]])
+def _get_output(layer, X, model_input):
+    """Get output of partial model"""
+    partial_model = keras.models.Model(inputs=model_input,
+                                       outputs=layer.output)
+    y = partial_model.predict(X)
     return y
 
 def get_ymodel_keras(keras_model, X):
     """
     Calculate each layer's ouput and put them into a dictionary
-    Params:
-    ------
-    keras_model: a keras model
+
+    Parameters
+    ----------
+    keras_model :
+        a keras model
     X : array-like
-        Test data on which to evaluate the model to profile activations
-        Must be formatted suitably for the model.predict(X) method
-    Return:
-    ------
+        Test data on which to evaluate the model to profile activations.
+        Must be formatted suitably for the ``model.predict(X)`` method.
+
+    Returns
+    -------
+    dictionary
         A dictionary in the form {"layer_name": ouput array of layer}
     """
     
-    partial_model = keras.models.Sequential()
     ymodel = {}
     
     for layer in keras_model.layers:
@@ -441,26 +438,22 @@ def get_ymodel_keras(keras_model, X):
                 if layer.activation:
                     
                     if layer.activation.__class__.__name__ == "linear":
-                        ymodel[layer.name] = _get_output(ymodel, layer, X)
+                        ymodel[layer.name] = _get_output(layer, X, keras_model.input)
                     
                     else:
                         temp_activation = layer.activation
                         layer.activation = None
                         #Get output for layer without activation
-                        ymodel[layer.name] = _get_output(ymodel, layer, X)
+                        ymodel[layer.name] = _get_output(layer, X, keras_model.input)
 
-                        #Get ouput for activation
-                        ymodel[layer.name + "_{}".format(temp_activation.__class__.__name__)] =  _get_output(ymodel, temp_activation, X)
-
-                        #Add the activation back
+                        #Add the activation back 
                         layer.activation = temp_activation
+                        #Get ouput for activation
+                        ymodel[layer.name + "_{}".format(temp_activation.__class__.__name__)] =  _get_output(layer, X, keras_model.input)
                 else:
-                    ymodel[layer.name] = _get_output(ymodel, layer, X)
+                    ymodel[layer.name] = _get_output(layer, X, keras_model.input)
             else:    
-                ymodel[layer.name] = _get_output(ymodel, layer, X)
-        
-        #Add the layer for later processing
-        partial_model.add(layer)
+                ymodel[layer.name] = _get_output(layer, X, keras_model.input)
     print("Done taking outputs for Keras model.")
     return ymodel
 
@@ -483,7 +476,6 @@ def _norm_diff(ymodel, ysim):
 def _dist_diff(ymodel, ysim):
     """
     Calculate the normalized distribution of the differences of the elements
-    of the output vectors 
     of the output vectors. 
     If difference >= original value then the normalized difference will be set to 1,
     meaning "very difference".
@@ -501,7 +493,7 @@ def _dist_diff(ymodel, ysim):
         abs_ymodel = np.absolute(flattened_ymodel)
 
         normalized_diff = np.zeros(diff_vector.shape)
-        normalized_diff[diff_vector >= abs_ymodel] = 1
+        normalized_diff[(diff_vector >= abs_ymodel) & (abs_ymodel>0) & (diff_vector>0)] = 1
 
         #Fill out the rest
         index = diff_vector < abs_ymodel
@@ -527,21 +519,28 @@ def _dist_diff(ymodel, ysim):
 def compare(keras_model, hls_model, X, plot_type = "dist_diff"):
     """
     Compare each layer's output in keras and hls model. Note that the hls_model should not be compiled before using this.
-    Params:
-    ------
-    keras_model : original keras model
-    hls_model : converted HLS model, with "Trace:True" in the configuration file.
-    X: numpy array, input for the model. 
-    plot_type : (string) different methods to visualize the y_model and y_sim differences.
-                Possible options include:
-                     - "norm_diff" : square root of the sum of the squares of the differences 
-                                    between each output vectors 
-                     - "dist_diff" : The normalized distribution of the differences of the elements
-                                    between two output vectors
+
+    Parameters
+    ----------
+    keras_model : 
+        original keras model
+    hls_model :
+        converted HLSModel, with "Trace:True" in the configuration file.
+    X : array-like 
+        Input for the model. 
+    plot_type : string
+        different methods to visualize the y_model and y_sim differences.
+        Possible options include:
         
-    Return:
-    ------
-        plot object of the histogram depicting the difference in each layer's ouput
+        - 'norm_diff' : square root of the sum of the squares of the differences 
+          between each output vectors 
+        - 'dist_diff' : The normalized distribution of the differences of the elements
+          between two output vectors
+        
+    Returns
+    -------
+    matplotlib figure
+        plot object of the histogram depicting the difference in each layer's output
     """
     
     #Take in output from both models
