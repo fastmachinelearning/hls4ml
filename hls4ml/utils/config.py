@@ -142,6 +142,11 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, b
 
     for weight_info in weight_data:
         layer_name = weight_info['layer']
+
+        if layer_name not in config['LayerName']:
+            print(f"Weight profiling: {layer_name} not present in config['LayerName'], ignoring.")
+            continue
+
         suffix = weight_info['weight'].split('/')[1]
 
         if suffix not in suffix_map or suffix_map[suffix] not in config['LayerName'][layer_name]['Precision']:
@@ -181,6 +186,11 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, b
 
         for activation_info in activation_data:
             layer_name = activation_info['weight']
+
+            if layer_name not in config['LayerName']:
+                print(f"Activation profiling: {layer_name} not present in config['LayerName'], ignoring.")
+                continue
+
             has_dict = isinstance(config['LayerName'][layer_name]['Precision'], dict)
 
             if has_dict:
