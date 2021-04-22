@@ -20,16 +20,33 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
-#include <map>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
+#include <string>
+#include <cctype>
 
 #include "firmware/parameters.h"
 #include "firmware/myproject.h"
 
 #define CHECKPOINT 5000
+
+// This function is written to avoid stringstream, which is
+// not supported in cosim 20.1, and because strtok
+// requires a const_cast or allocation to use with std::strings.
+// This function returns the next float (by argument) at position pos,
+// updating pos. True is returned if conversion done, false if the string
+// has ended, and std::invalid_argument exception if the sting was bad.
+bool nextToken(const std::string& str, std::size_t& pos, float& val)
+{
+  while (pos < str.size() && std::isspace(static_cast<unsigned char>(str[pos]))) {
+    pos++;
+  }
+  if (pos >= str.size()) {
+    return false;
+  }
+  std::size_t offset = 0;
+  val = std::stof(str.substr(pos), &offset);
+  pos += offset;
+  return true;
+}
 
 int main(int argc, char **argv)
 {
@@ -44,37 +61,41 @@ int main(int argc, char **argv)
 
   std::string iline;
   std::string pline;
-  int e = 0;
-
-  int num_iterations = std::count(std::istreambuf_iterator<char>(fin),
-                   std::istreambuf_iterator<char>(), '\n');
 
   if (fin.is_open() && fpr.is_open()) {
     //hls-fpga-machine-learning insert component-io
-    std::vector<float> pr[num_iterations];
-    while ( std::getline(fin,iline) && std::getline (fpr,pline) ) {
-      if (e % CHECKPOINT == 0) std::cout << "Processing input " << e << std::endl;
-      e++;
-      char* cstr=const_cast<char*>(iline.c_str());
-      char* current;
-      std::vector<float> in;
-      current=strtok(cstr," ");
-      while(current!=NULL) {
-        in.push_back(atof(current));
-        current=strtok(NULL," ");
+    std::vector<std::vector<float> > predictions;
+    unsigned int num_iterations = 0;
+    for (; std::getline(fin,iline) && std::getline (fpr,pline); num_iterations++) {
+      if (num_iterations % CHECKPOINT == 0) {
+	std::cout << "Processing input "  << num_iterations << std::endl;
       }
-      cstr=const_cast<char*>(pline.c_str());
 
-      current=strtok(cstr," ");
-      while(current!=NULL) {
-        pr[e].push_back(atof(current));
-        current=strtok(NULL," ");
+      std::vector<float> in;
+      std::vector<float> pr;
+      float current;
+
+      std::size_t pos = 0;
+      while(nextToken(iline, pos, current)) {
+	in.push_back(current);
+      }
+
+      pos = 0;
+      while(nextToken(pline, pos, current)) {
+	pr.push_back(current);
       }
 
       //hls-fpga-machine-learning insert data
+      predictions.push_back(std::move(pr));
+    }
 
-      //hls-fpga-machine-learning insert top-level-function
-    for(int j = 0; j < e; j++) {
+    // Do this separately to avoid vector reallocation
+    //hls-fpga-machine-learning insert top-level-function
+
+    //hls-fpga-machine-learning insert run
+
+
+    for(int j = 0; j < num_iterations; j++) {
       //hls-fpga-machine-learning insert tb-output
       if (j % CHECKPOINT == 0) {
         std::cout << "Predictions" << std::endl;
@@ -86,12 +107,13 @@ int main(int argc, char **argv)
     fin.close();
     fpr.close();
   } else {
-    num_iterations = 10;
+    const unsigned int num_iterations = 10;
     std::cout << "INFO: Unable to open input/predictions file, using default input with " << num_iterations << " invocations." << std::endl;
     //hls-fpga-machine-learning insert zero
 
-    for (int i = 0; i < num_iterations; i++) {
-      //hls-fpga-machine-learning insert second-top-level-function
+    //hls-fpga-machine-learning insert top-level-function
+
+    //hls-fpga-machine-learning insert run
 
     for (int j = 0; j < num_iterations; j++) {
       //hls-fpga-machine-learning insert output

@@ -78,12 +78,13 @@ class QuartusWriter(Writer):
 
         rf = int(layer.reuse_factor)
         weight_header = '#ifdef __INTELFPGA_COMPILER__\n'
-        if(rf == 1 or var.name[0] == 'b' or layer.get_attr('n_in')*layer.get_attr('n_out') <= 2048 or (var.name[0] == 'w' and (layer.binary_check() or layer.ternary_check()))):
+        if (rf == 1 or var.name[0] == 'b' or layer.get_attr('n_in')*layer.get_attr('n_out') <= 2048
+                or (var.name[0] == 'w' and var.type.precision.width < 3)):
             weight_header += 'hls_init_on_powerup\n'
         else:
             block_factor = (layer.get_attr('n_in')*layer.get_attr('n_out'))/rf
-            nbanks = int((pow(2, np.ceil(np.log(block_factor)/np.log(2))))/2)
-            var_width = int(np.ceil(int(re.findall('\d+',var.type.precision)[0])/8))
+            nbanks = int(2**np.ceil(np.log2(block_factor)) / 2)
+            var_width = int(np.ceil(var.type.precision.width / 8))
             bwidth = self.next_pow2(var_width)
             weight_header += 'hls_bankwidth({bwidth})\nhls_numbanks({nbanks})\nhls_max_replicates(1)\nhls_memory_impl("BLOCK_RAM")\n'.format(bwidth=bwidth, nbanks=nbanks)
         weight_header += '#endif\n'
@@ -296,6 +297,12 @@ class QuartusWriter(Writer):
         ## test bench
         ###################
 
+        if len(model.get_output_variables()) != 1:
+            print("WARNING:  The testbench only supports one output variable. Leaving empty testbench")
+            return
+
+        outvar = model.get_output_variables()[0]
+
         filedir = os.path.dirname(os.path.abspath(__file__))
 
         if not os.path.exists('{}/tb_data/'.format(model.config.get_output_dir())):
@@ -330,65 +337,56 @@ class QuartusWriter(Writer):
                 newline += '      std::vector<float>::const_iterator in_begin = in.cbegin();\n'
                 newline += '      std::vector<float>::const_iterator in_end;\n'
                 for inp in model.get_input_variables():
-                    newline += '      in_end = in_begin + ({});\n'.format(inp.size_cpp())
-                    newline += '      std::copy(in_begin, in_end, {});\n'.format(inp.cppname+'[e].data')
+                    newline += f'      in_end = in_begin + ({inp.size_cpp()});\n'
+                    newline += f'      {inp.cppname}.emplace_back();\n'
+                    newline += f'      std::copy(in_begin, in_end, {inp.cppname}.back().data);\n'
                     newline += '      in_begin = in_end;\n'
+                newline += f'      {outvar.cppname}.emplace_back();\n'
             elif '//hls-fpga-machine-learning insert component-io' in line:
                 newline = line
                 for inp in model.get_input_variables():
-                    newline += indent + 'inputdat ' + inp.name + '[num_iterations];\n'
-                for out in model.get_output_variables():
-                    # brace-init zeros the array out because we use std=c++0x
-                    newline += indent + 'outputdat ' + out.name + '[num_iterations];\n'
+                    newline += indent + 'std::vector<inputdat> ' + inp.name + ';\n'
+                newline += indent + 'std::vector<outputdat> ' + outvar.name + ';\n'
             elif '//hls-fpga-machine-learning insert zero' in line:
                 newline = line
                 for inp in model.get_input_variables():
-                    newline += '    ' + 'inputdat ' + inp.name + '[num_iterations];\n'
-                for out in model.get_output_variables():
-                    newline += '    ' + 'outputdat ' + out.name + '[num_iterations];\n'
+                    newline += '    ' + 'std::vector<inputdat> ' + inp.name + '(num_iterations);\n'
+                newline += '    ' + 'std::vector<outputdat> ' + outvar.name + '(num_iterations);\n'
+                newline += indent + 'for(int i = 0; i < num_iterations; i++) {\n'
+                for inp in model.get_input_variables():
+                    newline += indent + f'  std::fill_n({inp.cppname}[i].data, {inp.size_cpp()}, 0.0);\n'
+                newline += indent + '}\n'
+
             elif '//hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
 
-                input_vars = ','.join([i.cppname for i in model.get_input_variables()])
-                output_vars = ','.join([o.cppname for o in model.get_output_variables()])
+                newline += indent + f'for(int i = 0; i < num_iterations; i++) {{\n'
 
-                top_level = indent + 'ihc_hls_enqueue(&{}, {}, {});\n'.format(output_vars+'[e]', model.config.get_project_name(), input_vars+'[e]')
-                newline += top_level
-                newline += '    ' + '}\n'
-                newline += '    ' + 'ihc_hls_component_run_all({});\n'.format(model.config.get_project_name())
-            elif '//hls-fpga-machine-learning insert second-top-level-function' in line:
+                input_vars = ','.join([f'{i.cppname}[i]' for i in model.get_input_variables()])
+
+                newline += indent + f'  ihc_hls_enqueue(&{outvar.cppname}[i], {model.config.get_project_name()}, {input_vars});\n'
+                newline += indent + '}\n'
+            elif 'hls-fpga-machine-learning insert run' in line:
                 newline = line
-
-                input_vars = ','.join([i.cppname for i in model.get_input_variables()])
-                output_vars = ','.join([o.cppname for o in model.get_output_variables()])
-
-                newline += indent + 'std::fill_n({}, {}, 0.);\n'.format(inp.cppname+'[i].data', inp.size_cpp())
-
-                top_level = indent + 'ihc_hls_enqueue(&{}, {}, {});\n'.format(output_vars+'[i]', model.config.get_project_name(), input_vars+'[i]')
-                newline += top_level
-                newline += '    ' + '}\n'
                 newline += '    ' + 'ihc_hls_component_run_all({});\n'.format(model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert predictions' in line:
                 newline = line
-                for out in model.get_output_variables():
-                    newline += indent + 'for(int i = 0; i < {}; i++) {{\n'.format(out.size_cpp())
-                    newline += indent + '  std::cout << pr[j][i] << " ";\n'
-                    newline += indent + '}\n'
-                    newline += indent + 'std::cout << std::endl;\n'
+                newline += indent + 'for(int i = 0; i < {}; i++) {{\n'.format(outvar.size_cpp())
+                newline += indent + '  std::cout << predictions[j][i] << " ";\n'
+                newline += indent + '}\n'
+                newline += indent + 'std::cout << std::endl;\n'
             elif '//hls-fpga-machine-learning insert tb-output' in line:
                 newline = line
-                for out in model.get_output_variables():
-                    newline += indent + 'for(int i = 0; i < {}; i++) {{\n'.format(out.size_cpp())
-                    newline += indent + '  fout << {}[j].data[i] << " ";\n'.format(out.cppname)
-                    newline += indent + '}\n'
-                    newline += indent + 'fout << std::endl;\n'
+                newline += indent + 'for(int i = 0; i < {}; i++) {{\n'.format(outvar.size_cpp())
+                newline += indent + '  fout << {}[j].data[i] << " ";\n'.format(outvar.cppname)
+                newline += indent + '}\n'
+                newline += indent + 'fout << std::endl;\n'
             elif '//hls-fpga-machine-learning insert output' in line or '//hls-fpga-machine-learning insert quantized' in line:
                 newline = line
-                for out in model.get_output_variables():
-                    newline += indent + 'for(int i = 0; i < {}; i++) {{\n'.format(out.size_cpp())
-                    newline += indent + '  std::cout << {}[j].data[i] << " ";\n'.format(out.cppname)
-                    newline += indent + '}\n'
-                    newline += indent + 'std::cout << std::endl;\n'
+                newline += indent + 'for(int i = 0; i < {}; i++) {{\n'.format(outvar.size_cpp())
+                newline += indent + '  std::cout << {}[j].data[i] << " ";\n'.format(outvar.cppname)
+                newline += indent + '}\n'
+                newline += indent + 'std::cout << std::endl;\n'
             else:
                 newline = line
             fout.write(newline)

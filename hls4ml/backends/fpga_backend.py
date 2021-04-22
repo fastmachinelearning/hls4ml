@@ -139,18 +139,23 @@ class FPGABackend(Backend):
         Convert a precision string (e.g. "ac_fixed<16,6>" to the internal FixedPrecisionTypes etc)
         '''
         bits = re.search('.+<(.+?)>', precision).group(1).split(',')
+        signed = True  # default is signed
         sat_mode = None
         round_mode = None
         if 'fixed' in precision:
             W = int(bits[0])
             I = int(bits[1])
-            signed = bool(bits[2])
-            fields = 3
+            fields = 2
+            if len(bits) > 2:
+                signed = bool(bits[2])
+                fields = 3
         elif 'int' in precision:
             W = int(bits[0])
             I = W
-            signed = bool(bits[1])
-            fields = 2
+            fields = 1
+            if len(bits) > 1:
+                signed = bool(bits[1])
+                fields = 2
         if len(bits) > fields:
             sat_mode = bits[fields]
         if len(bits) > fields+1:
