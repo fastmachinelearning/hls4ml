@@ -111,7 +111,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#subpackages">Subpackages</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.converters.keras_to_hls">hls4ml.converters.keras_to_hls module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.converters.onnx_to_hls">hls4ml.converters.onnx_to_hls module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hls4ml-converters-onnx-to-hls-module">hls4ml.converters.onnx_to_hls module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hls4ml-converters-pytorch-to-hls-module">hls4ml.converters.pytorch_to_hls module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hls4ml-converters-tf-to-hls-module">hls4ml.converters.tf_to_hls module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.converters">Module contents</a></li>
@@ -298,54 +298,8 @@
 <dd></dd></dl>
 
 </div>
-<div class="section" id="module-hls4ml.converters.onnx_to_hls">
-<span id="hls4ml-converters-onnx-to-hls-module"></span><h2>hls4ml.converters.onnx_to_hls module<a class="headerlink" href="#module-hls4ml.converters.onnx_to_hls" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="hls4ml.converters.onnx_to_hls.ONNXDataReader">
-<em class="property">class </em><code class="sig-prename descclassname">hls4ml.converters.onnx_to_hls.</code><code class="sig-name descname">ONNXDataReader</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.ONNXDataReader" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="method">
-<dt id="hls4ml.converters.onnx_to_hls.ONNXDataReader.add_input">
-<code class="sig-name descname">add_input</code><span class="sig-paren">(</span><em class="sig-param">layer_name</em>, <em class="sig-param">inputs</em>, <em class="sig-param">transpose=True</em>, <em class="sig-param">perm=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.ONNXDataReader.add_input" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="hls4ml.converters.onnx_to_hls.ONNXDataReader.get_weights_data">
-<code class="sig-name descname">get_weights_data</code><span class="sig-paren">(</span><em class="sig-param">layer_name</em>, <em class="sig-param">var_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.ONNXDataReader.get_weights_data" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="hls4ml.converters.onnx_to_hls.compute_pads_1d">
-<code class="sig-prename descclassname">hls4ml.converters.onnx_to_hls.</code><code class="sig-name descname">compute_pads_1d</code><span class="sig-paren">(</span><em class="sig-param">operation</em>, <em class="sig-param">layer</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.compute_pads_1d" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="hls4ml.converters.onnx_to_hls.compute_pads_2d">
-<code class="sig-prename descclassname">hls4ml.converters.onnx_to_hls.</code><code class="sig-name descname">compute_pads_2d</code><span class="sig-paren">(</span><em class="sig-param">operation</em>, <em class="sig-param">layer</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.compute_pads_2d" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="hls4ml.converters.onnx_to_hls.get_input_shape">
-<code class="sig-prename descclassname">hls4ml.converters.onnx_to_hls.</code><code class="sig-name descname">get_input_shape</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">operation</em>, <em class="sig-param">input_idx=0</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.get_input_shape" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="hls4ml.converters.onnx_to_hls.get_onnx_attribute">
-<code class="sig-prename descclassname">hls4ml.converters.onnx_to_hls.</code><code class="sig-name descname">get_onnx_attribute</code><span class="sig-paren">(</span><em class="sig-param">operation</em>, <em class="sig-param">name</em>, <em class="sig-param">default=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.get_onnx_attribute" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="hls4ml.converters.onnx_to_hls.onnx_to_hls">
-<code class="sig-prename descclassname">hls4ml.converters.onnx_to_hls.</code><code class="sig-name descname">onnx_to_hls</code><span class="sig-paren">(</span><em class="sig-param">yamlConfig</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.onnx_to_hls" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="hls4ml.converters.onnx_to_hls.sanitize_layer_name">
-<code class="sig-prename descclassname">hls4ml.converters.onnx_to_hls.</code><code class="sig-name descname">sanitize_layer_name</code><span class="sig-paren">(</span><em class="sig-param">layer</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.onnx_to_hls.sanitize_layer_name" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<div class="section" id="hls4ml-converters-onnx-to-hls-module">
+<h2>hls4ml.converters.onnx_to_hls module<a class="headerlink" href="#hls4ml-converters-onnx-to-hls-module" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="hls4ml-converters-pytorch-to-hls-module">
 <h2>hls4ml.converters.pytorch_to_hls module<a class="headerlink" href="#hls4ml-converters-pytorch-to-hls-module" title="Permalink to this headline">¶</a></h2>

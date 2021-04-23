@@ -1293,6 +1293,11 @@ to the inputs of the next node</p></li>
 <dd></dd></dl>
 
 <dl class="function">
+<dt id="hls4ml.model.profiling.activations_hlsmodel">
+<code class="sig-prename descclassname">hls4ml.model.profiling.</code><code class="sig-name descname">activations_hlsmodel</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">X</em>, <em class="sig-param">fmt='summary'</em>, <em class="sig-param">plot='boxplot'</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.profiling.activations_hlsmodel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="hls4ml.model.profiling.activations_keras">
 <code class="sig-prename descclassname">hls4ml.model.profiling.</code><code class="sig-name descname">activations_keras</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">X</em>, <em class="sig-param">fmt='longform'</em>, <em class="sig-param">plot='boxplot'</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.profiling.activations_keras" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1348,6 +1353,11 @@ between two output vectors</p></li>
 </dd></dl>
 
 <dl class="function">
+<dt id="hls4ml.model.profiling.get_unoptimized_hlsmodel">
+<code class="sig-prename descclassname">hls4ml.model.profiling.</code><code class="sig-name descname">get_unoptimized_hlsmodel</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.profiling.get_unoptimized_hlsmodel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="hls4ml.model.profiling.get_ymodel_keras">
 <code class="sig-prename descclassname">hls4ml.model.profiling.</code><code class="sig-name descname">get_ymodel_keras</code><span class="sig-paren">(</span><em class="sig-param">keras_model</em>, <em class="sig-param">X</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.profiling.get_ymodel_keras" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate each layer’s ouput and put them into a dictionary</p>
@@ -1390,8 +1400,11 @@ Options are: ‘boxplot’ (default), ‘violinplot’, ‘histogram’,
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The pair of produced figures. First weights and biases,
-then activations</p>
+<dd class="field-even"><p>The quadruple of produced figures. First weights and biases
+for the pre- and post-optimization models respectively,
+then activations for the pre- and post-optimization models
+respectively. (Optimizations are applied to an HLSModel by hls4ml,
+a post-optimization HLSModel is a final model)</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>tuple</p>
