@@ -3,8 +3,10 @@ import numpy as np
 import h5py
 import json
 import math
+import tensorflow.keras as keras
 from hls4ml.model.profiling import activations_keras, weights_keras
 from hls4ml.model.hls_layers import layer_map
+from hls4ml.templates import VivadoBackend
 from collections import OrderedDict
 
 QKERAS_DATA_TYPE_PREFIX = '***'
@@ -67,6 +69,69 @@ def _get_precision_from_quantizer(quantizer, auto_precision_on=False):
         return prefix + 'ap_fixed<{},{}>'.format(bits, integer)
     else:
         return prefix + 'ap_int<{}>'.format(bits)
+
+
+def set_accum_from_keras_model(config, model):
+    if 'LayerName' not in config:
+        raise RuntimeError("The granularity of the supplied config is not 'name'.")
+
+    def find_optimal_a_b(max_val, min_val):
+        max_bits = 64
+
+        for a in range(1, max_bits + 1):
+            for b in range(0, a + 1):
+                max_possible = 2 ** b - 2 ** (b - a)
+                min_possible = 2 ** (b - a)
+
+                if min_possible <= min_val and max_possible >= max_val:
+                    return a + 1, b + 1
+
+        return None, None
+
+    for i, layer in enumerate(model.layers):
+        name = layer.name
+
+        if name not in config['LayerName']:
+            print(f"accum_t profiling: {name} not present in config['LayerName'], ignoring.")
+            continue
+
+        if 'accum' not in config['LayerName'][name]['Precision']:
+            continue
+
+        if not isinstance(layer, keras.layers.Dense):
+            print(f"accum_t profiling: {name} is not a Dense layer, ignoring as only Dense layers are currently "
+                  "supported. You can use set_data_types_from_keras_model() instead.")
+            continue
+
+        type_w = VivadoBackend.convert_precision_string(None, config['LayerName'][name]['Precision']['weight'])
+        type_b = VivadoBackend.convert_precision_string(None, config['LayerName'][name]['Precision']['bias'])
+
+        if i == 0:
+            previous_layer_config = config['LayerName'][name + '_input']
+        else:
+            previous_layer_config = config['LayerName'][model.layers[i - 1].name]
+
+        if isinstance(previous_layer_config['Precision'], dict):
+            type_i = VivadoBackend.convert_precision_string(None, previous_layer_config['Precision']['result'])
+        else:
+            type_i = VivadoBackend.convert_precision_string(None, previous_layer_config['Precision'])
+
+        # Assuming that all of type_w, type_b and type_i are FixedPrecisionType objects.
+        n = layer.output_shape[1]
+        max_w = 2 ** (type_w.integer - 1) - 2 ** (type_w.integer - type_w.width)
+        max_i = 2 ** (type_i.integer - 1) - 2 ** (type_i.integer - type_i.width)
+        max_b = 2 ** (type_b.integer - 1) - 2 ** (type_b.integer - type_b.width)
+        min_b = 2 ** (type_b.integer - type_b.width)
+
+        max_val = n * max_w * max_i + max_b
+        min_val = min_b
+
+        a, b = find_optimal_a_b(max_val, min_val)
+
+        if a is None or b is None:
+            raise RuntimeError(f"Could not find an optimal accum_t type for {name}.")
+
+        config['LayerName'][name]['Precision']['accum'] = f'ap_fixed<{a},{b}>'
 
 
 def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, best_type_algorithm=None):
