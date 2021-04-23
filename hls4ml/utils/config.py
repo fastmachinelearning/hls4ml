@@ -72,6 +72,30 @@ def _get_precision_from_quantizer(quantizer, auto_precision_on=False):
 
 
 def set_accum_from_keras_model(config, model):
+    """Adjust accum_t of relevant layers in a given HLSModel configuration based on both a Keras model and data types
+    set in the configuration.
+
+    The function aims for setting accum_t in applicable layers in a way that no overflow is possible during machine
+    learning inference and the minimum non-zero possible value of an accumulator during calculations is covered. The
+    maximum bit width (excluding the sign bit) of a resultant value of accum_t is 64.
+
+    Similarly to set_data_types_from_keras_model(), set_accum_from_keras_model() works in a heuristic way. Therefore,
+    the optimal result is not guaranteed and post-tuning may be required in order to achieve the best outcome.
+
+    Contrary to set_data_types_from_keras_model(), set_accum_from_keras_model() does not use profiling information.
+    Instead, for each applicable layer, it uses data types set in the HLSModel config along with information about the
+    layer shape.
+
+    The function supports Dense-type layers only. If your model contains other layers with accum_t (e.g. convolutional
+    layers), consider using set_data_types_from_keras_model() instead.
+
+    Args:
+        config (dict): HLSModel configuration dictionary to be updated. Its granularity must be 'name'.
+        model: Keras model to be used for adjusting accum_t in relevant layers.
+
+    Returns:
+        None. The function makes changes directly to the supplied config.
+    """
     if 'LayerName' not in config:
         raise RuntimeError("The granularity of the supplied config is not 'name'.")
 
