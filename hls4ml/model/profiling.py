@@ -10,7 +10,6 @@ import shutil
 from collections import defaultdict
 
 from hls4ml.model.hls_model import HLSModel
-from hls4ml.converters import convert_from_config
 
 try:
     from tensorflow import keras
@@ -27,6 +26,8 @@ except ImportError:
 
 
 def get_unoptimized_hlsmodel(model):
+    from hls4ml.converters import convert_from_config
+
     new_config = model.config.config.copy()
     new_output_dir = uuid.uuid4().hex
 
