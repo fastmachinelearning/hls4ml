@@ -350,6 +350,10 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
 
     def make_layer_config(layer):
         layer_config = {}
+        layer_type = layer_map[layer['class_name']].__name__
+
+        hls_layers_accum = ['Dense', 'Conv1D', 'Conv2D']
+
         layer_config['LayerType'] = layer_map[layer['class_name']].__name__
 
         if layer['class_name'] in dense_layers + conv_layers:
@@ -357,6 +361,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             layer_config['Precision']['weight'] = default_precision
             layer_config['Precision']['bias'] = default_precision
             layer_config['Precision']['result'] = default_precision
+            layer_config['Precision']['accum'] = default_precision
             layer_config['ReuseFactor'] = default_reuse_factor
 
         elif layer['class_name'] in activation_layers:
@@ -385,6 +390,9 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
                 layer_config['Precision'] = {}
                 for name, precision in layer['precision'].items():
                     layer_config['Precision'][name] = precision
+
+                if layer_type in hls_layers_accum:
+                    layer_config['Precision']['accum'] = default_precision
             else:
                 print('WARNING: Found no precision information in QKeras layer {} ({})'.format(layer['name'], layer['class_name']))
                 layer_config['Precision'] = default_precision
