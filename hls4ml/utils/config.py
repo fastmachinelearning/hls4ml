@@ -233,7 +233,10 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, b
             a, b = best_type_algorithm(layer_type, max_value, min_value, median, q1, q3, max_bits)
 
             if a is None or b is None:
-                raise RuntimeError("Could not find an optimal data type for " + layer_name + " (output)")
+                if precision_type is not None:
+                    raise RuntimeError(f"Could not find an optimal data type for {layer_name} ({precision_type}).")
+                else:
+                    raise RuntimeError(f"Could not find an optimal data type for {layer_name}.")
 
             data_type = f'ap_fixed<{a},{b}>'
 
