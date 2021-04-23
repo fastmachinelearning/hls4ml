@@ -129,6 +129,52 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, b
         else:
             return None, None
 
+    def get_precision(layer_dict, key):
+        if key is None:
+            return layer_dict['Precision']
+        else:
+            return layer_dict['Precision'][key]
+
+    def set_precision(layer_dict, key, value):
+        if key is None:
+            layer_dict['Precision'] = value
+        else:
+            layer_dict['Precision'][key] = value
+
+    def process_precision_in_dict(layer_dict, stats, precision_type=None, data_type=None):
+        if precision_type is not None and precision_type not in layer_dict['Precision']:
+            return None
+
+        current_data_type = get_precision(layer_dict, precision_type)
+
+        if current_data_type.startswith(QKERAS_DATA_TYPE_PREFIX):
+            # This data type comes from QKeras, so don't change it (just remove the flag)
+            set_precision(layer_dict, precision_type, current_data_type[len(QKERAS_DATA_TYPE_PREFIX):])
+            return None
+
+        if data_type is None:
+            min_value = stats['whislo']
+            max_value = stats['whishi']
+            median = stats['med']
+            q1 = stats['q1']
+            q3 = stats['q3']
+
+            if 'LayerType' in config['LayerName'][layer_name]:
+                layer_type = config['LayerName'][layer_name]['LayerType']
+            else:
+                raise RuntimeError(f"config['LayerName']['{layer_name}'] doesn't have the LayerType key. "
+                                    "Make sure that the config has been made by config_from_keras_model().")
+
+            a, b = best_type_algorithm(layer_type, max_value, min_value, median, q1, q3, max_bits)
+
+            if a is None or b is None:
+                raise RuntimeError("Could not find an optimal data type for " + layer_name + " (output)")
+
+            data_type = f'ap_fixed<{a},{b}>'
+
+        set_precision(layer_dict, precision_type, data_type)
+        return data_type
+
     if best_type_algorithm is None:
         best_type_algorithm = find_optimal_a_b
 
@@ -152,34 +198,7 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, b
         if suffix not in suffix_map or suffix_map[suffix] not in config['LayerName'][layer_name]['Precision']:
             continue
 
-        current_data_type = config['LayerName'][layer_name]['Precision'][suffix_map[suffix]]
-
-        if current_data_type.startswith(QKERAS_DATA_TYPE_PREFIX):
-            # This data type comes from QKeras, so don't change it (just remove the flag)
-            config['LayerName'][layer_name]['Precision'][suffix_map[suffix]] = \
-                current_data_type[len(QKERAS_DATA_TYPE_PREFIX):]
-            continue
-
-        min_value = weight_info['whislo']
-        max_value = weight_info['whishi']
-        median = weight_info['med']
-        q1 = weight_info['q1']
-        q3 = weight_info['q3']
-
-        if 'LayerType' in config['LayerName'][layer_name]:
-            layer_type = config['LayerName'][layer_name]['LayerType']
-        else:
-            raise RuntimeError(f"config['LayerName']['{layer_name}'] doesn't have the LayerType key. "
-                               "Make sure that the config has been made by config_from_keras_model().")
-
-        a, b = best_type_algorithm(layer_type, max_value, min_value, median, q1, q3, max_bits)
-
-        if a is None or b is None:
-            raise RuntimeError("Could not find an optimal data type for " + layer_name + "/" + suffix)
-
-        data_type = f'ap_fixed<{a},{b}>'
-
-        config['LayerName'][layer_name]['Precision'][suffix_map[suffix]] = data_type
+        process_precision_in_dict(config['LayerName'][layer_name], weight_info, suffix_map[suffix])
 
     if test_inputs is not None:
         activation_data = activations_keras(model, test_inputs, fmt='summary', plot='boxplot')
@@ -191,51 +210,18 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, b
                 print(f"Activation profiling: {layer_name} not present in config['LayerName'], ignoring.")
                 continue
 
-            has_dict = isinstance(config['LayerName'][layer_name]['Precision'], dict)
+            data_type = None
 
-            if has_dict:
-                if 'result' in config['LayerName'][layer_name]['Precision']:
-                    current_data_type = config['LayerName'][layer_name]['Precision']['result']
-                else:
-                    continue
+            if isinstance(config['LayerName'][layer_name]['Precision'], dict):
+                data_type = process_precision_in_dict(config['LayerName'][layer_name], activation_info,
+                                                      'result', data_type)
+                data_type = process_precision_in_dict(config['LayerName'][layer_name], activation_info,
+                                                      'accum', data_type)
             else:
-                current_data_type = config['LayerName'][layer_name]['Precision']
+                data_type = process_precision_in_dict(config['LayerName'][layer_name], activation_info,
+                                                      data_type=data_type)
 
-            if current_data_type.startswith(QKERAS_DATA_TYPE_PREFIX):
-                # This data type comes from QKeras, so don't change it (just remove the flag)
-                if has_dict:
-                    config['LayerName'][layer_name]['Precision']['result'] = \
-                        current_data_type[len(QKERAS_DATA_TYPE_PREFIX):]
-                else:
-                    config['LayerName'][layer_name]['Precision'] = \
-                        current_data_type[len(QKERAS_DATA_TYPE_PREFIX):]
-                continue
-
-            min_value = activation_info['whislo']
-            max_value = activation_info['whishi']
-            median = activation_info['med']
-            q1 = activation_info['q1']
-            q3 = activation_info['q3']
-
-            if 'LayerType' in config['LayerName'][layer_name]:
-                layer_type = config['LayerName'][layer_name]['LayerType']
-            else:
-                raise RuntimeError(f"config['LayerName']['{layer_name}'] doesn't have the LayerType key. "
-                                   "Make sure that the config has been made by config_from_keras_model().")
-
-            a, b = best_type_algorithm(layer_type, max_value, min_value, median, q1, q3, max_bits)
-
-            if a is None or b is None:
-                raise RuntimeError("Could not find an optimal data type for " + layer_name + " (output)")
-
-            data_type = f'ap_fixed<{a},{b}>'
-
-            if has_dict:
-                config['LayerName'][layer_name]['Precision']['result'] = data_type
-            else:
-                config['LayerName'][layer_name]['Precision'] = data_type
-
-            if layer_name + '_linear' in config['LayerName']:
+            if data_type is not None and layer_name + '_linear' in config['LayerName']:
                 config['LayerName'][layer_name + '_linear']['Precision'] = data_type
 
 
@@ -404,7 +390,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
 
         else:
             layer_config['Precision'] = default_precision
-        
+
         return layer_config
 
     config = {}
