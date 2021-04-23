@@ -338,6 +338,14 @@ const config{index}::sublayer_t<{il}>::output_transform_biases_t (&config{index}
 
 garnet_stack_config_template = (garnet_stack_base_config_template, garnet_stack_sublayer_config_template)
 
+distance_config_template = """struct config{index} : nnet::distance_config {{
+    static const unsigned n_in = {n_in};
+    static const unsigned n_out = 1;
+    typedef {accum_t} accum_t;
+    typedef {sum_t} sum_t;
+    typedef {exp_table_t} exp_table_t;
+    static const unsigned table_size = {table_size};
+}};\n"""
 
 
 dense_function_template = 'nnet::dense<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
@@ -360,6 +368,7 @@ resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input
 transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}, {output});'
 garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
 garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
+distance_function_template = 'nnet::{distance}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
 
 dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_stream.h']
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
@@ -374,6 +383,7 @@ merge_include_list = ['nnet_utils/nnet_merge.h', 'nnet_utils/nnet_merge_stream.h
 resize_include_list = ['nnet_utils/nnet_image.h', 'nnet_utils/nnet_image_stream.h']
 transpose_include_list = ['nnet_utils/nnet_array.h']
 garnet_include_list = ['nnet_utils/nnet_garnet.h']
+distance_include_list = ['nnet_utils/nnet_distance.h']
 
 class VivadoBackend(Backend):
     def __init__(self):
@@ -403,7 +413,8 @@ class VivadoBackend(Backend):
         self.register_templates('Resize'                 , resize_function_template,      resize_config_template, resize_include_list)
         self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template, transpose_include_list)
         self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
-        self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)        
+        self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)
+        self.register_templates('KLLoss'                 , distance_function_template    , distance_config_template, distance_include_list)
     
     def get_valid_reuse_factors(self, layer):
         n_in = 0
