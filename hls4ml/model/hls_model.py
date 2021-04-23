@@ -115,6 +115,10 @@ class HLSConfig(object):
 
         return (precision, type_name)
 
+    def get_bram_size(self, layer):
+        bf = self.model_bf
+        return bf
+
     def get_reuse_factor(self, layer):
         rf = self.layer_name_rf.get(layer.name.lower())
         if rf is None:
@@ -184,6 +188,7 @@ class HLSConfig(object):
                 else:
                     self.model_precision['default'] = precision_cfg # Default precision for everything
 
+            self.model_bf = model_cfg.get('BramFactor') # Weight threshold to be external BRAM
             self.model_rf = model_cfg.get('ReuseFactor')
             self.model_tclk = model_cfg.get('TargetLatency')
             self.model_strategy = model_cfg.get('Strategy', 'Latency')
@@ -282,6 +287,10 @@ class HLSModel(object):
         self.index = 0
         self.graph = OrderedDict()
         self.output_vars = {}
+
+        # External BRAM 
+        self.brams   = []
+        self.bram_vars = {}
 
         self._top_function_lib = None
 
@@ -448,6 +457,16 @@ class HLSModel(object):
         variables = []
         for inp in self.inputs:
             variables.append(self.graph[inp].get_output_variable())
+        return variables
+
+    def register_bram_variable(self, out_name, variable):
+        self.brams.append(out_name)
+        self.bram_vars[out_name] = variable
+
+    def get_bram_variables(self):
+        variables = []
+        for bram in self.brams:
+            variables.append(self.bram_vars[bram])
         return variables
 
     def register_output_variable(self, out_name, variable):
