@@ -379,7 +379,7 @@ class Layer(object):
         self.set_attr('accum_t', accum_t.precision)
 
         self.reuse_factor = self.model.config.get_reuse_factor(self)
-        self.parallelization_factor = self.model.config.get_config_value('ParallelizationFactor')
+        self.parallelization_factor = self.model.config.get_layer_config_value(self, 'ParallelizationFactor')
         if self.parallelization_factor is None:
             self.parallelization_factor = self.reuse_factor
 
