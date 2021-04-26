@@ -18,6 +18,8 @@ void zeropad1d_cf(
     data_T data[CONFIG_T::n_chan * CONFIG_T::in_width],
     data_T res[CONFIG_T::n_chan * CONFIG_T::out_width]
 ) {
+    #pragma HLS PIPELINE
+
     for(int j = 0; j < CONFIG_T::n_chan; j++) {
         for (int i = 0; i < CONFIG_T::pad_left; i++) {
             *(res++) = 0;
@@ -38,6 +40,8 @@ void zeropad1d_cl(
     data_T data[CONFIG_T::n_chan * CONFIG_T::in_width],
     res_T res[CONFIG_T::n_chan * CONFIG_T::out_width]
 ) {
+    #pragma HLS PIPELINE
+
     for (int i = 0; i < CONFIG_T::pad_left; i++) {
         for(int j = 0; j < CONFIG_T::n_chan; j++) {
             *(res++) = 0;
@@ -75,6 +79,8 @@ void zeropad2d_cf(
     data_T data[CONFIG_T::n_chan * CONFIG_T::in_height * CONFIG_T::in_width],
     data_T res[CONFIG_T::n_chan * CONFIG_T::out_height * CONFIG_T::out_width]
 ) {
+    #pragma HLS PIPELINE
+
     for(int k = 0; k < CONFIG_T::n_chan; k++) {
 
         for (int i = 0; i < CONFIG_T::pad_top; i++) {
@@ -108,6 +114,8 @@ void zeropad2d_cl(
     data_T data[CONFIG_T::n_chan * CONFIG_T::in_height * CONFIG_T::in_width],
     res_T res[CONFIG_T::n_chan * CONFIG_T::out_height * CONFIG_T::out_width]
 ) {
+    #pragma HLS PIPELINE
+
     for (int i = 0; i < CONFIG_T::pad_top; i++) {
         for (int j = 0; j < CONFIG_T::out_width; j++) {
             for(int k = 0; k < CONFIG_T::n_chan; k++) {
