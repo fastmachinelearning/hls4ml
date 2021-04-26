@@ -5,7 +5,7 @@ import json
 import math
 import tensorflow.keras as keras
 from hls4ml.model.profiling import activations_keras, weights_keras
-from hls4ml.model.hls_layers import layer_map
+from hls4ml.model.hls_layers import layer_map, FixedPrecisionType, IntegerPrecisionType
 from hls4ml.templates import VivadoBackend
 from collections import OrderedDict
 
