@@ -86,8 +86,8 @@ def set_accum_from_keras_model(config, model):
     Instead, for each applicable layer, it uses data types set in the HLSModel config along with information about the
     layer shape.
 
-    The function supports Dense-type layers only. If your model contains other layers with accum_t (e.g. convolutional
-    layers), consider using set_data_types_from_keras_model() instead.
+    The function supports Dense- and Conv-type layers only. If your model contains other layers with accum_t, consider
+    using set_data_types_from_keras_model() instead.
 
     Args:
         config (dict): HLSModel configuration dictionary to be updated. Its granularity must be 'name'.
@@ -112,6 +112,18 @@ def set_accum_from_keras_model(config, model):
 
         return None, None
 
+    def get_max_min(hls_type):
+        if isinstance(hls_type, FixedPrecisionType) or isinstance(hls_type, IntegerPrecisionType):
+            if hls_type.signed:
+                subtract = 1
+            else:
+                subtract = 0
+
+            return 2 ** (hls_type.integer - subtract) - 2 ** (hls_type.integer - hls_type.width), \
+                2 ** (hls_type.integer - hls_type.width)
+        else:
+            raise RuntimeError(f"Unexpected type: {hls_type}")
+
     for i, layer in enumerate(model.layers):
         name = layer.name
 
@@ -122,9 +134,13 @@ def set_accum_from_keras_model(config, model):
         if 'accum' not in config['LayerName'][name]['Precision']:
             continue
 
-        if not isinstance(layer, keras.layers.Dense):
-            print(f"accum_t profiling: {name} is not a Dense layer, ignoring as only Dense layers are currently "
-                  "supported. You can use set_data_types_from_keras_model() instead.")
+        if isinstance(layer, keras.layers.Dense):
+            n = layer.output_shape[1]
+        elif isinstance(layer, keras.layers.Conv1D) or isinstance(layer, keras.layers.Conv2D):
+            n = layer.input_shape[-1]
+        else:
+            print(f"accum_t profiling: {name} is not a supported layer, ignoring. "
+                  "You can use set_data_types_from_keras_model() instead.")
             continue
 
         type_w = VivadoBackend.convert_precision_string(None, config['LayerName'][name]['Precision']['weight'])
@@ -140,15 +156,16 @@ def set_accum_from_keras_model(config, model):
         else:
             type_i = VivadoBackend.convert_precision_string(None, previous_layer_config['Precision'])
 
-        # Assuming that all of type_w, type_b and type_i are FixedPrecisionType objects.
-        n = layer.output_shape[1]
-        max_w = 2 ** (type_w.integer - 1) - 2 ** (type_w.integer - type_w.width)
-        max_i = 2 ** (type_i.integer - 1) - 2 ** (type_i.integer - type_i.width)
-        max_b = 2 ** (type_b.integer - 1) - 2 ** (type_b.integer - type_b.width)
-        min_b = 2 ** (type_b.integer - type_b.width)
+        max_w, min_w = get_max_min(type_w)
+        max_i, min_i = get_max_min(type_i)
 
-        max_val = n * max_w * max_i + max_b
-        min_val = min_b
+        if layer.use_bias:
+            max_b, min_b = get_max_min(type_b)
+            max_val = n * max_w * max_i + max_b
+            min_val = min(min_b, min_w * min_i)
+        else:
+            max_val = n * max_w * max_i
+            min_val = min_w * min_i
 
         a, b = find_optimal_a_b(max_val, min_val)
 
