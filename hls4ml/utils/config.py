@@ -86,8 +86,14 @@ def set_accum_from_keras_model(config, model):
     Instead, for each applicable layer, it uses data types set in the HLSModel config along with information about the
     layer shape.
 
-    The function supports Dense- and Conv-type layers only. If your model contains other layers with accum_t, consider
-    using set_data_types_from_keras_model() instead.
+    The function supports the following layers only:
+    * Dense + its subclasses
+    * Conv1D, Conv2D + their subclasses
+    * AveragePooling1D, AveragePooling2D + their subclasses
+
+    If your model contains other layers with accum_t, consider using set_data_types_from_keras_model(). QKeras
+    equivalents of layers from the above list should count as their subclasses and therefore be supported by this
+    function.
 
     Args:
         config (dict): HLSModel configuration dictionary to be updated. Its granularity must be 'name'.
@@ -131,21 +137,6 @@ def set_accum_from_keras_model(config, model):
             print(f"accum_t profiling: {name} not present in config['LayerName'], ignoring.")
             continue
 
-        if 'accum' not in config['LayerName'][name]['Precision']:
-            continue
-
-        if isinstance(layer, keras.layers.Dense):
-            n = layer.output_shape[1]
-        elif isinstance(layer, keras.layers.Conv1D) or isinstance(layer, keras.layers.Conv2D):
-            n = layer.input_shape[-1]
-        else:
-            print(f"accum_t profiling: {name} is not a supported layer, ignoring. "
-                  "You can use set_data_types_from_keras_model() instead.")
-            continue
-
-        type_w = VivadoBackend.convert_precision_string(None, config['LayerName'][name]['Precision']['weight'])
-        type_b = VivadoBackend.convert_precision_string(None, config['LayerName'][name]['Precision']['bias'])
-
         if i == 0:
             previous_layer_config = config['LayerName'][name + '_input']
         else:
@@ -160,23 +151,50 @@ def set_accum_from_keras_model(config, model):
         else:
             type_i = VivadoBackend.convert_precision_string(None, previous_layer_config['Precision'])
 
-        max_w, min_w = get_max_min(type_w)
         max_i, min_i = get_max_min(type_i)
 
-        if layer.use_bias:
-            max_b, min_b = get_max_min(type_b)
-            max_val = n * max_w * max_i + max_b
-            min_val = min(min_b, min_w * min_i)
+        if isinstance(layer, keras.layers.AveragePooling1D):
+            max_val = layer.pool_size * max_i
+            min_val = min_i
+        elif isinstance(layer, keras.layers.AveragePooling2D):
+            if isinstance(layer.pool_size, int):
+                max_val = layer.pool_size * layer.pool_size * max_i
+            else:
+                max_val = layer.pool_size[0] * layer.pool_size[1] * max_i
+
+            min_val = min_i
         else:
-            max_val = n * max_w * max_i
-            min_val = min_w * min_i
+            if isinstance(layer, keras.layers.Dense):
+                n = layer.output_shape[1]
+            elif isinstance(layer, keras.layers.Conv1D) or isinstance(layer, keras.layers.Conv2D):
+                n = layer.input_shape[-1]
+            else:
+                print(f"accum_t profiling: {name} is not a supported layer, ignoring. "
+                      "You can use set_data_types_from_keras_model() instead.")
+                continue
+
+            type_w = VivadoBackend.convert_precision_string(None, config['LayerName'][name]['Precision']['weight'])
+            max_w, min_w = get_max_min(type_w)
+
+            if layer.use_bias:
+                type_b = VivadoBackend.convert_precision_string(None, config['LayerName'][name]['Precision']['bias'])
+                max_b, min_b = get_max_min(type_b)
+
+                max_val = n * max_w * max_i + max_b
+                min_val = min(min_b, min_w * min_i)
+            else:
+                max_val = n * max_w * max_i
+                min_val = min_w * min_i
 
         a, b = find_optimal_a_b(max_val, min_val)
 
         if a is None or b is None:
             raise RuntimeError(f"Could not find an optimal accum_t type for {name}.")
 
-        config['LayerName'][name]['Precision']['accum'] = f'ap_fixed<{a},{b}>'
+        if isinstance(config['LayerName'][name]['Precision'], dict):
+            config['LayerName'][name]['Precision']['accum'] = f'ap_fixed<{a},{b}>'
+        else:
+            config['LayerName'][name]['accum_t'] = f'ap_fixed<{a},{b}>'
 
 
 def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, best_type_algorithm=None):
