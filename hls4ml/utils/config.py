@@ -149,7 +149,11 @@ def set_accum_from_keras_model(config, model):
         if i == 0:
             previous_layer_config = config['LayerName'][name + '_input']
         else:
-            previous_layer_config = config['LayerName'][model.layers[i - 1].name]
+            index = i - 1
+            while index >= 0 and model.layers[index].name not in config['LayerName']:
+                index -= 1
+
+            previous_layer_config = config['LayerName'][model.layers[index].name]
 
         if isinstance(previous_layer_config['Precision'], dict):
             type_i = VivadoBackend.convert_precision_string(None, previous_layer_config['Precision']['result'])
