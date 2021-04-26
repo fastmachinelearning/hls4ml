@@ -191,7 +191,7 @@ class VivadoWriter(Writer):
                     # TODO discussed adding a handle for setting the interface mode for individual input and output arrays (16.03.2020)
                     # Probably the handle doesn't need to be exposed to the user but should be just set in hls_model.py
                     newline += indent + '#pragma HLS INTERFACE ap_vld port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
-                    if model.config.model_strategy == 'Resource':
+                    if model.config.model_strategy.lower() == 'resource':
                         newline += indent + '#pragma HLS DATAFLOW \n'
                     else:
                         newline += indent + '#pragma HLS PIPELINE \n'
@@ -218,7 +218,7 @@ class VivadoWriter(Writer):
                                 newline += '    ' + def_cpp + ';\n'
                                 if var.pragma:
                                     newline += '    ' + self._make_array_pragma(var) + '\n'
-                                if model.config.model_strategy == 'Resource':
+                                if model.config.model_strategy.lower() == 'resource':
                                     newline += '    ' + self._make_stable_pragma(var) + '\n'
                     func = layer.function_cpp()
                     if func:
