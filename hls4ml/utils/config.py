@@ -169,8 +169,7 @@ def set_accum_from_keras_model(config, model):
             elif isinstance(layer, keras.layers.Conv1D) or isinstance(layer, keras.layers.Conv2D):
                 n = layer.input_shape[-1]
             else:
-                print(f"accum_t profiling: {name} is not a supported layer, ignoring. "
-                      "You can use set_data_types_from_keras_model() instead.")
+                print(f"accum_t profiling: {name} is not a supported layer or it doesn't have accum_t, ignoring.")
                 continue
 
             type_w = VivadoBackend.convert_precision_string(None, config['LayerName'][name]['Precision']['weight'])
