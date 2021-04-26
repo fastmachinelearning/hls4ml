@@ -36,31 +36,35 @@ void klloss(
 #else
     static bool initialized = false;
     static typename CONFIG_T::exp_table_t exp_table[CONFIG_T::table_size];
-
 #endif
     if (!initialized) {
         init_exp_table<data2_T, CONFIG_T>(exp_table);
         initialized = true;
     }
-    
+
     typename CONFIG_T::accum_t kl[CONFIG_T::n_in];
     #pragma HLS ARRAY_PARTITION variable=kl complete
-    
+
+    typename CONFIG_T::accum_t mean_sq[CONFIG_T::n_in];
+    #pragma HLS ARRAY_PARTITION variable=mean_sq complete
+
     typename CONFIG_T::sum_t kl_sum(0);
-    
+
+    for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
+        #pragma HLS UNROLL
+    	mean_sq[i] = mean[i] * mean[i];
+    }
+
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         #pragma HLS UNROLL
         unsigned x = softmax_idx_from_real_val<data2_T, CONFIG_T>(log_var[i]);
-        kl[i] = 1.;
-        kl[i] += log_var[i] - mean[i] * mean[i] - exp_table[x];
-        
+        kl[i] = data2_T(1.) + log_var[i] - mean_sq[i] - exp_table[x];
     }
-    
+
     Op_add<typename CONFIG_T::accum_t> op_add;
     kl_sum = reduce<typename CONFIG_T::accum_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::accum_t>>(kl, op_add);
-    
-    res[0] = -0.5;
-    res[0] *= kl_sum;
+
+    res[0] = res_T(-0.5) * kl_sum;
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
