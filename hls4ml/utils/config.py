@@ -395,6 +395,9 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             set_accum_from_keras_model() before returning a generated HLS conversion config and after calling
             set_data_types_from_keras_model(). Note that set_accum_from_keras_model() doesn't use profiling information
             unlike set_data_types_from_keras_model().
+            * 'auto_accum_only': Same as 'default', but infer accumulator data types for applicable layers as well by
+            calling set_accum_from_keras_model() before returning a generated HLS conversion config. This option is
+            not the same as 'auto_accum': it doesn't call set_data_types_from_keras_model() at any point.
         max_bits (int, optional): Maximum bit width (excluding the sign bit) to be fed into
             set_data_types_from_keras_model() if data_type_mode is set to either 'auto' or 'auto_accum'.
             See the docstring for set_data_types_from_keras_model() for more details. The default value for this
@@ -409,13 +412,14 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     Returns:
         [dict]: The created config.
     """
-    if data_type_mode not in ['default', 'flag_qkeras', 'auto', 'auto_accum']:
-        raise Exception('data_type_mode must be one of "default", "flag_qkeras", "auto" or "auto_accum".')
+    if data_type_mode not in ['default', 'flag_qkeras', 'auto', 'auto_accum', 'auto_accum_only']:
+        raise Exception('data_type_mode must be one of "default", "flag_qkeras", "auto", "auto_accum" or '
+                        '"auto_accum_only".')
 
     if granularity.lower() not in ['model', 'type', 'name']:
         raise Exception('Invalid configuration granularity specified, expected "model", "type" or "name" got "{}"'.format(granularity))
 
-    auto_precision = data_type_mode != 'default'
+    auto_precision = data_type_mode in ['flag_qkeras', 'auto', 'auto_accum']
 
     #This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
@@ -599,7 +603,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     if data_type_mode in ['auto', 'auto_accum']:
         set_data_types_from_keras_model(config, model, max_bits=max_bits, test_inputs=test_inputs)
 
-    if data_type_mode == 'auto_accum':
+    if data_type_mode in ['auto_accum', 'auto_accum_only']:
         set_accum_from_keras_model(config, model)
 
     return config
