@@ -21,6 +21,11 @@ try:
 except ImportError:
     __qkeras_optimizers__ = False
 
+if __qkeras_optimizers__:
+    register_pass('output_rounding_saturation_mode', OutputRoundingSaturationMode)
+    register_pass('qkeras_factorize_alpha', QKerasFactorizeAlpha)
+    register_pass('fuse_consecutive_batch_normalization', FuseConsecutiveBatchNormalization) 
+
 register_pass('eliminate_linear_activation', EliminateLinearActivation)
 register_pass('merge_batch_norm_quantized_tanh', MergeBatchNormAndQuantizedTanh)
 register_pass('quantize_dense_output', QuantizeDenseOutput)
@@ -31,9 +36,4 @@ register_pass('conv2d_same_pad', InsertZeroPaddingBeforeConv2D)
 register_pass('optimize_pointwise_conv', OptimizePointwiseConv)
 register_pass('clone_output', CloneOutput)
 register_pass('reshape_stream', ReshapeStream)
-
-if __qkeras_optimizers__:
-    register_pass('output_rounding_saturation_mode', OutputRoundingSaturationMode)
-    register_pass('qkeras_factorize_alpha', QKerasFactorizeAlpha)
-    register_pass('fuse_consecutive_batch_normalization', FuseConsecutiveBatchNormalization) 
 
