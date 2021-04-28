@@ -506,6 +506,8 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
         elif layer['class_name'] in qkeras_layers:
             if 'precision' in layer:
                 layer_config['Precision'] = {}
+                layer_config['Precision']['result'] = default_precision
+
                 for name, precision in layer['precision'].items():
                     layer_config['Precision'][name] = precision
 
