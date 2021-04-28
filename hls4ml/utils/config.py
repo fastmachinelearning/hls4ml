@@ -202,7 +202,8 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, b
     The function aims for setting precision of the layers in the configuration to match the distribution of both
     weights in the model and outputs of the model resulting from the test inputs (if supplied). Data types flagged
     as inferred from QKeras are not adjusted (this happens when the config comes from config_from_keras_model() with
-    data_type_mode set to either 'flag_qkeras', 'auto' or 'auto_accum'), they have the flag removed instead.
+    data_type_mode set to either 'flag_qkeras', 'auto' or 'auto_accum'), they have the flag removed instead. Moreover,
+    accumulator types are set to the same type as output types (when test inputs are provided and where applicable).
 
     set_data_types_from_keras_model() works in a heuristic way and does not account for optimizations that can be
     subsequently made by hls4ml. Therefore, the optimal result is not guaranteed and it might be necessary to do
