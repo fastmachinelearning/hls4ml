@@ -4,7 +4,7 @@ import h5py
 import json
 import math
 import tensorflow.keras as keras
-from hls4ml.model.profiling import activations_keras, weights_keras
+from hls4ml.model.profiling import activations_keras, weights_keras, array_to_summary
 from hls4ml.model.hls_layers import layer_map, FixedPrecisionType, IntegerPrecisionType
 from hls4ml.templates import VivadoBackend
 from collections import OrderedDict
@@ -331,10 +331,16 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, b
         process_precision_in_dict(config['LayerName'][layer_name], weight_info, suffix_map[suffix])
 
     if test_inputs is not None:
+        test_inputs_prof = test_inputs.flatten()
+        test_inputs_prof = abs(test_inputs_prof[test_inputs_prof != 0])
+
+        input_data = array_to_summary(test_inputs_prof)
         activation_data = activations_keras(model, test_inputs, fmt='summary', plot='boxplot')
 
-        for activation_info in activation_data:
-            layer_name = activation_info['weight']
+        input_data['weight'] = activation_data[0]['weight'] + '_input'
+
+        for info in [input_data] + activation_data:
+            layer_name = info['weight']
 
             if layer_name not in config['LayerName']:
                 print(f"Activation profiling: {layer_name} not present in config['LayerName'], ignoring.")
@@ -343,12 +349,12 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, b
             data_type = None
 
             if isinstance(config['LayerName'][layer_name]['Precision'], dict):
-                data_type = process_precision_in_dict(config['LayerName'][layer_name], activation_info,
+                data_type = process_precision_in_dict(config['LayerName'][layer_name], info,
                                                       'result', data_type)
-                data_type = process_precision_in_dict(config['LayerName'][layer_name], activation_info,
+                data_type = process_precision_in_dict(config['LayerName'][layer_name], info,
                                                       'accum', data_type)
             else:
-                data_type = process_precision_in_dict(config['LayerName'][layer_name], activation_info,
+                data_type = process_precision_in_dict(config['LayerName'][layer_name], info,
                                                       data_type=data_type)
 
             if data_type is not None and layer_name + '_linear' in config['LayerName']:
