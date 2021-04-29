@@ -538,6 +538,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             layer_config['Precision'] = {}
             layer_config['Precision']['scale'] = default_precision
             layer_config['Precision']['bias'] = default_precision
+            layer_config['Precision']['result'] = default_precision
             layer_config['ReuseFactor'] = default_reuse_factor
         
         elif layer['class_name'] in qkeras_layers:
