@@ -2,8 +2,10 @@
 #define NNET_POOLING_STREAM_H_
 
 #include "utils/x_hls_utils.h"
+#include "ap_shift_reg.h"
 #include "nnet_common.h"
 #include "nnet_pooling.h"
+#include "nnet_conv_stream.h"
 #include "hls_stream.h"
 
 namespace nnet {
