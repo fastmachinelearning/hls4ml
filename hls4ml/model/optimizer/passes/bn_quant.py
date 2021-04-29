@@ -2,7 +2,7 @@ import numpy as np
 import re
 
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.hls_model import Layer, IntegerPrecisionType, XnorPrecisionType, register_layer
+from hls4ml.model.hls_model import Layer, IntegerPrecisionType, FixedPrecisionType, XnorPrecisionType, register_layer
 from hls4ml.model.hls_layers import BatchNormalization
 from hls4ml.templates import templates
 
@@ -40,7 +40,7 @@ class BatchNormalizationQuantizedTanh(Layer):
 
         return self._config_template.format(**params)
 
-    def set_thresholds(self, scale, bias):
+    def set_thresholds(self, scale, bias, ternary_threshold=0.5):
         inp = self.get_input_variable()
         shape = inp.shape
         dims = inp.dim_names
@@ -53,8 +53,8 @@ class BatchNormalizationQuantizedTanh(Layer):
             self.add_weights_variable(name='threshold', var_name='t{index}', data=threshold, type_name='threshold{index}_t', precision=inp.type.precision)
         elif self.get_attr('quantize') == 3:
             self.add_output_variable(shape, dims, precision=IntegerPrecisionType(width=2))
-            threshold_hi = 1. / 3 / scale + threshold
-            threshold_lo = -1. / 3 / scale + threshold
+            threshold_hi = ternary_threshold / scale + threshold
+            threshold_lo = -ternary_threshold / scale + threshold
             threshold_hi = np.floor(threshold_hi * 2**F) / 2**F
             threshold_lo = np.floor(threshold_lo * 2**F) / 2**F
             self.add_weights_variable(name='threshold_hi', var_name='th{index}', data=threshold_hi, type_name='threshold_hi_{index}_t', precision=inp.type.precision)
@@ -82,6 +82,7 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
         is_match = (node.__class__.__name__ == 'Activation'
             and node.get_attr('activation') in ['binary', 'binary_tanh', 'ternary', 'ternary_tanh']
             and isinstance(node.get_input_node(), BatchNormalization))
+        is_match = is_match or node.__class__.__name__ == 'TernaryTanh'
         return is_match
 
     def transform(self, model, node):
@@ -104,7 +105,7 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
             'Trace' : bn_layer.get_attr('Trace')
         }
         bnbt_layer = model.make_node('BatchNormalizationQuantizedTanh', 'bnbt_' + bn_layer.name, attrs, bn_layer.inputs)
-        bnbt_layer.set_thresholds(bn_layer.get_weights('scale').data, bn_layer.get_weights('bias').data)
+        bnbt_layer.set_thresholds(bn_layer.get_weights('scale').data, bn_layer.get_weights('bias').data, node.get_attr('threshold',0.5))
         # Remove the BatchNormalization layer
         model.remove_node(bn_layer, rewire=True)
         # Replace the old Activation layer with this one
@@ -172,3 +173,4 @@ class QuantizeDenseOutput(OptimizerPass):
                     threshold_var.data = np.floor(threshold_var.data)
 
         return False
+
