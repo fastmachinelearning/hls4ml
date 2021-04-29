@@ -479,7 +479,7 @@ class VivadoBackend(Backend):
         self.register_templates('Resize'                 , resize_function_template,      resize_config_template, resize_include_list)
         self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template, transpose_include_list)
         self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
-        self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)
+        self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)    
 
     def get_valid_reuse_factors(self, layer, recr = False):
         n_in = 0
@@ -528,7 +528,7 @@ class VivadoBackend(Backend):
 
     def get_closest_reuse_factor(self, valid_rf, chosen_rf):
         """
-        Returns closest value to chosen_rf. valid_rf is sorted (obtained from get_valid_reuse_factors())
+        Returns closest value to chosen_rf. valid_rf is sorted (obtained from get_valid_reuse_factors()) 
         If two numbers are equally close, return the smallest number.
         """
         pos = bisect_left(valid_rf, chosen_rf)
@@ -707,5 +707,5 @@ class VivadoBackend(Backend):
         for i in range(min_H):
             for j in range(min_W):
                 windows_int.append((int(''.join(str(p) for p in reversed(windows_bin[i * min_W + j])), 2)))
-
+        
         return (min_H, min_W, windows_int)

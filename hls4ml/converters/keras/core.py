@@ -17,7 +17,7 @@ def parse_input_layer(keras_layer, input_names, input_shapes, data_reader, confi
         layer['type_name'] = 'integer_input_t'
         layer['precision'] = IntegerPrecisionType(width=32)
     output_shape = keras_layer['config']['batch_input_shape']
-
+    
     return layer, output_shape
 
 
@@ -30,7 +30,7 @@ class BinaryQuantizer(Quantizer):
         else:
             raise Exception('BinaryQuantizer suppots 1 or 2 bits, but called with bits={}'.format(bits))
         super(BinaryQuantizer, self).__init__(bits, hls_type)
-
+    
     def __call__(self, data):
         zeros = np.zeros_like(data)
         ones = np.ones_like(data)
@@ -44,7 +44,7 @@ class BinaryQuantizer(Quantizer):
 class TernaryQuantizer(Quantizer):
     def __init__(self):
         super(TernaryQuantizer, self).__init__(2, IntegerPrecisionType(width=2))
-
+    
     def __call__(self, data):
         zeros = np.zeros_like(data)
         ones = np.ones_like(data)
@@ -57,7 +57,7 @@ def parse_dense_layer(keras_layer, input_names, input_shapes, data_reader, confi
     assert('Dense' in keras_layer['class_name'])
 
     layer = parse_default_keras_layer(keras_layer, input_names)
-
+    
     weights_shape = data_reader.get_weights_shape(layer['name'], 'kernel')
     layer['n_in'] = weights_shape[0]
     layer['n_out'] = weights_shape[1]
@@ -97,7 +97,7 @@ def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader, 
         layer['class_name'] = 'Softmax'
     if layer['class_name'] == 'ReLU':
         layer['class_name'] = 'Activation'
-
+    
     return layer, [shape for shape in input_shapes[0]]
 
 
