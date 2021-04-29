@@ -59,7 +59,6 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader,
         activation_config = {}
         # some activations are classes 
         if hasattr(quantizer_obj, 'get_config'):
-            print("Name: " + quantizer_obj.__class__.__name__)
             activation_config['class_name'] = quantizer_obj.__class__.__name__
             if activation_config['class_name'] == 'ternary' or activation_config['class_name'] == 'binary':
                 activation_config['class_name'] += '_tanh'
@@ -82,7 +81,10 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader,
         raise Exception('Unsupported QKeras activation: {}'.format(activation_config['class_name']))
 
 
-    layer['class_name'] = 'Activation'
+    if activation_config['class_name'] == 'ternary_tanh':
+        layer['class_name'] = 'TernaryTanh'
+    else:
+        layer['class_name'] = 'Activation'
     if activation_config['class_name'] == 'quantized_bits':
         activation_config['class_name'] = 'linear'
     layer['activation'] = activation_config['class_name'].replace('quantized_', '')
