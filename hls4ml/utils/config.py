@@ -187,13 +187,15 @@ def set_accum_from_keras_model(config, model):
             config['LayerName'][name]['accum_t'] = f'ap_fixed<{a},{b}>'
 
 
-def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, best_type_algorithm=None):
+def set_data_types_from_keras_model(config, model, max_bits, change_flagged_types=False, test_inputs=None,
+                                    best_type_algorithm=None):
     """Adjust data types in a given HLSModel configuration based on a Keras model and test inputs (if supplied).
 
     The function aims for setting precision of the layers in the configuration to match the distribution of both
     weights in the model and outputs of the model resulting from the test inputs (if supplied). Types flagged
-    as inferred from QKeras (i.e. present in QKerasInferred in a layer config) are not adjusted. Moreover, accumulator
-    types are set to the same type as output types (when test inputs are provided and where applicable).
+    as inferred from QKeras (i.e. present in QKerasInferred in a layer config) are not adjusted unless
+    change_flagged_types is set to True. Moreover, accumulator types are set to the same type as output types
+    (when test inputs are provided and where applicable).
 
     set_data_types_from_keras_model() works in a heuristic way and does not account for optimizations that can be
     subsequently made by hls4ml. Therefore, the optimal result is not guaranteed and it might be necessary to do
@@ -204,6 +206,8 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, b
         config (dict): HLSModel configuration dictionary to be updated. Its granularity must be 'name'.
         model: Keras model to be used for adjusting the data types.
         max_bits (int): The maximum bit width (excluding the sign bit) all data types in the config should have.
+        change_flagged_types (bool, optional): Whether types flagged as inferred from QKeras should be adjusted. If
+            not provided, these types will not be updated.
         test_inputs (array-like, optional): Inputs to be used for producing the distribution of model outputs.
             The type of test_inputs is the same as the type of X in hls4ml.model.profiling.numerical(). If not provided,
             precision of the layer outputs/activations will not be updated.
@@ -265,9 +269,9 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, b
         if precision_type is not None and precision_type not in layer_dict['Precision']:
             return None
 
-        if precision_type is not None and 'QKerasInferred' in layer_dict and \
+        if not change_flagged_types and precision_type is not None and 'QKerasInferred' in layer_dict and \
                 precision_type in layer_dict['QKerasInferred']:
-            # This data type comes from QKeras, so don't change it.
+            # This data type comes from QKeras and change_flagged_types is False, so don't change the type.
             return None
 
         if data_type is None:
