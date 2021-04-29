@@ -134,6 +134,9 @@ pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
     static const unsigned stride_width = {stride_width};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     static const unsigned reuse = {reuse};
+
+    static const unsigned filt_width = {pool_width};
+    static const unsigned n_chan = {n_filt};
 }};\n"""
 
 pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{

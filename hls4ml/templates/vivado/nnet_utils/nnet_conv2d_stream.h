@@ -76,17 +76,13 @@ void conv_2d_cl(
     static ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[CONFIG_T::filt_height - 1][CONFIG_T::n_chan];
     #pragma HLS ARRAY_RESHAPE variable = line_buffer complete dim = 2
 
-    res_T res_pack;
-    #pragma HLS DATA_PACK variable=res_pack
-    unsigned outputs_ready = 0;
-
 ReadInputHeight: for (int i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
-    ReadInputWidth: for (int i_iw = 0; i_iw < CONFIG_T::in_width / (data_T::size / CONFIG_T::n_chan); i_iw++) {
+    ReadInputWidth: for (int i_iw = 0; i_iw < CONFIG_T::in_width; i_iw++) {
         #pragma HLS LOOP_FLATTEN
-            if(CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1) {
+            if(CONFIG_T::strategy == nnet::latency) {
                 #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
             }
-            compute_output<data_T, res_T, CONFIG_T>(data.read(), line_buffer, res, res_pack, outputs_ready, weights, biases);
+            compute_output_2d<data_T, res_T, CONFIG_T>(data.read(), line_buffer, res, weights, biases);
         }
     }
 }
