@@ -9,8 +9,6 @@ from hls4ml.model.hls_layers import layer_map, FixedPrecisionType, IntegerPrecis
 from hls4ml.templates import VivadoBackend
 from collections import OrderedDict
 
-QKERAS_DATA_TYPE_PREFIX = '***'
-
 
 def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
     fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
@@ -27,7 +25,7 @@ def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
 
     return config
 
-def _get_precision_from_quantizer(quantizer, auto_precision_on=False):
+def _get_precision_from_quantizer(quantizer):
     import qkeras
     if isinstance(quantizer, str):
         quantizer_obj = qkeras.get_quantizer(quantizer)
@@ -58,17 +56,10 @@ def _get_precision_from_quantizer(quantizer, auto_precision_on=False):
 
     decimal = bits - integer
 
-    # If precision is to be set automatically (i.e. auto_precision_on is True), return the data types with the special
-    # prefix so that set_data_types_from_keras_model() can flag them as coming from QKeras and leave them unchanged.
-    if auto_precision_on:
-        prefix = QKERAS_DATA_TYPE_PREFIX
-    else:
-        prefix = ''
-
     if decimal > 0:
-        return prefix + 'ap_fixed<{},{}>'.format(bits, integer)
+        return 'ap_fixed<{},{}>'.format(bits, integer)
     else:
-        return prefix + 'ap_int<{}>'.format(bits)
+        return 'ap_int<{}>'.format(bits)
 
 
 def set_accum_from_keras_model(config, model):
@@ -200,10 +191,9 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, b
     """Adjust data types in a given HLSModel configuration based on a Keras model and test inputs (if supplied).
 
     The function aims for setting precision of the layers in the configuration to match the distribution of both
-    weights in the model and outputs of the model resulting from the test inputs (if supplied). Data types flagged
-    as inferred from QKeras are not adjusted (this happens when the config comes from config_from_keras_model() with
-    data_type_mode set to either 'flag_qkeras', 'auto' or 'auto_accum'), they have the flag removed instead. Moreover,
-    accumulator types are set to the same type as output types (when test inputs are provided and where applicable).
+    weights in the model and outputs of the model resulting from the test inputs (if supplied). Types flagged
+    as inferred from QKeras (i.e. present in QKerasInferred in a layer config) are not adjusted. Moreover, accumulator
+    types are set to the same type as output types (when test inputs are provided and where applicable).
 
     set_data_types_from_keras_model() works in a heuristic way and does not account for optimizations that can be
     subsequently made by hls4ml. Therefore, the optimal result is not guaranteed and it might be necessary to do
@@ -275,11 +265,9 @@ def set_data_types_from_keras_model(config, model, max_bits, test_inputs=None, b
         if precision_type is not None and precision_type not in layer_dict['Precision']:
             return None
 
-        current_data_type = get_precision(layer_dict, precision_type)
-
-        if current_data_type.startswith(QKERAS_DATA_TYPE_PREFIX):
-            # This data type comes from QKeras, so don't change it (just remove the flag)
-            set_precision(layer_dict, precision_type, current_data_type[len(QKERAS_DATA_TYPE_PREFIX):])
+        if precision_type is not None and 'QKerasInferred' in layer_dict and \
+                precision_type in layer_dict['QKerasInferred']:
+            # This data type comes from QKeras, so don't change it.
             return None
 
         if data_type is None:
@@ -386,12 +374,11 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
         default_precision (str, optional): Default precision to use. Defaults to 'ap_fixed<16,6>'.
         default_reuse_factor (int, optional): Default reuse factor. Defaults to 1.
         data_type_mode (str, optional): Data type inference mode for layers. It may be one of the following:
-            * 'default': Set default precision for all layers except for QKeras layers with enough information for
-            type inference. This option is default if no value for data_type_mode is provided.
-            * 'flag_qkeras': Same as 'default', but make QKeras layers with enough information for type inference have
-            flagged data types so that they can be processed by set_data_types_from_keras_model().
-            * 'auto': Infer data types for all layers automatically by calling set_data_types_from_keras_model() before
-            returning a generated HLS conversion config.
+            * 'default': Set default precision for all layers except for QKeras layers with enough information for type
+            inference to be done already in config_from_keras_model(). This option is default if no value for
+            data_type_mode is provided.
+            * 'auto': Infer data types for all layers (except QKeras layers where applicable) automatically by calling
+            set_data_types_from_keras_model() before returning a generated HLS conversion config.
             * 'auto_accum': Same as 'auto', but infer accumulator data types for applicable layers as well by calling
             set_accum_from_keras_model() before returning a generated HLS conversion config and after calling
             set_data_types_from_keras_model(). Note that set_accum_from_keras_model() doesn't use profiling information
@@ -399,6 +386,9 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             * 'auto_accum_only': Same as 'default', but infer accumulator data types for applicable layers as well by
             calling set_accum_from_keras_model() before returning a generated HLS conversion config. This option is
             not the same as 'auto_accum': it doesn't call set_data_types_from_keras_model() at any point.
+
+            It must be noted that using an automatic mode does not mean that users no longer have to tweak the resultant
+            configuration manually regardless of their case.
         max_bits (int, optional): Maximum bit width (excluding the sign bit) to be fed into
             set_data_types_from_keras_model() if data_type_mode is set to either 'auto' or 'auto_accum'.
             See the docstring for set_data_types_from_keras_model() for more details. The default value for this
@@ -413,14 +403,11 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     Returns:
         [dict]: The created config.
     """
-    if data_type_mode not in ['default', 'flag_qkeras', 'auto', 'auto_accum', 'auto_accum_only']:
-        raise Exception('data_type_mode must be one of "default", "flag_qkeras", "auto", "auto_accum" or '
-                        '"auto_accum_only".')
+    if data_type_mode not in ['default', 'auto', 'auto_accum', 'auto_accum_only']:
+        raise Exception('data_type_mode must be one of "default", "auto", "auto_accum" or "auto_accum_only".')
 
     if granularity.lower() not in ['model', 'type', 'name']:
         raise Exception('Invalid configuration granularity specified, expected "model", "type" or "name" got "{}"'.format(granularity))
-
-    auto_precision = data_type_mode in ['flag_qkeras', 'auto', 'auto_accum']
 
     #This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
@@ -481,17 +468,25 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             layer['class_name'] = 'Input'
 
         if layer['class_name'] in qkeras_layers:
+            def add_to_inferred(name):
+                if 'qkeras_inferred' not in layer:
+                    layer['qkeras_inferred'] = []
+
+                layer['qkeras_inferred'].append(name)
+
             layer['precision'] = {}
             for qname, qclass in layer['config'].items():
                 if 'quantizer' in qname.lower():
                     pname = qname.split('_quantizer')[0]
                     if pname == 'kernel': pname = 'weight'
                     if qclass is not None:
-                        precision = _get_precision_from_quantizer(qclass, auto_precision_on=auto_precision)
+                        precision = _get_precision_from_quantizer(qclass)
                         layer['precision'][pname] = precision
+                        add_to_inferred(pname)
                 elif qname == 'activation' and layer['class_name'] == 'QActivation':
-                    precision = _get_precision_from_quantizer(qclass, auto_precision_on=auto_precision)
+                    precision = _get_precision_from_quantizer(qclass)
                     layer['precision']['result'] = precision
+                    add_to_inferred('result')
 
         print('Layer name: {}, layer type: {}'.format(layer['name'], layer['class_name']))
         layer_list.append( layer )
@@ -510,6 +505,9 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
         hls_layers_accum = ['Dense', 'Conv1D', 'Conv2D']
 
         layer_config['LayerType'] = layer_map[layer['class_name']].__name__
+
+        if 'qkeras_inferred' in layer:
+            layer_config['QKerasInferred'] = layer['qkeras_inferred']
 
         if layer['class_name'] in dense_layers + conv_layers:
             layer_config['Precision'] = {}
