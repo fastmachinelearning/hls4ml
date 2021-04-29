@@ -53,8 +53,8 @@ class BatchNormalizationQuantizedTanh(Layer):
             self.add_weights_variable(name='threshold', var_name='t{index}', data=threshold, type_name='threshold{index}_t', precision=inp.type.precision)
         elif self.get_attr('quantize') == 3:
             self.add_output_variable(shape, dims, precision=IntegerPrecisionType(width=2))
-            threshold_hi = 0.5 / scale + threshold
-            threshold_lo = -0.5 / scale + threshold
+            threshold_hi = 1. / 3 / scale + threshold
+            threshold_lo = -1. / 3 / scale + threshold
             threshold_hi = np.floor(threshold_hi * 2**F) / 2**F
             threshold_lo = np.floor(threshold_lo * 2**F) / 2**F
             self.add_weights_variable(name='threshold_hi', var_name='th{index}', data=threshold_hi, type_name='threshold_hi_{index}_t', precision=inp.type.precision)

@@ -54,7 +54,7 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader,
     if isinstance(activation_config, str):
         quantizer_obj = get_quantizer(activation_config)
 
-    if isinstance(activation_config, str):
+    else:
         quantizer_obj = get_quantizer(activation_config)
         activation_config = {}
         # some activations are classes 
