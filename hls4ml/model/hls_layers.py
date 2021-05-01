@@ -146,53 +146,20 @@ class Variable(object):
         self.type = atype
         self.cppname = re.sub(r'\W|^(?=\d)','_', self.name)
 
-class ArrayVariable(Variable):
-    def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, pragma='partition', **kwargs):
-        super(ArrayVariable, self).__init__(var_name, HLSType(type_name, precision, **kwargs), **kwargs)
+class TensorVariable(Variable):
+    def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, **kwargs):
+        super(TensorVariable, self).__init__(var_name, HLSType(type_name, precision, **kwargs), **kwargs)
         self.shape = shape
         self.dim_names = dim_names
-        self.pragma = pragma
 
     def get_shape(self):
         return zip(self.dim_names, self.shape)
-
-    def definition_cpp(self):
-        array_shape = self.size_cpp()
-        return '{type} {name}[{shape}]'.format(type=self.type.name, name=self.cppname, shape=array_shape)
 
     def size(self):
         nelem = 1
         for dim in self.shape:
             nelem *= dim
         return nelem
-
-    def size_cpp(self):
-        return '*'.join([str(k) for k in self.dim_names])
-
-class StreamVariable(Variable):
-    def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, n_pack=1, depth=0, **kwargs):
-        super(StreamVariable, self).__init__(var_name, PackedType(type_name, precision, shape[-1], n_pack, **kwargs), **kwargs)
-        self.shape = shape
-        self.dim_names = dim_names
-        if depth == 0:
-            depth = np.prod(shape) // shape[-1]
-        self.pragma = ('stream', depth)
-
-    def get_shape(self):
-        return zip(self.dim_names, self.shape)
-
-    #def definition_cpp(self):
-    #    array_shape = self.size_cpp()
-    #    return '{type} {name}[{shape}]'.format(type=self.type.name, name=self.cppname, shape=array_shape)
-
-    def size(self):
-        nelem = 1
-        for dim in self.shape:
-            nelem *= dim
-        return nelem
-
-    def size_cpp(self):
-        return '*'.join([str(k) for k in self.dim_names])
 
 class InplaceVariable():
     def __init__(self, shape, dim_names, proxy, **kwargs):
@@ -437,32 +404,12 @@ class Layer(object):
         if precision is None:
             precision, _ = self.model.config.get_precision(self, var='result')
 
-        if self.model.config.get_config_value('IOType') == 'io_stream':
-            out = self.make_stream_variable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision)
-        else:
-            out = self.make_array_variable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, pragma=pragma)
+        out = TensorVariable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, index=self.index)
 
         self.variables[out_name] = out
         self.model.register_output_variable(out_name, out)
 
         self.precision[out.type.name] = out.type
-
-    def make_array_variable(self, shape, dim_names, var_name='layer{index}_out', type_name='layer{index}_t', precision=None, pragma='auto'):
-        if pragma == 'auto':
-            if self.model.config.get_config_value('IOType') == 'io_serial':
-                pragma = 'stream'
-            else:
-                if self.name in self.model.inputs:
-                    pragma = 'reshape'
-                else:
-                    pragma = 'partition'
-
-        return ArrayVariable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, pragma=pragma, index=self.index)
-
-    def make_stream_variable(self, shape, dim_names, var_name='layer{index}_out', type_name='layer{index}_t', precision=None, depth=0):
-        pack_factor = self.model.config.get_layer_config_value(self, 'PackFactor', default=1)
-        
-        return StreamVariable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, n_pack=pack_factor, depth=depth, index=self.index)
 
     def add_weights(self, quantizer=None, compression=False):
         data = self.model.get_weights_data(self.name, 'kernel')
@@ -665,19 +612,6 @@ class Conv1D(Layer):
         params['out_width'] = 'N_OUTPUTS_{}'.format(self.index)
         params['nzeros'] = self.get_weights('weight').nzeros
 
-        if self.model.config.get_config_value('IOType') == 'io_stream':
-            min_w, instructions = self.model.config.backend.compute_conv1d_instructions(
-                self.get_input_variable().shape[0],
-                self.get_input_variable().shape[1],
-                params['filt_width'],
-                params['stride_width'])
-            instructions_str = ','.join(str(i) for i in instructions)
-            params['min_width'] = min_w
-            params['instructions'] = instructions_str
-        else:
-            params['min_width'] = params['n_in']
-            params['instructions'] = '0'
-
         params['config_t'] = 'config{}_mult'.format(self.index)
         conv_config = self._config_template[0].format(**params)
 
@@ -745,19 +679,6 @@ class SeparableConv1D(Layer):
         params['nzeros'] = self.get_weights('depthwise').nzeros
         params['index'] = str(self.index) + '_depthwise'
         params['weight_t'] = self.get_weights('depthwise').type.name
-
-        if self.model.config.get_config_value('IOType') == 'io_stream':
-            min_w, instructions = self.model.config.backend.compute_conv1d_instructions(
-                self.get_input_variable().shape[0],
-                self.get_input_variable().shape[1],
-                params['filt_width'],
-                params['stride_width'])
-            instructions_str = ','.join(str(i) for i in instructions)
-            params['min_width'] = min_w
-            params['instructions'] = instructions_str
-        else:
-            params['min_width'] = params['in_width']
-            params['instructions'] = '0'
 
         params['config_t'] = 'config{}_depthwise_mult'.format(self.index)
         depthwise_config = self._config_template[1].format(**params)
@@ -843,22 +764,6 @@ class Conv2D(Layer):
             params['out_width'] = self.get_output_variable().dim_names[2]
         params['dilation'] = self.get_attr('dilation', 1)
         params['nzeros'] = self.get_weights('weight').nzeros
-
-        if self.model.config.get_config_value('IOType') == 'io_stream':
-            min_h, min_w, instructions = self.model.config.backend.compute_conv2d_instructions(
-                self.get_input_variable().shape[0],
-                self.get_input_variable().shape[1],
-                self.get_input_variable().shape[2],
-                params['filt_height'],
-                params['stride_height'])
-            instructions_str = ','.join(str(i) for i in instructions)
-            params['min_height'] = min_h
-            params['min_width'] = min_w
-            params['instructions'] = instructions_str
-        else:
-            params['min_height'] = params['in_height']
-            params['min_width'] = params['in_width']
-            params['instructions'] = '0'
 
         params['config_t'] = 'config{}_mult'.format(self.index)
         conv_config = self._config_template[0].format(**params)
@@ -983,22 +888,6 @@ class SeparableConv2D(Layer):
         params['nzeros'] = self.get_weights('depthwise').nzeros
         params['index'] = str(self.index) + '_depthwise'
         params['weight_t'] = self.get_weights('depthwise').type.name
-
-        if self.model.config.get_config_value('IOType') == 'io_stream':
-            min_h, min_w, instructions = self.model.config.backend.compute_conv2d_instructions(
-                self.get_input_variable().shape[0],
-                self.get_input_variable().shape[1],
-                self.get_input_variable().shape[2],
-                params['filt_height'],
-                params['stride_height'])
-            instructions_str = ','.join(str(i) for i in instructions)
-            params['min_height'] = min_h
-            params['min_width'] = min_w
-            params['instructions'] = instructions_str
-        else:
-            params['min_height'] = params['in_height']
-            params['min_width'] = params['in_width']
-            params['instructions'] = '0'
 
         params['config_t'] = 'config{}_depthwise_mult'.format(self.index)
         depthwise_config = self._config_template[1].format(**params)

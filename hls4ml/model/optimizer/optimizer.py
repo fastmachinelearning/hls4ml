@@ -20,6 +20,10 @@ class OptimizerPass(object):
         else:
             return cls.name
 
+class GlobalOptimizerPass(OptimizerPass):
+    def match(self, node):
+        return True # Match everything
+
 class WrappedOptimizerPass(OptimizerPass):
     def __init__(self, name, condition=None, transform=None):
         self.name = name

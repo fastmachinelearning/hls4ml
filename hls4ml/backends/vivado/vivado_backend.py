@@ -430,7 +430,6 @@ class VivadoBackend(FPGABackend):
 
         return parse_vivado_report(model.config.get_output_dir())
 
-    #@optimizer_pass(condition=lambda node: node.__class__.__name__ == 'Dense')
     @layer_optimizer('Dense')
     def init_dense(self, layer):
         index_t = IntegerPrecisionType(width=1, signed=False)

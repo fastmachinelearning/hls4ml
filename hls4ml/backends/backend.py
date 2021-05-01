@@ -56,7 +56,7 @@ class Backend(object):
                         # if 'func' is a class
                         # and it inherits from OptimizerPass
                         # and is defined in this module (i.e., not imported)
-                        if inspect.isclass(func) and OptimizerPass in func.__bases__ and func.__module__ == lib.__name__:
+                        if inspect.isclass(func) and issubclass(func, OptimizerPass) and func.__module__ == lib.__name__:
                             self.register_pass(func.get_name(), func)
 
             except ImportError:
