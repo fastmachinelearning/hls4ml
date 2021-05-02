@@ -9,7 +9,7 @@ import glob
 from collections import OrderedDict
 
 from hls4ml.writer.writers import Writer
-from hls4ml.model.hls_layers import XnorPrecisionType
+from hls4ml.model.hls_types import XnorPrecisionType
 
 config_filename = 'hls4ml_config.yml'
 

@@ -1,6 +1,6 @@
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.hls_layers import BatchNormalization
-from hls4ml.model.hls_model import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType, register_layer
+from hls4ml.model.hls_layers import BatchNormalization, register_layer
+from hls4ml.model.hls_types import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType
 from hls4ml.backends import get_backend
 import tensorflow as tf
 import numpy as np

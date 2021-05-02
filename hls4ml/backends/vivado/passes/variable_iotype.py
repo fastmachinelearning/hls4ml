@@ -1,6 +1,6 @@
 
 from hls4ml.model.optimizer import GlobalOptimizerPass
-from hls4ml.model.hls_layers import Variable, TensorVariable
+from hls4ml.model.hls_types import Variable, TensorVariable
 from hls4ml.backends.fpga.fpga_types import ArrayVariable, StreamVariable
 
 

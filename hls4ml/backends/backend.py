@@ -60,6 +60,7 @@ class Backend(object):
                             self.register_pass(func.get_name(), func)
 
             except ImportError:
+                print('WARN: Unable to import optiizer(s) from {}'.format(module))
                 continue
 
     def create_initial_config(self, **kwargs):

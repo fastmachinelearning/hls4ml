@@ -2,8 +2,8 @@ import numpy as np
 import re
 
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.hls_model import Layer, IntegerPrecisionType, XnorPrecisionType, register_layer
-from hls4ml.model.hls_layers import BatchNormalization
+from hls4ml.model.hls_types import IntegerPrecisionType, XnorPrecisionType
+from hls4ml.model.hls_layers import Layer, BatchNormalization, register_layer
 from hls4ml.backends import get_backend
 
 class BatchNormalizationQuantizedTanh(Layer):

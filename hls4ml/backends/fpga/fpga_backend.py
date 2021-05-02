@@ -7,7 +7,7 @@ from collections.abc import Iterable
 import re
 
 from hls4ml.backends.backend import Backend
-from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType, XnorPrecisionType, ExponentPrecisionType
+from hls4ml.model.hls_types import IntegerPrecisionType, FixedPrecisionType, XnorPrecisionType, ExponentPrecisionType
 
 
 class FPGABackend(Backend):

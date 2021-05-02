@@ -3,8 +3,8 @@ import numpy as np
 from hls4ml.converters.keras_to_hls import parse_default_keras_layer
 from hls4ml.converters.keras_to_hls import keras_handler
 
-from hls4ml.model.hls_model import Quantizer
-from hls4ml.model.hls_model import IntegerPrecisionType
+from hls4ml.model.hls_types import Quantizer
+from hls4ml.model.hls_types import IntegerPrecisionType
 
 @keras_handler('InputLayer')
 def parse_input_layer(keras_layer, input_names, input_shapes, data_reader, config):

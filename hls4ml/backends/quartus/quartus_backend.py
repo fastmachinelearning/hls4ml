@@ -9,7 +9,7 @@ from tabulate import tabulate
 from ast import literal_eval
 from contextlib import contextmanager
 
-from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
+from hls4ml.model.hls_types import IntegerPrecisionType, FixedPrecisionType
 from hls4ml.backends.backend import custom_initializer, optimizer_pass, layer_optimizer
 from hls4ml.backends import FPGABackend
 from hls4ml.report import parse_quartus_report

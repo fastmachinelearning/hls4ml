@@ -4,7 +4,7 @@ import yaml
 import importlib
 
 from hls4ml.utils.config import create_config
-from hls4ml.model.hls_model import FixedPrecisionType
+from hls4ml.model.hls_types import FixedPrecisionType
 from hls4ml.converters.keras_to_hls import keras_to_hls, get_supported_keras_layers, register_keras_layer_handler
 
 for module in os.listdir(os.path.dirname(__file__) + '/keras'):

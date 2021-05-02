@@ -1,6 +1,6 @@
 import numpy as np
 
-from hls4ml.model.hls_layers import Variable, TensorVariable, PackedType
+from hls4ml.model.hls_types import Variable, TensorVariable, PackedType
 
 class ArrayVariable(TensorVariable):
     def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, pragma='partition', **kwargs):

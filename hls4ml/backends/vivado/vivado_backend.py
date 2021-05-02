@@ -6,7 +6,7 @@ from bisect import bisect_left
 from queue import Queue
 from collections.abc import Iterable
 
-from hls4ml.model.hls_layers import IntegerPrecisionType
+from hls4ml.model.hls_types import IntegerPrecisionType
 from hls4ml.backends.backend import custom_initializer, optimizer_pass, layer_optimizer
 from hls4ml.backends import FPGABackend
 from hls4ml.report import parse_vivado_report
