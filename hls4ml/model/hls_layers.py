@@ -1126,16 +1126,12 @@ class LSTM(Layer):
     def initialize(self):
         shape = [self.attributes['n_sequence_out'],int(self.attributes['recurr_n_out']/4)]
         dims = ['N_SEQUENCE_OUT_{}'.format(self.index), 'N_LAYER_{}'.format(self.index)]
-        compression = self.model.config.get_compression(self)
         reuse_factor = self.model.config.get_reuse_factor(self)
         self.reuse_factor_recr = reuse_factor
         if self.model.config.is_resource_strategy(self):
             if self.model.config.backend.name == 'Vivado':
                 self.model.config.backend.set_closest_reuse_factor(self)
                 self.model.config.backend.set_closest_reuse_factor_recr(self)
-            if compression:
-                self.set_attr('strategy', 'compressed')
-            else:
                 self.set_attr('strategy', 'resource')
         else:
             self.set_attr('strategy', 'latency')
@@ -1146,7 +1142,13 @@ class LSTM(Layer):
         self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
         recurrent_bias = np.zeros(self.get_output_variable().shape[-1]*4)
         self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
+        index_t = IntegerPrecisionType(width=1, signed=False)
+        if self.model.config.is_resource_strategy(self):
+            if self.model.config.backend.name == 'Vivado':
+                self.weights['weight'].data = np.transpose(self.weights['weight'].data)
+                self.weights['recurrent_weight'].data = np.transpose(self.weights['recurrent_weight'].data)
 
+        self.set_attr('index_t', index_t)
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1212,16 +1214,12 @@ class GRU(Layer):
     def initialize(self):
         shape = [self.attributes['n_sequence_out'], int(self.attributes['recurr_n_out']/3)]
         dims = ['N_SEQUENCE_OUT_{}'.format(self.index), 'N_LAYER_{}'.format(self.index)]
-        compression = self.model.config.get_compression(self)
         reuse_factor = self.model.config.get_reuse_factor(self)
         self.reuse_factor_recr = reuse_factor
         if self.model.config.is_resource_strategy(self):
             if self.model.config.backend.name == 'Vivado':
                 self.model.config.backend.set_closest_reuse_factor(self)
                 self.model.config.backend.set_closest_reuse_factor_recr(self)
-            if compression:
-                self.set_attr('strategy', 'compressed')
-            else:
                 self.set_attr('strategy', 'resource')
         else:
             self.set_attr('strategy', 'latency')
@@ -1232,6 +1230,13 @@ class GRU(Layer):
         self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
         recurrent_bias = np.zeros(self.get_output_variable().shape[-1]*3)
         self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
+        index_t = IntegerPrecisionType(width=1, signed=False)
+        if self.model.config.is_resource_strategy(self):
+            if self.model.config.backend.name == 'Vivado':
+                self.weights['weight'].data = np.transpose(self.weights['weight'].data)
+                self.weights['recurrent_weight'].data = np.transpose(self.weights['recurrent_weight'].data)
+
+        self.set_attr('index_t', index_t)
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1255,10 +1260,8 @@ class GRU(Layer):
 
         params['config_mult_t1'] = 'config{}_mult1'.format(self.index)
         params['config_mult_t2'] = 'config{}_mult2'.format(self.index)
-        params['gru_act_t'] = '{}_config{}_recr'.format(
-            self.get_attr('recurrent_activation'), self.index)
-        params['act_t'] = '{}_config{}'.format(
-            self.get_attr('activation'), self.index)
+        params['gru_act_t'] = '{}_config{}_recr'.format(self.get_attr('recurrent_activation'), self.index)
+        params['act_t'] = '{}_config{}'.format(self.get_attr('activation'), self.index)
         gru_config = self._config_template[0].format(**params)
 
         gru_params = self._default_config_params()
@@ -1277,19 +1280,13 @@ class GRU(Layer):
 
         mult_params1 = self._default_config_params()
         mult_params2 = self._default_config_params()
-        mult_params1['n_in'] = self.get_input_variable(
-        ).dim_names[1]  # n_in -> n_in * 3
-        mult_params1['n_out'] = self.get_output_variable(
-        ).dim_names[1] + ' * 3'
-        mult_params1['product_type'] = self.model.config.backend.product_type(
-            self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
+        mult_params1['n_in'] = self.get_input_variable().dim_names[1]  # n_in -> n_in * 3
+        mult_params1['n_out'] = self.get_output_variable().dim_names[1] + ' * 3'
+        mult_params1['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
         mult_params1['reuse'] = params['reuse']
-        mult_params2['n_in'] = self.get_output_variable(
-        ).dim_names[1]  # n_state -> n_state *3
-        mult_params2['n_out'] = self.get_output_variable(
-        ).dim_names[1] + ' * 3'
-        mult_params2['product_type'] = self.model.config.backend.product_type(
-            self.get_output_variable().type.precision, self.get_weights('recurrent_weight').type.precision)
+        mult_params2['n_in'] = self.get_output_variable().dim_names[1]  # n_state -> n_state *3
+        mult_params2['n_out'] = self.get_output_variable().dim_names[1] + ' * 3'
+        mult_params2['product_type'] = self.model.config.backend.product_type(self.get_output_variable().type.precision, self.get_weights('recurrent_weight').type.precision)
         mult_params2['reuse'] = self.reuse_factor_recr
 
         mult_config1 = self._config_template[1].format(**mult_params1)
