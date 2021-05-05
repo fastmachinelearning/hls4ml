@@ -10,7 +10,7 @@ class Quantizer(object):
     def __init__(self, bits, hls_type):
         self.bits = bits
         self.hls_type = hls_type
-    
+
     def __call__(self, data):
         raise NotImplementedError
 
@@ -20,7 +20,7 @@ class IntegerPrecisionType(object):
         self.integer = width
         self.fractional = 0
         self.signed = signed
-    
+
     def __str__(self):
         typestring = 'ap_{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring
@@ -42,7 +42,7 @@ class FixedPrecisionType(object):
         self.rounding_mode = rounding_mode
         self.saturation_mode = saturation_mode
         self.saturation_bits = saturation_bits
-    
+
     def __str__(self):
         args = [self.width, self.integer, self.rounding_mode, self.saturation_mode, self.saturation_bits]
         args = ','.join([str(arg) for arg in args if arg is not None])
@@ -258,7 +258,7 @@ class WeightVariable(Variable):
                     # to right of decimal point
                     decimal_spaces = len(str(lsb).split('.')[1])
                 else:
-                    decimal_spaces = len(str(2**integer_bits)) 
+                    decimal_spaces = len(str(2**integer_bits))
                 self.precision_fmt = '%.{}f'.format(decimal_spaces)
             else:
                 self.precision_fmt = '%f'
@@ -374,7 +374,7 @@ class Layer(object):
         if acc_type_obj == def_type_obj: # 'accum' precision not defined in config
             acc_type_obj = inp_type_obj # use input tensor's precision for 'accum'
 
-        accum_t = HLSType(acc_type_name, acc_type_obj) 
+        accum_t = HLSType(acc_type_name, acc_type_obj)
         self.precision[accum_t.name] = accum_t
         self.set_attr('accum_t', accum_t.precision)
 
@@ -460,7 +460,7 @@ class Layer(object):
 
     def make_stream_variable(self, shape, dim_names, var_name='layer{index}_out', type_name='layer{index}_t', precision=None, depth=0):
         pack_factor = self.model.config.get_layer_config_value(self, 'PackFactor', default=1)
-        
+
         return StreamVariable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, n_pack=pack_factor, depth=depth, index=self.index)
 
     def add_weights(self, quantizer=None, compression=False):
@@ -626,7 +626,7 @@ class Dense(Layer):
             else:
                 if self.model.config.backend.name == 'Vivado':
                     self.weights['weight'].data = np.transpose(self.weights['weight'].data)
-                    
+
         self.set_attr('index_t', index_t)
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
@@ -723,13 +723,13 @@ class SeparableConv1D(Layer):
             shape = [self.attributes['n_filt'], self.attributes['out_width']]
             dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
-        
+
         depthwise_data = self.model.get_weights_data(self.name, 'depthwise_kernel')
         pointwise_data = self.model.get_weights_data(self.name, 'pointwise_kernel')
 
         self.add_weights_variable(name='depthwise', var_name='d{index}', data=depthwise_data, quantizer=self.get_attr('depthwise_quantizer'))
         self.add_weights_variable(name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer'))
-        
+
         zero_bias_data = np.zeros((self.attributes['n_chan'],))
         self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data)
 
@@ -813,7 +813,7 @@ class SeparableConv1D(Layer):
         else:
             params['in_width'] = '*'.join([str(k) for k in input_dims[1:]])
             params['n_chan'] = input_dims[0]
-        
+
         params['filt_width'] = 1
         params['dilation'] = self.get_attr('dilation', 1)
         params['n_filt'] = 'N_FILT_{}'.format(self.index)
@@ -972,13 +972,13 @@ class SeparableConv2D(Layer):
             shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
             dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
-        
+
         depthwise_data = self.model.get_weights_data(self.name, 'depthwise_kernel')
         pointwise_data = self.model.get_weights_data(self.name, 'pointwise_kernel')
 
         self.add_weights_variable(name='depthwise', var_name='d{index}', data=depthwise_data, quantizer=self.get_attr('depthwise_quantizer'))
         self.add_weights_variable(name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer'))
-        
+
         zero_bias_data = np.zeros((self.attributes['n_chan'],))
         self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data)
 
@@ -1210,8 +1210,21 @@ class LSTM(Layer):
 
 class GRU(Layer):
     def initialize(self):
-        shape = [self.attributes['n_sequence_out'],int(self.attributes['recurr_n_out']/3)]
+        shape = [self.attributes['n_sequence_out'], int(self.attributes['recurr_n_out']/3)]
         dims = ['N_SEQUENCE_OUT_{}'.format(self.index), 'N_LAYER_{}'.format(self.index)]
+        compression = self.model.config.get_compression(self)
+        reuse_factor = self.model.config.get_reuse_factor(self)
+        self.reuse_factor_recr = reuse_factor
+        if self.model.config.is_resource_strategy(self):
+            if self.model.config.backend.name == 'Vivado':
+                self.model.config.backend.set_closest_reuse_factor(self)
+                self.model.config.backend.set_closest_reuse_factor_recr(self)
+            if compression:
+                self.set_attr('strategy', 'compressed')
+            else:
+                self.set_attr('strategy', 'resource')
+        else:
+            self.set_attr('strategy', 'latency')
         self.add_output_variable(shape, dims)
         self.add_weights()
         self.add_bias()
@@ -1242,26 +1255,42 @@ class GRU(Layer):
 
         params['config_mult_t1'] = 'config{}_mult1'.format(self.index)
         params['config_mult_t2'] = 'config{}_mult2'.format(self.index)
-        params['gru_act_t'] = '{}_config{}_recr'.format(self.get_attr('recurrent_activation'), self.index)
-        params['act_t'] = '{}_config{}'.format(self.get_attr('activation'), self.index)
+        params['gru_act_t'] = '{}_config{}_recr'.format(
+            self.get_attr('recurrent_activation'), self.index)
+        params['act_t'] = '{}_config{}'.format(
+            self.get_attr('activation'), self.index)
         gru_config = self._config_template[0].format(**params)
 
         gru_params = self._default_config_params()
         gru_params['n_in'] = self.get_output_variable().dim_names[1] + ' * 2'
+        gru_params['table_size'] = 1024
+        gru_params['type'] = self.get_attr('recurrent_activation')
+        gru_params['table_t'] = 'ap_fixed<18,8>'
         gru_act_config = self._config_template[2].format(**gru_params)
 
         act_params = self._default_config_params()
         act_params['n_in'] = self.get_output_variable().dim_names[1]
         act_params['table_size'] = 1024
+        act_params['type'] = self.get_attr('activation')
         act_params['table_t'] = 'ap_fixed<18,8>'
         act_config = self._config_template[3].format(**act_params)
 
         mult_params1 = self._default_config_params()
         mult_params2 = self._default_config_params()
-        mult_params1['n_in'] = self.get_input_variable().dim_names[1] # n_in -> n_in * 3
-        mult_params1['n_out'] = self.get_output_variable().dim_names[1] + ' * 3'
-        mult_params2['n_in'] = self.get_output_variable().dim_names[1] # n_state -> n_state *3
-        mult_params2['n_out'] = self.get_output_variable().dim_names[1] + ' * 3'
+        mult_params1['n_in'] = self.get_input_variable(
+        ).dim_names[1]  # n_in -> n_in * 3
+        mult_params1['n_out'] = self.get_output_variable(
+        ).dim_names[1] + ' * 3'
+        mult_params1['product_type'] = self.model.config.backend.product_type(
+            self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
+        mult_params1['reuse'] = params['reuse']
+        mult_params2['n_in'] = self.get_output_variable(
+        ).dim_names[1]  # n_state -> n_state *3
+        mult_params2['n_out'] = self.get_output_variable(
+        ).dim_names[1] + ' * 3'
+        mult_params2['product_type'] = self.model.config.backend.product_type(
+            self.get_output_variable().type.precision, self.get_weights('recurrent_weight').type.precision)
+        mult_params2['reuse'] = self.reuse_factor_recr
 
         mult_config1 = self._config_template[1].format(**mult_params1)
         mult_config2 = self._config_template[4].format(**mult_params2)
@@ -1690,7 +1719,7 @@ class GarNet(Layer):
         input_array = self.get_input_variable(self.inputs[0])
         partition_factor = input_array.shape[1] * (input_array.shape[0] // reuse_factor)
         input_array.pragma = ('partition', 'cyclic', partition_factor)
-        
+
         if self.attributes['collapse']:
             shape = [self._output_features]
             dims = ['OUT_FEATURES_{}'.format(self.index)]
@@ -1775,7 +1804,7 @@ class GarNet(Layer):
 
         # automatically make the variable unsigned if data are all positive
         signed = (np.amin(data) < 0.)
-        
+
         int_width = find_minimum_width(data, signed=signed)
 
         if quantize:
@@ -1783,9 +1812,9 @@ class GarNet(Layer):
         else:
             width = int_width + frac_width
             precision = FixedPrecisionType(width=width, integer=int_width, signed=signed, rounding_mode='AP_RND', saturation_mode='AP_SAT')
-            
+
         self.add_weights_variable(name=name, var_name=var_name, data=data, precision=precision)
-        
+
     def function_cpp(self):
         params = self._default_function_params()
 
@@ -1884,13 +1913,13 @@ class GarNetStack(GarNet):
             name = 'input_transform_{}_biases'.format(il)
             self._add_variable(name, 'input_transform_{}_b{{index}}'.format(il), bias, frac_width=10, quantize=quantize)
             sublayer_weights['input_transform_biases'] = self.weights[name]
-        
+
             weights_source = [
                 ('aggregator_distance', 'S{}'.format(il), 'kernel'),
                 ('aggregator_distance', 'S{}'.format(il), 'bias'),
                 ('output_transform', 'Fout{}'.format(il), 'bias')
             ]
-    
+
             for op_name, lname, wtype in weights_source:
                 data = self.model.get_weights_data(self.name, '{name}/{lname}_{wtype}:0'.format(name=self.name, lname=lname, wtype=wtype))
                 if wtype == 'kernel':

@@ -499,6 +499,12 @@ class VivadoBackend(Backend):
         elif 'LSTM' in layer.__class__.__name__ and recr:
             n_in = layer.get_attr('n_out')
             n_out = layer.get_attr('n_out') * 4
+        elif 'GRU' in layer.__class__.__name__ and not recr:
+            n_in = layer.get_attr('n_in')
+            n_out = layer.get_attr('n_out') * 3
+        elif 'GRU' in layer.__class__.__name__ and recr:
+            n_in = layer.get_attr('n_out')
+            n_out = layer.get_attr('n_out') * 3
 
         max_rf = n_in * n_out
         valid_reuse_factors = []
@@ -528,7 +534,7 @@ class VivadoBackend(Backend):
 
     def get_closest_reuse_factor(self, valid_rf, chosen_rf):
         """
-        Returns closest value to chosen_rf. valid_rf is sorted (obtained from get_valid_reuse_factors()) 
+        Returns closest value to chosen_rf. valid_rf is sorted (obtained from get_valid_reuse_factors())
         If two numbers are equally close, return the smallest number.
         """
         pos = bisect_left(valid_rf, chosen_rf)
@@ -707,5 +713,5 @@ class VivadoBackend(Backend):
         for i in range(min_H):
             for j in range(min_W):
                 windows_int.append((int(''.join(str(p) for p in reversed(windows_bin[i * min_W + j])), 2)))
-        
+
         return (min_H, min_W, windows_int)

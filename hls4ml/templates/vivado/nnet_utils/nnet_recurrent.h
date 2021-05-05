@@ -794,6 +794,58 @@ template<class data_T, class res_T, typename CONFIG_T>
         }
     }
 
+template<class data_T, class res_T, typename CONFIG_T>
+  void gru_loop(
+      hls::stream<data_T> &data_stream,
+      hls::stream<res_T>  &res_stream,
+	  typename CONFIG_T::weight_t     param   [CONFIG_T::n_state*3*CONFIG_T::n_in],
+      typename CONFIG_T::weight_t     param_zr[CONFIG_T::n_state*3*CONFIG_T::n_state],
+      typename CONFIG_T::bias_t       param_b [CONFIG_T::n_state*3],
+      typename CONFIG_T::bias_t       param_br [CONFIG_T::n_state*3]
+      ) {
+
+    typename res_T::value_type  h_newstate[CONFIG_T::n_state];
+    #pragma HLS ARRAY_PARTITION variable=h_newstate complete
+    for(int ii = 0; ii < CONFIG_T::n_state; ii++) h_newstate[ii] = 0;
+
+    typename data_T::value_type data_in[CONFIG_T::n_in];
+    bool reset_state = true;
+
+    DataPropagation: for(int i_in = 0; i_in < CONFIG_T::n_sequence*CONFIG_T::n_in / data_T::size; i_in++) {
+      if (CONFIG_T::n_sequence*CONFIG_T::n_in / data_T::size > 1) {
+          // #pragma HLS PIPELINE
+      }
+      data_T data_pack = data_stream.read();
+      DataPack: for (int i_pack = 0; i_pack < data_T::size; i_pack++) {
+          #pragma HLS UNROLL
+          data_in[i_pack] = data_pack[i_pack];
+      }
+      nnet::gru_static<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(reset_state,data_in,h_newstate,param,param_zr,param_b, param_br);
+      if (CONFIG_T::n_sequence_out > 1){
+        res_T res_pack;
+        #pragma HLS DATA_PACK variable=res_pack
+        ResPack_sequences: for (int i_pack = 0; i_pack < res_T::size; i_pack++) {
+            #pragma HLS UNROLL
+            res_pack[i_pack] = h_newstate[i_pack];
+        }
+        res_stream.write(res_pack);
+      }
+      reset_state = false;
+    }
+
+    if (CONFIG_T::n_sequence_out == 1){
+      res_T res_pack;
+      #pragma HLS DATA_PACK variable=res_pack
+      ResPack: for (int i_pack = 0; i_pack < res_T::size; i_pack++) {
+          #pragma HLS UNROLL
+          res_pack[i_pack] = h_newstate[i_pack];
+      }
+      res_stream.write(res_pack);
+    }
+
+}
+
+
 }//end namespace
 
 #endif
