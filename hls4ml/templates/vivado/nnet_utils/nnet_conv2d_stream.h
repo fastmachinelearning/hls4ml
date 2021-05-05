@@ -26,7 +26,7 @@ void compute_scaled_indices_2d(
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-void conv_2d_cl2(
+void conv_2d_encoded_cl(
     hls::stream<data_T> &data,
     hls::stream<res_T>  &res,
     typename CONFIG_T::weight_t weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
@@ -58,14 +58,14 @@ void conv_2d_cl2(
                 #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
             }
             compute_scaled_indices_2d<data_T, CONFIG_T>(i_ih, i_iw, pixel_idx);
-            compute_output<data_T, res_T, CONFIG_T>(data.read(), data_window, res, res_pack, outputs_ready, weights, biases, pixel_idx);
+            compute_encoded_output<data_T, res_T, CONFIG_T>(data.read(), data_window, res, res_pack, outputs_ready, weights, biases, pixel_idx);
         }
     }
 }
 
 // Line Buffer
 template <class data_T, class res_T, typename CONFIG_T>
-void conv_2d_cl(
+void conv_2d_buffer_cl(
     hls::stream<data_T> &data,
     hls::stream<res_T>  &res,
     typename CONFIG_T::weight_t weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
@@ -82,9 +82,27 @@ ReadInputHeight: for (int i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
             if(CONFIG_T::strategy == nnet::latency) {
                 #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
             }
-            compute_output_2d<data_T, res_T, CONFIG_T>(data.read(), line_buffer, res, weights, biases);
+            compute_output_buffer_2d<data_T, res_T, CONFIG_T>(data.read(), line_buffer, res, weights, biases);
         }
     }
+}
+
+template <class data_T, class res_T, typename CONFIG_T>
+void conv_2d_cl(
+    hls::stream<data_T> &data,
+    hls::stream<res_T>  &res,
+    typename CONFIG_T::weight_t weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
+    typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt])
+{
+    #pragma HLS inline region
+    switch(CONFIG_T::implementation){
+        case conv_implementation::linebuffer:
+            conv_2d_buffer_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+            break;
+        case conv_implementation::encoded:
+            conv_2d_encoded_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+            break;
+    }  
 }
 
 }

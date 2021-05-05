@@ -7,6 +7,11 @@
 
 namespace nnet {
 
+enum class conv_implementation { linebuffer=0, encoded=1};
+
+// *************************************************
+//       Encoded Implementation (Vlad's)
+// *************************************************
 template<unsigned K, unsigned S, unsigned W>
 unsigned scale_index(const unsigned idx) {
     #pragma HLS INLINE
@@ -79,7 +84,7 @@ void mult_buffer(
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-void compute_output(
+void compute_encoded_output(
     const data_T& in_elem,
     hls::stream<typename data_T::value_type> data_window[CONFIG_T::kernel_size * CONFIG_T::n_chan],
     hls::stream<res_T> &res,
@@ -137,7 +142,7 @@ void kernel_shift_1d(
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
-void kernel_shift(
+void kernel_shift_2d(
     typename data_T::value_type shift_buffer[CONFIG_T::filt_height][CONFIG_T::n_chan],
     typename res_T::value_type kernel_window[CONFIG_T::filt_width * CONFIG_T::filt_height * CONFIG_T::n_chan]) {
   #pragma HLS inline
@@ -188,11 +193,11 @@ void shift_line_buffer(const data_T& in_elem,
       shift_buffer[CONFIG_T::filt_height - i_ih - 1][i_ic] = pop_elem; // Popped element placed back into shift_buffer, one row up.
     }
   }
-  kernel_shift<data_T, res_T, CONFIG_T>(shift_buffer, kernel_window);
+  kernel_shift_2d<data_T, res_T, CONFIG_T>(shift_buffer, kernel_window);
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-void compute_output_2d(
+void compute_output_buffer_2d(
     const data_T& in_elem,
     ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[CONFIG_T::filt_height - 1][CONFIG_T::n_chan],
     hls::stream<res_T> &res_stream,
@@ -258,7 +263,7 @@ void compute_output_2d(
 
 // Conv 1D compute output
 template<class data_T, class res_T, typename CONFIG_T>
-void compute_output_1d(
+void compute_output_buffer_1d(
     const data_T& in_elem,
     hls::stream<res_T> &res_stream,
     typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan * CONFIG_T::n_filt],

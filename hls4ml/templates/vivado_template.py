@@ -50,6 +50,7 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
     static const unsigned strategy = nnet::{strategy};
+    static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
     static const unsigned min_width = {min_width};
     static const ap_uint<filt_width> pixels[min_width];
     typedef {accum_t} accum_t;
@@ -91,6 +92,7 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
     static const unsigned strategy = nnet::{strategy};
+    static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
     static const unsigned min_height = {min_height};
     static const unsigned min_width = {min_width};
     static const ap_uint<filt_height * filt_width> pixels[min_height * min_width];
@@ -133,6 +135,7 @@ pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
     static const unsigned pad_right = {pad_right};
     static const unsigned stride_width = {stride_width};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
+    static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
     static const unsigned reuse = {reuse};
 
     static const unsigned filt_width = {pool_width};
@@ -159,6 +162,7 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
     static const unsigned pad_left = {pad_left};
     static const unsigned pad_right = {pad_right};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
+    static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
     static const unsigned reuse = {reuse};
 }};\n"""
 
@@ -477,8 +481,10 @@ class VivadoBackend(Backend):
         if tclk is not None:
             if layer.get_attr('class_name') == 'Dense': 
                 kernel_multiplies = layer.get_attr('n_out')
+            elif layer.get_attr('class_name') == 'Conv1D':  
+                kernel_multiplies = layer.get_attr('out_width')
             elif layer.get_attr('class_name') == 'Conv2D': 
-                kernel_multiplies = layer.get_attr('in_height') * layer.get_attr('in_width')
+                kernel_multiplies = layer.get_attr('out_height') * layer.get_attr('out_width')
             else: 
                 print('Target clock unsupported layer')
                 return

@@ -38,6 +38,10 @@ class HLSConfig(object):
         self.layer_type_strategy = {}
         self.layer_name_strategy = {}
 
+        self.model_conv_implementation = 'LineBuffer'
+        self.layer_type_conv_implementation = {}
+        self.layer_name_conv_implementation = {}
+
         self.model_compression = False
         self.layer_type_compression = {}
         self.layer_name_compression = {}
@@ -137,8 +141,7 @@ class HLSConfig(object):
             tclk = self.layer_name_tclk.get(layer.__class__.__name__.lower())
         if tclk is None:
             tclk = self.model_tclk
-
-        # Kelvin Lin    
+ 
         return tclk
 
     def get_strategy(self, layer):
@@ -149,6 +152,15 @@ class HLSConfig(object):
             strategy = self.model_strategy
 
         return strategy
+    
+    def get_conv_implementation(self, layer):
+        conv_implementation = self.layer_name_conv_implementation.get(layer.name.lower())
+        if conv_implementation is None:
+            conv_implementation = self.layer_type_conv_implementation.get(layer.__class__.__name__.lower())
+        if conv_implementation is None:
+            conv_implementation = self.model_conv_implementation
+
+        return conv_implementation
 
     def is_resource_strategy(self, layer):
         return self.get_strategy(layer).lower() == 'resource'
@@ -191,6 +203,7 @@ class HLSConfig(object):
             self.model_bf = model_cfg.get('BramFactor') # Weight threshold to be external BRAM
             self.model_rf = model_cfg.get('ReuseFactor')
             self.model_tclk = model_cfg.get('TargetLatency')
+            self.model_conv_implementation = model_cfg.get('ConvImplementation', 'LineBuffer')
             self.model_strategy = model_cfg.get('Strategy', 'Latency')
             self.model_compression = bool(model_cfg.get('Compression', 0))
 
@@ -215,6 +228,10 @@ class HLSConfig(object):
                 strategy = layer_cfg.get('Strategy')
                 if strategy is not None:
                     self.layer_type_strategy[layer_type.lower()] = strategy
+
+                conv_implementation = layer_cfg.get('ConvImplementation')
+                if conv_implementation is not None:
+                    self.layer_type_conv_implementation[layer_type.lower()] = conv_implementation
 
                 compression = layer_cfg.get('Compression')
                 if compression is not None:
@@ -241,6 +258,10 @@ class HLSConfig(object):
                 strategy = layer_cfg.get('Strategy')
                 if strategy is not None:
                     self.layer_name_strategy[layer_name.lower()] = strategy
+
+                conv_implementation = layer_cfg.get('ConvImplementation')
+                if conv_implementation is not None:
+                    self.layer_name_conv_implementation[layer_name.lower()] = conv_implementation
 
                 compression = layer_cfg.get('Compression')
                 if compression is not None:
@@ -289,7 +310,6 @@ class HLSModel(object):
         self.output_vars = {}
 
         # External BRAM 
-        self.brams   = []
         self.bram_vars = {}
 
         self._top_function_lib = None
@@ -460,14 +480,10 @@ class HLSModel(object):
         return variables
 
     def register_bram_variable(self, out_name, variable):
-        self.brams.append(out_name)
         self.bram_vars[out_name] = variable
 
     def get_bram_variables(self):
-        variables = []
-        for bram in self.brams:
-            variables.append(self.bram_vars[bram])
-        return variables
+        return self.bram_vars.values()
 
     def register_output_variable(self, out_name, variable):
         if out_name in self.outputs:

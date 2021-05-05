@@ -37,7 +37,7 @@ void init_pool_table(
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-void compute_pool_2d(
+void compute_pool_encoded_2d(
     const unsigned h_idx,
     const unsigned w_idx,
     const data_T& in_elem,
@@ -122,7 +122,7 @@ void compute_pool_2d(
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-void pooling2d_cl2(
+void pooling2d_encoded_cl(
     hls::stream<data_T> &data,
     hls::stream<res_T> &res
 ) {
@@ -147,7 +147,7 @@ void pooling2d_cl2(
             if (res_T::size / CONFIG_T::n_filt == 1) {
                 #pragma HLS PIPELINE II=pack_factor
             }
-            compute_pool_2d<data_T, res_T, CONFIG_T>(i_ih, i_iw, data.read(), data_window, res, res_pack, outputs_ready);
+            compute_pool_encoded_2d<data_T, res_T, CONFIG_T>(i_ih, i_iw, data.read(), data_window, res, res_pack, outputs_ready);
         }
     }
 }
@@ -156,7 +156,7 @@ void pooling2d_cl2(
 //       Line Buffer Implementation (Phil's)
 // *************************************************
 template<class data_T, class res_T, typename CONFIG_T>
-void compute_pool_2d(
+void compute_pool_buffer_2d(
     const data_T& in_elem,
     ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[CONFIG_T::pool_height - 1][CONFIG_T::n_filt],
     hls::stream<res_T> &res
@@ -212,7 +212,7 @@ void compute_pool_2d(
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-void pooling2d_cl(
+void pooling2d_buffer_cl(
     hls::stream<data_T> &data,
     hls::stream<res_T> &res
 ) {
@@ -227,9 +227,25 @@ void pooling2d_cl(
             #pragma HLS LOOP_FLATTEN
             #pragma HLS PIPELINE
 
-            compute_pool_2d<data_T, res_T, CONFIG_T>(data.read(), line_buffer, res);
+            compute_pool_buffer_2d<data_T, res_T, CONFIG_T>(data.read(), line_buffer, res);
         }
     }
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
+void pooling2d_cl(
+    hls::stream<data_T> &data,
+    hls::stream<res_T> &res
+) {
+    #pragma HLS inline region
+    switch(CONFIG_T::implementation){
+        case conv_implementation::linebuffer:
+            pooling2d_buffer_cl<data_T, res_T, CONFIG_T>(data, res);
+            break;
+        case conv_implementation::encoded:
+            pooling2d_encoded_cl<data_T, res_T, CONFIG_T>(data, res);
+            break;
+        } 
 }
 
 // *************************************************
@@ -237,7 +253,7 @@ void pooling2d_cl(
 // *************************************************
 
 template<class data_T, class res_T, typename CONFIG_T>
-void compute_pool_1d(
+void compute_pool_encoded_1d(
     const unsigned w_idx,
     const data_T& in_elem,
     hls::stream<typename data_T::value_type> data_window[CONFIG_T::pool_width * CONFIG_T::n_filt],
@@ -312,7 +328,7 @@ void compute_pool_1d(
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-void pooling1d_cl2(
+void pooling1d_encoded_cl(
     hls::stream<data_T> &data,
     hls::stream<res_T> &res
 ) {
@@ -336,7 +352,7 @@ void pooling1d_cl2(
         if (res_T::size / CONFIG_T::n_filt == 1) {
             #pragma HLS PIPELINE II=pack_factor
         }
-        compute_pool_1d<data_T, res_T, CONFIG_T>(i_iw, data.read(), data_window, res, res_pack, outputs_ready);
+        compute_pool_encoded_1d<data_T, res_T, CONFIG_T>(i_iw, data.read(), data_window, res, res_pack, outputs_ready);
     }
 }
 
@@ -344,21 +360,7 @@ void pooling1d_cl2(
 //       Line Buffer Implementation (Phil's) 1D
 // *************************************************
 template<class data_T, class res_T, typename CONFIG_T>
-void pooling1d_cl(
-    hls::stream<data_T> &data,
-    hls::stream<res_T> &res
-) {
-    assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
-    
-    ReadInputWidth: for (unsigned i_iw = 0; i_iw < CONFIG_T::n_in; i_iw++) {
-        #pragma HLS LOOP_FLATTEN
-        #pragma HLS PIPELINE
-        compute_pool_1d<data_T, res_T, CONFIG_T>(data.read(), res);
-    }
-}
-
-template<class data_T, class res_T, typename CONFIG_T>
-void compute_pool_1d(
+void compute_pool_buffer_1d(
     const data_T& in_elem,
     // ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[CONFIG_T::n_filt],
     hls::stream<res_T> &res
@@ -405,6 +407,37 @@ void compute_pool_1d(
     } else {
       pX = pX + 1;
     }
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
+void pooling1d_buffer_cl(
+    hls::stream<data_T> &data,
+    hls::stream<res_T> &res
+) {
+    assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
+    
+    ReadInputWidth: for (unsigned i_iw = 0; i_iw < CONFIG_T::n_in; i_iw++) {
+        #pragma HLS LOOP_FLATTEN
+        #pragma HLS PIPELINE
+        compute_pool_buffer_1d<data_T, res_T, CONFIG_T>(data.read(), res);
+    }
+}
+
+
+template<class data_T, class res_T, typename CONFIG_T>
+void pooling1d_cl(
+    hls::stream<data_T> &data,
+    hls::stream<res_T> &res
+) {
+    #pragma HLS inline region
+    switch(CONFIG_T::implementation){
+        case conv_implementation::linebuffer:
+            pooling1d_buffer_cl<data_T, res_T, CONFIG_T>(data, res);
+            break;
+        case conv_implementation::encoded:
+            pooling1d_encoded_cl<data_T, res_T, CONFIG_T>(data, res);
+            break;
+    } 
 }
 
 

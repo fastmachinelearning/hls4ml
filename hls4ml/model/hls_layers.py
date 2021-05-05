@@ -656,10 +656,12 @@ class Conv1D(Layer):
         if self.model.config.is_resource_strategy(self):
             self.set_attr('strategy', 'resource')
             if self.model.config.backend.name == 'Vivado':
+                self.model.config.backend.set_target_reuse_factor(self)
                 self.model.config.backend.set_closest_reuse_factor(self)
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 0, 1]) #(W,C,F) => (F,W,C)
         else:
             self.set_attr('strategy', 'latency')
+        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -735,6 +737,8 @@ class SeparableConv1D(Layer):
                 self.weights['pointwise'].data = np.transpose(self.weights['pointwise'].data, axes=[2, 0, 1]) #(W,C,F) => (F,W,C)
         else:
             self.set_attr('strategy', 'latency')
+        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
+        
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -842,6 +846,9 @@ class Conv2D(Layer):
         self.add_output_variable(shape, dims)
         self.add_weights(quantizer=self.get_attr('weight_quantizer'))
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
+        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
+
         if self.model.config.is_resource_strategy(self):
             self.set_attr('strategy', 'resource')
             if self.model.config.backend.name == 'Vivado':
@@ -986,6 +993,8 @@ class SeparableConv2D(Layer):
                 self.weights['pointwise'].data = np.transpose(self.weights['pointwise'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
         else:
             self.set_attr('strategy', 'latency')
+        
+        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1116,6 +1125,8 @@ class DepthwiseConv2D(Conv2D):
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
         else:
             self.set_attr('strategy', 'latency')
+        
+        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
 class Pooling1D(Layer):
     def initialize(self):
@@ -1127,6 +1138,7 @@ class Pooling1D(Layer):
             dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0])
+        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1157,6 +1169,7 @@ class Pooling2D(Layer):
             dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0])
+        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
     def function_cpp(self):
         params = self._default_function_params()
