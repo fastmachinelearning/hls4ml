@@ -360,24 +360,9 @@ class Layer(object):
         self.weights = OrderedDict()
         self.variables = OrderedDict()
         self.precision = OrderedDict()
-
-        # We set 'accum' precision to match input tensor's precision if 'accum' was not explicitly set
-        def_type_obj, _ = self.model.config.get_precision(self, 'default')
-        acc_type_obj, acc_type_name = self.model.config.get_precision(self, 'accum')
-
-        inp = self.get_input_variable()
-        if inp is not None:
-            inp_type_obj = inp.type.precision
-        else:
-            inp_type_obj = def_type_obj
-
-        if acc_type_obj == def_type_obj: # 'accum' precision not defined in config
-            acc_type_obj = inp_type_obj # use input tensor's precision for 'accum'
-
-        accum_t = HLSType(acc_type_name, acc_type_obj) 
+        accum_t = HLSType(*reversed(self.model.config.get_precision(self, 'accum')))
         self.precision[accum_t.name] = accum_t
         self.set_attr('accum_t', accum_t.precision)
-
         self.reuse_factor = self.model.config.get_reuse_factor(self)
         self.parallelization_factor = self.model.config.get_layer_config_value(self, 'ParallelizationFactor')
         if self.parallelization_factor is None:
