@@ -200,7 +200,7 @@ class HLSConfig(object):
                 else:
                     self.model_precision['default'] = precision_cfg # Default precision for everything
 
-            self.model_bf = model_cfg.get('BramFactor') # Weight threshold to be external BRAM
+            self.model_bf = model_cfg.get('BramFactor', np.inf) # Weight threshold to be external BRAM
             self.model_rf = model_cfg.get('ReuseFactor')
             self.model_tclk = model_cfg.get('TargetLatency')
             self.model_conv_implementation = model_cfg.get('ConvImplementation', 'LineBuffer')
