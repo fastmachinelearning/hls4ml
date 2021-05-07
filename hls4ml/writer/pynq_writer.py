@@ -4,6 +4,27 @@ import numpy as np
 from hls4ml.writer.vivado_writer import VivadoWriter
 from hls4ml.model.hls_model import IntegerPrecisionType, FixedPrecisionType
 
+'''
+IOType: io_parallel # options: io_serial/io_parallel
+HLSConfig:
+  Model:
+    Precision: ap_fixed<16,6>
+    ReuseFactor: 1
+    Strategy: Latency
+  LayerType:
+    Dense:
+      ReuseFactor: 2
+      Strategy: Resource
+      Compression: True
+WrapperConfig:
+  Board: pynq-z2
+  Interface: axis # or m_axi, s_axilite
+  Driver: pynq
+  Precision:
+    Input: float
+    Output: float
+'''
+
 class PynqWriter(VivadoWriter):
 
     def next_axi_type(self, p):
@@ -116,6 +137,7 @@ class PynqWriter(VivadoWriter):
                     newline += indent + inp.type.name + ' in_local[N_IN];\n'
                     newline += indent + out.type.name + ' out_local[N_OUT];\n'
                 elif io_type == 'io_stream':
+                    newline = ''
                     newline += indent + 'hls::stream<' + inp.type.name + '> in_local("input_1");\n'
                     newline += indent + 'hls::stream<' + out.type.name + '> out_local("output_1");\n\n'
                     newline += indent + '#pragma HLS STREAM variable=in_local depth=N_IN\n'
@@ -206,7 +228,7 @@ class PynqWriter(VivadoWriter):
 
     def modify_build_script(self, model):
         '''
-        Modify the build_prj.tcl script to add the extra wrapper files and set the top function
+        Modify the build_prj.tcl and build_lib.sh scripts to add the extra wrapper files and set the top function
         '''
         filedir = os.path.dirname(os.path.abspath(__file__))
         oldfile = '{}/build_prj.tcl'.format(model.config.get_output_dir())
@@ -227,6 +249,93 @@ class PynqWriter(VivadoWriter):
         fout.close()
         os.rename(newfile, oldfile)
 
+        ###################
+        # build_lib.sh
+        ###################
+
+        f = open(os.path.join(filedir, '../templates/pynq/build_lib.sh'), 'r')
+        fout = open('{}/build_lib.sh'.format(model.config.get_output_dir()), 'w')
+
+        for line in f.readlines():
+            line = line.replace('myproject', model.config.get_project_name())
+            line = line.replace('mystamp', model.config.get_config_value('Stamp'))
+
+            fout.write(line)
+        f.close()
+        fout.close()
+    
+    def write_wrapper_test(self, model):
+
+        ###################
+        # write myproject_test_wrapper.cpp
+        ###################
+        oldfile = '{}/{}_test.cpp'.format(model.config.get_output_dir(), model.config.get_project_name())
+        newfile = '{}/{}_test_wrapper.cpp'.format(model.config.get_output_dir(), model.config.get_project_name())
+
+        f = open(oldfile,'r')
+        fout = open(newfile, 'w')
+
+        inp = model.get_input_variables()[0]
+        out = model.get_output_variables()[0]
+
+        for line in f.readlines():
+            if '{}.h'.format(model.config.get_project_name()) in line:
+                newline = line.replace('{}.h'.format(model.config.get_project_name()), '{}_axi.h'.format(model.config.get_project_name()))            
+            elif self.variable_definition_cpp(model, inp) in line:
+                newline = line.replace(self.variable_definition_cpp(model, inp), 'input_axi_t inputs[N_IN]')
+            elif self.variable_definition_cpp(model, out) in line:
+                newline = line.replace(self.variable_definition_cpp(model, out), 'output_axi_t outputs[N_OUT]')
+            elif 'unsigned short' in line:
+                newline = ''
+            elif '{}('.format(model.config.get_project_name()) in line:
+                indent_amount = line.split(model.config.get_project_name())[0]
+                newline = indent_amount + '{}_axi(inputs,outputs);\n'.format(model.config.get_project_name())
+            elif inp.size_cpp() in line or inp.cppname in line or inp.type.name in line:
+                newline = line.replace(inp.size_cpp(),'N_IN').replace(inp.cppname, 'inputs').replace(inp.type.name, 'input_axi_t')
+            elif out.size_cpp() in line or out.cppname in line or out.type.name in line:
+                newline = line.replace(out.size_cpp(),'N_OUT').replace(out.cppname, 'outputs').replace(out.type.name, 'output_axi_t')
+            else:
+                newline = line
+            fout.write(newline)
+
+        f.close()
+        fout.close()
+        os.rename(newfile, oldfile)
+
+        ###################
+        # write myproject_bridge_wrapper.cpp
+        ###################
+        oldfile = '{}/{}_bridge.cpp'.format(model.config.get_output_dir(), model.config.get_project_name())
+        newfile = '{}/{}_bridge_wrapper.cpp'.format(model.config.get_output_dir(), model.config.get_project_name())
+
+        f = open(oldfile,'r')
+        fout = open(newfile, 'w')
+
+        inp = model.get_input_variables()[0]
+        out = model.get_output_variables()[0]
+
+        for line in f.readlines():
+            if '{}.h'.format(model.config.get_project_name()) in line:
+                newline = line.replace('{}.h'.format(model.config.get_project_name()), '{}_axi.h'.format(model.config.get_project_name()))            
+            elif self.variable_definition_cpp(model, inp, name_suffix='_ap') in line:
+                newline = line.replace(self.variable_definition_cpp(model, inp, name_suffix='_ap'), 'input_axi_t {}_ap[N_IN]'.format(inp.cppname))
+            elif self.variable_definition_cpp(model, out, name_suffix='_ap') in line:
+                newline = line.replace(self.variable_definition_cpp(model, out, name_suffix='_ap'), 'output_axi_t {}_ap[N_OUT]'.format(out.cppname))
+            elif '{}('.format(model.config.get_project_name()) in line:
+                indent_amount = line.split(model.config.get_project_name())[0]
+                newline = indent_amount + '{}_axi({}_ap,{}_ap);\n'.format(model.config.get_project_name(), inp.cppname,out.cppname)
+            elif inp.size_cpp() in line or inp.cppname in line or inp.type.name in line:
+                newline = line.replace(inp.size_cpp(),'N_IN').replace(inp.type.name, 'input_axi_t')
+            elif out.size_cpp() in line or out.cppname in line or out.type.name in line:
+                newline = line.replace(out.size_cpp(),'N_OUT').replace(out.type.name, 'output_axi_t')
+            else:
+                newline = line
+            fout.write(newline)
+
+        f.close()
+        fout.close()
+        os.rename(newfile, oldfile)
+    
     def write_board_script(self, model):
         '''
         Write the tcl scripts to create a Vivado IPI project for the Pynq
@@ -257,5 +366,6 @@ class PynqWriter(VivadoWriter):
         self.modify_build_script(model)
         self.write_board_script(model)
         self.write_driver(model)
+        self.write_wrapper_test(model)
 
 

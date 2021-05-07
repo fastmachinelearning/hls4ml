@@ -18,8 +18,6 @@ def create_backend_config(output_dir='my-hls-test', project_name='myproject',
     config['Backend'] = backend
     config['IOType'] = io_type
     config['HLSConfig'] = {}
-    if backend == 'pynq':
-        config['WrapperParams'] = {}
 
     return config
 

@@ -303,7 +303,6 @@ class VivadoWriter(Writer):
                     all_precision.update(layer_precision)
                 for used_type in all_precision.values():
                     newline += self.type_definition_cpp(model, used_type)
-
             else:
                 newline = line
             fout.write(newline)
