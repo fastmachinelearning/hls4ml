@@ -10,12 +10,16 @@ class Quantizer(object):
     def __call__(self, data):
         raise NotImplementedError
 
-class IntegerPrecisionType(object):
-    def __init__(self, width=16, signed=True):
+class PrecisionType(object):
+    def __init__(self, width, signed):
         self.width = width
+        self.signed = signed
+
+class IntegerPrecisionType(PrecisionType):
+    def __init__(self, width=16, signed=True):
+        super().__init__(width=width, signed=signed)
         self.integer = width
         self.fractional = 0
-        self.signed = signed
     
     def __str__(self):
         typestring = 'ap_{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
@@ -29,12 +33,11 @@ class IntegerPrecisionType(object):
         eq = eq and self.fractional == other.fractional
         return eq
 
-class FixedPrecisionType(object):
+class FixedPrecisionType(PrecisionType):
     def __init__(self, width=16, integer=6, signed=True, rounding_mode=None, saturation_mode=None, saturation_bits=None):
-        self.width = width
+        super().__init__(width=width, signed=signed)
         self.integer = integer
         self.fractional = width-integer
-        self.signed = signed
         self.rounding_mode = rounding_mode
         self.saturation_mode = saturation_mode
         self.saturation_bits = saturation_bits
@@ -157,7 +160,7 @@ class TensorVariable(Variable):
             nelem *= dim
         return nelem
 
-class InplaceVariable():
+class InplaceVariable(Variable):
     def __init__(self, shape, dim_names, proxy, **kwargs):
         self.shape = shape
         self.dim_names = dim_names
