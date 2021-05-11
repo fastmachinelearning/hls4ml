@@ -79,9 +79,9 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader,
 
     if activation_config['class_name'] == 'ternary_tanh':
         layer['class_name'] = 'TernaryTanh'
-        layer['threshold'] = activation_config.get('config', {}).get('threshold', 1./3)
+        layer['threshold'] = activation_config.get('config', {}).get('threshold', 0.33)
         if layer['threshold'] is None:
-            layer['threshold'] = 1./3 # the default ternary tanh threshold for QKeras
+            layer['threshold'] = 0.33 # the default ternary tanh threshold for QKeras
     else:
         layer['class_name'] = 'Activation'
     if activation_config['class_name'] == 'quantized_bits':

@@ -2,7 +2,7 @@ import numpy as np
 import re
 
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.hls_model import Layer, IntegerPrecisionType, FixedPrecisionType, XnorPrecisionType, register_layer
+from hls4ml.model.hls_model import Layer, IntegerPrecisionType, XnorPrecisionType, register_layer
 from hls4ml.model.hls_layers import BatchNormalization
 from hls4ml.templates import templates
 
