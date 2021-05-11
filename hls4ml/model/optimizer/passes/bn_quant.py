@@ -100,7 +100,6 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
             'n_in' : bn_layer.get_attr('n_in'),
             'n_out' : bn_layer.get_attr('n_in'),
             'n_filt' : bn_layer.get_attr('n_filt'),
-            'epsilon' : bn_layer.get_attr('epsilon'),
             'quantize' : quantize,
             'Trace' : bn_layer.get_attr('Trace')
         }
