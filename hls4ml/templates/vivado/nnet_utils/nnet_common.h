@@ -32,9 +32,6 @@ namespace nnet {
 enum io_type {io_parallel = 0, io_serial, io_stream};
 enum strategy { latency, resource };
 
-// Activation enum
-enum activ_type {activ_relu = 0, activ_sigmoid, activ_tanh, activ_softmax};
-
  /* ---
   * Balanced tree reduce implementation.
   * For use in scenarios where Vivado cannot expression balance

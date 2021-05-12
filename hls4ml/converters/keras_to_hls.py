@@ -118,8 +118,6 @@ def parse_default_keras_layer(keras_layer, input_names):
         layer['activation'] = keras_layer['config']['activation']
     if 'epsilon' in keras_layer['config']:
         layer['epsilon'] = keras_layer['config']['epsilon']
-    if 'recurrent_activation' in keras_layer['config']:
-        layer['recurrent_activation'] = keras_layer['config']['recurrent_activation']
     if 'use_bias' in keras_layer['config']:
         layer['use_bias'] = keras_layer['config']['use_bias']
 

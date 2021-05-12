@@ -71,35 +71,6 @@ conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     using product = nnet::product::{product_type}<x_T, y_T, res_T>;
 }};\n"""
 
-rnn_mult1_config_template = """struct config{index}_mult1 : nnet::dense_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned n_out = {n_out};
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned strategy = nnet::{strategy};
-    static const unsigned reuse_factor = {reuse};
-    typedef {accum_t} accum_t;
-    typedef {bias_t} bias_t;
-    typedef {weight_t} weight_t;
-    typedef {index_t} index_t;
-    template<class x_T, class y_T, class res_T>
-    using product = nnet::product::{product_type}<x_T, y_T, res_T>;
-}};\n"""
-
-
-rnn_mult2_config_template = """struct config{index}_mult2 : nnet::dense_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned n_out = {n_out};
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned strategy = nnet::{strategy};
-    static const unsigned reuse_factor = {reuse};
-    typedef {accum_t} accum_t;
-    typedef {bias_t} bias_t;
-    typedef {weight_t} weight_t;
-    typedef {index_t} index_t;
-    template<class x_T, class y_T, class res_T>
-    using product = nnet::product::{product_type}<x_T, y_T, res_T>;
-}};\n"""
-
 conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned pad_top = {pad_top};
     static const unsigned pad_bottom = {pad_bottom};
@@ -142,7 +113,11 @@ lstm_config_template = """struct config{index} : nnet::lstm_config {{
     typedef {config_mult_t1} mult_config1;
     typedef {config_mult_t2} mult_config2;
     typedef {lstm_act_t} ACT_CONFIG_LSTM;
+    template<class x_T, class y_T, class config_T>
+    using activation_recr = nnet::activation::{recurrent_activation}<x_T, y_T, config_T>;
     typedef {act_t} ACT_CONFIG_T;
+    template<class x_T, class y_T, class config_T>
+    using activation = nnet::activation::{activation}<x_T, y_T, config_T>;
     static const unsigned n_in  = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned n_state = {n_state};
@@ -160,7 +135,11 @@ gru_config_template = """struct config{index} : nnet::gru_config {{
     typedef {config_mult_t1} mult_config1;
     typedef {config_mult_t2} mult_config2;
     typedef {gru_act_t} ACT_CONFIG_GRU;
+    template<class x_T, class y_T, class config_T>
+    using activation_recr = nnet::activation::{recurrent_activation}<x_T, y_T, config_T>;
     typedef {act_t} ACT_CONFIG_T;
+    template<class x_T, class y_T, class config_T>
+    using activation = nnet::activation::{activation}<x_T, y_T, config_T>;
     static const unsigned n_in  = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned n_state = {n_state};
@@ -171,21 +150,11 @@ gru_config_template = """struct config{index} : nnet::gru_config {{
     static const bool store_weights_in_bram = false;
 }};\n"""
 
-activ_config_recr_template = """struct {type}_config{index}_recr : nnet::activ_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned table_size = {table_size};
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned reuse_factor = {reuse};
-    static const unsigned activation_type = nnet::activ_{type};
-    typedef {table_t} table_t;
-}};\n"""
-
 activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned n_in = {n_in};
     static const unsigned table_size = {table_size};
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
-    static const unsigned activation_type = nnet::activ_{type};
     typedef {table_t} table_t;
 }};\n"""
 
@@ -415,9 +384,6 @@ dense_function_template = 'nnet::dense<{input_t}, {output_t}, {config}>({input},
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
 conv1d_function_template = 'nnet::conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 conv2d_function_template = 'nnet::conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
-lstm_function_template = 'nnet::lstm_loop<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {wr}, {b}, {br});'
-gru_function_template = 'nnet::gru_loop<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {wr}, {b}, {br});'
-activ_recr_function_template = 'nnet::{recurrent_activation}<{input_t}, {output_t}, {config}>({input}, {output});'
 sepconv1d_function_template = 'nnet::separable_conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {d}, {p}, {z}, {b});'
 sepconv2d_function_template = 'nnet::separable_conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {d}, {p}, {z}, {b});'
 depthconv2d_function_template = 'nnet::depthwise_conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
@@ -434,12 +400,13 @@ resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input
 transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}, {output});'
 garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
 garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
+lstm_function_template = 'nnet::lstm_stack<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {wr}, {b}, {br});'
+gru_function_template = 'nnet::gru_stack<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {wr}, {b}, {br});'
 
 dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_stream.h']
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
 conv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_conv1d_stream.h']
 conv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_stream.h']
-lstm_include_list = ['nnet_utils/nnet_recurrent.h']
 sepconv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_sepconv1d_stream.h']
 sepconv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_sepconv2d_stream.h']
 activ_include_list = ['nnet_utils/nnet_activation.h', 'nnet_utils/nnet_activation_stream.h']
@@ -449,6 +416,7 @@ merge_include_list = ['nnet_utils/nnet_merge.h', 'nnet_utils/nnet_merge_stream.h
 resize_include_list = ['nnet_utils/nnet_image.h', 'nnet_utils/nnet_image_stream.h']
 transpose_include_list = ['nnet_utils/nnet_array.h']
 garnet_include_list = ['nnet_utils/nnet_garnet.h']
+lstm_include_list = ['nnet_utils/nnet_recurrent.h']
 
 class VivadoBackend(Backend):
     def __init__(self):
@@ -458,9 +426,6 @@ class VivadoBackend(Backend):
         self.register_templates('BatchNormalization'     , batchnorm_function_template,   batchnorm_config_template, batchnorm_include_list)
         self.register_templates('Conv1D'                 , conv1d_function_template,      [conv1d_config_template, conv_mult_config_template], conv1d_include_list)
         self.register_templates('Conv2D'                 , conv2d_function_template,      [conv2d_config_template, conv_mult_config_template], conv2d_include_list)
-        self.register_templates('LSTM'                   , lstm_function_template,        [lstm_config_template, rnn_mult1_config_template, activ_config_recr_template, activ_config_template, rnn_mult2_config_template], lstm_include_list)
-        self.register_templates('GRU'                    , gru_function_template,         [gru_config_template, rnn_mult1_config_template,activ_config_recr_template, activ_config_template, rnn_mult2_config_template], lstm_include_list)
-        self.register_templates('Recurrent_Activation'   , activ_recr_function_template,   activ_config_recr_template, activ_include_list)
         self.register_templates('Conv2DBatchnorm'        , conv2d_function_template,      [conv2d_config_template, conv_mult_config_template], conv2d_include_list)
         self.register_templates('SeparableConv1D'        , sepconv1d_function_template,   [sepconv_config_template, conv1d_config_template, conv1d_config_template, conv_mult_config_template, conv_mult_config_template], sepconv1d_include_list)
         self.register_templates('SeparableConv2D'        , sepconv2d_function_template,   [sepconv_config_template, conv2d_config_template, conv2d_config_template, conv_mult_config_template, conv_mult_config_template], sepconv2d_include_list)
@@ -481,7 +446,9 @@ class VivadoBackend(Backend):
         self.register_templates('Resize'                 , resize_function_template,      resize_config_template, resize_include_list)
         self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template, transpose_include_list)
         self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
-        self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)    
+        self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)
+        self.register_templates('LSTM'                   , lstm_function_template,        [lstm_config_template, dense_config_template, activ_config_template, activ_config_template, dense_config_template], lstm_include_list)
+        self.register_templates('GRU'                    , gru_function_template,         [gru_config_template, dense_config_template,activ_config_template, activ_config_template, dense_config_template], lstm_include_list)  
 
     def get_valid_reuse_factors(self, layer, recr = False):
         n_in = 0
@@ -551,23 +518,17 @@ class VivadoBackend(Backend):
         else:
             return before
 
-    def set_closest_reuse_factor(self, layer):
-        valid_rf = self.get_valid_reuse_factors(layer)
-        chosen_rf = layer.reuse_factor
+    def set_closest_reuse_factor(self, layer, recr = False):
+        valid_rf = self.get_valid_reuse_factors(layer, recr)
+        chosen_rf = layer.reuse_factor_recr if recr else layer.reuse_factor
         if chosen_rf not in valid_rf:
             closest_rf = self.get_closest_reuse_factor(valid_rf, chosen_rf)
             print('WARNING: Invalid ReuseFactor={} with "Resource" strategy in layer "{}". Using ReuseFactor={} instead. Valid ReuseFactor(s): {}.'
                 .format(chosen_rf, layer.name, closest_rf, ','.join(map(str, valid_rf))))
-            layer.reuse_factor = closest_rf
-
-    def set_closest_reuse_factor_recr(self, layer):
-        valid_rf = self.get_valid_reuse_factors(layer, recr = True)
-        chosen_rf = layer.reuse_factor_recr
-        if chosen_rf not in valid_rf:
-            closest_rf = self.get_closest_reuse_factor(valid_rf, chosen_rf)
-            print('WARNING: Invalid ReuseFactor={} with "Resource" strategy in layer "{}". Using ReuseFactor={} instead. Valid ReuseFactor(s): {}.'
-                .format(chosen_rf, layer.name, closest_rf, ','.join(map(str, valid_rf))))
-            layer.reuse_factor_recr = closest_rf
+            if recr:
+                layer.reuse_factor_recr = closest_rf
+            else:
+                layer.reuse_factor = closest_rf
 
     def convert_precision_string(self, precision):
         '''

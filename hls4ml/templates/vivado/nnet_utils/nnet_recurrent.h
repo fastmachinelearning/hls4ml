@@ -23,226 +23,13 @@
 
 #include "nnet_common.h"
 #include "nnet_activation.h"
+#include "nnet_recr_activations.h"
 #include "nnet_dense.h"
 #include "hls_stream.h"
 
 
 namespace nnet {
 
-struct rnn_config
-{
-    // Internal data type definitions
-    typedef float state_t;
-    typedef float U_t;  // State x Input
-    typedef float W_t;  // State x State
-    typedef float V_t;  // Output x State
-
-    // Layer Sizes
-    static const unsigned n_in = 10;
-    static const unsigned n_out = 2;
-    static const unsigned n_state = 2;
-    static const unsigned activation_type = activ_relu;
-    static const unsigned table_size = 1024;
-
-    // Resource reuse info
-    static const unsigned io_type = io_parallel;
-    static const unsigned reuse_factor = 1;
-    static const bool store_weights_in_bram = false;
-};
-
-// Recusive Neural Network (RNN)
-// Resources:
-//  - http://www.wildml.com/2015/09/recurrent-neural-networks-tutorial-part-1-introduction-to-rnns/
-//  - https://github.com/pangolulu/rnn-from-scratch
-// Notes:
-//  - RNN naming conventions adopted from the above links
-//      - newstate = activation(U*input + W*state)
-//      - output   = V*newstate
-//  - If softmax is needed on output, perform *outside* this operations
-template<class data_T, class res_T, typename CONFIG_T, typename ACT_CONFIG_T>
-void simple_rnn(
-    data_T    data[CONFIG_T::n_in],
-    res_T     res[CONFIG_T::n_out],
-    typename CONFIG_T::state_t newstate[CONFIG_T::n_state],
-    typename CONFIG_T::U_t     param_U[CONFIG_T::n_in]   [CONFIG_T::n_state],
-    typename CONFIG_T::W_t     param_W[CONFIG_T::n_state][CONFIG_T::n_state],
-    typename CONFIG_T::V_t     param_V[CONFIG_T::n_state][CONFIG_T::n_out])
-{
-
-    // Initialize the state variable -- will maintain state between function calls
-    //static typename CONFIG_T::state_t newstate[CONFIG_T::n_state];
-    std::cout << "Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << newstate[ii] << " "; std::cout << "]" << std::endl;
-
-    // Operation: U*input
-    data_T inputcache;
-    typename CONFIG_T::state_t inputmult[CONFIG_T::n_in][CONFIG_T::n_state];
-    typename CONFIG_T::state_t inputacc[CONFIG_T::n_state];
-    InputProd1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        inputcache = data[ii];
-        InputProd2: for(int jj = 0; jj < CONFIG_T::n_state; jj++) {
-            inputmult[ii][jj] = inputcache * param_U[ii][jj];
-        }
-    }
-    for(int iacc = 0; iacc < CONFIG_T::n_state; iacc++) {
-        inputacc[iacc] = 0;
-    }
-    InputAccum1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        InputAccum2: for(int jj = 0; jj < CONFIG_T::n_state; jj++) {
-            inputacc[jj] += inputmult[ii][jj];
-        }
-    }
-
-    // Operation: W*state
-    data_T statecache;
-    typename CONFIG_T::state_t statemult[CONFIG_T::n_state][CONFIG_T::n_state];
-    typename CONFIG_T::state_t stateacc[CONFIG_T::n_state];
-    StateProd1: for(int ii = 0; ii < CONFIG_T::n_state; ii++) {
-        statecache = newstate[ii];
-        StateProd2: for(int jj = 0; jj < CONFIG_T::n_state; jj++) {
-            statemult[ii][jj] = statecache * param_W[ii][jj];
-        }
-    }
-    for(int iacc = 0; iacc < CONFIG_T::n_state; iacc++) {
-        stateacc[iacc] = 0;
-    }
-    StateAccum1: for(int ii = 0; ii < CONFIG_T::n_state; ii++) {
-        StateAccum2: for(int jj = 0; jj < CONFIG_T::n_state; jj++) {
-            stateacc[jj] += statemult[ii][jj];
-        }
-    }
-
-    // Operation: U*input + W*state
-    typename CONFIG_T::state_t rawstate[CONFIG_T::n_state];
-    for(int iacc = 0; iacc < CONFIG_T::n_state; iacc++) {
-        rawstate[iacc] = inputacc[iacc] + stateacc[iacc];
-    }
-
-    std::cout << "Post-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << rawstate[ii] << " "; std::cout << "]" << std::endl;
-
-    // Run activation function
-    if (CONFIG_T::activation_type == activ_relu){
-        relu<typename CONFIG_T::state_t, typename CONFIG_T::state_t, ACT_CONFIG_T>(rawstate, newstate);
-    }
-    else if (CONFIG_T::activation_type == activ_sigmoid){
-      sigmoid<typename CONFIG_T::state_t, typename CONFIG_T::state_t, ACT_CONFIG_T>(rawstate, newstate);
-    }
-    else if (CONFIG_T::activation_type == activ_tanh){
-        tanh<typename CONFIG_T::state_t, typename CONFIG_T::state_t, ACT_CONFIG_T>(rawstate, newstate);
-    }
-
-    std::cout << "Activated State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << newstate[ii] << " "; std::cout << "]" << std::endl;
-
-    // Operation: output = V*state
-    data_T outputcache;
-    typename CONFIG_T::state_t outputmult[CONFIG_T::n_state][CONFIG_T::n_out];
-    OutputProd1: for(int ii = 0; ii < CONFIG_T::n_state; ii++) {
-        outputcache = newstate[ii];
-        OutputProd2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-            outputmult[ii][jj] = outputcache * param_V[ii][jj];
-        }
-    }
-    for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
-        res[iacc] = 0;
-    }
-    OutputAccum1: for(int ii = 0; ii < CONFIG_T::n_state; ii++) {
-        OutputAccum2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-            res[jj] += outputmult[ii][jj];
-        }
-    }
-
-}
-//Version of the RNN where Pipeline is impossible but resource usage is significantly smaller. Here the states are contained in a fixed variable that is maintained during recursive calls
-template<class data_T, class res_T, typename CONFIG_T, typename ACT_CONFIG_T>
-void simple_rnn_static(
-    data_T    data[CONFIG_T::n_in],
-    res_T     res[CONFIG_T::n_out],
-    typename CONFIG_T::U_t     param_U[CONFIG_T::n_in]   [CONFIG_T::n_state],
-    typename CONFIG_T::W_t     param_W[CONFIG_T::n_state][CONFIG_T::n_state],
-    typename CONFIG_T::V_t     param_V[CONFIG_T::n_state][CONFIG_T::n_out])
-{
-
-    // Initialize the state variable -- will maintain state between function calls
-    static typename CONFIG_T::state_t newstate[CONFIG_T::n_state];
-    std::cout << "Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << newstate[ii] << " "; std::cout << "]" << std::endl;
-
-    // Operation: U*input
-    data_T inputcache;
-    typename CONFIG_T::state_t inputmult[CONFIG_T::n_in][CONFIG_T::n_state];
-    typename CONFIG_T::state_t inputacc[CONFIG_T::n_state];
-    InputProd1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        inputcache = data[ii];
-        InputProd2: for(int jj = 0; jj < CONFIG_T::n_state; jj++) {
-            inputmult[ii][jj] = inputcache * param_U[ii][jj];
-        }
-    }
-    for(int iacc = 0; iacc < CONFIG_T::n_state; iacc++) {
-        inputacc[iacc] = 0;
-    }
-    InputAccum1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        InputAccum2: for(int jj = 0; jj < CONFIG_T::n_state; jj++) {
-            inputacc[jj] += inputmult[ii][jj];
-        }
-    }
-
-    // Operation: W*state
-    data_T statecache;
-    typename CONFIG_T::state_t statemult[CONFIG_T::n_state][CONFIG_T::n_state];
-    typename CONFIG_T::state_t stateacc[CONFIG_T::n_state];
-    StateProd1: for(int ii = 0; ii < CONFIG_T::n_state; ii++) {
-        statecache = newstate[ii];
-        StateProd2: for(int jj = 0; jj < CONFIG_T::n_state; jj++) {
-            statemult[ii][jj] = statecache * param_W[ii][jj];
-        }
-    }
-    for(int iacc = 0; iacc < CONFIG_T::n_state; iacc++) {
-        stateacc[iacc] = 0;
-    }
-    StateAccum1: for(int ii = 0; ii < CONFIG_T::n_state; ii++) {
-        StateAccum2: for(int jj = 0; jj < CONFIG_T::n_state; jj++) {
-            stateacc[jj] += statemult[ii][jj];
-        }
-    }
-
-    // Operation: U*input + W*state
-    typename CONFIG_T::state_t rawstate[CONFIG_T::n_state];
-    for(int iacc = 0; iacc < CONFIG_T::n_state; iacc++) {
-        rawstate[iacc] = inputacc[iacc] + stateacc[iacc];
-    }
-
-    std::cout << "Post-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << rawstate[ii] << " "; std::cout << "]" << std::endl;
-
-    // Run activation function
-    if (CONFIG_T::activation_type == activ_relu){
-        relu<typename CONFIG_T::state_t, typename CONFIG_T::state_t, ACT_CONFIG_T>(rawstate, newstate);
-    }
-    else if (CONFIG_T::activation_type == activ_sigmoid){
-        sigmoid<typename CONFIG_T::state_t, typename CONFIG_T::state_t, ACT_CONFIG_T>(rawstate, newstate);
-    }
-    else if (CONFIG_T::activation_type == activ_tanh){
-        tanh<typename CONFIG_T::state_t, typename CONFIG_T::state_t, ACT_CONFIG_T>(rawstate, newstate);
-    }
-
-    std::cout << "Activated State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << newstate[ii] << " "; std::cout << "]" << std::endl;
-
-    // Operation: output = V*state
-    data_T outputcache;
-    typename CONFIG_T::state_t outputmult[CONFIG_T::n_state][CONFIG_T::n_out];
-    OutputProd1: for(int ii = 0; ii < CONFIG_T::n_state; ii++) {
-        outputcache = newstate[ii];
-        OutputProd2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-            outputmult[ii][jj] = outputcache * param_V[ii][jj];
-        }
-    }
-    for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
-        res[iacc] = 0;
-    }
-    OutputAccum1: for(int ii = 0; ii < CONFIG_T::n_state; ii++) {
-        OutputAccum2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-            res[jj] += outputmult[ii][jj];
-        }
-    }
-
-}
 struct lstm_config
 {
     // Internal data type definitions
@@ -255,7 +42,6 @@ struct lstm_config
     static const unsigned n_out = 2;
     static const unsigned n_state = 2;
     static const unsigned n_4state = 8;
-    static const unsigned activation_type = activ_relu;
     static const unsigned table_size = 1024;
 
     // Resource reuse info
@@ -263,6 +49,11 @@ struct lstm_config
     static const unsigned reuse_factor = 1;
     static const unsigned n_zeros = 0;
     static const bool store_weights_in_bram = false;
+
+    template<class x_T, class y_T, class config_T>
+    using activation_recr = nnet::activation::relu<x_T, y_T, config_T>;
+    template<class x_T, class y_T, class config_T>
+    using activation = nnet::activation::relu<x_T, y_T, config_T>;
 };
 // Long Short term Memory NN (LSTM)
 // Resources:
@@ -286,10 +77,6 @@ template<class data_T, class res_T, typename CONFIG_T>
             typename CONFIG_T::bias_t     param_br[CONFIG_T::n_state*4]
 	    ) {
   // Initialize the state variable -- will maintain state between function calls
-  # ifndef __SYNTHESIS__
-  std::cout << "S Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << s_newstate[ii] << " "; std::cout << "]" << std::endl;
-  std::cout << "H Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
-  # endif
 
   res_T tmpres      [CONFIG_T::n_state*4];
   res_T tmpres_state[CONFIG_T::n_state*4];
@@ -321,47 +108,23 @@ template<class data_T, class res_T, typename CONFIG_T>
     int index = iacc + CONFIG_T::n_state*2;
     inputacc_c[iacc] = tmpres[index] + tmpres_state[index];
   }
-  if(CONFIG_T::ACT_CONFIG_LSTM::activation_type == activ_relu){
-    nnet::relu<data_T, typename CONFIG_T:: weight_t, typename CONFIG_T::ACT_CONFIG_LSTM>(inputacc_ifo, tmpres_ifo);
-  }
-  else if (CONFIG_T::ACT_CONFIG_LSTM::activation_type == activ_sigmoid){
-    nnet::sigmoid<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_LSTM>(inputacc_ifo, tmpres_ifo);
-  }
-  else if (CONFIG_T::ACT_CONFIG_LSTM::activation_type == activ_tanh){
-    nnet::tanh<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_LSTM>(inputacc_ifo, tmpres_ifo);
-  }
+  
+  CONFIG_T::template activation_recr<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_LSTM>::activation(inputacc_ifo, tmpres_ifo);
+
   //Now for the confusion matrix
-  if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_relu){
-    nnet::relu<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>(inputacc_c, tmpres_c);
-  }
-  else if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_sigmoid){
-    nnet::sigmoid<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>(inputacc_c, tmpres_c);
-  }
-  else if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_tanh){
-    nnet::tanh<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>(inputacc_c, tmpres_c);
-  }
+  CONFIG_T::template activation<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>::activation(inputacc_c, tmpres_c);
+
   // Operation: s=g*i+sold*f (update state with buffer to avoid timing issues)
   for(int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
 #pragma HLS UNROLL
     s_newstate[iacc] =  tmpres_c[iacc]*tmpres_ifo[iacc] + s_newstate[iacc]*tmpres_ifo[iacc+(CONFIG_T::n_state)];
   }
   // Operation: h=act(s)*o
-  if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_relu){
-    nnet::relu<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>(s_newstate,s_actstate);
-  }
-  else if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_sigmoid){
-    nnet::sigmoid<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>(s_newstate,s_actstate);
-  }
-  else if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_tanh){
-    nnet::tanh<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>(s_newstate,s_actstate);
-  }
+  CONFIG_T::template activation<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>::activation(s_newstate, s_actstate);
+  
   for(int iacc = 0; iacc < CONFIG_T::n_state; iacc++) {
     h_newstate[iacc] = tmpres_ifo[iacc+2*(CONFIG_T::n_state)]*s_actstate[iacc];
   }
-  # ifndef __SYNTHESIS__
-  std::cout << "Post-State: s [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << s_newstate[ii] << " "; std::cout << "]" << std::endl;
-  std::cout << "Post-State: h [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
-  # endif
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
@@ -401,11 +164,6 @@ template<class data_T, class res_T, typename CONFIG_T>
       h_state[i_s_newstate] = 0;
     }
   }
-  # ifndef __SYNTHESIS__
-  std::cout << "I Input(Pr): [ "; for (int ii = 0; ii < CONFIG_T::n_in; ii++) std::cout << data[ii] << " "; std::cout << "]" << std::endl;
-  std::cout << "S Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << s_newstate[ii] << " "; std::cout << "]" << std::endl;
-  std::cout << "H Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_state[ii] << " "; std::cout << "]" << std::endl;
-  # endif
 
   nnet::dense<data_T, res_T, typename CONFIG_T::mult_config1>(data      ,tmpres   , param,param_b);
   nnet::dense<data_T, res_T, typename CONFIG_T::mult_config2>(h_state,tmpres_state, param_r, param_br);
@@ -422,54 +180,28 @@ template<class data_T, class res_T, typename CONFIG_T>
     inputacc_c[iacc] = tmpres[index] + tmpres_state[index];
   }
 
+  CONFIG_T::template activation_recr<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_LSTM>::activation(inputacc_ifo, tmpres_ifo);
 
-  if (CONFIG_T::ACT_CONFIG_LSTM::activation_type == activ_relu){
-    nnet::relu<data_T, typename CONFIG_T:: weight_t, typename CONFIG_T::ACT_CONFIG_LSTM>(inputacc_ifo, tmpres_ifo);
-  }
-  else if (CONFIG_T::ACT_CONFIG_LSTM::activation_type == activ_sigmoid){
-    nnet::sigmoid<data_T, typename CONFIG_T:: weight_t, typename CONFIG_T::ACT_CONFIG_LSTM>(inputacc_ifo, tmpres_ifo);
-  }
-  else if (CONFIG_T::ACT_CONFIG_LSTM::activation_type == activ_tanh){
-    nnet::tanh<data_T, typename CONFIG_T:: weight_t, typename CONFIG_T::ACT_CONFIG_LSTM>(inputacc_ifo, tmpres_ifo);
-  }
   //Now for the confusion matrix
-  if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_relu){
-    nnet::relu<res_T, typename CONFIG_T:: weight_t, typename CONFIG_T::ACT_CONFIG_T>(inputacc_c, tmpres_c);
-  }
-  else if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_sigmoid){
-    nnet::sigmoid<res_T, typename CONFIG_T:: weight_t, typename CONFIG_T::ACT_CONFIG_T>(inputacc_c, tmpres_c);
-  }
-  else if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_tanh){
-    nnet::tanh<data_T, typename CONFIG_T:: weight_t, typename CONFIG_T::ACT_CONFIG_T>(inputacc_c, tmpres_c);
-  }
+  CONFIG_T::template activation<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>::activation(inputacc_c, tmpres_c);
+
   // Operation: s=g*i+sold*f (update state with buffer to avoid timing issues)
   for(int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
     #pragma HLS UNROLL
     s_newstate[iacc] =  tmpres_c[iacc]*tmpres_ifo[iacc] + s_newstate[iacc]*tmpres_ifo[iacc+(CONFIG_T::n_state)];
   }
   // Operation: h=act(s)*o
-  if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_relu){
-    nnet::relu<data_T, typename CONFIG_T:: weight_t, typename CONFIG_T::ACT_CONFIG_T>(s_newstate,s_actstate);
-  }
-  else if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_sigmoid){
-    nnet::sigmoid<data_T, typename CONFIG_T:: weight_t, typename CONFIG_T::ACT_CONFIG_T>(s_newstate,s_actstate);
-  }
-  else if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_tanh){
-    nnet::tanh<data_T, typename CONFIG_T:: weight_t, typename CONFIG_T::ACT_CONFIG_T>(s_newstate,s_actstate);
-  }
+  CONFIG_T::template activation<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>::activation(s_newstate, s_actstate);
+
   for(int iacc = 0; iacc < CONFIG_T::n_state; iacc++) {
 #pragma HLS UNROLL
     h_state[iacc] = tmpres_ifo[iacc+2*(CONFIG_T::n_state)]*s_actstate[iacc];
     h_newstate[iacc] = h_state[iacc];
   }
-  # ifndef __SYNTHESIS__
-  std::cout << "Post-State: s [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << s_newstate[ii] << " "; std::cout << "]" << std::endl;
-  std::cout << "Post-State: h [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
-  # endif
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-  void lstm_loop(
+  void lstm_stack(
       data_T    data      [CONFIG_T::n_sequence*CONFIG_T::n_in],
       res_T     res [CONFIG_T::n_sequence_out*CONFIG_T::n_state],
       typename CONFIG_T::weight_t     param  [CONFIG_T::n_state*4*CONFIG_T::n_in],
@@ -500,7 +232,7 @@ template<class data_T, class res_T, typename CONFIG_T>
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-  void lstm_loop(
+  void lstm_stack(
       hls::stream<data_T> &data_stream,
       hls::stream<res_T>  &res_stream,
       typename CONFIG_T::weight_t     param  [CONFIG_T::n_state*4*CONFIG_T::n_in],
@@ -565,7 +297,6 @@ struct gru_config
     static const unsigned n_state = 2;
     static const unsigned n_sequence = 2;
     static const unsigned n_4state = 8;
-    static const unsigned activation_type = activ_relu;
     static const unsigned table_size = 1024;
 
     // Resource reuse info
@@ -573,6 +304,11 @@ struct gru_config
     static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
     static const unsigned n_zeros = 0;
+
+    template<class x_T, class y_T, class config_T>
+    using activation_recr = nnet::activation::relu<x_T, y_T, config_T>;
+    template<class x_T, class y_T, class config_T>
+    using activation = nnet::activation::relu<x_T, y_T, config_T>;
 };
 
 template<class data_T, class res_T, typename CONFIG_T>
@@ -585,11 +321,6 @@ template<class data_T, class res_T, typename CONFIG_T>
       typename CONFIG_T::bias_t       param_br [CONFIG_T::n_state*3]
 	    ) {
     // Initialize the state variable -- will maintain state between function calls
-    # ifndef __SYNTHESIS__
-    std::cout << "I Input(Pr): [ "; for (int ii = 0; ii < CONFIG_T::n_in; ii++) std::cout << data[ii] << " "; std::cout << "]" << std::endl;
-    std::cout << "H Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
-    # endif
-
     typename CONFIG_T::accum_t h_state_hin [CONFIG_T::n_state];
     typename CONFIG_T::accum_t tmpres      [CONFIG_T::n_state*3];
     typename CONFIG_T::accum_t tmpres_state_zr[CONFIG_T::n_state*3];
@@ -619,15 +350,8 @@ template<class data_T, class res_T, typename CONFIG_T>
     }
 
     // Activation function Sub layer -- START
-    if (CONFIG_T::ACT_CONFIG_GRU::activation_type == activ_relu){
-      relu<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_GRU>(inputacc_zr, tmpres_zr);
-    }
-    else if (CONFIG_T::ACT_CONFIG_GRU::activation_type == activ_sigmoid){
-      sigmoid<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_GRU>(inputacc_zr, tmpres_zr);
-    }
-    else if (CONFIG_T::ACT_CONFIG_GRU::activation_type == activ_tanh){
-      tanh<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_GRU>(inputacc_zr, tmpres_zr);
-    }
+    CONFIG_T::template activation_recr<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>::ACT_CONFIG_GRU(inputacc_zr, tmpres_zr);
+
     // Activation function Sub layer -- END
 
     // Hadamrd product of r(t) = inputacc_zr[2*n_state:n_state] and h(t-1) = h_newstate
@@ -644,24 +368,13 @@ template<class data_T, class res_T, typename CONFIG_T>
     }
 
     //Now run the activation on this guy
-    if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_relu){
-      relu<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>(inputacc_h, tmpres_h);
-    }
-    else if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_sigmoid){
-      sigmoid<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>(inputacc_h, tmpres_h);
-    }
-    else if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_tanh){
-      tanh<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>(inputacc_h, tmpres_h);
-    }
+    CONFIG_T::template activation<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>::activation(inputacc_h, tmpres_h);
 
     //Mix the stat with the previous state
     for(int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
     #pragma HLS UNROLL
       h_newstate[iacc] =  (res_T)(tmpres_h[iacc]*(1-tmpres_zr[iacc]) + h_newstate[iacc]*tmpres_zr[iacc]);
     }
-    # ifndef __SYNTHESIS__
-    std::cout << "Post-State: h [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
-    # endif
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
@@ -696,11 +409,6 @@ template<class data_T, class res_T, typename CONFIG_T>
     #pragma HLS ARRAY_PARTITION variable=inputacc_zr     complete
     #pragma HLS ARRAY_PARTITION variable=inputacc_h      complete
 
-    // # ifndef __SYNTHESIS__
-    // std::cout << "I Input(Pr): [ "; for (int ii = 0; ii < CONFIG_T::n_in; ii++) std::cout << data[ii] << " "; std::cout << "]" << std::endl;
-    // std::cout << "H Pre-State: [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_state[ii] << " "; std::cout << "]" << std::endl;
-    // # endif
-
     if(reset_state){
       for(int i_h_state = 0; i_h_state < (CONFIG_T::n_state); i_h_state++) {h_state[i_h_state] = 0;}
     }
@@ -715,15 +423,8 @@ template<class data_T, class res_T, typename CONFIG_T>
     }
 
     // Activation function Sub layer -- START
-    if (CONFIG_T::ACT_CONFIG_GRU::activation_type == activ_relu){
-      relu<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_GRU>(inputacc_zr, tmpres_zr);
-    }
-    else if (CONFIG_T::ACT_CONFIG_GRU::activation_type == activ_sigmoid){
-      sigmoid<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_GRU>(inputacc_zr, tmpres_zr);
-    }
-    else if (CONFIG_T::ACT_CONFIG_GRU::activation_type == activ_tanh){
-      tanh<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_GRU>(inputacc_zr, tmpres_zr);
-    }
+    CONFIG_T::template activation_recr<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>::ACT_CONFIG_GRU(inputacc_zr, tmpres_zr);
+
     // Activation function Sub layer -- END
 
     // Hadamrd product of r(t) = inputacc_zr[2*n_state:n_state] and h(t-1) = h_newstate
@@ -740,15 +441,7 @@ template<class data_T, class res_T, typename CONFIG_T>
     }
 
     //Now run the activation on this guy
-    if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_relu){
-      relu<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>(inputacc_h, tmpres_h);
-    }
-    else if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_sigmoid){
-      sigmoid<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>(inputacc_h, tmpres_h);
-    }
-    else if (CONFIG_T::ACT_CONFIG_T::activation_type == activ_tanh){
-      tanh<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>(inputacc_h, tmpres_h);
-    }
+    CONFIG_T::template activation<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>::activation(inputacc_h, tmpres_h);
 
     //Mix the stat with the previous state
     for(int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
@@ -756,13 +449,10 @@ template<class data_T, class res_T, typename CONFIG_T>
       h_state[iacc] =  (res_T)(tmpres_h[iacc]*(1-tmpres_zr[iacc]) + h_state[iacc]*tmpres_zr[iacc]);
       h_newstate[iacc] = h_state[iacc];
     }
-  // # ifndef __SYNTHESIS__
-  //   std::cout << "Post-State: h [ "; for (int ii = 0; ii < CONFIG_T::n_state; ii++) std::cout << h_newstate[ii] << " "; std::cout << "]" << std::endl;
-  // # endif
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-  void gru_loop(
+  void gru_stack(
         data_T    data      [CONFIG_T::n_sequence*CONFIG_T::n_in],
       res_T     h_newstate[CONFIG_T::n_sequence_out*CONFIG_T::n_state],
         typename CONFIG_T::weight_t     param   [CONFIG_T::n_state*3*CONFIG_T::n_in],
@@ -795,7 +485,7 @@ template<class data_T, class res_T, typename CONFIG_T>
     }
 
 template<class data_T, class res_T, typename CONFIG_T>
-  void gru_loop(
+  void gru_stack(
       hls::stream<data_T> &data_stream,
       hls::stream<res_T>  &res_stream,
 	  typename CONFIG_T::weight_t     param   [CONFIG_T::n_state*3*CONFIG_T::n_in],
