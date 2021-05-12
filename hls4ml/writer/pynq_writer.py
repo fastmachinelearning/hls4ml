@@ -34,8 +34,16 @@ class PynqWriter(VivadoWriter):
         assert len(model_outputs) == 1, "Only models with one output tensor are currently supported by PynqBackend"
         inp = model_inputs[0]
         out = model_outputs[0]
-        inp_axi_t = self.next_axi_type(inp.type.precision)
-        out_axi_t = self.next_axi_type(inp.type.precision)
+        if model.config.interface == 'axis':
+            # assert model.config.get_config_value('InputWrapperDType', None) is not None, "To use `axis` interface, you must set the `InputWrapperDType` field of your config"
+            # assert model.config.get_config_value('OutputWrapperDType', None) is not None, "To use `axis` interface, you must set the `OutputWrapperDType` field of your config"
+            # assert model.config.get_config_value('OutputBitWidth', None) is not None, "To use `axis` interface, you must set the `OutputBitWidth` field of your config"
+            # assert model.config.get_config_value('InputBitWidth',  None) is not None, "To use `axis` interface, you must set the `InputBitWidth` field of your config"
+            inp_axi_t = model.config.get_config_value('InputWrapperDType')
+            out_axi_t = model.config.get_config_value('OutputWrapperDType')
+        else:
+            inp_axi_t = self.next_axi_type(inp.type.precision)
+            out_axi_t = self.next_axi_type(inp.type.precision)
 
         indent = '    '
 
@@ -58,14 +66,28 @@ class PynqWriter(VivadoWriter):
                 newline = ''
                 newline += 'static const unsigned N_IN = {};\n'.format(inp.size())
                 newline += 'static const unsigned N_OUT = {};\n'.format(out.size())
-                newline += 'typedef {} input_axi_t;\n'.format(inp_axi_t)
-                newline += 'typedef {} output_axi_t;\n'.format(out_axi_t)
-                #newline += 'typedef {} input_t;\n'.format(inp.type.precision)
-                #newline += 'typedef {} output_t ;\n'.format(out.type.precision)
-                #newline += 'typedef {} input_axi_t;\n'.format(inp_axi_t)
-                #newline += 'typedef {} output_axi_t;\n'.format(out_axi_t)
-                #newline += 'typedef {} input_t;\n'.format(inp.type.precision)
-                #newline += 'typedef {} output_t;\n'.format(out.type.precision)
+                if model.config.interface == 'axis':
+                    newline += 'typedef {} T_in;\n'.format(inp_axi_t)
+                    newline += 'typedef {} T_out;\n'.format(out_axi_t)
+                    newline += 'typedef struct in_struct {\n' + \
+                               indent + 'T_in data;\n' + \
+                               indent + 'ap_uint<1> last;\n' + \
+                               indent + 'in_struct(const T_in& data, const ap_uint<1>& last){this->data = data; this->last = last;};\n' + \
+                               '} input_axi_t;\n'
+                    newline += 'typedef struct out_struct {\n' + \
+                               indent + 'T_out data;\n' + \
+                               indent + 'ap_uint<1> last;\n' + \
+                               indent + 'out_struct(const T_out& data, const ap_uint<1>& last){this->data = data; this->last = last;};\n' + \
+                               '} output_axi_t;\n'
+                else:
+                    newline += 'typedef {} input_axi_t;\n'.format(inp_axi_t)
+                    newline += 'typedef {} output_axi_t;\n'.format(out_axi_t)
+                    #newline += 'typedef {} input_t;\n'.format(inp.type.precision)
+                    #newline += 'typedef {} output_t ;\n'.format(out.type.precision)
+                    #newline += 'typedef {} input_axi_t;\n'.format(inp_axi_t)
+                    #newline += 'typedef {} output_axi_t;\n'.format(out_axi_t)
+                    #newline += 'typedef {} input_t;\n'.format(inp.type.precision)
+                    #newline += 'typedef {} output_t;\n'.format(out.type.precision)
             else:
                 newline = line
             fout.write(newline)
@@ -87,12 +109,13 @@ class PynqWriter(VivadoWriter):
             elif '//hls-fpga-machine-learning insert include' in line:
                 newline = '#include "{}_axi.h"\n'.format(model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert local vars' in line:
+                newline = ''
+                if model.config.interface == "axis":
+                    newline += indent + 'bool is_last = false;\n'
                 if io_type == 'io_parallel':
-                    newline = ''
                     newline += indent + inp.type.name + ' in_local[N_IN];\n'
                     newline += indent + out.type.name + ' out_local[N_OUT];\n'
                 elif io_type == 'io_stream':
-                    newline = ''
                     newline += indent + 'hls::stream<' + inp.type.name + '> in_local("input_1");\n'
                     newline += indent + 'hls::stream<' + out.type.name + '> out_local("output_1");\n\n'
                     newline += indent + '#pragma HLS STREAM variable=in_local depth=N_IN\n'
@@ -110,13 +133,25 @@ class PynqWriter(VivadoWriter):
                     newline += indent + '#pragma HLS INTERFACE s_axilite port=return bundle=CTRL_BUS\n'
                     newline += indent + '#pragma HLS INTERFACE m_axi depth=N_IN port=in offset=slave bundle=IN_BUS\n'
                     newline += indent + '#pragma HLS INTERFACE m_axi depth=N_OUT port=out offset=slave bundle=OUT_BUS\n'
+                elif model.config.interface == 'axis':
+                    newline = ''
+                    newline += indent + '#pragma HLS INTERFACE axis port=in\n'
+                    newline += indent + '#pragma HLS INTERFACE axis port=out\n'
+                    newline += indent + '#pragma HLS INTERFACE ap_ctrl_none port=return\n'
+                    if model.config.get_config_value("IOType") == 'io_stream':
+                        newline += indent + '#pragma HLS DATAFLOW\n'
             elif '//hls-fpga-machine-learning insert enqueue' in line:
                 io_type = model.config.get_config_value("IOType")
                 if io_type == 'io_parallel':
                     newline = ''
                     newline += indent + 'for(unsigned i = 0; i < N_IN; i++){\n'
-                    newline += indent + indent + '#pragma HLS UNROLL\n'
-                    newline += indent + indent + 'in_local[i] = in[i]; // Read input with cast\n'
+                    if model.config.interface == 'axis':
+                        newline += indent + indent + '#pragma HLS PIPELINE\n'
+                        newline += indent + indent + 'in_local[i] = in[i].data; // Read input with cast\n'
+                        newline += indent + indent + 'is_last |= (in[i].last == 1)? true: false;\n'
+                    else:
+                        newline += indent + indent + '#pragma HLS UNROLL\n'
+                        newline += indent + indent + 'in_local[i] = in[i]; // Read input with cast\n'
                     newline += indent + '}\n'
                 elif io_type == 'io_stream':
                     newline = ''
@@ -126,7 +161,11 @@ class PynqWriter(VivadoWriter):
                     newline += indent + indent + '#pragma HLS DATA_PACK variable=ctype\n'
                     newline += indent + indent + 'for(unsigned j = 0; j < {input_t}::size; j++) {{\n'
                     #newline += indent + indent + indent + '#pragma HLS UNROLL\n'
-                    newline += indent + indent + indent + 'ctype[j] = typename {input_t}::value_type(in[i * {input_t}::size + j]);\n'
+                    if model.config.interface == 'axis':
+                        newline += indent + indent + indent + 'ctype[j] = typename {input_t}::value_type(in[i * {input_t}::size + j].data);\n'
+                        newline += indent + indent + indent + 'is_last |= (in[i * input_t::size + j].last == 1)? true : false;\n'
+                    else:
+                        newline += indent + indent + indent + 'ctype[j] = typename {input_t}::value_type(in[i * {input_t}::size + j]);\n'
                     newline += indent + indent + '}}\n'
                     newline += indent + indent + 'in_local.write(ctype);\n'
                     newline += indent + '}}\n'
@@ -136,8 +175,13 @@ class PynqWriter(VivadoWriter):
                 if io_type == 'io_parallel':
                     newline = ''
                     newline += indent + 'for(unsigned i = 0; i < N_OUT; i++){\n'
-                    newline += indent + indent + '#pragma HLS UNROLL\n'
-                    newline += indent + indent + 'out[i] = out_local[i]; // Write output with cast\n'
+                    if model.config.interface == 'axis':
+                        newline += indent + indent + '#pragma HLS PIPELINE\n'
+                        newline += indent + indent + 'out[i].data = out_local[i]; // Write output with cast\n'
+                        newline += indent + indent + 'out[i].last = (is_last && (i == N_OUT - 1))? true : false;\n'
+                    else:
+                        newline += indent + indent + '#pragma HLS UNROLL\n'
+                        newline += indent + indent + 'out[i] = out_local[i]; // Write output with cast\n'
                     newline += indent + '}\n'
                 elif io_type == 'io_stream':
                     newline = ''
@@ -146,7 +190,11 @@ class PynqWriter(VivadoWriter):
                     newline += indent + indent + '{result_t} ctype = out_local.read();\n'
                     newline += indent + indent + 'for(unsigned j = 0; j < {result_t}::size; j++) {{\n'
                     #newline += indent + indent + indent + '#pragma HLS UNROLL\n'
-                    newline += indent + indent + indent + 'out[i * {result_t}::size + j] = output_axi_t(ctype[j]);\n'
+                    if model.config.interface == 'axis':
+                        newline += indent + indent + indent + 'bool last = (is_last && (i * {result_t}::size + j == N_OUT - 1)) ? true : false;\n'
+                        newline += indent + indent + indent + 'out[i * {result_t}::size + j] = output_axi_t(ctype[j], last);\n'
+                    else:
+                        newline += indent + indent + indent + 'out[i * {result_t}::size + j] = output_axi_t(ctype[j]);\n'
                     newline += indent + indent + '}}\n'
                     newline += indent + '}}\n'
                     newline = newline.format(result_t=out.type.name)
@@ -184,10 +232,21 @@ class PynqWriter(VivadoWriter):
         Write the tcl scripts to create a Vivado IPI project for the Pynq
         '''
         filedir = os.path.dirname(os.path.abspath(__file__))
-        copyfile(os.path.join(filedir,'../templates/pynq/pynq_design.tcl'), '{}/pynq_design.tcl'.format(model.config.get_output_dir()))
+        if model.config.interface == 'axis':
+            copyfile(os.path.join(filedir, '../templates/pynq/pynq_design_axis.tcl'),'{}/pynq_design.tcl'.format(model.config.get_output_dir()))
+        else:
+            copyfile(os.path.join(filedir,'../templates/pynq/pynq_design.tcl'), '{}/pynq_design.tcl'.format(model.config.get_output_dir()))
         f = open('{}/project.tcl'.format(model.config.get_output_dir()),'w')
         f.write('variable myproject\n')
         f.write('set myproject "{}"\n'.format(model.config.get_project_name()))
+        if model.config.interface == 'axis':
+            f.write('set bit_width_hls_output {}\n'.format(model.config.get_config_value("OutputBitWidth")))
+            f.write('set bit_width_hls_input {}\n'.format(model.config.get_config_value("InputBitWidth")))
+    
+    def write_driver(self, model):
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        if model.config.interface == 'axis':
+            copyfile(os.path.join(filedir, '../templates/pynq/AXISDriver.py'), '{}/AXISDriver.py'.format(model.config.get_output_dir()))
         
     def write_hls(self, model):
         '''
@@ -197,5 +256,6 @@ class PynqWriter(VivadoWriter):
         self.write_axi_wrapper(model)
         self.modify_build_script(model)
         self.write_board_script(model)
+        self.write_driver(model)
 
 
