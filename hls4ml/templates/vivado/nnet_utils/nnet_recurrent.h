@@ -423,7 +423,7 @@ template<class data_T, class res_T, typename CONFIG_T>
     }
 
     // Activation function Sub layer -- START
-    CONFIG_T::template activation_recr<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_T>::ACT_CONFIG_GRU(inputacc_zr, tmpres_zr);
+    CONFIG_T::template activation_recr<typename CONFIG_T::accum_t, typename CONFIG_T::weight_t, typename CONFIG_T::ACT_CONFIG_GRU>::activation(inputacc_zr, tmpres_zr);
 
     // Activation function Sub layer -- END
 
