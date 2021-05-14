@@ -21,6 +21,4 @@ class TransformVariables(GlobalOptimizerPass):
             else:
                 raise Exception('Unknown IOType {} in {} ({})'.format(io_type, node.name, node.__class__.__name__))
 
-            node.variables[out_name] = new_var
-            node.model.register_output_variable(out_name, new_var)
-            node.precision[new_var.type.name] = new_var.type
+            node.set_attr(out_name, new_var)

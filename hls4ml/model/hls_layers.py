@@ -1,13 +1,42 @@
 import numpy as np
 import six
-from collections import OrderedDict
 
 from hls4ml.model.hls_types import HLSType
 from hls4ml.model.hls_types import TensorVariable, WeightVariable, CompressedWeightVariable, ExponentWeightVariable, InplaceVariable
-from hls4ml.model.hls_types import IntegerPrecisionType, FixedPrecisionType, XnorPrecisionType, ExponentPrecisionType
+from hls4ml.model.hls_types import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType
 from hls4ml.model.hls_types import find_minimum_width
 
+from hls4ml.model.hls_attributes import Attribute, WeightAttribute, TypeAttribute, ChoiceAttribute
+from hls4ml.model.hls_attributes import AttributeDict, AttributeMapping
+
+# TODO move this to some utility module
+class classproperty(object):
+    def __init__(self, func):
+        self.func = func
+    
+    def __get__(self, obj, owner):
+        return self.func(owner)
+
 class Layer(object):
+    _expected_attributes = [
+        Attribute('index'),
+
+        TypeAttribute('accum'),
+        TypeAttribute('result'),
+    ]
+
+    @classproperty
+    def expected_attributes(cls):
+        """ Returns the expected attributes of a class. """
+        all_attributes = []
+        for base_cls in reversed(cls.mro()): # Iterate over all base classes in the hierarchy
+            if cls == base_cls: # Skip adding attributes from self
+                continue
+            if hasattr(base_cls, '_expected_attributes'): # Only consider classes with '_expected_attributes' defined
+                all_attributes.extend(base_cls._expected_attributes)
+        all_attributes.extend(cls._expected_attributes)
+        return all_attributes
+
     def __init__(self, model, name, attributes, inputs, outputs=None):
         self.model = model
         self.name = name
@@ -17,14 +46,17 @@ class Layer(object):
         if self.outputs is None:
             self.outputs = [self.name]
 
-        self.attributes = attributes
+        self.attributes = AttributeDict(self)
+        self.attributes.update(attributes)
+
+        self.set_attr('index', self.index)
 
         self._function_template = self.model.config.backend.get_function_template(self.__class__.__name__)
         self._config_template = self.model.config.backend.get_config_template(self.__class__.__name__)
         self.include_list = self.model.config.backend.get_include_list(self.__class__.__name__)
-        self.weights = OrderedDict()
-        self.variables = OrderedDict()
-        self.precision = OrderedDict()
+        self.weights = AttributeMapping(self.attributes, WeightVariable)
+        self.variables = AttributeMapping(self.attributes, TensorVariable)
+        self.types = AttributeMapping(self.attributes, HLSType)
 
         # We set 'accum' precision to match input tensor's precision if 'accum' was not explicitly set
         def_type_obj, _ = self.model.config.get_precision(self, 'default')
@@ -40,8 +72,7 @@ class Layer(object):
             acc_type_obj = inp_type_obj # use input tensor's precision for 'accum'
 
         accum_t = HLSType(acc_type_name, acc_type_obj) 
-        self.precision[accum_t.name] = accum_t
-        self.set_attr('accum_t', accum_t.precision)
+        self.set_attr('accum_t', accum_t)
 
         self.reuse_factor = self.model.config.get_reuse_factor(self)
 
@@ -53,6 +84,7 @@ class Layer(object):
 
         self.initialize()
         self.model.config.backend.initialize_layer(self)
+        self._validate_attributes()
 
     def initialize(self):
         raise NotImplementedError
@@ -62,6 +94,28 @@ class Layer(object):
 
     def get_attr(self, key, default=None):
         return self.attributes.get(key, default)
+
+    def _validate_attributes(self):
+        all_attributes = {}
+        for attr in self.expected_attributes:
+            all_attributes[attr.name] = attr
+        
+        # Validate existing attributes
+        for attr_name, attr_value in self.attributes.items():
+            exp_attr = all_attributes.pop(attr_name, None)
+            if exp_attr is not None:
+                if not exp_attr.validate_value(attr_value):
+                    raise Exception('Unexpected value of attribute "{}" of layer {} ({}). Expected {}, got {} ({})'
+                        .format(attr_name, self.name, self.__class__.__name__, exp_attr.value_type, type(attr_value), attr_value))
+            else:
+                pass # TODO layer contains attribute that is not expected. we can log this for debugging
+        
+        # If any expected attributes remain, try adding their default values
+        for attr_name, attr in all_attributes.items():
+            if attr.default is not None:
+                self.set_attr(attr_name, attr.default)
+            else:
+                raise Exception('Attribute "{}" of layer {} ({}) not set and no default value is specified.'.format(attr_name, self.name, self.__class__.__name__))
 
     def get_input_node(self, input_name=None):
         if input_name is not None:
@@ -104,10 +158,7 @@ class Layer(object):
 
         out = TensorVariable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, index=self.index)
 
-        self.variables[out_name] = out
-        self.model.register_output_variable(out_name, out)
-
-        self.precision[out.type.name] = out.type
+        self.set_attr(out_name, out)
 
     def add_weights(self, quantizer=None, compression=False):
         data = self.model.get_weights_data(self.name, 'kernel')
@@ -162,8 +213,8 @@ class Layer(object):
             var = WeightVariable(var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, index=self.index)
 
         var.data_unquantized = data_unquantized
-        self.weights[name] = var
-        self.precision[var.type.name] = var.type
+
+        self.set_attr(name, var)
 
     def _default_function_params(self):
         params = {}
@@ -183,14 +234,13 @@ class Layer(object):
         params['iotype'] = self.model.config.get_config_value('IOType')
         params['reuse'] = self.reuse_factor
 
-        # data types
-        for weight_name, variable in self.weights.items():
-            params[weight_name + '_t'] = variable.type.name
-
         return params
 
     def get_layer_precision(self):
-        return self.precision
+        precision = {}
+        for data_type in self.types.values():
+            precision[data_type.name] = data_type
+        return precision
 
     # myproject.cpp/h
     def function_cpp(self):
@@ -251,6 +301,17 @@ class Reshape(Layer):
         return None
 
 class Dense(Layer):
+    expected_attributes = [
+        Attribute('n_in'),
+        Attribute('n_out'),
+
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+    ]
+
     def initialize(self):
         shape = [self.attributes['n_out']]
         dims = ['N_LAYER_{}'.format(self.index)]
@@ -267,8 +328,6 @@ class Dense(Layer):
 
     def config_cpp(self):
         params = self._default_config_params()
-        params['n_in'] = self.get_input_variable().size_cpp()
-        params['n_out'] = self.get_output_variable().size_cpp()
         params['nzeros'] = self.get_weights('weight').nzeros
         params['nonzeros'] = self.get_weights('weight').nonzeros
         params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
@@ -376,7 +435,7 @@ class SeparableConv1D(Layer):
         params['dilation'] = self.get_attr('dilation', 1)
         params['nzeros'] = self.get_weights('depthwise').nzeros
         params['index'] = str(self.index) + '_depthwise'
-        params['weight_t'] = self.get_weights('depthwise').type.name
+        params['weight_t'] = self.get_weights('depthwise').type
 
         params['config_t'] = 'config{}_depthwise_mult'.format(self.index)
         depthwise_config = self._config_template[1].format(**params)
@@ -386,7 +445,7 @@ class SeparableConv1D(Layer):
         mult_params['index'] = str(self.index) + '_depthwise'
         mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_width')
         mult_params['n_out'] = self.get_attr('n_chan')
-        mult_params['weight_t'] = self.get_weights('depthwise').type.name
+        mult_params['weight_t'] = self.get_weights('depthwise').type
         mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('depthwise').type.precision)
         depthwise_mult_config = self._config_template[3].format(**mult_params)
 
@@ -406,7 +465,7 @@ class SeparableConv1D(Layer):
         params['out_width'] = 'N_OUTPUTS_{}'.format(self.index)
         params['nzeros'] = self.get_weights('pointwise').nzeros
         params['index'] = str(self.index) + '_pointwise'
-        params['weight_t'] = self.get_weights('pointwise').type.name
+        params['weight_t'] = self.get_weights('pointwise').type
         params['min_width'] = params['in_width']
         params['instructions'] = '0'
 
@@ -418,13 +477,35 @@ class SeparableConv1D(Layer):
         mult_params['index'] = str(self.index) + '_pointwise'
         mult_params['n_in'] = self.get_attr('n_chan')
         mult_params['n_out'] = self.get_attr('n_filt')
-        mult_params['weight_t'] = self.get_weights('pointwise').type.name
+        mult_params['weight_t'] = self.get_weights('pointwise').type
         mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('pointwise').type.precision)
         pointwise_mult_config = self._config_template[4].format(**mult_params)
 
         return depthwise_mult_config + '\n' + depthwise_config + '\n' + pointwise_mult_config + '\n' + pointwise_config + '\n' + sep_config
 
 class Conv2D(Layer):
+    expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+
+        Attribute('out_height'),
+        Attribute('out_width'),
+
+        Attribute('n_chan'),
+        Attribute('n_filt'),
+
+        Attribute('filt_height'),
+        Attribute('filt_width'),
+        Attribute('stride_height'),
+        Attribute('stride_width'),
+
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+    ]
+
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
@@ -527,6 +608,30 @@ class Conv2DBatchnorm(Conv2D):
         return super(Conv2DBatchnorm, self).config_cpp()
 
 class SeparableConv2D(Layer):
+    expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+
+        Attribute('out_height'),
+        Attribute('out_width'),
+
+        Attribute('n_chan'),
+        Attribute('n_filt'),
+
+        Attribute('filt_height'),
+        Attribute('filt_width'),
+        Attribute('stride_height'),
+        Attribute('stride_width'),
+        
+        WeightAttribute('depthwise'),
+        WeightAttribute('pointwise'),
+        WeightAttribute('bias'),
+
+        TypeAttribute('depthwise'),
+        TypeAttribute('pointwise'),
+        TypeAttribute('bias'),
+    ]
+
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
@@ -585,7 +690,7 @@ class SeparableConv2D(Layer):
         params['dilation'] = self.get_attr('dilation', 1)
         params['nzeros'] = self.get_weights('depthwise').nzeros
         params['index'] = str(self.index) + '_depthwise'
-        params['weight_t'] = self.get_weights('depthwise').type.name
+        params['weight_t'] = self.get_weights('depthwise').type
 
         params['config_t'] = 'config{}_depthwise_mult'.format(self.index)
         depthwise_config = self._config_template[1].format(**params)
@@ -595,7 +700,7 @@ class SeparableConv2D(Layer):
         mult_params['index'] = str(self.index) + '_depthwise'
         mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
         mult_params['n_out'] = self.get_attr('n_chan')
-        mult_params['weight_t'] = self.get_weights('depthwise').type.name
+        mult_params['weight_t'] = self.get_weights('depthwise').type
         mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('depthwise').type.precision)
         depthwise_mult_config = self._config_template[3].format(**mult_params)
 
@@ -620,7 +725,7 @@ class SeparableConv2D(Layer):
         params['dilation'] = self.get_attr('dilation', 1)
         params['nzeros'] = self.get_weights('pointwise').nzeros
         params['index'] = str(self.index) + '_pointwise'
-        params['weight_t'] = self.get_weights('pointwise').type.name
+        params['weight_t'] = self.get_weights('pointwise').type
         params['min_height'] = params['in_height']
         params['min_width'] = params['in_width']
         params['instructions'] = '0'
@@ -633,7 +738,7 @@ class SeparableConv2D(Layer):
         mult_params['index'] = str(self.index) + '_pointwise'
         mult_params['n_in'] = self.get_attr('n_chan')
         mult_params['n_out'] = self.get_attr('n_filt')
-        mult_params['weight_t'] = self.get_weights('pointwise').type.name
+        mult_params['weight_t'] = self.get_weights('pointwise').type
         mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('pointwise').type.precision)
         pointwise_mult_config = self._config_template[4].format(**mult_params)
 
@@ -877,10 +982,25 @@ class PReLU(Activation):
         return [self._function_template.format(**params)]
 
 class Softmax(Activation):
+    expected_attributes = [
+        ChoiceAttribute('implementation', ['latency', 'stable', 'legacy'], default='stable')
+    ]
+
     def initialize(self):
         super(Softmax, self).initialize()
 
 class BatchNormalization(Layer):
+    expected_attributes = [
+        Attribute('n_in'),
+        Attribute('n_filt', default=0),
+
+        WeightAttribute('scale'),
+        WeightAttribute('bias'),
+
+        TypeAttribute('scale'),
+        TypeAttribute('bias'),
+    ]
+
     def initialize(self):
         inp = self.get_input_variable()
         shape = inp.shape

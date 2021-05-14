@@ -20,9 +20,9 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     static const unsigned n_zeros = {nzeros};
     static const unsigned n_nonzeros = {nonzeros};
     static const bool store_weights_in_bram = false;
-    typedef {accum_t} accum_t;
-    typedef {bias_t} bias_t;
-    typedef {weight_t} weight_t;
+    typedef {accum_t.name} accum_t;
+    typedef {bias_t.name} bias_t;
+    typedef {weight_t.name} weight_t;
     typedef {index_t} index_t;
     template<class x_T, class y_T, class res_T>
     using product = nnet::product::{product_type}<x_T, y_T, res_T>;
@@ -34,8 +34,8 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
     static const bool store_weights_in_bram = false;
-    typedef {bias_t} bias_t;
-    typedef {scale_t} scale_t;
+    typedef {bias_t.name} bias_t;
+    typedef {scale_t.name} scale_t;
     template<class x_T, class y_T, class res_T>
     using product = nnet::product::{product_type}<x_T, y_T, res_T>;
 }};\n"""
@@ -57,9 +57,9 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     static const unsigned strategy = nnet::{strategy};
     static const unsigned min_width = {min_width};
     static const ap_uint<filt_width> pixels[min_width];
-    typedef {accum_t} accum_t;
-    typedef {bias_t} bias_t;
-    typedef {weight_t} weight_t;
+    typedef {accum_t.name} accum_t;
+    typedef {bias_t.name} bias_t;
+    typedef {weight_t.name} weight_t;
     typedef {config_t} mult_config;
 }};
 const ap_uint<config{index}::filt_width> config{index}::pixels[] = {{{instructions}}};\n"""
@@ -69,9 +69,9 @@ conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     static const unsigned n_out = {n_out};
     static const unsigned reuse_factor = {reuse};
     static const unsigned strategy = nnet::{strategy};
-    typedef {accum_t} accum_t;
-    typedef {bias_t} bias_t;
-    typedef {weight_t} weight_t;
+    typedef {accum_t.name} accum_t;
+    typedef {bias_t.name} bias_t;
+    typedef {weight_t.name} weight_t;
     template<class x_T, class y_T, class res_T>
     using product = nnet::product::{product_type}<x_T, y_T, res_T>;
 }};\n"""
@@ -99,9 +99,9 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned min_height = {min_height};
     static const unsigned min_width = {min_width};
     static const ap_uint<filt_height * filt_width> pixels[min_height * min_width];
-    typedef {accum_t} accum_t;
-    typedef {bias_t} bias_t;
-    typedef {weight_t} weight_t;
+    typedef {accum_t.name} accum_t;
+    typedef {bias_t.name} bias_t;
+    typedef {weight_t.name} weight_t;
     typedef {config_t} mult_config;
 }};
 const ap_uint<config{index}::filt_height * config{index}::filt_width> config{index}::pixels[] = {{{instructions}}};\n"""
@@ -139,7 +139,7 @@ pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
     static const unsigned stride_width = {stride_width};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     static const unsigned reuse = {reuse};
-    typedef {accum_t} accum_t;
+    typedef {accum_t.name} accum_t;
 }};\n"""
 
 pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
@@ -158,7 +158,7 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
     static const unsigned pad_right = {pad_right};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     static const unsigned reuse = {reuse};
-    typedef {accum_t} accum_t;
+    typedef {accum_t.name} accum_t;
 }};\n"""
 
 global_pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
@@ -168,7 +168,7 @@ global_pooling1d_config_template = """struct config{index} : nnet::pooling1d_con
     static const unsigned pad_right = {pad_right};
     static const unsigned stride = {stride};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
-    typedef {accum_t} accum_t;
+    typedef {accum_t.name} accum_t;
 }};\n"""
 
 global_pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
@@ -177,7 +177,7 @@ global_pooling2d_config_template = """struct config{index} : nnet::pooling2d_con
     static const unsigned n_filt = {n_filt};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     static const unsigned reuse = {reuse};
-    typedef {accum_t} accum_t;
+    typedef {accum_t.name} accum_t;
 }};\n"""
 
 zeropad1d_config_template = """struct config{index} : nnet::padding1d_config {{
@@ -208,7 +208,7 @@ dot_config_template = """struct config{index} : nnet::dot_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned reuse_factor = {reuse};
-    typedef {accum_t} accum_t;
+    typedef {accum_t.name} accum_t;
     template<class x_T, class y_T, class res_T>
     using product = nnet::product::{product_type}<x_T, y_T, res_T>;
 }};\n"""
