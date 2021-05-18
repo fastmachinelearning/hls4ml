@@ -147,7 +147,10 @@ class QKerasFactorizeAlpha(OptimizerPass):
 
         # update the weights also applying the hls4ml quantizer
         # this is only needed for the binary layers which encode -1 as 0
-        node.weights['weight'].data = node.weights['weight'].quantizer(new_weights.numpy())
+        quantized_new_weights = node.weights['weight'].quantizer(new_weights.numpy())
+        if node.model.config.is_resource_strategy(node):
+            quantized_new_weights = quantized_new_weights.T
+        node.weights['weight'].data = quantized_new_weights
 
         # Move the biases from the Dense layer to the ApplyAlpha layer
         bias = node.weights['bias'].data
