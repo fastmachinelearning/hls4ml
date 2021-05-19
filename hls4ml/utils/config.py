@@ -129,7 +129,17 @@ def set_accum_from_keras_model(config, model):
             continue
 
         if i == 0:
-            previous_layer_config = config['LayerName'][name + '_input']
+            previous_layer_config = None
+            for value in config['LayerName'].values():
+                if value['LayerType'] == 'Input':
+                    previous_layer_config = value
+                    break
+
+            if previous_layer_config is None:
+                if name + '_input' in config['LayerName']:
+                    previous_layer_config = config['LayerName'][name + '_input']
+                else:
+                    raise RuntimeError('The input layer could not be found in the config')
         else:
             index = i - 1
             while index >= 0 and model.layers[index].name not in config['LayerName']:
