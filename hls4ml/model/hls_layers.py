@@ -108,7 +108,7 @@ class Layer(object):
             exp_attr = all_attributes.pop(attr_name, None)
             if exp_attr is not None:
                 if not exp_attr.validate_value(attr_value):
-                    raise Exception('Unexpected value of attribute "{}" of layer {} ({}). Expected {}, got {} ({})'
+                    raise Exception('Unexpected value of attribute "{}" of layer "{}" ({}). Expected {}, got {} ({})'
                         .format(attr_name, self.name, self.__class__.__name__, exp_attr.value_type, type(attr_value), attr_value))
             else:
                 pass # TODO layer contains attribute that is not expected. we can log this for debugging
@@ -930,6 +930,7 @@ class ZeroPadding2D(Layer):
 class Activation(Layer):
     _expected_attributes = [
         Attribute('n_in'),
+        Attribute('activation', value_type=str),
         Attribute('table_size', default=1024),
         
         TypeAttribute('table')
