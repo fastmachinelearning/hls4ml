@@ -1,0 +1,18 @@
+pytest:
+  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing
+  tags: 
+    - docker
+  before_script:
+    - git submodule init
+    - git submodule update
+    - source activate hls4ml-testing
+    - pip install .[profiling]
+  script:
+    - cd test/pytest
+    - pytest -rA --cov-report xml --cov=hls4ml --junitxml=report.xml
+  artifacts:
+    when: always
+    reports:
+      junit: 
+        - test/pytest/report.xml
+        - test/pytest/coverage.xml
