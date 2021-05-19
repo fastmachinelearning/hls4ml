@@ -131,7 +131,7 @@ def set_accum_from_keras_model(config, model):
         if i == 0:
             previous_layer_config = None
             for value in config['LayerName'].values():
-                if value['LayerType'] == 'Input':
+                if isinstance(value, dict) and 'LayerType' in value and value['LayerType'] == 'Input':
                     previous_layer_config = value
                     break
 
