@@ -43,9 +43,9 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     static const unsigned multiplier_limit = DIV_ROUNDUP(n_in*n_out, multiplier_factor);
     static const unsigned multiplier_scale = multiplier_limit/n_out;
 
-    typedef {accum_t} accum_t;
-    typedef {bias_t} bias_t;
-    typedef {weight_t} weight_t;
+    typedef {accum_t.name} accum_t;
+    typedef {bias_t.name} bias_t;
+    typedef {weight_t.name} weight_t;
     typedef {index_t} index_t;
 }};\n"""
 
@@ -55,8 +55,8 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
     static const bool store_weights_in_bram = false;
-    typedef {bias_t} bias_t;
-    typedef {scale_t} scale_t;
+    typedef {bias_t.name} bias_t;
+    typedef {scale_t.name} scale_t;
 }};\n"""
 
 conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
@@ -72,9 +72,9 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
-    typedef {accum_t} accum_t;
-    typedef {bias_t} bias_t;
-    typedef {weight_t} weight_t;
+    typedef {accum_t.name} accum_t;
+    typedef {bias_t.name} bias_t;
+    typedef {weight_t.name} weight_t;
     typedef {config_t} mult_config;
 }};\n"""
 
@@ -82,9 +82,9 @@ conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned reuse_factor = {reuse};
-    typedef {accum_t} accum_t;
-    typedef {bias_t} bias_t;
-    typedef {weight_t} weight_t;
+    typedef {accum_t.name} accum_t;
+    typedef {bias_t.name} bias_t;
+    typedef {weight_t.name} weight_t;
 }};\n"""
 
 conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
@@ -105,9 +105,9 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
-    typedef {accum_t} accum_t;
-    typedef {bias_t} bias_t;
-    typedef {weight_t} weight_t;
+    typedef {accum_t.name} accum_t;
+    typedef {bias_t.name} bias_t;
+    typedef {weight_t.name} weight_t;
     typedef {config_t} mult_config;
 }};\n"""
 
@@ -116,7 +116,7 @@ activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned table_size = {table_size};
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
-    typedef {table_t} table_t;
+    typedef {table_t.name} table_t;
 }};\n"""
 
 softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
@@ -124,8 +124,8 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned table_size = {table_size};
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
-    typedef {exp_table_t} exp_table_t;
-    typedef {inv_table_t} inv_table_t;
+    typedef {exp_table_t.name} exp_table_t;
+    typedef {inv_table_t.name} inv_table_t;
 }};\n"""
 
 pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
