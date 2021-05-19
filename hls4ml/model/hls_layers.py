@@ -80,6 +80,9 @@ class Layer(object):
         for config_key, config_value in layer_config.items():
             if config_key in self.attributes:
                 print('WARNING: Config parameter "{}" overwrites an existing attribute in layer "{}" ({})'.format(config_key, self.name, self.__class__.__name__))
+            if config_key.endswith('_t') and isinstance(config_value, str): #TODO maybe move this to __setitem__ of AttributeDict?
+                precision = self.model.config.backend.convert_precision_string(config_value)
+                config_value = HLSType(self.name + config_key, precision)
             self.attributes[config_key] = config_value
 
         self.initialize()
@@ -301,7 +304,7 @@ class Reshape(Layer):
         return None
 
 class Dense(Layer):
-    expected_attributes = [
+    _expected_attributes = [
         Attribute('n_in'),
         Attribute('n_out'),
 
@@ -484,7 +487,7 @@ class SeparableConv1D(Layer):
         return depthwise_mult_config + '\n' + depthwise_config + '\n' + pointwise_mult_config + '\n' + pointwise_config + '\n' + sep_config
 
 class Conv2D(Layer):
-    expected_attributes = [
+    _expected_attributes = [
         Attribute('in_height'),
         Attribute('in_width'),
 
@@ -608,7 +611,7 @@ class Conv2DBatchnorm(Conv2D):
         return super(Conv2DBatchnorm, self).config_cpp()
 
 class SeparableConv2D(Layer):
-    expected_attributes = [
+    _expected_attributes = [
         Attribute('in_height'),
         Attribute('in_width'),
 
@@ -925,16 +928,25 @@ class ZeroPadding2D(Layer):
         return self._config_template.format(**params)
 
 class Activation(Layer):
+    _expected_attributes = [
+        Attribute('n_in'),
+        Attribute('table_size', default=1024),
+        
+        TypeAttribute('table')
+    ]
+
     def initialize(self):
         inp = self.get_input_variable()
         shape = inp.shape
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
+        self.set_attr('n_in', self.get_input_variable().size())
+
         if 'table_t' not in self.attributes:
-            self.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
-        if 'table_size' not in self.attributes:
-            self.set_attr('table_size', 1024)
+            self.set_attr('table_t', HLSType(name=self.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
+        #if 'table_size' not in self.attributes:
+        #    self.set_attr('table_size', 1024)
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -946,7 +958,6 @@ class Activation(Layer):
     def config_cpp(self):
         params = self._default_config_params()
         params['type'] = self.get_attr('activation')
-        params['n_in'] = self.get_input_variable().size_cpp()
 
         return self._config_template.format(**params)
 
@@ -982,7 +993,7 @@ class PReLU(Activation):
         return [self._function_template.format(**params)]
 
 class Softmax(Activation):
-    expected_attributes = [
+    _expected_attributes = [
         ChoiceAttribute('implementation', ['latency', 'stable', 'legacy'], default='stable')
     ]
 
@@ -990,7 +1001,7 @@ class Softmax(Activation):
         super(Softmax, self).initialize()
 
 class BatchNormalization(Layer):
-    expected_attributes = [
+    _expected_attributes = [
         Attribute('n_in'),
         Attribute('n_filt', default=0),
 
