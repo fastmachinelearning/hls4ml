@@ -135,8 +135,8 @@ def test_single_dense_activation_exact(randX_100_16, bits):
   model.add(QActivation(activation=quantized_relu(bits,0), name='relu1'))
   model.compile()
 
-  hls4ml.model.optimizer.OutputRoundingSaturationMode.layers = ['Activation']
-  hls4ml.model.optimizer.OutputRoundingSaturationMode.rounding_mode = 'AP_RND'
+  hls4ml.model.optimizer.OutputRoundingSaturationMode.layers = ['relu1']
+  hls4ml.model.optimizer.OutputRoundingSaturationMode.rounding_mode = 'AP_RND_CONV'
   hls4ml.model.optimizer.OutputRoundingSaturationMode.saturation_mode = 'AP_SAT'
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
   hls_model = hls4ml.converters.convert_from_keras_model(model,
@@ -191,3 +191,44 @@ def test_btnn(make_btnn, randX_100_10):
   y_ker = model.predict(X)
   wrong = (y_hls != y_ker).ravel()
   assert sum(wrong) / len(wrong) < 0.005
+
+@pytest.fixture(scope='module')
+def randX_1000_1():
+  return randX(1000, 1)
+
+@pytest.mark.parametrize('quantizer', [(quantized_bits(8,0)),
+                                       (quantized_bits(8,4)),
+                                       (quantized_bits(4,2)),
+                                       (quantized_bits(4,0)),
+                                       (quantized_bits(10,0)),
+                                       (quantized_relu(4)),
+                                       (quantized_relu(10))])
+def test_quantizer(randX_1000_1, quantizer):
+  '''
+  Test a single quantizer as an Activation function.
+  Checks the type inference through the conversion is correct without just
+  using the same logic.
+  '''
+  X = randX_1000_1
+  X = np.round(X * 2**10) * 2**-10 # make it an exact ap_fixed<16,6>
+  model = Sequential()
+  model.add(QActivation(input_shape=(1,), activation=quantizer, name='quantizer'))
+  model.compile()
+
+  hls4ml.model.optimizer.OutputRoundingSaturationMode.layers = ['quantizer']
+  hls4ml.model.optimizer.OutputRoundingSaturationMode.rounding_mode = 'AP_RND_CONV'
+  hls4ml.model.optimizer.OutputRoundingSaturationMode.saturation_mode = 'AP_SAT'
+  config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+  hls_model = hls4ml.converters.convert_from_keras_model(model,
+                                                       hls_config=config,
+                                                       output_dir='qkeras-quantizer-hls4ml-prj',
+                                                       fpga_part='xcu250-figd2104-2L-e')
+  hls4ml.model.optimizer.OutputRoundingSaturationMode.layers = []                                                   
+  hls_model.compile()
+
+  y_qkeras = model.predict(X)
+  y_hls4ml = hls_model.predict(X)
+  # Goal is to get it passing with all equal
+  np.testing.assert_array_equal(y_qkeras, y_hls4ml)
+  # For now allow matching within 1 bit
+  #np.testing.assert_allclose(y_qkeras.ravel(), y_hls4ml.ravel(), atol=2**-bits, rtol=1.0)

@@ -1,11 +1,12 @@
 pytest:
-  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing
+    image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.base
   tags: 
     - docker
   before_script:
+    - source ~/.bashrc
     - git submodule init
     - git submodule update
-    - source activate hls4ml-testing
+    - conda activate hls4ml-testing
     - pip install .[profiling]
   script:
     - cd test/pytest
