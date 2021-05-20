@@ -131,7 +131,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
         weights = node.weights['weight'].data_unquantized # get weights
         qweights = quantizer(tf.convert_to_tensor(weights))
         if isinstance(quantizer.scale, (int, float)):
-            scale = np.ones(shape=node.get_output_variable().shape) * quantizer.scale
+            scale = np.ones(shape=node.get_output_variable().shape[-1]) * quantizer.scale
         else:
             scale = quantizer.scale.numpy()
         unscale = 1. / scale
