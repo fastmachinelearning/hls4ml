@@ -163,7 +163,6 @@ def make_btnn(N, kernel_quantizer, bias_quantizer, activation_quantizer, use_bat
     model.add(BatchNormalization(name='bn'))
   model.add(QActivation(activation=activation_quantizer))
   model.compile()
-  is_xnor = activation_quantizer == 'binary'
   return model, is_xnor
 
 @pytest.fixture(scope='module')
@@ -171,10 +170,10 @@ def randX_100_10():
   return randX(100, 10)
 
 @pytest.mark.parametrize('N,kernel_quantizer,bias_quantizer,activation_quantizer,use_batchnorm,is_xnor',
-                          [(10, ternary(alpha=1), quantized_bits(5,2), 'binary_tanh', False, True),
+                          [(10, ternary(alpha=1), quantized_bits(5,2), 'binary_tanh', False, False),
                            (10, binary(), quantized_bits(5,2), 'binary_tanh', False, True),
-                           (10, ternary(alpha='auto'), quantized_bits(5,2), binary(), True, False),
-                           (10, ternary(alpha='auto'), quantized_bits(5,2), 'ternary', True, True),
+                           (10, ternary(alpha='auto'), quantized_bits(5,2), binary(), True, True),
+                           (10, ternary(alpha='auto'), quantized_bits(5,2), 'ternary', True, False),
                            (10, ternary(alpha='auto'), quantized_bits(5,2), ternary(threshold=0.2), True, False),
                            (10, ternary(alpha='auto'), quantized_bits(5,2), ternary(threshold=0.8), True, False),
                            (10, binary(), quantized_bits(5,2), binary(), False, True)])
