@@ -149,7 +149,9 @@ class QKerasFactorizeAlpha(OptimizerPass):
         # this is only needed for the binary layers which encode -1 as 0
         quantized_new_weights = node.weights['weight'].quantizer(new_weights.numpy())
         if node.model.config.is_resource_strategy(node):
-            quantized_new_weights = quantized_new_weights.T
+            ndim = len(weights.shape) - 1
+            perm = [ndim] + [i for i in range(ndim)]
+            quantized_new_weights = np.transpose(quantized_new_weights, axes=perm)
         node.weights['weight'].data = quantized_new_weights
 
         # Move the biases from the Dense layer to the ApplyAlpha layer
