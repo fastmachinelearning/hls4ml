@@ -1,7 +1,7 @@
 pytest:
   image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.base
   tags: 
-    - docker
+    - hls4ml
   before_script:
     - source ~/.bashrc
     - git submodule init
