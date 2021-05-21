@@ -1,5 +1,34 @@
-pytest:
+stages:
+  - test
+  - convert
+  - csim
+  - csynth
+  - report
+
+test:
+  stage: test
   image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.base
+  tags: 
+    - docker
+  before_script:
+    - source ~/.bashrc
+    - git submodule init
+    - git submodule update
+    - conda activate hls4ml-testing
+    - pip install .[profiling]
+  script:
+    - cd ${CI_PROJECT_DIR}/test/pytest
+    - pytest -rA --cov-report xml --cov=hls4ml --junitxml=report.xml
+  artifacts:
+    when: always
+    reports:
+      junit: 
+        - test/pytest/report.xml
+        - test/pytest/coverage.xml
+
+convert:
+  stage: convert
+  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.vivado
   tags: 
     - hls4ml
   before_script:
@@ -9,11 +38,42 @@ pytest:
     - conda activate hls4ml-testing
     - pip install .[profiling]
   script:
-    - cd test/pytest
-    - pytest -rA --cov-report xml --cov=hls4ml --junitxml=report.xml
+    - cd ${CI_PROJECT_DIR}/test
+    - ./convert-keras-models.sh -x -f keras-models.txt
+
+csim:
+  stage: csim
+  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.vivado
+  tags: 
+    - hls4ml
+  before_script:
+    - source ~/.bashrc
+  script:
+    - cd ${CI_PROJECT_DIR}/test
+    - ./build-prj.sh -i /data/Xilinx -v 2019.2 -c -p 12
+
+csynth:
+  stage: csynth
+  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.vivado
+  tags: 
+    - hls4ml
+  before_script:
+    - source ~/.bashrc
+  script:
+    - cd ${CI_PROJECT_DIR}/test
+    - ./build-prj.sh -i /data/Xilinx -v 2019.2 -s -r -p 12 
+
+report:
+  stage: report
+  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.vivado
+  tags: 
+    - hls4ml
+  before_script:
+    - source ~/.bashrc
+  script:
+    - cd ${CI_PROJECT_DIR}/test
+    - ./gather-reports.sh -b | tee report.rpt
   artifacts:
     when: always
-    reports:
-      junit: 
-        - test/pytest/report.xml
-        - test/pytest/coverage.xml
+    paths:
+      - test/report.rpt
