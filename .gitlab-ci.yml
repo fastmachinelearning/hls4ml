@@ -1,12 +1,11 @@
 stages:
-  - test
-  - convert
+  - first
   - csim
   - csynth
   - report
 
 test:
-  stage: test
+  stage: first
   image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.base
   tags: 
     - docker
@@ -27,7 +26,7 @@ test:
         - test/pytest/coverage.xml
 
 convert:
-  stage: convert
+  stage: first
   image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.vivado
   tags: 
     - hls4ml
