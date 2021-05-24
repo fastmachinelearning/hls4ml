@@ -338,6 +338,26 @@ class Dense(Layer):
         return self._config_template.format(**params)
 
 class Conv1D(Layer):
+    _expected_attributes = [
+        Attribute('in_width'),
+        Attribute('out_width'),
+
+        Attribute('n_chan'),
+        Attribute('n_filt'),
+
+        Attribute('filt_width'),
+        Attribute('stride_width'),
+
+        Attribute('pad_left'),
+        Attribute('pad_right'),
+
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+    ]
+
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_width'], self.attributes['n_filt']]
@@ -384,6 +404,28 @@ class Conv1D(Layer):
         return mult_config + '\n' + conv_config
 
 class SeparableConv1D(Layer):
+    _expected_attributes = [
+        Attribute('in_width'),
+        Attribute('out_width'),
+
+        Attribute('n_chan'),
+        Attribute('n_filt'),
+
+        Attribute('filt_width'),
+        Attribute('stride_width'),
+
+        Attribute('pad_left'),
+        Attribute('pad_right'),
+        
+        WeightAttribute('depthwise'),
+        WeightAttribute('pointwise'),
+        WeightAttribute('bias'),
+
+        TypeAttribute('depthwise'),
+        TypeAttribute('pointwise'),
+        TypeAttribute('bias'),
+    ]
+
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_width'], self.attributes['n_filt']]
@@ -501,6 +543,11 @@ class Conv2D(Layer):
         Attribute('filt_width'),
         Attribute('stride_height'),
         Attribute('stride_width'),
+
+        Attribute('pad_top'),
+        Attribute('pad_bottom'),
+        Attribute('pad_left'),
+        Attribute('pad_right'),
 
         WeightAttribute('weight'),
         WeightAttribute('bias'),
@@ -625,6 +672,11 @@ class SeparableConv2D(Layer):
         Attribute('filt_width'),
         Attribute('stride_height'),
         Attribute('stride_width'),
+
+        Attribute('pad_top'),
+        Attribute('pad_bottom'),
+        Attribute('pad_left'),
+        Attribute('pad_right'),
         
         WeightAttribute('depthwise'),
         WeightAttribute('pointwise'),
@@ -763,6 +815,20 @@ class DepthwiseConv2D(Conv2D):
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
 class Pooling1D(Layer):
+    _expected_attributes = [
+        Attribute('n_in'),
+        Attribute('n_out'),
+        Attribute('n_filt'),
+
+        Attribute('pool_width'),
+        Attribute('stride_width'),
+
+        Attribute('pad_left'),
+        Attribute('pad_right'),
+
+        ChoiceAttribute('pool_op', ['Max', 'Average'])
+    ]
+
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['n_out'], self.attributes['n_filt']]
@@ -793,6 +859,28 @@ class Pooling1D(Layer):
         return self._config_template.format(**params)
 
 class Pooling2D(Layer):
+    _expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+
+        Attribute('out_height'),
+        Attribute('out_width'),
+
+        Attribute('n_filt'),
+
+        Attribute('pool_height'),
+        Attribute('pool_width'),
+        Attribute('stride_height'),
+        Attribute('stride_width'),
+
+        Attribute('pad_top'),
+        Attribute('pad_bottom'),
+        Attribute('pad_left'),
+        Attribute('pad_right'),
+
+        ChoiceAttribute('pool_op', ['Max', 'Average'])
+    ]
+
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
@@ -827,8 +915,15 @@ class Pooling2D(Layer):
         return self._config_template.format(**params)
 
 class GlobalPooling1D(Layer):
+    _expected_attributes = [
+        Attribute('n_in'),
+        Attribute('n_filt'),
+
+        ChoiceAttribute('pool_op', ['Max', 'Average'])
+    ]
+
     def initialize(self):
-        shape = [self.attributes['n_out'], self.attributes['n_filt']]
+        shape = [self.attributes['n_filt']]
         dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0].replace('Global', ''))
@@ -845,6 +940,16 @@ class GlobalPooling1D(Layer):
         return self._config_template.format(**params)
 
 class GlobalPooling2D(Layer):
+    _expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+        Attribute('out_height'),
+        Attribute('out_width'),
+        Attribute('n_filt'),
+
+        ChoiceAttribute('pool_op', ['Max', 'Average'])
+    ]
+
     def initialize(self):
         shape = [self.attributes['n_filt']]
         dims = ['N_FILT_{}'.format(self.index)]
@@ -868,6 +973,15 @@ class GlobalPooling2D(Layer):
         return self._config_template.format(**params)
 
 class ZeroPadding1D(Layer):
+    _expected_attributes = [
+        Attribute('in_width'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+
+        Attribute('pad_left'),
+        Attribute('pad_right'),
+    ]
+
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_width'], self.attributes['n_chan']]
@@ -896,6 +1010,19 @@ class ZeroPadding1D(Layer):
         return self._config_template.format(**params)
 
 class ZeroPadding2D(Layer):
+    _expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+        Attribute('out_height'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+
+        Attribute('pad_top'),
+        Attribute('pad_bottom'),
+        Attribute('pad_left'),
+        Attribute('pad_right'),
+    ]
+
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_chan']]
