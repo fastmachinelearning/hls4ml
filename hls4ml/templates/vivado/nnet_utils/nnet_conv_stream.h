@@ -119,24 +119,24 @@ void compute_encoded_output(
 template <class data_T, class res_T, typename CONFIG_T>
 void kernel_shift_1d(
     const data_T& in_elem,
-    // typename data_T::value_type shift_buffer[CONFIG_T::n_chan],
     typename res_T::value_type kernel_window[CONFIG_T::filt_width * CONFIG_T::n_chan]
 ) {
     #pragma HLS inline
-    #pragma HLS PIPELINE
-
+    #pragma HLS PIPELINE II = 1
+    
     // Shift kernel_window by one step to the left (manual shift operation)
     static const int filt_width = CONFIG_T::filt_width - 1;
-    for (int i_iw = 0; i_iw < filt_width; i_iw++) {
-        for (unsigned i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
+    KernelShiftWidth: for (int i_iw = 0; i_iw < filt_width; i_iw++) {
+        #pragma HLS UNROLL
+        KernelShiftChannel: for (unsigned i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
             // Shift every element in kernel_window to the left
             kernel_window[i_iw * CONFIG_T::n_chan + i_ic] = kernel_window[(i_iw + 1) * CONFIG_T::n_chan + i_ic];
         }
     }
 
-  // Insert shift_buffer column into right-most column of kernel
-  static const int lastheight = (CONFIG_T::filt_width - 1) * CONFIG_T::n_chan;
-    for (int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
+    // Insert shift_buffer column into right-most column of kernel
+    static const int lastheight = (CONFIG_T::filt_width - 1) * CONFIG_T::n_chan;
+    KernelPushChannel: for (int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
         #pragma HLS UNROLL
         kernel_window[lastheight + i_ic] = in_elem[i_ic];
     }
@@ -151,10 +151,10 @@ void kernel_shift_2d(
         
     // Shift kernel_window by one step to the left (manual shift operation)
     static const int filt_width = CONFIG_T::filt_width - 1;
-    for (int i_iw = 0; i_iw < filt_width; i_iw++) {
+    KernelShiftWidth: for (int i_iw = 0; i_iw < filt_width; i_iw++) {
         #pragma HLS PIPELINE II = 1
-        for (unsigned i_ih = 0; i_ih < CONFIG_T::filt_height; i_ih++) {
-            for (unsigned i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
+        KernelShiftHeight: for (unsigned i_ih = 0; i_ih < CONFIG_T::filt_height; i_ih++) {
+            KernelShiftChannel: for (unsigned i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
             // Shift every element in kernel_window to the left
                 kernel_window[i_ih * CONFIG_T::filt_width * CONFIG_T::n_chan + i_iw * CONFIG_T::n_chan + i_ic] = kernel_window[i_ih * CONFIG_T::filt_width * CONFIG_T::n_chan + (i_iw + 1) * CONFIG_T::n_chan + i_ic];
             }
@@ -163,9 +163,9 @@ void kernel_shift_2d(
 
     // Insert shift_buffer column into right-most column of kernel
     static const int lastheight = (CONFIG_T::filt_width - 1) * CONFIG_T::n_chan;
-    for (int i_ih = 0; i_ih < CONFIG_T::filt_height; i_ih++) {
+    KernelPushHeight: for (int i_ih = 0; i_ih < CONFIG_T::filt_height; i_ih++) {
         #pragma HLS UNROLL
-        for (int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
+        KernelPushChannel: for (int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
             kernel_window[lastheight + i_ih * CONFIG_T::filt_width * CONFIG_T::n_chan + i_ic] = shift_buffer[i_ih][i_ic];
         }
     }
@@ -173,24 +173,26 @@ void kernel_shift_2d(
 
 template <class data_T, class res_T, typename CONFIG_T>
 void shift_line_buffer(const data_T& in_elem, 
-                  ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[CONFIG_T::filt_height - 1][CONFIG_T::n_chan],
-                  typename data_T::value_type kernel_window[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan]
+                    ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[CONFIG_T::filt_height - 1][CONFIG_T::n_chan],
+                    typename data_T::value_type kernel_window[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan]
 ) {
     
     #pragma HLS PIPELINE
 
     // Temporary buffer for popped (shifted) elements
     typename data_T::value_type shift_buffer[CONFIG_T::filt_height][CONFIG_T::n_chan];
-    #pragma HLS ARRAY_RESHAPE variable = shift_buffer complete dim = 0
+    #pragma HLS ARRAY_PARTITION variable = shift_buffer complete dim = 0
 
-    for (int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
+    UpdateBuffer: for (int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
         #pragma HLS UNROLL
 
         // Insert pixel(s) at end of shift buffer
         shift_buffer[CONFIG_T::filt_height - 1][i_ic] = in_elem[i_ic];
+    }
 
+    LineBufferDataIn: for (int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
         // Shift the shift buffer into the line buffer
-        for (unsigned i_ih = 1; i_ih < CONFIG_T::filt_height; i_ih++) {
+        LineBufferShift: for (unsigned i_ih = 1; i_ih < CONFIG_T::filt_height; i_ih++) {
             #pragma HLS UNROLL
             typename data_T::value_type pop_elem = line_buffer[i_ih - 1][i_ic].shift(shift_buffer[CONFIG_T::filt_height - i_ih][i_ic]); // Shift the line buffer, return the popped pixel
             shift_buffer[CONFIG_T::filt_height - i_ih - 1][i_ic] = pop_elem; // Popped element placed back into shift_buffer, one row up.
@@ -213,15 +215,18 @@ void compute_output_buffer_2d(
     const static int lShiftX = CONFIG_T::filt_width - 1;
     const static int lShiftY = CONFIG_T::filt_height - 1;
 
-    // Pixel Pointers
-    static int pX = 0;
-    static int pY = 0;
+    // Counters
+    static int pX = 0; // Pixel X
+    static int pY = 0; // Pixel Y
+
+    static int sX = 0; // Stride X
+    static int sY = 0; // Stride Y
 
     static typename data_T::value_type kernel_data[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan];
-    #pragma HLS ARRAY_RESHAPE variable=kernel_data complete
+    #pragma HLS ARRAY_PARTITION variable=kernel_data complete
 
     typename res_T::value_type res_out[CONFIG_T::n_filt];
-    #pragma HLS ARRAY_RESHAPE variable=res_out complete dim = 0
+    #pragma HLS ARRAY_PARTITION variable=res_out complete dim = 0
 
     res_T res_pack;
     #pragma HLS DATA_PACK variable=res_pack
@@ -230,7 +235,7 @@ void compute_output_buffer_2d(
     nnet::shift_line_buffer<data_T, res_T, CONFIG_T>(in_elem, line_buffer, kernel_data);
 
     // Check to see if we have a full kernel
-    if ((pX - lShiftX) % CONFIG_T::stride_width == 0 && (pY - lShiftY) % CONFIG_T::stride_height == 0 && pY > lShiftY - 1 && pX > lShiftX - 1) {
+    if ( (sX - lShiftX) == 0 && (sY - lShiftY) == 0 && pY > lShiftY - 1 && pX > lShiftX - 1) {
         
         // Dense multiply
         #pragma HLS INLINE region
@@ -250,17 +255,23 @@ void compute_output_buffer_2d(
         res_stream.write(res_pack);
     }
 
-    // Pointer Housekeeping
+    // Counter Housekeeping
     if (pX + 1 == CONFIG_T::in_width)  // Includes padding, end of line (padded)
     {
-        pX = 0;
+        pX = 0; 
+        sX = 0;
         if (pY + 1 == CONFIG_T::in_height) {  // Reached bottom of image
-            pY = 0;
+            pY = 0; 
+            sY = 0;
         } else {
             pY = pY + 1;
+            // Update stride (threshold) ? subtract stride : increment stride
+            sY = ((sY - lShiftY) == 0) ? sY - CONFIG_T::stride_height + 1 : sY + 1; 
         }
     } else {
         pX = pX + 1;
+        // Update stride (threshold) ? subtract stride : increment stride
+        sX = ((sX - lShiftX) == 0) ? sX - CONFIG_T::stride_width + 1 : sX + 1; 
     }
 }
 
@@ -277,14 +288,15 @@ void compute_output_buffer_1d(
     // Thresholds
     const static int lShiftX = CONFIG_T::filt_width - 1;
 
-    // Pixel Pointers
-    static int pX = 0;
+    // Counters
+    static int pX = 0; // pixel counter
+    static int sX = 0; // stride counter
 
     static typename data_T::value_type kernel_data[CONFIG_T::filt_width * CONFIG_T::n_chan];
-    #pragma HLS ARRAY_RESHAPE variable=kernel_data complete
+    #pragma HLS ARRAY_PARTITION variable=kernel_data complete
 
     typename res_T::value_type res_out[CONFIG_T::n_filt];
-    #pragma HLS ARRAY_RESHAPE variable=res_out complete dim = 0
+    #pragma HLS ARRAY_PARTITION variable=res_out complete dim = 0
 
     res_T res_pack;
     #pragma HLS DATA_PACK variable=res_pack
@@ -293,7 +305,7 @@ void compute_output_buffer_1d(
     nnet::kernel_shift_1d<data_T, res_T, CONFIG_T>(in_elem, kernel_data);
 
     // Check to see if we have a full kernel
-    if ((pX - lShiftX) % CONFIG_T::stride_width == 0 && pX > lShiftX - 1) {
+    if ( (sX - lShiftX) == 0 && pX > lShiftX - 1 ) {
         
         // Dense multiply
         #pragma HLS INLINE region
@@ -313,12 +325,15 @@ void compute_output_buffer_1d(
         res_stream.write(res_pack);
     }
 
-    // Pointer Housekeeping
+    // Counter Housekeeping
     if (pX + 1 == CONFIG_T::in_width)  // Includes padding, end of line (padded)
     {
         pX = 0;
+        sX = 0;
     } else {
         pX = pX + 1;
+        // Update stride (threshold) ? subtract stride : increment stride
+        sX = ((sX - lShiftX) == 0) ? sX - CONFIG_T::stride_width + 1 : sX + 1; 
     }
 }
 

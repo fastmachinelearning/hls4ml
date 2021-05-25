@@ -185,14 +185,15 @@ void compute_1d_depthwise_output(
     // Thresholds
     const static int lShiftX = CONFIG_T::filt_width - 1;
 
-    // Pixel Pointers
+    // Counters
     static int pX = 0;
+    static int sX = 0;
 
     static typename data_T::value_type kernel_data[CONFIG_T::filt_width * CONFIG_T::n_chan];
-    #pragma HLS ARRAY_RESHAPE variable=kernel_data complete
+    #pragma HLS ARRAY_PARTITION variable=kernel_data complete
 
     typename res_T::value_type res_out[CONFIG_T::n_chan];
-    #pragma HLS ARRAY_RESHAPE variable=res_out complete dim = 0
+    #pragma HLS ARRAY_PARTITION variable=res_out complete dim = 0
 
     res_T res_pack;
     #pragma HLS DATA_PACK variable=res_pack
@@ -201,7 +202,7 @@ void compute_1d_depthwise_output(
     nnet::kernel_shift_1d<data_T, res_T, CONFIG_T>(in_elem, kernel_data);
 
     // Check to see if we have a full kernel
-    if ((pX - lShiftX) % CONFIG_T::stride_width == 0 && pX > lShiftX - 1) { 
+    if ((sX - lShiftX) == 0 && pX > lShiftX - 1) { 
       // Dense multiply
       #pragma HLS INLINE region
       if (CONFIG_T::strategy == nnet::latency) {
@@ -223,9 +224,11 @@ void compute_1d_depthwise_output(
     // Pointer Housekeeping
     if (pX + 1 == CONFIG_T::in_width)  // Includes padding, end of line (padded)
     {
-      pX = 0;
+        pX = 0;
+        sX = 0;
     } else {
-      pX = pX + 1;
+        pX = pX + 1;
+        sX = ((sX - lShiftX) == 0) ? sX - CONFIG_T::stride_width + 1 : sX + 1; 
     }
   }
 
@@ -243,15 +246,18 @@ void compute_2d_depthwise_output(
     const static int lShiftX = CONFIG_T::filt_width - 1;
     const static int lShiftY = CONFIG_T::filt_height - 1;
 
-    // Pixel Pointers
-    static int pX = 0;
-    static int pY = 0;
+    // counters
+    static int pX = 0; // pixel X
+    static int pY = 0; // pixel Y
+
+    static int sX = 0; // stride X
+    static int sY = 0; // stride Y
 
     static typename data_T::value_type kernel_data[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan];
-    #pragma HLS ARRAY_RESHAPE variable=kernel_data complete
+    #pragma HLS ARRAY_PARTITION variable=kernel_data complete
 
     typename res_T::value_type res_out[CONFIG_T::n_chan];
-    #pragma HLS ARRAY_RESHAPE variable=res_out complete dim = 0
+    #pragma HLS ARRAY_PARTITION variable=res_out complete dim = 0
 
     res_T res_pack;
     #pragma HLS DATA_PACK variable=res_pack
@@ -260,7 +266,7 @@ void compute_2d_depthwise_output(
     nnet::shift_line_buffer<data_T, res_T, CONFIG_T>(in_elem, line_buffer, kernel_data);
 
     // Check to see if we have a full kernel
-    if ((pX - lShiftX) % CONFIG_T::stride_width == 0 && (pY - lShiftY) % CONFIG_T::stride_height == 0 && pY > lShiftY - 1 && pX > lShiftX - 1) { 
+    if ((sX - lShiftX) == 0 && (sY - lShiftY) == 0 && pY > lShiftY - 1 && pX > lShiftX - 1) { 
       // Dense multiply
       #pragma HLS INLINE region
       if (CONFIG_T::strategy == nnet::latency) {
@@ -282,14 +288,18 @@ void compute_2d_depthwise_output(
     // Pointer Housekeeping
     if (pX + 1 == CONFIG_T::in_width)  // Includes padding, end of line (padded)
     {
-      pX = 0;
-      if (pY + 1 == CONFIG_T::in_height) {  // Reached bottom of image
-        pY = 0;
-      } else {
-        pY = pY + 1;
-      }
+        pX = 0;
+        sX = 0;
+        if (pY + 1 == CONFIG_T::in_height) {  // Reached bottom of image
+            pY = 0;
+            sY = 0;
+        } else {
+            pY = pY + 1;
+            sY = ((sY - lShiftY) == 0) ? sY - CONFIG_T::stride_height + 1 : sY + 1; 
+        }
     } else {
-      pX = pX + 1;
+        pX = pX + 1;
+        sX = ((sX - lShiftX) == 0) ? sX - CONFIG_T::stride_width + 1 : sX + 1; 
     }
   }
 

@@ -74,11 +74,11 @@ void conv_2d_buffer_cl(
     assert(CONFIG_T::pad_top == 0 && CONFIG_T::pad_bottom == 0 && CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
 
     static ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[CONFIG_T::filt_height - 1][CONFIG_T::n_chan];
-    #pragma HLS ARRAY_RESHAPE variable = line_buffer complete dim = 2
+    #pragma HLS ARRAY_PARTITION variable = line_buffer complete dim = 2
 
-ReadInputHeight: for (int i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
-    ReadInputWidth: for (int i_iw = 0; i_iw < CONFIG_T::in_width; i_iw++) {
-        #pragma HLS LOOP_FLATTEN
+    ReadInputHeight: for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
+        ReadInputWidth: for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width; i_iw++) {
+            #pragma HLS LOOP_FLATTEN
             if(CONFIG_T::strategy == nnet::latency) {
                 #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
             }
