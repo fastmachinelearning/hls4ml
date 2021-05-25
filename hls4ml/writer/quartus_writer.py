@@ -399,7 +399,7 @@ class QuartusWriter(Writer):
         ###################
 
         filedir = os.path.dirname(os.path.abspath(__file__))
-        f = open(os.path.join(filedir,'../templates/vivado/myproject_bridge.cpp'),'r')
+        f = open(os.path.join(filedir,'../templates/quartus/myproject_bridge.cpp'),'r')
         fout = open('{}/{}_bridge.cpp'.format(model.config.get_output_dir(), model.config.get_project_name()),'w')
 
         model_inputs = model.get_input_variables()
