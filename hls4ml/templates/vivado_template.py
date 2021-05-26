@@ -550,6 +550,8 @@ class VivadoBackend(Backend):
                 product = 'both_binary'
             elif isinstance(weight_T, XnorPrecisionType): # data is not xnor-binary
                 product = 'weight_binary'
+            elif isinstance(data_T, XnorPrecisionType): # data is xnor, weight is not
+                product = 'data_binary'
             elif isinstance(weight_T, IntegerPrecisionType) and weight_T.width == 2 and weight_T.signed:
                 product = 'weight_ternary'
             else:
