@@ -4,26 +4,26 @@ stages:
   - csynth
   - report
 
-test:
-  stage: first
-  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.base
-  tags: 
-    - corelia
-  before_script:
-    - source ~/.bashrc
-    - git submodule init
-    - git submodule update
-    - conda activate hls4ml-testing
-    - pip install .[profiling]
-  script:
-    - cd ${CI_PROJECT_DIR}/test/pytest
-    - pytest -rA --cov-report xml --cov=hls4ml --junitxml=report.xml
-  artifacts:
-    when: always
-    reports:
-      junit: 
-        - test/pytest/report.xml
-        - test/pytest/coverage.xml
+#test:
+#  stage: first
+#  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.base
+#  tags: 
+#    - corelia
+#  before_script:
+#    - source ~/.bashrc
+#    - git submodule init
+#    - git submodule update
+#    - conda activate hls4ml-testing
+#    - pip install .[profiling]
+#  script:
+#    - cd ${CI_PROJECT_DIR}/test/pytest
+#    - pytest -rA --cov-report xml --cov=hls4ml --junitxml=report.xml
+#  artifacts:
+#    when: always
+#    reports:
+#      junit: 
+#        - test/pytest/report.xml
+#        - test/pytest/coverage.xml
 
 convert:
   stage: first
