@@ -8,7 +8,7 @@ test:
   stage: first
   image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.base
   tags: 
-    - hls4ml
+    - corelia
   before_script:
     - source ~/.bashrc
     - git submodule init
