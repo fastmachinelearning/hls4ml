@@ -1,32 +1,46 @@
 stages:
-  # - tests
+  - tests
   - convert
   - csim
   - csynth
   - report
 
-#pytest:
-#  stage: tests
-#  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.base
-#  tags: 
-#    - hls4ml
-#  before_script:
-#    - source ~/.bashrc
-#    - git submodule init
-#    - git submodule update
-#    - conda activate hls4ml-testing
-#    - pip install .[profiling]
-#  script:
-#    - cd ${CI_PROJECT_DIR}/test/pytest
-#    - pytest -rA --cov-report xml --cov=hls4ml --junitxml=report.xml
-#  artifacts:
-#    when: always
-#    reports:
-#      junit: 
-#        - test/pytest/report.xml
-#        - test/pytest/coverage.xml
-#    expire_in: 1 week
-#  allow_failure: true
+pytest:
+  stage: tests
+  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.base
+  tags: 
+    - docker
+  before_script:
+    - source ~/.bashrc
+    - git submodule init
+    - git submodule update
+    - conda activate hls4ml-testing
+    - pip install .[profiling]
+  script:
+    - cd ${CI_PROJECT_DIR}/test/pytest
+    - pytest -rA $TEST --junitxml=report.xml
+  artifacts:
+    when: always
+    reports:
+      junit: 
+        - test/pytest/report.xml
+    expire_in: 1 week
+  allow_failure: true
+
+test_qkeras:
+  extends: pytest
+  variables:
+    TEST: test_qkeras.py
+
+test_cnn_mnist:
+  extends: pytest
+  variables:
+    TEST: test_cnn_mnist.py
+
+test_softmax:
+  extends: pytest
+  variables:
+    TEST: test_softmax.py
 
 convert:
   stage: convert

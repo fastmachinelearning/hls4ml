@@ -23,25 +23,25 @@ KERAS_3layer
 #KERAS_conv1d_small
 #KERAS_conv2d_model
 #KERAS_dense_16x100x100x100x100x100x5
-KERAS_3layer_batch_norm
-KERAS_3layer_binary_smaller
-KERAS_3layer_ternary_small
+#KERAS_3layer_batch_norm
+#KERAS_3layer_binary_smaller
+#KERAS_3layer_ternary_small
  
-garnet_1layer y:garnet_1layer_config 
+#garnet_1layer y:garnet_1layer_config 
 
 # Resource strategy
-KERAS_3layer r:2 s:Resource
-qkeras_mnist_dense r:112 s:Resource
+#KERAS_3layer r:2 s:Resource
+#qkeras_mnist_dense r:112 s:Resource
 
 #Fails synthesis due to a problem with loop unrolling
 #jetTagger_Conv2D_Small:jetTagger_Conv2D_Small
 
 # Streaming IO
 #KERAS_1layer io:s
-KERAS_3layer io:s
-KERAS_conv1d_small io:s
-KERAS_conv2d_model io:s
-jetTagger_Conv2D_Small io:s
-jetTagger_Conv2D_Small_NoBatchNorm io:s
+#KERAS_3layer io:s
+#KERAS_conv1d_small io:s
+#KERAS_conv2d_model io:s
+#jetTagger_Conv2D_Small io:s
+#jetTagger_Conv2D_Small_NoBatchNorm io:s
 
 #KERAS_1layer
