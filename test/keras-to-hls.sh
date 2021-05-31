@@ -1,7 +1,7 @@
 #!/bin/bash
 
 pycmd=python
-xilinxpart="xcvu9p-flgb2104-2-e"
+xilinxpart="xcu250-figd2104-2L-e"
 clock=5
 io=io_parallel
 rf=1
@@ -22,7 +22,7 @@ function print_usage {
    echo ""
    echo "Options are:"
    echo "   -x DEVICE"
-   echo "      Xilinx device part number. Defaults to 'xcvu9p-flgb2104-2-e'."
+   echo "      Xilinx device part number. Defaults to 'xcu250-figd2104-2L-e'."
    echo "   -c CLOCK"
    echo "      Clock period to use. Defaults to 5."
    echo "   -s"

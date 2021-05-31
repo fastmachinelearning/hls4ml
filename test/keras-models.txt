@@ -27,7 +27,7 @@ KERAS_3layer_batch_norm
 KERAS_3layer_binary_smaller
 KERAS_3layer_ternary_small
  
-garnet_1layer x:xcku115-flvb2104-2-i y:garnet_1layer_config 
+garnet_1layer y:garnet_1layer_config 
 
 # Resource strategy
 KERAS_3layer r:2 s:Resource
@@ -44,4 +44,4 @@ KERAS_conv2d_model io:s
 jetTagger_Conv2D_Small io:s
 jetTagger_Conv2D_Small_NoBatchNorm io:s
 
-#KERAS_1layer x:xcku115-flvf1924-2-i
+#KERAS_1layer
