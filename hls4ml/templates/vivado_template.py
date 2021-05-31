@@ -415,6 +415,7 @@ class VivadoBackend(Backend):
         self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
         self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)
         self.register_templates('KLLoss'                 , distance_function_template    , distance_config_template, distance_include_list)
+        self.register_templates('CustomMSE'                 , distance_function_template    , distance_config_template, distance_include_list)
     
     def get_valid_reuse_factors(self, layer):
         n_in = 0

@@ -1841,6 +1841,34 @@ class KLLoss(Layer):
         params['n_out'] = 1
         return self._config_template.format(**params)
 
+class CustomMSE(Layer):
+    def initialize(self):
+        assert(len(self.inputs) == 2)
+        self.add_output_variable(shape=[1], dim_names=['CUSTOM_MSE_{}'.format(self.index)])
+
+        print(self.attributes)
+        if 'sum_t' not in self.attributes:
+            self.set_attr('sum_t', self.get_attr('accum_t'))
+
+    def function_cpp(self):
+        params = {}
+        params['distance'] = 'klloss'
+        params['config'] = 'config{}'.format(self.index)
+        params['input1_t'] = self.get_input_variable(self.inputs[0]).type.name
+        params['input2_t'] = self.get_input_variable(self.inputs[1]).type.name
+        params['output_t'] = self.get_output_variable().type.name
+        params['input1'] = self.get_input_variable(self.inputs[0]).name
+        params['input2'] = self.get_input_variable(self.inputs[1]).name
+        params['output'] = self.get_output_variable().name
+
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+        params['n_in'] = self.get_input_variable(self.inputs[0]).shape[0]
+        params['n_out'] = 1
+        return self._config_template.format(**params)
+
 layer_map = {
     'Input'                  : Input,
     'InputLayer'             : Input,
@@ -1886,6 +1914,7 @@ layer_map = {
     'GarNet'                 : GarNet,
     'GarNetStack'            : GarNetStack,
     'KLLoss'                 : KLLoss,
+    'CustomMSE'              : CustomMSE,
     # TensorFlow-specific layers:
     'BiasAdd'                : BiasAdd,
 }
