@@ -5,7 +5,7 @@ stages:
   - csynth
   - report
 
-pytest:
+.pytest:
   stage: tests
   image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.base
   tags: 
@@ -27,26 +27,26 @@ pytest:
     expire_in: 1 week
   allow_failure: true
 
-test_qkeras:
+pytest:test_qkeras:
   extends: pytest
   variables:
     TEST: test_qkeras.py
 
-test_cnn_mnist:
+pytest:test_cnn_mnist:
   extends: pytest
   variables:
     TEST: test_cnn_mnist.py
 
-test_softmax:
+pytest:test_softmax:
   extends: pytest
   variables:
     TEST: test_softmax.py
 
 convert:
   stage: convert
-  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.vivado
+  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.base
   tags: 
-    - hls4ml
+    - docker
   before_script:
     - source ~/.bashrc
     - git submodule init
