@@ -26,7 +26,7 @@ pytest:
         - test/pytest/report.xml
         - test/pytest/coverage.xml
     expire_in: 1 week
-  allow-failure: true
+  allow_failure: true
 
 convert:
   stage: convert
