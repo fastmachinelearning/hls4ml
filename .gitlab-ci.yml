@@ -1,6 +1,7 @@
 stages:
   - tests
   - convert
+  - build
   - csim
   - csynth
 
@@ -147,10 +148,12 @@ convert:
 #    HLS4ML_PRJ_DIR: KERAS_3layer
 
 builds:
+  stage: build
   needs: 
   - convert
   trigger:
     include:
-      - artifact: test/convert-keras-models.yml
+      - job: convert
+        artifact: test/convert-keras-models.yml
     strategy: depend
 
