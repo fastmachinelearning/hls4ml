@@ -5,6 +5,8 @@ stages:
 
 .convert:
   image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.base
+  stage:
+    convert
   tags:
     - docker
   before_script:
@@ -50,4 +52,6 @@ stages:
     paths:
     - test/vivado_prj/${HLS4ML_PRJ}/myproject_prj/solution1/synth/report/myproject_prj.rpt
     - test/vivado_prj/${HLS4ML_PRJ}/myproject_prj/solution1/synth/report/myproject_prj.xml
+
+
 
