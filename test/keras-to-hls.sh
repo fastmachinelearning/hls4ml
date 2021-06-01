@@ -8,8 +8,8 @@ rf=1
 strategy="Latency"
 type="ap_fixed<16,6>"
 yml=""
+ciyaml=false
 basedir=vivado_prj
-ciymlfile=false
 
 sanitizer="[^A-Za-z0-9._]"
 
@@ -60,7 +60,7 @@ while getopts ":x:c:sr:g:t:d:y:fh" opt; do
       ;;
    y) yml=$OPTARG
       ;;
-   f) ciymlfile=true
+   f) ciyaml=true
       ;;
    h)
       print_usage
@@ -95,9 +95,9 @@ do
 
    echo "Creating config file for model '${model}'"
    base=`echo "${h5}" | sed -e 's/\(_weights\)*$//g'`
-   file="${basedir}/${base}.yml"
-   taildir="${base}-${xilinxpart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}"
-   prjdir="${basedir}/$taildir"
+   prjname="${base}-${xilinxpart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}"
+   file="${basedir}/${prjname}.yml"
+   prjdir="${basedir}/$prjname"
 
    hlscfg=""
    if [ ! -z "${yml}" ]; then
@@ -124,12 +124,20 @@ do
       echo "${hlscfg}" >> ${file}
    fi
 
-   ${pycmd} ../scripts/hls4ml convert -c ${file} || exit 1
-   rm ${file}
-   rm -rf "${prjdir}"
-   echo ""
    if $ciymlfile ; then
-      echo -e "csim ${taildir}:\n  extends: .csim\n  variables:\n    HLS4ML_PRJ: ${taildir}\n\n" >> convert-keras-models-ci.yml
-      echo -e "csynth ${taildir}:\n  extends: .csynth\n  needs:\n  - csim ${taildir}\n  variables:\n    HLS4ML_PRJ: ${taildir}\n\n" >> convert-keras-models-ci.yml
+      args="-x $xilinxpart -c $clock -s $io -r $rf -g $strategy -t $type -d $basedir "
+      if [ ! -z "${yml}" ]; then args="$args -y $yml"; fi
+      echo -e "convert ${prjname}:\n extends: .convert\n variables:\n    ARGS:  ${args}\n    HLS4ML_PRJ: ${prjname}\n\n" >> convert-keras-models-ci.yml
+      echo -e "csim ${prjname}:\n  extends: .csim\n  needs:\n  - convert ${prjname}\n  variables:\n    HLS4ML_PRJ: ${prjname}\n\n" >> convert-keras-models-ci.yml
+      echo -e "csynth ${prjname}:\n  extends: .csynth\n  needs:\n  - csim ${prjname}\n  variables:\n    HLS4ML_PRJ: ${prjname}\n\n" >> convert-keras-models-ci.yml
+      echo $cmdargs
+      echo $prjname
+   else
+      ${pycmd} ../scripts/hls4ml convert -c ${file} || exit 1
+      rm ${file}
+      rm -rf "${prjdir}"
+      echo ""
    fi
+
+
 done

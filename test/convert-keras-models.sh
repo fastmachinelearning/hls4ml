@@ -4,7 +4,7 @@ models_var=HLS4ML_KERAS_MODELS
 models_file=
 exec=echo
 dir=
-yaml=false
+ciyaml=false
 
 function print_usage {
    echo "Usage: `basename $0` [OPTION]"
@@ -34,7 +34,7 @@ while getopts ":f:xd:yh" opt; do
       ;;
    d) dir="-d $OPTARG"
       ;;
-   y) yaml=true
+   y) ciyaml=true
       ;;
    h)
       print_usage
@@ -73,7 +73,7 @@ do
          if [[ "${model_def[$i]}" == i:* ]] ; then params[5]="-t ${model_def[$i]:2} "; fi
          if [[ "${model_def[$i]}" == y:* ]] ; then params[6]="-y ${model_def[$i]:2} "; fi
       done
-      if $yaml ; then params[7]="-f "; fi
+      if $ciyaml ; then params[7]="-f "; fi
       params[8]=${model_def[0]}
 
       cmd="./keras-to-hls.sh ${dir} ${params[0]}${params[1]}${params[2]}${params[3]}${params[4]}${params[5]}${params[6]}${params[7]}${params[8]}"

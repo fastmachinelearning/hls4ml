@@ -1,6 +1,20 @@
 stages:
+  - convert
   - csim
   - csynth
+
+.convert:
+  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.base
+  tags:
+    - docker
+  before_script:
+    - source ~/.bashrc
+  script:
+    - cd ${CI_PROJECT_DIR}/test/
+    - ./keras-to-hls.sh $ARGS
+  artifacts:
+    paths:
+    - test/vivado_prj/${HLS4ML_PRJ}.tar.gz
 
 .build_prj:
   image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.vivado
@@ -15,7 +29,7 @@ stages:
     - vivado_hls -f build_prj ${BUILD_PRJ_OPTS}
   artifacts:
     paths:
-    - test/vivado_prj/${HLS4ML_PRJ_DIR}/vivado_hls.log
+    - test/vivado_prj/${HLS4ML_PRJ}/vivado_hls.log
 
 .csim:
   extends: .build_prj
@@ -34,6 +48,6 @@ stages:
     BUILD_PRJ_OPTS: "reset=1 csim=0 synth=1 cosim=0 validation=0 vsynth=0 export=0"
   artifacts:
     paths:
-    - test/vivado_prj/${HLS4ML_PRJ_DIR}/myproject_prj/solution1/synth/report/myproject_prj.rpt
-    - test/vivado_prj/${HLS4ML_PRJ_DIR}/myproject_prj/solution1/synth/report/myproject_prj.xml
+    - test/vivado_prj/${HLS4ML_PRJ}/myproject_prj/solution1/synth/report/myproject_prj.rpt
+    - test/vivado_prj/${HLS4ML_PRJ}/myproject_prj/solution1/synth/report/myproject_prj.xml
 
