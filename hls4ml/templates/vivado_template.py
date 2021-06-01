@@ -475,10 +475,10 @@ class VivadoBackend(Backend):
             layer.reuse_factor = closest_rf
     
     def set_target_reuse_factor(self, layer):
-        tclk = layer.target_clock
+        targ_cycles = layer.target_cycles
 
         shuffle_cycles = 6 # Number of clock cycles to move data around
-        if tclk is not None:
+        if targ_cycles is not None:
             if layer.get_attr('class_name') == 'Dense': 
                 kernel_multiplies = layer.get_attr('n_out')
             elif layer.get_attr('class_name') == 'Conv1D':  
@@ -489,11 +489,11 @@ class VivadoBackend(Backend):
                 print('Target clock unsupported layer')
                 return
 
-            if tclk < shuffle_cycles*kernel_multiplies: # 6 clock min (6 * out_height * out_width)
-                print("Latency can not be achieved with current target %d. Mininum %d." % (tclk, shuffle_cycles*kernel_multiplies+1))
+            if targ_cycles < shuffle_cycles*kernel_multiplies: # 6 clock min (6 * out_height * out_width)
+                print("Latency can not be achieved with current target %d. Mininum %d." % (targ_cycles, shuffle_cycles*kernel_multiplies+1))
                 return
             else: 
-                rf = tclk - shuffle_cycles*kernel_multiplies # subtract data shuffling overhead
+                rf = targ_cycles - shuffle_cycles*kernel_multiplies # subtract data shuffling overhead
 
             layer.reuse_factor = float(rf) / kernel_multiplies
 
