@@ -1,3 +1,7 @@
+stages:
+  - csim
+  - csynth
+
 .build_prj:
   image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.vivado
   tags: 

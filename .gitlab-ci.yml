@@ -2,8 +2,6 @@ stages:
   - tests
   - convert
   - build
-  - csim
-  - csynth
 
 .pytest:
   stage: tests
