@@ -29,6 +29,7 @@ stages:
     - hls4ml
   before_script:
     - source ~/.bashrc
+    - source /opt/Xilinx/Vivado/2019.2/settings64.sh
   script:
     - cd ${CI_PROJECT_DIR}/test/vivado_prj/
     - mkdir -p "${HLS4ML_PRJ}" && tar -xzf "${HLS4ML_PRJ}.tar.gz" -C "${HLS4ML_PRJ}"
