@@ -30,9 +30,9 @@ class HLSConfig(object):
         self.layer_type_rf = {}
         self.layer_name_rf = {}
 
-        self.model_tclk = None
-        self.layer_type_tclk = {}
-        self.layer_name_tclk = {}
+        self.model_targ_cycles = None
+        self.layer_type_targ_cycles = {}
+        self.layer_name_targ_cycles = {}
 
         self.model_strategy = 'Latency'
         self.layer_type_strategy = {}
@@ -135,14 +135,14 @@ class HLSConfig(object):
 
         return rf
 
-    def get_target_latency(self, layer):
-        tclk = self.layer_name_tclk.get(layer.name.lower())
-        if tclk is None:
-            tclk = self.layer_name_tclk.get(layer.__class__.__name__.lower())
-        if tclk is None:
-            tclk = self.model_tclk
+    def get_target_cycles(self, layer):
+        targ_cycles = self.layer_name_targ_cycles.get(layer.name.lower())
+        if targ_cycles is None:
+            targ_cycles = self.layer_name_targ_cycles.get(layer.__class__.__name__.lower())
+        if targ_cycles is None:
+            targ_cycles = self.model_targ_cycles
  
-        return tclk
+        return targ_cycles
 
     def get_strategy(self, layer):
         strategy = self.layer_name_strategy.get(layer.name.lower())
@@ -202,7 +202,7 @@ class HLSConfig(object):
 
             self.model_bf = model_cfg.get('BramFactor', np.inf) # Weight threshold to be external BRAM
             self.model_rf = model_cfg.get('ReuseFactor')
-            self.model_tclk = model_cfg.get('TargetLatency')
+            self.model_targ_cycles = model_cfg.get('TargetCycles')
             self.model_conv_implementation = model_cfg.get('ConvImplementation', 'LineBuffer')
             self.model_strategy = model_cfg.get('Strategy', 'Latency')
             self.model_compression = bool(model_cfg.get('Compression', 0))
@@ -221,9 +221,9 @@ class HLSConfig(object):
                 if rf is not None:
                     self.layer_type_rf[layer_type.lower()] = rf
                 
-                tclk = layer_cfg.get('TargetLatency')
-                if tclk is not None:
-                    self.layer_type_tclk[layer_type.lower()] = tclk
+                targ_cycles = layer_cfg.get('TargetCycles')
+                if targ_cycles is not None:
+                    self.layer_type_targ_cycles[layer_type.lower()] = targ_cycles
 
                 strategy = layer_cfg.get('Strategy')
                 if strategy is not None:
@@ -251,9 +251,9 @@ class HLSConfig(object):
                 if rf is not None:
                     self.layer_name_rf[layer_name.lower()] = rf
 
-                tclk = layer_cfg.get('TargetLatency')
-                if tclk is not None:
-                    self.layer_name_tclk[layer_name.lower()] = tclk
+                targ_cycles = layer_cfg.get('TargetCycles')
+                if targ_cycles is not None:
+                    self.layer_name_targ_cycles[layer_name.lower()] = targ_cycles
 
                 strategy = layer_cfg.get('Strategy')
                 if strategy is not None:

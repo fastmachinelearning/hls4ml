@@ -364,7 +364,7 @@ class Layer(object):
         self.precision[accum_t.name] = accum_t
         self.set_attr('accum_t', accum_t.precision)
         self.reuse_factor = self.model.config.get_reuse_factor(self)
-        self.target_clock = self.model.config.get_target_latency(self)
+        self.target_cycles = self.model.config.get_target_cycles(self)
 
         layer_config = self.model.config.get_layer_config(self)
         for config_key, config_value in layer_config.items():
