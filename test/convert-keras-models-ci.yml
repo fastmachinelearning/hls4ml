@@ -53,7 +53,7 @@ stages:
   extends: .build_prj
   stage: csynth
   variables:
-    BUILD_PRJ_OPTS: "reset=1 csim=0 synth=1 cosim=0 validation=0 vsynth=0 export=0"
+    BUILD_PRJ_OPTS: "reset=1 csim=0 cosim=0 validation=0"
   artifacts:
     paths:
     - test/vivado_prj/${HLS4ML_PRJ}/myproject_prj/solution1/synth/report/myproject_prj.rpt
