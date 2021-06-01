@@ -235,7 +235,7 @@ void compute_1d_depthwise_output(
 template<class data_T, class res_T, typename CONFIG_T>
 void compute_2d_depthwise_output(
     const data_T& in_elem,
-    ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[CONFIG_T::filt_height - 1][CONFIG_T::n_chan],
+    ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[MAX(CONFIG_T::filt_height - 1,1)][CONFIG_T::n_chan],
     hls::stream<res_T> &res_stream,
     typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan],
     typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]

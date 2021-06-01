@@ -65,7 +65,11 @@ void depthwise_conv_2d_buffer_cl(
             if (CONFIG_T::strategy == nnet::latency) {
                 #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
             }
-            compute_2d_depthwise_output<data_T, res_T, CONFIG_T>(data.read(), line_buffer, res, weights, biases);
+            if (CONFIG_T::filt_height > 1) {
+                compute_2d_depthwise_output<data_T, res_T, CONFIG_T>(data.read(), line_buffer, res, weights, biases);
+            } else {
+                compute_1d_depthwise_output<data_T, res_T, CONFIG_T>(data.read(), res, weights, biases);
+            }
         }
     }
 }

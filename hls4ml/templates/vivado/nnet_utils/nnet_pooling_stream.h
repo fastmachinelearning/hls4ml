@@ -158,7 +158,7 @@ void pooling2d_encoded_cl(
 template<class data_T, class res_T, typename CONFIG_T>
 void compute_pool_buffer_2d(
     const data_T& in_elem,
-    ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[CONFIG_T::pool_height - 1][CONFIG_T::n_filt],
+    ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[MAX(CONFIG_T::pool_height - 1,1)][CONFIG_T::n_filt],
     hls::stream<res_T> &res
 ) {
     #pragma HLS INLINE
@@ -227,7 +227,7 @@ void pooling2d_buffer_cl(
     assert(CONFIG_T::pad_top == 0 && CONFIG_T::pad_bottom == 0 && CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
     assert(CONFIG_T::pool_height == CONFIG_T::stride_height && CONFIG_T::pool_width == CONFIG_T::stride_width);
 
-    static ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[CONFIG_T::pool_height - 1][CONFIG_T::n_filt];
+    static ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[MAX(CONFIG_T::pool_height - 1,1)][CONFIG_T::n_filt];
     #pragma HLS ARRAY_PARTITION variable = line_buffer complete dim = 2
 
     ReadInputHeight: for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
