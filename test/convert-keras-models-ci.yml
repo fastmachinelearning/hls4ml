@@ -32,7 +32,7 @@ stages:
     - source /opt/Xilinx/Vivado/2019.2/settings64.sh
   script:
     - cd ${CI_PROJECT_DIR}/test
-    - mkdir -p "vivado_prj/${HLS4ML_PRJ}" && tar -xzf "vivado_prj/${HLS4ML_PRJ}.tar.gz" -C "vivado_prj/${HLS4ML_PRJ}"
+    - tar -xzf "vivado_prj/${HLS4ML_PRJ}.tar.gz"
     - cd vivado_prj/${HLS4ML_PRJ}
     - vivado_hls -f build_prj.tcl ${BUILD_PRJ_OPTS}
   artifacts:
