@@ -62,6 +62,6 @@ stages:
     - test/vivado_prj/${HLS4ML_PRJ}/myproject_prj/solution1/syn/report/myproject_csynth.rpt
     - test/vivado_prj/${HLS4ML_PRJ}/myproject_prj/solution1/syn/report/myproject_csynth.xml
     reports:
-      - test/vivado_prj/${HLS4ML_PRJ}/metrics.txt
+    - test/vivado_prj/${HLS4ML_PRJ}/metrics.txt
 
 
