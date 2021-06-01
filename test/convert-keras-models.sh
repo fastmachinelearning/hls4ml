@@ -4,6 +4,7 @@ models_var=HLS4ML_KERAS_MODELS
 models_file=
 exec=echo
 dir=
+yaml=false
 
 function print_usage {
    echo "Usage: `basename $0` [OPTION]"
@@ -19,17 +20,21 @@ function print_usage {
    echo "      Execute the commands instead of just printing them."
    echo "   -d DIR"
    echo "      Output directory passed to keras-to-hls script."
+   echo "   -y"
+   echo "      Write a .yml file for the Gitlab CI"
    echo "   -h"
    echo "      Prints this help message."
 }
 
-while getopts ":f:xd:h" opt; do
+while getopts ":f:xd:yh" opt; do
    case "$opt" in
    f) models_file=$OPTARG
       ;;
    x) exec=eval
       ;;
    d) dir="-d $OPTARG"
+      ;;
+   y) yaml=true
       ;;
    h)
       print_usage
@@ -55,7 +60,7 @@ fi
 
 for line in "${model_line[@]}"
 do
-   params=("" "" "" "" "" "" "" "")
+   params=("" "" "" "" "" "" "" "" "")
    if [[ ${line} = *[![:space:]]* ]] && ! [[ "${line}" = \#* ]] ; then
       IFS=" " read -ra model_def <<< "${line}"
       for (( i=1; i<"${#model_def[@]}"; i++ ));
@@ -68,9 +73,10 @@ do
          if [[ "${model_def[$i]}" == i:* ]] ; then params[5]="-t ${model_def[$i]:2} "; fi
          if [[ "${model_def[$i]}" == y:* ]] ; then params[6]="-y ${model_def[$i]:2} "; fi
       done
-      params[7]=${model_def[0]}
+      if $yaml ; then params[7]="-f "; fi
+      params[8]=${model_def[0]}
 
-      cmd="./keras-to-hls.sh ${dir} ${params[0]}${params[1]}${params[2]}${params[3]}${params[4]}${params[5]}${params[6]}${params[7]}"
+      cmd="./keras-to-hls.sh ${dir} ${params[0]}${params[1]}${params[2]}${params[3]}${params[4]}${params[5]}${params[6]}${params[7]}${params[8]}"
 
       ${exec} "${cmd}"
    fi
