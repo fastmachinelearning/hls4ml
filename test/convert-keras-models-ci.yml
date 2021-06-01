@@ -31,7 +31,7 @@ stages:
     - source ~/.bashrc
   script:
     - cd ${CI_PROJECT_DIR}/test/vivado_prj/
-    - mkdir -p "${HLS4ML_PRJ}" && tar -xzf "${HLS$ML_PRJ}.tar.gz" -C "${HLS$ML_PRJ}"
+    - mkdir -p "${HLS4ML_PRJ}" && tar -xzf "${HLS4ML_PRJ}.tar.gz" -C "${HLS4ML_PRJ}"
     - cd ${HLS4ML_PRJ}
     - vivado_hls -f build_prj ${BUILD_PRJ_OPTS}
   artifacts:
