@@ -129,12 +129,11 @@ do
       echo -e "convert ${prjname}:\n extends: .convert\n variables:\n    ARGS: ${args}\n    HLS4ML_PRJ: ${prjname}\n\n" >> convert-keras-models-ci.yml
       echo -e "csim ${prjname}:\n  extends: .csim\n  needs:\n  - convert ${prjname}\n  variables:\n    HLS4ML_PRJ: ${prjname}\n\n" >> convert-keras-models-ci.yml
       echo -e "csynth ${prjname}:\n  extends: .csynth\n  needs:\n  - csim ${prjname}\n  variables:\n    HLS4ML_PRJ: ${prjname}\n\n" >> convert-keras-models-ci.yml
-   else
-      ${pycmd} ../scripts/hls4ml convert -c ${file} || exit 1
-      rm ${file}
-      rm -rf "${prjdir}"
-      echo ""
    fi
+   ${pycmd} ../scripts/hls4ml convert -c ${file} || exit 1
+   rm ${file}
+   rm -rf "${prjdir}"
+   echo ""
 
 
 done

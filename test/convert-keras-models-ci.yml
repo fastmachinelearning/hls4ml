@@ -8,7 +8,7 @@ stages:
   stage:
     convert
   tags:
-    - docker
+    - hls4ml
   before_script:
     - source ~/.bashrc
   script:
