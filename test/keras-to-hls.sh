@@ -42,6 +42,7 @@ function print_usage {
    echo "      Prints this help message."
 }
 
+args=$@
 while getopts ":x:c:sr:g:t:d:y:fh" opt; do
    case "$opt" in
    x) xilinxpart=$OPTARG
@@ -125,14 +126,9 @@ do
    fi
 
    if $ciymlfile ; then
-      args="-x $xilinxpart -c $clock -s $io -r $rf -g $strategy -t $type -d $basedir "
-      if [ ! -z "${yml}" ]; then args="$args -y $yml"; fi
-      echo -e "convert ${prjname}:\n extends: .convert\n variables:\n    XILINXPART:  ${xilinxpart}\n    CLOCK: $clock" >> convert-keras-models-ci.yml
-      echo -e "    IO: $io\n    RF: $rf\n    STRATEGY: $strategy\n    TYPE: $type\n    BASEDIR: $basedir\n    HLS4ML_PRJ: ${prjname}\n\n" >> convert-keras-models-ci.yml
+      echo -e "convert ${prjname}:\n extends: .convert\n variables:\n    ARGS: ${args}\n    HLS4ML_PRJ: ${prjname}\n\n" >> convert-keras-models-ci.yml
       echo -e "csim ${prjname}:\n  extends: .csim\n  needs:\n  - convert ${prjname}\n  variables:\n    HLS4ML_PRJ: ${prjname}\n\n" >> convert-keras-models-ci.yml
       echo -e "csynth ${prjname}:\n  extends: .csynth\n  needs:\n  - csim ${prjname}\n  variables:\n    HLS4ML_PRJ: ${prjname}\n\n" >> convert-keras-models-ci.yml
-      echo $cmdargs
-      echo $prjname
    else
       ${pycmd} ../scripts/hls4ml convert -c ${file} || exit 1
       rm ${file}

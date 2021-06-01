@@ -30,7 +30,7 @@ KERAS_3layer
 #garnet_1layer y:garnet_1layer_config 
 
 # Resource strategy
-#KERAS_3layer r:2 s:Resource
+KERAS_3layer r:2 s:Resource
 #qkeras_mnist_dense r:112 s:Resource
 
 #Fails synthesis due to a problem with loop unrolling

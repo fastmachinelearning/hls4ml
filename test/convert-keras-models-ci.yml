@@ -13,7 +13,8 @@ stages:
     - source ~/.bashrc
   script:
     - cd ${CI_PROJECT_DIR}/test/
-    - ./keras-to-hls.sh -x $XILINXPART -c $CLOCK -s $IO -r $RF -g $STRATEGY -t $TYPE -d $BASEDIR $HLS4ml_PRJ
+    - cmd="./keras-to-hls.sh ${ARGS}"
+    - eval $cmd
   artifacts:
     paths:
     - test/vivado_prj/${HLS4ML_PRJ}.tar.gz
@@ -52,5 +53,4 @@ stages:
     paths:
     - test/vivado_prj/${HLS4ML_PRJ}/myproject_prj/solution1/synth/report/myproject_prj.rpt
     - test/vivado_prj/${HLS4ML_PRJ}/myproject_prj/solution1/synth/report/myproject_prj.xml
-
 
