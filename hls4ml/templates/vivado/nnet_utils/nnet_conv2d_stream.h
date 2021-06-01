@@ -73,7 +73,7 @@ void conv_2d_buffer_cl(
 {
     assert(CONFIG_T::pad_top == 0 && CONFIG_T::pad_bottom == 0 && CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
 
-    static ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[CONFIG_T::filt_height - 1][CONFIG_T::n_chan];
+    static ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[MAX(CONFIG_T::filt_height - 1,1)][CONFIG_T::n_chan];
     #pragma HLS ARRAY_PARTITION variable = line_buffer complete dim = 2
 
     ReadInputHeight: for (unsigned i_ih = 0; i_ih < CONFIG_T::in_height; i_ih++) {
@@ -82,7 +82,11 @@ void conv_2d_buffer_cl(
             if(CONFIG_T::strategy == nnet::latency) {
                 #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
             }
-            compute_output_buffer_2d<data_T, res_T, CONFIG_T>(data.read(), line_buffer, res, weights, biases);
+            if (CONFIG_T::filt_height > 1) {
+                compute_output_buffer_2d<data_T, res_T, CONFIG_T>(data.read(), line_buffer, res, weights, biases);
+            } else {
+                compute_output_buffer_1d<data_T, res_T, CONFIG_T>(data.read(), res, weights, biases);
+            }
         }
     }
 }
