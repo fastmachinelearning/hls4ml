@@ -54,8 +54,14 @@ stages:
   stage: csynth
   variables:
     BUILD_PRJ_OPTS: "reset=1 csim=0 cosim=0 validation=0"
+  after_script:
+    - cd ${CI_PROJECT_DIR}/test
+    - python report_metrics.py -d vivado_prj/${HLS4ML_PRJ} -o vivado_prj/${HLS4ML_PRJ}/metrics.txt
   artifacts:
     paths:
     - test/vivado_prj/${HLS4ML_PRJ}/myproject_prj/solution1/syn/report/myproject_csynth.rpt
     - test/vivado_prj/${HLS4ML_PRJ}/myproject_prj/solution1/syn/report/myproject_csynth.xml
+    reports:
+      - test/vivado_prj/${HLS4ML_PRJ}/metrics.txt
+
 
