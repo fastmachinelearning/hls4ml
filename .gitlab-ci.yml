@@ -134,11 +134,11 @@ csim:KERAS_3layer:
     HLS4ML_PRJ_DIR: KERAS_3layer
 
 csynth:KERAS_1layer:
-  extends: .csim
+  extends: .csynth
   variables:
     HLS4ML_PRJ_DIR: KERAS_3layer
 
 csynth:KERAS_3layer:
-  extends: .csim
+  extends: .csynth
   variables:
     HLS4ML_PRJ_DIR: KERAS_3layer
