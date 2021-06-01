@@ -56,6 +56,6 @@ stages:
     BUILD_PRJ_OPTS: "reset=1 csim=0 cosim=0 validation=0"
   artifacts:
     paths:
-    - test/vivado_prj/${HLS4ML_PRJ}/myproject_prj/solution1/synth/report/myproject_prj.rpt
-    - test/vivado_prj/${HLS4ML_PRJ}/myproject_prj/solution1/synth/report/myproject_prj.xml
+    - test/vivado_prj/${HLS4ML_PRJ}/myproject_prj/solution1/syn/report/myproject_csynth.rpt
+    - test/vivado_prj/${HLS4ML_PRJ}/myproject_prj/solution1/syn/report/myproject_csynth.xml
 
