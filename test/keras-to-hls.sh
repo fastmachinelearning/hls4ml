@@ -129,7 +129,7 @@ do
    rm -rf "${prjdir}"
    echo ""
    if $ciymlfile ; then
-      echo -e "csim ${taildir}:\n  extends: .csim\n  variables:\n    HLS4ML_PRJ: ${taildir}\n\n" >> convert-keras-models.yml
-      echo -e "csynth ${taildir}:\n  extends: .csynth\n  needs:\n  - csim ${taildir}\n  variables:\n    HLS4ML_PRJ: ${taildir}\n\n" >> convert-keras-models.yml
+      echo -e "csim ${taildir}:\n  extends: .csim\n  variables:\n    HLS4ML_PRJ: ${taildir}\n\n" >> convert-keras-models-ci.yml
+      echo -e "csynth ${taildir}:\n  extends: .csynth\n  needs:\n  - csim ${taildir}\n  variables:\n    HLS4ML_PRJ: ${taildir}\n\n" >> convert-keras-models-ci.yml
    fi
 done

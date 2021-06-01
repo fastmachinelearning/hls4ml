@@ -59,7 +59,7 @@ convert:
   artifacts:
     paths:
     - test/vivado_prj/
-    - test/convert-keras-models.yml
+    - test/convert-keras-models-ci.yml
     expire_in: 2 days
 
 #csim:
@@ -154,6 +154,6 @@ builds:
   trigger:
     include:
       - job: convert
-        artifact: test/convert-keras-models.yml
+        artifact: test/convert-keras-models-ci.yml
     strategy: depend
 
