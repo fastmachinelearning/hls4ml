@@ -53,7 +53,7 @@ convert:
     - pip install .[profiling]
   script:
     - cd ${CI_PROJECT_DIR}/test
-    - ./convert-keras-models.sh -y -f keras-models.txt
+    - ./convert-keras-models.sh -x -y -f keras-models.txt
   artifacts:
     paths:
     - test/vivado_prj/
