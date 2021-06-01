@@ -173,7 +173,7 @@ void kernel_shift_2d(
 
 template <class data_T, class res_T, typename CONFIG_T>
 void shift_line_buffer(const data_T& in_elem, 
-                    ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[CONFIG_T::filt_height - 1][CONFIG_T::n_chan],
+                    ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[MAX(CONFIG_T::filt_height - 1,1)][CONFIG_T::n_chan],
                     typename data_T::value_type kernel_window[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan]
 ) {
     
@@ -204,7 +204,7 @@ void shift_line_buffer(const data_T& in_elem,
 template<class data_T, class res_T, typename CONFIG_T>
 void compute_output_buffer_2d(
     const data_T& in_elem,
-    ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[CONFIG_T::filt_height - 1][CONFIG_T::n_chan],
+    ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[MAX(CONFIG_T::filt_height - 1,1)][CONFIG_T::n_chan],
     hls::stream<res_T> &res_stream,
     typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan * CONFIG_T::n_filt],
     typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]
