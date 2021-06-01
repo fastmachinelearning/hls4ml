@@ -41,7 +41,7 @@ void depthwise_conv_2d_encoded_cl(
                 #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
             }
             compute_scaled_indices_2d<data_T, CONFIG_T>(i_ih, i_iw, pixel_idx);
-            compute_depthwise_output<data_T, res_T, CONFIG_T>(data.read(), data_window, res, res_pack, outputs_ready, weights, biases, pixel_idx);
+            compute_depthwise_output_encoded<data_T, res_T, CONFIG_T>(data.read(), data_window, res, res_pack, outputs_ready, weights, biases, pixel_idx);
         }
     }
 }
@@ -66,9 +66,9 @@ void depthwise_conv_2d_buffer_cl(
                 #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
             }
             if (CONFIG_T::filt_height > 1) {
-                compute_2d_depthwise_output<data_T, res_T, CONFIG_T>(data.read(), line_buffer, res, weights, biases);
+                compute_depthwise_output_buffer_2d<data_T, res_T, CONFIG_T>(data.read(), line_buffer, res, weights, biases);
             } else {
-                compute_1d_depthwise_output<data_T, res_T, CONFIG_T>(data.read(), res, weights, biases);
+                compute_depthwise_output_buffer_1d<data_T, res_T, CONFIG_T>(data.read(), res, weights, biases);
             }
         }
     }

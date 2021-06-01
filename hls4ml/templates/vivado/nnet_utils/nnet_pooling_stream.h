@@ -370,7 +370,6 @@ void pooling1d_encoded_cl(
 template<class data_T, class res_T, typename CONFIG_T>
 void compute_pool_buffer_1d(
     const data_T& in_elem,
-    // ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[CONFIG_T::n_filt],
     hls::stream<res_T> &res
 ) {
     #pragma HLS INLINE

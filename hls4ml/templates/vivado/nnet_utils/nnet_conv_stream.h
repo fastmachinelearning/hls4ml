@@ -84,7 +84,7 @@ void mult_buffer(
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-void compute_encoded_output(
+void compute_output_encoded(
     const data_T& in_elem,
     hls::stream<typename data_T::value_type> data_window[CONFIG_T::kernel_size * CONFIG_T::n_chan],
     hls::stream<res_T> &res,
