@@ -32,3 +32,4 @@
     paths:
     - test/vivado_prj/${HLS4ML_PRJ_DIR}/myproject_prj/solution1/synth/report/myproject_prj.rpt
     - test/vivado_prj/${HLS4ML_PRJ_DIR}/myproject_prj/solution1/synth/report/myproject_prj.xml
+
