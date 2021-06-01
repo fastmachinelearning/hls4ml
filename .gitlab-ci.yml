@@ -3,7 +3,6 @@ stages:
   - convert
   - csim
   - csynth
-  - report
 
 .pytest:
   stage: tests
@@ -28,17 +27,17 @@ stages:
   allow_failure: true
 
 pytest:test_qkeras:
-  extends: pytest
+  extends: .pytest
   variables:
     TEST: test_qkeras.py
 
 pytest:test_cnn_mnist:
-  extends: pytest
+  extends: .pytest
   variables:
     TEST: test_cnn_mnist.py
 
 pytest:test_softmax:
-  extends: pytest
+  extends: .pytest
   variables:
     TEST: test_softmax.py
 
@@ -61,47 +60,85 @@ convert:
     - test/vivado_prj/
     expire_in: 2 days
 
-csim:
+#csim:
+#  stage: csim
+#  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.vivado
+#  tags: 
+#    - hls4ml
+#  before_script:
+#    - source ~/.bashrc
+#  script:
+#    - cd ${CI_PROJECT_DIR}/test
+#    - ./build-prj.sh -v 2019.2 -c -p 6
+#  artifacts:
+#    paths:
+#    - test/vivado_prj/
+#    expire_in: 2 days
+
+#csynth:
+#  stage: csynth
+#  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.vivado
+#  tags: 
+#    - hls4ml
+#  before_script:
+#    - source ~/.bashrc
+#  script:
+#    - cd ${CI_PROJECT_DIR}/test
+#    - ./build-prj.sh -v 2019.2 -s -r -p 6
+#  artifacts:
+#    paths:
+#    - test/vivado_prj/
+#    expire_in: 2 days
+
+.build_prj:
+  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.vivado
+  tags: 
+    - hls4ml
+  before_script:
+    - source ~/.bashrc
+  script:
+    - cd ${CI_PROJECT_DIR}/test/vivado_prj/${HLS4ML_PRJ_DIR}
+    - vivado_hls -f build_prj ${BUILD_PRJ_OPTS}
+  artifacts:
+    paths:
+    - test/vivado_prj/${HLS4ML_PRJ_DIR}/vivado_hls.log
+
+.csim:
+  extends: .build_prj
   stage: csim
-  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.vivado
-  tags: 
-    - hls4ml
-  before_script:
-    - source ~/.bashrc
-  script:
-    - cd ${CI_PROJECT_DIR}/test
-    - ./build-prj.sh -v 2019.2 -c -p 6
+  variables:
+    BUILD_PRJ_OPTS: "reset=1 csim=1 synth=0 cosim=0 validation=0 vsynth=0 export=0"
   artifacts:
     paths:
-    - test/vivado_prj/
+    - test/vivado_prj/${HLS4ML_PRJ_DIR}
     expire_in: 2 days
 
-csynth:
+.csynth:
+  extends: .build_prj
   stage: csynth
-  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.vivado
-  tags: 
-    - hls4ml
-  before_script:
-    - source ~/.bashrc
-  script:
-    - cd ${CI_PROJECT_DIR}/test
-    - ./build-prj.sh -v 2019.2 -s -r -p 6
+  variables:
+    BUILD_PRJ_OPTS: "reset=1 csim=0 synth=1 cosim=0 validation=0 vsynth=0 export=0"
   artifacts:
     paths:
-    - test/vivado_prj/
-    expire_in: 2 days
+    - test/vivado_prj/${HLS4ML_PRJ_DIR}/myproject_prj/solution1/synth/report/myproject_prj.rpt
+    - test/vivado_prj/${HLS4ML_PRJ_DIR}/myproject_prj/solution1/synth/report/myproject_prj.xml
 
-report:
-  stage: report
-  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.vivado
-  tags: 
-    - hls4ml
-  before_script:
-    - source ~/.bashrc
-  script:
-    - cd ${CI_PROJECT_DIR}/test
-    - ./gather-reports.sh -b | tee report.rpt
-  artifacts:
-    when: always
-    paths:
-      - test/report.rpt
+csim:KERAS_1layer:
+  extends: .csim
+  variables:
+    HLS4ML_PRJ_DIR: KERAS_1layer
+
+csim:KERAS_3layer:
+  extends: .csim
+  variables:
+    HLS4ML_PRJ_DIR: KERAS_3layer
+
+csynth:KERAS_1layer:
+  extends: .csim
+  variables:
+    HLS4ML_PRJ_DIR: KERAS_3layer
+
+csynth:KERAS_3layer:
+  extends: .csim
+  variables:
+    HLS4ML_PRJ_DIR: KERAS_3layer
