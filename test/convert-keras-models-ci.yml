@@ -11,6 +11,10 @@ stages:
     - hls4ml
   before_script:
     - source ~/.bashrc
+    - git submodule init
+    - git submodule update
+    - conda activate hls4ml-testing
+    - pip install .[profiling]
   script:
     - cd ${CI_PROJECT_DIR}/test/
     - cmd="./keras-to-hls.sh ${ARGS}"
