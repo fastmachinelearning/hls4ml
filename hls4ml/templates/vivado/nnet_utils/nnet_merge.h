@@ -94,7 +94,7 @@ void average(
     res_T res[CONFIG_T::n_elem])
 {
     for (int ii=0; ii<CONFIG_T::n_elem; ii++) {
-        res[ii] = data1[ii] * data2[ii] / (res_T) 2;
+        res[ii] = (data1[ii] + data2[ii]) / (res_T) 2;
     }
 }
 

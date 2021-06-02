@@ -105,7 +105,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
        and an 'ApplyAlpha' layer is inserted to reapply the scale.
     '''
     def match(self, node):
-        q_layer = node.__class__.__name__ in ["Dense", "Conv1D", "Conv2D"]
+        q_layer = node.__class__.__name__ in ["Dense", "Conv1D", "Conv2D", "Conv2DBatchnorm"]
         has_w_quant = node.get_attr('weight_quantizer') is not None 
         has_b_quant = node.get_attr('bias_quantizer') is not None
         has_w_alpha, has_b_alpha = False, False

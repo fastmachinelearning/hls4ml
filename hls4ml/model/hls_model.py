@@ -497,7 +497,7 @@ class HLSModel(object):
         return variables
 
     def get_layer_output_variable(self, output_name):
-        return self.output_vars[output_name]
+        return self.output_vars.get(output_name, None)
 
     def write(self):
         def make_stamp():
