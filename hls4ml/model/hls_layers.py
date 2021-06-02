@@ -1845,14 +1845,18 @@ class CustomMSE(Layer):
     def initialize(self):
         assert(len(self.inputs) == 2)
         self.add_output_variable(shape=[1], dim_names=['CUSTOM_MSE_{}'.format(self.index)])
-
-        print(self.attributes)
-        if 'sum_t' not in self.attributes:
-            self.set_attr('sum_t', self.get_attr('accum_t'))
+        if 'accum_t' not in self.attributes:
+            self.set_attr('accum_t', self.get_attr('accum_t'), FixedPrecisionType(width=18, integer=8, roundin_mode='AP_RND_CONV', saturation_mode='AP_SAT'))     
+        if 'table_t' not in self.attributes:
+            self.set_attr('table_t', FixedPrecisionType(width=18, integer=8, rounding_mode='AP_RND_CONV', saturation_mode='AP_SAT'))
+        if 'squared_error_t' not in self.attributes:
+            self.set_attr('squared_error_t', FixedPrecisionType(width=18, integer=8, rounding_mode='AP_RND_CONV', saturation_mode='AP_SAT'))
+        if 'table_size' not in self.attributes:
+            self.set_attr('table_size', 1024)
 
     def function_cpp(self):
         params = {}
-        params['distance'] = 'klloss'
+        params['distance'] = 'custom_mse'
         params['config'] = 'config{}'.format(self.index)
         params['input1_t'] = self.get_input_variable(self.inputs[0]).type.name
         params['input2_t'] = self.get_input_variable(self.inputs[1]).type.name
@@ -1865,9 +1869,30 @@ class CustomMSE(Layer):
 
     def config_cpp(self):
         params = self._default_config_params()
-        params['n_in'] = self.get_input_variable(self.inputs[0]).shape[0]
-        params['n_out'] = 1
-        return self._config_template.format(**params)
+        params['n_in'] = np.product(self.get_input_variable(self.inputs[0]).shape)
+        params['table_t'] = self.get_attr('table_t')
+        params['accum_t'] = self.get_attr('accum_t')
+        params['table_size'] = self.get_attr('table_size')
+        params['tanh_config_t'] = 'tanh_config{}'.format(params['index'])
+        params['mse_config_t'] = 'config{}_mse'.format(params['index'])
+        custom_mse_config = self._config_template[0].format(**params)
+
+        tanh_params = self._default_config_params()
+        tanh_params['type'] = 'tanh'
+        tanh_params['n_in'] = self.get_input_variable(self.inputs[0]).shape[0]
+        tanh_params['table_size'] = self.get_attr('table_size')
+        tanh_params['table_t'] = self.get_attr('table_t')
+        tanh_config = self._config_template[1].format(**tanh_params)
+
+        mse_params = self._default_config_params()
+        mse_params['index'] = '{}_mse'.format(params['index'])
+        mse_params['n_in'] = np.product(self.get_input_variable(self.inputs[0]).shape)
+        mse_params['error_t'] = self.get_input_variable(self.inputs[0]).type.name
+        mse_params['squared_error_t'] = self.get_attr('squared_error_t')
+        mse_params['accum_t'] = self.get_attr('accum_t')
+        mse_config = self._config_template[2].format(**mse_params)
+
+        return tanh_config + '\n' + mse_config + '\n' + custom_mse_config
 
 layer_map = {
     'Input'                  : Input,

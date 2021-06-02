@@ -347,6 +347,33 @@ distance_config_template = """struct config{index} : nnet::distance_config {{
     static const unsigned table_size = {table_size};
 }};\n"""
 
+mse_config_template = """
+struct config{index} : nnet::mse_config{{
+    static const unsigned n_in = {n_in};
+    static const unsigned n_out = 1;
+    typedef {error_t} error_t;
+    typedef {squared_error_t} squared_error_t;
+    typedef {accum_t} accum_t;
+}};"""
+
+custom_mse_config_template = """
+struct config{index} : nnet::custom_mse_config
+{{
+    static const unsigned n_in = {n_in};
+    static const unsigned n_out = 1;
+    static const unsigned NMET = 4;
+    static const unsigned NEGAMMAS = 4;
+    static const unsigned NMUONS = 4;
+    static const unsigned NJETS = 10;
+    static const unsigned NPARTS = NMET + NEGAMMAS + NMUONS + NJETS;
+    typedef {table_t} table_t; // type for tanh table data
+    typedef {accum_t} accum_t; // type for squared error
+    typedef {tanh_config_t} tanh_config;
+    typedef {mse_config_t} mse_config;
+    static const unsigned table_size = {table_size};
+
+}};\n\n"""
+
 
 dense_function_template = 'nnet::dense<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
@@ -415,7 +442,8 @@ class VivadoBackend(Backend):
         self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
         self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)
         self.register_templates('KLLoss'                 , distance_function_template    , distance_config_template, distance_include_list)
-        self.register_templates('CustomMSE'                 , distance_function_template    , distance_config_template, distance_include_list)
+        self.register_templates('MSE'                    , distance_function_template    , mse_config_template, distance_include_list)
+        self.register_templates('CustomMSE'              , distance_function_template    , [custom_mse_config_template, activ_config_template, mse_config_template], distance_include_list)
     
     def get_valid_reuse_factors(self, layer):
         n_in = 0

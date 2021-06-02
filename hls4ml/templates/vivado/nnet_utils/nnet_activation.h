@@ -426,20 +426,32 @@ void softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
 // *************************************************
 //       TanH Activation
 // *************************************************
-template<typename CONFIG_T, int N_TABLE>
-void init_tanh_table(typename CONFIG_T::table_t table_out[N_TABLE])
-{
-    // Implement tanh lookup
-    for (int ii = 0; ii < N_TABLE; ii++) {
-        // First, convert from table index to X-value (signed 8-bit, range -4 to +4)
-        float in_val = 2*4.0*(ii-float(N_TABLE)/2.0)/float(N_TABLE);
-        // Next, compute lookup table function
-        typename CONFIG_T::table_t real_val = tanh(in_val);
-        //std::cout << "Tanh:  Lookup table Index: " <<  ii<< " In Value: " << in_val << " Result: " << real_val << std::endl;
-        table_out[ii] = real_val;
-    }
+template<class data_T, typename CONFIG_T>
+inline float tanh_real_val_from_idx(unsigned i){
+    // Treat the index as the top N bits
+    static constexpr int N = ceillog2(CONFIG_T::table_size); // number of address bits for table
+    data_T x(0);
+    x(x.width-1, x.width-N) = i;
+    return (float) x;
 }
 
+template<class data_T, typename CONFIG_T>
+inline unsigned tanh_idx_from_real_val(data_T x){
+    // Slice the top N bits to get an index into the table
+    static constexpr int N = ceillog2(CONFIG_T::table_size); // number of address bits for table
+    ap_uint<N> y = x(x.width-1, x.width-N); // slice the top N bits of input
+    // Maybe that can be better implemented for tanh
+    return (unsigned) y(N-1, 0);
+}
+
+template<class data_T, typename CONFIG_T>
+void init_tanh_table(typename CONFIG_T::table_t table_out[CONFIG_T::table_size]){
+    for(unsigned i = 0; i < CONFIG_T::table_size; i++){
+        float x = tanh_real_val_from_idx<data_T, CONFIG_T>(i);
+        typename CONFIG_T::table_t tanhx = tanh(x);
+        table_out[i] = tanhx;
+    }
+}
 
 template<class data_T, class res_T, typename CONFIG_T>
 void  tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
@@ -453,7 +465,7 @@ void  tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     static typename CONFIG_T::table_t tanh_table[CONFIG_T::table_size];
 #endif
     if (!initialized) {
-        init_tanh_table<CONFIG_T, CONFIG_T::table_size>(tanh_table);
+        init_tanh_table<data_T, CONFIG_T>(tanh_table);
         initialized = true;
     }
 
@@ -468,11 +480,7 @@ void  tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS PIPELINE
         }
-        data_round = data[ii]*CONFIG_T::table_size/8;
-        index = data_round + 4*CONFIG_T::table_size/8;
-        //std::cout << "Input: "  << data[ii] << " Round: " << data_round << " Index: " << index << std::endl;
-        if (index < 0)   index = 0;
-        if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+        int index = tanh_idx_from_real_val<data_T, CONFIG_T>(data[ii]);
         res[ii] = (res_T) tanh_table[index];
     }
 }
