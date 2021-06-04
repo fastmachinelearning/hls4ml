@@ -401,8 +401,10 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             calling set_accum_from_keras_model() before returning a generated HLS conversion config. This option is
             not the same as 'auto_accum': it doesn't call set_data_types_from_keras_model() at any point.
 
-            It must be noted that using an automatic mode does not mean that users no longer have to tweak the resultant
-            configuration manually regardless of their case.
+            The following must be noted:
+            * Using an automatic mode does not mean that users no longer have to tweak the resultant configuration
+            manually regardless of their case.
+            * Using any mode other than 'default' requires the granularity argument to be set to 'name'.
         max_bits (int, optional): Maximum bit width (excluding the sign bit) to be fed into
             set_data_types_from_keras_model() if data_type_mode is set to either 'auto' or 'auto_accum'.
             See the docstring for set_data_types_from_keras_model() for more details. The default value for this
@@ -412,13 +414,17 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             set_data_types_from_keras_model() for more details. The default value for this argument is None.
 
     Raises:
-        Exception: If Keras model has layers not supported by hls4ml or data_type_mode is invalid.
+        Exception: If Keras model has layers not supported by hls4ml, data_type_mode is invalid or both data_type_mode
+        is other than 'default' and granularity is other than 'name'.
 
     Returns:
         [dict]: The created config.
     """
     if data_type_mode not in ['default', 'auto', 'auto_accum', 'auto_accum_only']:
         raise Exception('data_type_mode must be one of "default", "auto", "auto_accum" or "auto_accum_only".')
+
+    if granularity != 'name' and data_type_mode != 'default':
+        raise Exception('When data_type_mode is not "default", granularity must be "name".')
 
     if granularity.lower() not in ['model', 'type', 'name']:
         raise Exception('Invalid configuration granularity specified, expected "model", "type" or "name" got "{}"'.format(granularity))
