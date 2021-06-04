@@ -482,11 +482,11 @@ class VivadoBackend(Backend):
 
         shuffle_cycles = 6 # Number of clock cycles to move data around
         if targ_cycles is not None:
-            if 'Dense' in layer.get_attr('class_name'): 
+            if 'Dense' in layer.__class__.__name__: 
                 kernel_multiplies = layer.get_attr('n_out')
-            elif 'Conv1D' in layer.get_attr('class_name'):  
+            elif 'Conv1D' in layer.__class__.__name__:  
                 kernel_multiplies = layer.get_attr('out_width')
-            elif 'Conv2D' in layer.get_attr('class_name'): 
+            elif 'Conv2D' in layer.__class__.__name__: 
                 kernel_multiplies = layer.get_attr('out_height') * layer.get_attr('out_width')
             else: 
                 print('Target cycles unsupported layer')
