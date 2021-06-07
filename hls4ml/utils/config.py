@@ -367,8 +367,12 @@ def set_data_types_from_keras_model(config, model, max_bits, change_flagged_type
                 data_type = process_precision_in_dict(config['LayerName'][layer_name], info,
                                                       data_type=data_type)
 
-            if data_type is not None and layer_name + '_linear' in config['LayerName']:
-                config['LayerName'][layer_name + '_linear']['Precision'] = data_type
+            if data_type is not None:
+                activ_types = ['linear', 'relu', 'tanh']
+
+                for activ_type in activ_types:
+                    if layer_name + '_' + activ_type in config['LayerName']:
+                        config['LayerName'][layer_name + '_' + activ_type]['Precision'] = data_type
 
 
 def config_from_keras_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1,
