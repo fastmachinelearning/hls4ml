@@ -1080,6 +1080,11 @@ without saturation / overflow</p>
 <em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.hls_model.</code><code class="sig-name descname">HLSConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.hls_model.HLSConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="method">
+<dt id="hls4ml.model.hls_model.HLSConfig.get_bram_size">
+<code class="sig-name descname">get_bram_size</code><span class="sig-paren">(</span><em class="sig-param">layer</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.hls_model.HLSConfig.get_bram_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="hls4ml.model.hls_model.HLSConfig.get_compression">
 <code class="sig-name descname">get_compression</code><span class="sig-paren">(</span><em class="sig-param">layer</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.hls_model.HLSConfig.get_compression" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1087,6 +1092,11 @@ without saturation / overflow</p>
 <dl class="method">
 <dt id="hls4ml.model.hls_model.HLSConfig.get_config_value">
 <code class="sig-name descname">get_config_value</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">default=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.hls_model.HLSConfig.get_config_value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.hls_model.HLSConfig.get_conv_implementation">
+<code class="sig-name descname">get_conv_implementation</code><span class="sig-paren">(</span><em class="sig-param">layer</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.hls_model.HLSConfig.get_conv_implementation" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1125,6 +1135,11 @@ without saturation / overflow</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="hls4ml.model.hls_model.HLSConfig.get_target_cycles">
+<code class="sig-name descname">get_target_cycles</code><span class="sig-paren">(</span><em class="sig-param">layer</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.hls_model.HLSConfig.get_target_cycles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="hls4ml.model.hls_model.HLSConfig.is_resource_strategy">
 <code class="sig-name descname">is_resource_strategy</code><span class="sig-paren">(</span><em class="sig-param">layer</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.hls_model.HLSConfig.is_resource_strategy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1143,6 +1158,11 @@ without saturation / overflow</p>
 <dl class="method">
 <dt id="hls4ml.model.hls_model.HLSModel.compile">
 <code class="sig-name descname">compile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.hls_model.HLSModel.compile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.hls_model.HLSModel.get_bram_variables">
+<code class="sig-name descname">get_bram_variables</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.hls_model.HLSModel.get_bram_variables" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1230,6 +1250,11 @@ functions.</p>
 <dl class="method">
 <dt id="hls4ml.model.hls_model.HLSModel.predict">
 <code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.hls_model.HLSModel.predict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.hls_model.HLSModel.register_bram_variable">
+<code class="sig-name descname">register_bram_variable</code><span class="sig-paren">(</span><em class="sig-param">out_name</em>, <em class="sig-param">variable</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.hls_model.HLSModel.register_bram_variable" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
