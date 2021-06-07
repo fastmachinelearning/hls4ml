@@ -344,6 +344,11 @@ def set_data_types_from_keras_model(config, model, max_bits, change_flagged_type
 
         input_data['weight'] = activation_data[0]['weight'] + '_input'
 
+        for key, value in config['LayerName'].items():
+            if value['LayerType'] == 'Input':
+                input_data['weight'] = key
+                break
+
         for info in [input_data] + activation_data:
             layer_name = info['weight']
 
