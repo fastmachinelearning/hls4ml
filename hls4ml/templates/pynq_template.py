@@ -2,9 +2,9 @@ from hls4ml.templates.vivado_template import VivadoBackend
 import os
 from shutil import copyfile
 
-class PynqBackend(VivadoBackend):
+class VivadoAcceleratorBackend(VivadoBackend):
     def __init__(self):
-        super(PynqBackend, self).__init__(name='Pynq')
+        super(VivadoAcceleratorBackend, self).__init__()
 
     def make_bitfile(model):
         curr_dir = os.getcwd()

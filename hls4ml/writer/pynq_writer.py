@@ -4,6 +4,27 @@ import numpy as np
 from hls4ml.writer.vivado_writer import VivadoWriter
 from hls4ml.model.hls_model import IntegerPrecisionType, FixedPrecisionType
 
+'''
+IOType: io_parallel # options: io_serial/io_parallel
+HLSConfig:
+  Model:
+    Precision: ap_fixed<16,6>
+    ReuseFactor: 1
+    Strategy: Latency
+  LayerType:
+    Dense:
+      ReuseFactor: 2
+      Strategy: Resource
+      Compression: True
+WrapperConfig:
+  Board: pynq-z2
+  Interface: axis # or m_axi, s_axilite
+  Driver: pynq
+  Precision:
+    Input: float
+    Output: float
+'''
+
 class PynqWriter(VivadoWriter):
 
     def next_axi_type(self, p):
