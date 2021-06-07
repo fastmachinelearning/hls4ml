@@ -26,7 +26,6 @@
 
 #include "defines.h"
 
-
 // Prototype of top level function for C-synthesis
 void myproject(
     //hls-fpga-machine-learning insert header

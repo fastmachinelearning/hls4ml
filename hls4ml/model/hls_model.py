@@ -30,9 +30,17 @@ class HLSConfig(object):
         self.layer_type_rf = {}
         self.layer_name_rf = {}
 
+        self.model_targ_cycles = None
+        self.layer_type_targ_cycles = {}
+        self.layer_name_targ_cycles = {}
+
         self.model_strategy = 'Latency'
         self.layer_type_strategy = {}
         self.layer_name_strategy = {}
+
+        self.model_conv_implementation = 'LineBuffer'
+        self.layer_type_conv_implementation = {}
+        self.layer_name_conv_implementation = {}
 
         self.model_compression = False
         self.layer_type_compression = {}
@@ -111,6 +119,10 @@ class HLSConfig(object):
 
         return (precision, type_name)
 
+    def get_bram_size(self, layer):
+        bf = self.model_bf
+        return bf
+
     def get_reuse_factor(self, layer):
         rf = self.layer_name_rf.get(layer.name.lower())
         if rf is None:
@@ -123,6 +135,15 @@ class HLSConfig(object):
 
         return rf
 
+    def get_target_cycles(self, layer):
+        targ_cycles = self.layer_name_targ_cycles.get(layer.name.lower())
+        if targ_cycles is None:
+            targ_cycles = self.layer_name_targ_cycles.get(layer.__class__.__name__.lower())
+        if targ_cycles is None:
+            targ_cycles = self.model_targ_cycles
+ 
+        return targ_cycles
+
     def get_strategy(self, layer):
         strategy = self.layer_name_strategy.get(layer.name.lower())
         if strategy is None:
@@ -131,6 +152,15 @@ class HLSConfig(object):
             strategy = self.model_strategy
 
         return strategy
+    
+    def get_conv_implementation(self, layer):
+        conv_implementation = self.layer_name_conv_implementation.get(layer.name.lower())
+        if conv_implementation is None:
+            conv_implementation = self.layer_type_conv_implementation.get(layer.__class__.__name__.lower())
+        if conv_implementation is None:
+            conv_implementation = self.model_conv_implementation
+
+        return conv_implementation
 
     def is_resource_strategy(self, layer):
         return self.get_strategy(layer).lower() == 'resource'
@@ -170,7 +200,10 @@ class HLSConfig(object):
                 else:
                     self.model_precision['default'] = precision_cfg # Default precision for everything
 
+            self.model_bf = model_cfg.get('BramFactor', np.inf) # Weight threshold to be external BRAM
             self.model_rf = model_cfg.get('ReuseFactor')
+            self.model_targ_cycles = model_cfg.get('TargetCycles')
+            self.model_conv_implementation = model_cfg.get('ConvImplementation', 'LineBuffer')
             self.model_strategy = model_cfg.get('Strategy', 'Latency')
             self.model_compression = bool(model_cfg.get('Compression', 0))
 
@@ -187,10 +220,18 @@ class HLSConfig(object):
                 rf = layer_cfg.get('ReuseFactor')
                 if rf is not None:
                     self.layer_type_rf[layer_type.lower()] = rf
+                
+                targ_cycles = layer_cfg.get('TargetCycles')
+                if targ_cycles is not None:
+                    self.layer_type_targ_cycles[layer_type.lower()] = targ_cycles
 
                 strategy = layer_cfg.get('Strategy')
                 if strategy is not None:
                     self.layer_type_strategy[layer_type.lower()] = strategy
+
+                conv_implementation = layer_cfg.get('ConvImplementation')
+                if conv_implementation is not None:
+                    self.layer_type_conv_implementation[layer_type.lower()] = conv_implementation
 
                 compression = layer_cfg.get('Compression')
                 if compression is not None:
@@ -210,9 +251,17 @@ class HLSConfig(object):
                 if rf is not None:
                     self.layer_name_rf[layer_name.lower()] = rf
 
+                targ_cycles = layer_cfg.get('TargetCycles')
+                if targ_cycles is not None:
+                    self.layer_name_targ_cycles[layer_name.lower()] = targ_cycles
+
                 strategy = layer_cfg.get('Strategy')
                 if strategy is not None:
                     self.layer_name_strategy[layer_name.lower()] = strategy
+
+                conv_implementation = layer_cfg.get('ConvImplementation')
+                if conv_implementation is not None:
+                    self.layer_name_conv_implementation[layer_name.lower()] = conv_implementation
 
                 compression = layer_cfg.get('Compression')
                 if compression is not None:
@@ -259,6 +308,9 @@ class HLSModel(object):
         self.index = 0
         self.graph = OrderedDict()
         self.output_vars = {}
+
+        # External BRAM 
+        self.bram_vars = {}
 
         self._top_function_lib = None
 
@@ -426,6 +478,12 @@ class HLSModel(object):
         for inp in self.inputs:
             variables.append(self.graph[inp].get_output_variable())
         return variables
+
+    def register_bram_variable(self, out_name, variable):
+        self.bram_vars[out_name] = variable
+
+    def get_bram_variables(self):
+        return self.bram_vars.values()
 
     def register_output_variable(self, out_name, variable):
         if out_name in self.outputs:
