@@ -381,6 +381,8 @@ garnet_include_list = ['nnet_utils/nnet_garnet.h']
 class VivadoBackend(FPGABackend):
     def __init__(self):
         super(VivadoBackend, self).__init__('Vivado')
+
+    def register_templates(self):
         self.register_templates(Dense                  , dense_function_template,       dense_config_template, dense_include_list)
         self.register_templates(BatchNormalization     , batchnorm_function_template,   batchnorm_config_template, batchnorm_include_list)
         self.register_templates(Conv1D                 , conv1d_function_template,      [conv1d_config_template, conv_mult_config_template], conv1d_include_list)
@@ -406,8 +408,6 @@ class VivadoBackend(FPGABackend):
         self.register_templates(Transpose              , transpose_function_template,   transpose_config_template, transpose_include_list)
         self.register_templates(GarNet                 , garnet_function_template,      garnet_config_template, garnet_include_list)
         self.register_templates(GarNetStack            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)
-
-        # Extra attributes
 
     def create_initial_config(self, device='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
         config = {}

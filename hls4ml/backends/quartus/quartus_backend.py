@@ -212,6 +212,8 @@ activ_include_list = ['nnet_utils/nnet_activation.h']
 class QuartusBackend(FPGABackend):
     def __init__(self):
         super(QuartusBackend, self).__init__('Quartus')
+    
+    def register_templates(self):
         self.register_templates(Dense                  , dense_function_template, dense_config_template, dense_include_list)
         self.register_templates(BatchNormalization     , batchnorm_function_template,   batchnorm_config_template, batchnorm_include_list)
         #self.register_templates(Conv1D                , conv1d_function_template,      [conv1d_config_template, conv_mult_config_template], conv1d_include_list)
