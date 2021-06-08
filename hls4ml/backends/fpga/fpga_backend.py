@@ -23,7 +23,7 @@ class FPGABackend(Backend):
     def create_layer_class(self, layer_class):
         new_attrubutes = []
         for cls, attributes in self.attribute_map.items():
-            if isinstance(layer_class, cls):
+            if issubclass(layer_class, cls):
                 new_attrubutes.extend(attributes)
         
         return type(self.name + layer_class.__name__, (layer_class,), {'_expected_attributes': new_attrubutes})

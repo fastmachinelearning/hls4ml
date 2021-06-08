@@ -74,7 +74,7 @@ class Layer(object):
         accum_t = HLSType(acc_type_name, acc_type_obj) 
         self.set_attr('accum_t', accum_t)
 
-        self.reuse_factor = self.model.config.get_reuse_factor(self)
+        self.set_attr('reuse_factor', self.model.config.get_reuse_factor(self))
 
         layer_config = self.model.config.get_layer_config(self)
         for config_key, config_value in layer_config.items():
@@ -209,7 +209,7 @@ class Layer(object):
                 exponent_type = True
 
         if compression:
-            var = CompressedWeightVariable(var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, reuse_factor=self.reuse_factor, index=self.index)
+            var = CompressedWeightVariable(var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, reuse_factor=self.get_attr('reuse_factor'), index=self.index)
         elif exponent_type:
             var = ExponentWeightVariable(var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, index=self.index)
         else:
@@ -233,9 +233,8 @@ class Layer(object):
     def _default_config_params(self):
         params = {}
         params.update(self.attributes)
-        params['index'] = self.index
         params['iotype'] = self.model.config.get_config_value('IOType')
-        params['reuse'] = self.reuse_factor
+        params['reuse'] = self.get_attr('reuse_factor')
 
         return params
 
