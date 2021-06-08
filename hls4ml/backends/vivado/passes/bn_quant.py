@@ -4,7 +4,6 @@ import re
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.hls_types import IntegerPrecisionType, XnorPrecisionType
 from hls4ml.model.hls_layers import Layer, Activation, Dense, BatchNormalization, register_layer
-from hls4ml.backends import get_backend
 
 class BatchNormalizationQuantizedTanh(Layer):
     ''' Merged Batch Normalization and quantized (binary or ternary) Tanh layer.
@@ -76,8 +75,10 @@ def register_bn_quant(backend):
     # Register the layer types to the layer map
     register_layer('BatchNormalizationQuantizedTanh', BatchNormalizationQuantizedTanh)
 
+    bn_include_list = backend.get_include_list(BatchNormalization)
+
     # Register the templates for config and function
-    backend.register_templates(BatchNormalizationQuantizedTanh, batchnorm_quantized_tanh_function_template, batchnorm_quantized_tanh_config_template)
+    backend.register_templates(BatchNormalizationQuantizedTanh, batchnorm_quantized_tanh_function_template, batchnorm_quantized_tanh_config_template, bn_include_list)
 
     # Register the optimization passes
     backend.register_pass('merge_batch_norm_quantized_tanh', MergeBatchNormAndQuantizedTanh)
