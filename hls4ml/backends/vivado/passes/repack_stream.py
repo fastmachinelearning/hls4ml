@@ -51,7 +51,7 @@ class ReshapeStream(OptimizerPass):
         }
 
         # Insert new Repack node instead of Reshape
-        repack_layer = model.make_node('Repack', 'repack_' + node.name, attrs, node.inputs.copy())
+        repack_layer = model.make_node(Repack, 'repack_' + node.name, attrs, node.inputs.copy())
         model.replace_node(node, repack_layer)
 
         return True

@@ -71,7 +71,7 @@ class CloneOutput(OptimizerPass):
                     }
                     idx = layer.inputs.index(output)
                     layer.inputs[idx] = output + '_cpy' + str(i)
-                clone_layer = model.make_node('Clone', 'clone_' + node.name, attrs, [output], [output + '_cpy1', output + '_cpy2'])
+                clone_layer = model.make_node(Clone, 'clone_' + node.name, attrs, [output], [output + '_cpy1', output + '_cpy2'])
                 model.insert_node(clone_layer)
                 transformed = True
         

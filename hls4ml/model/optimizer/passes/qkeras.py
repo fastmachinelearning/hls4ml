@@ -185,7 +185,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
             'scale_t' : scale_t,
             'Trace' : node.get_attr('Trace', False) 
         }
-        alpha_layer = model.make_node('ApplyAlpha', node.name + '_alpha', attrs, node.outputs)
+        alpha_layer = model.make_node(ApplyAlpha, node.name + '_alpha', attrs, node.outputs)
 
         alpha_layer.add_weights(scale, quantizer=scale_q)
         alpha_layer.add_bias(bias, quantizer=bias_quantizer)

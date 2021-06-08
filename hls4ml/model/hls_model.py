@@ -293,7 +293,7 @@ class HLSModel(object):
         functions.
 
         Args:
-            kind (str): Type of node to add
+            kind (type or str): Type of node to add
             name (str): Name of the node
             attributes (dict): Initial set of attributes required to construct the node (Layer)
             inputs (list): List of inputs to the layer
@@ -307,10 +307,15 @@ class HLSModel(object):
             Layer: The node created.
         """
 
-        if kind not in layer_map:
-            raise Exception('Layer {} not found in registry.'.format(kind))
+        if isinstance(kind, str):
+            if kind not in layer_map:
+                raise Exception('Layer {} not found in registry.'.format(kind))
+            layer_cls = layer_map[kind]
+        else:
+            if kind not in layer_map.values():
+                raise Exception('Layer {} not found in registry.'.format(kind))
+            layer_cls = kind
 
-        layer_cls = layer_map[kind]
         if self.config.backend is not None:
             layer_cls = self.config.backend.create_layer_class(layer_cls)
         node = layer_cls(self, name, attributes, inputs, outputs)

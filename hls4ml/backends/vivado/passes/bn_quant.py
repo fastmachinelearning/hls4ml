@@ -117,7 +117,7 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
             'variance_quantizer' : bn_layer.get_attr('variance_quantizer'),
             'Trace' : bn_layer.get_attr('Trace')
         }
-        bnbt_layer = model.make_node('BatchNormalizationQuantizedTanh', 'bnbt_' + bn_layer.name, attrs, bn_layer.inputs)
+        bnbt_layer = model.make_node(BatchNormalizationQuantizedTanh, 'bnbt_' + bn_layer.name, attrs, bn_layer.inputs)
         # Replace the old BatchNormalization layer with this one
         model.replace_node(bn_layer, bnbt_layer)
 
