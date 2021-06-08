@@ -50,7 +50,7 @@ class Backend(object):
         self.config_templates = LayerDict()
         self.function_templates = LayerDict()
         self.include_lists = LayerDict()
-        self.register_templates()
+        self.init_templates()
         # Optimizers
         self.layer_initializers = LayerDict()
         init_func_list = [getattr(self, func) for func in dir(self) if callable(getattr(self, func)) and hasattr(getattr(self, func), 'handles')]
@@ -60,7 +60,7 @@ class Backend(object):
         self.optimizers = {}
         self._init_optimizers()
 
-    def register_templates(self):
+    def init_templates(self):
         raise NotImplementedError
 
     def _init_optimizers(self):
