@@ -2,7 +2,35 @@ import importlib
 import inspect
 import os
 
+from collections.abc import MutableMapping
+
+from hls4ml.model.hls_layers import Layer
 from hls4ml.model.optimizer import OptimizerPass, optimizer_pass, extract_optimizers_from_object
+
+class LayerDict(MutableMapping):
+    def __init__(self):
+        self.layer_dict = {}
+
+    def __getitem__(self, key):
+        if key in self.layer_dict:
+            return self.layer_dict[key]
+        else:
+            return self.layer_dict[key.__bases__[0]]
+
+    def __len__(self):
+        return len(self.layer_dict)
+
+    def __iter__(self):
+        for key in self.layer_dict.keys():
+            yield key
+
+    def __setitem__(self, key, value):
+        if not issubclass(key, Layer):
+            raise KeyError('Keys must be instances of Layer class')
+        self.layer_dict[key] = value
+
+    def __delitem__(self, key):
+        self.layer_dict.remove(key)
 
 def custom_initializer(*args):
     def decorator(function):
@@ -12,18 +40,18 @@ def custom_initializer(*args):
 
 def layer_optimizer(layer):
     def decorator(function):
-        return optimizer_pass(lambda node: node.__class__.__name__ == layer)(function)
+        return optimizer_pass(lambda node: isinstance(node, layer))(function)
     return decorator
 
 class Backend(object):
     def __init__(self, name):
         self.name = name
         # Templates
-        self.config_templates = {}
-        self.function_templates = {}
-        self.include_lists = {}
+        self.config_templates = LayerDict()
+        self.function_templates = LayerDict()
+        self.include_lists = LayerDict()
         # Optimizers
-        self.layer_initializers = {}
+        self.layer_initializers = LayerDict()
         init_func_list = [getattr(self, func) for func in dir(self) if callable(getattr(self, func)) and hasattr(getattr(self, func), 'handles')]
         for func in init_func_list:
             for layer_class in func.handles:
@@ -66,6 +94,9 @@ class Backend(object):
     def create_initial_config(self, **kwargs):
         raise NotImplementedError
 
+    def create_layer_class(self, layer_class):
+        raise NotImplementedError
+
     def get_config_template(self, kind):
         return self.config_templates.get(kind)
 
@@ -81,10 +112,10 @@ class Backend(object):
     def get_optimizers(self):
         return self.optimizers.values()
 
-    def register_templates(self, name, function_template, config_template, include_list=[]):
-        self.function_templates[name] = function_template
-        self.config_templates[name] = config_template
-        self.include_lists[name] = include_list
+    def register_templates(self, cls, function_template, config_template, include_list=[]):
+        self.function_templates[cls] = function_template
+        self.config_templates[cls] = config_template
+        self.include_lists[cls] = include_list
 
     def register_source(self, file_name, source, destination_dir='nnet_utils'):
         raise NotImplementedError
@@ -105,7 +136,7 @@ class Backend(object):
             self.optimizers[name] = opt
 
     def initialize_layer(self, layer):
-        init_func = self.layer_initializers.get(layer.__class__.__name__)
+        init_func = self.layer_initializers.get(layer.__class__)
         if init_func is not None:
             init_func(layer)
 

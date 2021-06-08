@@ -29,16 +29,16 @@ def register_pointwise(backend):
 
     # Register the templates for config and function
     backend.register_templates(
-        'PointwiseConv1D',
+        PointwiseConv1D,
         pointwise_conv1d_function_template,
-        backend.get_config_template('Conv1D'),
+        backend.get_config_template(Conv1D),
         sepconv1d_include_list
     )
 
     backend.register_templates(
-        'PointwiseConv2D',
+        PointwiseConv2D,
         pointwise_conv2d_function_template,
-        backend.get_config_template('Conv2D'),
+        backend.get_config_template(Conv2D),
         sepconv2d_include_list
     )
 
@@ -47,7 +47,7 @@ def register_pointwise(backend):
 
 class OptimizePointwiseConv(OptimizerPass):
     def match(self, node):
-        return node.__class__.__name__ in ['Conv1D', 'Conv2D'] and \
+        return isinstance(node, (Conv1D, Conv2D)) and \
             node.get_attr('filt_height', 1) == 1 and \
             node.get_attr('filt_width') == 1
 

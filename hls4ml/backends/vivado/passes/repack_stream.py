@@ -2,7 +2,7 @@ import numpy as np
 
 from hls4ml.model.optimizer import OptimizerPass
 
-from hls4ml.model.hls_model import Layer, register_layer
+from hls4ml.model.hls_model import Layer, Reshape, register_layer
 from hls4ml.backends import get_backend
 
 class Repack(Layer):
@@ -32,7 +32,7 @@ def register_repack_stream(backend):
     register_layer('Repack', Repack)
     
     # Register the templates for config and function
-    backend.register_templates('Repack', repack_function_template, None, repack_include_list)
+    backend.register_templates(Repack, repack_function_template, None, repack_include_list)
     
     # Register the optimization passes
     backend.register_pass('reshape_stream', ReshapeStream)
@@ -40,7 +40,7 @@ def register_repack_stream(backend):
 class ReshapeStream(OptimizerPass):
     ''' Repacks stream for Reshape layer '''
     def match(self, node):
-        return node.__class__.__name__ == 'Reshape'
+        return isinstance(node, Reshape)
 
     def transform(self, model, node):
         if model.config.get_config_value('IOType') != 'io_stream':

@@ -7,6 +7,8 @@ from queue import Queue
 from collections.abc import Iterable
 
 from hls4ml.model.hls_types import IntegerPrecisionType
+from hls4ml.model.hls_layers import Layer, Dense, BatchNormalization, Conv1D, Conv2D, Conv2DBatchnorm, SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Activation, ParametrizedActivation, PReLU, Softmax, Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D, ZeroPadding1D, ZeroPadding2D, Merge, Concatenate, Dot, Resize, Transpose, GarNet, GarNetStack
+from hls4ml.model.hls_attributes import Attribute
 from hls4ml.backends.backend import custom_initializer, optimizer_pass, layer_optimizer
 from hls4ml.backends import FPGABackend
 from hls4ml.report import parse_vivado_report
@@ -379,32 +381,33 @@ garnet_include_list = ['nnet_utils/nnet_garnet.h']
 class VivadoBackend(FPGABackend):
     def __init__(self):
         super(VivadoBackend, self).__init__('Vivado')
-        self.register_templates('Dense', dense_function_template, dense_config_template, dense_include_list)
-        self.register_templates('BinaryDense'            , dense_function_template,       dense_config_template, dense_include_list)
-        self.register_templates('BatchNormalization'     , batchnorm_function_template,   batchnorm_config_template, batchnorm_include_list)
-        self.register_templates('Conv1D'                 , conv1d_function_template,      [conv1d_config_template, conv_mult_config_template], conv1d_include_list)
-        self.register_templates('Conv2D'                 , conv2d_function_template,      [conv2d_config_template, conv_mult_config_template], conv2d_include_list)
-        self.register_templates('Conv2DBatchnorm'        , conv2d_function_template,      [conv2d_config_template, conv_mult_config_template], conv2d_include_list)
-        self.register_templates('SeparableConv1D'        , sepconv1d_function_template,   [sepconv_config_template, conv1d_config_template, conv1d_config_template, conv_mult_config_template, conv_mult_config_template], sepconv1d_include_list)
-        self.register_templates('SeparableConv2D'        , sepconv2d_function_template,   [sepconv_config_template, conv2d_config_template, conv2d_config_template, conv_mult_config_template, conv_mult_config_template], sepconv2d_include_list)
-        self.register_templates('DepthwiseConv2D'        , depthconv2d_function_template, [conv2d_config_template, conv_mult_config_template], sepconv2d_include_list)
-        self.register_templates('Activation'             , activ_function_template,       activ_config_template, activ_include_list)
-        self.register_templates('ParametrizedActivation' , param_activ_function_template, activ_config_template, activ_include_list)
-        self.register_templates('PReLU'                  , param_activ_function_template, activ_config_template, activ_include_list)
-        self.register_templates('Softmax'                , activ_function_template,       softmax_config_template, activ_include_list)
-        self.register_templates('Pooling1D'              , pooling1d_function_template,   pooling1d_config_template, pooling_include_list)
-        self.register_templates('Pooling2D'              , pooling2d_function_template,   pooling2d_config_template, pooling_include_list)
-        self.register_templates('GlobalPooling1D'        , global_pooling1d_function_template,   global_pooling1d_config_template, pooling_include_list)
-        self.register_templates('GlobalPooling2D'        , global_pooling2d_function_template,   global_pooling2d_config_template, pooling_include_list)
-        self.register_templates('ZeroPadding1D'          , zeropad1d_function_template,   zeropad1d_config_template, padding_include_list)
-        self.register_templates('ZeroPadding2D'          , zeropad2d_function_template,   zeropad2d_config_template, padding_include_list)
-        self.register_templates('Merge'                  , merge_function_template,       merge_config_template, merge_include_list)
-        self.register_templates('Concatenate'            , merge_function_template,       concat_config_template, merge_include_list)
-        self.register_templates('Dot'                    , merge_function_template,       dot_config_template, merge_include_list)
-        self.register_templates('Resize'                 , resize_function_template,      resize_config_template, resize_include_list)
-        self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template, transpose_include_list)
-        self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
-        self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)
+        self.register_templates(Dense                  , dense_function_template,       dense_config_template, dense_include_list)
+        self.register_templates(BatchNormalization     , batchnorm_function_template,   batchnorm_config_template, batchnorm_include_list)
+        self.register_templates(Conv1D                 , conv1d_function_template,      [conv1d_config_template, conv_mult_config_template], conv1d_include_list)
+        self.register_templates(Conv2D                 , conv2d_function_template,      [conv2d_config_template, conv_mult_config_template], conv2d_include_list)
+        self.register_templates(Conv2DBatchnorm        , conv2d_function_template,      [conv2d_config_template, conv_mult_config_template], conv2d_include_list)
+        self.register_templates(SeparableConv1D        , sepconv1d_function_template,   [sepconv_config_template, conv1d_config_template, conv1d_config_template, conv_mult_config_template, conv_mult_config_template], sepconv1d_include_list)
+        self.register_templates(SeparableConv2D        , sepconv2d_function_template,   [sepconv_config_template, conv2d_config_template, conv2d_config_template, conv_mult_config_template, conv_mult_config_template], sepconv2d_include_list)
+        self.register_templates(DepthwiseConv2D        , depthconv2d_function_template, [conv2d_config_template, conv_mult_config_template], sepconv2d_include_list)
+        self.register_templates(Activation             , activ_function_template,       activ_config_template, activ_include_list)
+        self.register_templates(ParametrizedActivation , param_activ_function_template, activ_config_template, activ_include_list)
+        self.register_templates(PReLU                  , param_activ_function_template, activ_config_template, activ_include_list)
+        self.register_templates(Softmax                , activ_function_template,       softmax_config_template, activ_include_list)
+        self.register_templates(Pooling1D              , pooling1d_function_template,   pooling1d_config_template, pooling_include_list)
+        self.register_templates(Pooling2D              , pooling2d_function_template,   pooling2d_config_template, pooling_include_list)
+        self.register_templates(GlobalPooling1D        , global_pooling1d_function_template,   global_pooling1d_config_template, pooling_include_list)
+        self.register_templates(GlobalPooling2D        , global_pooling2d_function_template,   global_pooling2d_config_template, pooling_include_list)
+        self.register_templates(ZeroPadding1D          , zeropad1d_function_template,   zeropad1d_config_template, padding_include_list)
+        self.register_templates(ZeroPadding2D          , zeropad2d_function_template,   zeropad2d_config_template, padding_include_list)
+        self.register_templates(Merge                  , merge_function_template,       merge_config_template, merge_include_list)
+        self.register_templates(Concatenate            , merge_function_template,       concat_config_template, merge_include_list)
+        self.register_templates(Dot                    , merge_function_template,       dot_config_template, merge_include_list)
+        self.register_templates(Resize                 , resize_function_template,      resize_config_template, resize_include_list)
+        self.register_templates(Transpose              , transpose_function_template,   transpose_config_template, transpose_include_list)
+        self.register_templates(GarNet                 , garnet_function_template,      garnet_config_template, garnet_include_list)
+        self.register_templates(GarNetStack            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)
+
+        # Extra attributes
 
     def create_initial_config(self, device='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
         config = {}
@@ -430,7 +433,7 @@ class VivadoBackend(FPGABackend):
 
         return parse_vivado_report(model.config.get_output_dir())
 
-    @layer_optimizer('Dense')
+    @layer_optimizer(Dense)
     def init_dense(self, layer):
         index_t = IntegerPrecisionType(width=1, signed=False)
         compression = layer.model.config.get_compression(layer)
@@ -446,7 +449,7 @@ class VivadoBackend(FPGABackend):
             layer.set_attr('strategy', 'latency')
         layer.set_attr('index_t', index_t)
 
-    @layer_optimizer('Conv1D')
+    @layer_optimizer(Conv1D)
     def init_conv1d(self, layer):
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
@@ -455,7 +458,7 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
 
-    @layer_optimizer('SeparableConv1D')
+    @layer_optimizer(SeparableConv1D)
     def init_sepconv1d(self, layer):
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
@@ -465,7 +468,7 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
 
-    @layer_optimizer('Conv2D')
+    @layer_optimizer(Conv2D)
     def init_conv2d(self, layer):
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
@@ -474,7 +477,7 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
 
-    @layer_optimizer('SeparableConv2D')
+    @layer_optimizer(SeparableConv2D)
     def init_sepconv2d(self, layer):
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
@@ -484,7 +487,7 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
 
-    @layer_optimizer('DepthwiseConv2D')
+    @layer_optimizer(DepthwiseConv2D)
     def init_depconv2d(self, layer):
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
@@ -493,7 +496,7 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
 
-    @custom_initializer('Softmax')
+    @layer_optimizer(Softmax)
     def init_softmax(self, layer):
         if 'exp_table_t' not in layer.attributes:
             layer.set_attr('exp_table_t', layer.get_attr('table_t'))

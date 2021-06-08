@@ -310,7 +310,10 @@ class HLSModel(object):
         if kind not in layer_map:
             raise Exception('Layer {} not found in registry.'.format(kind))
 
-        node = layer_map[kind](self, name, attributes, inputs, outputs)
+        layer_cls = layer_map[kind]
+        if self.config.backend is not None:
+            layer_cls = self.config.backend.create_layer_class(layer_cls)
+        node = layer_cls(self, name, attributes, inputs, outputs)
         for o in node.outputs:
             out_var = node.get_output_variable(output_name=o)
             if o in self.outputs:

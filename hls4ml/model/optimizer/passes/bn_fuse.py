@@ -1,9 +1,10 @@
 from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.model.hls_layers import BatchNormalization, Dense, Conv1D, Conv2D
 
 class FuseBatchNormalization(OptimizerPass):
     def match(self, node):
-        is_match = node.__class__.__name__ == 'BatchNormalization' and \
-            node.get_input_node().__class__.__name__ in ['Dense', 'Conv1D', 'Conv2D'] and \
+        is_match = isinstance(node, BatchNormalization) and \
+            isinstance(node.get_input_node(), (Dense, Conv1D, Conv2D)) and \
             node.get_input_node().get_attr('weight_quantizer') is None and \
             node.get_input_node().get_attr('bias_quantizer') is None
         return is_match

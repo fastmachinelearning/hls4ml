@@ -1,5 +1,5 @@
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.hls_layers import BatchNormalization, register_layer
+from hls4ml.model.hls_layers import BatchNormalization, Dense, Conv1D, Conv2D, register_layer, layer_map
 from hls4ml.model.hls_types import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType
 from hls4ml.backends import get_backend
 import tensorflow as tf
@@ -41,7 +41,9 @@ class OutputRoundingSaturationMode(OptimizerPass):
     saturation_bits = None
 
     def match(self, node):
-        layer_match = node.__class__.__name__ in self.layers or node.name in self.layers
+        layer_cls = (layer_map.get(l, None) for l in self.layers)
+        layer_cls = (l for l in layer_cls if l is not None)
+        layer_match = isinstance(node, layer_cls) or node.name in self.layers
         t = str(node.get_output_variable().type.precision)
         # check that the type doesn't already contain the rounding mode
         rs_match = False
@@ -97,7 +99,7 @@ class ApplyAlpha(BatchNormalization):
 register_layer('ApplyAlpha', ApplyAlpha)
 # TODO ideally: for backend in backends
 backend = get_backend('Vivado')
-backend.register_templates('ApplyAlpha', backend.get_function_template('BatchNormalization'), backend.get_config_template('BatchNormalization'), backend.get_include_list('BatchNormalization'))
+backend.register_templates(ApplyAlpha, backend.get_function_template('BatchNormalization'), backend.get_config_template('BatchNormalization'), backend.get_include_list('BatchNormalization'))
 
 class QKerasFactorizeAlpha(OptimizerPass):
     '''OptimizerPass for extracting alpha "scale" from QKeras quantized layer.
@@ -105,7 +107,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
        and an 'ApplyAlpha' layer is inserted to reapply the scale.
     '''
     def match(self, node):
-        q_layer = node.__class__.__name__ in ["Dense", "Conv1D", "Conv2D"]
+        q_layer = isinstance(node, (Dense, Conv1D, Conv2D))
         has_w_quant = node.get_attr('weight_quantizer') is not None 
         has_b_quant = node.get_attr('bias_quantizer') is not None
         has_w_alpha, has_b_alpha = False, False

@@ -10,6 +10,7 @@ from ast import literal_eval
 from contextlib import contextmanager
 
 from hls4ml.model.hls_types import IntegerPrecisionType, FixedPrecisionType
+from hls4ml.model.hls_layers import Layer, Dense, BatchNormalization, Activation, ParametrizedActivation, PReLU, Softmax
 from hls4ml.backends.backend import custom_initializer, optimizer_pass, layer_optimizer
 from hls4ml.backends import FPGABackend
 from hls4ml.report import parse_quartus_report
@@ -211,21 +212,20 @@ activ_include_list = ['nnet_utils/nnet_activation.h']
 class QuartusBackend(FPGABackend):
     def __init__(self):
         super(QuartusBackend, self).__init__('Quartus')
-        self.register_templates('Dense'                  , dense_function_template, dense_config_template, dense_include_list)
-        self.register_templates('BinaryDense'            , dense_function_template,       dense_config_template, dense_include_list)
-        self.register_templates('BatchNormalization'     , batchnorm_function_template,   batchnorm_config_template, batchnorm_include_list)
-        #self.register_templates('Conv1D'                 , conv1d_function_template,      [conv1d_config_template, conv_mult_config_template], conv1d_include_list)
-        #self.register_templates('Conv2D'                 , conv2d_function_template,      [conv2d_config_template, conv_mult_config_template], conv2d_include_list)
-        self.register_templates('Activation'             , activ_function_template,       activ_config_template, activ_include_list)
-        self.register_templates('ParametrizedActivation' , param_activ_function_template, activ_config_template, activ_include_list)
-        self.register_templates('PReLU'                  , param_activ_function_template, activ_config_template, activ_include_list)
-        self.register_templates('Softmax'                , activ_function_template,       softmax_config_template, activ_include_list)
-        #self.register_templates('Pooling1D'              , pooling1d_function_template,   pooling1d_config_template, pooling_include_list)
-        #self.register_templates('Pooling2D'              , pooling2d_function_template,   pooling2d_config_template, pooling_include_list)
-        #self.register_templates('Merge'                  , merge_function_template,       merge_config_template, merge_include_list)
-        #self.register_templates('Concatenate'            , merge_function_template,       concat_config_template, merge_include_list)
-        #self.register_templates('Resize'                 , resize_function_template,      resize_config_template, resize_include_list)
-        #self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template, transpose_include_list)
+        self.register_templates(Dense                  , dense_function_template, dense_config_template, dense_include_list)
+        self.register_templates(BatchNormalization     , batchnorm_function_template,   batchnorm_config_template, batchnorm_include_list)
+        #self.register_templates(Conv1D                , conv1d_function_template,      [conv1d_config_template, conv_mult_config_template], conv1d_include_list)
+        #self.register_templates(Conv2D                , conv2d_function_template,      [conv2d_config_template, conv_mult_config_template], conv2d_include_list)
+        self.register_templates(Activation             , activ_function_template,       activ_config_template, activ_include_list)
+        self.register_templates(ParametrizedActivation , param_activ_function_template, activ_config_template, activ_include_list)
+        self.register_templates(PReLU                  , param_activ_function_template, activ_config_template, activ_include_list)
+        self.register_templates(Softmax                , activ_function_template,       softmax_config_template, activ_include_list)
+        #self.register_templates(Pooling1D             , pooling1d_function_template,   pooling1d_config_template, pooling_include_list)
+        #self.register_templates(Pooling2D             , pooling2d_function_template,   pooling2d_config_template, pooling_include_list)
+        #self.register_templates(Merge                 , merge_function_template,       merge_config_template, merge_include_list)
+        #self.register_templates(Concatenate           , merge_function_template,       concat_config_template, merge_include_list)
+        #self.register_templates(Resize                , resize_function_template,      resize_config_template, resize_include_list)
+        #self.register_templates(Transpose             , transpose_function_template,   transpose_config_template, transpose_include_list)
 
     def create_initial_config(self, device='Arria10', clock_period=5, io_type='io_parallel'):
         config = {}
@@ -335,7 +335,7 @@ class QuartusBackend(FPGABackend):
         else:
             return 'ac_int<{width}, {signed}>'.format(width=width, signed='false' if not signed else 'true')
 
-    @layer_optimizer('Dense')
+    @layer_optimizer(Dense)
     def init_dense(self, layer):
         index_t = IntegerPrecisionType(width=1, signed=False)
 
@@ -355,7 +355,7 @@ class QuartusBackend(FPGABackend):
 
         layer.set_attr('index_t', index_t)
 
-    @layer_optimizer('Softmax')
+    @layer_optimizer(Softmax)
     def init_softmax(self, layer):
         if 'exp_table_t' not in layer.attributes:
             layer.set_attr('exp_table_t', layer.get_attr('table_t'))

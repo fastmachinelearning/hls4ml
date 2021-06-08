@@ -3,7 +3,7 @@ import re
 
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.hls_types import IntegerPrecisionType, XnorPrecisionType
-from hls4ml.model.hls_layers import Layer, BatchNormalization, register_layer
+from hls4ml.model.hls_layers import Layer, Activation, Dense, BatchNormalization, register_layer
 from hls4ml.backends import get_backend
 
 class BatchNormalizationQuantizedTanh(Layer):
@@ -77,7 +77,7 @@ def register_bn_quant(backend):
     register_layer('BatchNormalizationQuantizedTanh', BatchNormalizationQuantizedTanh)
 
     # Register the templates for config and function
-    backend.register_templates('BatchNormalizationQuantizedTanh', batchnorm_quantized_tanh_function_template, batchnorm_quantized_tanh_config_template)
+    backend.register_templates(BatchNormalizationQuantizedTanh, batchnorm_quantized_tanh_function_template, batchnorm_quantized_tanh_config_template)
 
     # Register the optimization passes
     backend.register_pass('merge_batch_norm_quantized_tanh', MergeBatchNormAndQuantizedTanh)
@@ -86,7 +86,7 @@ def register_bn_quant(backend):
 
 class MergeBatchNormAndQuantizedTanh(OptimizerPass):
     def match(self, node):
-        is_match = (node.__class__.__name__ == 'Activation'
+        is_match = (isinstance(node, Activation)
             and node.get_attr('activation') in ['binary_tanh', 'ternary_tanh']
             and isinstance(node.get_input_node(), BatchNormalization))
         return is_match
@@ -124,8 +124,8 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
 
 class QuantizeDenseOutput(OptimizerPass):
     def match(self, node):
-        is_match = (node.__class__.__name__ == 'Dense' and node.get_attr('weight_quantizer') is not None
-            and node.get_input_node().__class__.__name__ == 'BatchNormalizationQuantizedTanh')
+        is_match = (isinstance(node, Dense) and node.get_attr('weight_quantizer') is not None
+            and isinstance(node.get_input_node(), BatchNormalizationQuantizedTanh))
         return is_match
 
     def transform(self, model, node):
@@ -167,7 +167,7 @@ class QuantizeDenseOutput(OptimizerPass):
         # Also requantise the weights
         bd_out_nodes = node.get_output_nodes()
         for out_node in bd_out_nodes:
-            if out_node.__class__.__name__ == 'BatchNormalizationQuantizedTanh':
+            if isinstance(out_node, BatchNormalizationQuantizedTanh):
                 var_names = []
                 if quantizer.__class__.__name__ == 'BinaryQuantizer':
                     var_names.append('threshold')

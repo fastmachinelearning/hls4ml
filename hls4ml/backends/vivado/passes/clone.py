@@ -31,7 +31,7 @@ def register_clone(backend):
     register_layer('Clone', Clone)
 
     # Register the templates for config and function
-    backend.register_templates('Clone', clone_function_template, None, clone_include_list)
+    backend.register_templates(Clone, clone_function_template, None, clone_include_list)
 
     # Register the optimization passes
     backend.register_pass('clone_output', CloneOutput)
@@ -41,7 +41,7 @@ class CloneOutput(OptimizerPass):
     ''' Clones streams that are used multiple times '''
     def match(self, node):
         # We may have already inserted the Clone layer
-        if node.__class__.__name__ == 'Clone':
+        if isinstance(node, Clone):
             return False
 
         return True

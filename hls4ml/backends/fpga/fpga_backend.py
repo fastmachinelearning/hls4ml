@@ -7,12 +7,26 @@ from collections.abc import Iterable
 import re
 
 from hls4ml.backends.backend import Backend
+from hls4ml.model.hls_layers import Layer
+from hls4ml.model.hls_attributes import Attribute
 from hls4ml.model.hls_types import IntegerPrecisionType, FixedPrecisionType, XnorPrecisionType, ExponentPrecisionType
 
 
 class FPGABackend(Backend):
     def __init__(self, name):
         super(FPGABackend, self).__init__(name)
+        
+        self.attribute_map = {
+            Layer: [Attribute('reuse_factor')]
+        }
+
+    def create_layer_class(self, layer_class):
+        new_attrubutes = []
+        for cls, attributes in self.attribute_map.items():
+            if isinstance(layer_class, cls):
+                new_attrubutes.extend(attributes)
+        
+        return type(self.name + layer_class.__name__, (layer_class,), {'_expected_attributes': new_attrubutes})
 
     def compile(self, model):
         curr_dir = os.getcwd()
