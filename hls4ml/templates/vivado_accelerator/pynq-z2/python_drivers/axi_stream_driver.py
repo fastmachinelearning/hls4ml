@@ -2,6 +2,13 @@ from pynq import DefaultHierarchy, allocate
 from datetime import datetime
 import pynq.lib.dma
 import numpy as np
+# todo: see below
+'''
+ideas:
+    - generate the proper driver from hls4ml (axi_s/m_axi/axi_lite) starting from a common template that will be
+    filled with the proper code. For predict(), for example, can be imported another file with the correct 
+    implementation of predict() function (depending on which system - axi_s, axi_m, axi_lite - the user would like to use).
+'''
 
 
 class NN(DefaultHierarchy):

@@ -6,7 +6,6 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     CFLAGS="-O3 -fPIC -std=c++11"
 fi
-LDFLAGS=
 INCFLAGS="-Ifirmware/ap_types/"
 PROJECT=myproject
 LIB_STAMP=mystamp

@@ -30,7 +30,7 @@ clone_include_list = ['nnet_utils/nnet_stream.h']
 register_layer('Clone', Clone)
 
 # Register the templates for config and function
-for backend in ['Vivado', 'Pynq']:
+for backend in ['Vivado', 'VivadoAccelerator']:
     templates.get_backend(backend).register_templates('Clone', clone_function_template, None, clone_include_list)
 
 
@@ -44,7 +44,7 @@ class CloneOutput(OptimizerPass):
         return True
 
     def transform(self, model, node):
-        if model.config.backend.name not in ['Vivado', 'Pynq'] or \
+        if model.config.backend.name not in ['Vivado', 'VivadoAccelerator'] or \
             model.config.get_config_value('IOType') != 'io_stream':
             return False
 

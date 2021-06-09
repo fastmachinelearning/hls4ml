@@ -28,7 +28,7 @@ register_layer('PointwiseConv1D', PointwiseConv1D)
 register_layer('PointwiseConv2D', PointwiseConv2D)
 
 # Register the templates for config and function
-for backend in ['Vivado', 'Pynq']:
+for backend in ['Vivado', 'VivadoAccelerator']:
     templates.get_backend(backend).register_templates(
         'PointwiseConv1D',
         pointwise_conv1d_function_template,

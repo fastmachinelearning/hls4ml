@@ -1,3 +1,4 @@
+#@todo: try to remove startgroup and endgroup and see if it work
 set tcldir [file dirname [info script]]
 source [file join $tcldir project.tcl]
 

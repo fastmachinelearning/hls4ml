@@ -17,6 +17,10 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Cl
 make_wrapper -files [get_files ./${myproject}_pynq/project_1.srcs/sources_1/bd/design_1/design_1.bd] -top
 add_files -norecurse ./${myproject}_pynq/project_1.srcs/sources_1/bd/design_1/hdl/design_1_wrapper.v
 
-launch_runs synth_1
-wait_on_run -timeout 360 synth_1
-launch_runs impl_1 -to_step write_bitstream
+reset_run impl_1
+reset_run synth_1
+launch_runs impl_1 -to_step write_bitstream -jobs 6
+wait_on_run -timeout 360 impl_1
+
+open_run impl_1
+report_utilization -file util.rpt -hierarchical -hierarchical_percentages

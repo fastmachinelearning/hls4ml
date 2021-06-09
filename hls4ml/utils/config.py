@@ -5,19 +5,25 @@ import json
 import math
 from collections import OrderedDict
 
-def create_backend_config(output_dir='my-hls-test', project_name='myproject',
-                          fpga_part='xcku115-flvb2104-2-i', clock_period=5, backend='Vivado',
-                          io_type='io_parallel'):
-    
+import hls4ml
+
+
+def create_config(output_dir='my-hls-test', project_name='myproject',
+    backend='Vivado', **kwargs):
+
+    backend_list = hls4ml.templates.get_available_backends()
+    if backend not in backend_list:
+        raise Exception('Unknown backend: {}'.format(backend))
+
+    backend = hls4ml.templates.get_backend(backend)
+
+    backend_config = backend.create_initial_config(**kwargs)
+
     config = {}
-    
     config['OutputDir'] = output_dir
     config['ProjectName'] = project_name
-    config['XilinxPart'] = fpga_part
-    config['ClockPeriod'] = clock_period
-    config['Backend'] = backend
-    config['IOType'] = io_type
-    config['HLSConfig'] = {}
+    config['Backend'] = backend.name
+    config.update(backend_config)
 
     return config
 
