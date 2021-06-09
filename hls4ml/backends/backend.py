@@ -140,9 +140,9 @@ class Backend(object):
             self.optimizers[name] = opt
 
     def initialize_layer(self, layer):
-        init_func = self.layer_initializers.get(layer.__class__)
-        if init_func is not None:
-            init_func(layer)
+        for cls, init_func in self.layer_initializers.items():
+            if isinstance(layer, cls):
+                init_func(layer)
 
 backend_map = {}
 

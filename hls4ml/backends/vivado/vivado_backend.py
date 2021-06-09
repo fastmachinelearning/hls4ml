@@ -433,6 +433,11 @@ class VivadoBackend(FPGABackend):
 
         return parse_vivado_report(model.config.get_output_dir())
 
+    @custom_initializer(Layer)
+    def init_base_layer(self, layer):
+        reuse_factor = layer.model.config.get_reuse_factor(layer)
+        layer.set_attr('reuse_factor', reuse_factor)
+
     @layer_optimizer(Dense)
     def init_dense(self, layer):
         index_t = IntegerPrecisionType(width=1, signed=False)

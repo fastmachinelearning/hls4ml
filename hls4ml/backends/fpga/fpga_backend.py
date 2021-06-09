@@ -17,7 +17,7 @@ class FPGABackend(Backend):
         super(FPGABackend, self).__init__(name)
         
         self.attribute_map = {
-            Layer: [Attribute('reuse_factor')]
+            Layer: [Attribute('reuse_factor', default=1)]
         }
 
     def create_layer_class(self, layer_class):
