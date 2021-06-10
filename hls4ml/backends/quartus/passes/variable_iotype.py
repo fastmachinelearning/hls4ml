@@ -17,6 +17,6 @@ class TransformVariables(GlobalOptimizerPass):
                 else:
                     new_var = ArrayVariable.from_variable(var, pragma='hls_register')
             else:
-                raise Exception('Unknown IOType {} in {} ({})'.format(io_type, node.name, node.__class__.__name__))
+                raise Exception('Unknown IOType {} in {} ({})'.format(io_type, node.name, node.class_name))
 
             node.set_attr(out_name, new_var)    

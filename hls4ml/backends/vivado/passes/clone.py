@@ -62,7 +62,7 @@ class CloneOutput(OptimizerPass):
         for output in node.outputs:
             if len(output_map[output]) > 1:
                 if len(output_map[output]) > 2:
-                    print('WARN: Cannot clone output {} of {} ({})'.format(output, node.__class__.__name__, node.name))
+                    print('WARN: Cannot clone output {} of {} ({})'.format(output, node.class_name, node.name))
                     return False
                 out_var = node.get_output_variable(output)
                 for i, layer in enumerate(output_map[output], 1):

@@ -26,7 +26,7 @@ class FPGABackend(Backend):
             if issubclass(layer_class, cls):
                 new_attrubutes.extend(attributes)
         
-        return type(self.name + layer_class.__name__, (layer_class,), {'_expected_attributes': new_attrubutes})
+        return type(self.name + layer_class.__name__, (layer_class,), {'_expected_attributes': new_attrubutes, '_wrapped': True})
 
     def compile(self, model):
         curr_dir = os.getcwd()
@@ -46,13 +46,13 @@ class FPGABackend(Backend):
     def get_valid_reuse_factors(self, layer):
         n_in = 0
         n_out = 0
-        if 'Dense' in layer.__class__.__name__:
+        if 'Dense' in layer.class_name:
             n_in = layer.get_attr('n_in')
             n_out = layer.get_attr('n_out')
-        elif 'Conv1D' in layer.__class__.__name__:
+        elif 'Conv1D' in layer.class_name:
             n_in = layer.get_attr('n_chan') * layer.get_attr('filt_width')
             n_out = layer.get_attr('n_filt')
-        elif 'Conv2D' in layer.__class__.__name__:
+        elif 'Conv2D' in layer.class_name:
             n_in = layer.get_attr('n_chan') * layer.get_attr('filt_height') * layer.get_attr('filt_width')
             n_out = layer.get_attr('n_filt')
 

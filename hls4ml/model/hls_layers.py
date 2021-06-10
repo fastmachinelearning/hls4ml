@@ -77,7 +77,7 @@ class Layer(object):
         layer_config = self.model.config.get_layer_config(self)
         for config_key, config_value in layer_config.items():
             if config_key in self.attributes:
-                print('WARNING: Config parameter "{}" overwrites an existing attribute in layer "{}" ({})'.format(config_key, self.name, self.__class__.__name__))
+                print('WARNING: Config parameter "{}" overwrites an existing attribute in layer "{}" ({})'.format(config_key, self.name, self.class_name))
             if config_key.endswith('_t') and isinstance(config_value, str): #TODO maybe move this to __setitem__ of AttributeDict?
                 precision = self.model.config.backend.convert_precision_string(config_value)
                 config_value = HLSType(self.name + config_key, precision)
@@ -86,6 +86,16 @@ class Layer(object):
         self.initialize()
         self.model.config.backend.initialize_layer(self)
         self._validate_attributes()
+
+    @property
+    def class_name(self, include_wrapped=False):
+        if include_wrapped:
+            return self.__class__.__name__
+        else:
+            if hasattr(self, '_wrapped'):
+                return self.__class__.__bases__[0].__name__
+            else:
+                return self.__class__.__name__
 
     def initialize(self):
         raise NotImplementedError
@@ -107,7 +117,7 @@ class Layer(object):
             if exp_attr is not None:
                 if not exp_attr.validate_value(attr_value):
                     raise Exception('Unexpected value of attribute "{}" of layer "{}" ({}). Expected {}, got {} ({})'
-                        .format(attr_name, self.name, self.__class__.__name__, exp_attr.value_type, type(attr_value), attr_value))
+                        .format(attr_name, self.name, self.class_name, exp_attr.value_type, type(attr_value), attr_value))
             else:
                 pass # TODO layer contains attribute that is not expected. we can log this for debugging
         
@@ -116,7 +126,7 @@ class Layer(object):
             if attr.default is not None:
                 self.set_attr(attr_name, attr.default)
             else:
-                raise Exception('Attribute "{}" of layer {} ({}) not set and no default value is specified.'.format(attr_name, self.name, self.__class__.__name__))
+                raise Exception('Attribute "{}" of layer {} ({}) not set and no default value is specified.'.format(attr_name, self.name, self.class_name))
 
     def get_input_node(self, input_name=None):
         if input_name is not None:

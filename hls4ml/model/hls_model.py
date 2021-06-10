@@ -59,7 +59,7 @@ class HLSConfig(object):
         if name_config is not None:
             return name_config.get(key, default)
 
-        type_config = hls_config.get('LayerType', {}).get(layer.__class__.__name__, None)
+        type_config = hls_config.get('LayerType', {}).get(layer.class_name, None)
         if type_config is not None:
             return type_config.get(key, default)
 
@@ -73,7 +73,7 @@ class HLSConfig(object):
         hls_config = self.config['HLSConfig']
         layer_config = {}
 
-        type_config = hls_config.get('LayerType', {}).get(layer.__class__.__name__, None)
+        type_config = hls_config.get('LayerType', {}).get(layer.class_name, None)
         if type_config is not None:
             layer_config.update(type_config)
 
@@ -91,11 +91,11 @@ class HLSConfig(object):
             type_name = layer.name.lower() + '_default_t'
 
         if precision is None:
-            precision = self.layer_type_precision.get(layer.__class__.__name__.lower() + '_' + var)
-            type_name = layer.__class__.__name__ + '_' + var + '_t'
+            precision = self.layer_type_precision.get(layer.class_name.lower() + '_' + var)
+            type_name = layer.class_name + '_' + var + '_t'
         if precision is None:
-            precision = self.layer_type_precision.get(layer.__class__.__name__.lower() + '_default')
-            type_name = layer.__class__.__name__ + '_default_t'
+            precision = self.layer_type_precision.get(layer.class_name.lower() + '_default')
+            type_name = layer.class_name + '_default_t'
 
         if precision is None:
             precision = self.model_precision.get(var)
@@ -114,7 +114,7 @@ class HLSConfig(object):
     def get_reuse_factor(self, layer):
         rf = self.layer_name_rf.get(layer.name.lower())
         if rf is None:
-            rf = self.layer_type_rf.get(layer.__class__.__name__.lower())
+            rf = self.layer_type_rf.get(layer.class_name.lower())
         if rf is None:
             rf = self.model_rf
 
@@ -126,7 +126,7 @@ class HLSConfig(object):
     def get_strategy(self, layer):
         strategy = self.layer_name_strategy.get(layer.name.lower())
         if strategy is None:
-            strategy = self.layer_type_strategy.get(layer.__class__.__name__.lower())
+            strategy = self.layer_type_strategy.get(layer.class_name.lower())
         if strategy is None:
             strategy = self.model_strategy
 
@@ -138,7 +138,7 @@ class HLSConfig(object):
     def get_compression(self, layer):
         compression = self.layer_name_compression.get(layer.name.lower())
         if compression is None:
-            compression = self.layer_type_compression.get(layer.__class__.__name__.lower())
+            compression = self.layer_type_compression.get(layer.class_name.lower())
         if compression is None:
             compression = self.model_compression
 
