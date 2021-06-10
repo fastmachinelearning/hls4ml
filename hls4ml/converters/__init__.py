@@ -151,6 +151,7 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
     )
 
     config['KerasModel'] = model
+    config['HLSConfig'] = {}
 
     model_config = hls_config.get('Model', None)
     if model_config is not None:

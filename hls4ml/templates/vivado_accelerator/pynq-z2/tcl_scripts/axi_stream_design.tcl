@@ -2,7 +2,7 @@
 set tcldir [file dirname [info script]]
 source [file join $tcldir project.tcl]
 
-create_project project_1 ${myproject}_pynq -part xc7z020clg400-1 -force
+create_project project_1 ${myproject}_vivado_accelerator -part xc7z020clg400-1 -force
 
 set_property board_part tul.com.tw:pynq-z2:part0:1.0 [current_project]
 set_property  ip_repo_paths  ${myproject}_prj [current_project]
@@ -48,9 +48,9 @@ apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config { Clk {/processing_s
 
 group_bd_cells hier_0 [get_bd_cells axi_dma_0] [get_bd_cells ${myproject}_axi_0]
 
-make_wrapper -files [get_files ./${myproject}_pynq/project_1.srcs/sources_1/bd/design_1/design_1.bd] -top
+make_wrapper -files [get_files ./${myproject}_vivado_accelerator/project_1.srcs/sources_1/bd/design_1/design_1.bd] -top
 
-add_files -norecurse ./${myproject}_pynq/project_1.srcs/sources_1/bd/design_1/hdl/design_1_wrapper.v
+add_files -norecurse ./${myproject}_vivado_accelerator/project_1.srcs/sources_1/bd/design_1/hdl/design_1_wrapper.v
 
 reset_run impl_1
 reset_run synth_1

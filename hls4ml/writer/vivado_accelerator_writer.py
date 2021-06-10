@@ -1,71 +1,25 @@
 import os
 from shutil import copyfile
-import numpy as np
+
+from hls4ml.templates.vivado_accelerator_config import VivadoAcceleratorConfig
 from hls4ml.writer.vivado_writer import VivadoWriter
 from hls4ml.model.hls_model import IntegerPrecisionType, FixedPrecisionType
 
 class VivadoAcceleratorWriter(VivadoWriter):
 
-    def get_axi_type(self, model):
-        def next_factor8_type(p):
-            ''' Return a new type with the width rounded to the next factor of 8 up to p's width
-                Args:
-                    p : IntegerPrecisionType or FixedPrecisionType
-                Returns:
-                    An IntegerPrecisionType or FixedPrecisionType with the width rounder up to the next factor of 8
-                    of p's width. Other parameters (fractional bits, extra modes) stay the same.
-            '''
-            W = p.width
-            newW = int(np.ceil(W / 8) * 8)
-            if isinstance(p, FixedPrecisionType):
-                return FixedPrecisionType(newW, p.integer, p.signed, p.rounding_mode, p.saturation_mode,
-                                          p.saturation_bits)
-            elif isinstance(p, IntegerPrecisionType):
-                return IntegerPrecisionType(newW, p.signed)
+    def __init__(self):
+        super().__init__()
+        self.vivado_accelerator_config = None
         
-        model_inputs = model.get_input_variables()
-        model_outputs = model.get_output_variables()
-        assert len(
-            model_inputs) == 1, "Only models with one input tensor are currently supported by VivadoAcceleratorBackend"
-        assert len(
-            model_outputs) == 1, "Only models with one output tensor are currently supported by VivadoAcceleratorBackend"
-        inp = model_inputs[0]
-        out = model_outputs[0]
-        inp_axi_t = model.config.config['AcceleratorConfig']['Precision']['Input']['Type']
-        out_axi_t = model.config.config['AcceleratorConfig']['Precision']['Output']['Type']
-        if model.config.config['AcceleratorConfig']['Interface'] == 'axi_stream':
-            if inp_axi_t not in ['float', 'double']:
-                inp_axi_t = next_factor8_type(model.config.backend.convert_precision_string(inp_axi_t))
-            if out_axi_t not in ['float', 'double']:
-                out_axi_t = next_factor8_type(model.config.backend.convert_precision_string(out_axi_t))
-        else:
-            inp_axi_t = next_factor8_type(inp.type.precision)
-            out_axi_t = next_factor8_type(out.type.precision)
-        
-        if inp_axi_t is 'float':
-            input_bitwidth = 32
-        elif inp_axi_t is 'double':
-            input_bitwidth = 64
-        else:
-            input_bitwidth = inp_axi_t.width
-            
-        if out_axi_t is 'float':
-            output_bitwidth = 32
-        elif out_axi_t is 'double':
-            output_bitwidth = 64
-        else:
-            output_bitwidth = out_axi_t.width
-
-        model.config.config['AcceleratorConfig']['Precision']['Input']['Bitwidth'] = input_bitwidth
-        model.config.config['AcceleratorConfig']['Precision']['Output']['Bitwidth'] = output_bitwidth
-        return inp_axi_t, out_axi_t, inp, out
+    def substitute_device_with_part(self, model):
+        model.config.config['Device'] = self.vivado_accelerator_config.get_part()
 
     def write_axi_wrapper(self, model):
         ''' Write a top level HLS C++ file to wrap the hls4ml project with AXI interfaces
             Args:
                 model : The HLSModel to write the wrapper for
         '''
-        inp_axi_t, out_axi_t, inp, out = self.get_axi_type(model)
+        inp_axi_t, out_axi_t, inp, out = self.vivado_accelerator_config.get_corrected_types()
         indent = '    '
 
         #######################
@@ -87,7 +41,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 newline = ''
                 newline += 'static const unsigned N_IN = {};\n'.format(inp.size())
                 newline += 'static const unsigned N_OUT = {};\n'.format(out.size())
-                if model.config.config['AcceleratorConfig']['Interface'] == 'axi_stream':
+                if self.vivado_accelerator_config.get_interface() == 'axi_stream':
                     newline += 'typedef {} T_in;\n'.format(inp_axi_t)
                     newline += 'typedef {} T_out;\n'.format(out_axi_t)
                     newline += 'typedef struct in_struct {\n' + \
@@ -103,12 +57,6 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 else:
                     newline += 'typedef {} input_axi_t;\n'.format(inp_axi_t)
                     newline += 'typedef {} output_axi_t;\n'.format(out_axi_t)
-                    # newline += 'typedef {} input_t;\n'.format(inp.type.precision)
-                    # newline += 'typedef {} output_t ;\n'.format(out.type.precision)
-                    # newline += 'typedef {} input_axi_t;\n'.format(inp_axi_t)
-                    # newline += 'typedef {} output_axi_t;\n'.format(out_axi_t)
-                    # newline += 'typedef {} input_t;\n'.format(inp.type.precision)
-                    # newline += 'typedef {} output_t;\n'.format(out.type.precision)
             else:
                 newline = line
             fout.write(newline)
@@ -132,7 +80,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 newline = '#include "{}_axi.h"\n'.format(model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert local vars' in line:
                 newline = ''
-                if model.config.config['AcceleratorConfig']['Interface'] == 'axi_stream':
+                if self.vivado_accelerator_config.get_interface() == 'axi_stream':
                     newline += indent + 'bool is_last = false;\n'
                 if io_type == 'io_parallel':
                     newline += indent + inp.type.name + ' in_local[N_IN];\n'
@@ -146,17 +94,17 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 newline = indent + '{}(in_local, out_local, in_size, out_size);\n'.format(
                     model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert interface' in line:
-                if model.config.config['AcceleratorConfig']['Interface'] == 'axi_lite':
+                if self.vivado_accelerator_config.get_interface() == 'axi_lite':
                     newline = ''
                     newline += indent + '#pragma HLS INTERFACE ap_ctrl_none port=return\n'
                     newline += indent + '#pragma HLS INTERFACE s_axilite port=in\n'
                     newline += indent + '#pragma HLS INTERFACE s_axilite port=out\n'
-                elif model.config.config['AcceleratorConfig']['Interface'] == 'axi_master':
+                elif self.vivado_accelerator_config.get_interface() == 'axi_master':
                     newline = ''
                     newline += indent + '#pragma HLS INTERFACE s_axilite port=return bundle=CTRL_BUS\n'
                     newline += indent + '#pragma HLS INTERFACE m_axi depth=N_IN port=in offset=slave bundle=IN_BUS\n'
                     newline += indent + '#pragma HLS INTERFACE m_axi depth=N_OUT port=out offset=slave bundle=OUT_BUS\n'
-                elif model.config.config['AcceleratorConfig']['Interface'] == 'axi_stream':
+                elif self.vivado_accelerator_config.get_interface() == 'axi_stream':
                     newline = ''
                     newline += indent + '#pragma HLS INTERFACE axis port=in\n'
                     newline += indent + '#pragma HLS INTERFACE axis port=out\n'
@@ -168,7 +116,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 if io_type == 'io_parallel':
                     newline = ''
                     newline += indent + 'for(unsigned i = 0; i < N_IN; i++){\n'
-                    if model.config.config['AcceleratorConfig']['Interface'] == 'axi_stream':
+                    if self.vivado_accelerator_config.get_interface() == 'axi_stream':
                         newline += indent + indent + '#pragma HLS PIPELINE\n'
                         newline += indent + indent + 'in_local[i] = in[i].data; // Read input with cast\n'
                         newline += indent + indent + 'is_last |= (in[i].last == 1)? true: false;\n'
@@ -184,7 +132,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     newline += indent + indent + '#pragma HLS DATA_PACK variable=ctype\n'
                     newline += indent + indent + 'for(unsigned j = 0; j < {input_t}::size; j++) {{\n'
                     # newline += indent + indent + indent + '#pragma HLS UNROLL\n'
-                    if model.config.config['AcceleratorConfig']['Interface'] == 'axi_stream':
+                    if self.vivado_accelerator_config.get_interface() == 'axi_stream':
                         newline += indent + indent + indent + 'ctype[j] = typename {input_t}::value_type(in[i * {input_t}::size + j].data);\n'
                         newline += indent + indent + indent + 'is_last |= (in[i * input_t::size + j].last == 1)? true : false;\n'
                     else:
@@ -198,7 +146,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 if io_type == 'io_parallel':
                     newline = ''
                     newline += indent + 'for(unsigned i = 0; i < N_OUT; i++){\n'
-                    if model.config.config['AcceleratorConfig']['Interface'] == 'axi_stream':
+                    if self.vivado_accelerator_config.get_interface() == 'axi_stream':
                         newline += indent + indent + '#pragma HLS PIPELINE\n'
                         newline += indent + indent + 'out[i].data = out_local[i]; // Write output with cast\n'
                         newline += indent + indent + 'out[i].last = (is_last && (i == N_OUT - 1))? true : false;\n'
@@ -213,7 +161,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     newline += indent + indent + '{result_t} ctype = out_local.read();\n'
                     newline += indent + indent + 'for(unsigned j = 0; j < {result_t}::size; j++) {{\n'
                     # newline += indent + indent + indent + '#pragma HLS UNROLL\n'
-                    if model.config.config['AcceleratorConfig']['Interface'] == 'axi_stream':
+                    if self.vivado_accelerator_config.get_interface() == 'axi_stream':
                         newline += indent + indent + indent + 'bool last = (is_last && (i * {result_t}::size + j == N_OUT - 1)) ? true : false;\n'
                         newline += indent + indent + indent + 'out[i * {result_t}::size + j] = output_axi_t(ctype[j], last);\n'
                     else:
@@ -350,32 +298,37 @@ class VivadoAcceleratorWriter(VivadoWriter):
         Write the tcl scripts to create a Vivado IPI project for the VivadoAccelerator
         '''
         filedir = os.path.dirname(os.path.abspath(__file__))
-        if model.config.config['AcceleratorConfig']['Interface'] == 'axi_stream':
-            copyfile(os.path.join(filedir, '../templates/vivado_accelerator/pynq-z2/tcl_scripts/axi_stream_design.tcl'),
+        if self.vivado_accelerator_config.get_interface() == 'axi_stream':
+            copyfile(os.path.join(filedir, '../templates/vivado_accelerator/' +
+                                  self.vivado_accelerator_config.get_device() + '/tcl_scripts/axi_stream_design.tcl'),
                      '{}/design.tcl'.format(model.config.get_output_dir()))
-        else:
-            copyfile(os.path.join(filedir, '../templates/vivado_accelerator/pynq-z2/tcl_scripts/axi_lite_design.tcl'),
+        else: 
+            copyfile(os.path.join(filedir, '../templates/vivado_accelerator/' +
+                                  self.vivado_accelerator_config.get_device() + '/tcl_scripts/axi_lite_design.tcl'),
                      '{}/design.tcl'.format(model.config.get_output_dir()))
         f = open('{}/project.tcl'.format(model.config.get_output_dir()), 'w')
         f.write('variable myproject\n')
         f.write('set myproject "{}"\n'.format(model.config.get_project_name()))
-        if model.config.config['AcceleratorConfig']['Interface'] == 'axi_stream':
-            f.write('set bit_width_hls_output {}\n'.format(
-                model.config.config['AcceleratorConfig']['Precision']['Output']['Bitwidth']))
-            f.write('set bit_width_hls_input {}\n'.format(
-                model.config.config['AcceleratorConfig']['Precision']['Input']['Bitwidth']))
+        if self.vivado_accelerator_config.get_interface() == 'axi_stream':
+            in_bit, out_bit = self.vivado_accelerator_config.get_io_bitwidth()
+            f.write('set bit_width_hls_output {}\n'.format(in_bit))
+            f.write('set bit_width_hls_input {}\n'.format(out_bit))
+        f.close()
 
     def write_driver(self, model):
         filedir = os.path.dirname(os.path.abspath(__file__))
-        if model.config.config['AcceleratorConfig']['Interface'] == 'axi_stream':
+        if self.vivado_accelerator_config.get_interface() == 'axi_stream':
             copyfile(os.path.join(filedir,
-                                  '../templates/vivado_accelerator/pynq-z2/python_drivers/axi_stream_driver.py'),
-                     '{}/axi_stream_driver.py'.format(model.config.get_output_dir()))
+                                  '../templates/vivado_accelerator/' + self.vivado_accelerator_config.get_driver_path()),
+                     ('{}/' + self.vivado_accelerator_config.get_driver_file()).format(model.config.get_output_dir()))
 
     def write_hls(self, model):
-        '''
+        """
         Write the HLS project. Calls the VivadoBackend writer, and extra steps for VivadoAccelerator/AXI interface
-        '''
+        """
+        self.vivado_accelerator_config = VivadoAcceleratorConfig(model.config, model.get_input_variables(),
+                                                                 model.get_output_variables())
+        self.substitute_device_with_part(model)
         super(VivadoAcceleratorWriter, self).write_hls(model)
         self.write_axi_wrapper(model)
         self.modify_build_script(model)

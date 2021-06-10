@@ -1,9 +1,5 @@
 from __future__ import print_function
-import numpy as np
-import h5py
 import json
-import math
-from collections import OrderedDict
 
 import hls4ml
 
