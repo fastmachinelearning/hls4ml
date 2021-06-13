@@ -11,6 +11,7 @@ from hls4ml.converters.keras_to_hls import keras_to_hls, get_supported_keras_lay
 #----------Make converters available if the libraries can be imported----------#       
 try:
     from hls4ml.converters.pytorch_to_hls import pytorch_to_hls, get_supported_pytorch_layers, register_pytorch_layer_handler
+    from hls4ml.converters.pyg_to_hls import pyg_to_hls
     __pytorch_enabled__ = True
 except ImportError:
     warnings.warn("WARNING: Pytorch converter is not enabled!")
@@ -297,6 +298,34 @@ def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', pro
     
     return pytorch_to_hls(config)
 
+def convert_from_pyg_model(model, n_node, node_dim, n_edge, edge_dim,
+                           forward_dictionary=None, activate_final=None,
+                           output_dir='my-hls-test', project_name='myproject',
+                           fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
+    
+    config = create_vivado_config(
+        output_dir=output_dir,
+        project_name=project_name,
+        fpga_part=fpga_part,
+        clock_period=clock_period,
+        io_type=io_type
+    )
+    
+    config['PytorchModel'] = model
+    config['InputShape'] = {
+        'NodeAttr': [n_node, node_dim],
+        'EdgeAttr': [n_edge, edge_dim],
+        'EdgeIndex': [n_edge, 2]
+    }
+    config['ForwardDictionary'] = forward_dictionary
+    config['ActivateFinal'] = activate_final
+
+    model_config = hls_config.get('Model', None)
+    config['HLSConfig']['Model'] = _check_model_config(model_config)
+    
+    _check_hls_config(config, hls_config)
+    
+    return pyg_to_hls(config)
 
 def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,
                              output_data_tb=None, backend='Vivado', board=None, part=None, clock_period=5, io_type='io_parallel',
