@@ -290,6 +290,18 @@ def config_from_pytorch_model(model, granularity='model', default_precision='ap_
     
     return config
 
+def config_from_pyg_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_index_precision='ap_uint<16>', default_reuse_factor=1):
+    config = {}
+
+    model_config = {}
+    model_config['Precision'] = default_precision
+    model_config['IndexPrecision'] = default_index_precision
+    model_config['ReuseFactor'] = default_reuse_factor
+    model_config['Strategy'] = 'Latency'
+    
+    config['Model'] = model_config
+
+    return config
 
 def config_from_onnx_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1):
     """Generate configuration dictionary from an ONNX model.

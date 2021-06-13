@@ -467,8 +467,11 @@ class HLSModel(object):
 
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
 
-    def get_weights_data(self, layer_name, var_name):
-        return self.reader.get_weights_data(layer_name, var_name)
+    def get_weights_data(self, layer_name, var_name, module_name=None):
+        if module_name is not None:
+            return self.reader.get_weights_data(layer_name, var_name, module_name)
+        else:
+            return self.reader.get_weights_data(layer_name, var_name)
 
     def next_layer(self):
         self.index += 1

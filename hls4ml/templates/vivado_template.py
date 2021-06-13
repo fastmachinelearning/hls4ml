@@ -19,6 +19,7 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
     typedef {index_t} index_t;
+    static const bool remove_pipeline_pragma = {remove_pipeline_pragma};
     template<class x_T, class y_T, class res_T>
     using product = nnet::product::{product_type}<x_T, y_T, res_T>;
 }};\n"""
@@ -345,6 +346,50 @@ const config{index}::sublayer_t<{il}>::output_transform_biases_t (&config{index}
 
 garnet_stack_config_template = (garnet_stack_base_config_template, garnet_stack_sublayer_config_template)
 
+edgeblock_config_template = """struct config{index}: nnet::graph_config{{
+    typedef {bias_t} bias_t;
+    typedef {weight_t} weight_t;
+    typedef {table_t} table_t;
+    static const unsigned n_node = {n_node};
+    static const unsigned n_edge = {n_edge};
+    static const unsigned node_dim = {node_dim};
+    static const unsigned edge_dim = {edge_dim};
+    static const unsigned out_dim = {out_dim};
+    static const unsigned n_layers = {n_layers};
+    static const unsigned flow = {flow};
+    static const unsigned io_type = nnet::{io_type};
+    static const unsigned reuse_factor = {reuse};
+    static const unsigned n_zeros = {n_zeros};
+    static const bool io_stream = false; 
+}};"""
+
+nodeblock_config_template = """struct config{index}: nnet::graph_config{{
+    typedef {bias_t} bias_t;
+    typedef {weight_t} weight_t;
+    typedef {table_t} table_t;
+    static const unsigned n_node = {n_node};
+    static const unsigned n_edge = {n_edge};
+    static const unsigned node_dim = {node_dim}; 
+    static const unsigned edge_dim = {edge_dim};
+    static const unsigned out_dim = {out_dim};
+    static const unsigned n_layers = {n_layers};
+    static const unsigned io_type = nnet::{io_type};
+    static const unsigned reuse_factor = {reuse};
+    static const unsigned n_zeros = {n_zeros};
+    static const bool io_stream = false; 
+}};"""
+
+aggregate_config_template = """struct aggregation_config{index}: nnet::aggregate_config{{
+    typedef {table_t} table_t;
+    static const unsigned n_node = {n_node};
+    static const unsigned n_edge = {n_edge};
+    static const unsigned edge_dim = {edge_dim};
+    static const unsigned aggr = {aggr};
+    static const unsigned flow = {flow};
+    static const unsigned io_type = nnet::{io_type};
+    static const unsigned reuse_factor = {reuse};
+    static const bool io_stream = false;
+}};"""
 
 
 dense_function_template = 'nnet::dense<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
@@ -367,6 +412,9 @@ resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input
 transpose_function_template = 'nnet::transpose_{dim}<{input_t}, {config}>({input}, {output});'
 garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
 garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
+edgeblock_function_template = 'nnet::edgeblock<{input_t}, {index_t}, {output_t}, {config}>({node_attr}, {edge_attr}, {edge_index}, {out}, {w0}, {b0}, {w1}, {b1}, {w2}, {b2}, {w3}, {b3});'
+nodeblock_function_template = 'nnet::nodeblock<{input_t}, {output_t}, {config}>({node_attr}, {edge_attr_aggr}, {out}, {w0}, {b0}, {w1}, {b1}, {w2}, {b2}, {w3}, {b3});'
+aggregate_function_template = 'nnet::aggregate<{input_t}, {index_t}, {output_t}, {config}>({edge_attr}, {edge_index}, {out});'
 
 dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_stream.h']
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
@@ -381,6 +429,21 @@ merge_include_list = ['nnet_utils/nnet_merge.h', 'nnet_utils/nnet_merge_stream.h
 resize_include_list = ['nnet_utils/nnet_image.h', 'nnet_utils/nnet_image_stream.h']
 transpose_include_list = ['nnet_utils/nnet_array.h']
 garnet_include_list = ['nnet_utils/nnet_garnet.h']
+edgeblock_include_list = ['nnet_utils/nnet_common.h',
+                          'nnet_utils/nnet_dense.h',
+                          'nnet_utils/nnet_dense_resource.h',
+                          'nnet_utils/nnet_activation.h',
+                          'nnet_utils/nnet_graph.h',
+                          'nnet_utils/nnet_merge.h',
+                          'nnet_utils/nnet_array.h']
+nodeblock_include_list = ['nnet_utils/nnet_common.h',
+                          'nnet_utils/nnet_dense.h',
+                          'nnet_utils/nnet_dense_resource.h',
+                          'nnet_utils/nnet_activation.h',
+                          'nnet_utils/nnet_graph.h',
+                          'nnet_utils/nnet_merge.h',
+                          'nnet_utils/nnet_array.h']
+aggregate_include_list = ['nnet_utils/nnet_graph.h']
 
 class VivadoBackend(Backend):
     def __init__(self):
@@ -411,6 +474,9 @@ class VivadoBackend(Backend):
         self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template, transpose_include_list)
         self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
         self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)        
+        self.register_templates('EdgeBlock'              , edgeblock_function_template, edgeblock_config_template, edgeblock_include_list)
+        self.register_templates('NodeBlock'              , nodeblock_function_template, nodeblock_config_template, nodeblock_include_list)
+        self.register_templates('Aggregate'              , aggregate_function_template, aggregate_config_template, aggregate_include_list)
     
     def get_valid_reuse_factors(self, layer):
         n_in = 0
