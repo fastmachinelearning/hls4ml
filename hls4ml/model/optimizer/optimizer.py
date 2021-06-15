@@ -25,26 +25,24 @@ class GlobalOptimizerPass(OptimizerPass):
         return True # Match everything
 
 class WrappedOptimizerPass(OptimizerPass):
-    def __init__(self, name, condition=None, transform=None):
+    def __init__(self, name, condition, transform):
         self.name = name
-        self.transform_func = transform
         self.condition = condition
+        self.transform_func = transform
     
     def match(self, node):
-        if self.condition is not None:
-            return self.condition(node)
-        else:
-            raise NotImplementedError
+        return self.condition(node)
 
     def transform(self, model, node):
-        if self.transform_func is not None:
-            retval = self.transform_func(node)
-            return retval if retval is not None else False
-        else:
-            raise NotImplementedError
+        retval = self.transform_func(node)
+        return retval if retval is not None else False
     
     def get_name(self):
         return self.name
+
+class LayerOptimizerPass(WrappedOptimizerPass):
+    def __init__(self, name, layer_class, transform):
+        super(LayerOptimizerPass, self).__init__(name, lambda node: isinstance(node, layer_class), transform)
 
 def optimizer_pass(condition):
     def decorator(function):
@@ -57,7 +55,10 @@ def extract_optimizers_from_object(clazz):
     optimizer_list = [func for func in dir(clazz) if callable(getattr(clazz, func)) and hasattr(getattr(clazz, func), '_condition')]
     for opt_name in optimizer_list:
         func = getattr(clazz, opt_name)
-        opt = WrappedOptimizerPass(name=opt_name, condition=func._condition, transform=func)
+        if inspect.isclass(func._condition):
+            opt = LayerOptimizerPass(name=opt_name, layer_class=func._condition, transform=func)
+        else:
+            opt = WrappedOptimizerPass(name=opt_name, condition=func._condition, transform=func)
         optimizers[opt_name] = opt
     
     return optimizers

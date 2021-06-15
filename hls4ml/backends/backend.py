@@ -40,7 +40,7 @@ def custom_initializer(*args):
 
 def layer_optimizer(layer):
     def decorator(function):
-        return optimizer_pass(lambda node: isinstance(node, layer))(function)
+        return optimizer_pass(layer)(function)
     return decorator
 
 class Backend(object):
