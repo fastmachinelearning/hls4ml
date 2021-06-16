@@ -861,32 +861,72 @@ void  ternary_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
  
 }
 
+template<class data_T>
+short MSB_position(data_T data)
+{
+	for(short i = data_T::width - 1; i >= 0 ; i--)
+	{
+		if (data[i] == 1)
+			return i;
+	}
+	return 0;
+}
+
+#define sqrt_2_minus_1 0.4142135623730950488016887242096980785696718753769480731766797379907324784621
+//#include "hls_math.h"
+
 template<class data_T, class res_T, typename CONFIG_T>
 void po2(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
-    if (CONFIG_T::io_type == 0)
-    {
-        #pragma HLS PIPELINE
-    }
-    
-    for (int i=0; i < CONFIG_T::n_in; i++)
-    {
-    	res[i] = 0;
-    	short last_1 = -1;
-    	// set MSB to keep the sign
-        res[i][res[i].width - 1] = data[i][data[i].width - 1];
-        loop_po2: for(unsigned short j = 0; j < data[i].width - 1; j++)
+/*
+    general idea:
+    - get the position of the first and the last 1 (from the left), f_1:l_1
+    - consider the ap_fixed<f_1 - l_1, 2> with the last integer bit = f_1 and the last bit l_1; 
+        if this value >= sqrt(2) ==> round up (set all to zero but the MSB)
+        else round down (set all the decimal part to zero)
+    - assign back to the original input and return
+*/
+     if (CONFIG_T::io_type == io_parallel){
+         #pragma HLS PIPELINE
+     }
+     
+	for(unsigned i = 0; i < CONFIG_T::n_in; i++)
+	{
+		bool is_neg = data[i] < 0 ? true : false;
+        //data = hls::abs(data);
+        if(data[i] < 0)
+            data[i] = -data[i];
+        short msb_pos = MSB_position<data_T>(data[i]);
+        ap_ufixed<data_T::width,0> decimal_part;
+        decimal_part.range() = data[i].range(msb_pos - 1, 0) << (data_T::width - msb_pos);
+        //std::cout << "Input value bin:     " << data.to_string() << std::endl;
+        //std::cout << "Input value decimal: " << data.to_float() << std::endl;
+        //std::cout << "Decimal part bin:    " << decimal_part.to_string() << std::endl;
+        //std::cout << "Decimal part value:  " << decimal_part.to_float() << std::endl << std::endl;
+        if(decimal_part >= sqrt_2_minus_1)
         {
-            //#pragma HLS unroll
-            if(data[i][j] == 1)
-            {
-                last_1 = j;
-            }
+            res[i].weight = (msb_pos + 1) - (data_T::width - data_T::iwidth);
+            res[i].sign   = is_neg;
+            /*
+            res_T rounded_data = data[i] << 1;
+            rounded_data.range(msb_pos, 0) = 0;
+            if (is_neg)
+                res[i] = -rounded_data;
+            else
+                res[i] = rounded_data;
+            */
         }
-        // set just the last bit to get the po2 rounding
-        if (last_1 >= 0)
+        else
         {
-            res[i][last_1] = 1;    
+            res[i].weight = msb_pos - (data_T::width - data_T::iwidth);
+            res[i].sign   = is_neg;
+            /*
+            data[i].range(msb_pos - 1, 0) = 0;
+            if(is_neg)
+                res[i] = -data[i];
+            else
+                res[i] = data[i];
+            */
         }
     }
 }

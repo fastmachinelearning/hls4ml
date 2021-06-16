@@ -1246,6 +1246,14 @@ class Activation(Layer):
 
         return self._config_template.format(**params)
 
+class PO2Activation(Activation):
+    def initialize(self):
+        # super(PO2Activation, self).initialize()
+        inp = self.get_input_variable()
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_output_variable(shape, dims, precision=ExponentType(precision=18))
+
 class ParametrizedActivation(Activation):
     def function_cpp(self):
         params = self._default_function_params()
@@ -1730,6 +1738,7 @@ layer_map = {
     'InputLayer'             : Input,
     'Activation'             : Activation,
     'QActivation'            : Activation,
+    'PO2Activation'          : PO2Activation,
     'LeakyReLU'              : ParametrizedActivation,
     'ThresholdedReLU'        : ParametrizedActivation,
     'ELU'                    : ParametrizedActivation,

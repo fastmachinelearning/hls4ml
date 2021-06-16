@@ -51,8 +51,6 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader,
     layer = parse_default_keras_layer(keras_layer, input_names)
 
     activation_config = keras_layer['config']['activation']
-    if isinstance(activation_config, str):
-        quantizer_obj = get_quantizer(activation_config)
 
     if isinstance(activation_config, str):
         quantizer_obj = get_quantizer(activation_config)
