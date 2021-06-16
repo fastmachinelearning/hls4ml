@@ -114,7 +114,8 @@ void mse(data1_T a[CONFIG_T::n_in],
     #pragma HLS pipeline
     typename CONFIG_T::error_t error[CONFIG_T::n_in];
     typename CONFIG_T::squared_error_t error_squared[CONFIG_T::n_in];
-    #pragma HLS array_partition variable=delta complete
+    #pragma HLS array_partition variable=error complete
+    #pragma HLS array_partition variable=error_squared complete
     for(unsigned i = 0; i < CONFIG_T::n_in; i++){
         #pragma HLS unroll
         error[i] = a[i] - b[i];
@@ -174,15 +175,16 @@ void custom_mse(data1_T a[CONFIG_T::n_in],
 
     // Compute the tanh of predicted {eta, phi} and do the scaling (pi, 3.0, 2.1 or 4.0)
     // Concat predicted tanh {eta, phi} in a single array to reduce together
-    typename CONFIG_T::table_t tanh_pred[N_PARTS];
+    typename CONFIG_T::table_t tanh_pred[3*N_PARTS];
     typename CONFIG_T::table_t tanh_pred_eta[N_PARTS];
     typename CONFIG_T::table_t tanh_pred_phi[N_PARTS];
-    data1_T true_eta_phi[2*N_PARTS];
+    #pragma HLS array_partition variable=tanh_pred complete
     #pragma HLS array_partition variable=tanh_pred_eta complete
     #pragma HLS array_partition variable=tanh_pred_phi complete
     tanh<data2_T, typename CONFIG_T::table_t, typename CONFIG_T::tanh_config>(pred_eta, tanh_pred_eta);
     tanh<data2_T, typename CONFIG_T::table_t, typename CONFIG_T::tanh_config>(pred_phi, tanh_pred_phi);
     typename CONFIG_T::table_t mults[N_PARTS] = {1, 3, 3, 3, 3, 2.1, 2.1, 2.1, 2.1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4};
+    #pragma HLS array_partition variable=mults complete
     for(unsigned i = 0; i < N_PARTS; i++){
         #pragma HLS unroll
         tanh_pred[3*i + 0] = pred_pt[i];

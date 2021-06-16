@@ -361,11 +361,6 @@ struct config{index} : nnet::custom_mse_config
 {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = 1;
-    static const unsigned NMET = 4;
-    static const unsigned NEGAMMAS = 4;
-    static const unsigned NMUONS = 4;
-    static const unsigned NJETS = 10;
-    static const unsigned NPARTS = NMET + NEGAMMAS + NMUONS + NJETS;
     typedef {table_t} table_t; // type for tanh table data
     typedef {accum_t} accum_t; // type for squared error
     typedef {tanh_config_t} tanh_config;
