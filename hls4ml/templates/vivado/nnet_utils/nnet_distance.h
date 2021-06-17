@@ -7,7 +7,7 @@
 #include <cmath>
 
 namespace nnet {
-
+    
 struct distance_config
 {
     // IO size
@@ -22,6 +22,19 @@ struct distance_config
     // Internal info
     static const unsigned table_size = 1024;
 };
+
+template<typename CONFIG_T, int N_TABLE>
+void init_klloss_exp_table(typename CONFIG_T::exp_table_t table_out[N_TABLE])
+{
+    for (int ii = 0; ii < N_TABLE; ii++) {
+        // First, convert from table index to X-value (range -1 to +1)
+        float in_val = 2*1*(ii-float(N_TABLE)/2.0)/float(N_TABLE);
+        // Next, compute lookup table function
+        typename CONFIG_T::exp_table_t real_val = exp_fcn_float(in_val);
+        //std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
+        table_out[ii] = real_val;
+    }
+}
 
 template<class data1_T, class data2_T, class res_T, typename CONFIG_T>
 void klloss(
@@ -39,7 +52,8 @@ void klloss(
     static typename CONFIG_T::exp_table_t exp_table[CONFIG_T::table_size];
 #endif
     if (!initialized) {
-        init_exp_table<data2_T, CONFIG_T>(exp_table);
+        // init_exp_table<data2_T, CONFIG_T>(exp_table);
+        init_klloss_exp_table<CONFIG_T, CONFIG_T::table_size>(exp_table);
         initialized = true;
     }
 
@@ -49,22 +63,33 @@ void klloss(
     typename CONFIG_T::accum_t mean_sq[CONFIG_T::n_in];
     #pragma HLS ARRAY_PARTITION variable=mean_sq complete
 
-    typename CONFIG_T::sum_t kl_sum(0);
+    typename CONFIG_T::accum_t kl_sum(0);
 
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         #pragma HLS UNROLL
-    	mean_sq[i] = mean[i] * mean[i];
+        mean_sq[i] = mean[i] * mean[i];
+        kl[i] = data2_T(1.) + log_var[i];
     }
 
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         #pragma HLS UNROLL
-        unsigned x = softmax_idx_from_real_val<data2_T, CONFIG_T>(log_var[i]);
-        kl[i] = data2_T(1.) + log_var[i] - mean_sq[i] - exp_table[x];
+        //unsigned x = softmax_idx_from_real_val<data2_T, CONFIG_T>(log_var[i]);
+        //kl[i] = data2_T(1.) + log_var[i] - mean_sq[i] - exp_table[x];
+        int data_round = log_var[i] * CONFIG_T::table_size / 2;
+        int index = data_round + 1*CONFIG_T::table_size / 2;
+        if (index < 0)   index = 0;
+        if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+        kl[i] -= exp_table[index];
+    }
+
+    for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
+        #pragma HLS UNROLL
+        kl[i] -= mean_sq[i];
     }
 
     Op_add<typename CONFIG_T::accum_t> op_add;
     kl_sum = reduce<typename CONFIG_T::accum_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::accum_t>>(kl, op_add);
-
+    kl_sum /= typename CONFIG_T::accum_t(CONFIG_T::n_in);
     res[0] = res_T(-0.5) * kl_sum;
 }
 
