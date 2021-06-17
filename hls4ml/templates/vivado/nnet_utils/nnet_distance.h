@@ -4,6 +4,7 @@
 #include "nnet_common.h"
 #include "nnet_activation.h"
 #include <cstdlib>
+#include <cmath>
 
 namespace nnet {
 
@@ -93,6 +94,113 @@ void radius(
     }
 
     // Not implemented
+}
+
+struct mse_config{
+    // IO size
+    static const unsigned n_in = 10;
+    static const unsigned n_out = 1;
+    
+    // Internal data type definitions
+    typedef float error_t;
+    typedef float squared_error_t;
+    typedef float accum_t;
+};
+
+template<class data1_T, class data2_T, class res_T, typename CONFIG_T>
+void mse(data1_T a[CONFIG_T::n_in],
+         data2_T b[CONFIG_T::n_in],
+         res_T   res[CONFIG_T::n_out]){
+    #pragma HLS pipeline
+    typename CONFIG_T::error_t error[CONFIG_T::n_in];
+    typename CONFIG_T::squared_error_t error_squared[CONFIG_T::n_in];
+    #pragma HLS array_partition variable=error complete
+    #pragma HLS array_partition variable=error_squared complete
+    for(unsigned i = 0; i < CONFIG_T::n_in; i++){
+        #pragma HLS unroll
+        error[i] = a[i] - b[i];
+        error_squared[i] = error[i] * error[i];
+    }
+    // TODO: check the cast here is okay
+    Op_add<typename CONFIG_T::squared_error_t> op_add;
+    res[0] = reduce<typename CONFIG_T::squared_error_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::squared_error_t>>(error_squared, op_add) * typename CONFIG_T::squared_error_t(1. / CONFIG_T::n_in);
+}
+
+struct custom_mse_config
+{
+    // IO size
+    static const unsigned n_in = 10;
+    static const unsigned n_out = 1;
+    static const unsigned NMET = 1;
+    static const unsigned NEGAMMAS = 4;
+    static const unsigned NMUONS = 4;
+    static const unsigned NJETS = 10;
+    static const unsigned NPARTS = NMET + NEGAMMAS + NMUONS + NJETS;
+    
+    // Internal data type definitions
+    typedef ap_fixed<16,3> table_t; // type for tanh table data
+    typedef ap_fixed<16,6,AP_RND_CONV,AP_SAT> accum_t; // type for squared error
+
+};
+
+template<class data1_T, class data2_T, class res_T, typename CONFIG_T>
+void custom_mse(data1_T a[CONFIG_T::n_in],
+                data2_T b[CONFIG_T::n_in],
+                res_T  res[CONFIG_T::n_out]){
+
+    #pragma HLS pipeline II=1
+    static const unsigned N_PARTS = CONFIG_T::NPARTS;
+    // Extract separately the pt, eta, phi
+    data1_T true_pt[N_PARTS];
+    data1_T true_phi[N_PARTS];
+    data1_T true_eta[N_PARTS];
+    data2_T pred_pt[N_PARTS];
+    data2_T pred_phi[N_PARTS];
+    data2_T pred_eta[N_PARTS];
+    #pragma HLS array_partition variable=pred_pt complete
+    #pragma HLS array_partition variable=pred_eta complete
+    #pragma HLS array_partition variable=pred_phi complete
+    #pragma HLS array_partition variable=true_pt complete
+    #pragma HLS array_partition variable=true_eta complete
+    #pragma HLS array_partition variable=true_phi complete
+    for(unsigned i = 0; i < N_PARTS; i++){
+        #pragma HLS unroll
+        true_pt[i]  = a[3*i + 0];
+        true_eta[i] = a[3*i + 1];
+        true_phi[i] = a[3*i + 2];
+        pred_pt[i]  = b[3*i + 0];
+        pred_eta[i] = b[3*i + 1];
+        pred_phi[i] = b[3*i + 2];
+    }
+
+    // Compute the tanh of predicted {eta, phi} and do the scaling (pi, 3.0, 2.1 or 4.0)
+    // Concat predicted tanh {eta, phi} in a single array to reduce together
+    typename CONFIG_T::table_t tanh_pred[3*N_PARTS];
+    typename CONFIG_T::table_t tanh_pred_eta[N_PARTS];
+    typename CONFIG_T::table_t tanh_pred_phi[N_PARTS];
+    #pragma HLS array_partition variable=tanh_pred complete
+    #pragma HLS array_partition variable=tanh_pred_eta complete
+    #pragma HLS array_partition variable=tanh_pred_phi complete
+    tanh<data2_T, typename CONFIG_T::table_t, typename CONFIG_T::tanh_config>(pred_eta, tanh_pred_eta);
+    tanh<data2_T, typename CONFIG_T::table_t, typename CONFIG_T::tanh_config>(pred_phi, tanh_pred_phi);
+    typename CONFIG_T::table_t mults[N_PARTS] = {1, 3, 3, 3, 3, 2.1, 2.1, 2.1, 2.1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4};
+    #pragma HLS array_partition variable=mults complete
+    for(unsigned i = 0; i < N_PARTS; i++){
+        #pragma HLS unroll
+        tanh_pred[3*i + 0] = pred_pt[i];
+        tanh_pred[3*i + 1] = tanh_pred_eta[i] * mults[i];
+        tanh_pred[3*i + 2] = tanh_pred_phi[i] * typename CONFIG_T::table_t(M_PI);
+    }
+
+    // apply the mask: for any index in true which contains zero, set that index in pred to 0
+    for(unsigned i = 0; i < CONFIG_T::n_in; i++){
+        tanh_pred[i] = a[i] == 0 ? typename CONFIG_T::table_t(0) : tanh_pred[i];
+    }
+    // Reduce the {eta, phi} and {pt} parts of the MSE separately
+    typename CONFIG_T::accum_t mse_acc[1];
+    mse<data1_T, typename CONFIG_T::table_t, typename CONFIG_T::accum_t, typename CONFIG_T::mse_config>(a, tanh_pred, mse_acc);
+    res[0] = mse_acc[0];
+
 }
 
 }//end namespace

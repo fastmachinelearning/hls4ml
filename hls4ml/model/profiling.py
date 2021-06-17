@@ -198,7 +198,7 @@ types_plots = {'boxplot' : types_boxplot,
 
 def ap_fixed_WIF(dtype):
     from hls4ml.templates.vivado_template import VivadoBackend
-    dtype = VivadoBackend.convert_precision_string(None, dtype) 
+    dtype = VivadoBackend.convert_precision_string(None, dtype)
     W, I, F = dtype.width, dtype.integer, dtype.fractional
     return W, I, F
 
@@ -636,9 +636,9 @@ def get_ymodel_keras(keras_model, X):
     dictionary
         A dictionary in the form {"layer_name": ouput array of layer}
     """
-    
+
     ymodel = {}
-    
+
     for layer in keras_model.layers:
         print("Processing {} in Keras model...".format(layer.name))
         if not _is_ignored_layer(layer):
@@ -646,23 +646,23 @@ def get_ymodel_keras(keras_model, X):
             #Note that if the layer is a standalone activation layer then skip this
             if hasattr(layer, 'activation') and not (isinstance(layer,keras.layers.Activation) or isinstance(layer, qkeras.qlayers.QActivation)):
                 if layer.activation:
-                    
+
                     if layer.activation.__class__.__name__ == "linear":
                         ymodel[layer.name] = _get_output(layer, X, keras_model.input)
-                    
+
                     else:
                         temp_activation = layer.activation
                         layer.activation = None
                         #Get output for layer without activation
                         ymodel[layer.name] = _get_output(layer, X, keras_model.input)
 
-                        #Add the activation back 
+                        #Add the activation back
                         layer.activation = temp_activation
                         #Get ouput for activation
                         ymodel[layer.name + "_{}".format(temp_activation.__class__.__name__)] =  _get_output(layer, X, keras_model.input)
                 else:
                     ymodel[layer.name] = _get_output(layer, X, keras_model.input)
-            else:    
+            else:
                 ymodel[layer.name] = _get_output(layer, X, keras_model.input)
     print("Done taking outputs for Keras model.")
     return ymodel
@@ -672,10 +672,10 @@ def _norm_diff(ymodel, ysim):
     _check_plt()
 
     diff = {}
-    
+
     for key in list(ysim.keys()):
         diff[key] = np.linalg.norm(ysim[key]-ymodel[key])
-    
+
     #---Bar Plot---
     f, ax = plt.subplots()
     plt.bar(list(diff.keys()),list(diff.values()))
@@ -688,7 +688,7 @@ def _norm_diff(ymodel, ysim):
 def _dist_diff(ymodel, ysim):
     """
     Calculate the normalized distribution of the differences of the elements
-    of the output vectors. 
+    of the output vectors.
     If difference >= original value then the normalized difference will be set to 1,
     meaning "very difference".
     If difference < original value then the normalized difference would be difference/original.
@@ -716,7 +716,7 @@ def _dist_diff(ymodel, ysim):
 
     #---Box Plot---
     f, ax = plt.subplots()
-    pos = np.array(range(len(list(diff.values())))) + 1            
+    pos = np.array(range(len(list(diff.values())))) + 1
     ax.boxplot(list(diff.values()), sym='k+', positions=pos)
 
     #--formatting
@@ -735,21 +735,21 @@ def compare(keras_model, hls_model, X, plot_type = "dist_diff"):
 
     Parameters
     ----------
-    keras_model : 
+    keras_model :
         original keras model
     hls_model :
         converted HLSModel, with "Trace:True" in the configuration file.
-    X : array-like 
-        Input for the model. 
+    X : array-like
+        Input for the model.
     plot_type : string
         different methods to visualize the y_model and y_sim differences.
         Possible options include:
-        
-        - 'norm_diff' : square root of the sum of the squares of the differences 
-          between each output vectors 
+
+        - 'norm_diff' : square root of the sum of the squares of the differences
+          between each output vectors
         - 'dist_diff' : The normalized distribution of the differences of the elements
           between two output vectors
-        
+
     Returns
     -------
     matplotlib figure
@@ -761,7 +761,7 @@ def compare(keras_model, hls_model, X, plot_type = "dist_diff"):
     #Note that each y is a dictionary with structure {"layer_name": flattened ouput array}
     ymodel = get_ymodel_keras(keras_model, X)
     _, ysim = hls_model.trace(X)
-    
+
     print("Plotting difference...")
     f = plt.figure()
     if plot_type == "norm_diff":

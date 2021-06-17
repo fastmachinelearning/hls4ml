@@ -12,9 +12,9 @@ from collections import OrderedDict
 
 def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
     fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
-    
+
     config = {}
-    
+
     config['OutputDir'] = output_dir
     config['ProjectName'] = project_name
     config['XilinxPart'] = fpga_part
@@ -35,7 +35,7 @@ def _get_precision_from_quantizer(quantizer):
             quantizer['class_name'] = quantizer_obj.__class__.__name__
             quantizer['config'] = quantizer_obj.get_config()
         # Some activations are just functions
-        else: 
+        else:
             quantizer['class_name'] = quantizer_obj.__name__
 
     supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh', 'quantized_po2', 'quantized_relu_po2']
@@ -43,11 +43,11 @@ def _get_precision_from_quantizer(quantizer):
         bits = int(quantizer['config']['bits'])
         # if integer isn't specified, it should be the same as bits
         integer = int(quantizer['config'].get('integer', bits-1)) + 1
-        
+
     elif quantizer['class_name'] in ['binary', 'stochastic_binary', 'binary_tanh']:
         bits = 2
         integer = 2
-    
+
     elif quantizer['class_name'] in ['ternary', 'stochastic_ternary', 'ternary_tanh']:
         bits = 2
         integer = 2
@@ -65,31 +65,24 @@ def _get_precision_from_quantizer(quantizer):
 def set_accum_from_keras_model(config, model):
     """Adjust accum_t of relevant layers in a given HLSModel configuration based on both a Keras model and data types
     set in the configuration.
-
     The function aims for setting accum_t in applicable layers in a way that no overflow is possible during machine
     learning inference and the minimum non-zero possible value of an accumulator during calculations is covered. The
     maximum bit width (excluding the sign bit) of a resultant value of accum_t is 64.
-
     Similarly to set_data_types_from_keras_model(), set_accum_from_keras_model() works in a heuristic way. Therefore,
     the optimal result is not guaranteed and post-tuning may be required in order to achieve the best outcome.
-
     Contrary to set_data_types_from_keras_model(), set_accum_from_keras_model() does not use profiling information.
     Instead, for each applicable layer, it uses data types set in the HLSModel config along with information about the
     layer shape.
-
     The function supports the following layers only:
     * Dense + its subclasses
     * Conv1D, Conv2D + their subclasses
     * AveragePooling1D, AveragePooling2D + their subclasses
-
     If your model contains other layers with accum_t, consider using set_data_types_from_keras_model(). QKeras
     equivalents of layers from the above list should count as their subclasses and therefore be supported by this
     function.
-
     Args:
         config (dict): HLSModel configuration dictionary to be updated. Its granularity must be 'name'.
         model: Keras model to be used for adjusting accum_t in relevant layers.
-
     Returns:
         None. The function makes changes directly to the supplied config.
     """
@@ -129,7 +122,17 @@ def set_accum_from_keras_model(config, model):
             continue
 
         if i == 0:
-            previous_layer_config = config['LayerName'][name + '_input']
+            previous_layer_config = None
+            for value in config['LayerName'].values():
+                if isinstance(value, dict) and 'LayerType' in value and value['LayerType'] == 'Input':
+                    previous_layer_config = value
+                    break
+
+            if previous_layer_config is None:
+                if name + '_input' in config['LayerName']:
+                    previous_layer_config = config['LayerName'][name + '_input']
+                else:
+                    raise RuntimeError('The input layer could not be found in the config')
         else:
             index = i - 1
             while index >= 0 and model.layers[index].name not in config['LayerName']:
@@ -190,18 +193,15 @@ def set_accum_from_keras_model(config, model):
 def set_data_types_from_keras_model(config, model, max_bits, change_flagged_types=False, test_inputs=None,
                                     best_type_algorithm=None):
     """Adjust data types in a given HLSModel configuration based on a Keras model and test inputs (if supplied).
-
     The function aims for setting precision of the layers in the configuration to match the distribution of both
     weights in the model and outputs of the model resulting from the test inputs (if supplied). Types flagged
     as inferred from QKeras (i.e. present in QKerasInferred in a layer config) are not adjusted unless
     change_flagged_types is set to True. Moreover, accumulator types are set to the same type as output types
     (when test inputs are provided and where applicable).
-
     set_data_types_from_keras_model() works in a heuristic way and does not account for optimizations that can be
     subsequently made by hls4ml. Therefore, the optimal result is not guaranteed and it might be necessary to do
     post-tuning of the data types in order to achieve the best outcome. A user-defined algorithm can be passed to
     this function as best_type_algorithm to help obtain precision types closer to the optimal ones.
-
     Args:
         config (dict): HLSModel configuration dictionary to be updated. Its granularity must be 'name'.
         model: Keras model to be used for adjusting the data types.
@@ -217,13 +217,10 @@ def set_data_types_from_keras_model(config, model, max_bits, change_flagged_type
             following profiling information: corresponding hls4ml layer class name (layer_type), max value (max_val),
             min value (min_val), median (median), 1st quartile (q1), 3rd quartile (q3) and the max bit width without
             the sign bit (max_bits). Because the bit width doesn't include the sign bit, A may exceed max_bits by 1.
-
             If the algorithm does not find any suitable data type, it should return (None, None).
-
             If best_type_algorithm is not provided, the default algorithm will be used for all layers (using only
             max_val and min_val to find a data type both covering max_val and with the minimum absolute distance
             between min_val and the minimum representable number).
-
     Returns:
         None. The function makes changes directly to the supplied config.
     """
@@ -355,7 +352,6 @@ def set_data_types_from_keras_model(config, model, max_bits, change_flagged_type
             if data_type is not None and layer_name + '_linear' in config['LayerName']:
                 config['LayerName'][layer_name + '_linear']['Precision'] = data_type
 
-
 def config_from_keras_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1,
                             data_type_mode='default', max_bits=15, test_inputs=None):
     """Create an HLS conversion config given the Keras model.
@@ -431,9 +427,9 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate', 'Dot']
     qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D', 'QBatchNormalization', 'QConv2DBatchnorm']
     padding_layers = ['ZeroPadding1D', 'ZeroPadding2D']
-    loss_layers = ['KLLoss', 'Radius']
+    loss_layers = ['KLLoss', 'Radius', 'CustomMSE']
     #Define layers to skip for conversion to HLS
-    skip_layers = ['Dropout', 'Flatten']
+    skip_layers = ['Dropout', 'Flatten', 'UpSampling2D']
     #All supported layers
     supported_layers = core_layers + dense_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + padding_layers + loss_layers + skip_layers
 
@@ -535,14 +531,14 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
                layer_config['inv_table_t'] = 'ap_fixed<18,8,AP_RND,AP_SAT>'
             else:
                 layer_config['table_t'] = 'ap_fixed<18,8>'
-        
+
         elif layer['class_name'] in norm_layers:
             layer_config['Precision'] = {}
             layer_config['Precision']['scale'] = default_precision
             layer_config['Precision']['bias'] = default_precision
             layer_config['Precision']['result'] = default_precision
             layer_config['ReuseFactor'] = default_reuse_factor
-        
+
         elif layer['class_name'] in qkeras_layers:
             if 'precision' in layer:
                 layer_config['Precision'] = {}
@@ -585,7 +581,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     #model_config['Trace'] = False
 
     config['Model'] = model_config
-    
+
     if granularity.lower() == 'type':
         type_config = {}
         for layer in layer_list:
@@ -593,7 +589,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
                 continue
             layer_config = make_layer_config(layer)
             type_config[layer['class_name']] = layer_config
-        
+
         config['LayerType'] = type_config
 
     elif granularity.lower() == 'name':
@@ -601,7 +597,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
         for layer in layer_list:
             layer_config = make_layer_config(layer)
             name_config[layer['name']] = layer_config
-        
+
         config['LayerName'] = name_config
 
     if data_type_mode in ['auto', 'auto_accum']:
