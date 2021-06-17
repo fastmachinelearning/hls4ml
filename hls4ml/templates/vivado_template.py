@@ -345,6 +345,7 @@ distance_config_template = """struct config{index} : nnet::distance_config {{
     typedef {sum_t} sum_t;
     typedef {exp_table_t} exp_table_t;
     static const unsigned table_size = {table_size};
+    static constexpr float exp_range = {exp_range};
 }};\n"""
 
 

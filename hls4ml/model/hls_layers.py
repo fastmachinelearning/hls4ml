@@ -1821,6 +1821,8 @@ class KLLoss(Layer):
             self.set_attr('exp_table_t', FixedPrecisionType(width=18, integer=8))
         if 'table_size' not in self.attributes:
             self.set_attr('table_size', 1024)
+        if 'exp_range' not in self.attributes:
+            self.set_attr('exp_range', 8)
 
     def function_cpp(self):
         params = {}
