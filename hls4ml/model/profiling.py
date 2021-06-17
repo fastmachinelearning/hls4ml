@@ -672,6 +672,7 @@ def _dist_diff(ymodel, ysim):
     diff = {}
 
     for key in list(ysim.keys()):
+        if not (key in ymodel.keys()): continue
         flattened_ysim = ysim[key].flatten()
         flattened_ymodel = np.array(ymodel[key]).flatten()
 

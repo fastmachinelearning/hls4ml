@@ -105,7 +105,6 @@ void dense_latency(
         acc[iacc] = (typename CONFIG_T::accum_t) biases[iacc];
     }
 
-    // Accumulate multiplication result
     Accum1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS PIPELINE
@@ -116,13 +115,13 @@ void dense_latency(
         }
     }
 
-    // Cast to "res_t" type
     Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS UNROLL
         }
-        //res[ires] = (res_T) (acc[ires]);
-        res[ires] = cast<data_T, res_T, CONFIG_T>(acc[ires]);
+        res[ires] = (res_T) (acc[ires]);
+        //printf("res[%d] = %e acc[%d] = %e\n", ires, res[ires].to_float(), ires, acc[ires].to_float());
+        //res[ires] = cast<data_T, res_T, CONFIG_T>(acc[ires]);
     }
 }
 
