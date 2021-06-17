@@ -57,6 +57,8 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
     typedef {config_t} mult_config;
+    template<class data_T, typename CONFIG_T>
+    using fill_line = nnet::{fill_fn}<data_T, CONFIG_T>;
 }};
 const ap_uint<config{index}::filt_width> config{index}::pixels[] = {{{instructions}}};\n"""
 
@@ -88,7 +90,7 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned stride_width = {stride_width};
     static const unsigned out_height = {out_height};
     static const unsigned out_width = {out_width};
-    static const unsigned reuse_factor = {reuse};
+    static const unsigned reuse_factor = {parallelization_factor};
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
     static const unsigned strategy = nnet::{strategy};
@@ -100,6 +102,8 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
     typedef {config_t} mult_config;
+    template<class data_T, typename CONFIG_T>
+    using fill_line = nnet::{fill_fn}<data_T, CONFIG_T>;
 }};
 const ap_uint<config{index}::filt_height * config{index}::filt_width> config{index}::pixels[] = {{{instructions}}};\n"""
 
@@ -345,6 +349,14 @@ const config{index}::sublayer_t<{il}>::output_transform_biases_t (&config{index}
 
 garnet_stack_config_template = (garnet_stack_base_config_template, garnet_stack_sublayer_config_template)
 
+distance_config_template = """struct config{index} : nnet::distance_config {{
+    static const unsigned n_in = {n_in};
+    static const unsigned n_out = 1;
+    typedef {accum_t} accum_t;
+    typedef {sum_t} sum_t;
+    typedef {exp_table_t} exp_table_t;
+    static const unsigned table_size = {table_size};
+}};\n"""
 
 
 dense_function_template = 'nnet::dense<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
@@ -367,6 +379,7 @@ resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input
 transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}, {output});'
 garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
 garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
+distance_function_template = 'nnet::{distance}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
 
 dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_stream.h']
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
@@ -381,6 +394,7 @@ merge_include_list = ['nnet_utils/nnet_merge.h', 'nnet_utils/nnet_merge_stream.h
 resize_include_list = ['nnet_utils/nnet_image.h', 'nnet_utils/nnet_image_stream.h']
 transpose_include_list = ['nnet_utils/nnet_array.h']
 garnet_include_list = ['nnet_utils/nnet_garnet.h']
+distance_include_list = ['nnet_utils/nnet_distance.h']
 
 class VivadoBackend(Backend):
     def __init__(self):
@@ -410,7 +424,8 @@ class VivadoBackend(Backend):
         self.register_templates('Resize'                 , resize_function_template,      resize_config_template, resize_include_list)
         self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template, transpose_include_list)
         self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
-        self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)        
+        self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)
+        self.register_templates('KLLoss'                 , distance_function_template    , distance_config_template, distance_include_list)
     
     def get_valid_reuse_factors(self, layer):
         n_in = 0
@@ -500,6 +515,30 @@ class VivadoBackend(Backend):
 
             layer.reuse_factor = float(rf) / kernel_multiplies
 
+
+    def divisorGenerator(self, n):
+        large_divisors = []
+        for i in range(1, int(math.sqrt(n) + 1)):
+            if n % i == 0:
+                yield i
+                if i*i != n:
+                    large_divisors.append(n // i)
+        for divisor in reversed(large_divisors):
+            yield divisor
+
+    def set_closest_parallelization_factor(self, layer):
+        if 'Conv1D' in layer.__class__.__name__:
+            n_in = layer.get_attr('out_width')
+        elif 'Conv2D' in layer.__class__.__name__:
+            n_in = layer.get_attr('out_height') * layer.get_attr('out_width')
+
+        valid_pf = list(self.divisorGenerator(n_in))
+        chosen_pf = layer.parallelization_factor
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            print('INFO: Setting ParallelizationFactor={} in layer {}. Valid ParallelizationFactor(s): {}.'
+                .format(closest_pf, layer.name, ','.join(map(str, valid_pf))))
+            layer.parallelization_factor = closest_pf
 
     def convert_precision_string(self, precision):
         '''
@@ -649,3 +688,146 @@ class VivadoBackend(Backend):
                 windows_int.append((int(''.join(str(p) for p in reversed(windows_bin[i * min_W + j])), 2)))
         
         return (min_H, min_W, windows_int)
+
+    def _compute_conv1d_im2col(self, input_shape, kernel=3, stride=1, pad=(0,0)):
+        W, C = input_shape
+        pad_l, pad_r = pad
+
+        out_w = (W + pad_l + pad_r - kernel) // stride + 1
+
+        input_img = np.arange(1, W * C + 1).reshape(W, C)
+
+        img = np.pad(input_img, [(pad_l, pad_r), (0,0)], 'constant')
+        col = np.zeros((out_w, kernel, C))
+
+        for x in range(kernel):
+            x_max = x + stride * out_w
+            col[:, x, :] = img[x:x_max:stride, :]
+
+        col = col.reshape(out_w, -1)
+        return col
+
+    def _compute_conv2d_im2col(self, input_shape, kernel=(3,3), stride=(1,1), pad=(0,0)):
+        H, W, C = input_shape
+        kernel_h, kernel_w = kernel
+        stride_h, stride_w = stride
+        pad_t, pad_b, pad_l, pad_r = pad
+
+        out_h = (H + pad_t + pad_b - kernel_h) // stride_h + 1
+        out_w = (W + pad_l + pad_r - kernel_w) // stride_w + 1
+
+        input_img = np.arange(1, H * W * C + 1).reshape(H, W, C)
+
+        img = np.pad(input_img, [(pad_t, pad_b), (pad_l, pad_r), (0,0)], 'constant')
+        col = np.zeros((out_h, out_w, kernel_h, kernel_w, C))
+
+        for y in range(kernel_h):
+            y_max = y + stride_h * out_h
+            for x in range(kernel_w):
+                x_max = x + stride_w * out_w
+                col[:, :, y, x, :] = img[y:y_max:stride_h, x:x_max:stride_w, :]
+
+        col = col.reshape(out_h * out_w, -1)
+        return col
+
+    def generate_conv1d_line_buffer_fn(self, layer_idx, in_W, in_C, kernel_width=3, stride_width=1, pad=0):
+        if isinstance(pad, Iterable):
+            pad_left = pad[0]
+            pad_right = pad[1]
+        else:
+            pad_left = pad
+            pad_right = pad
+
+        generated_code = (
+            "template<class data_T, typename CONFIG_T>\n"
+            "class fill_line_{index} : public FillLineBuffer1D<data_T, CONFIG_T> {{\n"
+            "    public:\n"
+            "    static void fill_line(\n"
+            "        data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],\n"
+            "        data_T line[CONFIG_T::filt_width * CONFIG_T::n_chan],\n"
+            "        const unsigned pixel_idx\n"
+            "    ) {{\n"
+        ).format(index=layer_idx)
+        indent = '    '
+        im2col_matrix = self._compute_conv1d_im2col(
+            (in_W, in_C),
+            kernel_width,
+            stride_width,
+            (pad_left, pad_right)
+        )
+        #im2col_matrix = self._compute_conv2d_im2col(
+        #    (1, in_W, in_C),
+        #    (1, kernel_width),
+        #    (1, stride_width),
+        #    (0, 0, pad_left, pad_right)
+        #)
+        for i, arr in enumerate(im2col_matrix):
+            generated_code += indent * 2 + 'if (pixel_idx == {:>3}) {{'.format(i)
+            for j, v in enumerate(arr):
+                if v == 0:
+                    val = '0'
+                else:
+                    val = 'data[{}]'.format(int(v-1))
+                generated_code += ' line[{}] = {:>10};'.format(j, val)
+            generated_code += ' }\n'
+        generated_code += indent + '}\n'
+        generated_code += '};\n'
+
+        return generated_code
+
+    def generate_conv2d_line_buffer_fn(self, layer_idx, in_H, in_W, in_C, kernel_size=3, stride=1, pad=0):
+        if isinstance(kernel_size, Iterable):
+            kernel_height = kernel_size[0]
+            kernel_width = kernel_size[1]
+        else:
+            kernel_height = kernel_size
+            kernel_width = kernel_size
+
+        if isinstance(stride, Iterable):
+            stride_height = stride[0]
+            stride_width = stride[1]
+        else:
+            stride_height = stride
+            stride_width = stride
+        
+        if isinstance(pad, Iterable):
+            pad_top = pad[0]
+            pad_bottom = pad[1]
+            pad_left = pad[2]
+            pad_right = pad[3]
+        else:
+            pad_top = pad
+            pad_bottom = pad
+            pad_left = pad
+            pad_right = pad
+
+        generated_code = (
+            "template<class data_T, typename CONFIG_T>\n"
+            "class fill_line_{index} : public FillLineBuffer2D<data_T, CONFIG_T> {{\n"
+            "    public:\n"
+            "    static void fill_line(\n"
+            "        data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],\n"
+            "        data_T line[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan],\n"
+            "        const unsigned pixel_idx\n"
+            "    ) {{\n"
+        ).format(index=layer_idx)
+        indent = '    '
+        im2col_matrix = self._compute_conv2d_im2col(
+            (in_H, in_W, in_C),
+            (kernel_height, kernel_width),
+            (stride_height, stride_width),
+            (pad_top, pad_bottom, pad_left, pad_right)
+        )
+        for i, arr in enumerate(im2col_matrix):
+            generated_code += indent * 2 + 'if (pixel_idx == {:>3}) {{'.format(i)
+            for j, v in enumerate(arr):
+                if v == 0:
+                    val = '0'
+                else:
+                    val = 'data[{}]'.format(int(v-1))
+                generated_code += ' line[{}] = {:>10};'.format(j, val)
+            generated_code += ' }\n'
+        generated_code += indent + '}\n'
+        generated_code += '};\n'
+
+        return generated_code

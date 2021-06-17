@@ -364,7 +364,9 @@ class Layer(object):
         self.precision[accum_t.name] = accum_t
         self.set_attr('accum_t', accum_t.precision)
         self.reuse_factor = self.model.config.get_reuse_factor(self)
-        self.target_cycles = self.model.config.get_target_cycles(self)
+        self.parallelization_factor = self.model.config.get_layer_config_value(self, 'ParallelizationFactor')
+        if self.parallelization_factor is None:
+            self.parallelization_factor = self.reuse_factor
 
         layer_config = self.model.config.get_layer_config(self)
         for config_key, config_value in layer_config.items():
@@ -527,6 +529,7 @@ class Layer(object):
         params['index'] = self.index
         params['iotype'] = self.model.config.get_config_value('IOType')
         params['reuse'] = self.reuse_factor
+        params['parallelization_factor'] = self.parallelization_factor
 
         # data types
         for weight_name, variable in self.weights.items():
@@ -656,9 +659,16 @@ class Conv1D(Layer):
         if self.model.config.is_resource_strategy(self):
             self.set_attr('strategy', 'resource')
             if self.model.config.backend.name == 'Vivado':
-                self.model.config.backend.set_target_reuse_factor(self)
-                self.model.config.backend.set_closest_reuse_factor(self)
-                self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 0, 1]) #(W,C,F) => (F,W,C)
+                #self.model.config.backend.set_closest_reuse_factor(self)
+                #self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 0, 1]) #(W,C,F) => (F,W,C)
+                self.generated_code = self.model.config.backend.generate_conv1d_line_buffer_fn(
+                    self.index,
+                    self.get_input_variable().shape[0],
+                    self.get_input_variable().shape[1],
+                    self.get_attr('filt_width'),
+                    self.get_attr('stride_width'),
+                    (self.get_attr('pad_left'), self.get_attr('pad_right'))
+                )
         else:
             self.set_attr('strategy', 'latency')
         self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
@@ -694,9 +704,14 @@ class Conv1D(Layer):
             instructions_str = ','.join(str(i) for i in instructions)
             params['min_width'] = min_w
             params['instructions'] = instructions_str
+            params['fill_fn'] = 'FillLineBuffer1D'
         else:
             params['min_width'] = params['n_in']
             params['instructions'] = '0'
+            if self.model.config.is_resource_strategy(self):
+                params['fill_fn'] = 'fill_line_{}'.format(self.index)
+            else:
+                params['fill_fn'] = 'FillLineBuffer1D'
 
         params['config_t'] = 'config{}_mult'.format(self.index)
         conv_config = self._config_template[0].format(**params)
@@ -738,7 +753,7 @@ class SeparableConv1D(Layer):
         else:
             self.set_attr('strategy', 'latency')
         self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
-        
+
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -852,10 +867,18 @@ class Conv2D(Layer):
         if self.model.config.is_resource_strategy(self):
             self.set_attr('strategy', 'resource')
             if self.model.config.backend.name == 'Vivado':
-                # TODO: compute optimized reuse
-                self.model.config.backend.set_target_reuse_factor(self)
-                self.model.config.backend.set_closest_reuse_factor(self)
-                self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
+                #self.model.config.backend.set_closest_reuse_factor(self)
+                #self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
+                self.generated_code = self.model.config.backend.generate_conv2d_line_buffer_fn(
+                    self.index,
+                    self.get_input_variable().shape[0],
+                    self.get_input_variable().shape[1],
+                    self.get_input_variable().shape[2],
+                    (self.get_attr('filt_height'), self.get_attr('filt_width')),
+                    (self.get_attr('stride_height'), self.get_attr('stride_width')),
+                    (self.get_attr('pad_top'), self.get_attr('pad_bottom'), self.get_attr('pad_left'), self.get_attr('pad_right'))
+                )
+                self.model.config.backend.set_closest_parallelization_factor(self)
         else:
             self.set_attr('strategy', 'latency')
 
@@ -897,10 +920,15 @@ class Conv2D(Layer):
             params['min_height'] = min_h
             params['min_width'] = min_w
             params['instructions'] = instructions_str
+            params['fill_fn'] = 'FillLineBuffer2D'
         else:
             params['min_height'] = params['in_height']
             params['min_width'] = params['in_width']
             params['instructions'] = '0'
+            if self.model.config.is_resource_strategy(self):
+                params['fill_fn'] = 'fill_line_{}'.format(self.index)
+            else:
+                params['fill_fn'] = 'FillLineBuffer2D'
 
         params['config_t'] = 'config{}_mult'.format(self.index)
         conv_config = self._config_template[0].format(**params)
@@ -993,7 +1021,7 @@ class SeparableConv2D(Layer):
                 self.weights['pointwise'].data = np.transpose(self.weights['pointwise'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
         else:
             self.set_attr('strategy', 'latency')
-        
+
         self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
     def function_cpp(self):
@@ -1125,7 +1153,7 @@ class DepthwiseConv2D(Conv2D):
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
         else:
             self.set_attr('strategy', 'latency')
-        
+
         self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
 class Pooling1D(Layer):
@@ -1800,6 +1828,38 @@ class GarNetStack(GarNet):
 
         params['sublayer_configs'] = '\n'.join(sublayer_configs)
 
+class KLLoss(Layer):
+    def initialize(self):
+        assert(len(self.inputs) == 2)
+        self.add_output_variable(shape=[1], dim_names=['KL_LOSS_{}'.format(self.index)])
+
+        print(self.attributes)
+        if 'sum_t' not in self.attributes:
+            self.set_attr('sum_t', self.get_attr('accum_t'))
+        if 'exp_table_t' not in self.attributes:
+            self.set_attr('exp_table_t', FixedPrecisionType(width=18, integer=8))
+        if 'table_size' not in self.attributes:
+            self.set_attr('table_size', 1024)
+
+    def function_cpp(self):
+        params = {}
+        params['distance'] = 'klloss'
+        params['config'] = 'config{}'.format(self.index)
+        params['input1_t'] = self.get_input_variable(self.inputs[0]).type.name
+        params['input2_t'] = self.get_input_variable(self.inputs[1]).type.name
+        params['output_t'] = self.get_output_variable().type.name
+        params['input1'] = self.get_input_variable(self.inputs[0]).name
+        params['input2'] = self.get_input_variable(self.inputs[1]).name
+        params['output'] = self.get_output_variable().name
+
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+        params['n_in'] = self.get_input_variable(self.inputs[0]).shape[0]
+        params['n_out'] = 1
+        return self._config_template.format(**params)
+
 layer_map = {
     'Input'                  : Input,
     'InputLayer'             : Input,
@@ -1844,6 +1904,7 @@ layer_map = {
     'Transpose'              : Transpose,
     'GarNet'                 : GarNet,
     'GarNetStack'            : GarNetStack,
+    'KLLoss'                 : KLLoss,
     # TensorFlow-specific layers:
     'BiasAdd'                : BiasAdd,
 }

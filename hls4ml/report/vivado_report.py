@@ -117,6 +117,9 @@ def parse_vivado_report(hls_dir):
         return
 
     solutions = _find_solutions(sln_dir)
+    if len(solutions) == 0:
+        print('No solution(s) found in {}.'.format(sln_dir))
+        return
     if len(solutions) > 1:
         print('WARNING: Found {} solution(s) in {}. Using the first solution.'.format(len(solutions), sln_dir))
 
@@ -177,4 +180,3 @@ def parse_vivado_report(hls_dir):
                         report['CosimIntervalMax'] = result[7]
 
     return report
-

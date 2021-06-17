@@ -126,6 +126,73 @@ void dense_latency(
     }
 }
 
+template<class data_T, class res_T, typename CONFIG_T, int P>
+void mult_line_buffer(
+    data_T    data[P][CONFIG_T::n_in],
+    res_T     res[P][CONFIG_T::n_out],
+    typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
+    typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
+{
+    #pragma HLS INLINE
+
+    data_T cache[P];
+    typename CONFIG_T::accum_t mult[P][CONFIG_T::n_in*CONFIG_T::n_out];
+    typename CONFIG_T::accum_t acc[P][CONFIG_T::n_out];
+
+    #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+
+    #pragma HLS ARRAY_PARTITION variable=weights complete
+    #pragma HLS ARRAY_PARTITION variable=biases complete
+    #pragma HLS ARRAY_PARTITION variable=cache complete
+    #pragma HLS ARRAY_PARTITION variable=mult complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=acc complete dim=0
+
+    constexpr unsigned multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in*CONFIG_T::n_out, CONFIG_T::reuse_factor) - (CONFIG_T::n_zeros / CONFIG_T::reuse_factor);
+    #pragma HLS ALLOCATION instances=product limit=multiplier_limit function
+
+    Product1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
+        for(int p = 0; p < P; p++) {
+            #pragma HLS UNROLL
+            cache[p] = data[p][ii];
+        }
+        Product2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
+            int index = ii*CONFIG_T::n_out+jj;
+            for(int p = 0; p < P; p++) {
+                #pragma HLS UNROLL
+                cache[p] = data[p][ii];
+                mult[p][index] = CONFIG_T::template product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>::product(cache[p], weights[index]);
+            }
+        }
+    }
+
+    // Initialize accumulator with input biases
+    ResetAccum: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
+        for(int p = 0; p < P; p++) {
+            #pragma HLS UNROLL
+            acc[p][iacc] = (typename CONFIG_T::accum_t) biases[iacc];
+        }
+    }
+
+    // Accumulate multiplication result
+    Accum1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
+        Accum2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
+            int index = ii*CONFIG_T::n_out+jj;
+            for(int p = 0; p < P; p++) {
+                #pragma HLS UNROLL
+                acc[p][jj] += mult[p][index];
+            }
+        }
+    }
+
+    // Cast to "res_t" type
+    Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
+        for(int p = 0; p < P; p++) {
+            #pragma HLS UNROLL
+            res[p][ires] = cast<data_T, res_T, CONFIG_T>(acc[p][ires]);
+        }
+    }
+}
+
 }
 
 #endif
