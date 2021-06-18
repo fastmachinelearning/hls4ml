@@ -558,7 +558,6 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             layer_config['Precision'] = {}
             layer_config['Precision']['result'] = default_precision
             layer_config['Precision']['accum'] = default_precision
-            layer_config['sum_t'] = default_precision
             layer_config['exp_table_t'] = 'ap_fixed<18,8,AP_RND,AP_SAT>'
             layer_config['table_size'] = 1024
 
