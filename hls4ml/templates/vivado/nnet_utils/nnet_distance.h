@@ -69,7 +69,7 @@ void klloss(
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         #pragma HLS UNROLL
         mean_sq[i] = mean[i] * mean[i];
-        //kl[i] = data2_T(1.) + log_var[i];
+        kl[i] = data2_T(1.) + log_var[i];
     }
 
     constexpr unsigned table_scale = (unsigned) (CONFIG_T::table_size / (2 * CONFIG_T::range));
@@ -77,15 +77,10 @@ void klloss(
 
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         #pragma HLS UNROLL
-        //unsigned x = softmax_idx_from_real_val<data2_T, CONFIG_T>(log_var[i]);
-        //kl[i] = data2_T(1.) + log_var[i] - mean_sq[i] - exp_table[x];
-        //kl[i] -= exp_table[x];
-
         auto data_round = log_var[i] * table_scale;
         auto index = data_round + index_scale;
         if (index < 0)   index = 0;
         if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
-        //kl[i] = data2_T(1.) + log_var[i] - mean_sq[i] - exp_table[index];
         kl[i] -= exp_table[index];
     }
 
