@@ -7,13 +7,13 @@
 #include <cmath>
 
 namespace nnet {
-    
+
 struct distance_config
 {
     // IO size
     static const unsigned n_in = 10;
     static const unsigned n_out = 1;
-    
+
     // Internal data type definitions
     typedef float accum_t;
     typedef float sum_t;
@@ -21,6 +21,7 @@ struct distance_config
 
     // Internal info
     static const unsigned table_size = 1024;
+    static constexpr float exp_range = 1024;
 };
 
 template<typename CONFIG_T, int N_TABLE>
@@ -28,7 +29,7 @@ void init_klloss_exp_table(typename CONFIG_T::exp_table_t table_out[N_TABLE])
 {
     for (int ii = 0; ii < N_TABLE; ii++) {
         // First, convert from table index to X-value (range -1 to +1)
-        float in_val = 2*1*(ii-float(N_TABLE)/2.0)/float(N_TABLE);
+        float in_val = 2*CONFIG_T::range*(ii-float(N_TABLE)/2.0)/float(N_TABLE);
         // Next, compute lookup table function
         typename CONFIG_T::exp_table_t real_val = exp_fcn_float(in_val);
         //std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
@@ -52,7 +53,6 @@ void klloss(
     static typename CONFIG_T::exp_table_t exp_table[CONFIG_T::table_size];
 #endif
     if (!initialized) {
-        // init_exp_table<data2_T, CONFIG_T>(exp_table);
         init_klloss_exp_table<CONFIG_T, CONFIG_T::table_size>(exp_table);
         initialized = true;
     }
@@ -65,20 +65,27 @@ void klloss(
 
     typename CONFIG_T::accum_t kl_sum(0);
 
+
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         #pragma HLS UNROLL
         mean_sq[i] = mean[i] * mean[i];
-        kl[i] = data2_T(1.) + log_var[i];
+        //kl[i] = data2_T(1.) + log_var[i];
     }
+
+    constexpr unsigned table_scale = (unsigned) (CONFIG_T::table_size / (2 * CONFIG_T::range));
+    constexpr unsigned index_scale = (unsigned) (CONFIG_T::range * table_scale);
 
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         #pragma HLS UNROLL
         //unsigned x = softmax_idx_from_real_val<data2_T, CONFIG_T>(log_var[i]);
         //kl[i] = data2_T(1.) + log_var[i] - mean_sq[i] - exp_table[x];
-        int data_round = log_var[i] * CONFIG_T::table_size / 2;
-        int index = data_round + 1*CONFIG_T::table_size / 2;
+        //kl[i] -= exp_table[x];
+
+        auto data_round = log_var[i] * table_scale;
+        auto index = data_round + index_scale;
         if (index < 0)   index = 0;
         if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+        //kl[i] = data2_T(1.) + log_var[i] - mean_sq[i] - exp_table[index];
         kl[i] -= exp_table[index];
     }
 
@@ -125,7 +132,7 @@ struct mse_config{
     // IO size
     static const unsigned n_in = 10;
     static const unsigned n_out = 1;
-    
+
     // Internal data type definitions
     typedef float error_t;
     typedef float squared_error_t;
@@ -161,7 +168,7 @@ struct custom_mse_config
     static const unsigned NMUONS = 4;
     static const unsigned NJETS = 10;
     static const unsigned NPARTS = NMET + NEGAMMAS + NMUONS + NJETS;
-    
+
     // Internal data type definitions
     typedef ap_fixed<16,3> table_t; // type for tanh table data
     typedef ap_fixed<16,6,AP_RND_CONV,AP_SAT> accum_t; // type for squared error
