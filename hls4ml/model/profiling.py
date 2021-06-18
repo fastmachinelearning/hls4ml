@@ -34,6 +34,9 @@ def get_unoptimized_hlsmodel(model):
     while os.path.exists(new_output_dir):
         new_output_dir = uuid.uuid4().hex
 
+    if 'SkipOptimizers' in new_config['HLSConfig']:
+        del new_config['HLSConfig']['SkipOptimizers']
+
     new_config['HLSConfig']['Optimizers'] = []
     new_config['OutputDir'] = new_output_dir
 
