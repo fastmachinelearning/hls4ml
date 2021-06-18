@@ -29,7 +29,7 @@ void init_klloss_exp_table(typename CONFIG_T::exp_table_t table_out[N_TABLE])
 {
     for (int ii = 0; ii < N_TABLE; ii++) {
         // First, convert from table index to X-value (range -1 to +1)
-        float in_val = 2*CONFIG_T::range*(ii-float(N_TABLE)/2.0)/float(N_TABLE);
+        float in_val = 2*CONFIG_T::exp_range*(ii-float(N_TABLE)/2.0)/float(N_TABLE);
         // Next, compute lookup table function
         typename CONFIG_T::exp_table_t real_val = exp_fcn_float(in_val);
         //std::cout << "Lookup table In Value: " << in_val << " Result: " << real_val << std::endl;
@@ -72,8 +72,8 @@ void klloss(
         kl[i] = data2_T(1.) + log_var[i];
     }
 
-    constexpr unsigned table_scale = (unsigned) (CONFIG_T::table_size / (2 * CONFIG_T::range));
-    constexpr unsigned index_scale = (unsigned) (CONFIG_T::range * table_scale);
+    constexpr unsigned table_scale = (unsigned) (CONFIG_T::table_size / (2 * CONFIG_T::exp_range));
+    constexpr unsigned index_scale = (unsigned) (CONFIG_T::exp_range * table_scale);
 
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         #pragma HLS UNROLL
