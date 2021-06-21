@@ -13,6 +13,7 @@ from hls4ml.model.hls_layers import *
 from hls4ml.backends import get_backend
 from hls4ml.writer import get_writer
 from hls4ml.model.optimizer import optimize_model, get_available_passes
+from hls4ml.model.flow import get_flow
 
 
 class HLSConfig(object):
@@ -252,6 +253,8 @@ class HLSModel(object):
         self.config = HLSConfig(config)
         self.reader = data_reader
 
+        self._applied_flows = []
+
         # If not provided, assumes layer_list[0] is input, and layer_list[-1] is output
         self.inputs = inputs if inputs is not None else [layer_list[0]['name']]
         self.outputs = outputs if outputs is not None else [layer_list[-1]['name']]
@@ -280,6 +283,24 @@ class HLSModel(object):
                 outputs = [name]
 
             self.graph[name] = self.make_node(kind, name, layer, inputs, outputs)
+
+    def apply_flow(self, flow):
+        if flow is None:
+            return
+
+        if isinstance(flow, str):
+            flow = get_flow(flow)
+
+        for sub_flow in flow.requires:
+            if sub_flow not in self._applied_flows:
+                sub_flow = get_flow(sub_flow)
+                if len(sub_flow.optimizers) > 0:
+                    self._optimize_model(self, sub_flow.optimizers)
+                self._applied_flows.append(sub_flow.name)
+
+        if len(flow.optimizers) > 0:
+            self._optimize_model(flow.optimizers)
+        self._applied_flows.append(flow.name)
 
     def _optimize_model(self, optimizers):
         optimize_model(self, optimizers)

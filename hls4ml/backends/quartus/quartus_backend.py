@@ -11,6 +11,7 @@ from contextlib import contextmanager
 
 from hls4ml.model.hls_types import IntegerPrecisionType, FixedPrecisionType
 from hls4ml.model.hls_layers import Layer, Dense, BatchNormalization, Activation, ParametrizedActivation, PReLU, Softmax
+from hls4ml.model.flow.flow import register_flow
 from hls4ml.backends.backend import custom_initializer, optimizer_pass, layer_optimizer
 from hls4ml.backends import FPGABackend
 from hls4ml.report import parse_quartus_report
@@ -212,6 +213,7 @@ activ_include_list = ['nnet_utils/nnet_activation.h']
 class QuartusBackend(FPGABackend):
     def __init__(self):
         super(QuartusBackend, self).__init__('Quartus')
+        self._register_flows()
     
     def init_templates(self):
         self.register_templates(Dense                  , dense_function_template, dense_config_template, dense_include_list)
@@ -228,6 +230,15 @@ class QuartusBackend(FPGABackend):
         #self.register_templates(Concatenate           , merge_function_template,       concat_config_template, merge_include_list)
         #self.register_templates(Resize                , resize_function_template,      resize_config_template, resize_include_list)
         #self.register_templates(Transpose             , transpose_function_template,   transpose_config_template, transpose_include_list)
+
+    def _register_flows(self):
+        register_flow('quartus_ip', self.optimizers)
+
+    def get_default_flow(self):
+        return 'quartus_ip'
+    
+    def get_available_flows(self):
+        return ['quartus_ip']
 
     def create_initial_config(self, device='Arria10', clock_period=5, io_type='io_parallel'):
         config = {}

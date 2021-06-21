@@ -9,6 +9,7 @@ from collections.abc import Iterable
 from hls4ml.model.hls_types import IntegerPrecisionType
 from hls4ml.model.hls_layers import Layer, Dense, BatchNormalization, Conv1D, Conv2D, Conv2DBatchnorm, SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Activation, ParametrizedActivation, PReLU, Softmax, Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D, ZeroPadding1D, ZeroPadding2D, Merge, Concatenate, Dot, Resize, Transpose, GarNet, GarNetStack
 from hls4ml.model.hls_attributes import Attribute
+from hls4ml.model.flow.flow import register_flow
 from hls4ml.backends.backend import custom_initializer, optimizer_pass, layer_optimizer
 from hls4ml.backends import FPGABackend
 from hls4ml.report import parse_vivado_report
@@ -381,6 +382,7 @@ garnet_include_list = ['nnet_utils/nnet_garnet.h']
 class VivadoBackend(FPGABackend):
     def __init__(self):
         super(VivadoBackend, self).__init__('Vivado')
+        self._register_flows()
 
     def init_templates(self):
         self.register_templates(Dense                  , dense_function_template,       dense_config_template, dense_include_list)
@@ -408,6 +410,15 @@ class VivadoBackend(FPGABackend):
         self.register_templates(Transpose              , transpose_function_template,   transpose_config_template, transpose_include_list)
         self.register_templates(GarNet                 , garnet_function_template,      garnet_config_template, garnet_include_list)
         self.register_templates(GarNetStack            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)
+
+    def _register_flows(self):
+        register_flow('vivado_ip', self.optimizers)
+
+    def get_default_flow(self):
+        return 'vivado_ip'
+    
+    def get_available_flows(self):
+        return ['vivado_ip']
 
     def create_initial_config(self, device='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
         config = {}

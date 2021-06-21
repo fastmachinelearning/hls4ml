@@ -115,6 +115,12 @@ class Backend(object):
 
     def get_optimizers(self):
         return self.optimizers.values()
+    
+    def get_default_flow(self):
+        raise NotImplementedError
+    
+    def get_available_flows(self):
+        raise NotImplementedError
 
     def register_templates(self, cls, function_template, config_template, include_list=[]):
         self.function_templates[cls] = function_template
