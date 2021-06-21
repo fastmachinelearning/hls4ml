@@ -68,7 +68,7 @@ class Backend(object):
         self._init_file_optimizers()
 
     def _init_class_optimizers(self):
-        self.optimizers.update(extract_optimizers_from_object(self))
+        self.optimizers.update(extract_optimizers_from_object(self, self.name))
 
     def _init_file_optimizers(self):
         opt_path = os.path.dirname(inspect.getfile(self.__class__)) + '/passes'

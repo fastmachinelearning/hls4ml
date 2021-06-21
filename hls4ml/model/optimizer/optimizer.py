@@ -50,16 +50,22 @@ def optimizer_pass(condition):
         return function
     return decorator
 
-def extract_optimizers_from_object(clazz):
+def extract_optimizers_from_object(clazz, name_prefix=None):
+    if name_prefix is None:
+        name_prefix = ''
+    elif name_prefix[-1] != '_':
+        name_prefix += '_'
+    name_prefix = name_prefix.lower()
+
     optimizers = {}
     optimizer_list = [func for func in dir(clazz) if callable(getattr(clazz, func)) and hasattr(getattr(clazz, func), '_condition')]
     for opt_name in optimizer_list:
         func = getattr(clazz, opt_name)
         if inspect.isclass(func._condition):
-            opt = LayerOptimizerPass(name=opt_name, layer_class=func._condition, transform=func)
+            opt = LayerOptimizerPass(name=name_prefix + opt_name, layer_class=func._condition, transform=func)
         else:
-            opt = WrappedOptimizerPass(name=opt_name, condition=func._condition, transform=func)
-        optimizers[opt_name] = opt
+            opt = WrappedOptimizerPass(name=name_prefix + opt_name, condition=func._condition, transform=func)
+        optimizers[name_prefix + opt_name] = opt
     
     return optimizers
 
