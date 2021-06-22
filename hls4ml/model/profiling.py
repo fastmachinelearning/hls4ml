@@ -7,6 +7,7 @@ import seaborn as sb
 import uuid
 import os
 import shutil
+import json
 from collections import defaultdict
 
 from hls4ml.model.hls_model import HLSModel
@@ -29,6 +30,8 @@ def get_unoptimized_hlsmodel(model):
     from hls4ml.converters import convert_from_config
 
     new_config = model.config.config.copy()
+    new_config['HLSConfig'] = json.loads(json.dumps(new_config['HLSConfig']))
+
     new_output_dir = uuid.uuid4().hex
 
     while os.path.exists(new_output_dir):
