@@ -528,20 +528,6 @@ class QuartusWriter(Writer):
 
         copytree(srcpath, dstpath)
 
-        ###################
-        ## ap_types
-        ###################
-
-        filedir = os.path.dirname(os.path.abspath(__file__))
-
-        srcpath = os.path.join(filedir,'../templates/quartus/ap_types/')
-        dstpath = '{}/firmware/ap_types/'.format(model.config.get_output_dir())
-
-        if os.path.exists(dstpath):
-            rmtree(dstpath)
-
-        copytree(srcpath, dstpath)        
-
     def write_activation_tables(self, model):
 
         ###################
