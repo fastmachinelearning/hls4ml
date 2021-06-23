@@ -9,7 +9,7 @@ from tabulate import tabulate
 from ast import literal_eval
 from contextlib import contextmanager
 
-from hls4ml.model.hls_types import IntegerPrecisionType, FixedPrecisionType
+from hls4ml.model.hls_types import HLSType, IntegerPrecisionType, FixedPrecisionType
 from hls4ml.model.hls_layers import Layer, Dense, BatchNormalization, Activation, ParametrizedActivation, PReLU, Softmax
 from hls4ml.model.flow.flow import register_flow
 from hls4ml.backends.backend import custom_initializer, optimizer_pass, layer_optimizer
@@ -48,7 +48,7 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
-    typedef {index_t} index_t;
+    typedef {index_t.name} index_t;
 }};\n"""
 
 batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
@@ -262,21 +262,22 @@ class QuartusBackend(FPGABackend):
         return typestring
 
     def gen_quartus_weight_array(self, layer):
-        block_factor = int((layer.attributes['n_in']*layer.attributes['n_out'])/layer.reuse_factor)
+        rf = layer.get_attr('reuse_factor')
+        block_factor = int((layer.attributes['n_in']*layer.attributes['n_out'])/rf)
         bf_rounded = int(pow(2, np.ceil(np.log(block_factor)/np.log(2))))
-        rf_rounded = int(pow(2, np.ceil(np.log(layer.reuse_factor)/np.log(2))))
+        rf_rounded = int(pow(2, np.ceil(np.log(rf)/np.log(2))))
 
         layer.weights['weight'].data = np.transpose(layer.weights['weight'].data).flatten()
 
-        if(layer.attributes['n_in']*layer.attributes['n_out'] > 2048 and rf_rounded != layer.reuse_factor):
-            layer.set_attr('rfpad', rf_rounded-layer.reuse_factor)
+        if(layer.attributes['n_in']*layer.attributes['n_out'] > 2048 and rf_rounded != rf):
+            layer.set_attr('rfpad', rf_rounded-rf)
             layer.set_attr('bfpad', bf_rounded-block_factor)
 
             temp = np.empty([bf_rounded, rf_rounded])
             for i in range(rf_rounded):
                 for j in range (bf_rounded):
-                    if (i < layer.reuse_factor and j < block_factor):
-                        w_index = i + layer.reuse_factor * j
+                    if (i < rf and j < block_factor):
+                        w_index = i + rf * j
                         temp[j][i] = layer.weights['weight'].data[w_index]
                     else:
                         temp[j][i] = 0
@@ -366,7 +367,7 @@ class QuartusBackend(FPGABackend):
             if layer.model.config.get_compression(layer):
                 index_t = layer.get_weights('weight').type.index_precision
 
-        layer.set_attr('index_t', index_t)
+        layer.set_attr('index_t', HLSType('layer{}_index'.format(layer.index), index_t))
 
     @layer_optimizer(Softmax)
     def init_softmax(self, layer):

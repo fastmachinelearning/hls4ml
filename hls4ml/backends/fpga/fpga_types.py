@@ -31,6 +31,35 @@ class APFixedPrecisionType(FixedPrecisionType):
         return cls(width=precision_type.width, integer=precision_type.integer, signed=precision_type.signed,
             rounding_mode=precision_type.rounding_mode, saturation_mode=precision_type.saturation_mode, saturation_bits=precision_type.saturation_bits)
 
+class ACIntegerPrecisionType(IntegerPrecisionType):
+    def definition_cpp(self):
+        typestring = 'ac_int<{width}, {signed}>'.format(width=self.width, signed=str(self.signed).lower())
+        return typestring
+    
+    @classmethod
+    def from_precision(cls, precision_type):
+        return cls(width=precision_type.width, signed=precision_type.signed)
+
+class ACFixedPrecisionType(FixedPrecisionType):
+    def _rounding_mode_cpp(self, mode):
+        if mode is not None:
+            return 'AC_' + str(mode)
+
+    def _saturation_mode_cpp(self, mode):
+        if mode is not None:
+            return 'AC_' + str(mode)
+
+    def definition_cpp(self):
+        args = [self.width, self.integer, str(self.signed).lower(), self._rounding_mode_cpp(self.rounding_mode), self._saturation_mode_cpp(self.saturation_mode), self.saturation_bits]
+        args = ','.join([str(arg) for arg in args if arg is not None])
+        typestring = 'ac_fixed<{args}>'.format(args=args)
+        return typestring
+    
+    @classmethod
+    def from_precision(cls, precision_type):
+        return cls(width=precision_type.width, integer=precision_type.integer, signed=precision_type.signed,
+            rounding_mode=precision_type.rounding_mode, saturation_mode=precision_type.saturation_mode, saturation_bits=precision_type.saturation_bits)
+
 class ArrayVariable(TensorVariable):
     def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, pragma='partition', **kwargs):
         super(ArrayVariable, self).__init__(shape, dim_names, var_name, type_name, precision, **kwargs)

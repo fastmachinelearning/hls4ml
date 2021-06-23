@@ -131,12 +131,12 @@ class FPGABackend(Backend):
             W = int(bits[0])
             I = int(bits[1])
             fields = 2
-            signed = ~('u' in precision)
+            signed = bool(~('u' in precision))
         elif 'int' in precision:
             W = int(bits[0])
             I = W
             fields = 1
-            signed = ~('u' in precision)
+            signed = bool(~('u' in precision))
         if len(bits) > fields:
             sat_mode = bits[fields]
         if len(bits) > fields+1:

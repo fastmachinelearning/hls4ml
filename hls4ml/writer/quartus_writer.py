@@ -18,21 +18,21 @@ class QuartusWriter(Writer):
     def type_definition_cpp(self, model, atype):
         type_class = atype.__class__.__name__
         if type_class == 'HLSType':
-            return 'typedef {precision} {name};\n'.format(name=atype.name, precision=atype.precision)
+            return 'typedef {precision} {name};\n'.format(name=atype.name, precision=atype.precision.definition_cpp())
         elif type_class == 'CompressedType':
             cpp_fmt = ('typedef struct {name} {{ '
                '{index} row_index;'
                '{index} col_index;'
                '{precision} weight; }} {name};\n')
-            return cpp_fmt.format(name=atype.name, index=atype.index_precision, precision=atype.precision)
+            return cpp_fmt.format(name=atype.name, index=atype.index_precision, precision=atype.precision.definition_cpp())
         elif type_class == 'PackedType':
             n_elem_expr = '/' if atype.unpack else '*'
-            return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=atype.name, precision=atype.precision, n_elem=str(atype.n_elem) + n_elem_expr + str(atype.n_pack))
+            return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=atype.name, precision=atype.precision.definition_cpp(), n_elem=str(atype.n_elem) + n_elem_expr + str(atype.n_pack))
         elif type_class == 'ExponentType':
             cpp_fmt = ('typedef struct {name} {{ '
                        '{sign} sign; '
                        '{precision} weight; }} {name};\n')
-            return cpp_fmt.format(name=atype.name, precision=atype.precision, sign=str(XnorPrecisionType()))
+            return cpp_fmt.format(name=atype.name, precision=atype.precision.definition_cpp(), sign=str(XnorPrecisionType()))
 
     def variable_definition_cpp(self, model, var, name_suffix='', as_reference=False):
         var_class = var.__class__.__name__
@@ -54,7 +54,7 @@ class QuartusWriter(Writer):
     def get_max_reuse_factor(self, model):
         max_rf = 0
         for layer in model.get_layers():
-            rf = int(layer.reuse_factor)
+            rf = int(layer.get_attr('reuse_factor'))
             if(rf > max_rf):
                 max_rf = rf
         return max_rf
@@ -76,7 +76,7 @@ class QuartusWriter(Writer):
         h_file.write("#define {}_H_\n".format(var.name.upper()))
         h_file.write("\n")
 
-        rf = int(layer.reuse_factor)
+        rf = int(layer.get_attr('reuse_factor'))
         weight_header = '#ifdef __INTELFPGA_COMPILER__\n'
         if (rf == 1 or var.name[0] == 'b' or layer.get_attr('n_in')*layer.get_attr('n_out') <= 2048
                 or (var.name[0] == 'w' and var.type.precision.width < 3)):
