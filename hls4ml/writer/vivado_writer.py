@@ -18,21 +18,21 @@ class VivadoWriter(Writer):
     def type_definition_cpp(self, model, atype):
         type_class = atype.__class__.__name__
         if type_class == 'HLSType':
-            return 'typedef {precision} {name};\n'.format(name=atype.name, precision=atype.precision)
+            return 'typedef {precision} {name};\n'.format(name=atype.name, precision=atype.precision.definition_cpp())
         elif type_class == 'CompressedType':
             cpp_fmt = ('typedef struct {name} {{ '
                '{index} row_index;'
                '{index} col_index;'
                '{precision} weight; }} {name};\n')
-            return cpp_fmt.format(name=atype.name, index=atype.index_precision, precision=atype.precision)
+            return cpp_fmt.format(name=atype.name, index=atype.index_precision, precision=atype.precision.definition_cpp())
         elif type_class == 'PackedType':
             n_elem_expr = '/' if atype.unpack else '*'
-            return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=atype.name, precision=atype.precision, n_elem=str(atype.n_elem) + n_elem_expr + str(atype.n_pack))
+            return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=atype.name, precision=atype.precision.definition_cpp(), n_elem=str(atype.n_elem) + n_elem_expr + str(atype.n_pack))
         elif type_class == 'ExponentType':
             cpp_fmt = ('typedef struct {name} {{ '
                        '{sign} sign; '
                        '{precision} weight; }} {name};\n')
-            return cpp_fmt.format(name=atype.name, precision=atype.precision, sign=str(XnorPrecisionType()))
+            return cpp_fmt.format(name=atype.name, precision=atype.precision.definition_cpp(), sign=str(XnorPrecisionType()))
         else:
             raise Exception('Unknown data type class "{}"'.format(type_class))
 

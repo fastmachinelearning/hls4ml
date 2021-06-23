@@ -6,7 +6,7 @@ from bisect import bisect_left
 from queue import Queue
 from collections.abc import Iterable
 
-from hls4ml.model.hls_types import IntegerPrecisionType
+from hls4ml.model.hls_types import HLSType, IntegerPrecisionType
 from hls4ml.model.hls_layers import Layer, Dense, BatchNormalization, Conv1D, Conv2D, Conv2DBatchnorm, SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Activation, ParametrizedActivation, PReLU, Softmax, Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D, ZeroPadding1D, ZeroPadding2D, Merge, Concatenate, Dot, Resize, Transpose, GarNet, GarNetStack
 from hls4ml.model.hls_attributes import Attribute
 from hls4ml.model.flow.flow import register_flow
@@ -26,7 +26,7 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
-    typedef {index_t} index_t;
+    typedef {index_t.name} index_t;
     template<class x_T, class y_T, class res_T>
     using product = nnet::product::{product_type}<x_T, y_T, res_T>;
 }};\n"""
@@ -463,7 +463,7 @@ class VivadoBackend(FPGABackend):
                 layer.weights['weight'].data = np.transpose(layer.weights['weight'].data)
         else:
             layer.set_attr('strategy', 'latency')
-        layer.set_attr('index_t', index_t)
+        layer.set_attr('index_t', HLSType('layer{}_index'.format(layer.index), index_t))
 
     @layer_optimizer(Conv1D)
     def init_conv1d(self, layer):

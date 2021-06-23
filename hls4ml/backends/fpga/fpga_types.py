@@ -1,6 +1,27 @@
 import numpy as np
 
-from hls4ml.model.hls_types import Variable, TensorVariable, PackedType
+from hls4ml.model.hls_types import FixedPrecisionType, IntegerPrecisionType, Variable, TensorVariable, PackedType
+
+class APIntegerPrecisionType(IntegerPrecisionType):
+    def definition_cpp(self):
+        typestring = 'ap_{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
+        return typestring
+    
+    @classmethod
+    def from_precision(cls, precision_type):
+        return cls(width=precision_type.width, signed=precision_type.signed)
+
+class APFixedPrecisionType(FixedPrecisionType):
+    def definition_cpp(self):
+        args = [self.width, self.integer, self.rounding_mode, self.saturation_mode, self.saturation_bits]
+        args = ','.join([str(arg) for arg in args if arg is not None])
+        typestring = 'ap_{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
+        return typestring
+    
+    @classmethod
+    def from_precision(cls, precision_type):
+        return cls(width=precision_type.width, integer=precision_type.integer, signed=precision_type.signed,
+            rounding_mode=precision_type.rounding_mode, saturation_mode=precision_type.saturation_mode, saturation_bits=precision_type.saturation_bits)
 
 class ArrayVariable(TensorVariable):
     def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, pragma='partition', **kwargs):

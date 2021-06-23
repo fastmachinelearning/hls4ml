@@ -22,7 +22,7 @@ class IntegerPrecisionType(PrecisionType):
         self.fractional = 0
     
     def __str__(self):
-        typestring = 'ap_{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
+        typestring = '{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring
 
     def __eq__(self, other):
@@ -32,6 +32,9 @@ class IntegerPrecisionType(PrecisionType):
         eq = eq and self.integer == other.integer
         eq = eq and self.fractional == other.fractional
         return eq
+    
+    def definition_cpp(self):
+        raise NotImplementedError
 
 class FixedPrecisionType(PrecisionType):
     def __init__(self, width=16, integer=6, signed=True, rounding_mode=None, saturation_mode=None, saturation_bits=None):
@@ -45,7 +48,7 @@ class FixedPrecisionType(PrecisionType):
     def __str__(self):
         args = [self.width, self.integer, self.rounding_mode, self.saturation_mode, self.saturation_bits]
         args = ','.join([str(arg) for arg in args if arg is not None])
-        typestring = 'ap_{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
+        typestring = '{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
         return typestring
 
     def __eq__(self, other):
@@ -57,6 +60,9 @@ class FixedPrecisionType(PrecisionType):
         eq = eq and self.saturation_mode == other.saturation_mode
         eq = eq and self.saturation_bits == other.saturation_bits
         return eq
+
+    def definition_cpp(self):
+        raise NotImplementedError
 
 class XnorPrecisionType(IntegerPrecisionType):
     '''
