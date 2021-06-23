@@ -101,12 +101,12 @@ class FPGABackend(Backend):
 
     def set_closest_reuse_factor(self, layer):
         valid_rf = self.get_valid_reuse_factors(layer)
-        chosen_rf = layer.reuse_factor
+        chosen_rf = layer.get_attr('reuse_factor')
         if chosen_rf not in valid_rf:
             closest_rf = self.get_closest_reuse_factor(valid_rf, chosen_rf)
             print('WARNING: Invalid ReuseFactor={} in layer "{}". Using ReuseFactor={} instead. Valid ReuseFactor(s): {}.'
                 .format(chosen_rf, layer.name, closest_rf, ','.join(map(str, valid_rf))))
-            layer.reuse_factor = closest_rf
+            layer.set_attr('reuse_factor', closest_rf)
 
     def convert_precision_string(self, precision):
         if isinstance(precision, IntegerPrecisionType) or isinstance(precision, FixedPrecisionType):
