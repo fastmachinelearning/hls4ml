@@ -299,6 +299,21 @@ void copy_data(std::vector<src_T> src, hls::stream<dst_T> &dst) {
     }
 }
 
+template<class src_T, class dst_T, size_t OFFSET, size_t SIZE>
+void copy_data_axi(std::vector<src_T> src, dst_T dst[SIZE]) {
+    for(auto i = 0; i < SIZE; i++)
+    	if(i == SIZE - 1)
+    	{
+    		dst[i].data = src[i];
+    		dst[i].last = 1;
+    	}
+    	else
+    	{
+    		dst[i].data = src[i];
+    		dst[i].last = 0;
+    	}
+}
+
 template<class res_T, size_t SIZE>
 void print_result(res_T result[SIZE], std::ostream &out, bool keep = false) {
     for(int i = 0; i < SIZE; i++) {

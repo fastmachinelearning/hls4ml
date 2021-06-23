@@ -13,7 +13,8 @@ class VivadoAcceleratorConfig(object):
             device_info = devices[self.device]
             self.part = device_info['part']
         else:
-            raise Exception('The device is still not supported')
+            print("WARNING! The device does not appear in supported_devices.json file")
+            self.part = self.device
 
         accel_config = self.config.get('AcceleratorConfig', None)
         if accel_config is not None:

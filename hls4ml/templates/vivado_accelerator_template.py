@@ -45,7 +45,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
         config = super(VivadoAcceleratorBackend, self).create_initial_config(device, clock_period, io_type)
         config['AcceleratorConfig'] = {}
         config['AcceleratorConfig']['Interface'] = interface  # axi_stream, axi_master, axi_lite
-        config['AcceleratorConfig']['Driver'] = driver  
+        config['AcceleratorConfig']['Driver'] = driver
         config['AcceleratorConfig']['Precision'] = {}
         config['AcceleratorConfig']['Precision']['Input'] = {}
         config['AcceleratorConfig']['Precision']['Output'] = {}
