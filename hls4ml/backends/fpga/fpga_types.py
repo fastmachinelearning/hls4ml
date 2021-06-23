@@ -12,8 +12,16 @@ class APIntegerPrecisionType(IntegerPrecisionType):
         return cls(width=precision_type.width, signed=precision_type.signed)
 
 class APFixedPrecisionType(FixedPrecisionType):
+    def _rounding_mode_cpp(self, mode):
+        if mode is not None:
+            return 'AP_' + str(mode)
+
+    def _saturation_mode_cpp(self, mode):
+        if mode is not None:
+            return 'AP_' + str(mode)
+
     def definition_cpp(self):
-        args = [self.width, self.integer, self.rounding_mode, self.saturation_mode, self.saturation_bits]
+        args = [self.width, self.integer, self._rounding_mode_cpp(self.rounding_mode), self._saturation_mode_cpp(self.saturation_mode), self.saturation_bits]
         args = ','.join([str(arg) for arg in args if arg is not None])
         typestring = 'ap_{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
         return typestring

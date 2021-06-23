@@ -1,3 +1,4 @@
+from enum import Enum
 import re
 import numpy as np
 
@@ -9,6 +10,41 @@ class Quantizer(object):
     
     def __call__(self, data):
         raise NotImplementedError
+
+class RoundingMode(Enum):
+    TRN = 1
+    TRN_ZERO = 2
+    RND = 3
+    RND_ZERO = 4
+    RND_INF = 5
+    RND_MIN_INF = 6
+    RND_CONV = 7
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def from_string(cls, mode):
+        mode = mode.replace('AP_', '').upper()
+        mode = mode.replace('AC_', '').upper()
+
+        return cls[mode]
+
+class SaturationMode(Enum):
+    WRAP = 1
+    SAT = 2
+    SAT_ZERO = 3
+    SAT_SYM = 4
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def from_string(cls, mode):
+        mode = mode.replace('AP_', '').upper()
+        mode = mode.replace('AC_', '').upper()
+
+        return cls[mode]
 
 class PrecisionType(object):
     def __init__(self, width, signed):
@@ -44,7 +80,29 @@ class FixedPrecisionType(PrecisionType):
         self.rounding_mode = rounding_mode
         self.saturation_mode = saturation_mode
         self.saturation_bits = saturation_bits
+
+    @property
+    def rounding_mode(self):
+        return self._rounding_mode
     
+    @rounding_mode.setter
+    def rounding_mode(self, mode):
+        if isinstance(mode, str):
+            self._rounding_mode = RoundingMode.from_string(mode)
+        else:
+            self._rounding_mode = mode
+
+    @property
+    def saturation_mode(self):
+        return self._saturation_mode
+    
+    @saturation_mode.setter
+    def saturation_mode(self, mode):
+        if isinstance(mode, str):
+            self._saturation_mode = SaturationMode.from_string(mode)
+        else:
+            self._saturation_mode = mode
+
     def __str__(self):
         args = [self.width, self.integer, self.rounding_mode, self.saturation_mode, self.saturation_bits]
         args = ','.join([str(arg) for arg in args if arg is not None])
