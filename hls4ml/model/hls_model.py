@@ -30,9 +30,17 @@ class HLSConfig(object):
         self.layer_type_rf = {}
         self.layer_name_rf = {}
 
+        self.model_targ_cycles = None
+        self.layer_type_targ_cycles = {}
+        self.layer_name_targ_cycles = {}
+
         self.model_strategy = 'Latency'
         self.layer_type_strategy = {}
         self.layer_name_strategy = {}
+
+        self.model_conv_implementation = 'LineBuffer'
+        self.layer_type_conv_implementation = {}
+        self.layer_name_conv_implementation = {}
 
         self.model_compression = False
         self.layer_type_compression = {}
@@ -111,6 +119,10 @@ class HLSConfig(object):
 
         return (precision, type_name)
 
+    def get_bram_size(self, layer):
+        bf = self.model_bf
+        return bf
+
     def get_reuse_factor(self, layer):
         rf = self.layer_name_rf.get(layer.name.lower())
         if rf is None:
@@ -123,6 +135,15 @@ class HLSConfig(object):
 
         return rf
 
+    def get_target_cycles(self, layer):
+        targ_cycles = self.layer_name_targ_cycles.get(layer.name.lower())
+        if targ_cycles is None:
+            targ_cycles = self.layer_name_targ_cycles.get(layer.__class__.__name__.lower())
+        if targ_cycles is None:
+            targ_cycles = self.model_targ_cycles
+ 
+        return targ_cycles
+
     def get_strategy(self, layer):
         strategy = self.layer_name_strategy.get(layer.name.lower())
         if strategy is None:
@@ -131,6 +152,15 @@ class HLSConfig(object):
             strategy = self.model_strategy
 
         return strategy
+    
+    def get_conv_implementation(self, layer):
+        conv_implementation = self.layer_name_conv_implementation.get(layer.name.lower())
+        if conv_implementation is None:
+            conv_implementation = self.layer_type_conv_implementation.get(layer.__class__.__name__.lower())
+        if conv_implementation is None:
+            conv_implementation = self.model_conv_implementation
+
+        return conv_implementation
 
     def is_resource_strategy(self, layer):
         return self.get_strategy(layer).lower() == 'resource'
@@ -170,7 +200,10 @@ class HLSConfig(object):
                 else:
                     self.model_precision['default'] = precision_cfg # Default precision for everything
 
+            self.model_bf = model_cfg.get('BramFactor', np.inf) # Weight threshold to be external BRAM
             self.model_rf = model_cfg.get('ReuseFactor')
+            self.model_targ_cycles = model_cfg.get('TargetCycles')
+            self.model_conv_implementation = model_cfg.get('ConvImplementation', 'LineBuffer')
             self.model_strategy = model_cfg.get('Strategy', 'Latency')
             self.model_compression = bool(model_cfg.get('Compression', 0))
 
@@ -187,10 +220,18 @@ class HLSConfig(object):
                 rf = layer_cfg.get('ReuseFactor')
                 if rf is not None:
                     self.layer_type_rf[layer_type.lower()] = rf
+                
+                targ_cycles = layer_cfg.get('TargetCycles')
+                if targ_cycles is not None:
+                    self.layer_type_targ_cycles[layer_type.lower()] = targ_cycles
 
                 strategy = layer_cfg.get('Strategy')
                 if strategy is not None:
                     self.layer_type_strategy[layer_type.lower()] = strategy
+
+                conv_implementation = layer_cfg.get('ConvImplementation')
+                if conv_implementation is not None:
+                    self.layer_type_conv_implementation[layer_type.lower()] = conv_implementation
 
                 compression = layer_cfg.get('Compression')
                 if compression is not None:
@@ -210,9 +251,17 @@ class HLSConfig(object):
                 if rf is not None:
                     self.layer_name_rf[layer_name.lower()] = rf
 
+                targ_cycles = layer_cfg.get('TargetCycles')
+                if targ_cycles is not None:
+                    self.layer_name_targ_cycles[layer_name.lower()] = targ_cycles
+
                 strategy = layer_cfg.get('Strategy')
                 if strategy is not None:
                     self.layer_name_strategy[layer_name.lower()] = strategy
+
+                conv_implementation = layer_cfg.get('ConvImplementation')
+                if conv_implementation is not None:
+                    self.layer_name_conv_implementation[layer_name.lower()] = conv_implementation
 
                 compression = layer_cfg.get('Compression')
                 if compression is not None:
@@ -260,6 +309,9 @@ class HLSModel(object):
         self.graph = OrderedDict()
         self.output_vars = {}
 
+        # External BRAM 
+        self.bram_vars = {}
+
         self._top_function_lib = None
 
         self._make_graph(layer_list)
@@ -283,6 +335,31 @@ class HLSModel(object):
         optimize_model(self, optimizers)
 
     def make_node(self, kind, name, attributes, inputs, outputs=None):
+        """ Make a new node not connected to the model graph.
+
+        The 'kind' should be a valid layer registered with `register_layer`. If no outputs
+        are specified, a default output named the same as the node will be created. The 
+        returned node should be added to the graph with `insert_node` or `replace_node`
+        functions.
+
+        Args:
+            kind (str): Type of node to add
+            name (str): Name of the node
+            attributes (dict): Initial set of attributes required to construct the node (Layer)
+            inputs (list): List of inputs to the layer
+            outputs (list, optional): The optional list of named outputs of the node
+
+        Raises:
+            Exception: If an attempt to insert a node with multiple inputs is made or if
+                `before` does not specify a correct node in sequence.
+
+        Returns:
+            Layer: The node created.
+        """
+
+        if kind not in layer_map:
+            raise Exception('Layer {} not found in registry.'.format(kind))
+
         node = layer_map[kind](self, name, attributes, inputs, outputs)
         for o in node.outputs:
             out_var = node.get_output_variable(output_name=o)
@@ -292,12 +369,33 @@ class HLSModel(object):
 
         return node
 
-    def insert_node(self, node):
+    def insert_node(self, node, before=None):
+        """ Insert a new node into the model graph.
+
+        The node to be inserted should be created with `make_node()` function. The optional 
+        parameter `before` can be used to specify the node that follows in case of ambiguities.
+
+        Args:
+            node (Layer): Node to insert
+            before (Layer, optional): The next node in sequence before which a
+                new node should be inserted. 
+        Raises:
+            Exception: If an attempt to insert a node with multiple inputs is made or if
+                `before` does not specify a correct node in sequence.
+
+        """
         if len(node.inputs) > 1:
             raise Exception('Cannot insert a node with more than one input (for now).')
 
         prev_node = self.graph.get(node.inputs[0])
-        next_node = next((x for x in self.graph.values() if x.inputs[0] == prev_node.outputs[0]), None)
+        next_nodes = [x for x in self.graph.values() if x.inputs[0] == prev_node.outputs[0]]
+        if before is None:
+            next_node = next((x for x in self.graph.values() if x.inputs[0] == prev_node.outputs[0]), None)
+        else:
+            if before not in next_nodes:
+                raise Exception('Cannot insert a node {} before {} (candidates: {}).'.format(node.name, before.name, ','.join([n.name for n in next_nodes])))
+            next_node = before
+
         if next_node is not None:
             next_node.inputs[0] = node.outputs[0]
 
@@ -310,6 +408,21 @@ class HLSModel(object):
         self.graph = new_graph
 
     def remove_node(self, node, rewire=True):
+        """ Remove a node from a graph.
+
+        By default, this function can connect the outputs of previous node to the input of next one.
+        Note that when removing a leaf node `rewire` should be set to `False`.
+
+        Args:
+            node (Layer): The node to remove
+            rewire (bool, optional): If `True`, connects the outputs of the previous node
+                to the inputs of the next node
+
+        Raises:
+            Exception: If an attempt is made to rewire a leaf node or a node with multiple
+                inputs/outpus.
+
+        """
         if rewire:
             if len(node.inputs) > 1 or len(node.outputs) > 1:
                 raise Exception('Cannot rewire a node with multiple inputs/outputs')
@@ -333,6 +446,13 @@ class HLSModel(object):
         del self.graph[node.name]
 
     def replace_node(self, old_node, new_node):
+        """ Replace an existing node in the graph with a new one.
+
+        Args:
+            old_node (Layer): The node to replace
+            new_node (Layer): The new node
+
+        """
         prev_node = self.graph.get(old_node.inputs[0])
         next_node = next((x for x in self.graph.values() if x.inputs[0] == old_node.outputs[0]), None)
         if next_node is not None:
@@ -359,6 +479,12 @@ class HLSModel(object):
             variables.append(self.graph[inp].get_output_variable())
         return variables
 
+    def register_bram_variable(self, out_name, variable):
+        self.bram_vars[out_name] = variable
+
+    def get_bram_variables(self):
+        return self.bram_vars.values()
+
     def register_output_variable(self, out_name, variable):
         if out_name in self.outputs:
             variable.type.name = 'result_t'
@@ -371,7 +497,7 @@ class HLSModel(object):
         return variables
 
     def get_layer_output_variable(self, output_name):
-        return self.output_vars[output_name]
+        return self.output_vars.get(output_name, None)
 
     def write(self):
         def make_stamp():

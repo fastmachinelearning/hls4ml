@@ -35,7 +35,7 @@ def _get_precision_from_quantizer(quantizer):
 
     supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh', 'quantized_po2', 'quantized_relu_po2']
     if quantizer['class_name'] in supported_quantizers:
-        bits = int(quantizer['config']['bits']) + 1
+        bits = int(quantizer['config']['bits'])
         # if integer isn't specified, it should be the same as bits
         integer = int(quantizer['config'].get('integer', bits-1)) + 1
         
@@ -56,7 +56,32 @@ def _get_precision_from_quantizer(quantizer):
         return 'ap_int<{}>'.format(bits)
 
 def config_from_keras_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1):
+    """Create an HLS conversion config given the Keras model.
 
+    This function serves as the initial step in creating the custom conversion configuration.
+    Users are advised to inspect the returned object to tweak the conversion configuration.
+    The return object can be passed as `hls_config` parameter to `convert_from_keras_model`.
+
+    Args:
+        model: Keras model
+        granularity (str, optional): Granularity of the created config. Defaults to 'model'.
+            Can be set to 'model', 'type' and 'layer'.
+
+            Granularity can be used to generate a more verbose config that can be fine-tuned.
+            The default granulrity ('model') will generate config keys that apply to the whole
+            model, so changes to the keys will affect the entire model. 'type' granularity will
+            generate config keys that affect all layers of a given type, while the 'name' granularity
+            will generate config keys for every layer separately, allowing for highly specific
+            configuration tweaks.
+        default_precision (str, optional): Default precision to use. Defaults to 'ap_fixed<16,6>'.
+        default_reuse_factor (int, optional): Default reuse factor. Defaults to 1.
+
+    Raises:
+        Exception: If Keras model has layers not supported by hls4ml.
+
+    Returns:
+        [dict]: The created config.
+    """
     if granularity.lower() not in ['model', 'type', 'name']:
         raise Exception('Invalid configuration granularity specified, expected "model", "type" or "name" got "{}"'.format(granularity))
 

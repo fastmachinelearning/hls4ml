@@ -1,11 +1,13 @@
-import importlib
 from hls4ml.model.hls_model import HLSModel
 from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
-import qkeras
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas
 import seaborn as sb
+import uuid
+import os
+import shutil
+from collections import defaultdict
 
 from hls4ml.model.hls_model import HLSModel
 
@@ -21,6 +23,21 @@ try:
     __torch_profiling_enabled__ = True
 except ImportError:
     __torch_profiling_enabled__ = False
+
+
+def get_unoptimized_hlsmodel(model):
+    from hls4ml.converters import convert_from_config
+
+    new_config = model.config.config.copy()
+    new_output_dir = uuid.uuid4().hex
+
+    while os.path.exists(new_output_dir):
+        new_output_dir = uuid.uuid4().hex
+
+    new_config['HLSConfig']['Optimizers'] = []
+    new_config['OutputDir'] = new_output_dir
+
+    return convert_from_config(new_config), new_output_dir
 
 
 def array_to_summary(x, fmt='boxplot'):
@@ -188,6 +205,7 @@ def weights_hlsmodel(model, fmt='longform', plot='boxplot'):
         data = {'x' : [], 'layer' : [], 'weight' : []}
     elif fmt == 'summary':
         data = []
+
     for layer in model.get_layers():
         name = layer.name
         for iw, weight in enumerate(layer.get_weights()):
@@ -196,6 +214,7 @@ def weights_hlsmodel(model, fmt='longform', plot='boxplot'):
             w = abs(w[w != 0])
             n = len(w)
             if n == 0:
+                print(f'Weights for {name} are only zeros, ignoring.')
                 break
             if fmt == 'longform':
                 data['x'].extend(w.tolist())
@@ -210,21 +229,77 @@ def weights_hlsmodel(model, fmt='longform', plot='boxplot'):
         data = pandas.DataFrame(data)
     return data
 
+
+def _keras_batchnorm(layer):
+    weights = layer.get_weights()
+    epsilon = layer.epsilon
+
+    gamma = weights[0]
+    beta = weights[1]
+    mean = weights[2]
+    var = weights[3]
+
+    scale = gamma / np.sqrt(var + epsilon)
+    bias = beta - gamma * mean / np.sqrt(var + epsilon)
+
+    return [scale, bias], ['s', 'b']
+
+
+def _keras_layer(layer):
+    return layer.get_weights(), ['w', 'b']
+
+
+keras_process_layer_map = defaultdict(lambda: _keras_layer,
+                                      {
+                                          'BatchNormalization': _keras_batchnorm,
+                                          'QBatchNormalization': _keras_batchnorm
+                                      })
+
+
+def activations_hlsmodel(model, X, fmt='summary', plot='boxplot'):
+    if fmt == 'longform':
+        raise NotImplemented
+    elif fmt == 'summary':
+        data = []
+
+    _, trace = model.trace(np.ascontiguousarray(X))
+
+    if len(trace) == 0:
+        raise RuntimeError("HLSModel must have tracing on for at least 1 layer (this can be set in its config)")
+
+    for layer in trace.keys():
+        print("   {}".format(layer))
+
+        if fmt == 'summary':
+            y = trace[layer].flatten()
+            y = abs(y[y != 0])
+
+            if len(y) == 0:
+                print(f'Activations for {layer} are only zeros, ignoring.')
+                continue
+
+            data.append(array_to_summary(y, fmt=plot))
+            data[-1]['weight'] = layer
+
+    return data
+
+
 def weights_keras(model, fmt='longform', plot='boxplot'):
-    suffix = ['w', 'b']
     if fmt == 'longform':
         data = {'x' : [], 'layer' : [], 'weight' : []}
     elif fmt == 'summary':
         data = []
     for layer in model.layers:
         name = layer.name
-        weights = layer.get_weights()
+        weights, suffix = keras_process_layer_map[type(layer).__name__](layer)
+
         for i, w in enumerate(weights):
             l = '{}/{}'.format(name, suffix[i])
             w = w.flatten()
             w = abs(w[w != 0])
             n = len(w)
             if n == 0:
+                print(f'Weights for {name} are only zeros, ignoring.')
                 break
             if fmt == 'longform':
                 data['x'].extend(w.tolist())
@@ -250,14 +325,14 @@ def activations_keras(model, X, fmt='longform', plot='boxplot'):
         # or histogram bin edges and heights
         data = []
 
-    partial_model = keras.models.Sequential()
     for layer in model.layers:
         print("   {}".format(layer.name))
-        partial_model.add(layer)
-        partial_model.compile(optimizer='adam', loss='mse')
         if not isinstance(layer, keras.layers.InputLayer):
-            y = partial_model.predict(X).flatten()
+            y = _get_output(layer, X, model.input).flatten()
             y = abs(y[y != 0])
+            if len(y) == 0:
+                print(f'Activations for {layer.name} are only zeros, ignoring.')
+                continue
             if fmt == 'longform':
                 data['x'].extend(y.tolist())
                 data['weight'].extend([layer.name for i in range(len(y))])
@@ -287,6 +362,7 @@ def weights_torch(model, fmt='longform', plot='boxplot'):
                 w = abs(w[w != 0])
                 n = len(w)
                 if n == 0:
+                    print(f'Weights for {name} are only zeros, ignoring.')
                     break
                 if fmt == 'longform':
                     data['x'].extend(w.tolist())
@@ -318,6 +394,9 @@ def activations_torch(model, X, fmt='longform', plot='boxplot'):
         print("   {}".format(lname))
         y = pm(X).flatten().detach().numpy()
         y = abs(y[y != 0])
+        if len(y) == 0:
+            print(f'Activations for {lname} are only zeros, ignoring.')
+            continue
         if fmt == 'longform':
             data['x'].extend(y.tolist())
             data['weight'].extend([lname for _ in range(len(y))])
@@ -342,7 +421,7 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
         The HLSModel to profile
     X : array-like, optional
         Test data on which to evaluate the model to profile activations
-        Must be formatted suitably for the model.predict(X) method
+        Must be formatted suitably for the ``model.predict(X)`` method
     plot : str, optional
         The type of plot to produce.
         Options are: 'boxplot' (default), 'violinplot', 'histogram',
@@ -351,52 +430,101 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     Returns
     -------
     tuple
-        The pair of produced figures. First weights and biases,
-        then activations
+        The quadruple of produced figures. First weights and biases
+        for the pre- and post-optimization models respectively,
+        then activations for the pre- and post-optimization models
+        respectively. (Optimizations are applied to an HLSModel by hls4ml,
+        a post-optimization HLSModel is a final model)
     """
-    wp, ap = None, None
+    wp, wph, ap, aph = None, None, None, None
 
-    print("Profiling weights")
+    hls_model_present = hls_model is not None and isinstance(hls_model, HLSModel)
+    model_present = model is not None
+
+    if hls_model_present:
+        before = " (before optimization)"
+        after = " (final / after optimization)"
+        hls_model_unoptimized, tmp_output_dir = get_unoptimized_hlsmodel(hls_model)
+    else:
+        before = ""
+        after = ""
+        hls_model_unoptimized, tmp_output_dir = None, None
+
+    print("Profiling weights" + before)
     data = None
-    if hls_model is not None and isinstance(hls_model, HLSModel):
-        data = weights_hlsmodel(hls_model, fmt='summary', plot=plot)
-    elif model is not None:
+
+    if hls_model_present:
+        data = weights_hlsmodel(hls_model_unoptimized, fmt='summary', plot=plot)
+    elif model_present:
         if __tf_profiling_enabled__ and isinstance(model, keras.Model):
             data = weights_keras(model, fmt='summary', plot=plot)
         elif __torch_profiling_enabled__ and \
                 isinstance(model, torch.nn.Sequential):
             data = weights_torch(model, fmt='summary', plot=plot)
+
     if data is None:
         print("Only keras, PyTorch (Sequential) and HLSModel models " +
               "can currently be profiled")
-        return wp, ap
+
+        if hls_model_present and os.path.exists(tmp_output_dir):
+            shutil.rmtree(tmp_output_dir)
+
+        return wp, wph, ap, aph
 
     wp = plots[plot](data, fmt='summary')  # weight plot
-    if isinstance(hls_model, HLSModel) and plot in types_plots:
-        t_data = types_hlsmodel(hls_model)
+
+    if hls_model_present and plot in types_plots:
+        t_data = types_hlsmodel(hls_model_unoptimized)
         types_plots[plot](t_data, fmt='summary')
 
-    plt.title("Distribution of (non-zero) weights")
+    plt.title("Distribution of (non-zero) weights" + before)
     plt.tight_layout()
 
-    print("Profiling activations")
-    data = None
+    if hls_model_present:
+        print("Profiling weights" + after)
+
+        data = weights_hlsmodel(hls_model, fmt='summary', plot=plot)
+        wph = plots[plot](data, fmt='summary')  # weight plot
+
+        if plot in types_plots:
+            t_data = types_hlsmodel(hls_model)
+            types_plots[plot](t_data, fmt='summary')
+
+        plt.title("Distribution of (non-zero) weights" + after)
+        plt.tight_layout()
+
     if X is not None:
+        print("Profiling activations" + before)
+        data = None
         if __tf_profiling_enabled__ and isinstance(model, keras.Model):
             data = activations_keras(model, X, fmt='summary', plot=plot)
         elif __torch_profiling_enabled__ and \
                 isinstance(model, torch.nn.Sequential):
             data = activations_torch(model, X, fmt='summary', plot=plot)
-    if data is not None:
-        ap = plots[plot](data, fmt='summary')  # activation plot
-        plt.title("Distribution of (non-zero) activations")
-        plt.tight_layout()
 
-    if X is not None and isinstance(hls_model, HLSModel):
-        t_data = activation_types_hlsmodel(hls_model)
-        types_plots[plot](t_data, fmt='summary')
+        if data is not None:
+            ap = plots[plot](data, fmt='summary')  # activation plot
+            if hls_model_present and plot in types_plots:
+                t_data = activation_types_hlsmodel(hls_model_unoptimized)
+                types_plots[plot](t_data, fmt='summary')
+            plt.title("Distribution of (non-zero) activations" + before)
+            plt.tight_layout()
 
-    return wp, ap
+        if hls_model_present:
+            print("Profiling activations" + after)
+            data = activations_hlsmodel(hls_model, X, fmt='summary', plot=plot)
+            aph = plots[plot](data, fmt='summary')
+
+            t_data = activation_types_hlsmodel(hls_model)
+            types_plots[plot](t_data, fmt='summary')
+
+            plt.title("Distribution of (non-zero) activations (final / after optimization)")
+            plt.tight_layout()
+
+    if hls_model_present and os.path.exists(tmp_output_dir):
+        shutil.rmtree(tmp_output_dir)
+
+    return wp, wph, ap, aph
 
 
 ########COMPARE OUTPUT IMPLEMENTATION########
@@ -407,31 +535,31 @@ def _is_ignored_layer(layer):
         return True
     return False
 
-def _get_output(ymodel, layer, X):
-    
-    #If there is no layer in the model just take that layer's output
-    if len(ymodel.keys()) == 0:
-        y = layer(X)
-    else:
-        #If there are already layers then calculate next output based on last layer's output
-        y = layer(ymodel[list(ymodel.keys())[-1]])
+def _get_output(layer, X, model_input):
+    """Get output of partial model"""
+    partial_model = keras.models.Model(inputs=model_input,
+                                       outputs=layer.output)
+    y = partial_model.predict(X)
     return y
 
 def get_ymodel_keras(keras_model, X):
     """
     Calculate each layer's ouput and put them into a dictionary
-    Params:
-    ------
-    keras_model: a keras model
+
+    Parameters
+    ----------
+    keras_model :
+        a keras model
     X : array-like
-        Test data on which to evaluate the model to profile activations
-        Must be formatted suitably for the model.predict(X) method
-    Return:
-    ------
+        Test data on which to evaluate the model to profile activations.
+        Must be formatted suitably for the ``model.predict(X)`` method.
+
+    Returns
+    -------
+    dictionary
         A dictionary in the form {"layer_name": ouput array of layer}
     """
     
-    partial_model = keras.models.Sequential()
     ymodel = {}
     
     for layer in keras_model.layers:
@@ -443,26 +571,22 @@ def get_ymodel_keras(keras_model, X):
                 if layer.activation:
                     
                     if layer.activation.__class__.__name__ == "linear":
-                        ymodel[layer.name] = _get_output(ymodel, layer, X)
+                        ymodel[layer.name] = _get_output(layer, X, keras_model.input)
                     
                     else:
                         temp_activation = layer.activation
                         layer.activation = None
                         #Get output for layer without activation
-                        ymodel[layer.name] = _get_output(ymodel, layer, X)
+                        ymodel[layer.name] = _get_output(layer, X, keras_model.input)
 
-                        #Get ouput for activation
-                        ymodel[layer.name + "_{}".format(temp_activation.__class__.__name__)] =  _get_output(ymodel, temp_activation, X)
-
-                        #Add the activation back
+                        #Add the activation back 
                         layer.activation = temp_activation
+                        #Get ouput for activation
+                        ymodel[layer.name + "_{}".format(temp_activation.__class__.__name__)] =  _get_output(layer, X, keras_model.input)
                 else:
-                    ymodel[layer.name] = _get_output(ymodel, layer, X)
+                    ymodel[layer.name] = _get_output(layer, X, keras_model.input)
             else:    
-                ymodel[layer.name] = _get_output(ymodel, layer, X)
-        
-        #Add the layer for later processing
-        partial_model.add(layer)
+                ymodel[layer.name] = _get_output(layer, X, keras_model.input)
     print("Done taking outputs for Keras model.")
     return ymodel
 
@@ -485,7 +609,6 @@ def _norm_diff(ymodel, ysim):
 def _dist_diff(ymodel, ysim):
     """
     Calculate the normalized distribution of the differences of the elements
-    of the output vectors 
     of the output vectors. 
     If difference >= original value then the normalized difference will be set to 1,
     meaning "very difference".
@@ -503,7 +626,7 @@ def _dist_diff(ymodel, ysim):
         abs_ymodel = np.absolute(flattened_ymodel)
 
         normalized_diff = np.zeros(diff_vector.shape)
-        normalized_diff[diff_vector >= abs_ymodel] = 1
+        normalized_diff[(diff_vector >= abs_ymodel) & (abs_ymodel>0) & (diff_vector>0)] = 1
 
         #Fill out the rest
         index = diff_vector < abs_ymodel
@@ -529,21 +652,28 @@ def _dist_diff(ymodel, ysim):
 def compare(keras_model, hls_model, X, plot_type = "dist_diff"):
     """
     Compare each layer's output in keras and hls model. Note that the hls_model should not be compiled before using this.
-    Params:
-    ------
-    keras_model : original keras model
-    hls_model : converted HLS model, with "Trace:True" in the configuration file.
-    X: numpy array, input for the model. 
-    plot_type : (string) different methods to visualize the y_model and y_sim differences.
-                Possible options include:
-                     - "norm_diff" : square root of the sum of the squares of the differences 
-                                    between each output vectors 
-                     - "dist_diff" : The normalized distribution of the differences of the elements
-                                    between two output vectors
+
+    Parameters
+    ----------
+    keras_model : 
+        original keras model
+    hls_model :
+        converted HLSModel, with "Trace:True" in the configuration file.
+    X : array-like 
+        Input for the model. 
+    plot_type : string
+        different methods to visualize the y_model and y_sim differences.
+        Possible options include:
         
-    Return:
-    ------
-        plot object of the histogram depicting the difference in each layer's ouput
+        - 'norm_diff' : square root of the sum of the squares of the differences 
+          between each output vectors 
+        - 'dist_diff' : The normalized distribution of the differences of the elements
+          between two output vectors
+        
+    Returns
+    -------
+    matplotlib figure
+        plot object of the histogram depicting the difference in each layer's output
     """
     
     #Take in output from both models

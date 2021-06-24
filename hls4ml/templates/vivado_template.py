@@ -50,6 +50,7 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
     static const unsigned strategy = nnet::{strategy};
+    static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
     static const unsigned min_width = {min_width};
     static const ap_uint<filt_width> pixels[min_width];
     typedef {accum_t} accum_t;
@@ -91,6 +92,7 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
     static const unsigned strategy = nnet::{strategy};
+    static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
     static const unsigned min_height = {min_height};
     static const unsigned min_width = {min_width};
     static const ap_uint<filt_height * filt_width> pixels[min_height * min_width];
@@ -133,7 +135,11 @@ pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
     static const unsigned pad_right = {pad_right};
     static const unsigned stride_width = {stride_width};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
+    static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
     static const unsigned reuse = {reuse};
+    static const unsigned filt_width = {pool_width};
+    static const unsigned n_chan = {n_filt};
+    typedef {accum_t} accum_t;
 }};\n"""
 
 pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
@@ -144,6 +150,11 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
     static const unsigned stride_width = {stride_width};
     static const unsigned pool_height = {pool_height};
     static const unsigned pool_width = {pool_width};
+
+    static const unsigned filt_height = {pool_height};
+    static const unsigned filt_width = {pool_width};
+    static const unsigned n_chan = {n_filt};
+
     static const unsigned out_height = {out_height};
     static const unsigned out_width = {out_width};
     static const unsigned pad_top = {pad_top};
@@ -151,7 +162,9 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
     static const unsigned pad_left = {pad_left};
     static const unsigned pad_right = {pad_right};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
+    static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
     static const unsigned reuse = {reuse};
+    typedef {accum_t} accum_t;
 }};\n"""
 
 global_pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
@@ -161,6 +174,7 @@ global_pooling1d_config_template = """struct config{index} : nnet::pooling1d_con
     static const unsigned pad_right = {pad_right};
     static const unsigned stride = {stride};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
+    typedef {accum_t} accum_t;
 }};\n"""
 
 global_pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
@@ -169,6 +183,7 @@ global_pooling2d_config_template = """struct config{index} : nnet::pooling2d_con
     static const unsigned n_filt = {n_filt};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     static const unsigned reuse = {reuse};
+    typedef {accum_t} accum_t;
 }};\n"""
 
 zeropad1d_config_template = """struct config{index} : nnet::padding1d_config {{
@@ -461,6 +476,30 @@ class VivadoBackend(Backend):
             print('WARNING: Invalid ReuseFactor={} with "Resource" strategy in layer "{}". Using ReuseFactor={} instead. Valid ReuseFactor(s): {}.'
                 .format(chosen_rf, layer.name, closest_rf, ','.join(map(str, valid_rf))))
             layer.reuse_factor = closest_rf
+    
+    def set_target_reuse_factor(self, layer):
+        targ_cycles = layer.target_cycles
+
+        shuffle_cycles = 6 # Number of clock cycles to move data around
+        if targ_cycles is not None:
+            if 'Dense' in layer.__class__.__name__: 
+                kernel_multiplies = layer.get_attr('n_out')
+            elif 'Conv1D' in layer.__class__.__name__:  
+                kernel_multiplies = layer.get_attr('out_width')
+            elif 'Conv2D' in layer.__class__.__name__: 
+                kernel_multiplies = layer.get_attr('out_height') * layer.get_attr('out_width')
+            else: 
+                print('Target cycles unsupported layer')
+                return
+
+            if targ_cycles < shuffle_cycles*kernel_multiplies: # 6 clock min (6 * out_height * out_width)
+                print("Latency can not be achieved with current target %d. Mininum %d." % (targ_cycles, shuffle_cycles*kernel_multiplies+1))
+                return
+            else: 
+                rf = targ_cycles - shuffle_cycles*kernel_multiplies # subtract data shuffling overhead
+
+            layer.reuse_factor = float(rf) / kernel_multiplies
+
 
     def convert_precision_string(self, precision):
         '''
@@ -478,16 +517,16 @@ class VivadoBackend(Backend):
             W = int(bits[0])
             I = int(bits[1])
             fields = 2
-            signed = ~('u' in precision)
+            signed = not ('u' in precision)
         elif 'int' in precision:
             W = int(bits[0])
             I = W
             fields = 1
-            signed = ~('u' in precision)
+            signed = not ('u' in precision)
         if len(bits) > fields:
-            sat_mode = bits[fields]
+            round_mode = bits[fields]
         if len(bits) > fields+1:
-            round_mode = bits[fields+1]
+            sat_mode = bits[fields+1]
         if len(bits) > fields+2:
             sat_bits = int(bits[fields+2])
         if 'fixed' in precision:

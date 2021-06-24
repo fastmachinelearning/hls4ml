@@ -152,7 +152,7 @@ def build(args):
     if args.all:
         csim = synth = cosim = validation = export = vsynth = 1
     
-    yamlConfig = hls4ml.converters.parse_config(args.project + '/' + config_filename)
+    yamlConfig = hls4ml.converters.parse_yaml_config(args.project + '/' + config_filename)
 
     # Check if vivado_hls is available
     if 'linux' in sys.platform or 'darwin' in sys.platform:
