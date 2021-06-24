@@ -73,7 +73,8 @@ def config(args):
         print('Model file (-m or --model) must be provided.')
         sys.exit(1)
     
-    config = hls4ml.utils.config.create_vivado_config(
+    config = hls4ml.utils.config.create_config(
+        backend='Vivado',
         output_dir=args.dir,
         project_name=args.project,
         fpga_part=args.fpga,
@@ -157,7 +158,7 @@ def build(args):
     # Check if vivado_hls is available
     if 'linux' in sys.platform or 'darwin' in sys.platform:
         backend = yamlConfig.get('Backend', 'Vivado')
-        if backend in ['Vivado', 'Pynq']:
+        if backend in ['Vivado', 'VivadoAccelerator']:
             found = os.system('command -v vivado_hls > /dev/null')
             if found != 0:
                 print('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
@@ -167,7 +168,7 @@ def build(args):
         elif backend == 'Mentor':
             raise NotImplementedError
         else:
-            raise Exception('Backend values can be [Vivado, Intel, Mentor, Pynq]')
+            raise Exception('Backend values can be [Vivado, Intel, Mentor, VivadoAccelerator]')
     
     os.system('cd {dir} && vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
         .format(dir=args.project, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
