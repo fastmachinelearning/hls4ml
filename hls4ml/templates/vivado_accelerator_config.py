@@ -89,10 +89,12 @@ class VivadoAcceleratorConfig(object):
     def get_interface(self):
         return self.interface
 
-    def get_device_info(self, device):
+    def get_device_info(self, device=None):
         devices = get_supported_devices_dict()
+        if device is None:
+            device = self.device
         if device in devices.keys():
-            return devices[self.device]
+            return devices[device]
         else:
             raise Exception('The device is still not supported')
 
@@ -106,7 +108,8 @@ class VivadoAcceleratorConfig(object):
         return self.device
 
     def get_driver_path(self):
-        return self.device + '/' + self.driver + '_drivers/' + self.get_driver_file()
+        return '../templates/vivado_accelerator/' + self.device + '/' + self.driver + '_drivers/' + \
+               self.get_driver_file()
 
     def get_driver_file(self):
         driver_ext = '.py' if self.driver is 'python' else '.h'
@@ -117,3 +120,13 @@ class VivadoAcceleratorConfig(object):
 
     def get_output_type(self):
         return self.output_type
+
+    def get_tcl_file_path(self):
+        device_info = self.get_device_info()
+        tcl_scripts = device_info.get('tcl_scripts', None)
+        if tcl_scripts is None:
+            raise Exception('No tcl scripts definition available for the device in supported_board.json')
+        tcl_script = tcl_scripts.get(self.interface, None)
+        if tcl_script is None:
+            raise Exception('No tcl script definition available for the desired interface in supported_board.json')
+        return '../templates/vivado_accelerator/' + self.device + '/tcl_scripts/' + tcl_script

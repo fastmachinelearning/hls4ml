@@ -273,7 +273,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
 
         f.close()
         fout.close()
-        # os.rename(newfile, oldfile)
+        os.rename(newfile, oldfile)
 
         ###################
         # write myproject_bridge_wrapper.cpp
@@ -311,21 +311,15 @@ class VivadoAcceleratorWriter(VivadoWriter):
 
         f.close()
         fout.close()
-        # os.rename(newfile, oldfile)
+        os.rename(newfile, oldfile)
 
     def write_board_script(self, model):
         '''
         Write the tcl scripts to create a Vivado IPI project for the VivadoAccelerator
         '''
         filedir = os.path.dirname(os.path.abspath(__file__))
-        if self.vivado_accelerator_config.get_interface() == 'axi_stream':
-            copyfile(os.path.join(filedir, '../templates/vivado_accelerator/' +
-                                  self.vivado_accelerator_config.get_device() + '/tcl_scripts/axi_stream_design.tcl'),
-                     '{}/design.tcl'.format(model.config.get_output_dir()))
-        else: 
-            copyfile(os.path.join(filedir, '../templates/vivado_accelerator/' +
-                                  self.vivado_accelerator_config.get_device() + '/tcl_scripts/axi_lite_design.tcl'),
-                     '{}/design.tcl'.format(model.config.get_output_dir()))
+        copyfile(os.path.join(filedir, self.vivado_accelerator_config.get_tcl_file_path()),
+                 '{}/design.tcl'.format(model.config.get_output_dir()))
         f = open('{}/project.tcl'.format(model.config.get_output_dir()), 'w')
         f.write('variable myproject\n')
         f.write('set myproject "{}"\n'.format(model.config.get_project_name()))
@@ -337,10 +331,8 @@ class VivadoAcceleratorWriter(VivadoWriter):
 
     def write_driver(self, model):
         filedir = os.path.dirname(os.path.abspath(__file__))
-        if self.vivado_accelerator_config.get_interface() == 'axi_stream':
-            copyfile(os.path.join(filedir,
-                                  '../templates/vivado_accelerator/' + self.vivado_accelerator_config.get_driver_path()),
-                     ('{}/' + self.vivado_accelerator_config.get_driver_file()).format(model.config.get_output_dir()))
+        copyfile(os.path.join(filedir, self.vivado_accelerator_config.get_driver_path()),
+                 ('{}/' + self.vivado_accelerator_config.get_driver_file()).format(model.config.get_output_dir()))
 
     def write_hls(self, model):
         """
