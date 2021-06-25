@@ -179,7 +179,7 @@ void compute_pool_buffer_2d(
     #pragma HLS DATA_PACK variable=res_pack
 
     // Add pixel into line buffer, return pooling kernels
-    nnet::shift_line_buffer<data_T, res_T, CONFIG_T>(in_elem, line_buffer, kernel_data);
+    nnet::shift_line_buffer<data_T, CONFIG_T>(in_elem, line_buffer, kernel_data);
 
     // Can compute pooling output
     if ((sX - lShiftX) == 0 && (sY - lShiftY) == 0 && pY > lShiftY - 1 && pX > lShiftX - 1) {
@@ -389,7 +389,7 @@ void compute_pool_buffer_1d(
 
     // Add pixel into line buffer, return pooling kernels
     // 1D case line buffer not necessary. Put directly into the kernel_data buffer
-    nnet::kernel_shift_1d<data_T, res_T, CONFIG_T>(in_elem, kernel_data);
+    nnet::kernel_shift_1d<data_T, CONFIG_T>(in_elem, kernel_data);
 
     // Can compute pooling output
     if ( (sX - lShiftX) == 0 && pX > lShiftX - 1) {
