@@ -116,10 +116,10 @@ void compute_output_encoded(
 // *************************************************
 //       Line Buffer Implementation (Phil's)
 // *************************************************
-template <class data_T, class res_T, typename CONFIG_T>
+template <class data_T, typename CONFIG_T>
 void kernel_shift_1d(
     const data_T& in_elem,
-    typename res_T::value_type kernel_window[CONFIG_T::filt_width * CONFIG_T::n_chan]
+    typename data_T::value_type kernel_window[CONFIG_T::filt_width * CONFIG_T::n_chan]
 ) {
     #pragma HLS inline
     #pragma HLS PIPELINE II = 1
@@ -142,10 +142,10 @@ void kernel_shift_1d(
     }
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
+template <class data_T, typename CONFIG_T>
 void kernel_shift_2d(
     typename data_T::value_type shift_buffer[CONFIG_T::filt_height][CONFIG_T::n_chan],
-    typename res_T::value_type kernel_window[CONFIG_T::filt_width * CONFIG_T::filt_height * CONFIG_T::n_chan]
+    typename data_T::value_type kernel_window[CONFIG_T::filt_width * CONFIG_T::filt_height * CONFIG_T::n_chan]
 ) {
     #pragma HLS inline
         
@@ -171,7 +171,7 @@ void kernel_shift_2d(
     }
 }
 
-template <class data_T, class res_T, typename CONFIG_T>
+template <class data_T, typename CONFIG_T>
 void shift_line_buffer(const data_T& in_elem, 
                     ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[MAX(CONFIG_T::filt_height - 1,1)][CONFIG_T::n_chan],
                     typename data_T::value_type kernel_window[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan]
@@ -198,7 +198,7 @@ void shift_line_buffer(const data_T& in_elem,
             shift_buffer[CONFIG_T::filt_height - i_ih - 1][i_ic] = pop_elem; // Popped element placed back into shift_buffer, one row up.
         }
     }
-    kernel_shift_2d<data_T, res_T, CONFIG_T>(shift_buffer, kernel_window);
+    kernel_shift_2d<data_T, CONFIG_T>(shift_buffer, kernel_window);
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
@@ -232,7 +232,7 @@ void compute_output_buffer_2d(
     #pragma HLS DATA_PACK variable=res_pack
 
     // Add pixel to buffer
-    nnet::shift_line_buffer<data_T, res_T, CONFIG_T>(in_elem, line_buffer, kernel_data);
+    nnet::shift_line_buffer<data_T, CONFIG_T>(in_elem, line_buffer, kernel_data);
 
     // Check to see if we have a full kernel
     if ( (sX - lShiftX) == 0 && (sY - lShiftY) == 0 && pY > lShiftY - 1 && pX > lShiftX - 1) {
@@ -302,7 +302,7 @@ void compute_output_buffer_1d(
     #pragma HLS DATA_PACK variable=res_pack
 
     // Add pixel to buffer
-    nnet::kernel_shift_1d<data_T, res_T, CONFIG_T>(in_elem, kernel_data);
+    nnet::kernel_shift_1d<data_T, CONFIG_T>(in_elem, kernel_data);
 
     // Check to see if we have a full kernel
     if ( (sX - lShiftX) == 0 && pX > lShiftX - 1 ) {
