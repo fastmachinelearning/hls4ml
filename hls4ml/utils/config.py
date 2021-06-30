@@ -386,7 +386,7 @@ def set_data_types_from_keras_model(config, model, max_bits=15, change_flagged_t
 
 
 def config_from_keras_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1,
-                            data_type_mode='default', max_bits=15, test_inputs=None):
+                            data_type_mode='default', **set_data_types_kwargs):
     """Create an HLS conversion config given the Keras model.
 
     This function serves as the initial step in creating the custom conversion configuration.
@@ -424,13 +424,10 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             * Using an automatic mode does not mean that users no longer have to tweak the resultant configuration
             manually regardless of their case.
             * Using any mode other than 'default' requires the granularity argument to be set to 'name'.
-        max_bits (int, optional): Maximum bit width (excluding the sign bit) to be fed into
-            set_data_types_from_keras_model() if data_type_mode is set to either 'auto' or 'auto_accum'.
-            See the docstring for set_data_types_from_keras_model() for more details. The default value for this
-            argument is 15.
-        test_inputs (array-like, optional): Test inputs to be fed into set_data_types_from_keras_model() if
-            data_type_mode is set to either 'auto' or 'auto_accum'. See the docstring for
-            set_data_types_from_keras_model() for more details. The default value for this argument is None.
+        set_data_types_kwargs (kwargs, optional): Keyword arguments to be passed to
+            set_data_types_from_keras_model() when data_type_mode is set to either 'auto' or 'auto_accum'. For example,
+            calling config_from_keras_model() with data_type_mode='auto' and max_bits=64 makes
+            set_data_types_from_keras_model() be called with max_bits=64.
 
     Raises:
         Exception: If Keras model has layers not supported by hls4ml, data_type_mode is invalid or both data_type_mode
@@ -630,7 +627,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
         config['LayerName'] = name_config
 
     if data_type_mode in ['auto', 'auto_accum']:
-        set_data_types_from_keras_model(config, model, max_bits=max_bits, test_inputs=test_inputs)
+        set_data_types_from_keras_model(config, model, **set_data_types_kwargs)
 
     if data_type_mode in ['auto_accum', 'auto_accum_only']:
         set_accum_from_keras_model(config, model)
