@@ -197,8 +197,8 @@ def set_accum_from_keras_model(config, model):
             config['LayerName'][name]['accum_t'] = f'ap_fixed<{a},{b}>'
 
 
-def set_data_types_from_keras_model(config, model, max_bits, change_flagged_types=False, test_inputs=None,
-                                    best_type_algorithm=None):
+def set_data_types_from_keras_model(config, model, max_bits=15, change_flagged_types=False,
+                                    ignore_optimal_type_errors=False, test_inputs=None, best_type_algorithm=None):
     """Adjust data types in a given HLSModel configuration based on a Keras model and test inputs (if supplied).
 
     The function aims for setting precision of the layers in the configuration to match the distribution of both
@@ -215,9 +215,13 @@ def set_data_types_from_keras_model(config, model, max_bits, change_flagged_type
     Args:
         config (dict): HLSModel configuration dictionary to be updated. Its granularity must be 'name'.
         model: Keras model to be used for adjusting the data types.
-        max_bits (int): The maximum bit width (excluding the sign bit) all data types in the config should have.
+        max_bits (int): The maximum bit width (excluding the sign bit) all data types in the config should have. The
+            default value is 15.
         change_flagged_types (bool, optional): Whether types flagged as inferred from QKeras should be adjusted. If
             not provided, these types will not be updated.
+        ignore_optimal_type_errors (bool, optional): Whether failures to obtain an optimal data type for specific
+            precision should be ignored. If true, the problematic precision is left unchanged. Otherwise, a RuntimeError
+            is raised in case the algorithm does not find a data type. The default value is False.
         test_inputs (array-like, optional): Inputs to be used for producing the distribution of model outputs.
             The type of test_inputs is the same as the type of X in hls4ml.model.profiling.numerical(). If not provided,
             precision of the layer outputs/activations will not be updated.
@@ -270,7 +274,9 @@ def set_data_types_from_keras_model(config, model, max_bits, change_flagged_type
             return layer_dict['Precision'][key]
 
     def set_precision(layer_dict, key, value):
-        if key is None:
+        if value is None:
+            pass
+        elif key is None:
             layer_dict['Precision'] = value
         else:
             layer_dict['Precision'][key] = value
@@ -300,12 +306,14 @@ def set_data_types_from_keras_model(config, model, max_bits, change_flagged_type
             a, b = best_type_algorithm(layer_type, max_value, min_value, median, q1, q3, max_bits)
 
             if a is None or b is None:
-                if precision_type is not None:
+                if ignore_optimal_type_errors:
+                    pass
+                elif precision_type is not None:
                     raise RuntimeError(f"Could not find an optimal data type for {layer_name} ({precision_type}).")
                 else:
                     raise RuntimeError(f"Could not find an optimal data type for {layer_name}.")
-
-            data_type = f'ap_fixed<{a},{b}>'
+            else:
+                data_type = f'ap_fixed<{a},{b}>'
 
         set_precision(layer_dict, precision_type, data_type)
         return data_type
@@ -361,8 +369,10 @@ def set_data_types_from_keras_model(config, model, max_bits, change_flagged_type
             if isinstance(config['LayerName'][layer_name]['Precision'], dict):
                 data_type = process_precision_in_dict(config['LayerName'][layer_name], info,
                                                       'result', data_type)
-                data_type = process_precision_in_dict(config['LayerName'][layer_name], info,
-                                                      'accum', data_type)
+
+                if data_type is not None:
+                    data_type = process_precision_in_dict(config['LayerName'][layer_name], info,
+                                                          'accum', data_type)
             else:
                 data_type = process_precision_in_dict(config['LayerName'][layer_name], info,
                                                       data_type=data_type)
