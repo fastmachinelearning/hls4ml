@@ -309,9 +309,13 @@ def set_data_types_from_keras_model(config, model, max_bits=15, change_flagged_t
                 if ignore_optimal_type_errors:
                     pass
                 elif precision_type is not None:
-                    raise RuntimeError(f"Could not find an optimal data type for {layer_name} ({precision_type}).")
+                    raise RuntimeError(f"Could not find an optimal data type for {layer_name} ({precision_type}). "
+                                       "If you want to ignore this, call the function with "
+                                       "ignore_optimal_type_errors=True.")
                 else:
-                    raise RuntimeError(f"Could not find an optimal data type for {layer_name}.")
+                    raise RuntimeError(f"Could not find an optimal data type for {layer_name}. "
+                                       "If you want to ignore this, call the function with "
+                                       "ignore_optimal_type_errors=True.")
             else:
                 data_type = f'ap_fixed<{a},{b}>'
 
