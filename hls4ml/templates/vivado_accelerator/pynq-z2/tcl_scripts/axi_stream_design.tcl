@@ -9,8 +9,6 @@ set_property  ip_repo_paths  ${myproject}_prj [current_project]
 update_ip_catalog
 
 create_bd_design "design_1"
-set_property  ip_repo_paths ${myproject}_prj/solution1/impl/ip [current_project]
-update_ip_catalog
 
 startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_system7_0

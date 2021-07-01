@@ -202,9 +202,10 @@ class VivadoAcceleratorWriter(VivadoWriter):
         for line in f.readlines():
             if 'set_top' in line:
                 newline = line[:-1] + '_axi\n'  # remove the newline from the line end and append _axi for the new top
-                # newline += 'add_files firmware/{}_axi.h -cflags "-std=c++0x"\n'.format(model.config.get_project_name())
                 newline += 'add_files firmware/{}_axi.cpp -cflags "-std=c++0x"\n'.format(
                     model.config.get_project_name())
+            elif 'myproject_cosim' in line:
+                newline = line.replace('myproject_cosim', 'myproject_axi_cosim')
             else:
                 newline = line
             fout.write(newline)
