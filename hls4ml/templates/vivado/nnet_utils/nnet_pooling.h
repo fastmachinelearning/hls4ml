@@ -161,6 +161,9 @@ struct pooling2d_config{
   static const Pool_Op pool_op = Max;
   // Reuse
   static const unsigned reuse = 1;
+  
+  // Internal data type definitions
+  typedef float accum_t;
 };
 
 template<typename CONFIG_T>

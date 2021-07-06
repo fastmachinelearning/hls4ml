@@ -364,6 +364,7 @@ class Layer(object):
         self.precision[accum_t.name] = accum_t
         self.set_attr('accum_t', accum_t.precision)
         self.reuse_factor = self.model.config.get_reuse_factor(self)
+        self.target_cycles = self.model.config.get_target_cycles(self)
 
         layer_config = self.model.config.get_layer_config(self)
         for config_key, config_value in layer_config.items():
@@ -504,6 +505,12 @@ class Layer(object):
         self.weights[name] = var
         self.precision[var.type.name] = var.type
 
+        # Register weights as BRAM if exceeds threshold
+        bramport_size = self.model.config.get_bram_size(self)
+        if(np.prod(data.shape) > bramport_size):
+            var_out = var_name.replace("{index}",str(self.index))
+            self.model.register_bram_variable(var_out,var)
+
     def _default_function_params(self):
         params = {}
         params['config'] = 'config{}'.format(self.index)
@@ -595,6 +602,7 @@ class Dense(Layer):
         compression = self.model.config.get_compression(self)
         if self.model.config.is_resource_strategy(self):
             if self.model.config.backend.name == 'Vivado':
+                self.model.config.backend.set_target_reuse_factor(self)
                 self.model.config.backend.set_closest_reuse_factor(self)
             if compression:
                 self.set_attr('strategy', 'compressed')
@@ -648,10 +656,12 @@ class Conv1D(Layer):
         if self.model.config.is_resource_strategy(self):
             self.set_attr('strategy', 'resource')
             if self.model.config.backend.name == 'Vivado':
+                self.model.config.backend.set_target_reuse_factor(self)
                 self.model.config.backend.set_closest_reuse_factor(self)
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[2, 0, 1]) #(W,C,F) => (F,W,C)
         else:
             self.set_attr('strategy', 'latency')
+        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -727,6 +737,8 @@ class SeparableConv1D(Layer):
                 self.weights['pointwise'].data = np.transpose(self.weights['pointwise'].data, axes=[2, 0, 1]) #(W,C,F) => (F,W,C)
         else:
             self.set_attr('strategy', 'latency')
+        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
+        
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -834,9 +846,14 @@ class Conv2D(Layer):
         self.add_output_variable(shape, dims)
         self.add_weights(quantizer=self.get_attr('weight_quantizer'))
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
+        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
+
         if self.model.config.is_resource_strategy(self):
             self.set_attr('strategy', 'resource')
             if self.model.config.backend.name == 'Vivado':
+                # TODO: compute optimized reuse
+                self.model.config.backend.set_target_reuse_factor(self)
                 self.model.config.backend.set_closest_reuse_factor(self)
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
         else:
@@ -896,6 +913,58 @@ class Conv2D(Layer):
 
         return mult_config + '\n' + conv_config
 
+
+class Conv2DBatchnorm(Conv2D):
+    def _get_folded_weights(self):
+        """
+        Function to get the batchnorm folded weights.
+        This function converts the weights by folding batchnorm parameters into
+        the weight of QConv2D. The high-level equation:
+        W_fold = gamma * W / sqrt(variance + epsilon)
+        bias_fold = gamma * (bias - moving_mean) / sqrt(variance + epsilon) + beta
+        """
+        kernel = self.model.get_weights_data(self.name, 'kernel')
+        bias = self.model.get_weights_data(self.name, 'bias')
+        if bias is None:
+            bias = 0
+
+        # get batchnorm weights and moving stats
+        gamma = self.model.get_weights_data(self.name, 'gamma')
+        beta = self.model.get_weights_data(self.name, 'beta')
+        moving_mean = self.model.get_weights_data(self.name, 'moving_mean')
+        moving_variance = self.model.get_weights_data(self.name, 'moving_variance')
+        # get the inversion factor so that we replace division by multiplication
+        inv = np.reciprocal(np.sqrt(moving_variance + self.get_attr('epsilon')))
+        if gamma is not None:
+            inv *= gamma
+
+        # wrap conv kernel and bias with bn parameters
+        folded_kernel = inv * kernel
+        folded_bias = inv * (bias - moving_mean) + beta
+
+        return [folded_kernel, folded_bias]
+
+    def initialize(self):
+        super(Conv2DBatchnorm, self).initialize()
+        folded_weights, folded_bias = self._get_folded_weights()
+        if self.model.config.is_resource_strategy(self) and self.model.config.backend.name == 'Vivado':
+            self.weights['weight'].data_unquantized = np.transpose(folded_weights, axes=[3, 0, 1, 2])
+            self.weights['weight'].data = self.get_attr('weight_quantizer')(self.weights['weight'].data_unquantized)
+
+        else:
+            self.weights['weight'].data_unquantized = folded_weights
+            self.weights['weight'].data = self.get_attr('weight_quantizer')(folded_weights)
+        self.weights['bias'].data_unquantized = folded_bias
+        bias_q = self.get_attr('bias_quantizer')
+        if bias_q is not None:
+            self.weights['bias'].data = bias_q(folded_bias)
+
+    def function_cpp(self):
+        return super(Conv2DBatchnorm, self).function_cpp()
+
+    def config_cpp(self):
+        return super(Conv2DBatchnorm, self).config_cpp()
+
 class SeparableConv2D(Layer):
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
@@ -924,6 +993,8 @@ class SeparableConv2D(Layer):
                 self.weights['pointwise'].data = np.transpose(self.weights['pointwise'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
         else:
             self.set_attr('strategy', 'latency')
+        
+        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1054,6 +1125,8 @@ class DepthwiseConv2D(Conv2D):
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
         else:
             self.set_attr('strategy', 'latency')
+        
+        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
 class Pooling1D(Layer):
     def initialize(self):
@@ -1065,6 +1138,7 @@ class Pooling1D(Layer):
             dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0])
+        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1095,6 +1169,7 @@ class Pooling2D(Layer):
             dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0])
+        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1745,6 +1820,7 @@ layer_map = {
     'Conv2D'                 : Conv2D,
     'BinaryConv2D'           : Conv2D,
     'QConv2D'                : Conv2D,
+    'QConv2DBatchnorm'       : Conv2DBatchnorm,
     'SeparableConv1D'        : SeparableConv1D,
     'SeparableConv2D'        : SeparableConv2D,
     'DepthwiseConv2D'        : DepthwiseConv2D,

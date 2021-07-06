@@ -86,6 +86,6 @@ class InsertZeroPaddingBeforeConv2D(OptimizerPass):
         # Insert new ZeroPadding2D node above Conv2D
         padding_layer = model.make_node('ZeroPadding2D', 'zp2d_' + node.name, attrs, node.inputs.copy())
         padding_layer.get_output_variable().type.precision = node.get_input_variable().type.precision
-        model.insert_node(padding_layer)
+        model.insert_node(padding_layer, before=node)
 
         return True
