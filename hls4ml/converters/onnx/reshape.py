@@ -11,12 +11,12 @@ def parse_reshape_layer(reader, node, inputs_map, input_shapes, graph, config):
 
     layer['inputs'] = get_onnx_input_name(node, graph)
 
-    if node.op_type == 'Reshape':
-        layer['target_shape'] = node.shape
-    elif node.op_type == 'Squeeze':
-        layer['target_shape'] =
-    elif node.op_type == 'Unsqueeze':
-        output_shape = input_shapes[0][:1] + layer['target_shape']
+    # if node.op_type == 'Reshape':
+    #     layer['target_shape'] = node.shape
+    # elif node.op_type == 'Squeeze':
+    #     layer['target_shape'] = 
+    # elif node.op_type == 'Unsqueeze':
+    #     output_shape = input_shapes[0][:1] + layer['target_shape']
     
     return layer, output_shape
 
