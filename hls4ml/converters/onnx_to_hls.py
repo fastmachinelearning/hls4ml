@@ -1,8 +1,9 @@
 from __future__ import print_function
+from sys import path_importer_cache
 import numpy as np
 import math
 from onnx import ModelProto, GraphProto, NodeProto, TensorProto
-from onnx import optimizer, helper, numpy_helper, shape_inference
+from onnx import  helper, numpy_helper, shape_inference
 
 from hls4ml.model import HLSModel
 
@@ -73,6 +74,12 @@ def sanitize_layer_name(layer):
     
     layer['name'] = new_name
 
+def replace_char_inconsitency(name):
+    """
+    Replace some inconsistent characters that cause issues when writing into HLS.
+    """
+    return name.replace('.','_')
+
 def get_onnx_attribute(operation, name, default=None):
     attr = next((x for x in operation.attribute if x.name == name), None)
     if attr is None:
@@ -136,43 +143,6 @@ def compute_pads_2d(operation, layer):
     
     return pads
 
-def _hls4ml_onnx_optimizer(graph):
-    """
-    Optimize onnx's model graph.
-    """
-    
-    layer_index = 0
-    initializer_list = [x for x in graph.initializer]
-    
-    print("Optimizing hls4ml ONNX model ...")
-    for layer in graph.node:
-        
-        if layer_index != 0:
-            input_idx = layer.input[0] #input layer index of this node, only support 1 input for now
-            before_layer = [x for x in graph.node if input_idx in x.output]
-            after_layer = [x for x in graph.node if layer.output[0] in x.input]
-            
-            if not before_layer or not after_layer:
-                continue
-            else:
-                #Pick the first layer
-                before_layer = before_layer[0]
-                after_layer = after_layer[0]
-            
-            #-------------CASE 1--------------#
-            #If there is transpose before and after the layer remove both of them
-            # (tranpose) -> (current_layer) -> (transpose)
-            #The tranpose layers are likely some sort of internal operation that we
-            #don't need during conversion.
-            if before_layer.op_type == after_layer.op_type == 'Transpose':
-                graph.node.remove(before_layer)
-                graph.node.remove(after_layer)
-                print("Layer {} has transpose before and after it. Optimized!".format(layer.name))
-        
-        layer_index += 1
-        
-    return graph
-
 ####----------------------Layer handling---------------------######
 layer_handlers = {}
 
@@ -191,7 +161,28 @@ def onnx_handler(*args):
         return function
     return decorator
 
-####---------------Main processing function------------------######
+#--->> A set of functions to address the naming convetion in ONNx's graph
+def get_onnx_input_name(node, graph):
+    """
+    In ONNX, when calling node.input, it returns the node input's index in the graph instead of the input's name.
+    However, the input's name is used for indexing in HLSModel's graph. This function return the input node's name instead.
+    """
+    input_node_name = [in_node.name for in_node in graph.node if (in_node.output[0] == node.input[0])]
+
+    if input_node_name:
+        return input_node_name
+    else: #If there is no input name it's actually the first layer
+        return [replace_char_inconsitency(node.input[0])]
+
+def get_out_layer_name(graph):
+    """
+    Get the output layer's name for the model.
+    graph.output only returns the output's node index
+    """
+    output_index_list = [x.name for x in graph.output]
+    return [node.name for node in graph.node if node.output[0] in output_index_list]
+
+
 def onnx_to_hls(config):
     """ Convert onnx model to hls model from configuration.
     
@@ -214,29 +205,37 @@ def onnx_to_hls(config):
     
     model =  onnx.load(config['OnnxModel']) if isinstance(config['OnnxModel'], str) else config['OnnxModel']
           
-    #Optimizie the model graph's before conversion
-    model = shape_inference.infer_shapes(model) # have to infer shapes before optimizing the model
-    graph =  _hls4ml_onnx_optimizer(model.graph)
+    model = shape_inference.infer_shapes(model)
+    graph = model.graph
     
-    #Map inputs of skipped layers
-    inputs_map = {}
     reader = ONNXDataReader(model)
     
-    #Input layer info (assuming that there is only one input layer)
-    input_layer = {}
-    input_layer['name'] = 'Input'
-    input_layer['class_name'] = 'InputLayer'
-    input_shape = [d.dim_value for d in graph.input[0].type.tensor_type.shape.dim]
-    input_layer['input_shape'] = input_shape
+    #Obtain list of input/ouput layers
+    all_inputs = [x.name for x in model.graph.input]
+    all_initializers = [x.name for x in model.graph.initializer]
+    input_layers = [x for x in all_inputs if x not in all_initializers]
+    output_layers = get_out_layer_name(graph)
+    
+    print("Output layers: ", output_layers)
+    
+    for i, inp in enumerate(input_layers):
+        input_layer = {}
+        input_layer['name'] = replace_char_inconsitency(inp)
+        input_layer['class_name'] = 'InputLayer'
+        inp_shape = next((x.type.tensor_type.shape.dim for x in model.graph.input if x.name == inp), None)
+        input_layer['input_shape'] = [x.dim_value for x in inp_shape]
+        
+        if len(input_layer['input_shape']) > 1:
+            input_layer['input_shape'][0] = None #Firt dim is batch
 
-    if len(input_layer['input_shape']) > 1:
-        input_layer['input_shape'][0] = None #Firt dim is batch
+        #Clean the layer name for specific models
+        sanitize_layer_name(input_layer)
+        input_layers[i] = input_layer['name']
 
-    sanitize_layer_name(input_layer)
-    layer_list.append(input_layer)
+        layer_list.append(input_layer)
 
     # Defined supported layers and check for unsupported layer type
-    skip_layers = ['Squeeze', 'Unsqueeze', 'Dropout', 'Identity', 'Flatten', 'Reshape']
+    skip_layers = ['Dropout', 'Identity', 'Flatten']
     
     #Map inputs of skipped layers
     inputs_map = {}
@@ -296,5 +295,5 @@ def onnx_to_hls(config):
     #################
 
     print('Creating HLS model')
-    hls_model = HLSModel(config, reader, layer_list)
+    hls_model = HLSModel(config, reader, layer_list, input_layers, output_layers)
     return hls_model

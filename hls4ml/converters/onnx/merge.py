@@ -1,4 +1,4 @@
-from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute
+from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute, get_onnx_input_name
 
 merge_layers = ['Add', 'Sub', 'Mul', 'Average', 'Max', 'Min', 'Concat', 'Sum']
 @onnx_handler(*merge_layers)
@@ -7,6 +7,7 @@ def parse_merge_layer(reader, node, inputs_map, input_shapes, graph, config):
     layer = {}
     
     layer['op'] = layer['class_name'].lower()
+    layer['inputs'] = get_onnx_input_name(node, graph)
     
     if layer['class_name'] == 'Concatenate':
         rank = len(input_shapes[0][1:])

@@ -4,7 +4,11 @@ from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute, comp
 pool_operations = ['AveragePool', 'MaxPool']
 @onnx_handler(*pool_operations)
 def parse_pool_layer(reader, node, inputs_map, input_shapes, graph, config):
-            
+    
+    layer = {}
+    layer['inputs'] = node.input
+    layer['outputs'] = node.output
+    
     info = layer['class_name'].replace('Pool', '')
     strides = get_onnx_attribute(node, 'strides')
     kernel_shape = get_onnx_attribute(node, 'kernel_shape')
@@ -63,5 +67,5 @@ def parse_pool_layer(reader, node, inputs_map, input_shapes, graph, config):
                                                                                layer['filt_width'])
         
         output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
-        
-        return layer, output_shape
+    
+    return layer, output_shape

@@ -1,11 +1,12 @@
 import math
-from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute, compute_pads_1d, compute_pads_2d
+from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute, get_onnx_input_name, compute_pads_1d, compute_pads_2d
 
 @onnx_handler('Conv')
 def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
     
     layer = {}
     layer['data_format'] = 'channels_first' #ONNX's default is channel first
+    layer['inputs'] = get_onnx_input_name(node, graph)
     
     strides = get_onnx_attribute(node, 'strides')
     kernel_shape = get_onnx_attribute(node, 'kernel_shape')

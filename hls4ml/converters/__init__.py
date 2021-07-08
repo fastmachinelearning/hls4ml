@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import os
 import yaml
 import importlib
+import warnings
 
 from hls4ml.utils.config import create_vivado_config
 
@@ -12,18 +13,21 @@ try:
     from hls4ml.converters.pytorch_to_hls import pytorch_to_hls, get_supported_pytorch_layers, register_pytorch_layer_handler
     __pytorch_enabled__ = True
 except ImportError:
+    warnings.warn("WARNING: Pytorch converter is not enabled!")
     __pytorch_enabled__ = False
 
 try:
     from hls4ml.converters.onnx_to_hls import onnx_to_hls, get_supported_onnx_layers, register_onnx_layer_handler
     __onnx_enabled__ = True
 except ImportError:
+    warnings.warn("WARNING: ONNX converter is not enabled!")
     __onnx_enabled__ = False
 
 try:
     from hls4ml.converters.tf_to_hls import tf_to_hls
     __tensorflow_enabled__ = True
 except ImportError:
+    warnings.warn("WARNING: Tensorflow converter is not enabled!")
     __tensorflow_enabled__ = False
 
 #----------Layer handling register----------#
@@ -239,6 +243,10 @@ def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', pro
     >>> import hls4ml
     >>> config = hls4ml.utils.config_from_pytorch_model(model, granularity='model')
     >>> hls_model = hls4ml.converters.convert_from_pytorch_model(model, hls_config=config)
+    
+    Notes
+    -----
+    Only sequential Pytorch models are supported for now.
     """
     
     config = create_vivado_config(

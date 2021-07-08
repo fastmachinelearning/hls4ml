@@ -113,8 +113,11 @@ def pytorch_to_hls(config):
         
     Returns
     -------
-    hls_model : hls4ml model object
-        
+    hls_model : hls4ml model object.
+    
+    Notes
+    -----
+    Only sequential pytorch models are supported for now.
     """
     
     #This is a list of dictionaries to hold all the layer info we need to generate HLS

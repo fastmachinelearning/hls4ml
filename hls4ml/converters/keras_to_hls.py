@@ -123,8 +123,6 @@ def parse_default_keras_layer(keras_layer, input_names):
 
     return layer
 
-<<<<<<< HEAD
-=======
 def parse_data_format(input_shape, data_format='channels_last'):
     # Ignore batch size
     input_shape = input_shape[1:]
@@ -192,7 +190,6 @@ def compute_padding_2d(pad_type, in_height, in_width, stride_height, stride_widt
 
     return (out_height, out_width, pad_top, pad_bottom, pad_left, pad_right)
 
->>>>>>> upstream/master
 def keras_to_hls(config):
 
     ######################
