@@ -43,6 +43,8 @@ class ONNXDataReader:
             extracted weights data 
         
         """
+        #Get the node associated with the layer name
+        node = next((node for node in self.model.graph.node if node.name == layer_name))
         
         inputs = self.input_map[layer_name]
         inp_idx = self.index_map[var_name]
@@ -59,6 +61,11 @@ class ONNXDataReader:
                 if inputs['perm'] is not None and len(data.shape) == len(inputs['perm']):
                     data = data.transpose(inputs['perm'])
                 else:
+                    data = data.transpose()
+            
+            #Check for transB in Gemm
+            if node.op_type == 'Gemm':
+                if not get_onnx_attribute(node, 'transB'):
                     data = data.transpose()
 
         return data
