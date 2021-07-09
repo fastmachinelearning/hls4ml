@@ -134,7 +134,7 @@ class VivadoWriter(Writer):
 
     @staticmethod
     def _make_stable_pragma(variable):
-        template = '#pragma HLS STABLE variable={name}'
+        template = '//#pragma HLS STABLE variable={name}'
         return template.format(name=variable.name)
 
     def write_project_cpp(self, model):
