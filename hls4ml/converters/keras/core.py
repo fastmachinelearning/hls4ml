@@ -128,10 +128,11 @@ def parse_permute_layer(keras_layer, input_names, input_shapes, data_reader, con
     layer = parse_default_keras_layer(keras_layer, input_names)
 
     layer['class_name'] = 'Transpose'
-    perm = keras_layer['config']['dims']
+    swap = keras_layer['config']['dims']
+    perm = list(range(len(input_shapes[0])))
+    perm[swap[0]], perm[swap[1]] = perm[swap[1]], perm[swap[0]]
     layer['perm'] = perm
-
-    output_shape = input_shapes[0]
-    output_shape[perm[0]], output_shape[perm[1]] = output_shape[perm[1]], output_shape[perm[0]]
+    
+    output_shape = [input_shapes[0][p] for p in perm]
 
     return layer, output_shape

@@ -1513,6 +1513,8 @@ class Transpose(Layer):
         self.set_attr('dim', '{}d'.format(len(inp.shape)))
         if len(perm) == 4 and perm[0] == 0:
             perm = [i - 1 for i in perm[1:]]
+        elif len(perm) == 3 and len(inp.shape) == 2 and perm[0] == 0:
+            perm = [i - 1 for i in perm[1:]]
         shape = [inp.shape[i] for i in perm]
         if len(shape) == 2:
             self.set_attr('perm_str', ','.join(['0'] + [str(i+1) for i in perm]))
@@ -1531,7 +1533,7 @@ class Transpose(Layer):
 
     def function_cpp(self):
         params = self._default_function_params()
-        params['dim'] = '3d' # self.get_attr('dim')
+        params['dim'] = '3d' # always use 3d instead of self.get_attr('dim')
 
         return [self._function_template.format(**params)]
 
