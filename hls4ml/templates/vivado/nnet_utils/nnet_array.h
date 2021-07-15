@@ -9,7 +9,7 @@ struct transpose3d_config {
     static const unsigned height = 10;
     static const unsigned width = 10;
     static const unsigned depth = 10;
-    static const unsigned perm[3];
+    static constexpr unsigned perm[3] = {2, 0, 1};
 };
 
 template<class data_T, typename CONFIG_T>

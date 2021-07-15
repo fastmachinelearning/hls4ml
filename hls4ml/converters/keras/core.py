@@ -120,3 +120,18 @@ def parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader, c
         layer['n_filt']=input_shapes[0][3]
 
     return layer, [shape for shape in input_shapes[0]]
+
+@keras_handler('Permute')
+def parse_permute_layer(keras_layer, input_names, input_shapes, data_reader, config):
+    assert(keras_layer['class_name'] == 'Permute')
+
+    layer = parse_default_keras_layer(keras_layer, input_names)
+
+    layer['class_name'] = 'Transpose'
+    perm = keras_layer['config']['dims']
+    layer['perm'] = perm
+
+    output_shape = input_shapes[0]
+    output_shape[perm[0]], output_shape[perm[1]] = output_shape[perm[1]], output_shape[perm[0]]
+
+    return layer, output_shape
