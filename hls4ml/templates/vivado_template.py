@@ -238,7 +238,7 @@ resize_config_template = """struct config{index} : nnet::resize_config {{
     static const unsigned new_width = {out_width};
 }};\n"""
 
-transpose_config_template = """struct config{index} : nnet::transpose3d_config {{
+transpose_config_template = """struct config{index} : nnet::transpose_config {{
     static const unsigned depth = {depth};
     static const unsigned height = {height};
     static const unsigned width = {width};

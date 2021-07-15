@@ -1511,29 +1511,27 @@ class Transpose(Layer):
         inp = self.get_input_variable(self.inputs[0])
         perm = self.get_attr('perm')
         self.set_attr('dim', '{}d'.format(len(inp.shape)))
-        if len(perm) == 4 and perm[0] == 0:
-            perm = [i - 1 for i in perm[1:]]
-        elif len(perm) == 3 and len(inp.shape) == 2 and perm[0] == 0:
-            perm = [i - 1 for i in perm[1:]]
+        if len(perm) > 3:
+            raise Exception('ERROR: Transpose of tensors with rank > 3 is not yet supported.')
         shape = [inp.shape[i] for i in perm]
         if len(shape) == 2:
             self.set_attr('perm_str', ','.join(['0'] + [str(i+1) for i in perm]))
             dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
             self.set_attr('depth', 1)
-            self.set_attr('height', shape[0])
-            self.set_attr('width', shape[1])
+            self.set_attr('height', inp.shape[0])
+            self.set_attr('width', inp.shape[1])
         else:
             shape = [inp.shape[i] for i in perm]
             self.set_attr('perm_str', ','.join([str(i) for i in perm]))
             dims = ['OUT_DEPTH_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
-            self.set_attr('depth', shape[0])
-            self.set_attr('height', shape[1])
-            self.set_attr('width', shape[2])
+            self.set_attr('depth', inp.shape[0])
+            self.set_attr('height', inp.shape[1])
+            self.set_attr('width', inp.shape[2])
         self.add_output_variable(shape, dims)
 
     def function_cpp(self):
         params = self._default_function_params()
-        params['dim'] = '3d' # always use 3d instead of self.get_attr('dim')
+        params['dim'] = self.get_attr('dim')
 
         return [self._function_template.format(**params)]
 
@@ -1846,7 +1844,6 @@ layer_map = {
     'Resize'                 : Resize,
     'UpSampling2D'           : Resize,
     'Transpose'              : Transpose,
-    'Permute'                : Transpose,
     'GarNet'                 : GarNet,
     'GarNetStack'            : GarNetStack,
     # TensorFlow-specific layers:
