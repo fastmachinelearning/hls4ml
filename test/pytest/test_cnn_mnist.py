@@ -1,11 +1,12 @@
+from hls4ml.converters.keras_to_hls import keras_to_hls
 import pytest
 import hls4ml
 import numpy as np
 from sklearn.metrics import accuracy_score
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Input, Conv2D, Dense, Activation, MaxPooling2D, Flatten, Dropout
-from qkeras import QDense, QConv2D, quantized_bits
+from tensorflow.keras.models import model_from_json
+from qkeras.utils import _add_supported_quantized_objects; co = {}; _add_supported_quantized_objects(co)
+import yaml
 
 @pytest.fixture(scope='module')
 def mnist_data():
@@ -21,42 +22,24 @@ def mnist_data():
   return x_train, y_train, x_test, y_test
 
 @pytest.fixture(scope='module')
-def mnist_model(mnist_data):
-  x_train, y_train, x_test, y_test = mnist_data
-  model = tf.keras.Sequential(
-    [
-        Input(shape=(28,28,1)),
-        QConv2D(16, kernel_size=(3, 3), activation="relu",
-                kernel_quantizer=quantized_bits(6,0,alpha=1),
-                bias_quantizer=quantized_bits(6,0,alpha=1)),
-        MaxPooling2D(pool_size=(2, 2)),
-        QConv2D(16, kernel_size=(3, 3), activation="relu",
-                kernel_quantizer=quantized_bits(6,0,alpha=1),
-                bias_quantizer=quantized_bits(6,0,alpha=1)),
-        MaxPooling2D(pool_size=(2, 2)),
-        Flatten(),
-        Dropout(0.5),
-        QDense(10, kernel_quantizer=quantized_bits(6,0,alpha=1),
-                   bias_quantizer=quantized_bits(6,0,alpha=1)),
-        Activation(activation="softmax", name="softmax"),
-    ]
-  )
-  model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
-  model.fit(x_train, y_train, batch_size=128, epochs=10, validation_split=0.1)
+def mnist_model():
+  jsons = open('../../example-models/keras/qkeras_mnist_cnn.json','r').read()
+  model = model_from_json(jsons, custom_objects=co)
+  model.load_weights('../../example-models/keras/qkeras_mnist_cnn_weights.h5')
   return model
 
 @pytest.fixture      
 @pytest.mark.parametrize('io_type',['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('strategy', ['latency', 'resource'])                                 
-def hls_model(mnist_model, io_type, strategy):
-  model = mnist_model
-  config = hls4ml.utils.config.config_from_keras_model(model, granularity='name')
-  config['Model']['Strategy'] = strategy
-  config['LayerName']['softmax']['Strategy'] = 'Stable'
-  hls_model = hls4ml.converters.convert_from_keras_model(model,
-                                                         hls_config=config,
-                                                         output_dir='mnist-hls4ml-prj',
-                                                         io_type=io_type)
+def hls_model(io_type, strategy):
+  config = yaml.load(open('../../example-models/config-files/qkeras_mnist_cnn_config.yml').read())
+  config['KerasJson'] = '../../example-models/keras/qkeras_mnist_cnn.json'
+  config['KerasH5'] = '../../example-models/keras/qkeras_mnist_cnn_weights.h5'
+  config['OutputDir'] = 'mnist-hls4ml-prj'
+  config['IOType'] = io_type
+  config['HLSConfig']['Model']['Strategy'] = strategy
+  config['HLSConfig']['LayerName']['softmax']['Strategy'] = 'Stable'
+  hls_model = keras_to_hls(config)
   hls_model.compile()
   return hls_model
 

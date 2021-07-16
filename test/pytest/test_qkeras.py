@@ -5,12 +5,13 @@ from tensorflow.keras.utils import to_categorical
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Sequential, model_from_json
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.regularizers import l1
 from tensorflow.keras.layers import Activation, BatchNormalization
 from qkeras.qlayers import QDense, QActivation
 from qkeras.quantizers import quantized_bits, quantized_relu, ternary, binary
+from qkeras.utils import _add_supported_quantized_objects; co = {}; _add_supported_quantized_objects(co)
 
 import warnings
 warnings.filterwarnings("ignore", message="numpy.dtype size changed")
@@ -34,42 +35,22 @@ def get_jettagging_data():
   return X_train_val, X_test, y_train_val, y_test
 
 @pytest.fixture(scope='module')
-def train_jettagging_model(get_jettagging_data):
+def load_jettagging_model():
   ''' 
-  Train a 3 hidden layer QKeras model on the jet tagging dataset
+  Load the 3 hidden layer QKeras example model trained on the jet tagging dataset
   '''
-  X_train_val, X_test, y_train_val, y_test = get_jettagging_data
-  model = Sequential()
-  model.add(QDense(64, input_shape=(16,), name='fc1',
-                  kernel_quantizer=quantized_bits(6,0,alpha=1), bias_quantizer=quantized_bits(6,0,alpha=1),
-                  kernel_initializer='lecun_uniform', kernel_regularizer=l1(0.0001)))
-  model.add(QActivation(activation=quantized_relu(6), name='relu1'))
-  model.add(QDense(32, name='fc2',
-                  kernel_quantizer=quantized_bits(6,0,alpha=1), bias_quantizer=quantized_bits(6,0,alpha=1),
-                  kernel_initializer='lecun_uniform', kernel_regularizer=l1(0.0001)))
-  model.add(QActivation(activation=quantized_relu(6), name='relu2'))
-  model.add(QDense(32, name='fc3',
-                  kernel_quantizer=quantized_bits(6,0,alpha=1), bias_quantizer=quantized_bits(6,0,alpha=1),
-                  kernel_initializer='lecun_uniform', kernel_regularizer=l1(0.0001)))
-  model.add(QActivation(activation=quantized_relu(6), name='relu3'))
-  model.add(QDense(5, name='output',
-                  kernel_quantizer=quantized_bits(6,0,alpha=1), bias_quantizer=quantized_bits(6,0,alpha=1),
-                  kernel_initializer='lecun_uniform', kernel_regularizer=l1(0.0001)))
-  model.add(Activation(activation='softmax', name='softmax'))
-  adam = Adam(lr=0.0001)
-  model.compile(optimizer=adam, loss=['categorical_crossentropy'], metrics=['accuracy'])
-  model.fit(X_train_val, y_train_val, batch_size=1024,
-          epochs=10, validation_split=0.25, shuffle=True)
-  model.save('qkeras-jettagging.h5')
+  jsons = open('../../example-models/keras/qkeras_3layer.json','r').read()
+  model = model_from_json(jsons, custom_objects=co)
+  model.load_weights('../../example-models/keras/qkeras_3layer_weights.h5')
   return model
 
 @pytest.fixture
 @pytest.mark.parametrize('strategy', ['latency', 'resource'])
-def convert(train_jettagging_model, strategy):
+def convert(load_jettagging_model, strategy):
   '''
   Convert a QKeras model trained on the jet tagging dataset
   '''
-  model = train_jettagging_model
+  model = load_jettagging_model
   hls4ml.model.optimizer.OutputRoundingSaturationMode.layers = ['Activation']
   hls4ml.model.optimizer.OutputRoundingSaturationMode.rounding_mode = 'AP_RND'
   hls4ml.model.optimizer.OutputRoundingSaturationMode.saturation_mode = 'AP_SAT'
@@ -87,7 +68,7 @@ def convert(train_jettagging_model, strategy):
   return hls_model
 
 @pytest.mark.parametrize('strategy', ['latency', 'resource'])
-def test_accuracy(convert, train_jettagging_model, get_jettagging_data, strategy):
+def test_accuracy(convert, load_jettagging_model, get_jettagging_data, strategy):
   '''
   Test the hls4ml-evaluated accuracy of a 3 hidden layer QKeras model trained on
   the jet tagging dataset. QKeras model accuracy is required to be over 70%, and
@@ -99,7 +80,7 @@ def test_accuracy(convert, train_jettagging_model, get_jettagging_data, strategy
   X_train_val, X_test, y_train_val, y_test = get_jettagging_data
 
   hls_model = convert
-  model = train_jettagging_model
+  model = load_jettagging_model
 
   y_qkeras = model.predict(np.ascontiguousarray(X_test))
   y_hls4ml = hls_model.predict(np.ascontiguousarray(X_test))
