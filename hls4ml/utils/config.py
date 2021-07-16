@@ -94,7 +94,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
         model_arch = json.loads(model.to_json())
 
     #Define supported laers
-    core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Reshape']
+    core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Reshape', 'Permute']
     dense_layers = ['Dense', 'BinaryDense', 'TernaryDense']
     conv_layers = ['Conv1D', 'Conv2D', 'BinaryConv2D']
     pooling_layers = ['MaxPooling1D', 'MaxPooling2D', 'GlobalMaxPooling1D', 'GlobalMaxPooling2D', 'AveragePooling1D', 'AveragePooling2D', 'GlobalAveragePooling1D', 'GlobalAveragePooling2D']
