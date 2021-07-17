@@ -75,7 +75,6 @@ void conv_1d_buffer_cl(
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-<<<<<<< HEAD
 void conv_1d_cl(
     hls::stream<data_T> &data,
     hls::stream<res_T>  &res,
