@@ -427,11 +427,12 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate', 'Dot']
     qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D', 'QBatchNormalization', 'QConv2DBatchnorm']
     padding_layers = ['ZeroPadding1D', 'ZeroPadding2D']
-    loss_layers = ['KLLoss', 'Radius', 'CustomMSE']
+    loss_layers = ['KLLoss', 'Radius']
+    mse_layers = ['CustomMSE']
     #Define layers to skip for conversion to HLS
     skip_layers = ['Dropout', 'Flatten', 'UpSampling2D']
     #All supported layers
-    supported_layers = core_layers + dense_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + padding_layers + loss_layers + skip_layers
+    supported_layers = core_layers + dense_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + padding_layers + loss_layers + mse_layers + skip_layers
 
     keras_layer_config = None
     if model_arch['class_name'] == 'Sequential':
@@ -559,6 +560,15 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             layer_config['Precision']['result'] = default_precision
             layer_config['Precision']['accum'] = default_precision
             layer_config['exp_table_t'] = 'ap_fixed<18,8,AP_RND,AP_SAT>'
+            layer_config['table_size'] = 1024
+
+        elif layer['class_name'] in mse_layers:
+            layer_config['Precision'] = {}
+            layer_config['Precision']['result'] = 'ap_fixed<32,16,AP_RND,AP_SAT>'
+            layer_config['Precision']['accum'] = 'ap_fixed<32,16,AP_RND,AP_SAT>'
+            layer_config['error_t'] = 'ap_fixed<32,16,AP_RND,AP_SAT>'
+            layer_config['squared_error_t'] = 'ap_fixed<32,16,AP_RND,AP_SAT>'
+            layer_config['table_t'] = 'ap_fixed<32,16,AP_RND,AP_SAT>'
             layer_config['table_size'] = 1024
 
         elif layer['class_name'] == 'Input':
