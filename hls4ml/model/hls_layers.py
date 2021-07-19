@@ -1453,6 +1453,7 @@ class Concatenate(Merge):
         inp1 = self.get_input_variable(self.inputs[0])
         inp2 = self.get_input_variable(self.inputs[1])
         axis = self.attributes['axis']
+        if axis > 0: axis -= 1
         shape = inp1.shape[:]
         shape[axis] += inp2.shape[axis]
         rank = len(shape)
