@@ -1528,7 +1528,7 @@ class Transpose(Layer):
             self.set_attr('depth', inp.shape[0])
             self.set_attr('height', inp.shape[1])
             self.set_attr('width', inp.shape[2])
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape, dims, precision=inp.type.precision)
 
     def function_cpp(self):
         params = self._default_function_params()
