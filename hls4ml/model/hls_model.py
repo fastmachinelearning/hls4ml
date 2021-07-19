@@ -538,14 +538,18 @@ class HLSModel(object):
     def _get_top_function(self, x):
         if self._top_function_lib is None:
             raise Exception('Model not compiled')
-        if len(self.get_input_variables()) > 1 or len(self.get_input_variables()) > 1:
-            raise Exception('Calling "predict" on models with multiple inputs or outputs is not supported (yet)')
+        if len(self.get_input_variables()) == 1:
+            xlist = [x]
+        else: 
+            xlist = x
+        
+        for x in xlist:
+            if not isinstance(x, np.ndarray):
+                raise Exception('Expected numpy.ndarray, but got {}'.format(type(x)))
+            if not x.flags['C_CONTIGUOUS']:
+                raise Exception('Array must be c_contiguous, try using numpy.ascontiguousarray(x)')
 
-        if not isinstance(x, np.ndarray):
-            raise Exception('Expected numpy.ndarray, but got {}'.format(type(x)))
-        if not x.flags['C_CONTIGUOUS']:
-            raise Exception('Array must be c_contiguous, try using numpy.ascontiguousarray(x)')
-
+        x = xlist[0]
         if x.dtype in [np.single, np.float32]:
             top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_float')
             ctype = ctypes.c_float
@@ -555,20 +559,31 @@ class HLSModel(object):
         else:
             raise Exception('Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(x.dtype))
 
+
         top_function.restype = None
-        top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS"), npc.ndpointer(ctype, flags="C_CONTIGUOUS"),
-            ctypes.POINTER(ctypes.c_ushort), ctypes.POINTER(ctypes.c_ushort)]
+        top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS") for i in range(len(xlist)+1)]
+        top_function.argtypes += [ctypes.POINTER(ctypes.c_ushort) for i in range(len(xlist)+1)]
 
         return top_function, ctype
 
     def _compute_n_samples(self, x):
-        expected_size = self.get_input_variables()[0].size()
-        x_size = np.prod(x.shape)
-        n_samples, rem = divmod(x_size, expected_size)
-        if rem != 0:
-            raise Exception('Input size mismatch, got {}, expected {}'.format(x_size.shape, self.get_input_variables()[0].shape))
+        if len(self.get_input_variables()) == 1:
+            xlist = [x]
+        else:
+            xlist = x
+        n_samples = []
+        for x in xlist:
+            expected_size = self.get_input_variables()[0].size()
+            x_size = np.prod(x.shape)
+            n_sample, rem = divmod(x_size, expected_size)
+            if rem != 0:
+                raise Exception('Input size mismatch, got {}, expected {}'.format(x_size.shape, self.get_input_variables()[0].shape))
+            n_samples.append(n_sample)
 
-        return n_samples
+        if not all([n_samples[i] == n_samples[i+1] for i in range(len(xlist)-1)]):
+            raise Exception('Input size mismatch, not all inputs match')
+
+        return n_sample
 
     def predict(self, x):
         top_function, ctype = self._get_top_function(x)
@@ -584,8 +599,16 @@ class HLSModel(object):
         try:
             for i in range(n_samples):
                 predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
-                top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
+                if len(self.get_input_variables()) == 1:
+                    top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
+                else:
+                    argtuple = [xi for xi in x[i]]
+                    argtuple += [predictions]
+                    argtuple += [ctypes.byref(ctypes.c_ushort()) for i in range(len(x[i])+1)]
+                    argtuple = tuple(argtuple)
+                    top_function(*argtuple)
                 output.append(predictions)
+
 
             #Convert to numpy array
             output = np.asarray(output)
@@ -643,7 +666,14 @@ class HLSModel(object):
 
             for i in range(n_samples):
                 predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
-                top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
+                if len(self.get_input_variables()) == 1:
+                    top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
+                else:
+                    argtuple = [xi for xi in x[i]]
+                    argtuple += [predictions]
+                    argtuple += [ctypes.byref(ctypes.c_ushort()) for i in range(len(x[i])+1)]
+                    argtuple = tuple(argtuple)
+                    top_function(*argtuple)
                 output.append(predictions)
                 collect_func(trace_data)
                 for trace in trace_data:
