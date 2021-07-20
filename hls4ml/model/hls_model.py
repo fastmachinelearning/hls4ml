@@ -572,12 +572,12 @@ class HLSModel(object):
         else:
             xlist = x
         n_samples = []
-        for x in xlist:
-            expected_size = self.get_input_variables()[0].size()
+        for i, x in enumerate(xlist):
+            expected_size = self.get_input_variables()[i].size()
             x_size = np.prod(x.shape)
             n_sample, rem = divmod(x_size, expected_size)
             if rem != 0:
-                raise Exception('Input size mismatch, got {}, expected {}'.format(x_size.shape, self.get_input_variables()[0].shape))
+                raise Exception('Input size mismatch, got {}, expected {}'.format(x_size.shape, self.get_input_variables()[i].shape))
             n_samples.append(n_sample)
 
         if not all([n_samples[i] == n_samples[i+1] for i in range(len(xlist)-1)]):
