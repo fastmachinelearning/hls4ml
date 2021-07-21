@@ -227,7 +227,7 @@ concat_config_template = """struct config{index} : nnet::concat_config {{
     static const unsigned n_elem2_1 = {n_elem2_1};
     static const unsigned n_elem2_2 = {n_elem2_2};
 
-    static const unsigned axis = {axis};
+    static const int axis = {axis};
 }};\n"""
 
 resize_config_template = """struct config{index} : nnet::resize_config {{
