@@ -431,7 +431,10 @@ class HLSModel(object):
             prev_node = self.graph.get(node.inputs[0])
             next_nodes = [x for x in self.graph.values() if node.outputs[0] in x.inputs]
             if len(next_nodes) == 0:
-                raise Exception('Cannot rewire a node without child')
+                if node.outputs[0] in self.outputs:
+                    self.outputs = [node.inputs[0] if x == node.outputs[0] else x for x in self.outputs] 
+                else:
+                    raise Exception('Cannot rewire a node which has no child nor is an output node')
             if prev_node is not None:
                 for next_node in next_nodes:
                     if next_node is not None:
@@ -453,15 +456,8 @@ class HLSModel(object):
             new_node (Layer): The new node
 
         """
-        prev_node = self.graph.get(old_node.inputs[0])
-        next_node = next((x for x in self.graph.values() if x.inputs[0] == old_node.outputs[0]), None)
-        if next_node is not None:
-            next_node.inputs[0] = new_node.outputs[0]
-        if prev_node is not None:
-            if new_node.inputs is None or len(new_node.inputs) == 0: # Check if already rewired
-                new_node.inputs = [prev_node.outputs[0]]
-
-        self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
+        self.insert_node(new_node, before=old_node)
+        self.remove_node(old_node, rewire=True)
 
     def get_weights_data(self, layer_name, var_name):
         return self.reader.get_weights_data(layer_name, var_name)
