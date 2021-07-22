@@ -81,8 +81,8 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
     def match(self, node):
         is_match = (node.__class__.__name__ == 'Activation'
             and node.get_attr('activation') in ['binary', 'binary_tanh', 'ternary', 'ternary_tanh']
-            and isinstance(node.get_input_node(), BatchNormalization))
-        is_match = is_match or node.__class__.__name__ == 'TernaryTanh'
+            or node.__class__.__name__ == 'TernaryTanh')
+        is_match = is_match and isinstance(node.get_input_node(), BatchNormalization)
         return is_match
 
     def transform(self, model, node):
@@ -108,9 +108,7 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
         # Remove the BatchNormalization layer
         model.remove_node(bn_layer, rewire=True)
         # Replace the old Activation layer with this one
-        model.remove_node(node, rewire=True)
-        #model.replace_node(node, bnbt_layer)
-        model.insert_node(bnbt_layer)
+        model.replace_node(node, bnbt_layer)
 
         return True
 

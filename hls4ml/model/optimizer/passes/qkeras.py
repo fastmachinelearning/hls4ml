@@ -256,6 +256,6 @@ class ExtractTernaryThreshold(OptimizerPass):
         layer = model.make_node('ApplyAlpha', node.name + '_scale', attrs, node.inputs.copy())
         layer.add_weights(scale)
         layer.add_bias(bias)
-        model.insert_node(layer)
+        model.insert_node(layer, before=node)
         return True
 
