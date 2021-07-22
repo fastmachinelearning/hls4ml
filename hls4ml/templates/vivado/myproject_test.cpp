@@ -28,6 +28,8 @@
 #include "firmware/myproject.h"
 #include "firmware/nnet_utils/nnet_helpers.h"
 
+//hls-fpga-machine-learning insert bram
+
 #define CHECKPOINT 5000
 
 namespace nnet {
@@ -92,6 +94,7 @@ int main(int argc, char **argv)
     fpr.close();
   } else {
     std::cout << "INFO: Unable to open input/predictions file, using default input." << std::endl;
+
     //hls-fpga-machine-learning insert zero
 
     //hls-fpga-machine-learning insert top-level-function
@@ -99,6 +102,7 @@ int main(int argc, char **argv)
     //hls-fpga-machine-learning insert output
 
     //hls-fpga-machine-learning insert tb-output
+
   }
 
   fout.close();

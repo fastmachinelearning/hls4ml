@@ -50,6 +50,7 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
     static const unsigned strategy = nnet::{strategy};
+    static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
     static const unsigned min_width = {min_width};
     static const ap_uint<filt_width> pixels[min_width];
     typedef {accum_t} accum_t;
@@ -91,6 +92,7 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
     static const unsigned strategy = nnet::{strategy};
+    static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
     static const unsigned min_height = {min_height};
     static const unsigned min_width = {min_width};
     static const ap_uint<filt_height * filt_width> pixels[min_height * min_width];
@@ -133,7 +135,10 @@ pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
     static const unsigned pad_right = {pad_right};
     static const unsigned stride_width = {stride_width};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
+    static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
     static const unsigned reuse = {reuse};
+    static const unsigned filt_width = {pool_width};
+    static const unsigned n_chan = {n_filt};
     typedef {accum_t} accum_t;
 }};\n"""
 
@@ -145,6 +150,11 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
     static const unsigned stride_width = {stride_width};
     static const unsigned pool_height = {pool_height};
     static const unsigned pool_width = {pool_width};
+
+    static const unsigned filt_height = {pool_height};
+    static const unsigned filt_width = {pool_width};
+    static const unsigned n_chan = {n_filt};
+
     static const unsigned out_height = {out_height};
     static const unsigned out_width = {out_width};
     static const unsigned pad_top = {pad_top};
@@ -152,6 +162,7 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
     static const unsigned pad_left = {pad_left};
     static const unsigned pad_right = {pad_right};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
+    static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
     static const unsigned reuse = {reuse};
     typedef {accum_t} accum_t;
 }};\n"""
@@ -216,7 +227,7 @@ concat_config_template = """struct config{index} : nnet::concat_config {{
     static const unsigned n_elem2_1 = {n_elem2_1};
     static const unsigned n_elem2_2 = {n_elem2_2};
 
-    static const unsigned axis = {axis};
+    static const int axis = {axis};
 }};\n"""
 
 resize_config_template = """struct config{index} : nnet::resize_config {{
@@ -231,7 +242,7 @@ transpose_config_template = """struct config{index} : nnet::transpose_config {{
     static const unsigned depth = {depth};
     static const unsigned height = {height};
     static const unsigned width = {width};
-    static const unsigned perm[3] = {{{perm_str}}};
+    static constexpr unsigned perm[3] = {{{perm_str}}};
 }};\n"""
 
 garnet_common_config_template = """
@@ -353,7 +364,7 @@ zeropad1d_function_template = 'nnet::zeropad1d_{data_format}<{input_t}, {output_
 zeropad2d_function_template = 'nnet::zeropad2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
 resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
-transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}, {output});'
+transpose_function_template = 'nnet::transpose_{dim}<{input_t}, {config}>({input}, {output});'
 garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
 garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
 
@@ -466,6 +477,30 @@ class VivadoBackend(Backend):
             print('WARNING: Invalid ReuseFactor={} with "Resource" strategy in layer "{}". Using ReuseFactor={} instead. Valid ReuseFactor(s): {}.'
                 .format(chosen_rf, layer.name, closest_rf, ','.join(map(str, valid_rf))))
             layer.reuse_factor = closest_rf
+    
+    def set_target_reuse_factor(self, layer):
+        targ_cycles = layer.target_cycles
+
+        shuffle_cycles = 6 # Number of clock cycles to move data around
+        if targ_cycles is not None:
+            if 'Dense' in layer.__class__.__name__: 
+                kernel_multiplies = layer.get_attr('n_out')
+            elif 'Conv1D' in layer.__class__.__name__:  
+                kernel_multiplies = layer.get_attr('out_width')
+            elif 'Conv2D' in layer.__class__.__name__: 
+                kernel_multiplies = layer.get_attr('out_height') * layer.get_attr('out_width')
+            else: 
+                print('Target cycles unsupported layer')
+                return
+
+            if targ_cycles < shuffle_cycles*kernel_multiplies: # 6 clock min (6 * out_height * out_width)
+                print("Latency can not be achieved with current target %d. Mininum %d." % (targ_cycles, shuffle_cycles*kernel_multiplies+1))
+                return
+            else: 
+                rf = targ_cycles - shuffle_cycles*kernel_multiplies # subtract data shuffling overhead
+
+            layer.reuse_factor = float(rf) / kernel_multiplies
+
 
     def convert_precision_string(self, precision):
         '''
@@ -483,12 +518,12 @@ class VivadoBackend(Backend):
             W = int(bits[0])
             I = int(bits[1])
             fields = 2
-            signed = ~('u' in precision)
+            signed = not ('u' in precision)
         elif 'int' in precision:
             W = int(bits[0])
             I = W
             fields = 1
-            signed = ~('u' in precision)
+            signed = not ('u' in precision)
         if len(bits) > fields:
             round_mode = bits[fields]
         if len(bits) > fields+1:
@@ -526,7 +561,11 @@ class VivadoBackend(Backend):
         # Current limitations
         assert pad == 0
 
-        min_W = (math.ceil(kernel_size / stride) - 1) * stride + kernel_size
+        if kernel_size >= stride:
+            min_W = (math.ceil(kernel_size / stride) - 1) * stride + kernel_size
+        else:
+            min_W = (math.ceil(stride / kernel_size) - 1) * stride + kernel_size
+
         min_oW = int((min_W - kernel_size) // stride + 1)
 
         out_W = int((in_W - kernel_size) // stride + 1)
@@ -570,8 +609,16 @@ class VivadoBackend(Backend):
         assert stride_height == stride_width
         assert pad == 0
 
-        min_H = (math.ceil(kernel_height / stride_height) - 1) * stride_height + kernel_height
-        min_W = (math.ceil(kernel_width / stride_width) - 1) * stride_width + kernel_width
+        if kernel_height >= stride_height:
+            min_H = (math.ceil(kernel_height / stride_height) - 1) * stride_height + kernel_height
+        else:
+            min_H = (math.ceil(stride_height / kernel_height) - 1) * stride_height + kernel_height
+        
+        if kernel_width >= stride_width:
+            min_W = (math.ceil(kernel_width / stride_width) - 1) * stride_width + kernel_width
+        else:
+            min_W = (math.ceil(stride_width / kernel_width) - 1) * stride_width + kernel_width
+
         min_oH = int((min_H - kernel_height) // stride_height + 1)
         min_oW = int((min_W - kernel_width) // stride_width + 1)
 

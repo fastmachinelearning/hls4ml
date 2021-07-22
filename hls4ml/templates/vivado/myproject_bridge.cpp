@@ -6,6 +6,9 @@
 #include <algorithm>
 #include <map>
 
+//hls-fpga-machine-learning insert bram
+
+
 namespace nnet {
     bool trace_enabled = false;
     std::map<std::string, void *> *trace_outputs = NULL;
