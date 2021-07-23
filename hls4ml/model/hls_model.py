@@ -454,7 +454,9 @@ class HLSModel(object):
             new_node (Layer): The new node
 
         """
+        inputs = old_node.inputs.copy()
         self.insert_node(new_node, before=old_node)
+        new_node.inputs = inputs
         self.remove_node(old_node, rewire=True)
 
     def get_weights_data(self, layer_name, var_name):
