@@ -84,7 +84,7 @@ void klloss(
     Op_add<typename CONFIG_T::accum_t> op_add;
     kl_sum = reduce<typename CONFIG_T::accum_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::accum_t>>(kl, op_add);
     //std::cout << "KL sum: " << kl_sum << std::endl;
-    kl_sum /= typename CONFIG_T::accum_t(CONFIG_T::n_in);
+    kl_sum *= typename CONFIG_T::accum_t(1. / CONFIG_T::n_in);
     res[0] = res_T(-0.5) * kl_sum;
 }
 
