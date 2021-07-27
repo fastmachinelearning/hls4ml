@@ -40,5 +40,5 @@ def get_backend(name):
 def get_available_backends():
     return list(backend_map.keys())
 
-def get_supported_devices_dict():
-    return json.load(open(os.path.dirname(__file__) + '/supported_devices.json'))
+def get_supported_boards_dict():
+    return json.load(open(os.path.dirname(__file__) + '/supported_boards.json'))

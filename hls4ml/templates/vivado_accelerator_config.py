@@ -1,21 +1,21 @@
 import numpy as np
 
 from hls4ml.model.hls_layers import FixedPrecisionType, IntegerPrecisionType
-from hls4ml.templates import get_supported_devices_dict
+from hls4ml.templates import get_supported_boards_dict
 
 
 class VivadoAcceleratorConfig(object):
     def __init__(self, config, model_inputs, model_outputs):
         self.config = config.config
-        self.device = self.config.get('Device', 'pynq-z2')
-        devices = get_supported_devices_dict()
-        if self.device in devices.keys():
-            device_info = devices[self.device]
-            self.part = device_info['part']
+        self.board = self.config.get('Board', 'pynq-z2')
+        boards = get_supported_boards_dict()
+        if self.board in boards.keys():
+            board_info = boards[self.board]
+            self.part = board_info['part']
         else:
-            print("WARNING! The device does not appear in supported_devices.json file")
-            self.part = self.device
-
+            raise Exception("The board does not appear in supported_boards.json file")
+        
+        self.config['Part'] = self.part
         accel_config = self.config.get('AcceleratorConfig', None)
         if accel_config is not None:
             prec = accel_config.get('Precision')
@@ -89,14 +89,14 @@ class VivadoAcceleratorConfig(object):
     def get_interface(self):
         return self.interface
 
-    def get_device_info(self, device=None):
-        devices = get_supported_devices_dict()
-        if device is None:
-            device = self.device
-        if device in devices.keys():
-            return devices[device]
+    def get_board_info(self, board=None):
+        boards = get_supported_boards_dict()
+        if board is None:
+            board = self.board
+        if board in boards.keys():
+            return boards[board]
         else:
-            raise Exception('The device is still not supported')
+            raise Exception('The board is still not supported')
 
     def get_part(self):
         return self.part
@@ -104,11 +104,11 @@ class VivadoAcceleratorConfig(object):
     def get_driver(self):
         return self.driver
 
-    def get_device(self):
-        return self.device
+    def get_board(self):
+        return self.board
 
     def get_driver_path(self):
-        return '../templates/vivado_accelerator/' + self.device + '/' + self.driver + '_drivers/' + \
+        return '../templates/vivado_accelerator/' + self.board + '/' + self.driver + '_drivers/' + \
                self.get_driver_file()
 
     def get_driver_file(self):
@@ -122,11 +122,11 @@ class VivadoAcceleratorConfig(object):
         return self.output_type
 
     def get_tcl_file_path(self):
-        device_info = self.get_device_info()
-        tcl_scripts = device_info.get('tcl_scripts', None)
+        board_info = self.get_board_info(self.board)
+        tcl_scripts = board_info.get('tcl_scripts', None)
         if tcl_scripts is None:
-            raise Exception('No tcl scripts definition available for the device in supported_board.json')
+            raise Exception('No tcl scripts definition available for the board in supported_board.json')
         tcl_script = tcl_scripts.get(self.interface, None)
         if tcl_script is None:
             raise Exception('No tcl script definition available for the desired interface in supported_board.json')
-        return '../templates/vivado_accelerator/' + self.device + '/tcl_scripts/' + tcl_script
+        return '../templates/vivado_accelerator/' + self.board + '/tcl_scripts/' + tcl_script

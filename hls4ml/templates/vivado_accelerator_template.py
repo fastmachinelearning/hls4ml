@@ -19,12 +19,12 @@ class VivadoAcceleratorBackend(VivadoBackend):
         # copyfile('{}_vivado_accelerator/project_1.srcs/sources_1/bd/design_1/hw_handoff/design_1.hwh'.format(model.config.get_project_name()), './{}.hwh'.format(model.config.get_project_name()))
         os.chdir(curr_dir)
 
-    def create_initial_config(self, device='pynq-z2', clock_period=5, io_type='io_parallel', interface='axi_stream',
+    def create_initial_config(self, board='pynq-z2', part=None, clock_period=5, io_type='io_parallel', interface='axi_stream',
                               driver='python', input_type='float', output_type='float'):
         '''
         Create initial accelerator config with default parameters
         Args:
-            device: one of the keys defined in supported_devices.json
+            device: one of the keys defined in supported_boards.json
             clock_period: clock period passed to hls project
             io_type: io_parallel or io_stream
             interface: `axi_stream`: generate hardware designs and drivers which exploit axi stream channels.
@@ -41,8 +41,8 @@ class VivadoAcceleratorBackend(VivadoBackend):
         Returns:
             populated config
         '''
-        device = device if device is not None else 'pynq-z2'
-        config = super(VivadoAcceleratorBackend, self).create_initial_config(device, clock_period, io_type)
+        board = board if board is not None else 'pynq-z2'
+        config = super(VivadoAcceleratorBackend, self).create_initial_config(part, board, clock_period, io_type)
         config['AcceleratorConfig'] = {}
         config['AcceleratorConfig']['Interface'] = interface  # axi_stream, axi_master, axi_lite
         config['AcceleratorConfig']['Driver'] = driver

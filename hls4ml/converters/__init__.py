@@ -117,8 +117,9 @@ def convert_from_config(config):
 
     return model
 
-def convert_from_keras_model(model, output_dir='my-hls-test', project_name='myproject',
-    backend='Vivado', device=None, clock_period=5, io_type='io_parallel', hls_config={}):
+def convert_from_keras_model(model, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,
+                             output_data_tb=None, backend='Vivado', board=None, part=None, clock_period=5, io_type='io_parallel', 
+                             hls_config={}, **kwargs):
     """Convert to hls4ml model based on the provided configuration.
     Args:
         model: Keras model to convert
@@ -144,13 +145,17 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
     config = create_config(
         output_dir=output_dir,
         project_name=project_name,
-        device=device,
+        board=board,
+        part=part,
         clock_period=clock_period,
         io_type=io_type,
-        backend=backend
+        backend=backend,
+        **kwargs
     )
 
     config['KerasModel'] = model
+    config['InputData'] = input_data_tb
+    config['OutputPredictions'] = output_data_tb
     config['HLSConfig'] = {}
 
     model_config = hls_config.get('Model', None)

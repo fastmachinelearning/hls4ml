@@ -3,16 +3,12 @@ from shutil import copyfile
 
 from hls4ml.templates.vivado_accelerator_config import VivadoAcceleratorConfig
 from hls4ml.writer.vivado_writer import VivadoWriter
-from hls4ml.model.hls_model import IntegerPrecisionType, FixedPrecisionType
 
 class VivadoAcceleratorWriter(VivadoWriter):
 
     def __init__(self):
         super().__init__()
         self.vivado_accelerator_config = None
-        
-    def substitute_device_with_part(self, model):
-        model.config.config['Device'] = self.vivado_accelerator_config.get_part()
 
     def write_axi_wrapper(self, model):
         ''' Write a top level HLS C++ file to wrap the hls4ml project with AXI interfaces
@@ -334,14 +330,13 @@ class VivadoAcceleratorWriter(VivadoWriter):
         filedir = os.path.dirname(os.path.abspath(__file__))
         copyfile(os.path.join(filedir, self.vivado_accelerator_config.get_driver_path()),
                  ('{}/' + self.vivado_accelerator_config.get_driver_file()).format(model.config.get_output_dir()))
-
+        
     def write_hls(self, model):
         """
         Write the HLS project. Calls the VivadoBackend writer, and extra steps for VivadoAccelerator/AXI interface
         """
         self.vivado_accelerator_config = VivadoAcceleratorConfig(model.config, model.get_input_variables(),
                                                                  model.get_output_variables())
-        self.substitute_device_with_part(model)
         super(VivadoAcceleratorWriter, self).write_hls(model)
         self.write_axi_wrapper(model)
         self.modify_build_script(model)

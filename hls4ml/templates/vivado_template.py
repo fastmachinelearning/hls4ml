@@ -401,10 +401,12 @@ class VivadoBackend(Backend):
         self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
         self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)        
     
-    def create_initial_config(self, device='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
+    def create_initial_config(self, part='xcku115-flvb2104-2-i', board=None, clock_period=5, io_type='io_parallel'):
         config = {}
-
-        config['Device'] = device if device is not None else 'xcku115-flvb2104-2-i'
+        if board is not None and part is not None:
+            raise Exception('Both board and part parameters are set. Please, set only one of the two')
+        config['Part'] = part if part is not None and board is None else None
+        config['Board'] = board if part is None else None
         config['ClockPeriod'] = clock_period
         config['IOType'] = io_type
         config['HLSConfig'] = {}
