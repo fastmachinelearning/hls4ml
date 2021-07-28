@@ -134,7 +134,7 @@ class VivadoWriter(Writer):
 
     @staticmethod
     def _make_stable_pragma(variable):
-        template = '//#pragma HLS STABLE variable={name}'
+        template = '#pragma HLS STABLE variable={name}'
         return template.format(name=variable.name)
 
     def write_project_cpp(self, model):
@@ -218,8 +218,8 @@ class VivadoWriter(Writer):
                                 newline += '    ' + def_cpp + ';\n'
                                 if var.pragma:
                                     newline += '    ' + self._make_array_pragma(var) + '\n'
-                                if model.config.model_strategy == 'Resource':
-                                    newline += '    ' + self._make_stable_pragma(var) + '\n'
+                                # if model.config.model_strategy == 'Resource':
+                                #    newline += '    ' + self._make_stable_pragma(var) + '\n'
                     func = layer.function_cpp()
                     if func:
                         if len(func) == 1:
