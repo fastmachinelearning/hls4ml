@@ -13,9 +13,13 @@ class VivadoAcceleratorConfig(object):
             board_info = boards[self.board]
             self.part = board_info['part']
         else:
-            raise Exception("The board does not appear in supported_boards.json file")
+            raise Exception('The board does not appear in supported_boards.json file')
         
-        self.config['Part'] = self.part
+        if self.config.get('XilinxPart') is not None:
+            if self.config.get('XilinxPart') != self.part:
+                print('WARNING: You set a XilinxPart that does not correspond to the Board you specified. The correct '
+                      'XilinxPart is now set.')
+                self.config['XilinxPart'] = self.part
         accel_config = self.config.get('AcceleratorConfig', None)
         if accel_config is not None:
             prec = accel_config.get('Precision')
