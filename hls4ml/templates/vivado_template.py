@@ -405,7 +405,7 @@ class VivadoBackend(Backend):
         config = {}
         if board is not None and part is not None:
             raise Exception('Both board and part parameters are set. Please, set only one of the two')
-        config['Part'] = part if part is not None and board is None else None
+        config['Part'] = part if part is not None and board is None else 'xcku115-flvb2104-2-i'
         config['Board'] = board if part is None else None
         config['ClockPeriod'] = clock_period
         config['IOType'] = io_type
