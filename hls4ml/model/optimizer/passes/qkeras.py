@@ -106,7 +106,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
        and an 'ApplyAlpha' layer is inserted to reapply the scale.
     '''
     def match(self, node):
-        q_layer = node.__class__.__name__ in ["Dense", "Conv1D", "Conv2D"]
+        q_layer = node.__class__.__name__ in ["Dense", "Conv1D", "Conv2D", "Conv2DBatchnorm"]
         has_w_quant = node.get_attr('weight_quantizer') is not None 
         has_b_quant = node.get_attr('bias_quantizer') is not None
         has_w_alpha, has_b_alpha = False, False
@@ -132,7 +132,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
         weights = node.weights['weight'].data_unquantized # get weights
         qweights = quantizer(tf.convert_to_tensor(weights))
         if isinstance(quantizer.scale, (int, float)):
-            scale = np.ones(shape=node.get_output_variable().shape) * quantizer.scale
+            scale = np.ones(shape=node.get_output_variable().shape[-1]) * quantizer.scale
         else:
             scale = quantizer.scale.numpy()
         unscale = 1. / scale
@@ -148,7 +148,12 @@ class QKerasFactorizeAlpha(OptimizerPass):
 
         # update the weights also applying the hls4ml quantizer
         # this is only needed for the binary layers which encode -1 as 0
-        node.weights['weight'].data = node.weights['weight'].quantizer(new_weights.numpy())
+        quantized_new_weights = node.weights['weight'].quantizer(new_weights.numpy())
+        if node.model.config.is_resource_strategy(node):
+            ndim = len(weights.shape) - 1
+            perm = [ndim] + [i for i in range(ndim)]
+            quantized_new_weights = np.transpose(quantized_new_weights, axes=perm)
+        node.weights['weight'].data = quantized_new_weights
 
         # Move the biases from the Dense layer to the ApplyAlpha layer
         bias = node.weights['bias'].data

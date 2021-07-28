@@ -94,7 +94,7 @@ void average(
     res_T res[CONFIG_T::n_elem])
 {
     for (int ii=0; ii<CONFIG_T::n_elem; ii++) {
-        res[ii] = data1[ii] * data2[ii] / (res_T) 2;
+        res[ii] = (data1[ii] + data2[ii]) / (res_T) 2;
     }
 }
 
@@ -199,7 +199,7 @@ void concatenate2d(
 	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1])
 {
-    if (CONFIG_T::axis == 1 || CONFIG_T::axis == -1) {
+    if (CONFIG_T::axis == 2 || CONFIG_T::axis == -1) {
         concatenate2d_1<input1_T, input2_T, res_T, CONFIG_T>(data1, data2, res);
     } else {
         concatenate2d_0<input1_T, input2_T, res_T, CONFIG_T>(data1, data2, res);
@@ -289,9 +289,9 @@ void concatenate3d(
 	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2])
 {
-    if (CONFIG_T::axis == 2 || CONFIG_T::axis == -1) {
+    if (CONFIG_T::axis == 3 || CONFIG_T::axis == -1) {
         concatenate3d_2<input1_T, input2_T, res_T, CONFIG_T>(data1, data2, res);
-    } else if (CONFIG_T::axis == 1) {
+    } else if (CONFIG_T::axis == 2 || CONFIG_T::axis == -2) {
         concatenate3d_1<input1_T, input2_T, res_T, CONFIG_T>(data1, data2, res);
     } else {
         concatenate3d_0<input1_T, input2_T, res_T, CONFIG_T>(data1, data2, res);
