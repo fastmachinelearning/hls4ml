@@ -42,3 +42,17 @@ def parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader, conf
         output_shape = [input_shapes[0][0], layer['out_height'], layer['out_width'], layer['n_chan']]
 
     return layer, output_shape
+
+@keras_handler('Permute')
+def parse_permute_layer(keras_layer, input_names, input_shapes, data_reader, config):
+    assert(keras_layer['class_name'] == 'Permute')
+
+    layer = parse_default_keras_layer(keras_layer, input_names)
+
+    layer['class_name'] = 'Transpose'
+    dims = keras_layer['config']['dims']
+    layer['perm'] = [dim - 1 for dim in keras_layer['config']['dims']]
+    
+    output_shape = [input_shapes[0][0]] + [input_shapes[0][s] for s in dims]
+
+    return layer, output_shape
