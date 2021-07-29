@@ -1535,8 +1535,6 @@ class Transpose(Layer):
             self.set_attr('height', inp.shape[0])
             self.set_attr('width', inp.shape[1])
         elif len(shape) > 2:
-            shape = [inp.shape[i] for i in perm]
-            self.set_attr('perm_str', ','.join([str(i) for i in perm]))
             dims = ['OUT_DEPTH_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
             self.set_attr('depth', inp.shape[0])
             self.set_attr('height', inp.shape[1])
