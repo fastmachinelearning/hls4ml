@@ -166,7 +166,12 @@ class QuartusWriter(Writer):
                             var.name += '.data'
                     if layer.get_attr('activation') == 'tanh': #TODO move this to an optimizer
                         layer.set_attr('activation') == 'dense_tanh'
-                    func = layer.function_cpp()
+                    #if 'function_cpp' in layer.attributes:
+                    #    func = layer.get_attr('function_cpp')
+                    #    func = [func]
+                    #else: # Temporarily support calling function_cpp()
+                    #    func = layer.function_cpp()
+                    func = layer.function_cpp() # Since the code above uses
                     if func:
                         for line in func:
                             newline += '    ' + line + '\n'
@@ -277,7 +282,10 @@ class QuartusWriter(Writer):
             elif "//hls-fpga-machine-learning insert layer-config" in line:
                 newline = line
                 for layer in model.get_layers():
-                    config = layer.config_cpp()
+                    if 'config_cpp' in layer.attributes:
+                        config = layer.get_attr('config_cpp')
+                    else: # Temporarily support calling config_cpp()
+                        config = layer.config_cpp()
                     if config:
                         newline += config + '\n'
             else:
@@ -449,7 +457,11 @@ class QuartusWriter(Writer):
             elif '//hls-fpga-machine-learning insert trace_outputs' in line:
                 newline = ''
                 for layer in model.get_layers():
-                    if layer.function_cpp() and model.config.trace_output and model.config.get_layer_config_value(layer, 'Trace', False):
+                    if 'function_cpp' in layer.attributes:
+                        func = layer.get_attr('function_cpp')
+                    else: # Temporarily support calling function_cpp()
+                        func = layer.function_cpp()
+                    if func and model.config.trace_output and model.config.get_layer_config_value(layer, 'Trace', False):
                             vars = layer.get_variables()
                             for var in vars:
                                 newline += indent + 'nnet::trace_outputs->insert(std::pair<std::string, void *>("{}", (void *) malloc({} * element_size)));\n'.format(layer.name, var.size_cpp())
