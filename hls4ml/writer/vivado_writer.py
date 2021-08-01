@@ -220,7 +220,11 @@ class VivadoWriter(Writer):
                                     newline += '    ' + self._make_array_pragma(var) + '\n'
                                 if model.config.model_strategy == 'Resource':
                                     newline += '    ' + self._make_stable_pragma(var) + '\n'
-                    func = layer.function_cpp()
+                    if 'function_cpp' in layer.attributes:
+                        func = layer.get_attr('function_cpp')
+                        func = [func]
+                    else: # Temporarily support calling function_cpp()
+                        func = layer.function_cpp()
                     if func:
                         if len(func) == 1:
                             newline += '    ' + func[0] + ' // ' + layer.name + '\n'
@@ -331,7 +335,10 @@ class VivadoWriter(Writer):
             elif "//hls-fpga-machine-learning insert layer-config" in line:
                 newline = line
                 for layer in model.get_layers():
-                    config = layer.config_cpp()
+                    if 'config_cpp' in layer.attributes:
+                        config = layer.get_attr('config_cpp')
+                    else: # Temporarily support calling config_cpp()
+                        config = layer.config_cpp()
                     if config:
                         newline += '// ' + layer.name + '\n'
                         newline += config + '\n'
@@ -514,7 +521,11 @@ class VivadoWriter(Writer):
             elif '//hls-fpga-machine-learning insert trace_outputs' in line:
                 newline = ''
                 for layer in model.get_layers():
-                    if layer.function_cpp() and model.config.trace_output and layer.get_attr('Trace', False):
+                    if 'function_cpp' in layer.attributes:
+                        func = layer.get_attr('function_cpp')
+                    else: # Temporarily support calling function_cpp()
+                        func = layer.function_cpp()
+                    if func and model.config.trace_output and layer.get_attr('Trace', False):
                             vars = layer.get_variables()
                             for var in vars:
                                 newline += indent + 'nnet::trace_outputs->insert(std::pair<std::string, void *>("{}", (void *) malloc({} * element_size)));\n'.format(layer.name, var.size_cpp())

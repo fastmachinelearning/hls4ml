@@ -613,7 +613,6 @@ class Conv2D(Layer):
 
         return mult_config + '\n' + conv_config
 
-
 class Conv2DBatchnorm(Conv2D):
     def _get_folded_weights(self):
         """

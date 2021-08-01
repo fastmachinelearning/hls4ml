@@ -89,7 +89,11 @@ class Backend(object):
                         # and it inherits from OptimizerPass
                         # and is defined in this module (i.e., not imported)
                         if inspect.isclass(func) and issubclass(func, OptimizerPass) and func.__module__ == lib.__name__:
-                            self.register_pass(func.get_name(), func)
+                            if inspect.ismethod(func.get_name):
+                                self.register_pass(func.get_name(), func)
+                            else:
+                                func_instance = func()
+                                self.register_pass(func_instance.get_name(), func_instance)
 
             except ImportError:
                 print('WARN: Unable to import optiizer(s) from {}'.format(module))
