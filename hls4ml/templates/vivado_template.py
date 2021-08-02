@@ -403,6 +403,7 @@ transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}
 garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
 garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
 distance_function_template = 'nnet::{distance}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
+mse_distance_function_template = 'nnet::{distance}<{input0_t}, {input1_t}, {input2_t}, {output_t}, {config}>({input0}, {input1}, {input2}, {output});'
 
 dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_stream.h']
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
@@ -422,7 +423,7 @@ distance_include_list = ['nnet_utils/nnet_distance.h']
 class VivadoBackend(Backend):
     def __init__(self):
         super(VivadoBackend, self).__init__('Vivado')
-        self.register_templates('Dense', dense_function_template, dense_config_template, dense_include_list)
+        self.register_templates('Dense'                  , dense_function_template,       dense_config_template, dense_include_list)
         self.register_templates('BinaryDense'            , dense_function_template,       dense_config_template, dense_include_list)
         self.register_templates('BatchNormalization'     , batchnorm_function_template,   batchnorm_config_template, batchnorm_include_list)
         self.register_templates('Conv1D'                 , conv1d_function_template,      [conv1d_config_template, conv_mult_config_template], conv1d_include_list)
@@ -450,8 +451,8 @@ class VivadoBackend(Backend):
         self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)
         self.register_templates('KLLoss'                 , distance_function_template    , distance_config_template, distance_include_list)
         self.register_templates('MSE'                    , distance_function_template    , mse_config_template, distance_include_list)
-        self.register_templates('CustomMSE'              , distance_function_template    , [custom_mse_config_template, activ_config_template, mse_config_template], distance_include_list)
-    
+        self.register_templates('CustomMSE'              , mse_distance_function_template, [custom_mse_config_template, activ_config_template, mse_config_template], distance_include_list)
+
     def get_valid_reuse_factors(self, layer):
         n_in = 0
         n_out = 0

@@ -1865,7 +1865,6 @@ class KLLoss(Layer):
 
 class CustomMSE(Layer):
     def initialize(self):
-        assert(len(self.inputs) == 2)
         self.add_output_variable(shape=[1], dim_names=['CUSTOM_MSE_{}'.format(self.index)])
         if 'accum_t' not in self.attributes:
             self.set_attr('accum_t', self.get_attr('accum_t'), FixedPrecisionType(width=18, integer=8, roundin_mode='AP_RND_CONV', saturation_mode='AP_SAT'))     
@@ -1875,16 +1874,20 @@ class CustomMSE(Layer):
             self.set_attr('squared_error_t', FixedPrecisionType(width=18, integer=8, rounding_mode='AP_RND_CONV', saturation_mode='AP_SAT'))
         if 'table_size' not in self.attributes:
             self.set_attr('table_size', 1024)
+        if 'reshape' not in self.attributes:
+            self.set_attr('reshape', (19,3,1))
 
     def function_cpp(self):
         params = {}
         params['distance'] = 'custom_mse'
         params['config'] = 'config{}'.format(self.index)
-        params['input1_t'] = self.get_input_variable(self.inputs[0]).type.name
-        params['input2_t'] = self.get_input_variable(self.inputs[1]).type.name
+        params['input0_t'] = self.get_input_variable(self.inputs[0]).type.name
+        params['input1_t'] = self.get_input_variable(self.inputs[1]).type.name
+        params['input2_t'] = self.get_input_variable(self.inputs[2]).type.name
         params['output_t'] = self.get_output_variable().type.name
-        params['input1'] = self.get_input_variable(self.inputs[0]).name
-        params['input2'] = self.get_input_variable(self.inputs[1]).name
+        params['input0'] = self.get_input_variable(self.inputs[0]).name
+        params['input1'] = self.get_input_variable(self.inputs[1]).name
+        params['input2'] = self.get_input_variable(self.inputs[2]).name
         params['output'] = self.get_output_variable().name
 
         return [self._function_template.format(**params)]
@@ -1901,7 +1904,7 @@ class CustomMSE(Layer):
 
         tanh_params = self._default_config_params()
         tanh_params['type'] = 'tanh'
-        tanh_params['n_in'] = self.get_input_variable(self.inputs[0]).shape[0]
+        tanh_params['n_in'] = self.get_attr('reshape')[0]
         tanh_params['table_size'] = self.get_attr('table_size')
         tanh_params['table_t'] = self.get_attr('table_t')
         tanh_config = self._config_template[1].format(**tanh_params)

@@ -163,8 +163,9 @@ struct custom_mse_config
 
 };
 
-template<class data1_T, class data2_T, class res_T, typename CONFIG_T>
-void custom_mse(data1_T a[CONFIG_T::n_in],
+template<class data0_T, class data1_T, class data2_T, class res_T, typename CONFIG_T>
+void custom_mse(data0_T a_origin[CONFIG_T::n_in],
+                data1_T a[CONFIG_T::n_in],
                 data2_T b[CONFIG_T::n_in],
                 res_T  res[CONFIG_T::n_out]){
 
@@ -212,9 +213,14 @@ void custom_mse(data1_T a[CONFIG_T::n_in],
         tanh_pred[3*i + 2] = tanh_pred_phi[i] * typename CONFIG_T::table_t(M_PI);
     }
 
-    // apply the mask: for any index in true which contains zero, set that index in pred to 0
+    // apply the mask from not-scaled input: for any index in true which contains zero, set that index in pred to 0
     for(unsigned i = 0; i < CONFIG_T::n_in; i++){
-        tanh_pred[i] = a[i] == 0 ? typename CONFIG_T::table_t(0) : tanh_pred[i];
+        tanh_pred[i] = a_origin[i] == 0 ? typename CONFIG_T::table_t(0) : tanh_pred[i];
+    }
+    // apply the mask from not-scaled input to scaled input: for any index in true which contains zero, set that index in pred to 0
+    for(unsigned i = 0; i < CONFIG_T::n_in; i++){
+        a[i] = a_origin[i] == 0 ? (data1_T) a_origin[i] : a[i];
+        // if(a_origin[i] == 0) a[i] = 0
     }
     // Reduce the {eta, phi} and {pt} parts of the MSE separately
     typename CONFIG_T::accum_t mse_acc[1];
