@@ -50,13 +50,19 @@ class ONNXDataReader:
         inp_idx = self.index_map[var_name]
         
         if inp_idx >= len(inputs['inputs']):
-            # Input not found, likely a bias tensor is not available
-            return None
+            # Check if the layer is an AddBias layer
+            if (node.op_type == 'Add') and (var_name == 'bias'):
+                inp_idx = 1
+            else:
+                # Input not found, likely a bias tensor is not available
+                return None
 
         tensor = next((x for x in self.model.graph.initializer if x.name == inputs['inputs'][inp_idx]), None)
         
         if tensor is not None:
+
             data = numpy_helper.to_array(tensor)
+
             if inputs['transpose']:
                 if inputs['perm'] is not None and len(data.shape) == len(inputs['perm']):
                     data = data.transpose(inputs['perm'])
@@ -174,7 +180,7 @@ def get_onnx_input_name(node, graph):
     In ONNX, when calling node.input, it returns the node input's index in the graph instead of the input's name.
     However, the input's name is used for indexing in HLSModel's graph. This function return the input node's name instead.
     """
-    input_node_name = [in_node.name for in_node in graph.node if (in_node.output[0] == node.input[0])]
+    input_node_name = [in_node.name for in_node in graph.node if (in_node.output[0] in node.input)]
 
     if input_node_name:
         return input_node_name

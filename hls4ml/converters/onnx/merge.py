@@ -5,7 +5,8 @@ merge_layers = ['Add', 'Sub', 'Mul', 'Average', 'Max', 'Min', 'Concat', 'Sum']
 def parse_merge_layer(reader, node, inputs_map, input_shapes, graph, config):
     
     layer = {}
-    
+    layer['class_name'] = node.op_type
+    layer['name'] = node.name
     layer['op'] = layer['class_name'].lower()
     layer['inputs'] = get_onnx_input_name(node, graph)
     
@@ -15,10 +16,15 @@ def parse_merge_layer(reader, node, inputs_map, input_shapes, graph, config):
             raise Exception('ERROR: Concatenation of tensors with rank > 3 is not yet supported.')
         layer['op'] = layer['class_name'].lower() + '{}d'.format(rank)
         layer['axis'] = get_onnx_attribute(node, 'axis')
+   
+    elif layer['class_name'] ==  'Add':
+        #Check if the layer is an AddBias
+        for input in node.input:
+            if "bias" in input:
+                layer['class_name'] = 'BiasAdd'
+                reader.add_input(layer['name'], node.input)
     else:
         layer['class_name'] = 'Merge'
-    
-    layer['inputs'] = [inputs_map.get(x, x) for x in node.input]
     
     if len(layer['inputs']) > 2:
         raise Exception('ERROR: Merging more than two tensors is not yet supported.')

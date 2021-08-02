@@ -1516,10 +1516,10 @@ class Transpose(Layer):
         if len(perm) > 3:
             raise Exception('ERROR: Transpose of tensors with rank > 3 is not yet supported.')
         
-        #ONNX double transpose specific, input dimension might
-        #be 1 but perm has dimension 2
-        #It will be optimized away later
-        if len(inp.shape) == 1 and len(perm) == 2:
+        #ONNX double transpose specific, sometimes ONNX injects
+        #useless double transpose layers when converting 
+        #from other frameworks
+        if len(perm) == 1:
             shape = inp.shape #dummy shape
             dims = ['DUMMY'] #dummy dims
             self.set_attr('perm', [0])

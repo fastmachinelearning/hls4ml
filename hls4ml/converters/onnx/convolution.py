@@ -1,20 +1,21 @@
 import math
 from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute, get_onnx_input_name, compute_pads_1d, compute_pads_2d
+from hls4ml.converters.utils import compute_padding_1d, compute_padding_2d
 
 @onnx_handler('Conv')
 def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
     
     layer = {}
+    layer['name'] = node.name
     layer['data_format'] = 'channels_first' #ONNX's default is channel first
     layer['inputs'] = get_onnx_input_name(node, graph)
-    
+    reader.add_input(layer['name'], node.input)
+
     strides = get_onnx_attribute(node, 'strides')
     kernel_shape = get_onnx_attribute(node, 'kernel_shape')
 
     if len(input_shapes) == 3: # Conv1D
         layer['class_name'] = 'Conv1D'
-        
-        reader.add_input(layer['name'], operation.input)
 
         layer['in_width']= input_shapes[0][2]
         layer['filt_width']= kernel_shape[0]
@@ -39,7 +40,7 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
 
         output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_width']]
         
-    elif len(input_shapes) == 4: # Conv2D
+    elif len(input_shapes[0]) == 4: # Conv2D
         
         layer['class_name'] = 'Conv2D'
 
@@ -48,7 +49,7 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
         layer['filt_height']=kernel_shape[0]
         layer['filt_width']=kernel_shape[1]
         layer['n_chan']=input_shapes[0][1]
-        layer['n_filt']=next((x.type.tensor_type.shape.dim[1].dim_value for x in graph.value_info if x.name == operation.output[0]), None)
+        layer['n_filt']=next((x.type.tensor_type.shape.dim[1].dim_value for x in graph.value_info if x.name == node.output[0]), None)
         layer['stride_height'] = strides[0]
         layer['stride_width'] = strides[1]
         pads = compute_pads_2d(node, layer)
@@ -73,5 +74,5 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
 
         output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
 
-        return layer, output_shape
+    return layer, output_shape
     

@@ -1,6 +1,6 @@
 from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute, get_onnx_input_name
 
-@onnx_handler('Gemm')
+@onnx_handler(*['Gemm', 'MatMul'])
 def parse_gemm_layer(reader, node, inputs_map, input_shapes, graph, config):
     
     layer = {}
@@ -9,7 +9,7 @@ def parse_gemm_layer(reader, node, inputs_map, input_shapes, graph, config):
     layer['name'] = node.name
     layer['inputs'] = get_onnx_input_name(node, graph)
     
-    layer['n_in'] = next((x.type.tensor_type.shape.dim[-1].dim_value for x in graph.input if x.name == node.input[0]), None)
+    layer['n_in'] = input_shapes[0][1]
     layer['n_out'] = next((x.type.tensor_type.shape.dim[-1].dim_value for x in graph.value_info if x.name == node.output[0]), None)
     
     output_shape = [input_shapes[0][0], layer['n_out']]

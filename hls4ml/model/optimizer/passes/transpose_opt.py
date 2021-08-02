@@ -12,6 +12,7 @@ class RemoveUselessTranspose(OptimizerPass):
         """
         print("Unnessary {} in the model, optimizing ...".format(node.name))
         if not node.get_output_nodes():
+            print("WARNING: {} is the output layer! No rewiring performed.".format(node.name))
             model.remove_node(node, rewire=False) #Don't rewire if there is no output layer
         else:
             model.remove_node(node, rewire=True)
