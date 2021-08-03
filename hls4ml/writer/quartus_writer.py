@@ -38,7 +38,9 @@ class QuartusWriter(Writer):
         var_class = var.__class__.__name__
 
         if var_class == 'ArrayVariable':
-            return '{type} {name}{suffix}[{shape}] hls_register'.format(type=var.type.name, name=var.cppname, suffix=name_suffix, shape=var.size_cpp())
+            return '{type} {name}{suffix}[{shape}] {pragma}'.format(type=var.type.name, name=var.cppname, suffix=name_suffix, shape=var.size_cpp(), pragma=var.pragma)
+        elif var_class == 'StructMemberVariable':
+            return '{type} {name}{suffix}[{shape}]'.format(type=var.type.name, name=var.member_name, suffix=name_suffix, shape=var.size_cpp())
         elif var_class == 'StreamVariable':
             raise Exception('Streaming is not yet supported by Quartus backend')
         elif var_class == 'WeightVariable':
@@ -132,12 +134,6 @@ class QuartusWriter(Writer):
                 clock_mhz = 1000/(model.config.get_config_value('ClockPeriod'))
                 newline += 'hls_scheduler_target_fmax_mhz({})\n'.format(np.ceil(clock_mhz).astype(np.int))
 
-            elif '//hls-fpga-machine-learning insert header' in line:
-                inputs_str = ', '.join(['inputdat ' + i.name for i in model_inputs])
-
-                newline = ''
-                newline += indent + inputs_str + '\n'
-
             elif '//hls-fpga-machine-learning insert weights' in line:
                 newline = line
                 for layer in model.get_layers():
@@ -159,30 +155,18 @@ class QuartusWriter(Writer):
                             def_cpp = self.variable_definition_cpp(model, var)
                             if def_cpp is not None:
                                 newline += '    ' + def_cpp + ';\n'
-                        if var in model_inputs:
-                            var.name += '.data'
-                        if var in model_outputs:
-                            newline += '    ' + 'hls_register outputdat ' + var.cppname + ';\n'
-                            var.name += '.data'
                     if layer.get_attr('activation') == 'tanh': #TODO move this to an optimizer
                         layer.set_attr('activation') == 'dense_tanh'
-                    #if 'function_cpp' in layer.attributes:
-                    #    func = layer.get_attr('function_cpp')
-                    #    func = [func]
-                    #else: # Temporarily support calling function_cpp()
-                    #    func = layer.function_cpp()
-                    func = layer.function_cpp() # Since the code above uses
+                    if 'function_cpp' in layer.attributes:
+                        func = layer.get_attr('function_cpp')
+                        func = [func]
+                    else: # Temporarily support calling function_cpp()
+                        func = layer.function_cpp()
                     if func:
                         for line in func:
                             newline += '    ' + line + '\n'
                         newline += '\n'
 
-                for inp in model.get_input_variables():
-                    inp.name = inp.name.replace('.data','')
-                for out in model.get_output_variables():
-                    out.name = out.name.replace('.data','')
-                    name = out.name
-                    newline += indent + 'return ' + name + ';\n'
             #Just copy line
             else:
                 newline = line
@@ -218,21 +202,16 @@ class QuartusWriter(Writer):
                 newline += 'hls_component_ii({})\n'.format(self.get_max_reuse_factor(model))
                 clock_mhz = 1000/(model.config.get_config_value('ClockPeriod'))
                 newline += 'hls_scheduler_target_fmax_mhz({})\n'.format(np.ceil(clock_mhz).astype(np.int))
-            elif 'component outputdat myproject(' in line:
-                newline = 'component outputdat {}(\n'.format(model.config.get_project_name())
-            elif '//Input Parameters' in line:
+            elif 'component output_data myproject(' in line:
+                newline = 'component output_data {}(\n'.format(model.config.get_project_name())
+            elif '//hls-fpga-machine-learning insert inputs' in line:
                 for inp in model_inputs:
                     newline = ''
-                    newline += indent + inp.type.name + ' data' + '[' + inp.size_cpp() + ']' + ';\n'
-            elif '//Output Parameters' in line:
+                    newline += indent + self.variable_definition_cpp(model, inp) + ';\n'
+            elif '//hls-fpga-machine-learning insert outputs' in line:
                 for out in model_outputs:
                     newline = ''
-                    newline += indent + out.type.name + ' data' + '[' + out.size_cpp() + ']' + ';\n'
-            elif '//hls-fpga-machine-learning insert header' in line:
-                inputs_str = ', '.join(['inputdat ' + i.name for i in model_inputs])
-
-                newline = ''
-                newline += indent + inputs_str + '\n'
+                    newline += indent + self.variable_definition_cpp(model, out) + ';\n'
             else:
                 newline = line
             fout.write(newline)
@@ -342,37 +321,27 @@ class QuartusWriter(Writer):
                 newline = line.replace('myproject', model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert data' in line:
                 newline = line
+                # TODO this is not correct for more than one input
                 newline += '      std::vector<float>::const_iterator in_begin = in.cbegin();\n'
                 newline += '      std::vector<float>::const_iterator in_end;\n'
+                newline += '      inputs.emplace_back();\n'
                 for inp in model.get_input_variables():
                     newline += f'      in_end = in_begin + ({inp.size_cpp()});\n'
-                    newline += f'      {inp.cppname}.emplace_back();\n'
-                    newline += f'      std::copy(in_begin, in_end, {inp.cppname}.back().data);\n'
+                    newline += f'      std::copy(in_begin, in_end, inputs.back().{inp.member_name});\n'
                     newline += '      in_begin = in_end;\n'
-                newline += f'      {outvar.cppname}.emplace_back();\n'
-            elif '//hls-fpga-machine-learning insert component-io' in line:
-                newline = line
-                for inp in model.get_input_variables():
-                    newline += indent + 'std::vector<inputdat> ' + inp.name + ';\n'
-                newline += indent + 'std::vector<outputdat> ' + outvar.name + ';\n'
+                newline += '      outputs.emplace_back();\n'
             elif '//hls-fpga-machine-learning insert zero' in line:
                 newline = line
-                for inp in model.get_input_variables():
-                    newline += '    ' + 'std::vector<inputdat> ' + inp.name + '(num_iterations);\n'
-                newline += '    ' + 'std::vector<outputdat> ' + outvar.name + '(num_iterations);\n'
                 newline += indent + 'for(int i = 0; i < num_iterations; i++) {\n'
                 for inp in model.get_input_variables():
-                    newline += indent + f'  std::fill_n({inp.cppname}[i].data, {inp.size_cpp()}, 0.0);\n'
+                    newline += indent + f'  std::fill_n(inputs[i].{inp.member_name}, {inp.size_cpp()}, 0.0);\n'
                 newline += indent + '}\n'
 
             elif '//hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
 
-                newline += indent + f'for(int i = 0; i < num_iterations; i++) {{\n'
-
-                input_vars = ','.join([f'{i.cppname}[i]' for i in model.get_input_variables()])
-
-                newline += indent + f'  ihc_hls_enqueue(&{outvar.cppname}[i], {model.config.get_project_name()}, {input_vars});\n'
+                newline += indent + 'for(int i = 0; i < num_iterations; i++) {\n'
+                newline += indent + f'  ihc_hls_enqueue(&outputs[i], {model.config.get_project_name()}, inputs[i]);\n'
                 newline += indent + '}\n'
             elif 'hls-fpga-machine-learning insert run' in line:
                 newline = line
@@ -386,13 +355,13 @@ class QuartusWriter(Writer):
             elif '//hls-fpga-machine-learning insert tb-output' in line:
                 newline = line
                 newline += indent + 'for(int i = 0; i < {}; i++) {{\n'.format(outvar.size_cpp())
-                newline += indent + '  fout << {}[j].data[i] << " ";\n'.format(outvar.cppname)
+                newline += indent + '  fout << outputs[j].{}[i] << " ";\n'.format(outvar.member_name)
                 newline += indent + '}\n'
                 newline += indent + 'fout << std::endl;\n'
             elif '//hls-fpga-machine-learning insert output' in line or '//hls-fpga-machine-learning insert quantized' in line:
                 newline = line
                 newline += indent + 'for(int i = 0; i < {}; i++) {{\n'.format(outvar.size_cpp())
-                newline += indent + '  std::cout << {}[j].data[i] << " ";\n'.format(outvar.cppname)
+                newline += indent + '  std::cout << outputs[j].{}[i] << " ";\n'.format(outvar.member_name)
                 newline += indent + '}\n'
                 newline += indent + 'std::cout << std::endl;\n'
             else:
@@ -437,23 +406,18 @@ class QuartusWriter(Writer):
             elif '//hls-fpga-machine-learning insert wrapper' in line:
                 dtype = line.split('#', 1)[1].strip()
                 newline = ''
+                newline += indent + 'input_data inputs_ap;\n'
                 for i in model_inputs:
-                    newline += indent + 'inputdat {name}_ap;\n'.format(name=i.cppname)
-                    newline += indent + 'nnet::convert_data<{}, {}, {}>({}, {}_ap.data);\n'.format(dtype, i.type.name, i.size_cpp(), i.cppname, i.cppname)
+                    newline += indent + 'nnet::convert_data<{}, {}, {}>({}, inputs_ap.{});\n'.format(dtype, i.type.name, i.size_cpp(), i.cppname, i.cppname)
                 newline += '\n'
 
-                for o in model_outputs:
-                    newline += indent + 'outputdat {name}_ap;\n'.format(name=o.cppname)
-
-                input_vars = ','.join([i.cppname + '_ap' for i in model.get_input_variables()])
-                output_vars = ','.join([o.cppname + '_ap' for o in model.get_output_variables()])
-                top_level = indent + '{} = {}({});\n'.format(output_vars, model.config.get_project_name(), input_vars)
+                newline += indent + 'output_data outputs_ap;\n'
+                top_level = indent + 'outputs_ap = {}(inputs_ap);\n'.format(model.config.get_project_name())
                 newline += top_level
-
                 newline += '\n'
 
                 for o in model_outputs:
-                    newline += indent + 'nnet::convert_data_back<{}, {}, {}>({}_ap.data, {});\n'.format(o.type.name, dtype, o.size_cpp(), o.cppname, o.cppname)
+                    newline += indent + 'nnet::convert_data_back<{}, {}, {}>(outputs_ap.{}, {});\n'.format(o.type.name, dtype, o.size_cpp(), o.cppname, o.cppname)
             elif '//hls-fpga-machine-learning insert trace_outputs' in line:
                 newline = ''
                 for layer in model.get_layers():

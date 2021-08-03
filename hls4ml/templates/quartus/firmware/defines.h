@@ -1,9 +1,11 @@
 #ifndef DEFINES_H_
 #define DEFINES_H_
 
-#include "ac_fixed.h"
+#ifndef __INTELFPGA_COMPILER__
 #include "ac_int.h"
-#ifdef __INTELFPGA_COMPILER__
+#include "ac_fixed.h"
+#define hls_register
+#else
 #include "HLS/hls.h"
 #include "HLS/ac_int.h"
 #include "HLS/ac_fixed.h"

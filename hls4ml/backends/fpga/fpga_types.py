@@ -72,6 +72,18 @@ class ArrayVariable(TensorVariable):
     def from_variable(cls, tensor_var, pragma='partition', **kwargs):
         return cls(tensor_var.shape, tensor_var.dim_names, var_name=tensor_var.name, type_name=tensor_var.type.name, precision=tensor_var.type.precision, pragma=pragma)
 
+class StructMemberVariable(ArrayVariable):
+    """Used by Quartus backend for input/output arrays that are members of the inputs/outpus struct"""
+    def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, pragma='hls_register', struct_name=None, **kwargs):
+        super(StructMemberVariable, self).__init__(shape, dim_names, var_name, type_name, precision, pragma, **kwargs)
+        assert struct_name is not None, 'struct_name must be provided when creating StructMemberVariable'
+        self.struct_name = str(struct_name)
+        self.member_name = self.name
+        self.name = self.struct_name + '.' + self.member_name
+
+    @classmethod
+    def from_variable(cls, tensor_var, pragma='partition', struct_name=None, **kwargs):
+        return cls(tensor_var.shape, tensor_var.dim_names, var_name=tensor_var.name, type_name=tensor_var.type.name, precision=tensor_var.type.precision, pragma=pragma, struct_name=struct_name)
 
 class StreamVariable(TensorVariable):
     def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, n_pack=1, depth=0, **kwargs):

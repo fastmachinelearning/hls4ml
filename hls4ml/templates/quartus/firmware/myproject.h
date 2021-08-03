@@ -23,7 +23,6 @@
 #ifndef __INTELFPGA_COMPILER__
 #include "ac_int.h"
 #include "ac_fixed.h"
-#include <complex>
 #define hls_register
 #else
 #include "HLS/hls.h"
@@ -33,23 +32,23 @@
 
 #include "parameters.h"
 
-struct inputdat {
-  //Input Parameters
+struct input_data {
+  //hls-fpga-machine-learning insert inputs
 };
 
-struct outputdat {
-  //Output Parameters
+struct output_data {
+  //hls-fpga-machine-learning insert outputs
 };
 
 
 #ifndef __INTELFPGA_COMPILER__
-outputdat myproject(
-  //hls-fpga-machine-learning insert header
+output_data myproject(
+  input_data inputs
 );
 #else
 //hls-fpga-machine-learning insert cpragmas
-component outputdat myproject(
-  //hls-fpga-machine-learning insert header
+component output_data myproject(
+  input_data inputs
 );
 #endif
 

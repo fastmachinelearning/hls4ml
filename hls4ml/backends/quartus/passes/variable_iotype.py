@@ -1,7 +1,7 @@
 
 from hls4ml.model.optimizer import GlobalOptimizerPass
 from hls4ml.model.hls_types import Variable, TensorVariable
-from hls4ml.backends.fpga.fpga_types import ArrayVariable, StreamVariable
+from hls4ml.backends.fpga.fpga_types import ArrayVariable, StreamVariable, StructMemberVariable
 
 
 class TransformVariables(GlobalOptimizerPass):
@@ -12,8 +12,10 @@ class TransformVariables(GlobalOptimizerPass):
             if io_type == 'io_stream':
                 new_var = StreamVariable.from_variable(var)
             elif io_type == 'io_parallel':
-                if self.name in node.model.inputs:
-                    new_var = ArrayVariable.from_variable(var) # TODO replace with struct member variable
+                if node.name in node.model.inputs:
+                    new_var = StructMemberVariable.from_variable(var, pragma='hls_register', struct_name='inputs')
+                elif node.name in node.model.outputs:
+                    new_var = StructMemberVariable.from_variable(var, pragma='hls_register', struct_name='outputs')
                 else:
                     new_var = ArrayVariable.from_variable(var, pragma='hls_register')
             else:

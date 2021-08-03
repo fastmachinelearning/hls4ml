@@ -23,19 +23,21 @@
 //hls-fpga-machine-learning insert weights
 
 #ifndef __INTELFPGA_COMPILER__
-outputdat myproject(
-   //hls-fpga-machine-learning insert header
+output_data myproject(
+   input_data inputs
 ) {
 #else
 //hls-fpga-machine-learning insert cpragmas
-component outputdat myproject(
-   //hls-fpga-machine-learning insert header
+component output_data myproject(
+   input_data inputs
 ) {
 #endif
+    hls_register output_data outputs;
 
     // ****************************************
     // NETWORK INSTANTIATION
     // ****************************************
 
     //hls-fpga-machine-learning insert layers
+    return outputs;
 }

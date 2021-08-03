@@ -14,7 +14,7 @@ class TransformVariables(GlobalOptimizerPass):
             elif io_type == 'io_serial':
                 new_var = ArrayVariable.from_variable(var, pragma='stream')
             elif io_type == 'io_parallel':
-                if self.name in node.model.inputs:
+                if node.name in node.model.inputs:
                     new_var = ArrayVariable.from_variable(var, pragma='reshape')
                 else:
                     new_var = ArrayVariable.from_variable(var, pragma='partition')

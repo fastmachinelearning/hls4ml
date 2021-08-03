@@ -62,13 +62,15 @@ int main(int argc, char **argv)
   std::string iline;
   std::string pline;
 
+  std::vector<input_data> inputs;
+  std::vector<output_data> outputs;
+
   if (fin.is_open() && fpr.is_open()) {
-    //hls-fpga-machine-learning insert component-io
     std::vector<std::vector<float> > predictions;
     unsigned int num_iterations = 0;
     for (; std::getline(fin,iline) && std::getline (fpr,pline); num_iterations++) {
       if (num_iterations % CHECKPOINT == 0) {
-	std::cout << "Processing input "  << num_iterations << std::endl;
+        std::cout << "Processing input "  << num_iterations << std::endl;
       }
 
       std::vector<float> in;
@@ -77,12 +79,12 @@ int main(int argc, char **argv)
 
       std::size_t pos = 0;
       while(nextToken(iline, pos, current)) {
-	in.push_back(current);
+        in.push_back(current);
       }
 
       pos = 0;
       while(nextToken(pline, pos, current)) {
-	pr.push_back(current);
+        pr.push_back(current);
       }
 
       //hls-fpga-machine-learning insert data
