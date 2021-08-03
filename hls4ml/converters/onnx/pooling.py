@@ -1,19 +1,21 @@
 import math
-from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute, compute_pads_1d, compute_pads_2d
+from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute, compute_pads_1d, compute_pads_2d, get_onnx_input_name
+from hls4ml.converters.utils import compute_padding_1d, compute_padding_2d
 
 pool_operations = ['AveragePool', 'MaxPool']
 @onnx_handler(*pool_operations)
 def parse_pool_layer(reader, node, inputs_map, input_shapes, graph, config):
     
     layer = {}
-    layer['inputs'] = node.input
-    layer['outputs'] = node.output
-    
+    layer['name'] = node.name
+    layer['inputs'] = get_onnx_input_name(node, graph)
+    layer['class_name'] = node.op_type
+
     info = layer['class_name'].replace('Pool', '')
     strides = get_onnx_attribute(node, 'strides')
     kernel_shape = get_onnx_attribute(node, 'kernel_shape')
     
-    if len(current_shape) == 3: # 1D
+    if len(input_shapes[0]) == 3: # 1D
         layer['class_name'] = info + 'Pooling1D'
         layer['stride'] = strides[0]
         layer['pool_size'] = layer['y_filt'] = kernel_shape[0]
@@ -35,7 +37,7 @@ def parse_pool_layer(reader, node, inputs_map, input_shapes, graph, config):
 
         output_shape = [input_shapes[0][0], layer['n_filt'], layer['n_out']]
     
-    elif len(current_shape) == 4: # 2D
+    elif len(input_shapes[0]) == 4: # 2D
         layer['class_name'] = info + 'Pooling2D'
 
         layer['n_filt'] = input_shapes[0][1]

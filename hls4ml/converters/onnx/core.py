@@ -34,12 +34,17 @@ def parse_activation_layer(reader, node, inputs_map, input_shapes, graph, config
     
     layer['name'] = node.name
     layer['class_name'] = activation_map[node.op_type]
+    layer['activation'] = node.op_type.lower()
     layer['inputs'] = get_onnx_input_name(node, graph)
     
     if layer['class_name'] != 'Activation':
         
         if layer['class_name'] == 'Softmax':
             layer['activation'] = 'softmax'
+
+        elif layer['class_name'] in ['ELU', 'LeakyReLU', 'ThresholdedReLU']:
+            layer['activation'] = layer['class_name']
+            layer['activ_param'] = get_onnx_attribute(node, 'alpha', 0.01)
         
         else:
             layer['activation'] = layer['class_name']

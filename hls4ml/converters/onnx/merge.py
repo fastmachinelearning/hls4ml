@@ -9,7 +9,7 @@ def parse_merge_layer(reader, node, inputs_map, input_shapes, graph, config):
     layer['name'] = node.name
     layer['op'] = layer['class_name'].lower()
     layer['inputs'] = get_onnx_input_name(node, graph)
-    
+
     if layer['class_name'] == 'Concatenate':
         rank = len(input_shapes[0][1:])
         if rank > 3:

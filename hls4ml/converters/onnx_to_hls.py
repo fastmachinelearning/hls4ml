@@ -180,10 +180,18 @@ def get_onnx_input_name(node, graph):
     In ONNX, when calling node.input, it returns the node input's index in the graph instead of the input's name.
     However, the input's name is used for indexing in HLSModel's graph. This function return the input node's name instead.
     """
-    input_node_name = [in_node.name for in_node in graph.node if (in_node.output[0] in node.input)]
+    
+    in_node = [in_node for in_node in graph.node if (in_node.output[0] in node.input)]
 
-    if input_node_name:
+    if in_node:
+        in_node = in_node[0] #first element of the list above
+        if in_node.op_type == 'Flatten':
+            input_node_name = [x.name for x in graph.node if (x.output[0] in in_node.input)]
+        else:
+            input_node_name = [in_node.name]
+
         return input_node_name
+        
     else: #If there is no input name it's actually the first layer
         return [replace_char_inconsitency(node.input[0])]
 
