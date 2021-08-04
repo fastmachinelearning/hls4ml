@@ -10,10 +10,12 @@ def parse_merge_layer(reader, node, inputs_map, input_shapes, graph, config):
     layer['op'] = layer['class_name'].lower()
     layer['inputs'] = get_onnx_input_name(node, graph)
 
-    if layer['class_name'] == 'Concatenate':
+    if layer['class_name'] == 'Concat':
         rank = len(input_shapes[0][1:])
         if rank > 3:
             raise Exception('ERROR: Concatenation of tensors with rank > 3 is not yet supported.')
+
+        layer['class_name'] = 'Concatenate'
         layer['op'] = layer['class_name'].lower() + '{}d'.format(rank)
         layer['axis'] = get_onnx_attribute(node, 'axis')
    

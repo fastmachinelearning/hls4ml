@@ -184,11 +184,10 @@ def get_onnx_input_name(node, graph):
     in_node = [in_node for in_node in graph.node if (in_node.output[0] in node.input)]
 
     if in_node:
-        in_node = in_node[0] #first element of the list above
-        if in_node.op_type == 'Flatten':
-            input_node_name = [x.name for x in graph.node if (x.output[0] in in_node.input)]
-        else:
-            input_node_name = [in_node.name]
+        if in_node[0].op_type != 'Flatten':
+            input_node_name = [x.name for x in in_node]
+        else: #IF it's a flatten
+            input_node_name = [x.name for x in graph.node if (x.output[0] in in_node[0].input)]
 
         return input_node_name
         
