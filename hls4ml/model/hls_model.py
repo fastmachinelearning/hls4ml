@@ -18,7 +18,6 @@ from hls4ml.report.vivado_report import parse_vivado_report
 class HLSConfig(object):
     def __init__(self, config):
         self.config = config
-
         self.backend = get_backend(self.config.get('Backend', 'Vivado'))
         self.writer = get_writer(self.config.get('Backend', 'Vivado'))
 

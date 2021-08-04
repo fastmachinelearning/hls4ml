@@ -29,8 +29,15 @@ class VivadoAcceleratorConfig(object):
                 if prec.get('Input') is None or prec.get('Output') is None:
                     raise Exception('Input and Output fields must be provided in the AcceleratorConfig->Precision')
         else:
-            accel_config = {'Precision': {}}
-            config['AcceleratorConfig'] = accel_config
+            accel_config = {'Precision': 
+                                {
+                                    'Input': 'float',
+                                    'Output': 'float'
+                                },
+                            'Driver': 'python',
+                            'Interface': 'axi_stream'
+                            }
+            config.config['AcceleratorConfig'] = accel_config
 
         self.interface = self.config['AcceleratorConfig'].get('Interface',
                                                               'axi_stream')  # axi_stream, axi_master, axi_lite
