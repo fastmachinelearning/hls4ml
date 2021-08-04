@@ -34,10 +34,10 @@ def parse_gemm_layer(reader, node, inputs_map, input_shapes, graph, config):
 
     else: #Normal dense
         layer['n_in'] = input_shapes[0][1]
-        layer['n_out'] = next((x.type.tensor_type.shape.dim[-1].dim_value for x in graph.value_info if x.name == node.output[0]), None)
-
         tran_weight = get_onnx_attribute(node, 'transB', 0)
         reader.add_input(layer['name'], node.input, tran_weight)
+
+        layer['n_out'] = reader.get_weights_data(layer['name'], 'kernel').shape[1]      
     
         output_shape = [input_shapes[0][0], layer['n_out']]
     
