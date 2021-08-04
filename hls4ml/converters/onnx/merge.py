@@ -9,6 +9,7 @@ def parse_merge_layer(reader, node, inputs_map, input_shapes, graph, config):
     layer['name'] = node.name
     layer['op'] = layer['class_name'].lower()
     layer['inputs'] = get_onnx_input_name(node, graph)
+    output_shape = input_shapes[0]
 
     if layer['class_name'] == 'Concat':
         rank = len(input_shapes[0][1:])
@@ -18,6 +19,10 @@ def parse_merge_layer(reader, node, inputs_map, input_shapes, graph, config):
         layer['class_name'] = 'Concatenate'
         layer['op'] = layer['class_name'].lower() + '{}d'.format(rank)
         layer['axis'] = get_onnx_attribute(node, 'axis')
+
+         #Calculate output shape
+        new_dim = next((x.type.tensor_type.shape.dim[1].dim_value for x in graph.value_info if x.name == node.output[0]), None)
+        output_shape[layer['axis']] = new_dim
    
     elif layer['class_name'] ==  'Add':
         #Check if the layer is an AddBias
@@ -31,4 +36,4 @@ def parse_merge_layer(reader, node, inputs_map, input_shapes, graph, config):
     if len(layer['inputs']) > 2:
         raise Exception('ERROR: Merging more than two tensors is not yet supported.')
     
-    return layer, input_shapes[0]
+    return layer, output_shape

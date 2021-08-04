@@ -20,8 +20,7 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
         layer['in_width']= input_shapes[0][2]
         layer['n_chan']=input_shapes[0][1]
         layer['filt_width']= kernel_shape[0]
-        layer['n_filt']= next((x.type.tensor_type.shape.dim[1].dim_value for x in graph.value_info if x.name == node.output[0]), None)
-        
+        layer['n_filt']= reader.get_weights_data(layer['name'], 'kernel').shape[2]
         layer['stride_width'] = strides[0]
         pads = compute_pads_1d(node, layer)
 
@@ -32,7 +31,7 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
             layer['padding'] = 'valid'
         else:
             layer['padding'] = 'same'
-            
+        
         (layer['out_width'],_,_) = compute_padding_1d(layer['padding'],
                                                       layer['in_width'],
                                                       layer['stride_width'],
@@ -46,9 +45,11 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
 
         layer['in_height']=input_shapes[0][2]
         layer['in_width']=input_shapes[0][3]
+        layer['n_chan']=input_shapes[0][1]
+
         layer['filt_height']=kernel_shape[0]
         layer['filt_width']=kernel_shape[1]
-        layer['n_chan']=input_shapes[0][1]
+        
         layer['n_filt']=next((x.type.tensor_type.shape.dim[1].dim_value for x in graph.value_info if x.name == node.output[0]), None)
         layer['stride_height'] = strides[0]
         layer['stride_width'] = strides[1]

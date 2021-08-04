@@ -12,13 +12,16 @@ def parse_gemm_layer(reader, node, inputs_map, input_shapes, graph, config):
     
     if len(input_shapes[0]) == 3: #Batch dense, remap to pointwise Conv1D
         layer['class_name'] = 'Conv1D'
-        layer['data_format'] = 'channels_first'
-        layer['in_width']= input_shapes[0][2]
+        layer['data_format'] = 'channels_last' #Batch dense in ONNX is apparently channel last
+
+        layer['in_width']= input_shapes[0][1]
+        layer['n_chan']= input_shapes[0][2]
+        reader.add_input(layer['name'], node.input)
 
         layer['stride_width'] = layer['filt_width'] = 1
-        layer['n_chan']= layer['n_filt'] = input_shapes[0][1]
         layer['pad_left'] = layer['pad_right'] = 0
-
+        layer['n_filt'] = reader.get_weights_data(layer['name'], 'kernel').shape[0]
+        
         layer['padding'] = 'valid'
 
         (layer['out_width'],_,_) = compute_padding_1d(layer['padding'],
@@ -26,8 +29,8 @@ def parse_gemm_layer(reader, node, inputs_map, input_shapes, graph, config):
                                                       layer['stride_width'],
                                                       layer['filt_width'])
 
-        output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_width']]
-        reader.add_input(layer['name'], node.input)
+        output_shape = [input_shapes[0][0], layer['out_width'], layer['n_filt']]
+        
 
     else: #Normal dense
         layer['n_in'] = input_shapes[0][1]
