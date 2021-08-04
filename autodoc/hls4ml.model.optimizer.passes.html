@@ -118,6 +118,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes.clone">hls4ml.model.optimizer.passes.clone module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes.conv_same_pad">hls4ml.model.optimizer.passes.conv_same_pad module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes.fuse_biasadd">hls4ml.model.optimizer.passes.fuse_biasadd module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes.multi_dense">hls4ml.model.optimizer.passes.multi_dense module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes.nop">hls4ml.model.optimizer.passes.nop module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes.pointwise">hls4ml.model.optimizer.passes.pointwise module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hls4ml-model-optimizer-passes-qkeras-module">hls4ml.model.optimizer.passes.qkeras module</a></li>
@@ -375,6 +376,25 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 <dl class="method">
 <dt id="hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd.transform">
 <code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-hls4ml.model.optimizer.passes.multi_dense">
+<span id="hls4ml-model-optimizer-passes-multi-dense-module"></span><h2>hls4ml.model.optimizer.passes.multi_dense module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.multi_dense" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.multi_dense.</code><code class="sig-name descname">ReplaceMultidimensionalDenseWithConv</code><a class="headerlink" href="#hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv.match">
+<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv.match" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv.transform" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
