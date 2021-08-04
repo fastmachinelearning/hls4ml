@@ -1,4 +1,5 @@
 from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute, get_onnx_input_name
+from hls4ml.converters.utils import compute_padding_1d
 
 @onnx_handler(*['Gemm', 'MatMul'])
 def parse_gemm_layer(reader, node, inputs_map, input_shapes, graph, config):
@@ -9,13 +10,33 @@ def parse_gemm_layer(reader, node, inputs_map, input_shapes, graph, config):
     layer['name'] = node.name
     layer['inputs'] = get_onnx_input_name(node, graph)
     
-    layer['n_in'] = input_shapes[0][1]
-    layer['n_out'] = next((x.type.tensor_type.shape.dim[-1].dim_value for x in graph.value_info if x.name == node.output[0]), None)
+    if len(input_shapes[0]) == 3: #Batch dense, remap to pointwise Conv1D
+        layer['class_name'] = 'Conv1D'
+        layer['data_format'] = 'channels_first'
+        layer['in_width']= input_shapes[0][2]
+
+        layer['stride_width'] = layer['filt_width'] = 1
+        layer['n_chan']= layer['n_filt'] = input_shapes[0][1]
+        layer['pad_left'] = layer['pad_right'] = 0
+
+        layer['padding'] = 'valid'
+
+        (layer['out_width'],_,_) = compute_padding_1d(layer['padding'],
+                                                      layer['in_width'],
+                                                      layer['stride_width'],
+                                                      layer['filt_width'])
+
+        output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_width']]
+        reader.add_input(layer['name'], node.input)
+
+    else: #Normal dense
+        layer['n_in'] = input_shapes[0][1]
+        layer['n_out'] = next((x.type.tensor_type.shape.dim[-1].dim_value for x in graph.value_info if x.name == node.output[0]), None)
+
+        tran_weight = get_onnx_attribute(node, 'transB', 0)
+        reader.add_input(layer['name'], node.input, tran_weight)
     
-    output_shape = [input_shapes[0][0], layer['n_out']]
-    
-    tran_weight = get_onnx_attribute(node, 'transB', 0)
-    reader.add_input(layer['name'], node.input, tran_weight)
+        output_shape = [input_shapes[0][0], layer['n_out']]
     
     return layer, output_shape
 

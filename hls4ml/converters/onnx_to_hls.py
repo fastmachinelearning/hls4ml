@@ -110,10 +110,10 @@ def get_input_shape(model, operation, input_idx=0):
 def compute_pads_1d(operation, layer):
     auto_pad = get_onnx_attribute(operation, 'auto_pad', 'NOTSET')
     if auto_pad != 'NOTSET':
-        if (layer['y_in'] % layer['stride'] == 0):
-            pad_along_width = max(layer['y_filt'] - layer['stride'], 0)
+        if (layer['in_width'] % layer['stride_width'] == 0):
+            pad_along_width = max(layer['filt_width'] - layer['stride_width'], 0)
         else:
-            pad_along_width = max(layer['y_filt'] - (layer['y_in'] % layer['stride']), 0)
+            pad_along_width = max(layer['filt_width'] - (layer['in_width'] % layer['stride_width']), 0)
 
         pads = [pad_along_width // 2, pad_along_width - (pad_along_width // 2)]
 

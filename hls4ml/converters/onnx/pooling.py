@@ -10,6 +10,7 @@ def parse_pool_layer(reader, node, inputs_map, input_shapes, graph, config):
     layer['name'] = node.name
     layer['inputs'] = get_onnx_input_name(node, graph)
     layer['class_name'] = node.op_type
+    layer['data_format'] = 'channels_first' #Default ONNX
 
     info = layer['class_name'].replace('Pool', '')
     strides = get_onnx_attribute(node, 'strides')
@@ -70,4 +71,38 @@ def parse_pool_layer(reader, node, inputs_map, input_shapes, graph, config):
         
         output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
     
+    return layer, output_shape
+
+global_pooling_layers = ['GlobalMaxPool', 'GlobalAveragePool']
+@onnx_handler(*global_pooling_layers)
+def parse_global_pooling_layer(reader, node, inputs_map, input_shapes, graph, config):
+
+    layer = {}
+    layer['name'] = node.name
+    layer['inputs'] = get_onnx_input_name(node, graph)
+    layer['class_name'] = node.op_type
+    layer['data_format'] = 'channels_first'
+
+    #Sonme default parameters for global pooling
+    layer['n_out'] = 1
+    layer['pad_left'] = layer['pad_right'] = 0
+    layer['stride'] = 0
+
+    info = layer['class_name'].replace('Pool', '')
+
+    if len(input_shapes[0]) == 3: # 1D
+        layer['class_name'] = info + 'Pooling1D'
+
+        layer['n_in'] = input_shapes[0][2]
+        layer['n_filt'] = input_shapes[0][1]
+    
+    elif len(input_shapes[0]) == 4:
+        layer['class_name'] = info + 'Pooling2D'
+
+        layer['n_filt'] = input_shapes[0][1]
+        layer['in_height'] = input_shapes[0][2]
+        layer['in_width'] = input_shapes[0][3]
+    
+    output_shape = [input_shapes[0][0], layer['n_filt']] + [1]*(len(input_shapes[0]) - 2)
+
     return layer, output_shape

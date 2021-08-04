@@ -18,8 +18,8 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
         layer['class_name'] = 'Conv1D'
 
         layer['in_width']= input_shapes[0][2]
+        layer['n_chan']=input_shapes[0][1]
         layer['filt_width']= kernel_shape[0]
-        layer['n_chan']= input_shapes[0][1]
         layer['n_filt']= next((x.type.tensor_type.shape.dim[1].dim_value for x in graph.value_info if x.name == node.output[0]), None)
         
         layer['stride_width'] = strides[0]
