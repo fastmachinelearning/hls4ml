@@ -11,7 +11,7 @@ from hls4ml.model.optimizer.passes.conv_same_pad import InsertZeroPaddingBeforeC
 from hls4ml.model.optimizer.passes.conv_same_pad import InsertZeroPaddingBeforeConv2D
 from hls4ml.model.optimizer.passes.pointwise import OptimizePointwiseConv
 from hls4ml.model.optimizer.passes.clone import CloneOutput
-from hls4ml.model.optimizer.passes.repack_stream import ReshapeStream
+from hls4ml.model.optimizer.passes.repack_stream import ReshapeStream, BroadcastStream
 from hls4ml.model.optimizer.passes.transpose_opt import RemoveUselessTranspose
 from hls4ml.model.optimizer.passes.multi_dense import ReplaceMultidimensionalDenseWithConv
 
@@ -35,6 +35,7 @@ register_pass('clone_output', CloneOutput)
 register_pass('reshape_stream', ReshapeStream)
 register_pass('remove_useless_transpose', RemoveUselessTranspose)
 register_pass('replace_multidense_conv', ReplaceMultidimensionalDenseWithConv)
+register_pass('broadcast_stream', BroadcastStream)
 
 if __qkeras_optimizers__:
     register_pass('output_rounding_saturation_mode', OutputRoundingSaturationMode)
