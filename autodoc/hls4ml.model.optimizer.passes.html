@@ -458,6 +458,44 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 <div class="section" id="module-hls4ml.model.optimizer.passes.repack_stream">
 <span id="hls4ml-model-optimizer-passes-repack-stream-module"></span><h2>hls4ml.model.optimizer.passes.repack_stream module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.repack_stream" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
+<dt id="hls4ml.model.optimizer.passes.repack_stream.Broadcast">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.repack_stream.</code><code class="sig-name descname">Broadcast</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">name</em>, <em class="sig-param">attributes</em>, <em class="sig-param">inputs</em>, <em class="sig-param">outputs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.repack_stream.Broadcast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.hls_layers.Layer" title="hls4ml.model.hls_layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.hls_layers.Layer</span></code></a></p>
+<p>Inserted between layers for broadcasting.</p>
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.repack_stream.Broadcast.config_cpp">
+<code class="sig-name descname">config_cpp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.repack_stream.Broadcast.config_cpp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.repack_stream.Broadcast.function_cpp">
+<code class="sig-name descname">function_cpp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.repack_stream.Broadcast.function_cpp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.repack_stream.Broadcast.initialize">
+<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.repack_stream.Broadcast.initialize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hls4ml.model.optimizer.passes.repack_stream.BroadcastStream">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.repack_stream.</code><code class="sig-name descname">BroadcastStream</code><a class="headerlink" href="#hls4ml.model.optimizer.passes.repack_stream.BroadcastStream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.repack_stream.BroadcastStream.match">
+<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.repack_stream.BroadcastStream.match" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.repack_stream.BroadcastStream.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.repack_stream.BroadcastStream.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="hls4ml.model.optimizer.passes.repack_stream.Repack">
 <em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.repack_stream.</code><code class="sig-name descname">Repack</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">name</em>, <em class="sig-param">attributes</em>, <em class="sig-param">inputs</em>, <em class="sig-param">outputs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.repack_stream.Repack" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.hls_layers.Layer" title="hls4ml.model.hls_layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.hls_layers.Layer</span></code></a></p>
