@@ -20,8 +20,8 @@ def parse_merge_layer(reader, node, inputs_map, input_shapes, graph, config):
         layer['op'] = layer['class_name'].lower() + '{}d'.format(rank)
         layer['axis'] = get_onnx_attribute(node, 'axis')
 
-         #Calculate output shape
-        new_dim = next((x.type.tensor_type.shape.dim[1].dim_value for x in graph.value_info if x.name == node.output[0]), None)
+        #Calculate output shape
+        new_dim = sum([x.type.tensor_type.shape.dim[layer['axis']].dim_value for x in graph.value_info if x.name in node.input])
         output_shape[layer['axis']] = new_dim
    
     elif layer['class_name'] ==  'Add':
