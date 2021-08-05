@@ -323,7 +323,9 @@ class HLSModel(object):
             name = layer['name']
             inputs = layer.get('inputs', [])
             outputs = layer.get('outputs', [])
-            if len(inputs) == 0:
+            if kind in ['InputLayer', 'Input']:
+                inputs = ['input']
+            elif len(inputs) == 0:
                 inputs = [next(reversed(self.graph), 'input')]
             if len(outputs) == 0:
                 outputs = [name]
