@@ -90,12 +90,9 @@ class ReshapeStream(OptimizerPass):
 class BroadcastStream(OptimizerPass):
     def match(self, node):
         if node.__class__.__name__ == 'Merge':
-            try: 
-                inp1 = node.get_input_variable(node.inputs[0])
-                inp2 = node.get_input_variable(node.inputs[1])
-                return inp1.shape != inp2.shape
-            except:
-                return False
+            inp1 = node.get_input_variable(node.inputs[0])
+            inp2 = node.get_input_variable(node.inputs[1])
+            return inp1.shape != inp2.shape
         else:
             return False
         
