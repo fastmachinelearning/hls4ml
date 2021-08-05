@@ -18,8 +18,12 @@ def parse_pool_layer(reader, node, inputs_map, input_shapes, graph, config):
     
     if len(input_shapes[0]) == 3: # 1D
         layer['class_name'] = info + 'Pooling1D'
-        layer['stride'] = strides[0]
-        layer['pool_size'] = layer['y_filt'] = kernel_shape[0]
+
+        layer['n_filt'] = input_shapes[0][1]
+        layer['n_in'] = input_shapes[0][2]
+
+        layer['pool_width'] = kernel_shape[0]
+        layer['stride_width'] = strides[0]
         
         #Padding
         pads = compute_pads_1d(node, layer)
@@ -31,10 +35,10 @@ def parse_pool_layer(reader, node, inputs_map, input_shapes, graph, config):
         else:
             layer['padding'] = 'same'
             
-        (layer['out_width'],_,_) = compute_padding_1d(layer['padding'],
-                                                      layer['in_width'],
+        (layer['n_out'],_,_) = compute_padding_1d(layer['padding'],
+                                                      layer['n_in'],
                                                       layer['stride_width'],
-                                                      layer['filt_width'])
+                                                      layer['pool_width'])
 
         output_shape = [input_shapes[0][0], layer['n_filt'], layer['n_out']]
     
