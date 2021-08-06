@@ -456,8 +456,31 @@ class HLSModel(object):
             new_node (Layer): The new node
 
         """
+        inputs = old_node.inputs.copy()
+        # temporarily rename the new_node if it has the same name as old_node
+        # to avoid removing it
+        same_name = new_node.name == old_node.name
+        name = new_node.name
+        new_node.name += '_new' if new_node.name == old_node.name else ''
         self.insert_node(new_node, before=old_node)
+        new_node.inputs = inputs
         self.remove_node(old_node, rewire=True)
+
+        # if new_node & old_node had the same name, clean up
+        if same_name:
+            # Rename the layer in the graph
+            new_node.name = name
+            new_graph = OrderedDict()
+            for k, v in self.graph.items():
+                new_graph[name if k == name + '_new' else k] = v
+            self.graph = new_graph
+
+            # reinstate the output variables (deleted by remove_node)
+            for o in new_node.outputs:
+                out_var = new_node.get_output_variable(output_name=o)
+                if o in self.outputs:
+                    out_var.type.name = 'result_t'
+                self.output_vars[o] = out_var
 
     def get_weights_data(self, layer_name, var_name):
         return self.reader.get_weights_data(layer_name, var_name)
