@@ -123,7 +123,7 @@ class VivadoAcceleratorConfig(object):
                self.get_driver_file()
 
     def get_driver_file(self):
-        driver_ext = '.py' if self.driver is 'python' else '.h'
+        driver_ext = '.py' if self.driver == 'python' else '.h'
         return self.interface + '_driver' + driver_ext
 
     def get_input_type(self):
