@@ -227,7 +227,7 @@ concat_config_template = """struct config{index} : nnet::concat_config {{
     static const unsigned n_elem2_1 = {n_elem2_1};
     static const unsigned n_elem2_2 = {n_elem2_2};
 
-    static const unsigned axis = {axis};
+    static const int axis = {axis};
 }};\n"""
 
 resize_config_template = """struct config{index} : nnet::resize_config {{
@@ -242,7 +242,7 @@ transpose_config_template = """struct config{index} : nnet::transpose_config {{
     static const unsigned depth = {depth};
     static const unsigned height = {height};
     static const unsigned width = {width};
-    static const unsigned perm[3] = {{{perm_str}}};
+    static constexpr unsigned perm[3] = {{{perm_str}}};
 }};\n"""
 
 garnet_common_config_template = """
@@ -364,7 +364,7 @@ zeropad1d_function_template = 'nnet::zeropad1d_{data_format}<{input_t}, {output_
 zeropad2d_function_template = 'nnet::zeropad2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
 resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
-transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}, {output});'
+transpose_function_template = 'nnet::transpose_{dim}<{input_t}, {config}>({input}, {output});'
 garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
 garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
 
@@ -560,7 +560,11 @@ class VivadoBackend(Backend):
         # Current limitations
         assert pad == 0
 
-        min_W = (math.ceil(kernel_size / stride) - 1) * stride + kernel_size
+        if kernel_size >= stride:
+            min_W = (math.ceil(kernel_size / stride) - 1) * stride + kernel_size
+        else:
+            min_W = (math.ceil(stride / kernel_size) - 1) * stride + kernel_size
+
         min_oW = int((min_W - kernel_size) // stride + 1)
 
         out_W = int((in_W - kernel_size) // stride + 1)
@@ -604,8 +608,16 @@ class VivadoBackend(Backend):
         assert stride_height == stride_width
         assert pad == 0
 
-        min_H = (math.ceil(kernel_height / stride_height) - 1) * stride_height + kernel_height
-        min_W = (math.ceil(kernel_width / stride_width) - 1) * stride_width + kernel_width
+        if kernel_height >= stride_height:
+            min_H = (math.ceil(kernel_height / stride_height) - 1) * stride_height + kernel_height
+        else:
+            min_H = (math.ceil(stride_height / kernel_height) - 1) * stride_height + kernel_height
+        
+        if kernel_width >= stride_width:
+            min_W = (math.ceil(kernel_width / stride_width) - 1) * stride_width + kernel_width
+        else:
+            min_W = (math.ceil(stride_width / kernel_width) - 1) * stride_width + kernel_width
+
         min_oH = int((min_H - kernel_height) // stride_height + 1)
         min_oW = int((min_W - kernel_width) // stride_width + 1)
 
