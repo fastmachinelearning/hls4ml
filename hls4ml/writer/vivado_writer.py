@@ -225,8 +225,6 @@ class VivadoWriter(Writer):
                                 newline += '    ' + def_cpp + ';\n'
                                 if var.pragma:
                                     newline += '    ' + self._make_array_pragma(var) + '\n'
-                                if model.config.model_strategy.lower() == 'resource':
-                                    newline += '    ' + self._make_stable_pragma(var) + '\n'
                     func = layer.function_cpp()
                     if func:
                         if len(func) == 1:
@@ -314,7 +312,6 @@ class VivadoWriter(Writer):
                     all_precision.update(layer_precision)
                 for used_type in all_precision.values():
                     newline += self.type_definition_cpp(model, used_type)
-
             else:
                 newline = line
             fout.write(newline)

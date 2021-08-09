@@ -35,6 +35,8 @@ def main():
     config_parser.add_argument('-p', '--project', help='Project name', default='myproject')
     config_parser.add_argument('-d', '--dir', help='Project output directory', default='my-hls-test')
     config_parser.add_argument('-f', '--fpga', help='FPGA part', default='xcku115-flvb2104-2-i')
+    config_parser.add_argument('-bo', '--board', help='Board used.', default='pynq-z2')
+    config_parser.add_argument('-ba', '--backend', help='Backend to use (Vivado, VivadoAccelerator)', default='Vivado')
     config_parser.add_argument('-c', '--clock', help='Clock frequency (ns)', type=int, default=5)
     config_parser.add_argument('-g', '--granularity', help='Granularity of configuration. One of "model", "type" or "name"', default='model')
     config_parser.add_argument('-x', '--precision', help='Default precision', default='ap_fixed<16,6>')
@@ -73,10 +75,12 @@ def config(args):
         print('Model file (-m or --model) must be provided.')
         sys.exit(1)
     
-    config = hls4ml.utils.config.create_vivado_config(
+    config = hls4ml.utils.config.create_config(
+        backend=args.backend,
         output_dir=args.dir,
         project_name=args.project,
-        fpga_part=args.fpga,
+        part=args.fpga,
+        board=args.board,
         clock_period=args.clock
     )
 
@@ -157,7 +161,7 @@ def build(args):
     # Check if vivado_hls is available
     if 'linux' in sys.platform or 'darwin' in sys.platform:
         backend = yamlConfig.get('Backend', 'Vivado')
-        if backend == 'Vivado':
+        if backend in ['Vivado', 'VivadoAccelerator']:
             found = os.system('command -v vivado_hls > /dev/null')
             if found != 0:
                 print('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
@@ -167,7 +171,7 @@ def build(args):
         elif backend == 'Mentor':
             raise NotImplementedError
         else:
-            raise Exception('Backend values can be [Vivado, Intel, Mentor]')
+            raise Exception('Backend values can be [Vivado, Intel, Mentor, VivadoAccelerator]')
     
     os.system('cd {dir} && vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
         .format(dir=args.project, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))

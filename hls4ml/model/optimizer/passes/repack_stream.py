@@ -63,8 +63,9 @@ register_layer('Repack', Repack)
 register_layer('Broadcast', Broadcast)
 
 # Register the templates for config and function
-templates.get_backend('Vivado').register_templates('Repack', repack_function_template, None, repack_include_list)
-templates.get_backend('Vivado').register_templates('Broadcast', broadcast_function_template, broadcast_config_template, broadcast_include_list)
+for backend in ['Vivado', 'VivadoAccelerator']:
+    templates.get_backend(backend).register_templates('Repack', repack_function_template, None, repack_include_list)
+    templates.get_backend(backend).register_templates('Broadcast', broadcast_function_template, broadcast_config_template, broadcast_include_list)
 
 
 class ReshapeStream(OptimizerPass):
@@ -73,7 +74,7 @@ class ReshapeStream(OptimizerPass):
         return node.__class__.__name__ == 'Reshape'
 
     def transform(self, model, node):
-        if model.config.backend.name != 'Vivado' or \
+        if model.config.backend.name not in ['Vivado', 'VivadoAccelerator'] or \
             model.config.get_config_value('IOType') != 'io_stream':
             return False
 

@@ -127,7 +127,7 @@ def parse_vivado_report(hls_dir):
         csim_results = []
         with open(sim_file, 'r') as f:
             for line in f.readlines():
-                csim_results.append([float(r) for r in line.split()])
+                csim_results.append([r for r in line.split()])
         report['CSimResults'] = csim_results
 
     sim_file = hls_dir + '/tb_data/rtl_cosim_results.log'
@@ -135,7 +135,7 @@ def parse_vivado_report(hls_dir):
         cosim_results = []
         with open(sim_file, 'r') as f:
             for line in f.readlines():
-                cosim_results.append([float(r) for r in line.split()])
+                cosim_results.append([r for r in line.split()])
         report['CosimResults'] = cosim_results
 
     syn_file = sln_dir + '/' + solutions[0] + '/syn/report/{}_csynth.xml'.format(top_func_name)

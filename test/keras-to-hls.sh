@@ -2,6 +2,8 @@
 
 pycmd=python
 xilinxpart="xcvu9p-flgb2104-2-e"
+board="None"
+backend="Vivado"
 clock=5
 io=io_parallel
 rf=1
@@ -21,8 +23,12 @@ function print_usage {
    echo "Multiple models can be specified."
    echo ""
    echo "Options are:"
-   echo "   -x DEVICE"
+   echo "   -x XILINXPART"
    echo "      Xilinx device part number. Defaults to 'xcvu9p-flgb2104-2-e'."
+   echo "   -b BOARD"
+   echo "      Board used. Defaults to 'pynq-z2'."
+   echo "   -B BACKEND"
+   echo "      Backend to use for the generation of the code. Defaults to 'Vivado'."
    echo "   -c CLOCK"
    echo "      Clock period to use. Defaults to 5."
    echo "   -s"
@@ -41,9 +47,13 @@ function print_usage {
    echo "      Prints this help message."
 }
 
-while getopts ":x:c:sr:g:t:d:y:h" opt; do
+while getopts ":x:b:B:c:s:r:g:t:d:y:h" opt; do
    case "$opt" in
    x) xilinxpart=$OPTARG
+      ;;
+   b) board=$OPTARG
+      ;;
+   B) backend=$OPTARG
       ;;
    c) clock=$OPTARG
       ;;
@@ -105,6 +115,8 @@ do
    echo "OutputDir: ${prjdir}" >> ${file}
    echo "ProjectName: myproject" >> ${file}
    echo "XilinxPart: ${xilinxpart}" >> ${file}
+   echo "Board: ${board}" >> ${file}
+   echo "Backend: ${backend}" >> ${file}
    echo "ClockPeriod: ${clock}" >> ${file}
    echo "" >> ${file}
    echo "IOType: ${io}" >> ${file}

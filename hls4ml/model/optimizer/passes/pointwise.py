@@ -28,19 +28,20 @@ register_layer('PointwiseConv1D', PointwiseConv1D)
 register_layer('PointwiseConv2D', PointwiseConv2D)
 
 # Register the templates for config and function
-templates.get_backend('Vivado').register_templates(
-    'PointwiseConv1D',
-    pointwise_conv1d_function_template,
-    templates.get_backend('Vivado').get_config_template('Conv1D'),
-    sepconv1d_include_list
-)
+for backend in ['Vivado', 'VivadoAccelerator']:
+    templates.get_backend(backend).register_templates(
+        'PointwiseConv1D',
+        pointwise_conv1d_function_template,
+        templates.get_backend(backend).get_config_template('Conv1D'),
+        sepconv1d_include_list
+    )
 
-templates.get_backend('Vivado').register_templates(
-    'PointwiseConv2D',
-    pointwise_conv2d_function_template,
-    templates.get_backend('Vivado').get_config_template('Conv2D'),
-    sepconv2d_include_list
-)
+    templates.get_backend(backend).register_templates(
+        'PointwiseConv2D',
+        pointwise_conv2d_function_template,
+        templates.get_backend(backend).get_config_template('Conv2D'),
+        sepconv2d_include_list
+    )
 
 class OptimizePointwiseConv(OptimizerPass):
     def match(self, node):
