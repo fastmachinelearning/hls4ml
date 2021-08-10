@@ -456,6 +456,8 @@ class Layer(object):
 
     def make_stream_variable(self, shape, dim_names, var_name='layer{index}_out', type_name='layer{index}_t', precision=None, depth=0):
         pack_factor = self.model.config.get_layer_config_value(self, 'PackFactor', default=1)
+        if depth == 0:
+            depth = self.model.config.get_layer_config_value(self, 'StreamDepth', default=0)
         
         return StreamVariable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, n_pack=pack_factor, depth=depth, index=self.index)
 
