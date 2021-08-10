@@ -5,6 +5,7 @@ from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.hls_model import Layer, register_layer
 from hls4ml.templates import templates
 
+
 class Repack(Layer):
     ''' Inserted between layers with different packing factors.'''
 
@@ -23,6 +24,7 @@ class Repack(Layer):
 
     def config_cpp(self):
         return None
+
 
 class Broadcast(Layer):
     ''' Inserted between layers for broadcasting.'''
@@ -45,6 +47,7 @@ class Broadcast(Layer):
         params['n_chan'] = self.get_input_variable().shape[2]
         params['n_dupl'] = int(np.prod(self.get_output_variable().shape)/np.prod(self.get_input_variable().shape))
         return self._config_template.format(**params)
+
 
 repack_function_template = 'nnet::repack_stream<{input_t}, {output_t}, {size}>({input}, {output});'
 repack_include_list = ['nnet_utils/nnet_stream.h']
@@ -69,12 +72,13 @@ templates.get_backend('Vivado').register_templates('Broadcast', broadcast_functi
 
 class ReshapeStream(OptimizerPass):
     ''' Repacks stream for Reshape layer '''
+
     def match(self, node):
         return node.__class__.__name__ == 'Reshape'
 
     def transform(self, model, node):
         if model.config.backend.name != 'Vivado' or \
-            model.config.get_config_value('IOType') != 'io_stream':
+                model.config.get_config_value('IOType') != 'io_stream':
             return False
 
         attrs = {
@@ -87,6 +91,7 @@ class ReshapeStream(OptimizerPass):
 
         return True
 
+
 class BroadcastStream(OptimizerPass):
     def match(self, node):
         if node.__class__.__name__ == 'Merge':
@@ -95,12 +100,12 @@ class BroadcastStream(OptimizerPass):
             return inp1.shape != inp2.shape
         else:
             return False
-        
+
     def transform(self, model, node):
         if model.config.backend.name not in ['Vivado'] or \
-            model.config.get_config_value('IOType') != 'io_stream':
+                model.config.get_config_value('IOType') != 'io_stream':
             return False
-            
+
         inp1 = node.get_input_variable(node.inputs[0])
         inp2 = node.get_input_variable(node.inputs[1])
         if np.prod(inp1.shape) > np.prod(inp2.shape):

@@ -40,6 +40,7 @@ try:
 except ImportError:
     __tensorflow_enabled__ = False
 
+
 def parse_yaml_config(config_file):
     """Parse conversion configuration from the provided YAML file.
 
@@ -80,6 +81,7 @@ def parse_yaml_config(config_file):
         parsed_config = yaml.load(file, Loader=yaml.SafeLoader)
     return parsed_config
 
+
 def convert_from_config(config):
     """Convert to hls4ml model based on the provided configuration.
 
@@ -117,8 +119,9 @@ def convert_from_config(config):
 
     return model
 
+
 def convert_from_keras_model(model, output_dir='my-hls-test', project_name='myproject',
-    fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
+                             fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
     """Convert to hls4ml model based on the provided configuration.
 
     Args:
