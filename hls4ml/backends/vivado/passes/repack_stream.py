@@ -2,7 +2,7 @@ import numpy as np
 
 from hls4ml.model.optimizer import OptimizerPass
 
-from hls4ml.model.hls_model import Layer, Reshape, register_layer
+from hls4ml.model.hls_layers import Layer, Reshape, register_layer
 from hls4ml.backends import get_backend
 
 class Repack(Layer):

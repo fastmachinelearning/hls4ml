@@ -2,7 +2,7 @@ import numpy as np
 import re
 
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.hls_model import Conv1D, Conv2D, register_layer
+from hls4ml.model.hls_layers import Conv1D, Conv2D, register_layer
 
 class PointwiseConv1D(Conv1D):
     ''' Optimized Conv1D implementation for 1x1 kernels. '''
