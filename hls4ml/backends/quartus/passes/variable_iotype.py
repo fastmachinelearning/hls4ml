@@ -13,9 +13,15 @@ class TransformVariables(GlobalOptimizerPass):
                 new_var = StreamVariable.from_variable(var)
             elif io_type == 'io_parallel':
                 if node.name in node.model.inputs:
-                    new_var = StructMemberVariable.from_variable(var, pragma='hls_register', struct_name='inputs')
+                    if isinstance(var, StructMemberVariable):
+                        new_var = var
+                    else:
+                        new_var = StructMemberVariable.from_variable(var, pragma='hls_register', struct_name='inputs')
                 elif node.name in node.model.outputs:
-                    new_var = StructMemberVariable.from_variable(var, pragma='hls_register', struct_name='outputs')
+                    if isinstance(var, StructMemberVariable):
+                        new_var = var
+                    else:
+                        new_var = StructMemberVariable.from_variable(var, pragma='hls_register', struct_name='outputs')
                 else:
                     new_var = ArrayVariable.from_variable(var, pragma='hls_register')
             else:
