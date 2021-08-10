@@ -66,14 +66,14 @@ class VivadoAcceleratorConfig(object):
         elif self.input_type is 'double':
             self.input_bitwidth = 64
         else:
-            self.input_bitwidth = inp_axi_t.width
+            self.input_bitwidth = config.backend.convert_precision_string(inp_axi_t).width
 
         if out_axi_t is 'float':
             self.output_bitwidth = 32
         elif out_axi_t is 'double':
             self.output_bitwidth = 64
         else:
-            self.output_bitwidth = out_axi_t.width
+            self.output_bitwidth = config.backend.convert_precision_string(out_axi_t).width
 
     def _next_factor8_type(self, p):
         ''' Return a new type with the width rounded to the next factor of 8 up to p's width
