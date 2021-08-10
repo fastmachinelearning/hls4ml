@@ -1,0 +1,87 @@
+#!/bin/bash
+# Copyright (c) 2017, Medicine Yeh
+# MIT License
+
+# Turn on this to replace any pragma
+REPLACE_ANY_PRAGMA=1
+
+function replace_all()
+{
+    local prefix="$1"
+    local keywords=("${!2}")
+    local pattern="$3"
+    local file_pathes=("${!4}")
+
+    # echo "Keywords     : ${keywords[*]}"
+    # echo "Pattern      : ${pattern}"
+    # echo "File Path    : ${file_pathes[*]}"
+
+    for file_path in "${file_pathes[@]}"; do
+        [[ ! -r "$file_path" ]] && continue
+        for w in "${keywords[@]}"; do
+            # echo "Replace '${prefix}$w' in '$file_path'"
+            sed -i "s/${prefix}${w}/${pattern}${prefix}${w}/g" "${file_path}"
+        done
+    done
+}
+
+function re_replace_all()
+{
+    local prefix="$1"
+    local keywords=("${!2}")
+    local pattern="$3"
+    local file_pathes=("${!4}")
+
+    # echo "Keywords     : ${keywords[*]}"
+    # echo "Anti-Pattern : ${pattern}"
+    # echo "File Path    : ${file_pathes[*]}"
+
+    for file_path in "${file_pathes[@]}"; do
+        [[ ! -r "$file_path" ]] && continue
+        for w in "${keywords[@]}"; do
+            # echo "Re:replace '${prefix}$w' in '$file_path'"
+            sed -i "s/${pattern}${prefix}${w}/${prefix}${w}/g" "${file_path}"
+        done
+    done
+}
+
+function format()
+{
+    clang-format "$@"
+}
+
+function main()
+{
+    # This is the pattern for replacing to comments
+    local comment_pattern="\/\/"
+    # This is the pattern for replacing comments back to original string
+    local re_comment_pattern="\/\/ *"
+    # The path of files
+    local file_pathes=()
+    # Define the keywords of pragma to be escaped from formatting
+    local pragma_prefix="#pragma "
+    local pragma_key_words=()
+    # Loop specific
+    pragma_key_words+=(omp simd loop unroll ivdep vector)
+    # Memory specific
+    pragma_key_words+=(alloc_section)
+    # Misc.
+    pragma_key_words+=("cilk grainsize" offload)
+
+    # Turn on the following line to indent any pragma
+    [[ "$REPLACE_ANY_PRAGMA" == "1" ]] && pragma_key_words=("")
+
+    # Find all files in the arguments
+    for var in "$@"; do
+        if [[ ! "$var" =~ ^-.* ]]; then
+            file_pathes+=("$var")
+        fi
+    done
+
+    replace_all "$pragma_prefix" "pragma_key_words[@]" "$comment_pattern" "file_pathes[@]"
+    format "$@"
+    re_replace_all "$pragma_prefix" "pragma_key_words[@]" "$re_comment_pattern" "file_pathes[@]"
+}
+
+main "$@"
+

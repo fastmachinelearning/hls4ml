@@ -33,16 +33,18 @@ namespace nnet {
 // *************************************************
 //       LINEAR Activation
 // *************************************************
-template<class data_T, class res_T, typename CONFIG_T>
-void linear(hls::stream<data_T> &data, hls::stream<res_T> &res) {
-    LinearActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+template <class data_T, class res_T, typename CONFIG_T> void linear(hls::stream<data_T> &data, hls::stream<res_T> &res)
+{
+LinearActLoop:
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+    #pragma HLS DATA_PACK variable=out_data
 
-        LinearPackLoop: for (int j = 0; j < res_T::size; j++) {
+    LinearPackLoop:
+        for (int j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
             out_data[j] = in_data[j];
         }
@@ -51,23 +53,26 @@ void linear(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     }
 }
 
-
 // *************************************************
 //       RELU Activation
 // *************************************************
-template<class data_T, class res_T, typename CONFIG_T>
-void relu(hls::stream<data_T> &data, hls::stream<res_T> &res) {
-    ReLUActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+template <class data_T, class res_T, typename CONFIG_T> void relu(hls::stream<data_T> &data, hls::stream<res_T> &res)
+{
+ReLUActLoop:
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+    #pragma HLS DATA_PACK variable=out_data
 
-        ReLUPackLoop: for (int j = 0; j < res_T::size; j++) {
+    ReLUPackLoop:
+        for (int j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
-            if (in_data[j] > 0) out_data[j] = in_data[j];
-            else out_data[j] = 0;
+            if (in_data[j] > 0)
+                out_data[j] = in_data[j];
+            else
+                out_data[j] = 0;
         }
 
         res.write(out_data);
@@ -78,9 +83,9 @@ void relu(hls::stream<data_T> &data, hls::stream<res_T> &res) {
 //       Sigmoid Activation
 // *************************************************
 
-template<class data_T, class res_T, typename CONFIG_T>
-void sigmoid(hls::stream<data_T> &data, hls::stream<res_T> &res) {
-    // Initialize the lookup table
+template <class data_T, class res_T, typename CONFIG_T> void sigmoid(hls::stream<data_T> &data, hls::stream<res_T> &res)
+{
+// Initialize the lookup table
 #ifdef __HLS_SYN__
     bool initialized = false;
     typename CONFIG_T::table_t sigmoid_table[CONFIG_T::table_size];
@@ -93,19 +98,23 @@ void sigmoid(hls::stream<data_T> &data, hls::stream<res_T> &res) {
         initialized = true;
     }
 
-    SigmoidActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+SigmoidActLoop:
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+    #pragma HLS DATA_PACK variable=out_data
 
-        SigmoidPackLoop: for (int j = 0; j < res_T::size; j++) {
+    SigmoidPackLoop:
+        for (int j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
-            int data_round = in_data[j]*CONFIG_T::table_size/16;
-            int index = data_round + 8*CONFIG_T::table_size/16;
-            if (index < 0)   index = 0;
-            else if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+            int data_round = in_data[j] * CONFIG_T::table_size / 16;
+            int index = data_round + 8 * CONFIG_T::table_size / 16;
+            if (index < 0)
+                index = 0;
+            else if (index > CONFIG_T::table_size - 1)
+                index = CONFIG_T::table_size - 1;
             out_data[j] = sigmoid_table[index];
         }
 
@@ -113,14 +122,14 @@ void sigmoid(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     }
 }
 
-
 // *************************************************
 //       Softmax Activation
 // *************************************************
 
 template <class data_T, class res_T, typename CONFIG_T>
-void softmax_latency(hls::stream<data_T> &data, hls::stream<res_T> &res){
-    // Initialize the lookup tables
+void softmax_latency(hls::stream<data_T> &data, hls::stream<res_T> &res)
+{
+// Initialize the lookup tables
 #ifdef __HLS_SYN__
     bool initialized = false;
     typename CONFIG_T::exp_table_t exp_table[CONFIG_T::table_size];
@@ -146,12 +155,14 @@ void softmax_latency(hls::stream<data_T> &data, hls::stream<res_T> &res){
     typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
     #pragma HLS array_partition variable=exp_res complete
     typename CONFIG_T::exp_table_t exp_sum(0);
-    SoftmaxExpLoop: for(unsigned i = 0; i < CONFIG_T::n_in / data_T::size; i++){
+SoftmaxExpLoop:
+    for (unsigned i = 0; i < CONFIG_T::n_in / data_T::size; i++) {
         if (CONFIG_T::n_in / data_T::size > 1) {
             #pragma HLS PIPELINE
         }
         data_T in_pack = data.read();
-        SoftmaxExpPackLoop: for(unsigned j = 0; j < data_T::size; j++){
+    SoftmaxExpPackLoop:
+        for (unsigned j = 0; j < data_T::size; j++) {
             #pragma HLS UNROLL
             unsigned x = softmax_idx_from_real_val<typename data_T::value_type, CONFIG_T>(in_pack[j]);
             exp_res[i * data_T::size + j] = exp_table[x];
@@ -161,15 +172,19 @@ void softmax_latency(hls::stream<data_T> &data, hls::stream<res_T> &res){
     // Explicitly sum the results with an adder tree.
     // Rounding & Saturation mode, which improve accuracy, prevent Vivado from expression balancing
     Op_add<typename CONFIG_T::exp_table_t> op_add;
-    exp_sum = reduce<typename CONFIG_T::exp_table_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::exp_table_t>>(exp_res, op_add);
+    exp_sum = reduce<typename CONFIG_T::exp_table_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::exp_table_t> >(exp_res,
+                                                                                                              op_add);
 
-    typename CONFIG_T::inv_table_t inv_exp_sum = invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
-    SoftmaxInvLoop: for(unsigned i = 0; i < CONFIG_T::n_in / res_T::size; i++){
+    typename CONFIG_T::inv_table_t inv_exp_sum =
+        invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t, CONFIG_T>(exp_sum)];
+SoftmaxInvLoop:
+    for (unsigned i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE II=ii
 
         res_T out_pack;
-        #pragma HLS DATA_PACK variable=out_pack
-        SoftmaxInvPackLoop: for(unsigned j = 0; j < res_T::size; j++){
+    #pragma HLS DATA_PACK variable=out_pack
+    SoftmaxInvPackLoop:
+        for (unsigned j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
             #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
             out_pack[i * res_T::size + j] = exp_res[i * res_T::size + j] * inv_exp_sum;
@@ -179,8 +194,9 @@ void softmax_latency(hls::stream<data_T> &data, hls::stream<res_T> &res){
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
-void softmax_stable(hls::stream<data_T> &data, hls::stream<res_T> &res){
-    // Initialize the lookup tables
+void softmax_stable(hls::stream<data_T> &data, hls::stream<res_T> &res)
+{
+// Initialize the lookup tables
 #ifdef __HLS_SYN__
     bool initialized = false;
     typename CONFIG_T::exp_table_t exp_table[CONFIG_T::table_size];
@@ -203,13 +219,15 @@ void softmax_stable(hls::stream<data_T> &data, hls::stream<res_T> &res){
     constexpr unsigned ii = CONFIG_T::n_in / multiplier_limit;
 
     typename data_T::value_type data_array[CONFIG_T::n_in];
-    #pragma HLS ARRAY_PARTITION variable=data_array complete
-    SoftmaxArrayLoop: for(unsigned i = 0; i < CONFIG_T::n_in / data_T::size; i++){
+#pragma HLS ARRAY_PARTITION variable=data_array complete
+SoftmaxArrayLoop:
+    for (unsigned i = 0; i < CONFIG_T::n_in / data_T::size; i++) {
         if (CONFIG_T::n_in / data_T::size > 1) {
             #pragma HLS PIPELINE
         }
         data_T in_pack = data.read();
-        SoftmaxArrayPackLoop: for(unsigned j = 0; j < data_T::size; j++){
+    SoftmaxArrayPackLoop:
+        for (unsigned j = 0; j < data_T::size; j++) {
             #pragma HLS UNROLL
             data_array[i * data_T::size + j] = in_pack[j];
         }
@@ -217,11 +235,12 @@ void softmax_stable(hls::stream<data_T> &data, hls::stream<res_T> &res){
 
     // Find the max and compute all delta(x_i, x_max)
     Op_max<typename data_T::value_type> op_max;
-    typename data_T::value_type x_max = reduce<typename data_T::value_type, CONFIG_T::n_in, Op_max<typename data_T::value_type>>(data_array, op_max);
+    typename data_T::value_type x_max =
+        reduce<typename data_T::value_type, CONFIG_T::n_in, Op_max<typename data_T::value_type> >(data_array, op_max);
 
     // For the diffs, use the same type as the input but force rounding and saturation
-    ap_fixed<data_T::value_type::width, data_T::value_type::iwidth,AP_RND,AP_SAT> d_xi_xmax[CONFIG_T::n_in];
-    for(unsigned i = 0; i < CONFIG_T::n_in; i++){
+    ap_fixed<data_T::value_type::width, data_T::value_type::iwidth, AP_RND, AP_SAT> d_xi_xmax[CONFIG_T::n_in];
+    for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         #pragma HLS UNROLL
         d_xi_xmax[i] = data_array[i] - x_max;
     }
@@ -230,7 +249,7 @@ void softmax_stable(hls::stream<data_T> &data, hls::stream<res_T> &res){
     typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
     #pragma HLS ARRAY_PARTITION variable=exp_res complete
     typename CONFIG_T::exp_table_t exp_sum(0);
-    for(unsigned i = 0; i < CONFIG_T::n_in; i++){
+    for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         #pragma HLS UNROLL
         unsigned x = softmax_idx_from_real_val<typename data_T::value_type, CONFIG_T>(d_xi_xmax[i]);
         exp_res[i] = exp_table[x];
@@ -239,15 +258,19 @@ void softmax_stable(hls::stream<data_T> &data, hls::stream<res_T> &res){
     // Explicitly sum the results with an adder tree.
     // Rounding & Saturation mode, which improve accuracy, prevent Vivado from expression balancing
     Op_add<typename CONFIG_T::exp_table_t> op_add;
-    exp_sum = reduce<typename CONFIG_T::exp_table_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::exp_table_t>>(exp_res, op_add);
+    exp_sum = reduce<typename CONFIG_T::exp_table_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::exp_table_t> >(exp_res,
+                                                                                                              op_add);
 
-    typename CONFIG_T::inv_table_t inv_exp_sum = invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
-    SoftmaxInvLoop: for(unsigned i = 0; i < CONFIG_T::n_in / res_T::size; i++){
+    typename CONFIG_T::inv_table_t inv_exp_sum =
+        invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t, CONFIG_T>(exp_sum)];
+SoftmaxInvLoop:
+    for (unsigned i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE II=ii
 
         res_T out_pack;
-        #pragma HLS DATA_PACK variable=out_pack
-        SoftmaxInvPackLoop: for(unsigned j = 0; j < res_T::size; j++){
+    #pragma HLS DATA_PACK variable=out_pack
+    SoftmaxInvPackLoop:
+        for (unsigned j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
             #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
             out_pack[i * res_T::size + j] = exp_res[i * res_T::size + j] * inv_exp_sum;
@@ -256,9 +279,10 @@ void softmax_stable(hls::stream<data_T> &data, hls::stream<res_T> &res){
     }
 }
 
-template<class data_T, class res_T, typename CONFIG_T>
-void softmax_legacy(hls::stream<data_T> &data, hls::stream<res_T> &res) {
-    // Initialize the lookup table
+template <class data_T, class res_T, typename CONFIG_T>
+void softmax_legacy(hls::stream<data_T> &data, hls::stream<res_T> &res)
+{
+// Initialize the lookup table
 #ifdef __HLS_SYN__
     bool initialized = false;
     typename CONFIG_T::table_t exp_table[CONFIG_T::table_size];
@@ -279,56 +303,66 @@ void softmax_legacy(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     typename CONFIG_T::table_t exp_diff_res;
     typename data_T::value_type data_cache[CONFIG_T::n_in];
 
-    SoftmaxInitLoop: for(unsigned i = 0; i < CONFIG_T::n_in / data_T::size; i++) {
+SoftmaxInitLoop:
+    for (unsigned i = 0; i < CONFIG_T::n_in / data_T::size; i++) {
         #pragma HLS PIPELINE
         data_T in_pack = data.read();
-        SoftmaxInitPackLoop: for(unsigned j = 0; j < data_T::size; j++) {
+    SoftmaxInitPackLoop:
+        for (unsigned j = 0; j < data_T::size; j++) {
             #pragma HLS UNROLL
             data_cache[i * data_T::size + j] = in_pack[j];
             exp_res[i * data_T::size + j] = 0;
         }
     }
 
-    SoftmaxExpLoop: for (int i = 0; i < CONFIG_T::n_in; i++) {
-        #pragma HLS PIPELINE
-        SoftmaxExpInner: for (int j = 0; j < CONFIG_T::n_in; j++) {
+SoftmaxExpLoop:
+    for (int i = 0; i < CONFIG_T::n_in; i++) {
+    #pragma HLS PIPELINE
+    SoftmaxExpInner:
+        for (int j = 0; j < CONFIG_T::n_in; j++) {
             #pragma HLS UNROLL
-            
+
             if (i == j) {
                 exp_diff_res = 1;
             } else {
                 int data_round = (data_cache[j] - data_cache[i]) * CONFIG_T::table_size / 16;
                 int index = data_round + 8 * CONFIG_T::table_size / 16;
-                if (index < 0) index = 0;
-                if (index > CONFIG_T::table_size - 1) index = CONFIG_T::table_size - 1;
+                if (index < 0)
+                    index = 0;
+                if (index > CONFIG_T::table_size - 1)
+                    index = CONFIG_T::table_size - 1;
                 exp_diff_res = exp_table[index];
             }
-            
+
             exp_res[i] += exp_diff_res;
         }
     }
 
-    SoftmaxInvLoop: for(unsigned i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+SoftmaxInvLoop:
+    for (unsigned i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
         res_T out_pack;
-        #pragma HLS DATA_PACK variable=out_pack
-        SoftmaxInvPackLoop: for(unsigned j = 0; j < res_T::size; j++) {
+    #pragma HLS DATA_PACK variable=out_pack
+    SoftmaxInvPackLoop:
+        for (unsigned j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
-            
+
             int exp_res_index = exp_res[i * res_T::size + j] * CONFIG_T::table_size / 64;
-            if (exp_res_index < 0) exp_res_index = 0;
-            if (exp_res_index > CONFIG_T::table_size - 1) exp_res_index = CONFIG_T::table_size - 1;
-            
-            out_pack[i * res_T::size + j] = (typename res_T::value_type) invert_table[exp_res_index];
+            if (exp_res_index < 0)
+                exp_res_index = 0;
+            if (exp_res_index > CONFIG_T::table_size - 1)
+                exp_res_index = CONFIG_T::table_size - 1;
+
+            out_pack[i * res_T::size + j] = (typename res_T::value_type)invert_table[exp_res_index];
         }
         res.write(out_pack);
     }
 }
 
-template<class data_T, class res_T, typename CONFIG_T>
-void softmax(hls::stream<data_T> &data, hls::stream<res_T> &res){
-    switch(CONFIG_T::implementation){
+template <class data_T, class res_T, typename CONFIG_T> void softmax(hls::stream<data_T> &data, hls::stream<res_T> &res)
+{
+    switch (CONFIG_T::implementation) {
     case softmax_implementation::latency:
         softmax_latency<data_T, res_T, CONFIG_T>(data, res);
         break;
@@ -338,17 +372,16 @@ void softmax(hls::stream<data_T> &data, hls::stream<res_T> &res){
     case softmax_implementation::legacy:
         softmax_legacy<data_T, res_T, CONFIG_T>(data, res);
         break;
-    }    
+    }
 }
 
 // *************************************************
 //       TanH Activation
 // *************************************************
 
-
-template<class data_T, class res_T, typename CONFIG_T>
-void tanh(hls::stream<data_T> &data, hls::stream<res_T> &res) {
-    // Initialize the lookup table
+template <class data_T, class res_T, typename CONFIG_T> void tanh(hls::stream<data_T> &data, hls::stream<res_T> &res)
+{
+// Initialize the lookup table
 #ifdef __HLS_SYN__
     bool initialized = false;
     typename CONFIG_T::table_t tanh_table[CONFIG_T::table_size];
@@ -361,19 +394,23 @@ void tanh(hls::stream<data_T> &data, hls::stream<res_T> &res) {
         initialized = true;
     }
 
-    TanHActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+TanHActLoop:
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+    #pragma HLS DATA_PACK variable=out_data
 
-        TanHPackLoop: for (int j = 0; j < res_T::size; j++) {
+    TanHPackLoop:
+        for (int j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
-            int data_round = in_data[j]*CONFIG_T::table_size/8;
-            int index = data_round + 4*CONFIG_T::table_size/8;
-            if (index < 0)   index = 0;
-            else if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+            int data_round = in_data[j] * CONFIG_T::table_size / 8;
+            int index = data_round + 4 * CONFIG_T::table_size / 8;
+            if (index < 0)
+                index = 0;
+            else if (index > CONFIG_T::table_size - 1)
+                index = CONFIG_T::table_size - 1;
             out_data[j] = tanh_table[index];
         }
 
@@ -381,28 +418,32 @@ void tanh(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     }
 }
 
-
 // *************************************************
 //       Hard sigmoid Activation
 // *************************************************
 
-template<class data_T, class res_T, typename CONFIG_T>
-void hard_sigmoid(hls::stream<data_T> &data, hls::stream<res_T> &res) {
-    typename data_T::value_type slope = (typename data_T::value_type) 0.2;
-    typename data_T::value_type shift = (typename data_T::value_type) 0.5;
+template <class data_T, class res_T, typename CONFIG_T>
+void hard_sigmoid(hls::stream<data_T> &data, hls::stream<res_T> &res)
+{
+    typename data_T::value_type slope = (typename data_T::value_type)0.2;
+    typename data_T::value_type shift = (typename data_T::value_type)0.5;
 
-    HardSigmoidActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+HardSigmoidActLoop:
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+    #pragma HLS DATA_PACK variable=out_data
 
-        HardSigmoidPackLoop: for (int j = 0; j < res_T::size; j++) {
+    HardSigmoidPackLoop:
+        for (int j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
             typename data_T::value_type datareg = slope * in_data[j] + shift;
-            if (datareg > 1) datareg = 1;
-            else if (datareg < 0) datareg = 0;
+            if (datareg > 1)
+                datareg = 1;
+            else if (datareg < 0)
+                datareg = 0;
             out_data[j] = datareg;
         }
 
@@ -410,61 +451,69 @@ void hard_sigmoid(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     }
 }
 
-
 // *************************************************
 //       Leaky RELU Activation
 // *************************************************
 
-template<class data_T, class res_T, typename CONFIG_T>
-void leaky_relu(hls::stream<data_T> &data, typename data_T::value_type alpha, hls::stream<res_T> &res) {
-    LeakyReLUActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+template <class data_T, class res_T, typename CONFIG_T>
+void leaky_relu(hls::stream<data_T> &data, typename data_T::value_type alpha, hls::stream<res_T> &res)
+{
+LeakyReLUActLoop:
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+    #pragma HLS DATA_PACK variable=out_data
 
-        LeakyReLUPackLoop: for (int j = 0; j < res_T::size; j++) {
+    LeakyReLUPackLoop:
+        for (int j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
-            if (in_data[j] > 0) out_data[j] = in_data[j];
-            else out_data[j] = alpha * in_data[j];
+            if (in_data[j] > 0)
+                out_data[j] = in_data[j];
+            else
+                out_data[j] = alpha * in_data[j];
         }
         res.write(out_data);
     }
 }
-
 
 // *************************************************
 //       Thresholded RELU Activation
 // *************************************************
 
-template<class data_T, class res_T, typename CONFIG_T>
-void thresholded_relu(hls::stream<data_T> &data, typename data_T::value_type theta, hls::stream<res_T> &res) {
-    ThresholdedReLUActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+template <class data_T, class res_T, typename CONFIG_T>
+void thresholded_relu(hls::stream<data_T> &data, typename data_T::value_type theta, hls::stream<res_T> &res)
+{
+ThresholdedReLUActLoop:
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+    #pragma HLS DATA_PACK variable=out_data
 
-        ThresholdedReLUPackLoop: for (int j = 0; j < res_T::size; j++) {
+    ThresholdedReLUPackLoop:
+        for (int j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
-            if (in_data[j] > theta) out_data[j] = in_data[j];
-            else out_data[j] = 0;
+            if (in_data[j] > theta)
+                out_data[j] = in_data[j];
+            else
+                out_data[j] = 0;
         }
 
         res.write(out_data);
     }
 }
 
-
 // *************************************************
 //       Softplus Activation
 // *************************************************
 
-template<class data_T, class res_T, typename CONFIG_T>
-void softplus(hls::stream<data_T> &data, hls::stream<res_T> &res) {
-    // Initialize the lookup table
+template <class data_T, class res_T, typename CONFIG_T>
+void softplus(hls::stream<data_T> &data, hls::stream<res_T> &res)
+{
+// Initialize the lookup table
 #ifdef __HLS_SYN__
     bool initialized = false;
     typename CONFIG_T::table_t softplus_table[CONFIG_T::table_size];
@@ -477,33 +526,37 @@ void softplus(hls::stream<data_T> &data, hls::stream<res_T> &res) {
         initialized = true;
     }
 
-    SoftplusActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+SoftplusActLoop:
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+    #pragma HLS DATA_PACK variable=out_data
 
-        SoftplusPackLoop: for (int j = 0; j < res_T::size; j++) {
+    SoftplusPackLoop:
+        for (int j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
-            int data_round = in_data[j]*CONFIG_T::table_size/16;
-            int index = data_round + 8*CONFIG_T::table_size/16;
-            if (index < 0)   index = 0;
-            else if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+            int data_round = in_data[j] * CONFIG_T::table_size / 16;
+            int index = data_round + 8 * CONFIG_T::table_size / 16;
+            if (index < 0)
+                index = 0;
+            else if (index > CONFIG_T::table_size - 1)
+                index = CONFIG_T::table_size - 1;
             out_data[j] = softplus_table[index];
         }
         res.write(out_data);
     }
 }
 
-
 // *************************************************
 //       Softsign Activation
 // *************************************************
 
-template<class data_T, class res_T, typename CONFIG_T>
-void softsign(hls::stream<data_T> &data, hls::stream<res_T> &res) {
-    // Initialize the lookup table
+template <class data_T, class res_T, typename CONFIG_T>
+void softsign(hls::stream<data_T> &data, hls::stream<res_T> &res)
+{
+// Initialize the lookup table
 #ifdef __HLS_SYN__
     bool initialized = false;
     typename CONFIG_T::table_t softsign_table[CONFIG_T::table_size];
@@ -516,32 +569,36 @@ void softsign(hls::stream<data_T> &data, hls::stream<res_T> &res) {
         initialized = true;
     }
 
-    SoftsignActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+SoftsignActLoop:
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+    #pragma HLS DATA_PACK variable=out_data
 
-        SoftsignPackLoop: for (int j = 0; j < res_T::size; j++) {
+    SoftsignPackLoop:
+        for (int j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
-            int data_round = in_data[j]*CONFIG_T::table_size/16;
-            int index = data_round + 8*CONFIG_T::table_size/16;
-            if (index < 0)   index = 0;
-            else if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+            int data_round = in_data[j] * CONFIG_T::table_size / 16;
+            int index = data_round + 8 * CONFIG_T::table_size / 16;
+            if (index < 0)
+                index = 0;
+            else if (index > CONFIG_T::table_size - 1)
+                index = CONFIG_T::table_size - 1;
             out_data[j] = softsign_table[index];
         }
         res.write(out_data);
     }
 }
 
-
 // *************************************************
 //       ELU Activation
 // *************************************************
-template<class data_T, class res_T, typename CONFIG_T>
-void elu(hls::stream<data_T> &data, typename data_T::value_type alpha, hls::stream<res_T> &res) {
-    // Initialize the lookup table
+template <class data_T, class res_T, typename CONFIG_T>
+void elu(hls::stream<data_T> &data, typename data_T::value_type alpha, hls::stream<res_T> &res)
+{
+// Initialize the lookup table
 #ifdef __HLS_SYN__
     bool initialized = false;
     typename CONFIG_T::table_t elu_table[CONFIG_T::table_size];
@@ -554,22 +611,25 @@ void elu(hls::stream<data_T> &data, typename data_T::value_type alpha, hls::stre
         initialized = true;
     }
 
-    EluActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+EluActLoop:
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+    #pragma HLS DATA_PACK variable=out_data
 
-        EluPackLoop: for (int j = 0; j < res_T::size; j++) {
+    EluPackLoop:
+        for (int j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
-            
+
             typename data_T::value_type datareg = in_data[j];
             if (datareg >= 0) {
                 out_data[j] = datareg;
             } else {
-                int index = datareg*CONFIG_T::table_size/-8;
-                if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+                int index = datareg * CONFIG_T::table_size / -8;
+                if (index > CONFIG_T::table_size - 1)
+                    index = CONFIG_T::table_size - 1;
                 out_data[j] = alpha * elu_table[index];
             }
         }
@@ -577,8 +637,8 @@ void elu(hls::stream<data_T> &data, typename data_T::value_type alpha, hls::stre
     }
 }
 
-template<class data_T, class res_T, typename CONFIG_T>
-void elu(hls::stream<data_T> &data, hls::stream<res_T> &res) {
+template <class data_T, class res_T, typename CONFIG_T> void elu(hls::stream<data_T> &data, hls::stream<res_T> &res)
+{
     elu<data_T, res_T, CONFIG_T>(data, 1.0, res);
 }
 
@@ -586,9 +646,9 @@ void elu(hls::stream<data_T> &data, hls::stream<res_T> &res) {
 //       SELU Activation
 // *************************************************
 
-template<class data_T, class res_T, typename CONFIG_T>
-void selu(hls::stream<data_T> &data, hls::stream<res_T> &res) {
-    // Initialize the lookup table
+template <class data_T, class res_T, typename CONFIG_T> void selu(hls::stream<data_T> &data, hls::stream<res_T> &res)
+{
+// Initialize the lookup table
 #ifdef __HLS_SYN__
     bool initialized = false;
     typename CONFIG_T::table_t selu_table[CONFIG_T::table_size];
@@ -601,22 +661,25 @@ void selu(hls::stream<data_T> &data, hls::stream<res_T> &res) {
         initialized = true;
     }
 
-    SeluActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+SeluActLoop:
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+    #pragma HLS DATA_PACK variable=out_data
 
-        SeluPackLoop: for (int j = 0; j < res_T::size; j++) {
+    SeluPackLoop:
+        for (int j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
 
             typename data_T::value_type datareg = in_data[j];
             if (datareg >= 0) {
-                out_data[j] = (typename data_T::value_type) 1.0507009873554804934193349852946 * datareg;
+                out_data[j] = (typename data_T::value_type)1.0507009873554804934193349852946 * datareg;
             } else {
-                int index = datareg*CONFIG_T::table_size/-8;
-                if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+                int index = datareg * CONFIG_T::table_size / -8;
+                if (index > CONFIG_T::table_size - 1)
+                    index = CONFIG_T::table_size - 1;
                 out_data[j] = selu_table[index];
             }
         }
@@ -624,30 +687,32 @@ void selu(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     }
 }
 
-
 // *************************************************
 //       PReLU Activation
 // *************************************************
 
-template<class data_T, class res_T, typename CONFIG_T>
-void prelu(hls::stream<data_T> &data, typename data_T::value_type alpha[CONFIG_T::n_in], hls::stream<res_T> &res) {
-    PReLUActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+template <class data_T, class res_T, typename CONFIG_T>
+void prelu(hls::stream<data_T> &data, typename data_T::value_type alpha[CONFIG_T::n_in], hls::stream<res_T> &res)
+{
+PReLUActLoop:
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+    #pragma HLS DATA_PACK variable=out_data
 
-        PReLUPackLoop: for (int j = 0; j < res_T::size; j++) {
+    PReLUPackLoop:
+        for (int j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
-            if (in_data[j] > 0) out_data[j] = in_data[j];
-            else out_data[j] = alpha[i*res_T::size+j] * in_data[j];
+            if (in_data[j] > 0)
+                out_data[j] = in_data[j];
+            else
+                out_data[j] = alpha[i * res_T::size + j] * in_data[j];
         }
         res.write(out_data);
     }
 }
-
-
 }
 
 #endif

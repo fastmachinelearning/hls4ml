@@ -27,8 +27,7 @@
 
 namespace nnet {
 
-struct conv2d_config
-{
+struct conv2d_config {
     // Internal data type definitions
     typedef float bias_t;
     typedef float weight_t;
@@ -58,12 +57,12 @@ struct conv2d_config
     static const unsigned n_zeros = 0; // not used yet
 };
 
-template<class data_T, class res_T, typename CONFIG_T>
-void conv_2d_cf(
-    data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],
-    res_T  res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt],
-    typename CONFIG_T::weight_t weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
-    typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt])
+template <class data_T, class res_T, typename CONFIG_T>
+void conv_2d_cf(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],
+                res_T res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt],
+                typename CONFIG_T::weight_t weights
+                    [CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
+                typename CONFIG_T::bias_t biases[CONFIG_T::n_filt])
 {
     if (CONFIG_T::strategy == nnet::latency) {
         conv_2d_latency_cf<data_T, res_T, CONFIG_T>(data, res, weights, biases);
@@ -72,12 +71,12 @@ void conv_2d_cf(
     }
 }
 
-template<class data_T, class res_T, typename CONFIG_T>
-void conv_2d_cl(
-    data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],
-    res_T  res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt],
-    typename CONFIG_T::weight_t weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
-    typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt])
+template <class data_T, class res_T, typename CONFIG_T>
+void conv_2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],
+                res_T res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt],
+                typename CONFIG_T::weight_t weights
+                    [CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
+                typename CONFIG_T::bias_t biases[CONFIG_T::n_filt])
 {
     if (CONFIG_T::strategy == nnet::latency) {
         conv_2d_latency_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
@@ -86,6 +85,6 @@ void conv_2d_cl(
     }
 }
 
-}//end namespace
+} // end namespace
 
 #endif

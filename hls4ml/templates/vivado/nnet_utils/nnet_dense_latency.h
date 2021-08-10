@@ -28,35 +28,36 @@
 
 namespace nnet {
 
-template<class data_T, class res_T, typename CONFIG_T>
-void dense_latency(
-    data_T    data[CONFIG_T::n_in],
-    res_T     res[CONFIG_T::n_out],
-    typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
-    typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
+template <class data_T, class res_T, typename CONFIG_T>
+void dense_latency(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
+                   typename CONFIG_T::weight_t weights[CONFIG_T::n_in * CONFIG_T::n_out],
+                   typename CONFIG_T::bias_t biases[CONFIG_T::n_out])
 {
     data_T cache;
-    typename CONFIG_T::accum_t mult[CONFIG_T::n_in*CONFIG_T::n_out];
+    typename CONFIG_T::accum_t mult[CONFIG_T::n_in * CONFIG_T::n_out];
     typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
 
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
     #pragma HLS function_instantiate variable=weights,biases
 
-    if (CONFIG_T::io_type == io_parallel || CONFIG_T::io_type == io_stream){
+    if (CONFIG_T::io_type == io_parallel || CONFIG_T::io_type == io_stream) {
         // For parallel inputs:
         //   - completely partition arrays -- target fabric
         //   - if we have an unroll factor, limit number of multipliers
         #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
-        // #pragma HLS ARRAY_PARTITION variable=weights complete // remove this line for now, it breaks compression sometimes
+        // #pragma HLS ARRAY_PARTITION variable=weights complete // remove this line for now, it breaks compression
+        // sometimes
         #pragma HLS ARRAY_PARTITION variable=biases complete
         #pragma HLS ARRAY_PARTITION variable=mult complete
         #pragma HLS ARRAY_PARTITION variable=acc complete
 
-        int multiplier_limit  = ceil(float(CONFIG_T::n_in*CONFIG_T::n_out) / float(CONFIG_T::reuse_factor)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
-        CONFIG_T::template product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>::limit(multiplier_limit);
+        int multiplier_limit = ceil(float(CONFIG_T::n_in * CONFIG_T::n_out) / float(CONFIG_T::reuse_factor)) -
+                               floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
+        CONFIG_T::template product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>::limit(
+            multiplier_limit);
 
-    } else if (CONFIG_T::io_type == io_serial){
+    } else if (CONFIG_T::io_type == io_serial) {
         // Only reduce cycle_factor if n_out is evenly divisible by reuse_factor
         // Otherwise, HLS wont be happy
         int cycle_factor = CONFIG_T::n_out / CONFIG_T::reuse_factor;
@@ -76,56 +77,64 @@ void dense_latency(
         #pragma HLS DATAFLOW
         #pragma HLS STREAM variable=mult depth=1
         #pragma HLS STREAM variable=acc depth=1
-        if (CONFIG_T::store_weights_in_bram){
+        if (CONFIG_T::store_weights_in_bram) {
             #pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
         }
     }
 
-    // Do the matrix-multiply
-    Product1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        if (CONFIG_T::io_type == io_serial){
+// Do the matrix-multiply
+Product1:
+    for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
+        if (CONFIG_T::io_type == io_serial) {
             #pragma HLS PIPELINE
         }
         cache = data[ii];
-        Product2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
+    Product2:
+        for (int jj = 0; jj < CONFIG_T::n_out; jj++) {
             if (CONFIG_T::io_type == io_serial) {
-                int multiplier_limit  = ceil(float(CONFIG_T::n_out) / float(CONFIG_T::reuse_factor));
-                CONFIG_T::template product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>::limit(multiplier_limit);
+                int multiplier_limit = ceil(float(CONFIG_T::n_out) / float(CONFIG_T::reuse_factor));
+                CONFIG_T::template product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>::limit(
+                    multiplier_limit);
             }
-        int index = ii*CONFIG_T::n_out+jj;
-        mult[index] = CONFIG_T::template product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>::product(cache, weights[index]);
+            int index = ii * CONFIG_T::n_out + jj;
+            mult[index] =
+                CONFIG_T::template product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>::product(
+                    cache, weights[index]);
         }
     }
 
-    // Initialize accumulator with input biases
-    ResetAccum: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
-        if (CONFIG_T::io_type == io_serial){
+// Initialize accumulator with input biases
+ResetAccum:
+    for (int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
+        if (CONFIG_T::io_type == io_serial) {
             #pragma HLS UNROLL
         }
-        acc[iacc] = (typename CONFIG_T::accum_t) biases[iacc];
+        acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
     }
 
-    // Accumulate multiplication result
-    Accum1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        if (CONFIG_T::io_type == io_serial){
+// Accumulate multiplication result
+Accum1:
+    for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
+        if (CONFIG_T::io_type == io_serial) {
             #pragma HLS PIPELINE
         }
-        Accum2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
-        int index = ii*CONFIG_T::n_out+jj;
-        acc[jj] += mult[index];
+    Accum2:
+        for (int jj = 0; jj < CONFIG_T::n_out; jj++) {
+            int index = ii * CONFIG_T::n_out + jj;
+            acc[jj] += mult[index];
         }
     }
 
-    // Cast to "res_t" type
-    Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
-        if (CONFIG_T::io_type == io_serial){
+// Cast to "res_t" type
+Result:
+    for (int ires = 0; ires < CONFIG_T::n_out; ires++) {
+        if (CONFIG_T::io_type == io_serial) {
             #pragma HLS UNROLL
         }
-        //res[ires] = (res_T) (acc[ires]);
+        // res[ires] = (res_T) (acc[ires]);
         res[ires] = cast<data_T, res_T, CONFIG_T>(acc[ires]);
     }
 }
-
 }
 
 #endif

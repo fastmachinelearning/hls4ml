@@ -7,14 +7,13 @@
 
 namespace nnet {
 
-template<class data_T, typename CONFIG_T>
-void compute_scaled_indices_1d(
-    const unsigned w_idx,
-    ap_uint<CONFIG_T::filt_width> *pixel_idx
-) {
+template <class data_T, typename CONFIG_T>
+void compute_scaled_indices_1d(const unsigned w_idx, ap_uint<CONFIG_T::filt_width> *pixel_idx)
+{
     unsigned wp_idx = w_idx * (data_T::size / CONFIG_T::n_chan);
 
-    ComputeIndex: for (unsigned p = 0; p < data_T::size / CONFIG_T::n_chan; p++) {
+ComputeIndex:
+    for (unsigned p = 0; p < data_T::size / CONFIG_T::n_chan; p++) {
         #pragma HLS UNROLL
 
         unsigned sw_idx = scale_index<CONFIG_T::filt_width, CONFIG_T::stride_width, CONFIG_T::in_width>(wp_idx + p);
@@ -22,12 +21,10 @@ void compute_scaled_indices_1d(
     }
 }
 
-template<class data_T, class res_T, typename CONFIG_T>
-void conv_1d_encoded_cl(
-    hls::stream<data_T> &data,
-    hls::stream<res_T>  &res,
-    typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
-    typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt])
+template <class data_T, class res_T, typename CONFIG_T>
+void conv_1d_encoded_cl(hls::stream<data_T> &data, hls::stream<res_T> &res,
+                        typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
+                        typename CONFIG_T::bias_t biases[CONFIG_T::n_filt])
 {
     assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
 
@@ -44,28 +41,29 @@ void conv_1d_encoded_cl(
     unsigned outputs_ready = 0;
 
     ap_uint<CONFIG_T::filt_width> pixel_idx[data_T::size / CONFIG_T::n_chan];
-    #pragma HLS ARRAY_PARTITION variable=pixel_idx complete
+#pragma HLS ARRAY_PARTITION variable=pixel_idx complete
 
-    ReadInputWidth: for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width / (data_T::size / CONFIG_T::n_chan); i_iw++) {
+ReadInputWidth:
+    for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width / (data_T::size / CONFIG_T::n_chan); i_iw++) {
         #pragma HLS LOOP_FLATTEN
         if (CONFIG_T::strategy == nnet::latency && data_T::size / CONFIG_T::n_chan == 1) {
             #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
         }
         compute_scaled_indices_1d<data_T, CONFIG_T>(i_iw, pixel_idx);
-        compute_output_encoded<data_T, res_T, CONFIG_T>(data.read(), data_window, res, res_pack, outputs_ready, weights, biases, pixel_idx);
+        compute_output_encoded<data_T, res_T, CONFIG_T>(data.read(), data_window, res, res_pack, outputs_ready, weights,
+                                                        biases, pixel_idx);
     }
 }
 
-template<class data_T, class res_T, typename CONFIG_T>
-void conv_1d_buffer_cl(
-    hls::stream<data_T> &data,
-    hls::stream<res_T>  &res,
-    typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
-    typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt])
+template <class data_T, class res_T, typename CONFIG_T>
+void conv_1d_buffer_cl(hls::stream<data_T> &data, hls::stream<res_T> &res,
+                       typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
+                       typename CONFIG_T::bias_t biases[CONFIG_T::n_filt])
 {
     assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
 
-    ReadInputWidth: for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width; i_iw++) {
+ReadInputWidth:
+    for (unsigned i_iw = 0; i_iw < CONFIG_T::in_width; i_iw++) {
         #pragma HLS LOOP_FLATTEN
         if (CONFIG_T::strategy == nnet::latency) {
             #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
@@ -74,23 +72,20 @@ void conv_1d_buffer_cl(
     }
 }
 
-template<class data_T, class res_T, typename CONFIG_T>
-void conv_1d_cl(
-    hls::stream<data_T> &data,
-    hls::stream<res_T>  &res,
-    typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
-    typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt])
+template <class data_T, class res_T, typename CONFIG_T>
+void conv_1d_cl(hls::stream<data_T> &data, hls::stream<res_T> &res,
+                typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
+                typename CONFIG_T::bias_t biases[CONFIG_T::n_filt])
 {
     #pragma HLS inline region
-    switch(CONFIG_T::implementation){
-        case conv_implementation::linebuffer:
-            conv_1d_buffer_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-            break;
-        case conv_implementation::encoded:
-            conv_1d_encoded_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-            break;
-    }  
+    switch (CONFIG_T::implementation) {
+    case conv_implementation::linebuffer:
+        conv_1d_buffer_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+        break;
+    case conv_implementation::encoded:
+        conv_1d_encoded_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+        break;
+    }
 }
-
 }
 #endif
