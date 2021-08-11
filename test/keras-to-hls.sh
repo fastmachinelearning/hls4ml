@@ -47,7 +47,7 @@ function print_usage {
    echo "      Prints this help message."
 }
 
-while getopts ":x:b:B:c:s:r:g:t:d:y:h" opt; do
+while getopts ":x:b:B:c:sr:g:t:d:y:h" opt; do
    case "$opt" in
    x) xilinxpart=$OPTARG
       ;;
@@ -103,7 +103,7 @@ do
    echo "Creating config file for model '${model}'"
    base=`echo "${h5}" | sed -e 's/\(_weights\)*$//g'`
    file="${basedir}/${base}.yml"
-   prjdir="${basedir}/${base}-${xilinxpart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}"
+   prjdir="${basedir}/${base}-backend${backend}-board${board//${sanitizer}/_}-${xilinxpart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}"
 
    hlscfg=""
    if [ ! -z "${yml}" ]; then

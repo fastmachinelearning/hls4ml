@@ -331,6 +331,10 @@ class VivadoAcceleratorWriter(VivadoWriter):
         copyfile(os.path.join(filedir, self.vivado_accelerator_config.get_driver_path()),
                  ('{}/' + self.vivado_accelerator_config.get_driver_file()).format(model.config.get_output_dir()))
         
+    def write_new_tar(self, model):
+        os.remove(model.config.get_output_dir() + '.tar.gz')
+        super(VivadoAcceleratorWriter, self).write_tar(model)
+        
     def write_hls(self, model):
         """
         Write the HLS project. Calls the VivadoBackend writer, and extra steps for VivadoAccelerator/AXI interface
@@ -338,8 +342,10 @@ class VivadoAcceleratorWriter(VivadoWriter):
         self.vivado_accelerator_config = VivadoAcceleratorConfig(model.config, model.get_input_variables(),
                                                                  model.get_output_variables())
         super(VivadoAcceleratorWriter, self).write_hls(model)
-        self.write_axi_wrapper(model)
-        self.modify_build_script(model)
         self.write_board_script(model)
         self.write_driver(model)
         self.write_wrapper_test(model)
+        self.write_axi_wrapper(model)
+        self.modify_build_script(model)
+        self.write_new_tar(model)
+
