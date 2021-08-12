@@ -1,0 +1,38 @@
+hls4ml.converters.pytorch package
+=================================
+
+Submodules
+----------
+
+hls4ml.converters.pytorch.convolution module
+--------------------------------------------
+
+.. automodule:: hls4ml.converters.pytorch.convolution
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.converters.pytorch.core module
+-------------------------------------
+
+.. automodule:: hls4ml.converters.pytorch.core
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.converters.pytorch.pooling module
+----------------------------------------
+
+.. automodule:: hls4ml.converters.pytorch.pooling
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.converters.pytorch
+   :members:
+   :undoc-members:
+   :show-inheritance:

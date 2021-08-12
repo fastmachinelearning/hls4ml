@@ -109,6 +109,8 @@
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.html">hls4ml package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.html">hls4ml.converters package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.keras.html">hls4ml.converters.keras package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.onnx.html">hls4ml.converters.onnx package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.pytorch.html">hls4ml.converters.pytorch package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.model.html">hls4ml.model package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.model.optimizer.html">hls4ml.model.optimizer package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.model.optimizer.passes.html">hls4ml.model.optimizer.passes package</a></li>
@@ -231,6 +233,78 @@ configuration tweaks.</p>
 <dd class="field-even"><p>[dict]</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="hls4ml.utils.config.config_from_onnx_model">
+<code class="sig-prename descclassname">hls4ml.utils.config.</code><code class="sig-name descname">config_from_onnx_model</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">granularity='model'</em>, <em class="sig-param">default_precision='ap_fixed&lt;16</em>, <em class="sig-param">6&gt;'</em>, <em class="sig-param">default_reuse_factor=1</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.config_from_onnx_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate configuration dictionary from an ONNX model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ONNX model object.</em>) – Model to be converted to hls model object.</p></li>
+<li><p><strong>granularity</strong> (<em>string</em><em>, </em><em>optional</em>) – How granular you want the configuration to be.</p></li>
+<li><p><strong>default_precision</strong> (<em>string</em><em>, </em><em>optional</em>) – Defines the precsion of your inputs, outputs, weights and biases.
+It is denoted by ap_fixed&lt;X,Y&gt;, where Y is the number of bits representing
+the signed number above the binary point (i.e. the integer part),
+and X is the total number of bits. Additionally, integers in fixed precision
+data type (ap_int&lt;N&gt;, where N is a bit-size from 1 to 1024) can also be used.</p></li>
+<li><p><strong>default_reuse_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – Reuse factor for hls model</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>config</strong> – configuration dictionary to be used in ONNX converter.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">hls4ml.config_from_keras_model()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">hls4ml.convert_from_pytorch_model()</span></code></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">hls4ml</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_keras_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">hls_config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="hls4ml.utils.config.config_from_pytorch_model">
+<code class="sig-prename descclassname">hls4ml.utils.config.</code><code class="sig-name descname">config_from_pytorch_model</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">granularity='model'</em>, <em class="sig-param">default_precision='ap_fixed&lt;16</em>, <em class="sig-param">6&gt;'</em>, <em class="sig-param">default_reuse_factor=1</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.config_from_pytorch_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate configuration dictionary from a Pytorch model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>Pytorch model object.</em>) – Model to be converted to hls model object.</p></li>
+<li><p><strong>granularity</strong> (<em>string</em><em>, </em><em>optional</em>) – How granular you want the configuration to be.</p></li>
+<li><p><strong>default_precision</strong> (<em>string</em><em>, </em><em>optional</em>) – Defines the precsion of your inputs, outputs, weights and biases.
+It is denoted by ap_fixed&lt;X,Y&gt;, where Y is the number of bits representing
+the signed number above the binary point (i.e. the integer part),
+and X is the total number of bits. Additionally, integers in fixed precision
+data type (ap_int&lt;N&gt;, where N is a bit-size from 1 to 1024) can also be used.</p></li>
+<li><p><strong>default_reuse_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – Reuse factor for hls model</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>config</strong> – configuration dictionary to be used in Pytorch converter.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">hls4ml.config_from_keras_model()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">hls4ml.convert_from_onnx_model()</span></code></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">hls4ml</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_keras_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">hls_config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">

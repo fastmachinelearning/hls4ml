@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>hls4ml.report package &mdash; hls4ml 0.5.1 documentation</title>
+  <title>hls4ml.converters.pytorch package &mdash; hls4ml 0.5.1 documentation</title>
   
 
   
@@ -40,8 +40,8 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="hls4ml.templates package" href="hls4ml.templates.html" />
-    <link rel="prev" title="hls4ml.model.optimizer.passes package" href="hls4ml.model.optimizer.passes.html" /> 
+    <link rel="next" title="hls4ml.model package" href="hls4ml.model.html" />
+    <link rel="prev" title="hls4ml.converters.onnx package" href="hls4ml.converters.onnx.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -110,16 +110,18 @@
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.html">hls4ml.converters package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.keras.html">hls4ml.converters.keras package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.onnx.html">hls4ml.converters.onnx package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.pytorch.html">hls4ml.converters.pytorch package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">hls4ml.converters.pytorch package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hls4ml-converters-pytorch-convolution-module">hls4ml.converters.pytorch.convolution module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hls4ml-converters-pytorch-core-module">hls4ml.converters.pytorch.core module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hls4ml-converters-pytorch-pooling-module">hls4ml.converters.pytorch.pooling module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.converters.pytorch">Module contents</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.model.html">hls4ml.model package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.model.optimizer.html">hls4ml.model.optimizer package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.model.optimizer.passes.html">hls4ml.model.optimizer.passes package</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">hls4ml.report package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.vivado_report">hls4ml.report.vivado_report module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report">Module contents</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.report.html">hls4ml.report package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.templates.html">hls4ml.templates package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.utils.html">hls4ml.utils package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.writer.html">hls4ml.writer package</a></li>
@@ -173,7 +175,9 @@
         
           <li><a href="hls4ml.html">hls4ml package</a> &raquo;</li>
         
-      <li>hls4ml.report package</li>
+          <li><a href="hls4ml.converters.html">hls4ml.converters package</a> &raquo;</li>
+        
+      <li>hls4ml.converters.pytorch package</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -190,26 +194,22 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="hls4ml-report-package">
-<h1>hls4ml.report package<a class="headerlink" href="#hls4ml-report-package" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="hls4ml-converters-pytorch-package">
+<h1>hls4ml.converters.pytorch package<a class="headerlink" href="#hls4ml-converters-pytorch-package" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-hls4ml.report.vivado_report">
-<span id="hls4ml-report-vivado-report-module"></span><h2>hls4ml.report.vivado_report module<a class="headerlink" href="#module-hls4ml.report.vivado_report" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="hls4ml.report.vivado_report.parse_vivado_report">
-<code class="sig-prename descclassname">hls4ml.report.vivado_report.</code><code class="sig-name descname">parse_vivado_report</code><span class="sig-paren">(</span><em class="sig-param">hls_dir</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.report.vivado_report.parse_vivado_report" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="hls4ml.report.vivado_report.read_vivado_report">
-<code class="sig-prename descclassname">hls4ml.report.vivado_report.</code><code class="sig-name descname">read_vivado_report</code><span class="sig-paren">(</span><em class="sig-param">hls_dir</em>, <em class="sig-param">full_report=False</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.report.vivado_report.read_vivado_report" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<div class="section" id="hls4ml-converters-pytorch-convolution-module">
+<h2>hls4ml.converters.pytorch.convolution module<a class="headerlink" href="#hls4ml-converters-pytorch-convolution-module" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-hls4ml.report">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.report" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="hls4ml-converters-pytorch-core-module">
+<h2>hls4ml.converters.pytorch.core module<a class="headerlink" href="#hls4ml-converters-pytorch-core-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="hls4ml-converters-pytorch-pooling-module">
+<h2>hls4ml.converters.pytorch.pooling module<a class="headerlink" href="#hls4ml-converters-pytorch-pooling-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-hls4ml.converters.pytorch">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.converters.pytorch" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 
@@ -219,8 +219,8 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="hls4ml.templates.html" class="btn btn-neutral float-right" title="hls4ml.templates package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="hls4ml.model.optimizer.passes.html" class="btn btn-neutral float-left" title="hls4ml.model.optimizer.passes package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hls4ml.model.html" class="btn btn-neutral float-right" title="hls4ml.model package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="hls4ml.converters.onnx.html" class="btn btn-neutral float-left" title="hls4ml.converters.onnx package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

@@ -108,6 +108,8 @@
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.html">hls4ml package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.converters.html">hls4ml.converters package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.converters.keras.html">hls4ml.converters.keras package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.converters.onnx.html">hls4ml.converters.onnx package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.converters.pytorch.html">hls4ml.converters.pytorch package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.model.html">hls4ml.model package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.model.optimizer.html">hls4ml.model.optimizer package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.model.optimizer.passes.html">hls4ml.model.optimizer.passes package</a></li>
@@ -225,9 +227,11 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_layers.Layer.add_bias">add_bias() (hls4ml.model.hls_layers.Layer method)</a>
 </li>
+      <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.plot.add_edge">add_edge() (in module hls4ml.utils.plot)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.plot.add_edge">add_edge() (in module hls4ml.utils.plot)</a>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.ONNXDataReader.add_input">add_input() (hls4ml.converters.onnx_to_hls.ONNXDataReader method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_layers.Layer.add_output_variable">add_output_variable() (hls4ml.model.hls_layers.Layer method)</a>
 </li>
@@ -292,8 +296,20 @@
       <li><a href="autodoc/hls4ml.templates.html#hls4ml.templates.vivado_template.VivadoBackend.compute_conv2d_instructions">compute_conv2d_instructions() (hls4ml.templates.vivado_template.VivadoBackend method)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.compute_padding_1d">compute_padding_1d() (in module hls4ml.converters.keras_to_hls)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.utils.compute_padding_1d">(in module hls4ml.converters.utils)</a>
 </li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.compute_padding_2d">compute_padding_2d() (in module hls4ml.converters.keras_to_hls)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.utils.compute_padding_2d">(in module hls4ml.converters.utils)</a>
+</li>
+      </ul></li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.compute_pads_1d">compute_pads_1d() (in module hls4ml.converters.onnx_to_hls)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.compute_pads_2d">compute_pads_2d() (in module hls4ml.converters.onnx_to_hls)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_layers.Concatenate">Concatenate (class in hls4ml.model.hls_layers)</a>
 </li>
@@ -359,6 +375,10 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.config.config_from_keras_model">config_from_keras_model() (in module hls4ml.utils.config)</a>
 </li>
+      <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.config.config_from_onnx_model">config_from_onnx_model() (in module hls4ml.utils.config)</a>
+</li>
+      <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.config.config_from_pytorch_model">config_from_pytorch_model() (in module hls4ml.utils.config)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_layers.Conv1D">Conv1D (class in hls4ml.model.hls_layers)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_layers.Conv2D">Conv2D (class in hls4ml.model.hls_layers)</a>
@@ -368,6 +388,10 @@
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.convert_from_config">convert_from_config() (in module hls4ml.converters)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.convert_from_keras_model">convert_from_keras_model() (in module hls4ml.converters)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.convert_from_onnx_model">convert_from_onnx_model() (in module hls4ml.converters)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.convert_from_pytorch_model">convert_from_pytorch_model() (in module hls4ml.converters)</a>
 </li>
       <li><a href="autodoc/hls4ml.templates.html#hls4ml.templates.vivado_template.VivadoBackend.convert_precision_string">convert_precision_string() (hls4ml.templates.vivado_template.VivadoBackend method)</a>
 </li>
@@ -533,6 +557,8 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_layers.Layer.get_input_node">get_input_node() (hls4ml.model.hls_layers.Layer method)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.get_input_shape">get_input_shape() (in module hls4ml.converters.onnx_to_hls)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_layers.Layer.get_input_variable">get_input_variable() (hls4ml.model.hls_layers.Layer method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_model.HLSModel.get_input_variables">get_input_variables() (hls4ml.model.hls_model.HLSModel method)</a>
@@ -549,12 +575,18 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_layers.Layer.get_numbers_cpp">get_numbers_cpp() (hls4ml.model.hls_layers.Layer method)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.get_onnx_attribute">get_onnx_attribute() (in module hls4ml.converters.onnx_to_hls)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.get_onnx_input_name">get_onnx_input_name() (in module hls4ml.converters.onnx_to_hls)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.get_optimizer">get_optimizer() (in module hls4ml.model.optimizer.optimizer)</a>
 </li>
-      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_model.HLSConfig.get_output_dir">get_output_dir() (hls4ml.model.hls_model.HLSConfig method)</a>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.get_out_layer_name">get_out_layer_name() (in module hls4ml.converters.onnx_to_hls)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_model.HLSConfig.get_output_dir">get_output_dir() (hls4ml.model.hls_model.HLSConfig method)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_layers.Layer.get_output_nodes">get_output_nodes() (hls4ml.model.hls_layers.Layer method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_layers.Layer.get_output_variable">get_output_variable() (hls4ml.model.hls_layers.Layer method)</a>
@@ -581,6 +613,8 @@
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.get_supported_keras_layers">get_supported_keras_layers() (in module hls4ml.converters.keras_to_hls)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.get_supported_onnx_layers">get_supported_onnx_layers() (in module hls4ml.converters.onnx_to_hls)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_model.HLSConfig.get_target_cycles">get_target_cycles() (hls4ml.model.hls_model.HLSConfig method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.profiling.get_unoptimized_hlsmodel">get_unoptimized_hlsmodel() (in module hls4ml.model.profiling)</a>
@@ -595,6 +629,8 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.KerasModelReader.get_weights_data">(hls4ml.converters.keras_to_hls.KerasModelReader method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.ONNXDataReader.get_weights_data">(hls4ml.converters.onnx_to_hls.ONNXDataReader method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_model.HLSModel.get_weights_data">(hls4ml.model.hls_model.HLSModel method)</a>
 </li>
@@ -643,6 +679,24 @@
 </li>
       <li><a href="autodoc/hls4ml.converters.html#module-hls4ml.converters.keras_to_hls">hls4ml.converters.keras_to_hls (module)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.onnx.html#module-hls4ml.converters.onnx">hls4ml.converters.onnx (module)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.onnx.html#module-hls4ml.converters.onnx.convolution">hls4ml.converters.onnx.convolution (module)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.onnx.html#module-hls4ml.converters.onnx.core">hls4ml.converters.onnx.core (module)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.onnx.html#module-hls4ml.converters.onnx.merge">hls4ml.converters.onnx.merge (module)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.onnx.html#module-hls4ml.converters.onnx.pooling">hls4ml.converters.onnx.pooling (module)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.onnx.html#module-hls4ml.converters.onnx.reshape">hls4ml.converters.onnx.reshape (module)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.html#module-hls4ml.converters.onnx_to_hls">hls4ml.converters.onnx_to_hls (module)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch">hls4ml.converters.pytorch (module)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.html#module-hls4ml.converters.utils">hls4ml.converters.utils (module)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#module-hls4ml.model">hls4ml.model (module)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#module-hls4ml.model.hls_layers">hls4ml.model.hls_layers (module)</a>
@@ -653,6 +707,8 @@
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.html#module-hls4ml.model.optimizer.optimizer">hls4ml.model.optimizer.optimizer (module)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes">hls4ml.model.optimizer.passes (module)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.bn_fuse">hls4ml.model.optimizer.passes.bn_fuse (module)</a>
@@ -661,8 +717,6 @@
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.clone">hls4ml.model.optimizer.passes.clone (module)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.conv_same_pad">hls4ml.model.optimizer.passes.conv_same_pad (module)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.fuse_biasadd">hls4ml.model.optimizer.passes.fuse_biasadd (module)</a>
@@ -674,6 +728,8 @@
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.pointwise">hls4ml.model.optimizer.passes.pointwise (module)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.repack_stream">hls4ml.model.optimizer.passes.repack_stream (module)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.transpose_opt">hls4ml.model.optimizer.passes.transpose_opt (module)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#module-hls4ml.model.profiling">hls4ml.model.profiling (module)</a>
 </li>
@@ -856,6 +912,8 @@
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.repack_stream.ReshapeStream.match">(hls4ml.model.optimizer.passes.repack_stream.ReshapeStream method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.transpose_opt.RemoveUselessTranspose.match">(hls4ml.model.optimizer.passes.transpose_opt.RemoveUselessTranspose method)</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -891,10 +949,16 @@
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.optimize_model">optimize_model() (in module hls4ml.model.optimizer.optimizer)</a>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.onnx_handler">onnx_handler() (in module hls4ml.converters.onnx_to_hls)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.onnx_to_hls">onnx_to_hls() (in module hls4ml.converters.onnx_to_hls)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.ONNXDataReader">ONNXDataReader (class in hls4ml.converters.onnx_to_hls)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.optimize_model">optimize_model() (in module hls4ml.model.optimizer.optimizer)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.pointwise.OptimizePointwiseConv">OptimizePointwiseConv (class in hls4ml.model.optimizer.passes.pointwise)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass">OptimizerPass (class in hls4ml.model.optimizer.optimizer)</a>
@@ -910,9 +974,17 @@
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_layers.ParametrizedActivation">ParametrizedActivation (class in hls4ml.model.hls_layers)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.core.parse_activation_layer">parse_activation_layer() (in module hls4ml.converters.keras.core)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.core.parse_activation_layer">(in module hls4ml.converters.onnx.core)</a>
 </li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.core.parse_batchnorm_layer">parse_batchnorm_layer() (in module hls4ml.converters.keras.core)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.core.parse_batchnorm_layer">(in module hls4ml.converters.onnx.core)</a>
 </li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.convolution.parse_conv1d_layer">parse_conv1d_layer() (in module hls4ml.converters.keras.convolution)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.convolution.parse_conv2d_layer">parse_conv2d_layer() (in module hls4ml.converters.keras.convolution)</a>
@@ -921,27 +993,51 @@
         <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.reshape.parse_conv2d_layer">(in module hls4ml.converters.keras.reshape)</a>
 </li>
       </ul></li>
-      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.parse_data_format">parse_data_format() (in module hls4ml.converters.keras_to_hls)</a>
+      <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.convolution.parse_conv_layer">parse_conv_layer() (in module hls4ml.converters.onnx.convolution)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.parse_data_format">parse_data_format() (in module hls4ml.converters.keras_to_hls)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.utils.parse_data_format">(in module hls4ml.converters.utils)</a>
+</li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.keras_to_hls.parse_default_keras_layer">parse_default_keras_layer() (in module hls4ml.converters.keras_to_hls)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.core.parse_dense_layer">parse_dense_layer() (in module hls4ml.converters.keras.core)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.graph.parse_garnet_layer">parse_garnet_layer() (in module hls4ml.converters.keras.graph)</a>
 </li>
-      <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.pooling.parse_global_pooling_layer">parse_global_pooling_layer() (in module hls4ml.converters.keras.pooling)</a>
+      <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.core.parse_gemm_layer">parse_gemm_layer() (in module hls4ml.converters.onnx.core)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.pooling.parse_global_pooling_layer">parse_global_pooling_layer() (in module hls4ml.converters.keras.pooling)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.pooling.parse_global_pooling_layer">(in module hls4ml.converters.onnx.pooling)</a>
+</li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.core.parse_input_layer">parse_input_layer() (in module hls4ml.converters.keras.core)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.merge.parse_merge_layer">parse_merge_layer() (in module hls4ml.converters.keras.merge)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.merge.parse_merge_layer">(in module hls4ml.converters.onnx.merge)</a>
 </li>
-      <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.reshape.parse_permute_layer">parse_permute_layer() (in module hls4ml.converters.keras.reshape)</a>
-</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.reshape.parse_permute_layer">parse_permute_layer() (in module hls4ml.converters.keras.reshape)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.pooling.parse_pool_layer">parse_pool_layer() (in module hls4ml.converters.onnx.pooling)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.pooling.parse_pooling_layer">parse_pooling_layer() (in module hls4ml.converters.keras.pooling)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.reshape.parse_reshape_layer">parse_reshape_layer() (in module hls4ml.converters.keras.reshape)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.reshape.parse_reshape_layer">(in module hls4ml.converters.onnx.reshape)</a>
+</li>
+      </ul></li>
+      <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.reshape.parse_transpose_layer">parse_transpose_layer() (in module hls4ml.converters.onnx.reshape)</a>
 </li>
       <li><a href="autodoc/hls4ml.report.html#hls4ml.report.vivado_report.parse_vivado_report">parse_vivado_report() (in module hls4ml.report.vivado_report)</a>
 </li>
@@ -1001,6 +1097,8 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_layers.register_layer">register_layer() (in module hls4ml.model.hls_layers)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.register_onnx_layer_handler">register_onnx_layer_handler() (in module hls4ml.converters.onnx_to_hls)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_model.HLSModel.register_output_variable">register_output_variable() (hls4ml.model.hls_model.HLSModel method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.register_pass">register_pass() (in module hls4ml.model.optimizer.optimizer)</a>
@@ -1015,7 +1113,11 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_model.HLSModel.remove_node">remove_node() (hls4ml.model.hls_model.HLSModel method)</a>
 </li>
+      <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.transpose_opt.RemoveUselessTranspose">RemoveUselessTranspose (class in hls4ml.model.optimizer.passes.transpose_opt)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.repack_stream.Repack">Repack (class in hls4ml.model.optimizer.passes.repack_stream)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.replace_char_inconsitency">replace_char_inconsitency() (in module hls4ml.converters.onnx_to_hls)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_model.HLSModel.replace_node">replace_node() (hls4ml.model.hls_model.HLSModel method)</a>
 </li>
@@ -1033,6 +1135,8 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.sanitize_layer_name">sanitize_layer_name() (in module hls4ml.converters.onnx_to_hls)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_layers.SeparableConv1D">SeparableConv1D (class in hls4ml.model.hls_layers)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_layers.SeparableConv2D">SeparableConv2D (class in hls4ml.model.hls_layers)</a>
@@ -1043,14 +1147,14 @@
 </li>
       <li><a href="autodoc/hls4ml.templates.html#hls4ml.templates.vivado_template.VivadoBackend.set_target_reuse_factor">set_target_reuse_factor() (hls4ml.templates.vivado_template.VivadoBackend method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_layers.ArrayVariable.size">size() (hls4ml.model.hls_layers.ArrayVariable method)</a>
 
       <ul>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_layers.StreamVariable.size">(hls4ml.model.hls_layers.StreamVariable method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.hls_layers.ArrayVariable.size_cpp">size_cpp() (hls4ml.model.hls_layers.ArrayVariable method)</a>
 
       <ul>
@@ -1099,6 +1203,8 @@
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.repack_stream.BroadcastStream.transform">(hls4ml.model.optimizer.passes.repack_stream.BroadcastStream method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.repack_stream.ReshapeStream.transform">(hls4ml.model.optimizer.passes.repack_stream.ReshapeStream method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.transpose_opt.RemoveUselessTranspose.transform">(hls4ml.model.optimizer.passes.transpose_opt.RemoveUselessTranspose method)</a>
 </li>
       </ul></li>
   </ul></td>

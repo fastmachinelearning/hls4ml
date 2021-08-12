@@ -1,0 +1,54 @@
+hls4ml.converters.onnx package
+==============================
+
+Submodules
+----------
+
+hls4ml.converters.onnx.convolution module
+-----------------------------------------
+
+.. automodule:: hls4ml.converters.onnx.convolution
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.converters.onnx.core module
+----------------------------------
+
+.. automodule:: hls4ml.converters.onnx.core
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.converters.onnx.merge module
+-----------------------------------
+
+.. automodule:: hls4ml.converters.onnx.merge
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.converters.onnx.pooling module
+-------------------------------------
+
+.. automodule:: hls4ml.converters.onnx.pooling
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.converters.onnx.reshape module
+-------------------------------------
+
+.. automodule:: hls4ml.converters.onnx.reshape
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.converters.onnx
+   :members:
+   :undoc-members:
+   :show-inheritance:

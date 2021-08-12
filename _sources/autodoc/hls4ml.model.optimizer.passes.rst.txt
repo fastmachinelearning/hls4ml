@@ -84,6 +84,14 @@ hls4ml.model.optimizer.passes.repack\_stream module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.model.optimizer.passes.transpose\_opt module
+---------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.transpose_opt
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 
 Module contents
 ---------------
