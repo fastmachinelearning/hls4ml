@@ -29,9 +29,12 @@ def mnist_model():
   return model
 
 @pytest.fixture      
-@pytest.mark.parametrize('io_type',['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('strategy', ['latency', 'resource'])                                 
-def hls_model(io_type, strategy):
+@pytest.mark.parametrize('settings', [('io_parallel', 'latency'),
+                                      ('io_stream', 'latency'),
+                                      ('io_stream', 'resource')])
+def hls_model(settings):
+  io_type = settings[0]
+  strategy = settings[1]
   config = yaml.load(open('../../example-models/config-files/qkeras_mnist_cnn_config.yml').read())
   config['KerasJson'] = '../../example-models/keras/qkeras_mnist_cnn.json'
   config['KerasH5'] = '../../example-models/keras/qkeras_mnist_cnn_weights.h5'
@@ -43,8 +46,9 @@ def hls_model(io_type, strategy):
   hls_model.compile()
   return hls_model
 
-@pytest.mark.parametrize('io_type',['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('strategy', ['latency', 'resource'])     
+@pytest.mark.parametrize('settings', [('io_parallel', 'latency'),
+                                      ('io_stream', 'latency'),
+                                      ('io_stream', 'resource')])
 def test_accuracy(mnist_data, mnist_model, hls_model):
   x_train, y_train, x_test, y_test = mnist_data
   model = mnist_model
