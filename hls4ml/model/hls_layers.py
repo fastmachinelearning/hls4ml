@@ -1529,18 +1529,29 @@ class Transpose(Layer):
         inp = self.get_input_variable(self.inputs[0])
         perm = self.get_attr('perm')
         self.set_attr('dim', '{}d'.format(len(inp.shape)))
+
         if len(perm) > 3:
             raise Exception('ERROR: Transpose of tensors with rank > 3 is not yet supported.')
-        shape = [inp.shape[i] for i in perm]
+        
+        #ONNX double transpose specific, sometimes ONNX injects
+        #useless double transpose layers when converting 
+        #from other frameworks
+        if len(perm) == 1:
+            shape = inp.shape #dummy shape
+            dims = ['DUMMY'] #dummy dims
+            self.set_attr('perm', [0])
+        else:
+            shape = [inp.shape[i] for i in perm]
+
+        self.set_attr('perm_str', ','.join([str(i) for i in perm]))
+        
         if len(shape) == 2:
             self.set_attr('perm_str', ','.join(['0'] + [str(i+1) for i in perm]))
             dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
             self.set_attr('depth', 1)
             self.set_attr('height', inp.shape[0])
             self.set_attr('width', inp.shape[1])
-        else:
-            shape = [inp.shape[i] for i in perm]
-            self.set_attr('perm_str', ','.join([str(i) for i in perm]))
+        elif len(shape) > 2:
             dims = ['OUT_DEPTH_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
             self.set_attr('depth', inp.shape[0])
             self.set_attr('height', inp.shape[1])
