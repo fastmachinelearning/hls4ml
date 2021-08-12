@@ -22,7 +22,11 @@
 
 #include "nnet_common.h"
 #include "hls_stream.h"
+#ifdef NO_VIVADO
+#include <cmath>
+#else
 #include "hls_math.h"
+#endif
 
 namespace nnet {
   namespace garnet_utils {
@@ -45,7 +49,11 @@ namespace nnet {
       for (unsigned iw = 1; iw < table_size; ++iw) {
         index = iw;
         distance.range(CONFIG_T::distance_width - 1, 0) = index.range(CONFIG_T::distance_width - 1, 0);
+#ifdef NO_VIVADO
+        edge_weights_table[iw] = std::exp(-distance.to_double() * distance.to_double());
+#else
         edge_weights_table[iw] = hls::exp(-distance * distance);
+#endif
       }
     }
 
