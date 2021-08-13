@@ -33,8 +33,9 @@ def test_dense():
     keras_prediction = model.predict(X_input)
 
     config = hls4ml.utils.config_from_keras_model(model)
+    output_dir = 'hls4mlprj_keras_api_dense'
 
-    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
 
     hls_model.compile()
 
@@ -52,11 +53,12 @@ def test_dense():
     assert list(hls_model.get_layers())[2].attributes['activation'] == str(model.layers[1].activation).split()[1]
     assert list(hls_model.get_layers())[1].attributes['activation'] == str(model.layers[0].activation).split()[1]
 
+# TODO: add ThresholdedReLU test when it can be made to pass
+# https://github.com/fastmachinelearning/hls4ml/issues/376
 @pytest.mark.parametrize("activation_function", [Activation(activation='relu', name='Activation'),
                                                  LeakyReLU(alpha=1.0),
                                                  ELU(alpha=1.0),
                                                  PReLU(alpha_initializer="zeros",),])
-                                                 # TODO: add ThresholdedReLU test when it can be made to pass
                                                  #ThresholdedReLU(theta=1.0)])
 def test_activations(activation_function):
     model = tf.keras.models.Sequential()
@@ -71,7 +73,8 @@ def test_activations(activation_function):
     X_input = np.random.rand(100,1)
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(model)
-    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config)
+    output_dir = 'hls4mlprj_keras_api_activations_{}'.format(activation_function.__class__.__name__)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input)
 
@@ -104,7 +107,8 @@ def test_conv1d(conv1d, padds):
     X_input = np.random.rand(10,128,4)
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(model)
-    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config)
+    output_dir = 'hls4mlprj_keras_api_conv1d_{}'.format(padds)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input)
 
@@ -148,28 +152,27 @@ chans_options = ['channels_last']
 @pytest.mark.parametrize("padds", padds_options)
 def test_conv2d(conv2d, chans, padds):
     model = tf.keras.models.Sequential()
-    input_shape = (4, 4, 28, 30)
+    input_shape = (28,28,3)
     model.add(conv2d(filters=32,
                      kernel_size=(4,4),
                      strides=(4,4),
                      padding=padds,
-                     activation='relu',
-                     input_shape=input_shape[1:],
+                     input_shape=input_shape,
                      kernel_initializer='normal',
                      use_bias=False,
                      data_format=chans
                      ))
-    model.add(Activation(activation='relu'))
 
     model.compile(optimizer='adam', loss='mse')
-    X_input = np.random.rand(4, 4, 28, 30)
+    X_input = np.random.rand(100, *input_shape)
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(model)
-    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config)
+    output_dir = 'hls4mlprj_keras_api_conv2d_{}_{}'.format(chans, padds)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
     hls_model.compile()
-    hls_prediction = hls_model.predict(X_input)
+    hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
 
-    assert len(model.layers) + 2 == len(hls_model.get_layers())
+    assert len(model.layers) + 1 == len(hls_model.get_layers())
     assert list(hls_model.get_layers())[1].attributes['name'] == model.layers[0]._name
 
     if conv2d == 'Conv2D':
@@ -225,131 +228,125 @@ def test_conv2d(conv2d, chans, padds):
       assert list(hls_model.get_layers())[1].attributes['pad_right'] == 0
 
 pooling_layers = [MaxPooling1D, MaxPooling2D, AveragePooling1D, AveragePooling2D]
-padds_options = ['same', 'valid']
-chans_options = ['channels_first', 'channels_last']
-@pytest.mark.parametrize("poolings", pooling_layers)
+@pytest.mark.parametrize("pooling", pooling_layers)
 @pytest.mark.parametrize("padds", padds_options)
 @pytest.mark.parametrize("chans", chans_options)
-def test_pooling(poolings, padds, chans):
+def test_pooling(pooling, padds, chans):
+    assert '1D' in pooling.__name__ or '2D' in pooling.__name__
+    input_shape = (8,8,3) if '2D' in pooling.__name__ else (64,3)
     model = tf.keras.models.Sequential()
-    if poolings == 'MaxPooling2D' or poolings == 'AveragePooling2D':
-        model.add(Conv2D(1, (3,3), activation='relu', input_shape=(8, 8, 1)))
-        model.add(AveragePooling2D(pool_size=(2, 2), strides=None, padding='valid', data_format=None))
-        model.add(MaxPooling2D(pool_size=(2, 2), strides=None, padding='valid', data_format=None))
+    if '2D' in pooling.__name__:
+        model.add(Conv2D(1, (3,3), input_shape=input_shape, 
+                         padding=padds, data_format=chans))
+    elif '1D' in pooling.__name__:
+        model.add(Conv1D(filters=32, kernel_size=3, strides=1, padding=padds,
+                      input_shape=input_shape, kernel_initializer='normal', use_bias=False,
+                      data_format=chans))  
+    
+    pool_size = (2, 2) if '2D' in pooling.__name__ else 2
+    model.add(pooling(pool_size=pool_size, strides=None, padding=padds, data_format=None))
+    model.compile(optimizer='adam', loss='mse')
 
-        model.compile(optimizer='adam', loss='mse')
-        X_input = np.random.rand(10, 128,4)
-        keras_prediction = model.predict(X_input)
-        config = hls4ml.utils.config_from_keras_model(model)
-        hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config)
-        hls_model.compile()
-        hls_prediction = hls_model.predict(X_input)
+    X_input = np.random.rand(100, *input_shape)
+    keras_prediction = model.predict(X_input)
+    config = hls4ml.utils.config_from_keras_model(model)
+    output_dir = 'hls4mlprj_keras_api_pooling_{}_{}_{}'.format(pooling.__name__, chans, padds)
 
-        for i in range(2):
-          assert list(hls_model.get_layers())[i + 3].attributes['name'] == model.layers[i + 1]._name
-          assert list(hls_model.get_layers())[i + 3].attributes['class_name'][-2] == str(2)
-          assert list(hls_model.get_layers())[i + 3].attributes['stride_height'] == model.layers[i + 1].strides[0]
-          assert list(hls_model.get_layers())[i + 3].attributes['stride_width'] == model.layers[i + 1].strides[1]
-          assert list(hls_model.get_layers())[i + 3].attributes['pool_height'] == model.layers[i + 1].pool_size[1]
-          assert list(hls_model.get_layers())[i + 3].attributes['pool_width'] == model.layers[i + 1].pool_size[0]
-          assert list(hls_model.get_layers())[i + 3].attributes['padding'] == model.layers[i + 1].padding
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
+    hls_model.compile()
+    hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
 
-          if list(hls_model.get_layers())[i + 3].attributes['data_format'] == 'channels_last':
-            assert list(hls_model.get_layers())[i + 3].attributes['in_height'] == model.layers[i + 1].input_shape[1]
-            assert list(hls_model.get_layers())[i + 3].attributes['in_width'] == model.layers[i + 1].input_shape[2]
-            assert list(hls_model.get_layers())[i + 3].attributes['n_filt'] == model.layers[i + 1].input_shape[3]
-          elif list(hls_model.get_layers())[i + 3].attributes['data_format'] == 'channels_first':
-            assert list(hls_model.get_layers())[i + 3].attributes['in_height'] == model.layers[i + 1].input_shape[2]
-            assert list(hls_model.get_layers())[i + 3].attributes['in_width'] == model.layers[i + 1].input_shape[3]
-            assert list(hls_model.get_layers())[i + 3].attributes['n_filt'] == model.layers[i + 1].input_shape[1]
+    hls_pool = list(hls_model.get_layers())[-1]
+    ker_pool = model.layers[-1]
+    if '2D' in pooling.__name__:
+      assert hls_pool.attributes['name'] == ker_pool._name
+      assert hls_pool.attributes['class_name'][-2] == str(2)
+      assert hls_pool.attributes['stride_height'] == ker_pool.strides[0]
+      assert hls_pool.attributes['stride_width'] == ker_pool.strides[1]
+      assert hls_pool.attributes['pool_height'] == ker_pool.pool_size[1]
+      assert hls_pool.attributes['pool_width'] == ker_pool.pool_size[0]
+      assert hls_pool.attributes['padding'] == ker_pool.padding
 
-          if list(hls_model.get_layers())[i + 3].attributes['padding'] == 'same':
-            # Height
-            in_height = model.layers[i + 1].input_shape[1]
-            if model.layers[i + 1].data_format == 'channels_first':
-              in_height = model.layers[i + 1].input_shape[2]
-            out_height = int(math.ceil(float(in_height) / float(model.layers[i + 1].strides[0])))
-            assert out_height == list(hls_model.get_layers())[i + 3].attributes['out_height']
-            if in_height % model.layers[i + 1].strides[0] == 0:
-              pad_along_height = max(model.layers[i + 1].pool_size[1] - model.layers[i + 1].strides[0], 0)
-            else:
-              pad_along_height = max(model.layers[i + 1].pool_size[1] - (in_height % model.layers[i + 1].strides[0]), 0)
-            pad_top = pad_along_height // 2
-            pad_bottom = pad_along_height - pad_top
-            assert pad_bottom == list(hls_model.get_layers())[i + 3].attributes['pad_bottom']
-            assert pad_top == list(hls_model.get_layers())[i + 3].attributes['pad_top']
+      if hls_pool.attributes['data_format'] == 'channels_last':
+        assert hls_pool.attributes['in_height'] == ker_pool.input_shape[1]
+        assert hls_pool.attributes['in_width'] == ker_pool.input_shape[2]
+        assert hls_pool.attributes['n_filt'] == ker_pool.input_shape[3]
+      elif hls_pool.attributes['data_format'] == 'channels_first':
+        assert hls_pool.attributes['in_height'] == ker_pool.input_shape[2]
+        assert hls_pool.attributes['in_width'] == ker_pool.input_shape[3]
+        assert hls_pool.attributes['n_filt'] == ker_pool.input_shape[1]
 
-            # Width
-            in_width = model.layers[i + 1].input_shape[2]
-            if model.layers[i + 1].data_format == 'channels_first':
-              in_height = model.layers[1].input_shape[i + 3]
-            out_width = int(math.ceil(float(in_width) / float(model.layers[i + 1].strides[1])))
-            assert out_width == list(hls_model.get_layers())[i + 3].attributes['out_width']
-            if in_width % model.layers[i + 1].strides[1] == 0:
-              pad_along_width = max(model.layers[i + 1].pool_size[0] - model.layers[i + 1].strides[1], 0)
-            else:
-              pad_along_width = max(model.layers[i + 1].pool_size[0] - (in_width % model.layers[i + 1].strides[1]), 0)
-            pad_left = pad_along_width // 2
-            pad_right = pad_along_width - pad_left
-            assert pad_left == list(hls_model.get_layers())[i + 3].attributes['pad_left']
-            assert pad_right == list(hls_model.get_layers())[i + 3].attributes['pad_right']
+      if hls_pool.attributes['padding'] == 'same':
+        # Height
+        in_height = ker_pool.input_shape[1]
+        if ker_pool.data_format == 'channels_first':
+          in_height = ker_pool.input_shape[2]
+        out_height = int(math.ceil(float(in_height) / float(ker_pool.strides[0])))
+        assert out_height == hls_pool.attributes['out_height']
+        if in_height % ker_pool.strides[0] == 0:
+          pad_along_height = max(ker_pool.pool_size[1] - ker_pool.strides[0], 0)
+        else:
+          pad_along_height = max(ker_pool.pool_size[1] - (in_height % ker_pool.strides[0]), 0)
+        pad_top = pad_along_height // 2
+        pad_bottom = pad_along_height - pad_top
+        assert pad_bottom == hls_pool.attributes['pad_bottom']
+        assert pad_top == hls_pool.attributes['pad_top']
 
-          elif list(hls_model.get_layers())[i + 3].attributes['padding'] == 'valid':
-            if list(hls_model.get_layers())[i + 3].attributes['data_format'] == 'channels_first':
-              in_height = model.layers[i + 1].input_shape[2]
-              in_width = model.layers[i + 1].input_shape[3]
-            elif list(hls_model.get_layers())[i + 3].attributes['data_format'] == 'channels_last':
-              in_height = model.layers[i + 1].input_shape[1]
-              in_width = model.layers[i + 1].input_shape[2]
+        # Width
+        in_width = ker_pool.input_shape[2]
+        if ker_pool.data_format == 'channels_first':
+          in_height = model.layers[1].input_shape[-1]
+        out_width = int(math.ceil(float(in_width) / float(ker_pool.strides[1])))
+        assert out_width == hls_pool.attributes['out_width']
+        if in_width % ker_pool.strides[1] == 0:
+          pad_along_width = max(ker_pool.pool_size[0] - ker_pool.strides[1], 0)
+        else:
+          pad_along_width = max(ker_pool.pool_size[0] - (in_width % ker_pool.strides[1]), 0)
+        pad_left = pad_along_width // 2
+        pad_right = pad_along_width - pad_left
+        assert pad_left == hls_pool.attributes['pad_left']
+        assert pad_right == hls_pool.attributes['pad_right']
 
-            out_width = int(math.ceil(float(in_width - model.layers[i + 1].pool_size[0] + 1) / float(model.layers[i + 1].strides[1])))
-            out_height = int(math.ceil(float(in_height - model.layers[i + 1].pool_size[1] + 1) / float(model.layers[i + 1].strides[0])))
+      elif hls_pool.attributes['padding'] == 'valid':
+        if hls_pool.attributes['data_format'] == 'channels_first':
+          in_height = ker_pool.input_shape[2]
+          in_width = ker_pool.input_shape[3]
+        elif hls_pool.attributes['data_format'] == 'channels_last':
+          in_height = ker_pool.input_shape[1]
+          in_width = ker_pool.input_shape[2]
 
-            assert list(hls_model.get_layers())[i + 3].attributes['out_height'] == out_height
-            assert list(hls_model.get_layers())[i + 3].attributes['out_width'] == out_width
-            assert list(hls_model.get_layers())[i + 3].attributes['pad_top'] == 0
-            assert list(hls_model.get_layers())[i + 3].attributes['pad_bottom'] == 0
-            assert list(hls_model.get_layers())[i + 3].attributes['pad_left'] == 0
-            assert list(hls_model.get_layers())[i + 3].attributes['pad_right'] == 0
+        out_width = int(math.ceil(float(in_width - ker_pool.pool_size[0] + 1) / float(ker_pool.strides[1])))
+        out_height = int(math.ceil(float(in_height - ker_pool.pool_size[1] + 1) / float(ker_pool.strides[0])))
 
-    elif poolings == 'MaxPooling1D' or poolings == 'AveragePooling2D':
-        input_shape = (10, 128, 4)
-        model.add(Conv1D(filters=32, kernel_size=3, strides=1, padding='same', activation='relu',
-                            input_shape=input_shape[1:], kernel_initializer='normal', use_bias=False,
-                            data_format='channels_last'))
-        model.add(MaxPooling1D(pool_size=2, strides=None, padding=padds, data_format=chans))
-        model.add(AveragePooling1D(pool_size=2, strides=None, padding=padds, data_format=chans))
+        assert hls_pool.attributes['out_height'] == out_height
+        assert hls_pool.attributes['out_width'] == out_width
+        assert hls_pool.attributes['pad_top'] == 0
+        assert hls_pool.attributes['pad_bottom'] == 0
+        assert hls_pool.attributes['pad_left'] == 0
+        assert hls_pool.attributes['pad_right'] == 0
 
-        model.compile(optimizer='adam', loss='mse')
-        X_input = np.random.rand(10, 128,4)
-        keras_prediction = model.predict(X_input)
-        config = hls4ml.utils.config_from_keras_model(model)
-        hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config)
-        hls_model.compile()
-        hls_prediction = hls_model.predict(X_input)
+    elif '1D' in pooling.__name__:
+      assert hls_pool.attributes['name'] == ker_pool._name
+      assert hls_pool.attributes['class_name'][-2] == str(1)
+      assert hls_pool.attributes['n_in'] == ker_pool.input_shape[1]
+      assert hls_pool.attributes['n_filt'] == ker_pool.input_shape[2]
+      assert hls_pool.attributes['pool_width'] == ker_pool.pool_size[0]
+      assert hls_pool.attributes['stride_width'] == ker_pool.strides[0]
+      assert hls_pool.attributes['padding'] == ker_pool.padding
 
-        for i in range(2):
-          assert list(hls_model.get_layers())[i + 3].attributes['name'] == model.layers[i + 1]._name
-          assert list(hls_model.get_layers())[i + 3].attributes['class_name'][-2] == str(1)
-          assert list(hls_model.get_layers())[i + 3].attributes['n_in'] == model.layers[i + 1].input_shape[1]
-          assert list(hls_model.get_layers())[i + 3].attributes['n_filt'] == model.layers[i + 1].input_shape[2]
-          assert list(hls_model.get_layers())[i + 3].attributes['pool_size'] == model.layers[i + 1].pool_size[0]
-          assert list(hls_model.get_layers())[i + 3].attributes['stride'] == model.layers[i + 1].strides[0]
-          assert list(hls_model.get_layers())[i + 3].attributes['padding'] == model.layers[i + 1].padding
+      out_same	= math.ceil(float(ker_pool.input_shape[1]) / float(ker_pool.strides[0]))
+      out_valid	= math.ceil(float(ker_pool.input_shape[1] - ker_pool.pool_size[0] + 1) / ker_pool.strides[0])
 
-          out_same	= math.ceil(float(model.layers[i + 1].input_shape[1]) / float(model.layers[i + 1].strides[0]))
-          out_valid	= math.ceil(float(model.layers[i + 1].input_shape[1] - model.layers[i + 1].pool_size[0] + 1) / model.layers[i + 1].strides[0])
+      if hls_pool.attributes['padding'] == 'same':
+        assert hls_pool.attributes['n_out'] == out_same
+        if ker_pool.input_shape[1] % ker_pool.strides[0] == 0:
+          pad_along_width = max(ker_pool.pool_size[0] - ker_pool.strides[0], 0)
+        else:
+          pad_along_width = max(ker_pool.pool_size[0] - (ker_pool.input_shape[1] % ker_pool.strides[0]), 0)
+        assert hls_pool.attributes['pad_left'] == pad_along_width // 2
+        assert hls_pool.attributes['pad_right'] == pad_along_width - pad_along_width // 2
 
-          if list(hls_model.get_layers())[i + 3].attributes['padding'] == 'same':
-            assert list(hls_model.get_layers())[i + 3].attributes['n_out'] == out_same
-            if model.layers[i + 1].input_shape[1] % model.layers[i + 1].strides[0] == 0:
-              pad_along_width = max(model.layers[i + 1].pool_size[0] - model.layers[i + 1].strides[0], 0)
-            else:
-              pad_along_width = max(model.layers[i + 1].pool_size[0] - (model.layers[i + 1].input_shape[1] % model.layers[i + 1].strides[0]), 0)
-            assert list(hls_model.get_layers())[i + 3].attributes['pad_left'] == pad_along_width // 2
-            assert list(hls_model.get_layers())[i + 3].attributes['pad_right'] == pad_along_width - pad_along_width // 2
-
-          elif list(hls_model.get_layers())[i + 3].attributes['padding'] == 'valid':
-            assert list(hls_model.get_layers())[i + 3].attributes['n_out'] == out_valid
-            assert list(hls_model.get_layers())[i + 3].attributes['pad_left'] == 0
-            assert list(hls_model.get_layers())[i + 3].attributes['pad_right'] == 0
+      elif hls_pool.attributes['padding'] == 'valid':
+        assert hls_pool.attributes['n_out'] == out_valid
+        assert hls_pool.attributes['pad_left'] == 0
+        assert hls_pool.attributes['pad_right'] == 0
