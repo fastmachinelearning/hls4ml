@@ -58,7 +58,7 @@ def _get_precision_from_quantizer(quantizer):
     else:
         return 'ap_int<{}>'.format(bits)
 
-def config_from_keras_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_int_precision='ap_int<16>', default_reuse_factor=1):
+def config_from_keras_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1):
     """Create an HLS conversion config given the Keras model.
 
     This function serves as the initial step in creating the custom conversion configuration.
@@ -77,7 +77,6 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             will generate config keys for every layer separately, allowing for highly specific
             configuration tweaks.
         default_precision (str, optional): Default precision to use. Defaults to 'ap_fixed<16,6>'.
-        default_int_precision (str, optional): Default precision to use for integers. Defaults to 'ap_int<16>'.
         default_reuse_factor (int, optional): Default reuse factor. Defaults to 1.
 
     Raises:
@@ -182,16 +181,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
 
     def make_layer_config(layer):
         layer_config = {}
-        if layer['class_name'] == 'Input':
-            dtype = layer['config']['dtype']
-            if dtype.startswith('int') or dtype.startswith('uint'):
-                layer['type_name'] = 'integer_input_t'
-                width = int(dtype[dtype.index('int') + 3:])
-                signed = (not dtype.startswith('u'))
-                layer['precision'] = IntegerPrecisionType(width=width, signed=signed)
-            # elif bool, q[u]int, ...
-
-        elif layer['class_name'] in dense_layers + conv_layers:
+        if layer['class_name'] in dense_layers + conv_layers:
             layer_config['Precision'] = {}
             layer_config['Precision']['weight'] = default_precision
             layer_config['Precision']['bias'] = default_precision
@@ -254,7 +244,15 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
 
         elif layer['class_name'] == 'Input':
             layer_config['Precision'] = {}
-            layer_config['Precision']['result'] = default_precision
+
+            dtype = layer['config']['dtype']
+            if dtype.startswith('int') or dtype.startswith('uint'):
+                typename = dtype[:dtype.index('int') + 3]
+                width = int(dtype[dtype.index('int') + 3:])
+                layer_config['Precision']['result'] = 'ap_{}<{}>'.format(typename, width)
+            # elif bool, q[u]int, ...
+            else:
+                layer_config['Precision']['result'] = default_precision
 
         else:
             layer_config['Precision'] = default_precision
