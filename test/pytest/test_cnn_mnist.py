@@ -28,6 +28,8 @@ def mnist_model():
   model.load_weights('../../example-models/keras/qkeras_mnist_cnn_weights.h5')
   return model
 
+# TODO: add ('io_parallel', 'resource') when it can pass
+# https://github.com/fastmachinelearning/hls4ml/issues/375
 @pytest.fixture      
 @pytest.mark.parametrize('settings', [('io_parallel', 'latency'),
                                       ('io_stream', 'latency'),
@@ -38,7 +40,7 @@ def hls_model(settings):
   config = yaml.load(open('../../example-models/config-files/qkeras_mnist_cnn_config.yml').read())
   config['KerasJson'] = '../../example-models/keras/qkeras_mnist_cnn.json'
   config['KerasH5'] = '../../example-models/keras/qkeras_mnist_cnn_weights.h5'
-  config['OutputDir'] = 'mnist-hls4ml-prj'
+  config['OutputDir'] = 'hls4mlprj_cnn_mnist_{}_{}'.format(io_type, strategy)
   config['IOType'] = io_type
   config['HLSConfig']['Model']['Strategy'] = strategy
   config['HLSConfig']['LayerName']['softmax']['Strategy'] = 'Stable'

@@ -61,7 +61,7 @@ def convert(load_jettagging_model, strategy):
   config['LayerName']['softmax']['inv_table_t'] = 'ap_fixed<18,4>'
   hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                        hls_config=config,
-                                                       output_dir='qkeras-jettagging-hls4ml-prj',
+                                                       output_dir='hls4mlprj_qkeras_accuracy_{}'.format(strategy),
                                                        fpga_part='xcu250-figd2104-2L-e')
   hls4ml.model.optimizer.OutputRoundingSaturationMode.layers = []                                                     
   hls_model.compile()
@@ -124,7 +124,7 @@ def test_single_dense_activation_exact(randX_100_16, bits):
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
   hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                        hls_config=config,
-                                                       output_dir='qkeras-simple-hls4ml-prj-{}'.format(bits),
+                                                       output_dir='hls4mlprj_qkeras_single_dense_activation_exact_{}'.format(bits),
                                                        fpga_part='xcu250-figd2104-2L-e')
   hls4ml.model.optimizer.OutputRoundingSaturationMode.layers = []                                                   
   hls_model.compile()
@@ -181,12 +181,13 @@ def test_btnn(make_btnn, randX_100_10):
 def randX_1000_1():
   return randX(1000, 1)
 
+# TODO: include quantized_relu tests when they are made to pass
+# https://github.com/fastmachinelearning/hls4ml/issues/377
 @pytest.mark.parametrize('quantizer', [(quantized_bits(8,0)),
                                        (quantized_bits(8,4)),
                                        (quantized_bits(4,2)),
                                        (quantized_bits(4,0)),
                                        (quantized_bits(10,0)),])
-                                       # TODO include these after fixes
                                        #(quantized_relu(4)),
                                        #(quantized_relu(10))])
 def test_quantizer(randX_1000_1, quantizer):
@@ -205,9 +206,11 @@ def test_quantizer(randX_1000_1, quantizer):
   hls4ml.model.optimizer.OutputRoundingSaturationMode.rounding_mode = 'AP_RND_CONV'
   hls4ml.model.optimizer.OutputRoundingSaturationMode.saturation_mode = 'AP_SAT'
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+  output_dir = 'hls4mlprj_qkeras_quantizer_{}_{}_{}'.format(quantizer.__class__.__name__,
+                                                            quantizer.bits, quantizer.integer)
   hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                        hls_config=config,
-                                                       output_dir='qkeras-quantizer-hls4ml-prj',
+                                                       output_dir=output_dir,
                                                        fpga_part='xcu250-figd2104-2L-e')
   hls4ml.model.optimizer.OutputRoundingSaturationMode.layers = []                                                   
   hls_model.compile()
@@ -216,5 +219,3 @@ def test_quantizer(randX_1000_1, quantizer):
   y_hls4ml = hls_model.predict(X)
   # Goal is to get it passing with all equal
   np.testing.assert_array_equal(y_qkeras, y_hls4ml)
-  # For now allow matching within 1 bit
-  #np.testing.assert_allclose(y_qkeras.ravel(), y_hls4ml.ravel(), atol=2**-bits, rtol=1.0)

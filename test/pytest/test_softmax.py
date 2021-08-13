@@ -33,7 +33,7 @@ def test_softmax(strategy, generate_data):
   cfg['LayerName']['softmax']['Strategy'] = strategy
   cfg['LayerName']['softmax']['inv_table_t'] = 'ap_fixed<18,8,AP_RND,AP_SAT>'
   cfg['LayerName']['softmax']['exp_table_t'] = 'ap_fixed<18,8,AP_RND,AP_SAT>'
-  hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=cfg, output_dir='softmax_prj')
+  hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=cfg, output_dir='hls4mlprj_softmax_{}'.format(strategy))
   hls_model.compile()
   y_keras = model.predict(X)
   y_hls4ml = hls_model.predict(X)

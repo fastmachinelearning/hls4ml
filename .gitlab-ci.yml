@@ -17,3 +17,5 @@ pytest:
       junit: 
         - test/pytest/report.xml
         - test/pytest/coverage.xml
+    paths:
+      - test/pytest/hls4mlprj*.tar.gz
