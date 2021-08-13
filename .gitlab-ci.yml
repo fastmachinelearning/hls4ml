@@ -10,7 +10,7 @@ pytest:
     - pip install .[profiling]
   script:
     - cd test/pytest
-    - pytest -rA --cov-report xml --cov=hls4ml --junitxml=report.xml
+    - pytest -rA --cov-report xml --cov-report term --cov=hls4ml --junitxml=report.xml
   artifacts:
     when: always
     reports:
