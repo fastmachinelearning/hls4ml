@@ -1,5 +1,4 @@
 from __future__ import print_function
-import torch
 
 from hls4ml.converters.pytorch_to_hls import PyTorchModelReader
 from hls4ml.model.hls_model import HLSModel
@@ -47,8 +46,25 @@ class PygModelReader(PyTorchModelReader):
 
         return data
 
-def pyg_to_hls(config):
+# EdgeBlock/NodeBlock/Aggregate handlers
+block_handlers = {}
 
+def register_pyg_block_handler(block_name, handler_func):
+    if block_name in block_handlers:
+        raise Exception('Block {} already registered'.format(block_name))
+    else:
+        block_handlers[block_name] = handler_func
+
+def get_supported_pyg_blocks():
+    return list(block_handlers.keys())
+
+def pyg_handler(*args):
+    def decorator(function):
+        function.handles = [arg for arg in args]
+        return function
+    return decorator
+
+def pyg_to_hls(config):
     forward_dict = config['ForwardDictionary']
     activate_final = config['ActivateFinal']
 
@@ -63,7 +79,6 @@ def pyg_to_hls(config):
     n_edge = reader.n_edge
     node_dim = reader.node_dim
     edge_dim = reader.edge_dim
-
 
     # initiate layer list with inputs: node_attr, edge_attr, edge_index
     layer_list = []
@@ -95,81 +110,26 @@ def pyg_to_hls(config):
         'precision': int_type
     }
     layer_list.append(EdgeIndex_layer)
-    last_node_update = "node_attr"
-    last_edge_update = "edge_attr"
+    update_dict = {"last_node_update": "node_attr", "last_edge_update": "edge_attr", "last_edge_aggr_update": None}
 
-    # If the first block is a NodeBlock, we need a layer to construct the initial edge_aggregates
+    # If the first block is a NodeBlock, we need an initial Aggregate block to construct the initial edge_aggregates
     if forward_dict[list(forward_dict.keys())[0]] == "NodeBlock":
-        aggr_layer = {"name": "aggr1",
-                       "class_name": "Aggregate",
-                       "n_node": n_node,
-                       "n_edge": n_edge,
-                       "node_dim": node_dim,
-                       "edge_dim": edge_dim,
-                       "precision": fp_type,
-                       "out_dim": edge_dim,
-                       "inputs": ["edge_attr", "edge_index"],
-                       "outputs": ["edge_attr_aggr"]}
-        layer_list.append(aggr_layer)
-        last_edge_aggr_update = "edge_attr_aggr"
-    else: last_edge_aggr_update = None
+        index = len(layer_list)+1
+        layer_dict, update_dict = block_handlers["Aggregate"](index, fp_type, update_dict, n_node,
+                                                                        n_edge, node_dim, edge_dim)
+        layer_list.append(layer_dict)
 
     # complete the layer list
     for i, (key, val) in enumerate(forward_dict.items()):
-        layer_dict = {
-            "name": key,
-            "class_name": val,
-            "n_node": n_node,
-            "n_edge": n_edge,
-            "node_dim": node_dim,
-            "edge_dim": edge_dim,
-            "precision": fp_type
-        }
-
-        # get n_layers, out_dim
-        model = config['PytorchModel']
-        torch_block = getattr(model, key)
-        try:
-            torch_layers = torch_block.layers._modules
-        except AttributeError:
-            torch_layers = torch_block._modules
-
-        lcount = 0
-        for lname, l in torch_layers.items():
-            if isinstance(l, torch.nn.modules.linear.Linear):
-                lcount += 1
-                last_layer = l
-        layer_dict["n_layers"] = lcount
-        layer_dict["out_dim"] = last_layer.out_features
-
         # get inputs, outputs
-        if val == "NodeBlock":
-            index = len(layer_list) + 1
-            layer_dict["inputs"] = [last_node_update, last_edge_aggr_update]
-            layer_dict["outputs"] = [f"layer{index}_out"]
-            last_node_update = f"layer{index}_out"
-            layer_list.append(layer_dict)
-        elif val == "EdgeBlock":
-            index = len(layer_list) + 1
-            layer_dict["inputs"] = [last_node_update, last_edge_update, "edge_index"]
-            layer_dict["outputs"] = [f"layer{index}_out"]
-            last_edge_update = f"layer{index}_out"
-            layer_list.append(layer_dict)
+        index = len(layer_list)+1
+        layer_dict, update_dict = block_handlers[val](key, config, update_dict, index, n_node, n_edge, node_dim, edge_dim)
+        layer_list.append(layer_dict)
 
         # if val==EdgeBlock and this is not the final graph-block, follow it with an aggregation layer
         if (val == "EdgeBlock") and (i < len(forward_dict) - 1):
             index = len(layer_list) + 1
-            layer_dict = {"name": f"aggr{index}",
-                       "class_name": "Aggregate",
-                       "n_node": n_node,
-                       "n_edge": n_edge,
-                       "node_dim": node_dim,
-                       "edge_dim": edge_dim,
-                       "precision": fp_type,
-                       "out_dim": edge_dim,
-                       "inputs": [last_edge_update, "edge_index"],
-                       "outputs": [f"layer{index}_out"]}
-            last_edge_aggr_update = f"layer{index}_out"
+            layer_dict, update_dict = block_handlers["Aggregate"](index, update_dict, n_node, n_edge, node_dim, edge_dim)
             layer_list.append(layer_dict)
 
     if activate_final is not None:

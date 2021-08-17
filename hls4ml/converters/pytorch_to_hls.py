@@ -119,7 +119,7 @@ def pytorch_to_hls(config):
     -----
     Only sequential pytorch models are supported for now.
     """
-    
+
     #This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
 

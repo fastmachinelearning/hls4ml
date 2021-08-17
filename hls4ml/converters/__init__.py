@@ -11,7 +11,7 @@ from hls4ml.converters.keras_to_hls import keras_to_hls, get_supported_keras_lay
 #----------Make converters available if the libraries can be imported----------#       
 try:
     from hls4ml.converters.pytorch_to_hls import pytorch_to_hls, get_supported_pytorch_layers, register_pytorch_layer_handler
-    from hls4ml.converters.pyg_to_hls import pyg_to_hls
+    from hls4ml.converters.pyg_to_hls import pyg_to_hls, get_supported_pyg_blocks, register_pyg_block_handler
     __pytorch_enabled__ = True
 except ImportError:
     warnings.warn("WARNING: Pytorch converter is not enabled!")
@@ -32,7 +32,7 @@ except ImportError:
     __tensorflow_enabled__ = False
 
 #----------Layer handling register----------#
-model_types = ['keras', 'pytorch', 'onnx']
+model_types = ['keras', 'pytorch', 'onnx', 'pyg']
 
 for model_type in model_types:
     for module in os.listdir(os.path.dirname(__file__) + '/{}'.format(model_type)):
@@ -53,6 +53,8 @@ for model_type in model_types:
                             register_pytorch_layer_handler(layer, func)
                         elif model_type == 'onnx':
                             register_onnx_layer_handler(layer, func)
+                        elif model_type == 'pyg':
+                            register_pyg_block_handler(layer, func)
                             
         except ImportError:
             continue
