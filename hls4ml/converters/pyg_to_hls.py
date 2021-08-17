@@ -116,14 +116,12 @@ def pyg_to_hls(config):
     aggr_count = 0
     forward_dict_new = OrderedDict()
     for key, val in forward_dict.items():
-        if val=="NodeBlock":
+        if val == "NodeBlock":
             aggr_count += 1
             aggr_key = f"aggr{aggr_count}"
             aggr_val = "Aggregate"
             forward_dict_new[aggr_key] = aggr_val
         forward_dict_new[key] = val
-    print(f"forward_dict: {forward_dict}")
-    print(f"forward_dict_new: {forward_dict_new}")
 
     # complete the layer list
     for i, (key, val) in enumerate(forward_dict_new.items()):

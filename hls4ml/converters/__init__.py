@@ -300,11 +300,14 @@ def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', pro
     
     return pytorch_to_hls(config)
 
+def check_forward_dict(model, forward_dictionary):
+    for key in forward_dictionary:
+        assert(hasattr(model, key))
 def convert_from_pyg_model(model, n_node, node_dim, n_edge, edge_dim,
                            forward_dictionary=None, activate_final=None,
                            output_dir='my-hls-test', project_name='myproject',
                            fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
-    
+    check_forward_dict(model, forward_dictionary)
     config = create_vivado_config(
         output_dir=output_dir,
         project_name=project_name,
