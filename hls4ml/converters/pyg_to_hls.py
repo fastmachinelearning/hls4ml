@@ -1,9 +1,9 @@
 from __future__ import print_function
+from collections import OrderedDict
 
 from hls4ml.converters.pytorch_to_hls import PyTorchModelReader
 from hls4ml.model.hls_model import HLSModel
 from hls4ml.templates import get_backend
-
 
 class PygModelReader(PyTorchModelReader):
     def __init__(self, config):
@@ -112,25 +112,25 @@ def pyg_to_hls(config):
     layer_list.append(EdgeIndex_layer)
     update_dict = {"last_node_update": "node_attr", "last_edge_update": "edge_attr", "last_edge_aggr_update": None}
 
-    # If the first block is a NodeBlock, we need an initial Aggregate block to construct the initial edge_aggregates
-    if forward_dict[list(forward_dict.keys())[0]] == "NodeBlock":
-        index = len(layer_list)+1
-        layer_dict, update_dict = block_handlers["Aggregate"](index, fp_type, update_dict, n_node,
-                                                                        n_edge, node_dim, edge_dim)
-        layer_list.append(layer_dict)
+    # insert an aggregation step before each NodeBlock
+    aggr_count = 0
+    forward_dict_new = OrderedDict()
+    for key, val in forward_dict.items():
+        if val=="NodeBlock":
+            aggr_count += 1
+            aggr_key = f"aggr{aggr_count}"
+            aggr_val = "Aggregate"
+            forward_dict_new[aggr_key] = aggr_val
+        forward_dict_new[key] = val
+    print(f"forward_dict: {forward_dict}")
+    print(f"forward_dict_new: {forward_dict_new}")
 
     # complete the layer list
-    for i, (key, val) in enumerate(forward_dict.items()):
+    for i, (key, val) in enumerate(forward_dict_new.items()):
         # get inputs, outputs
         index = len(layer_list)+1
         layer_dict, update_dict = block_handlers[val](key, config, update_dict, index, n_node, n_edge, node_dim, edge_dim)
         layer_list.append(layer_dict)
-
-        # if val==EdgeBlock and this is not the final graph-block, follow it with an aggregation layer
-        if (val == "EdgeBlock") and (i < len(forward_dict) - 1):
-            index = len(layer_list) + 1
-            layer_dict, update_dict = block_handlers["Aggregate"](index, update_dict, n_node, n_edge, node_dim, edge_dim)
-            layer_list.append(layer_dict)
 
     if activate_final is not None:
         act_dict = {
