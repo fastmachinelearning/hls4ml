@@ -302,7 +302,11 @@ def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', pro
 
 def check_forward_dict(model, forward_dictionary):
     for key in forward_dictionary:
-        assert(hasattr(model, key))
+        try:
+            block = getattr(model, key)
+        except AttributeError:
+            raise AttributeError(f'Model is missing module "{key}" that is present in the provided forward dictionary; Check compatability')
+
 def convert_from_pyg_model(model, n_node, node_dim, n_edge, edge_dim,
                            forward_dictionary=None, activate_final=None,
                            output_dir='my-hls-test', project_name='myproject',
