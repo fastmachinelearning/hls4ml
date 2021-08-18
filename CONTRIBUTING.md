@@ -18,7 +18,6 @@ Consult [GitHub Help](https://help.github.com/articles/about-pull-requests/) for
 1. In the pull request description, clearly document all changes made and the expected behavior.
 1. If you are introducing new functionality, add at least one unit test under the `test` folder and make sure it passes before you submit the pull request.
 1. Similarly, if you are fixing a bug, add at least one unit test under the `test` folder such that the master branch fails the test and your branch passes the test.
-1. Check that your code passes `autopep8 --in-place --aggressive --aggressive *.py -v`
 1. Submit the pull request to the [main](https://github.com/fastmachinelearning/hls4ml) branch.
 
 ## Code Reviews
