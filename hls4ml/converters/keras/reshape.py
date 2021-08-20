@@ -2,7 +2,19 @@ import numpy as np
 
 from hls4ml.converters.keras_to_hls import parse_default_keras_layer
 from hls4ml.converters.keras_to_hls import keras_handler
-from hls4ml.converters.keras_to_hls import parse_data_format
+from hls4ml.converters.utils import parse_data_format
+
+@keras_handler('Flatten')
+def parse_flatten_layer(keras_layer, input_names, input_shapes, data_reader, config):
+    assert(keras_layer["class_name"] == 'Flatten')
+
+    layer = parse_default_keras_layer(keras_layer, input_names)
+    
+    layer['class_name'] = 'Reshape'
+    layer['target_shape'] = [input_shapes[0][0], np.prod(input_shapes[0][1:])]
+    output_shape = layer['target_shape']
+    
+    return layer, output_shape
 
 @keras_handler('Reshape')
 def parse_reshape_layer(keras_layer, input_names, input_shapes, data_reader, config):

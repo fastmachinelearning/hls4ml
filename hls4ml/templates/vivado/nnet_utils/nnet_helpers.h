@@ -25,6 +25,7 @@
 #include <math.h>
 #include <fstream>
 #include <algorithm>
+#include <vector>
 #include <map>
 #include <iostream>
 #include "hls_stream.h"
