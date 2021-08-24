@@ -2327,7 +2327,7 @@ class NodeBlock(GraphBlock):
         #expected outputs: node_update
         assert(len(self.outputs)==1)
 
-class Aggregate(Layer):
+class EdgeAggregate(Layer):
     def initialize(self):
         self.n_node = self.attributes['n_node']
         self.n_edge = self.attributes['n_edge']
@@ -2417,7 +2417,7 @@ class Aggregate(Layer):
 
         aggr_params = self.get_Aggregate_params()
         nested_duplicate = self._config_template.format(**aggr_params).split('\n')
-        nested_duplicate[0] = "struct nested_duplicate: nnet::aggregate_config{"
+        nested_duplicate[0] = "struct nested_duplicate: nnet::edge_aggregate_config{"
         nested_duplicate = '\n'.join(nested_duplicate)
         configs['nested_duplicate'] = nested_duplicate
 
@@ -2483,7 +2483,7 @@ layer_map = {
     'GarNetStack'            : GarNetStack,
     'EdgeBlock'              : EdgeBlock,
     'NodeBlock'              : NodeBlock,
-    'Aggregate'              : Aggregate,
+    'EdgeAggregate'              : EdgeAggregate,
     # TensorFlow-specific layers:
     'BiasAdd'                : BiasAdd,
 }
