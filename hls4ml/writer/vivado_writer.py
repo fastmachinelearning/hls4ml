@@ -132,11 +132,6 @@ class VivadoWriter(Writer):
         elif mode == 'stream':
             return '#pragma HLS STREAM variable={name} depth={depth}'.format(name=variable.name, depth=depth)
 
-    @staticmethod
-    def _make_stable_pragma(variable):
-        template = '#pragma HLS STABLE variable={name}'
-        return template.format(name=variable.name)
-
     def write_project_cpp(self, model):
         ###################
         ## myproject.cpp
