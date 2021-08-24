@@ -1,7 +1,6 @@
-from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.model.optimizer import OptimizerPass, register_pass
 from hls4ml.model.hls_layers import BatchNormalization, Dense, Conv1D, Conv2D, register_layer, layer_map
 from hls4ml.model.hls_types import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType
-from hls4ml.backends import get_backend
 import tensorflow as tf
 import numpy as np
 from qkeras import get_quantizer
@@ -41,9 +40,7 @@ class OutputRoundingSaturationMode(OptimizerPass):
     saturation_bits = None
 
     def match(self, node):
-        layer_cls = (layer_map.get(l, None) for l in self.layers)
-        layer_cls = (l for l in layer_cls if l is not None)
-        layer_match = isinstance(node, layer_cls) or node.name in self.layers
+        layer_match = node.class_name in self.layers or node.name in self.layers
         t = str(node.get_output_variable().type.precision)
         # check that the type doesn't already contain the rounding mode
         rs_match = False
@@ -95,11 +92,16 @@ class ApplyAlpha(BatchNormalization):
     def add_bias(self, bias, quantizer=None):
         self.add_weights_variable(name='bias', var_name='b{index}', data=bias, quantizer=quantizer)
 
-# register the layer and its templates
-register_layer('ApplyAlpha', ApplyAlpha)
-# TODO ideally: for backend in backends
-backend = get_backend('Vivado')
-backend.register_templates(ApplyAlpha, backend.get_function_template('BatchNormalization'), backend.get_config_template('BatchNormalization'), backend.get_include_list('BatchNormalization'))
+def register_qkeras():
+    # Register the layer types to the layer map
+    register_layer('ApplyAlpha', ApplyAlpha)
+
+    # Register the optimization passes
+    register_pass('output_rounding_saturation_mode', OutputRoundingSaturationMode)
+    register_pass('qkeras_factorize_alpha', QKerasFactorizeAlpha)
+    register_pass('fuse_consecutive_batch_normalization', FuseConsecutiveBatchNormalization) 
+
+    # TODO add ApplyAlpha handlers in backend
 
 class QKerasFactorizeAlpha(OptimizerPass):
     '''OptimizerPass for extracting alpha "scale" from QKeras quantized layer.
@@ -107,7 +109,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
        and an 'ApplyAlpha' layer is inserted to reapply the scale.
     '''
     def match(self, node):
-        q_layer = isinstance(node, (Dense, Conv1D, Conv2D))
+        q_layer = node.class_name in ['Dense', 'Conv1D', 'Conv2D']
         has_w_quant = node.get_attr('weight_quantizer') is not None 
         has_b_quant = node.get_attr('bias_quantizer') is not None
         has_w_alpha, has_b_alpha = False, False

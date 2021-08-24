@@ -1,4 +1,3 @@
-from hls4ml.model.optimizer import optimize_model
 
 class Flow(object):
     def __init__(self, name, optimizers, requires=None):
@@ -15,17 +14,32 @@ class Flow(object):
 
 flow_map = {}
 
-def register_flow(name, optimizers, requires=None):
+def _get_backend_name_prefix(name, backend):
+    if backend is not None and not name.startswith(backend.lower()):
+        name = backend.lower() + ':' + name
+
+    return name
+
+def register_flow(name, optimizers, requires=None, backend=None):
+    name = _get_backend_name_prefix(name, backend)
+
     if name in flow_map:
         raise Exception('Flow {} already registered'.format(name))
+
+    opt_list = [_get_backend_name_prefix(opt, backend) for opt in optimizers]
     
-    flow_map[name] = Flow(name, optimizers, requires)
+    flow_map[name] = Flow(name, opt_list, requires)
+
+    return name
 
 def get_flow(name):
     if name in flow_map:
         return flow_map[name]
     else:
         raise Exception('Unknown flow: {}'.format(name))
+
+def get_backend_flows(backend):
+    return [flow for flow in flow_map.keys() if flow.startswith(backend.lower() + ':')]
 
 def get_available_flows():
     return list(flow_map.keys())

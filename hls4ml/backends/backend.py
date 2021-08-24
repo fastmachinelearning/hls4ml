@@ -1,11 +1,12 @@
-import importlib
 import inspect
 import os
 
 from collections.abc import MutableMapping
 
+from hls4ml.backends.template import Template
 from hls4ml.model.hls_layers import Layer
-from hls4ml.model.optimizer import OptimizerPass, optimizer_pass, extract_optimizers_from_object
+from hls4ml.model.flow import get_backend_flows
+from hls4ml.model.optimizer import LayerOptimizerPass, optimizer_pass, register_pass, extract_optimizers_from_path, extract_optimizers_from_object, get_backend_passes
 
 class LayerDict(MutableMapping):
     def __init__(self):
@@ -57,47 +58,38 @@ class Backend(object):
         for func in init_func_list:
             for layer_class in func.handles:
                 self.layer_initializers[layer_class] = func
-        self.optimizers = {}
         self._init_optimizers()
 
     def init_templates(self):
         raise NotImplementedError
 
     def _init_optimizers(self):
-        self._init_class_optimizers()
-        self._init_file_optimizers()
+        optimizers = {}
+        optimizers.update(self._init_class_optimizers())
+        optimizers.update(self._init_file_optimizers())
+        for opt_name, opt in optimizers.items():
+            self.register_pass(opt_name, opt)
 
     def _init_class_optimizers(self):
-        self.optimizers.update(extract_optimizers_from_object(self, self.name))
+        class_optimizers = extract_optimizers_from_object(self)
+        return class_optimizers
 
     def _init_file_optimizers(self):
         opt_path = os.path.dirname(inspect.getfile(self.__class__)) + '/passes'
-        if not os.path.exists(opt_path):
-            return
+        module_path = self.__module__[:self.__module__.rfind('.')] + '.passes'
+        file_optimizers = extract_optimizers_from_path(opt_path, module_path, self)
+        return file_optimizers
 
-        for module in os.listdir(opt_path):
-            if module == '__init__.py' or module[-3:] != '.py':
-                continue
-            try:
-                lib = importlib.import_module(self.__module__[:self.__module__.rfind('.')] + '.passes.' + module[:-3])
-                if 'register_' + module[:-3] in lib.__dict__:
-                    opt_init_func = lib.__dict__['register_' + module[:-3]]
-                    opt_init_func(self)
-                else:
-                    for func in list(lib.__dict__.values()):
-                        # if 'func' is a class
-                        # and it inherits from OptimizerPass
-                        # and is defined in this module (i.e., not imported)
-                        if inspect.isclass(func) and issubclass(func, OptimizerPass) and func.__module__ == lib.__name__:
-                            if inspect.ismethod(func.get_name):
-                                self.register_pass(func.get_name(), func)
-                            else:
-                                func_instance = func()
-                                self.register_pass(func_instance.get_name(), func_instance)
+    def _get_layer_initializers(self):
+        all_initializers = { name:opt for name, opt in get_backend_passes(self.name) if isinstance(opt, LayerOptimizerPass) }
 
-            except ImportError:
-                print('WARN: Unable to import optiizer(s) from {}'.format(module))
-                continue
+        # Sort through the initializers based on the base class (e.g., to apply 'Layer' optimizers before 'Dense')
+        sorted_initializers = sorted(all_initializers.items(), key=lambda x: len(x[1].__class__.mro()))
+
+        return sorted_initializers
+
+    def _get_layer_templates(self):
+        return { name:opt for name, opt in get_backend_passes(self.name) if isinstance(opt, Template) }
 
     def create_initial_config(self, **kwargs):
         raise NotImplementedError
@@ -114,11 +106,11 @@ class Backend(object):
     def get_include_list(self, kind):
         return self.include_lists.get(kind, [])
 
-    def get_available_optimizers(self):
-        return list(self.optimizers.keys())
+    def get_available_flows(self):
+        return get_backend_flows(self.name)
 
-    def get_optimizers(self):
-        return self.optimizers.values()
+    def get_available_optimizers(self):
+        return get_backend_passes(self.name)
     
     def get_default_flow(self):
         raise NotImplementedError
@@ -135,19 +127,7 @@ class Backend(object):
         raise NotImplementedError
     
     def register_pass(self, name, opt_cls):
-        if name in self.optimizers:
-            raise Exception('Optimization pass {} already registered'.format(name))
-    
-        if inspect.isclass(opt_cls):
-            opt = opt_cls()
-        else:
-            opt = opt_cls
-
-        if type(name) in [list, tuple]:
-            for n in name:
-                self.optimizers[n] = opt
-        else:    
-            self.optimizers[name] = opt
+        register_pass(name, opt_cls, backend=self.name)
 
     def initialize_layer(self, layer):
         for cls, init_func in self.layer_initializers.items():

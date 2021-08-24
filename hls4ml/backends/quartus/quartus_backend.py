@@ -11,6 +11,7 @@ from contextlib import contextmanager
 
 from hls4ml.model.hls_types import HLSType, IntegerPrecisionType, FixedPrecisionType
 from hls4ml.model.hls_layers import Layer, Dense, BatchNormalization, Activation, ParametrizedActivation, PReLU, Softmax
+from hls4ml.model.optimizer import get_backend_passes
 from hls4ml.model.flow.flow import register_flow
 from hls4ml.backends.backend import custom_initializer, optimizer_pass, layer_optimizer
 from hls4ml.backends import FPGABackend
@@ -232,14 +233,11 @@ class QuartusBackend(FPGABackend):
         #self.register_templates(Transpose             , transpose_function_template,   transpose_config_template, transpose_include_list)
 
     def _register_flows(self):
-        register_flow('quartus_ip', self.optimizers)
+        self._default_flow = register_flow('quartus:ip', get_backend_passes(self.name), requires=['optimize'], backend=self.name)
 
     def get_default_flow(self):
-        return 'quartus_ip'
+        return self._default_flow
     
-    def get_available_flows(self):
-        return ['quartus_ip']
-
     def create_initial_config(self, device='Arria10', clock_period=5, io_type='io_parallel'):
         config = {}
 

@@ -148,6 +148,11 @@ class HLSConfig(object):
     def _parse_hls_config(self):
         hls_config = self.config['HLSConfig']
         
+        self.flows = hls_config.get('Flows')
+        if self.flows is None:
+            self.flows = [self.backend.get_default_flow()]
+
+        # TODO this is now effectively broken
         self.optimizers = hls_config.get('Optimizers')
         if 'SkipOptimizers' in hls_config:
             if self.optimizers is not None:
@@ -267,9 +272,8 @@ class HLSModel(object):
 
         self._make_graph(layer_list)
 
-        self._optimize_model(self.config.optimizers)
-
-        self._optimize_model(self.config.backend.get_optimizers())
+        for flow in self.config.flows:
+            self.apply_flow(flow)
 
     def _make_graph(self, layer_list):
         for layer in layer_list:
@@ -285,18 +289,11 @@ class HLSModel(object):
             self.graph[name] = self.make_node(kind, name, layer, inputs, outputs)
 
     def apply_flow(self, flow):
-        if flow is None:
-            return
-
-        if isinstance(flow, str):
-            flow = get_flow(flow)
+        flow = get_flow(flow)
 
         for sub_flow in flow.requires:
             if sub_flow not in self._applied_flows:
-                sub_flow = get_flow(sub_flow)
-                if len(sub_flow.optimizers) > 0:
-                    self._optimize_model(self, sub_flow.optimizers)
-                self._applied_flows.append(sub_flow.name)
+                self.apply_flow(sub_flow)
 
         if len(flow.optimizers) > 0:
             self._optimize_model(flow.optimizers)
