@@ -119,7 +119,7 @@ def pyg_to_hls(config):
         if val == "NodeBlock":
             aggr_count += 1
             aggr_key = f"aggr{aggr_count}"
-            aggr_val = "Aggregate"
+            aggr_val = "EdgeAggregate"
             forward_dict_new[aggr_key] = aggr_val
         forward_dict_new[key] = val
 

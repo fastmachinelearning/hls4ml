@@ -40,7 +40,7 @@ namespace nnet {
     static const bool no_aggr = false; //if no_aggr==true, then skip aggregation steps
   };
 
-  struct aggregate_config
+  struct edge_aggregate_config
   {
      typedef float table_t;
      static const unsigned n_node = 10;
@@ -185,7 +185,7 @@ namespace nnet {
   }
 
   template<class data_T, class index_T, class res_T, typename CONFIG_T>
-    void aggregate(
+    void edge_aggregate(
             data_T    edge_attr_1D[CONFIG_T::n_edge*CONFIG_T::edge_dim],
             index_T   edge_index_1D[CONFIG_T::n_edge*2],
             res_T     edge_attr_aggr_1D[CONFIG_T::n_node*CONFIG_T::edge_dim])

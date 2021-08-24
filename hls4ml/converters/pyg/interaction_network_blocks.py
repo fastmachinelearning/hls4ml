@@ -45,10 +45,10 @@ def parse_EdgeBlock(block_name, config, update_dict, index, n_node, n_edge, node
     update_dict["last_edge_update"] = f"layer{index}_out"
     return layer_dict, update_dict
 
-@pyg_handler('Aggregate')
-def parse_Aggregate(block_name, config, update_dict, index, n_node, n_edge, node_dim, edge_dim):
+@pyg_handler('EdgeAggregate')
+def parse_EdgeAggregate(block_name, config, update_dict, index, n_node, n_edge, node_dim, edge_dim):
     layer_dict = {"name": f"aggr{index}",
-                  "class_name": "Aggregate",
+                  "class_name": "EdgeAggregate",
                   "n_node": n_node,
                   "n_edge": n_edge,
                   "node_dim": node_dim,
@@ -62,5 +62,5 @@ def parse_Aggregate(block_name, config, update_dict, index, n_node, n_edge, node
 IN_handlers = {
     "NodeBlock": parse_NodeBlock,
     "EdgeBlock": parse_EdgeBlock,
-    "Aggregate": parse_Aggregate
+    "EdgeAggregate": parse_EdgeAggregate
 }
