@@ -11,7 +11,7 @@ from hls4ml.model.hls_layers import Layer, Dense, BatchNormalization, Conv1D, Co
 from hls4ml.model.hls_attributes import Attribute
 from hls4ml.model.optimizer import get_backend_passes
 from hls4ml.model.flow import register_flow
-from hls4ml.backends.backend import custom_initializer, optimizer_pass, layer_optimizer
+from hls4ml.backends.backend import layer_optimizer
 from hls4ml.backends import FPGABackend
 from hls4ml.report import parse_vivado_report
 

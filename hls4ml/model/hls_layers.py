@@ -84,7 +84,6 @@ class Layer(object):
             self.attributes[config_key] = config_value
 
         self.initialize()
-        self.model.config.backend.initialize_layer(self)
         self._validate_attributes()
 
     @property

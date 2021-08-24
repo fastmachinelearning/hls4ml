@@ -33,12 +33,6 @@ class LayerDict(MutableMapping):
     def __delitem__(self, key):
         self.layer_dict.remove(key)
 
-def custom_initializer(*args):
-    def decorator(function):
-        function.handles = [arg for arg in args]
-        return function
-    return decorator
-
 def layer_optimizer(layer):
     def decorator(function):
         return optimizer_pass(layer)(function)
@@ -53,11 +47,6 @@ class Backend(object):
         self.include_lists = LayerDict()
         self.init_templates()
         # Optimizers
-        self.layer_initializers = LayerDict()
-        init_func_list = [getattr(self, func) for func in dir(self) if callable(getattr(self, func)) and hasattr(getattr(self, func), 'handles')]
-        for func in init_func_list:
-            for layer_class in func.handles:
-                self.layer_initializers[layer_class] = func
         self._init_optimizers()
 
     def init_templates(self):
@@ -129,10 +118,6 @@ class Backend(object):
     def register_pass(self, name, opt_cls):
         register_pass(name, opt_cls, backend=self.name)
 
-    def initialize_layer(self, layer):
-        for cls, init_func in self.layer_initializers.items():
-            if isinstance(layer, cls):
-                init_func(layer)
 
 backend_map = {}
 
