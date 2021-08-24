@@ -258,7 +258,7 @@ class HLSModel(object):
         self.config = HLSConfig(config)
         self.reader = data_reader
 
-        self._applied_flows = []
+        self._applied_flows = {}
 
         # If not provided, assumes layer_list[0] is input, and layer_list[-1] is output
         self.inputs = inputs if inputs is not None else [layer_list[0]['name']]
@@ -288,19 +288,18 @@ class HLSModel(object):
 
             self.graph[name] = self.make_node(kind, name, layer, inputs, outputs)
 
-    def apply_flow(self, flow):
+    def apply_flow(self, flow, force=False):
+        if flow in self._applied_flows and not force:
+            return
         flow = get_flow(flow)
 
         for sub_flow in flow.requires:
-            if sub_flow not in self._applied_flows:
-                self.apply_flow(sub_flow)
+            if sub_flow not in self._applied_flows.keys():
+                self.apply_flow(sub_flow, force)
 
         if len(flow.optimizers) > 0:
-            self._optimize_model(flow.optimizers)
-        self._applied_flows.append(flow.name)
-
-    def _optimize_model(self, optimizers):
-        optimize_model(self, optimizers)
+            applied_passes = optimize_model(self, flow.optimizers)
+        self._applied_flows[flow.name] = applied_passes
 
     def make_node(self, kind, name, attributes, inputs, outputs=None):
         """ Make a new node not connected to the model graph.

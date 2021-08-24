@@ -140,13 +140,15 @@ def get_available_passes():
     return list(optimizer_map.keys())
 
 def optimize_model(model, passes):
-    optimizers = [get_optimizer(opt_pass) for opt_pass in passes]
+    optimizers = {opt_pass: get_optimizer(opt_pass) for opt_pass in passes}
+    applied_passes = set()
     optimization_done = False
     while not optimization_done:
-        for opt in optimizers:
+        for opt_name, opt in optimizers.items():
             for node in model.graph.values():
                 if opt.match(node):
                     res = opt.transform(model, node)
+                    applied_passes.add(opt_name)
                     if res:
                         break
             else:
@@ -154,3 +156,5 @@ def optimize_model(model, passes):
             break
         else:
             optimization_done = True
+
+    return applied_passes
