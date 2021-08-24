@@ -216,7 +216,7 @@ namespace nnet {
 
     //4. edge_attr_aggr (output)
     res_T edge_attr_aggr[CONFIG_T::n_node][CONFIG_T::edge_dim];
-    #pragma HLS ARRAY_PARTITION variable=edge_update_aggr complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=edge_attr_aggr complete dim=0
     if((CONFIG_T::aggr==aggr_sum)||(CONFIG_T::aggr==aggr_mean)){
       for(int i=0; i < CONFIG_T::n_node; i++){
         for(int j=0; j<CONFIG_T::edge_dim; j++){
@@ -281,7 +281,7 @@ namespace nnet {
     }
 
     // None --> max
-    if(CONFIG_T::aggr == aggr_max){ //note: the edge_update_aggr array has been initialized but IS NOT ZEROS
+    if(CONFIG_T::aggr == aggr_max){ //note: the edge_attr_aggr array has been initialized but IS NOT ZEROS
       for(int i=0; i < CONFIG_T::n_node; i++){
         for(int j=0; j<CONFIG_T::edge_dim; j++){
           #pragma HLS UNROLL
