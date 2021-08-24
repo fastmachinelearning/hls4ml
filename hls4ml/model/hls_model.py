@@ -376,8 +376,9 @@ class HLSModel(object):
 
         Args:
             node (Layer): Node to insert
-            before (Layer, optional): The next node in sequence before which a
-                new node should be inserted. 
+            before (Layer, optional): The next node in sequence before which a new node should
+                be inserted. If `node` is inserted after a layer whose output branches, `before`
+                can be used to specify that the inserted node should only be connected to one branch.
         Raises:
             Exception: If an attempt to insert a node with multiple inputs is made or if
                 `before` does not specify a correct node in sequence.
@@ -387,18 +388,22 @@ class HLSModel(object):
             raise Exception('Cannot insert a node with more than one input (for now).')
 
         prev_node = self.graph.get(node.inputs[0])
-        next_nodes = [x for x in self.graph.values() if x.inputs[0] == prev_node.outputs[0]]
-        if before is None:
-            next_node = next((x for x in self.graph.values() if x.inputs[0] == prev_node.outputs[0]), None)
-        else:
-            if before not in next_nodes:
-                raise Exception('Cannot insert a node {} before {} (candidates: {}).'.format(node.name, before.name, ','.join([n.name for n in next_nodes])))
-            next_node = before
+        next_nodes = [x for x in self.graph.values() if len(np.intersect1d(x.inputs, prev_node.outputs)) > 0]
+        if len(next_nodes) > 0:
+            if not before is None:
+                if before not in next_nodes:
+                    raise Exception('Cannot insert a node {} before {} (candidates: {}).'.format(node.name, before.name, ','.join([n.name for n in next_nodes])))
+                next_nodes = [before]
+            
+            for next_node in next_nodes:
+                common_vars = np.intersect1d(next_node.inputs, prev_node.outputs)
+                for var in common_vars:
+                    il = np.nonzero(np.array(next_node.inputs) == var)[0][0]
+                    ir = np.nonzero(np.array(prev_node.outputs) == var)[0][0]
+                next_node.inputs[il] = node.outputs[ir]
 
-        if next_node is not None:
-            next_node.inputs[0] = node.outputs[0]
-
-        if len(next_nodes) == 0:
+        # If there are no next nodes, it's an output node so update model outputs
+        elif len(next_nodes) == 0:
             if prev_node.outputs[0] in self.outputs:
                 self.outputs = [node.outputs[0] if x == prev_node.outputs[0] else x for x in self.outputs] 
             else:
