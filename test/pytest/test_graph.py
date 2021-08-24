@@ -19,75 +19,6 @@ def base_model(output_dir='hls4mlprj_graph_base_model'):
   model = hls4ml.model.HLSModel(config, reader, layers)
   return model
 
-'''
-
-def test_base_model():
-  model = base_model()
-  model.compile()
-  X = np.zeros((1,1))
-  y = model.predict(X)
-  assert y[0] == 3
-
-@pytest.mark.parametrize('after', ['layer0_input', 'layer0', 'layer1'])
-def test_insert(after):
-  odir = 'hls4mlprj_graph_insert_{}'.format(after)
-  model = base_model(odir)
-  original_layers = np.array([layer.name for layer in list(model.get_layers())])
-  node = model.make_node('Dense', 'layer2', {'n_in' : 1, 'n_out' : 1}, [after])
-  model.insert_node(node)
-  model.compile()
-  hls4ml.utils.plot_model(model, show_shapes=True, show_precision=True, to_file='{}/model.png'.format(odir))
-  X = np.zeros((1,1))
-  y = model.predict(X)
-  # check the output
-  assert y[0] == 7
-  # check the order
-  iInsert = np.argwhere(original_layers == after)[0][0] + 1
-  expected = np.insert(original_layers, iInsert, 'layer2')
-  actual = np.array([layer.name for layer in list(model.get_layers())])
-  np.testing.assert_array_equal(expected, actual)
-
-@pytest.mark.parametrize('node', ['layer0', 'layer1'])
-def test_remove(node):
-  odir = 'hls4mlprj_graph_remove_{}'.format(node)
-  model = base_model(odir)
-  original_layers = np.array([layer.name for layer in list(model.get_layers())])
-  node_obj = [n for n in list(model.get_layers()) if n.name == node][0]
-  model.remove_node(node_obj)
-  model.compile()
-  hls4ml.utils.plot_model(model, show_shapes=True, show_precision=True, to_file='{}/model.png'.format(odir))
-  X = np.zeros((1,1))
-  y = model.predict(X)
-  # check the output
-  assert y[0] == 1
-  # check the order
-  iRemove = np.argwhere(original_layers == node)[0][0]
-  expected = np.delete(original_layers, iRemove)
-  actual = np.array([layer.name for layer in list(model.get_layers())])
-  np.testing.assert_array_equal(expected, actual)
-
-@pytest.mark.parametrize('node', ['layer0', 'layer1'])
-def test_replace(node):
-  odir = 'hls4mlprj_graph_replace_{}'.format(node)
-  model = base_model(odir)
-  original_layers = np.array([layer.name for layer in list(model.get_layers())])
-  old_node = model.graph.get(node)
-  new_node = model.make_node('Dense', 'layer2', {'n_in' : 1, 'n_out' : 1}, old_node.inputs)
-  model.replace_node(old_node, new_node)
-  model.compile()
-  hls4ml.utils.plot_model(model, show_shapes=True, show_precision=True, to_file='{}/model.png'.format(odir))
-  X = np.zeros((1,1))
-  y = model.predict(X)
-  # check the output
-  assert y[0] == 3
-  # check the order
-  iInsert = np.argwhere(original_layers == node)[0][0]
-  expected = np.delete(original_layers, iInsert)
-  expected = np.insert(expected, iInsert, 'layer2')
-  actual = np.array([layer.name for layer in list(model.get_layers())])
-  np.testing.assert_array_equal(expected, actual)
-'''
-
 def branched_model(output_dir='hls4mlprj_graph_branched_model'):
   layers = [{'class_name' : 'Input', 'name' : 'layer0_input', 'input_shape' : [1]},
             {'class_name' : 'Dense', 'name' : 'layer0', 'n_in' : 1, 'n_out' : 1},
@@ -100,44 +31,6 @@ def branched_model(output_dir='hls4mlprj_graph_branched_model'):
   config['IOType'] = 'io_parallel'
   model = hls4ml.model.HLSModel(config, reader, layers)
   return model
-
-'''
-def test_branched_model():
-  odir = 'hls4mlprj_graph_branched_model'
-  model = branched_model(odir)
-  model.compile()
-  hls4ml.utils.plot_model(model, show_shapes=True, show_precision=True, to_file='{}/model.png'.format(odir))
-  X = np.zeros((1,1))
-  y = model.predict(X)
-  np.testing.assert_array_equal(y, np.array([3, 3]))
-
-@pytest.mark.parametrize('parameters', [('layer0', None, [7,7]),
-                                        ('layer0', 'layer1l', [7,3]),
-                                        ('layer0', 'layer1r', [3,7]),
-                                        ('layer1l', None, [7,3]),
-                                        ('layer1r', None, [3,7])])
-def test_insert_branched(parameters):
-  after, before, expected = parameters[0], parameters[1], parameters[2]
-  odir = 'hls4mlprj_graph_insert_branched_{}_{}'.format(after, before)
-  model = branched_model(odir)
-  original_layers = np.array([layer.name for layer in list(model.get_layers())])
-  node = model.make_node('Dense', 'layer2', {'n_in' : 1, 'n_out' : 1}, [after])
-  if not before is None:
-      before = [x for x in model.graph.values() if x.name == before][0]
-  model.insert_node(node, before=before)
-  model.compile()
-  hls4ml.utils.plot_model(model, show_shapes=True, show_precision=True, to_file='{}/model.png'.format(odir))
-  X = np.zeros((1,1))
-  y = model.predict(X)
-  expected = np.array(expected)
-  # check the output
-  np.testing.assert_array_equal(y, expected)
-  # check the order
-  iInsert = np.argwhere(original_layers == after)[0][0] + 1
-  expected = np.insert(original_layers, iInsert, 'layer2')
-  actual = np.array([layer.name for layer in list(model.get_layers())])
-  np.testing.assert_array_equal(expected, actual)
-'''
 
 def skip_model_l(output_dir='hls4mlprj_graph_skip_model_l'):
   layers = [{'class_name' : 'Input', 'name' : 'layer0_input', 'input_shape' : [1]},
