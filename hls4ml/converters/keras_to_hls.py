@@ -319,6 +319,7 @@ def keras_to_hls(config):
                 act_layer['class_name'] = layer['activation']
             elif layer['activation'] == 'softmax':
                 act_layer['class_name'] = 'Softmax'
+                act_layer['axis'] = -1
             else:
                 act_layer['class_name'] = 'Activation'
             inputs_map[layer['name']] = act_layer['name']
