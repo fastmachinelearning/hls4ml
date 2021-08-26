@@ -1252,7 +1252,7 @@ class ZeroPadding1D(Layer):
         else:
             shape = [self.attributes['n_chan'], self.attributes['out_width']]
             dims = ['N_CHAN_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape, dims, precision=inp.type.precision)
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1280,7 +1280,7 @@ class ZeroPadding2D(Layer):
         else:
             shape = [self.attributes['n_chan'], self.attributes['out_height'], self.attributes['out_width']]
             dims = ['N_CHAN_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape, dims, precision=inp.type.precision)
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1511,7 +1511,7 @@ class Resize(Layer):
     def initialize(self):
         shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
         dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape, dims, precision=inp.type.precision)
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1556,7 +1556,7 @@ class Transpose(Layer):
             self.set_attr('depth', inp.shape[0])
             self.set_attr('height', inp.shape[1])
             self.set_attr('width', inp.shape[2])
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape, dims, precision=inp.type.precision)
 
     def function_cpp(self):
         params = self._default_function_params()
