@@ -228,7 +228,7 @@ def keras_to_hls(config):
     #print(model_arch)
 
     #Define layers to skip for conversion to HLS
-    skip_layers = ['Dropout', 'Flatten']
+    skip_layers = ['Dropout']
     #All supported layers
     supported_layers = get_supported_keras_layers() + skip_layers
 
@@ -293,10 +293,7 @@ def keras_to_hls(config):
                 #Skipped layers can follow each other (e.g., Dropout -> Flatten)
                 inputs_map[name] = inputs_map.get(parent_input, parent_input)
 
-            if keras_class == 'Flatten':
-                output_shapes[keras_layer['config']['name']] = [input_shapes[0][0], np.prod(input_shapes[0][1:])]
-            else:
-                output_shapes[keras_layer['config']['name']] = input_shapes[0]
+            output_shapes[keras_layer['config']['name']] = input_shapes[0]
 
             continue
 
