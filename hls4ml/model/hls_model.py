@@ -397,8 +397,6 @@ class HLSModel(object):
 
         if next_node is not None:
             next_node.inputs[0] = node.outputs[0]
-        else:
-            self.outputs[0] = node.outputs[0]
 
         new_graph = OrderedDict()
         for k, v in self.graph.items():
@@ -428,19 +426,18 @@ class HLSModel(object):
             if len(node.inputs) > 1 or len(node.outputs) > 1:
                 raise Exception('Cannot rewire a node with multiple inputs/outputs')
             prev_node = self.graph.get(node.inputs[0])
-            next_nodes = [x for x in self.graph.values() if node.outputs[0] in x.inputs]
-            if len(next_nodes) == 0:
-                if node.outputs[0] in self.outputs:
-                    self.outputs = [node.inputs[0] if x == node.outputs[0] else x for x in self.outputs] 
-                else:
-                    raise Exception('Cannot rewire a node which has no child nor is an output node')
+            next_node = next((x for x in self.graph.values() if node.outputs[0] in x.inputs), None)
             if prev_node is not None:
-                for next_node in next_nodes:
-                    if next_node is not None:
-                        for i,_ in enumerate(next_node.inputs):
-                            if node.outputs[0] == next_node.inputs[i]:
-                                next_node.inputs[i] = prev_node.outputs[0]
-                                break
+                if next_node is not None:
+                    for i,_ in enumerate(next_node.inputs):
+                        if node.outputs[0] == next_node.inputs[i]:
+                            next_node.inputs[i] = prev_node.outputs[0]
+                            break
+                else:
+                    if node.outputs[0] in self.outputs:
+                        self.outputs = [prev_node.outputs[0] if x == node.outputs[0] else x for x in self.outputs]
+                    else:
+                        raise Exception('Cannot rewire a node without child')
             else:
                 raise Exception('Cannot rewire a node without a parent')
         
@@ -460,31 +457,15 @@ class HLSModel(object):
             new_node (Layer): The new node
 
         """
-        inputs = old_node.inputs.copy()
-        # temporarily rename the new_node if it has the same name as old_node
-        # to avoid removing it
-        same_name = new_node.name == old_node.name
-        name = new_node.name
-        new_node.name += '_new' if new_node.name == old_node.name else ''
-        self.insert_node(new_node, before=old_node)
-        new_node.inputs = inputs
-        self.remove_node(old_node, rewire=True)
+        prev_node = self.graph.get(old_node.inputs[0])
+        next_node = next((x for x in self.graph.values() if x.inputs[0] == old_node.outputs[0]), None)
+        if next_node is not None:
+            next_node.inputs[0] = new_node.outputs[0]
+        if prev_node is not None:
+            if new_node.inputs is None or len(new_node.inputs) == 0: # Check if already rewired
+                new_node.inputs = [prev_node.outputs[0]]
 
-        # if new_node & old_node had the same name, clean up
-        if same_name:
-            # Rename the layer in the graph
-            new_node.name = name
-            new_graph = OrderedDict()
-            for k, v in self.graph.items():
-                new_graph[name if k == name + '_new' else k] = v
-            self.graph = new_graph
-
-            # reinstate the output variables (deleted by remove_node)
-            for o in new_node.outputs:
-                out_var = new_node.get_output_variable(output_name=o)
-                if o in self.outputs:
-                    out_var.type.name = 'result_t'
-                self.output_vars[o] = out_var
+        self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
 
     def get_weights_data(self, layer_name, var_name):
         return self.reader.get_weights_data(layer_name, var_name)
