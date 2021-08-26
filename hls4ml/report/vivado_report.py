@@ -163,16 +163,18 @@ def parse_vivado_report(hls_dir):
         vivado_synth_rpt = {}
         with open(vivado_syn_file) as f:
             for line in f.readlines():
-                if 'CLB LUTs' in line:
-                    vivado_synth_rpt['LUT'] = line.split('|')[2].strip()
-                elif 'CLB Registers' in line:
-                    vivado_synth_rpt['FF'] = line.split('|')[2].strip()
-                elif 'RAMB18 ' in line:
-                    vivado_synth_rpt['BRAM_18K'] = line.split('|')[2].strip()
-                elif 'DSPs' in line:
-                    vivado_synth_rpt['DSP48E'] = line.split('|')[2].strip()
-                elif 'URAM' in line:
-                    vivado_synth_rpt['URAM'] = line.split('|')[2].strip()
+                # Sometimes, phrases such as 'CLB Registers' can show up in the non-tabular sections of the report
+                if '|' in line:
+                    if 'CLB LUTs' in line:
+                        vivado_synth_rpt['LUT'] = line.split('|')[2].strip()
+                    elif 'CLB Registers' in line:
+                        vivado_synth_rpt['FF'] = line.split('|')[2].strip()
+                    elif 'RAMB18 ' in line:
+                        vivado_synth_rpt['BRAM_18K'] = line.split('|')[2].strip()
+                    elif 'DSPs' in line:
+                        vivado_synth_rpt['DSP48E'] = line.split('|')[2].strip()
+                    elif 'URAM' in line:
+                        vivado_synth_rpt['URAM'] = line.split('|')[2].strip()
         report['VivadoSynthReport'] = vivado_synth_rpt
 
     cosim_file = sln_dir + '/' + solutions[0] + '/sim/report/{}_cosim.rpt'.format(top_func_name)
