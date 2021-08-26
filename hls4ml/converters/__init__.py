@@ -173,15 +173,23 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
             project. Defaults to 'my-hls-test'.
         project_name (str, optional): Name of the HLS project.
             Defaults to 'myproject'.
+        input_data_tb (str, optional): String representing the path of input data in .npy or .dat format that will be
+            used during csim and cosim.
+        output_data_tb (str, optional): String representing the path of output data in .npy or .dat format that will be
+            used during csim and cosim.
         backend (str, optional): Name of the backend to use, e.g., 'Vivado'
             or 'Quartus'.
-        device (str, optional): The target FPGA device. If set to `None` a default
+        board (str, optional): One of target boards specified in `supported_board.json` file. If set to `None` a default
             device of a backend will be used. See documentation of the backend used.
+        part (str, optional): The FPGA part. If set to `None` a default part of a backend will be used.
+            See documentation of the backend used. Note that if `board` is specified, the part associated to that board
+            will overwrite any part passed as a parameter.
         clock_period (int, optional): Clock period of the design.
             Defaults to 5.
         io_type (str, optional): Type of implementation used. One of
             'io_parallel' or 'io_serial'. Defaults to 'io_parallel'.
         hls_config (dict, optional): The HLS config.
+        kwargs** (dict, optional): Additional parameters that will be used to create the config of the specified backend
     Raises:
         Exception: If precision and reuse factor are not present in 'hls_config'
     Returns:
@@ -212,8 +220,9 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
     return keras_to_hls(config)
 
 
-def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', project_name='myproject',
-    fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
+def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,
+                             output_data_tb=None, backend='Vivado', board=None, part=None, clock_period=5, io_type='io_parallel',
+                             hls_config={}, **kwargs):
     """
     
     Convert a Pytorch model to a hls model.
@@ -222,19 +231,28 @@ def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', pro
     ----------
     model : Pytorch model object.
         Model to be converted to hls model object.
-    output_dir : string, optional
-        Output directory to write hls codes.
-    project_name : string, optional
-        hls project name.
-    fpga_part : string, optional
-        The particular FPGA part number that you are considering.
-    clock_period : int, optional
-        The clock period, in ns, at which your algorithm runs.
-    io_type : string, optional
-        Your options are 'io_parallel' or 'io_serial' where this really 
-        defines if you are pipelining your algorithm or not.
-    hls_config : dict, optional
-        Additional configuration dictionary for hls model.
+    input_shape : @todo: to be filled
+    output_dir (str, optional): Output directory of the generated HLS
+        project. Defaults to 'my-hls-test'.
+    project_name (str, optional): Name of the HLS project.
+        Defaults to 'myproject'.
+    input_data_tb (str, optional): String representing the path of input data in .npy or .dat format that will be
+        used during csim and cosim.
+    output_data_tb (str, optional): String representing the path of output data in .npy or .dat format that will be
+        used during csim and cosim.
+    backend (str, optional): Name of the backend to use, e.g., 'Vivado'
+        or 'Quartus'.
+    board (str, optional): One of target boards specified in `supported_board.json` file. If set to `None` a default
+        device of a backend will be used. See documentation of the backend used.
+    part (str, optional): The FPGA part. If set to `None` a default part of a backend will be used.
+        See documentation of the backend used. Note that if `board` is specified, the part associated to that board
+        will overwrite any part passed as a parameter.
+    clock_period (int, optional): Clock period of the design.
+        Defaults to 5.
+    io_type (str, optional): Type of implementation used. One of
+        'io_parallel' or 'io_serial'. Defaults to 'io_parallel'.
+    hls_config (dict, optional): The HLS config.
+    kwargs** (dict, optional): Additional parameters that will be used to create the config of the specified backend
         
     Returns
     -------
@@ -254,17 +272,23 @@ def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', pro
     -----
     Only sequential Pytorch models are supported for now.
     """
-    
-    config = create_vivado_config(
+
+    config = create_config(
         output_dir=output_dir,
         project_name=project_name,
-        fpga_part=fpga_part,
+        board=board,
+        part=part,
         clock_period=clock_period,
-        io_type=io_type
+        io_type=io_type,
+        backend=backend,
+        **kwargs
     )
     
     config['PytorchModel'] = model
     config['InputShape'] = input_shape
+    config['InputData'] = input_data_tb
+    config['OutputPredictions'] = output_data_tb
+    config['HLSConfig'] = {}
 
     model_config = hls_config.get('Model', None)
     config['HLSConfig']['Model'] = _check_model_config(model_config)
@@ -274,8 +298,9 @@ def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', pro
     return pytorch_to_hls(config)
 
 
-def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='myproject',
-    fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
+def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,
+                             output_data_tb=None, backend='Vivado', board=None, part=None, clock_period=5, io_type='io_parallel',
+                             hls_config={}, **kwargs):
     """
     
     Convert an ONNX model to a hls model.
@@ -284,19 +309,27 @@ def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='mypro
     ----------
     model : ONNX model object.
         Model to be converted to hls model object.
-    output_dir : string, optional
-        Output directory to write hls codes.
-    project_name : string, optional
-        hls project name.
-    fpga_part : string, optional
-        The particular FPGA part number that you are considering.
-    clock_period : int, optional
-        The clock period, in ns, at which your algorithm runs.
-    io_type : string, optional
-        Your options are 'io_parallel' or 'io_serial' where this really 
-        defines if you are pipelining your algorithm or not.
-    hls_config : dict, optional
-        Additional configuration dictionary for hls model.
+    output_dir (str, optional): Output directory of the generated HLS
+        project. Defaults to 'my-hls-test'.
+    project_name (str, optional): Name of the HLS project.
+        Defaults to 'myproject'.
+    input_data_tb (str, optional): String representing the path of input data in .npy or .dat format that will be
+        used during csim and cosim.
+    output_data_tb (str, optional): String representing the path of output data in .npy or .dat format that will be
+        used during csim and cosim.
+    backend (str, optional): Name of the backend to use, e.g., 'Vivado'
+        or 'Quartus'.
+    board (str, optional): One of target boards specified in `supported_board.json` file. If set to `None` a default
+        device of a backend will be used. See documentation of the backend used.
+    part (str, optional): The FPGA part. If set to `None` a default part of a backend will be used.
+        See documentation of the backend used. Note that if `board` is specified, the part associated to that board
+        will overwrite any part passed as a parameter.
+    clock_period (int, optional): Clock period of the design.
+        Defaults to 5.
+    io_type (str, optional): Type of implementation used. One of
+        'io_parallel' or 'io_serial'. Defaults to 'io_parallel'.
+    hls_config (dict, optional): The HLS config.
+    kwargs** (dict, optional): Additional parameters that will be used to create the config of the specified backend
         
     Returns
     -------
@@ -312,16 +345,22 @@ def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='mypro
     >>> config = hls4ml.utils.config_from_onnx_model(model, granularity='model')
     >>> hls_model = hls4ml.converters.convert_from_onnx_model(model, hls_config=config)
     """
-    
-    config = create_vivado_config(
+
+    config = create_config(
         output_dir=output_dir,
         project_name=project_name,
-        fpga_part=fpga_part,
+        board=board,
+        part=part,
         clock_period=clock_period,
-        io_type=io_type
+        io_type=io_type,
+        backend=backend,
+        **kwargs
     )
-    
+
     config['OnnxModel'] = model
+    config['InputData'] = input_data_tb
+    config['OutputPredictions'] = output_data_tb
+    config['HLSConfig'] = {}
 
     model_config = hls_config.get('Model', None)
     config['HLSConfig']['Model'] = _check_model_config(model_config)

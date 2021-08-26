@@ -414,8 +414,6 @@ class VivadoBackend(Backend):
     
     def create_initial_config(self, part='xcku115-flvb2104-2-i', board=None, clock_period=5, io_type='io_parallel'):
         config = {}
-        if board is None and part is None:
-            raise Exception('Both Board and Part fields are set to None. Please, set at least one of the two')
         config['XilinxPart'] = part if part is not None else 'xcku115-flvb2104-2-i'
         config['Board'] = board
         config['ClockPeriod'] = clock_period
