@@ -435,9 +435,7 @@ class HLSModel(object):
                             next_node.inputs[i] = prev_node.outputs[0]
                             break
                 else:
-                    if node.outputs[0] in self.outputs:
-                        self.outputs = [prev_node.outputs[0] if x == node.outputs[0] else x for x in self.outputs]
-                    else:
+                    if not node.outputs[0] in self.outputs:
                         raise Exception('Cannot rewire a node without child')
             else:
                 raise Exception('Cannot rewire a node without a parent')
