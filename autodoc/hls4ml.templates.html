@@ -118,6 +118,8 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">hls4ml.templates package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.templates.templates">hls4ml.templates.templates module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.templates.vivado_accelerator_config">hls4ml.templates.vivado_accelerator_config module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.templates.vivado_accelerator_template">hls4ml.templates.vivado_accelerator_template module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.templates.vivado_template">hls4ml.templates.vivado_template module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.templates">Module contents</a></li>
 </ul>
@@ -230,8 +232,18 @@
 </dd></dl>
 
 <dl class="function">
+<dt id="hls4ml.templates.templates.get_available_backends">
+<code class="sig-prename descclassname">hls4ml.templates.templates.</code><code class="sig-name descname">get_available_backends</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.templates.get_available_backends" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="hls4ml.templates.templates.get_backend">
 <code class="sig-prename descclassname">hls4ml.templates.templates.</code><code class="sig-name descname">get_backend</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.templates.get_backend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="hls4ml.templates.templates.get_supported_boards_dict">
+<code class="sig-prename descclassname">hls4ml.templates.templates.</code><code class="sig-name descname">get_supported_boards_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.templates.get_supported_boards_dict" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
@@ -240,11 +252,124 @@
 <dd></dd></dl>
 
 </div>
+<div class="section" id="module-hls4ml.templates.vivado_accelerator_config">
+<span id="hls4ml-templates-vivado-accelerator-config-module"></span><h2>hls4ml.templates.vivado_accelerator_config module<a class="headerlink" href="#module-hls4ml.templates.vivado_accelerator_config" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.templates.vivado_accelerator_config.</code><code class="sig-name descname">VivadoAcceleratorConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">model_inputs</em>, <em class="sig-param">model_outputs</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_board">
+<code class="sig-name descname">get_board</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_board" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_board_info">
+<code class="sig-name descname">get_board_info</code><span class="sig-paren">(</span><em class="sig-param">board=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_board_info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_corrected_types">
+<code class="sig-name descname">get_corrected_types</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_corrected_types" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_driver">
+<code class="sig-name descname">get_driver</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_driver" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_driver_file">
+<code class="sig-name descname">get_driver_file</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_driver_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_driver_path">
+<code class="sig-name descname">get_driver_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_driver_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_input_type">
+<code class="sig-name descname">get_input_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_input_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_interface">
+<code class="sig-name descname">get_interface</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_interface" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_io_bitwidth">
+<code class="sig-name descname">get_io_bitwidth</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_io_bitwidth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_output_type">
+<code class="sig-name descname">get_output_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_output_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_part">
+<code class="sig-name descname">get_part</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_part" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_tcl_file_path">
+<code class="sig-name descname">get_tcl_file_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_accelerator_config.VivadoAcceleratorConfig.get_tcl_file_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-hls4ml.templates.vivado_accelerator_template">
+<span id="hls4ml-templates-vivado-accelerator-template-module"></span><h2>hls4ml.templates.vivado_accelerator_template module<a class="headerlink" href="#module-hls4ml.templates.vivado_accelerator_template" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hls4ml.templates.vivado_accelerator_template.VivadoAcceleratorBackend">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.templates.vivado_accelerator_template.</code><code class="sig-name descname">VivadoAcceleratorBackend</code><a class="headerlink" href="#hls4ml.templates.vivado_accelerator_template.VivadoAcceleratorBackend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.templates.vivado_template.VivadoBackend" title="hls4ml.templates.vivado_template.VivadoBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.templates.vivado_template.VivadoBackend</span></code></a></p>
+<dl class="method">
+<dt id="hls4ml.templates.vivado_accelerator_template.VivadoAcceleratorBackend.create_initial_config">
+<code class="sig-name descname">create_initial_config</code><span class="sig-paren">(</span><em class="sig-param">board='pynq-z2'</em>, <em class="sig-param">part=None</em>, <em class="sig-param">clock_period=5</em>, <em class="sig-param">io_type='io_parallel'</em>, <em class="sig-param">interface='axi_stream'</em>, <em class="sig-param">driver='python'</em>, <em class="sig-param">input_type='float'</em>, <em class="sig-param">output_type='float'</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_accelerator_template.VivadoAcceleratorBackend.create_initial_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create initial accelerator config with default parameters
+:param device: one of the keys defined in supported_boards.json
+:param clock_period: clock period passed to hls project
+:param io_type: io_parallel or io_stream
+:param interface: <cite>axi_stream</cite>: generate hardware designs and drivers which exploit axi stream channels.</p>
+<blockquote>
+<div><p><cite>axi_master</cite>: generate hardware designs and drivers which exploit axi master channels.
+<cite>axi_lite</cite> : generate hardware designs and drivers which exploit axi lite channels. (Don’t use it
+to exchange large amount of data)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>driver</strong> – <cite>python</cite>: generates the python driver to use the accelerator in the PYNQ stack.
+<cite>c</cite>: generates the c driver to use the accelerator bare-metal.</p></li>
+<li><p><strong>input_type</strong> – the wrapper input precision. Can be <cite>float</cite> or an <cite>ap_type</cite>. Note: VivadoAcceleratorBackend
+will round the number of bits used to the next power-of-2 value.</p></li>
+<li><p><strong>output_type</strong> – the wrapper output precision. Can be <cite>float</cite> or an <cite>ap_type</cite>. Note:
+VivadoAcceleratorBackend will round the number of bits used to the next power-of-2 value.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>populated config</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_accelerator_template.VivadoAcceleratorBackend.make_bitfile">
+<code class="sig-name descname">make_bitfile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_accelerator_template.VivadoAcceleratorBackend.make_bitfile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
 <div class="section" id="module-hls4ml.templates.vivado_template">
 <span id="hls4ml-templates-vivado-template-module"></span><h2>hls4ml.templates.vivado_template module<a class="headerlink" href="#module-hls4ml.templates.vivado_template" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="hls4ml.templates.vivado_template.VivadoBackend">
-<em class="property">class </em><code class="sig-prename descclassname">hls4ml.templates.vivado_template.</code><code class="sig-name descname">VivadoBackend</code><a class="headerlink" href="#hls4ml.templates.vivado_template.VivadoBackend" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.templates.vivado_template.</code><code class="sig-name descname">VivadoBackend</code><span class="sig-paren">(</span><em class="sig-param">name='Vivado'</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_template.VivadoBackend" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.templates.templates.Backend" title="hls4ml.templates.templates.Backend"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.templates.templates.Backend</span></code></a></p>
 <dl class="method">
 <dt id="hls4ml.templates.vivado_template.VivadoBackend.compute_conv1d_instructions">
@@ -261,6 +386,11 @@
 <code class="sig-name descname">convert_precision_string</code><span class="sig-paren">(</span><em class="sig-param">precision</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_template.VivadoBackend.convert_precision_string" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a precision string (e.g. “ap_fixed&lt;16,6&gt;” to the internal IntegerPrecisionTypes etc)</p>
 </dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.templates.vivado_template.VivadoBackend.create_initial_config">
+<code class="sig-name descname">create_initial_config</code><span class="sig-paren">(</span><em class="sig-param">part='xcku115-flvb2104-2-i'</em>, <em class="sig-param">board=None</em>, <em class="sig-param">clock_period=5</em>, <em class="sig-param">io_type='io_parallel'</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.templates.vivado_template.VivadoBackend.create_initial_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="hls4ml.templates.vivado_template.VivadoBackend.get_closest_reuse_factor">

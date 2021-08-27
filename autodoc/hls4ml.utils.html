@@ -308,8 +308,8 @@ data type (ap_int&lt;N&gt;, where N is a bit-size from 1 to 1024) can also be us
 </dd></dl>
 
 <dl class="function">
-<dt id="hls4ml.utils.config.create_vivado_config">
-<code class="sig-prename descclassname">hls4ml.utils.config.</code><code class="sig-name descname">create_vivado_config</code><span class="sig-paren">(</span><em class="sig-param">output_dir='my-hls-test'</em>, <em class="sig-param">project_name='myproject'</em>, <em class="sig-param">fpga_part='xcku115-flvb2104-2-i'</em>, <em class="sig-param">clock_period=5</em>, <em class="sig-param">io_type='io_parallel'</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.create_vivado_config" title="Permalink to this definition">¶</a></dt>
+<dt id="hls4ml.utils.config.create_config">
+<code class="sig-prename descclassname">hls4ml.utils.config.</code><code class="sig-name descname">create_config</code><span class="sig-paren">(</span><em class="sig-param">output_dir='my-hls-test'</em>, <em class="sig-param">project_name='myproject'</em>, <em class="sig-param">backend='Vivado'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.create_config" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -322,7 +322,7 @@ data type (ap_int&lt;N&gt;, where N is a bit-size from 1 to 1024) can also be us
 
 <dl class="function">
 <dt id="hls4ml.utils.example_models.fetch_example_model">
-<code class="sig-prename descclassname">hls4ml.utils.example_models.</code><code class="sig-name descname">fetch_example_model</code><span class="sig-paren">(</span><em class="sig-param">model_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.example_models.fetch_example_model" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">hls4ml.utils.example_models.</code><code class="sig-name descname">fetch_example_model</code><span class="sig-paren">(</span><em class="sig-param">model_name</em>, <em class="sig-param">backend='Vivado'</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.example_models.fetch_example_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Download an example model (and example data &amp; configuration if available) from github repo to working directory, and return the corresponding configuration:</p>
 <p><a class="reference external" href="https://github.com/hls-fpga-machine-learning/example-models">https://github.com/hls-fpga-machine-learning/example-models</a></p>
 <p>Use fetch_example_list() to see all the available models.</p>

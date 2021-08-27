@@ -12,6 +12,22 @@ hls4ml.templates.templates module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.templates.vivado\_accelerator\_config module
+---------------------------------------------------
+
+.. automodule:: hls4ml.templates.vivado_accelerator_config
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.templates.vivado\_accelerator\_template module
+-----------------------------------------------------
+
+.. automodule:: hls4ml.templates.vivado_accelerator_template
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.templates.vivado\_template module
 ----------------------------------------
 

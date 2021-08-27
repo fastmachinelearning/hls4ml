@@ -118,6 +118,7 @@
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.utils.html">hls4ml.utils package</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">hls4ml.writer package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.vivado_accelerator_writer">hls4ml.writer.vivado_accelerator_writer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.vivado_writer">hls4ml.writer.vivado_writer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.writers">hls4ml.writer.writers module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer">Module contents</a></li>
@@ -194,6 +195,55 @@
 <h1>hls4ml.writer package<a class="headerlink" href="#hls4ml-writer-package" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-hls4ml.writer.vivado_accelerator_writer">
+<span id="hls4ml-writer-vivado-accelerator-writer-module"></span><h2>hls4ml.writer.vivado_accelerator_writer module<a class="headerlink" href="#module-hls4ml.writer.vivado_accelerator_writer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.writer.vivado_accelerator_writer.</code><code class="sig-name descname">VivadoAcceleratorWriter</code><a class="headerlink" href="#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.writer.vivado_writer.VivadoWriter" title="hls4ml.writer.vivado_writer.VivadoWriter"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.writer.vivado_writer.VivadoWriter</span></code></a></p>
+<dl class="method">
+<dt id="hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.modify_build_script">
+<code class="sig-name descname">modify_build_script</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.modify_build_script" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify the build_prj.tcl and build_lib.sh scripts to add the extra wrapper files and set the top function</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_axi_wrapper">
+<code class="sig-name descname">write_axi_wrapper</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_axi_wrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a top level HLS C++ file to wrap the hls4ml project with AXI interfaces
+:param model: The HLSModel to write the wrapper for</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_board_script">
+<code class="sig-name descname">write_board_script</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_board_script" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the tcl scripts to create a Vivado IPI project for the VivadoAccelerator</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_driver">
+<code class="sig-name descname">write_driver</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_driver" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_hls">
+<code class="sig-name descname">write_hls</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_hls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the HLS project. Calls the VivadoBackend writer, and extra steps for VivadoAccelerator/AXI interface</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_new_tar">
+<code class="sig-name descname">write_new_tar</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_new_tar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_wrapper_test">
+<code class="sig-name descname">write_wrapper_test</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_wrapper_test" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
 <div class="section" id="module-hls4ml.writer.vivado_writer">
 <span id="hls4ml-writer-vivado-writer-module"></span><h2>hls4ml.writer.vivado_writer module<a class="headerlink" href="#module-hls4ml.writer.vivado_writer" title="Permalink to this headline">¶</a></h2>

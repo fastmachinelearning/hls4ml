@@ -4,6 +4,14 @@ hls4ml.writer package
 Submodules
 ----------
 
+hls4ml.writer.vivado\_accelerator\_writer module
+------------------------------------------------
+
+.. automodule:: hls4ml.writer.vivado_accelerator_writer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.writer.vivado\_writer module
 -----------------------------------
 
