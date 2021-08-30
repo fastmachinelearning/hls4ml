@@ -6,7 +6,7 @@ from collections.abc import MutableMapping
 from hls4ml.backends.template import Template
 from hls4ml.model.hls_layers import Layer
 from hls4ml.model.flow import get_backend_flows
-from hls4ml.model.optimizer import LayerOptimizerPass, optimizer_pass, register_pass, extract_optimizers_from_path, extract_optimizers_from_object, get_backend_passes
+from hls4ml.model.optimizer import LayerOptimizerPass, optimizer_pass, register_pass, extract_optimizers_from_path, extract_optimizers_from_object, get_backend_passes, get_optimizer
 
 class LayerDict(MutableMapping):
     def __init__(self):
@@ -70,15 +70,16 @@ class Backend(object):
         return file_optimizers
 
     def _get_layer_initializers(self):
-        all_initializers = { name:opt for name, opt in get_backend_passes(self.name) if isinstance(opt, LayerOptimizerPass) }
+        all_initializers = { name:get_optimizer(name) for name in get_backend_passes(self.name) if isinstance(get_optimizer(name), LayerOptimizerPass) }
 
         # Sort through the initializers based on the base class (e.g., to apply 'Layer' optimizers before 'Dense')
         sorted_initializers = sorted(all_initializers.items(), key=lambda x: len(x[1].__class__.mro()))
 
-        return sorted_initializers
+        # Return only the names of the initializers
+        return [opt[0] for opt in sorted_initializers]
 
     def _get_layer_templates(self):
-        return { name:opt for name, opt in get_backend_passes(self.name) if isinstance(opt, Template) }
+        return [name for name in get_backend_passes(self.name) if isinstance(get_optimizer(name), Template)]
 
     def create_initial_config(self, **kwargs):
         raise NotImplementedError

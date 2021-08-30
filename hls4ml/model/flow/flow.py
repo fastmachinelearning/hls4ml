@@ -6,7 +6,6 @@ class Flow(object):
             self.optimizers = []
         else:
             self.optimizers = optimizers
-        self.optimizers = optimizers
         if requires is None:
             self.requires = []
         else:
@@ -26,7 +25,10 @@ def register_flow(name, optimizers, requires=None, backend=None):
     if name in flow_map:
         raise Exception('Flow {} already registered'.format(name))
 
-    opt_list = [_get_backend_name_prefix(opt, backend) for opt in optimizers]
+    if optimizers is not None:
+        opt_list = [_get_backend_name_prefix(opt, backend) for opt in optimizers]
+    else:
+        opt_list = None
     
     flow_map[name] = Flow(name, opt_list, requires)
 

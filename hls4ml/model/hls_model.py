@@ -299,6 +299,8 @@ class HLSModel(object):
 
         if len(flow.optimizers) > 0:
             applied_passes = optimize_model(self, flow.optimizers)
+        else:
+            applied_passes = []
         self._applied_flows[flow.name] = applied_passes
 
     def make_node(self, kind, name, attributes, inputs, outputs=None):

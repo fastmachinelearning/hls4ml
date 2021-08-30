@@ -233,7 +233,34 @@ class QuartusBackend(FPGABackend):
         #self.register_templates(Transpose             , transpose_function_template,   transpose_config_template, transpose_include_list)
 
     def _register_flows(self):
-        self._default_flow = register_flow('quartus:ip', get_backend_passes(self.name), requires=['optimize'], backend=self.name)
+        initializers = self._get_layer_initializers()
+        init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
+
+        quartus_types = [
+            'quartus:transform_variables',
+            'quartus:transform_a_c_types',
+        ]
+        quartus_types_flow = register_flow('specific_types', quartus_types, requires=[init_flow], backend=self.name)
+
+        templates = self._get_layer_templates()
+        template_flow = register_flow('apply_templates', templates, requires=[init_flow], backend=self.name)
+
+        all_passes = get_backend_passes(self.name)
+
+        extras = [
+            # Ideally this should be empty
+            opt_pass for opt_pass in all_passes if opt_pass not in initializers + quartus_types + templates
+        ]
+
+        if len(extras) > 0:
+            extras_flow = register_flow('extras', extras, requires=[init_flow], backend=self.name)
+        else:
+            extras_flow = None
+
+        ip_flow_requirements = ['optimize', init_flow, quartus_types_flow, extras_flow, template_flow]
+        ip_flow_requirements = list(filter(None, ip_flow_requirements))
+
+        self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
 
     def get_default_flow(self):
         return self._default_flow
