@@ -53,7 +53,6 @@ class Layer(object):
 
         self._function_template = self.model.config.backend.get_function_template(self.__class__)
         self._config_template = self.model.config.backend.get_config_template(self.__class__)
-        self.include_list = self.model.config.backend.get_include_list(self.__class__)
         self.weights = AttributeMapping(self.attributes, WeightVariable)
         self.variables = AttributeMapping(self.attributes, TensorVariable)
         self.types = AttributeMapping(self.attributes, HLSType)

@@ -75,7 +75,7 @@ def register_bn_quant(backend):
     # Register the layer types to the layer map
     register_layer('BatchNormalizationQuantizedTanh', BatchNormalizationQuantizedTanh)
 
-    bn_include_list = backend.get_include_list(BatchNormalization)
+    bn_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
 
     # Register the templates for config and function
     backend.register_templates(BatchNormalizationQuantizedTanh, batchnorm_quantized_tanh_function_template, batchnorm_quantized_tanh_config_template, bn_include_list)

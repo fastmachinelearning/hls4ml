@@ -27,6 +27,8 @@ zeropad2d_config_template = """struct config{index} : nnet::padding2d_config {{
 zeropad1d_function_template = 'nnet::zeropad1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 zeropad2d_function_template = 'nnet::zeropad2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 
+padding_include_list = ['nnet_utils/nnet_padding.h', 'nnet_utils/nnet_padding_stream.h']
+
 class ZeroPaddingConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__((ZeroPadding1D, ZeroPadding2D))
@@ -41,7 +43,7 @@ class ZeroPaddingConfigTemplate(LayerConfigTemplate):
 
 class ZeroPaddingFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__((ZeroPadding1D, ZeroPadding2D))
+        super().__init__((ZeroPadding1D, ZeroPadding2D), include_header=padding_include_list)
         self.templates = {
             'ZeroPadding1D': zeropad1d_function_template,
             'ZeroPadding2D': zeropad2d_function_template,
@@ -66,6 +68,8 @@ resize_config_template = """struct config{index} : nnet::resize_config {{
 
 resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
 
+resize_include_list = ['nnet_utils/nnet_image.h', 'nnet_utils/nnet_image_stream.h']
+
 class ResizeConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(Resize)
@@ -78,7 +82,7 @@ class ResizeConfigTemplate(LayerConfigTemplate):
 
 class ResizeFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__(Resize)
+        super().__init__(Resize, include_header=resize_include_list)
         self.template = resize_function_template
 
     def format(self, node):
@@ -99,6 +103,8 @@ transpose_config_template = """struct config{index} : nnet::transpose_config {{
 
 transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}, {output});'
 
+transpose_include_list = ['nnet_utils/nnet_array.h']
+
 class TransposeConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(Transpose)
@@ -111,7 +117,7 @@ class TransposeConfigTemplate(LayerConfigTemplate):
 
 class TransposeFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__(Transpose)
+        super().__init__(Transpose, include_header=transpose_include_list)
         self.template = transpose_function_template
 
     def format(self, node):

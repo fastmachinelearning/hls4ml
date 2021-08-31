@@ -44,7 +44,6 @@ class Backend(object):
         # Templates
         self.config_templates = LayerDict()
         self.function_templates = LayerDict()
-        self.include_lists = LayerDict()
         self.init_templates()
         # Optimizers
         self._init_optimizers()
@@ -93,9 +92,6 @@ class Backend(object):
     def get_function_template(self, kind):
         return self.function_templates.get(kind)
 
-    def get_include_list(self, kind):
-        return self.include_lists.get(kind, [])
-
     def get_available_flows(self):
         return get_backend_flows(self.name)
 
@@ -111,7 +107,6 @@ class Backend(object):
     def register_templates(self, cls, function_template, config_template, include_list=[]):
         self.function_templates[cls] = function_template
         self.config_templates[cls] = config_template
-        self.include_lists[cls] = include_list
 
     def register_source(self, file_name, source, destination_dir='nnet_utils'):
         raise NotImplementedError

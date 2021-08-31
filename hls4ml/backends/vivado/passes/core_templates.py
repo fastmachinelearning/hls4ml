@@ -24,6 +24,8 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
 
 dense_function_template = 'nnet::dense<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 
+dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_stream.h']
+
 class DenseConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(Dense)
@@ -39,7 +41,7 @@ class DenseConfigTemplate(LayerConfigTemplate):
 
 class DenseFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__(Dense)
+        super().__init__(Dense, include_header=dense_include_list)
         self.template = dense_function_template
     
     def format(self, node):
@@ -66,6 +68,8 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
 
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
 
+batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
+
 class BatchNormalizationConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(BatchNormalization)
@@ -80,7 +84,7 @@ class BatchNormalizationConfigTemplate(LayerConfigTemplate):
 
 class BatchNormalizationFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__(BatchNormalization)
+        super().__init__(BatchNormalization, include_header=batchnorm_include_list)
         self.template = batchnorm_function_template
     
     def format(self, node):
@@ -114,6 +118,8 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
 param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {param}, {output});'
 
+activ_include_list = ['nnet_utils/nnet_activation.h', 'nnet_utils/nnet_activation_stream.h']
+
 class ActivationConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__((Activation, ParametrizedActivation, PReLU))
@@ -132,7 +138,7 @@ class SoftmaxConfigTemplate(ActivationConfigTemplate):
 
 class ActivationFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__((Activation, Softmax))
+        super().__init__((Activation, Softmax), include_header=activ_include_list)
         self.template = activ_function_template
     
     def format(self, node):
@@ -144,7 +150,7 @@ class ActivationFunctionTemplate(FunctionCallTemplate):
 
 class ParametrizedActivationFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__(ParametrizedActivation)
+        super().__init__(ParametrizedActivation, include_header=activ_include_list)
         self.template = activ_function_template
 
     def format(self, node):
@@ -157,7 +163,7 @@ class ParametrizedActivationFunctionTemplate(FunctionCallTemplate):
 
 class PReLUFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__(PReLU)
+        super().__init__(PReLU, include_header=activ_include_list)
         self.template = activ_function_template
 
     def format(self, node):

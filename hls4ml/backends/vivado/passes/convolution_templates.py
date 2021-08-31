@@ -45,6 +45,8 @@ const ap_uint<config{index}::filt_width> config{index}::pixels[] = {{{instructio
 
 conv1d_function_template = 'nnet::conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 
+conv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_conv1d_stream.h']
+
 class Conv1DConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(Conv1D)
@@ -69,7 +71,7 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
 
 class Conv1DFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__(Conv1D)
+        super().__init__(Conv1D, include_header=conv1d_include_list)
         self.template = conv1d_function_template
 
     def format(self, node):
@@ -115,6 +117,8 @@ const ap_uint<config{index}::filt_height * config{index}::filt_width> config{ind
 conv2d_function_template = 'nnet::conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 depthconv2d_function_template = 'nnet::depthwise_conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 
+conv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_stream.h']
+
 class Conv2DConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__((Conv2D, Conv2DBatchnorm, DepthwiseConv2D))
@@ -139,7 +143,7 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
 
 class Conv2DFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__((Conv2D, Conv2DBatchnorm))
+        super().__init__((Conv2D, Conv2DBatchnorm), include_header=conv2d_include_list)
         self.template = conv2d_function_template
     
     def format(self, node):
@@ -152,7 +156,7 @@ class Conv2DFunctionTemplate(FunctionCallTemplate):
 
 class DepthwiseConv2DFunctionTemplate(Conv2DFunctionTemplate):
     def __init__(self):
-        super(Conv2DFunctionTemplate, self).__init__(DepthwiseConv2D)
+        super(Conv2DFunctionTemplate, self).__init__(DepthwiseConv2D, include_header=sepconv2d_include_list)
         self.template = depthconv2d_function_template
 
 # SeparableConv1D/2D Templates
@@ -164,6 +168,9 @@ sepconv_config_template = """struct config{index} {{
 
 sepconv1d_function_template = 'nnet::separable_conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {d}, {p}, {z}, {b});'
 sepconv2d_function_template = 'nnet::separable_conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {d}, {p}, {z}, {b});'
+
+sepconv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_sepconv1d_stream.h']
+sepconv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_sepconv2d_stream.h']
 
 class SeparableConv1DConfigTemplate(LayerConfigTemplate):
     def __init__(self):
@@ -236,7 +243,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
 
 class SeparableConv1DFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__(SeparableConv1D)
+        super().__init__(SeparableConv1D, include_header=sepconv1d_include_list)
         self.template = sepconv1d_function_template
     
     def format(self, node):
@@ -320,7 +327,7 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
 
 class SeparableConv2DFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__(SeparableConv2D)
+        super().__init__(SeparableConv2D, include_header=sepconv2d_include_list)
         self.template = sepconv2d_function_template
     
     def format(self, node):

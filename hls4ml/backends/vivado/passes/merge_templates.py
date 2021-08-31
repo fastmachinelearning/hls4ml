@@ -11,6 +11,8 @@ merge_config_template = """struct config{index} : nnet::merge_config {{
 
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
 
+merge_include_list = ['nnet_utils/nnet_merge.h', 'nnet_utils/nnet_merge_stream.h']
+
 class MergeConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(Merge)
@@ -24,7 +26,7 @@ class MergeConfigTemplate(LayerConfigTemplate):
 
 class MergeFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__((Merge, Concatenate, Dot))
+        super().__init__((Merge, Concatenate, Dot), include_header=merge_include_list)
         self.template = merge_function_template
 
     def format(self, node):

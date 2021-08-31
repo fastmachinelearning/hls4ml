@@ -60,6 +60,8 @@ pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {output_
 global_pooling1d_function_template = 'nnet::global_pooling1d<{input_t}, {config}>({input}, {output});'
 global_pooling2d_function_template = 'nnet::global_pooling2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 
+pooling_include_list = ['nnet_utils/nnet_pooling.h', 'nnet_utils/nnet_pooling_stream.h']
+
 class PoolingConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__((Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D))
@@ -76,7 +78,7 @@ class PoolingConfigTemplate(LayerConfigTemplate):
 
 class PoolingFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__((Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D))
+        super().__init__((Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D), include_header=pooling_include_list)
         self.templates = {
             'Pooling1D': pooling1d_function_template,
             'Pooling2D': pooling2d_function_template,

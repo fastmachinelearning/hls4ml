@@ -45,13 +45,14 @@ class LayerConfigTemplate(Template):
         return params
 
 class FunctionCallTemplate(Template):
-    def __init__(self, layer_class):
+    def __init__(self, layer_class, include_header=None):
         if isinstance(layer_class, (list, tuple, set)):
             name = '_'.join([cls.__name__.lower() for cls in layer_class])
         else:
             name = layer_class.__name__.lower()
         name += '_function_template'
         super().__init__(name, layer_class, 'function_cpp')
+        self.include_header = include_header
     
     def _default_function_params(self, layer):
         params = {}
@@ -63,3 +64,7 @@ class FunctionCallTemplate(Template):
         params['output'] = layer.get_output_variable().name
 
         return params
+
+    def transform(self, model, node):
+        node.set_attr('include_header', self.include_header)
+        return super().transform(model, node)
