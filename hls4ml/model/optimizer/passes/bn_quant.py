@@ -21,7 +21,7 @@ class BatchNormalizationQuantizedTanh(Layer):
         elif self.get_attr('quantize') == 3:
             self.add_output_variable(shape, dims, precision=IntegerPrecisionType(width=2))
         else:
-            print("Not adding output variable")
+            raise Exception('Unsupported quantize attribute for BatchNormalizationQuantizedTanh: {}'.format(self.get_attr('quantize')))
 
     def function_cpp(self):
         params = self._default_function_params()
