@@ -325,10 +325,7 @@ namespace nnet {
     #pragma HLS ARRAY_PARTITION variable=edge_index complete dim=0
     nnet::vec_to_mat<index_T, index_T, typename CONFIG_T::edge_index_config>(edge_index_1D, edge_index);
 
-    // 4. edge_update (output)
-    res_T edge_update[CONFIG_T::n_edge][CONFIG_T::out_dim];
-    #pragma HLS ARRAY_PARTITION variable=edge_update complete dim=0
-
+    // 4. phi_input (intermediate)
     int sender_col;
     int receiver_col;
     if(CONFIG_T::flow == source_to_target){
@@ -339,35 +336,44 @@ namespace nnet {
       sender_col = 1;
       receiver_col = 0;
     }
+    data_T phi_input[CONFIG_T::n_edge][2*CONFIG_T::node_dim+CONFIG_T::n_edge];
+    #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
+    for(int i=0; i<CONFIG_T::n_edge; i++){
+      index_T s = edge_index[i][sender_col];
+      index_T r = edge_index[i][receiver_col];
+
+      // phi_input_i = <receiver_i, sender_i, edge_i>
+      for(int j=0; j<CONFIG_T::node_dim; j++){
+        #pragma HLS UNROLL
+        phi_input[i][j] = node_attr[r][j];
+        phi_input[i][CONFIG_T::node_dim+j] = node_attr[s][j];
+      }
+      for(int k=0; k<CONFIG_T::edge_dim; k++){
+        #pragma HLS UNROLL
+        phi_input[i][2*CONFIG_T::node_dim+k] = edge_attr[i][k];
+      }
+    }
+
+    // 5. edge_update (output)
+    res_T edge_update[CONFIG_T::n_edge][CONFIG_T::out_dim];
+    #pragma HLS ARRAY_PARTITION variable=edge_update complete dim=0
 
     #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
     edge_loop: for(int i = 0; i < CONFIG_T::n_edge; i++) { //for each edge
       #pragma HLS UNROLL
 
-      // get sender, receiver indices
-      index_T s = edge_index[i][sender_col];
-      index_T r = edge_index[i][receiver_col];
-
-      // construct NN input: <receiver, sender, edge>
-      data_T node_concat[2*CONFIG_T::node_dim];
-      #pragma HLS ARRAY_PARTITION variable=node_concat complete dim=0
-      nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[r], node_attr[s], node_concat);
-      data_T phi_input[CONFIG_T::edge_dim + 2*CONFIG_T::node_dim];
-      #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
-      nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config2>(node_concat, edge_attr[i], phi_input);
-
-      // send it through NN
+      // send phi_input[i] through NN to edge_update[i]
         if(CONFIG_T::n_layers == 1){
-	      nnet::dense_mult_1lyr<data_T, data_T, CONFIG_T>(phi_input, edge_update[i], core_edge_w0, core_edge_b0);
+	      nnet::dense_mult_1lyr<data_T, data_T, CONFIG_T>(phi_input[i], edge_update[i], core_edge_w0, core_edge_b0);
           }
         else if(CONFIG_T::n_layers == 2){
-	      nnet::dense_mult_2lyr<data_T, data_T, CONFIG_T>(phi_input, edge_update[i], core_edge_w0, core_edge_b0, core_edge_w1, core_edge_b1);
+	      nnet::dense_mult_2lyr<data_T, data_T, CONFIG_T>(phi_input[i], edge_update[i], core_edge_w0, core_edge_b0, core_edge_w1, core_edge_b1);
         }
         else if(CONFIG_T::n_layers == 3){
-	      nnet::dense_mult_3lyr<data_T, data_T, CONFIG_T>(phi_input, edge_update[i], core_edge_w0, core_edge_b0, core_edge_w1, core_edge_b1, core_edge_w2, core_edge_b2);
+	      nnet::dense_mult_3lyr<data_T, data_T, CONFIG_T>(phi_input[i], edge_update[i], core_edge_w0, core_edge_b0, core_edge_w1, core_edge_b1, core_edge_w2, core_edge_b2);
         }
         else if(CONFIG_T::n_layers == 4){
-	      nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(phi_input, edge_update[i], core_edge_w0, core_edge_b0, core_edge_w1, core_edge_b1, core_edge_w2, core_edge_b2, core_edge_w3, core_edge_b3);
+	      nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(phi_input[i], edge_update[i], core_edge_w0, core_edge_b0, core_edge_w1, core_edge_b1, core_edge_w2, core_edge_b2, core_edge_w3, core_edge_b3);
         }
     }
 
