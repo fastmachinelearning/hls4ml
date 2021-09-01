@@ -58,9 +58,3 @@ def parse_EdgeAggregate(block_name, config, update_dict, index, n_node, n_edge, 
                   "outputs": [f"layer{index}_out"]}
     update_dict["last_edge_aggr_update"] = f"layer{index}_out"
     return layer_dict, update_dict
-
-IN_handlers = {
-    "NodeBlock": parse_NodeBlock,
-    "EdgeBlock": parse_EdgeBlock,
-    "EdgeAggregate": parse_EdgeAggregate
-}
