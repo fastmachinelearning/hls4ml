@@ -33,11 +33,6 @@ class LayerDict(MutableMapping):
     def __delitem__(self, key):
         self.layer_dict.remove(key)
 
-def layer_optimizer(layer):
-    def decorator(function):
-        return optimizer_pass(layer)(function)
-    return decorator
-
 class Backend(object):
     def __init__(self, name):
         self.name = name

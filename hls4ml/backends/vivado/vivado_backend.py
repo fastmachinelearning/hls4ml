@@ -9,9 +9,8 @@ from collections.abc import Iterable
 from hls4ml.model.hls_types import HLSType, IntegerPrecisionType
 from hls4ml.model.hls_layers import Layer, Dense, BatchNormalization, Conv1D, Conv2D, Conv2DBatchnorm, SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Activation, ParametrizedActivation, PReLU, Softmax, Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D, ZeroPadding1D, ZeroPadding2D, Merge, Concatenate, Dot, Resize, Transpose, GarNet, GarNetStack
 from hls4ml.model.hls_attributes import Attribute
-from hls4ml.model.optimizer import get_backend_passes
+from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.flow import register_flow
-from hls4ml.backends.backend import layer_optimizer
 from hls4ml.backends import FPGABackend
 from hls4ml.report import parse_vivado_report
 
@@ -439,6 +438,7 @@ class VivadoBackend(FPGABackend):
             'vivado:transform_variables',
             'vivado:transform_a_p_types',
             'vivado:generate_conv_streaming_instructions',
+            'vivado:apply_resource_strategy',
         ]
         vivado_types_flow = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
 
@@ -505,7 +505,6 @@ class VivadoBackend(FPGABackend):
                 index_t = layer.get_weights('weight').type.index_precision
             else:
                 layer.set_attr('strategy', 'resource')
-                layer.weights['weight'].data = np.transpose(layer.weights['weight'].data)
         else:
             layer.set_attr('strategy', 'latency')
         layer.set_attr('index_t', HLSType('layer{}_index'.format(layer.index), index_t))
@@ -515,7 +514,6 @@ class VivadoBackend(FPGABackend):
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
             self.set_closest_reuse_factor(layer)
-            layer.weights['weight'].data = np.transpose(layer.weights['weight'].data, axes=[2, 0, 1]) #(W,C,F) => (F,W,C)
         else:
             layer.set_attr('strategy', 'latency')
 
@@ -524,8 +522,6 @@ class VivadoBackend(FPGABackend):
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
             self.set_closest_reuse_factor(layer)
-            layer.weights['depthwise'].data = np.transpose(layer.weights['depthwise'].data, axes=[2, 0, 1]) #(W,C,F) => (F,W,C)
-            layer.weights['pointwise'].data = np.transpose(layer.weights['pointwise'].data, axes=[2, 0, 1]) #(W,C,F) => (F,W,C)
         else:
             layer.set_attr('strategy', 'latency')
 
@@ -534,7 +530,6 @@ class VivadoBackend(FPGABackend):
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
             self.set_closest_reuse_factor(layer)
-            layer.weights['weight'].data = np.transpose(layer.weights['weight'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
         else:
             layer.set_attr('strategy', 'latency')
 
@@ -543,8 +538,6 @@ class VivadoBackend(FPGABackend):
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
             self.set_closest_reuse_factor(layer)
-            layer.weights['depthwise'].data = np.transpose(layer.weights['depthwise'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
-            layer.weights['pointwise'].data = np.transpose(layer.weights['pointwise'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
         else:
             layer.set_attr('strategy', 'latency')
 
@@ -553,7 +546,6 @@ class VivadoBackend(FPGABackend):
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
             self.set_closest_reuse_factor(layer)
-            layer.weights['weight'].data = np.transpose(layer.weights['weight'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
         else:
             layer.set_attr('strategy', 'latency')
 

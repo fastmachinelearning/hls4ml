@@ -47,11 +47,22 @@ class LayerOptimizerPass(WrappedOptimizerPass):
         super(LayerOptimizerPass, self).__init__(name, lambda node: isinstance(node, layer_class), transform)
         self.layer_class = layer_class
 
+
+# Decorator optimizers
+
 def optimizer_pass(condition):
     def decorator(function):
         function._condition = condition
         return function
     return decorator
+
+def layer_optimizer(layer):
+    def decorator(function):
+        return optimizer_pass(layer)(function)
+    return decorator
+
+
+# Helpers for extracting optimizers from objects
 
 def extract_optimizers_from_path(opt_path, module_path, initializer=None):
     optimizers = {}
@@ -103,6 +114,9 @@ def extract_optimizers_from_object(clazz):
         optimizers[opt_name] = opt
     
     return optimizers
+
+
+# Optimizer registry
 
 optimizer_map = {}
 

@@ -11,9 +11,8 @@ from contextlib import contextmanager
 
 from hls4ml.model.hls_types import HLSType, IntegerPrecisionType, FixedPrecisionType
 from hls4ml.model.hls_layers import Layer, Dense, BatchNormalization, Activation, ParametrizedActivation, PReLU, Softmax
-from hls4ml.model.optimizer import get_backend_passes
-from hls4ml.model.flow.flow import register_flow
-from hls4ml.backends.backend import layer_optimizer
+from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
+from hls4ml.model.flow import register_flow
 from hls4ml.backends import FPGABackend
 from hls4ml.report import parse_quartus_report
 
