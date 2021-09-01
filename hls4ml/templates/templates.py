@@ -1,3 +1,6 @@
+import json
+import os.path
+
 
 class Backend(object):
     def __init__(self, name):
@@ -33,3 +36,9 @@ def register_backend(name, backend_cls):
 
 def get_backend(name):
     return backend_map[name]
+
+def get_available_backends():
+    return list(backend_map.keys())
+
+def get_supported_boards_dict():
+    return json.load(open(os.path.dirname(__file__) + '/supported_boards.json'))

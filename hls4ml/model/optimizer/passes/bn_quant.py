@@ -75,7 +75,8 @@ register_layer('BatchNormalizationQuantizedTanh', BatchNormalizationQuantizedTan
 from hls4ml.templates.vivado_template import batchnorm_include_list
 
 # Register the templates for config and function
-templates.get_backend('Vivado').register_templates('BatchNormalizationQuantizedTanh', batchnorm_quantized_tanh_function_template, batchnorm_quantized_tanh_config_template, batchnorm_include_list)
+for backend in ['Vivado', 'VivadoAccelerator']:
+    templates.get_backend(backend).register_templates('BatchNormalizationQuantizedTanh', batchnorm_quantized_tanh_function_template, batchnorm_quantized_tanh_config_template, batchnorm_include_list)
 
 class MergeBatchNormAndQuantizedTanh(OptimizerPass):
     def match(self, node):

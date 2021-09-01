@@ -18,7 +18,6 @@ from hls4ml.report.vivado_report import parse_vivado_report
 class HLSConfig(object):
     def __init__(self, config):
         self.config = config
-
         self.backend = get_backend(self.config.get('Backend', 'Vivado'))
         self.writer = get_writer(self.config.get('Backend', 'Vivado'))
 
@@ -704,7 +703,7 @@ class HLSModel(object):
     def build(self, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
         if 'linux' in sys.platform:
             backend = self.config.get_config_value('Backend', 'Vivado')
-            if backend == 'Vivado':
+            if backend in ['Vivado', 'VivadoAccelerator']:
                 found = os.system('command -v vivado_hls > /dev/null')
                 if found != 0:
                     raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')

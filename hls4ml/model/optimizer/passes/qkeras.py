@@ -96,8 +96,9 @@ class ApplyAlpha(BatchNormalization):
 # register the layer and its templates
 register_layer('ApplyAlpha', ApplyAlpha)
 # TODO ideally: for backend in backends
-temps = templates.get_backend('Vivado')
-temps.register_templates('ApplyAlpha', temps.get_function_template('BatchNormalization'), temps.get_config_template('BatchNormalization'), temps.get_include_list('BatchNormalization'))
+for backend in ['Vivado', 'VivadoAccelerator']:
+    temps = templates.get_backend(backend)
+    temps.register_templates('ApplyAlpha', temps.get_function_template('BatchNormalization'), temps.get_config_template('BatchNormalization'), temps.get_include_list('BatchNormalization'))
 
 class QKerasFactorizeAlpha(OptimizerPass):
     '''OptimizerPass for extracting alpha "scale" from QKeras quantized layer.
