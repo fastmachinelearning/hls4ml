@@ -4,7 +4,8 @@ from hls4ml.model.optimizer.optimizer import OptimizerPass, register_pass, get_o
 
 
 from hls4ml.model.optimizer.passes.nop import EliminateLinearActivation
-from hls4ml.model.optimizer.passes.bn_quant import MergeBatchNormAndQuantizedTanh, QuantizeDenseOutput
+from hls4ml.model.optimizer.passes.bn_quant import MergeBatchNormAndQuantizedTanh
+from hls4ml.model.optimizer.passes.bn_quant import QuantizeDenseOutput
 from hls4ml.model.optimizer.passes.bn_fuse import FuseBatchNormalization
 from hls4ml.model.optimizer.passes.fuse_biasadd import FuseBiasAdd
 from hls4ml.model.optimizer.passes.conv_same_pad import InsertZeroPaddingBeforeConv1D
@@ -19,9 +20,16 @@ try:
     from hls4ml.model.optimizer.passes.qkeras import OutputRoundingSaturationMode
     from hls4ml.model.optimizer.passes.qkeras import QKerasFactorizeAlpha
     from hls4ml.model.optimizer.passes.qkeras import FuseConsecutiveBatchNormalization
+    from hls4ml.model.optimizer.passes.qkeras import ExtractTernaryThreshold
     __qkeras_optimizers__ = True
 except ImportError:
     __qkeras_optimizers__ = False
+
+if __qkeras_optimizers__:
+    register_pass('output_rounding_saturation_mode', OutputRoundingSaturationMode)
+    register_pass('qkeras_factorize_alpha', QKerasFactorizeAlpha)
+    register_pass('extract_ternary_threshold', ExtractTernaryThreshold)
+    register_pass('fuse_consecutive_batch_normalization', FuseConsecutiveBatchNormalization) 
 
 register_pass('eliminate_linear_activation', EliminateLinearActivation)
 register_pass('merge_batch_norm_quantized_tanh', MergeBatchNormAndQuantizedTanh)
@@ -36,9 +44,4 @@ register_pass('reshape_stream', ReshapeStream)
 register_pass('remove_useless_transpose', RemoveUselessTranspose)
 register_pass('replace_multidense_conv', ReplaceMultidimensionalDenseWithConv)
 register_pass('broadcast_stream', BroadcastStream)
-
-if __qkeras_optimizers__:
-    register_pass('output_rounding_saturation_mode', OutputRoundingSaturationMode)
-    register_pass('qkeras_factorize_alpha', QKerasFactorizeAlpha)
-    register_pass('fuse_consecutive_batch_normalization', FuseConsecutiveBatchNormalization) 
 
