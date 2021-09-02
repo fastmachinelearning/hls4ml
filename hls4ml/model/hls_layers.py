@@ -1245,6 +1245,7 @@ class GlobalPooling2D(Layer):
 
 class ZeroPadding1D(Layer):
     def initialize(self):
+        inp = self.get_input_variable()
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_width'], self.attributes['n_chan']]
             dims = ['OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
@@ -1273,6 +1274,7 @@ class ZeroPadding1D(Layer):
 
 class ZeroPadding2D(Layer):
     def initialize(self):
+        inp = self.get_input_variable()
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_chan']]
             dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
@@ -1512,6 +1514,7 @@ class BiasAdd(Merge): # TensorFlow's operator that gets merged into Dense/Conv
 
 class Resize(Layer):
     def initialize(self):
+        inp = self.get_input_variable()
         shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
         dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
         self.add_output_variable(shape, dims, precision=inp.type.precision)
