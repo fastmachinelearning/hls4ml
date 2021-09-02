@@ -11,6 +11,73 @@ array set opt {
   vsynth     0
 }
 
+set tcldir [file dirname [info script]]
+source [file join $tcldir project.tcl]
+
+proc add_vcd_instructions_tcl {} {
+    set timestamp [clock format [clock seconds] -format {%Y%m%d%H%M%S}]
+
+    set filename myproject_prj/solution1/sim/verilog/myproject_axi.tcl
+    set temp     $filename.new.$timestamp
+    # set backup   $filename.bak.$timestamp
+
+    set in  [open $filename r]
+    set out [open $temp     w]
+
+    # line-by-line, read the original file
+    while {[gets $in line] != -1} {
+        if {[string equal "$line" "log_wave -r /"]} {
+            set line {log_wave -r /
+open_vcd
+# log_vcd [get_objects -r -regexp [get_scopes -regexp {layer(\d*)_.*data_(\d*)_V_U.*}]\/usedw]
+log_vcd *}
+        }
+        if {[string equal "$line" "quit"]} {
+            set line {flush_vcd
+close_vcd
+quit
+}
+        }
+        # then write the transformed line
+        puts $out $line
+    }
+
+    close $in
+    close $out
+
+    # move the new data to the proper filename
+    file delete -force $filename
+    file rename -force $temp $filename
+}
+
+proc add_vcd_instructions_xsim {} {
+    set timestamp [clock format [clock seconds] -format {%Y%m%d%H%M%S}]
+
+    set filename myproject_prj/solution1/sim/verilog/run_xsim.sh
+    set temp     $filename.new.$timestamp
+    # set backup   $filename.bak.$timestamp
+
+    set in  [open $filename r]
+    set out [open $temp     w]
+
+    # line-by-line, read the original file
+    while {[gets $in line] != -1} {
+        if {[string match *bin/xsim* $line]} {
+            append line " -vcdfile simulation.vcd"
+        }
+        # then write the transformed line
+        puts $out $line
+    }
+
+    close $in
+    close $out
+
+    # move the new data to the proper filename
+    file delete -force $filename
+    file rename -force $temp $filename
+    exec chmod +x $filename
+}
+
 foreach arg $::argv {
   foreach o [lsort [array names opt]] {
     regexp "$o=+(\\w+)" $arg unused opt($o)
@@ -92,6 +159,15 @@ if {$opt(cosim)} {
   add_files -tb myproject_test.cpp -cflags "-std=c++0x -DRTL_SIM"
   set time_start [clock clicks -milliseconds]
   cosim_design -trace_level all
+  if {$fifo_opt} {
+      puts "FIFO OPT"
+      add_vcd_instructions_xsim
+      add_vcd_instructions_tcl
+      set old_pwd [pwd]
+      cd myproject_prj/solution1/sim/verilog/
+      exec vivado_hls run_sim.tcl #todo
+      cd $old_pwd
+  }
   set time_end [clock clicks -milliseconds]
   puts "INFO:"
   puts [read [open myproject_prj/solution1/sim/report/myproject_cosim.rpt r]]

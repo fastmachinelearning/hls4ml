@@ -196,7 +196,9 @@ class VivadoAcceleratorWriter(VivadoWriter):
         fout = open(newfile, 'w')
 
         for line in f.readlines():
-            if 'set_top' in line:
+            if 'set filename myproject_prj/solution1/sim/verilog/myproject.tcl' in line:
+                newline = line[:-5] + '_axi\n'
+            elif 'set_top' in line:
                 newline = line[:-1] + '_axi\n'  # remove the newline from the line end and append _axi for the new top
                 newline += 'add_files firmware/{}_axi.cpp -cflags "-std=c++0x"\n'.format(
                     model.config.get_project_name())
@@ -324,6 +326,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
             in_bit, out_bit = self.vivado_accelerator_config.get_io_bitwidth()
             f.write('set bit_width_hls_output {}\n'.format(in_bit))
             f.write('set bit_width_hls_input {}\n'.format(out_bit))
+        f.write('set fifo_opt 1') # todo: hardcoded! should be deducted from the config
         f.close()
 
     def write_driver(self, model):
