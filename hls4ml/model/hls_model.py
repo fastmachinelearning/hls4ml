@@ -404,6 +404,7 @@ class HLSModel(object):
                 new_graph[node.name] = node
 
         self.graph = new_graph
+        self._update_model_outputs()
 
     def remove_node(self, node, rewire=True):
         """ Remove a node from a graph.
@@ -433,20 +434,14 @@ class HLSModel(object):
                             next_node.inputs[i] = prev_node.outputs[0]
                             break
                 else:
-                    if node.outputs[0] in self.outputs:
-                        self.outputs = [prev_node.outputs[0] if x == node.outputs[0] else x for x in self.outputs]
-                    else:
+                    if not node.outputs[0] in self.outputs:
                         raise Exception('Cannot rewire a node without child')
             else:
                 raise Exception('Cannot rewire a node without a parent')
         
-        #If it's the output layer then reset the output to this node's input
-        if node.name in self.outputs:
-            node_indx = self.outputs.index(node.name)
-            self.outputs[node_indx] = node.inputs[0]
-
         del self.output_vars[node.outputs[0]]
         del self.graph[node.name]
+        self._update_model_outputs()
 
     def replace_node(self, old_node, new_node):
         """ Replace an existing node in the graph with a new one.
@@ -465,6 +460,18 @@ class HLSModel(object):
                 new_node.inputs = [prev_node.outputs[0]]
 
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
+        self._update_model_outputs()
+
+    def _update_model_outputs(self):
+        ''' Update the model outputs
+
+        All node outputs and inputs are found. The model outputs are set to all node outputs
+        that are not also node inputs.
+        '''
+        node_outputs = np.array([out for node in self.graph.values() for out in node.outputs])
+        node_inputs = np.array([inp for node in self.graph.values() for inp in node.inputs])
+        model_outputs = node_outputs[np.isin(node_outputs, node_inputs, invert=True)]
+        self.outputs = model_outputs.tolist()
 
     def get_weights_data(self, layer_name, var_name):
         return self.reader.get_weights_data(layer_name, var_name)
