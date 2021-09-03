@@ -196,12 +196,7 @@ namespace nnet {
     #pragma HLS ARRAY_PARTITION variable=edge_attr complete dim=0
     nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::edge_attr_config>(edge_attr_1D, edge_attr);
 
-    // 2. edge_index (input)
-    index_T edge_index[CONFIG_T::n_edge][2];
-    #pragma HLS ARRAY_PARTITION variable=edge_index complete dim=0
-    nnet::vec_to_mat<index_T, index_T, typename CONFIG_T::edge_index_config>(edge_index_1D, edge_index);
-
-    //3. num_edge_per_node (intermediate), 4. edge_aggr_mask (intermediate)
+    //2. num_edge_per_node (intermediate), 3. edge_aggr_mask (intermediate)
     index_T num_edge_per_node[CONFIG_T::n_node];
     #pragma HLS ARRAY_PARTITION variable=num_edge_per_node complete dim=0
     ap_uint<1> edge_aggr_mask[CONFIG_T::n_node];
@@ -250,7 +245,7 @@ namespace nnet {
     #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
     for(int i=0; i<CONFIG_T::n_edge; i++){
       #pragma HLS UNROLL
-      index_T r = edge_index[i][receiver_col];
+      index_T r = edge_index_1D[2*i+receiver_col];
       num_edge_per_node[r] += 1;
       edge_aggr_mask[r] = 1;
 
@@ -320,12 +315,7 @@ namespace nnet {
     #pragma HLS ARRAY_PARTITION variable=edge_attr complete dim=0
     nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::edge_attr_config>(edge_attr_1D, edge_attr);
 
-    // 3. edge_index (input)
-    index_T edge_index[CONFIG_T::n_edge][2];
-    #pragma HLS ARRAY_PARTITION variable=edge_index complete dim=0
-    nnet::vec_to_mat<index_T, index_T, typename CONFIG_T::edge_index_config>(edge_index_1D, edge_index);
-
-    // 4. phi_input (intermediate)
+    // 3. phi_input (intermediate)
     int sender_col;
     int receiver_col;
     if(CONFIG_T::flow == source_to_target){
@@ -339,8 +329,8 @@ namespace nnet {
     data_T phi_input[CONFIG_T::n_edge][2*CONFIG_T::node_dim+CONFIG_T::n_edge];
     #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
     for(int i=0; i<CONFIG_T::n_edge; i++){
-      index_T s = edge_index[i][sender_col];
-      index_T r = edge_index[i][receiver_col];
+      index_T s = edge_index_1D[2*i+sender_col];
+      index_T r = edge_index_1D[2*i+receiver_col];
 
       // phi_input_i = <receiver_i, sender_i, edge_i>
       for(int j=0; j<CONFIG_T::node_dim; j++){
@@ -354,7 +344,7 @@ namespace nnet {
       }
     }
 
-    // 5. edge_update (output)
+    // 4. edge_update (output)
     res_T edge_update[CONFIG_T::n_edge][CONFIG_T::out_dim];
     #pragma HLS ARRAY_PARTITION variable=edge_update complete dim=0
 
