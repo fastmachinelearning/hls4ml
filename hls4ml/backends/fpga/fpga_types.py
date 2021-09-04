@@ -1,6 +1,11 @@
 import numpy as np
+from numpy.lib.arraysetops import isin
 
-from hls4ml.model.hls_types import FixedPrecisionType, IntegerPrecisionType, Variable, TensorVariable, PackedType
+from hls4ml.model.hls_types import CompressedType, NamedType, ExponentType, FixedPrecisionType, IntegerPrecisionType, TensorVariable, PackedType, WeightVariable, XnorPrecisionType
+
+#TODO Rethink if these classes should be built with `from_...(var, ...)` methods or with `__init__(var, ...)`
+
+#region Precision types
 
 class APIntegerPrecisionType(IntegerPrecisionType):
     def definition_cpp(self):
@@ -60,35 +65,159 @@ class ACFixedPrecisionType(FixedPrecisionType):
         return cls(width=precision_type.width, integer=precision_type.integer, signed=precision_type.signed,
             rounding_mode=precision_type.rounding_mode, saturation_mode=precision_type.saturation_mode, saturation_bits=precision_type.saturation_bits)
 
+class PrecisionTypeConverter(object):
+    def convert(self, precision_type):
+        raise NotImplementedError
+
+class APTypeConverter(PrecisionTypeConverter):
+    def convert(self, precision_type):
+        if isinstance(precision_type, IntegerPrecisionType):
+            return APIntegerPrecisionType.from_precision(precision_type)
+        elif isinstance(precision_type, FixedPrecisionType):
+            return APFixedPrecisionType.from_precision(precision_type)
+        else:
+            raise Exception('Unknown precision type: {}'.format(precision_type.__class__.__name__))
+
+class ACTypeConverter(PrecisionTypeConverter):
+    def convert(self, precision_type):
+        if isinstance(precision_type, IntegerPrecisionType):
+            return ACIntegerPrecisionType.from_precision(precision_type)
+        elif isinstance(precision_type, FixedPrecisionType):
+            return ACFixedPrecisionType.from_precision(precision_type)
+        if isinstance(precision_type, (APIntegerPrecisionType, APFixedPrecisionType)):
+            return precision_type
+        else:
+            raise Exception('Unknown precision type: {}'.format(precision_type.__class__.__name__))
+
+#endregion
+
+#region Data types
+
+class HLSType(NamedType):
+    def definition_cpp(self):
+        return 'typedef {precision} {name};\n'.format(name=self.name, precision=self.precision.definition_cpp())
+
+    @classmethod
+    def from_type(cls, type, precision_converter):
+        return cls(
+            name=type.name,
+            precision=precision_converter.convert(type.precision)
+        )
+
+class HLSCompressedType(CompressedType):
+    def definition_cpp(self):
+        cpp_fmt = (
+            'typedef struct {name} {{'
+            '{index} row_index;'
+            '{index} col_index;'
+            '{precision} weight; }} {name};\n'
+        )
+        return cpp_fmt.format(name=self.name, index=self.index_precision, precision=self.precision.definition_cpp())
+
+    @classmethod
+    def from_type(cls, type, precision_converter):
+        return cls(
+            name=type.name,
+            precision=precision_converter.convert(type.precision),
+            index_precision=type.index_precision
+        )
+
+class HLSExponentType(ExponentType):
+    def definition_cpp(self):
+        cpp_fmt = (
+            'typedef struct {name} {{'
+            '{sign} sign;'
+            '{precision} weight; }} {name};\n'
+        )
+        return cpp_fmt.format(name=self.name, precision=self.precision.definition_cpp(), sign=str(XnorPrecisionType()))
+
+    @classmethod
+    def from_type(cls, type, precision_converter):
+        return cls(
+            name=type.name,
+            precision=precision_converter.convert(type.precision)
+        )
+
+class HLSPackedType(PackedType):
+    def definition_cpp(self):
+        n_elem_expr = '/' if self.unpack else '*'
+        return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=self.name, precision=self.precision.definition_cpp(), n_elem=str(self.n_elem) + n_elem_expr + str(self.n_pack))
+
+    @classmethod
+    def from_type(cls, type, precision_converter):
+        return cls(
+            name=type.name,
+            precision=precision_converter.convert(type.precision),
+            n_elem=type.n_elem,
+            n_pack=type.n_pack
+        )
+
+class NamedTypeConverter(object):
+    def convert(self, type, precision_converter):
+        raise NotImplementedError
+
+class HLSTypeConverter(NamedTypeConverter):
+    def convert(self, type, precision_converter):
+        if isinstance(type, PackedType):
+            return HLSPackedType.from_type(type, precision_converter)
+        elif isinstance(type, CompressedType):
+            return HLSCompressedType.from_type(type, precision_converter)
+        elif isinstance(type, ExponentType):
+            return HLSExponentType.from_type(type, precision_converter)
+        elif isinstance(type, NamedType):
+            return HLSType.from_type(type, precision_converter)
+        else:
+            raise Exception('Unknown type: {}'.format(type.__class__.__name__))
+
+#endregion
+
+#region Variables
+
 class ArrayVariable(TensorVariable):
-    def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, pragma='partition', **kwargs):
-        super(ArrayVariable, self).__init__(shape, dim_names, var_name, type_name, precision, **kwargs)
+    def __init__(self, shape, dim_names, var_name, type_name, precision, pragma='partition'):
+        super(ArrayVariable, self).__init__(shape, dim_names, var_name, type_name, precision)
+        self.type = HLSType(type_name, precision)
         self.pragma = pragma
 
     def size_cpp(self):
         return '*'.join([str(k) for k in self.dim_names])
 
     @classmethod
-    def from_variable(cls, tensor_var, pragma='partition', **kwargs):
-        return cls(tensor_var.shape, tensor_var.dim_names, var_name=tensor_var.name, type_name=tensor_var.type.name, precision=tensor_var.type.precision, pragma=pragma)
+    def from_variable(cls, tensor_var, precision_converter, pragma='partition'):
+        return cls(
+            tensor_var.shape,
+            tensor_var.dim_names,
+            var_name=tensor_var.name,
+            type_name=tensor_var.type.name,
+            precision=precision_converter.convert(tensor_var.type.precision),
+            pragma=pragma
+        )
 
 class StructMemberVariable(ArrayVariable):
     """Used by Quartus backend for input/output arrays that are members of the inputs/outpus struct"""
-    def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, pragma='hls_register', struct_name=None, **kwargs):
-        super(StructMemberVariable, self).__init__(shape, dim_names, var_name, type_name, precision, pragma, **kwargs)
+    def __init__(self, shape, dim_names, var_name, type_name, precision, pragma='hls_register', struct_name=None):
+        super(StructMemberVariable, self).__init__(shape, dim_names, var_name, type_name, precision, pragma)
         assert struct_name is not None, 'struct_name must be provided when creating StructMemberVariable'
         self.struct_name = str(struct_name)
         self.member_name = self.name
         self.name = self.struct_name + '.' + self.member_name
 
     @classmethod
-    def from_variable(cls, tensor_var, pragma='partition', struct_name=None, **kwargs):
-        return cls(tensor_var.shape, tensor_var.dim_names, var_name=tensor_var.name, type_name=tensor_var.type.name, precision=tensor_var.type.precision, pragma=pragma, struct_name=struct_name)
+    def from_variable(cls, tensor_var, precision_converter, pragma='partition', struct_name=None):
+        return cls(
+            tensor_var.shape,
+            tensor_var.dim_names,
+            var_name=tensor_var.name,
+            type_name=tensor_var.type.name,
+            precision=precision_converter.convert(tensor_var.type.precision),
+            pragma=pragma,
+            struct_name=struct_name
+        )
 
 class StreamVariable(TensorVariable):
-    def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, n_pack=1, depth=0, **kwargs):
-        super(StreamVariable, self).__init__(shape, dim_names, var_name, type_name, precision, **kwargs)
-        self.type = PackedType(type_name, precision, shape[-1], n_pack, **kwargs)
+    def __init__(self, shape, dim_names, var_name, type_name, precision, n_pack=1, depth=0):
+        super(StreamVariable, self).__init__(shape, dim_names, var_name, type_name, precision)
+        self.type = HLSPackedType(type_name, precision, shape[-1], n_pack)
         if depth == 0:
             depth = np.prod(shape) // shape[-1]
         self.pragma = ('stream', depth)
@@ -100,5 +229,42 @@ class StreamVariable(TensorVariable):
         return '*'.join([str(k) for k in self.dim_names])
 
     @classmethod
-    def from_variable(cls, tensor_var, n_pack=1, depth=0, **kwargs):
-        return cls(tensor_var.shape, tensor_var.dim_names, var_name=tensor_var.name, type_name=tensor_var.type.name, precision=tensor_var.type.precision, n_pack=n_pack, depth=depth, **kwargs)
+    def from_variable(cls, tensor_var, precision_converter,  n_pack=1, depth=0):
+        return cls(
+            tensor_var.shape,
+            tensor_var.dim_names,
+            var_name=tensor_var.name,
+            type_name=tensor_var.type.name,
+            precision=precision_converter.convert(tensor_var.type.precision),
+            n_pack=n_pack,
+            depth=depth
+        )
+
+class StaticWeightVariable(WeightVariable):
+    def __init__(self, weight_class, var_name, type_name, precision, data, index_precision=None):
+        super(StaticWeightVariable, self).__init__(var_name, type_name, precision, data)
+        self.weight_class = weight_class
+        if self.weight_class == 'WeightVariable':
+            self.type = HLSType(type_name, precision)
+        elif self.weight_class == 'ExponentWeightVariable':
+            self.type = HLSExponentType(type_name, precision)
+        elif self.weight_class == 'CompressedWeightVariable':
+            self.type = HLSCompressedType(type_name, precision, index_precision)
+        else:
+            raise Exception('Cannot create StaticWeightVariable, unknown weight class: {}'.format(self.weight_class))
+
+    def definition_cpp(self):
+        return '{type} {name}[{size}]'.format(type=self.type.name, name=self.cppname, size=self.data_length)
+    
+    @classmethod
+    def from_variable(cls, weight_var, precision_converter, index_precision=None):
+        return cls(
+            weight_var.__class__.__name__,
+            var_name=weight_var.name,
+            type_name=weight_var.type.name,
+            precision=precision_converter.convert(weight_var.type.precision),
+            data=weight_var.data,
+            index_precision=index_precision
+        )
+
+#endregion

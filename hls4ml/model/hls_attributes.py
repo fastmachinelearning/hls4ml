@@ -1,6 +1,6 @@
 from collections.abc import MutableMapping
 
-from hls4ml.model.hls_types import HLSType, TensorVariable, WeightVariable
+from hls4ml.model.hls_types import NamedType, TensorVariable, WeightVariable
 
 class Attribute(object):
     def __init__(self, name, value_type=int, default=None, configurable=False):
@@ -19,7 +19,7 @@ class TypeAttribute(Attribute):
     def __init__(self, name, default=None, configurable=True):
         if not name.endswith('_t'):
             name += '_t'
-        super(TypeAttribute, self).__init__(name, value_type=HLSType, default=default, configurable=configurable)
+        super(TypeAttribute, self).__init__(name, value_type=NamedType, default=default, configurable=configurable)
 
 class ChoiceAttribute(Attribute):
     def __init__(self, name, choices, default=None, configurable=True):

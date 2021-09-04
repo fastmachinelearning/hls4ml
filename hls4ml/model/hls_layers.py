@@ -1,7 +1,7 @@
 import numpy as np
 import six
 
-from hls4ml.model.hls_types import HLSType
+from hls4ml.model.hls_types import NamedType
 from hls4ml.model.hls_types import TensorVariable, WeightVariable, CompressedWeightVariable, ExponentWeightVariable, InplaceVariable
 from hls4ml.model.hls_types import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType
 from hls4ml.model.hls_types import find_minimum_width
@@ -55,7 +55,7 @@ class Layer(object):
         self._config_template = self.model.config.backend.get_config_template(self.__class__)
         self.weights = AttributeMapping(self.attributes, WeightVariable)
         self.variables = AttributeMapping(self.attributes, TensorVariable)
-        self.types = AttributeMapping(self.attributes, HLSType)
+        self.types = AttributeMapping(self.attributes, NamedType)
 
         # We set 'accum' precision to match input tensor's precision if 'accum' was not explicitly set
         def_type_obj, _ = self.model.config.get_precision(self, 'default')
@@ -70,7 +70,7 @@ class Layer(object):
         if acc_type_obj == def_type_obj: # 'accum' precision not defined in config
             acc_type_obj = inp_type_obj # use input tensor's precision for 'accum'
 
-        accum_t = HLSType(acc_type_name, acc_type_obj) 
+        accum_t = NamedType(acc_type_name, acc_type_obj) 
         self.set_attr('accum_t', accum_t)
 
         layer_config = self.model.config.get_layer_config(self)
@@ -79,7 +79,7 @@ class Layer(object):
                 print('WARNING: Config parameter "{}" overwrites an existing attribute in layer "{}" ({})'.format(config_key, self.name, self.class_name))
             if config_key.endswith('_t') and isinstance(config_value, str): #TODO maybe move this to __setitem__ of AttributeDict?
                 precision = self.model.config.backend.convert_precision_string(config_value)
-                config_value = HLSType(self.name + config_key, precision)
+                config_value = NamedType(self.name + config_key, precision)
             self.attributes[config_key] = config_value
 
         self.initialize()
@@ -1077,7 +1077,7 @@ class Activation(Layer):
         self.set_attr('n_in', self.get_input_variable().size())
 
         if 'table_t' not in self.attributes:
-            self.set_attr('table_t', HLSType(name=self.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
+            self.set_attr('table_t', NamedType(name=self.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
         #if 'table_size' not in self.attributes:
         #    self.set_attr('table_size', 1024)
 

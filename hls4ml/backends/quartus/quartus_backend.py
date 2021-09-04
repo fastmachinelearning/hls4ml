@@ -9,7 +9,7 @@ from tabulate import tabulate
 from ast import literal_eval
 from contextlib import contextmanager
 
-from hls4ml.model.hls_types import HLSType, IntegerPrecisionType, FixedPrecisionType
+from hls4ml.model.hls_types import NamedType, IntegerPrecisionType, FixedPrecisionType
 from hls4ml.model.hls_layers import Layer, Dense, BatchNormalization, Activation, ParametrizedActivation, PReLU, Softmax
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.flow import register_flow
@@ -391,7 +391,7 @@ class QuartusBackend(FPGABackend):
             if layer.model.config.get_compression(layer):
                 index_t = layer.get_weights('weight').type.index_precision
 
-        layer.set_attr('index_t', HLSType('layer{}_index'.format(layer.index), index_t))
+        layer.set_attr('index_t', NamedType('layer{}_index'.format(layer.index), index_t))
 
     @layer_optimizer(Softmax)
     def init_softmax(self, layer):

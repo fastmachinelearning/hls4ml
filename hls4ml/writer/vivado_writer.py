@@ -15,27 +15,6 @@ config_filename = 'hls4ml_config.yml'
 
 class VivadoWriter(Writer):
 
-    def type_definition_cpp(self, model, atype):
-        type_class = atype.__class__.__name__
-        if type_class == 'HLSType':
-            return 'typedef {precision} {name};\n'.format(name=atype.name, precision=atype.precision.definition_cpp())
-        elif type_class == 'CompressedType':
-            cpp_fmt = ('typedef struct {name} {{ '
-               '{index} row_index;'
-               '{index} col_index;'
-               '{precision} weight; }} {name};\n')
-            return cpp_fmt.format(name=atype.name, index=atype.index_precision, precision=atype.precision.definition_cpp())
-        elif type_class == 'PackedType':
-            n_elem_expr = '/' if atype.unpack else '*'
-            return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=atype.name, precision=atype.precision.definition_cpp(), n_elem=str(atype.n_elem) + n_elem_expr + str(atype.n_pack))
-        elif type_class == 'ExponentType':
-            cpp_fmt = ('typedef struct {name} {{ '
-                       '{sign} sign; '
-                       '{precision} weight; }} {name};\n')
-            return cpp_fmt.format(name=atype.name, precision=atype.precision.definition_cpp(), sign=str(XnorPrecisionType()))
-        else:
-            raise Exception('Unknown data type class "{}"'.format(type_class))
-
     def variable_definition_cpp(self, model, var, name_suffix='', as_reference=False):
         var_class = var.__class__.__name__
         if var_class == 'ArrayVariable':
@@ -171,9 +150,9 @@ class VivadoWriter(Writer):
                 newline = line
                 for layer in model.get_layers():
                     for w in layer.get_weights():
-                        if w.__class__.__name__ == 'CompressedWeightVariable':
+                        if w.weight_class == 'CompressedWeightVariable':
                             newline += indent + '    nnet::load_compressed_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.nonzeros, w.name, w.name)
-                        elif w.__class__.__name__ == 'ExponentWeightVariable':
+                        elif w.weight_class == 'ExponentWeightVariable':
                             newline += indent + '    nnet::load_exponent_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.data_length, w.name, w.name)
                         else:
                             newline += indent + '    nnet::load_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.data_length, w.name, w.name)
@@ -306,7 +285,7 @@ class VivadoWriter(Writer):
                     layer_precision = layer.get_layer_precision()
                     all_precision.update(layer_precision)
                 for used_type in all_precision.values():
-                    newline += self.type_definition_cpp(model, used_type)
+                    newline += used_type.definition_cpp()
 
             else:
                 newline = line

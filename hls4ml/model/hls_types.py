@@ -158,37 +158,24 @@ def find_minimum_width(data, signed=True):
 
     return iwidth
 
-class HLSType(object):
+class NamedType(object):
     def __init__(self, name, precision, **kwargs):
         self.name = name.format(**kwargs)
         self.precision = precision
 
     def definition_cpp(self):
-        return 'typedef {precision} {name};\n'.format(name=self.name, precision=self.precision)
+        raise NotImplementedError
 
-class CompressedType(HLSType):
+class CompressedType(NamedType):
     def __init__(self, name, precision, index_precision, **kwargs):
         super(CompressedType, self).__init__('compressed_type{index}', precision, **kwargs)
         self.index_precision = index_precision
 
-    def definition_cpp(self):
-        cpp_fmt = ('typedef struct {name} {{ '
-               '{index} row_index; '
-               '{index} col_index; '
-               '{precision} weight; }} {name};\n')
-        return cpp_fmt.format(name=self.name, index=self.index_precision, precision=self.precision)
-
-class ExponentType(HLSType):
+class ExponentType(NamedType):
     def __init__(self, name, precision, **kwargs):
         super(ExponentType, self).__init__('exponent_type{index}', precision, **kwargs)
 
-    def definition_cpp(self):
-        cpp_fmt = ('typedef struct {name} {{ '
-                   '{sign} sign; '
-                   '{precision} weight; }} {name};\n')
-        return cpp_fmt.format(name=self.name, precision=self.precision, sign=str(XnorPrecisionType()))
-
-class PackedType(HLSType):
+class PackedType(NamedType):
     def __init__(self, name, precision, n_elem, n_pack, **kwargs):
         super(PackedType, self).__init__(name, precision, **kwargs)
         self.n_elem = n_elem
@@ -199,10 +186,6 @@ class PackedType(HLSType):
             self.n_pack = n_pack
             self.unpack = False
 
-    def definition_cpp(self):
-        n_elem_expr = '/' if self.unpack else '*'
-        return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(name=self.name, precision=self.precision, n_elem=str(self.n_elem) + n_elem_expr + str(self.n_pack))
-
 class Variable(object):
     def __init__(self, var_name, atype, **kwargs):
         self.name = var_name.format(**kwargs)
@@ -211,7 +194,7 @@ class Variable(object):
 
 class TensorVariable(Variable):
     def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, **kwargs):
-        super(TensorVariable, self).__init__(var_name, HLSType(type_name, precision, **kwargs), **kwargs)
+        super(TensorVariable, self).__init__(var_name, NamedType(type_name, precision, **kwargs), **kwargs)
         self.shape = shape
         self.dim_names = dim_names
 
@@ -235,15 +218,12 @@ class InplaceVariable(Variable):
     def get_shape(self):
         return zip(self.dim_names, self.shape)
 
-    def definition_cpp(self):
-        return None
-
     def size_cpp(self):
         return '*'.join([str(k) for k in self.dim_names])
 
 class WeightVariable(Variable):
     def __init__(self, var_name, type_name, precision, data, quantizer=None, **kwargs):
-        super(WeightVariable, self).__init__(var_name, HLSType(type_name, precision, **kwargs), **kwargs)
+        super(WeightVariable, self).__init__(var_name, NamedType(type_name, precision, **kwargs), **kwargs)
         self.data = data
         self.nzeros = -1
         self.shape = list(self.data.shape)
@@ -292,9 +272,6 @@ class WeightVariable(Variable):
                 self.precision_fmt = '%.{}f'.format(decimal_spaces)
             else:
                 self.precision_fmt = '%f'
-
-    def definition_cpp(self):
-        return '{type} {name}[{size}]'.format(type=self.type.name, name=self.cppname, size=self.data_length)
 
 class CompressedWeightVariable(WeightVariable):
     def __init__(self, var_name, type_name, precision, data, reuse_factor, quantizer=None, **kwargs):
