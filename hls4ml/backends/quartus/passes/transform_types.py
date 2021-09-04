@@ -4,7 +4,7 @@ from hls4ml.model.hls_types import CompressedWeightVariable, Variable, TensorVar
 from hls4ml.backends.fpga.fpga_types import ACIntegerPrecisionType, ACTypeConverter, ArrayVariable, HLSTypeConverter, StaticWeightVariable, StreamVariable, StructMemberVariable
 
 
-class TransformVariables(GlobalOptimizerPass):
+class TransformTypes(GlobalOptimizerPass):
     def __init__(self):
         self.precision_converter = ACTypeConverter()
         self.type_converter = HLSTypeConverter()

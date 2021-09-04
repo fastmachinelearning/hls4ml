@@ -236,8 +236,7 @@ class QuartusBackend(FPGABackend):
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
         quartus_types = [
-            'quartus:transform_variables',
-            'quartus:transform_a_c_types',
+            'quartus:transform_types',
         ]
         quartus_types_flow = register_flow('specific_types', quartus_types, requires=[init_flow], backend=self.name)
 
