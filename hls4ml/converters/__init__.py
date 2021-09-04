@@ -307,8 +307,8 @@ def check_forward_dict(model, forward_dictionary):
         except AttributeError:
             raise AttributeError(f'Model is missing module "{key}" that is present in the provided forward dictionary; Check compatability')
 
-def convert_from_pyg_model(model, n_node, node_dim, n_edge, edge_dim,
-                           forward_dictionary=None, activate_final=None,
+def convert_from_pyg_model(model, forward_dictionary, n_node, node_dim,
+                           n_edge, edge_dim, activate_final=None,
                            output_dir='my-hls-test', project_name='myproject',
                            fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
     check_forward_dict(model, forward_dictionary)
@@ -397,11 +397,9 @@ def convert_from_pyg_model(model, n_node, node_dim, n_edge, edge_dim,
     >>> forward_dictionary['R1'] = 'EdgeBlock'
     >>> forward_dictionary['O'] = 'NodeBlock'
     >>> forward_dictionary['R2'] = 'EdgeBlock'
-    >>> n_node, node_dim = 112, 3
-    >>> n_edge, edge_dim = 148, 4
-    >>> hls_model = hls4ml.converters.convert_from_pyg_model(model, n_node, node_dim,
-                                                             n_edge, edge_dim, 
-                                                             forward_dictionary, 
+    >>> graph_dimensions = {"n_node": 112, "node_dim": 3, "n_edge": 148, "edge_dim": 4}
+    >>> hls_model = hls4ml.converters.convert_from_pyg_model(model, forward_dictionary,
+                                                             **graph_dimensions,
                                                              activate_final='sigmoid'
                                                              hls_config=config)
 
