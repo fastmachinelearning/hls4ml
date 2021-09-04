@@ -191,6 +191,9 @@ class Variable(object):
         self.name = var_name.format(**kwargs)
         self.type = atype
         self.cppname = re.sub(r'\W|^(?=\d)','_', self.name)
+    
+    def definition_cpp(self, name_suffix='', as_reference=False):
+        raise NotImplementedError
 
 class TensorVariable(Variable):
     def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, **kwargs):
@@ -220,6 +223,9 @@ class InplaceVariable(Variable):
 
     def size_cpp(self):
         return '*'.join([str(k) for k in self.dim_names])
+
+    def definition_cpp(self, name_suffix='', as_reference=False):
+        return None
 
 class WeightVariable(Variable):
     def __init__(self, var_name, type_name, precision, data, quantizer=None, **kwargs):

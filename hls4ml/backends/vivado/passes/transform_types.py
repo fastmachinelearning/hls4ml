@@ -1,7 +1,7 @@
 
 from hls4ml.model.optimizer import GlobalOptimizerPass
-from hls4ml.model.hls_types import CompressedWeightVariable, Variable, TensorVariable
-from hls4ml.backends.fpga.fpga_types import APIntegerPrecisionType, APTypeConverter, ArrayVariable, HLSTypeConverter, StaticWeightVariable, StreamVariable
+from hls4ml.model.hls_types import CompressedWeightVariable
+from hls4ml.backends.fpga.fpga_types import APIntegerPrecisionType, APTypeConverter, VivadoArrayVariable, HLSTypeConverter, StaticWeightVariable, StreamVariable
 
 
 class TransformTypes(GlobalOptimizerPass):
@@ -16,12 +16,12 @@ class TransformTypes(GlobalOptimizerPass):
             if io_type == 'io_stream':
                 new_var = StreamVariable.from_variable(var)
             elif io_type == 'io_serial':
-                new_var = ArrayVariable.from_variable(var, self.precision_converter, pragma='stream')
+                new_var = VivadoArrayVariable.from_variable(var, self.precision_converter, pragma='stream')
             elif io_type == 'io_parallel':
                 if node.name in node.model.inputs:
-                    new_var = ArrayVariable.from_variable(var, self.precision_converter, pragma='reshape')
+                    new_var = VivadoArrayVariable.from_variable(var, self.precision_converter, pragma='reshape')
                 else:
-                    new_var = ArrayVariable.from_variable(var, self.precision_converter, pragma='partition')
+                    new_var = VivadoArrayVariable.from_variable(var, self.precision_converter, pragma='partition')
             else:
                 raise Exception('Unknown IOType {} in {} ({})'.format(io_type, node.name, node.__class__.__name__))
 

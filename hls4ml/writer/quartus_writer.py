@@ -9,27 +9,10 @@ import glob
 from collections import OrderedDict
 
 from hls4ml.writer.writers import Writer
-from hls4ml.model.hls_types import XnorPrecisionType
 
 config_filename = 'hls4ml_config.yml'
 
 class QuartusWriter(Writer):
-
-    def variable_definition_cpp(self, model, var, name_suffix='', as_reference=False):
-        var_class = var.__class__.__name__
-
-        if var_class == 'ArrayVariable':
-            return '{type} {name}{suffix}[{shape}] {pragma}'.format(type=var.type.name, name=var.cppname, suffix=name_suffix, shape=var.size_cpp(), pragma=var.pragma)
-        elif var_class == 'StructMemberVariable':
-            return '{type} {name}{suffix}[{shape}]'.format(type=var.type.name, name=var.member_name, suffix=name_suffix, shape=var.size_cpp())
-        elif var_class == 'StreamVariable':
-            raise Exception('Streaming is not yet supported by Quartus backend')
-        elif var_class == 'WeightVariable':
-            return '{type} {name}{suffix}[{size}]'.format(type=var.type.name, name=var.cppname, suffix=name_suffix, size=var.data_length)
-        elif var_class == 'InplaceVariable':
-            return None
-        else:
-            raise Exception('Unknown variable class "{}"'.format(var_class))
 
     def next_pow2(self, x):
         return 1<<(x-1).bit_length()
@@ -133,7 +116,7 @@ class QuartusWriter(Writer):
                     vars = layer.get_variables()
                     for var in vars:
                         if var not in model_inputs and var not in model_outputs:
-                            def_cpp = self.variable_definition_cpp(model, var)
+                            def_cpp = var.definition_cpp()
                             if def_cpp is not None:
                                 newline += '    ' + def_cpp + ';\n'
                     if layer.get_attr('activation') == 'tanh': #TODO move this to an optimizer
@@ -188,11 +171,11 @@ class QuartusWriter(Writer):
             elif '//hls-fpga-machine-learning insert inputs' in line:
                 for inp in model_inputs:
                     newline = ''
-                    newline += indent + self.variable_definition_cpp(model, inp) + ';\n'
+                    newline += indent + inp.definition_cpp() + ';\n'
             elif '//hls-fpga-machine-learning insert outputs' in line:
                 for out in model_outputs:
                     newline = ''
-                    newline += indent + self.variable_definition_cpp(model, out) + ';\n'
+                    newline += indent + out.definition_cpp() + ';\n'
             else:
                 newline = line
             fout.write(newline)

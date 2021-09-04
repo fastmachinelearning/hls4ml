@@ -1,7 +1,7 @@
 
 from hls4ml.model.optimizer import GlobalOptimizerPass
-from hls4ml.model.hls_types import CompressedWeightVariable, Variable, TensorVariable
-from hls4ml.backends.fpga.fpga_types import ACIntegerPrecisionType, ACTypeConverter, ArrayVariable, HLSTypeConverter, StaticWeightVariable, StreamVariable, StructMemberVariable
+from hls4ml.model.hls_types import CompressedWeightVariable
+from hls4ml.backends.fpga.fpga_types import ACIntegerPrecisionType, ACTypeConverter, QuartusArrayVariable, HLSTypeConverter, StaticWeightVariable, StreamVariable, StructMemberVariable
 
 
 class TransformTypes(GlobalOptimizerPass):
@@ -27,7 +27,7 @@ class TransformTypes(GlobalOptimizerPass):
                     else:
                         new_var = StructMemberVariable.from_variable(var, self.precision_converter, pragma='hls_register', struct_name='outputs')
                 else:
-                    new_var = ArrayVariable.from_variable(var, self.precision_converter, pragma='hls_register')
+                    new_var = QuartusArrayVariable.from_variable(var, self.precision_converter, pragma='hls_register')
             else:
                 raise Exception('Unknown IOType {} in {} ({})'.format(io_type, node.name, node.class_name))
 

@@ -193,6 +193,15 @@ class ArrayVariable(TensorVariable):
             pragma=pragma
         )
 
+class VivadoArrayVariable(ArrayVariable):
+    def definition_cpp(self, name_suffix='', as_reference=False):
+        return '{type} {name}{suffix}[{shape}]'.format(type=self.type.name, name=self.cppname, suffix=name_suffix, shape=self.size_cpp())
+
+class QuartusArrayVariable(ArrayVariable):
+    def definition_cpp(self, name_suffix='', as_reference=False):
+        return '{type} {name}{suffix}[{shape}] {pragma}'.format(type=self.type.name, name=self.cppname, suffix=name_suffix, shape=self.size_cpp(), pragma=self.pragma)
+
+
 class StructMemberVariable(ArrayVariable):
     """Used by Quartus backend for input/output arrays that are members of the inputs/outpus struct"""
     def __init__(self, shape, dim_names, var_name, type_name, precision, pragma='hls_register', struct_name=None):
@@ -201,6 +210,9 @@ class StructMemberVariable(ArrayVariable):
         self.struct_name = str(struct_name)
         self.member_name = self.name
         self.name = self.struct_name + '.' + self.member_name
+
+    def definition_cpp(self, name_suffix='', as_reference=False):
+        return '{type} {name}{suffix}[{shape}]'.format(type=self.type.name, name=self.member_name, suffix=name_suffix, shape=self.size_cpp())
 
     @classmethod
     def from_variable(cls, tensor_var, precision_converter, pragma='partition', struct_name=None):
@@ -228,6 +240,12 @@ class StreamVariable(TensorVariable):
     def size_cpp(self):
         return '*'.join([str(k) for k in self.dim_names])
 
+    def definition_cpp(self, name_suffix='', as_reference=False):
+        if as_reference: # Function parameter
+            return 'hls::stream<{type}> &{name}{suffix}'.format(type=self.type.name, name=self.cppname, suffix=name_suffix)
+        else: # Declaration
+            return 'hls::stream<{type}> {name}{suffix}("{name}")'.format(type=self.type.name, name=self.cppname, suffix=name_suffix)
+
     @classmethod
     def from_variable(cls, tensor_var, precision_converter,  n_pack=1, depth=0):
         return cls(
@@ -253,7 +271,7 @@ class StaticWeightVariable(WeightVariable):
         else:
             raise Exception('Cannot create StaticWeightVariable, unknown weight class: {}'.format(self.weight_class))
 
-    def definition_cpp(self):
+    def definition_cpp(self, name_suffix='', as_reference=False):
         return '{type} {name}[{size}]'.format(type=self.type.name, name=self.cppname, size=self.data_length)
     
     @classmethod

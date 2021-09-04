@@ -9,27 +9,10 @@ import glob
 from collections import OrderedDict
 
 from hls4ml.writer.writers import Writer
-from hls4ml.model.hls_types import XnorPrecisionType
 
 config_filename = 'hls4ml_config.yml'
 
 class VivadoWriter(Writer):
-
-    def variable_definition_cpp(self, model, var, name_suffix='', as_reference=False):
-        var_class = var.__class__.__name__
-        if var_class == 'ArrayVariable':
-            return '{type} {name}{suffix}[{shape}]'.format(type=var.type.name, name=var.cppname, suffix=name_suffix, shape=var.size_cpp())
-        elif var_class == 'StreamVariable':
-            if as_reference: # Function parameter
-                return 'hls::stream<{type}> &{name}{suffix}'.format(type=var.type.name, name=var.cppname, suffix=name_suffix)
-            else: # Declaration
-                return 'hls::stream<{type}> {name}{suffix}("{name}")'.format(type=var.type.name, name=var.cppname, suffix=name_suffix)
-        elif var_class == 'WeightVariable':
-            return '{type} {name}{suffix}[{size}]'.format(type=var.type.name, name=var.cppname, suffix=name_suffix, size=var.data_length)
-        elif var_class == 'InplaceVariable':
-            return None
-        else:
-            raise Exception('Unknown variable class "{}"'.format(var_class))
 
     def print_array_to_cpp(self, var, odir, write_txt_file=True):
         #######################################
@@ -135,8 +118,8 @@ class VivadoWriter(Writer):
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert header' in line:
-                inputs_str = ', '.join([self.variable_definition_cpp(model, i, as_reference=True) for i in model_inputs])
-                outputs_str = ', '.join([self.variable_definition_cpp(model, o, as_reference=True) for o in model_outputs])
+                inputs_str = ', '.join([i.definition_cpp(as_reference=True) for i in model_inputs])
+                outputs_str = ', '.join([o.definition_cpp(as_reference=True) for o in model_outputs])
                 insize_str = ', '.join(['unsigned short &const_size_in_{}'.format(i) for i in range(1, len(model_inputs) + 1)])
                 outsize_str = ', '.join(['unsigned short &const_size_out_{}'.format(i) for i in range(1, len(model_outputs) + 1)])
 
@@ -192,7 +175,7 @@ class VivadoWriter(Writer):
                     vars = layer.get_variables()
                     for var in vars:
                         if var not in inputs and var not in outputs:
-                            def_cpp = self.variable_definition_cpp(model, var)
+                            def_cpp = var.definition_cpp()
                             if def_cpp is not None:
                                 newline += '    ' + def_cpp + ';\n'
                                 if var.pragma:
@@ -248,8 +231,8 @@ class VivadoWriter(Writer):
             elif 'void myproject(' in line:
                 newline = 'void {}(\n'.format(model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert header' in line:
-                inputs_str = ', '.join([self.variable_definition_cpp(model, i, as_reference=True) for i in model_inputs])
-                outputs_str = ', '.join([self.variable_definition_cpp(model, o, as_reference=True) for o in model_outputs])
+                inputs_str = ', '.join([i.definition_cpp(as_reference=True) for i in model_inputs])
+                outputs_str = ', '.join([o.definition_cpp(as_reference=True) for o in model_outputs])
                 insize_str = ', '.join(['unsigned short &const_size_in_{}'.format(i) for i in range(1, len(model_inputs) + 1)])
                 outsize_str = ', '.join(['unsigned short &const_size_out_{}'.format(o) for o in range(1, len(model_outputs) + 1)])
 
@@ -396,18 +379,18 @@ class VivadoWriter(Writer):
                 newline = line
                 offset = 0
                 for inp in model.get_input_variables():
-                    newline += '      ' + self.variable_definition_cpp(model, inp) + ';\n'
+                    newline += '      ' + inp.definition_cpp() + ';\n'
                     newline += '      nnet::copy_data<float, {}, {}, {}>(in, {});\n'.format(inp.type.name, offset, inp.size_cpp(), inp.cppname)
                     offset += inp.size()
                 for out in model.get_output_variables():
-                    newline += '      ' + self.variable_definition_cpp(model, out) + ';\n'
+                    newline += '      ' + out.definition_cpp() + ';\n'
             elif '//hls-fpga-machine-learning insert zero' in line:
                 newline = line
                 for inp in model.get_input_variables():
-                    newline += '    ' + self.variable_definition_cpp(model, inp) + ';\n'
+                    newline += '    ' + inp.definition_cpp() + ';\n'
                     newline += '    nnet::fill_zero<{}, {}>({});\n'.format(inp.type.name, inp.size_cpp(), inp.cppname)
                 for out in model.get_output_variables():
-                    newline += '    ' + self.variable_definition_cpp(model, out) + ';\n'
+                    newline += '    ' + out.definition_cpp() + ';\n'
             elif '//hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
 
@@ -477,12 +460,12 @@ class VivadoWriter(Writer):
                 dtype = line.split('#', 1)[1].strip()
                 newline = ''
                 for i in model_inputs:
-                    newline += indent + '{var};\n'.format(var=self.variable_definition_cpp(model, i, name_suffix='_ap'))
+                    newline += indent + '{var};\n'.format(var=i.definition_cpp(name_suffix='_ap'))
                     newline += indent + 'nnet::convert_data<{}, {}, {}>({}, {}_ap);\n'.format(dtype, i.type.name, i.size_cpp(), i.cppname, i.cppname)
                 newline += '\n'
                 
                 for o in model_outputs:
-                    newline += indent + '{var};\n'.format(var=self.variable_definition_cpp(model, o, name_suffix='_ap'))
+                    newline += indent + '{var};\n'.format(var=o.definition_cpp(name_suffix='_ap'))
                 
                 newline += '\n'
 
