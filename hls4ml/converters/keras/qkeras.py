@@ -72,7 +72,7 @@ def get_type(quantizer_config):
         else:
             return IntegerPrecisionType(width=width, signed=True)
     else:
-        return FixedPrecisionType(width=width+1, integer=integer+1, signed=True)
+        return FixedPrecisionType(width=width, integer=integer+1, signed=True)
 
 def get_quantizer_from_config(keras_layer, quantizer_var):
     quantizer_config = keras_layer['config']['{}_quantizer'.format(quantizer_var)]

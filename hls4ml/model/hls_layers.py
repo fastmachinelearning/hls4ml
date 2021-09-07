@@ -57,20 +57,7 @@ class Layer(object):
         self.variables = AttributeMapping(self.attributes, TensorVariable)
         self.types = AttributeMapping(self.attributes, NamedType)
 
-        # We set 'accum' precision to match input tensor's precision if 'accum' was not explicitly set
-        def_type_obj, _ = self.model.config.get_precision(self, 'default')
-        acc_type_obj, acc_type_name = self.model.config.get_precision(self, 'accum')
-
-        inp = self.get_input_variable()
-        if inp is not None:
-            inp_type_obj = inp.type.precision
-        else:
-            inp_type_obj = def_type_obj
-
-        if acc_type_obj == def_type_obj: # 'accum' precision not defined in config
-            acc_type_obj = inp_type_obj # use input tensor's precision for 'accum'
-
-        accum_t = NamedType(acc_type_name, acc_type_obj) 
+        accum_t = NamedType(*reversed(self.model.config.get_precision(self, 'accum')))
         self.set_attr('accum_t', accum_t)
 
         layer_config = self.model.config.get_layer_config(self)
@@ -226,6 +213,12 @@ class Layer(object):
 
         self.set_attr(name, var)
 
+        # Register weights as BRAM if exceeds threshold
+        bramport_size = self.model.config.get_bram_size(self)
+        if(np.prod(data.shape) > bramport_size):
+            var_out = var_name.replace("{index}",str(self.index))
+            self.model.register_bram_variable(var_out,var)
+
     def _default_function_params(self):
         params = {}
         params.update(self.attributes)
@@ -322,8 +315,12 @@ class Dense(Layer):
     ]
 
     def initialize(self):
-        shape = [self.attributes['n_out']]
-        dims = ['N_LAYER_{}'.format(self.index)]
+        shape = self.get_input_variable().shape[:]
+        shape[-1] = self.attributes['n_out']
+        if len(shape) > 1:
+            dims = ['N_LAYER_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+        else:
+            dims = ['N_LAYER_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=self.model.config.get_compression(self))
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
@@ -644,7 +641,7 @@ class Conv2DBatchnorm(Conv2D):
     def initialize(self):
         super(Conv2DBatchnorm, self).initialize()
         folded_weights, folded_bias = self._get_folded_weights()
-        if self.model.config.is_resource_strategy(self) and self.model.config.backend.name == 'Vivado':
+        if self.model.config.is_resource_strategy(self) and self.model.config.backend.name in ['Vivado', 'VivadoAccelerator']:
             self.weights['weight'].data_unquantized = np.transpose(folded_weights, axes=[3, 0, 1, 2])
             self.weights['weight'].data = self.get_attr('weight_quantizer')(self.weights['weight'].data_unquantized)
 
@@ -843,6 +840,7 @@ class Pooling1D(Layer):
             dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0])
+        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -895,6 +893,7 @@ class Pooling2D(Layer):
             dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0])
+        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -988,13 +987,14 @@ class ZeroPadding1D(Layer):
     ]
 
     def initialize(self):
+        inp = self.get_input_variable()
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_width'], self.attributes['n_chan']]
             dims = ['OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
         else:
             shape = [self.attributes['n_chan'], self.attributes['out_width']]
             dims = ['N_CHAN_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape, dims, precision=inp.type.precision)
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1029,13 +1029,14 @@ class ZeroPadding2D(Layer):
     ]
 
     def initialize(self):
+        inp = self.get_input_variable()
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_chan']]
             dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
         else:
             shape = [self.attributes['n_chan'], self.attributes['out_height'], self.attributes['out_width']]
             dims = ['N_CHAN_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape, dims, precision=inp.type.precision)
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1073,13 +1074,6 @@ class Activation(Layer):
         shape = inp.shape
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
-
-        self.set_attr('n_in', self.get_input_variable().size())
-
-        if 'table_t' not in self.attributes:
-            self.set_attr('table_t', NamedType(name=self.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
-        #if 'table_size' not in self.attributes:
-        #    self.set_attr('table_size', 1024)
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1133,6 +1127,10 @@ class Softmax(Activation):
     def initialize(self):
         super(Softmax, self).initialize()
 
+class TernaryTanh(Activation):
+    def initialize(self):
+        super(TernaryTanh, self).initialize()
+
 class BatchNormalization(Layer):
     _expected_attributes = [
         Attribute('n_in'),
@@ -1181,9 +1179,12 @@ class Merge(Layer):
         assert(len(self.inputs) == 2)
         inp1 = self.get_input_variable(self.inputs[0])
         inp2 = self.get_input_variable(self.inputs[1])
-        shape = inp1.shape
-        assert(inp1.shape == inp2.shape)
-        dims = inp1.dim_names
+        if np.prod(inp2.shape) > np.prod(inp1.shape):
+            shape = inp2.shape
+            dims = inp2.dim_names
+        else:
+            shape = inp1.shape
+            dims = inp1.dim_names
         self.add_output_variable(shape, dims)
 
     def function_cpp(self):
@@ -1201,7 +1202,12 @@ class Merge(Layer):
 
     def config_cpp(self):
         params = self._default_config_params()
-        params['n_elem'] = self.get_input_variable(self.inputs[0]).size_cpp()
+        inp1 = self.get_input_variable(self.inputs[0])
+        inp2 = self.get_input_variable(self.inputs[1])
+        if np.prod(inp2.shape) > np.prod(inp1.shape):
+            params['n_elem'] = inp2.size_cpp()
+        else:
+            params['n_elem'] = inp1.size_cpp()
 
         return self._config_template.format(**params)
 
@@ -1231,6 +1237,7 @@ class Concatenate(Merge):
         inp1 = self.get_input_variable(self.inputs[0])
         inp2 = self.get_input_variable(self.inputs[1])
         axis = self.attributes['axis']
+        if axis > 0: axis -= 1
         shape = inp1.shape[:]
         shape[axis] += inp2.shape[axis]
         rank = len(shape)
@@ -1269,9 +1276,10 @@ class BiasAdd(Merge): # TensorFlow's operator that gets merged into Dense/Conv
 
 class Resize(Layer):
     def initialize(self):
+        inp = self.get_input_variable()
         shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
         dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape, dims, precision=inp.type.precision)
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1289,21 +1297,34 @@ class Transpose(Layer):
         inp = self.get_input_variable(self.inputs[0])
         perm = self.get_attr('perm')
         self.set_attr('dim', '{}d'.format(len(inp.shape)))
-        if len(perm) == 4 and perm[0] == 0:
-            perm = [i - 1 for i in perm[1:]]
-        shape = [inp.shape[i] for i in perm]
+
+        if len(perm) > 3:
+            raise Exception('ERROR: Transpose of tensors with rank > 3 is not yet supported.')
+        
+        #ONNX double transpose specific, sometimes ONNX injects
+        #useless double transpose layers when converting 
+        #from other frameworks
+        if len(perm) == 1:
+            shape = inp.shape #dummy shape
+            dims = ['DUMMY'] #dummy dims
+            self.set_attr('perm', [0])
+        else:
+            shape = [inp.shape[i] for i in perm]
+
         self.set_attr('perm_str', ','.join([str(i) for i in perm]))
+        
         if len(shape) == 2:
+            self.set_attr('perm_str', ','.join(['0'] + [str(i+1) for i in perm]))
             dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
             self.set_attr('depth', 1)
-            self.set_attr('height', shape[0])
-            self.set_attr('width', shape[1])
-        else:
+            self.set_attr('height', inp.shape[0])
+            self.set_attr('width', inp.shape[1])
+        elif len(shape) > 2:
             dims = ['OUT_DEPTH_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
-            self.set_attr('depth', shape[0])
-            self.set_attr('height', shape[1])
-            self.set_attr('width', shape[2])
-        self.add_output_variable(shape, dims)
+            self.set_attr('depth', inp.shape[0])
+            self.set_attr('height', inp.shape[1])
+            self.set_attr('width', inp.shape[2])
+        self.add_output_variable(shape, dims, precision=inp.type.precision)
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1588,6 +1609,7 @@ layer_map = {
     'ELU'                    : ParametrizedActivation,
     'PReLU'                  : PReLU,
     'Softmax'                : Softmax,
+    'TernaryTanh'            : TernaryTanh,
     'Reshape'                : Reshape,
     'Dense'                  : Dense,
     'BinaryDense'            : Dense,

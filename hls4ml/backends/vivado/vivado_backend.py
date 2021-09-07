@@ -6,7 +6,7 @@ from bisect import bisect_left
 from queue import Queue
 from collections.abc import Iterable
 
-from hls4ml.model.hls_types import NamedType, IntegerPrecisionType
+from hls4ml.model.hls_types import FixedPrecisionType, NamedType, IntegerPrecisionType
 from hls4ml.model.hls_layers import Layer, Dense, BatchNormalization, Conv1D, Conv2D, Conv2DBatchnorm, SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Activation, ParametrizedActivation, PReLU, Softmax, Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D, ZeroPadding1D, ZeroPadding2D, Merge, Concatenate, Dot, Resize, Transpose, GarNet, GarNetStack
 from hls4ml.model.hls_attributes import Attribute
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
@@ -58,6 +58,7 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
     static const unsigned strategy = nnet::{strategy};
+    static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
     static const unsigned min_width = {min_width};
     static const ap_uint<filt_width> pixels[min_width];
     typedef {accum_t.name} accum_t;
@@ -99,6 +100,7 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned n_zeros = {nzeros};
     static const bool store_weights_in_bram = false;
     static const unsigned strategy = nnet::{strategy};
+    static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
     static const unsigned min_height = {min_height};
     static const unsigned min_width = {min_width};
     static const ap_uint<filt_height * filt_width> pixels[min_height * min_width];
@@ -137,10 +139,15 @@ pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
     static const unsigned n_out = {n_out};
     static const unsigned n_filt = {n_filt};
     static const unsigned pool_width = {pool_width};
+
+    static const unsigned filt_width = pool_width;
+    static const unsigned n_chan = n_filt;
+
     static const unsigned pad_left = {pad_left};
     static const unsigned pad_right = {pad_right};
     static const unsigned stride_width = {stride_width};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
+    static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
     static const unsigned reuse = {reuse};
     typedef {accum_t.name} accum_t;
 }};\n"""
@@ -153,6 +160,11 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
     static const unsigned stride_width = {stride_width};
     static const unsigned pool_height = {pool_height};
     static const unsigned pool_width = {pool_width};
+
+    static const unsigned filt_height = pool_height;
+    static const unsigned filt_width = pool_width;
+    static const unsigned n_chan = n_filt;
+
     static const unsigned out_height = {out_height};
     static const unsigned out_width = {out_width};
     static const unsigned pad_top = {pad_top};
@@ -160,6 +172,7 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
     static const unsigned pad_left = {pad_left};
     static const unsigned pad_right = {pad_right};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
+    static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
     static const unsigned reuse = {reuse};
     typedef {accum_t.name} accum_t;
 }};\n"""
@@ -224,7 +237,7 @@ concat_config_template = """struct config{index} : nnet::concat_config {{
     static const unsigned n_elem2_1 = {n_elem2_1};
     static const unsigned n_elem2_2 = {n_elem2_2};
 
-    static const unsigned axis = {axis};
+    static const int axis = {axis};
 }};\n"""
 
 resize_config_template = """struct config{index} : nnet::resize_config {{
@@ -239,7 +252,7 @@ transpose_config_template = """struct config{index} : nnet::transpose_config {{
     static const unsigned depth = {depth};
     static const unsigned height = {height};
     static const unsigned width = {width};
-    static const unsigned perm[3] = {{{perm_str}}};
+    static constexpr unsigned perm[3] = {{{perm_str}}};
 }};\n"""
 
 garnet_common_config_template = """
@@ -361,7 +374,7 @@ zeropad1d_function_template = 'nnet::zeropad1d_{data_format}<{input_t}, {output_
 zeropad2d_function_template = 'nnet::zeropad2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
 resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
-transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}, {output});'
+transpose_function_template = 'nnet::transpose_{dim}<{input_t}, {config}>({input}, {output});'
 garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
 garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
 
@@ -493,11 +506,15 @@ class VivadoBackend(FPGABackend):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('reuse_factor', reuse_factor)
 
+        target_cycles = layer.model.config.get_target_cycles(layer)
+        layer.set_attr('target_cycles', target_cycles)
+
     @layer_optimizer(Dense)
     def init_dense(self, layer):
         index_t = IntegerPrecisionType(width=1, signed=False)
         compression = layer.model.config.get_compression(layer)
         if layer.model.config.is_resource_strategy(layer):
+            self.set_target_reuse_factor(layer)
             self.set_closest_reuse_factor(layer)
             if compression:
                 layer.set_attr('strategy', 'compressed')
@@ -508,13 +525,20 @@ class VivadoBackend(FPGABackend):
             layer.set_attr('strategy', 'latency')
         layer.set_attr('index_t', NamedType('layer{}_index'.format(layer.index), index_t))
 
+    #TODO consolidate these functions into a single `init_conv`
     @layer_optimizer(Conv1D)
     def init_conv1d(self, layer):
+        if len(layer.weights['weight'].data.shape) == 2: # This can happen if we assign weights of Dense layer to 1x1 Conv1D
+            layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0,1))
+
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
+            self.set_target_reuse_factor(layer)
             self.set_closest_reuse_factor(layer)
         else:
             layer.set_attr('strategy', 'latency')
+        
+        layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(SeparableConv1D)
     def init_sepconv1d(self, layer):
@@ -523,14 +547,22 @@ class VivadoBackend(FPGABackend):
             self.set_closest_reuse_factor(layer)
         else:
             layer.set_attr('strategy', 'latency')
+        
+        layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(Conv2D)
     def init_conv2d(self, layer):
+        if len(layer.weights['weight'].data.shape) == 2: # This can happen if we assign weights of Dense layer to 1x1 Conv2D
+            layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0,1))
+
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
+            self.set_target_reuse_factor(layer)
             self.set_closest_reuse_factor(layer)
         else:
             layer.set_attr('strategy', 'latency')
+        
+        layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(SeparableConv2D)
     def init_sepconv2d(self, layer):
@@ -539,6 +571,8 @@ class VivadoBackend(FPGABackend):
             self.set_closest_reuse_factor(layer)
         else:
             layer.set_attr('strategy', 'latency')
+        
+        layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(DepthwiseConv2D)
     def init_depconv2d(self, layer):
@@ -547,6 +581,17 @@ class VivadoBackend(FPGABackend):
             self.set_closest_reuse_factor(layer)
         else:
             layer.set_attr('strategy', 'latency')
+        
+        layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+    @layer_optimizer(Activation)
+    def init_activation(self, layer):
+        layer.set_attr('n_in', layer.get_input_variable().size())
+
+        if 'table_t' not in layer.attributes:
+            layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
+        if 'table_size' not in layer.attributes:
+            layer.set_attr('table_size', 1024)
 
     @layer_optimizer(Softmax)
     def init_softmax(self, layer):

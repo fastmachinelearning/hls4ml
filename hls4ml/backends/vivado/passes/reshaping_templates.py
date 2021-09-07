@@ -98,10 +98,10 @@ transpose_config_template = """struct config{index} : nnet::transpose_config {{
     static const unsigned depth = {depth};
     static const unsigned height = {height};
     static const unsigned width = {width};
-    static const unsigned perm[3] = {{{perm_str}}};
+    static constexpr unsigned perm[3] = {{{perm_str}}};
 }};\n"""
 
-transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}, {output});'
+transpose_function_template = 'nnet::transpose_{dim}<{input_t}, {config}>({input}, {output});'
 
 transpose_include_list = ['nnet_utils/nnet_array.h']
 

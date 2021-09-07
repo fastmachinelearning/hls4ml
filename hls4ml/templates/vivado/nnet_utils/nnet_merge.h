@@ -56,7 +56,7 @@ struct concat_config {
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void add(
     input1_T data1[CONFIG_T::n_elem],
-	input2_T data2[CONFIG_T::n_elem],
+    input2_T data2[CONFIG_T::n_elem],
     res_T res[CONFIG_T::n_elem])
 {
     for (int ii=0; ii<CONFIG_T::n_elem; ii++) {
@@ -68,7 +68,7 @@ void add(
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void subtract(
     input1_T data1[CONFIG_T::n_elem],
-	input2_T data2[CONFIG_T::n_elem],
+    input2_T data2[CONFIG_T::n_elem],
     res_T res[CONFIG_T::n_elem])
 {
     for (int ii=0; ii<CONFIG_T::n_elem; ii++) {
@@ -79,7 +79,7 @@ void subtract(
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void multiply(
     input1_T data1[CONFIG_T::n_elem],
-	input2_T data2[CONFIG_T::n_elem],
+    input2_T data2[CONFIG_T::n_elem],
     res_T res[CONFIG_T::n_elem])
 {
     for (int ii=0; ii<CONFIG_T::n_elem; ii++) {
@@ -90,18 +90,18 @@ void multiply(
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void average(
     input1_T data1[CONFIG_T::n_elem],
-	input2_T data2[CONFIG_T::n_elem],
+    input2_T data2[CONFIG_T::n_elem],
     res_T res[CONFIG_T::n_elem])
 {
     for (int ii=0; ii<CONFIG_T::n_elem; ii++) {
-        res[ii] = data1[ii] * data2[ii] / (res_T) 2;
+        res[ii] = (data1[ii] + data2[ii]) / (res_T) 2;
     }
 }
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void maximum(
     input1_T data1[CONFIG_T::n_elem],
-	input2_T data2[CONFIG_T::n_elem],
+    input2_T data2[CONFIG_T::n_elem],
     res_T res[CONFIG_T::n_elem])
 {
     for (int ii=0; ii<CONFIG_T::n_elem; ii++) {
@@ -112,7 +112,7 @@ void maximum(
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void minimum(
     input1_T data1[CONFIG_T::n_elem],
-	input2_T data2[CONFIG_T::n_elem],
+    input2_T data2[CONFIG_T::n_elem],
     res_T res[CONFIG_T::n_elem])
 {
     for (int ii=0; ii<CONFIG_T::n_elem; ii++) {
@@ -123,7 +123,7 @@ void minimum(
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void dot1d(
     input1_T data1[CONFIG_T::n_in],
-	input2_T data2[CONFIG_T::n_in],
+    input2_T data2[CONFIG_T::n_in],
     res_T res[CONFIG_T::n_out])
 {
     #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
@@ -152,7 +152,7 @@ void dot1d(
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate1d(
     input1_T data1[CONFIG_T::n_elem1_0],
-	input2_T data2[CONFIG_T::n_elem2_0],
+    input2_T data2[CONFIG_T::n_elem2_0],
     res_T res[CONFIG_T::n_elem1_0 + CONFIG_T::n_elem2_0])
 {
     for (int ii=0; ii<CONFIG_T::n_elem1_0; ii++) {
@@ -166,7 +166,7 @@ void concatenate1d(
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate2d_0(
     input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1],
-	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1],
+    input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1])
 {
     for (int ii=0; ii<CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1; ii++) {
@@ -180,7 +180,7 @@ void concatenate2d_0(
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate2d_1(
     input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1],
-	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1],
+    input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1])
 {
     for (int ii=0; ii<CONFIG_T::n_elem1_0; ii++) {
@@ -196,10 +196,10 @@ void concatenate2d_1(
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate2d(
     input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1],
-	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1],
+    input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1])
 {
-    if (CONFIG_T::axis == 1 || CONFIG_T::axis == -1) {
+    if (CONFIG_T::axis == 2 || CONFIG_T::axis == -1) {
         concatenate2d_1<input1_T, input2_T, res_T, CONFIG_T>(data1, data2, res);
     } else {
         concatenate2d_0<input1_T, input2_T, res_T, CONFIG_T>(data1, data2, res);
@@ -209,7 +209,7 @@ void concatenate2d(
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate3d_0(
 input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
-	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
+    input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2])
 {
     for (int ii=0; ii<CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2; ii++) {
@@ -223,7 +223,7 @@ input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate3d_1(
 input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
-	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
+    input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2])
 {
     for (int ii=0; ii<CONFIG_T::n_elem1_0; ii++) {
@@ -254,8 +254,8 @@ input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
 
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate3d_2(
-input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
-	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
+    input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
+    input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2])
 {
     for (int ii=0; ii<CONFIG_T::n_elem1_0; ii++) {
@@ -270,7 +270,6 @@ input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
                 res[res_idx] = data1[data_idx];
             }
             for (int kk=0; kk<CONFIG_T::n_elem1_2; kk++) {
-                res[ii * (CONFIG_T::n_elem1_1 + CONFIG_T::n_elem2_1) + CONFIG_T::n_elem1_1 + jj] = data1[ii * CONFIG_T::n_elem2_1 + jj];
                 int res_idx = ii * CONFIG_T::n_elem1_1 * (CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_2)
                             + jj * (CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_2)
                             + kk + CONFIG_T::n_elem1_2;
@@ -286,12 +285,12 @@ input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
 template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate3d(
     input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
-	input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
+    input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2])
 {
-    if (CONFIG_T::axis == 2 || CONFIG_T::axis == -1) {
+    if (CONFIG_T::axis == 3 || CONFIG_T::axis == -1) {
         concatenate3d_2<input1_T, input2_T, res_T, CONFIG_T>(data1, data2, res);
-    } else if (CONFIG_T::axis == 1) {
+    } else if (CONFIG_T::axis == 2 || CONFIG_T::axis == -2) {
         concatenate3d_1<input1_T, input2_T, res_T, CONFIG_T>(data1, data2, res);
     } else {
         concatenate3d_0<input1_T, input2_T, res_T, CONFIG_T>(data1, data2, res);

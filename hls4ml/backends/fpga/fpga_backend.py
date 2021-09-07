@@ -108,6 +108,30 @@ class FPGABackend(Backend):
                 .format(chosen_rf, layer.name, closest_rf, ','.join(map(str, valid_rf))))
             layer.set_attr('reuse_factor', closest_rf)
 
+    def set_target_reuse_factor(self, layer):
+        targ_cycles = layer.get_attr('target_cycles')
+
+        shuffle_cycles = 6 # Number of clock cycles to move data around
+        if targ_cycles is not None:
+            if 'Dense' in layer.class_name: 
+                kernel_multiplies = layer.get_attr('n_out')
+            elif 'Conv1D' in layer.class_name:  
+                kernel_multiplies = layer.get_attr('out_width')
+            elif 'Conv2D' in layer.class_name: 
+                kernel_multiplies = layer.get_attr('out_height') * layer.get_attr('out_width')
+            else: 
+                print('Unable to set target reuse factor for layer: {} ({})'.format(layer.name, layer.class_name))
+                return
+
+            if targ_cycles < shuffle_cycles*kernel_multiplies: # 6 clock min (6 * out_height * out_width)
+                print('Latency can not be achieved with current target {}. Mininum {}.'.format(targ_cycles, shuffle_cycles*kernel_multiplies+1))
+                return
+            else: 
+                rf = targ_cycles - shuffle_cycles*kernel_multiplies # subtract data shuffling overhead
+
+            layer.set_attr('reuse_factor', float(rf) / kernel_multiplies)
+
+
     def convert_precision_string(self, precision):
         if isinstance(precision, IntegerPrecisionType) or isinstance(precision, FixedPrecisionType):
             return precision
@@ -193,6 +217,8 @@ class FPGABackend(Backend):
                 product = 'both_binary'
             elif isinstance(weight_T, XnorPrecisionType): # data is not xnor-binary
                 product = 'weight_binary'
+            elif isinstance(data_T, XnorPrecisionType): # data is xnor, weight is not
+                product = 'data_binary'
             elif isinstance(weight_T, IntegerPrecisionType) and weight_T.width == 2 and weight_T.signed:
                 product = 'weight_ternary'
             else:
@@ -204,7 +230,11 @@ class FPGABackend(Backend):
         # Current limitations
         assert pad == 0
 
-        min_W = (math.ceil(kernel_size / stride) - 1) * stride + kernel_size
+        if kernel_size >= stride:
+            min_W = (math.ceil(kernel_size / stride) - 1) * stride + kernel_size
+        else:
+            min_W = (math.ceil(stride / kernel_size) - 1) * stride + kernel_size
+
         min_oW = int((min_W - kernel_size) // stride + 1)
 
         out_W = int((in_W - kernel_size) // stride + 1)
@@ -248,8 +278,16 @@ class FPGABackend(Backend):
         assert stride_height == stride_width
         assert pad == 0
 
-        min_H = (math.ceil(kernel_height / stride_height) - 1) * stride_height + kernel_height
-        min_W = (math.ceil(kernel_width / stride_width) - 1) * stride_width + kernel_width
+        if kernel_height >= stride_height:
+            min_H = (math.ceil(kernel_height / stride_height) - 1) * stride_height + kernel_height
+        else:
+            min_H = (math.ceil(stride_height / kernel_height) - 1) * stride_height + kernel_height
+        
+        if kernel_width >= stride_width:
+            min_W = (math.ceil(kernel_width / stride_width) - 1) * stride_width + kernel_width
+        else:
+            min_W = (math.ceil(stride_width / kernel_width) - 1) * stride_width + kernel_width
+
         min_oH = int((min_H - kernel_height) // stride_height + 1)
         min_oW = int((min_W - kernel_width) // stride_width + 1)
 

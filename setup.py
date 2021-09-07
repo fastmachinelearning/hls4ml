@@ -26,11 +26,13 @@ setup(name='hls4ml',
       author_email='hls4ml.help@gmail.com',
       url='https://github.com/hls-fpga-machine-learning/hls4ml',
       license='Apache 2.0',
-      install_requires=['numpy',
-                        'six',
-                        'pyyaml',
-                        'h5py',
-                        'onnx>=1.4.0'],
+      install_requires=[
+          'numpy',
+          'six',
+          'pyyaml',
+          'h5py',
+          'onnx>=1.4.0'
+      ],
       extras_require={
         'profiling': [
             'pandas',

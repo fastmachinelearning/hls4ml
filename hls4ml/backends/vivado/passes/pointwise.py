@@ -54,6 +54,9 @@ class OptimizePointwiseConv(OptimizerPass):
     def transform(self, model, node):
         dim = node.__class__.__name__[-2:] # '1D' or '2D'
         pw_node = model.make_node('PointwiseConv' + dim, node.name, node.attributes.copy(), node.inputs.copy())
+        if len(node.weights['weight'].data.shape) == 2: # This can happen if we assign weights of Dense layer to 1x1 Conv2D
+            pw_node.weights['weight'].data = np.expand_dims(node.weights['weight'].data, axis=(0,1))
+        pw_node.weights['bias'].data = node.weights['bias'].data
         model.replace_node(node, pw_node)
         
         return True

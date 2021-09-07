@@ -5,12 +5,26 @@
 
 namespace nnet {
 
-struct transpose3d_config {
+struct transpose_config {
     static const unsigned height = 10;
     static const unsigned width = 10;
     static const unsigned depth = 10;
-    static const unsigned perm[3];
+    static constexpr unsigned perm[3] = {2, 0, 1};
 };
+
+template<class data_T, typename CONFIG_T>
+void transpose_2d(
+    data_T data[CONFIG_T::height * CONFIG_T::width],
+    data_T data_t[CONFIG_T::height * CONFIG_T::width]
+) {
+    #pragma HLS PIPELINE
+
+    for (int i = 0; i < CONFIG_T::height; i++) {
+        for (int j = 0; j < CONFIG_T::width; j++) {
+            data_t[j * CONFIG_T::height + i] = data[i * CONFIG_T::width + j];
+        }
+    }
+}
 
 template<class data_T, typename CONFIG_T>
 void transpose_3d(

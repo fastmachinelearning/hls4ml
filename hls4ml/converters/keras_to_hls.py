@@ -228,7 +228,7 @@ def keras_to_hls(config):
     #print(model_arch)
 
     #Define layers to skip for conversion to HLS
-    skip_layers = ['Dropout', 'Flatten']
+    skip_layers = ['Dropout']
     #All supported layers
     supported_layers = get_supported_keras_layers() + skip_layers
 
@@ -273,12 +273,12 @@ def keras_to_hls(config):
     for keras_layer in layer_config:
         if 'batch_input_shape' in keras_layer['config']:
             if 'inbound_nodes' in keras_layer and len(keras_layer['inbound_nodes']) > 0:
-                input_shapes = [output_shapes[inbound_node[0][0]] for inbound_node in keras_layer['inbound_nodes']]
+                input_shapes = [output_shapes[inbound_node[0]] for inbound_node in keras_layer['inbound_nodes'][0]]
             else:
                 input_shapes = [keras_layer['config']['batch_input_shape']]
         else:
             if 'inbound_nodes' in keras_layer:
-                input_shapes = [output_shapes[inbound_node[0][0]] for inbound_node in keras_layer['inbound_nodes']]
+                input_shapes = [output_shapes[inbound_node[0]] for inbound_node in keras_layer['inbound_nodes'][0]]
             else:
                 # Sequential model, so output_shape from the previous layer is still valid 
                 input_shapes = [output_shape]
@@ -293,10 +293,7 @@ def keras_to_hls(config):
                 #Skipped layers can follow each other (e.g., Dropout -> Flatten)
                 inputs_map[name] = inputs_map.get(parent_input, parent_input)
 
-            if keras_class == 'Flatten':
-                output_shapes[keras_layer['config']['name']] = [input_shapes[0][0], np.prod(input_shapes[0][1:])]
-            else:
-                output_shapes[keras_layer['config']['name']] = input_shapes[0]
+            output_shapes[keras_layer['config']['name']] = input_shapes[0]
 
             continue
 
@@ -311,9 +308,9 @@ def keras_to_hls(config):
 
         layer, output_shape = layer_handlers[keras_class](keras_layer, input_names, input_shapes, reader, config)
 
-        print('Layer name: {}, layer type: {}, current shape: {}'.format(layer['name'], layer['class_name'], input_shapes))
+        print('Layer name: {}, layer type: {}, input shapes: {}, output shape: {}'.format(layer['name'], layer['class_name'], input_shapes, output_shape))
         layer_list.append( layer )
-        if 'activation' in layer and layer['class_name'] not in ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax']:# + qkeras_layers:
+        if 'activation' in layer and layer['class_name'] not in ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'TernaryTanh']:# + qkeras_layers:
             act_layer = {}
             act_layer['name'] = layer['name'] + '_' + layer['activation']
             act_layer['activation'] = layer['activation']

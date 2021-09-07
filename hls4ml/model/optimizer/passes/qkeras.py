@@ -99,7 +99,8 @@ def register_qkeras():
     # Register the optimization passes
     register_pass('output_rounding_saturation_mode', OutputRoundingSaturationMode)
     register_pass('qkeras_factorize_alpha', QKerasFactorizeAlpha)
-    register_pass('fuse_consecutive_batch_normalization', FuseConsecutiveBatchNormalization) 
+    register_pass('extract_ternary_threshold', ExtractTernaryThreshold)
+    register_pass('fuse_consecutive_batch_normalization', FuseConsecutiveBatchNormalization)
 
     # TODO add ApplyAlpha handlers in backend
 
@@ -109,7 +110,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
        and an 'ApplyAlpha' layer is inserted to reapply the scale.
     '''
     def match(self, node):
-        q_layer = node.class_name in ['Dense', 'Conv1D', 'Conv2D']
+        q_layer = node.class_name in ['Dense', 'Conv1D', 'Conv2D', 'Conv2DBatchnorm']
         has_w_quant = node.get_attr('weight_quantizer') is not None 
         has_b_quant = node.get_attr('bias_quantizer') is not None
         has_w_alpha, has_b_alpha = False, False
@@ -135,7 +136,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
         weights = node.weights['weight'].data_unquantized # get weights
         qweights = quantizer(tf.convert_to_tensor(weights))
         if isinstance(quantizer.scale, (int, float)):
-            scale = np.ones(shape=node.get_output_variable().shape) * quantizer.scale
+            scale = np.ones(shape=node.get_output_variable().shape[-1]) * quantizer.scale
         else:
             scale = quantizer.scale.numpy()
         unscale = 1. / scale
@@ -151,7 +152,12 @@ class QKerasFactorizeAlpha(OptimizerPass):
 
         # update the weights also applying the hls4ml quantizer
         # this is only needed for the binary layers which encode -1 as 0
-        node.weights['weight'].data = node.weights['weight'].quantizer(new_weights.numpy())
+        quantized_new_weights = node.weights['weight'].quantizer(new_weights.numpy())
+        if node.model.config.is_resource_strategy(node):
+            ndim = len(weights.shape) - 1
+            perm = [ndim] + [i for i in range(ndim)]
+            quantized_new_weights = np.transpose(quantized_new_weights, axes=perm)
+        node.weights['weight'].data = quantized_new_weights
 
         # Move the biases from the Dense layer to the ApplyAlpha layer
         bias = node.weights['bias'].data
@@ -221,3 +227,40 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
 
         model.remove_node(node, rewire=True)
         return True
+
+class ExtractTernaryThreshold(OptimizerPass):
+    ''' The input value (threshold) at which the output of a a ternary activation
+    changes is configurable. This pass extracts that threshold point, inserting
+    a BatchNormalization layer to execute the scaling. That BatchNormalization
+    layer is then expected to be fused into a BatchNormalizationQuantizedTanh
+    layer configured with the correct threshold.
+    '''
+
+    def match(self, node):
+        return node.__class__.__name__ == 'TernaryTanh' and node.get_attr('threshold', None) != 0.5
+
+    def transform(self, model, node):
+        shape = node.get_input_variable().shape
+        scale = np.full(shape, 0.5 / node.get_attr('threshold', 0.5))
+        bias = np.zeros_like(scale)
+        node.set_attr('threshold', 0.5)
+
+        attrs = {
+            'name' : node.get_attr('name') + '_scale',
+            'class_name' : 'Alpha',
+            'inputs' : node.get_input_node().outputs,
+            'outputs' : node.inputs,
+            'n_filt' : node.get_attr('n_filt', -1),
+            'reuse_factor' : node.get_attr('reuse_factor'),
+            # These should just be placeholders
+            'bias_t' : IntegerPrecisionType(1),
+            'scale_t' : FixedPrecisionType(16,6),
+            'Trace' : node.get_attr('Trace', False)
+        }
+
+        layer = model.make_node('ApplyAlpha', node.name + '_scale', attrs, node.inputs.copy())
+        layer.add_weights(scale)
+        layer.add_bias(bias)
+        model.insert_node(layer, before=node)
+        return True
+

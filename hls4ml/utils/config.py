@@ -1,9 +1,5 @@
 from __future__ import print_function
-import numpy as np
-import h5py
 import json
-import math
-from collections import OrderedDict
 
 import hls4ml
 
@@ -41,7 +37,7 @@ def _get_precision_from_quantizer(quantizer):
 
     supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh', 'quantized_po2', 'quantized_relu_po2']
     if quantizer['class_name'] in supported_quantizers:
-        bits = int(quantizer['config']['bits']) + 1
+        bits = int(quantizer['config']['bits'])
         # if integer isn't specified, it should be the same as bits
         integer = int(quantizer['config'].get('integer', bits-1)) + 1
         
@@ -99,8 +95,8 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     else:
         model_arch = json.loads(model.to_json())
 
-    #Define supported laers
-    core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Reshape']
+    #Define supported layers
+    core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Reshape', 'Permute']
     dense_layers = ['Dense', 'BinaryDense', 'TernaryDense']
     conv_layers = ['Conv1D', 'Conv2D', 'BinaryConv2D']
     pooling_layers = ['MaxPooling1D', 'MaxPooling2D', 'GlobalMaxPooling1D', 'GlobalMaxPooling2D', 'AveragePooling1D', 'AveragePooling2D', 'GlobalAveragePooling1D', 'GlobalAveragePooling2D']
@@ -108,8 +104,8 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
     merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate', 'Dot']
     qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D', 'QBatchNormalization', 'QConv2DBatchnorm']
-    #Define layers to skip for conversion to HLS
-    skip_layers = ['Dropout', 'Flatten']
+    #Define layers to skip because they're not configurable or not converted to HLS
+    skip_layers = ['Dropout', 'Flatten', 'Reshape', 'Permute']
     #All supported layers
     supported_layers = core_layers + dense_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + skip_layers
 
@@ -247,4 +243,98 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
         
         config['LayerName'] = name_config
 
+    return config
+
+
+def config_from_pytorch_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1):
+    """Generate configuration dictionary from a Pytorch model.
+    
+    Parameters
+    ----------
+    model : Pytorch model object.
+        Model to be converted to hls model object.
+    granularity : string, optional
+        How granular you want the configuration to be.
+    default_precision : string, optional
+        Defines the precsion of your inputs, outputs, weights and biases.
+        It is denoted by ap_fixed<X,Y>, where Y is the number of bits representing 
+        the signed number above the binary point (i.e. the integer part),
+        and X is the total number of bits. Additionally, integers in fixed precision 
+        data type (ap_int<N>, where N is a bit-size from 1 to 1024) can also be used. 
+    default_reuse_factor : int, optional
+        Reuse factor for hls model
+        
+    Returns
+    -------
+    config : dict
+        configuration dictionary to be used in Pytorch converter.
+        
+    See Also
+    --------
+    hls4ml.config_from_keras_model, hls4ml.convert_from_onnx_model
+    
+    Examples
+    --------
+    >>> import hls4ml
+    >>> config = hls4ml.utils.config_from_keras_model(model, granularity='model')
+    >>> hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config)
+
+    """
+    
+    config = {}
+
+    model_config = {}
+    model_config['Precision'] = default_precision
+    model_config['ReuseFactor'] = default_reuse_factor
+    model_config['Strategy'] = 'Latency'
+
+    config['Model'] = model_config
+    
+    return config
+
+
+def config_from_onnx_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1):
+    """Generate configuration dictionary from an ONNX model.
+    
+    Parameters
+    ----------
+    model : ONNX model object.
+        Model to be converted to hls model object.
+    granularity : string, optional
+        How granular you want the configuration to be.
+    default_precision : string, optional
+        Defines the precsion of your inputs, outputs, weights and biases.
+        It is denoted by ap_fixed<X,Y>, where Y is the number of bits representing 
+        the signed number above the binary point (i.e. the integer part),
+        and X is the total number of bits. Additionally, integers in fixed precision 
+        data type (ap_int<N>, where N is a bit-size from 1 to 1024) can also be used. 
+    default_reuse_factor : int, optional
+        Reuse factor for hls model
+        
+    Returns
+    -------
+    config : dict
+        configuration dictionary to be used in ONNX converter.
+        
+    See Also
+    --------
+    hls4ml.config_from_keras_model, hls4ml.convert_from_pytorch_model
+    
+    Examples
+    --------
+    >>> import hls4ml
+    >>> config = hls4ml.utils.config_from_keras_model(model, granularity='model')
+    >>> hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config)
+
+    """
+    
+    config = {}
+
+    model_config = {}
+    model_config['Precision'] = default_precision
+    model_config['ReuseFactor'] = default_reuse_factor
+    model_config['Strategy'] = 'Latency'
+
+    config['Model'] = model_config
+    
     return config

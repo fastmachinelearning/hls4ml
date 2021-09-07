@@ -15,35 +15,12 @@ class BatchNormalizationQuantizedTanh(Layer):
         inp = self.get_input_variable()
         shape = inp.shape
         dims = inp.dim_names
-        precision = self.model.config.backend.convert_precision_string(inp.type.precision)
-        W, I, F = precision.width, precision.integer, precision.fractional
-        original_name = self.attributes.get('original_name')
-        variance = self.model.get_weights_data(original_name, 'moving_variance')
-        mean = self.model.get_weights_data(original_name, 'moving_mean')
-        gamma = self.model.get_weights_data(original_name, 'gamma')
-        beta = self.model.get_weights_data(original_name, 'beta')
-        mean_quantizer = self.get_attr('mean_quantizer')
-        variance_quantizer = self.get_attr('variance_quantizer')
-        gamma_quantizer = self.get_attr('gamma_quantizer')
-        beta_quantizer = self.get_attr('beta_quantizer')
-        mean = mean_quantizer(mean) if mean_quantizer is not None else mean
-        variance = variance_quantizer(variance) if variance_quantizer is not None else variance
-        gamma = gamma_quantizer(gamma) if gamma_quantizer is not None else gamma
-        beta = beta_quantizer(beta) if beta_quantizer is not None else beta
-        epsilon = self.attributes.get('epsilon')
-        threshold = mean - beta * np.sqrt(variance + epsilon) / gamma
         if self.get_attr('quantize') == 2:
             self.add_output_variable(shape, dims, precision=XnorPrecisionType())
-            threshold = np.floor(threshold * 2**F) / 2**F
-            self.add_weights_variable(name='threshold', var_name='t{index}', data=threshold, type_name='threshold{index}_t', precision=inp.type.precision)
         elif self.get_attr('quantize') == 3:
             self.add_output_variable(shape, dims, precision=IntegerPrecisionType(width=2))
-            threshold_hi = 0.5/(gamma/np.sqrt(variance + epsilon)) + threshold
-            threshold_lo = -0.5/(gamma/np.sqrt(variance + epsilon)) + threshold
-            threshold_hi = np.floor(threshold_hi * 2**F) / 2**F
-            threshold_lo = np.floor(threshold_lo * 2**F) / 2**F
-            self.add_weights_variable(name='threshold_hi', var_name='th{index}', data=threshold_hi, type_name='threshold_hi_{index}_t', precision=inp.type.precision)
-            self.add_weights_variable(name='threshold_lo', var_name='tl{index}', data=threshold_lo, type_name='threshold_lo_{index}_t', precision=inp.type.precision)
+        else:
+            raise Exception('Unsupported quantize attribute for BatchNormalizationQuantizedTanh: {}'.format(self.get_attr('quantize')))
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -61,6 +38,26 @@ class BatchNormalizationQuantizedTanh(Layer):
         params['n_in'] = self.get_input_variable().size_cpp()
 
         return self._config_template.format(**params)
+
+    def set_thresholds(self, scale, bias, ternary_threshold=0.5):
+        inp = self.get_input_variable()
+        shape = inp.shape
+        dims = inp.dim_names
+        precision = self.model.config.backend.convert_precision_string(inp.type.precision)
+        W, I, F = precision.width, precision.integer, precision.fractional
+        threshold = - bias / scale
+        if self.get_attr('quantize') == 2:
+            self.add_output_variable(shape, dims, precision=XnorPrecisionType())
+            threshold = np.floor(threshold * 2**F) / 2**F
+            self.add_weights_variable(name='threshold', var_name='t{index}', data=threshold, type_name='threshold{index}_t', precision=inp.type.precision)
+        elif self.get_attr('quantize') == 3:
+            self.add_output_variable(shape, dims, precision=IntegerPrecisionType(width=2))
+            threshold_hi = ternary_threshold / scale + threshold
+            threshold_lo = -ternary_threshold / scale + threshold
+            threshold_hi = np.floor(threshold_hi * 2**F) / 2**F
+            threshold_lo = np.floor(threshold_lo * 2**F) / 2**F
+            self.add_weights_variable(name='threshold_hi', var_name='th{index}', data=threshold_hi, type_name='threshold_hi_{index}_t', precision=inp.type.precision)
+            self.add_weights_variable(name='threshold_lo', var_name='tl{index}', data=threshold_lo, type_name='threshold_lo_{index}_t', precision=inp.type.precision)
 
 batchnorm_quantized_tanh_config_template = """struct config{index} : nnet::batchnorm_quantized_tanh_config {{
     static const unsigned n_in = {n_in};
@@ -87,20 +84,19 @@ def register_bn_quant(backend):
 
 class MergeBatchNormAndQuantizedTanh(OptimizerPass):
     def match(self, node):
-        is_match = (isinstance(node, Activation)
-            and node.get_attr('activation') in ['binary_tanh', 'ternary_tanh']
-            and isinstance(node.get_input_node(), BatchNormalization))
+        is_match = (node.class_name == 'Activation'
+            and node.get_attr('activation') in ['binary', 'binary_tanh', 'ternary', 'ternary_tanh']
+            or node.class_name == 'TernaryTanh')
+        is_match = is_match and isinstance(node.get_input_node(), BatchNormalization)
         return is_match
 
     def transform(self, model, node):
         bn_layer = node.get_input_node()
-        # Remove the Activation layer
-        model.remove_node(node, rewire=True)
         # Make a new layer with the new attributes
         quantize = 0
-        if node.get_attr('activation') == 'binary_tanh':
+        if 'binary' in node.get_attr('activation'):
             quantize = 2
-        if node.get_attr('activation') == 'ternary_tanh':
+        if 'ternary' in node.get_attr('activation'):
             quantize = 3
         attrs = {
             'name' : bn_layer.get_attr('name'),
@@ -109,25 +105,25 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
             'n_in' : bn_layer.get_attr('n_in'),
             'n_out' : bn_layer.get_attr('n_in'),
             'n_filt' : bn_layer.get_attr('n_filt'),
-            'epsilon' : bn_layer.get_attr('epsilon'),
             'quantize' : quantize,
-            'beta_quantizer' : bn_layer.get_attr('beta_quantizer'),
-            'gamma_quantizer' : bn_layer.get_attr('gamma_quantizer'),
-            'mean_quantizer' : bn_layer.get_attr('mean_quantizer'),
-            'variance_quantizer' : bn_layer.get_attr('variance_quantizer'),
             'Trace' : bn_layer.get_attr('Trace')
         }
         bnbt_layer = model.make_node(BatchNormalizationQuantizedTanh, 'bnbt_' + bn_layer.name, attrs, bn_layer.inputs)
-        # Replace the old BatchNormalization layer with this one
-        model.replace_node(bn_layer, bnbt_layer)
+        bnbt_layer.set_thresholds(bn_layer.get_weights('scale').data, bn_layer.get_weights('bias').data, node.get_attr('threshold',0.5))
+        # Remove the BatchNormalization layer
+        model.remove_node(bn_layer, rewire=True)
+        # Replace the old Activation layer with this one
+        model.replace_node(node, bnbt_layer)
 
         return True
 
 class QuantizeDenseOutput(OptimizerPass):
     def match(self, node):
-        is_match = (isinstance(node, Dense) and node.get_attr('weight_quantizer') is not None
-            and isinstance(node.get_input_node(), BatchNormalizationQuantizedTanh))
-        return is_match
+        is_dense = node.class_name == 'Dense'
+        is_input_bnqt = node.get_input_node().class_name == 'BatchNormalizationQuantizedTanh'
+        quantizer = node.get_attr('weight_quantizer')
+        is_binary_ternary = (quantizer.__class__.__name__ == 'BinaryQuantizer' or quantizer.__class__.__name__ == 'TernaryQuantizer')
+        return is_dense and is_input_bnqt and is_binary_ternary
 
     def transform(self, model, node):
         # Compute the required precision and update the variables
@@ -181,3 +177,4 @@ class QuantizeDenseOutput(OptimizerPass):
                     threshold_var.data = np.floor(threshold_var.data)
 
         return False
+
