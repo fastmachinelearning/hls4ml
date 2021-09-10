@@ -25,7 +25,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
         '''
         Create initial accelerator config with default parameters
         Args:
-            device: one of the keys defined in supported_boards.json
+            board: one of the keys defined in supported_boards.json
             clock_period: clock period passed to hls project
             io_type: io_parallel or io_stream
             interface: `axi_stream`: generate hardware designs and drivers which exploit axi stream channels.

@@ -51,8 +51,6 @@ class Layer(object):
 
         self.set_attr('index', self.index)
 
-        self._function_template = self.model.config.backend.get_function_template(self.__class__)
-        self._config_template = self.model.config.backend.get_config_template(self.__class__)
         self.weights = AttributeMapping(self.attributes, WeightVariable)
         self.variables = AttributeMapping(self.attributes, (TensorVariable, InplaceVariable))
         self.types = AttributeMapping(self.attributes, NamedType)
@@ -244,14 +242,6 @@ class Layer(object):
             precision[data_type.name] = data_type
         return precision
 
-    # myproject.cpp/h
-    def function_cpp(self):
-        raise NotImplementedError
-
-    # parameters.h
-    def config_cpp(self):
-        raise NotImplementedError
-
     def get_numbers_cpp(self):
         numbers = ''
         for k, v in self.get_output_variable().get_shape():
@@ -276,12 +266,6 @@ class Input(Layer):
         precision = self.attributes.get('precision', None)
         self.add_output_variable(shape, dims, var_name=self.name, type_name=type_name, precision=precision)
 
-    def function_cpp(self):
-        return None
-
-    def config_cpp(self):
-        return None
-
 class Reshape(Layer):
     def initialize(self):
         shape = self.attributes['target_shape']
@@ -294,12 +278,6 @@ class Reshape(Layer):
         out = InplaceVariable(shape, dims, proxy, index=self.get_input_node().index)
 
         self.set_attr(out_name, out)
-
-    def function_cpp(self):
-        return None
-
-    def config_cpp(self):
-        return None
 
 class Dense(Layer):
     _expected_attributes = [
@@ -323,21 +301,6 @@ class Dense(Layer):
         self.add_output_variable(shape, dims)
         self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=self.model.config.get_compression(self))
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['w'] = self.get_weights('weight').name
-        params['b'] = self.get_weights('bias').name
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        params['nzeros'] = self.get_weights('weight').nzeros
-        params['nonzeros'] = self.get_weights('weight').nonzeros
-        params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
-
-        return self._config_template.format(**params)
 
 class Conv1D(Layer):
     _expected_attributes = [
@@ -371,39 +334,6 @@ class Conv1D(Layer):
         self.add_output_variable(shape, dims)
         self.add_weights(quantizer = self.get_attr('weight_quantizer'))
         self.add_bias(quantizer = self.get_attr('bias_quantizer'))
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
-        params['w'] = self.get_weights('weight').name
-        params['b'] = self.get_weights('bias').name
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        input_dims = self.get_input_variable().dim_names
-        if self.get_attr('data_format') == 'channels_last':
-            params['n_in'] = '*'.join([str(k) for k in input_dims[:-1]])
-            params['n_chan'] = input_dims[-1]
-        else:
-            params['n_in'] = '*'.join([str(k) for k in input_dims[1:]])
-            params['n_chan'] = input_dims[0]
-        params['dilation'] = self.get_attr('dilation', 1)
-        params['n_filt'] = 'N_FILT_{}'.format(self.index)
-        params['out_width'] = 'N_OUTPUTS_{}'.format(self.index)
-        params['nzeros'] = self.get_weights('weight').nzeros
-
-        params['config_t'] = 'config{}_mult'.format(self.index)
-        conv_config = self._config_template[0].format(**params)
-
-        mult_params = self._default_config_params()
-        mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_width')
-        mult_params['n_out'] = self.get_attr('n_filt')
-        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
-        mult_config = self._config_template[1].format(**mult_params)
-
-        return mult_config + '\n' + conv_config
 
 class SeparableConv1D(Layer):
     _expected_attributes = [
@@ -448,88 +378,6 @@ class SeparableConv1D(Layer):
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
-        params['d'] = self.get_weights('depthwise').name
-        params['p'] = self.get_weights('pointwise').name
-        params['b'] = self.get_weights('bias').name
-        params['z'] = self.get_weights('zero_bias').name
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        # Separable master config
-        params = {}
-        params['index'] = self.index
-        params['depthwise_config'] = 'config{}_depthwise'.format(self.index)
-        params['pointwise_config'] = 'config{}_pointwise'.format(self.index)
-        sep_config = self._config_template[0].format(**params)
-
-        # Depthwise config
-        params = self._default_config_params()
-        if self.get_attr('data_format') == 'channels_last':
-            params['in_width'] = self.get_input_variable().dim_names[0]
-            params['n_chan'] = self.get_input_variable().dim_names[1]
-            params['out_width'] = self.get_output_variable().dim_names[0]
-            params['n_filt'] = self.get_input_variable().dim_names[1]
-        else:
-            params['n_chan'] = self.get_input_variable().dim_names[0]
-            params['in_width'] = self.get_input_variable().dim_names[1]
-            params['n_filt'] = self.get_input_variable().dim_names[0]
-            params['out_width'] = self.get_output_variable().dim_names[1]
-
-        params['dilation'] = self.get_attr('dilation', 1)
-        params['nzeros'] = self.get_weights('depthwise').nzeros
-        params['index'] = str(self.index) + '_depthwise'
-        params['weight_t'] = self.get_weights('depthwise').type
-
-        params['config_t'] = 'config{}_depthwise_mult'.format(self.index)
-        depthwise_config = self._config_template[1].format(**params)
-
-        # Depthwise mult config
-        mult_params = self._default_config_params()
-        mult_params['index'] = str(self.index) + '_depthwise'
-        mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_width')
-        mult_params['n_out'] = self.get_attr('n_chan')
-        mult_params['weight_t'] = self.get_weights('depthwise').type
-        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('depthwise').type.precision)
-        depthwise_mult_config = self._config_template[3].format(**mult_params)
-
-        # Pointwise config
-        params = self._default_config_params()
-        input_dims = self.get_input_variable().dim_names
-        if self.get_attr('data_format') == 'channels_last':
-            params['in_width'] = '*'.join([str(k) for k in input_dims[:-1]])
-            params['n_chan'] = input_dims[-1]
-        else:
-            params['in_width'] = '*'.join([str(k) for k in input_dims[1:]])
-            params['n_chan'] = input_dims[0]
-        
-        params['filt_width'] = 1
-        params['dilation'] = self.get_attr('dilation', 1)
-        params['n_filt'] = 'N_FILT_{}'.format(self.index)
-        params['out_width'] = 'N_OUTPUTS_{}'.format(self.index)
-        params['nzeros'] = self.get_weights('pointwise').nzeros
-        params['index'] = str(self.index) + '_pointwise'
-        params['weight_t'] = self.get_weights('pointwise').type
-        params['min_width'] = params['in_width']
-        params['instructions'] = '0'
-
-        params['config_t'] = 'config{}_pointwise_mult'.format(self.index)
-        pointwise_config = self._config_template[2].format(**params)
-
-        # Pointwise mult config
-        mult_params = self._default_config_params()
-        mult_params['index'] = str(self.index) + '_pointwise'
-        mult_params['n_in'] = self.get_attr('n_chan')
-        mult_params['n_out'] = self.get_attr('n_filt')
-        mult_params['weight_t'] = self.get_weights('pointwise').type
-        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('pointwise').type.precision)
-        pointwise_mult_config = self._config_template[4].format(**mult_params)
-
-        return depthwise_mult_config + '\n' + depthwise_config + '\n' + pointwise_mult_config + '\n' + pointwise_config + '\n' + sep_config
-
 class Conv2D(Layer):
     _expected_attributes = [
         Attribute('in_height'),
@@ -568,44 +416,6 @@ class Conv2D(Layer):
         self.add_output_variable(shape, dims)
         self.add_weights(quantizer=self.get_attr('weight_quantizer'))
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
-        params['w'] = self.get_weights('weight').name
-        params['b'] = self.get_weights('bias').name
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        if self.get_attr('data_format') == 'channels_last':
-            params['in_height'] = self.get_input_variable().dim_names[0]
-            params['in_width'] = self.get_input_variable().dim_names[1]
-            params['n_chan'] = self.get_input_variable().dim_names[2]
-            params['out_height'] = self.get_output_variable().dim_names[0]
-            params['out_width'] = self.get_output_variable().dim_names[1]
-            params['n_filt'] = self.get_output_variable().dim_names[2]
-        else:
-            params['n_chan'] = self.get_input_variable().dim_names[0]
-            params['in_height'] = self.get_input_variable().dim_names[1]
-            params['in_width'] = self.get_input_variable().dim_names[2]
-            params['n_filt'] = self.get_output_variable().dim_names[0]
-            params['out_height'] = self.get_output_variable().dim_names[1]
-            params['out_width'] = self.get_output_variable().dim_names[2]
-        params['dilation'] = self.get_attr('dilation', 1)
-        params['nzeros'] = self.get_weights('weight').nzeros
-
-        params['config_t'] = 'config{}_mult'.format(self.index)
-        conv_config = self._config_template[0].format(**params)
-
-        mult_params = self._default_config_params()
-        mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
-        mult_params['n_out'] = self.get_attr('n_filt')
-        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
-        mult_config = self._config_template[1].format(**mult_params)
-
-        return mult_config + '\n' + conv_config
 
 class Conv2DBatchnorm(Conv2D):
     def _get_folded_weights(self):
@@ -651,12 +461,6 @@ class Conv2DBatchnorm(Conv2D):
         bias_q = self.get_attr('bias_quantizer')
         if bias_q is not None:
             self.weights['bias'].data = bias_q(folded_bias)
-
-    def function_cpp(self):
-        return super(Conv2DBatchnorm, self).function_cpp()
-
-    def config_cpp(self):
-        return super(Conv2DBatchnorm, self).config_cpp()
 
 class SeparableConv2D(Layer):
     _expected_attributes = [
@@ -708,98 +512,6 @@ class SeparableConv2D(Layer):
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
-        params['d'] = self.get_weights('depthwise').name
-        params['p'] = self.get_weights('pointwise').name
-        params['b'] = self.get_weights('bias').name
-        params['z'] = self.get_weights('zero_bias').name
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        # Separable master config
-        params = {}
-        params['index'] = self.index
-        params['depthwise_config'] = 'config{}_depthwise'.format(self.index)
-        params['pointwise_config'] = 'config{}_pointwise'.format(self.index)
-        sep_config = self._config_template[0].format(**params)
-
-        # Depthwise config
-        params = self._default_config_params()
-        if self.get_attr('data_format') == 'channels_last':
-            params['in_height'] = self.get_input_variable().dim_names[0]
-            params['in_width'] = self.get_input_variable().dim_names[1]
-            params['n_chan'] = self.get_input_variable().dim_names[2]
-            params['out_height'] = self.get_output_variable().dim_names[0]
-            params['out_width'] = self.get_output_variable().dim_names[1]
-            params['n_filt'] = self.get_input_variable().dim_names[2]
-        else:
-            params['n_chan'] = self.get_input_variable().dim_names[0]
-            params['in_height'] = self.get_input_variable().dim_names[1]
-            params['in_width'] = self.get_input_variable().dim_names[2]
-            params['n_filt'] = self.get_input_variable().dim_names[0]
-            params['out_height'] = self.get_output_variable().dim_names[1]
-            params['out_width'] = self.get_output_variable().dim_names[2]
-
-        params['dilation'] = self.get_attr('dilation', 1)
-        params['nzeros'] = self.get_weights('depthwise').nzeros
-        params['index'] = str(self.index) + '_depthwise'
-        params['weight_t'] = self.get_weights('depthwise').type
-
-        params['config_t'] = 'config{}_depthwise_mult'.format(self.index)
-        depthwise_config = self._config_template[1].format(**params)
-
-        # Depthwise mult config
-        mult_params = self._default_config_params()
-        mult_params['index'] = str(self.index) + '_depthwise'
-        mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
-        mult_params['n_out'] = self.get_attr('n_chan')
-        mult_params['weight_t'] = self.get_weights('depthwise').type
-        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('depthwise').type.precision)
-        depthwise_mult_config = self._config_template[3].format(**mult_params)
-
-        # Pointwise config
-        params = self._default_config_params()
-        if self.get_attr('data_format') == 'channels_last':
-            params['in_height'] = self.get_output_variable().dim_names[0]
-            params['in_width'] = self.get_output_variable().dim_names[1]
-            params['n_chan'] = self.get_input_variable().dim_names[2]
-            params['out_height'] = self.get_output_variable().dim_names[0]
-            params['out_width'] = self.get_output_variable().dim_names[1]
-            params['n_filt'] = self.get_output_variable().dim_names[2]
-        else:
-            params['n_chan'] = self.get_input_variable().dim_names[0]
-            params['in_height'] = self.get_output_variable().dim_names[1]
-            params['in_width'] = self.get_output_variable().dim_names[2]
-            params['n_filt'] = self.get_output_variable().dim_names[0]
-            params['out_height'] = self.get_output_variable().dim_names[1]
-            params['out_width'] = self.get_output_variable().dim_names[2]
-
-        params['filt_height'] = params['filt_width'] = 1
-        params['dilation'] = self.get_attr('dilation', 1)
-        params['nzeros'] = self.get_weights('pointwise').nzeros
-        params['index'] = str(self.index) + '_pointwise'
-        params['weight_t'] = self.get_weights('pointwise').type
-        params['min_height'] = params['in_height']
-        params['min_width'] = params['in_width']
-        params['instructions'] = '0'
-
-        params['config_t'] = 'config{}_pointwise_mult'.format(self.index)
-        pointwise_config = self._config_template[2].format(**params)
-
-        # Pointwise mult config
-        mult_params = self._default_config_params()
-        mult_params['index'] = str(self.index) + '_pointwise'
-        mult_params['n_in'] = self.get_attr('n_chan')
-        mult_params['n_out'] = self.get_attr('n_filt')
-        mult_params['weight_t'] = self.get_weights('pointwise').type
-        mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('pointwise').type.precision)
-        pointwise_mult_config = self._config_template[4].format(**mult_params)
-
-        return depthwise_mult_config + '\n' + depthwise_config + '\n' + pointwise_mult_config + '\n' + pointwise_config + '\n' + sep_config
-
 class DepthwiseConv2D(Conv2D):
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
@@ -841,25 +553,6 @@ class Pooling1D(Layer):
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0])
         self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        if self.get_attr('data_format') == 'channels_last':
-            params['n_in'] = self.get_input_variable().dim_names[0]
-            params['n_out'] = self.get_output_variable().dim_names[0]
-            params['n_filt'] = self.get_output_variable().dim_names[1]
-        else:
-            params['n_in'] = self.get_input_variable().dim_names[1]
-            params['n_out'] = self.get_input_variable().dim_names[1]
-            params['n_filt'] = self.get_output_variable().dim_names[0]
-
-        return self._config_template.format(**params)
-
 class Pooling2D(Layer):
     _expected_attributes = [
         Attribute('in_height'),
@@ -894,29 +587,6 @@ class Pooling2D(Layer):
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0])
         self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        if self.get_attr('data_format') == 'channels_last':
-            params['in_height'] = self.get_input_variable().dim_names[0]
-            params['in_width'] = self.get_input_variable().dim_names[1]
-            params['out_height'] = self.get_output_variable().dim_names[0]
-            params['out_width'] = self.get_output_variable().dim_names[1]
-            params['n_filt'] = self.get_output_variable().dim_names[2]
-        else:
-            params['in_height'] = self.get_input_variable().dim_names[1]
-            params['in_width'] = self.get_input_variable().dim_names[2]
-            params['n_filt'] = self.get_output_variable().dim_names[0]
-            params['out_height'] = self.get_output_variable().dim_names[1]
-            params['out_width'] = self.get_output_variable().dim_names[2]
-
-        return self._config_template.format(**params)
-
 class GlobalPooling1D(Layer):
     _expected_attributes = [
         Attribute('n_in'),
@@ -930,17 +600,6 @@ class GlobalPooling1D(Layer):
         dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0].replace('Global', ''))
-
-    def function_cpp(self):
-        params = self._default_function_params()
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        params['n_in'] = self.get_input_variable().size_cpp()
-
-        return self._config_template.format(**params)
 
 class GlobalPooling2D(Layer):
     _expected_attributes = [
@@ -958,22 +617,6 @@ class GlobalPooling2D(Layer):
         dims = ['N_FILT_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0].replace('Global', ''))
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        if self.get_attr('data_format') == 'channels_last':
-            params['in_height'] = self.get_input_variable().dim_names[0]
-            params['in_width'] = self.get_input_variable().dim_names[1]
-        else:
-            params['in_height'] = self.get_input_variable().dim_names[1]
-            params['in_width'] = self.get_input_variable().dim_names[2]
-
-        return self._config_template.format(**params)
 
 class ZeroPadding1D(Layer):
     _expected_attributes = [
@@ -994,24 +637,6 @@ class ZeroPadding1D(Layer):
             shape = [self.attributes['n_chan'], self.attributes['out_width']]
             dims = ['N_CHAN_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
         self.add_output_variable(shape, dims, precision=inp.type.precision)
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        if self.get_attr('data_format') == 'channels_last':
-            params['in_width'] = self.get_input_variable().dim_names[0]
-            params['n_chan'] = self.get_input_variable().dim_names[1]
-            params['out_width'] = self.get_output_variable().dim_names[0]
-        else:
-            params['n_chan'] = self.get_input_variable().dim_names[0]
-            params['in_width'] = self.get_input_variable().dim_names[1]
-            params['out_width'] = self.get_output_variable().dim_names[1]
-
-        return self._config_template.format(**params)
 
 class ZeroPadding2D(Layer):
     _expected_attributes = [
@@ -1037,28 +662,6 @@ class ZeroPadding2D(Layer):
             dims = ['N_CHAN_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
         self.add_output_variable(shape, dims, precision=inp.type.precision)
 
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        if self.get_attr('data_format') == 'channels_last':
-            params['in_height'] = self.get_input_variable().dim_names[0]
-            params['in_width'] = self.get_input_variable().dim_names[1]
-            params['n_chan'] = self.get_input_variable().dim_names[2]
-            params['out_height'] = self.get_output_variable().dim_names[0]
-            params['out_width'] = self.get_output_variable().dim_names[1]
-        else:
-            params['n_chan'] = self.get_input_variable().dim_names[0]
-            params['in_height'] = self.get_input_variable().dim_names[1]
-            params['in_width'] = self.get_input_variable().dim_names[2]
-            params['out_height'] = self.get_output_variable().dim_names[1]
-            params['out_width'] = self.get_output_variable().dim_names[2]
-
-        return self._config_template.format(**params)
-
 class Activation(Layer):
     _expected_attributes = [
         Attribute('n_in'),
@@ -1075,28 +678,7 @@ class Activation(Layer):
         self.add_output_variable(shape, dims)
         self.set_attr('n_in', self.get_input_variable().size())
 
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['activation'] = self.get_attr('activation').lower()
-        params['config'] = '{}_config{}'.format(self.get_attr('activation'), self.index)
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        params['type'] = self.get_attr('activation')
-
-        return self._config_template.format(**params)
-
 class ParametrizedActivation(Activation):
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['activation'] = self._get_act_function_name()
-        params['param'] = self.get_attr('activ_param', 1.0)
-        params['config'] = '{}_config{}'.format(self.get_attr('activation'), self.index)
-
-        return [self._function_template.format(**params)]
-
     def _get_act_function_name(self):
         act = self.get_attr('activation').lower()
         if act == 'leakyrelu':
@@ -1110,14 +692,6 @@ class PReLU(Activation):
     def initialize(self):
         super(PReLU, self).initialize()
         self.add_weights_variable(name='alpha', var_name='a{index}')
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['activation'] = self.get_attr('activation').lower()
-        params['param'] = self.get_weights('alpha').name
-        params['config'] = '{}_config{}'.format(self.get_attr('activation'), self.index)
-
-        return [self._function_template.format(**params)]
 
 class Softmax(Activation):
     _expected_attributes = [
@@ -1160,20 +734,6 @@ class BatchNormalization(Layer):
         self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
         self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
 
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['scale'] = self.get_weights('scale').name
-        params['bias'] = self.get_weights('bias').name
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        params['n_in'] = self.get_input_variable().size_cpp()
-        params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('scale').type.precision)
-
-        return self._config_template.format(**params)
-
 class Merge(Layer):
     def initialize(self):
         assert(len(self.inputs) == 2)
@@ -1187,30 +747,6 @@ class Merge(Layer):
             dims = inp1.dim_names
         self.add_output_variable(shape, dims)
 
-    def function_cpp(self):
-        params = {}
-        params['merge'] = self.get_attr('op').lower()
-        params['config'] = 'config{}'.format(self.index)
-        params['input1_t'] = self.get_input_variable(self.inputs[0]).type.name
-        params['input2_t'] = self.get_input_variable(self.inputs[1]).type.name
-        params['output_t'] = self.get_output_variable().type.name
-        params['input1'] = self.get_input_variable(self.inputs[0]).name
-        params['input2'] = self.get_input_variable(self.inputs[1]).name
-        params['output'] = self.get_output_variable().name
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        inp1 = self.get_input_variable(self.inputs[0])
-        inp2 = self.get_input_variable(self.inputs[1])
-        if np.prod(inp2.shape) > np.prod(inp1.shape):
-            params['n_elem'] = inp2.size_cpp()
-        else:
-            params['n_elem'] = inp1.size_cpp()
-
-        return self._config_template.format(**params)
-
 class Dot(Merge):
     def initialize(self):
         assert(len(self.inputs) == 2)
@@ -1221,15 +757,6 @@ class Dot(Merge):
             raise Exception('ERROR: Dot of tensors with rank > 1 is not yet supported.')
 
         self.add_output_variable(shape=[1], dim_names=['OUT_DOT_{}'.format(self.index)])
-
-    def config_cpp(self):
-        inp1 = self.get_input_variable(self.inputs[0])
-        inp2 = self.get_input_variable(self.inputs[1])
-        params = self._default_config_params()
-        params['n_out'] = 1
-        params['n_in'] = inp1.shape[0]
-        params['product_type'] = self.model.config.backend.product_type(inp1.type.precision, inp2.type.precision)
-        return self._config_template.format(**params)
 
 class Concatenate(Merge):
     def initialize(self):
@@ -1247,19 +774,6 @@ class Concatenate(Merge):
             dims = ['OUT_CONCAT_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
 
-    def config_cpp(self):
-        params = self._default_config_params()
-        for i in range(3):
-            params.setdefault('n_elem1_{}'.format(i), 0)
-            params.setdefault('n_elem2_{}'.format(i), 0)
-        inp1 = self.get_input_variable(self.inputs[0])
-        inp2 = self.get_input_variable(self.inputs[1])
-        for i, (s1, s2) in enumerate(zip(inp1.shape, inp2.shape)):
-            params['n_elem1_{}'.format(i)] = s1
-            params['n_elem2_{}'.format(i)] = s2
-
-        return self._config_template.format(**params)
-
 class BiasAdd(Merge): # TensorFlow's operator that gets merged into Dense/Conv
     def initialize(self):
         inp = self.get_input_variable(self.inputs[0])
@@ -1268,29 +782,12 @@ class BiasAdd(Merge): # TensorFlow's operator that gets merged into Dense/Conv
         self.add_bias()
         self.add_output_variable(shape, dims)
 
-    def function_cpp(self):
-        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
-
-    def config_cpp(self):
-        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
-
 class Resize(Layer):
     def initialize(self):
         inp = self.get_input_variable()
         shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
         dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
         self.add_output_variable(shape, dims, precision=inp.type.precision)
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['algorithm'] = self.get_attr('algorithm')
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-
-        return self._config_template.format(**params)
 
 class Transpose(Layer):
     def initialize(self):
@@ -1325,17 +822,6 @@ class Transpose(Layer):
             self.set_attr('height', inp.shape[1])
             self.set_attr('width', inp.shape[2])
         self.add_output_variable(shape, dims, precision=inp.type.precision)
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['dim'] = self.get_attr('dim')
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-
-        return self._config_template.format(**params)
 
 class GarNet(Layer):
     ref_impl = False

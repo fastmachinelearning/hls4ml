@@ -16,14 +16,6 @@ class Repack(Layer):
 
         self.add_output_variable(shape, dims)
 
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['size'] = np.prod(self.get_output_variable().shape)
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        return None
-
 repack_function_template = 'nnet::repack_stream<{input_t}, {output_t}, {size}>({input}, {output});'
 repack_include_list = ['nnet_utils/nnet_stream.h']
 
@@ -47,18 +39,6 @@ class Broadcast(Layer):
             shape = shape[1:]
         dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
         self.add_output_variable(shape, dims)
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        params['in_height'] = self.get_input_variable().shape[0]
-        params['in_width'] = self.get_input_variable().shape[1]
-        params['n_chan'] = self.get_input_variable().shape[2]
-        params['n_dupl'] = int(np.prod(self.get_output_variable().shape)/np.prod(self.get_input_variable().shape))
-        return self._config_template.format(**params)
 
 broadcast_function_template = 'nnet::broadcast_stream<{input_t}, {output_t}, {config}>({input}, {output});'
 broadcast_config_template = """struct config{index} : nnet::broadcast_config {{

@@ -4,6 +4,7 @@ from hls4ml.model.optimizer import OptimizerPass
 
 from hls4ml.model.hls_layers import Layer, register_layer
 from hls4ml.backends import get_backend
+from hls4ml.backends.template import FunctionCallTemplate
 
 class Clone(Layer):
     ''' Inserted after the layer whose output is used more than once.'''
@@ -13,29 +14,30 @@ class Clone(Layer):
         self.add_output_variable(inp.shape, inp.dim_names, out_name=self.outputs[0], var_name='layer{index}_cpy1')
         self.add_output_variable(inp.shape, inp.dim_names, out_name=self.outputs[1], var_name='layer{index}_cpy2')
 
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['size'] = self.get_attr('size')
-        params['output1'] = self.variables[self.outputs[0]].name
-        params['output2'] = self.variables[self.outputs[1]].name
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        return None
-
 clone_function_template = 'nnet::clone_stream<{input_t}, {output_t}, {size}>({input}, {output1}, {output2});'
 clone_include_list = ['nnet_utils/nnet_stream.h']
+
+class CloneFunctionTemplate(FunctionCallTemplate):
+    def __init__(self):
+        super().__init__(Clone, include_header=clone_include_list)
+        self.template = clone_function_template
+    
+    def format(self, node):
+        params = self._default_function_params(node)
+        params['output1'] = node.variables[node.outputs[0]].name
+        params['output2'] = node.variables[node.outputs[1]].name
+
+        return self.template.format(**params)
 
 def register_clone(backend):
     # Register the layer types to the layer map
     register_layer('Clone', Clone)
 
-    # Register the templates for config and function
-    backend.register_templates(Clone, clone_function_template, None, clone_include_list)
-
     # Register the optimization passes
     backend.register_pass('clone_output', CloneOutput)
 
+    # Register template passes
+    backend.register_template(CloneFunctionTemplate)
 
 class CloneOutput(OptimizerPass):
     ''' Clones streams that are used multiple times '''

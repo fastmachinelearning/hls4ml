@@ -121,14 +121,9 @@ class QuartusWriter(Writer):
                                 newline += '    ' + def_cpp + ';\n'
                     if layer.get_attr('activation') == 'tanh': #TODO move this to an optimizer
                         layer.set_attr('activation') == 'dense_tanh'
-                    if 'function_cpp' in layer.attributes:
-                        func = layer.get_attr('function_cpp')
-                        func = [func]
-                    else: # Temporarily support calling function_cpp()
-                        func = layer.function_cpp()
+                    func = layer.get_attr('function_cpp', None)
                     if func:
-                        for line in func:
-                            newline += '    ' + line + '\n'
+                        newline += '    ' + func + '\n'
                         newline += '\n'
 
             #Just copy line
@@ -225,10 +220,7 @@ class QuartusWriter(Writer):
             elif "//hls-fpga-machine-learning insert layer-config" in line:
                 newline = line
                 for layer in model.get_layers():
-                    if 'config_cpp' in layer.attributes:
-                        config = layer.get_attr('config_cpp')
-                    else: # Temporarily support calling config_cpp()
-                        config = layer.config_cpp()
+                    config = layer.get_attr('config_cpp', None)
                     if config:
                         newline += config + '\n'
             else:
@@ -385,10 +377,7 @@ class QuartusWriter(Writer):
             elif '//hls-fpga-machine-learning insert trace_outputs' in line:
                 newline = ''
                 for layer in model.get_layers():
-                    if 'function_cpp' in layer.attributes:
-                        func = layer.get_attr('function_cpp')
-                    else: # Temporarily support calling function_cpp()
-                        func = layer.function_cpp()
+                    func = layer.get_attr('function_cpp')
                     if func and model.config.trace_output and model.config.get_layer_config_value(layer, 'Trace', False):
                             vars = layer.get_variables()
                             for var in vars:
@@ -415,7 +404,7 @@ class QuartusWriter(Writer):
             line = line.replace('myproject',model.config.get_project_name())
 
             if 'DEVICE   :=' in line:
-                line = 'DEVICE   := {}\n'.format(model.config.get_config_value('Device'))
+                line = 'DEVICE   := {}\n'.format(model.config.get_config_value('Part'))
 
             fout.write(line)
         f.close()

@@ -36,11 +36,6 @@ class LayerDict(MutableMapping):
 class Backend(object):
     def __init__(self, name):
         self.name = name
-        # Templates
-        self.config_templates = LayerDict()
-        self.function_templates = LayerDict()
-        self.init_templates()
-        # Optimizers
         self._init_optimizers()
 
     def init_templates(self):
@@ -81,12 +76,6 @@ class Backend(object):
     def create_layer_class(self, layer_class):
         raise NotImplementedError
 
-    def get_config_template(self, kind):
-        return self.config_templates.get(kind)
-
-    def get_function_template(self, kind):
-        return self.function_templates.get(kind)
-
     def get_available_flows(self):
         return get_backend_flows(self.name)
 
@@ -98,10 +87,6 @@ class Backend(object):
     
     def get_available_flows(self):
         raise NotImplementedError
-
-    def register_templates(self, cls, function_template, config_template, include_list=[]):
-        self.function_templates[cls] = function_template
-        self.config_templates[cls] = config_template
 
     def register_source(self, file_name, source, destination_dir='nnet_utils'):
         raise NotImplementedError

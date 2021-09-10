@@ -4,6 +4,7 @@ import re
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.hls_types import IntegerPrecisionType, XnorPrecisionType
 from hls4ml.model.hls_layers import Layer, Activation, Dense, BatchNormalization, register_layer
+from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 
 class BatchNormalizationQuantizedTanh(Layer):
     ''' Merged Batch Normalization and quantized (binary or ternary) Tanh layer.
@@ -21,23 +22,6 @@ class BatchNormalizationQuantizedTanh(Layer):
             self.add_output_variable(shape, dims, precision=IntegerPrecisionType(width=2))
         else:
             raise Exception('Unsupported quantize attribute for BatchNormalizationQuantizedTanh: {}'.format(self.get_attr('quantize')))
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        if self.get_attr('quantize') == 2:
-            params['quantize'] = 'binary'
-            params['threshold'] = self.get_weights('threshold').name
-        elif self.get_attr('quantize') == 3:
-            params['quantize'] = 'ternary'
-            params['threshold'] = self.get_weights('threshold_hi').name + ', ' + self.get_weights('threshold_lo').name
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        params['n_in'] = self.get_input_variable().size_cpp()
-
-        return self._config_template.format(**params)
 
     def set_thresholds(self, scale, bias, ternary_threshold=0.5):
         inp = self.get_input_variable()
@@ -67,19 +51,46 @@ batchnorm_quantized_tanh_config_template = """struct config{index} : nnet::batch
 }};\n"""
 
 batchnorm_quantized_tanh_function_template = 'nnet::normalize_{quantize}_tanh<{input_t}, {config}>({input}, {output}, {threshold});'
+bn_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
+
+class BatchNormalizationQuantizedTanhConfigTemplate(LayerConfigTemplate):
+    def __init__(self):
+        super().__init__(BatchNormalizationQuantizedTanh)
+        self.template = batchnorm_quantized_tanh_config_template
+    
+    def format(self, node):
+        params = self._default_config_params(node)
+        params['n_in'] = node.get_input_variable().size_cpp()
+        
+        return self.template.format(**params)
+
+class BatchNormalizationQuantizedTanhFunctionTemplate(FunctionCallTemplate):
+    def __init__(self):
+        super().__init__(BatchNormalizationQuantizedTanh, include_header=bn_include_list)
+        self.template = batchnorm_quantized_tanh_function_template
+    
+    def format(self, node):
+        params = self._default_function_params(node)
+        if node.get_attr('quantize') == 2:
+            params['quantize'] = 'binary'
+            params['threshold'] = node.get_weights('threshold').name
+        elif node.get_attr('quantize') == 3:
+            params['quantize'] = 'ternary'
+            params['threshold'] = node.get_weights('threshold_hi').name + ', ' + node.get_weights('threshold_lo').name
+
+        return self.template.format(**params)
 
 def register_bn_quant(backend):
     # Register the layer types to the layer map
     register_layer('BatchNormalizationQuantizedTanh', BatchNormalizationQuantizedTanh)
 
-    bn_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
-
-    # Register the templates for config and function
-    backend.register_templates(BatchNormalizationQuantizedTanh, batchnorm_quantized_tanh_function_template, batchnorm_quantized_tanh_config_template, bn_include_list)
-
     # Register the optimization passes
     backend.register_pass('merge_batch_norm_quantized_tanh', MergeBatchNormAndQuantizedTanh)
     backend.register_pass('quantize_dense_output', QuantizeDenseOutput)
+
+    # Register template passes
+    backend.register_template(BatchNormalizationQuantizedTanhConfigTemplate)
+    backend.register_template(BatchNormalizationQuantizedTanhFunctionTemplate)
 
 
 class MergeBatchNormAndQuantizedTanh(OptimizerPass):

@@ -182,12 +182,9 @@ class VivadoWriter(Writer):
                                 newline += '    ' + def_cpp + ';\n'
                                 if var.pragma:
                                     newline += '    ' + self._make_array_pragma(var) + '\n'
-                    if 'function_cpp' in layer.attributes:
-                        func = layer.get_attr('function_cpp')
-                        func = [func]
-                    else: # Temporarily support calling function_cpp()
-                        func = layer.function_cpp()
+                    func = layer.get_attr('function_cpp', None)
                     if func:
+                        func = [func]
                         if len(func) == 1:
                             newline += '    ' + func[0] + ' // ' + layer.name + '\n'
                         else:
@@ -304,10 +301,7 @@ class VivadoWriter(Writer):
             elif "//hls-fpga-machine-learning insert layer-config" in line:
                 newline = line
                 for layer in model.get_layers():
-                    if 'config_cpp' in layer.attributes:
-                        config = layer.get_attr('config_cpp')
-                    else: # Temporarily support calling config_cpp()
-                        config = layer.config_cpp()
+                    config = layer.get_attr('config_cpp', None)
                     if config:
                         newline += '// ' + layer.name + '\n'
                         newline += config + '\n'
@@ -512,10 +506,7 @@ class VivadoWriter(Writer):
             elif '//hls-fpga-machine-learning insert trace_outputs' in line:
                 newline = ''
                 for layer in model.get_layers():
-                    if 'function_cpp' in layer.attributes:
-                        func = layer.get_attr('function_cpp')
-                    else: # Temporarily support calling function_cpp()
-                        func = layer.function_cpp()
+                    func = layer.get_attr('function_cpp', None)
                     if func and model.config.trace_output and layer.get_attr('Trace', False):
                             vars = layer.get_variables()
                             for var in vars:

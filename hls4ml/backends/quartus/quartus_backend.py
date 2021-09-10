@@ -25,212 +25,11 @@ def chdir(newdir):
     finally:
         os.chdir(prevdir)
 
-dense_config_template = """struct config{index} : nnet::dense_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned n_out = {n_out};
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned n_zeros = {nzeros};
-    static const unsigned n_nonzeros = {nonzeros};
-    static const bool store_weights_in_bram = false;
-
-    static const unsigned rf_pad = {rfpad};
-    static const unsigned bf_pad = {bfpad};
-
-    static const unsigned reuse_factor = {reuse};
-    static const unsigned compressed_block_factor = DIV_ROUNDUP(n_nonzeros, reuse_factor);
-    static const unsigned reuse_factor_rounded = reuse_factor + rf_pad;
-    static const unsigned block_factor = DIV_ROUNDUP(n_in*n_out, reuse_factor);
-    static const unsigned block_factor_rounded = block_factor + bf_pad;
-    static const unsigned multiplier_factor = MIN(n_in, reuse_factor);
-    static const unsigned multiplier_limit = DIV_ROUNDUP(n_in*n_out, multiplier_factor);
-    static const unsigned multiplier_scale = multiplier_limit/n_out;
-
-    typedef {accum_t.name} accum_t;
-    typedef {bias_t.name} bias_t;
-    typedef {weight_t.name} weight_t;
-    typedef {index_t.name} index_t;
-}};\n"""
-
-batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned n_filt = {n_filt};
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned reuse_factor = {reuse};
-    static const bool store_weights_in_bram = false;
-    typedef {bias_t.name} bias_t;
-    typedef {scale_t.name} scale_t;
-}};\n"""
-
-conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
-    static const unsigned pad_left = {pad_left};
-    static const unsigned pad_right = {pad_right};
-    static const unsigned n_in = {n_in};
-    static const unsigned n_chan = {n_chan};
-    static const unsigned filt_width = {filt_width};
-    static const unsigned n_filt = {n_filt};
-    static const unsigned stride = {stride};
-    static const unsigned dilation = {dilation};
-    static const unsigned n_out = {n_out};
-    static const unsigned reuse_factor = {reuse};
-    static const unsigned n_zeros = {nzeros};
-    static const bool store_weights_in_bram = false;
-    typedef {accum_t.name} accum_t;
-    typedef {bias_t.name} bias_t;
-    typedef {weight_t.name} weight_t;
-    typedef {config_t} mult_config;
-}};\n"""
-
-conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned n_out = {n_out};
-    static const unsigned reuse_factor = {reuse};
-    typedef {accum_t.name} accum_t;
-    typedef {bias_t.name} bias_t;
-    typedef {weight_t.name} weight_t;
-}};\n"""
-
-conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
-    static const unsigned pad_top = {pad_top};
-    static const unsigned pad_bottom = {pad_bottom};
-    static const unsigned pad_left = {pad_left};
-    static const unsigned pad_right = {pad_right};
-    static const unsigned in_height = {in_height};
-    static const unsigned in_width = {in_width};
-    static const unsigned n_chan = {n_chan};
-    static const unsigned filt_height = {filt_height};
-    static const unsigned filt_width = {filt_width};
-    static const unsigned n_filt = {n_filt};
-    static const unsigned stride_height = {stride_height};
-    static const unsigned stride_width = {stride_width};
-    static const unsigned out_height = {out_height};
-    static const unsigned out_width = {out_width};
-    static const unsigned reuse_factor = {reuse};
-    static const unsigned n_zeros = {nzeros};
-    static const bool store_weights_in_bram = false;
-    typedef {accum_t.name} accum_t;
-    typedef {bias_t.name} bias_t;
-    typedef {weight_t.name} weight_t;
-    typedef {config_t} mult_config;
-}};\n"""
-
-activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned table_size = {table_size};
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned reuse_factor = {reuse};
-    typedef {table_t.name} table_t;
-}};\n"""
-
-softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned table_size = {table_size};
-    static const unsigned io_type = nnet::{iotype};
-    static const unsigned reuse_factor = {reuse};
-    typedef {exp_table_t.name} exp_table_t;
-    typedef {inv_table_t.name} inv_table_t;
-}};\n"""
-
-pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
-    static const unsigned n_in = {n_in};
-    static const unsigned pool_size = {pool_size};
-    static const unsigned n_out = {n_out};
-    static const unsigned pad_left = {pad_left};
-    static const unsigned pad_right = {pad_right};
-    static const unsigned stride = {stride};
-    static const nnet::Pool_Op pool_op = nnet::{pool_op};
-}};\n"""
-
-pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
-    static const unsigned in_height = {in_height};
-    static const unsigned in_width = {in_width};
-    static const unsigned n_filt = {n_filt};
-    static const unsigned stride_height = {stride_height};
-    static const unsigned stride_width = {stride_width};
-    static const unsigned pool_height = {pool_height};
-    static const unsigned pool_width = {pool_width};
-    static const unsigned out_height = {out_height};
-    static const unsigned out_width = {out_width};
-    static const unsigned pad_top = {pad_top};
-    static const unsigned pad_bottom = {pad_bottom};
-    static const unsigned pad_left = {pad_left};
-    static const unsigned pad_right = {pad_right};
-    static const nnet::Pool_Op pool_op = nnet::{pool_op};
-    static const unsigned reuse = {reuse};
-}};\n"""
-
-merge_config_template = """struct config{index} : nnet::merge_config {{
-    static const unsigned n_elem = {n_elem};
-}};\n"""
-
-concat_config_template = """struct config{index} : nnet::concat_config {{
-    static const unsigned n_elem1_0 = {n_elem1_0};
-    static const unsigned n_elem1_1 = {n_elem1_1};
-    static const unsigned n_elem1_2 = {n_elem1_2};
-    static const unsigned n_elem2_0 = {n_elem2_0};
-    static const unsigned n_elem2_1 = {n_elem2_1};
-    static const unsigned n_elem2_2 = {n_elem2_2};
-
-    static const unsigned axis = {axis};
-}};\n"""
-
-resize_config_template = """struct config{index} : nnet::resize_config {{
-    static const unsigned height = {height};
-    static const unsigned width = {width};
-    static const unsigned n_chan = {n_chan};
-    static const unsigned new_height = {new_height};
-    static const unsigned new_width = {new_width};
-}};\n"""
-
-transpose_config_template = """struct config{index} : nnet::transpose_config {{
-    static const unsigned depth = {depth};
-    static const unsigned height = {height};
-    static const unsigned width = {width};
-    static const unsigned perm[3] = {{{perm_str}}};
-}};\n"""
-
-dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
-batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
-#conv1d_function_template = 'nnet::conv_1d_{strategy}_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
-#conv2d_function_template = 'nnet::conv_2d_{strategy}_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
-activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
-param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {param}, {output});'
-#pooling1d_function_template = 'nnet::pooling1d<{input_t}, {config}>({input}, {output});'
-#pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {config}>({input}, {output});'
-#merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
-#resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
-#transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}, {output});'
-
-dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h']
-batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h']
-#conv1d_include_list = ['nnet_utils/nnet_conv.h', 'nnet_utils/nnet_conv_large.h']
-#conv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_large.h']
-activ_include_list = ['nnet_utils/nnet_activation.h']
-#pooling_include_list = ['nnet_utils/nnet_pooling.h']
-#merge_include_list = ['nnet_utils/nnet_merge.h']
-#resize_include_list = ['nnet_utils/nnet_image.h']
-#transpose_include_list = ['nnet_utils/nnet_array.h']
-
 class QuartusBackend(FPGABackend):
     def __init__(self):
         super(QuartusBackend, self).__init__('Quartus')
         self._register_flows()
     
-    def init_templates(self):
-        self.register_templates(Dense                  , dense_function_template, dense_config_template, dense_include_list)
-        self.register_templates(BatchNormalization     , batchnorm_function_template,   batchnorm_config_template, batchnorm_include_list)
-        #self.register_templates(Conv1D                , conv1d_function_template,      [conv1d_config_template, conv_mult_config_template], conv1d_include_list)
-        #self.register_templates(Conv2D                , conv2d_function_template,      [conv2d_config_template, conv_mult_config_template], conv2d_include_list)
-        self.register_templates(Activation             , activ_function_template,       activ_config_template, activ_include_list)
-        self.register_templates(ParametrizedActivation , param_activ_function_template, activ_config_template, activ_include_list)
-        self.register_templates(PReLU                  , param_activ_function_template, activ_config_template, activ_include_list)
-        self.register_templates(Softmax                , activ_function_template,       softmax_config_template, activ_include_list)
-        #self.register_templates(Pooling1D             , pooling1d_function_template,   pooling1d_config_template, pooling_include_list)
-        #self.register_templates(Pooling2D             , pooling2d_function_template,   pooling2d_config_template, pooling_include_list)
-        #self.register_templates(Merge                 , merge_function_template,       merge_config_template, merge_include_list)
-        #self.register_templates(Concatenate           , merge_function_template,       concat_config_template, merge_include_list)
-        #self.register_templates(Resize                , resize_function_template,      resize_config_template, resize_include_list)
-        #self.register_templates(Transpose             , transpose_function_template,   transpose_config_template, transpose_include_list)
-
     def _register_flows(self):
         initializers = self._get_layer_initializers()
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
@@ -263,10 +62,10 @@ class QuartusBackend(FPGABackend):
     def get_default_flow(self):
         return self._default_flow
     
-    def create_initial_config(self, device='Arria10', clock_period=5, io_type='io_parallel'):
+    def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel'):
         config = {}
 
-        config['Part'] = device if device is not None else 'Arria10'
+        config['Part'] = part if part is not None else 'Arria10'
         config['ClockPeriod'] = clock_period
         config['IOType'] = io_type
         config['HLSConfig'] = {}
