@@ -1,7 +1,7 @@
 import os
 from shutil import copyfile
 
-from hls4ml.templates.vivado_accelerator_config import VivadoAcceleratorConfig
+from hls4ml.backends import VivadoAcceleratorConfig
 from hls4ml.writer.vivado_writer import VivadoWriter
 
 class VivadoAcceleratorWriter(VivadoWriter):
@@ -243,10 +243,10 @@ class VivadoAcceleratorWriter(VivadoWriter):
             if '{}.h'.format(model.config.get_project_name()) in line:
                 newline = line.replace('{}.h'.format(model.config.get_project_name()),
                                        '{}_axi.h'.format(model.config.get_project_name()))
-            elif self.variable_definition_cpp(model, inp) in line:
-                newline = line.replace(self.variable_definition_cpp(model, inp), 'input_axi_t inputs[N_IN]')
-            elif self.variable_definition_cpp(model, out) in line:
-                newline = line.replace(self.variable_definition_cpp(model, out), 'output_axi_t outputs[N_OUT]')
+            elif inp.definition_cpp() in line:
+                newline = line.replace(inp.definition_cpp(), 'input_axi_t inputs[N_IN]') #TODO instead of replacing strings, how about we use proper variables and their definition?
+            elif out.definition_cpp() in line:
+                newline = line.replace(out.definition_cpp(), 'output_axi_t outputs[N_OUT]')
             elif 'unsigned short' in line:
                 newline = ''
             elif '{}('.format(model.config.get_project_name()) in line:
@@ -288,11 +288,11 @@ class VivadoAcceleratorWriter(VivadoWriter):
             if '{}.h'.format(model.config.get_project_name()) in line:
                 newline = line.replace('{}.h'.format(model.config.get_project_name()),
                                        '{}_axi.h'.format(model.config.get_project_name()))
-            elif self.variable_definition_cpp(model, inp, name_suffix='_ap') in line:
-                newline = line.replace(self.variable_definition_cpp(model, inp, name_suffix='_ap'),
+            elif inp.definition_cpp(name_suffix='_ap') in line:
+                newline = line.replace(inp.definition_cpp(name_suffix='_ap'),
                                        'input_axi_t {}_ap[N_IN]'.format(inp.cppname))
-            elif self.variable_definition_cpp(model, out, name_suffix='_ap') in line:
-                newline = line.replace(self.variable_definition_cpp(model, out, name_suffix='_ap'),
+            elif out.definition_cpp(name_suffix='_ap') in line:
+                newline = line.replace(out.definition_cpp(name_suffix='_ap'),
                                        'output_axi_t {}_ap[N_OUT]'.format(out.cppname))
             elif '{}('.format(model.config.get_project_name()) in line:
                 indent_amount = line.split(model.config.get_project_name())[0]

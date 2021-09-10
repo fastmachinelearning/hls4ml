@@ -14,7 +14,7 @@ class TransformTypes(GlobalOptimizerPass):
             io_type = node.model.config.get_config_value('IOType') # move this out of the loop
 
             if io_type == 'io_stream':
-                new_var = StreamVariable.from_variable(var)
+                new_var = StreamVariable.from_variable(var, self.precision_converter)
             elif io_type == 'io_serial':
                 new_var = VivadoArrayVariable.from_variable(var, self.precision_converter, pragma='stream')
             elif io_type == 'io_parallel':

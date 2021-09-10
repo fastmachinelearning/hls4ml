@@ -1,6 +1,6 @@
 from collections.abc import MutableMapping
 
-from hls4ml.model.hls_types import NamedType, TensorVariable, WeightVariable
+from hls4ml.model.hls_types import InplaceVariable, NamedType, TensorVariable, WeightVariable
 
 class Attribute(object):
     def __init__(self, name, value_type=int, default=None, configurable=False):
@@ -57,7 +57,7 @@ class AttributeDict(MutableMapping):
 
     def __setitem__(self, key, value):
         self.attributes[key] = value
-        if isinstance(value, TensorVariable):
+        if isinstance(value, (TensorVariable, InplaceVariable)):
             self.layer.model.register_output_variable(key, value)
             self.attributes['result_t'] = value.type
         elif isinstance(value, WeightVariable):

@@ -266,7 +266,7 @@ class QuartusBackend(FPGABackend):
     def create_initial_config(self, device='Arria10', clock_period=5, io_type='io_parallel'):
         config = {}
 
-        config['Device'] = device if device is not None else 'Arria10'
+        config['Part'] = device if device is not None else 'Arria10'
         config['ClockPeriod'] = clock_period
         config['IOType'] = io_type
         config['HLSConfig'] = {}
@@ -391,6 +391,13 @@ class QuartusBackend(FPGABackend):
                 index_t = layer.get_weights('weight').type.index_precision
 
         layer.set_attr('index_t', NamedType('layer{}_index'.format(layer.index), index_t))
+
+    @layer_optimizer(Activation)
+    def init_activation(self, layer):
+        if 'table_t' not in layer.attributes:
+            layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
+        if 'table_size' not in layer.attributes:
+            layer.set_attr('table_size', 1024)
 
     @layer_optimizer(Softmax)
     def init_softmax(self, layer):

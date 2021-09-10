@@ -25,12 +25,7 @@ def register_flow(name, optimizers, requires=None, backend=None):
     if name in flow_map:
         raise Exception('Flow {} already registered'.format(name))
 
-    if optimizers is not None:
-        opt_list = [_get_backend_name_prefix(opt, backend) for opt in optimizers]
-    else:
-        opt_list = None
-    
-    flow_map[name] = Flow(name, opt_list, requires)
+    flow_map[name] = Flow(name, optimizers, requires)
 
     return name
 

@@ -477,10 +477,10 @@ class VivadoBackend(FPGABackend):
     def get_default_flow(self):
         return self._default_flow
     
-    def create_initial_config(self, device='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
+    def create_initial_config(self, part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
         config = {}
 
-        config['Device'] = device if device is not None else 'xcku115-flvb2104-2-i'
+        config['Part'] = part if part is not None else 'xcku115-flvb2104-2-i'
         config['ClockPeriod'] = clock_period
         config['IOType'] = io_type
         config['HLSConfig'] = {}
@@ -586,8 +586,6 @@ class VivadoBackend(FPGABackend):
 
     @layer_optimizer(Activation)
     def init_activation(self, layer):
-        layer.set_attr('n_in', layer.get_input_variable().size())
-
         if 'table_t' not in layer.attributes:
             layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
         if 'table_size' not in layer.attributes:

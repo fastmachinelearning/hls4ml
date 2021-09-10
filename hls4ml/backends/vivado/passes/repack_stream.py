@@ -1,9 +1,9 @@
 import numpy as np
 
 from hls4ml.model.optimizer import OptimizerPass
-
 from hls4ml.model.hls_layers import Layer, Reshape, register_layer
 from hls4ml.backends import get_backend
+from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 
 class Repack(Layer):
     ''' Inserted between layers with different packing factors.'''
@@ -23,6 +23,20 @@ class Repack(Layer):
 
     def config_cpp(self):
         return None
+
+repack_function_template = 'nnet::repack_stream<{input_t}, {output_t}, {size}>({input}, {output});'
+repack_include_list = ['nnet_utils/nnet_stream.h']
+
+class RepackFunctionTemplate(FunctionCallTemplate):
+    def __init__(self):
+        super().__init__(Repack, include_header=repack_include_list)
+        self.template = repack_function_template
+    
+    def format(self, node):
+        params = self._default_function_params(node)
+        params['size'] = np.prod(node.get_output_variable().shape)
+
+        return self.template.format(**params)
 
 class Broadcast(Layer):
     ''' Inserted between layers for broadcasting.'''
@@ -46,9 +60,6 @@ class Broadcast(Layer):
         params['n_dupl'] = int(np.prod(self.get_output_variable().shape)/np.prod(self.get_input_variable().shape))
         return self._config_template.format(**params)
 
-repack_function_template = 'nnet::repack_stream<{input_t}, {output_t}, {size}>({input}, {output});'
-repack_include_list = ['nnet_utils/nnet_stream.h']
-
 broadcast_function_template = 'nnet::broadcast_stream<{input_t}, {output_t}, {config}>({input}, {output});'
 broadcast_config_template = """struct config{index} : nnet::broadcast_config {{
     static const unsigned in_width = {in_width};
@@ -58,18 +69,42 @@ broadcast_config_template = """struct config{index} : nnet::broadcast_config {{
 }};\n"""
 broadcast_include_list = ['nnet_utils/nnet_stream.h']
 
+class BroadcastConfigTemplate(LayerConfigTemplate):
+    def __init__(self):
+        super().__init__(Broadcast)
+        self.template = broadcast_config_template
+    
+    def format(self, node):
+        params = self._default_config_params(node)
+        params['in_height'] = node.get_input_variable().shape[0]
+        params['in_width'] = node.get_input_variable().shape[1]
+        params['n_chan'] = node.get_input_variable().shape[2]
+        params['n_dupl'] = int(np.prod(node.get_output_variable().shape) / np.prod(node.get_input_variable().shape))
+
+        return self.template.format(**params)
+
+class BroadcastFunctionTemplate(FunctionCallTemplate):
+    def __init__(self):
+        super().__init__(Broadcast, include_header=broadcast_include_list)
+        self.template = broadcast_function_template
+    
+    def format(self, node):
+        params = self._default_function_params(node)
+        return self.template.format(**params)
+
 def register_repack_stream(backend):
     # Register the layer types to the layer map
     register_layer('Repack', Repack)
     register_layer('Broadcast', Broadcast)
     
-    # Register the templates for config and function
-    backend.register_templates(Repack, repack_function_template, None, repack_include_list)
-    backend.register_templates(Broadcast, broadcast_function_template, broadcast_config_template, broadcast_include_list)
-    
     # Register the optimization passes
     backend.register_pass('reshape_stream', ReshapeStream)
     backend.register_pass('broadcast_stream', BroadcastStream)
+    
+    # Register template passes
+    backend.register_template(RepackFunctionTemplate)
+    backend.register_template(BroadcastConfigTemplate)
+    backend.register_template(BroadcastFunctionTemplate)
 
 class ReshapeStream(OptimizerPass):
     ''' Repacks stream for Reshape layer '''

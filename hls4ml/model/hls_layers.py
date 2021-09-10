@@ -54,7 +54,7 @@ class Layer(object):
         self._function_template = self.model.config.backend.get_function_template(self.__class__)
         self._config_template = self.model.config.backend.get_config_template(self.__class__)
         self.weights = AttributeMapping(self.attributes, WeightVariable)
-        self.variables = AttributeMapping(self.attributes, TensorVariable)
+        self.variables = AttributeMapping(self.attributes, (TensorVariable, InplaceVariable))
         self.types = AttributeMapping(self.attributes, NamedType)
 
         accum_t = NamedType(*reversed(self.model.config.get_precision(self, 'accum')))
@@ -293,8 +293,7 @@ class Reshape(Layer):
         proxy = self.get_input_variable()
         out = InplaceVariable(shape, dims, proxy, index=self.get_input_node().index)
 
-        self.variables[out_name] = out
-        self.model.register_output_variable(out_name, out)
+        self.set_attr(out_name, out)
 
     def function_cpp(self):
         return None
@@ -1064,9 +1063,9 @@ class Activation(Layer):
     _expected_attributes = [
         Attribute('n_in'),
         Attribute('activation', value_type=str),
-        Attribute('table_size', default=1024),
+        #Attribute('table_size', default=1024),
         
-        TypeAttribute('table')
+        #TypeAttribute('table')
     ]
 
     def initialize(self):
@@ -1074,6 +1073,7 @@ class Activation(Layer):
         shape = inp.shape
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
+        self.set_attr('n_in', self.get_input_variable().size())
 
     def function_cpp(self):
         params = self._default_function_params()

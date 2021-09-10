@@ -67,7 +67,7 @@ class Backend(object):
         all_initializers = { name:get_optimizer(name) for name in get_backend_passes(self.name) if isinstance(get_optimizer(name), LayerOptimizerPass) }
 
         # Sort through the initializers based on the base class (e.g., to apply 'Layer' optimizers before 'Dense')
-        sorted_initializers = sorted(all_initializers.items(), key=lambda x: len(x[1].__class__.mro()))
+        sorted_initializers = sorted(all_initializers.items(), key=lambda x: len(x[1].layer_class.mro()))
 
         # Return only the names of the initializers
         return [opt[0] for opt in sorted_initializers]
@@ -108,6 +108,10 @@ class Backend(object):
     
     def register_pass(self, name, opt_cls):
         register_pass(name, opt_cls, backend=self.name)
+    
+    def register_template(self, template_cls):
+        template = template_cls()
+        register_pass(template.get_name(), template, backend=self.name)
 
 
 backend_map = {}

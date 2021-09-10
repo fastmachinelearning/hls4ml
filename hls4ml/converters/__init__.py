@@ -163,8 +163,7 @@ def _check_model_config(model_config):
     return model_config
 
 def convert_from_keras_model(model, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,
-                             output_data_tb=None, backend='Vivado', board=None, part=None, clock_period=5, io_type='io_parallel',
-                             hls_config={}, **kwargs):
+                             output_data_tb=None, backend='Vivado', hls_config={}, **kwargs):
     """Convert to hls4ml model based on the provided configuration.
     Args:
         model: Keras model to convert
@@ -198,10 +197,6 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
     config = create_config(
         output_dir=output_dir,
         project_name=project_name,
-        board=board,
-        part=part,
-        clock_period=clock_period,
-        io_type=io_type,
         backend=backend,
         **kwargs
     )
@@ -220,8 +215,7 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
 
 
 def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,
-                             output_data_tb=None, backend='Vivado', board=None, part=None, clock_period=5, io_type='io_parallel',
-                             hls_config={}, **kwargs):
+                             output_data_tb=None, backend='Vivado', hls_config={}, **kwargs):
     """
 
     Convert a Pytorch model to a hls model.
@@ -275,10 +269,6 @@ def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', pro
     config = create_config(
         output_dir=output_dir,
         project_name=project_name,
-        board=board,
-        part=part,
-        clock_period=clock_period,
-        io_type=io_type,
         backend=backend,
         **kwargs
     )
@@ -298,7 +288,7 @@ def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', pro
 
 
 def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,
-                             output_data_tb=None, backend='Vivado', board=None, part=None, clock_period=5, io_type='io_parallel',
+                             output_data_tb=None, backend='Vivado',
                              hls_config={}, **kwargs):
     """
 
@@ -348,10 +338,6 @@ def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='mypro
     config = create_config(
         output_dir=output_dir,
         project_name=project_name,
-        board=board,
-        part=part,
-        clock_period=clock_period,
-        io_type=io_type,
         backend=backend,
         **kwargs
     )

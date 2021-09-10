@@ -120,9 +120,10 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
 class QuantizeDenseOutput(OptimizerPass):
     def match(self, node):
         is_dense = node.class_name == 'Dense'
-        is_input_bnqt = node.get_input_node().class_name == 'BatchNormalizationQuantizedTanh'
+        input_node = node.get_input_node()
+        is_input_bnqt = input_node is not None and input_node.class_name == 'BatchNormalizationQuantizedTanh'
         quantizer = node.get_attr('weight_quantizer')
-        is_binary_ternary = (quantizer.__class__.__name__ == 'BinaryQuantizer' or quantizer.__class__.__name__ == 'TernaryQuantizer')
+        is_binary_ternary = quantizer is not None and (quantizer.__class__.__name__ == 'BinaryQuantizer' or quantizer.__class__.__name__ == 'TernaryQuantizer')
         return is_dense and is_input_bnqt and is_binary_ternary
 
     def transform(self, model, node):
