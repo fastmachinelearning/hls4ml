@@ -131,19 +131,20 @@ class FPGABackend(Backend):
 
             layer.set_attr('reuse_factor', float(rf) / kernel_multiplies)
 
-
-    def convert_precision_string(self, precision):
+    @staticmethod
+    def convert_precision_string(precision):
         if isinstance(precision, IntegerPrecisionType) or isinstance(precision, FixedPrecisionType):
             return precision
 
         if precision.startswith('ap_'):
-            return self._convert_ap_type(precision)
+            return FPGABackend._convert_ap_type(precision)
         elif precision.startswith('ac_'):
-            return self._convert_ac_type(precision)
+            return FPGABackend._convert_ac_type(precision)
         else:
             raise Exception('Cannot convert precision string: {}'.format(precision))
 
-    def _convert_ap_type(self, precision):
+    @staticmethod
+    def _convert_ap_type(precision):
         '''
         Convert a precision string (e.g. "ap_fixed<16,6>" to the internal FixedPrecisionTypes etc)
         '''
@@ -162,9 +163,9 @@ class FPGABackend(Backend):
             fields = 1
             signed = bool(~('u' in precision))
         if len(bits) > fields:
-            sat_mode = bits[fields]
+            round_mode = bits[fields]
         if len(bits) > fields+1:
-            round_mode = bits[fields+1]
+            sat_mode = bits[fields+1]
         if len(bits) > fields+2:
             sat_bits = int(bits[fields+2])
         if 'fixed' in precision:
@@ -172,7 +173,8 @@ class FPGABackend(Backend):
         elif 'int' in precision:
             return IntegerPrecisionType(W, signed)
 
-    def _convert_ac_type(self, precision):
+    @staticmethod
+    def _convert_ac_type(precision):
         '''
         Convert a precision string (e.g. "ac_fixed<16,6>" to the internal FixedPrecisionTypes etc)
         '''
@@ -195,9 +197,9 @@ class FPGABackend(Backend):
                 signed = bool(bits[1])
                 fields = 2
         if len(bits) > fields:
-            sat_mode = bits[fields]
+            round_mode = bits[fields]
         if len(bits) > fields+1:
-            round_mode = bits[fields+1]
+            sat_mode = bits[fields+1]
         if 'fixed' in precision:
             return FixedPrecisionType(W, I, signed, round_mode, sat_mode)
         elif 'int' in precision:

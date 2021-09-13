@@ -159,7 +159,7 @@ types_plots = {'boxplot' : types_boxplot,
 
 def ap_fixed_WIF(dtype):
     from hls4ml.backends import VivadoBackend
-    dtype = VivadoBackend.convert_precision_string(None, dtype) 
+    dtype = VivadoBackend.convert_precision_string(dtype)
     W, I, F = dtype.width, dtype.integer, dtype.fractional
     return W, I, F
 
