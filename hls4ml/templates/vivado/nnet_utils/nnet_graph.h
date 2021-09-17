@@ -8,6 +8,7 @@
 #include "nnet_activation.h"
 #include "nnet_array.h"
 #include <math.h>
+#include <float.h>
 
 namespace nnet {
   enum flow {source_to_target=0, target_to_source=1};
@@ -221,10 +222,18 @@ namespace nnet {
       }
     }
     else{ //CONFIG_T:aggr==aggr_max, we want to initialize this with the most negative number we can represent
-      // note this only works for ap_ufixed types
+      // note: works for ap_fixed or float
       res_T most_negative_num;
-      most_negative_num.V = 1;
-      most_negative_num.V <<= res_T::width - 1;
+
+      std::ostringstream mnm_T_ss;
+      mnm_T_ss << typeid(most_negative_num).name();
+      if (mnm_T_ss.str()=="f"){
+        most_negative_num = -FLT_MAX+1;
+      }
+      else{
+        most_negative_num.V = 1;
+        most_negative_num.V <<= res_T::width - 1;
+      }
 
       for(int i=0; i < CONFIG_T::n_node; i++){
         for(int j=0; j<CONFIG_T::edge_dim; j++){
