@@ -661,7 +661,7 @@ class VivadoWriter(Writer):
         with open(model.config.get_output_dir() + '/' + config_filename, 'w') as file:
             try:
                 yaml.dump(model.config.config, file)
-            except ValueError:
+            except:
                 import torch
                 model_path = model.config.get_output_dir() + "/torch_model_state_dict.pt"
                 torch.save(model.config.config["PytorchModel"].state_dict(), model_path)
