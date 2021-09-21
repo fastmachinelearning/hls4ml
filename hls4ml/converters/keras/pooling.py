@@ -72,8 +72,8 @@ def parse_pooling_layer(keras_layer, input_names, input_shapes, data_reader, con
     
     return layer, output_shape
 
-pooling_layers = ['GlobalMaxPooling1D', 'GlobalMaxPooling2D', 'GlobalAveragePooling1D', 'GlobalAveragePooling2D']
-@keras_handler(*pooling_layers)
+global_pooling_layers = ['GlobalMaxPooling1D', 'GlobalMaxPooling2D', 'GlobalAveragePooling1D', 'GlobalAveragePooling2D']
+@keras_handler(*global_pooling_layers)
 def parse_global_pooling_layer(keras_layer, input_names, input_shapes, data_reader, config):
     assert('Pooling' in keras_layer['class_name'])
 

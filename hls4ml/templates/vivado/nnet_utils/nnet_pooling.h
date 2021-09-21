@@ -87,7 +87,8 @@ struct pooling1d_config{
   // IO size
   static const unsigned n_in = 10;
   static const unsigned pool_width = 2;
-  static const unsigned n_out = n_in / pool_width;
+  static const unsigned stride_width = 2;
+  static const unsigned n_out = (n_in - pool_width) / stride_width + 1;
   static const unsigned pad_left = 0;
   static const unsigned pad_right = 0;
   // Pooling function
