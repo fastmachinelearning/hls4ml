@@ -222,7 +222,7 @@ namespace nnet {
       }
     }
     else{ //CONFIG_T:aggr==aggr_max, we want to initialize this with the most negative number we can represent
-      res_T most_negative_num = hls::numeric_limits<res_T>::min();
+      res_T most_negative_num = -hls::numeric_limits<res_T>::max();
       for(int i=0; i < CONFIG_T::n_node; i++){
         for(int j=0; j<CONFIG_T::edge_dim; j++){
           #pragma HLS UNROLL
