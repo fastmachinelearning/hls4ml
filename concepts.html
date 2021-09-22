@@ -1,75 +1,33 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>Concepts &mdash; hls4ml 0.5.1 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+  <title>Concepts &mdash; hls4ml 0.5.1 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Reference and Contributors" href="reference.html" />
     <link rel="prev" title="Command Line Interface" href="command.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #2980B9" >
-          
-
-          
-            <a href="index.html">
-          
-
-          
-            
-            <img src="_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
-          
+            <a href="index.html"><img src="_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -77,18 +35,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
@@ -125,85 +72,45 @@
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.writer.html">hls4ml.writer package</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">hls4ml</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li>Concepts</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="concepts">
-<h1>Concepts<a class="headerlink" href="#concepts" title="Permalink to this headline">¶</a></h1>
+<h1>Concepts<a class="headerlink" href="#concepts" title="Permalink to this headline"></a></h1>
 <p>The goal of <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> is to provide an efficient and fast translation of machine learning models from open-source packages (like Keras and PyTorch) for training machine learning algorithms to high level synthesis (HLS) code that can then be transpiled to run on an FPGA. The resulting HLS project can be then used to produce an IP which can be plugged into more complex designs or be used to create a kernel for CPU co-processing. The user has freedom to define many of the parameters of their algorithm to best suit their needs.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> package enables fast prototyping of a machine learning algorithm implementation in FPGAs,
 greatly reducing the time to results and giving the user intuition for how to best design a machine learning algorithm for their application while balancing performance, resource utilization and latency requirements.</p>
 <div class="section" id="the-inspiration">
-<h2>The Inspiration<a class="headerlink" href="#the-inspiration" title="Permalink to this headline">¶</a></h2>
+<h2>The Inspiration<a class="headerlink" href="#the-inspiration" title="Permalink to this headline"></a></h2>
 <p>The inspiration for the creation of the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> package stems from the high energy physics community at the Large Hadron Collider (LHC). While machine learning has already been proven to be extremely useful in analysis of data from detectors at the LHC, it is typically performed in an “offline” environment after the data is taken and agglomerated. However, one of the largest problems at detectors on the LHC is that collisions, or “events”, generate too much data for everything to be saved. As such, filters called “triggers” are used to determine whether a given event should be kept. Using FPGAs allows for significantly lower latency so machine learning algorithms can essentially be run “live” at the detector level for event selection. As a result, more events with potential signs of new physics can be preserved for analysis.</p>
 </div>
 <div class="section" id="the-solution-hls4ml">
-<h2>The Solution: hls4ml<a class="headerlink" href="#the-solution-hls4ml" title="Permalink to this headline">¶</a></h2>
+<h2>The Solution: hls4ml<a class="headerlink" href="#the-solution-hls4ml" title="Permalink to this headline"></a></h2>
 <img alt="_images/overview.jpg" src="_images/overview.jpg" />
 <p>With this in mind, let’s take a look at how <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> helps to achieve such a goal. First, it’s important to realize the architecture differences between an FPGA and a CPU or GPU. An FPGA can be specifically programmed to do a certain task, in this case evaluate neural networks given a set of inputs, and as such can be highly optimized for the task, with tricks like pipelining and parallel evaluation. However, this means dynamic remapping while running isn’t really a possibility. FPGAs also often come at a comparatively low power cost with respect to CPUs and GPUs. This allows <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> to build HLS code from compressed neural networks that results in predictions on the microsecond scale for latency. The <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> tool saves the time investment needed to convert a neural network to a hardware design language or even HLS code, thus allowing for rapid prototyping.</p>
 </div>
 <div class="section" id="how-it-works">
-<h2>How it Works<a class="headerlink" href="#how-it-works" title="Permalink to this headline">¶</a></h2>
+<h2>How it Works<a class="headerlink" href="#how-it-works" title="Permalink to this headline"></a></h2>
 <a class="reference internal image-reference" href="_images/nn_map_paper_fig_2.png"><img alt="_images/nn_map_paper_fig_2.png" class="align-center" src="_images/nn_map_paper_fig_2.png" style="width: 70%;" /></a>
 <p>Consider a multi-layered neural network. At each neuron in a layer <span class="math notranslate nohighlight">\(m\)</span>  (containing <span class="math notranslate nohighlight">\(N_m\)</span> neurons), we calculate an output value (part of the output vector <span class="math notranslate nohighlight">\(\mathbf{x}_m\)</span> of said layer) using the sum of output values of the previous layer multiplied by independent weights for each of these values and a bias value. An activation function is performed on the result to get the final output value for the neuron. Representing the weights as a <span class="math notranslate nohighlight">\(N_m\)</span> by <span class="math notranslate nohighlight">\(N_{m-1}\)</span>  matrix  <span class="math notranslate nohighlight">\(W_{m,m-1}\)</span>, the bias values as <span class="math notranslate nohighlight">\(\mathbf{b}_m\)</span>, and the activation function as <span class="math notranslate nohighlight">\(g_m\)</span>, we can express this compactly as:</p>
 <div class="math notranslate nohighlight">
@@ -224,50 +131,33 @@ greatly reducing the time to results and giving the user intuition for how to be
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="reference.html" class="btn btn-neutral float-right" title="Reference and Contributors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="command.html" class="btn btn-neutral float-left" title="Command Line Interface" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="reference.html" class="btn btn-neutral float-right" title="Reference and Contributors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, Fast Machine Learning Lab.
-
-    </p>
+    <p>&#169; Copyright 2021, Fast Machine Learning Lab.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

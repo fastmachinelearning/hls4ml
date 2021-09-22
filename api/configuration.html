@@ -1,75 +1,33 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>Configuration &mdash; hls4ml 0.5.1 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+  <title>Configuration &mdash; hls4ml 0.5.1 documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+  <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/language_data.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="HLS Model Class" href="hls-model.html" />
     <link rel="prev" title="Reference and Contributors" href="../reference.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #2980B9" >
-          
-
-          
-            <a href="../index.html">
-          
-
-          
-            
-            <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
-          
+            <a href="../index.html"><img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -77,18 +35,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
@@ -125,71 +72,31 @@
 <li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.writer.html">hls4ml.writer package</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">hls4ml</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li>Configuration</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="configuration">
-<h1><a class="toc-backref" href="#id2">Configuration</a><a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h1>
+<h1><a class="toc-backref" href="#id2">Configuration</a><a class="headerlink" href="#configuration" title="Permalink to this headline"></a></h1>
 <p>We currently support two ways of setting hls4ml’s model configuration. This page documents both methods’ usage.</p>
 <div class="contents topic" id="id1">
 <p class="topic-title"></p>
@@ -215,7 +122,7 @@
 </ul>
 <hr class="docutils" />
 <div class="section" id="python-api">
-<h2><a class="toc-backref" href="#id3">1. Python API</a><a class="headerlink" href="#python-api" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id3">1. Python API</a><a class="headerlink" href="#python-api" title="Permalink to this headline"></a></h2>
 <p>Using hls4ml, you can quickly generate a simple configuration dictionary from a keras model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">hls4ml</span>
 <span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
@@ -233,9 +140,9 @@
 </div>
 <hr class="docutils" />
 <div class="section" id="yaml-configuration-file">
-<h2><a class="toc-backref" href="#id4">2. YAML Configuration file</a><a class="headerlink" href="#yaml-configuration-file" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id4">2. YAML Configuration file</a><a class="headerlink" href="#yaml-configuration-file" title="Permalink to this headline"></a></h2>
 <div class="section" id="top-level-configuration">
-<h3><a class="toc-backref" href="#id5">2.1 Top Level Configuration</a><a class="headerlink" href="#top-level-configuration" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id5">2.1 Top Level Configuration</a><a class="headerlink" href="#top-level-configuration" title="Permalink to this headline"></a></h3>
 <p>Configuration files are YAML files in hls4ml (<code class="docutils literal notranslate"><span class="pre">*.yml</span></code>). An example configuration file is <a class="reference external" href="https://github.com/hls-fpga-machine-learning/example-models/blob/master/keras-config.yml">here</a>.</p>
 <p>It looks like this:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">KerasJson</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">keras/KERAS_3layer.json</span>
@@ -278,7 +185,7 @@ Additionally, integers in fixed precision data type (<code class="docutils liter
 </ul>
 </div>
 <div class="section" id="per-layer-configuration">
-<h3><a class="toc-backref" href="#id6">2.2 Per-Layer Configuration</a><a class="headerlink" href="#per-layer-configuration" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id6">2.2 Per-Layer Configuration</a><a class="headerlink" href="#per-layer-configuration" title="Permalink to this headline"></a></h3>
 <p>In the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> configuration file, it is possible to specify the model <em>Precision</em> and <em>ReuseFactor</em> with finer granularity.</p>
 <p>Under the <code class="docutils literal notranslate"><span class="pre">HLSConfig</span></code> heading, these can be set for the <code class="docutils literal notranslate"><span class="pre">Model</span></code>, per <code class="docutils literal notranslate"><span class="pre">LayerType</span></code>, per <code class="docutils literal notranslate"><span class="pre">LayerName</span></code>, and for named variables within the layer (for precision only). The most basic configuration may look like this:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">HLSConfig</span><span class="p">:</span>
@@ -333,7 +240,7 @@ Additionally, integers in fixed precision data type (<code class="docutils liter
 </div>
 <hr class="docutils" />
 <div class="section" id="detailed-configuration-in-converted-hls-code">
-<h2><a class="toc-backref" href="#id7">Detailed Configuration in Converted HLS Code</a><a class="headerlink" href="#detailed-configuration-in-converted-hls-code" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id7">Detailed Configuration in Converted HLS Code</a><a class="headerlink" href="#detailed-configuration-in-converted-hls-code" title="Permalink to this headline"></a></h2>
 <p><strong>NOTE</strong>: this section is developer-oriented.</p>
 <p>After you create your project, you have the opportunity to do more configuration if you so choose.</p>
 <p>In your project, the file <code class="docutils literal notranslate"><span class="pre">&lt;OutputDir&gt;/firmware/&lt;ProjectName&gt;.cpp</span></code> is your top level file.  It has the network architecture constructed for you.  An example is <a class="reference external" href="https://github.com/hls-fpga-machine-learning/models/blob/master/HLS_projects/KERAS-1layer-hls/firmware/myproject.cpp">here</a> and the important snippet is:</p>
@@ -377,50 +284,33 @@ An example is <a class="reference external" href="https://github.com/hls-fpga-ma
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="hls-model.html" class="btn btn-neutral float-right" title="HLS Model Class" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../reference.html" class="btn btn-neutral float-left" title="Reference and Contributors" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hls-model.html" class="btn btn-neutral float-right" title="HLS Model Class" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, Fast Machine Learning Lab.
-
-    </p>
+    <p>&#169; Copyright 2021, Fast Machine Learning Lab.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>
