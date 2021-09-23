@@ -1857,6 +1857,85 @@ class GarNetStack(GarNet):
         params['sublayer_configs'] = '\n'.join(sublayer_configs)
 
 class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
+    def initialize_graphblock(self):
+        self.n_node = self.attributes['n_node']
+        self.n_edge = self.attributes['n_edge']
+        self.node_dim = self.attributes['node_dim']
+        self.edge_dim = self.attributes['edge_dim']
+        self.out_dim = self.attributes['out_dim']
+        self._check_inputs()
+
+        self.n_node_cppname, self.node_dim_cppname = self.model.get_layer_output_variable(self.inputs[0]).dim_names
+        self.n_edge_cppname, self.edge_dim_cppname = self.model.get_layer_output_variable(self.inputs[1]).dim_names
+        self.out_dim_cppname = f"LAYER{self.index}_OUT_DIM"
+
+        self.torch_module = getattr(self.model.reader.torch_model, self.name)
+        submodules = OrderedDict()
+        try:
+            for name, module in self.torch_module.layers.named_modules():
+                submodules[name] = module
+        except AttributeError:
+            for name, module in self.torch_module.named_modules():
+                submodules[name] = module
+        self.submodules = submodules
+
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'),
+                         compression=self.model.config.get_compression(self))
+        self.add_bias(quantizer=self.get_attr('weight_quantizer'))
+
+    def function_cpp_graphblock(self):
+        params = {}
+        params['config'] = 'config{}'.format(self.index)
+        params['output_t'] = self.get_output_variable().type.name
+        params['node_attr'] = self.attributes['inputs'][0]
+        params['edge_attr'] = self.attributes['inputs'][1]
+        params['out'] = f"layer{self.index}_out"
+
+        params['w0'] = self.get_weights(f"{self.name}_w0").name
+        params['b0'] = self.get_weights(f"{self.name}_b0").name
+        params['w1'] = self.get_weights(f"{self.name}_w1").name
+        params['b1'] = self.get_weights(f"{self.name}_b1").name
+        params['w2'] = self.get_weights(f"{self.name}_w2").name
+        params['b2'] = self.get_weights(f"{self.name}_b2").name
+        params['w3'] = self.get_weights(f"{self.name}_w3").name
+        params['b3'] = self.get_weights(f"{self.name}_b3").name
+        return params
+
+    def config_cpp(self):
+        top_params = self.get_top_params()
+        top_config = self._config_template.format(**top_params)
+        top_config = top_config.split('\n')[:-1]
+        top_config = '\n'.join(top_config)
+
+        sublayer_configs = self._config_sublayers()
+        sublayer_configs.update(self._config_misc())
+        for layer, config in sublayer_configs.items():
+            config = ['    ' + i for i in config.split('\n')]
+            config = '\n'.join(config)
+
+            top_config += '\n\n'
+            top_config += config
+
+        top_config += '\n};'
+        return top_config
+
+    def get_top_params_graphblock(self):
+        params = {}
+        params['index'] = self.index
+        params['bias_t'] = f'layer{self.index}_t'
+        params['weight_t'] = f'layer{self.index}_t'
+        params['table_t'] = f'layer{self.index}_t'
+        params['n_node'] = self.n_node_cppname
+        params['n_edge'] = self.n_edge_cppname
+        params['node_dim'] = self.node_dim_cppname
+        params['edge_dim'] = self.edge_dim_cppname
+        params['out_dim'] = self.out_dim
+        params['n_layers'] = self.attributes["n_layers"]
+        params['io_type'] = 'io_parallel'
+        params['reuse'] = self.reuse_factor
+        params['n_zeros'] = 0
+        return params
+
     def add_weights(self, quantizer=None, compression=False):
         linear_count = 0
 
@@ -1989,36 +2068,13 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
 
 class EdgeBlock(GraphBlock):
     def initialize(self):
-        self.n_node = self.attributes['n_node']
-        self.n_edge = self.attributes['n_edge']
-        self.node_dim = self.attributes['node_dim']
-        self.edge_dim = self.attributes['edge_dim']
-        self.out_dim = self.attributes['out_dim']
-        self._check_inputs()
+        self.initialize_graphblock()
 
-        self.n_edge_cppname, self.edge_dim_cppname = self.model.get_layer_output_variable('edge_attr').dim_names
-        self.n_node_cppname, self.node_dim_cppname = self.model.get_layer_output_variable('node_attr').dim_names
-        self.out_dim_cppname = f"LAYER{self.index}_OUT_DIM"
-
-        self.torch_module = getattr(self.model.reader.torch_model, self.name)
-        submodules = OrderedDict()
-        try:
-            for name, module in self.torch_module.layers.named_modules():
-                submodules[name] = module
-        except AttributeError:
-            for name, module in self.torch_module.named_modules():
-                submodules[name] = module
-        self.submodules = submodules
-
-        # edge predictions
+        # create edge-prediction variable
         out_shape = [self.n_edge, self.out_dim]
         out_dims = [self.n_edge_cppname, self.out_dim_cppname]
         out_name = f"layer{self.index}_out"
         self.add_output_variable(shape=out_shape, dim_names=out_dims, out_name=out_name, var_name=out_name, precision=self.attributes.get('precision', None), pragma='partition')
-
-        self.add_weights(quantizer=self.get_attr('weight_quantizer'),
-                         compression=self.model.config.get_compression(self))
-        self.add_bias(quantizer=self.get_attr('weight_quantizer'))
 
         # Reshape the input/output variables
         #for input_name in self.inputs:
@@ -2035,61 +2091,16 @@ class EdgeBlock(GraphBlock):
         #    output_array.pragma = ('partition', 'block', partition_factor)
 
     def function_cpp(self):
-        params = {}
-        params['config'] = 'config{}'.format(self.index)
+        params = self.function_cpp_graphblock()
         params['input_t'] = self.model.get_layer_output_variable('edge_attr').type.name
         params['index_t'] = self.model.get_layer_output_variable('edge_index').type.name
-        params['output_t'] = self.get_output_variable().type.name
-        params['node_attr'] = self.attributes['inputs'][0]
-        params['edge_attr'] = self.attributes['inputs'][1]
         params['edge_index'] = self.attributes['inputs'][2]
-        params['out'] = f"layer{self.index}_out"
-
-        params['w0'] = self.get_weights(f"{self.name}_w0").name
-        params['b0'] = self.get_weights(f"{self.name}_b0").name
-        params['w1'] = self.get_weights(f"{self.name}_w1").name
-        params['b1'] = self.get_weights(f"{self.name}_b1").name
-        params['w2'] = self.get_weights(f"{self.name}_w2").name
-        params['b2'] = self.get_weights(f"{self.name}_b2").name
-        params['w3'] = self.get_weights(f"{self.name}_w3").name
-        params['b3'] = self.get_weights(f"{self.name}_b3").name
 
         out = self._function_template.format(**params)
         return [out]
 
-    def config_cpp(self):
-        top_params = self.get_EdgeBlock_params()
-        top_config = self._config_template.format(**top_params)
-        top_config = top_config.split('\n')[:-1]
-        top_config = '\n'.join(top_config)
-
-        sublayer_configs = self._config_sublayers()
-        sublayer_configs.update(self._config_misc())
-        for layer, config in sublayer_configs.items():
-            config = ['    ' + i for i in config.split('\n')]
-            config = '\n'.join(config)
-
-            top_config += '\n\n'
-            top_config += config
-
-        top_config += '\n};'
-        return top_config
-
-    def get_EdgeBlock_params(self):  # hard-coded for now
-        params = {}
-        params['index'] = self.index
-        params['bias_t'] = f'layer{self.index}_t'
-        params['weight_t'] = f'layer{self.index}_t'
-        params['table_t'] = f'layer{self.index}_t'
-        params['n_node'] = self.n_node_cppname
-        params['n_edge'] = self.n_edge_cppname
-        params['node_dim'] = self.node_dim_cppname
-        params['edge_dim'] = self.edge_dim_cppname
-        params['out_dim'] = self.out_dim
-        params['n_layers'] = self.attributes["n_layers"]
-        params['io_type'] = 'io_parallel'
-        params['reuse'] = self.reuse_factor
-        params['n_zeros'] = 0
+    def get_top_params(self):  # hard-coded for now
+        params = self.get_top_params_graphblock()
 
         flow_map = {
             "source_to_target": 0,
@@ -2174,36 +2185,13 @@ class EdgeBlock(GraphBlock):
 
 class NodeBlock(GraphBlock):
     def initialize(self):
-        self.n_node = self.attributes['n_node']
-        self.n_edge = self.attributes['n_edge']
-        self.node_dim = self.attributes['node_dim']
-        self.edge_dim = self.attributes['edge_dim']
-        self.out_dim = self.attributes['out_dim']
-        self._check_inputs()
+        self.initialize_graphblock()
 
-        self.n_edge_cppname, self.edge_dim_cppname = self.model.get_layer_output_variable('edge_attr').dim_names
-        self.n_node_cppname, self.node_dim_cppname = self.model.get_layer_output_variable('node_attr').dim_names
-        self.out_dim_cppname = f"LAYER{self.index}_OUT_DIM"
-
-        self.torch_module = getattr(self.model.reader.torch_model, self.name)
-        submodules = OrderedDict()
-        try:
-            for name, module in self.torch_module.layers.named_modules():
-                submodules[name] = module
-        except AttributeError:
-            for name, module in self.torch_module.named_modules():
-                submodules[name] = module
-        self.submodules = submodules
-
-        # node predictions
+        # create node-prediction variable
         out_shape = [self.n_node, self.out_dim]
         out_dims = [self.n_node_cppname, self.out_dim_cppname]
         out_name = f"layer{self.index}_out"
         self.add_output_variable(shape=out_shape, dim_names=out_dims, out_name=out_name, var_name=out_name, precision=self.attributes.get('precision', None), pragma='partition')
-
-        self.add_weights(quantizer=self.get_attr('weight_quantizer'),
-                         compression=self.model.config.get_compression(self))
-        self.add_bias(quantizer=self.get_attr('weight_quantizer'))
 
         # Reshape the input/output variables
         #for input_name in self.inputs:
@@ -2220,59 +2208,15 @@ class NodeBlock(GraphBlock):
         #    output_array.pragma = ('partition', 'block', partition_factor)
 
     def function_cpp(self):
-        params = {}
-        params['config'] = 'config{}'.format(self.index)
+        params = self.function_cpp_graphblock()
         params['input_t'] = self.model.get_layer_output_variable('node_attr').type.name
-        params['output_t'] = self.get_output_variable().type.name
-        params['node_attr'] = self.attributes["inputs"][0]
         params['edge_attr_aggr'] = self.attributes["inputs"][1]
-        params['out'] = f"layer{self.index}_out"
-
-        params['w0'] = self.get_weights(f"{self.name}_w0").name
-        params['b0'] = self.get_weights(f"{self.name}_b0").name
-        params['w1'] = self.get_weights(f"{self.name}_w1").name
-        params['b1'] = self.get_weights(f"{self.name}_b1").name
-        params['w2'] = self.get_weights(f"{self.name}_w2").name
-        params['b2'] = self.get_weights(f"{self.name}_b2").name
-        params['w3'] = self.get_weights(f"{self.name}_w3").name
-        params['b3'] = self.get_weights(f"{self.name}_b3").name
 
         out = self._function_template.format(**params)
         return [out]
 
-    def config_cpp(self):
-        top_params = self.get_NodeBlock_params()
-        top_config = self._config_template.format(**top_params)
-        top_config = top_config.split('\n')[:-1]
-        top_config = '\n'.join(top_config)
-
-        sublayer_configs = self._config_sublayers()
-        sublayer_configs.update(self._config_misc())
-        for layer, config in sublayer_configs.items():
-            config = ['    ' + i for i in config.split('\n')]
-            config = '\n'.join(config)
-
-            top_config += '\n\n'
-            top_config += config
-
-        top_config += '\n};'
-        return top_config
-
-    def get_NodeBlock_params(self):  # hard-coded for now
-        params = {}
-        params['index'] = self.index
-        params['bias_t'] = f'layer{self.index}_t'
-        params['weight_t'] = f'layer{self.index}_t'
-        params['table_t'] = f'layer{self.index}_t'
-        params['n_node'] = self.n_node_cppname
-        params['n_edge'] = self.n_edge_cppname
-        params['node_dim'] = self.node_dim_cppname
-        params['edge_dim'] = self.edge_dim_cppname
-        params['out_dim'] = self.out_dim
-        params['n_layers'] = self.attributes["n_layers"]
-        params['io_type'] = 'io_parallel'
-        params['reuse'] = self.reuse_factor
-        params['n_zeros'] = 0
+    def get_top_params(self):  # hard-coded for now
+        params = self.get_top_params_graphblock()
         return params
 
     def _config_misc(self):
@@ -2336,8 +2280,8 @@ class EdgeAggregate(Layer):
         self.out_dim = self.attributes['out_dim']
         self._check_inputs()
 
-        self.n_edge_cppname, self.edge_dim_cppname = self.model.get_layer_output_variable('edge_attr').dim_names
         self.n_node_cppname, self.node_dim_cppname = self.model.get_layer_output_variable('node_attr').dim_names
+        self.n_edge_cppname, self.edge_dim_cppname = self.model.get_layer_output_variable(self.inputs[0]).dim_names
 
         aggr_name = f"layer{self.index}_out"
         aggr_shape = [self.n_node, self.out_dim]
@@ -2358,7 +2302,7 @@ class EdgeAggregate(Layer):
         return [self._function_template.format(**params)]
 
     def config_cpp(self):
-        params = self.get_Aggregate_params()
+        params = self.get_top_params()
 
         top_config = self._config_template.format(**params)
         top_config = top_config.split('\n')[:-1]
@@ -2375,13 +2319,13 @@ class EdgeAggregate(Layer):
         top_config += '\n};'
         return top_config
 
-    def get_Aggregate_params(self):
+    def get_top_params(self):
         params = {}
         params["index"] = self.index
-        params['n_node'] = self.attributes['n_node']
-        params['node_dim'] = self.attributes['node_dim']
-        params['n_edge'] = self.attributes['n_edge']
-        params['edge_dim'] = self.attributes['edge_dim']
+        params['n_node'] = self.n_node_cppname
+        params['node_dim'] = self.node_dim_cppname
+        params['n_edge'] = self.n_edge_cppname
+        params['edge_dim'] = self.edge_dim_cppname
         params['table_t'] = f'layer{self.index}_t'
         params['reuse'] = self.reuse_factor
 
@@ -2415,7 +2359,7 @@ class EdgeAggregate(Layer):
                                                                            n_rows=self.n_node_cppname,
                                                                            n_cols=f"LAYER{self.index}_OUT_DIM")
 
-        aggr_params = self.get_Aggregate_params()
+        aggr_params = self.get_top_params()
         nested_duplicate = self._config_template.format(**aggr_params).split('\n')
         nested_duplicate[0] = "struct nested_duplicate: nnet::edge_aggregate_config{"
         nested_duplicate = '\n'.join(nested_duplicate)
