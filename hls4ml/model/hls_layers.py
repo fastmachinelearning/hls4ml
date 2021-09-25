@@ -2127,10 +2127,6 @@ class EdgeBlock(GraphBlock):
                                                                     n_rows=self.n_edge_cppname,
                                                                     n_cols=self.edge_dim_cppname)
 
-        configs['edge_index_config'] = matrix_config_template.format(matrix_name="edge_index",
-                                                                     n_rows=self.n_edge_cppname,
-                                                                     n_cols="TWO")
-
         configs['edge_update_config'] = matrix_config_template.format(matrix_name="edge_update",
                                                                       n_rows=self.n_edge_cppname,
                                                                       n_cols=f"LAYER{self.index}_OUT_DIM")
@@ -2351,19 +2347,9 @@ class EdgeAggregate(Layer):
                                                                     n_rows=self.n_edge_cppname,
                                                                     n_cols=self.edge_dim_cppname)
 
-        configs['edge_index_config'] = matrix_config_template.format(matrix_name="edge_index",
-                                                                     n_rows=self.n_edge_cppname,
-                                                                     n_cols="TWO")
-
         configs['edge_attr_aggr_config'] = matrix_config_template.format(matrix_name="edge_attr_aggr",
                                                                            n_rows=self.n_node_cppname,
                                                                            n_cols=f"LAYER{self.index}_OUT_DIM")
-
-        aggr_params = self.get_top_params()
-        nested_duplicate = self._config_template.format(**aggr_params).split('\n')
-        nested_duplicate[0] = "struct nested_duplicate: nnet::edge_aggregate_config{"
-        nested_duplicate = '\n'.join(nested_duplicate)
-        configs['nested_duplicate'] = nested_duplicate
 
         return configs
 
