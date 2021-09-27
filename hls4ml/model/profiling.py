@@ -1,3 +1,6 @@
+from pyDigitalWaveTools.vcd.parser import VcdParser
+
+import hls4ml
 from hls4ml.model.hls_model import HLSModel
 from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
 import matplotlib.pyplot as plt
@@ -24,6 +27,67 @@ try:
     __torch_profiling_enabled__ = True
 except ImportError:
     __torch_profiling_enabled__ = False
+
+
+def optimize_fifos_depth(model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
+
+    values = []
+
+    def populate_values(name, data, depth):
+        values.append({'name': name, 'data': [], 'max': 0, 'depth': 0})
+        get_values = lambda x: int(x[1][1:], 2)
+        values[-1]['data'] = [get_values(x) for x in data]
+        values[-1]['max'] = max(values[-1]['data'])
+        values[-1]['depth'] = int(depth[1:], 2)
+
+    if not model.config.config['HLSConfig']['Model']['FIFO_opt']:
+        raise Exception('To use this optimization you have to set `FIFO_opt` field to True in the HLS config')
+
+    with open(model.config.get_output_dir() + '/' + model.config.get_project_name() + '_prj' + '/solution1/sim/verilog/fifo_opt.vcd') as vcd_file:
+        vcd = VcdParser()
+        vcd.parse(vcd_file)
+        data = vcd.scope.toJson()
+
+    # input/output fifos: should it be considered just for VivadoAccelerator?
+    # yes, to be considered just with vivado accelerator
+    for i in range(1, len(data['children'][0]['children'][0]['children'])):
+        populate_values(data['children'][0]['children'][0]['children'][i]['name'],
+                        data['children'][0]['children'][0]['children'][i]['children'][0]['data'],
+                        data['children'][0]['children'][0]['children'][i]['children'][1]['data'][0][1])
+
+    # model layers fifos
+    n_elem = len(data['children'][0]['children'][0]['children'][0]['children'])
+    for i in range(n_elem):
+        populate_values(data['children'][0]['children'][0]['children'][0]['children'][i]['name'],
+                        data['children'][0]['children'][0]['children'][0]['children'][i]['children'][0]['data'],
+                        data['children'][0]['children'][0]['children'][0]['children'][i]['children'][1]['data'][0][1])
+
+    maxs = [{'name': i['name'], 'max': i['max'], 'depth': i['depth']} for i in values]
+
+    with open('max_depth.json', 'w') as f:
+        json.dump(maxs, f, indent=4)
+
+    new_config = model.config.config.copy()['HLSConfig']
+    new_config['FIFO_opt'] = False
+    for k,v in model.output_vars.items():
+        filtered_max = [x['max'] for x in maxs if v.cppname in x['name']]
+        if len(filtered_max) == 0: continue # @todo: how to handle in_local and out_local?
+        if k not in new_config['LayerName']:
+            new_config['LayerName'][k] = {'StreamDepth': filtered_max[0] + 1}
+        else:
+            new_config['LayerName'][k]['StreamDepth'] = filtered_max[0] + 1
+    for x in maxs:
+        if 'in_local' in x['name']:
+            new_config['LayerName']['in_local'] = {'StreamDepth': x['max']}
+        elif 'out_local' in x['name']:
+            new_config['LayerName']['out_local'] = {'StreamDepth': x['max']}
+    out_dir = model.config.get_output_dir() +  '_FIFO_OPT'
+    hls_model = hls4ml.converters.convert_from_keras_model(model.config.config['KerasModel'], output_dir=out_dir, io_type=model.config.config['IOType'],
+                                                           board=model.config.config['Board'], hls_config=new_config,
+                                                           backend=model.config.config['Backend'])
+    hls_model.build(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
+    print('FIFO optimization completed!')
+    return hls_model, out_dir
 
 
 def get_unoptimized_hlsmodel(model):
@@ -161,7 +225,7 @@ types_plots = {'boxplot' : types_boxplot,
 
 def ap_fixed_WIF(dtype):
     from hls4ml.templates.vivado_template import VivadoBackend
-    dtype = VivadoBackend.convert_precision_string(None, dtype) 
+    dtype = VivadoBackend.convert_precision_string(None, dtype)
     W, I, F = dtype.width, dtype.integer, dtype.fractional
     return W, I, F
 
@@ -565,9 +629,9 @@ def get_ymodel_keras(keras_model, X):
     dictionary
         A dictionary in the form {"layer_name": ouput array of layer}
     """
-    
+
     ymodel = {}
-    
+
     for layer in keras_model.layers:
         print("Processing {} in Keras model...".format(layer.name))
         if not _is_ignored_layer(layer):
@@ -575,23 +639,23 @@ def get_ymodel_keras(keras_model, X):
             #Note that if the layer is a standalone activation layer then skip this
             if hasattr(layer, 'activation') and not (isinstance(layer,keras.layers.Activation) or isinstance(layer, qkeras.qlayers.QActivation)):
                 if layer.activation:
-                    
+
                     if layer.activation.__class__.__name__ == "linear":
                         ymodel[layer.name] = _get_output(layer, X, keras_model.input)
-                    
+
                     else:
                         temp_activation = layer.activation
                         layer.activation = None
                         #Get output for layer without activation
                         ymodel[layer.name] = _get_output(layer, X, keras_model.input)
 
-                        #Add the activation back 
+                        #Add the activation back
                         layer.activation = temp_activation
                         #Get ouput for activation
                         ymodel[layer.name + "_{}".format(temp_activation.__class__.__name__)] =  _get_output(layer, X, keras_model.input)
                 else:
                     ymodel[layer.name] = _get_output(layer, X, keras_model.input)
-            else:    
+            else:
                 ymodel[layer.name] = _get_output(layer, X, keras_model.input)
     print("Done taking outputs for Keras model.")
     return ymodel
@@ -599,10 +663,10 @@ def get_ymodel_keras(keras_model, X):
 def _norm_diff(ymodel, ysim):
     """Calculate the square root of the sum of the squares of the differences"""
     diff = {}
-    
+
     for key in list(ysim.keys()):
         diff[key] = np.linalg.norm(ysim[key]-ymodel[key])
-    
+
     #---Bar Plot---
     f, ax = plt.subplots()
     plt.bar(list(diff.keys()),list(diff.values()))
@@ -642,7 +706,7 @@ def _dist_diff(ymodel, ysim):
 
     #---Box Plot---
     f, ax = plt.subplots()
-    pos = np.array(range(len(list(diff.values())))) + 1            
+    pos = np.array(range(len(list(diff.values())))) + 1
     ax.boxplot(list(diff.values()), sym='k+', positions=pos)
 
     #--formatting
@@ -681,12 +745,12 @@ def compare(keras_model, hls_model, X, plot_type = "dist_diff"):
     matplotlib figure
         plot object of the histogram depicting the difference in each layer's output
     """
-    
+
     #Take in output from both models
     #Note that each y is a dictionary with structure {"layer_name": flattened ouput array}
     ymodel = get_ymodel_keras(keras_model, X)
     _, ysim = hls_model.trace(X)
-    
+
     print("Plotting difference...")
     f = plt.figure()
     if plot_type == "norm_diff":

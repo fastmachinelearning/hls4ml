@@ -28,10 +28,26 @@ proc add_vcd_instructions_tcl {} {
     while {[gets $in line] != -1} {
         if {[string equal "$line" "log_wave -r /"]} {
             set line {log_wave -r /
-open_vcd
-# log_vcd [get_objects -r -regexp [get_scopes -regexp {layer(\d*)_.*data_(\d*)_V_U.*}]\/usedw]
-log_vcd *}
+current_scope /apatb_myproject_axi_top/AESL_inst_myproject_axi/myproject_U0
+set scopes [get_scopes -regexp {layer(\d*)_.*data_0_V_U.*}]
+current_scope /apatb_myproject_axi_top/AESL_inst_myproject_axi
+append scopes { }
+append scopes [get_scopes -regexp {.*local_V_data_0.*}]
+open_vcd fifo_opt.vcd
+foreach scope $scopes {
+    current_scope $scope
+    set usedw [get_objects usedw]
+    set depth [get_objects DEPTH]
+    add_wave $usedw
+    log_vcd $usedw
+    log_wave $usedw
+    add_wave $depth
+    log_vcd $depth
+    log_wave $depth
+    }
+    }
         }
+
         if {[string equal "$line" "quit"]} {
             set line {flush_vcd
 close_vcd
@@ -48,34 +64,6 @@ quit
     # move the new data to the proper filename
     file delete -force $filename
     file rename -force $temp $filename
-}
-
-proc add_vcd_instructions_xsim {} {
-    set timestamp [clock format [clock seconds] -format {%Y%m%d%H%M%S}]
-
-    set filename myproject_prj/solution1/sim/verilog/run_xsim.sh
-    set temp     $filename.new.$timestamp
-    # set backup   $filename.bak.$timestamp
-
-    set in  [open $filename r]
-    set out [open $temp     w]
-
-    # line-by-line, read the original file
-    while {[gets $in line] != -1} {
-        if {[string match *bin/xsim* $line]} {
-            append line " -vcdfile simulation.vcd"
-        }
-        # then write the transformed line
-        puts $out $line
-    }
-
-    close $in
-    close $out
-
-    # move the new data to the proper filename
-    file delete -force $filename
-    file rename -force $temp $filename
-    exec chmod +x $filename
 }
 
 foreach arg $::argv {
@@ -158,15 +146,16 @@ if {$opt(cosim)} {
   # TODO: This is a workaround (Xilinx defines __RTL_SIMULATION__ only for SystemC testbenches).
   add_files -tb myproject_test.cpp -cflags "-std=c++0x -DRTL_SIM"
   set time_start [clock clicks -milliseconds]
-  cosim_design -trace_level all
   if {$fifo_opt} {
       puts "FIFO OPT"
-      add_vcd_instructions_xsim
+      cosim_design -trace_level all -setup
       add_vcd_instructions_tcl
       set old_pwd [pwd]
       cd myproject_prj/solution1/sim/verilog/
-      exec vivado_hls run_sim.tcl #todo
+      source run_sim.tcl
       cd $old_pwd
+  } else {
+      cosim_design -trace_level all
   }
   set time_end [clock clicks -milliseconds]
   puts "INFO:"

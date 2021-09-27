@@ -98,8 +98,21 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 elif io_type == 'io_stream':
                     newline += indent + 'hls::stream<' + inp.type.name + '> in_local("input_1");\n'
                     newline += indent + 'hls::stream<' + out.type.name + '> out_local("output_1");\n\n'
-                    newline += indent + '#pragma HLS STREAM variable=in_local depth=N_IN\n'
-                    newline += indent + '#pragma HLS STREAM variable=out_local depth=N_OUT\n'
+                    in_local_depth = 0
+                    out_local_depth = 0
+                    try:
+                        in_local_depth  = model.config.config['HLSConfig']['LayerName']['in_local']['StreamDepth']
+                        out_local_depth = model.config.config['HLSConfig']['LayerName']['out_local']['StreamDepth']
+                    except KeyError:
+                        pass
+                    if in_local_depth:
+                        newline += indent + '#pragma HLS STREAM variable=in_local depth={}\n'.format(in_local_depth)
+                    else:
+                        newline += indent + '#pragma HLS STREAM variable=in_local depth=N_IN\n'
+                    if out_local_depth:
+                        newline += indent + '#pragma HLS STREAM variable=out_local depth={}\n'.format(out_local_depth)
+                    else:
+                        newline += indent + '#pragma HLS STREAM variable=out_local depth=N_OUT\n'
             elif '//hls-fpga-machine-learning insert call' in line:
                 newline = indent + '{}(in_local, out_local, in_size, out_size);\n'.format(
                     model.config.get_project_name())
@@ -326,7 +339,10 @@ class VivadoAcceleratorWriter(VivadoWriter):
             in_bit, out_bit = self.vivado_accelerator_config.get_io_bitwidth()
             f.write('set bit_width_hls_output {}\n'.format(in_bit))
             f.write('set bit_width_hls_input {}\n'.format(out_bit))
-        f.write('set fifo_opt 1') # todo: hardcoded! should be deducted from the config
+        if model.config.config['HLSConfig'].get('FIFO_opt'):
+            f.write('set fifo_opt 1')
+        else:
+            f.write('set fifo_opt 0')
         f.close()
 
     def write_driver(self, model):
