@@ -339,7 +339,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
             in_bit, out_bit = self.vivado_accelerator_config.get_io_bitwidth()
             f.write('set bit_width_hls_output {}\n'.format(in_bit))
             f.write('set bit_width_hls_input {}\n'.format(out_bit))
-        if model.config.config['HLSConfig'].get('FIFO_opt'):
+        if model.config.config['HLSConfig']['Model'].get('FIFO_opt'):
             f.write('set fifo_opt 1')
         else:
             f.write('set fifo_opt 0')

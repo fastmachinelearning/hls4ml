@@ -68,7 +68,7 @@ def optimize_fifos_depth(model, reset=False, csim=True, synth=True, cosim=False,
         json.dump(maxs, f, indent=4)
 
     new_config = model.config.config.copy()['HLSConfig']
-    new_config['FIFO_opt'] = False
+    new_config['FIFO_opt'] = 0
     for k,v in model.output_vars.items():
         filtered_max = [x['max'] for x in maxs if v.cppname in x['name']]
         if len(filtered_max) == 0: continue # @todo: how to handle in_local and out_local?
