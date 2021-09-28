@@ -146,12 +146,12 @@ void im2col_1d_cl(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan], data_T dat
     for (int kernel_col = 0; kernel_col < CONFIG_T::filt_width; kernel_col++) {
         #pragma HLS UNROLL
 
-	ChannelLoop:
-	for (int channel = 0; channel < CONFIG_T::n_chan; channel++) {
-	    int index_data = (col*CONFIG_T::stride_width+kernel_col-CONFIG_T::pad_left) * CONFIG_T::n_chan + channel;
+        ChannelLoop:
+        for (int channel = 0; channel < CONFIG_T::n_chan; channel++) {
+            int index_data = (col*CONFIG_T::stride_width+kernel_col-CONFIG_T::pad_left) * CONFIG_T::n_chan + channel;
 
             if (index_data >= 0 && index_data < CONFIG_T::in_width*CONFIG_T::n_chan) {
-		data_col[index] = data[index_data];
+                data_col[index] = data[index_data];
             } else {
                 data_col[index] = 0;
             }
