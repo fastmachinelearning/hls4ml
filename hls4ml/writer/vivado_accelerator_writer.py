@@ -106,11 +106,11 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     except KeyError:
                         pass
                     if in_local_depth:
-                        newline += indent + '#pragma HLS STREAM variable=in_local depth={}\n'.format(in_local_depth+1)
+                        newline += indent + '#pragma HLS STREAM variable=in_local depth={}\n'.format(in_local_depth)
                     else:
                         newline += indent + '#pragma HLS STREAM variable=in_local depth=N_IN\n'
                     if out_local_depth:
-                        newline += indent + '#pragma HLS STREAM variable=out_local depth={}\n'.format(out_local_depth+1)
+                        newline += indent + '#pragma HLS STREAM variable=out_local depth={}\n'.format(out_local_depth)
                     else:
                         newline += indent + '#pragma HLS STREAM variable=out_local depth=N_OUT\n'
             elif '//hls-fpga-machine-learning insert call' in line:

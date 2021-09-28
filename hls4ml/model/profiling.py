@@ -64,7 +64,7 @@ def optimize_fifos_depth(model, reset=False, csim=True, synth=True, cosim=False,
 
     maxs = [{'name': i['name'], 'max': i['max'], 'depth': i['depth']} for i in values]
 
-    with open('max_depth.json', 'w') as f:
+    with open(model.config.get_output_dir() + '/max_depth.json', 'w') as f:
         json.dump(maxs, f, indent=4)
 
     new_config = model.config.config.copy()['HLSConfig']
@@ -78,15 +78,15 @@ def optimize_fifos_depth(model, reset=False, csim=True, synth=True, cosim=False,
             new_config['LayerName'][k]['StreamDepth'] = filtered_max[0] + 1
     for x in maxs:
         if 'in_local' in x['name']:
-            new_config['LayerName']['in_local'] = {'StreamDepth': x['max']}
+            new_config['LayerName']['in_local'] = {'StreamDepth': x['max']+1}
         elif 'out_local' in x['name']:
-            new_config['LayerName']['out_local'] = {'StreamDepth': x['max']}
+            new_config['LayerName']['out_local'] = {'StreamDepth': x['max']+1}
     out_dir = model.config.get_output_dir() +  '_FIFO_OPT'
     hls_model = hls4ml.converters.convert_from_keras_model(model.config.config['KerasModel'], output_dir=out_dir, io_type=model.config.config['IOType'],
                                                            board=model.config.config['Board'], hls_config=new_config,
                                                            backend=model.config.config['Backend'])
     hls_model.build(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
-    print('FIFO optimization completed!')
+    print('[hls4ml] - FIFO optimization completed')
     return hls_model, out_dir
 
 

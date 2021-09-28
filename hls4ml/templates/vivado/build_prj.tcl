@@ -15,9 +15,10 @@ set tcldir [file dirname [info script]]
 source [file join $tcldir project.tcl]
 
 proc add_vcd_instructions_tcl {} {
+    global myproject
     set timestamp [clock format [clock seconds] -format {%Y%m%d%H%M%S}]
 
-    set filename myproject_prj/solution1/sim/verilog/myproject_axi.tcl
+    set filename ${myproject}_prj/solution1/sim/verilog/${myproject}_axi.tcl
     set temp     $filename.new.$timestamp
     # set backup   $filename.bak.$timestamp
 
@@ -46,6 +47,8 @@ foreach scope $scopes {
     log_wave $depth
     }
     }
+
+    set line [string map [list "myproject" $myproject] $line]
         }
 
         if {[string equal "$line" "quit"]} {
@@ -146,17 +149,31 @@ if {$opt(cosim)} {
   # TODO: This is a workaround (Xilinx defines __RTL_SIMULATION__ only for SystemC testbenches).
   add_files -tb myproject_test.cpp -cflags "-std=c++0x -DRTL_SIM"
   set time_start [clock clicks -milliseconds]
+
+  cosim_design -trace_level all -setup
+
   if {$fifo_opt} {
-      puts "FIFO OPT"
-      cosim_design -trace_level all -setup
-      add_vcd_instructions_tcl
-      set old_pwd [pwd]
-      cd myproject_prj/solution1/sim/verilog/
-      source run_sim.tcl
-      cd $old_pwd
-  } else {
-      cosim_design -trace_level all
+    puts "\[hls4ml\] - FIFO optimization started"
+    add_vcd_instructions_tcl
   }
+
+  set old_pwd [pwd]
+  cd ${myproject}_prj/solution1/sim/verilog/
+  source run_sim.tcl
+  cd $old_pwd
+
+  # if {$fifo_opt} {
+  #     puts "FIFO OPT"
+  #     cosim_design -trace_level all -setup
+  #     add_vcd_instructions_tcl
+  #     set old_pwd [pwd]
+  #     cd ${myproject}_prj/solution1/sim/verilog/
+  #     source run_sim.tcl
+  #     cd $old_pwd
+  # } else {
+  #     cosim_design -trace_level all
+  # }
+
   set time_end [clock clicks -milliseconds]
   puts "INFO:"
   puts [read [open myproject_prj/solution1/sim/report/myproject_cosim.rpt r]]
