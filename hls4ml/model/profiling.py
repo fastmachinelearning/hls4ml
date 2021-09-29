@@ -159,32 +159,31 @@ def types_histogram(data, fmt='longform'):
 types_plots = {'boxplot' : types_boxplot,
                'histogram' : types_histogram}
 
-def ap_fixed_WIF(dtype):
+def ap_fixed_WIFS(dtype):
     from hls4ml.templates.vivado_template import VivadoBackend
     dtype = VivadoBackend.convert_precision_string(None, dtype) 
-    W, I, F = dtype.width, dtype.integer, dtype.fractional
-    return W, I, F
+    W, I, F, S = dtype.width, dtype.integer, dtype.fractional, dtype.signed
+    return W, I, F, S
 
 def types_hlsmodel(model):
     suffix = ['w', 'b']
     data = {'layer' : [], 'low' : [], 'high' : []}
     # Plot the default precision
     default_precision = model.config.model_precision['default']
-    # assumes ap_fixed
-    W, I, F = ap_fixed_WIF(default_precision)
+    W, I, F, S = ap_fixed_WIFS(default_precision)
     data['layer'].append('model')
     data['low'].append(-F)
-    data['high'].append(I-1)
+    data['high'].append(I-1 if S else I)
 
     for layer in model.get_layers():
         for iw, weight in enumerate(layer.get_weights()):
             wname = '{}/{}'.format(layer.name, suffix[iw])
             T = weight.type
             if T.name != 'model':
-                W, I, F = ap_fixed_WIF(T.precision)
+                W, I, F, S = ap_fixed_WIFS(T.precision)
                 data['layer'].append(wname)
                 data['low'].append(-F)
-                data['high'].append(I-1)
+                data['high'].append(I-1 if S else I)
     data = pandas.DataFrame(data)
     return data
 
@@ -192,16 +191,16 @@ def activation_types_hlsmodel(model):
     data = {'layer' : [], 'low' : [], 'high' : []}
     # Get the default precision
     default_precision = model.config.model_precision['default']
-    W, I, F = ap_fixed_WIF(default_precision)
+    W, I, F, S = ap_fixed_WIFS(default_precision)
     data['layer'].append('model')
     data['low'].append(-F)
-    data['high'].append(I-1)
+    data['high'].append(I-1 if S else I)
     for layer in model.get_layers():
         T = layer.get_output_variable().type.precision
-        W, I, F = ap_fixed_WIF(T)
+        W, I, F, S = ap_fixed_WIFS(T)
         data['layer'].append(layer.name)
         data['low'].append(-F)
-        data['high'].append(I-1)
+        data['high'].append(I-1 if S else I)
     data = pandas.DataFrame(data)
     return data
 
