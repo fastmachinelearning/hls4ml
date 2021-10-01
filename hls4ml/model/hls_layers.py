@@ -199,7 +199,7 @@ class InplaceVariable():
         self.shape = shape
         self.dim_names = dim_names
         self.type = proxy.type
-        self.name = proxy.name
+        self.cppname = proxy.name
         self.size = proxy.size
 
     def get_shape(self):
