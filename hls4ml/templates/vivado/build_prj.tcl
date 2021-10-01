@@ -37,6 +37,10 @@ append scopes [get_scopes -regexp {.*local_V_data_0.*}]
 open_vcd fifo_opt.vcd
 foreach scope $scopes {
     current_scope $scope
+    if {[catch [get_objects usedw]] == 0} {
+      puts "$scope skipped"
+      continue
+    }
     set usedw [get_objects usedw]
     set depth [get_objects DEPTH]
     add_wave $usedw
