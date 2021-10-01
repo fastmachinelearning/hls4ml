@@ -150,7 +150,7 @@ if {$opt(cosim)} {
   add_files -tb myproject_test.cpp -cflags "-std=c++0x -DRTL_SIM"
   set time_start [clock clicks -milliseconds]
 
-  cosim_design -trace_level all -setup
+  cosim_design -wave_debug -trace_level all -tool xsim -setup
 
   if {$fifo_opt} {
     puts "\[hls4ml\] - FIFO optimization started"
@@ -161,6 +161,7 @@ if {$opt(cosim)} {
   cd ${myproject}_prj/solution1/sim/verilog/
   source run_sim.tcl
   cd $old_pwd
+  close
 
   # if {$fifo_opt} {
   #     puts "FIFO OPT"

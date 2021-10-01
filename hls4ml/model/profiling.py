@@ -71,23 +71,26 @@ def optimize_fifos_depth(model, reset=False, csim=True, synth=True, cosim=False,
     new_config['Model']['FIFO_opt'] = 0
     for k,v in model.output_vars.items():
         filtered_max = [x['max'] for x in maxs if v.cppname in x['name']]
-        if len(filtered_max) == 0: continue # @todo: how to handle in_local and out_local?
+        if len(filtered_max) == 0:
+            continue
+        if len(filtered_max) > 1:
+            print('WARNING! Check names of FIFOs')
         if k not in new_config['LayerName']:
             new_config['LayerName'][k] = {'StreamDepth': filtered_max[0] + 1}
         else:
             new_config['LayerName'][k]['StreamDepth'] = filtered_max[0] + 1
     for x in maxs:
         if 'in_local' in x['name']:
-            new_config['LayerName']['in_local'] = {'StreamDepth': x['max']+1}
+            new_config['LayerName']['in_local'] = {'StreamDepth': x['max'] + 1}
         elif 'out_local' in x['name']:
-            new_config['LayerName']['out_local'] = {'StreamDepth': x['max']+1}
+            new_config['LayerName']['out_local'] = {'StreamDepth': x['max'] + 1}
     out_dir = model.config.get_output_dir() +  '_FIFO_OPT'
     hls_model = hls4ml.converters.convert_from_keras_model(model.config.config['KerasModel'], output_dir=out_dir, io_type=model.config.config['IOType'],
                                                            board=model.config.config['Board'], hls_config=new_config,
                                                            backend=model.config.config['Backend'])
     hls_model.build(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
     print('[hls4ml] - FIFO optimization completed')
-    return hls_model, out_dir
+    return hls_model
 
 
 def get_unoptimized_hlsmodel(model):
