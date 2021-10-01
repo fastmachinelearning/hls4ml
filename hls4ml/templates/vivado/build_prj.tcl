@@ -59,6 +59,7 @@ foreach scope $scopes {
             set line {flush_vcd
 close_vcd
 quit
+exit
 }
         }
         # then write the transformed line
