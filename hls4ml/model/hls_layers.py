@@ -518,8 +518,8 @@ class Layer(object):
         params['config'] = 'config{}'.format(self.index)
         params['input_t'] = self.get_input_variable().type.name
         params['output_t'] = self.get_output_variable().type.name
-        params['input'] = self.get_input_variable().name
-        params['output'] = self.get_output_variable().name
+        params['input'] = self.get_input_variable().cppname
+        params['output'] = self.get_output_variable().cppname
 
         return params
 

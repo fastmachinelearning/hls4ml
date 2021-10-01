@@ -166,7 +166,6 @@ if {$opt(cosim)} {
   cd ${myproject}_prj/solution1/sim/verilog/
   source run_sim.tcl
   cd $old_pwd
-  close
 
   # if {$fifo_opt} {
   #     puts "FIFO OPT"
