@@ -29,7 +29,7 @@ except ImportError:
     __torch_profiling_enabled__ = False
 
 
-def optimize_fifos_depth(model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
+def optimize_fifos_depth(model, reset=False, csim=True, synth=True, cosim=True, validation=True, export=True, vsynth=False):
 
     values = []
 
