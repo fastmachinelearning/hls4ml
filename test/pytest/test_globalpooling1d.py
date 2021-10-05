@@ -33,7 +33,6 @@ def keras_model_ave():
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('model_type', ['max', 'ave'])
 def test_global_pool1d(keras_model_max, keras_model_ave, data, model_type, io_type):
-    model_type, io_type = configuration
     if model_type == 'ave':
         model = keras_model_ave
     else:
