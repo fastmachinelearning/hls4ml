@@ -30,20 +30,19 @@ def keras_model_ave():
     return model
 
   
-@pytest.mark.parametrize("configuration", [("ave", 'io_parallel'),
-                                            ("ave", 'io_stream'),
-                                            ("max", 'io_parallel'),
-                                            ("max", 'io_stream')])
-def test_global_pool1d(keras_model_max, keras_model_ave, data, configuration):
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('model_type', ['max', 'ave'])
+def test_global_pool1d(keras_model_max, keras_model_ave, data, model_type, io_type):
     model_type, io_type = configuration
-    if model_type == "ave":
+    if model_type == 'ave':
         model = keras_model_ave
     else:
         model = keras_model_max
-    config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,1>',
+    config = hls4ml.utils.config_from_keras_model(model, 
+                                                  default_precision='ap_fixed<32,1>',
                                                   granularity='name')
-    if model_type == "ave":
-        config['LayerName']['global_average_pooling1d']['Precision']='ap_fixed<32,6>'
+    if model_type == 'ave':
+        config['LayerName']['global_average_pooling1d']['accum_t'] = 'ap_fixed<32,6>'
 
     hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                            hls_config=config,
