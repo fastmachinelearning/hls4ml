@@ -62,9 +62,6 @@ class FPGABackend(Backend):
             _assert = self._check_conditions(n_in, n_out, rf)
             if _assert:
                 valid_reuse_factors.append(rf)
-        # Avoid using RF=1
-        if valid_reuse_factors[0] == 1:
-            valid_reuse_factors.pop(0)
         return valid_reuse_factors
 
     def _check_conditions(self, n_in, n_out, rf):
