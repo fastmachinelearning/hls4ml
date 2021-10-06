@@ -131,20 +131,20 @@ class FPGABackend(Backend):
 
             layer.set_attr('reuse_factor', float(rf) / kernel_multiplies)
 
-    @staticmethod
-    def convert_precision_string(precision):
+    @classmethod
+    def convert_precision_string(cls, precision):
         if isinstance(precision, IntegerPrecisionType) or isinstance(precision, FixedPrecisionType):
             return precision
 
         if precision.startswith('ap_'):
-            return FPGABackend._convert_ap_type(precision)
+            return cls._convert_ap_type(precision)
         elif precision.startswith('ac_'):
-            return FPGABackend._convert_ac_type(precision)
+            return cls._convert_ac_type(precision)
         else:
             raise Exception('Cannot convert precision string: {}'.format(precision))
 
-    @staticmethod
-    def _convert_ap_type(precision):
+    @classmethod
+    def _convert_ap_type(cls, precision):
         '''
         Convert a precision string (e.g. "ap_fixed<16,6>" to the internal FixedPrecisionTypes etc)
         '''
@@ -173,8 +173,8 @@ class FPGABackend(Backend):
         elif 'int' in precision:
             return IntegerPrecisionType(W, signed)
 
-    @staticmethod
-    def _convert_ac_type(precision):
+    @classmethod
+    def _convert_ac_type(cls, precision):
         '''
         Convert a precision string (e.g. "ac_fixed<16,6>" to the internal FixedPrecisionTypes etc)
         '''
