@@ -1166,7 +1166,7 @@ class Pooling1D(Layer):
             params['n_filt'] = self.get_output_variable().dim_names[1]
         else:
             params['n_in'] = self.get_input_variable().dim_names[1]
-            params['n_out'] = self.get_input_variable().dim_names[1]
+            params['n_out'] = self.get_output_variable().dim_names[1]
             params['n_filt'] = self.get_output_variable().dim_names[0]
 
         return self._config_template.format(**params)
@@ -1208,19 +1208,24 @@ class Pooling2D(Layer):
 
 class GlobalPooling1D(Layer):
     def initialize(self):
-        shape = [self.attributes['n_out'], self.attributes['n_filt']]
-        dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+        shape = [self.attributes['n_filt']]
+        dims = ['N_FILT_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0].replace('Global', ''))
 
     def function_cpp(self):
         params = self._default_function_params()
-
+        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
         return [self._function_template.format(**params)]
 
     def config_cpp(self):
         params = self._default_config_params()
-        params['n_in'] = self.get_input_variable().size_cpp()
+        if self.get_attr('data_format') == 'channels_last':
+            params['n_in'] = self.get_input_variable().dim_names[0]
+            params['n_filt'] = self.get_input_variable().dim_names[1]
+        else:
+            params['n_in'] = self.get_input_variable().dim_names[1]
+            params['n_filt'] = self.get_input_variable().dim_names[0]
 
         return self._config_template.format(**params)
 
