@@ -31,7 +31,9 @@ setup(name='hls4ml',
           'six',
           'pyyaml',
           'h5py',
-          'onnx>=1.4.0'
+          'onnx>=1.4.0',
+          'calmjs.parse',
+          'tabulate'
       ],
       extras_require={
         'profiling': [
