@@ -246,7 +246,7 @@ def onnx_to_hls(config):
         input_layer['input_shape'] = [x.dim_value for x in inp_shape]
         
         if len(input_layer['input_shape']) > 1:
-            input_layer['input_shape'][0] = None #Firt dim is batch
+            input_layer['input_shape'][0] = None #First dim is batch
 
         #Clean the layer name for specific models
         sanitize_layer_name(input_layer)
@@ -270,7 +270,7 @@ def onnx_to_hls(config):
     layer_counter = 0
     
     #Output shape tracking
-    output_shapes = {}
+    #output_shapes = {}
     output_shape = None
 
     print('Topology:')

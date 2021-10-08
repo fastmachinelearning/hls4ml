@@ -1521,6 +1521,19 @@ class BiasAdd(Merge): # TensorFlow's operator that gets merged into Dense/Conv
     def config_cpp(self):
         raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
 
+class Quant(Layer):  # The QONNX quantization layer
+    def initialize(self):
+        inp = self.get_input_variable(self.inputs[0])
+        shape = inp.shape
+        dims = inp.dim_nam
+        self.add_output_variable(shape, dims)
+
+    def function_cpp(self):
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
+
+    def config_cpp(self):
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
+
 class Resize(Layer):
     def initialize(self):
         inp = self.get_input_variable()
@@ -1893,6 +1906,8 @@ layer_map = {
     'GarNetStack'            : GarNetStack,
     # TensorFlow-specific layers:
     'BiasAdd'                : BiasAdd,
+    # QONNX quantization layter
+    'Quant'                  : Quant
 }
 
 def register_layer(name, clazz):
