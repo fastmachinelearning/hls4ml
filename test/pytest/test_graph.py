@@ -94,14 +94,15 @@ def test_graph_manipulation(parameters, iotype):
     np.testing.assert_array_equal(expected_layers, actual_layers)
 
 @pytest.mark.parametrize('iotype', ['io_parallel', 'io_stream'])
-def test_graph_branch(iotype):
-  odir = 'hls4mlprj_graph_branch_model'
+@pytest.mark.parametrize('batch', [1, 100])
+def test_graph_branch(iotype, batch):
+  odir = 'hls4mlprj_graph_branch_model_{}_batch{}'.format(iotype, batch)
   model = branch_model(odir, iotype)
   original_layers = np.array([layer.name for layer in list(model.get_layers())])
   model.compile()
   hls4ml.utils.plot_model(model, show_shapes=True, show_precision=True, to_file='{}/model.png'.format(odir))
-  X0 = np.random.rand(1,1)
-  X1 = np.random.rand(1,1)
+  X0 = np.random.rand(batch, 1)
+  X1 = np.random.rand(batch, 1)
   y_expected = 2*(X0+X1)
   y = model.predict([X0, X1]).reshape(y_expected.shape)
   # check the output
