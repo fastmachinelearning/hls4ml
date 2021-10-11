@@ -222,6 +222,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             ## Following code copy-pasted from hls4ml.model.hls_layers - can we factor out commonalities between the two modules?
 
             ## Define default precisions for various internal arrays (can be overridden from the config file)
+            import math
             log2_reuse = int(math.log(default_reuse_factor, 2.))
             n_vertices_width = int(math.log(layer['n_vertices'], 2.))
 
