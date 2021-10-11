@@ -555,21 +555,21 @@ class HLSModel(object):
         else: 
             xlist = x
         
-        for x in xlist:
-            if not isinstance(x, np.ndarray):
+        for xi in xlist:
+            if not isinstance(xi, np.ndarray):
                 raise Exception('Expected numpy.ndarray, but got {}'.format(type(x)))
-            if not x.flags['C_CONTIGUOUS']:
+            if not xi.flags['C_CONTIGUOUS']:
                 raise Exception('Array must be c_contiguous, try using numpy.ascontiguousarray(x)')
 
-        x = xlist[0]
-        if x.dtype in [np.single, np.float32]:
+        x0 = xlist[0]
+        if x0.dtype in [np.single, np.float32]:
             top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_float')
             ctype = ctypes.c_float
-        elif x.dtype in [np.double, np.float64, np.float_]:
+        elif x0.dtype in [np.double, np.float64, np.float_]:
             top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_double')
             ctype = ctypes.c_double
         else:
-            raise Exception('Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(x.dtype))
+            raise Exception('Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(x0.dtype))
 
 
         top_function.restype = None
@@ -584,9 +584,9 @@ class HLSModel(object):
         else:
             xlist = x
         n_samples = []
-        for i, x in enumerate(xlist):
+        for i, xi in enumerate(xlist):
             expected_size = self.get_input_variables()[i].size()
-            x_size = np.prod(x.shape)
+            x_size = np.prod(xi.shape)
             n_sample, rem = divmod(x_size, expected_size)
             if rem != 0:
                 raise Exception('Input size mismatch, got {}, expected {}'.format(x_size.shape, self.get_input_variables()[i].shape))
@@ -600,23 +600,25 @@ class HLSModel(object):
     def predict(self, x):
         top_function, ctype = self._get_top_function(x)
         n_samples = self._compute_n_samples(x)
+        n_inputs = len(self.get_input_variables())
 
         curr_dir = os.getcwd()
         os.chdir(self.config.get_output_dir() + '/firmware')
 
         output = []
-        if n_samples == 1:
+        if n_samples == 1 and n_inputs == 1:
             x = [x]
 
         try:
             for i in range(n_samples):
                 predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
-                if len(self.get_input_variables()) == 1:
+                if n_inputs == 1:
                     top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
                 else:
-                    argtuple = [xi for xi in x[i]]
+                    inp = [xj[i] for xj in x]
+                    argtuple = inp
                     argtuple += [predictions]
-                    argtuple += [ctypes.byref(ctypes.c_ushort()) for i in range(len(x[i])+1)]
+                    argtuple += [ctypes.byref(ctypes.c_ushort()) for k in range(len(inp)+1)]
                     argtuple = tuple(argtuple)
                     top_function(*argtuple)
                 output.append(predictions)
@@ -639,6 +641,7 @@ class HLSModel(object):
 
         top_function, ctype = self._get_top_function(x)
         n_samples = self._compute_n_samples(x)
+        n_inputs = len(self.get_input_variables())
 
         class TraceData(ctypes.Structure):
             _fields_ = [('name', ctypes.c_char_p),
@@ -670,7 +673,7 @@ class HLSModel(object):
         os.chdir(self.config.get_output_dir() + '/firmware')
 
         output = []
-        if n_samples == 1:
+        if n_samples == 1 and n_inputs == 1:
             x = [x]
 
         try:
@@ -678,12 +681,13 @@ class HLSModel(object):
 
             for i in range(n_samples):
                 predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
-                if len(self.get_input_variables()) == 1:
+                if n_inputs == 1:
                     top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
                 else:
-                    argtuple = [xi for xi in x[i]]
+                    inp = [xj[i] for xj in x]
+                    argtuple = inp
                     argtuple += [predictions]
-                    argtuple += [ctypes.byref(ctypes.c_ushort()) for i in range(len(x[i])+1)]
+                    argtuple += [ctypes.byref(ctypes.c_ushort()) for k in range(len(inp)+1)]
                     argtuple = tuple(argtuple)
                     top_function(*argtuple)
                 output.append(predictions)
