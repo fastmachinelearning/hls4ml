@@ -1,8 +1,5 @@
-from __future__ import print_function
-from sys import path_importer_cache
 import numpy as np
-import math
-from onnx import ModelProto, GraphProto, NodeProto, TensorProto
+import onnx
 from onnx import  helper, numpy_helper, shape_inference
 
 from hls4ml.model import HLSModel
