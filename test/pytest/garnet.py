@@ -308,25 +308,3 @@ class GarNetStack(GarNet):
             'n_filters': list(ll[2].units for ll in self._transform_layers),
             'n_sublayers': len(self._transform_layers)
         })
-
-    
-# tf.ragged FIXME? the last one should be no problem
-class weighted_sum_layer(keras.layers.Layer):
-    def __init__(self, **kwargs):
-        super(weighted_sum_layer, self).__init__(**kwargs)
-        
-    def get_config(self):
-        base_config = super(weighted_sum_layer, self).get_config()
-        return dict(list(base_config.items()))
-
-    def compute_output_shape(self, input_shape):
-        assert input_shape[2] > 1
-        inshape=list(input_shape)
-        return tuple((inshape[0],input_shape[2]-1))
-    
-    def call(self, inputs):
-        # input #B x E x F
-        weights = inputs[:,:,0:1] #B x E x 1
-        tosum   = inputs[:,:,1:]
-        weighted = weights * tosum #broadcast to B x E x F-1
-        return K.sum(weighted, axis=1)    
