@@ -33,7 +33,7 @@ def garnet_models():
     return model, hls_model
 
 
-@pytest.mark.parametrize('batch', [1]) # [1, 3] when https://github.com/fastmachinelearning/hls4ml/pull/414 is merged
+@pytest.mark.parametrize('batch', [1, 3])
 def test_accuracy(garnet_models, batch):
     model, hls_model = garnet_models
     x = [np.random.rand(batch, vmax, feat), np.random.randint(0, vmax, size=(batch, 1))]
