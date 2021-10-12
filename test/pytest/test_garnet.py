@@ -1,5 +1,5 @@
 import numpy as np
-from garnet import GarNet
+from contrib.garnet import GarNet
 from tensorflow.keras.layers import Input
 from tensorflow.keras.models import Model
 import hls4ml
