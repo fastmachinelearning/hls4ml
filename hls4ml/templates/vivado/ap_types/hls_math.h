@@ -1,3 +1,6 @@
+#ifndef X_HLS_MATH_H
+#define X_HLS_MATH_H
+
 #include <cmath>
 #include "ap_fixed.h"
 
@@ -9,4 +12,4 @@ static T exp(const T x) {
 }
 
 }
- 
+#endif
