@@ -44,6 +44,7 @@ class AttributeDict(MutableMapping):
     def __init__(self, layer):
         self.layer = layer
         self.attributes = {}
+        self._expected_attributes = [a.name for a in self.layer.expected_attributes]
 
     def __getitem__(self, key):
         return self.attributes[key]
@@ -56,12 +57,15 @@ class AttributeDict(MutableMapping):
             yield key
 
     def __setitem__(self, key, value):
-        self.attributes[key] = value
         if isinstance(value, (TensorVariable, InplaceVariable)):
             self.layer.model.register_output_variable(key, value)
             self.attributes['result_t'] = value.type
+            if key in self._expected_attributes and key in self.layer.outputs:
+                key = 'out_' + key
         elif isinstance(value, WeightVariable):
             self.attributes[key + '_t'] = value.type
+
+        self.attributes[key] = value
 
     def __delitem__(self, key):
         self.attributes.remove(key)
@@ -87,3 +91,30 @@ class AttributeMapping(MutableMapping):
 
     def __delitem__(self, key):
         self.attributes.remove(key)
+
+class WeightMapping(AttributeMapping):
+    def __init__(self, attributes):
+        super().__init__(attributes, WeightVariable)
+
+class VariableMapping(AttributeMapping):
+    def __init__(self, attributes):
+        super().__init__(attributes, (TensorVariable, InplaceVariable))
+
+    def __getitem__(self, key):
+        if 'out_' + key in self.attributes:
+            return self.attributes['out_' + key]
+        else:
+            return self.attributes[key]
+
+    def __iter__(self):
+        precision_keys = [k for k, v in self.attributes.items() if isinstance(v, self.clazz)]
+        for key in precision_keys:
+            if key.startswith('out_'):
+                yield key[len('out_'):]
+            else:
+                yield key
+        super().__iter__()
+
+class TypeMapping(AttributeMapping):
+    def __init__(self, attributes):
+        super().__init__(attributes, NamedType)
