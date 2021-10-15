@@ -41,7 +41,7 @@ def _create_default_config(model_name, model_config, backend):
     config[model_config] = model_name
     config['HLSConfig']['Model'] = {}
     config['HLSConfig']['Model']['Precision'] = 'ap_fixed<16,6>'
-    config['HLSConfig']['Model']['ReuseFactor'] = '1'
+    config['HLSConfig']['Model']['ReuseFactor'] = 1
 
     return config
 
