@@ -85,9 +85,8 @@ foreach scope $scopes {
     set line [string map [list "myproject" $myproject] $line]
         }
 
-        if {[string equal "$line" "run all"]} {
-            set line {run all
-flush_vcd
+        if {[string equal "$line" "quit"]} {
+            set line {flush_vcd
 close_vcd
 quit
 }
@@ -185,8 +184,8 @@ if {$opt(cosim)} {
   add_files -tb myproject_test.cpp -cflags "-std=c++0x -DRTL_SIM"
   set time_start [clock clicks -milliseconds]
 
-  cosim_design -wave_debug -trace_level all -tool xsim -setup
-  # cosim_design -trace_level all -tool xsim
+  cosim_design -trace_level all -setup
+
   if {$fifo_opt} {
     puts "\[hls4ml\] - FIFO optimization started"
     add_vcd_instructions_tcl

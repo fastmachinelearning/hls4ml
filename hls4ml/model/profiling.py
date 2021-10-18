@@ -47,7 +47,7 @@ def optimize_fifos_depth(model, output_dir='my-hls-test', project_name='myprojec
                                                            input_data_tb=input_data_tb, output_data_tb=output_data_tb,
                                                            backend=backend, board=board, part=part,
                                                            clock_period=clock_period, io_type=io_type,
-                                                           hls_config=hls_config, kwargs=kwargs)
+                                                           hls_config=hls_config, **kwargs)
 
     config = hls_model.config.config['HLSConfig']
 
@@ -64,7 +64,7 @@ def optimize_fifos_depth(model, output_dir='my-hls-test', project_name='myprojec
                 config['LayerName'][k]['StreamDepth'] = 10000
 
     # run the build with FIFO_opt param set to 1 in order to generate the vcd file
-    # hls_model.build(csim=True, cosim=True, synth=True, vsynth=False, export=False, validation=True)
+    hls_model.build(csim=True, cosim=True, synth=True, vsynth=False, export=False, validation=True)
 
     with open(hls_model.config.get_output_dir() + '/' + hls_model.config.get_project_name() + '_prj' + '/solution1/sim/verilog/fifo_opt.vcd') as vcd_file:
         vcd = VcdParser()
