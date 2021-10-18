@@ -29,7 +29,10 @@ except ImportError:
     __torch_profiling_enabled__ = False
 
 
-def optimize_fifos_depth(model, reset=False, csim=True, synth=True, cosim=True, validation=True, export=True, vsynth=False):
+def optimize_fifos_depth(model, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,
+                         output_data_tb=None, backend='Vivado', board=None, part=None, clock_period=5,
+                         io_type='io_stream', hls_config={}, init_large_fifo=True, reset=False, csim=True, synth=True,
+                         cosim=True, validation=True, export=True, vsynth=False, **kwargs,):
 
     values = []
 
@@ -40,20 +43,40 @@ def optimize_fifos_depth(model, reset=False, csim=True, synth=True, cosim=True, 
         values[-1]['max'] = max(values[-1]['data'])
         values[-1]['depth'] = int(depth[1:], 2)
 
-    if not model.config.config['HLSConfig']['Model']['FIFO_opt']:
+    hls_model = hls4ml.converters.convert_from_keras_model(model, output_dir=output_dir, project_name=project_name,
+                                                           input_data_tb=input_data_tb, output_data_tb=output_data_tb,
+                                                           backend=backend, board=board, part=part,
+                                                           clock_period=clock_period, io_type=io_type,
+                                                           hls_config=hls_config, kwargs=kwargs)
+
+    config = hls_model.config.config['HLSConfig']
+
+    if not config['Model']['FIFO_opt']:
         raise Exception('To use this optimization you have to set `FIFO_opt` field to True in the HLS config')
 
-    with open(model.config.get_output_dir() + '/' + model.config.get_project_name() + '_prj' + '/solution1/sim/verilog/fifo_opt.vcd') as vcd_file:
+    # initialize all the fifos to 10000 so that they will be automatically implemented in BRAMs and so they will be
+    # profiled
+    if init_large_fifo:
+        for k,_ in hls_model.output_vars.items():
+            if k not in config['LayerName']:
+                config['LayerName'][k] = {'StreamDepth': 10000}
+            else:
+                config['LayerName'][k]['StreamDepth'] = 10000
+
+    # run the build with FIFO_opt param set to 1 in order to generate the vcd file
+    # hls_model.build(csim=True, cosim=True, synth=True, vsynth=False, export=False, validation=True)
+
+    with open(hls_model.config.get_output_dir() + '/' + hls_model.config.get_project_name() + '_prj' + '/solution1/sim/verilog/fifo_opt.vcd') as vcd_file:
         vcd = VcdParser()
         vcd.parse(vcd_file)
         data = vcd.scope.toJson()
 
-    # input/output fifos: should it be considered just for VivadoAccelerator?
-    # yes, to be considered just with vivado accelerator
-    for i in range(1, len(data['children'][0]['children'][0]['children'])):
-        populate_values(data['children'][0]['children'][0]['children'][i]['name'],
-                        data['children'][0]['children'][0]['children'][i]['children'][0]['data'],
-                        data['children'][0]['children'][0]['children'][i]['children'][1]['data'][0][1])
+    # wrapper fifos - useful only with VivadoAccelerator backend
+    if hls_model.config.get_config_value('Backend') == 'VivadoAccelerator':
+        for i in range(1, len(data['children'][0]['children'][0]['children'])):
+            populate_values(data['children'][0]['children'][0]['children'][i]['name'],
+                            data['children'][0]['children'][0]['children'][i]['children'][0]['data'],
+                            data['children'][0]['children'][0]['children'][i]['children'][1]['data'][0][1])
 
     # model layers fifos
     n_elem = len(data['children'][0]['children'][0]['children'][0]['children'])
@@ -64,12 +87,12 @@ def optimize_fifos_depth(model, reset=False, csim=True, synth=True, cosim=True, 
 
     maxs = [{'name': i['name'], 'max': i['max'], 'depth': i['depth']} for i in values]
 
-    with open(model.config.get_output_dir() + '/max_depth.json', 'w') as f:
+    with open(hls_model.config.get_output_dir() + '/max_depth.json', 'w') as f:
         json.dump(maxs, f, indent=4)
 
-    new_config = model.config.config.copy()['HLSConfig']
+    new_config = hls_model.config.config.copy()['HLSConfig']
     new_config['Model']['FIFO_opt'] = 0
-    for k,v in model.output_vars.items():
+    for k, v in hls_model.output_vars.items():
         filtered_max = [x['max'] for x in maxs if v.cppname in x['name']]
         if len(filtered_max) == 0:
             continue
@@ -84,10 +107,10 @@ def optimize_fifos_depth(model, reset=False, csim=True, synth=True, cosim=True, 
             new_config['LayerName']['in_local'] = {'StreamDepth': x['max'] + 1}
         elif 'out_local' in x['name']:
             new_config['LayerName']['out_local'] = {'StreamDepth': x['max'] + 1}
-    out_dir = model.config.get_output_dir() +  '_FIFO_OPT'
-    hls_model = hls4ml.converters.convert_from_keras_model(model.config.config['KerasModel'], output_dir=out_dir, io_type=model.config.config['IOType'],
-                                                           board=model.config.config['Board'], hls_config=new_config,
-                                                           backend=model.config.config['Backend'])
+    out_dir = hls_model.config.get_output_dir() + '_FIFO_OPT'
+    hls_model = hls4ml.converters.convert_from_keras_model(hls_model.config.config['KerasModel'], output_dir=out_dir, io_type=hls_model.config.config['IOType'],
+                                                           board=hls_model.config.config['Board'], hls_config=new_config,
+                                                           backend=hls_model.config.config['Backend'])
     hls_model.build(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
     print('[hls4ml] - FIFO optimization completed')
     return hls_model
