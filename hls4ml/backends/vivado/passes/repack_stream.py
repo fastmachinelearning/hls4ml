@@ -131,8 +131,10 @@ class BroadcastStream(OptimizerPass):
             attrs = {
                 'target_shape': inp2.shape
             }
-        brdcst_layer = model.make_node('Broadcast', 'broadcast_' + node.inputs[idx], attrs, [node.inputs[idx]].copy())
+        brdcst_inp = node.inputs[idx]
+        brdcst_out = 'broadcast_' + brdcst_inp
+        brdcst_layer = model.make_node('Broadcast', brdcst_out, attrs, [brdcst_inp].copy())
         model.insert_node(brdcst_layer)
-        node.inputs[idx] = 'broadcast_' + node.inputs[idx]
+        node.inputs[idx] = brdcst_out
 
         return True

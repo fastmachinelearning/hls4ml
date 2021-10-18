@@ -19,6 +19,19 @@ def base_model(output_dir='hls4mlprj_graph_base_model', iotype = 'io_parallel'):
   model = hls4ml.model.HLSModel(config, reader, layers)
   return model
 
+def branch_model(output_dir='hls4mlprj_graph_branch_model', iotype = 'io_parallel'):
+  layers = [{'class_name' : 'Input', 'name' : 'layer0_input0', 'input_shape' : [1], 'inputs': 'input'},
+            {'class_name' : 'Input', 'name' : 'layer0_input1', 'input_shape' : [1], 'inputs': 'input'},
+            {'class_name' : 'Merge', 'name' : 'layer0', 'inputs' : ['layer0_input0', 'layer0_input1'], 'op' : 'add'},
+            {'class_name' : 'Merge', 'name' : 'layer1', 'inputs' : ['layer0_input1', 'layer0'], 'op' : 'add'},
+            {'class_name' : 'Merge', 'name' : 'layer2', 'inputs' : ['layer0_input0', 'layer1'], 'op' : 'add'}]
+  config = {'HLSConfig':{'Model':{'Precision':'ap_fixed<32,16>','ReuseFactor' : 1}}}
+  config['OutputDir'] = output_dir
+  config['ProjectName'] = 'myprj'
+  config['IOType'] = iotype
+  model = hls4ml.model.HLSModel(config, reader, layers, inputs=['layer0_input0', 'layer0_input1'])
+  return model
+
 def do_nop(model, node, layers):
   return model, layers
 
@@ -79,3 +92,18 @@ def test_graph_manipulation(parameters, iotype):
   actual_layers = np.array([layer.name for layer in list(model.get_layers())])
   if not skip_layers_check: # skip check for this model since order changes
     np.testing.assert_array_equal(expected_layers, actual_layers)
+
+@pytest.mark.parametrize('iotype', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('batch', [1, 100])
+def test_graph_branch(iotype, batch):
+  odir = 'hls4mlprj_graph_branch_model_{}_batch{}'.format(iotype, batch)
+  model = branch_model(odir, iotype)
+  original_layers = np.array([layer.name for layer in list(model.get_layers())])
+  model.compile()
+  hls4ml.utils.plot_model(model, show_shapes=True, show_precision=True, to_file='{}/model.png'.format(odir))
+  X0 = np.random.rand(batch, 1)
+  X1 = np.random.rand(batch, 1)
+  y_expected = 2*(X0+X1)
+  y = model.predict([X0, X1]).reshape(y_expected.shape)
+  # check the output
+  np.testing.assert_allclose(y, y_expected, rtol=1, atol=2**-16)

@@ -113,7 +113,11 @@ class Layer(object):
 
     def get_input_node(self, input_name=None):
         if input_name is not None:
-            return self.model.graph.get(input_name)
+            nodes = [node for node in self.model.graph.values() if input_name in node.outputs]
+            if len(nodes) == 0:
+                return None
+            else:
+                return nodes[0]
         else:
             return self.model.graph.get(self.inputs[0])
 

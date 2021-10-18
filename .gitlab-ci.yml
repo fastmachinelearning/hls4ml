@@ -1,22 +1,27 @@
-pytest:
-  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.base
+stages:
+  - generate
+  - trigger
+  - test
+
+generator:
+  stage: generate
+  image: python:3.7-alpine
   tags: 
     - docker
   before_script:
-    - source ~/.bashrc
-    - git submodule init
-    - git submodule update
-    - conda activate hls4ml-testing
-    - pip install .[profiling]
-  script:
+    - pip install pyyaml
+  script: 
     - cd test/pytest
-    - pytest -rA --cov-report xml --cov-report term --cov=hls4ml --junitxml=report.xml
+    - python generate_ci_yaml.py
   artifacts:
-    when: always
-    reports:
-      junit: 
-        - test/pytest/report.xml
-      cobertura:
-        - test/pytest/coverage.xml
     paths:
-      - test/pytest/hls4mlprj*.tar.gz
+      - test/pytest/pytests.yml
+
+pytests:
+  stage: trigger
+  trigger:
+    include:
+      - local: test/pytest/ci-template.yml
+      - artifact: test/pytest/pytests.yml
+        job: generator
+    strategy: depend
