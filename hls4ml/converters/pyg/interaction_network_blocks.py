@@ -8,6 +8,8 @@ def parse_GraphBlock(block_name, config, n_node, n_edge, node_dim, edge_dim):
         "n_edge": n_edge,
         "node_dim": node_dim,
         "edge_dim": edge_dim,
+        "activate_final": "false",
+        "activation": "linear"
     }
 
     # get n_layers, out_dim
@@ -55,6 +57,7 @@ def parse_EdgeAggregate(block_name, config, update_dict, index, n_node, n_edge, 
                   "edge_dim": edge_dim,
                   "out_dim": edge_dim,
                   "inputs": [update_dict["last_edge_update"], "edge_index"],
-                  "outputs": [f"layer{index}_out"]}
+                  "outputs": [f"layer{index}_out"],
+                  "activate_final": "false"}
     update_dict["last_edge_aggr_update"] = f"layer{index}_out"
     return layer_dict, update_dict

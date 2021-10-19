@@ -54,6 +54,7 @@ void transpose_3d(
 struct matrix_config{
     static const unsigned n_rows = 10;
     static const unsigned n_cols = 10;
+    static const bool gnn_resource_limit = false;
 };
 template<class data_T, class res_T, typename CONFIG_T>
 void vec_to_mat( //faster (I think)
@@ -61,6 +62,10 @@ void vec_to_mat( //faster (I think)
     res_T mat[CONFIG_T::n_rows][CONFIG_T::n_cols]
 ) {
     for (int r=0; r < CONFIG_T::n_rows; r++){
+      if(CONFIG_T::gnn_resource_limit){
+        #pragma HLS UNROLL
+        //#pragma HLS PIPELINE II=1
+      }
       for (int c=0; c < CONFIG_T::n_cols; c++){
         #pragma HLS UNROLL
         mat[r][c] = vec[r*CONFIG_T::n_cols+c];
@@ -74,12 +79,50 @@ void mat_to_vec( //faster (I think)
     res_T vec[CONFIG_T::n_rows*CONFIG_T::n_cols]
 ) {
     for (int r=0; r < CONFIG_T::n_rows; r++){
+      if(CONFIG_T::gnn_resource_limit){
+        #pragma HLS UNROLL
+        //#pragma HLS PIPELINE II=1
+      }
       for (int c=0; c<CONFIG_T::n_cols; c++){
         #pragma HLS UNROLL
         vec[r*CONFIG_T::n_cols+c] = mat[r][c];
       }
     }
 }
+
+template<class data_T, typename CONFIG_T>
+    void clone_mat(
+    data_T     IN[CONFIG_T::n_rows][CONFIG_T::n_cols],
+    data_T     OUT1[CONFIG_T::n_rows][CONFIG_T::n_cols],
+    data_T     OUT2[CONFIG_T::n_rows][CONFIG_T::n_cols]
+  )
+  {
+    for(int i=0; i<CONFIG_T::n_rows; i++){
+      #pragma HLS UNROLL
+      for(int j=0; j<CONFIG_T::n_cols; j++){
+        #pragma HLS UNROLL
+        OUT1[i][j] =  IN[i][j];
+        OUT2[i][j] =  IN[i][j];
+      }
+    }
+  }
+
+template<class data_T, typename CONFIG_T>
+    void clone_vec(
+    data_T     IN[CONFIG_T::n_rows*CONFIG_T::n_cols],
+    data_T     OUT1[CONFIG_T::n_rows*CONFIG_T::n_cols],
+    data_T     OUT2[CONFIG_T::n_rows*CONFIG_T::n_cols]
+  )
+  {
+    for(int i=0; i<CONFIG_T::n_rows; i++){
+      #pragma HLS UNROLL
+      for(int j=0; j<CONFIG_T::n_cols; j++){
+        #pragma HLS UNROLL
+        OUT1[i*CONFIG_T::n_cols+j] =  IN[i*CONFIG_T::n_cols+j];
+        OUT2[i*CONFIG_T::n_cols+j] =  IN[i*CONFIG_T::n_cols+j];
+      }
+    }
+  }
 
 }
 

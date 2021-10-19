@@ -22,6 +22,7 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     static const bool remove_pipeline_pragma = {remove_pipeline_pragma};
     template<class x_T, class y_T, class res_T>
     using product = nnet::product::{product_type}<x_T, y_T, res_T>;
+    static const bool gnn_resource_limit = {gnn_resource_limit};
 }};\n"""
 
 batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
@@ -114,6 +115,15 @@ activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned table_size = {table_size};
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
+    typedef {table_t} table_t;
+}};\n"""
+
+block_activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
+    static const unsigned n_in = {n_in};
+    static const unsigned table_size = {table_size};
+    static const unsigned io_type = nnet::{iotype};
+    static const unsigned reuse_factor = {reuse};
+    static const unsigned activation = {activation};
     typedef {table_t} table_t;
 }};\n"""
 
@@ -226,6 +236,7 @@ concat_config_template = """struct config{index} : nnet::concat_config {{
     static const unsigned n_elem2_0 = {n_elem2_0};
     static const unsigned n_elem2_1 = {n_elem2_1};
     static const unsigned n_elem2_2 = {n_elem2_2};
+    static const bool gnn_resource_limit = {gnn_resource_limit};
 
     static const int axis = {axis};
 }};\n"""
@@ -360,6 +371,9 @@ edgeblock_config_template = """struct config{index}: nnet::graph_config{{
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {n_zeros};
     static const bool io_stream = false; 
+    static const bool activate_final = {activate_final};
+    static const bool gnn_resource_limit = {gnn_resource_limit};
+    static const unsigned par_factor = {par_factor};
 }};"""
 
 nodeblock_config_template = """struct config{index}: nnet::graph_config{{
@@ -376,6 +390,9 @@ nodeblock_config_template = """struct config{index}: nnet::graph_config{{
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {n_zeros};
     static const bool io_stream = false; 
+    static const bool activate_final = {activate_final};
+    static const bool gnn_resource_limit = {gnn_resource_limit};
+    static const unsigned par_factor = {par_factor};
 }};"""
 
 edge_aggregate_config_template = """struct aggregation_config{index}: nnet::edge_aggregate_config{{
@@ -388,6 +405,9 @@ edge_aggregate_config_template = """struct aggregation_config{index}: nnet::edge
     static const unsigned io_type = nnet::{io_type};
     static const unsigned reuse_factor = {reuse};
     static const bool io_stream = false;
+    static const bool activate_final = {activate_final};
+    static const bool gnn_resource_limit = {gnn_resource_limit};
+    static const unsigned par_factor = {par_factor};
 }};"""
 
 
@@ -399,6 +419,7 @@ sepconv1d_function_template = 'nnet::separable_conv_1d_{data_format}<{input_t}, 
 sepconv2d_function_template = 'nnet::separable_conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {d}, {p}, {z}, {b});'
 depthconv2d_function_template = 'nnet::depthwise_conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
+block_activ_function_template = 'nnet::block_activation<{input_t}, {output_t}, {config}>({input}, {output});'
 param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {param}, {output});'
 pooling1d_function_template = 'nnet::pooling1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
@@ -422,6 +443,7 @@ conv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_strea
 sepconv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_sepconv1d_stream.h']
 sepconv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_sepconv2d_stream.h']
 activ_include_list = ['nnet_utils/nnet_activation.h', 'nnet_utils/nnet_activation_stream.h']
+block_activ_include_list = ['nnet_utils/nnet_activation.h', 'nnet_utils/nnet_activation_stream.h']
 pooling_include_list = ['nnet_utils/nnet_pooling.h', 'nnet_utils/nnet_pooling_stream.h']
 padding_include_list = ['nnet_utils/nnet_padding.h', 'nnet_utils/nnet_padding_stream.h']
 merge_include_list = ['nnet_utils/nnet_merge.h', 'nnet_utils/nnet_merge_stream.h']
@@ -457,6 +479,7 @@ class VivadoBackend(Backend):
         self.register_templates('SeparableConv2D'        , sepconv2d_function_template,   [sepconv_config_template, conv2d_config_template, conv2d_config_template, conv_mult_config_template, conv_mult_config_template], sepconv2d_include_list)
         self.register_templates('DepthwiseConv2D'        , depthconv2d_function_template, [conv2d_config_template, conv_mult_config_template], sepconv2d_include_list)
         self.register_templates('Activation'             , activ_function_template,       activ_config_template, activ_include_list)
+        self.register_templates('BlockActivation'        , block_activ_function_template, block_activ_config_template, block_activ_include_list)
         self.register_templates('ParametrizedActivation' , param_activ_function_template, activ_config_template, activ_include_list)
         self.register_templates('PReLU'                  , param_activ_function_template, activ_config_template, activ_include_list)
         self.register_templates('Softmax'                , activ_function_template,       softmax_config_template, activ_include_list)

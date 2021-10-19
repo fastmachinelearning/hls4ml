@@ -116,10 +116,17 @@ class VivadoWriter(Writer):
                     factor = config[2]
             elif mode == 'stream':
                 depth = config[1]
+
+            try: #todo: probably get rid of this
+                dim = config[3]
+            except IndexError:
+                dim = 0
+
         else:
             mode = config
             typ = 'complete'
             factor = 0
+            dim = 0
 
         if mode in ['partition', 'reshape']:
             if typ == 'complete':
@@ -127,7 +134,7 @@ class VivadoWriter(Writer):
             else:
                 template = '#pragma HLS ARRAY_{mode} variable={name} {type} factor={factor} dim={dim}'
 
-            return template.format(mode=mode.upper(), name=variable.name, type=typ, factor=factor, dim=0)
+            return template.format(mode=mode.upper(), name=variable.name, type=typ, factor=factor, dim=dim)
 
         elif mode == 'stream':
             return '#pragma HLS STREAM variable={name} depth={depth}'.format(name=variable.name, depth=depth)
@@ -179,7 +186,29 @@ class VivadoWriter(Writer):
 
             #Add input/output type
             elif '//hls-fpga-machine-learning insert IO' in line:
+
+                if model.config.config.get("gnn_resource_limit")=="true":
+                    numbers_cpp = [layer.get_numbers_cpp() for layer in model.get_layers()]
+                    numbers_cpp = list(set("".join(numbers_cpp).split()))
+                    numbers_cpp = [i for i in numbers_cpp if not i.isdigit()]
+                    numbers_cpp = [i for i in numbers_cpp if i!= "#define"]
+
+                    # handle parallelization factor
+                    par_factor = model.config.config.get("ParallelizationFactor", 1)
+                    n_cols_cpp = [layer.attributes["pragma"][2].upper() for layer in model.get_layers()]
+                    n_cols_cpp = list(set(n_cols_cpp))
+                    n_rows_cpp = [i for i in numbers_cpp if i not in n_cols_cpp]
+
+                    before_line = indent+"//#pragma HLS DATAFLOW doesn't recognize macros\n"
+                    for n in n_rows_cpp:
+                        before_line += indent + f"int {n.lower()} = {n};\n"
+                    for n in n_cols_cpp:
+                        before_line += indent + f"int {n.lower()} = {n}*{par_factor};\n"
+
+                    line = before_line + "\n" + line
+
                 newline = line
+
                 all_inputs = [i.cppname for i in model_inputs]
                 all_outputs = [o.cppname for o in model_outputs]
                 all_brams = [b.cppname for b in model_brams] 
@@ -296,9 +325,17 @@ class VivadoWriter(Writer):
             #Insert numbers
             if '//hls-fpga-machine-learning insert numbers' in line:
                 newline = line
+
                 numbers = OrderedDict.fromkeys([layer.get_numbers_cpp() for layer in model.get_layers()])
                 numbers = set('\n'.join(numbers).split('\n')) #we want a unique set of macro declarations, since some of the macros are shared between different NN-blocks
-                newline += '\n'.join([i for i in numbers if i!=''])
+
+                # handle parallelization factor
+                if model.config.config.get("gnn_resource_limit") == "true":
+                    par_factor = model.config.config.get('ParallelizationFactor', 1)
+                    numbers = list(numbers)
+                    numbers = set(numbers)
+
+                newline += '\n'.join([i for i in numbers if i != ''])
                 newline += '\n' #for formatting purposes
 
             elif '//hls-fpga-machine-learning insert layer-precision' in line:

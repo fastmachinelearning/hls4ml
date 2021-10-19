@@ -574,7 +574,7 @@ class Input(Layer):
             default_type_name = 'input{}_t'.format(self.index)
         type_name = self.attributes.get('type_name', default_type_name)
         precision = self.attributes.get('precision', None)
-        self.add_output_variable(shape, dims, var_name=self.name, type_name=type_name, precision=precision)
+        self.add_output_variable(shape, dims, var_name=self.name, type_name=type_name, precision=precision, pragma=self.attributes.get("pragma", "auto"))
 
     def function_cpp(self):
         return None
@@ -649,6 +649,7 @@ class Dense(Layer):
         params['nonzeros'] = self.get_weights('weight').nonzeros
         params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
         params['strategy'] = self.get_attr('strategy')
+        params['gnn_resource_limit'] = 'false'
         if self.get_attr('remove_pipeline_pragma') is not None:
             params['remove_pipeline_pragma'] = self.get_attr('remove_pipeline_pragma')
         else:
@@ -931,7 +932,6 @@ class Conv2D(Layer):
         mult_config = self._config_template[1].format(**mult_params)
 
         return mult_config + '\n' + conv_config
-
 
 class Conv2DBatchnorm(Conv2D):
     def _get_folded_weights(self):
@@ -1459,6 +1459,7 @@ class Merge(Layer):
 
     def config_cpp(self):
         params = self._default_config_params()
+        params['gnn_resource_limit'] = 'false'
         inp1 = self.get_input_variable(self.inputs[0])
         inp2 = self.get_input_variable(self.inputs[1])
         if np.prod(inp2.shape) > np.prod(inp1.shape):
@@ -1779,7 +1780,6 @@ class GarNet(Layer):
             params['{}_t'.format(wname)] = weights.type.name
             params['{}_size'.format(wname)] = weights.data_length
 
-
 class GarNetStack(GarNet):
     def _initialize_transforms(self):
         self._sublayer_weights = []
@@ -1934,6 +1934,9 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
         params['io_type'] = 'io_parallel'
         params['reuse'] = self.reuse_factor
         params['n_zeros'] = 0
+        params['gnn_resource_limit'] = self.model.config.config['gnn_resource_limit']
+        params['par_factor'] = self.model.config.config["ParallelizationFactor"]
+        params['activate_final'] = self.attributes['activate_final']
         return params
 
     def add_weights(self, quantizer=None, compression=False):
@@ -1982,6 +1985,7 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
         params['reuse'] = 1
         params['nzeros'] = 0
         params['remove_pipeline_pragma'] = 'true'
+        params['gnn_resource_limit'] = self.model.config.config['gnn_resource_limit']
 
         params['accum_t'] = f'layer{self.index}_t'
         params['bias_t'] = f'layer{self.index}_t'
@@ -2064,6 +2068,30 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
                 relu_config_i = '\n'.join(relu_config_i)
                 configs[f"relu_config{i}"] = relu_config_i
 
+        activation_dict = {
+            "linear": 0,
+            "relu": 1,
+            "sigmoid": 2,
+            "selu": 3,
+            "tanh": 4,
+            "softplus": 5,
+            "softsign": 6,
+            "hard_sigmoid": 7,
+            "binary_tanh": 8,
+            "ternary_tanh": 9
+        }
+        activation_params = {
+            "type": "activation",
+            "index": "",
+            "n_in": self.out_dim_cppname,
+            "table_size": 1024,
+            "iotype": "io_parallel",
+            "reuse": 1,
+            "table_t": "ap_fixed<18,8>",
+            "activation": activation_dict[self.attributes["activation"]]
+        }
+        activation_config = self.config_layer("BlockActivation", activation_params)
+        configs["activation_config"] = activation_config
         return configs
 
 class EdgeBlock(GraphBlock):
@@ -2074,7 +2102,9 @@ class EdgeBlock(GraphBlock):
         out_shape = [self.n_edge, self.out_dim]
         out_dims = [self.n_edge_cppname, self.out_dim_cppname]
         out_name = f"layer{self.index}_out"
-        self.add_output_variable(shape=out_shape, dim_names=out_dims, out_name=out_name, var_name=out_name, precision=self.attributes.get('precision', None), pragma='partition')
+        self.add_output_variable(shape=out_shape, dim_names=out_dims, out_name=out_name, var_name=out_name,
+                                 precision=self.attributes.get('precision', None),
+                                 pragma=self.attributes.get("pragma", "partition"))
 
         # Reshape the input/output variables
         #for input_name in self.inputs:
@@ -2099,7 +2129,7 @@ class EdgeBlock(GraphBlock):
         out = self._function_template.format(**params)
         return [out]
 
-    def get_top_params(self):  # hard-coded for now
+    def get_top_params(self):
         params = self.get_top_params_graphblock()
 
         flow_map = {
@@ -2107,7 +2137,6 @@ class EdgeBlock(GraphBlock):
             "target_to_source": 1
         }
         params["flow"] = flow_map[self.attributes.get("flow", self.model.reader.torch_model.flow)]
-
         return params
 
     def _config_misc(self):
@@ -2117,19 +2146,23 @@ class EdgeBlock(GraphBlock):
         matrix_config_template = """struct {matrix_name}_config: nnet::matrix_config{{
                     static const unsigned n_rows = {n_rows};
                     static const unsigned n_cols = {n_cols};
+                    static const bool gnn_resource_limit = {gnn_resource_limit};
                 }};"""
 
         configs['node_attr_config'] = matrix_config_template.format(matrix_name="node_attr",
                                                                     n_rows=self.n_node_cppname,
-                                                                    n_cols=self.node_dim_cppname)
+                                                                    n_cols=self.node_dim_cppname,
+                                                                    gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
 
         configs['edge_attr_config'] = matrix_config_template.format(matrix_name="edge_attr",
                                                                     n_rows=self.n_edge_cppname,
-                                                                    n_cols=self.edge_dim_cppname)
+                                                                    n_cols=self.edge_dim_cppname,
+                                                                    gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
 
         configs['edge_update_config'] = matrix_config_template.format(matrix_name="edge_update",
                                                                       n_rows=self.n_edge_cppname,
-                                                                      n_cols=f"LAYER{self.index}_OUT_DIM")
+                                                                      n_cols=f"LAYER{self.index}_OUT_DIM",
+                                                                      gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
 
         # concatenation configs
         concat_config_template = self.model.config.backend.get_config_template('Concatenate')
@@ -2143,7 +2176,8 @@ class EdgeBlock(GraphBlock):
                     'n_elem2_0': self.node_dim_cppname,
                     'n_elem2_1': 1,
                     'n_elem2_2': 0,
-                    'axis': 0
+                    'axis': 0,
+                    'gnn_resource_limit': self.model.config.config['gnn_resource_limit']
                 }
         merge_config1 = concat_config_template.format(**merge_config1_params)
         configs['merge_config1'] = merge_config1
@@ -2156,7 +2190,8 @@ class EdgeBlock(GraphBlock):
                     'n_elem2_0': self.edge_dim_cppname,
                     'n_elem2_1': 1,
                     'n_elem2_2': 0,
-                    'axis': 0
+                    'axis': 0,
+                    'gnn_resource_limit': self.model.config.config['gnn_resource_limit']
                 }
         merge_config2 = concat_config_template.format(**merge_config2_params)
         configs['merge_config2'] = merge_config2
@@ -2187,7 +2222,9 @@ class NodeBlock(GraphBlock):
         out_shape = [self.n_node, self.out_dim]
         out_dims = [self.n_node_cppname, self.out_dim_cppname]
         out_name = f"layer{self.index}_out"
-        self.add_output_variable(shape=out_shape, dim_names=out_dims, out_name=out_name, var_name=out_name, precision=self.attributes.get('precision', None), pragma='partition')
+        self.add_output_variable(shape=out_shape, dim_names=out_dims, out_name=out_name, var_name=out_name,
+                                 precision=self.attributes.get('precision', None),
+                                 pragma=self.attributes.get("pragma", "partition"))
 
         # Reshape the input/output variables
         #for input_name in self.inputs:
@@ -2211,7 +2248,7 @@ class NodeBlock(GraphBlock):
         out = self._function_template.format(**params)
         return [out]
 
-    def get_top_params(self):  # hard-coded for now
+    def get_top_params(self):
         params = self.get_top_params_graphblock()
         return params
 
@@ -2222,19 +2259,23 @@ class NodeBlock(GraphBlock):
         matrix_config_template = """struct {matrix_name}_config: nnet::matrix_config{{
                             static const unsigned n_rows = {n_rows};
                             static const unsigned n_cols = {n_cols};
+                            static const bool gnn_resource_limit = {gnn_resource_limit};
                         }};"""
 
         configs['node_attr_config'] = matrix_config_template.format(matrix_name="node_attr",
                                                                     n_rows=self.n_node_cppname,
-                                                                    n_cols=self.node_dim_cppname)
+                                                                    n_cols=self.node_dim_cppname,
+                                                                    gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
 
         configs['edge_attr_aggr_config'] = matrix_config_template.format(matrix_name="edge_attr_aggr",
                                                                          n_rows=self.n_node_cppname,
-                                                                         n_cols=f"LAYER{self.index - 1}_OUT_DIM")
+                                                                         n_cols=f"LAYER{self.index - 1}_OUT_DIM",
+                                                                         gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
 
         configs['node_update_config'] = matrix_config_template.format(matrix_name="node_update",
                                                                       n_rows=self.n_node_cppname,
-                                                                      n_cols=f"LAYER{self.index}_OUT_DIM")
+                                                                      n_cols=f"LAYER{self.index}_OUT_DIM",
+                                                                      gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
 
         # concatenation configs
         concat_config_template = self.model.config.backend.get_config_template('Concatenate')
@@ -2247,7 +2288,8 @@ class NodeBlock(GraphBlock):
             'n_elem2_0': self.edge_dim_cppname,
             'n_elem2_1': 1,
             'n_elem2_2': 0,
-            'axis': 0
+            'axis': 0,
+            'gnn_resource_limit': self.model.config.config['gnn_resource_limit']
         }
         merge_config1 = concat_config_template.format(**merge_config1_params)
         configs['merge_config1'] = merge_config1
@@ -2269,6 +2311,7 @@ class NodeBlock(GraphBlock):
 
 class EdgeAggregate(Layer):
     def initialize(self):
+
         self.n_node = self.attributes['n_node']
         self.n_edge = self.attributes['n_edge']
         self.node_dim = self.attributes['node_dim']
@@ -2279,11 +2322,14 @@ class EdgeAggregate(Layer):
         self.n_node_cppname, self.node_dim_cppname = self.model.get_layer_output_variable('node_attr').dim_names
         self.n_edge_cppname, self.edge_dim_cppname = self.model.get_layer_output_variable(self.inputs[0]).dim_names
 
+        # add edge-aggregate variable
         aggr_name = f"layer{self.index}_out"
         aggr_shape = [self.n_node, self.out_dim]
         aggr_dims = ['N_NODE', f'LAYER{self.index}_OUT_DIM']
+
         self.add_output_variable(shape=aggr_shape, dim_names=aggr_dims, out_name=aggr_name, var_name=aggr_name,
-                                 precision=self.attributes.get('precision', None))
+                                 precision=self.attributes.get('precision', None),
+                                 pragma=self.attributes.get("pragma", "auto"))
 
     def function_cpp(self):
         params = {}
@@ -2332,6 +2378,9 @@ class EdgeAggregate(Layer):
         params['aggr'] = aggr_map[self.model.reader.torch_model.aggr]
 
         params['io_type'] = 'io_parallel'
+        params['gnn_resource_limit'] = self.model.config.config['gnn_resource_limit']
+        params['par_factor'] = self.model.config.config["ParallelizationFactor"]
+        params['activate_final'] = self.attributes['activate_final']
 
         return params
 
@@ -2341,15 +2390,18 @@ class EdgeAggregate(Layer):
         matrix_config_template = """struct {matrix_name}_config: nnet::matrix_config{{
                             static const unsigned n_rows = {n_rows};
                             static const unsigned n_cols = {n_cols};
+                            static const bool gnn_resource_limit = {gnn_resource_limit};
                         }};"""
 
         configs['edge_attr_config'] = matrix_config_template.format(matrix_name="edge_attr",
                                                                     n_rows=self.n_edge_cppname,
-                                                                    n_cols=self.edge_dim_cppname)
+                                                                    n_cols=self.edge_dim_cppname,
+                                                                    gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
 
         configs['edge_attr_aggr_config'] = matrix_config_template.format(matrix_name="edge_attr_aggr",
-                                                                           n_rows=self.n_node_cppname,
-                                                                           n_cols=f"LAYER{self.index}_OUT_DIM")
+                                                                         n_rows=self.n_node_cppname,
+                                                                         n_cols=f"LAYER{self.index}_OUT_DIM",
+                                                                         gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
 
         return configs
 
