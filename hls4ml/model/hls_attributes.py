@@ -11,7 +11,7 @@ class Attribute(object):
 
     def validate_value(self, value):
         if self.value_type is not None:
-            return type(value) == self.value_type
+            return issubclass(type(value), self.value_type)
         else:
             return True # Meaning we don't care
 

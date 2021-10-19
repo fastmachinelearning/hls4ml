@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.lib.arraysetops import isin
 
-from hls4ml.model.hls_types import CompressedType, NamedType, ExponentType, FixedPrecisionType, IntegerPrecisionType, TensorVariable, PackedType, WeightVariable, XnorPrecisionType
+from hls4ml.model.hls_types import CompressedType, NamedType, ExponentType, FixedPrecisionType, IntegerPrecisionType, XnorPrecisionType, ExponentPrecisionType, TensorVariable, PackedType, WeightVariable
 
 #TODO Rethink if these classes should be built with `from_...(var, ...)` methods or with `__init__(var, ...)`
 
@@ -36,6 +36,20 @@ class APFixedPrecisionType(FixedPrecisionType):
         return cls(width=precision_type.width, integer=precision_type.integer, signed=precision_type.signed,
             rounding_mode=precision_type.rounding_mode, saturation_mode=precision_type.saturation_mode, saturation_bits=precision_type.saturation_bits)
 
+class APXnorPrecisionType(XnorPrecisionType):
+    definition_cpp = APIntegerPrecisionType.definition_cpp
+    
+    @classmethod
+    def from_precision(cls, precision_type):
+        return cls()
+
+class APExponentPrecisionType(ExponentPrecisionType):
+    definition_cpp = APIntegerPrecisionType.definition_cpp
+    
+    @classmethod
+    def from_precision(cls, precision_type):
+        return cls(width=precision_type.width, signed=precision_type.signed)
+
 class ACIntegerPrecisionType(IntegerPrecisionType):
     def definition_cpp(self):
         typestring = 'ac_int<{width}, {signed}>'.format(width=self.width, signed=str(self.signed).lower())
@@ -65,29 +79,61 @@ class ACFixedPrecisionType(FixedPrecisionType):
         return cls(width=precision_type.width, integer=precision_type.integer, signed=precision_type.signed,
             rounding_mode=precision_type.rounding_mode, saturation_mode=precision_type.saturation_mode, saturation_bits=precision_type.saturation_bits)
 
+class ACXnorPrecisionType(XnorPrecisionType):
+    definition_cpp = ACIntegerPrecisionType.definition_cpp
+    
+    @classmethod
+    def from_precision(cls, precision_type):
+        return cls()
+
+class ACExponentPrecisionType(ExponentPrecisionType):
+    definition_cpp = ACIntegerPrecisionType.definition_cpp
+    
+    @classmethod
+    def from_precision(cls, precision_type):
+        return cls(width=precision_type.width, signed=precision_type.signed)
+
 class PrecisionTypeConverter(object):
     def convert(self, precision_type):
         raise NotImplementedError
 
 class APTypeConverter(PrecisionTypeConverter):
     def convert(self, precision_type):
-        if isinstance(precision_type, IntegerPrecisionType):
+        type_cls = type(precision_type)
+        
+        # If the type is already converted, do nothing
+        if type_cls.__name__.startswith('AP'):
+            return precision_type
+
+        if type_cls == XnorPrecisionType:
+            return APXnorPrecisionType.from_precision(precision_type)
+        elif type_cls == IntegerPrecisionType:
             return APIntegerPrecisionType.from_precision(precision_type)
-        elif isinstance(precision_type, FixedPrecisionType):
+        elif type_cls == ExponentPrecisionType:
+            return APExponentPrecisionType.from_precision(precision_type)
+        elif type_cls == FixedPrecisionType:
             return APFixedPrecisionType.from_precision(precision_type)
         else:
-            raise Exception('Unknown precision type: {}'.format(precision_type.__class__.__name__))
+            raise Exception('Cannot convert precision type to AP: {}'.format(precision_type.__class__.__name__))
 
 class ACTypeConverter(PrecisionTypeConverter):
     def convert(self, precision_type):
-        if isinstance(precision_type, IntegerPrecisionType):
-            return ACIntegerPrecisionType.from_precision(precision_type)
-        elif isinstance(precision_type, FixedPrecisionType):
-            return ACFixedPrecisionType.from_precision(precision_type)
-        if isinstance(precision_type, (APIntegerPrecisionType, APFixedPrecisionType)):
+        type_cls = type(precision_type)
+        
+        # If the type is already converted, do nothing
+        if type_cls.__name__.startswith('AC'):
             return precision_type
+
+        if type_cls == XnorPrecisionType:
+            return ACXnorPrecisionType.from_precision(precision_type)
+        elif type_cls == IntegerPrecisionType:
+            return ACIntegerPrecisionType.from_precision(precision_type)
+        elif type_cls == ExponentPrecisionType:
+            return ACExponentPrecisionType.from_precision(precision_type)
+        elif type_cls == FixedPrecisionType:
+            return ACFixedPrecisionType.from_precision(precision_type)
         else:
-            raise Exception('Unknown precision type: {}'.format(precision_type.__class__.__name__))
+            raise Exception('Cannot convert precision type to AC: {}'.format(precision_type.__class__.__name__))
 
 #endregion
 
@@ -216,6 +262,8 @@ class StructMemberVariable(ArrayVariable):
 
     @classmethod
     def from_variable(cls, tensor_var, precision_converter, pragma='partition', struct_name=None):
+        if type(tensor_var) == cls:
+            return tensor_var
         return cls(
             tensor_var.shape,
             tensor_var.dim_names,
@@ -248,6 +296,8 @@ class StreamVariable(TensorVariable):
 
     @classmethod
     def from_variable(cls, tensor_var, precision_converter,  n_pack=1, depth=0):
+        if type(tensor_var) == cls:
+            return tensor_var
         return cls(
             tensor_var.shape,
             tensor_var.dim_names,
@@ -276,6 +326,8 @@ class StaticWeightVariable(WeightVariable):
     
     @classmethod
     def from_variable(cls, weight_var, precision_converter, index_precision=None):
+        if type(weight_var) == cls:
+            return weight_var
         return cls(
             weight_var.__class__.__name__,
             var_name=weight_var.name,

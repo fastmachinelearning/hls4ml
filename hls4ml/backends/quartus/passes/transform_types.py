@@ -1,6 +1,6 @@
 
 from hls4ml.model.optimizer import GlobalOptimizerPass
-from hls4ml.model.hls_types import CompressedWeightVariable
+from hls4ml.model.hls_types import CompressedWeightVariable, InplaceVariable
 from hls4ml.backends.fpga.fpga_types import ACIntegerPrecisionType, ACTypeConverter, QuartusArrayVariable, HLSTypeConverter, StaticWeightVariable, StreamVariable, StructMemberVariable
 
 
@@ -10,8 +10,11 @@ class TransformTypes(GlobalOptimizerPass):
         self.type_converter = HLSTypeConverter()
 
     def transform(self, model, node):
+        io_type = node.model.config.get_config_value('IOType')
+
         for out_name, var in node.variables.items():
-            io_type = node.model.config.get_config_value('IOType')
+            if isinstance(var, InplaceVariable):
+                continue
 
             if io_type == 'io_stream':
                 new_var = StreamVariable.from_variable(var)
