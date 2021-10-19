@@ -30,7 +30,8 @@ setup(name='hls4ml',
                         'six',
                         'pyyaml',
                         'h5py',
-                        'onnx>=1.4.0'],
+                        'onnx>=1.4.0',
+                        'pyDigitalWaveTools'],
       extras_require={
         'profiling': [
             'pandas',
