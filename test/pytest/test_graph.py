@@ -1,6 +1,9 @@
 import hls4ml
 import numpy as np
 import pytest
+from pathlib import Path
+
+test_root_path = Path(__file__).parent
 
 class Reader:
     def get_weights_data(self, name, var):
@@ -16,6 +19,7 @@ def base_model(output_dir='hls4mlprj_graph_base_model', iotype = 'io_parallel'):
   config['OutputDir'] = output_dir
   config['ProjectName'] = 'myprj'
   config['IOType'] = iotype
+  config['Backend'] = 'Vivado'
   model = hls4ml.model.HLSModel(config, reader, layers)
   return model
 
@@ -77,7 +81,7 @@ graph_ops = {'insert'  : do_insert,
 @pytest.mark.parametrize('iotype', ['io_parallel', 'io_stream'])
 def test_graph_manipulation(parameters, iotype):
   model, op, node, expected, skip_layers_check = parameters[0], parameters[1], parameters[2], parameters[3], parameters[4]
-  odir = 'hls4mlprj_graph_{}_{}_{}'.format(model.__name__, op, node)
+  odir = str(test_root_path / 'hls4mlprj_graph_{}_{}_{}'.format(model.__name__, op, node))
   model = model(odir, iotype)
   original_layers = np.array([layer.name for layer in list(model.get_layers())])
   model, expected_layers = graph_ops[op](model, node, original_layers)
@@ -96,7 +100,7 @@ def test_graph_manipulation(parameters, iotype):
 @pytest.mark.parametrize('iotype', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('batch', [1, 100])
 def test_graph_branch(iotype, batch):
-  odir = 'hls4mlprj_graph_branch_model_{}_batch{}'.format(iotype, batch)
+  odir = str(test_root_path / 'hls4mlprj_graph_branch_model_{}_batch{}'.format(iotype, batch))
   model = branch_model(odir, iotype)
   original_layers = np.array([layer.name for layer in list(model.get_layers())])
   model.compile()

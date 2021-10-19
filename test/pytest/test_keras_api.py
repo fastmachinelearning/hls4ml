@@ -2,6 +2,7 @@ import pytest
 import hls4ml
 import tensorflow as tf
 import numpy as np
+from pathlib import Path
 from tensorflow.keras import optimizers
 from tensorflow.keras.layers import Input, Dense, Activation, Conv1D, Conv2D, \
                                     Reshape, ELU, LeakyReLU, ThresholdedReLU, \
@@ -11,6 +12,8 @@ from tensorflow.keras.layers import Input, Dense, Activation, Conv1D, Conv2D, \
                                     AveragePooling2D
 import math
 from tensorflow.keras import backend as K
+
+test_root_path = Path(__file__).parent
 
 def test_dense():
     model = tf.keras.models.Sequential()
@@ -33,7 +36,7 @@ def test_dense():
     keras_prediction = model.predict(X_input)
 
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = 'hls4mlprj_keras_api_dense'
+    output_dir = str(test_root_path / 'hls4mlprj_keras_api_dense')
 
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
 
@@ -73,7 +76,7 @@ def test_activations(activation_function):
     X_input = np.random.rand(100,1)
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = 'hls4mlprj_keras_api_activations_{}'.format(activation_function.__class__.__name__)
+    output_dir = str(test_root_path / 'hls4mlprj_keras_api_activations_{}'.format(activation_function.__class__.__name__))
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input)
@@ -107,7 +110,7 @@ def test_conv1d(conv1d, padds):
     X_input = np.random.rand(10,128,4)
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = 'hls4mlprj_keras_api_conv1d_{}'.format(padds)
+    output_dir = str(test_root_path / 'hls4mlprj_keras_api_conv1d_{}'.format(padds))
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input)
@@ -167,7 +170,7 @@ def test_conv2d(conv2d, chans, padds):
     X_input = np.random.rand(100, *input_shape)
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = 'hls4mlprj_keras_api_conv2d_{}_{}'.format(chans, padds)
+    output_dir = str(test_root_path / 'hls4mlprj_keras_api_conv2d_{}_{}'.format(chans, padds))
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
@@ -250,7 +253,7 @@ def test_pooling(pooling, padds, chans):
     X_input = np.random.rand(100, *input_shape)
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = 'hls4mlprj_keras_api_pooling_{}_{}_{}'.format(pooling.__name__, chans, padds)
+    output_dir = str(test_root_path / 'hls4mlprj_keras_api_pooling_{}_{}_{}'.format(pooling.__name__, chans, padds))
 
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
     hls_model.compile()
