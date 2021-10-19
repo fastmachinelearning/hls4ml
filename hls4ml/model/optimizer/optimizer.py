@@ -47,6 +47,14 @@ class LayerOptimizerPass(WrappedOptimizerPass):
         super(LayerOptimizerPass, self).__init__(name, lambda node: isinstance(node, layer_class), transform)
         self.layer_class = layer_class
 
+class ConfigurableOptimizerPass(OptimizerPass):
+    def configure(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+    
+    def get_config(self):
+        attrs = vars(self)
+        return attrs.copy()
 
 # Decorator optimizers
 
