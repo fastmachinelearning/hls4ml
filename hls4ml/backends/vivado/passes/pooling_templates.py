@@ -49,11 +49,9 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
 
 global_pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
     static const unsigned n_in = {n_in};
-    static const unsigned n_out = {n_out};
-    static const unsigned pad_left = {pad_left};
-    static const unsigned pad_right = {pad_right};
-    static const unsigned stride = {stride};
+    static const unsigned n_filt = {n_filt};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
+    static const unsigned reuse = {reuse};
     typedef {accum_t.name} accum_t;
 }};\n"""
 
