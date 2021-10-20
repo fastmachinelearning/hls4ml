@@ -4,32 +4,57 @@ from datetime import datetime
 import pynq.lib.dma
 import numpy as np
 
+
 class NeuralNetworkOverlay(Overlay):
-    def __init__(self, bitfile_name, dtbo=None, download=True, ignore_version=False, device=None):
-        
-        super().__init__(bitfile_name, dtbo=dtbo, download=download, ignore_version=ignore_version, device=device)
-        
+    def __init__(self, bitfile_name, x_shape, y_shape, dtype=np.float32, dtbo=None, download=True, ignore_version=False,
+                 device=None):
+        super().__init__(bitfile_name, dtbo=None, download=True, ignore_version=False, device=None)
+        self.sendchannel = self.hier_0.axi_dma_0.sendchannel
+        self.recvchannel = self.hier_0.axi_dma_0.recvchannel
+        self.input_buffer = allocate(shape=x_shape, dtype=dtype)
+        self.output_buffer = allocate(shape=y_shape, dtype=dtype)
+
     def _print_dt(self, timea, timeb, N):
-        dt = (timeb - timea) 
-        dts = dt.seconds + dt.microseconds * 10**-6
+        dt = (timeb - timea)
+        dts = dt.seconds + dt.microseconds * 10 ** -6
         rate = N / dts
         print("Classified {} samples in {} seconds ({} inferences / s)".format(N, dts, rate))
         return dts, rate
-    def predict(self, X, y_shape, dtype=np.float32, debug=None, profile=False, encode=None, decode=None):
+
+    def __predict(self, X, debug=None, encode=None, decode=None):
+        if encode is not None:
+            X = encode(X)
+
+        self.input_buffer[:] = X
+        self.sendchannel.transfer(self.input_buffer)
+        self.recvchannel.transfer(self.output_buffer)
+        if debug:
+            print("Transfer OK")
+        # self.sendchannel.wait()
+        if debug:
+            print("Send OK")
+        self.recvchannel.wait()
+        if debug:
+            print("Receive OK")
+        # result = self.output_buffer.copy()
+        if decode is not None:
+            self.output_buffer = decode(self.output_buffer)
+
+        return self.output_buffer
+
+    def predict(self, X, debug=None, profile=False, encode=None, decode=None):
         """
         Obtain the predictions of the NN implemented in the FPGA.
         Parameters:
         - X : the input vector. Should be numpy ndarray.
-        - y_shape : the shape of the output vector. Needed to the accelerator to set the TLAST bit properly and
-                    for sizing the output vector shape.
-        - dtype : the data type of the elements of the input/output vectors. 
-                  Note: it should be set depending on the interface of the accelerator; if it uses 'float' 
-                  types for the 'data' AXI-Stream field, 'np.float32' dtype is the correct one to use. 
+        - dtype : the data type of the elements of the input/output vectors.
+                  Note: it should be set depending on the interface of the accelerator; if it uses 'float'
+                  types for the 'data' AXI-Stream field, 'np.float32' dtype is the correct one to use.
                   Instead if it uses 'ap_fixed<A,B>', 'np.intA' is the correct one to use (note that A cannot
-                  any integer value, but it can assume {..., 8, 16, 32, ...} values. Check `numpy` 
+                  any integer value, but it can assume {..., 8, 16, 32, ...} values. Check `numpy`
                   doc for more info).
-                  In this case the encoding/decoding has to be computed by the PS. For example for 
-                  'ap_fixed<16,6>' type the following 2 functions are the correct one to use for encode/decode 
+                  In this case the encoding/decoding has to be computed by the PS. For example for
+                  'ap_fixed<16,6>' type the following 2 functions are the correct one to use for encode/decode
                   'float' -> 'ap_fixed<16,6>':
                   ```
                     def encode(xi):
@@ -45,27 +70,27 @@ class NeuralNetworkOverlay(Overlay):
                   the namesake parameter.
         """
         if profile:
+            import cProfile
+            import pstats
+            import io
             timea = datetime.now()
-        if encode is not None:
-            X = encode(X)
-        with allocate(shape=X.shape, dtype=dtype) as input_buffer, \
-             allocate(shape=y_shape, dtype=dtype) as output_buffer:
-            input_buffer[:] = X 
-            self.hier_0.axi_dma_0.sendchannel.transfer(input_buffer)
-            self.hier_0.axi_dma_0.recvchannel.transfer(output_buffer)
-            if debug:
-                print("Transfer OK")
-            self.hier_0.axi_dma_0.sendchannel.wait()
-            if debug:
-                print("Send OK")
-            self.hier_0.axi_dma_0.recvchannel.wait()
-            if debug:
-                print("Receive OK")
-            result = output_buffer.copy()
-        if decode is not None:
-            result = decode(result)
+
+            pr = cProfile.Profile()
+            pr.enable()
+
+        self.__predict(X, debug, encode, decode)
         if profile:
+            pr.disable()
+            s = io.StringIO()
+            stats = pstats.Stats(pr, stream=s)
+            stats.sort_stats(1)
+            stats.print_stats()
+
+            with open('profile.txt', 'w+') as f:
+                f.write(s.getvalue())
+
             timeb = datetime.now()
             dts, rate = self._print_dt(timea, timeb, len(X))
-            return result, dts, rate
-        return result
+            return self.output_buffer, dts, rate
+        else:
+            return self.output_buffer
