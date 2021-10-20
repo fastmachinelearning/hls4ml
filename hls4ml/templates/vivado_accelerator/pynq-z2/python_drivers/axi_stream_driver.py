@@ -70,25 +70,9 @@ class NeuralNetworkOverlay(Overlay):
                   the namesake parameter.
         """
         if profile:
-            import cProfile
-            import pstats
-            import io
             timea = datetime.now()
-
-            pr = cProfile.Profile()
-            pr.enable()
-
         self.__predict(X, debug, encode, decode)
         if profile:
-            pr.disable()
-            s = io.StringIO()
-            stats = pstats.Stats(pr, stream=s)
-            stats.sort_stats(1)
-            stats.print_stats()
-
-            with open('profile.txt', 'w+') as f:
-                f.write(s.getvalue())
-
             timeb = datetime.now()
             dts, rate = self._print_dt(timea, timeb, len(X))
             return self.output_buffer, dts, rate
