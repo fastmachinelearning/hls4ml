@@ -43,27 +43,42 @@ def optimize_fifos_depth(model, output_dir='my-hls-test', project_name='myprojec
         values[-1]['max'] = max(values[-1]['data'])
         values[-1]['depth'] = int(depth[1:], 2)
 
+    if not hls_config['Model']['FIFO_opt']:
+        raise Exception('To use this optimization you have to set `FIFO_opt` field to True in the HLS config')
+
+
     hls_model = hls4ml.converters.convert_from_keras_model(model, output_dir=output_dir, project_name=project_name,
                                                            input_data_tb=input_data_tb, output_data_tb=output_data_tb,
                                                            backend=backend, board=board, part=part,
                                                            clock_period=clock_period, io_type=io_type,
                                                            hls_config=hls_config, **kwargs)
 
-    config = hls_model.config.config['HLSConfig']
-
-    if not config['Model']['FIFO_opt']:
-        raise Exception('To use this optimization you have to set `FIFO_opt` field to True in the HLS config')
-
     # initialize all the fifos to 10000 so that they will be automatically implemented in BRAMs and so they will be
     # profiled
+
     if init_large_fifo:
+
         for k,_ in hls_model.output_vars.items():
-            if k not in config['LayerName']:
-                config['LayerName'][k] = {'StreamDepth': 10000}
+            if k not in hls_config['LayerName']:
+                hls_config['LayerName'][k] = {'StreamDepth': 10000}
             else:
-                config['LayerName'][k]['StreamDepth'] = 10000
+                hls_config['LayerName'][k]['StreamDepth'] = 10000
+
+        if hls_model.config.get_config_value('Backend') == 'VivadoAccelerator':
+            hls_config['LayerName']['in_local'] = {'StreamDepth' : 10000}
+            hls_config['LayerName']['out_local'] = {'StreamDepth': 10000}
+
+        hls_model = hls4ml.converters.convert_from_keras_model(model, output_dir=output_dir, project_name=project_name,
+                                                               input_data_tb=input_data_tb,
+                                                               output_data_tb=output_data_tb,
+                                                               backend=backend, board=board, part=part,
+                                                               clock_period=clock_period, io_type=io_type,
+                                                               hls_config=hls_config, **kwargs)
+
+
 
     # run the build with FIFO_opt param set to 1 in order to generate the vcd file
+    hls_model.write()
     hls_model.build(csim=True, cosim=True, synth=True, vsynth=False, export=False, validation=True)
 
     with open(hls_model.config.get_output_dir() + '/' + hls_model.config.get_project_name() + '_prj' + '/solution1/sim/verilog/fifo_opt.vcd') as vcd_file:
