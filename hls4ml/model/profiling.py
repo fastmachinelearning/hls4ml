@@ -30,7 +30,7 @@ except ImportError:
 
 
 def optimize_fifos_depth(model, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,
-                         output_data_tb=None, backend='Vivado', board=None, part=None, clock_period=5,
+                         output_data_tb=None, backend='VivadoBackend', board=None, part=None, clock_period=5,
                          io_type='io_stream', hls_config={}, init_large_fifo=True, reset=False, csim=True, synth=True,
                          cosim=True, validation=True, export=True, vsynth=False, **kwargs,):
 
@@ -123,9 +123,13 @@ def optimize_fifos_depth(model, output_dir='my-hls-test', project_name='myprojec
         elif 'out_local' in x['name']:
             new_config['LayerName']['out_local'] = {'StreamDepth': x['max'] + 1}
     out_dir = hls_model.config.get_output_dir() + '_FIFO_OPT'
-    hls_model = hls4ml.converters.convert_from_keras_model(hls_model.config.config['KerasModel'], output_dir=out_dir, io_type=hls_model.config.config['IOType'],
-                                                           board=hls_model.config.config['Board'], hls_config=new_config,
-                                                           backend=hls_model.config.config['Backend'])
+    hls_model = hls4ml.converters.convert_from_keras_model(hls_model.config.config['KerasModel'], output_dir=out_dir,
+                                                           io_type=io_type, board=board, part=part,
+                                                           clock_period=clock_period, hls_config=new_config,
+                                                           backend=backend,
+                                                           input_data_tb=input_data_tb,
+                                                           output_data_tb=output_data_tb, **kwargs)
+    hls_model.write()
     hls_model.build(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
     print('[hls4ml] - FIFO optimization completed')
     return hls_model
