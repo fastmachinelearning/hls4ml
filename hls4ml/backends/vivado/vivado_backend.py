@@ -9,7 +9,7 @@ from collections.abc import Iterable
 from hls4ml.model.hls_types import FixedPrecisionType, NamedType, IntegerPrecisionType
 from hls4ml.model.hls_layers import Layer, Dense, BatchNormalization, Conv1D, Conv2D, Conv2DBatchnorm, SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Activation, ParametrizedActivation, PReLU, Softmax, Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D, ZeroPadding1D, ZeroPadding2D, Merge, Concatenate, Dot, Resize, Transpose, GarNet, GarNetStack
 from hls4ml.model.hls_attributes import Attribute
-from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
+from hls4ml.model.optimizer import get_backend_passes, layer_optimizer, model_optimizer
 from hls4ml.model.flow import register_flow
 from hls4ml.backends import FPGABackend
 from hls4ml.report import parse_vivado_report
@@ -134,6 +134,7 @@ class VivadoBackend(FPGABackend):
             'vivado:clone_output',
             'vivado:insert_zero_padding_before_conv1d',
             'vivado:insert_zero_padding_before_conv2d',
+            'vivado:broadcast_stream',
         ]
         streaming_flow = register_flow('streaming', streaming_passes, requires=[init_flow], backend=self.name)
 
@@ -159,11 +160,17 @@ class VivadoBackend(FPGABackend):
         templates = self._get_layer_templates()
         template_flow = register_flow('apply_templates', templates, requires=[init_flow], backend=self.name)
 
+        writer_passes = [
+            'vivado:write_hls'
+        ]
+        writer_flow_requirements = ['optimize', vivado_types_flow, template_flow]
+        self._writer_flow = register_flow('write', writer_passes, requires=writer_flow_requirements, backend=self.name)
+
         all_passes = get_backend_passes(self.name)
 
         extras = [
             # Ideally this should be empty
-            opt_pass for opt_pass in all_passes if opt_pass not in initializers + streaming_passes + quantization_passes + optimization_passes + vivado_types + templates
+            opt_pass for opt_pass in all_passes if opt_pass not in initializers + streaming_passes + quantization_passes + optimization_passes + vivado_types + templates + writer_passes
         ]
 
         if len(extras) > 0:
@@ -178,7 +185,10 @@ class VivadoBackend(FPGABackend):
 
     def get_default_flow(self):
         return self._default_flow
-    
+
+    def get_writer_flow(self):
+        return self._writer_flow
+
     def create_initial_config(self, part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
         config = {}
 

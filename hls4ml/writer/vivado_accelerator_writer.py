@@ -1,7 +1,6 @@
 import os
 from shutil import copyfile
 
-from hls4ml.backends import VivadoAcceleratorConfig
 from hls4ml.writer.vivado_writer import VivadoWriter
 
 class VivadoAcceleratorWriter(VivadoWriter):
@@ -339,6 +338,8 @@ class VivadoAcceleratorWriter(VivadoWriter):
         """
         Write the HLS project. Calls the VivadoBackend writer, and extra steps for VivadoAccelerator/AXI interface
         """
+        #TODO temporarily move config import here to avoid cyclic dependency, until config is moved to its own package
+        from hls4ml.backends import VivadoAcceleratorConfig
         self.vivado_accelerator_config = VivadoAcceleratorConfig(model.config, model.get_input_variables(),
                                                                  model.get_output_variables())
         super(VivadoAcceleratorWriter, self).write_hls(model)

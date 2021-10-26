@@ -11,7 +11,7 @@ from contextlib import contextmanager
 
 from hls4ml.model.hls_types import NamedType, IntegerPrecisionType, FixedPrecisionType
 from hls4ml.model.hls_layers import Layer, Dense, BatchNormalization, Activation, ParametrizedActivation, PReLU, Softmax
-from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
+from hls4ml.model.optimizer import get_backend_passes, layer_optimizer, model_optimizer
 from hls4ml.model.flow import register_flow
 from hls4ml.backends import FPGABackend
 from hls4ml.report import parse_quartus_report
@@ -29,7 +29,7 @@ class QuartusBackend(FPGABackend):
     def __init__(self):
         super(QuartusBackend, self).__init__('Quartus')
         self._register_flows()
-    
+
     def _register_flows(self):
         initializers = self._get_layer_initializers()
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
@@ -42,11 +42,17 @@ class QuartusBackend(FPGABackend):
         templates = self._get_layer_templates()
         template_flow = register_flow('apply_templates', templates, requires=[init_flow], backend=self.name)
 
+        writer_passes = [
+            'quartus:write_hls'
+        ]
+        writer_flow_requirements = ['optimize', quartus_types_flow, template_flow]
+        self._writer_flow = register_flow('write', writer_passes, requires=writer_flow_requirements, backend=self.name)
+
         all_passes = get_backend_passes(self.name)
 
         extras = [
             # Ideally this should be empty
-            opt_pass for opt_pass in all_passes if opt_pass not in initializers + quartus_types + templates
+            opt_pass for opt_pass in all_passes if opt_pass not in initializers + quartus_types + templates + writer_passes
         ]
 
         if len(extras) > 0:
@@ -61,7 +67,10 @@ class QuartusBackend(FPGABackend):
 
     def get_default_flow(self):
         return self._default_flow
-    
+
+    def get_writer_flow(self):
+        return self._writer_flow
+
     def create_initial_config(self, part='Arria10', clock_period=5, io_type='io_parallel'):
         config = {}
 
@@ -117,7 +126,7 @@ class QuartusBackend(FPGABackend):
     def build(self, model, synth=True, fpgasynth=False):
         """
         Builds the project using Intel HLS compiler.
-        
+
         Users should generally not call this function directly but instead use `HLSModel.build()`.
         This function assumes the model was written with a call to `HLSModel.write()`
 
@@ -143,7 +152,7 @@ class QuartusBackend(FPGABackend):
                     raise Exception('Quartus installation not found. Make sure "quartus_sh" is on PATH.')
                 os.chdir(model.config.get_project_name() + '-fpga.prj/quartus')
                 os.system('quartus_sh --flow compile quartus_compile')
-        
+
         return parse_quartus_report(model.config.get_output_dir())
 
     def get_supportedlayers(self):

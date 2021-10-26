@@ -47,6 +47,15 @@ class LayerOptimizerPass(WrappedOptimizerPass):
         super(LayerOptimizerPass, self).__init__(name, lambda node: isinstance(node, layer_class), transform)
         self.layer_class = layer_class
 
+class ModelOptimizerPass(OptimizerPass):
+    def __init__(self, name, transform):
+        self.name = name
+        self.transform_func = transform
+    
+    def transform(self, model):
+        retval = self.transform_func(model)
+        return retval if retval is not None else False
+
 class ConfigurableOptimizerPass(OptimizerPass):
     def configure(self, **kwargs):
         for key, value in kwargs.items():
@@ -69,6 +78,10 @@ def layer_optimizer(layer):
         return optimizer_pass(layer)(function)
     return decorator
 
+def model_optimizer():
+    def decorator(function):
+        return optimizer_pass(None)(function)
+    return decorator
 
 # Helpers for extracting optimizers from objects
 
@@ -115,7 +128,9 @@ def extract_optimizers_from_object(clazz):
     optimizer_list = [func for func in dir(clazz) if callable(getattr(clazz, func)) and hasattr(getattr(clazz, func), '_condition')]
     for opt_name in optimizer_list:
         func = getattr(clazz, opt_name)
-        if inspect.isclass(func._condition):
+        if func._condition is None:
+            opt = ModelOptimizerPass(name=opt_name, transform=func)
+        elif inspect.isclass(func._condition):
             opt = LayerOptimizerPass(name=opt_name, layer_class=func._condition, transform=func)
         else:
             opt = WrappedOptimizerPass(name=opt_name, condition=func._condition, transform=func)
@@ -167,6 +182,11 @@ def optimize_model(model, passes):
     optimization_done = False
     while not optimization_done:
         for opt_name, opt in optimizers.items():
+            if isinstance(opt, ModelOptimizerPass) and opt_name not in applied_passes:
+                res = opt.transform(model)
+                if res:
+                    applied_passes.add(opt_name)
+                continue
             for node in model.graph.values():
                 if opt.match(node):
                     res = opt.transform(model, node)

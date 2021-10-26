@@ -1,17 +1,13 @@
 from __future__ import print_function
-import six
 import os
-import sys
 import platform
 import ctypes
-import re
 import numpy as np
 import numpy.ctypeslib as npc
 from collections import OrderedDict
 
 from hls4ml.model.hls_layers import *
 from hls4ml.backends import get_backend
-from hls4ml.writer import get_writer
 from hls4ml.model.optimizer import optimize_model, get_available_passes
 from hls4ml.model.flow import get_flow
 
@@ -20,7 +16,6 @@ class HLSConfig(object):
     def __init__(self, config):
         self.config = config
         self.backend = get_backend(self.config.get('Backend', 'Vivado'))
-        self.writer = get_writer(self.config.get('Backend', 'Vivado'))
 
         self.model_precision = {}
         self.layer_type_precision = {}
@@ -306,7 +301,7 @@ class HLSModel(object):
         self.config = HLSConfig(config)
         self.reader = data_reader
 
-        self._applied_flows = {}
+        self._applied_flows = []
 
         # If not provided, assumes layer_list[0] is input, and layer_list[-1] is output
         self.inputs = inputs if inputs is not None else [layer_list[0]['name']]
@@ -341,20 +336,25 @@ class HLSModel(object):
 
             self.graph[name] = self.make_node(kind, name, layer, inputs, outputs)
 
-    def apply_flow(self, flow, force=False):
-        if flow in self._applied_flows and not force:
+    def apply_flow(self, flow):
+        applied_flows = {}
+        self._apply_sub_flow(flow, applied_flows)
+        self._applied_flows.append(applied_flows)
+
+    def _apply_sub_flow(self, flow_name, applied_flows):
+        if flow_name in applied_flows:
             return
-        flow = get_flow(flow)
+        flow = get_flow(flow_name)
 
         for sub_flow in flow.requires:
-            if sub_flow not in self._applied_flows.keys():
-                self.apply_flow(sub_flow, force)
+            if sub_flow not in applied_flows.keys():
+                self._apply_sub_flow(sub_flow, applied_flows)
 
         if len(flow.optimizers) > 0:
             applied_passes = optimize_model(self, flow.optimizers)
         else:
             applied_passes = []
-        self._applied_flows[flow.name] = applied_passes
+        applied_flows[flow.name] = applied_passes
 
     def make_node(self, kind, name, attributes, inputs, outputs=None):
         """ Make a new node not connected to the model graph.
@@ -557,7 +557,7 @@ class HLSModel(object):
         
         self.config.config['Stamp'] = _make_stamp()
 
-        self.config.writer.write_hls(self)
+        self.config.backend.write(self)
 
     def compile(self):
         """Compile the generated project and link the library into current environment.

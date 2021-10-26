@@ -10,12 +10,16 @@ from hls4ml.backends.backend import Backend
 from hls4ml.model.hls_layers import Layer
 from hls4ml.model.hls_attributes import Attribute
 from hls4ml.model.hls_types import IntegerPrecisionType, FixedPrecisionType, XnorPrecisionType, ExponentPrecisionType
+from hls4ml.writer import get_writer
+from hls4ml.model.optimizer import model_optimizer
 
 
 class FPGABackend(Backend):
     def __init__(self, name):
         super(FPGABackend, self).__init__(name)
-        
+
+        self.writer = get_writer(self.name)
+
         self.attribute_map = {
             Layer: [Attribute('reuse_factor', default=1)]
         }
@@ -42,6 +46,18 @@ class FPGABackend(Backend):
             os.chdir(curr_dir)
         
         return lib_name
+
+    def write(self, model):
+        """Write the generated project to disk.
+
+        This function converts the model to C++ and writes the generated files in the output
+        directory specified in the `config`.
+        """
+
+        model.apply_flow(self.get_writer_flow())
+
+    def get_writer_flow(self):
+        raise NotImplementedError
 
     def get_valid_reuse_factors(self, layer):
         n_in = 0
@@ -330,3 +346,8 @@ class FPGABackend(Backend):
                 windows_int.append((int(''.join(str(p) for p in reversed(windows_bin[i * min_W + j])), 2)))
 
         return (min_H, min_W, windows_int)
+
+    @model_optimizer()
+    def write_hls(self, model):
+        self.writer.write_hls(model)
+        return True
