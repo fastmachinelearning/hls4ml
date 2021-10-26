@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.lib.arraysetops import isin
 
 from hls4ml.model.hls_types import CompressedType, NamedType, ExponentType, FixedPrecisionType, IntegerPrecisionType, XnorPrecisionType, ExponentPrecisionType, TensorVariable, PackedType, WeightVariable
 

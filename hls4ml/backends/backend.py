@@ -1,45 +1,15 @@
 import inspect
 import os
 
-from collections.abc import MutableMapping
-
 from hls4ml.backends.template import Template
-from hls4ml.model.hls_layers import Layer
 from hls4ml.model.flow import get_backend_flows
-from hls4ml.model.optimizer import LayerOptimizerPass, optimizer_pass, register_pass, extract_optimizers_from_path, extract_optimizers_from_object, get_backend_passes, get_optimizer
+from hls4ml.model.optimizer import LayerOptimizerPass, register_pass, extract_optimizers_from_path, extract_optimizers_from_object, get_backend_passes, get_optimizer
 
-class LayerDict(MutableMapping):
-    def __init__(self):
-        self.layer_dict = {}
-
-    def __getitem__(self, key):
-        if key in self.layer_dict:
-            return self.layer_dict[key]
-        else:
-            return self.layer_dict[key.__bases__[0]]
-
-    def __len__(self):
-        return len(self.layer_dict)
-
-    def __iter__(self):
-        for key in self.layer_dict.keys():
-            yield key
-
-    def __setitem__(self, key, value):
-        if not issubclass(key, Layer):
-            raise KeyError('Keys must be instances of Layer class')
-        self.layer_dict[key] = value
-
-    def __delitem__(self, key):
-        self.layer_dict.remove(key)
 
 class Backend(object):
     def __init__(self, name):
         self.name = name
         self._init_optimizers()
-
-    def init_templates(self):
-        raise NotImplementedError
 
     def _init_optimizers(self):
         optimizers = {}
@@ -79,21 +49,15 @@ class Backend(object):
     def get_available_flows(self):
         return get_backend_flows(self.name)
 
-    def get_available_optimizers(self):
-        return get_backend_passes(self.name)
-    
     def get_default_flow(self):
-        raise NotImplementedError
-    
-    def get_available_flows(self):
         raise NotImplementedError
 
     def register_source(self, file_name, source, destination_dir='nnet_utils'):
         raise NotImplementedError
-    
+
     def register_pass(self, name, opt_cls):
         register_pass(name, opt_cls, backend=self.name)
-    
+
     def register_template(self, template_cls):
         template = template_cls()
         register_pass(template.get_name(), template, backend=self.name)
@@ -104,7 +68,7 @@ backend_map = {}
 def register_backend(name, backend_cls):
     if name.lower() in backend_map:
         raise Exception('Backend {} already registered'.format(name))
-    
+
     backend_map[name.lower()] = backend_cls()
 
 def get_backend(name):
