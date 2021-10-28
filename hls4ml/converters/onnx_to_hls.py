@@ -221,7 +221,7 @@ def onnx_to_hls(config):
     print('Interpreting Model ...')
     
     model =  onnx.load(config['OnnxModel']) if isinstance(config['OnnxModel'], str) else config['OnnxModel']
-          
+    modelclone = model      
     model = shape_inference.infer_shapes(model)
     graph = model.graph
     
@@ -277,9 +277,12 @@ def onnx_to_hls(config):
             raise Exception('ERROR: Unsupported operation type: {}'.format(node.op_type))
         
         #If not the first layer then input shape is taken from last layer's output
-        if layer_counter != 0:
-            current_shape = [output_shape]
-            
+        #if layer_counter != 0:
+        #    current_shape = [output_shape]
+        #print(get_input_shape(model, node))
+        current_shape = [get_input_shape(model, node)]
+        print(node.op_type)
+
         if node.op_type in skip_layers:
             if node.op_type == 'Flatten':
                 output_shape = [current_shape[0][0], np.prod(current_shape[0][1:])]
