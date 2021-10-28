@@ -2,15 +2,13 @@ import numpy as np
 
 from hls4ml.model.hls_types import CompressedType, NamedType, ExponentType, FixedPrecisionType, IntegerPrecisionType, XnorPrecisionType, ExponentPrecisionType, TensorVariable, PackedType, WeightVariable
 
-#TODO Rethink if these classes should be built with `from_...(var, ...)` methods or with `__init__(var, ...)`
-
 #region Precision types
 
 class APIntegerPrecisionType(IntegerPrecisionType):
     def definition_cpp(self):
         typestring = 'ap_{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring
-    
+
     @classmethod
     def from_precision(cls, precision_type):
         return cls(width=precision_type.width, signed=precision_type.signed)
@@ -29,7 +27,7 @@ class APFixedPrecisionType(FixedPrecisionType):
         args = ','.join([str(arg) for arg in args if arg is not None])
         typestring = 'ap_{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
         return typestring
-    
+
     @classmethod
     def from_precision(cls, precision_type):
         return cls(width=precision_type.width, integer=precision_type.integer, signed=precision_type.signed,
@@ -37,14 +35,14 @@ class APFixedPrecisionType(FixedPrecisionType):
 
 class APXnorPrecisionType(XnorPrecisionType):
     definition_cpp = APIntegerPrecisionType.definition_cpp
-    
+
     @classmethod
     def from_precision(cls, precision_type):
         return cls()
 
 class APExponentPrecisionType(ExponentPrecisionType):
     definition_cpp = APIntegerPrecisionType.definition_cpp
-    
+
     @classmethod
     def from_precision(cls, precision_type):
         return cls(width=precision_type.width, signed=precision_type.signed)
@@ -53,7 +51,7 @@ class ACIntegerPrecisionType(IntegerPrecisionType):
     def definition_cpp(self):
         typestring = 'ac_int<{width}, {signed}>'.format(width=self.width, signed=str(self.signed).lower())
         return typestring
-    
+
     @classmethod
     def from_precision(cls, precision_type):
         return cls(width=precision_type.width, signed=precision_type.signed)
@@ -72,7 +70,7 @@ class ACFixedPrecisionType(FixedPrecisionType):
         args = ','.join([str(arg) for arg in args if arg is not None])
         typestring = 'ac_fixed<{args}>'.format(args=args)
         return typestring
-    
+
     @classmethod
     def from_precision(cls, precision_type):
         return cls(width=precision_type.width, integer=precision_type.integer, signed=precision_type.signed,
@@ -80,14 +78,14 @@ class ACFixedPrecisionType(FixedPrecisionType):
 
 class ACXnorPrecisionType(XnorPrecisionType):
     definition_cpp = ACIntegerPrecisionType.definition_cpp
-    
+
     @classmethod
     def from_precision(cls, precision_type):
         return cls()
 
 class ACExponentPrecisionType(ExponentPrecisionType):
     definition_cpp = ACIntegerPrecisionType.definition_cpp
-    
+
     @classmethod
     def from_precision(cls, precision_type):
         return cls(width=precision_type.width, signed=precision_type.signed)
@@ -99,7 +97,7 @@ class PrecisionTypeConverter(object):
 class APTypeConverter(PrecisionTypeConverter):
     def convert(self, precision_type):
         type_cls = type(precision_type)
-        
+
         # If the type is already converted, do nothing
         if type_cls.__name__.startswith('AP'):
             return precision_type
@@ -118,7 +116,7 @@ class APTypeConverter(PrecisionTypeConverter):
 class ACTypeConverter(PrecisionTypeConverter):
     def convert(self, precision_type):
         type_cls = type(precision_type)
-        
+
         # If the type is already converted, do nothing
         if type_cls.__name__.startswith('AC'):
             return precision_type
@@ -197,20 +195,19 @@ class HLSPackedType(PackedType):
             n_pack=type.n_pack
         )
 
-class NamedTypeConverter(object):
-    def convert(self, type, precision_converter):
-        raise NotImplementedError
+class HLSTypeConverter(object):
+    def __init__(self, precision_converter):
+        self.precision_converter = precision_converter
 
-class HLSTypeConverter(NamedTypeConverter):
-    def convert(self, type, precision_converter):
+    def convert(self, type):
         if isinstance(type, PackedType):
-            return HLSPackedType.from_type(type, precision_converter)
+            return HLSPackedType.from_type(type, self.precision_converter)
         elif isinstance(type, CompressedType):
-            return HLSCompressedType.from_type(type, precision_converter)
+            return HLSCompressedType.from_type(type, self.precision_converter)
         elif isinstance(type, ExponentType):
-            return HLSExponentType.from_type(type, precision_converter)
+            return HLSExponentType.from_type(type, self.precision_converter)
         elif isinstance(type, NamedType):
-            return HLSType.from_type(type, precision_converter)
+            return HLSType.from_type(type, self.precision_converter)
         else:
             raise Exception('Unknown type: {}'.format(type.__class__.__name__))
 
@@ -219,22 +216,19 @@ class HLSTypeConverter(NamedTypeConverter):
 #region Variables
 
 class ArrayVariable(TensorVariable):
-    def __init__(self, shape, dim_names, var_name, type_name, precision, pragma='partition'):
-        super(ArrayVariable, self).__init__(shape, dim_names, var_name, type_name, precision)
-        self.type = HLSType(type_name, precision)
+    def __init__(self, tensor_var, type_converter, pragma='partition'):
+        super(ArrayVariable, self).__init__(tensor_var.shape, tensor_var.dim_names, tensor_var.name, tensor_var.type.name, tensor_var.type.precision)
+        self.type = type_converter.convert(self.type)
         self.pragma = pragma
 
     def size_cpp(self):
         return '*'.join([str(k) for k in self.dim_names])
 
     @classmethod
-    def from_variable(cls, tensor_var, precision_converter, pragma='partition'):
+    def from_variable(cls, tensor_var, type_converter, pragma='partition'):
         return cls(
-            tensor_var.shape,
-            tensor_var.dim_names,
-            var_name=tensor_var.name,
-            type_name=tensor_var.type.name,
-            precision=precision_converter.convert(tensor_var.type.precision),
+            tensor_var,
+            type_converter,
             pragma=pragma
         )
 
@@ -249,8 +243,8 @@ class QuartusArrayVariable(ArrayVariable):
 
 class StructMemberVariable(ArrayVariable):
     """Used by Quartus backend for input/output arrays that are members of the inputs/outpus struct"""
-    def __init__(self, shape, dim_names, var_name, type_name, precision, pragma='hls_register', struct_name=None):
-        super(StructMemberVariable, self).__init__(shape, dim_names, var_name, type_name, precision, pragma)
+    def __init__(self, tensor_var, type_converter, pragma='hls_register', struct_name=None):
+        super(StructMemberVariable, self).__init__(tensor_var, type_converter, pragma)
         assert struct_name is not None, 'struct_name must be provided when creating StructMemberVariable'
         self.struct_name = str(struct_name)
         self.member_name = self.name
@@ -260,25 +254,22 @@ class StructMemberVariable(ArrayVariable):
         return '{type} {name}{suffix}[{shape}]'.format(type=self.type.name, name=self.member_name, suffix=name_suffix, shape=self.size_cpp())
 
     @classmethod
-    def from_variable(cls, tensor_var, precision_converter, pragma='partition', struct_name=None):
+    def from_variable(cls, tensor_var, type_converter, pragma='partition', struct_name=None):
         if type(tensor_var) == cls:
             return tensor_var
         return cls(
-            tensor_var.shape,
-            tensor_var.dim_names,
-            var_name=tensor_var.name,
-            type_name=tensor_var.type.name,
-            precision=precision_converter.convert(tensor_var.type.precision),
+            tensor_var,
+            type_converter,
             pragma=pragma,
             struct_name=struct_name
         )
 
 class StreamVariable(TensorVariable):
-    def __init__(self, shape, dim_names, var_name, type_name, precision, n_pack=1, depth=0):
-        super(StreamVariable, self).__init__(shape, dim_names, var_name, type_name, precision)
-        self.type = HLSPackedType(type_name, precision, shape[-1], n_pack)
+    def __init__(self, tensor_var, type_converter, n_pack=1, depth=0):
+        super(StreamVariable, self).__init__(tensor_var.shape, tensor_var.dim_names, tensor_var.name, tensor_var.type.name, tensor_var.type.precision)
+        self.type = type_converter.convert(PackedType(self.type.name, self.type.precision, self.shape[-1], n_pack))
         if depth == 0:
-            depth = np.prod(shape) // shape[-1]
+            depth = np.prod(self.shape) // self.shape[-1]
         self.pragma = ('stream', depth)
 
     def get_shape(self):
@@ -294,46 +285,32 @@ class StreamVariable(TensorVariable):
             return 'hls::stream<{type}> {name}{suffix}("{name}")'.format(type=self.type.name, name=self.cppname, suffix=name_suffix)
 
     @classmethod
-    def from_variable(cls, tensor_var, precision_converter,  n_pack=1, depth=0):
+    def from_variable(cls, tensor_var, type_converter,  n_pack=1, depth=0):
         if type(tensor_var) == cls:
             return tensor_var
         return cls(
-            tensor_var.shape,
-            tensor_var.dim_names,
-            var_name=tensor_var.name,
-            type_name=tensor_var.type.name,
-            precision=precision_converter.convert(tensor_var.type.precision),
+            tensor_var,
+            type_converter,
             n_pack=n_pack,
             depth=depth
         )
 
 class StaticWeightVariable(WeightVariable):
-    def __init__(self, weight_class, var_name, type_name, precision, data, index_precision=None):
-        super(StaticWeightVariable, self).__init__(var_name, type_name, precision, data)
-        self.weight_class = weight_class
-        if self.weight_class == 'WeightVariable':
-            self.type = HLSType(type_name, precision)
-        elif self.weight_class == 'ExponentWeightVariable':
-            self.type = HLSExponentType(type_name, precision)
-        elif self.weight_class == 'CompressedWeightVariable':
-            self.type = HLSCompressedType(type_name, precision, index_precision)
-        else:
-            raise Exception('Cannot create StaticWeightVariable, unknown weight class: {}'.format(self.weight_class))
+    def __init__(self, weight_var, type_converter):
+        super(StaticWeightVariable, self).__init__(weight_var.name, weight_var.type.name, weight_var.type.precision, weight_var.data)
+        self.weight_class = weight_var.__class__.__name__
+        self.type = type_converter.convert(self.type)
 
     def definition_cpp(self, name_suffix='', as_reference=False):
         return '{type} {name}[{size}]'.format(type=self.type.name, name=self.cppname, size=self.data_length)
-    
+
     @classmethod
-    def from_variable(cls, weight_var, precision_converter, index_precision=None):
+    def from_variable(cls, weight_var, type_converter):
         if type(weight_var) == cls:
             return weight_var
         return cls(
-            weight_var.__class__.__name__,
-            var_name=weight_var.name,
-            type_name=weight_var.type.name,
-            precision=precision_converter.convert(weight_var.type.precision),
-            data=weight_var.data,
-            index_precision=index_precision
+            weight_var,
+            type_converter=type_converter
         )
 
 #endregion

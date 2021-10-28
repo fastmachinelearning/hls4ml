@@ -6,8 +6,7 @@ from hls4ml.backends.fpga.fpga_types import ACIntegerPrecisionType, ACTypeConver
 
 class TransformTypes(GlobalOptimizerPass):
     def __init__(self):
-        self.precision_converter = ACTypeConverter()
-        self.type_converter = HLSTypeConverter()
+        self.type_converter = HLSTypeConverter(precision_converter=ACTypeConverter())
 
     def transform(self, model, node):
         io_type = node.model.config.get_config_value('IOType')
@@ -23,28 +22,23 @@ class TransformTypes(GlobalOptimizerPass):
                     if isinstance(var, StructMemberVariable):
                         new_var = var
                     else:
-                        new_var = StructMemberVariable.from_variable(var, self.precision_converter, pragma='hls_register', struct_name='inputs')
+                        new_var = StructMemberVariable.from_variable(var, self.type_converter, pragma='hls_register', struct_name='inputs')
                 elif node.name in node.model.outputs:
                     if isinstance(var, StructMemberVariable):
                         new_var = var
                     else:
-                        new_var = StructMemberVariable.from_variable(var, self.precision_converter, pragma='hls_register', struct_name='outputs')
+                        new_var = StructMemberVariable.from_variable(var, self.type_converter, pragma='hls_register', struct_name='outputs')
                 else:
-                    new_var = QuartusArrayVariable.from_variable(var, self.precision_converter, pragma='hls_register')
+                    new_var = QuartusArrayVariable.from_variable(var, self.type_converter, pragma='hls_register')
             else:
                 raise Exception('Unknown IOType {} in {} ({})'.format(io_type, node.name, node.class_name))
 
             node.set_attr(out_name, new_var)
 
         for w_name, weight in node.weights.items():
-            if isinstance(weight, CompressedWeightVariable):
-                index_precision = ACIntegerPrecisionType.from_precision(weight.index_precision)
-                new_weight = StaticWeightVariable.from_variable(weight, self.precision_converter, index_precision)
-            else:
-                new_weight = StaticWeightVariable.from_variable(weight, self.precision_converter)
-
+            new_weight = StaticWeightVariable.from_variable(weight, self.type_converter)
             node.set_attr(w_name, new_weight)
-        
+
         for t_name, type in node.types.items():
-            new_type = self.type_converter.convert(type, self.precision_converter)
+            new_type = self.type_converter.convert(type)
             node.set_attr(t_name, new_type)
