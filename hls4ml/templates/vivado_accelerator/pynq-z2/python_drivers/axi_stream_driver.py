@@ -21,27 +21,6 @@ class NeuralNetworkOverlay(Overlay):
         print("Classified {} samples in {} seconds ({} inferences / s)".format(N, dts, rate))
         return dts, rate
 
-    def __predict(self, X, debug=None, encode=None, decode=None):
-        if encode is not None:
-            X = encode(X)
-
-        self.input_buffer[:] = X
-        self.sendchannel.transfer(self.input_buffer)
-        self.recvchannel.transfer(self.output_buffer)
-        if debug:
-            print("Transfer OK")
-        # self.sendchannel.wait()
-        if debug:
-            print("Send OK")
-        self.recvchannel.wait()
-        if debug:
-            print("Receive OK")
-        # result = self.output_buffer.copy()
-        if decode is not None:
-            self.output_buffer = decode(self.output_buffer)
-
-        return self.output_buffer
-
     def predict(self, X, debug=None, profile=False, encode=None, decode=None):
         """
         Obtain the predictions of the NN implemented in the FPGA.
@@ -71,7 +50,23 @@ class NeuralNetworkOverlay(Overlay):
         """
         if profile:
             timea = datetime.now()
-        self.__predict(X, debug, encode, decode)
+        if encode is not None:
+            X = encode(X)
+        self.input_buffer[:] = X
+        self.sendchannel.transfer(self.input_buffer)
+        self.recvchannel.transfer(self.output_buffer)
+        if debug:
+            print("Transfer OK")
+        self.sendchannel.wait()
+        if debug:
+            print("Send OK")
+        self.recvchannel.wait()
+        if debug:
+            print("Receive OK")
+        # result = self.output_buffer.copy()
+        if decode is not None:
+            self.output_buffer = decode(self.output_buffer)
+
         if profile:
             timeb = datetime.now()
             dts, rate = self._print_dt(timea, timeb, len(X))
