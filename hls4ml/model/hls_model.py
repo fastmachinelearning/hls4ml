@@ -311,9 +311,6 @@ class HLSModel(object):
         self.graph = OrderedDict()
         self.output_vars = {}
 
-        # External BRAM 
-        self.bram_vars = {}
-
         self._top_function_lib = None
 
         self._make_graph(layer_list)
@@ -520,12 +517,6 @@ class HLSModel(object):
             variables.append(self.graph[inp].get_output_variable())
         return variables
 
-    def register_bram_variable(self, out_name, variable):
-        self.bram_vars[out_name] = variable
-
-    def get_bram_variables(self):
-        return self.bram_vars.values()
-
     def register_output_variable(self, out_name, variable):
         if out_name in self.outputs:
             variable.type.name = 'result_t'
@@ -539,6 +530,14 @@ class HLSModel(object):
 
     def get_layer_output_variable(self, output_name):
         return self.output_vars.get(output_name, None)
+
+    def get_weight_variables(self):
+        variables = []
+        for layer in self.get_layers():
+            weights = layer.get_weights()
+            variables.extend(weights)
+        
+        return variables
 
     def write(self):
         """Write the generated project to disk.

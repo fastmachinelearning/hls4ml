@@ -313,4 +313,17 @@ class StaticWeightVariable(WeightVariable):
             type_converter=type_converter
         )
 
+class BramWeightVariable(WeightVariable):
+    @classmethod
+    def from_variable(cls, weight_var):
+        if type(weight_var) == cls:
+            return weight_var
+        return cls(
+            var_name=weight_var.name,
+            type_name=weight_var.type.name,
+            precision=weight_var.type.precision,
+            data=weight_var.data,
+            quantizer=weight_var.quantizer
+        )
+
 #endregion

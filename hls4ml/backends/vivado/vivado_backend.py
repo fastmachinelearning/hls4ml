@@ -151,6 +151,7 @@ class VivadoBackend(FPGABackend):
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
         vivado_types = [
+            'vivado:register_bram_weights',
             'vivado:transform_types',
             'vivado:generate_conv_streaming_instructions',
             'vivado:apply_resource_strategy',

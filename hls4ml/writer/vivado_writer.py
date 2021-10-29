@@ -68,7 +68,7 @@ class VivadoWriter(Writer):
         If `pragma` is a tuple: (mode, type, factor) where mode is 'partition' or 'reshape', type is
         'complete', 'cyclic', or 'block', and factor is an integer only used when the type is not 'complete'.
         """
-        
+
         config = variable.pragma
         if type(config) is tuple:
             mode = config[0]
@@ -105,7 +105,7 @@ class VivadoWriter(Writer):
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
-        model_brams   = model.get_bram_variables()
+        model_brams = [var for var in model.get_weight_variables() if var.weight_class == 'BramWeightVariable']
 
         indent = '    '
 
@@ -123,7 +123,7 @@ class VivadoWriter(Writer):
                 newline = ''
                 newline += indent + inputs_str + ',\n'
                 newline += indent + outputs_str + ',\n'
-                if len(model_brams) > 0: 
+                if len(model_brams) > 0:
                     newline += brams_str + ',\n'
                 newline += indent + insize_str + ',\n'
                 newline += indent + outsize_str + '\n'
@@ -144,7 +144,7 @@ class VivadoWriter(Writer):
                 newline = line
                 all_inputs = [i.cppname for i in model_inputs]
                 all_outputs = [o.cppname for o in model_outputs]
-                all_brams = [b.cppname for b in model_brams] 
+                all_brams = [b.cppname for b in model_brams]
                 io_type = model.config.get_config_value("IOType")
 
                 if io_type == 'io_parallel':
@@ -171,12 +171,10 @@ class VivadoWriter(Writer):
 
             elif '//hls-fpga-machine-learning insert layers' in line:
                 newline = line + '\n'
-                inputs = model.get_input_variables()
-                outputs = model.get_output_variables()
                 for layer in model.get_layers():
                     vars = layer.get_variables()
                     for var in vars:
-                        if var not in inputs and var not in outputs:
+                        if var not in model_inputs and var not in model_outputs:
                             def_cpp = var.definition_cpp()
                             if def_cpp is not None:
                                 newline += '    ' + def_cpp + ';\n'
@@ -218,7 +216,7 @@ class VivadoWriter(Writer):
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
-        model_brams   = model.get_bram_variables()
+        model_brams = [var for var in model.get_weight_variables() if var.weight_class == 'BramWeightVariable']
 
         indent = '    '
 
@@ -238,7 +236,7 @@ class VivadoWriter(Writer):
                 newline = ''
                 newline += indent + inputs_str + ',\n'
                 newline += indent + outputs_str + ',\n'
-                if len(model_brams) > 0: 
+                if len(model_brams) > 0:
                     newline += brams_str + ',\n'
                 newline += indent + insize_str + ',\n'
                 newline += indent + outsize_str + '\n'
@@ -293,10 +291,8 @@ class VivadoWriter(Writer):
                 newline = line
                 for layer in model.get_layers():
                     for w in layer.get_weights():
-                        if w.name not in model.bram_vars.keys():
+                        if w.weight_class != 'BramWeightVariable':
                             newline += '#include "weights/{}.h"\n'.format(w.name)
-                        else:
-                            newline += '// #include "weights/{}.h"\n'.format(w.name)
 
             elif "//hls-fpga-machine-learning insert layer-config" in line:
                 newline = line
@@ -315,12 +311,12 @@ class VivadoWriter(Writer):
         for layer in model.get_layers():
             for weights in layer.get_weights():
                 self.print_array_to_cpp(weights, model.config.get_output_dir())
-    
-    def __make_dat_file(self, original_path, project_path): 
+
+    def __make_dat_file(self, original_path, project_path):
         """
         Convert other input/output data types into a dat file, which is
         a text file with the falttened matrix printed out. Note that ' ' is
-        assumed to be the delimiter. 
+        assumed to be the delimiter.
         """
 
         #Take in data from current supported data files
@@ -351,16 +347,16 @@ class VivadoWriter(Writer):
 
         if not os.path.exists('{}/tb_data/'.format(model.config.get_output_dir())):
             os.mkdir('{}/tb_data/'.format(model.config.get_output_dir()))
-        
+
         input_data = model.config.get_config_value('InputData')
         output_predictions = model.config.get_config_value('OutputPredictions')
-        
+
         if input_data:
             if input_data[-3:] == "dat":
                 copyfile(input_data, '{}/tb_data/tb_input_features.dat'.format(model.config.get_output_dir()))
             else:
                 self.__make_dat_file(input_data,'{}/tb_data/tb_input_features.dat'.format(model.config.get_output_dir()))
-        
+
         if output_predictions:
             if output_predictions[-3:] == "dat":
                 copyfile(output_predictions, '{}/tb_data/tb_output_predictions.dat'.format(model.config.get_output_dir()))
@@ -370,6 +366,10 @@ class VivadoWriter(Writer):
         f = open(os.path.join(filedir,'../templates/vivado/myproject_test.cpp'),'r')
         fout = open('{}/{}_test.cpp'.format(model.config.get_output_dir(), model.config.get_project_name()),'w')
 
+        model_inputs = model.get_input_variables()
+        model_outputs = model.get_output_variables()
+        model_brams = [var for var in model.get_weight_variables() if var.weight_class == 'BramWeightVariable']
+
         for line in f.readlines():
             indent = ' ' * (len(line) - len(line.lstrip(' ')))
 
@@ -378,58 +378,56 @@ class VivadoWriter(Writer):
                 newline = line.replace('myproject', model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert bram' in line:
                 newline = line
-                for bram in model.get_bram_variables():
+                for bram in model_brams:
                     newline += '#include \"firmware/weights/{}.h\"\n'.format(bram.cppname)
             elif '//hls-fpga-machine-learning insert data' in line:
                 newline = line
                 offset = 0
-                # for bram in model.get_bram_variables():
-                #     newline += bram.definition_cpp()+';\n'
-                for inp in model.get_input_variables():
+                for inp in model_inputs:
                     newline += '      ' + inp.definition_cpp() + ';\n'
                     newline += '      nnet::copy_data<float, {}, {}, {}>(in, {});\n'.format(inp.type.name, offset, inp.size_cpp(), inp.cppname)
                     offset += inp.size()
-                for out in model.get_output_variables():
+                for out in model_outputs:
                     newline += '      ' + out.definition_cpp() + ';\n'
             elif '//hls-fpga-machine-learning insert zero' in line:
                 newline = line
-                for inp in model.get_input_variables():
+                for inp in model_inputs:
                     newline += '    ' + inp.definition_cpp() + ';\n'
                     newline += '    nnet::fill_zero<{}, {}>({});\n'.format(inp.type.name, inp.size_cpp(), inp.cppname)
-                for out in model.get_output_variables():
+                for out in model_outputs:
                     newline += '    ' + out.definition_cpp() + ';\n'
             elif '//hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
 
                 size_str = indent + 'unsigned short {},{};\n'
-                input_size_vars = ','.join(['size_in{}'.format(i) for i in range(1, len(model.get_input_variables()) + 1)])
-                output_size_vars = ','.join(['size_out{}'.format(o) for o in range(1, len(model.get_output_variables()) + 1)])
+                input_size_vars = ','.join(['size_in{}'.format(i) for i in range(1, len(model_inputs) + 1)])
+                output_size_vars = ','.join(['size_out{}'.format(o) for o in range(1, len(model_outputs) + 1)])
                 newline += size_str.format(input_size_vars, output_size_vars)
 
-                input_vars = ','.join([i.cppname for i in model.get_input_variables()])
-                output_vars = ','.join([o.cppname for o in model.get_output_variables()])
-                bram_vars   =','.join([b.cppname for b in model.get_bram_variables()]) 
+                input_vars = ','.join([i.cppname for i in model_inputs])
+                output_vars = ','.join([o.cppname for o in model_outputs])
+                bram_vars   =','.join([b.cppname for b in model_brams])
 
                 # Concatenate the input, output, and bram variables. Filter out empty/null values
                 all_vars = ','.join(filter(None, [input_vars, output_vars, bram_vars]))
 
                 top_level = indent + '{}({},{},{});\n'.format(model.config.get_project_name(), all_vars, input_size_vars, output_size_vars)
-                
+
                 newline += top_level
             elif '//hls-fpga-machine-learning insert predictions' in line:
                 newline = line
-                for out in model.get_output_variables():
+                for out in model_outputs:
                     newline += indent + 'for(int i = 0; i < {}; i++) {{\n'.format(out.size_cpp())
                     newline += indent + '  std::cout << pr[i] << " ";\n'
                     newline += indent + '}\n'
                     newline += indent + 'std::cout << std::endl;\n'
             elif '//hls-fpga-machine-learning insert tb-output' in line:
                 newline = line
-                for out in model.get_output_variables():
+                for out in model_outputs:
                     newline += indent + 'nnet::print_result<{}, {}>({}, fout);\n'.format(out.type.name, out.size_cpp(), out.cppname) #TODO enable this
             elif '//hls-fpga-machine-learning insert output' in line or '//hls-fpga-machine-learning insert quantized' in line:
                 newline = line
-                for out in model.get_output_variables():
+                for out in model_outputs:
                     newline += indent + 'nnet::print_result<{}, {}>({}, std::cout, true);\n'.format(out.type.name, out.size_cpp(), out.cppname)
             else:
                 newline = line
@@ -448,7 +446,7 @@ class VivadoWriter(Writer):
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
-        model_brams   = model.get_bram_variables()
+        model_brams = [var for var in model.get_weight_variables() if var.weight_class == 'BramWeightVariable']
 
         indent = '    '
 
@@ -481,18 +479,18 @@ class VivadoWriter(Writer):
                     newline += indent + '{var};\n'.format(var=i.definition_cpp(name_suffix='_ap'))
                     newline += indent + 'nnet::convert_data<{}, {}, {}>({}, {}_ap);\n'.format(dtype, i.type.name, i.size_cpp(), i.cppname, i.cppname)
                 newline += '\n'
-                
+
                 for o in model_outputs:
                     newline += indent + '{var};\n'.format(var=o.definition_cpp(name_suffix='_ap'))
-                
+
                 newline += '\n'
 
-                input_size_vars = ','.join(['const_size_in_{}'.format(i) for i in range(1, len(model.get_input_variables()) + 1)])
-                output_size_vars = ','.join(['const_size_out_{}'.format(o) for o in range(1, len(model.get_output_variables()) + 1)])
-                input_vars = ','.join([i.cppname + '_ap' for i in model.get_input_variables()])
-                bram_vars   =','.join([b.cppname for b in model.get_bram_variables()]) 
-                output_vars = ','.join([o.cppname + '_ap' for o in model.get_output_variables()])
-                
+                input_size_vars = ','.join(['const_size_in_{}'.format(i) for i in range(1, len(model_inputs) + 1)])
+                output_size_vars = ','.join(['const_size_out_{}'.format(o) for o in range(1, len(model_outputs) + 1)])
+                input_vars = ','.join([i.cppname + '_ap' for i in model_inputs])
+                bram_vars   =','.join([b.cppname for b in model_brams])
+                output_vars = ','.join([o.cppname + '_ap' for o in model_outputs])
+
                 # Concatenate the input, output, and bram variables. Filter out empty/null values
                 all_vars = ','.join(filter(None, [input_vars, output_vars, bram_vars]))
 
@@ -511,7 +509,7 @@ class VivadoWriter(Writer):
                             vars = layer.get_variables()
                             for var in vars:
                                 newline += indent + 'nnet::trace_outputs->insert(std::pair<std::string, void *>("{}", (void *) malloc({} * element_size)));\n'.format(layer.name, var.size_cpp())
-                    
+
             else:
                 newline = line
             fout.write(newline)

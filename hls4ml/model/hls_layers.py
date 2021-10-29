@@ -215,12 +215,6 @@ class Layer(object):
 
         self.set_attr(name, var)
 
-        # Register weights as BRAM if exceeds threshold
-        bramport_size = self.model.config.get_bram_size(self)
-        if(np.prod(data.shape) > bramport_size):
-            var_out = var_name.replace("{index}",str(self.index))
-            self.model.register_bram_variable(var_out,var)
-
     def _default_function_params(self):
         params = {}
         params.update(self.attributes)
