@@ -21,7 +21,7 @@ class NeuralNetworkOverlay(Overlay):
         print("Classified {} samples in {} seconds ({} inferences / s)".format(N, dts, rate))
         return dts, rate
 
-    def predict(self, X, debug=None, profile=False, encode=None, decode=None):
+    def predict(self, X, debug=False, profile=False, encode=None, decode=None):
         """
         Obtain the predictions of the NN implemented in the FPGA.
         Parameters:
