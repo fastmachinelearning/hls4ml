@@ -13,7 +13,7 @@ def parse_gemm_layer(reader, node, inputs_map, input_shapes, graph, config):
     tran_weight = get_onnx_attribute(node, 'transB', 0)
     reader.add_input(layer['name'], node.input, tran_weight)
 
-    weights_shape = reader.get_weights_data(layer['name'], 'kernel').shape
+    weights_shape = input_shapes[1][:]
     layer['n_in'] = weights_shape[0]
     layer['n_out'] = weights_shape[1]
 
@@ -114,4 +114,4 @@ def parse_quant_layer(reader, node, inputs_map, input_shapes, graph, config):
 
     reader.add_input(layer['name'], node.input)
 
-    return layer, [shape for shape in input_shapes[0]]
+    return layer, input_shapes[0]
