@@ -1,5 +1,5 @@
-from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute, get_onnx_input_name
-from hls4ml.converters.utils import compute_padding_1d
+from hls4ml.converters.onnx_to_hls import (
+    onnx_handler, get_onnx_attribute, get_onnx_input_name, get_input_initial_value)
 
 @onnx_handler(*['Gemm', 'MatMul'])
 def parse_gemm_layer(reader, node, inputs_map, input_shapes, graph, config):
@@ -106,12 +106,17 @@ def parse_quant_layer(reader, node, inputs_map, input_shapes, graph, config):
     layer['class_name'] = 'Quant'
     layer['name'] = node.name
     layer['inputs'] = get_onnx_input_name(node, graph)
+    # main parameters
+    layer['scale'] = get_input_initial_value(graph, node.input[1])
+    layer['zeropt'] = get_input_initial_value(graph, node.input[2])
+    layer['bitwidth'] = get_input_initial_value(graph, node.input[3])
 
     #Other attributes
-    layer['scale'] = get_onnx_attribute(node, 'scale')
-    layer['zeropt'] = get_onnx_attribute(node, 'zeropt')
-    layer['bitwidt'] = get_onnx_attribute(node, 'bitwidth')
+    layer['narrow'] = get_onnx_attribute(node, 'narrow')
+    layer['rounding_mode'] = get_onnx_attribute(node, 'rounding_mode')
+    layer['signed'] = get_onnx_attribute(node, 'signed')
+    layer['output_shape'] = [shape for shape in input_shapes[0]]
 
     reader.add_input(layer['name'], node.input)
 
-    return layer, input_shapes[0]
+    return layer, [shape for shape in input_shapes[0]]

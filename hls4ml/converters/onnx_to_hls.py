@@ -115,6 +115,10 @@ def get_input_shape(graph, operation, input_idx=None):
         value_info_idx = next((i for i, x in enumerate(graph.value_info) if x.name == operation.input[input_idx]), 0)
         return [d.dim_value for d in graph.value_info[value_info_idx].type.tensor_type.shape.dim]
 
+def get_input_initial_value(graph, input_name):
+    tensor = next((x for x in graph.initializer if x.name == input_name), None)
+    return numpy_helper.to_array(tensor)
+
 def compute_pads_1d(operation, layer):
     auto_pad = get_onnx_attribute(operation, 'auto_pad', 'NOTSET')
     if auto_pad != 'NOTSET':

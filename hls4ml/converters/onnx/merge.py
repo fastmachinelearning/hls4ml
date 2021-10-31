@@ -1,6 +1,6 @@
 from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute, get_onnx_input_name
 
-merge_layers = ['Add', 'Sub', 'Mul', 'Average', 'Max', 'Min', 'Concat', 'Sum']
+merge_layers = ['Add', 'Sub', 'Mul', 'Div', 'Average', 'Max', 'Min', 'Concat', 'Sum']
 @onnx_handler(*merge_layers)
 def parse_merge_layer(reader, node, inputs_map, input_shapes, graph, config):
     
