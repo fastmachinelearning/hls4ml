@@ -579,19 +579,47 @@ class Input(Layer):
     def config_cpp(self):
         return None
 
+class Constant(Layer):
+    def initialize(self):
+        self.value = self.attributes['value']
+        shape = self.value.shape
+        dims = [f'{self.name}_{i}' for i in range(len(shape))]
+        self.add_output_variable(shape, dims, var_name=self.name)
+
+    def function_cpp(self):
+        return None
+
+    def config_cpp(self):
+        return None
+
+
 class Reshape(Layer):
     def initialize(self):
-        shape = self.attributes['target_shape']
-        if shape[0] is None:
-            shape = shape[1:]
-        dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+        shape = self.get_attr('target_shape')
+        if shape is None:
+            # need to get it from the input
+            input_shape =  self.get_input_variable(self.inputs[0]).shape
+            shape_node = self.get_input_node(self.inputs[1])
+            target_shape = shape_node.value
+            if input_shape[0] is None:
+                partial_shape = target_shape[1:]
+                if -1 in partial_shape:
+                    print("WARNING: Inferring -1 shape ... ")
+                    dummy_x = np.ones(input_shape[1:])
+                    dummy_y = np.reshape(dummy_x, partial_shape)
+                    partial_shape = list(dummy_y.shape)
+                target_shape = input_shape[:1] + partial_shape
+            else:
+                if -1 in target_shape:  #Need to infer shape for -1
+                    print("WARNING: Inferring -1 shape ... ")
+                    dummy_x = np.ones(input_shape)
+                    dummy_y = np.reshape(dummy_x, target_shape)
+                    target_shape = list(dummy_y.shape)
+            self.set_attr('target_shape', target_shape)
+            shape = target_shape
 
-        out_name = self.outputs[0]
-        proxy = self.get_input_variable()
-        out = InplaceVariable(shape, dims, proxy, index=self.get_input_node().index)
-
-        self.variables[out_name] = out
-        self.model.register_output_variable(out_name, out)
+        dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(len(shape))]
+        self.add_output_variable(shape, dims)
 
     def function_cpp(self):
         return None
@@ -1458,6 +1486,35 @@ class Merge(Layer):
 
         return self._config_template.format(**params)
 
+class MatMul(Layer):
+    """
+    This is a matrix multiply. Currently, it is only supported as an intermediate
+    form that gets converted to a Dense layer.
+    """
+    def initialize(self):
+        assert(len(self.inputs) == 2)
+        inp1 = self.get_input_variable(self.inputs[0])
+        inp2 = self.get_input_variable(self.inputs[1])
+        if len(inp2.shape) == 1:
+            # mat vec multiply
+            assert(inp1.shape[-1] == inp2.shape[0])
+            shape = inp1.shape[:-1] + [inp2.shape[0]]
+        else:
+            assert(inp1.shape[-1] == inp2.shape[-2])
+            shape = inp1.shape[:-1] + [inp2.shape[-1]]
+        if len(shape) > 1:
+            dims = ['N_LAYER_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+        else:
+            dims = ['N_LAYER_{}'.format(self.index)]
+
+        self.add_output_variable(shape, dims)
+
+    def function_cpp(self):
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
+
+    def config_cpp(self):
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
+
 class Dot(Merge):
     def initialize(self):
         assert(len(self.inputs) == 2)
@@ -1522,6 +1579,10 @@ class BiasAdd(Merge): # TensorFlow's operator that gets merged into Dense/Conv
         raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
 
 class Quant(Layer):  # The QONNX quantization layer
+    """
+    This is a QONNX quantization layer. Optimizations should convert it
+    before HLS is produced.
+    """
     def initialize(self):
         inp = self.get_input_variable(self.inputs[0])
         if inp:
@@ -1866,6 +1927,7 @@ class GarNetStack(GarNet):
 layer_map = {
     'Input'                  : Input,
     'InputLayer'             : Input,
+    'Constant'               : Constant,
     'Activation'             : Activation,
     'QActivation'            : Activation,
     'LeakyReLU'              : ParametrizedActivation,
@@ -1901,6 +1963,7 @@ layer_map = {
     'ZeroPadding1D'          : ZeroPadding1D,
     'ZeroPadding2D'          : ZeroPadding2D,
     'Merge'                  : Merge,
+    'MatMul'                 : MatMul,
     'Dot'                    : Dot,
     'Concatenate'            : Concatenate,
     'Resize'                 : Resize,
