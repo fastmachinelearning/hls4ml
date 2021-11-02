@@ -615,7 +615,6 @@ class Reshape(Layer):
                     dummy_x = np.ones(input_shape)
                     dummy_y = np.reshape(dummy_x, target_shape)
                     target_shape = list(dummy_y.shape)
-            self.set_attr('target_shape', target_shape)
             shape = target_shape
 
         dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(len(shape))]
