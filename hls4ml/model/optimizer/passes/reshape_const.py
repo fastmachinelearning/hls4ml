@@ -6,6 +6,7 @@ class ReshapeConstant(OptimizerPass):
     def match(self, node):
         is_match = (node.__class__.__name__ == 'Reshape'
                     and len(node.inputs) > 1
+                    and node.get_input_node(node.inputs[1])
                     and node.get_input_node(node.inputs[1]).__class__.__name__ == 'Constant') 
 
         return is_match
@@ -34,7 +35,7 @@ class ReshapeConstant(OptimizerPass):
                 dummy_y = np.reshape(dummy_x, target_shape)
                 target_shape = list(dummy_y.shape)
         node.set_attr('target_shape', target_shape)
-        del node.inputs[1]
+        node.inputs[1] = ''
         model.remove_node(shape_node, rewire=False)
        
         return True
