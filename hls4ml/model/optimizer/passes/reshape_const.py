@@ -13,7 +13,7 @@ class ReshapeConstant(OptimizerPass):
     
     def transform(self, model, node):
         """
-        Remove a transpose layer if it doesn't do anything. i.e 1D input and perm = [0]
+        Remove Constant from new shape input
         """
         shape_node =  node.get_input_node(node.inputs[1])
         print(f"Removing {shape_node.name} attached to {node.name}")
