@@ -1,5 +1,5 @@
 import math
-from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute, get_onnx_input_name, compute_pads_1d, compute_pads_2d
+from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute, compute_pads_1d, compute_pads_2d
 from hls4ml.converters.utils import compute_padding_1d, compute_padding_2d
 
 @onnx_handler('Conv')
@@ -8,7 +8,8 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
     layer = {}
     layer['name'] = node.name
     layer['data_format'] = 'channels_first' #ONNX's default is channel first
-    layer['inputs'] = get_onnx_input_name(node, graph)
+    layer['inputs'] = node.input
+    layer['outputs'] = node.output
     reader.add_input(layer['name'], node.input)
 
     strides = get_onnx_attribute(node, 'strides')
@@ -37,7 +38,7 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
                                                       layer['stride_width'],
                                                       layer['filt_width'])
 
-        output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_width']]
+        # output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_width']]
         
     elif len(input_shapes[0]) == 4: # Conv2D
         
@@ -73,7 +74,7 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
                                                                                layer['filt_height'],
                                                                                layer['filt_width'])
 
-        output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
+        # output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
 
-    return layer, output_shape
+    return layer
     

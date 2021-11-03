@@ -1,14 +1,14 @@
-from hls4ml.converters.onnx_to_hls import (
-    onnx_handler, get_onnx_attribute, get_onnx_input_name, get_input_initial_value)
+from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute
 
-@onnx_handler(*['Gemm', 'MatMul'])
+@onnx_handler(*['Gemm'])
 def parse_gemm_layer(reader, node, inputs_map, input_shapes, graph, config):
 
     layer = {}
 
     layer['class_name'] = 'Dense'
     layer['name'] = node.name
-    layer['inputs'] = get_onnx_input_name(node, graph)
+    layer['inputs'] = node.input
+    layer['outputs'] = node.output
 
     tran_weight = get_onnx_attribute(node, 'transB', 0)
     reader.add_input(layer['name'], node.input, tran_weight)
@@ -17,10 +17,19 @@ def parse_gemm_layer(reader, node, inputs_map, input_shapes, graph, config):
     layer['n_in'] = weights_shape[0]
     layer['n_out'] = weights_shape[1]
 
-    output_shape = input_shapes[0][:]
-    output_shape[-1] = layer['n_out']
+    return layer
 
-    return layer, output_shape
+@onnx_handler('MatMul')
+def parse_matmul_layer(reader, node, inputs_map, input_shapes, graph, config):
+
+    layer = {}
+
+    layer['class_name'] = 'MatMul'
+    layer['name'] = node.name
+    layer['inputs'] = node.input
+    layer['outputs'] = node.output
+
+    return layer
 
 #------------------Global paras for activations
 activation_layers = ['Relu', 'Tanh', 'Sigmoid', 'LeakyRelu', 'ThresholdedRelu', 'HardSigmoid', 'Elu', 'Selu', 'PRelu', 'Softmax', 'Softsign', 'Softplus', 'Clip']
@@ -40,7 +49,8 @@ def parse_activation_layer(reader, node, inputs_map, input_shapes, graph, config
     layer['name'] = node.name
     layer['class_name'] = activation_map[node.op_type]
     layer['activation'] = node.op_type.lower()
-    layer['inputs'] = get_onnx_input_name(node, graph)
+    layer['inputs'] = node.input
+    layer['outputs'] = node.output
 
     if layer['class_name'] != 'Activation':
 
@@ -67,7 +77,7 @@ def parse_activation_layer(reader, node, inputs_map, input_shapes, graph, config
             layer['activation'] = layer['class_name']
             layer['class_name'] = 'Activation'
 
-    return layer, [shape for shape in input_shapes[0]]
+    return layer
 
 @onnx_handler('BatchNormalization')
 def parse_batchnorm_layer(reader, node, inputs_map, input_shapes, graph, config):
@@ -77,7 +87,8 @@ def parse_batchnorm_layer(reader, node, inputs_map, input_shapes, graph, config)
     layer['class_name'] = 'BatchNormalization'
     layer['data_format'] = 'channels_first'
     layer['name'] = node.name
-    layer['inputs'] = get_onnx_input_name(node, graph)
+    layer['inputs'] = node.input
+    layer['outputs'] = node.output
 
     #Other attributes
     layer['epsilon'] = get_onnx_attribute(node, 'epsilon')
@@ -96,7 +107,7 @@ def parse_batchnorm_layer(reader, node, inputs_map, input_shapes, graph, config)
     elif len(input_shapes[0]) > 2:
         layer['n_filt']= input_shapes[0][1] #Always channel first for onnx
 
-    return layer, [shape for shape in input_shapes[0]]
+    return layer
 
 @onnx_handler('Quant')
 def parse_quant_layer(reader, node, inputs_map, input_shapes, graph, config):
@@ -105,11 +116,8 @@ def parse_quant_layer(reader, node, inputs_map, input_shapes, graph, config):
 
     layer['class_name'] = 'Quant'
     layer['name'] = node.name
-    layer['inputs'] = get_onnx_input_name(node, graph)
-    # main parameters
-    layer['scale'] = get_input_initial_value(graph, node.input[1])
-    layer['zeropt'] = get_input_initial_value(graph, node.input[2])
-    layer['bitwidth'] = get_input_initial_value(graph, node.input[3])
+    layer['inputs'] = node.input
+    layer['outputs'] = node.output
 
     #Other attributes
     layer['narrow'] = get_onnx_attribute(node, 'narrow')
@@ -119,4 +127,4 @@ def parse_quant_layer(reader, node, inputs_map, input_shapes, graph, config):
 
     reader.add_input(layer['name'], node.input)
 
-    return layer, [shape for shape in input_shapes[0]]
+    return layer

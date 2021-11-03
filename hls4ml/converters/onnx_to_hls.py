@@ -115,8 +115,8 @@ def get_input_shape(graph, operation, input_idx=None):
         value_info_idx = next((i for i, x in enumerate(graph.value_info) if x.name == operation.input[input_idx]), 0)
         return [d.dim_value for d in graph.value_info[value_info_idx].type.tensor_type.shape.dim]
 
-def get_input_initial_value(graph, input_name):
-    tensor = next((x for x in graph.initializer if x.name == input_name), None)
+def get_constant_value(graph, constant_name):
+    tensor = next((x for x in graph.initializer if x.name == constant_name), None)
     return numpy_helper.to_array(tensor)
 
 def compute_pads_1d(operation, layer):
@@ -172,6 +172,7 @@ def compute_pads_2d(operation, layer):
 layer_handlers = {}
 
 def register_onnx_layer_handler(layer_name, handler_func):
+    print(f"register layer handler {layer_name}")
     if layer_name in layer_handlers:
         raise Exception('Layer {} already registered'.format(layer_name))
     else:
@@ -185,26 +186,6 @@ def onnx_handler(*args):
         function.handles = [arg for arg in args]
         return function
     return decorator
-
-#--->> A set of functions to address the naming convetion in ONNx's graph
-def get_onnx_input_name(node, graph):
-    """
-    In ONNX, when calling node.input, it returns the node input's index in the graph instead of the input's name.
-    However, the input's name is used for indexing in HLSModel's graph. This function return the input node's name instead.
-    """
-
-    in_node = [in_node for in_node in graph.node if (in_node.output[0] in node.input)]
-
-    if in_node:
-        if in_node[0].op_type != 'Flatten':
-            input_node_name = [x.name for x in in_node]
-        else: #IF it's a flatten
-            input_node_name = [x.name for x in graph.node if (x.output[0] in in_node[0].input)]
-
-        return input_node_name
-
-    else: #If there is no input name it's actually the first layer
-        return [replace_char_inconsitency(node.input[0])]
 
 def get_out_layer_name(graph):
     """
@@ -247,6 +228,7 @@ def onnx_to_hls(config):
     all_inputs = [x.name for x in model.graph.input]
     all_initializers = [x.name for x in model.graph.initializer]
     input_layers = [x for x in all_inputs if x not in all_initializers]
+    constant_layers = all_initializers  # no need to copy it even though we change it
     output_layers = get_out_layer_name(model.graph)
 
     print("Output layers: ", output_layers)
@@ -267,6 +249,18 @@ def onnx_to_hls(config):
         input_layers[i] = input_layer['name']
 
         layer_list.append(input_layer)
+
+    for i, constant in enumerate(constant_layers):
+        constant_layer = {}
+        constant_layer['name'] = replace_char_inconsitency(constant)
+        constant_layer['class_name'] = 'Constant'
+        constant_layer['value'] = get_constant_value(model.graph, constant)
+
+        #Clean the layer name for specific models
+        sanitize_layer_name(constant_layer)
+        constant_layers[i] = constant_layer['name']
+
+        layer_list.append(constant_layer)
 
     # Defined supported layers and check for unsupported layer type
     skip_layers = ['Dropout', 'Identity', 'Flatten']
@@ -297,7 +291,7 @@ def onnx_to_hls(config):
             continue
 
         #Process the layer
-        layer, _ = layer_handlers[node.op_type](reader, node, inputs_map, current_shape, model.graph, config)
+        layer = layer_handlers[node.op_type](reader, node, inputs_map, current_shape, model.graph, config)
 
         sanitize_layer_name(layer)
         print('Layer name: {}, layer type: {}, current shape: {}'.format(layer['name'], layer['class_name'], current_shape))

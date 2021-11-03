@@ -1,5 +1,5 @@
 import math
-from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute, compute_pads_1d, compute_pads_2d, get_onnx_input_name
+from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute, compute_pads_1d, compute_pads_2d
 from hls4ml.converters.utils import compute_padding_1d, compute_padding_2d
 
 pool_operations = ['AveragePool', 'MaxPool']
@@ -8,7 +8,8 @@ def parse_pool_layer(reader, node, inputs_map, input_shapes, graph, config):
     
     layer = {}
     layer['name'] = node.name
-    layer['inputs'] = get_onnx_input_name(node, graph)
+    layer['inputs'] = node.input
+    layer['outputs'] = node.output
     layer['class_name'] = node.op_type
     layer['data_format'] = 'channels_first' #Default ONNX
 
@@ -40,7 +41,7 @@ def parse_pool_layer(reader, node, inputs_map, input_shapes, graph, config):
                                                       layer['stride_width'],
                                                       layer['pool_width'])
 
-        output_shape = [input_shapes[0][0], layer['n_filt'], layer['n_out']]
+        # output_shape = [input_shapes[0][0], layer['n_filt'], layer['n_out']]
     
     elif len(input_shapes[0]) == 4: # 2D
         layer['class_name'] = info + 'Pooling2D'
@@ -73,9 +74,9 @@ def parse_pool_layer(reader, node, inputs_map, input_shapes, graph, config):
                                                                                layer['filt_height'],
                                                                                layer['filt_width'])
         
-        output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
+        # output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
     
-    return layer, output_shape
+    return layer
 
 global_pooling_layers = ['GlobalMaxPool', 'GlobalAveragePool']
 @onnx_handler(*global_pooling_layers)
@@ -83,7 +84,8 @@ def parse_global_pooling_layer(reader, node, inputs_map, input_shapes, graph, co
 
     layer = {}
     layer['name'] = node.name
-    layer['inputs'] = get_onnx_input_name(node, graph)
+    layer['inputs'] = node.input
+    layer['outputs'] = node.output
     layer['class_name'] = node.op_type
     layer['data_format'] = 'channels_first'
 
@@ -107,6 +109,6 @@ def parse_global_pooling_layer(reader, node, inputs_map, input_shapes, graph, co
         layer['in_height'] = input_shapes[0][2]
         layer['in_width'] = input_shapes[0][3]
     
-    output_shape = [input_shapes[0][0], layer['n_filt']] + [1]*(len(input_shapes[0]) - 2)
+    # output_shape = [input_shapes[0][0], layer['n_filt']] + [1]*(len(input_shapes[0]) - 2)
 
-    return layer, output_shape
+    return layer
