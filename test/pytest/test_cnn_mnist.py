@@ -37,7 +37,7 @@ def mnist_model():
 def hls_model(settings):
   io_type = settings[0]
   strategy = settings[1]
-  config = yaml.load(open('../../example-models/config-files/qkeras_mnist_cnn_config.yml').read())
+  config = yaml.safe_load(open('../../example-models/config-files/qkeras_mnist_cnn_config.yml').read())
   config['KerasJson'] = '../../example-models/keras/qkeras_mnist_cnn.json'
   config['KerasH5'] = '../../example-models/keras/qkeras_mnist_cnn_weights.h5'
   config['OutputDir'] = 'hls4mlprj_cnn_mnist_{}_{}'.format(io_type, strategy)
