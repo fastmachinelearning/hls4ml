@@ -88,7 +88,7 @@ def _load_example_config(model_name):
 
     #Load the configuration from local yml file
     with open(config_name, 'r') as ymlfile:
-        config = yaml.load(ymlfile)
+        config = yaml.safe_load(ymlfile)
 
     return config
 

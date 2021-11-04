@@ -45,7 +45,7 @@ def hls_model(settings):
   strategy = settings[1]
   yml_path = example_model_path / 'config-files/qkeras_mnist_cnn_config.yml'
   with yml_path.open('r') as f:
-    config = yaml.load(f.read())
+    config = yaml.safe_load(f.read())
   config['KerasJson'] = str(example_model_path / 'keras/qkeras_mnist_cnn.json')
   config['KerasH5'] = str(example_model_path / 'keras/qkeras_mnist_cnn_weights.h5')
   config['OutputDir'] = str(test_root_path / 'hls4mlprj_cnn_mnist_{}_{}'.format(io_type, strategy))
