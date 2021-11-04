@@ -25,8 +25,8 @@ class RoundingMode(Enum):
 
     @classmethod
     def from_string(cls, mode):
-        mode = mode.replace('AP_', '').upper()
-        mode = mode.replace('AC_', '').upper()
+        mode = mode.strip().replace('AP_', '').upper()
+        mode = mode.strip().replace('AC_', '').upper()
 
         return cls[mode]
 
@@ -41,8 +41,8 @@ class SaturationMode(Enum):
 
     @classmethod
     def from_string(cls, mode):
-        mode = mode.replace('AP_', '').upper()
-        mode = mode.replace('AC_', '').upper()
+        mode = mode.strip().replace('AP_', '').upper()
+        mode = mode.strip().replace('AC_', '').upper()
 
         return cls[mode]
 
