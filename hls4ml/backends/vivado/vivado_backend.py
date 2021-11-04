@@ -12,113 +12,8 @@ from hls4ml.model.hls_attributes import Attribute
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer, model_optimizer
 from hls4ml.model.flow import register_flow
 from hls4ml.backends import FPGABackend
+from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter, VivadoArrayVariable
 from hls4ml.report import parse_vivado_report
-
-#TODO Switch GarNet to the new API
-garnet_common_config_template = """
-    static const unsigned n_vertices = {n_vertices};
-    static const unsigned n_vertices_width = {n_vertices_width};
-    static const unsigned n_in_features = {n_in_features};
-    static const unsigned distance_width = {distance_width};
-    static const unsigned output_collapse = {collapse_type};
-    static const bool mean_by_nvert = {mean_by_nvert};
-
-    typedef {norm_t} norm_t;
-    typedef ap_fixed<{distance_width}, {distance_nint}, AP_TRN, AP_SAT> distance_t;
-    typedef {edge_weight_t} edge_weight_t;
-    typedef {edge_weight_aggr_t} edge_weight_aggr_t;
-    typedef {aggr_t} aggr_t;
-    typedef {output_t} output_t;
-
-    static const unsigned reuse_factor = {reuse};
-    static const unsigned log2_reuse_factor = {log2_reuse};
-"""
-
-garnet_config_template = """struct config{index} : nnet::garnet_config {{"""
-garnet_config_template += garnet_common_config_template
-garnet_config_template += """
-    static const unsigned n_propagate = {n_propagate};
-    static const unsigned n_aggregators = {n_aggregators};
-    static const unsigned n_out_features = {n_out_features};
-
-    typedef {input_transform_weights_t} input_transform_weights_t;
-    typedef {input_transform_biases_t} input_transform_biases_t;
-    typedef {aggregator_distance_weights_t} aggregator_distance_weights_t;
-    typedef {aggregator_distance_biases_t} aggregator_distance_biases_t;
-    typedef {output_transform_weights_t} output_transform_weights_t;
-    typedef {output_transform_biases_t} output_transform_biases_t;
-
-    static const input_transform_weights_t (&input_transform_weights)[{input_transform_weights_size}];
-    static const input_transform_biases_t (&input_transform_biases)[{input_transform_biases_size}];
-    static const aggregator_distance_weights_t (&aggregator_distance_weights)[{aggregator_distance_weights_size}];
-    static const aggregator_distance_biases_t (&aggregator_distance_biases)[{aggregator_distance_biases_size}];
-    static const output_transform_weights_t (&output_transform_weights)[{output_transform_weights_size}];
-    static const output_transform_biases_t (&output_transform_biases)[{output_transform_biases_size}];
-
-    typedef config{index} base_t;
-}};
-
-const config{index}::input_transform_weights_t (&config{index}::input_transform_weights)[{input_transform_weights_size}] = {input_transform_weights};
-const config{index}::input_transform_biases_t (&config{index}::input_transform_biases)[{input_transform_biases_size}] = {input_transform_biases};
-const config{index}::aggregator_distance_weights_t (&config{index}::aggregator_distance_weights)[{aggregator_distance_weights_size}] = {aggregator_distance_weights};
-const config{index}::aggregator_distance_biases_t (&config{index}::aggregator_distance_biases)[{aggregator_distance_biases_size}] = {aggregator_distance_biases};
-const config{index}::output_transform_weights_t (&config{index}::output_transform_weights)[{output_transform_weights_size}] = {output_transform_weights};
-const config{index}::output_transform_biases_t (&config{index}::output_transform_biases)[{output_transform_biases_size}] = {output_transform_biases};
-"""
-
-garnet_stack_base_config_template = """struct config{index}_base : nnet::garnet_config {{"""
-garnet_stack_base_config_template += garnet_common_config_template
-garnet_stack_base_config_template += """
-    static const bool is_stack = true;
-
-    typedef config{index}_base base_t;
-}};
-
-struct config{index} : config{index}_base {{
-    static const unsigned n_sublayers = {n_sublayers};
-
-    template<int L>
-    struct sublayer_t : config{index}_base {{}};
-}};
-
-{sublayer_configs}
-"""
-
-garnet_stack_sublayer_config_template = """template<>
-struct config{index}::sublayer_t<{il}> : config{index}_base {{
-    static const unsigned n_in_features = {n_in_features};
-    static const unsigned n_propagate = {n_propagate};
-    static const unsigned n_aggregators = {n_aggregators};
-    static const unsigned n_out_features = {n_out_features};
-
-    typedef {input_transform_weights_t} input_transform_weights_t;
-    typedef {input_transform_biases_t} input_transform_biases_t;
-    typedef {aggregator_distance_weights_t} aggregator_distance_weights_t;
-    typedef {aggregator_distance_biases_t} aggregator_distance_biases_t;
-    typedef {output_transform_biases_t} output_transform_biases_t;
-
-    static const input_transform_weights_t (&input_transform_weights)[{input_transform_weights_size}];
-    static const input_transform_biases_t (&input_transform_biases)[{input_transform_biases_size}];
-    static const aggregator_distance_weights_t (&aggregator_distance_weights)[{aggregator_distance_weights_size}];
-    static const aggregator_distance_biases_t (&aggregator_distance_biases)[{aggregator_distance_biases_size}];
-    static const output_transform_biases_t (&output_transform_biases)[{output_transform_biases_size}];
-
-    typedef config{index}::sublayer_t<{next}> next_layer_t;
-}};
-
-const config{index}::sublayer_t<{il}>::input_transform_weights_t (&config{index}::sublayer_t<{il}>::input_transform_weights)[{input_transform_weights_size}] = {input_transform_weights};
-const config{index}::sublayer_t<{il}>::input_transform_biases_t (&config{index}::sublayer_t<{il}>::input_transform_biases)[{input_transform_biases_size}] = {input_transform_biases};
-const config{index}::sublayer_t<{il}>::aggregator_distance_weights_t (&config{index}::sublayer_t<{il}>::aggregator_distance_weights)[{aggregator_distance_weights_size}] = {aggregator_distance_weights};
-const config{index}::sublayer_t<{il}>::aggregator_distance_biases_t (&config{index}::sublayer_t<{il}>::aggregator_distance_biases)[{aggregator_distance_biases_size}] = {aggregator_distance_biases};
-const config{index}::sublayer_t<{il}>::output_transform_biases_t (&config{index}::sublayer_t<{il}>::output_transform_biases)[{output_transform_biases_size}] = {output_transform_biases};
-"""
-
-garnet_stack_config_template = (garnet_stack_base_config_template, garnet_stack_sublayer_config_template)
-
-garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
-garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
-
-garnet_include_list = ['nnet_utils/nnet_garnet.h']
 
 class VivadoBackend(FPGABackend):
     def __init__(self):
@@ -315,3 +210,32 @@ class VivadoBackend(FPGABackend):
             layer.set_attr('implementation', 'latency')
         else:
             layer.set_attr('implementation', layer.model.config.get_strategy(layer).lower())
+
+    @layer_optimizer(GarNet)
+    def init_garnet(self, layer):
+        reuse_factor = layer.attributes['reuse_factor']
+        
+        type_converter = HLSTypeConverter(precision_converter=APTypeConverter())
+        
+        # A bit controversial but we are going to set the partitioning of the input here
+        in_layer = layer.model.graph[layer.inputs[0]]
+        in_var = layer.get_input_variable(layer.inputs[0])
+        partition_factor = in_var.shape[1] * (in_var.shape[0] // reuse_factor)
+        in_pragma = ('partition', 'cyclic', partition_factor)
+        new_in_var = VivadoArrayVariable.from_variable(in_var, type_converter, pragma=in_pragma)
+        in_layer.set_attr(layer.inputs[0], new_in_var)
+
+        if layer.attributes['collapse']:
+            out_pragma = 'partition'
+        else:
+            partition_factor = layer._output_features * (layer.attributes['n_vertices'] // reuse_factor)
+            out_pragma = ('partition', 'cyclic' , partition_factor)
+
+        out_name, out_var = next(iter(layer.variables.items()))
+        new_out_var = VivadoArrayVariable.from_variable(out_var, type_converter, pragma=out_pragma)
+
+        layer.set_attr(out_name, new_out_var)
+
+    @layer_optimizer(GarNetStack)
+    def init_garnet_stack(self, layer):
+        self.init_garnet(layer)

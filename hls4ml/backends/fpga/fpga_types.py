@@ -226,6 +226,8 @@ class ArrayVariable(TensorVariable):
 
     @classmethod
     def from_variable(cls, tensor_var, type_converter, pragma='partition'):
+        if type(tensor_var) == cls:
+            return tensor_var
         return cls(
             tensor_var,
             type_converter,

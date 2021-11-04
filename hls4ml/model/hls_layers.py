@@ -147,7 +147,7 @@ class Layer(object):
     def get_variables(self):
         return self.variables.values()
 
-    def add_output_variable(self, shape, dim_names, out_name=None, var_name='layer{index}_out', type_name='layer{index}_t', precision=None, pragma='auto'):
+    def add_output_variable(self, shape, dim_names, out_name=None, var_name='layer{index}_out', type_name='layer{index}_t', precision=None):
         if out_name is None:
             out_name = self.outputs[0]
 
@@ -831,22 +831,15 @@ class GarNet(Layer):
 
         self._initialize_transforms()
 
-        # A bit controvertial but we are going to reshape the input variable here
-        input_array = self.get_input_variable(self.inputs[0])
-        partition_factor = input_array.shape[1] * (input_array.shape[0] // reuse_factor)
-        input_array.pragma = ('partition', 'cyclic', partition_factor)
-        
         if self.attributes['collapse']:
             shape = [self._output_features]
             dims = ['OUT_FEATURES_{}'.format(self.index)]
-            pragma = 'partition'
         else:
             shape = [self.attributes['n_vertices'], self._output_features]
             dims = ['VERTICES_{}'.format(self.index),'OUT_FEATURES_{}'.format(self.index)]
             partition_factor = self._output_features * (self.attributes['n_vertices'] // reuse_factor)
-            pragma = ('partition', 'cyclic' , partition_factor)
 
-        self.add_output_variable(shape, dims, pragma=pragma)
+        self.add_output_variable(shape, dims)
 
     def _initialize_transforms(self):
         n_propagate = self.attributes['n_propagate']
@@ -931,82 +924,6 @@ class GarNet(Layer):
             
         self.add_weights_variable(name=name, var_name=var_name, data=data, precision=precision)
         
-    def function_cpp(self):
-        params = self._default_function_params()
-
-        data = self.get_input_variable(self.inputs[0])
-        integer_input = self.get_input_variable(self.inputs[1])
-        params['input_t'] = data.type.name
-        params['input'] = data.name
-
-        params['integer_input_t'] = integer_input.type.name
-        params['nvtx'] = integer_input.name
-
-        if self.ref_impl:
-            params['impl'] = '_ref'
-        else:
-            params['impl'] = ''
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-
-        params['n_vertices'] = self.attributes['n_vertices']
-        params['n_vertices_width'] = int(np.log2(params['n_vertices']))
-        params['distance_width'] = 12
-        params['distance_nint'] = min(4, params['distance_width'] - 6) # this is tuned
-        params['log2_reuse'] = int(np.log2(params['reuse']))
-
-        ## Define default precisions for various internal arrays (can be overridden from the config file)
-        # We always give 10 digits for the subintegral part
-        fwidth = 10
-        # Integral precision for aggr_t depends on how large the temporary sum for weighed feature mean will be
-        aggr_intw = max(params['log2_reuse'], params['n_vertices_width'] - params['log2_reuse']) + 3 # safety factor 2**3
-        aggr_w = aggr_intw + fwidth
-        # edge_weight_aggr_t does not need the safety factor
-        ew_aggr_intw = aggr_intw - 3
-        ew_aggr_w = ew_aggr_intw + fwidth
-        # Integral precision for norm is fixed to 4
-        norm_intw = 4
-        norm_w = norm_intw + fwidth
-
-        vspecs = [
-            ('edge_weight', FixedPrecisionType(10, 0, signed=False)),
-            ('edge_weight_aggr', FixedPrecisionType(ew_aggr_w, ew_aggr_intw, signed=False)),
-            ('aggr', FixedPrecisionType(aggr_w, aggr_intw)),
-            ('norm', FixedPrecisionType(norm_w, norm_intw, signed=False))
-        ]
-        for vname, default_precision in vspecs:
-            params['{}_t'.format(vname)], type_name = self.model.config.get_precision(self, var=vname)
-            if type_name.endswith('default_t'):
-                params['{}_t'.format(vname)] = str(default_precision)
-
-        params['output_t'] = self.get_output_variable().type.name
-
-        if self.attributes['collapse'] in ['mean', 'max']:
-            params['collapse_type'] = 'collapse_{}'.format(self.attributes['collapse'])
-        else:
-            params['collapse_type'] = 'no_collapse'
-
-        params['mean_by_nvert'] = str(self.attributes['mean_by_nvert']).lower()
-
-        self._get_transforms_config(params)
-
-        return self._config_template.format(**params)
-
-    def _get_transforms_config(self, params):
-        params['n_in_features'] = self.attributes['n_in_features']
-        params['n_propagate'] = self.attributes['n_propagate']
-        params['n_aggregators'] = self.get_weights('aggregator_distance_biases').shape[0]
-        params['n_out_features'] = self.get_weights('output_transform_biases').shape[0]
-
-        for wname, weights in self.weights.items():
-            params[wname] = weights.name
-            params['{}_t'.format(wname)] = weights.type.name
-            params['{}_size'.format(wname)] = weights.data_length
-
-
 class GarNetStack(GarNet):
     def _initialize_transforms(self):
         self._sublayer_weights = []
@@ -1053,35 +970,6 @@ class GarNetStack(GarNet):
             self._sublayer_weights.append(sublayer_weights)
 
         self._output_features = self.attributes['n_out_features'][-1]
-
-    def _get_transforms_config(self, params):
-        base_template, sublayer_template = self._config_template
-        self._config_template = base_template
-
-        params['n_sublayers'] = self.attributes['n_sublayers']
-        params['n_in_features'] = self.attributes['n_in_features'][0]
-        params['n_out_features'] = self.attributes['n_out_features'][-1]
-
-        sublayer_configs = []
-        for il in range(self.attributes['n_sublayers'] - 1, -1, -1):
-            sub_params = {'index': self.index, 'il': il}
-
-            for p in ['n_in_features', 'n_propagate', 'n_aggregators', 'n_out_features']:
-                sub_params[p] = self.attributes[p][il]
-
-            for wname, weights in self._sublayer_weights[il].items():
-                sub_params[wname] = weights.name
-                sub_params['{}_t'.format(wname)] = weights.type.name
-                sub_params['{}_size'.format(wname)] = weights.data_length
-
-            if il != self.attributes['n_sublayers'] - 1:
-                sub_params['next'] = il + 1
-            else:
-                sub_params['next'] = 0
-
-            sublayer_configs.append(sublayer_template.format(**sub_params))
-
-        params['sublayer_configs'] = '\n'.join(sublayer_configs)
 
 layer_map = {
     'Input'                  : Input,
