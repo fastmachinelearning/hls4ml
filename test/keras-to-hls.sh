@@ -23,8 +23,8 @@ function print_usage {
    echo "Multiple models can be specified."
    echo ""
    echo "Options are:"
-   echo "   -x XILINXPART"
-   echo "      Xilinx device part number. Defaults to 'xcvu9p-flgb2104-2-e'."
+   echo "   -x PART"
+   echo "      FPGA device part number. Defaults to 'xcvu9p-flgb2104-2-e'."
    echo "   -b BOARD"
    echo "      Board used. Defaults to 'pynq-z2'."
    echo "   -B BACKEND"
@@ -114,7 +114,7 @@ do
    echo "KerasH5:   ../example-models/keras/${h5}.h5" >> ${file}
    echo "OutputDir: ${prjdir}" >> ${file}
    echo "ProjectName: myproject" >> ${file}
-   echo "XilinxPart: ${part}" >> ${file}
+   echo "Part: ${part}" >> ${file}
    echo "Board: ${board}" >> ${file}
    echo "Backend: ${backend}" >> ${file}
    echo "ClockPeriod: ${clock}" >> ${file}

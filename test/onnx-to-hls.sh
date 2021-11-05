@@ -82,7 +82,7 @@ do
    echo "OnnxModel: ../example-models/onnx/${model}.onnx" > ${file}
    echo "OutputDir: ${basedir}/${base}-${part//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}" >> ${file}
    echo "ProjectName: myproject" >> ${file}
-   echo "XilinxPart: ${part}" >> ${file}
+   echo "Part: ${part}" >> ${file}
    echo "ClockPeriod: ${clock}" >> ${file}
    echo "" >> ${file}
    echo "IOType: ${io}" >> ${file}
