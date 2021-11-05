@@ -454,7 +454,7 @@ class HLSModel(object):
 
         """
         prev_node = self.graph.get(old_node.inputs[0])
-        next_node = next((x for x in self.graph.values() if x.inputs[0] == old_node.outputs[0]), None)
+        next_node = next((x for x in self.graph.values() if x.inputs and x.inputs[0] == old_node.outputs[0]), None)
         if next_node is not None:
             next_node.inputs[0] = new_node.outputs[0]
         if prev_node is not None:

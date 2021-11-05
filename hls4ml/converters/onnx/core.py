@@ -84,8 +84,7 @@ def parse_batchnorm_layer(reader, node, inputs_map, input_shapes, graph, config)
 
     layer = {}
 
-    layer['class_name'] = 'BatchNormalization'
-    layer['data_format'] = 'channels_first'
+    layer['class_name'] = 'BaseBatchNormalization'
     layer['name'] = node.name
     layer['inputs'] = node.input
     layer['outputs'] = node.output
@@ -94,18 +93,18 @@ def parse_batchnorm_layer(reader, node, inputs_map, input_shapes, graph, config)
     layer['epsilon'] = get_onnx_attribute(node, 'epsilon')
     layer['momentum'] = get_onnx_attribute(node, 'momentum')
 
-    reader.add_input(layer['name'], node.input)
+    # reader.add_input(layer['name'], node.input)
 
-    in_size = 1
-    for dim in input_shapes[0][1:]:
-        in_size *= dim
+    # in_size = 1
+    # for dim in input_shapes[0][1:]:
+    #     in_size *= dim
 
-    layer['n_in'] = layer['n_out'] = in_size
+    # layer['n_in'] = layer['n_out'] = in_size
 
-    if len(input_shapes[0]) == 2:
-        layer['n_filt'] = -1
-    elif len(input_shapes[0]) > 2:
-        layer['n_filt']= input_shapes[0][1] #Always channel first for onnx
+    # if len(input_shapes[0]) == 2:
+    #     layer['n_filt'] = -1
+    # elif len(input_shapes[0]) > 2:
+    #     layer['n_filt']= input_shapes[0][1] #Always channel first for onnx
 
     return layer
 
@@ -125,6 +124,6 @@ def parse_quant_layer(reader, node, inputs_map, input_shapes, graph, config):
     layer['signed'] = get_onnx_attribute(node, 'signed')
     layer['output_shape'] = [shape for shape in input_shapes[0]]
 
-    reader.add_input(layer['name'], node.input)
+    # reader.add_input(layer['name'], node.input)
 
     return layer

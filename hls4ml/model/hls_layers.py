@@ -1416,7 +1416,35 @@ class TernaryTanh(Activation):
     def initialize(self):
         super(TernaryTanh, self).initialize()
 
-class BatchNormalization(Layer):
+
+class BaseBatchNormalization(Layer):
+    """
+    This is the basic BatchNormalization layer that does not
+    register the scale and bias variables at initialization
+    but instead depends on optimizations to propagate the
+    quantization information and values
+    """
+    def initialize(self):
+        inp = self.get_input_variable()
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_output_variable(shape, dims, precision=self.get_attr("quant_precision"))  # note: default is None if quant_precision is not defined
+
+    def function_cpp(self):
+        params = self._default_function_params()
+        params['scale'] = self.get_weights('scale').name
+        params['bias'] = self.get_weights('bias').name
+
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+        params['n_in'] = self.get_input_variable().size_cpp()
+        params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('scale').type.precision)
+
+        return self._config_template.format(**params)
+
+class BatchNormalization(BaseBatchNormalization):
     def initialize(self):
         inp = self.get_input_variable()
         shape = inp.shape
@@ -1433,20 +1461,6 @@ class BatchNormalization(Layer):
 
         self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
         self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
-
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['scale'] = self.get_weights('scale').name
-        params['bias'] = self.get_weights('bias').name
-
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        params['n_in'] = self.get_input_variable().size_cpp()
-        params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('scale').type.precision)
-
-        return self._config_template.format(**params)
 
 class Merge(Layer):
     def initialize(self):
@@ -1949,6 +1963,7 @@ layer_map = {
     'SeparableConv1D'        : SeparableConv1D,
     'SeparableConv2D'        : SeparableConv2D,
     'DepthwiseConv2D'        : DepthwiseConv2D,
+    'BaseBatchNormalization' : BaseBatchNormalization,
     'BatchNormalization'     : BatchNormalization,
     'QBatchNormalization'    : BatchNormalization,
     'MaxPooling1D'           : Pooling1D,
