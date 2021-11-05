@@ -584,7 +584,8 @@ class Constant(Layer):
         self.value = self.attributes['value']
         shape = self.value.shape
         dims = [f'{self.name}_{i}' for i in range(len(shape))]
-        self.add_output_variable(shape, dims, var_name=self.name)
+        self.add_output_variable(shape, dims, var_name=self.name, precision=self.get_attr("quant_precision")) 
+                # note: default is None if quant_precision is not defined
 
     def function_cpp(self):
         return None

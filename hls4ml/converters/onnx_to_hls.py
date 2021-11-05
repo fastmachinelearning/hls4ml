@@ -172,7 +172,6 @@ def compute_pads_2d(operation, layer):
 layer_handlers = {}
 
 def register_onnx_layer_handler(layer_name, handler_func):
-    print(f"register layer handler {layer_name}")
     if layer_name in layer_handlers:
         raise Exception('Layer {} already registered'.format(layer_name))
     else:

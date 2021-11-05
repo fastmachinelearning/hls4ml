@@ -90,8 +90,8 @@ def parse_batchnorm_layer(reader, node, inputs_map, input_shapes, graph, config)
     layer['outputs'] = node.output
 
     #Other attributes
-    layer['epsilon'] = get_onnx_attribute(node, 'epsilon')
-    layer['momentum'] = get_onnx_attribute(node, 'momentum')
+    layer['epsilon'] = get_onnx_attribute(node, 'epsilon', 1e-05)
+    # layer['momentum'] = get_onnx_attribute(node, 'momentum', 0.9)  # not used
 
     # reader.add_input(layer['name'], node.input)
 
