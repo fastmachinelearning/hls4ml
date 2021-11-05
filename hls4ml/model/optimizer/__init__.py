@@ -16,7 +16,7 @@ from hls4ml.model.optimizer.passes.repack_stream import ReshapeStream, Broadcast
 from hls4ml.model.optimizer.passes.transpose_opt import RemoveUselessTranspose
 from hls4ml.model.optimizer.passes.multi_dense import ReplaceMultidimensionalDenseWithConv
 from hls4ml.model.optimizer.passes.reshape_const import ReshapeConstant
-from hls4ml.model.optimizer.passes.quant_opt import QuantConstantParameters
+from hls4ml.model.optimizer.passes.quant_opt import QuantConstantParameters, QuantToBatchNorm
 
 try:
     from hls4ml.model.optimizer.passes.qkeras import OutputRoundingSaturationMode
@@ -35,6 +35,7 @@ if __qkeras_optimizers__:
 
 register_pass('reshape_constant', ReshapeConstant)
 register_pass('quant_constant_params', QuantConstantParameters)
+register_pass('quant_to_batchnorm', QuantToBatchNorm)
 register_pass('eliminate_linear_activation', EliminateLinearActivation)
 register_pass('merge_batch_norm_quantized_tanh', MergeBatchNormAndQuantizedTanh)
 register_pass('quantize_dense_output', QuantizeDenseOutput)
