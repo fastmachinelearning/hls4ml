@@ -18,6 +18,7 @@ from hls4ml.model.optimizer.passes.multi_dense import ReplaceMultidimensionalDen
 from hls4ml.model.optimizer.passes.reshape_const import ReshapeConstant
 from hls4ml.model.optimizer.passes.quant_opt import QuantConstantParameters, QuantToBatchNorm
 from hls4ml.model.optimizer.passes.batchnorm_opt import BatchNormConstantParameters, ConstantBatchNormMerging, FuseConsecutiveBaseBatchNormalization
+from hls4ml.model.optimizer.passes.merge_const import MergeTwoConstant, MergeToBaseBatchNormalization, MergeToBaseBatchNormalizationDiv
 
 try:
     from hls4ml.model.optimizer.passes.qkeras import OutputRoundingSaturationMode
@@ -40,6 +41,9 @@ register_pass('quant_to_batchnorm', QuantToBatchNorm)
 register_pass('batch_norm_constant_parameters', BatchNormConstantParameters)
 register_pass('fuse_consecutive_base_batch_normalizations', FuseConsecutiveBaseBatchNormalization)
 register_pass('constant_batch_norm_fusion', ConstantBatchNormMerging)
+register_pass('merge_two_constants', MergeTwoConstant)
+register_pass('merge_to_batchnorm', MergeToBaseBatchNormalization)
+register_pass('merge_to_batchnorm_div', MergeToBaseBatchNormalizationDiv)
 register_pass('eliminate_linear_activation', EliminateLinearActivation)
 register_pass('merge_batch_norm_quantized_tanh', MergeBatchNormAndQuantizedTanh)
 register_pass('quantize_dense_output', QuantizeDenseOutput)
