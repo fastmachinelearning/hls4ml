@@ -581,11 +581,13 @@ class Input(Layer):
 
 class Constant(Layer):
     def initialize(self):
-        self.value = self.attributes['value']
-        shape = self.value.shape
+        value = self.attributes['value']
+        # in the next line, the two get_attr functions usually return None
+        self.add_weights_variable(name='value', data=value, precision=self.get_attr("quant_precision"), quantizer=self.get_attr("quantizer"))
+        self.value = value  # note, this is unquantized; Only here for easier access
+        shape = value.shape
         dims = [f'{self.name}_{i}' for i in range(len(shape))]
         self.add_output_variable(shape, dims, var_name=self.name, precision=self.get_attr("quant_precision")) 
-                # note: default is None if quant_precision is not defined
 
     def function_cpp(self):
         return None
@@ -1420,10 +1422,7 @@ class TernaryTanh(Activation):
 
 class BaseBatchNormalization(Layer):
     """
-    This is the basic BatchNormalization layer that does not
-    register the scale and bias variables at initialization
-    but instead depends on optimizations to propagate the
-    quantization information and values
+    This is the basic BatchNormalization layer that registers scale and bias only if they exist
     """
     def initialize(self):
         inp = self.get_input_variable()
@@ -1431,6 +1430,13 @@ class BaseBatchNormalization(Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims, precision=self.get_attr("quant_precision"))  # note: default is None if quant_precision is not defined
 
+        scale = self.get_attr("scale")
+        if scale:
+            bias = self.get_attr("bias")  # bias must be defined if scale is
+            self.add_weights_variable(name='scale', data=scale, precision=self.get_attr("quant_precision"), quantizer=self.get_attr("quantizer"))
+            self.add_weights_variable(name='bias', data=bias, precision=self.get_attr("quant_precision"), quantizer=self.get_attr("quantizer"))
+
+ 
     def function_cpp(self):
         params = self._default_function_params()
         params['scale'] = self.get_weights('scale').name

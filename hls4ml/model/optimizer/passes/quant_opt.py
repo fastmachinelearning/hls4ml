@@ -81,6 +81,7 @@ class QuantToBatchNorm(OptimizerPass):
         bitwidth = node.get_attr("bitwidth")
         if np.squeeze(bitwidth).shape:
             raise RuntimeError("Only scalar bitwidth values are supporeted by the Quant node")
+        bitwidth = int(bitwidth)
 
         bn_precision = FixedPrecisionType(bitwidth, bitwidth, node.get_attr("signed"), bn_round, bn_sat)
         bn_quantizer = QuantNodeQuantizer(bn_precision)

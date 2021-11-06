@@ -18,8 +18,8 @@ class QuantNodeQuantizer(Quantizer):
         # Clamping
         min_int_val = self._min_int(self.hls_type.signed, self.hls_type.saturation_mode, self.bits)
         max_int_val = self._max_int(self.hls_type.signed, self.bits)
-        data = np.where(data > max_int_val, max_int_val.astype(data.dtype), data)
-        data = np.where(data < min_int_val, min_int_val.astype(data.dtype), data)
+        data = np.where(data > max_int_val, max_int_val, data)
+        data = np.where(data < min_int_val, min_int_val, data)
         # Rounding
         rounding_fx = self._resolve_rounding_mode(self.hls_type.rounding_mode)
         return rounding_fx(data)
