@@ -71,7 +71,8 @@ for backend in ['Vivado', 'VivadoAccelerator']:
 class ReshapeStream(OptimizerPass):
     ''' Repacks stream for Reshape layer '''
     def match(self, node):
-        return node.__class__.__name__ == 'Reshape'
+        # do not run optimizer pass for a flatten layer (1 output dimension)
+        return node.__class__.__name__ == 'Reshape' and len(node.get_output_variable().shape) > 1
 
     def transform(self, model, node):
         if model.config.backend.name not in ['Vivado', 'VivadoAccelerator'] or \
@@ -120,4 +121,15 @@ class BroadcastStream(OptimizerPass):
         model.insert_node(brdcst_layer)
         node.inputs[idx] = brdcst_out
 
+        return True
+
+class RemoveFinalReshape(OptimizerPass):
+    ''' Remove reshape if final layer '''
+    def match(self, node):
+        # match if reshape is final node
+        return node.__class__.__name__ == 'Reshape' and not node.get_output_nodes()
+
+    def transform(self, model, node):
+        # remove, but don't rewire because it's the output layer
+        model.remove_node(node, rewire=False) 
         return True
