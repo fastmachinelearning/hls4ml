@@ -1,5 +1,6 @@
 import numpy as np
 from hls4ml.model.hls_layers import FixedPrecisionType
+from hls4ml.converters.onnx.quantizer import QuantNodeQuantizer
 from hls4ml.model.optimizer import OptimizerPass
 
 class QuantConstantParameters(OptimizerPass):
@@ -69,6 +70,9 @@ class QuantToBatchNorm(OptimizerPass):
         else:
             raise NotImplementedError(f"Rounding mode {rounding_mode} not supported in Quant node. Only ROUND and FLOOR supported.")
 
+        if node.get_attr("narrow") and not node.get_attr("signed"):
+            raise NotImplementedError("Narrow mode is only supported for singed numbers.")
+
         if node.get_attr("narrow"):
             bn_sat = "AP_SAT_SYM"
         else:
@@ -77,10 +81,13 @@ class QuantToBatchNorm(OptimizerPass):
         bitwidth = node.get_attr("bitwidth")
         if np.squeeze(bitwidth).shape:
             raise RuntimeError("Only scalar bitwidth values are supporeted by the Quant node")
+        bitwidth = int(bitwidth)
 
         bn_precision = FixedPrecisionType(bitwidth, bitwidth, node.get_attr("signed"), bn_round, bn_sat)
+        bn_quantizer = QuantNodeQuantizer(bn_precision)
+
         bn_layer = model.make_node("BaseBatchNormalization", f"bn_{node.name}",
-                                   {"scale": bn_scale, "bias": bn_bias, "quant_precision": bn_precision},
+                                   {"scale": bn_scale, "bias": bn_bias, "quant_precision": bn_precision, "quantizer": bn_quantizer},
                                    [node.inputs[0]], node.outputs)
         model.replace_node(node, bn_layer)
 

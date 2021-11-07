@@ -735,4 +735,3 @@ class HLSModel(object):
         os.chdir(curr_dir)
 
         return parse_vivado_report(self.config.get_output_dir())
-
