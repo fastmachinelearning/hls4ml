@@ -44,6 +44,32 @@ quit
     file rename -force $temp $filename
 }
 
+proc clean_script {} {
+    global myproject
+    set timestamp [clock format [clock seconds] -format {%Y%m%d%H%M%S}]
+
+    set filename ${myproject}_prj/solution1/sim/verilog/${myproject}_axi.tcl
+    set temp     $filename.new.$timestamp
+    # set backup   $filename.bak.$timestamp
+
+    set in  [open $filename r]
+    set out [open $temp     w]
+
+    # line-by-line, read the original file
+    while {[gets $in line] != -1} {
+        if {[string equal "$line" "log_wave -r /"]} {
+            set line { }
+        puts $out $line
+    }
+
+    close $in
+    close $out
+
+    # move the new data to the proper filename
+    file delete -force $filename
+    file rename -force $temp $filename
+}
+
 proc add_vcd_instructions_tcl {} {
     global myproject
     set timestamp [clock format [clock seconds] -format {%Y%m%d%H%M%S}]
@@ -189,28 +215,12 @@ if {$opt(cosim)} {
     puts "\[hls4ml\] - FIFO optimization started"
     add_vcd_instructions_tcl
   }
-  #else {
-  #  add_exit_instruction_tcl
-  #}
 
+  clean_script
   set old_pwd [pwd]
   cd ${myproject}_prj/solution1/sim/verilog/
   source run_sim.tcl
-  # source check_sim.tcl
   cd $old_pwd
-  # cosim_design -wave_debug -trace_level all -tool xsim
-
-  # if {$fifo_opt} {
-  #     puts "FIFO OPT"
-  #     cosim_design -trace_level all -setup
-  #     add_vcd_instructions_tcl
-  #     set old_pwd [pwd]
-  #     cd ${myproject}_prj/solution1/sim/verilog/
-  #     source run_sim.tcl
-  #     cd $old_pwd
-  # } else {
-  #     cosim_design -trace_level all
-  # }
 
   set time_end [clock clicks -milliseconds]
   puts "INFO:"
