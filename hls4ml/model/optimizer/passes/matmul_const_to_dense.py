@@ -15,11 +15,15 @@ class MatmulConstToDense(OptimizerPass):
         matmul_node = node
         const_node = None
         const_inp_idx = 0
+        other_inp_idx = 1
         if matmul_node.get_input_node(matmul_node.inputs[0]).__class__.__name__ == 'Constant':
             const_node = matmul_node.get_input_node(matmul_node.inputs[0])
+            other_node = matmul_node.get_input_node(matmul_node.inputs[1])
         else:
             const_node = matmul_node.get_input_node(matmul_node.inputs[1])
+            other_node = matmul_node.get_input_node(matmul_node.inputs[0])
             const_inp_idx = 1
+            other_inp_idx = 0
         
         #creating the attributes
         #TODO: what other attributes need to be set here?
@@ -29,13 +33,19 @@ class MatmulConstToDense(OptimizerPass):
         attributes = {
             'n_in': input_shape,
             'n_out': output_shape,
-            }
+            "weights_data": const_node.value,
+            "weights_precision": const_node.get_attr("quant_precision"), 
+            "weights_quantizer": const_node.get_attr("quantizer"),
+            "precision": other_node.get_attr("quant_precision"), 
+            "quantizer": other_node.get_attr("quantizer"),
+            "omit_bias": True
+        }
 
         #making new node
-        new_dense = model.make_node("Dense", matmul_node.name, attributes, mul_node.inputs.copy())
-        new_dense.weights['weight'] = const_node.weights['value']
-        
+        new_dense = model.make_node("Dense", f"Dense_{matmul_node.name}", attributes, [matmul_node.inputs[other_inp_idx]], matmul_node.outputs)
+
         #removing and replacing old nodes
+        model.remove_node(const_node, rewire=False)
         model.replace_node(matmul_node, new_dense)
 
         return True

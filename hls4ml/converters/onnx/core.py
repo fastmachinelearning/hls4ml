@@ -84,7 +84,8 @@ def parse_batchnorm_layer(reader, node, inputs_map, input_shapes, graph, config)
 
     layer = {}
 
-    layer['class_name'] = 'BaseBatchNormalization'
+    layer['class_name'] = 'BatchNormalization'
+    layer['simple'] = True   # ONNX uses the simpler parsing
     layer['name'] = node.name
     layer['inputs'] = node.input
     layer['outputs'] = node.output
@@ -92,6 +93,7 @@ def parse_batchnorm_layer(reader, node, inputs_map, input_shapes, graph, config)
     #Other attributes
     layer['epsilon'] = get_onnx_attribute(node, 'epsilon', 1e-05)
     # layer['momentum'] = get_onnx_attribute(node, 'momentum', 0.9)  # not used
+
 
     # reader.add_input(layer['name'], node.input)
 
@@ -101,8 +103,10 @@ def parse_batchnorm_layer(reader, node, inputs_map, input_shapes, graph, config)
 
     # layer['n_in'] = layer['n_out'] = in_size
 
-    # if len(input_shapes[0]) == 2:
-    #     layer['n_filt'] = -1
+    if len(input_shapes[0]) == 2:
+        layer['n_filt'] = -1
+    else:
+        raise RuntimeError("Don't yet support larger dimensions for ONNX BatchNormalization")
     # elif len(input_shapes[0]) > 2:
     #     layer['n_filt']= input_shapes[0][1] #Always channel first for onnx
 

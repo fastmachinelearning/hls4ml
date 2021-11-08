@@ -2,20 +2,20 @@ import numpy as np
 from hls4ml.model.optimizer import OptimizerPass
 
 class BatchNormConstantParameters(OptimizerPass):
-    """ Remove Constant from the BaseBatchNormalization node parameters (but not input[0]) """
+    """ Remove Constant from the BatchNormalization node parameters (but not input[0]) """
     def match(self, node):
-        is_match = (node.__class__.__name__ == 'BaseBatchNormalization'
+        is_match = (node.__class__.__name__ == 'BatchNormalization'
                     and any(node.inputs[1:]))
 
         return is_match
 
     def transform(self, model, node):
         """
-        Remove Constant from the BaseBatchNormalization node parameters (but not input[0])
+        Remove Constant from the BatchNormalization node parameters (but not input[0])
         """
 
         if not (len(node.inputs) == 5 and all(node.inputs)):
-            raise ValueError(f"All {len.node.inputs} BaseBatchNormalization inputs need to be defined")
+            raise ValueError(f"All {len.node.inputs} BatchNormalization inputs need to be defined")
         
         gamma_node = node.get_input_node(node.inputs[1])
         if gamma_node.__class__.__name__ != 'Constant':
@@ -60,10 +60,10 @@ class BatchNormConstantParameters(OptimizerPass):
 
 class ConstantBatchNormMerging(OptimizerPass):
     """
-    Merge BaseBatchNorm into Const (after parameters have already been merged in BaseBatchNormalization)
+    Merge BatchNorm into Const (after parameters have already been merged in BatchNormalization)
     """
     def match(self, node):
-        is_match = (node.__class__.__name__ == 'BaseBatchNormalization'
+        is_match = (node.__class__.__name__ == 'BatchNormalization'
                     and not any(node.inputs[1:])
                     and node.get_input_node(node.inputs[0]).__class__.__name__ == 'Constant')
 
@@ -94,15 +94,15 @@ class ConstantBatchNormMerging(OptimizerPass):
         return True
 
 
-class FuseConsecutiveBaseBatchNormalization(OptimizerPass):
+class FuseConsecutiveBatchNormalization(OptimizerPass):
     '''
-    OptimizerPass to merge consecutive BaseBatchNormalization layers,
+    OptimizerPass to merge consecutive BatchNormalization layers,
     only if the earlier one does not have quantization specified
     '''
 
     def match(self, node):
-        return (node.__class__.__name__ == 'BaseBatchNormalization'
-                and node.get_input_node(node.inputs[0]).__class__.__name__ == 'BaseBatcnNormalization'
+        return (node.__class__.__name__ == 'BatchNormalization'
+                and node.get_input_node(node.inputs[0]).__class__.__name__ == 'BatcnNormalization'
                 and not node.get_input_node(node.inputs[0]).get_attr("quant_precision"))
  
 
