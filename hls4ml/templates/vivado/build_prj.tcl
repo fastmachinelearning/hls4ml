@@ -58,8 +58,7 @@ proc add_vcd_instructions_tcl {} {
     # line-by-line, read the original file
     while {[gets $in line] != -1} {
         if {[string equal "$line" "log_wave -r /"]} {
-            set line {log_wave -r /
-current_scope /apatb_myproject_axi_top/AESL_inst_myproject_axi/myproject_U0
+            set line {current_scope /apatb_myproject_axi_top/AESL_inst_myproject_axi/myproject_U0
 set scopes [get_scopes -regexp {layer(\d*)_.*data_0_V_U.*}]
 current_scope /apatb_myproject_axi_top/AESL_inst_myproject_axi
 append scopes { }
