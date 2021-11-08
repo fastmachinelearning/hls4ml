@@ -31,8 +31,8 @@ except ImportError:
 
 def optimize_fifos_depth(model, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,
                          output_data_tb=None, backend='VivadoBackend', board=None, part=None, clock_period=5,
-                         io_type='io_stream', hls_config={}, init_large_fifo=True, reset=False, csim=True, synth=True,
-                         cosim=True, validation=True, export=True, vsynth=False, **kwargs,):
+                         io_type='io_stream', hls_config={}, init_large_fifo=True, reset=True, csim=True, synth=True,
+                         cosim=True, validation=True, export=True, vsynth=True, **kwargs,):
 
     values = []
 
