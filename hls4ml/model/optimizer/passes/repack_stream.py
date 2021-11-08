@@ -130,6 +130,11 @@ class RemoveFinalReshape(OptimizerPass):
         return node.__class__.__name__ == 'Reshape' and not node.get_output_nodes()
 
     def transform(self, model, node):
-        # remove, but don't rewire because it's the output layer
-        model.remove_node(node, rewire=False) 
-        return True
+        if model.config.get_config_value('IOType') == 'io_parallel':
+            print('WARNING: Final layer is a Reshape, which does not affect the output for io_parallel; removing it')
+            # remove, but don't rewire because it's the output layer
+            model.remove_node(node, rewire=False) 
+            return True
+        elif model.config.get_config_value('IOType') == 'io_stream':
+            print('WARNING: Final layer is a Reshape, which may incur a large resource cost for io_stream; consider removing it')
+        return False
