@@ -23,7 +23,10 @@ def parse_gemm_layer(reader, node, inputs_map, input_shapes, graph, config):
     return layer, output_shape
 
 #------------------Global paras for activations
-activation_layers = ['Relu', 'Tanh', 'Sigmoid', 'LeakyRelu', 'ThresholdedRelu', 'HardSigmoid', 'Elu', 'Selu', 'PRelu', 'Softmax', 'Softsign', 'Softplus', 'Clip']
+# TODO: repair HardSigmoid support
+# https://github.com/fastmachinelearning/hls4ml/issues/409 
+#activation_layers = ['Relu', 'Tanh', 'Sigmoid', 'LeakyRelu', 'ThresholdedRelu', 'HardSigmoid', 'Elu', 'Selu', 'PRelu', 'Softmax', 'Softsign', 'Softplus', 'Clip']
+activation_layers = ['Relu', 'Tanh', 'Sigmoid', 'LeakyRelu', 'ThresholdedRelu', 'Elu', 'Selu', 'PRelu', 'Softmax', 'Softsign', 'Softplus', 'Clip']
 
 activation_map = {'Relu':'ReLU', 'Tanh':'Activation',
                 'Sigmoid':'Activation', 'LeakyRelu':'LeakyReLU',

@@ -2,6 +2,8 @@ import numpy as np
 
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
 
+# TODO: propagate use_bias info properly
+# https://github.com/fastmachinelearning/hls4ml/issues/409 
 @pytorch_handler('Linear')
 def parse_linear_layer(pytorch_layer, layer_name, input_shapes, data_reader, config):
     assert('Linear' in pytorch_layer.__class__.__name__)
@@ -15,6 +17,7 @@ def parse_linear_layer(pytorch_layer, layer_name, input_shapes, data_reader, con
     layer['n_out'] = pytorch_layer.out_features
     
     #Handling whether bias is used or not
+    assert not pytorch_layer.bias is None, "PyTorch Linear with bias=False not yet supported"
     if pytorch_layer.bias is None:    
         layer['use_bias'] = False
     else:
@@ -24,8 +27,10 @@ def parse_linear_layer(pytorch_layer, layer_name, input_shapes, data_reader, con
     
     return layer, output_shape
 
-
-activation_layers = ['LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
+# TODO: propagate parametrized activation parameters
+# https://github.com/fastmachinelearning/hls4ml/issues/409 
+# activation_layers = ['LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
+activation_layers = ['Softmax', 'ReLU']
 @pytorch_handler(*activation_layers)
 def parse_activation_layer(pytorch_layer, layer_name, input_shapes, data_reader, config):
     
