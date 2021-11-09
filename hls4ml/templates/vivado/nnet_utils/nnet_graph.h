@@ -364,9 +364,9 @@ namespace nnet {
       }
     }*/
     if(CONFIG_T::aggr==aggr_sum){
-      for(int k=0; k < CONFIG_T::par_factor; k++){
-        #pragma HLS UNROLL
-        for(int i=0; i < CONFIG_T::n_node; i++){
+      for(int i=0; i < CONFIG_T::n_node; i++){
+        #pragma HLS UNROLL factor=CONFIG_T::par_factor
+        for(int k=0; k < CONFIG_T::par_factor; k++){
           #pragma HLS UNROLL
           for(int j=0; j<CONFIG_T::edge_dim; j++){
             #pragma HLS UNROLL
@@ -430,26 +430,41 @@ namespace nnet {
       receiver_col = 0;
     }
 
-    data_T node_attr_1D_mat[CONFIG_T::par_factor][CONFIG_T::n_node*CONFIG_T::node_dim];
+    data_T node_attr_1D_mat[CONFIG_T::par_factor][CONFIG_T::n_node][CONFIG_T::node_dim];
     #pragma HLS ARRAY_PARTITION variable=node_attr_1D_mat complete  dim=1
-    #pragma HLS ARRAY_PARTITION variable=node_attr_1D_mat cyclic factor=CONFIG_T::node_dim dim=2
-    for(int j=0;j<CONFIG_T::n_node;j=j+1)
+    #pragma HLS ARRAY_RESHAPE variable=node_attr_1D_mat cyclic factor=CONFIG_T::par_factor dim=2
+    #pragma HLS ARRAY_PARTITION variable=node_attr_1D_mat complete dim=3
+    //#pragma HLS RESOURCE variable=node_attr_1D_mat core=RAM_2P
+    replicate_loop:for(int j=0;j<CONFIG_T::n_node;j=j+1)
     {
       #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
       #pragma HLS UNROLL factor=CONFIG_T::par_factor
-      replicate_loop:for(int i=0;i<CONFIG_T::par_factor;i++)
+      for(int i=0;i<CONFIG_T::par_factor;i++)
       {
         #pragma HLS UNROLL
         for (int c=0; c < CONFIG_T::node_dim; c++){
           #pragma HLS UNROLL
-          node_attr_1D_mat[i][j*CONFIG_T::node_dim+c] = node_attr_1D[j*CONFIG_T::node_dim+c];
+          node_attr_1D_mat[i][j][c] = node_attr_1D[j*CONFIG_T::node_dim+c];
         }
       }
     }
-
+        /*
+    data_T node_attr_1D_r[CONFIG_T::n_edge*CONFIG_T::node_dim];
+    data_T node_attr_1D_s[CONFIG_T::n_edge*CONFIG_T::node_dim];
+    #pragma HLS ARRAY_PARTITION variable=node_attr_1D_r cyclic factor=CONFIG_T::node_dim*CONFIG_T::par_factor dim=1
+    #pragma HLS ARRAY_PARTITION variable=node_attr_1D_s cyclic factor=CONFIG_T::node_dim*CONFIG_T::par_factor dim=1
+    node_attr_collect_loop:for(int j=0;j<CONFIG_T::n_edge;j++){
+        #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+        #pragma HLS UNROLL factor=CONFIG_T::par_factor
+        for (int c=0; c < CONFIG_T::node_dim; c++){
+            #pragma HLS UNROLL
+            node_attr_1D_s[j*CONFIG_T::node_dim+c] = node_attr_1D_mat[j%CONFIG_T::par_factor][edge_index_1D[j*2+sender_col]][c];
+            node_attr_1D_r[j*CONFIG_T::node_dim+c] = node_attr_1D_mat[j%CONFIG_T::par_factor][edge_index_1D[j*2+receiver_col]][c];
+        }
+    }*/
     edge_loop_1: for(int i = 0; i < CONFIG_T::n_edge; i+=1) { //for each edge
-      #pragma HLS UNROLL factor=CONFIG_T::par_factor
       #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+      #pragma HLS UNROLL factor=CONFIG_T::par_factor
       data_T edge_attr[CONFIG_T::edge_dim];
       #pragma HLS ARRAY_PARTITION variable=edge_attr complete dim=0
       trans_loop_1: for (int c=0; c < CONFIG_T::edge_dim; c++){
@@ -462,24 +477,38 @@ namespace nnet {
       data_T node_attr_r[CONFIG_T::node_dim];
       #pragma HLS ARRAY_PARTITION variable=node_attr_r complete dim=0
 
-      trans_loop_3: for (int c=0; c < CONFIG_T::node_dim; c++){
-        #pragma HLS UNROLL
-        node_attr_r[c] = node_attr_1D_mat[i%CONFIG_T::par_factor][r*CONFIG_T::node_dim+c];
-      }
-
       data_T node_attr_s[CONFIG_T::node_dim];
       #pragma HLS ARRAY_PARTITION variable=node_attr_s complete dim=0
-      trans_loop_4: for (int c=0; c < CONFIG_T::node_dim; c++){
+      trans_loop_3: for (int c=0; c < CONFIG_T::node_dim; c++){
+        #pragma HLS UNROLL
+        node_attr_s[c] = node_attr_1D_mat[i%CONFIG_T::par_factor][s][c];
+        node_attr_r[c] = node_attr_1D_mat[i%CONFIG_T::par_factor][r][c];
+      }
+
+      /*trans_loop_4: for (int c=0; c < CONFIG_T::node_dim; c++){
         #pragma HLS UNROLL
         node_attr_s[c] = node_attr_1D_mat[i%CONFIG_T::par_factor][s*CONFIG_T::node_dim+c];
-      }
+      }*/
+
       // construct NN input: <receiver, sender, edge>
+      /*
       data_T node_concat[2*CONFIG_T::node_dim];
       #pragma HLS ARRAY_PARTITION variable=node_concat complete dim=0
       nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr_r, node_attr_s, node_concat);
       data_T phi_input[CONFIG_T::edge_dim + 2*CONFIG_T::node_dim];
       #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
-      nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config2>(node_concat, edge_attr, phi_input);
+      nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config2>(node_concat, edge_attr, phi_input);*/
+      data_T phi_input[CONFIG_T::edge_dim + 2*CONFIG_T::node_dim];
+      #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
+      for(int j=0; j<CONFIG_T::node_dim; j++){
+        #pragma HLS UNROLL
+        phi_input[j] = node_attr_r[j];
+        phi_input[CONFIG_T::node_dim+j] = node_attr_s[j];
+      }
+      for(int k=0; k<CONFIG_T::edge_dim; k++){
+        #pragma HLS UNROLL
+        phi_input[2*CONFIG_T::node_dim+k] = edge_attr[k];
+      }
       res_T edge_update[CONFIG_T::out_dim];
       #pragma HLS ARRAY_PARTITION variable=edge_update complete dim=0
       // send it through NN
