@@ -102,12 +102,12 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
 
     def match(self, node):
         return (node.__class__.__name__ == 'BatchNormalization'
-                and node.get_input_node(node.inputs[0]).__class__.__name__ == 'BatcnNormalization'
+                and node.get_input_node(node.inputs[0]).__class__.__name__ == 'BatchNormalization'
                 and not node.get_input_node(node.inputs[0]).get_attr("quant_precision"))
  
 
     def transform(self, model, node):
-        prev_node = node.get_input_node()
+        prev_node = node.get_input_node(node.inputs[0])
 
         s0 = prev_node.weights['scale'].data_unquantized
         b0 = prev_node.weights['bias'].data_unquantized

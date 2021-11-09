@@ -4,12 +4,20 @@ import numpy as np
 
 class ReplaceMultidimensionalDenseWithConv(OptimizerPass):
     def match(self, node):
-        return node.__class__.__name__ == 'Dense' and \
-            len(node.get_input_variable().shape) > 1
+        is_match = node.__class__.__name__ == 'Dense'
+        if is_match:
+            shape = node.get_input_variable().shape
+            if len(shape) > 1 and shape[0] == 1:
+                shape = shape[1:]
+            is_match = len(shape) > 1
+        return is_match
 
     def transform(self, model, node):
-        dim = len(node.get_input_variable().shape) - 1        
+        dim = len(node.get_input_variable().shape) - 1
         input_shape = node.get_input_variable().shape
+        if input_shape[0] == 1:
+            dim -= 1
+            input_shape = input_shape[1:]
 
         pointwise_attrs = {
             'data_format': 'channels_last',
@@ -51,5 +59,5 @@ class ReplaceMultidimensionalDenseWithConv(OptimizerPass):
             pw_node.weights['weight'].data = np.expand_dims(node.weights['weight'].data, axis=(0,1))
         pw_node.weights['bias'].data = node.weights['bias'].data
         model.replace_node(node, pw_node)
-        
+
         return True
