@@ -62,19 +62,19 @@ def single_layer_model_factory(layer):
         return None, None
 
 def onnx_act_model(layer):
-    inp = onnx.helper.make_tensor_value_info('x', onnx.TensorProto.DOUBLE, [*layer.data_shape])
-    out = onnx.helper.make_tensor_value_info('y', onnx.TensorProto.DOUBLE, [None for i in range(len(layer.data_shape))])
+    inp = onnx.helper.make_tensor_value_info('x', onnx.TensorProto.FLOAT, [*layer.data_shape])
+    out = onnx.helper.make_tensor_value_info('y', onnx.TensorProto.FLOAT, [None for i in range(len(layer.data_shape))])
     model = onnx.helper.make_model(onnx.helper.make_graph([layer.layer], layer.output_dir, [inp], [out]))
     return model
 
 def onnx_gemm_model(layer):
     assert isinstance(layer, LayerTestWrapper)
     wshape = (*layer.input_shape, *layer.output_shape)
-    w = onnx.helper.make_tensor('b', onnx.TensorProto.DOUBLE, wshape, rand_neg1topos1(*wshape).flatten())
-    b = onnx.helper.make_tensor('c', onnx.TensorProto.DOUBLE, layer.output_shape, rand_neg1topos1(*layer.output_shape).flatten()) 
+    w = onnx.helper.make_tensor('b', onnx.TensorProto.FLOAT, wshape, rand_neg1topos1(*wshape).flatten())
+    b = onnx.helper.make_tensor('c', onnx.TensorProto.FLOAT, layer.output_shape, rand_neg1topos1(*layer.output_shape).flatten()) 
     #node = onnx.helper.make_node('Gemm', inputs=['x', 'b', 'c'], outputs=['y'], name='gemm')
-    inp = onnx.helper.make_tensor_value_info('x', onnx.TensorProto.DOUBLE, [None,*layer.input_shape])
-    out = onnx.helper.make_tensor_value_info('y', onnx.TensorProto.DOUBLE, [None,None])
+    inp = onnx.helper.make_tensor_value_info('x', onnx.TensorProto.FLOAT, [None,*layer.input_shape])
+    out = onnx.helper.make_tensor_value_info('y', onnx.TensorProto.FLOAT, [None,None])
     graph = onnx.helper.make_graph([layer.layer], 'gemm', [inp], [out])
     graph.initializer.append(w)
     graph.initializer.append(b)
@@ -85,19 +85,30 @@ def onnx_gemm_model(layer):
 def onnx_matmul_model(layer):
     assert isinstance(layer, LayerTestWrapper)
     wshape = (*layer.input_shape, *layer.output_shape)
-    w = onnx.helper.make_tensor('b', onnx.TensorProto.DOUBLE, wshape, rand_neg1topos1(*wshape).flatten())
+    w = onnx.helper.make_tensor('b', onnx.TensorProto.FLOAT, wshape, rand_neg1topos1(*wshape).flatten())
     #node = onnx.helper.make_node('MatMul', inputs=['x', 'b'], outputs=['y'], name='matmul')
-    inp = onnx.helper.make_tensor_value_info('x', onnx.TensorProto.DOUBLE, [None,*layer.input_shape])
-    out = onnx.helper.make_tensor_value_info('y', onnx.TensorProto.DOUBLE, [None,None])
+    inp = onnx.helper.make_tensor_value_info('x', onnx.TensorProto.FLOAT, [None,*layer.input_shape])
+    out = onnx.helper.make_tensor_value_info('y', onnx.TensorProto.FLOAT, [None,None])
     graph = onnx.helper.make_graph([layer.layer], 'matmul', [inp], [out])
     graph.initializer.append(w)
     model = onnx.helper.make_model(graph)
     onnx.checker.check_model(model)
     return model
 
-onnx_model_makers = {'Relu' : onnx_act_model,
-                     'Gemm' : onnx_gemm_model,
-                     'MatMul' : onnx_matmul_model}
+onnx_model_makers = {'Relu'            : onnx_act_model,
+                     'Elu'             : onnx_act_model,
+                     'Selu'            : onnx_act_model,
+                     'PRelu'           : onnx_act_model,
+                     'ThresholdedRelu' : onnx_act_model,
+                     'LeakyRelu'       : onnx_act_model,
+                     'Tanh'            : onnx_act_model,
+                     'Sigmoid'         : onnx_act_model,
+                     'HardSigmoid'     : onnx_act_model,
+                     'Softmax'         : onnx_act_model,
+                     'Softplus'        : onnx_act_model,
+                     'Clip'            : onnx_act_model,
+                     'Gemm'            : onnx_gemm_model,
+                     'MatMul'          : onnx_matmul_model}
 
 def validate_model_predictions(model, hls_model, shape, fdata=np.random.rand, test=np.testing.assert_allclose, test_kwargs={'atol':1e-2, 'rtol':1e-2}):
     '''Generate random data with shape, execute inference on model and hls_model, and test for correctness'''
@@ -109,7 +120,7 @@ def validate_model_predictions(model, hls_model, shape, fdata=np.random.rand, te
         y_ref = model(torch.Tensor(X)).detach().numpy()
     elif isinstance(model, onnx.onnx_ml_pb2.ModelProto):
         session = onnxruntime.InferenceSession(f'{model.metadata_props[0].value}/model.onnx')
-        y_ref = session.run(['y'], {'x' : X})[0]
+        y_ref = session.run(['y'], {'x' : X.astype(np.float32)})[0]
     y_hls = hls_model.predict(X)
     # Reshape output for Conv models. Use the hls_model's shape for extra validation
     if len(y_ref.shape) > 2:
@@ -223,20 +234,31 @@ pytorch_layers = [(torch.nn.Linear(16, 16, bias=True), f'{odb}pytorch_linear', (
                   #(torch.nn.Linear(16, 16, bias=False), f'{odb}pytorch_linear', (16,), None, 100),                 
                   # Activations
                   (torch.nn.ReLU(), f'{odb}pytorch_relu', (16,), None, 100),
-                  (torch.nn.LeakyReLU(negative_slope=1.0), f'{odb}pytorch_activation_leakyrelu_1', (16,), None, 100),
+                  #(torch.nn.LeakyReLU(negative_slope=1.0), f'{odb}pytorch_activation_leakyrelu_1', (16,), None, 100),
                   #(torch.nn.LeakyReLU(negative_slope=0.5), f'{odb}pytorch_activation_leakyrelu_1', (16,), None, 100),
-                  (torch.nn.ELU(alpha=1.0), f'{odb}pytorch_activation_elu_1', (16,), None, 100),
+                  #(torch.nn.ELU(alpha=1.0), f'{odb}pytorch_activation_elu_1', (16,), None, 100),
                   #(torch.nn.ELU(alpha=0.5), f'{odb}pytorch_activation_elu_1', (16,), None, 100),                 
 ] # close pytorch_layers
 
 # TODO: find out why Gemm tests don't pass
 onnx_layers = [(onnx.helper.make_node('MatMul', inputs=['x', 'b'], outputs=['y'], name='matmul'), f'{odb}onnx_matmul_1', (16,), (16,), 100),
                (onnx.helper.make_node('MatMul', inputs=['x', 'b'], outputs=['y'], name='matmul'), f'{odb}onnx_matmul_2', (16,), (8,), 100),
-               (onnx.helper.make_node('MatMul', inputs=['x', 'b'], outputs=['y'], name='matmul'), f'{odb}onnx_matmul_2', (8,), (16,), 100),              
+               (onnx.helper.make_node('MatMul', inputs=['x', 'b'], outputs=['y'], name='matmul'), f'{odb}onnx_matmul_3', (8,), (16,), 100),              
                #(onnx.helper.make_node('Gemm', inputs=['x', 'b', 'c'], outputs=['y'], name='gemm'), f'{odb}onnx_gemm_1', (16,), (16,), 100),
                #(onnx.helper.make_node('Gemm', inputs=['x', 'b', 'c'], outputs=['y'], name='gemm'), f'{odb}onnx_gemm_2', (16,), (8,), 100),
                #(onnx.helper.make_node('Gemm', inputs=['x', 'b', 'c'], outputs=['y'], name='gemm'), f'{odb}onnx_gemm_3', (8,), (16,), 100),
-               (onnx.helper.make_node('Relu', inputs=['x'], outputs=['y'], name='relu'), f'{odb}onnx_relu', (1,), None, 100),
+               (onnx.helper.make_node('Relu', inputs=['x'], outputs=['y'], name='relu'), f'{odb}onnx_act_relu', (1,), None, 100),
+               (onnx.helper.make_node('Elu', inputs=['x'], outputs=['y'], name='elu', alpha=1.0), f'{odb}onnx_act_elu_1', (1,), None, 100),
+               (onnx.helper.make_node('Elu', inputs=['x'], outputs=['y'], name='elu', alpha=0.5), f'{odb}onnx_elu_2', (1,), None, 100),
+               (onnx.helper.make_node('LeakyRelu', inputs=['x'], outputs=['y'], name='leakyrelu', alpha=1.0), f'{odb}onnx_act_leakyrelu_1', (1,), None, 100),
+               (onnx.helper.make_node('LeakyRelu', inputs=['x'], outputs=['y'], name='leakyrelu', alpha=0.5), f'{odb}onnx_leakyrelu_2', (1,), None, 100),
+               (onnx.helper.make_node('ThresholdedRelu', inputs=['x'], outputs=['y'], name='thresholdedrelu', alpha=1.0), f'{odb}onnx_act_thresholdedrelu_1', (1,), None, 100),
+               (onnx.helper.make_node('ThresholdedRelu', inputs=['x'], outputs=['y'], name='thresholdedrelu', alpha=0.5), f'{odb}onnx_act_thresholdedrelu_2', (1,), None, 100),
+               (onnx.helper.make_node('Tanh', inputs=['x'], outputs=['y'], name='tanh'), f'{odb}onnx_act_tanh', (1,), None, 100),
+               (onnx.helper.make_node('Sigmoid', inputs=['x'], outputs=['y'], name='sigmoid'), f'{odb}onnx_act_sigmoid', (1,), None, 100),
+               #(onnx.helper.make_node('HardSigmoid', inputs=['x'], outputs=['y'], name='hardsigmoid'), f'{odb}onnx_act_hardsigmoid', (1,), None, 100),
+               (onnx.helper.make_node('Softplus', inputs=['x'], outputs=['y'], name='softplus'), f'{odb}onnx_act_softplus', (1,), None, 100),
+               #(onnx.helper.make_node('Clip', inputs=['x'], outputs=['y'], name='clip'), f'{odb}onnx_act_clip_1', (1,), None, 100),
 ] #close onnx_layers
 
 layers = [*keras_layers, *pytorch_layers, *onnx_layers]
