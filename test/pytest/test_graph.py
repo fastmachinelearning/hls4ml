@@ -1,6 +1,7 @@
 import hls4ml
 import numpy as np
 import pytest
+import tensorflow as tf
 
 class Reader:
     def get_weights_data(self, name, var):
@@ -107,3 +108,34 @@ def test_graph_branch(iotype, batch):
   y = model.predict([X0, X1]).reshape(y_expected.shape)
   # check the output
   np.testing.assert_allclose(y, y_expected, rtol=1, atol=2**-16)
+
+@pytest.mark.parametrize('iotype', ['io_parallel', 'io_stream'])
+def test_final_reshape(iotype):
+  ''' Test case for a model with a Reshape as the final layer '''
+  inputs = tf.keras.layers.Input(shape=(1,1,1)) # 1 input pixel
+  conv = tf.keras.layers.Conv2D(6,1) # 6 filters, 1x1 kernel
+  x = conv(inputs)
+  conv.set_weights([np.linspace(1,6,6).reshape(1,1,1,6), np.zeros(6)]) # ascending int weights, 0 bias
+  x = tf.keras.layers.Reshape((3,2))(x) # reshape the (1,1,6) output to (3,2)
+  model = tf.keras.models.Model(inputs=inputs, outputs=x)
+
+  # create the HLSModel
+  config = hls4ml.utils.config_from_keras_model(model, granularity='model')
+  hls_model = hls4ml.converters.convert_from_keras_model(model,
+                                                         output_dir=f'hls4mlprj_graph_final_reshape_{iotype}',
+                                                         backend='Vivado',
+                                                         io_type = iotype,
+                                                         hls_config=config)
+  hls_model.compile()
+
+  # Test on ascending integers. The weights mean that each output pixel/neuron has
+  # a different value
+  X = np.linspace(-4,4,9).reshape(9,1,1,1)
+  y = model.predict(X)
+  y_hls = hls_model.predict(X).reshape(y.shape)
+  # because of integer inputs and integer weights, we can expect exact matching
+  np.testing.assert_allclose(y, y_hls, rtol=0)
+
+
+
+
