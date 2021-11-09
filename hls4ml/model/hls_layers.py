@@ -217,7 +217,7 @@ class WeightVariable(Variable):
         self.data = data
         self.nzeros = -1
         self.shape = list(self.data.shape)
-        self.data_length = np.prod(self.data.shape)
+        self.data_length = np.prod(self.data.shape) if len(self.data.shape) > 0 else 1
         self.nonzeros = np.count_nonzero(self.data)
         self.nzeros = self.data_length - self.nonzeros
         self.min = np.min(self.data)
@@ -587,7 +587,7 @@ class Constant(Layer):
         self.value = value  # note, this is unquantized; Only here for easier access
         shape = value.shape
         dims = [f'{self.name}_{i}' for i in range(len(shape))]
-        self.add_output_variable(shape, dims, var_name=self.name, precision=self.get_attr("quant_precision")) 
+        self.add_output_variable(shape, dims, var_name=self.name, precision=self.get_attr("quant_precision"))
 
     def function_cpp(self):
         return None
@@ -649,7 +649,12 @@ class Dense(Layer):
         else:
             self.set_attr('strategy', 'latency')
         self.add_output_variable(shape, dims)
-        self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=compression)
+        weights_data = self.get_attr("weights_data")
+        if weights_data is not None:
+            self.add_weights_variable(name='weight', var_name='w{index}', data=weights_data,
+                                      precision=self.get_attr("weights_precision"), quantizer=self.get_attr("weights_quantizer"))
+        else:
+            self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=compression)
         index_t = IntegerPrecisionType(width=1, signed=False)
         if self.model.config.is_resource_strategy(self):
             if self.model.config.get_compression(self):
@@ -659,7 +664,11 @@ class Dense(Layer):
                     self.weights['weight'].data = np.transpose(self.weights['weight'].data)
 
         self.set_attr('index_t', index_t)
-        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+        if not self.get_attr("omit_bias"):
+            self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+        else:
+            self.add_weights_variable(name='bias', var_name='b{index}', data=np.array(0))
+            
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1420,7 +1429,7 @@ class TernaryTanh(Activation):
         super(TernaryTanh, self).initialize()
 
 
-class BaseBatchNormalization(Layer):
+class BatchNormalization(Layer):
     """
     This is the basic BatchNormalization layer that registers scale and bias only if they exist
     """
@@ -1430,13 +1439,26 @@ class BaseBatchNormalization(Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims, precision=self.get_attr("quant_precision"))  # note: default is None if quant_precision is not defined
 
-        scale = self.get_attr("scale")
-        if scale:
-            bias = self.get_attr("bias")  # bias must be defined if scale is
-            self.add_weights_variable(name='scale', data=scale, precision=self.get_attr("quant_precision"), quantizer=self.get_attr("quantizer"))
-            self.add_weights_variable(name='bias', data=bias, precision=self.get_attr("quant_precision"), quantizer=self.get_attr("quantizer"))
+        if self.get_attr("simple"):
+            # Ths simpler form, used by ONNX parsing
+            scale = self.get_attr("scale")
+            if scale:
+                bias = self.get_attr("bias")  # bias must be defined if scale is
+                self.add_weights_variable(name='scale', data=scale, precision=self.get_attr("quant_precision"), quantizer=self.get_attr("quantizer"))
+                self.add_weights_variable(name='bias', data=bias, precision=self.get_attr("quant_precision"), quantizer=self.get_attr("quantizer"))
+        else:
+            gamma = self.model.get_weights_data(self.name, 'gamma')
+            beta = self.model.get_weights_data(self.name, 'beta')
+            mean = self.model.get_weights_data(self.name, 'moving_mean')
+            var = self.model.get_weights_data(self.name, 'moving_variance')
 
- 
+            scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
+            bias = beta - gamma * mean / np.sqrt(var + self.get_attr('epsilon'))
+
+            self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
+            self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
+
+
     def function_cpp(self):
         params = self._default_function_params()
         params['scale'] = self.get_weights('scale').name
@@ -1449,25 +1471,11 @@ class BaseBatchNormalization(Layer):
         params['n_in'] = self.get_input_variable().size_cpp()
         params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('scale').type.precision)
 
+        if "n_filt" not in params:
+            params['n_filt'] = -1
+
         return self._config_template.format(**params)
 
-class BatchNormalization(BaseBatchNormalization):
-    def initialize(self):
-        inp = self.get_input_variable()
-        shape = inp.shape
-        dims = inp.dim_names
-        self.add_output_variable(shape, dims)
-
-        gamma = self.model.get_weights_data(self.name, 'gamma')
-        beta = self.model.get_weights_data(self.name, 'beta')
-        mean = self.model.get_weights_data(self.name, 'moving_mean')
-        var = self.model.get_weights_data(self.name, 'moving_variance')
-
-        scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
-        bias = beta - gamma * mean / np.sqrt(var + self.get_attr('epsilon'))
-
-        self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
-        self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
 
 class Merge(Layer):
     def initialize(self):
@@ -1970,7 +1978,6 @@ layer_map = {
     'SeparableConv1D'        : SeparableConv1D,
     'SeparableConv2D'        : SeparableConv2D,
     'DepthwiseConv2D'        : DepthwiseConv2D,
-    'BaseBatchNormalization' : BaseBatchNormalization,
     'BatchNormalization'     : BatchNormalization,
     'QBatchNormalization'    : BatchNormalization,
     'MaxPooling1D'           : Pooling1D,

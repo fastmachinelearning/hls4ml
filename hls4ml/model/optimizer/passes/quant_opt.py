@@ -45,7 +45,7 @@ class QuantConstantParameters(OptimizerPass):
 
 
 class QuantToBatchNorm(OptimizerPass):
-    """ Change Quant node to BaseBatchNormalization input[0]"""
+    """ Change Quant node to BatchNormalization input[0]"""
     def match(self, node):
         is_match = (node.__class__.__name__ == 'Quant'
                     and not node.get_input_node(node.inputs[1])
@@ -57,7 +57,7 @@ class QuantToBatchNorm(OptimizerPass):
 
     def transform(self, model, node):
         """
-        Change quant node to BaseBatchNormalization
+        Change quant node to BatchNormalization
         """
         bn_scale = 1/node.get_attr("scale")
         bn_bias = node.get_attr("zeropt")
@@ -86,8 +86,9 @@ class QuantToBatchNorm(OptimizerPass):
         bn_precision = FixedPrecisionType(bitwidth, bitwidth, node.get_attr("signed"), bn_round, bn_sat)
         bn_quantizer = QuantNodeQuantizer(bn_precision)
 
-        bn_layer = model.make_node("BaseBatchNormalization", f"bn_{node.name}",
-                                   {"scale": bn_scale, "bias": bn_bias, "quant_precision": bn_precision, "quantizer": bn_quantizer},
+        bn_layer = model.make_node("BatchNormalization", f"bn_{node.name}",
+                                   {"simple": True, "scale": bn_scale, "bias": bn_bias, 
+                                    "quant_precision": bn_precision, "quantizer": bn_quantizer},
                                    [node.inputs[0]], node.outputs)
         model.replace_node(node, bn_layer)
 

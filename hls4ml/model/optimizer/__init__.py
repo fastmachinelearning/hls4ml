@@ -17,8 +17,9 @@ from hls4ml.model.optimizer.passes.transpose_opt import RemoveUselessTranspose
 from hls4ml.model.optimizer.passes.multi_dense import ReplaceMultidimensionalDenseWithConv
 from hls4ml.model.optimizer.passes.reshape_const import ReshapeConstant
 from hls4ml.model.optimizer.passes.quant_opt import QuantConstantParameters, QuantToBatchNorm
-from hls4ml.model.optimizer.passes.batchnorm_opt import BatchNormConstantParameters, ConstantBatchNormMerging, FuseConsecutiveBaseBatchNormalization
-from hls4ml.model.optimizer.passes.merge_const import MergeTwoConstant, MergeToBaseBatchNormalization, MergeToBaseBatchNormalizationDiv
+from hls4ml.model.optimizer.passes.batchnorm_opt import BatchNormConstantParameters, ConstantBatchNormMerging, FuseConsecutiveBatchNormalization
+from hls4ml.model.optimizer.passes.merge_const import MergeTwoConstant, MergeToBatchNormalization, MergeToBatchNormalizationDiv
+from hls4ml.model.optimizer.passes.matmul_const_to_dense import MatmulConstToDense
 
 try:
     from hls4ml.model.optimizer.passes.qkeras import OutputRoundingSaturationMode
@@ -33,17 +34,18 @@ if __qkeras_optimizers__:
     register_pass('output_rounding_saturation_mode', OutputRoundingSaturationMode)
     register_pass('qkeras_factorize_alpha', QKerasFactorizeAlpha)
     register_pass('extract_ternary_threshold', ExtractTernaryThreshold)
-    register_pass('fuse_consecutive_batch_normalization', FuseConsecutiveBatchNormalization)
+    # register_pass('fuse_consecutive_batch_normalization', FuseConsecutiveBatchNormalization)
 
 register_pass('reshape_constant', ReshapeConstant)
 register_pass('quant_constant_params', QuantConstantParameters)
 register_pass('quant_to_batchnorm', QuantToBatchNorm)
 register_pass('batch_norm_constant_parameters', BatchNormConstantParameters)
-register_pass('fuse_consecutive_base_batch_normalizations', FuseConsecutiveBaseBatchNormalization)
+register_pass('fuse_consecutive_base_batch_normalizations', FuseConsecutiveBatchNormalization)
 register_pass('constant_batch_norm_fusion', ConstantBatchNormMerging)
 register_pass('merge_two_constants', MergeTwoConstant)
-register_pass('merge_to_batchnorm', MergeToBaseBatchNormalization)
-register_pass('merge_to_batchnorm_div', MergeToBaseBatchNormalizationDiv)
+register_pass('merge_to_batchnorm', MergeToBatchNormalization)
+register_pass('merge_to_batchnorm_div', MergeToBatchNormalizationDiv)
+register_pass('matmul_const_to_dense', MatmulConstToDense)
 register_pass('eliminate_linear_activation', EliminateLinearActivation)
 register_pass('merge_batch_norm_quantized_tanh', MergeBatchNormAndQuantizedTanh)
 register_pass('quantize_dense_output', QuantizeDenseOutput)

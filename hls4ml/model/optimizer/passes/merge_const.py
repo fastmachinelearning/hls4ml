@@ -58,8 +58,8 @@ class MergeTwoConstant(OptimizerPass):
 
         return True
 
-class MergeToBaseBatchNormalization(OptimizerPass):
-    """ Convert Add, Sub, Mul, or Div Merges with consant to BaseBatchNormalization """
+class MergeToBatchNormalization(OptimizerPass):
+    """ Convert Add, Sub, Mul, or Div Merges with consant to BatchNormalization """
     def match(self, node):
         is_match = (node.__class__.__name__ == 'Merge'
                     and node.attributes["op"] in ("add", "sum", "sub", "mul")  # Div is separate
@@ -94,8 +94,8 @@ class MergeToBaseBatchNormalization(OptimizerPass):
             scale = const_node.value
             bias = np.array(0)
 
-        bn_layer = model.make_node("BaseBatchNormalization", f"bn_{node.name}",
-                                   {"scale": scale, "bias": bias,
+        bn_layer = model.make_node("BatchNormalization", f"bn_{node.name}",
+                                   {"simple": True, "scale": scale, "bias": bias,
                                    "quant_precision": node.get_attr("quant_precision"), "quantizer": node.get_attr("quantizer")},
                                    [node.inputs[input_node_idx]], node.outputs)
 
@@ -104,8 +104,8 @@ class MergeToBaseBatchNormalization(OptimizerPass):
 
         return True
 
-class MergeToBaseBatchNormalizationDiv(OptimizerPass):
-    """ Convert Add, Sub, Mul, or Div Merges with consant to BaseBatchNormalization """
+class MergeToBatchNormalizationDiv(OptimizerPass):
+    """ Convert Add, Sub, Mul, or Div Merges with consant to BatchNormalization """
     def match(self, node):
         is_match = (node.__class__.__name__ == 'Merge'
                     and node.attributes["op"] == 'div'
@@ -118,8 +118,8 @@ class MergeToBaseBatchNormalizationDiv(OptimizerPass):
         scale = 1/const_node.value
         bias = np.array(0)
 
-        bn_layer = model.make_node("BaseBatchNormalization", f"bn_{node.name}",
-                                   {"scale": scale, "bias": bias,
+        bn_layer = model.make_node("BatchNormalization", f"bn_{node.name}",
+                                   {"simple": True, "scale": scale, "bias": bias,
                                    "quant_precision": node.get_attr("quant_precision"), "quantizer": node.get_attr("quantizer")},
                                    [node.inputs[0]], node.outputs)
 
