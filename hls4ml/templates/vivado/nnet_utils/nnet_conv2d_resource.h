@@ -154,20 +154,18 @@ void im2col_2d_cl(
     const int col)
 {
     int index = 0;
-    for (int channel = CONFIG_T::n_chan; channel--; data++) {
+    for (int kernel_row = 0; kernel_row < CONFIG_T::filt_height; kernel_row++) {
         #pragma HLS UNROLL
-        for (int kernel_row = 0; kernel_row < CONFIG_T::filt_height; kernel_row++) {
-            int input_row = -CONFIG_T::pad_top + kernel_row * CONFIG_T::dilation_height + row * CONFIG_T::stride_height;
-            for (int kernel_col = 0; kernel_col < CONFIG_T::filt_width; kernel_col++) {
+        int input_row = -CONFIG_T::pad_top + kernel_row * CONFIG_T::dilation_height + row * CONFIG_T::stride_height;
+        for (int kernel_col = 0; kernel_col < CONFIG_T::filt_width; kernel_col++) {
+            for (int channel = 0; channel < CONFIG_T::n_chan; channel++) {
                 if (input_row < 0 || input_row >= CONFIG_T::in_height) {
                     data_col[index++] = 0;
                 } else {
                     int input_col = -CONFIG_T::pad_left + kernel_col * CONFIG_T::dilation_width + col * CONFIG_T::stride_width;
                     if (input_col >= 0 && input_col < CONFIG_T::in_width) {
-                        //*(data_col++) = data[input_row * CONFIG_T::in_width * CONFIG_T::n_chan + input_col * CONFIG_T::n_chan];
-                        data_col[index++] = data[input_row * CONFIG_T::in_width * CONFIG_T::n_chan + input_col * CONFIG_T::n_chan];
+                        data_col[index++] = data[input_row * CONFIG_T::in_width * CONFIG_T::n_chan + input_col * CONFIG_T::n_chan + channel];
                     } else {
-                        //*(data_col++) = 0;
                         data_col[index++] = 0;
                     }
                 }
@@ -209,7 +207,6 @@ void conv_2d_resource_cl(
             FiltLoop:
             for (int k = 0; k < CONFIG_T::n_filt; k++) {
                 res[i * CONFIG_T::out_width * CONFIG_T::n_filt + j * CONFIG_T::n_filt + k] = res_col[k];
-                //res[k * CONFIG_T::out_height * CONFIG_T::out_width + i * CONFIG_T::out_width + j] = res_col[k]; // Transposed order
             }
         }
     }
