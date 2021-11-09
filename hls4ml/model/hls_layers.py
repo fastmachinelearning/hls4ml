@@ -632,7 +632,7 @@ class Reshape(Layer):
 class Dense(Layer):
     def initialize(self):
         shape = self.get_input_variable().shape[:]
-        shape[-1] = self.attributes['n_out']
+        #shape[-1] = self.attributes['n_out']
         if len(shape) > 1:
             dims = ['N_LAYER_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
         else:
