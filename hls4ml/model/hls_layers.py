@@ -648,11 +648,11 @@ class Dense(Layer):
                 self.set_attr('strategy', 'resource')
         else:
             self.set_attr('strategy', 'latency')
-        self.add_output_variable(shape, dims)
-        weights_data = self.get_attr("weights_data")
+        self.add_output_variable(shape, dims, precision=self.get_attr("quant_precision"))
+        weights_data = self.get_attr("weight_data")
         if weights_data is not None:
             self.add_weights_variable(name='weight', var_name='w{index}', data=weights_data,
-                                      precision=self.get_attr("weights_precision"), quantizer=self.get_attr("weights_quantizer"))
+                                      precision=self.get_attr("weight_precision"), quantizer=self.get_attr("weight_quantizer"))
         else:
             self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=compression)
         index_t = IntegerPrecisionType(width=1, signed=False)
@@ -1444,8 +1444,8 @@ class BatchNormalization(Layer):
             scale = self.get_attr("scale")
             if scale:
                 bias = self.get_attr("bias")  # bias must be defined if scale is
-                self.add_weights_variable(name='scale', data=scale, precision=self.get_attr("quant_precision"), quantizer=self.get_attr("quantizer"))
-                self.add_weights_variable(name='bias', data=bias, precision=self.get_attr("quant_precision"), quantizer=self.get_attr("quantizer"))
+                self.add_weights_variable(name='scale', data=scale, precision=self.get_attr("weight_precision"), quantizer=self.get_attr("weight_quantizer"))
+                self.add_weights_variable(name='bias', data=bias, precision=self.get_attr("weight_precision"), quantizer=self.get_attr("weight_quantizer"))
         else:
             gamma = self.model.get_weights_data(self.name, 'gamma')
             beta = self.model.get_weights_data(self.name, 'beta')

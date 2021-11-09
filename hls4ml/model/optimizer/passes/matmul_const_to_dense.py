@@ -27,9 +27,9 @@ class MatmulConstToDense(OptimizerPass):
 
         #creating the attributes
         attributes = {
-            "weights_data": const_node.value,
-            "weights_precision": const_node.get_attr("quant_precision"),
-            "weights_quantizer": const_node.get_attr("quantizer"),
+            "weight_data": const_node.value,
+            "weight_precision": const_node.get_attr("quant_precision"),
+            "weight_quantizer": const_node.get_attr("quantizer"),
             "precision": other_node.get_attr("quant_precision"),
             "quantizer": other_node.get_attr("quantizer"),
             "omit_bias": True

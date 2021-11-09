@@ -52,8 +52,8 @@ class BatchNormConstantParameters(OptimizerPass):
         scale = gamma / np.sqrt(moving_variance + node.get_attr('epsilon'))
         bias = beta - gamma * moving_mean / np.sqrt(moving_variance + node.get_attr('epsilon'))
 
-        node.add_weights_variable("scale", data=scale, precision=node.get_attr("quant_precision"), quantizer=node.get_attr("quantizer"))
-        node.add_weights_variable("bias", data=bias, precision=node.get_attr("quant_precision"), quantizer=node.get_attr("quantizer"))
+        node.add_weights_variable("scale", data=scale, precision=node.get_attr("weight_precision"), quantizer=node.get_attr("weight_quantizer"))
+        node.add_weights_variable("bias", data=bias, precision=node.get_attr("weight_precision"), quantizer=node.get_attr("weight_quantizer"))
 
         return True
 
@@ -118,8 +118,8 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
         bias_new = s1 * b0 + b1
 
         # call function so that quantizer would be called if needed
-        node.add_weights_variable(name='scale', data=scale_new, precision=node.get_attr("quant_precision"), quantizer=node.get_attr("quantizer"))
-        node.add_weights_variable(name='bias', data=bias_new, precision=node.get_attr("quant_precision"), quantizer=node.get_attr("quantizer"))
+        node.add_weights_variable(name='scale', data=scale_new, precision=node.get_attr("weight_precision"), quantizer=node.get_attr("weight_quantizer"))
+        node.add_weights_variable(name='bias', data=bias_new, precision=node.get_attr("weight_precision"), quantizer=node.get_attr("weight_quantizer"))
  
         model.remove_node(prev_node, rewire=True)
         return True
