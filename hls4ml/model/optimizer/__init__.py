@@ -12,7 +12,7 @@ from hls4ml.model.optimizer.passes.conv_same_pad import InsertZeroPaddingBeforeC
 from hls4ml.model.optimizer.passes.conv_same_pad import InsertZeroPaddingBeforeConv2D
 from hls4ml.model.optimizer.passes.pointwise import OptimizePointwiseConv
 from hls4ml.model.optimizer.passes.clone import CloneOutput
-from hls4ml.model.optimizer.passes.repack_stream import ReshapeStream, BroadcastStream
+from hls4ml.model.optimizer.passes.repack_stream import ReshapeStream, BroadcastStream, RemoveFinalReshape
 from hls4ml.model.optimizer.passes.transpose_opt import RemoveUselessTranspose
 from hls4ml.model.optimizer.passes.multi_dense import ReplaceMultidimensionalDenseWithConv
 
@@ -40,6 +40,7 @@ register_pass('conv1d_same_pad', InsertZeroPaddingBeforeConv1D)
 register_pass('conv2d_same_pad', InsertZeroPaddingBeforeConv2D)
 register_pass('optimize_pointwise_conv', OptimizePointwiseConv)
 register_pass('clone_output', CloneOutput)
+register_pass('remove_final_reshape', RemoveFinalReshape)
 register_pass('reshape_stream', ReshapeStream)
 register_pass('remove_useless_transpose', RemoveUselessTranspose)
 register_pass('replace_multidense_conv', ReplaceMultidimensionalDenseWithConv)
