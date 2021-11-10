@@ -63,17 +63,19 @@ register_layer('Repack', Repack)
 register_layer('Broadcast', Broadcast)
 
 # Register the templates for config and function
-templates.get_backend('Vivado').register_templates('Repack', repack_function_template, None, repack_include_list)
-templates.get_backend('Vivado').register_templates('Broadcast', broadcast_function_template, broadcast_config_template, broadcast_include_list)
+for backend in ['Vivado', 'VivadoAccelerator']:
+    templates.get_backend(backend).register_templates('Repack', repack_function_template, None, repack_include_list)
+    templates.get_backend(backend).register_templates('Broadcast', broadcast_function_template, broadcast_config_template, broadcast_include_list)
 
 
 class ReshapeStream(OptimizerPass):
     ''' Repacks stream for Reshape layer '''
     def match(self, node):
-        return node.__class__.__name__ == 'Reshape'
+        # do not run optimizer pass for a flatten layer (1 output dimension)
+        return node.__class__.__name__ == 'Reshape' and len(node.get_output_variable().shape) > 1
 
     def transform(self, model, node):
-        if model.config.backend.name != 'Vivado' or \
+        if model.config.backend.name not in ['Vivado', 'VivadoAccelerator'] or \
             model.config.get_config_value('IOType') != 'io_stream':
             return False
 
@@ -113,8 +115,26 @@ class BroadcastStream(OptimizerPass):
             attrs = {
                 'target_shape': inp2.shape
             }
-        brdcst_layer = model.make_node('Broadcast', 'broadcast_' + node.inputs[idx], attrs, [node.inputs[idx]].copy())
+        brdcst_inp = node.inputs[idx]
+        brdcst_out = 'broadcast_' + brdcst_inp
+        brdcst_layer = model.make_node('Broadcast', brdcst_out, attrs, [brdcst_inp].copy())
         model.insert_node(brdcst_layer)
-        node.inputs[idx] = 'broadcast_' + node.inputs[idx]
+        node.inputs[idx] = brdcst_out
 
         return True
+
+class RemoveFinalReshape(OptimizerPass):
+    ''' Remove reshape if final layer '''
+    def match(self, node):
+        # match if reshape is final node
+        return node.__class__.__name__ == 'Reshape' and not node.get_output_nodes()
+
+    def transform(self, model, node):
+        if model.config.get_config_value('IOType') == 'io_parallel':
+            print('WARNING: Final layer is a Reshape, which does not affect the output for io_parallel; removing it')
+            # remove, but don't rewire because it's the output layer
+            model.remove_node(node, rewire=False) 
+            return True
+        elif model.config.get_config_value('IOType') == 'io_stream':
+            print('WARNING: Final layer is a Reshape, which may incur a large resource cost for io_stream; consider removing it')
+        return False

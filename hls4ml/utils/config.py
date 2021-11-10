@@ -1,22 +1,25 @@
 from __future__ import print_function
-import numpy as np
-import h5py
 import json
-import math
-from collections import OrderedDict
 
-def create_vivado_config(output_dir='my-hls-test', project_name='myproject',
-    fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel'):
-    
+import hls4ml
+
+
+def create_config(output_dir='my-hls-test', project_name='myproject',
+    backend='Vivado', **kwargs):
+
+    backend_list = hls4ml.templates.get_available_backends()
+    if backend not in backend_list:
+        raise Exception('Unknown backend: {}'.format(backend))
+
+    backend = hls4ml.templates.get_backend(backend)
+
+    backend_config = backend.create_initial_config(**kwargs)
+
     config = {}
-    
     config['OutputDir'] = output_dir
     config['ProjectName'] = project_name
-    config['XilinxPart'] = fpga_part
-    config['ClockPeriod'] = clock_period
-    config['Backend'] = 'Vivado'
-    config['IOType'] = io_type
-    config['HLSConfig'] = {}
+    config['Backend'] = backend.name
+    config.update(backend_config)
 
     return config
 
@@ -93,7 +96,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     else:
         model_arch = json.loads(model.to_json())
 
-    #Define supported laers
+    #Define supported layers
     core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Reshape', 'Permute']
     dense_layers = ['Dense', 'BinaryDense', 'TernaryDense']
     conv_layers = ['Conv1D', 'Conv2D', 'BinaryConv2D']
@@ -102,8 +105,8 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
     merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate', 'Dot']
     qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D', 'QBatchNormalization', 'QConv2DBatchnorm']
-    #Define layers to skip for conversion to HLS
-    skip_layers = ['Dropout', 'Flatten']
+    #Define layers to skip because they're not configurable or not converted to HLS
+    skip_layers = ['Dropout', 'Flatten', 'Reshape', 'Permute']
     #All supported layers
     supported_layers = core_layers + dense_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + skip_layers
 
