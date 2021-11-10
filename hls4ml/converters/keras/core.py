@@ -121,3 +121,19 @@ def parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader, c
         layer['n_filt']=input_shapes[0][3]
 
     return layer, [shape for shape in input_shapes[0]]
+
+embedding_layers = ['Embedding']
+@keras_handler(*embedding_layers)
+def parse_dense_layer(keras_layer, input_names, input_shapes, data_reader, config):
+    assert('Embedding' in keras_layer['class_name'])
+
+    layer = parse_default_keras_layer(keras_layer, input_names)
+    
+    weights_shape = data_reader.get_weights_shape(layer['name'], 'embeddings')
+    layer['n_in'] = input_shapes[0][1]
+    layer['vocab_size'] = weights_shape[0]
+    layer['n_out'] = weights_shape[1]
+    layer['weight_quantizer'] = None
+    output_shape = input_shapes[0]+[layer['n_out']]
+
+    return layer, output_shape

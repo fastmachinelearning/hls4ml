@@ -1849,6 +1849,34 @@ class GarNetStack(GarNet):
 
         params['sublayer_configs'] = '\n'.join(sublayer_configs)
 
+class Embedding(Layer):
+    def initialize(self):
+        shape = self.get_input_variable().shape[:]
+        shape += [self.attributes['n_out']]
+        if len(shape) > 1:
+            dims = ['N_LAYER_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+        else:
+            dims = ['N_LAYER_{}'.format(self.index)]
+        self.add_output_variable(shape, dims)
+
+        data = self.model.get_weights_data(self.name, 'embeddings')
+        self.add_weights_variable(name='embeddings', var_name='w{index}', data=data, quantizer=self.get_attr('weight_quantizer'))
+
+    def function_cpp(self):
+        params = self._default_function_params()
+        params['w'] = self.get_weights('embeddings').name
+
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+        params['n_in'] = self.get_input_variable().size_cpp()
+        params['n_out'] = self.attributes['n_out']
+        params['vocab_size'] = self.attributes['vocab_size']
+        params['weight_t'] = self.get_weights('embeddings').type.name
+
+        return self._config_template.format(**params)
+
 layer_map = {
     'Input'                  : Input,
     'InputLayer'             : Input,
@@ -1894,6 +1922,7 @@ layer_map = {
     'Transpose'              : Transpose,
     'GarNet'                 : GarNet,
     'GarNetStack'            : GarNetStack,
+    'Embedding'              : Embedding,
     # TensorFlow-specific layers:
     'BiasAdd'                : BiasAdd,
 }
