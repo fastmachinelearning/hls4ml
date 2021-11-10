@@ -122,9 +122,8 @@ def parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader, c
 
     return layer, [shape for shape in input_shapes[0]]
 
-embedding_layers = ['Embedding']
-@keras_handler(*embedding_layers)
-def parse_dense_layer(keras_layer, input_names, input_shapes, data_reader, config):
+@keras_handler('Embedding')
+def parse_embedding_layer(keras_layer, input_names, input_shapes, data_reader, config):
     assert('Embedding' in keras_layer['class_name'])
 
     layer = parse_default_keras_layer(keras_layer, input_names)
