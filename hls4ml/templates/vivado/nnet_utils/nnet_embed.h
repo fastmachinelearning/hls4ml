@@ -33,11 +33,30 @@ struct embed_config
    for (int j = 0; j < CONFIG_T::n_in; j++) {
      for (int i = 0; i < CONFIG_T::n_out; i++) {
        #pragma HLS UNROLL
-       res[j * CONFIG_T::n_out + i] = (res_T) weights[data[j] * CONFIG_T::n_out + i];
+       res[j * CONFIG_T::n_out + i] = weights[data[j] * CONFIG_T::n_out + i];
      }
    }
  }
 
+ template<class data_T, class res_T, typename CONFIG_T>
+   void embedding(
+	      hls::stream<data_T> &data,
+	      hls::stream<res_T>  &res,
+	      typename CONFIG_T::weight_t  weights[CONFIG_T::vocab_size*CONFIG_T::n_out])
+ {
+   // copy over the corresponding row in the weights lookup table
+   data_T in_data = data.read();
+   res_T res_pack;
+   #pragma HLS PIPELINE
+   #pragma HLS DATA_PACK variable=res_pack
+   for (int j = 0; j < data_T::size; j++) {
+     for (int i = 0; i < CONFIG_T::n_out; i++) {
+       #pragma HLS UNROLL
+       res_pack[i] = weights[in_data[j] * CONFIG_T::n_out + i];
+     }
+     res.write(res_pack);
+   }
+ }
 }
 
 #endif
