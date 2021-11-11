@@ -1384,6 +1384,9 @@ class Softmax(Activation):
                 self.set_attr('implementation', 'latency')
             else:
                 self.set_attr('implementation', self.model.config.get_strategy(self).lower())
+            
+            if self.model.config.get_config_value('IOType') == 'io_parallel':
+                assert len(self.get_input_variable().shape) == 1, 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
 
 class TernaryTanh(Activation):
     def initialize(self):
