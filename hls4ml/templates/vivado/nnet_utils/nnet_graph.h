@@ -301,9 +301,12 @@ namespace nnet {
     if(CONFIG_T::aggr==aggr_max){
       ap_uint<1> edge_aggr_mask_mat[CONFIG_T::par_factor][CONFIG_T::n_node];
       #pragma HLS ARRAY_PARTITION variable=edge_aggr_mask_mat complete dim=0
+      ap_uint<1> edge_aggr_mask[CONFIG_T::n_node];
+      #pragma HLS ARRAY_PARTITION variable=edge_aggr_mask complete dim=0
 
-      for(int i=0;i<CONFIG_T::n_node;i++){
+      mask_reset:for(int i=0;i<CONFIG_T::n_node;i++){
         #pragma HLS UNROLL
+        edge_aggr_mask[i]=0;
         for(int k=0; k < CONFIG_T::par_factor; k++){
           #pragma HLS UNROLL
           edge_aggr_mask_mat[k][i]=0;
@@ -311,7 +314,7 @@ namespace nnet {
       }
 
       res_T most_negative_num = -hls::numeric_limits<res_T>::max();
-      for(int i=0; i < CONFIG_T::n_node; i++){
+      edge_attr_aggr_reset:for(int i=0; i < CONFIG_T::n_node; i++){
         #pragma HLS UNROLL factor=CONFIG_T::par_factor
         for(int k=0; k < CONFIG_T::par_factor; k++){
           #pragma HLS UNROLL
@@ -322,7 +325,7 @@ namespace nnet {
         }
       }
 
-      for(int i=0; i < CONFIG_T::n_edge; i++){
+      compute:for(int i=0; i < CONFIG_T::n_edge; i++){
         #pragma HLS UNROLL factor=CONFIG_T::par_factor
         #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
         index_T r = edge_index_1D[i*2+receiver_col];
@@ -333,32 +336,32 @@ namespace nnet {
         }
       }
 
-      for(int i=0; i < CONFIG_T::n_node; i++){
-        #pragma HLS UNROLL factor=CONFIG_T::par_factor
-        #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
-        for(int j=0; j<CONFIG_T::edge_dim; j++){
-          #pragma HLS UNROLL
-          for(int k=0; k < CONFIG_T::par_factor; k++){
-            #pragma HLS UNROLL
-            edge_attr_aggr[k%CONFIG_T::par_factor][i][j] = edge_aggr_mask_mat[k%CONFIG_T::par_factor][i]*edge_attr_aggr[k%CONFIG_T::par_factor][i][j];
-          }
-        }
-      }
-
-      for (int r=0; r < CONFIG_T::n_node; r++){
+      combine:for (int i=0; i < CONFIG_T::n_node; i++){
         #pragma HLS UNROLL factor=CONFIG_T::par_factor
         #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
         for (int k=0; k<CONFIG_T::par_factor; k++){
           #pragma HLS UNROLL
-          for (int c=0; c<CONFIG_T::edge_dim; c++){
+          for (int j=0; j<CONFIG_T::edge_dim; j++){
             #pragma HLS UNROLL
             if(k==0){
-              edge_attr_aggr_1D[r*CONFIG_T::edge_dim+c]=edge_attr_aggr[k][r][c];
+              edge_attr_aggr_1D[i*CONFIG_T::edge_dim+j]=edge_attr_aggr[k][i][j];
             }
             else{
-              edge_attr_aggr_1D[r*CONFIG_T::edge_dim+c]+=edge_attr_aggr[k][r][c];
+              edge_attr_aggr_1D[i*CONFIG_T::edge_dim+j] = edge_attr_aggr_1D[i*CONFIG_T::edge_dim+j] > edge_attr_aggr[k][i][j] ? edge_attr_aggr_1D[i*CONFIG_T::edge_dim+j] : edge_attr_aggr[k][i][j];
             }
           }
+          if(edge_aggr_mask[i]==0){
+            edge_aggr_mask[i]=edge_aggr_mask_mat[k][i];
+          }
+        }
+      }
+
+      masking:for(int i=0; i < CONFIG_T::n_node; i++){
+        #pragma HLS UNROLL factor=CONFIG_T::par_factor
+        #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+        for(int j=0; j<CONFIG_T::edge_dim; j++){
+            #pragma HLS UNROLL
+            edge_attr_aggr_1D[i*CONFIG_T::edge_dim+j] = edge_aggr_mask[i]*edge_attr_aggr_1D[i*CONFIG_T::edge_dim+j];
         }
       }
 
@@ -511,7 +514,6 @@ namespace nnet {
     #pragma HLS ARRAY_PARTITION variable=node_attr_1D_mat complete  dim=1
     #pragma HLS ARRAY_RESHAPE variable=node_attr_1D_mat cyclic factor=CONFIG_T::par_factor dim=2
     #pragma HLS ARRAY_PARTITION variable=node_attr_1D_mat complete dim=3
-    //#pragma HLS RESOURCE variable=node_attr_1D_mat core=RAM_2P
     replicate_loop:for(int j=0;j<CONFIG_T::n_node;j=j+1)
     {
       #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
@@ -525,20 +527,7 @@ namespace nnet {
         }
       }
     }
-    /*
-    data_T node_attr_1D_r[CONFIG_T::n_edge*CONFIG_T::node_dim];
-    data_T node_attr_1D_s[CONFIG_T::n_edge*CONFIG_T::node_dim];
-    #pragma HLS ARRAY_PARTITION variable=node_attr_1D_r cyclic factor=CONFIG_T::node_dim*CONFIG_T::par_factor dim=1
-    #pragma HLS ARRAY_PARTITION variable=node_attr_1D_s cyclic factor=CONFIG_T::node_dim*CONFIG_T::par_factor dim=1
-    node_attr_collect_loop:for(int j=0;j<CONFIG_T::n_edge;j++){
-        #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
-        #pragma HLS UNROLL factor=CONFIG_T::par_factor
-        for (int c=0; c < CONFIG_T::node_dim; c++){
-            #pragma HLS UNROLL
-            node_attr_1D_s[j*CONFIG_T::node_dim+c] = node_attr_1D_mat[j%CONFIG_T::par_factor][edge_index_1D[j*2+sender_col]][c];
-            node_attr_1D_r[j*CONFIG_T::node_dim+c] = node_attr_1D_mat[j%CONFIG_T::par_factor][edge_index_1D[j*2+receiver_col]][c];
-        }
-    }*/
+
     edge_loop_1: for(int i = 0; i < CONFIG_T::n_edge; i+=1) { //for each edge
       #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
       #pragma HLS UNROLL factor=CONFIG_T::par_factor
@@ -562,18 +551,6 @@ namespace nnet {
         node_attr_r[c] = node_attr_1D_mat[i%CONFIG_T::par_factor][r][c];
       }
 
-      /*trans_loop_4: for (int c=0; c < CONFIG_T::node_dim; c++){
-        #pragma HLS UNROLL
-        node_attr_s[c] = node_attr_1D_mat[i%CONFIG_T::par_factor][s*CONFIG_T::node_dim+c];
-      }*/
-      // construct NN input: <receiver, sender, edge>
-      /*
-      data_T node_concat[2*CONFIG_T::node_dim];
-      #pragma HLS ARRAY_PARTITION variable=node_concat complete dim=0
-      nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr_r, node_attr_s, node_concat);
-      data_T phi_input[CONFIG_T::edge_dim + 2*CONFIG_T::node_dim];
-      #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
-      nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config2>(node_concat, edge_attr, phi_input);*/
       data_T phi_input[CONFIG_T::edge_dim + 2*CONFIG_T::node_dim];
       #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
       for(int j=0; j<CONFIG_T::node_dim; j++){
