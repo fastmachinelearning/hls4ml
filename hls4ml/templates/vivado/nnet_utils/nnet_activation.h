@@ -243,11 +243,11 @@ void softmax_latency(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
 
     // Calculate all the e^x's
     typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
-	#pragma HLS array_partition variable=exp_res complete
+    #pragma HLS array_partition variable=exp_res complete
     typename CONFIG_T::exp_table_t exp_sum(0);
     for(unsigned i = 0; i < CONFIG_T::n_in; i++){
         #pragma HLS unroll
-    	unsigned x = softmax_idx_from_real_val<data_T, CONFIG_T>(data[i]);
+        unsigned x = softmax_idx_from_real_val<data_T, CONFIG_T>(data[i]);
         exp_res[i] = exp_table[x];
     }
 
@@ -298,11 +298,11 @@ void softmax_stable(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
 
     // Calculate all the e^x's
     typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
-	#pragma HLS array_partition variable=exp_res complete
+    #pragma HLS array_partition variable=exp_res complete
     typename CONFIG_T::exp_table_t exp_sum(0);
     for(unsigned i = 0; i < CONFIG_T::n_in; i++){
         #pragma HLS unroll
-    	unsigned x = softmax_idx_from_real_val<data_T, CONFIG_T>(d_xi_xmax[i]);
+        unsigned x = softmax_idx_from_real_val<data_T, CONFIG_T>(d_xi_xmax[i]);
         exp_res[i] = exp_table[x];
     }
 
@@ -337,11 +337,11 @@ void init_invert_table_legacy(typename CONFIG_T::table_t table_out[N_TABLE])
     // Inversion function:
     //   result = 1/x
     for (int ii = 0; ii < N_TABLE; ii++) {
-      // First, convert from table index to X-value (signed 8-bit, range 0 to +64)
-	float in_val = 64.0*ii/float(N_TABLE);
+        // First, convert from table index to X-value (signed 8-bit, range 0 to +64)
+        float in_val = 64.0*ii/float(N_TABLE);
         // Next, compute lookup table function
-	if (in_val > 0.0) table_out[ii] = 1.0/in_val;
-	else table_out[ii] = 0.0;
+        if (in_val > 0.0) table_out[ii] = 1.0/in_val;
+        else table_out[ii] = 0.0;
     }
 }
 
@@ -376,33 +376,34 @@ void  softmax_legacy(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     int data_round;
     int index;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-      data_cache[ii] = data[ii];
-      exp_res[ii] = 0;
+        data_cache[ii] = data[ii];
+        exp_res[ii] = 0;
     }
+
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-      if (CONFIG_T::io_type == io_serial){
-          #pragma HLS PIPELINE
-      }
-      for (int jj=0; jj<CONFIG_T::n_in; jj++) {
-	if (ii==jj) exp_diff_res = 1;
-	else {
-	  data_round = (data_cache[jj]-data_cache[ii])*CONFIG_T::table_size/16;
-	  index = data_round + 8*CONFIG_T::table_size/16;
-	  if (index < 0)   index = 0;
-	  if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
-	  exp_diff_res = exp_table[index];
-	}
-	exp_res[ii] += exp_diff_res;
-      }
+        if (CONFIG_T::io_type == io_serial) {
+            #pragma HLS PIPELINE
+        }
+        for (int jj=0; jj<CONFIG_T::n_in; jj++) {
+            if (ii==jj) exp_diff_res = 1;
+            else {
+                data_round = (data_cache[jj]-data_cache[ii])*CONFIG_T::table_size/16;
+                index = data_round + 8*CONFIG_T::table_size/16;
+                if (index < 0)   index = 0;
+                if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+                exp_diff_res = exp_table[index];
+            }
+            exp_res[ii] += exp_diff_res;
+        }
     }
 
     //Second loop to invert
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-      int exp_res_index = exp_res[ii]*CONFIG_T::table_size/64;
-      if (exp_res_index < 0)   exp_res_index = 0;
-      if (exp_res_index > CONFIG_T::table_size-1) exp_res_index = CONFIG_T::table_size-1;
-      //typename CONFIG_T::table_t exp_res_invert = invert_table[exp_res_index];
-      res[ii] = (res_T) invert_table[exp_res_index];
+        int exp_res_index = exp_res[ii]*CONFIG_T::table_size/64;
+        if (exp_res_index < 0)   exp_res_index = 0;
+        if (exp_res_index > CONFIG_T::table_size-1) exp_res_index = CONFIG_T::table_size-1;
+        //typename CONFIG_T::table_t exp_res_invert = invert_table[exp_res_index];
+        res[ii] = (res_T) invert_table[exp_res_index];
     }
 
 }
@@ -420,7 +421,7 @@ void softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
     case softmax_implementation::legacy:
         softmax_legacy<data_T, res_T, CONFIG_T>(data, res);
         break;
-    }    
+    }
 }
 
 // *************************************************
@@ -720,7 +721,7 @@ void  elu(data_T data[CONFIG_T::n_in], const res_T alpha, res_T res[CONFIG_T::n_
 template<class data_T, class res_T, typename CONFIG_T>
 void  elu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
-	elu<data_T, res_T, CONFIG_T>(data, 1.0, res);
+    elu<data_T, res_T, CONFIG_T>(data, 1.0, res);
 }
 
 // *************************************************
@@ -810,26 +811,22 @@ void  prelu(data_T data[CONFIG_T::n_in], data_T alpha[CONFIG_T::n_in], res_T res
 template<class data_T, class res_T, typename CONFIG_T>
 void  binary_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
+    if (CONFIG_T::io_type == io_parallel){
+        #pragma HLS PIPELINE
+    }
 
- if (CONFIG_T::io_type == io_parallel){
-     #pragma HLS PIPELINE
- }
-  
- data_T datareg;   
- res_T cache; 
- for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+    data_T datareg;
+    res_T cache;
+    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+        if (CONFIG_T::io_type == io_serial){
+            #pragma HLS PIPELINE
+        }
+        datareg = data[ii];
+        if( datareg > 0 ) cache = 1;
+        else cache = -1;
 
-  if (CONFIG_T::io_type == io_serial){
-      #pragma HLS PIPELINE
-  }
-  datareg = data[ii];	 
-  if( datareg > 0 ) cache = 1;
-  else cache = -1;
-  
-  res[ii] = (res_T) cache;
- 
- }
- 
+        res[ii] = (res_T) cache;
+    }
 }
 
 // *************************************************
@@ -839,25 +836,23 @@ template<class data_T, class res_T, typename CONFIG_T>
 void  ternary_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
 
- if (CONFIG_T::io_type == io_parallel){
-     #pragma HLS PIPELINE
- }
+    if (CONFIG_T::io_type == io_parallel){
+        #pragma HLS PIPELINE
+    }
   
- data_T datareg;   
- res_T cache; 
- for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-
-  if (CONFIG_T::io_type == io_serial){
-      #pragma HLS PIPELINE
-  }
-  datareg = 2*data[ii];
-  if( datareg > 1 ) cache = 1;
-  else if( datareg > -1 && datareg <= 1) cache=0;
-  else cache = -1;
+    data_T datareg;   
+    res_T cache; 
+    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+        if (CONFIG_T::io_type == io_serial) {
+            #pragma HLS PIPELINE
+        }
+        datareg = 2*data[ii];
+        if( datareg > 1 ) cache = 1;
+        else if( datareg > -1 && datareg <= 1) cache=0;
+        else cache = -1;
   
-  res[ii] = (res_T) cache;
- 
- }
+        res[ii] = (res_T) cache;
+    }
  
 }
 
