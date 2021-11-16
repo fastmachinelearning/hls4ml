@@ -582,8 +582,8 @@ class Input(Layer):
 class Constant(Layer):
     def initialize(self):
         value = self.attributes['value']
-        # in the next line, the two get_attr functions usually return None
-        self.add_weights_variable(name='value', data=value, precision=self.get_attr("quant_precision"), quantizer=self.get_attr("quantizer"))
+        # the weight variable seems to not be used, so no need to make it.
+        # self.add_weights_variable(name='value', data=value, precision=self.get_attr("quant_precision"), quantizer=self.get_attr("quantizer"))
         self.value = value  # note, this is unquantized; Only here for easier access
         shape = value.shape
         dims = [f'{self.name}_{i}' for i in range(len(shape))]

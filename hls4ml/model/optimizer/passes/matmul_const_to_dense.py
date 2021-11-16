@@ -1,5 +1,6 @@
 import numpy as np
 from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.model.hls_layers import FixedPrecisionType
 
 class MatmulConstToDense(OptimizerPass):
     """ Convert MatMul with constant to a dense layer """
@@ -25,13 +26,26 @@ class MatmulConstToDense(OptimizerPass):
             const_inp_idx = 1
             other_inp_idx = 0
 
+        quant_precision = None
+        weight_precision = const_node.get_attr("quant_precision")
+        other_precision = other_node.get_attr("quant_precision")
+
+        if weight_precision and other_precision:
+            bitwidth = weight_precision.width + other_precision.width
+            if bitwidth != weight_precision.integer + other_precision.integer:
+                raise ValueError("quant_preicisions must always have the same width and integer parameters")
+            signed = weight_precision.signed or other_precision.signed
+            # copy staruation and rounding from "other"
+            rounding_mode = other_precision.rounding_mode
+            saturation_mode = other_precision.saturation_mode
+            quant_precision = FixedPrecisionType(bitwidth, bitwidth, signed, rounding_mode, saturation_mode)
+
         #creating the attributes
         attributes = {
             "weight_data": const_node.value,
-            "weight_precision": const_node.get_attr("quant_precision"),
+            "weight_precision": weight_precision,
             "weight_quantizer": const_node.get_attr("quantizer"),
-            "precision": other_node.get_attr("quant_precision"),
-            "quantizer": other_node.get_attr("quantizer"),
+            "quant_precision": quant_precision,
             "omit_bias": True
         }
 
