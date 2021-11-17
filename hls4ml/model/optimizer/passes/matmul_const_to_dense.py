@@ -31,9 +31,12 @@ class MatmulConstToDense(OptimizerPass):
         other_precision = other_node.get_attr("quant_precision")
 
         if weight_precision and other_precision:
-            bitwidth = weight_precision.width + other_precision.width
-            if bitwidth != weight_precision.integer + other_precision.integer:
+            if (weight_precision.width != weight_precision.integer 
+                or other_precision.width != other_precision.integer):
                 raise ValueError("quant_preicisions must always have the same width and integer parameters")
+
+            Nacc = matmul_node.get_input_variable(matmul_node.inputs[0]).shape[-1]
+            bitwidth = weight_precision.width + other_precision.width + int(np.ceil(np.log2(Nacc)))
             signed = weight_precision.signed or other_precision.signed
             # copy staruation and rounding from "other"
             rounding_mode = other_precision.rounding_mode
