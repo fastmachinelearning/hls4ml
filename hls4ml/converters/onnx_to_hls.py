@@ -262,7 +262,7 @@ def onnx_to_hls(config):
         layer_list.append(constant_layer)
 
     # Defined supported layers and check for unsupported layer type
-    skip_layers = ['Dropout', 'Identity', 'Flatten']
+    skip_layers = ['Dropout', 'Identity']
 
     #Map inputs of skipped layers
     inputs_map = {}
@@ -278,15 +278,13 @@ def onnx_to_hls(config):
         current_shape = get_input_shape(model.graph, node)
 
         if node.op_type in skip_layers:
-            if node.op_type != 'Flatten':
-               #Currently supported skipped layers have only one input and output
-                #Skipped layers can follow each other (e.g., Dropout -> Flatten)
+            #Currently supported skipped layers have only one input and output
+            #Skipped layers can follow each other (e.g., Dropout -> Flatten)
 
-                #Mapping inputs
-                input_name = inputs_map.get(node.input[0], node.input[0])
-                output_name = node.output[0]
-                inputs_map[output_name] = input_name
-
+            #Mapping inputs
+            input_name = inputs_map.get(node.input[0], node.input[0])
+            output_name = node.output[0]
+            inputs_map[output_name] = input_name
             continue
 
         #Process the layer

@@ -1,4 +1,3 @@
-import math
 from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute, compute_pads_1d, compute_pads_2d
 from hls4ml.converters.utils import compute_padding_1d, compute_padding_2d
 
@@ -7,74 +6,29 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
 
     layer = {}
     layer['name'] = node.name
-    layer['data_format'] = 'channels_first' #ONNX's default is channel first
+    if node.domain != 'qonnx.custom_op.channels_last':
+        raise RuntimeError("Please convert the model to channels-last format with qonnx-to-channels-last")
+    layer['data_format'] = 'channels_last' # QONNX needs to be channels-last.
     layer['inputs'] = node.input
     layer['outputs'] = node.output
-    reader.add_input(layer['name'], node.input)
+    #reader.add_input(layer['name'], node.input)
 
-    strides = get_onnx_attribute(node, 'strides')
-    kernel_shape = get_onnx_attribute(node, 'kernel_shape')
+    layer['strides'] = get_onnx_attribute(node, 'strides')
+    layer['kernel_shape'] = get_onnx_attribute(node, 'kernel_shape')
+    # Note:  currently don't have support for auto_pad.
+    layer['pads'] = get_onnx_attribute(node, 'pads')
+    dilations = get_onnx_attribute(node, 'dilations')
+    if dilations is None:
+        dilations = [1]*len(layer['kernel_shape'])
+    layer['dilations'] = dilations
 
-    if len(input_shapes[0]) == 3: # Conv1D
-        layer['class_name'] = 'Conv1D'
+    if get_onnx_attribute(node, 'group') != 1:
+        raise ValueError("Only 1 group supported corrently")
 
-        layer['in_width']= input_shapes[0][2]
-        layer['n_chan']=input_shapes[0][1]
-        layer['filt_width']= kernel_shape[0]
-        layer['n_filt']= reader.get_weights_data(layer['name'], 'kernel').shape[2]
-        layer['stride_width'] = strides[0]
-        pads = compute_pads_1d(node, layer)
-
-        layer['pad_left'] = pads[0]
-        layer['pad_right'] = pads[1]
-        
-        if all(x == 0 for x in pads): # No padding, i.e., 'VALID' padding
-            layer['padding'] = 'valid'
-        else:
-            layer['padding'] = 'same'
-        
-        (layer['out_width'],_,_) = compute_padding_1d(layer['padding'],
-                                                      layer['in_width'],
-                                                      layer['stride_width'],
-                                                      layer['filt_width'])
-
-        # output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_width']]
-        
-    elif len(input_shapes[0]) == 4: # Conv2D
-        
-        layer['class_name'] = 'Conv2D'
-
-        layer['in_height']=input_shapes[0][2]
-        layer['in_width']=input_shapes[0][3]
-        layer['n_chan']=input_shapes[0][1]
-
-        layer['filt_height']=kernel_shape[0]
-        layer['filt_width']=kernel_shape[1]
-        
-        layer['n_filt']=next((x.type.tensor_type.shape.dim[1].dim_value for x in graph.value_info if x.name == node.output[0]), None)
-        layer['stride_height'] = strides[0]
-        layer['stride_width'] = strides[1]
-        pads = compute_pads_2d(node, layer)
-
-        layer['pad_top'] = pads[0]
-        layer['pad_bottom'] = pads[2]
-        layer['pad_left'] = pads[1]
-        layer['pad_right'] = pads[3]
-
-        if all(x == 0 for x in pads): # No padding, i.e., 'VALID' padding in Keras/Tensorflow
-            layer['padding'] = 'valid'
-        else: #Only 'valid' and 'same' padding are available in Keras
-            layer['padding'] = 'same'
-            
-        (layer['out_height'], layer['out_width'],_,_,_,_) = compute_padding_2d(layer['padding'],
-                                                                               layer['in_height'],
-                                                                               layer['in_width'],
-                                                                               layer['stride_height'],
-                                                                               layer['stride_width'],
-                                                                               layer['filt_height'],
-                                                                               layer['filt_width'])
-
-        # output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
+    layer['n_chan'] = input_shapes[0][-1]
+    layer['n_dim'] = len(input_shapes[0]) - 2  # 2 comes from channels and batch dimentions
+    if layer['n_dim'] not in (1, 2):
+        raise ValueError("Only 1D and 2D convolutions are supported")
+    layer['class_name'] = 'Conv'
 
     return layer
-    

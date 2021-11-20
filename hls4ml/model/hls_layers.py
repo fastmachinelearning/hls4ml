@@ -598,36 +598,42 @@ class Constant(Layer):
 
 class Reshape(Layer):
     def initialize(self):
-        shape = self.get_attr('target_shape')
-        if shape is None:
+        input_shape =  self.get_input_variable(self.inputs[0]).shape
+        target_shape = self.get_attr('target_shape')
+        if target_shape is None:
             # need to get it from the input
-            input_shape =  self.get_input_variable(self.inputs[0]).shape
+
             shape_node = self.get_input_node(self.inputs[1])
             target_shape = shape_node.value
-            if input_shape[0] is None:
-                partial_shape = target_shape[1:]
-                if -1 in partial_shape:
-                    print("WARNING: Inferring -1 shape ... ")
-                    dummy_x = np.ones(input_shape[1:])
-                    dummy_y = np.reshape(dummy_x, partial_shape)
-                    partial_shape = list(dummy_y.shape)
-                target_shape = input_shape[:1] + partial_shape
-            else:
-                if -1 in target_shape:  #Need to infer shape for -1
-                    print("WARNING: Inferring -1 shape ... ")
-                    dummy_x = np.ones(input_shape)
-                    dummy_y = np.reshape(dummy_x, target_shape)
-                    target_shape = list(dummy_y.shape)
-            shape = target_shape
+
+        # take care of -1 shapes
+        shape = self.infer_shape(input_shape, target_shape)
 
         dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(len(shape))]
         #self.add_output_variable(shape, dims)
         out_name = self.outputs[0]
         proxy = self.get_input_variable()
-        out = InplaceVariable(shape, dims, proxy, index=self.get_input_node().index)
+        out = InplaceVariable(shape, dims, proxy, index=self.get_input_node(self.inputs[0]).index)
 
         self.variables[out_name] = out
         self.model.register_output_variable(out_name, out)
+
+    @staticmethod
+    def infer_shape(input_shape, target_shape):
+        """This infers -1 shapes"""
+        if input_shape[0] is None:
+            partial_shape = target_shape[1:]
+            if -1 in partial_shape:
+                dummy_x = np.ones(input_shape[1:])
+                dummy_y = np.reshape(dummy_x, partial_shape)
+                partial_shape = list(dummy_y.shape)
+            target_shape = input_shape[:1] + partial_shape
+        else:
+            if -1 in target_shape:  #Need to infer shape for -1
+                dummy_x = np.ones(input_shape)
+                dummy_y = np.reshape(dummy_x, target_shape)
+                target_shape = list(dummy_y.shape)
+        return target_shape
 
     def function_cpp(self):
         return None
@@ -674,7 +680,7 @@ class Dense(Layer):
             self.add_bias(quantizer=self.get_attr('bias_quantizer'))
         else:
             self.add_weights_variable(name='bias', var_name='b{index}', data=np.array(0))
-            
+
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -693,6 +699,57 @@ class Dense(Layer):
         params['strategy'] = self.get_attr('strategy')
 
         return self._config_template.format(**params)
+
+class Conv(Layer):
+    """
+    This is for the ONNX Conv node. Currently, it is only supported as an intermediate
+    form that gets converted to an explicit ConvXD.
+
+    Note:  these are always channels-last.
+    """
+    def initialize(self):
+        assert(len(self.inputs) == 2)
+        x = self.get_input_variable(self.inputs[0])  # dimension should have batch stripped off
+        w = self.get_input_variable(self.inputs[1])
+        pads = self.attributes["pads"]
+        strides = self.attributes["strides"]
+        kernel_shape = self.attributes["kernel_shape"]
+        dilations = self.attributes["dilations"]
+
+        self.set_attr('n_filt', w.shape[0])
+
+        # use negative indexing because it is not clear if batch dimension is always stripped
+        if self.attributes['n_dim'] == 1:
+            # this is 1D convolution
+            full_width = x.shape[-2] + pads[0] + pads[1]
+            eff_kernel_width = kernel_shape[0] * dilations[0]
+            n_out = int(np.ceil((full_width - eff_kernel_width + 1) / strides[0]))
+            self.set_attr("n_out", n_out)
+            shape = [n_out, self.attributes['n_filt']]
+            dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+        else:
+            # 2d
+            full_height = x.shape[-3] + pads[0] + pads[2]
+            eff_kernel_height = kernel_shape[0] * dilations[0]
+            out_height = int(np.ceil((full_height - eff_kernel_height + 1) / strides[0]))
+            self.set_attr("out_height", out_height)
+
+            full_width = x.shape[-2] + pads[1] + pads[3]
+            eff_kernel_width = kernel_shape[1] * dilations[1]
+            out_width = int(np.ceil((full_width - eff_kernel_width + 1) / strides[1]))
+            self.set_attr("out_width", out_width)
+
+            shape = [out_height, out_width, self.attributes['n_filt']]
+            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+
+        self.add_output_variable(shape, dims)
+
+    def function_cpp(self):
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
+
+    def config_cpp(self):
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
+
 
 class Conv1D(Layer):
     def initialize(self):
@@ -1975,6 +2032,7 @@ layer_map = {
     'BinaryDense'            : Dense,
     'TernaryDense'           : Dense,
     'QDense'                 : Dense,
+    'Conv'                   : Conv,
     'Conv1D'                 : Conv1D,
     'QConv1D'                : Conv1D,
     'Conv2D'                 : Conv2D,

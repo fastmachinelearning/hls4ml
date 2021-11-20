@@ -106,7 +106,9 @@ def parse_batchnorm_layer(reader, node, inputs_map, input_shapes, graph, config)
     if len(input_shapes[0]) == 2:
         layer['n_filt'] = -1
     else:
-        raise RuntimeError("Don't yet support larger dimensions for ONNX BatchNormalization")
+        # TEMP REMOVE
+        pass
+        # raise RuntimeError("Don't yet support larger dimensions for ONNX BatchNormalization")
     # elif len(input_shapes[0]) > 2:
     #     layer['n_filt']= input_shapes[0][1] #Always channel first for onnx
 

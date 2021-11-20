@@ -25,3 +25,15 @@ def parse_reshape_layer(reader, node, inputs_map, input_shapes, graph, config):
     layer['outputs'] = node.output
 
     return layer
+
+@onnx_handler('Flatten')
+def parse_reshape_layer(reader, node, inputs_map, input_shapes, graph, config):
+
+    layer = {}
+    layer['name'] = node.name
+    layer['class_name'] = 'Reshape'
+    layer['inputs'] = node.input
+    layer['outputs'] = node.output
+    layer['target_shape'] = [1, -1]
+
+    return layer
