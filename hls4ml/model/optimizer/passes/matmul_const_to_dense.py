@@ -33,7 +33,7 @@ class MatmulConstToDense(OptimizerPass):
         if weight_precision and other_precision:
             if (weight_precision.width != weight_precision.integer 
                 or other_precision.width != other_precision.integer):
-                raise ValueError("quant_preicisions must always have the same width and integer parameters")
+                raise ValueError("quant_precisions must always have the same width and integer parameters")
 
             Nacc = matmul_node.get_input_variable(matmul_node.inputs[0]).shape[-1]
             bitwidth = weight_precision.width + other_precision.width + int(np.ceil(np.log2(Nacc)))
@@ -49,7 +49,9 @@ class MatmulConstToDense(OptimizerPass):
             "weight_precision": weight_precision,
             "weight_quantizer": const_node.get_attr("quantizer"),
             "quant_precision": quant_precision,
-            "omit_bias": True
+            "omit_bias": True,
+            "n_in": const_node.value.shape[0],
+            "n_out": const_node.value.shape[1]
         }
 
         #making new node

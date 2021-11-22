@@ -20,6 +20,8 @@ from hls4ml.model.optimizer.passes.quant_opt import QuantConstantParameters, Qua
 from hls4ml.model.optimizer.passes.batchnorm_opt import BatchNormConstantParameters, ConstantBatchNormMerging, FuseConsecutiveBatchNormalization
 from hls4ml.model.optimizer.passes.merge_const import MergeTwoConstant, MergeToBatchNormalization, MergeToBatchNormalizationDiv
 from hls4ml.model.optimizer.passes.matmul_const_to_dense import MatmulConstToDense
+from hls4ml.model.optimizer.passes.conv_to_convxd import ConvToConvXD
+
 
 try:
     from hls4ml.model.optimizer.passes.qkeras import OutputRoundingSaturationMode
@@ -46,6 +48,7 @@ register_pass('merge_two_constants', MergeTwoConstant)
 register_pass('merge_to_batchnorm', MergeToBatchNormalization)
 register_pass('merge_to_batchnorm_div', MergeToBatchNormalizationDiv)
 register_pass('matmul_const_to_dense', MatmulConstToDense)
+register_pass('conv_to_convxd', ConvToConvXD)
 register_pass('eliminate_linear_activation', EliminateLinearActivation)
 register_pass('merge_batch_norm_quantized_tanh', MergeBatchNormAndQuantizedTanh)
 register_pass('quantize_dense_output', QuantizeDenseOutput)

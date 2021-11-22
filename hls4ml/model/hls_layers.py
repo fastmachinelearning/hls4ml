@@ -1,7 +1,5 @@
 from __future__ import print_function
 import six
-import os
-import sys
 import re
 import numpy as np
 from collections import OrderedDict
@@ -644,7 +642,7 @@ class Reshape(Layer):
 class Dense(Layer):
     def initialize(self):
         shape = self.get_input_variable().shape[:]
-        #shape[-1] = self.attributes['n_out']
+        shape[-1] = self.attributes['n_out']
         if len(shape) > 1:
             dims = ['N_LAYER_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
         else:
@@ -679,7 +677,8 @@ class Dense(Layer):
         if not self.get_attr("omit_bias"):
             self.add_bias(quantizer=self.get_attr('bias_quantizer'))
         else:
-            self.add_weights_variable(name='bias', var_name='b{index}', data=np.array(0))
+            self.add_weights_variable(name='bias', var_name='b{index}', data=np.zeros(self.attributes['n_out']),
+                                      precision=IntegerPrecisionType(1, False))
 
 
     def function_cpp(self):
@@ -708,38 +707,13 @@ class Conv(Layer):
     Note:  these are always channels-last.
     """
     def initialize(self):
-        assert(len(self.inputs) == 2)
-        x = self.get_input_variable(self.inputs[0])  # dimension should have batch stripped off
-        w = self.get_input_variable(self.inputs[1])
-        pads = self.attributes["pads"]
-        strides = self.attributes["strides"]
-        kernel_shape = self.attributes["kernel_shape"]
-        dilations = self.attributes["dilations"]
-
-        self.set_attr('n_filt', w.shape[0])
-
         # use negative indexing because it is not clear if batch dimension is always stripped
         if self.attributes['n_dim'] == 1:
             # this is 1D convolution
-            full_width = x.shape[-2] + pads[0] + pads[1]
-            eff_kernel_width = kernel_shape[0] * dilations[0]
-            n_out = int(np.ceil((full_width - eff_kernel_width + 1) / strides[0]))
-            self.set_attr("n_out", n_out)
-            shape = [n_out, self.attributes['n_filt']]
+            shape = [self.attributes['n_out'], self.attributes['n_filt']]
             dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
         else:
-            # 2d
-            full_height = x.shape[-3] + pads[0] + pads[2]
-            eff_kernel_height = kernel_shape[0] * dilations[0]
-            out_height = int(np.ceil((full_height - eff_kernel_height + 1) / strides[0]))
-            self.set_attr("out_height", out_height)
-
-            full_width = x.shape[-2] + pads[1] + pads[3]
-            eff_kernel_width = kernel_shape[1] * dilations[1]
-            out_width = int(np.ceil((full_width - eff_kernel_width + 1) / strides[1]))
-            self.set_attr("out_width", out_width)
-
-            shape = [out_height, out_width, self.attributes['n_filt']]
+            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
             dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
 
         self.add_output_variable(shape, dims)
@@ -760,9 +734,23 @@ class Conv1D(Layer):
             shape = [self.attributes['n_filt'], self.attributes['out_width']]
             dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
 
-        self.add_output_variable(shape, dims)
-        self.add_weights(quantizer = self.get_attr('weight_quantizer'))
-        self.add_bias(quantizer = self.get_attr('bias_quantizer'))
+        self.add_output_variable(shape, dims, precision=self.get_attr("quant_precision"))
+        weights_data = self.get_attr("weight_data")
+        bias_data = self.get_attr("bias_data")
+        if weights_data is not None:
+            self.add_weights_variable(name='weight', var_name='w{index}', data=weights_data,
+                                      precision=self.get_attr("weight_precision"), quantizer=self.get_attr("weight_quantizer"))
+            if bias_data:
+                self.add_weights_variable(name='bias', var_name='b{index}', data=bias_data,
+                                          precision=self.get_attr("bias_precision"), quantizer=self.get_attr("bias_quantizer"))
+            else:
+                # write dummy
+                self.add_weights_variable(name='bias', var_name='b{index}', data=np.zeros(self.attributes['n_filt']),
+                                          precision=IntegerPrecisionType(1,False))
+
+        else:
+            self.add_weights(quantizer=self.get_attr('weight_quantizer'))
+            self.add_bias(quantizer=self.get_attr('bias_quantizer'))
         if len(self.weights['weight'].data.shape) == 2: # This can happen if we assign weights of Dense layer to 1x1 Conv2D
             self.weights['weight'].data = np.expand_dims(self.weights['weight'].data, axis=0)
 
@@ -956,9 +944,23 @@ class Conv2D(Layer):
         else:
             shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
             dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
-        self.add_output_variable(shape, dims)
-        self.add_weights(quantizer=self.get_attr('weight_quantizer'))
-        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+        self.add_output_variable(shape, dims, precision=self.get_attr("quant_precision"))
+        weights_data = self.get_attr("weight_data")
+        bias_data = self.get_attr("bias_data")
+        if weights_data is not None:
+            self.add_weights_variable(name='weight', var_name='w{index}', data=weights_data,
+                                      precision=self.get_attr("weight_precision"), quantizer=self.get_attr("weight_quantizer"))
+            if bias_data is not None:
+                self.add_weights_variable(name='bias', var_name='b{index}', data=bias_data,
+                                          precision=self.get_attr("bias_precision"), quantizer=self.get_attr("bias_quantizer"))
+            else:
+                # write dummy
+                self.add_weights_variable(name='bias', var_name='b{index}', data=np.zeros(self.attributes['n_filt']),
+                                          precision=IntegerPrecisionType(1,False))
+        else:
+            self.add_weights(quantizer=self.get_attr('weight_quantizer'))
+            self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
         if len(self.weights['weight'].data.shape) == 2: # This can happen if we assign weights of Dense layer to 1x1 Conv2D
             self.weights['weight'].data = np.expand_dims(self.weights['weight'].data, axis=(0,1))
 
