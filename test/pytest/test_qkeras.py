@@ -188,9 +188,13 @@ def randX_1000_1():
                                        (quantized_bits(8,4)),
                                        (quantized_bits(4,2)),
                                        (quantized_bits(4,0)),
-                                       (quantized_bits(10,0)),])
-                                       #(quantized_relu(4)),
-                                       #(quantized_relu(10))])
+                                       (quantized_bits(10,0)),
+                                       (quantized_relu(4)),
+                                       (quantized_relu(4,2)),
+                                       (quantized_relu(8)),
+                                       (quantized_relu(8,4)),
+                                       (quantized_relu(10)),
+                                       (quantized_relu(10,5))])
 def test_quantizer(randX_1000_1, quantizer):
   '''
   Test a single quantizer as an Activation function.

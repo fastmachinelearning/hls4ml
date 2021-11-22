@@ -86,18 +86,18 @@ def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader, 
     if layer['class_name'] != 'Activation':
         layer['activation'] = layer['class_name']
     if layer['class_name'] == 'LeakyReLU':
-        layer['activ_param'] = keras_layer["config"].get('alpha', 0.3)
+        layer['activ_param'] = keras_layer['config'].get('alpha', 0.3)
     elif layer['class_name'] == 'ThresholdedReLU':
-        layer['activ_param'] = keras_layer["config"].get('theta', 1.)
+        layer['activ_param'] = keras_layer['config'].get('theta', 1.)
     elif layer['class_name'] == 'ELU':
-        layer['activ_param'] = keras_layer["config"].get('alpha', 1.)
+        layer['activ_param'] = keras_layer['config'].get('alpha', 1.)
     elif layer['class_name'] == 'ReLU':
         layer['class_name'] = 'Activation'
 
     if layer['class_name'] == 'Activation' and layer['activation'] == 'softmax':
         layer['class_name'] = 'Softmax'
-    if layer['class_name'] == 'ReLU':
-        layer['class_name'] = 'Activation'
+    if layer['class_name'] == 'Softmax':
+        layer['axis'] = keras_layer['config'].get('axis', -1)
     
     return layer, [shape for shape in input_shapes[0]]
 

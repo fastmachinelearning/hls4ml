@@ -110,6 +110,7 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned table_size = {table_size};
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
+    static const unsigned axis = {axis};
     static const nnet::softmax_implementation implementation = nnet::softmax_implementation::{implementation};
     typedef {exp_table_t.name} exp_table_t;
     typedef {inv_table_t.name} inv_table_t;

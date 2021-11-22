@@ -89,7 +89,8 @@ def register_repack_stream(backend):
 class ReshapeStream(OptimizerPass):
     ''' Repacks stream for Reshape layer '''
     def match(self, node):
-        return isinstance(node, Reshape)
+        # do not run optimizer pass for a flatten layer (1 output dimension)
+        return isinstance(node, Reshape) and len(node.get_output_variable().shape) > 1
 
     def transform(self, model, node):
         if model.config.get_config_value('IOType') != 'io_stream':
@@ -138,3 +139,19 @@ class BroadcastStream(OptimizerPass):
         node.inputs[idx] = brdcst_out
 
         return True
+
+class RemoveFinalReshape(OptimizerPass):
+    ''' Remove reshape if final layer '''
+    def match(self, node):
+        # match if reshape is final node
+        return node.__class__.__name__ == 'Reshape' and not node.get_output_nodes()
+
+    def transform(self, model, node):
+        if model.config.get_config_value('IOType') == 'io_parallel':
+            print('WARNING: Final layer is a Reshape, which does not affect the output for io_parallel; removing it')
+            # remove, but don't rewire because it's the output layer
+            model.remove_node(node, rewire=False) 
+            return True
+        elif model.config.get_config_value('IOType') == 'io_stream':
+            print('WARNING: Final layer is a Reshape, which may incur a large resource cost for io_stream; consider removing it')
+        return False

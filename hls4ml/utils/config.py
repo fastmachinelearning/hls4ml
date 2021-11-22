@@ -36,11 +36,14 @@ def _get_precision_from_quantizer(quantizer):
             quantizer['class_name'] = quantizer_obj.__name__
 
     supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh', 'quantized_po2', 'quantized_relu_po2']
+    signed = True
     if quantizer['class_name'] in supported_quantizers:
         bits = int(quantizer['config']['bits'])
         # if integer isn't specified, it should be the same as bits
         integer = int(quantizer['config'].get('integer', bits-1)) + 1
-        
+        if quantizer['class_name'] == 'quantized_relu':
+            signed = False
+            integer -= 1
     elif quantizer['class_name'] in ['binary', 'stochastic_binary', 'binary_tanh']:
         bits = 2
         integer = 2
@@ -52,10 +55,11 @@ def _get_precision_from_quantizer(quantizer):
         raise Exception('ERROR: Unsupported quantizer: {}'.format(quantizer['class_name']))
 
     decimal = bits - integer
+    signed = '' if signed else 'u'
     if decimal > 0:
-        return 'ap_fixed<{},{}>'.format(bits, integer)
+        return 'ap_{}fixed<{},{}>'.format(signed, bits, integer)
     else:
-        return 'ap_int<{}>'.format(bits)
+        return 'ap_{}int<{}>'.format(signed, bits)
 
 def config_from_keras_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1):
     """Create an HLS conversion config given the Keras model.

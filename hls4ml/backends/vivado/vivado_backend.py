@@ -211,6 +211,9 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('implementation', layer.model.config.get_strategy(layer).lower())
 
+        if layer.model.config.get_config_value('IOType') == 'io_parallel':
+            assert len(layer.get_input_variable().shape) == 1, 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
+
     @layer_optimizer(GarNet)
     def init_garnet(self, layer):
         reuse_factor = layer.attributes['reuse_factor']

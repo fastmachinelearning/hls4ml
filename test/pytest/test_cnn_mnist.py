@@ -34,10 +34,9 @@ def mnist_model():
   model.load_weights(example_model_path / 'keras/qkeras_mnist_cnn_weights.h5')
   return model
 
-# TODO: add ('io_parallel', 'resource') when it can pass
-# https://github.com/fastmachinelearning/hls4ml/issues/375
 @pytest.fixture      
 @pytest.mark.parametrize('settings', [('io_parallel', 'latency'),
+                                      ('io_parallel', 'resource'),
                                       ('io_stream', 'latency'),
                                       ('io_stream', 'resource')])
 def hls_model(settings):
@@ -57,10 +56,12 @@ def hls_model(settings):
   return hls_model
 
 @pytest.mark.parametrize('settings', [('io_parallel', 'latency'),
+                                      ('io_parallel', 'resource'),
                                       ('io_stream', 'latency'),
                                       ('io_stream', 'resource')])
 def test_accuracy(mnist_data, mnist_model, hls_model):
   x_train, y_train, x_test, y_test = mnist_data
+  x_test, y_test = x_test[:5000], y_test[:5000]
   model = mnist_model
   # model under test predictions and accuracy
   y_keras = model.predict(x_test)
