@@ -4,7 +4,7 @@ import numpy as np
 
 class ReplaceMultidimensionalDenseWithConv(OptimizerPass):
     def match(self, node):
-        return node.__class__.__name__ == 'Dense' and \
+        return isinstance(node, Dense) and \
             len(node.get_input_variable().shape) > 1
 
     def transform(self, model, node):
