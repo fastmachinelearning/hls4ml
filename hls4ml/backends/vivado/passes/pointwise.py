@@ -1,5 +1,6 @@
 import numpy as np
 import re
+from copy import copy
 
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.hls_layers import Conv1D, Conv2D, register_layer
@@ -62,13 +63,13 @@ def register_pointwise(backend):
 
 class OptimizePointwiseConv(OptimizerPass):
     def match(self, node):
-        return isinstance(node, (Conv1D, Conv2D)) and \
+        return node.class_name in ('Conv1D', 'Conv2D') and \
             node.get_attr('filt_height', 1) == 1 and \
             node.get_attr('filt_width') == 1
 
     def transform(self, model, node):
         dim = node.__class__.__name__[-2:] # '1D' or '2D'
-        pw_node = model.make_node('PointwiseConv' + dim, node.name, node.attributes.copy(), node.inputs.copy())
+        pw_node = model.make_node('PointwiseConv' + dim, node.name, copy(node.attributes), node.inputs.copy())
         if len(node.weights['weight'].data.shape) == 2: # This can happen if we assign weights of Dense layer to 1x1 Conv2D
             pw_node.weights['weight'].data = np.expand_dims(node.weights['weight'].data, axis=(0,1))
         pw_node.weights['bias'].data = node.weights['bias'].data
