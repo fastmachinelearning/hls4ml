@@ -140,7 +140,7 @@ class HLSConfig(object):
             targ_cycles = self.layer_name_targ_cycles.get(layer.__class__.__name__.lower())
         if targ_cycles is None:
             targ_cycles = self.model_targ_cycles
- 
+
         return targ_cycles
 
     def get_strategy(self, layer):
@@ -151,7 +151,7 @@ class HLSConfig(object):
             strategy = self.model_strategy
 
         return strategy
-    
+
     def get_conv_implementation(self, layer):
         conv_implementation = self.layer_name_conv_implementation.get(layer.name.lower())
         if conv_implementation is None:
@@ -175,7 +175,7 @@ class HLSConfig(object):
 
     def _parse_hls_config(self):
         hls_config = self.config['HLSConfig']
-        
+
         self.optimizers = hls_config.get('Optimizers')
         if 'SkipOptimizers' in hls_config:
             if self.optimizers is not None:
@@ -186,9 +186,9 @@ class HLSConfig(object):
                 try:
                     selected_optimizers.remove(opt)
                 except ValueError:
-                    pass                
+                    pass
             self.optimizers = selected_optimizers
-        
+
         model_cfg = hls_config.get('Model')
         if model_cfg is not None:
             precision_cfg = model_cfg.get('Precision')
@@ -219,7 +219,7 @@ class HLSConfig(object):
                 rf = layer_cfg.get('ReuseFactor')
                 if rf is not None:
                     self.layer_type_rf[layer_type.lower()] = rf
-                
+
                 targ_cycles = layer_cfg.get('TargetCycles')
                 if targ_cycles is not None:
                     self.layer_type_targ_cycles[layer_type.lower()] = targ_cycles
@@ -308,7 +308,7 @@ class HLSModel(object):
         self.graph = OrderedDict()
         self.output_vars = {}
 
-        # External BRAM 
+        # External BRAM
         self.bram_vars = {}
 
         self._top_function_lib = None
@@ -339,7 +339,7 @@ class HLSModel(object):
         """ Make a new node not connected to the model graph.
 
         The 'kind' should be a valid layer registered with `register_layer`. If no outputs
-        are specified, a default output named the same as the node will be created. The 
+        are specified, a default output named the same as the node will be created. The
         returned node should be added to the graph with `insert_node` or `replace_node`
         functions.
 
@@ -372,13 +372,13 @@ class HLSModel(object):
     def insert_node(self, node, before=None):
         """ Insert a new node into the model graph.
 
-        The node to be inserted should be created with `make_node()` function. The optional 
+        The node to be inserted should be created with `make_node()` function. The optional
         parameter `before` can be used to specify the node that follows in case of ambiguities.
 
         Args:
             node (Layer): Node to insert
             before (Layer, optional): The next node in sequence before which a
-                new node should be inserted. 
+                new node should be inserted.
         Raises:
             Exception: If an attempt to insert a node with multiple inputs is made or if
                 `before` does not specify a correct node in sequence.
@@ -440,7 +440,7 @@ class HLSModel(object):
                         raise Exception('Cannot rewire a node without child')
             else:
                 raise Exception('Cannot rewire a node without a parent')
-        
+
         del self.output_vars[node.outputs[0]]
         del self.graph[node.name]
         self._update_model_outputs()
@@ -457,6 +457,7 @@ class HLSModel(object):
         next_node = next((x for x in self.graph.values() if x.inputs[0] == old_node.outputs[0]), None)
         if next_node is not None:
             next_node.inputs[0] = new_node.outputs[0]
+            next_node.update_inplace_variables()
         if prev_node is not None:
             if new_node.inputs is None or len(new_node.inputs) == 0: # Check if already rewired
                 new_node.inputs = [prev_node.outputs[0]]
@@ -517,7 +518,7 @@ class HLSModel(object):
             from random import choice
             length = 8
             return ''.join(choice(hexdigits) for m in range(length))
-        
+
         self.config.config['Stamp'] = make_stamp()
 
         self.config.writer.write_hls(self)
@@ -552,7 +553,7 @@ class HLSModel(object):
             raise Exception('Model not compiled')
         if len(self.get_input_variables()) == 1:
             xlist = [x]
-        else: 
+        else:
             xlist = x
         
         for xi in xlist:

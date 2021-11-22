@@ -402,7 +402,7 @@ class Layer(object):
     def get_output_nodes(self, output_name=None):
         if output_name is None:
             output_name = self.outputs[0]
-        return [node for node in self.model.graph.values() if node.inputs[0] == output_name]
+        return [node for node in self.model.graph.values() if len(node.inputs) and node.inputs[0] == output_name]
 
     def get_output_variable(self, output_name=None):
         if output_name is not None:
@@ -541,6 +541,13 @@ class Layer(object):
     def get_layer_precision(self):
         return self.precision
 
+    def update_inplace_variables(self):
+        """
+        This recreates any inplace variables in case the upstream variable changed.
+        Only need to implement if there are inplace variables
+        """
+        pass
+
     # myproject.cpp/h
     def function_cpp(self):
         raise NotImplementedError
@@ -592,6 +599,14 @@ class Reshape(Layer):
 
         self.variables[out_name] = out
         self.model.register_output_variable(out_name, out)
+
+    def update_inplace_variables(self):
+        """Reinitialize the inplace variable"""
+        self.initialize()
+        # call on any ouput nodes
+        output_node = self.get_output_nodes()
+        if len(output_node):
+            output_node[0].update_inplace_variables()
 
     def function_cpp(self):
         return None
