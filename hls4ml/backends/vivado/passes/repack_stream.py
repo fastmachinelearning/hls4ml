@@ -78,6 +78,7 @@ def register_repack_stream(backend):
     register_layer('Broadcast', Broadcast)
     
     # Register the optimization passes
+    backend.register_pass('remove_final_reshape', RemoveFinalReshape)
     backend.register_pass('reshape_stream', ReshapeStream)
     backend.register_pass('broadcast_stream', BroadcastStream)
     

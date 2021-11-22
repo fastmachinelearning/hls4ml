@@ -25,6 +25,7 @@ class VivadoBackend(FPGABackend):
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
         streaming_passes = [
+            'vivado:remove_final_reshape',
             'vivado:reshape_stream',
             'vivado:clone_output',
             'vivado:insert_zero_padding_before_conv1d',
