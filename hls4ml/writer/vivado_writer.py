@@ -105,7 +105,7 @@ class VivadoWriter(Writer):
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
-        model_brams = [var for var in model.get_weight_variables() if var.weight_class == 'BramWeightVariable']
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
         indent = '    '
 
@@ -159,7 +159,7 @@ class VivadoWriter(Writer):
                         newline += indent + '#pragma HLS PIPELINE \n'
                 if io_type == 'io_serial' or io_type == 'io_stream':
                     newline += indent + '#pragma HLS INTERFACE axis port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
-                    if all_brams: # No BRAM ports
+                    if all_brams:
                         newline += indent + '#pragma HLS INTERFACE bram port={} \n'.format(','.join(all_brams))
                     newline += indent + '#pragma HLS DATAFLOW \n'
 
@@ -216,7 +216,7 @@ class VivadoWriter(Writer):
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
-        model_brams = [var for var in model.get_weight_variables() if var.weight_class == 'BramWeightVariable']
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
         indent = '    '
 
@@ -291,7 +291,7 @@ class VivadoWriter(Writer):
                 newline = line
                 for layer in model.get_layers():
                     for w in layer.get_weights():
-                        if w.weight_class != 'BramWeightVariable':
+                        if w.storage.lower() != 'bram':
                             newline += '#include "weights/{}.h"\n'.format(w.name)
 
             elif "//hls-fpga-machine-learning insert layer-config" in line:
@@ -368,7 +368,7 @@ class VivadoWriter(Writer):
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
-        model_brams = [var for var in model.get_weight_variables() if var.weight_class == 'BramWeightVariable']
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
         for line in f.readlines():
             indent = ' ' * (len(line) - len(line.lstrip(' ')))
@@ -446,7 +446,7 @@ class VivadoWriter(Writer):
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
-        model_brams = [var for var in model.get_weight_variables() if var.weight_class == 'BramWeightVariable']
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
         indent = '    '
 

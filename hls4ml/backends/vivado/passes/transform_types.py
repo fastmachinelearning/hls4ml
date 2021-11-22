@@ -1,12 +1,15 @@
 
 from hls4ml.model.optimizer import GlobalOptimizerPass
-from hls4ml.model.hls_types import CompressedWeightVariable, InplaceVariable
-from hls4ml.backends.fpga.fpga_types import APIntegerPrecisionType, APTypeConverter, VivadoArrayVariable, HLSTypeConverter, StaticWeightVariable, StreamVariable
+from hls4ml.model.hls_types import InplaceVariable
+from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter, StaticWeightVariableConverter, VivadoArrayVariableConverter, VivadoStreamVariableConverter
 
 
 class TransformTypes(GlobalOptimizerPass):
     def __init__(self):
         self.type_converter = HLSTypeConverter(precision_converter=APTypeConverter())
+        self.array_var_converter = VivadoArrayVariableConverter(type_converter=self.type_converter)
+        self.stream_var_converter = VivadoStreamVariableConverter(type_converter=self.type_converter)
+        self.weight_var_converter = StaticWeightVariableConverter(type_converter=self.type_converter)
 
     def transform(self, model, node):
         io_type = node.model.config.get_config_value('IOType')
@@ -15,21 +18,21 @@ class TransformTypes(GlobalOptimizerPass):
             if isinstance(var, InplaceVariable):
                 continue
             if io_type == 'io_stream':
-                new_var = StreamVariable.from_variable(var, self.type_converter)
+                new_var = self.stream_var_converter.convert(var)
             elif io_type == 'io_serial':
-                new_var = VivadoArrayVariable.from_variable(var, self.type_converter, pragma='stream')
+                new_var = self.array_var_converter.convert(var, pragma='stream')
             elif io_type == 'io_parallel':
                 if node.name in node.model.inputs:
-                    new_var = VivadoArrayVariable.from_variable(var, self.type_converter, pragma='reshape')
+                    new_var = self.array_var_converter.convert(var, pragma='reshape')
                 else:
-                    new_var = VivadoArrayVariable.from_variable(var, self.type_converter, pragma='partition')
+                    new_var = self.array_var_converter.convert(var, pragma='partition')
             else:
                 raise Exception('Unknown IOType {} in {} ({})'.format(io_type, node.name, node.__class__.__name__))
 
             node.set_attr(out_name, new_var)
 
         for w_name, weight in node.weights.items():
-            new_weight = StaticWeightVariable.from_variable(weight, self.type_converter)
+            new_weight = self.weight_var_converter.convert(weight)
             node.set_attr(w_name, new_weight)
 
         for t_name, type in node.types.items():

@@ -1,7 +1,7 @@
 import numpy as np
 
-from hls4ml.backends.backend import get_backend
-from hls4ml.backends.fpga.fpga_types import APFixedPrecisionType
+from hls4ml.model.hls_types import FixedPrecisionType
+from hls4ml.backends.fpga.fpga_types import APTypeConverter
 from hls4ml.model.hls_layers import GarNet, GarNetStack
 from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
 
@@ -101,15 +101,16 @@ class GarNetConfigTemplate(LayerConfigTemplate):
         norm_w = norm_intw + fwidth
 
         vspecs = [
-            ('edge_weight', APFixedPrecisionType(10, 0, signed=False)),
-            ('edge_weight_aggr', APFixedPrecisionType(ew_aggr_w, ew_aggr_intw, signed=False)),
-            ('aggr', APFixedPrecisionType(aggr_w, aggr_intw)),
-            ('norm', APFixedPrecisionType(norm_w, norm_intw, signed=False))
+            ('edge_weight', FixedPrecisionType(10, 0, signed=False)),
+            ('edge_weight_aggr', FixedPrecisionType(ew_aggr_w, ew_aggr_intw, signed=False)),
+            ('aggr', FixedPrecisionType(aggr_w, aggr_intw)),
+            ('norm', FixedPrecisionType(norm_w, norm_intw, signed=False))
         ]
+        precision_converter = APTypeConverter()
         for vname, default_precision in vspecs:
             params['{}_t'.format(vname)], type_name = node.model.config.get_precision(node, var=vname)
             if type_name.endswith('default_t'):
-                params['{}_t'.format(vname)] = default_precision.definition_cpp()
+                params['{}_t'.format(vname)] = precision_converter.convert(default_precision).definition_cpp()
 
         params['output_t'] = node.get_output_variable().type.name
 

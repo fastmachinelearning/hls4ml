@@ -7,7 +7,7 @@ class Quantizer(object):
     def __init__(self, bits, hls_type):
         self.bits = bits
         self.hls_type = hls_type
-    
+
     def __call__(self, data):
         raise NotImplementedError
 
@@ -56,7 +56,7 @@ class IntegerPrecisionType(PrecisionType):
         super().__init__(width=width, signed=signed)
         self.integer = width
         self.fractional = 0
-    
+
     def __str__(self):
         typestring = '{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring
@@ -68,9 +68,6 @@ class IntegerPrecisionType(PrecisionType):
         eq = eq and self.integer == other.integer
         eq = eq and self.fractional == other.fractional
         return eq
-    
-    def definition_cpp(self):
-        raise NotImplementedError
 
 class FixedPrecisionType(PrecisionType):
     def __init__(self, width=16, integer=6, signed=True, rounding_mode=None, saturation_mode=None, saturation_bits=None):
@@ -84,7 +81,7 @@ class FixedPrecisionType(PrecisionType):
     @property
     def rounding_mode(self):
         return self._rounding_mode
-    
+
     @rounding_mode.setter
     def rounding_mode(self, mode):
         if isinstance(mode, str):
@@ -95,7 +92,7 @@ class FixedPrecisionType(PrecisionType):
     @property
     def saturation_mode(self):
         return self._saturation_mode
-    
+
     @saturation_mode.setter
     def saturation_mode(self, mode):
         if isinstance(mode, str):
@@ -118,9 +115,6 @@ class FixedPrecisionType(PrecisionType):
         eq = eq and self.saturation_mode == other.saturation_mode
         eq = eq and self.saturation_bits == other.saturation_bits
         return eq
-
-    def definition_cpp(self):
-        raise NotImplementedError
 
 class XnorPrecisionType(IntegerPrecisionType):
     '''
@@ -163,17 +157,19 @@ class NamedType(object):
         self.name = name.format(**kwargs)
         self.precision = precision
 
-    def definition_cpp(self):
-        raise NotImplementedError
-
 class CompressedType(NamedType):
     def __init__(self, name, precision, index_precision, **kwargs):
-        super(CompressedType, self).__init__('compressed_type{index}', precision, **kwargs)
+        if not name.startswith('compressed_'):
+            name = 'compressed_' + name
+        super(CompressedType, self).__init__(name, precision, **kwargs)
         self.index_precision = index_precision
 
 class ExponentType(NamedType):
     def __init__(self, name, precision, **kwargs):
-        super(ExponentType, self).__init__('exponent_type{index}', precision, **kwargs)
+        if not name.startswith('exponent_'):
+            name = 'exponent_' + name
+        super(ExponentType, self).__init__(name, precision, **kwargs)
+        self.sign = XnorPrecisionType()
 
 class PackedType(NamedType):
     def __init__(self, name, precision, n_elem, n_pack, **kwargs):
@@ -191,9 +187,6 @@ class Variable(object):
         self.name = var_name.format(**kwargs)
         self.type = atype
         self.cppname = re.sub(r'\W|^(?=\d)','_', self.name)
-    
-    def definition_cpp(self, name_suffix='', as_reference=False):
-        raise NotImplementedError
 
 class TensorVariable(Variable):
     def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, **kwargs):
@@ -209,6 +202,10 @@ class TensorVariable(Variable):
         for dim in self.shape:
             nelem *= dim
         return nelem
+
+    def size_cpp(self):
+        #TODO get rid of size_cpp() (and dim_names)
+        return '*'.join([str(k) for k in self.dim_names])
 
 class InplaceVariable(Variable):
     def __init__(self, shape, dim_names, proxy, **kwargs):
@@ -274,7 +271,7 @@ class WeightVariable(Variable):
                     # to right of decimal point
                     decimal_spaces = len(str(lsb).split('.')[1])
                 else:
-                    decimal_spaces = len(str(2**integer_bits)) 
+                    decimal_spaces = len(str(2**integer_bits))
                 self.precision_fmt = '%.{}f'.format(decimal_spaces)
             else:
                 self.precision_fmt = '%f'
@@ -326,7 +323,7 @@ class CompressedWeightVariable(WeightVariable):
     next = __next__
 
 class ExponentWeightVariable(WeightVariable):
-    def __init__(self, var_name, type_name, precision, data, quantizer, **kwargs):
+    def __init__(self, var_name, type_name, precision, data, quantizer=None, **kwargs):
         super(ExponentWeightVariable, self).__init__(var_name, type_name, precision, data, quantizer, **kwargs)
         '''
         WeightVariable for Exponent aka po2 data. The data should already by quantized by the quantizer.

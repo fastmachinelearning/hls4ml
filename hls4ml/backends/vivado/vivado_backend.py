@@ -12,7 +12,7 @@ from hls4ml.model.hls_attributes import Attribute
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer, model_optimizer
 from hls4ml.model.flow import register_flow
 from hls4ml.backends import FPGABackend
-from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter, VivadoArrayVariable
+from hls4ml.backends.fpga.fpga_types import APTypeConverter, ArrayVariableConverter, HLSTypeConverter, VivadoArrayVariableConverter
 from hls4ml.report import parse_vivado_report
 
 class VivadoBackend(FPGABackend):
@@ -215,14 +215,14 @@ class VivadoBackend(FPGABackend):
     def init_garnet(self, layer):
         reuse_factor = layer.attributes['reuse_factor']
         
-        type_converter = HLSTypeConverter(precision_converter=APTypeConverter())
+        var_converter = ArrayVariableConverter(type_converter=HLSTypeConverter(precision_converter=APTypeConverter()))
         
         # A bit controversial but we are going to set the partitioning of the input here
         in_layer = layer.model.graph[layer.inputs[0]]
         in_var = layer.get_input_variable(layer.inputs[0])
         partition_factor = in_var.shape[1] * (in_var.shape[0] // reuse_factor)
         in_pragma = ('partition', 'cyclic', partition_factor)
-        new_in_var = VivadoArrayVariable.from_variable(in_var, type_converter, pragma=in_pragma)
+        new_in_var = var_converter.convert(in_var, pragma=in_pragma)
         in_layer.set_attr(layer.inputs[0], new_in_var)
 
         if layer.attributes['collapse']:
@@ -232,7 +232,7 @@ class VivadoBackend(FPGABackend):
             out_pragma = ('partition', 'cyclic' , partition_factor)
 
         out_name, out_var = next(iter(layer.variables.items()))
-        new_out_var = VivadoArrayVariable.from_variable(out_var, type_converter, pragma=out_pragma)
+        new_out_var = var_converter.convert(out_var, pragma=out_pragma)
 
         layer.set_attr(out_name, new_out_var)
 
