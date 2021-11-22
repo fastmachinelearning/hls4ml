@@ -126,8 +126,9 @@ def test_final_reshape(iotype):
 
   # create the HLSModel
   config = hls4ml.utils.config_from_keras_model(model, granularity='model')
+  odir = str(test_root_path / 'hls4mlprj_graph_final_reshape_{}'.format(iotype))
   hls_model = hls4ml.converters.convert_from_keras_model(model,
-                                                         output_dir=f'hls4mlprj_graph_final_reshape_{iotype}',
+                                                         output_dir=odir,
                                                          backend='Vivado',
                                                          io_type = iotype,
                                                          hls_config=config)
