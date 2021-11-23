@@ -27,7 +27,7 @@ def parse_reshape_layer(reader, node, inputs_map, input_shapes, graph, config):
     return layer
 
 @onnx_handler('Flatten')
-def parse_reshape_layer(reader, node, inputs_map, input_shapes, graph, config):
+def parse_flatten_layer(reader, node, inputs_map, input_shapes, graph, config):
 
     layer = {}
     layer['name'] = node.name
