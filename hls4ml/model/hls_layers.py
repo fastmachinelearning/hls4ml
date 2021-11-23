@@ -1524,8 +1524,8 @@ class BatchNormalization(Layer):
             scale = self.get_attr("scale")
             if scale:
                 bias = self.get_attr("bias")  # bias must be defined if scale is
-                self.add_weights_variable(name='scale', data=scale, precision=self.get_attr("weight_precision"), quantizer=self.get_attr("weight_quantizer"))
-                self.add_weights_variable(name='bias', data=bias, precision=self.get_attr("weight_precision"), quantizer=self.get_attr("weight_quantizer"))
+                self.add_weights_variable(name='scale', data=scale, precision=self.get_attr("scale_precision"), quantizer=self.get_attr("scale_quantizer"))
+                self.add_weights_variable(name='bias', data=bias, precision=self.get_attr("bias_precision"), quantizer=self.get_attr("bias_quantizer"))
         else:
             gamma = self.model.get_weights_data(self.name, 'gamma')
             beta = self.model.get_weights_data(self.name, 'beta')

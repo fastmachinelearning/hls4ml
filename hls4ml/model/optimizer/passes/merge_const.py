@@ -1,4 +1,5 @@
 import numpy as np
+from hls4ml.model.hls_layers import IntegerPrecisionType
 from hls4ml.model.optimizer import OptimizerPass
 
 
@@ -69,6 +70,7 @@ class MergeToBatchNormalization(OptimizerPass):
         return is_match
 
     def transform(self, model, node):
+
         node1 = node.get_input_node(node.inputs[1])
 
         node1const = node1.__class__.__name__ == 'Constant'
@@ -79,24 +81,39 @@ class MergeToBatchNormalization(OptimizerPass):
             const_node = node.get_input_node(node.inputs[0])
             input_node_idx = 1
         op = node.attributes["op"]
+        scale_precision = None
+        bias_precision = None
         if op in ('add', 'sum'):
-            scale = np.array(1)
+            scale = np.ones(const_node.value.shape)
+            scale_precision = IntegerPrecisionType(2)
             bias = const_node.value
         elif op == 'sub':
+            scale_precision = IntegerPrecisionType(2)
             if node1const:
-                scale = np.array(1)
+                scale = np.ones(const_node.value.shape)
                 bias = -const_node.value
             else:
-                scale = np.array(-1)
+                scale = -np.ones(const_node.value.shape)
                 bias = const_node.value
 
         elif op == 'mul':
+            bias_precision = IntegerPrecisionType(2)
             scale = const_node.value
-            bias = np.array(0)
+            bias = np.zeros(const_node.value.shape)
+
+        attributes = {
+            "simple": True, 
+            "scale": scale,
+            "bias": bias,
+            "quant_precision": node.get_attr("quant_precision"),
+            "quantizer": node.get_attr("quantizer"),
+            "scale_precision": scale_precision,
+            "bias_precision": bias_precision,
+            "n_filt": -1
+        }
 
         bn_layer = model.make_node("BatchNormalization", f"bn_{node.name}",
-                                   {"simple": True, "scale": scale, "bias": bias,
-                                   "quant_precision": node.get_attr("quant_precision"), "quantizer": node.get_attr("quantizer")},
+                                   attributes,
                                    [node.inputs[input_node_idx]], node.outputs)
 
         model.remove_node(const_node, rewire=False)
@@ -116,11 +133,21 @@ class MergeToBatchNormalizationDiv(OptimizerPass):
     def transform(self, model, node):
         const_node = node.get_input_node(node.inputs[1])
         scale = 1/const_node.value
-        bias = np.array(0)
+        bias_precision = IntegerPrecisionType(2)
+        bias = np.zeros(const_node.value.shape)
+
+        attributes = {
+            "simple": True, 
+            "scale": scale,
+            "bias": bias,
+            "quant_precision": node.get_attr("quant_precision"),
+            "quantizer": node.get_attr("quantizer"),
+            "bias_precision": bias_precision,
+            "n_filt": -1
+        }
 
         bn_layer = model.make_node("BatchNormalization", f"bn_{node.name}",
-                                   {"simple": True, "scale": scale, "bias": bias,
-                                   "quant_precision": node.get_attr("quant_precision"), "quantizer": node.get_attr("quantizer")},
+                                   attributes,
                                    [node.inputs[0]], node.outputs)
 
         model.remove_node(const_node, rewire=False)
