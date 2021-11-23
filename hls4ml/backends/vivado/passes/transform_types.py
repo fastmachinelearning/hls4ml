@@ -1,7 +1,7 @@
 
 from hls4ml.model.optimizer import GlobalOptimizerPass
 from hls4ml.model.hls_types import InplaceVariable
-from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter, StaticWeightVariableConverter, VivadoArrayVariableConverter, VivadoStreamVariableConverter
+from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter, StaticWeightVariableConverter, VivadoArrayVariableConverter, VivadoInplaceVariableConverter, VivadoStreamVariableConverter
 
 
 class TransformTypes(GlobalOptimizerPass):
@@ -10,13 +10,14 @@ class TransformTypes(GlobalOptimizerPass):
         self.array_var_converter = VivadoArrayVariableConverter(type_converter=self.type_converter)
         self.stream_var_converter = VivadoStreamVariableConverter(type_converter=self.type_converter)
         self.weight_var_converter = StaticWeightVariableConverter(type_converter=self.type_converter)
+        self.inplace_var_converter = VivadoInplaceVariableConverter(type_converter=self.type_converter)
 
     def transform(self, model, node):
         io_type = node.model.config.get_config_value('IOType')
 
         for out_name, var in node.variables.items():
             if isinstance(var, InplaceVariable):
-                continue
+                new_var = self.inplace_var_converter.convert(var, io_type)
             if io_type == 'io_stream':
                 new_var = self.stream_var_converter.convert(var)
             elif io_type == 'io_serial':

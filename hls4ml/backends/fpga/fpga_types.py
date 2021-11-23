@@ -282,6 +282,35 @@ class VivadoStreamVariableConverter(StreamVariableConverter):
 
 #endregion
 
+#region InplaceVariable
+
+class InplaceVariableConverter(object):
+    def __init__(self, type_converter, prefix):
+        self.type_converter = type_converter
+        self.prefix = prefix
+
+    def convert(self, tensor_var, io_type):
+        if tensor_var.__class__.__name__.startswith(self.prefix): # Already converted
+            return tensor_var
+
+        if io_type == 'io_stream':
+            tensor_var.type = self.type_converter.convert(PackedType(tensor_var.type.name, tensor_var.type.precision, tensor_var.shape[-1], n_pack=1))
+        else:
+            tensor_var.type = self.type_converter.convert(tensor_var.type)
+
+        tensor_var.__class__ = type(self.prefix + 'InplaceVariable', (type(tensor_var),), {})
+        return tensor_var
+
+class VivadoInplaceVariableConverter(InplaceVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Vivado')
+
+class QuartusInplaceVariableConverter(InplaceVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Quartus')
+
+#endregion
+
 #region WeightsVariable
 
 class StaticWeightVariableDefinition(VariableDefinition):
