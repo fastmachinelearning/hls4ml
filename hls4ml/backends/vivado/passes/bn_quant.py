@@ -2,7 +2,7 @@ import numpy as np
 import re
 
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.hls_types import IntegerPrecisionType, XnorPrecisionType
+from hls4ml.model.hls_types import IntegerPrecisionType, NamedType, XnorPrecisionType
 from hls4ml.model.hls_layers import Layer, Activation, Dense, BatchNormalization, register_layer
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 
@@ -143,7 +143,8 @@ class QuantizeDenseOutput(OptimizerPass):
         # Since this is the number of uint<1>'s which are summed
         nbits = int(np.ceil(np.log2(node.attributes['n_in'])) + 2)
         out_type = IntegerPrecisionType(width=nbits)
-        node.set_attr('accum_t', out_type)
+        accum_t = NamedType('layer{}_accum_t'.format(node.index), out_type)
+        node.set_attr('accum_t', accum_t)
         out_var = node.get_output_variable()
         out_var.type.precision = out_type
 

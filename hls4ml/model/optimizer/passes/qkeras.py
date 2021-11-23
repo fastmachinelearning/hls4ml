@@ -1,6 +1,6 @@
 from hls4ml.model.optimizer import OptimizerPass, ConfigurableOptimizerPass, register_pass
 from hls4ml.model.hls_layers import BatchNormalization, Dense, Conv1D, Conv2D, register_layer, layer_map
-from hls4ml.model.hls_types import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType
+from hls4ml.model.hls_types import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType, NamedType
 import tensorflow as tf
 import numpy as np
 from qkeras import get_quantizer
@@ -52,16 +52,17 @@ class OutputRoundingSaturationMode(ConfigurableOptimizerPass):
         return layer_match and rs_match
 
     def transform(self, model, node):
-        oldtype = node.get_output_variable().type.precision
-        if isinstance(oldtype, IntegerPrecisionType):
-            newtype = IntegerPrecisionType(oldtype.width, oldtype.signed)
-        elif isinstance(oldtype, FixedPrecisionType):
-            newtype = FixedPrecisionType(oldtype.width, oldtype.integer, oldtype.signed, self.rounding_mode, self.saturation_mode, self.saturation_bits)
+        old_precision = node.get_output_variable().type.precision
+        if isinstance(old_precision, IntegerPrecisionType):
+            new_precision = IntegerPrecisionType(old_precision.width, old_precision.signed)
+        elif isinstance(old_precision, FixedPrecisionType):
+            new_precision = FixedPrecisionType(old_precision.width, old_precision.integer, old_precision.signed, self.rounding_mode, self.saturation_mode, self.saturation_bits)
         else: # in case the precision is a string
-            newtype = self.precision_string_modify(oldtype)
-        node.get_output_variable().type.precision = newtype
+            new_precision = self.precision_string_modify(old_precision)
+        node.get_output_variable().type.precision = new_precision
         if node.get_attr('accum_t') is not None:
-            node.set_attr('accum_t', newtype)
+            accum_t = NamedType('layer{}_accum_t'.format(node.index), new_precision)
+            node.set_attr('accum_t', new_precision)
         return False
 
     def precision_string_modify(self, pstr):
