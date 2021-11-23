@@ -1,3 +1,4 @@
+import numpy as np
 from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute
 
 @onnx_handler(*['Gemm'])
@@ -94,23 +95,17 @@ def parse_batchnorm_layer(reader, node, inputs_map, input_shapes, graph, config)
     layer['epsilon'] = get_onnx_attribute(node, 'epsilon', 1e-05)
     # layer['momentum'] = get_onnx_attribute(node, 'momentum', 0.9)  # not used
 
-
-    # reader.add_input(layer['name'], node.input)
-
-    # in_size = 1
-    # for dim in input_shapes[0][1:]:
-    #     in_size *= dim
-
-    # layer['n_in'] = layer['n_out'] = in_size
+    layer['n_in'] = layer['n_out'] = np.prod(input_shapes[0][1:])
 
     if len(input_shapes[0]) == 2:
         layer['n_filt'] = -1
+    elif len(input_shapes[0]) > 2:
+        if node.domain != 'qonnx.custom_op.channels_last':
+            raise RuntimeError("Please convert the model to channels-last format with qonnx-to-channels-last")
+        layer['data_format'] = 'channels_last' # QONNX needs to be channels-last.
+        layer['n_filt']= input_shapes[0][-1]
     else:
-        # TEMP REMOVE
-        pass
-        # raise RuntimeError("Don't yet support larger dimensions for ONNX BatchNormalization")
-    # elif len(input_shapes[0]) > 2:
-    #     layer['n_filt']= input_shapes[0][1] #Always channel first for onnx
+        raise RuntimeError(f"Unexpected input shape: {input_shapes[0]}")
 
     return layer
 

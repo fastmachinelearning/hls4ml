@@ -25,6 +25,7 @@ class QuantConstantParameters(OptimizerPass):
             if scale_node.__class__.__name__ == 'Constant':
                 node.set_attr('scale', scale_node.value)
                 node.inputs[1] = ''
+                node.attributes["scale_precision"] = scale_node.get_attr("quant_precision")
                 model.remove_node(scale_node, rewire=False)
 
         if node.get_input_node(node.inputs[2]):
@@ -32,6 +33,7 @@ class QuantConstantParameters(OptimizerPass):
             if zeropt_node.__class__.__name__ == 'Constant':
                 node.set_attr('zeropt', zeropt_node.value)
                 node.inputs[2] = ''
+                node.attributes["bias_precision"] = zeropt_node.get_attr("quant_precision")
                 model.remove_node(zeropt_node, rewire=False)
 
         if node.get_input_node(node.inputs[3]):
@@ -59,8 +61,12 @@ class QuantToBatchNorm(OptimizerPass):
         """
         Change quant node to BatchNormalization
         """
-        bn_scale = 1/node.get_attr("scale")
-        bn_bias = node.get_attr("zeropt")
+        input_shape = node.get_input_variable().shape
+
+        n_in = np.prod(input_shape)
+
+        bn_scale = np.broadcast_to(1/node.get_attr("scale"), input_shape)
+        bn_bias = np.broadcast_to(node.get_attr("zeropt"), input_shape)
 
         rounding_mode = node.get_attr("rounding_mode")
         if rounding_mode == "ROUND":
@@ -86,9 +92,21 @@ class QuantToBatchNorm(OptimizerPass):
         bn_precision = FixedPrecisionType(bitwidth, bitwidth, node.get_attr("signed"), bn_round, bn_sat)
         bn_quantizer = QuantNodeQuantizer(bn_precision)
 
+        attributes = {
+            "simple": True,
+            "scale": bn_scale,
+            "bias": bn_bias,
+            "quant_precision": bn_precision,
+            "quantizer": bn_quantizer,
+            "scale_precision": node.get_attr("scale_precision"),
+            "bias_precision": node.get_attr("bias_precision"),
+            "n_in": n_in,
+            "n_out": n_in,
+            "n_filt": -1
+        }
+
         bn_layer = model.make_node("BatchNormalization", f"bn_{node.name}",
-                                   {"simple": True, "scale": bn_scale, "bias": bn_bias, 
-                                    "quant_precision": bn_precision, "quantizer": bn_quantizer},
+                                   attributes,
                                    [node.inputs[0]], node.outputs)
         model.replace_node(node, bn_layer)
 

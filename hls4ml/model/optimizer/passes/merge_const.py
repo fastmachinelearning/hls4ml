@@ -80,35 +80,45 @@ class MergeToBatchNormalization(OptimizerPass):
         else:
             const_node = node.get_input_node(node.inputs[0])
             input_node_idx = 1
+
+        input_shape = node.get_input_variable(node.inputs[input_node_idx]).shape
+        n_in = np.prod(input_shape)
+
+
         op = node.attributes["op"]
         scale_precision = None
         bias_precision = None
         if op in ('add', 'sum'):
-            scale = np.ones(const_node.value.shape)
+            scale = np.ones(input_shape)
             scale_precision = IntegerPrecisionType(2)
-            bias = const_node.value
+            bias = np.broadcast_to(const_node.value, input_shape)
+            bias_precision = const_node.get_attr("quant_precision")
         elif op == 'sub':
             scale_precision = IntegerPrecisionType(2)
+            bias_precision = const_node.get_attr("quant_precision")
             if node1const:
-                scale = np.ones(const_node.value.shape)
-                bias = -const_node.value
+                scale = np.ones(input_shape)
+                bias = np.broadcast_to(-const_node.value, input_shape)
             else:
-                scale = -np.ones(const_node.value.shape)
-                bias = const_node.value
+                scale = -np.ones(input_shape)
+                bias = np.broadcast_to(const_node.value, input_shape)
 
         elif op == 'mul':
+            scale_precision = const_node.get_attr("quant_precision")
             bias_precision = IntegerPrecisionType(2)
-            scale = const_node.value
-            bias = np.zeros(const_node.value.shape)
+            scale = np.broadcast_to(const_node.value, input_shape)
+            bias = np.zeros(input_shape)
 
         attributes = {
-            "simple": True, 
+            "simple": True,
             "scale": scale,
             "bias": bias,
             "quant_precision": node.get_attr("quant_precision"),
             "quantizer": node.get_attr("quantizer"),
             "scale_precision": scale_precision,
             "bias_precision": bias_precision,
+            "n_in": n_in,
+            "n_out": n_in,
             "n_filt": -1
         }
 
@@ -131,18 +141,24 @@ class MergeToBatchNormalizationDiv(OptimizerPass):
         return is_match
 
     def transform(self, model, node):
+        input_shape = node.get_input_variable().shape
+        n_in = np.prod(input_shape)
         const_node = node.get_input_node(node.inputs[1])
         scale = 1/const_node.value
+        scale_precision = const_node.get_attr("quant_precision")
         bias_precision = IntegerPrecisionType(2)
-        bias = np.zeros(const_node.value.shape)
+        bias = np.zeros(input_shape)
 
         attributes = {
-            "simple": True, 
+            "simple": True,
             "scale": scale,
             "bias": bias,
             "quant_precision": node.get_attr("quant_precision"),
             "quantizer": node.get_attr("quantizer"),
+            "scale_precision": scale_precision,
             "bias_precision": bias_precision,
+            "n_in": n_in,
+            "n_out": n_in,
             "n_filt": -1
         }
 

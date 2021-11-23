@@ -1522,7 +1522,7 @@ class BatchNormalization(Layer):
         if self.get_attr("simple"):
             # Ths simpler form, used by ONNX parsing
             scale = self.get_attr("scale")
-            if scale:
+            if scale is not None:
                 bias = self.get_attr("bias")  # bias must be defined if scale is
                 self.add_weights_variable(name='scale', data=scale, precision=self.get_attr("scale_precision"), quantizer=self.get_attr("scale_quantizer"))
                 self.add_weights_variable(name='bias', data=bias, precision=self.get_attr("bias_precision"), quantizer=self.get_attr("bias_quantizer"))
