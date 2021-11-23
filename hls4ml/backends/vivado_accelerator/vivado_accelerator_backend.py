@@ -60,5 +60,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
         parent_flows = get_backend_flows(backend='vivado')
         for flow_name in parent_flows:
             flow = get_flow(flow_name)
-            register_flow(flow_name.replace('vivado:', ''), flow.optimizers, requires=flow.requires, backend=self.name)
+            acc_flow = register_flow(flow_name.replace('vivado:', ''), flow.optimizers, requires=flow.requires, backend=self.name)
+            if ':write' in flow_name:
+                self._writer_flow = acc_flow
         self._default_flow = 'vivadoaccelerator:ip'
