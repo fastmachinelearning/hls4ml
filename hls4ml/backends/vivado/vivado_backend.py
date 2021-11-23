@@ -12,7 +12,7 @@ from hls4ml.model.hls_attributes import Attribute
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer, model_optimizer
 from hls4ml.model.flow import register_flow
 from hls4ml.backends import FPGABackend
-from hls4ml.backends.fpga.fpga_types import APTypeConverter, ArrayVariableConverter, HLSTypeConverter, VivadoArrayVariableConverter
+from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter, VivadoArrayVariableConverter
 from hls4ml.report import parse_vivado_report
 
 class VivadoBackend(FPGABackend):
@@ -219,7 +219,7 @@ class VivadoBackend(FPGABackend):
     def init_garnet(self, layer):
         reuse_factor = layer.attributes['reuse_factor']
         
-        var_converter = ArrayVariableConverter(type_converter=HLSTypeConverter(precision_converter=APTypeConverter()))
+        var_converter = VivadoArrayVariableConverter(type_converter=HLSTypeConverter(precision_converter=APTypeConverter()))
         
         # A bit controversial but we are going to set the partitioning of the input here
         in_layer = layer.model.graph[layer.inputs[0]]
