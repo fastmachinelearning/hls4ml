@@ -591,6 +591,9 @@ class Constant(Layer):
         # self.add_weights_variable(name='value', data=value, precision=self.get_attr("quant_precision"), quantizer=self.get_attr("quantizer"))
         self.value = value  # note, this is unquantized; Only here for easier access
         shape = value.shape
+        if not shape:
+            shape = (1,)
+            self.value = np.array([self.value])
         dims = [f'{self.name}_{i}' for i in range(len(shape))]
         self.add_output_variable(shape, dims, var_name=self.name, precision=self.get_attr("quant_precision"))
 
