@@ -93,7 +93,7 @@ def parse_yaml_config(config_file):
 
     print('Loading configuration from', config_file)
     with open(config_file, 'r') as file:
-        parsed_config = yaml.load(file, Loader=yaml.SafeLoader)
+        parsed_config = yaml.safe_load(file)
     return parsed_config
 
 def convert_from_config(config):
