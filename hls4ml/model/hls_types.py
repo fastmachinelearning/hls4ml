@@ -208,7 +208,7 @@ class TensorVariable(Variable):
         return '*'.join([str(k) for k in self.dim_names])
 
 class InplaceVariable(Variable):
-    def __init__(self, shape, dim_names, proxy, **kwargs):
+    def __init__(self, shape, dim_names, proxy):
         self.shape = shape
         self.dim_names = dim_names
         self.type = proxy.type

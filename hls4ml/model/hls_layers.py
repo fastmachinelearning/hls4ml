@@ -273,7 +273,7 @@ class Reshape(Layer):
 
         out_name = self.outputs[0]
         proxy = self.get_input_variable()
-        out = InplaceVariable(shape, dims, proxy, index=self.get_input_node().index)
+        out = InplaceVariable(shape, dims, proxy)
 
         self.set_attr(out_name, out)
 
