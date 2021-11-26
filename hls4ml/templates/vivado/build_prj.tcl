@@ -14,37 +14,7 @@ array set opt {
 set tcldir [file dirname [info script]]
 source [file join $tcldir project.tcl]
 
-proc add_exit_instruction_tcl {} {
-    global myproject
-    set timestamp [clock format [clock seconds] -format {%Y%m%d%H%M%S}]
-
-    set filename ${myproject}_prj/solution1/sim/verilog/${myproject}_axi.tcl
-    set temp     $filename.new.$timestamp
-    # set backup   $filename.bak.$timestamp
-
-    set in  [open $filename r]
-    set out [open $temp     w]
-
-    # line-by-line, read the original file
-    while {[gets $in line] != -1} {
-        if {[string equal "$line" "run all"]} {
-            set line {run all
-quit
-}
-        }
-        # then write the transformed line
-        puts $out $line
-    }
-
-    close $in
-    close $out
-
-    # move the new data to the proper filename
-    file delete -force $filename
-    file rename -force $temp $filename
-}
-
-proc clean_script {} {
+proc remove_recursive_log_wave {} {
     global myproject
     set timestamp [clock format [clock seconds] -format {%Y%m%d%H%M%S}]
 
@@ -59,15 +29,16 @@ proc clean_script {} {
     while {[gets $in line] != -1} {
         if {[string equal "$line" "log_wave -r /"]} {
             set line { }
+        }
         puts $out $line
     }
 
-    close $in
-    close $out
+     close $in
+     close $out
 
-    # move the new data to the proper filename
-    file delete -force $filename
-    file rename -force $temp $filename
+     # move the new data to the proper filename
+     file delete -force $filename
+     file rename -force $temp $filename
 }
 
 proc add_vcd_instructions_tcl {} {
@@ -216,7 +187,7 @@ if {$opt(cosim)} {
     add_vcd_instructions_tcl
   }
 
-  clean_script
+  remove_recursive_log_wave
   set old_pwd [pwd]
   cd ${myproject}_prj/solution1/sim/verilog/
   source run_sim.tcl
