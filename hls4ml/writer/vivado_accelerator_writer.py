@@ -343,7 +343,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
                                                                  model.get_output_variables())
         super(VivadoAcceleratorWriter, self).write_hls(model)
         self.write_board_script(model)
-        self.write_driver(model)
+        #self.write_driver(model)
         self.write_wrapper_test(model)
         self.write_axi_wrapper(model)
         self.modify_build_script(model)
