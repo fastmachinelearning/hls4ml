@@ -1,5 +1,6 @@
 import os
 from shutil import copyfile
+from shutil import copytree
 
 from hls4ml.templates.vivado_accelerator_config import VivadoAcceleratorConfig
 from hls4ml.writer.vivado_writer import VivadoWriter
@@ -328,8 +329,12 @@ class VivadoAcceleratorWriter(VivadoWriter):
 
     def write_driver(self, model):
         filedir = os.path.dirname(os.path.abspath(__file__))
-        copyfile(os.path.join(filedir, self.vivado_accelerator_config.get_driver_path()),
-                 ('{}/' + self.vivado_accelerator_config.get_driver_file()).format(model.config.get_output_dir()))
+        if os.path.isdir(os.path.join(filedir, self.vivado_accelerator_config.get_driver_path())):
+            copytree(os.path.join(filedir, self.vivado_accelerator_config.get_driver_path()),
+                     ('{}/' + self.vivado_accelerator_config.get_driver_files()).format(model.config.get_output_dir()))
+        else:
+            copyfile(os.path.join(filedir, self.vivado_accelerator_config.get_driver_path()),
+                     ('{}/' + self.vivado_accelerator_config.get_driver_files()).format(model.config.get_output_dir()))
         
     def write_new_tar(self, model):
         os.remove(model.config.get_output_dir() + '.tar.gz')
@@ -343,7 +348,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
                                                                  model.get_output_variables())
         super(VivadoAcceleratorWriter, self).write_hls(model)
         self.write_board_script(model)
-        #self.write_driver(model)
+        self.write_driver(model)
         self.write_wrapper_test(model)
         self.write_axi_wrapper(model)
         self.modify_build_script(model)
