@@ -8,7 +8,7 @@ set hls_solution_name "solution1"
 set ps_name "processing_system7_0"
 set acc_name "${myproject}_axi_0"
 set part_name "xc7z020clg400-1"
-set board_name "www.digilentinc.com:pynq-z1:part0:1.0"
+set board_name "tul.com.tw:pynq-z2:part0:1.0"
 
 # Set board and chip part names
 create_project ${project_name} ${myproject}_vivado_accelerator -part ${part_name} -force
