@@ -268,32 +268,31 @@ def types_histogram(data, fmt='longform'):
 types_plots = {'boxplot' : types_boxplot,
                'histogram' : types_histogram}
 
-def ap_fixed_WIF(dtype):
+def ap_fixed_WIFS(dtype):
     from hls4ml.templates.vivado_template import VivadoBackend
-    dtype = VivadoBackend.convert_precision_string(None, dtype)
-    W, I, F = dtype.width, dtype.integer, dtype.fractional
-    return W, I, F
+    dtype = VivadoBackend.convert_precision_string(None, dtype) 
+    W, I, F, S = dtype.width, dtype.integer, dtype.fractional, dtype.signed
+    return W, I, F, S
 
 def types_hlsmodel(model):
     suffix = ['w', 'b']
     data = {'layer' : [], 'low' : [], 'high' : []}
     # Plot the default precision
     default_precision = model.config.model_precision['default']
-    # assumes ap_fixed
-    W, I, F = ap_fixed_WIF(default_precision)
+    W, I, F, S = ap_fixed_WIFS(default_precision)
     data['layer'].append('model')
     data['low'].append(-F)
-    data['high'].append(I-1)
+    data['high'].append(I-1 if S else I)
 
     for layer in model.get_layers():
         for iw, weight in enumerate(layer.get_weights()):
             wname = '{}/{}'.format(layer.name, suffix[iw])
             T = weight.type
             if T.name != 'model':
-                W, I, F = ap_fixed_WIF(T.precision)
+                W, I, F, S = ap_fixed_WIFS(T.precision)
                 data['layer'].append(wname)
                 data['low'].append(-F)
-                data['high'].append(I-1)
+                data['high'].append(I-1 if S else I)
     data = pandas.DataFrame(data)
     return data
 
@@ -301,16 +300,16 @@ def activation_types_hlsmodel(model):
     data = {'layer' : [], 'low' : [], 'high' : []}
     # Get the default precision
     default_precision = model.config.model_precision['default']
-    W, I, F = ap_fixed_WIF(default_precision)
+    W, I, F, S = ap_fixed_WIFS(default_precision)
     data['layer'].append('model')
     data['low'].append(-F)
-    data['high'].append(I-1)
+    data['high'].append(I-1 if S else I)
     for layer in model.get_layers():
         T = layer.get_output_variable().type.precision
-        W, I, F = ap_fixed_WIF(T)
+        W, I, F, S = ap_fixed_WIFS(T)
         data['layer'].append(layer.name)
         data['low'].append(-F)
-        data['high'].append(I-1)
+        data['high'].append(I-1 if S else I)
     data = pandas.DataFrame(data)
     return data
 
@@ -674,9 +673,9 @@ def get_ymodel_keras(keras_model, X):
     dictionary
         A dictionary in the form {"layer_name": ouput array of layer}
     """
-
+    
     ymodel = {}
-
+    
     for layer in keras_model.layers:
         print("Processing {} in Keras model...".format(layer.name))
         if not _is_ignored_layer(layer):
@@ -684,23 +683,23 @@ def get_ymodel_keras(keras_model, X):
             #Note that if the layer is a standalone activation layer then skip this
             if hasattr(layer, 'activation') and not (isinstance(layer,keras.layers.Activation) or isinstance(layer, qkeras.qlayers.QActivation)):
                 if layer.activation:
-
+                    
                     if layer.activation.__class__.__name__ == "linear":
                         ymodel[layer.name] = _get_output(layer, X, keras_model.input)
-
+                    
                     else:
                         temp_activation = layer.activation
                         layer.activation = None
                         #Get output for layer without activation
                         ymodel[layer.name] = _get_output(layer, X, keras_model.input)
 
-                        #Add the activation back
+                        #Add the activation back 
                         layer.activation = temp_activation
                         #Get ouput for activation
                         ymodel[layer.name + "_{}".format(temp_activation.__class__.__name__)] =  _get_output(layer, X, keras_model.input)
                 else:
                     ymodel[layer.name] = _get_output(layer, X, keras_model.input)
-            else:
+            else:    
                 ymodel[layer.name] = _get_output(layer, X, keras_model.input)
     print("Done taking outputs for Keras model.")
     return ymodel
@@ -708,10 +707,10 @@ def get_ymodel_keras(keras_model, X):
 def _norm_diff(ymodel, ysim):
     """Calculate the square root of the sum of the squares of the differences"""
     diff = {}
-
+    
     for key in list(ysim.keys()):
         diff[key] = np.linalg.norm(ysim[key]-ymodel[key])
-
+    
     #---Bar Plot---
     f, ax = plt.subplots()
     plt.bar(list(diff.keys()),list(diff.values()))
@@ -751,7 +750,7 @@ def _dist_diff(ymodel, ysim):
 
     #---Box Plot---
     f, ax = plt.subplots()
-    pos = np.array(range(len(list(diff.values())))) + 1
+    pos = np.array(range(len(list(diff.values())))) + 1            
     ax.boxplot(list(diff.values()), sym='k+', positions=pos)
 
     #--formatting
@@ -790,12 +789,12 @@ def compare(keras_model, hls_model, X, plot_type = "dist_diff"):
     matplotlib figure
         plot object of the histogram depicting the difference in each layer's output
     """
-
+    
     #Take in output from both models
     #Note that each y is a dictionary with structure {"layer_name": flattened ouput array}
     ymodel = get_ymodel_keras(keras_model, X)
     _, ysim = hls_model.trace(X)
-
+    
     print("Plotting difference...")
     f = plt.figure()
     if plot_type == "norm_diff":

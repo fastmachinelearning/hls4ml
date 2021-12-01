@@ -385,7 +385,11 @@ class Layer(object):
 
     def get_input_node(self, input_name=None):
         if input_name is not None:
-            return self.model.graph.get(input_name)
+            nodes = [node for node in self.model.graph.values() if input_name in node.outputs]
+            if len(nodes) == 0:
+                return None
+            else:
+                return nodes[0]
         else:
             return self.model.graph.get(self.inputs[0])
 
@@ -1164,7 +1168,7 @@ class Pooling1D(Layer):
             params['n_filt'] = self.get_output_variable().dim_names[1]
         else:
             params['n_in'] = self.get_input_variable().dim_names[1]
-            params['n_out'] = self.get_input_variable().dim_names[1]
+            params['n_out'] = self.get_output_variable().dim_names[1]
             params['n_filt'] = self.get_output_variable().dim_names[0]
 
         return self._config_template.format(**params)
@@ -1206,19 +1210,24 @@ class Pooling2D(Layer):
 
 class GlobalPooling1D(Layer):
     def initialize(self):
-        shape = [self.attributes['n_out'], self.attributes['n_filt']]
-        dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+        shape = [self.attributes['n_filt']]
+        dims = ['N_FILT_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0].replace('Global', ''))
 
     def function_cpp(self):
         params = self._default_function_params()
-
+        params['data_format'] = 'cf' if self.get_attr('data_format') == 'channels_first' else 'cl'
         return [self._function_template.format(**params)]
 
     def config_cpp(self):
         params = self._default_config_params()
-        params['n_in'] = self.get_input_variable().size_cpp()
+        if self.get_attr('data_format') == 'channels_last':
+            params['n_in'] = self.get_input_variable().dim_names[0]
+            params['n_filt'] = self.get_input_variable().dim_names[1]
+        else:
+            params['n_in'] = self.get_input_variable().dim_names[1]
+            params['n_filt'] = self.get_input_variable().dim_names[0]
 
         return self._config_template.format(**params)
 
@@ -1377,6 +1386,13 @@ class Softmax(Activation):
                 self.set_attr('implementation', 'latency')
             else:
                 self.set_attr('implementation', self.model.config.get_strategy(self).lower())
+            
+            if self.model.config.get_config_value('IOType') == 'io_parallel':
+                assert len(self.get_input_variable().shape) == 1, 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
+
+class TernaryTanh(Activation):
+    def initialize(self):
+        super(TernaryTanh, self).initialize()
 
 class BatchNormalization(Layer):
     def initialize(self):
@@ -1845,6 +1861,7 @@ layer_map = {
     'ELU'                    : ParametrizedActivation,
     'PReLU'                  : PReLU,
     'Softmax'                : Softmax,
+    'TernaryTanh'            : TernaryTanh,
     'Reshape'                : Reshape,
     'Dense'                  : Dense,
     'BinaryDense'            : Dense,

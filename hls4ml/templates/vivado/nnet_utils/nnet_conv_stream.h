@@ -4,6 +4,7 @@
 #include "ap_shift_reg.h"
 #include "nnet_common.h"
 #include "hls_stream.h"
+#include "nnet_dense.h"
 
 namespace nnet {
 

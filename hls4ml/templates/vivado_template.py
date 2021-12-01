@@ -121,6 +121,7 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned table_size = {table_size};
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
+    static const unsigned axis = {axis};
     static const nnet::softmax_implementation implementation = nnet::softmax_implementation::{implementation};
     typedef {exp_table_t} exp_table_t;
     typedef {inv_table_t} inv_table_t;
@@ -169,11 +170,9 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
 
 global_pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
     static const unsigned n_in = {n_in};
-    static const unsigned n_out = {n_out};
-    static const unsigned pad_left = {pad_left};
-    static const unsigned pad_right = {pad_right};
-    static const unsigned stride = {stride};
+    static const unsigned n_filt = {n_filt};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
+    static const unsigned reuse = {reuse};
     typedef {accum_t} accum_t;
 }};\n"""
 
@@ -358,7 +357,7 @@ activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({
 param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {param}, {output});'
 pooling1d_function_template = 'nnet::pooling1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
-global_pooling1d_function_template = 'nnet::global_pooling1d<{input_t}, {config}>({input}, {output});'
+global_pooling1d_function_template = 'nnet::global_pooling1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 global_pooling2d_function_template = 'nnet::global_pooling2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 zeropad1d_function_template = 'nnet::zeropad1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 zeropad2d_function_template = 'nnet::zeropad2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
@@ -398,6 +397,7 @@ class VivadoBackend(Backend):
         self.register_templates('ParametrizedActivation' , param_activ_function_template, activ_config_template, activ_include_list)
         self.register_templates('PReLU'                  , param_activ_function_template, activ_config_template, activ_include_list)
         self.register_templates('Softmax'                , activ_function_template,       softmax_config_template, activ_include_list)
+        self.register_templates('TernaryTanh'            , activ_function_template,       activ_config_template, activ_include_list)
         self.register_templates('Pooling1D'              , pooling1d_function_template,   pooling1d_config_template, pooling_include_list)
         self.register_templates('Pooling2D'              , pooling2d_function_template,   pooling2d_config_template, pooling_include_list)
         self.register_templates('GlobalPooling1D'        , global_pooling1d_function_template,   global_pooling1d_config_template, pooling_include_list)
@@ -559,6 +559,8 @@ class VivadoBackend(Backend):
                 product = 'both_binary'
             elif isinstance(weight_T, XnorPrecisionType): # data is not xnor-binary
                 product = 'weight_binary'
+            elif isinstance(data_T, XnorPrecisionType): # data is xnor, weight is not
+                product = 'data_binary'
             elif isinstance(weight_T, IntegerPrecisionType) and weight_T.width == 2 and weight_T.signed:
                 product = 'weight_ternary'
             else:

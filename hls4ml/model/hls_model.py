@@ -323,7 +323,9 @@ class HLSModel(object):
             name = layer['name']
             inputs = layer.get('inputs', [])
             outputs = layer.get('outputs', [])
-            if len(inputs) == 0:
+            if kind in ['InputLayer', 'Input']:
+                inputs = ['input']
+            elif len(inputs) == 0:
                 inputs = [next(reversed(self.graph), 'input')]
             if len(outputs) == 0:
                 outputs = [name]
@@ -385,10 +387,10 @@ class HLSModel(object):
         if len(node.inputs) > 1:
             raise Exception('Cannot insert a node with more than one input (for now).')
 
-        prev_node = self.graph.get(node.inputs[0])
-        next_nodes = [x for x in self.graph.values() if x.inputs[0] == prev_node.outputs[0]]
+        prev_node = node.get_input_node(node.inputs[0])
+        next_nodes = [x for x in self.graph.values() if x.inputs[0] in prev_node.outputs]
         if before is None:
-            next_node = next((x for x in self.graph.values() if x.inputs[0] == prev_node.outputs[0]), None)
+            next_node = next((x for x in self.graph.values() if x.inputs[0] in prev_node.outputs), None)
         else:
             if before not in next_nodes:
                 raise Exception('Cannot insert a node {} before {} (candidates: {}).'.format(node.name, before.name, ','.join([n.name for n in next_nodes])))
@@ -404,6 +406,7 @@ class HLSModel(object):
                 new_graph[node.name] = node
 
         self.graph = new_graph
+        self._update_model_outputs()
 
     def remove_node(self, node, rewire=True):
         """ Remove a node from a graph.
@@ -433,20 +436,14 @@ class HLSModel(object):
                             next_node.inputs[i] = prev_node.outputs[0]
                             break
                 else:
-                    if node.outputs[0] in self.outputs:
-                        self.outputs = [prev_node.outputs[0] if x == node.outputs[0] else x for x in self.outputs]
-                    else:
+                    if not node.outputs[0] in self.outputs:
                         raise Exception('Cannot rewire a node without child')
             else:
                 raise Exception('Cannot rewire a node without a parent')
         
-        #If it's the output layer then reset the output to this node's input
-        if node.name in self.outputs:
-            node_indx = self.outputs.index(node.name)
-            self.outputs[node_indx] = node.inputs[0]
-
         del self.output_vars[node.outputs[0]]
         del self.graph[node.name]
+        self._update_model_outputs()
 
     def replace_node(self, old_node, new_node):
         """ Replace an existing node in the graph with a new one.
@@ -465,6 +462,18 @@ class HLSModel(object):
                 new_node.inputs = [prev_node.outputs[0]]
 
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
+        self._update_model_outputs()
+
+    def _update_model_outputs(self):
+        ''' Update the model outputs
+
+        All node outputs and inputs are found. The model outputs are set to all node outputs
+        that are not also node inputs.
+        '''
+        node_outputs = np.array([out for node in self.graph.values() for out in node.outputs])
+        node_inputs = np.array([inp for node in self.graph.values() for inp in node.inputs])
+        model_outputs = node_outputs[np.isin(node_outputs, node_inputs, invert=True)]
+        self.outputs = model_outputs.tolist()
 
     def get_weights_data(self, layer_name, var_name):
         return self.reader.get_weights_data(layer_name, var_name)
@@ -546,21 +555,21 @@ class HLSModel(object):
         else: 
             xlist = x
         
-        for x in xlist:
-            if not isinstance(x, np.ndarray):
+        for xi in xlist:
+            if not isinstance(xi, np.ndarray):
                 raise Exception('Expected numpy.ndarray, but got {}'.format(type(x)))
-            if not x.flags['C_CONTIGUOUS']:
+            if not xi.flags['C_CONTIGUOUS']:
                 raise Exception('Array must be c_contiguous, try using numpy.ascontiguousarray(x)')
 
-        x = xlist[0]
-        if x.dtype in [np.single, np.float32]:
+        x0 = xlist[0]
+        if x0.dtype in [np.single, np.float32]:
             top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_float')
             ctype = ctypes.c_float
-        elif x.dtype in [np.double, np.float64, np.float_]:
+        elif x0.dtype in [np.double, np.float64, np.float_]:
             top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_double')
             ctype = ctypes.c_double
         else:
-            raise Exception('Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(x.dtype))
+            raise Exception('Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(x0.dtype))
 
 
         top_function.restype = None
@@ -575,9 +584,9 @@ class HLSModel(object):
         else:
             xlist = x
         n_samples = []
-        for i, x in enumerate(xlist):
+        for i, xi in enumerate(xlist):
             expected_size = self.get_input_variables()[i].size()
-            x_size = np.prod(x.shape)
+            x_size = np.prod(xi.shape)
             n_sample, rem = divmod(x_size, expected_size)
             if rem != 0:
                 raise Exception('Input size mismatch, got {}, expected {}'.format(x_size.shape, self.get_input_variables()[i].shape))
@@ -591,23 +600,25 @@ class HLSModel(object):
     def predict(self, x):
         top_function, ctype = self._get_top_function(x)
         n_samples = self._compute_n_samples(x)
+        n_inputs = len(self.get_input_variables())
 
         curr_dir = os.getcwd()
         os.chdir(self.config.get_output_dir() + '/firmware')
 
         output = []
-        if n_samples == 1:
+        if n_samples == 1 and n_inputs == 1:
             x = [x]
 
         try:
             for i in range(n_samples):
                 predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
-                if len(self.get_input_variables()) == 1:
+                if n_inputs == 1:
                     top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
                 else:
-                    argtuple = [xi for xi in x[i]]
+                    inp = [xj[i] for xj in x]
+                    argtuple = inp
                     argtuple += [predictions]
-                    argtuple += [ctypes.byref(ctypes.c_ushort()) for i in range(len(x[i])+1)]
+                    argtuple += [ctypes.byref(ctypes.c_ushort()) for k in range(len(inp)+1)]
                     argtuple = tuple(argtuple)
                     top_function(*argtuple)
                 output.append(predictions)
@@ -630,6 +641,7 @@ class HLSModel(object):
 
         top_function, ctype = self._get_top_function(x)
         n_samples = self._compute_n_samples(x)
+        n_inputs = len(self.get_input_variables())
 
         class TraceData(ctypes.Structure):
             _fields_ = [('name', ctypes.c_char_p),
@@ -661,7 +673,7 @@ class HLSModel(object):
         os.chdir(self.config.get_output_dir() + '/firmware')
 
         output = []
-        if n_samples == 1:
+        if n_samples == 1 and n_inputs == 1:
             x = [x]
 
         try:
@@ -669,12 +681,13 @@ class HLSModel(object):
 
             for i in range(n_samples):
                 predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
-                if len(self.get_input_variables()) == 1:
+                if n_inputs == 1:
                     top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
                 else:
-                    argtuple = [xi for xi in x[i]]
+                    inp = [xj[i] for xj in x]
+                    argtuple = inp
                     argtuple += [predictions]
-                    argtuple += [ctypes.byref(ctypes.c_ushort()) for i in range(len(x[i])+1)]
+                    argtuple += [ctypes.byref(ctypes.c_ushort()) for k in range(len(inp)+1)]
                     argtuple = tuple(argtuple)
                     top_function(*argtuple)
                 output.append(predictions)
