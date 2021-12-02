@@ -385,12 +385,12 @@ class VivadoAcceleratorWriter(VivadoWriter):
  
     def write_driver(self, model):
         filedir = os.path.dirname(os.path.abspath(__file__))
-        if os.path.isdir(os.path.join(filedir, self.vivado_accelerator_config.get_driver_path())):
-            copytree(os.path.join(filedir, self.vivado_accelerator_config.get_driver_path()),
-                     ('{}/' + self.vivado_accelerator_config.get_driver_files()).format(model.config.get_output_dir()))
+        srcfiles = os.path.join(filedir, self.vivado_accelerator_config.get_driver_path())
+        dstfiles = ('{}/' + self.vivado_accelerator_config.get_driver_files()).format(model.config.get_output_dir())
+        if os.path.isdir(srcfiles):
+            copytree(srcfiles, dstfiles, dirs_exist_ok=True)
         else:
-            copyfile(os.path.join(filedir, self.vivado_accelerator_config.get_driver_path()),
-                     ('{}/' + self.vivado_accelerator_config.get_driver_files()).format(model.config.get_output_dir()))
+            copyfile(srcfiles, dstfiles)
         
     def write_new_tar(self, model):
         os.remove(model.config.get_output_dir() + '.tar.gz')
