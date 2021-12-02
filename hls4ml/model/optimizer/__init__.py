@@ -12,11 +12,11 @@ from hls4ml.model.optimizer.passes.conv_same_pad import InsertZeroPaddingBeforeC
 from hls4ml.model.optimizer.passes.conv_same_pad import InsertZeroPaddingBeforeConv2D
 from hls4ml.model.optimizer.passes.pointwise import OptimizePointwiseConv
 from hls4ml.model.optimizer.passes.clone import CloneOutput
-from hls4ml.model.optimizer.passes.repack_stream import ReshapeStream, BroadcastStream
+from hls4ml.model.optimizer.passes.repack_stream import ReshapeStream, BroadcastStream, RemoveFinalReshape
 from hls4ml.model.optimizer.passes.transpose_opt import RemoveUselessTranspose
 from hls4ml.model.optimizer.passes.multi_dense import ReplaceMultidimensionalDenseWithConv
 from hls4ml.model.optimizer.passes.reshape_const import ReshapeConstant
-from hls4ml.model.optimizer.passes.quant_opt import QuantConstantParameters, QuantToBatchNorm
+from hls4ml.model.optimizer.passes.quant_opt import QuantConstantParameters, QuantFactorizeScale, QuantToActivation, QuantToConstant
 from hls4ml.model.optimizer.passes.batchnorm_opt import BatchNormConstantParameters, ConstantBatchNormMerging, FuseConsecutiveBatchNormalization
 from hls4ml.model.optimizer.passes.merge_const import MergeTwoConstant, MergeToBatchNormalization, MergeToBatchNormalizationDiv
 from hls4ml.model.optimizer.passes.matmul_const_to_dense import MatmulConstToDense
@@ -40,7 +40,9 @@ if __qkeras_optimizers__:
 
 register_pass('reshape_constant', ReshapeConstant)
 register_pass('quant_constant_params', QuantConstantParameters)
-register_pass('quant_to_batchnorm', QuantToBatchNorm)
+register_pass('quant_factorize_scale', QuantFactorizeScale)
+register_pass('quant_to_activation', QuantToActivation)
+register_pass('quant_to_constant', QuantToConstant)
 register_pass('batch_norm_constant_parameters', BatchNormConstantParameters)
 register_pass('fuse_consecutive_base_batch_normalizations', FuseConsecutiveBatchNormalization)
 register_pass('constant_batch_norm_fusion', ConstantBatchNormMerging)
@@ -58,6 +60,7 @@ register_pass('conv1d_same_pad', InsertZeroPaddingBeforeConv1D)
 register_pass('conv2d_same_pad', InsertZeroPaddingBeforeConv2D)
 register_pass('optimize_pointwise_conv', OptimizePointwiseConv)
 register_pass('clone_output', CloneOutput)
+register_pass('remove_final_reshape', RemoveFinalReshape)
 register_pass('reshape_stream', ReshapeStream)
 register_pass('remove_useless_transpose', RemoveUselessTranspose)
 register_pass('replace_multidense_conv', ReplaceMultidimensionalDenseWithConv)
