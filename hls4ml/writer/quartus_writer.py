@@ -290,6 +290,8 @@ class QuartusWriter(Writer):
                 newline = line
                 newline += indent + 'for(int i = 0; i < num_iterations; i++) {\n'
                 for inp in model.get_input_variables():
+                    newline += indent + f'  inputs.emplace_back();\n'
+                    newline += indent + f'  outputs.emplace_back();\n'
                     newline += indent + f'  std::fill_n(inputs[i].{inp.member_name}, {inp.size_cpp()}, 0.0);\n'
                 newline += indent + '}\n'
 
