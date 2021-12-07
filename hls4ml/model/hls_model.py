@@ -434,6 +434,7 @@ class HLSModel(object):
                     for i,_ in enumerate(next_node.inputs):
                         if node.outputs[0] == next_node.inputs[i]:
                             next_node.inputs[i] = prev_node.outputs[0]
+                            next_node.update_inplace_variables()
                             break
                 else:
                     if not node.outputs[0] in self.outputs:
