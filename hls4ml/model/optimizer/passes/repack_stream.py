@@ -71,21 +71,30 @@ for backend in ['Vivado', 'VivadoAccelerator']:
 class ReshapeStream(OptimizerPass):
     ''' Repacks stream for Reshape layer '''
     def match(self, node):
-        # do not run optimizer pass for a flatten layer (1 output dimension)
-        return node.__class__.__name__ == 'Reshape' and len(node.get_output_variable().shape) > 1
+
+        return node.__class__.__name__ == 'Reshape'
 
     def transform(self, model, node):
-        if model.config.backend.name not in ['Vivado', 'VivadoAccelerator'] or \
-            model.config.get_config_value('IOType') != 'io_stream':
-            return False
+        if (model.config.backend.name not in ['Vivado', 'VivadoAccelerator']
+            or model.config.get_config_value('IOType') != 'io_stream'
+            or len(node.get_output_variable().shape) <= 1):
+            # do not add repack for a flatten layer (1 output dimension)
 
-        attrs = {
-            'target_shape': node.get_attr('target_shape')
-        }
+            # in this case just remove the reshape, changing the previous node's ouput shape
+            outvar = node.get_output_variable()
+            invar = node.get_input_variable()
+            invar.dim_names = outvar.dim_names
+            invar.shape = outvar.shape
+            model.remove_node(node)
 
-        # Insert new Repack node instead of Reshape
-        repack_layer = model.make_node('Repack', 'repack_' + node.name, attrs, node.inputs.copy())
-        model.replace_node(node, repack_layer)
+        else:
+            attrs = {
+                'target_shape': node.get_attr('target_shape')
+            }
+
+            # Insert new Repack node instead of Reshape
+            repack_layer = model.make_node('Repack', 'repack_' + node.name, attrs, node.inputs.copy())
+            model.replace_node(node, repack_layer)
 
         return True
 
@@ -97,12 +106,12 @@ class BroadcastStream(OptimizerPass):
             return inp1.shape != inp2.shape
         else:
             return False
-        
+
     def transform(self, model, node):
         if model.config.backend.name not in ['Vivado'] or \
             model.config.get_config_value('IOType') != 'io_stream':
             return False
-            
+
         inp1 = node.get_input_variable(node.inputs[0])
         inp2 = node.get_input_variable(node.inputs[1])
         if np.prod(inp1.shape) > np.prod(inp2.shape):
@@ -133,7 +142,7 @@ class RemoveFinalReshape(OptimizerPass):
         if model.config.get_config_value('IOType') == 'io_parallel':
             print('WARNING: Final layer is a Reshape, which does not affect the output for io_parallel; removing it')
             # remove, but don't rewire because it's the output layer
-            model.remove_node(node, rewire=False) 
+            model.remove_node(node, rewire=False)
             return True
         elif model.config.get_config_value('IOType') == 'io_stream':
             print('WARNING: Final layer is a Reshape, which may incur a large resource cost for io_stream; consider removing it')

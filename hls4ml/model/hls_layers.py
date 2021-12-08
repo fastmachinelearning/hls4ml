@@ -194,23 +194,6 @@ class StreamVariable(Variable):
     def size_cpp(self):
         return '*'.join([str(k) for k in self.dim_names])
 
-class InplaceVariable():
-    def __init__(self, shape, dim_names, proxy, **kwargs):
-        self.shape = shape
-        self.dim_names = dim_names
-        self.type = proxy.type
-        self.name = proxy.name
-        self.size = proxy.size
-
-    def get_shape(self):
-        return zip(self.dim_names, self.shape)
-
-    def definition_cpp(self):
-        return None
-
-    def size_cpp(self):
-        return '*'.join([str(k) for k in self.dim_names])
-
 class WeightVariable(Variable):
     def __init__(self, var_name, type_name, precision, data, quantizer=None, **kwargs):
         super(WeightVariable, self).__init__(var_name, HLSType(type_name, precision, **kwargs), **kwargs)
@@ -586,18 +569,14 @@ class Reshape(Layer):
             shape = shape[1:]
         dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
 
-        out_name = self.outputs[0]
-        proxy = self.get_input_variable()
-        out = InplaceVariable(shape, dims, proxy, index=self.get_input_node().index)
-
-        self.variables[out_name] = out
-        self.model.register_output_variable(out_name, out)
+        self.add_output_variable(shape, dims)
 
     def function_cpp(self):
-        return None
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
 
     def config_cpp(self):
-        return None
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
+
 
 class Dense(Layer):
     def initialize(self):
