@@ -3,7 +3,9 @@ import six
 import os
 import sys
 import re
+from copy import deepcopy
 import numpy as np
+
 from collections import OrderedDict
 
 class Quantizer(object):
@@ -194,13 +196,11 @@ class StreamVariable(Variable):
     def size_cpp(self):
         return '*'.join([str(k) for k in self.dim_names])
 
-class InplaceVariable():
-    def __init__(self, shape, dim_names, proxy, **kwargs):
+class InplaceVariable(Variable):
+    def __init__(self, shape, dim_names, var_name, atype, **kwargs):
+        super().__init__(var_name, atype, **kwargs)
         self.shape = shape
         self.dim_names = dim_names
-        self.type = proxy.type
-        self.name = proxy.name
-        self.size = proxy.size
 
     def get_shape(self):
         return zip(self.dim_names, self.shape)
@@ -587,14 +587,18 @@ class Reshape(Layer):
         dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
 
         out_name = self.outputs[0]
-        proxy = self.get_input_variable()
-        out = InplaceVariable(shape, dims, proxy, index=self.get_input_node().index)
+        outtype = deepcopy(self.get_input_variable().type)
+        outtype.name = f'layer{self.index}_t'
+        out = InplaceVariable(shape, dims, f'layer{self.index}_out', outtype)
 
         self.variables[out_name] = out
         self.model.register_output_variable(out_name, out)
 
     def function_cpp(self):
-        return None
+        invar = self.get_input_variable()
+        outvar = self.get_output_variable()
+        return [f'using {outvar.type.name} = {invar.type.name};',
+                f'auto& {outvar.cppname} = {invar.cppname};']
 
     def config_cpp(self):
         return None
