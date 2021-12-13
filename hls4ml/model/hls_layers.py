@@ -1,7 +1,6 @@
 from __future__ import print_function
 import six
 import re
-from copy import deepcopy
 import numpy as np
 
 from collections import OrderedDict
@@ -190,21 +189,6 @@ class StreamVariable(Variable):
         for dim in self.shape:
             nelem *= dim
         return nelem
-
-    def size_cpp(self):
-        return '*'.join([str(k) for k in self.dim_names])
-
-class InplaceVariable(Variable):
-    def __init__(self, shape, dim_names, var_name, atype, **kwargs):
-        super().__init__(var_name, atype, **kwargs)
-        self.shape = shape
-        self.dim_names = dim_names
-
-    def get_shape(self):
-        return zip(self.dim_names, self.shape)
-
-    def definition_cpp(self):
-        return None
 
     def size_cpp(self):
         return '*'.join([str(k) for k in self.dim_names])
@@ -607,18 +591,7 @@ class Reshape(Layer):
             shape_node = self.get_input_node(self.inputs[1])
             target_shape = shape_node.value
 
-        # take care of -1 shapes
-        shape = self.infer_shape(input_shape, target_shape)
-
-        dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(len(shape))]
-        #self.add_output_variable(shape, dims)
-        out_name = self.outputs[0]
-        outtype = deepcopy(self.get_input_variable().type)
-        outtype.name = f'layer{self.index}_t'
-        out = InplaceVariable(shape, dims, f'layer{self.index}_out', outtype)
-
-        self.variables[out_name] = out
-        self.model.register_output_variable(out_name, out)
+        self.add_output_variable(shape, dims)
 
     @staticmethod
     def infer_shape(input_shape, target_shape):
@@ -638,13 +611,10 @@ class Reshape(Layer):
         return target_shape
 
     def function_cpp(self):
-        invar = self.get_input_variable()
-        outvar = self.get_output_variable()
-        return [f'using {outvar.type.name} = {invar.type.name};',
-                f'auto& {outvar.cppname} = {invar.cppname};']
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
 
     def config_cpp(self):
-        return None
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
 
 class Dense(Layer):
     def initialize(self):

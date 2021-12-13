@@ -21,7 +21,7 @@ from hls4ml.model.optimizer.passes.batchnorm_opt import BatchNormConstantParamet
 from hls4ml.model.optimizer.passes.merge_const import MergeTwoConstant, MergeToBatchNormalization, MergeToBatchNormalizationDiv
 from hls4ml.model.optimizer.passes.matmul_const_to_dense import MatmulConstToDense
 from hls4ml.model.optimizer.passes.conv_to_convxd import ConvToConvXD
-
+from hls4ml.model.optimizer.passes.reshape_nop import ReshapeToNop
 
 try:
     from hls4ml.model.optimizer.passes.qkeras import OutputRoundingSaturationMode
@@ -61,6 +61,7 @@ register_pass('conv2d_same_pad', InsertZeroPaddingBeforeConv2D)
 register_pass('optimize_pointwise_conv', OptimizePointwiseConv)
 register_pass('clone_output', CloneOutput)
 register_pass('remove_final_reshape', RemoveFinalReshape)
+register_pass('reshape_to_nop', ReshapeToNop)
 register_pass('reshape_stream', ReshapeStream)
 register_pass('remove_useless_transpose', RemoveUselessTranspose)
 register_pass('replace_multidense_conv', ReplaceMultidimensionalDenseWithConv)
