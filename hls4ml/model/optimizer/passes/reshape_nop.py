@@ -67,7 +67,7 @@ class ReshapeToNop(OptimizerPass):
             'out_type': deepcopy(node.get_input_variable().type)
         }
 
-        # Insert new Repack node instead of Reshape
+        # Insert new ReshapeNop node instead of Reshape
         newnode = model.make_node('ReshapeNop', 'Nop_' + node.name, attrs, node.inputs.copy())
         model.replace_node(node, newnode)
 
