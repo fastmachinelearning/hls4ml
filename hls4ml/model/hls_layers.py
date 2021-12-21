@@ -591,6 +591,9 @@ class Reshape(Layer):
             shape_node = self.get_input_node(self.inputs[1])
             target_shape = shape_node.value
 
+        # remove Nones or leading ones
+        if target_shape[0] is None:
+            target_shape = target_shape[1:]
         # take care of -1 shapes
         shape = self.infer_shape(input_shape, target_shape)
 
@@ -601,18 +604,10 @@ class Reshape(Layer):
     @staticmethod
     def infer_shape(input_shape, target_shape):
         """This infers -1 shapes"""
-        if input_shape[0] is None:
-            partial_shape = target_shape[1:]
-            if -1 in partial_shape:
-                dummy_x = np.ones(input_shape[1:])
-                dummy_y = np.reshape(dummy_x, partial_shape)
-                partial_shape = list(dummy_y.shape)
-            target_shape = input_shape[:1] + partial_shape
-        else:
-            if -1 in target_shape:  #Need to infer shape for -1
-                dummy_x = np.ones(input_shape)
-                dummy_y = np.reshape(dummy_x, target_shape)
-                target_shape = list(dummy_y.shape)
+        if -1 in target_shape:  #Need to infer shape for -1
+            dummy_x = np.ones(input_shape)
+            dummy_y = np.reshape(dummy_x, target_shape)
+            target_shape = list(dummy_y.shape)
         return target_shape
 
     def function_cpp(self):
@@ -1472,6 +1467,7 @@ class Softmax(Activation):
                 self.set_attr('implementation', self.model.config.get_strategy(self).lower())
             
             if self.model.config.get_config_value('IOType') == 'io_parallel':
+                input_var = self.get_input_variable()
                 assert len(self.get_input_variable().shape) == 1, 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
 
 class TernaryTanh(Activation):
