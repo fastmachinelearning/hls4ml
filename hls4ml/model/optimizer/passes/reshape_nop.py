@@ -68,7 +68,7 @@ class ReshapeToNop(OptimizerPass):
         }
 
         # Insert new ReshapeNop node instead of Reshape
-        newnode = model.make_node('ReshapeNop', 'Nop_' + node.name, attrs, node.inputs.copy())
+        newnode = model.make_node('ReshapeNop', 'Nop_' + node.name, attrs, [x for x in node.inputs])
         model.replace_node(node, newnode)
 
         return True
