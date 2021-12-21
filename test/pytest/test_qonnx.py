@@ -2,7 +2,7 @@ import pytest
 import hls4ml
 import numpy as np
 from tensorflow.keras.models import Sequential
-import qonnx
+import qonnx.util.cleanup
 import urllib
 import os
 # To conveniently run QONNX inference
