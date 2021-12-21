@@ -1,8 +1,7 @@
 import pytest
 import hls4ml
 import numpy as np
-from tensorflow.keras.models import Sequential
-import qonnx
+import qonnx.util.cleanup
 import urllib
 import os
 # To conveniently run QONNX inference
@@ -41,11 +40,11 @@ def test_tfc_2w2a():
     config['LayerName']['Dense_MatMul_0'] = {'Precision' : {'accum' : 'ap_int<10>',
                                                       'result'  : 'ap_int<10>'}}
     config['LayerName']['Dense_MatMul_1'] = {'Precision' : {'accum' : 'ap_int<10>',
-                                                      'result'  : 'ap_int<10>'}}                                                      
+                                                      'result'  : 'ap_int<10>'}}
     config['LayerName']['Dense_MatMul_2'] = {'Precision' : {'accum' : 'ap_int<10>',
                                                       'result'  : 'ap_int<10>'}}
     config['LayerName']['Dense_MatMul_3'] = {'Precision' : {'accum' : 'ap_int<10>',
-                                                      'result'  : 'ap_int<10>'}}                                                      
+                                                      'result'  : 'ap_int<10>'}}
     hls_model = hls4ml.converters.convert_from_onnx_model(model,
                                                           output_dir='hls4mlprj_qonnx_tfc-2w2a',
                                                           part='xcu250-figd2104-2L-e',

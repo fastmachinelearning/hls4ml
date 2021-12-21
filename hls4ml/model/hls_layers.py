@@ -2,6 +2,7 @@ from __future__ import print_function
 import six
 import re
 import numpy as np
+
 from collections import OrderedDict
 
 class Quantizer(object):
@@ -188,23 +189,6 @@ class StreamVariable(Variable):
         for dim in self.shape:
             nelem *= dim
         return nelem
-
-    def size_cpp(self):
-        return '*'.join([str(k) for k in self.dim_names])
-
-class InplaceVariable():
-    def __init__(self, shape, dim_names, proxy, **kwargs):
-        self.shape = shape
-        self.dim_names = dim_names
-        self.type = proxy.type
-        self.name = proxy.name
-        self.size = proxy.size
-
-    def get_shape(self):
-        return zip(self.dim_names, self.shape)
-
-    def definition_cpp(self):
-        return None
 
     def size_cpp(self):
         return '*'.join([str(k) for k in self.dim_names])
@@ -539,13 +523,6 @@ class Layer(object):
     def get_layer_precision(self):
         return self.precision
 
-    def update_inplace_variables(self):
-        """
-        This recreates any inplace variables in case the upstream variable changed.
-        Only need to implement if there are inplace variables
-        """
-        pass
-
     # myproject.cpp/h
     def function_cpp(self):
         raise NotImplementedError
@@ -614,48 +591,30 @@ class Reshape(Layer):
             shape_node = self.get_input_node(self.inputs[1])
             target_shape = shape_node.value
 
+        # remove Nones or leading ones
+        if target_shape[0] is None:
+            target_shape = target_shape[1:]
         # take care of -1 shapes
         shape = self.infer_shape(input_shape, target_shape)
 
         dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(len(shape))]
-        #self.add_output_variable(shape, dims)
-        out_name = self.outputs[0]
-        proxy = self.get_input_variable()
-        out = InplaceVariable(shape, dims, proxy, index=self.get_input_node(self.inputs[0]).index)
 
-        self.variables[out_name] = out
-        self.model.register_output_variable(out_name, out)
+        self.add_output_variable(shape, dims)
 
     @staticmethod
     def infer_shape(input_shape, target_shape):
         """This infers -1 shapes"""
-        if input_shape[0] is None:
-            partial_shape = target_shape[1:]
-            if -1 in partial_shape:
-                dummy_x = np.ones(input_shape[1:])
-                dummy_y = np.reshape(dummy_x, partial_shape)
-                partial_shape = list(dummy_y.shape)
-            target_shape = input_shape[:1] + partial_shape
-        else:
-            if -1 in target_shape:  #Need to infer shape for -1
-                dummy_x = np.ones(input_shape)
-                dummy_y = np.reshape(dummy_x, target_shape)
-                target_shape = list(dummy_y.shape)
+        if -1 in target_shape:  #Need to infer shape for -1
+            dummy_x = np.ones(input_shape)
+            dummy_y = np.reshape(dummy_x, target_shape)
+            target_shape = list(dummy_y.shape)
         return target_shape
 
-    def update_inplace_variables(self):
-        """Reinitialize the inplace variable"""
-        self.initialize()
-        # call on any ouput nodes
-        output_node = self.get_output_nodes()
-        if len(output_node):
-            output_node[0].update_inplace_variables()
-
     def function_cpp(self):
-        return None
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
 
     def config_cpp(self):
-        return None
+        raise Exception('Layer {} should not be exported to HLS'.format(self.__class__.__name__))
 
 class Dense(Layer):
     def initialize(self):
@@ -1508,6 +1467,7 @@ class Softmax(Activation):
                 self.set_attr('implementation', self.model.config.get_strategy(self).lower())
             
             if self.model.config.get_config_value('IOType') == 'io_parallel':
+                input_var = self.get_input_variable()
                 assert len(self.get_input_variable().shape) == 1, 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
 
 class TernaryTanh(Activation):
