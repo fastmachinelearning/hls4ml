@@ -459,7 +459,6 @@ class HLSModel(object):
         next_node = next((x for x in self.graph.values() if x.inputs and x.inputs[0] == old_node.outputs[0]), None)
         if next_node is not None:
             next_node.inputs[0] = new_node.outputs[0]
-            next_node.update_inplace_variables()
         if prev_node is not None:
             if new_node.inputs is None or len(new_node.inputs) == 0: # Check if already rewired
                 new_node.inputs = [prev_node.outputs[0]]

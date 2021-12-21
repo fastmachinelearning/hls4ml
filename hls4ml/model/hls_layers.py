@@ -591,6 +591,11 @@ class Reshape(Layer):
             shape_node = self.get_input_node(self.inputs[1])
             target_shape = shape_node.value
 
+        # take care of -1 shapes
+        shape = self.infer_shape(input_shape, target_shape)
+
+        dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(len(shape))]
+
         self.add_output_variable(shape, dims)
 
     @staticmethod
