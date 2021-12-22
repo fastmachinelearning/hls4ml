@@ -591,6 +591,7 @@ class ModelGraph(object):
             xlist = [x]
         else: 
             xlist = x
+        n_outputs = len(self.get_output_variables())
         
         for xi in xlist:
             if not isinstance(xi, np.ndarray):
@@ -610,7 +611,7 @@ class ModelGraph(object):
 
 
         top_function.restype = None
-        top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS") for i in range(len(xlist)+1)]
+        top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS") for i in range(len(xlist) + n_outputs)]
 
         return top_function, ctype
 
@@ -637,6 +638,7 @@ class ModelGraph(object):
         top_function, ctype = self._get_top_function(x)
         n_samples = self._compute_n_samples(x)
         n_inputs = len(self.get_input_variables())
+        n_outputs = len(self.get_output_variables())
 
         curr_dir = os.getcwd()
         os.chdir(self.config.get_output_dir() + '/firmware')
@@ -647,20 +649,20 @@ class ModelGraph(object):
 
         try:
             for i in range(n_samples):
-                predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
+                predictions = [np.zeros(yj.size(), dtype=ctype) for yj in self.get_output_variables()]
                 if n_inputs == 1:
-                    top_function(x[i], predictions)
+                    inp = [x[i]]
                 else:
                     inp = [xj[i] for xj in x]
-                    argtuple = inp
-                    argtuple += [predictions]
-                    argtuple = tuple(argtuple)
-                    top_function(*argtuple)
+                argtuple = inp
+                argtuple += predictions
+                argtuple = tuple(argtuple)
+                top_function(*argtuple)
                 output.append(predictions)
 
 
             #Convert to numpy array
-            output = np.asarray(output)
+            output = np.asarray(output, dtype=object)
         finally:
             os.chdir(curr_dir)
 
