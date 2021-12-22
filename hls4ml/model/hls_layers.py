@@ -544,7 +544,8 @@ class Layer(object):
 class Input(Layer):
     def initialize(self):
         shape = self.attributes['input_shape']
-        if shape[0] is None:
+        if shape[0] is None or (len(shape) > 1 and shape[0] == 1):
+            # the latter is for QONNX input
             shape = shape[1:]
         dims = ['N_INPUT_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
         if self.index == 1:
@@ -592,7 +593,8 @@ class Reshape(Layer):
             target_shape = shape_node.value
 
         # remove Nones or leading ones
-        if target_shape[0] is None:
+        if target_shape[0] is None or (len(target_shape) > 1 and target_shape[0] == 1):
+            # the latter case is for QONNX
             target_shape = target_shape[1:]
         # take care of -1 shapes
         shape = self.infer_shape(input_shape, target_shape)
@@ -1465,7 +1467,7 @@ class Softmax(Activation):
                 self.set_attr('implementation', 'latency')
             else:
                 self.set_attr('implementation', self.model.config.get_strategy(self).lower())
-            
+
             if self.model.config.get_config_value('IOType') == 'io_parallel':
                 input_var = self.get_input_variable()
                 assert len(self.get_input_variable().shape) == 1, 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
@@ -1659,12 +1661,8 @@ class Quant(Layer):  # The QONNX quantization layer
     """
     def initialize(self):
         inp = self.get_input_variable(self.inputs[0])
-        if inp:
-            shape = inp.shape
-            dims = inp.dim_names
-        else:
-            shape = self.get_attr("output_shape")
-            dims = [f"Dim_{n}" for n in range(len(shape))]  # This is a placeholder
+        shape = inp.shape
+        dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
     def function_cpp(self):

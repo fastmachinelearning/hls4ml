@@ -10,7 +10,6 @@ def parse_merge_layer(reader, node, inputs_map, input_shapes, graph, config):
     layer['op'] = layer['class_name'].lower()
     layer['inputs'] = node.input
     layer['outputs'] = node.output
-    # output_shape = input_shapes[0]
 
     if layer['class_name'] == 'Concat':
         rank = len(input_shapes[0][1:])

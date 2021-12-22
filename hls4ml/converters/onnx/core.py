@@ -34,7 +34,7 @@ def parse_matmul_layer(reader, node, inputs_map, input_shapes, graph, config):
 
 #------------------Global paras for activations
 # TODO: repair HardSigmoid support
-# https://github.com/fastmachinelearning/hls4ml/issues/409 
+# https://github.com/fastmachinelearning/hls4ml/issues/409
 #activation_layers = ['Relu', 'Tanh', 'Sigmoid', 'LeakyRelu', 'ThresholdedRelu', 'HardSigmoid', 'Elu', 'Selu', 'PRelu', 'Softmax', 'Softsign', 'Softplus', 'Clip']
 activation_layers = ['Relu', 'Tanh', 'Sigmoid', 'LeakyRelu', 'ThresholdedRelu', 'Elu', 'Selu', 'PRelu', 'Softmax', 'Softsign', 'Softplus', 'Clip']
 
@@ -126,8 +126,5 @@ def parse_quant_layer(reader, node, inputs_map, input_shapes, graph, config):
     layer['narrow'] = get_onnx_attribute(node, 'narrow')
     layer['rounding_mode'] = get_onnx_attribute(node, 'rounding_mode')
     layer['signed'] = get_onnx_attribute(node, 'signed')
-    layer['output_shape'] = [shape for shape in input_shapes[0]]
-
-    # reader.add_input(layer['name'], node.input)
 
     return layer

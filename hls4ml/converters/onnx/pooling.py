@@ -94,6 +94,4 @@ def parse_global_pooling_layer(reader, node, inputs_map, input_shapes, graph, co
         layer['in_height'] = input_shapes[0][2]
         layer['in_width'] = input_shapes[0][3]
 
-    # output_shape = [input_shapes[0][0], layer['n_filt']] + [1]*(len(input_shapes[0]) - 2)
-
     return layer
