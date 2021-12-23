@@ -30,23 +30,21 @@ class QuantConstantParameters(OptimizerPass):
         """
         if node.get_input_node(node.inputs[1]):
             scale_node = node.get_input_node(node.inputs[1])
-            if scale_node.__class__.__name__ == 'Constant':
+            if isinstance(scale_node, Constant):
                 node.set_attr('scale', scale_node.value)
                 node.inputs[1] = ''
-                node.attributes["scale_precision"] = scale_node.get_attr("quant_precision")
                 model.remove_node(scale_node, rewire=False)
 
         if node.get_input_node(node.inputs[2]):
             zeropt_node = node.get_input_node(node.inputs[2])
-            if zeropt_node.__class__.__name__ == 'Constant':
+            if isinstance(zeropt_node, Constant):
                 node.set_attr('zeropt', zeropt_node.value)
                 node.inputs[2] = ''
-                node.attributes["bias_precision"] = zeropt_node.get_attr("quant_precision")
                 model.remove_node(zeropt_node, rewire=False)
 
         if node.get_input_node(node.inputs[3]):
             bitwidth_node = node.get_input_node(node.inputs[3])
-            if bitwidth_node.__class__.__name__ == 'Constant':
+            if isinstance(bitwidth_node, Constant):
                 node.set_attr('bitwidth', bitwidth_node.value)
                 node.inputs[3] = ''
                 model.remove_node(bitwidth_node, rewire=False)
@@ -64,7 +62,7 @@ class QuantToActivation(OptimizerPass):
     def match(self, node):
         # only matches after the other inputs are already folded
         is_match = (node.__class__.__name__ == 'Quant'
-                    and not isinstance(node.get_input_node(), Constant)
+                    and not isinstance(node.get_input_node(node.inputs[0]), Constant)
                     and not node.get_input_node(node.inputs[1])
                     and not node.get_input_node(node.inputs[2])
                     and not node.get_input_node(node.inputs[3]))
@@ -95,7 +93,7 @@ class QuantToActivation(OptimizerPass):
 
         attributes = {
             'activation' : 'linear',
-            'precision'  : precision,
+            'quant_precision'  : precision,
             'quantizer'  : quantizer,
             'n_in'       : n_in
         }
@@ -115,7 +113,7 @@ class FuseQuantWithConstant(OptimizerPass):
     def match(self, node):
         # only matches after the other inputs are already folded
         is_match = (node.__class__.__name__ == 'Quant'
-                    and isinstance(node.get_input_node(), Constant)
+                    and isinstance(node.get_input_node(node.inputs[0]), Constant)
                     and not node.get_input_node(node.inputs[1])
                     and not node.get_input_node(node.inputs[2])
                     and not node.get_input_node(node.inputs[3]))
@@ -142,7 +140,7 @@ class FuseQuantWithConstant(OptimizerPass):
         precision, quantizer = _calculate_precision_quantizer(bitwidth, signed, narrow, rounding_mode)
 
         const_node = node.get_input_node(node.inputs[0])
-        const_node.set_attr("precsion", precision)
+        const_node.set_attr("quant_precision", precision)
         const_node.set_attr("quantizer", quantizer)
 
         # reinitialize (which also runs quantization if quantizer exists)
@@ -164,7 +162,7 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
     def match(self, node):
         # only matches after the other inputs are already folded
         is_match = (node.__class__.__name__ == 'Quant'
-                    and not isinstance(node.get_input_node(), Constant)
+                    and not isinstance(node.get_input_node(node.inputs[0]), Constant)
                     and not node.get_input_node(node.inputs[1])
                     and not node.get_input_node(node.inputs[2])
                     and not node.get_input_node(node.inputs[3]))
@@ -196,7 +194,7 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
 
         attributes = {
             'activation' : 'linear',
-            'precision'  : precision,
+            'quant_precision'  : precision,
             'quantizer'  : quantizer,
             'n_in'       : n_in
         }
@@ -245,7 +243,7 @@ class ConstQuantToConstAlpha(OptimizerPass):
     def match(self, node):
         # only matches after the other inputs are already folded
         is_match = (node.__class__.__name__ == 'Quant'
-                    and isinstance(node.get_input_node(), Constant)
+                    and isinstance(node.get_input_node(node.inputs[0]), Constant)
                     and not node.get_input_node(node.inputs[1])
                     and not node.get_input_node(node.inputs[2])
                     and not node.get_input_node(node.inputs[3]))
@@ -283,8 +281,11 @@ class ConstQuantToConstAlpha(OptimizerPass):
         # caclucate the new value
         new_val = const_node.value / scale + bias
         const_node.set_attr('value', new_val)
-        const_node.set_attr("precsion", precision)
+        const_node.set_attr("quant_precision", precision)
         const_node.set_attr("quantizer", quantizer)
+
+        # reinitialize (which also runs quantization if quantizer exists)
+        const_node.initialize()
 
         attributes_rescale = {
             'n_in': n_in,
@@ -329,3 +330,4 @@ def _calculate_precision_quantizer(bitwidth, signed, narrow, rounding_mode):
     precision = FixedPrecisionType(bitwidth, bitwidth, signed, bn_round, bn_sat)
     quantizer = QuantNodeQuantizer(precision)
     return (precision, quantizer)
+

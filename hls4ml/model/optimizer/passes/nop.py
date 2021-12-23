@@ -10,3 +10,26 @@ class EliminateLinearActivation(OptimizerPass):
     def transform(self, model, node):
         model.remove_node(node)
         return True
+
+class EliminateLinearActivationQuant(OptimizerPass):
+    '''
+    This is to optimize away lots of linear qantizations in QONNX. May have to restrict it
+    more if it causes problems.
+    '''
+    def match(self, node):
+        '''
+        Only match if this activation is from quant node and previous node precision is not set  by a quant node already.
+        '''
+        is_match = (node.__class__.__name__ == 'Activation' and node.get_attr('activation') == 'linear'
+                    and node.get_attr("quant_precision")
+                    and not node.get_input_node(node.inputs[0]).get_attr("quant_precision"))
+        return is_match
+
+    def transform(self, model, node):
+        prev_node = node.get_input_node(node.inputs[0]);
+        quant_precision = node.get_attr("quant_precision")
+        prev_node.set_attr("quant_precision", quant_precision)
+        prev_node.set_attr("quantizer", node.get_attr("quantizer"))
+        prev_node.update_output_precision(quant_precision)
+        model.remove_node(node)
+        return True

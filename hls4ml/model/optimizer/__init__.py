@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from hls4ml.model.optimizer.optimizer import OptimizerPass, register_pass, get_optimizer, optimize_model, get_available_passes
 
 
-from hls4ml.model.optimizer.passes.nop import EliminateLinearActivation
+from hls4ml.model.optimizer.passes.nop import EliminateLinearActivation, EliminateLinearActivationQuant
 from hls4ml.model.optimizer.passes.bn_quant import MergeBatchNormAndQuantizedTanh
 from hls4ml.model.optimizer.passes.bn_quant import QuantizeDenseOutput
 from hls4ml.model.optimizer.passes.bn_fuse import FuseBatchNormalization
@@ -68,3 +68,4 @@ register_pass('reshape_stream', ReshapeStream)
 register_pass('remove_useless_transpose', RemoveUselessTranspose)
 register_pass('replace_multidense_conv', ReplaceMultidimensionalDenseWithConv)
 register_pass('broadcast_stream', BroadcastStream)
+register_pass('eliminate_linear_activation_quant', EliminateLinearActivationQuant)

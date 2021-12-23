@@ -384,13 +384,14 @@ class HLSModel(object):
                 `before` does not specify a correct node in sequence.
 
         """
-        if len(node.inputs) > 1:
+        # string comprehension is to remove empty inputs
+        if len([x for x in node.inputs if x]) > 1:
             raise Exception('Cannot insert a node with more than one input (for now).')
 
         prev_node = node.get_input_node(node.inputs[0])
-        next_nodes = [x for x in self.graph.values() if x.inputs[0] in prev_node.outputs]
+        next_nodes = [x for x in self.graph.values() if len(x.inputs) > 0 and x.inputs[0] in prev_node.outputs]
         if before is None:
-            next_node = next((x for x in self.graph.values() if x.inputs[0] in prev_node.outputs), None)
+            next_node = next((x for x in self.graph.values() if len(x.inputs) and x.inputs[0] in prev_node.outputs), None)
         else:
             if before not in next_nodes:
                 raise Exception('Cannot insert a node {} before {} (candidates: {}).'.format(node.name, before.name, ','.join([n.name for n in next_nodes])))
@@ -556,7 +557,7 @@ class HLSModel(object):
             xlist = [x]
         else:
             xlist = x
-        
+
         for xi in xlist:
             if not isinstance(xi, np.ndarray):
                 raise Exception('Expected numpy.ndarray, but got {}'.format(type(x)))
