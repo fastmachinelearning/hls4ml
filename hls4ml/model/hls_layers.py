@@ -418,6 +418,11 @@ class Layer(object):
 
         self.precision[out.type.name] = out.type
 
+    def update_output_precision(self, precision, output_name=None):
+        if output_name is None:
+            output_name = self.outputs[0]
+        self.variables[output_name].type.precision = precision
+
     def make_array_variable(self, shape, dim_names, var_name='layer{index}_out', type_name='layer{index}_t', precision=None, pragma='auto'):
         if pragma == 'auto':
             if self.model.config.get_config_value('IOType') == 'io_serial':
@@ -573,7 +578,7 @@ class Constant(Layer):
             shape = (1,)
             self.value = np.array([self.value])
         dims = [f'{self.name}_{i}' for i in range(len(shape))]
-        self.add_output_variable(shape, dims, var_name=self.name, precision=self.get_attr("quant_precision"))
+        self.add_output_variable(shape, dims, var_name=self.name, precision=self.get_attr("precision"))
 
     def function_cpp(self):
         return None
@@ -1524,6 +1529,21 @@ class BatchNormalization(Layer):
 
         return self._config_template.format(**params)
 
+class ApplyAlpha(BatchNormalization):
+    ''' A custom layer to scale the output of a QDense layer which used 'alpha != 1'
+        Inference computation uses BatchNormalization methods'''
+
+    def initialize(self):
+        inp = self.get_input_variable()
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_output_variable(shape, dims)
+
+    def add_weights(self, scale, quantizer=None):
+        self.add_weights_variable(name='scale', var_name='s{index}', data=scale, quantizer=quantizer)
+
+    def add_bias(self, bias, quantizer=None):
+        self.add_weights_variable(name='bias', var_name='b{index}', data=bias, quantizer=quantizer)
 
 class Merge(Layer):
     def initialize(self):
@@ -2046,8 +2066,9 @@ layer_map = {
     'GarNetStack'            : GarNetStack,
     # TensorFlow-specific layers:
     'BiasAdd'                : BiasAdd,
-    # QONNX quantization layter
-    'Quant'                  : Quant
+    # QONNX quantization layer
+    'Quant'                  : Quant,
+    'ApplyAlpha'             : ApplyAlpha
 }
 
 def register_layer(name, clazz):

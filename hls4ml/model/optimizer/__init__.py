@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from hls4ml.model.optimizer.optimizer import OptimizerPass, register_pass, get_optimizer, optimize_model, get_available_passes
 
 
-from hls4ml.model.optimizer.passes.nop import EliminateLinearActivation
+from hls4ml.model.optimizer.passes.nop import EliminateLinearActivation, EliminateLinearActivationQuant
 from hls4ml.model.optimizer.passes.bn_quant import MergeBatchNormAndQuantizedTanh
 from hls4ml.model.optimizer.passes.bn_quant import QuantizeDenseOutput
 from hls4ml.model.optimizer.passes.bn_fuse import FuseBatchNormalization
@@ -16,7 +16,8 @@ from hls4ml.model.optimizer.passes.repack_stream import ReshapeStream, Broadcast
 from hls4ml.model.optimizer.passes.transpose_opt import RemoveUselessTranspose
 from hls4ml.model.optimizer.passes.multi_dense import ReplaceMultidimensionalDenseWithConv
 from hls4ml.model.optimizer.passes.reshape_const import ReshapeConstant
-from hls4ml.model.optimizer.passes.quant_opt import QuantConstantParameters, QuantFactorizeScale, QuantToActivation, QuantToConstant
+from hls4ml.model.optimizer.passes.quant_opt import (
+    QuantConstantParameters, QuantToActivation, FuseQuantWithConstant, QuantToAlphaActivationAlpha, ConstQuantToConstAlpha)
 from hls4ml.model.optimizer.passes.batchnorm_opt import BatchNormConstantParameters, ConstantBatchNormMerging, FuseConsecutiveBatchNormalization
 from hls4ml.model.optimizer.passes.merge_const import MergeTwoConstant, MergeToBatchNormalization, MergeToBatchNormalizationDiv
 from hls4ml.model.optimizer.passes.matmul_const_to_dense import MatmulConstToDense
@@ -40,9 +41,10 @@ if __qkeras_optimizers__:
 
 register_pass('reshape_constant', ReshapeConstant)
 register_pass('quant_constant_params', QuantConstantParameters)
-register_pass('quant_factorize_scale', QuantFactorizeScale)
 register_pass('quant_to_activation', QuantToActivation)
-register_pass('quant_to_constant', QuantToConstant)
+register_pass('fuse_quant_with_constant', FuseQuantWithConstant)
+register_pass('quant_to_alph_activation_alpha', QuantToAlphaActivationAlpha)
+register_pass('const_quant_to_const_alpha', ConstQuantToConstAlpha)
 register_pass('batch_norm_constant_parameters', BatchNormConstantParameters)
 register_pass('fuse_consecutive_base_batch_normalizations', FuseConsecutiveBatchNormalization)
 register_pass('constant_batch_norm_fusion', ConstantBatchNormMerging)
@@ -66,3 +68,4 @@ register_pass('reshape_stream', ReshapeStream)
 register_pass('remove_useless_transpose', RemoveUselessTranspose)
 register_pass('replace_multidense_conv', ReplaceMultidimensionalDenseWithConv)
 register_pass('broadcast_stream', BroadcastStream)
+register_pass('eliminate_linear_activation_quant', EliminateLinearActivationQuant)

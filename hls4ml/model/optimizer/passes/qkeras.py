@@ -77,28 +77,6 @@ class OutputRoundingSaturationMode(OptimizerPass):
         pstr = pstr.replace('>', mode)
         return pstr
 
-class ApplyAlpha(BatchNormalization):
-    ''' A custom layer to scale the output of a QDense layer which used 'alpha != 1'
-        Inference computation uses BatchNormalization methods'''
-
-    def initialize(self):
-        inp = self.get_input_variable()
-        shape = inp.shape
-        dims = inp.dim_names
-        self.add_output_variable(shape, dims)
-
-    def add_weights(self, scale, quantizer=None):
-        self.add_weights_variable(name='scale', var_name='s{index}', data=scale, quantizer=quantizer)
-
-    def add_bias(self, bias, quantizer=None):
-        self.add_weights_variable(name='bias', var_name='b{index}', data=bias, quantizer=quantizer)
-
-# register the layer and its templates
-register_layer('ApplyAlpha', ApplyAlpha)
-# TODO ideally: for backend in backends
-for backend in ['Vivado', 'VivadoAccelerator']:
-    temps = templates.get_backend(backend)
-    temps.register_templates('ApplyAlpha', temps.get_function_template('BatchNormalization'), temps.get_config_template('BatchNormalization'), temps.get_include_list('BatchNormalization'))
 
 class QKerasFactorizeAlpha(OptimizerPass):
     '''OptimizerPass for extracting alpha "scale" from QKeras quantized layer.
