@@ -220,12 +220,12 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
 
         attributes_rescale = deepcopy(attributes_scale)
 
-        scale_node = model.make_node('ApplyAlpha', node.name + '_scale', attributes_scale, node.inputs)
+        scale_node = model.make_node('ApplyAlpha', node.name + '_scale', attributes_scale, [x for x in node.inputs])
         scale_node.add_weights(1/scale)
         scale_node.add_bias(bias)
         model.insert_node(scale_node)
 
-        rescale_node = model.make_node('ApplyAlpha', node.name + '_rescale', attributes_rescale, new_node.outputs)
+        rescale_node = model.make_node('ApplyAlpha', node.name + '_rescale', attributes_rescale, [x for x in new_node.outputs])
         rescale_node.add_weights(scale)
         rescale_node.add_bias(-bias*scale)
         model.insert_node(rescale_node)
@@ -296,7 +296,7 @@ class ConstQuantToConstAlpha(OptimizerPass):
             'Trace'      : False
         }
 
-        rescale_node = model.make_node('ApplyAlpha', node.name + '_rescale', attributes_rescale, node.inputs)
+        rescale_node = model.make_node('ApplyAlpha', node.name + '_rescale', attributes_rescale, [x for x in node.inputs])
         rescale_node.add_weights(scale)
         rescale_node.add_bias(-bias*scale)
         model.replace_node(node, rescale_node)
