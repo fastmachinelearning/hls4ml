@@ -9,16 +9,8 @@ def read(rel_path):
     with codecs.open(os.path.join(this_directory, rel_path), 'r') as fp:
         return fp.read()
 
-def get_version(rel_path):
-    for line in read(rel_path).splitlines():
-        if line.startswith('__version__'):
-            delim = '"' if '"' in line else "'"
-            return line.split(delim)[1]
-    else:
-        raise RuntimeError("Unable to find version string.")
-
 setup(name='hls4ml',
-      version=get_version("hls4ml/__init__.py"),
+      use_scm_version={"version_scheme": "no-guess-dev"},
       description='Machine learning in FPGAs using HLS',
       long_description=read('README.md'),
       long_description_content_type='text/markdown',
