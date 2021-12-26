@@ -55,13 +55,7 @@ class CloneOutput(OptimizerPass):
         if model.config.get_config_value('IOType') != 'io_stream':
             return False
 
-        output_map = {}
-        for output in node.outputs:
-            output_map[output] = []
-            for layer in model.get_layers():
-                for inp in layer.inputs:
-                    if output == inp:
-                        output_map[output].append(layer)
+        output_map = node.get_output_use_map()
 
         transformed = False
         for output in node.outputs:
