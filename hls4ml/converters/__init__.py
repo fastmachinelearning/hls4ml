@@ -310,7 +310,7 @@ def check_forward_dict(model, forward_dictionary):
 def convert_from_pyg_model(model, forward_dictionary, n_node, node_dim,
                            n_edge, edge_dim, activate_final=None,
                            output_dir='my-hls-test', project_name='myproject',
-                           fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
+                           part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
     check_forward_dict(model, forward_dictionary)
     """
 
@@ -369,7 +369,7 @@ def convert_from_pyg_model(model, forward_dictionary, n_node, node_dim,
         Output directory to write hls codes.
     project_name : string, optional
         hls project name.
-    fpga_part : string, optional
+    part : string, optional
         The particular FPGA part number that you are considering.
     clock_period : int, optional
         The clock period, in ns, at which your algorithm runs.
@@ -405,10 +405,10 @@ def convert_from_pyg_model(model, forward_dictionary, n_node, node_dim,
 
     """
 
-    config = create_vivado_config(
+    config = create_config(
         output_dir=output_dir,
         project_name=project_name,
-        fpga_part=fpga_part,
+        part=part,
         clock_period=clock_period,
         io_type=io_type
     )
