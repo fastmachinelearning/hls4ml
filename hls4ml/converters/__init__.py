@@ -310,7 +310,7 @@ def check_forward_dict(model, forward_dictionary):
 def convert_from_pyg_model(model, forward_dictionary, n_node, node_dim,
                            n_edge, edge_dim, activate_final=None,
                            output_dir='my-hls-test', project_name='myproject',
-                           part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
+                           part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={},
                            resource_limit=False, par_factor=16):
     check_forward_dict(model, forward_dictionary)
     """
