@@ -1,0 +1,44 @@
+import numpy as np
+from contrib.garnet import GarNet
+from tensorflow.keras.layers import Input
+from tensorflow.keras.models import Model
+import hls4ml
+import pytest
+
+vmax = 16
+feat = 3
+@pytest.fixture(scope='module')
+def garnet_models():
+    x = Input(shape=(vmax, feat))
+    n = Input(shape=(1,), dtype='uint16')
+    inputs = [x, n]
+    outputs = GarNet(8, 8, 16, simplified=True, collapse='mean', input_format='xn', 
+                     output_activation=None, name='gar_1', quantize_transforms=False)(inputs)
+    model = Model(inputs=inputs, outputs=outputs)
+    model.summary()
+    
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config['Model'] = {}
+    config['Model']['ReuseFactor'] = 1
+    config['Model']['Strategy'] = 'Latency'
+    config['Model']['Precision'] = 'ap_fixed<32,6>'
+    config['LayerName']['gar_1']['Precision'] = {'default': 'ap_fixed<32, 6, AP_RND, AP_SAT>', 'result': 'ap_fixed<32, 6>'}
+
+    cfg = hls4ml.converters.create_config(output_dir='hls4mlprj_garnet', part='xc7z020clg400-1')
+    cfg['HLSConfig'] = config
+    cfg['KerasModel'] = model
+    
+    hls_model = hls4ml.converters.keras_to_hls(cfg)
+    hls_model.compile()
+    return model, hls_model
+
+
+@pytest.mark.parametrize('batch', [1, 3])
+def test_accuracy(garnet_models, batch):
+    model, hls_model = garnet_models
+    x = [np.random.rand(batch, vmax, feat), np.random.randint(0, vmax, size=(batch, 1))]
+    y = model.predict(x)
+    x_hls = [x[0], x[1].astype(np.float64)]
+    y_hls = hls_model.predict(x_hls).reshape(y.shape)
+                                                                
+    np.testing.assert_allclose(y_hls, y, rtol=0, atol=0.1)
