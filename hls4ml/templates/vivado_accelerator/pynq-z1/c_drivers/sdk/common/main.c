@@ -28,12 +28,25 @@
 const unsigned INPUT_N_ELEMENTS = N_SAMPLES * N_X_INPUTS;
 const unsigned OUTPUT_N_ELEMENTS = N_SAMPLES * N_Y_OUTPUTS;
 
-#if 0
-#define REFERENCE_OUTPUTS data_y_outputs
-#define REFERENCE_OUTPUTS data_y_keras_outputs
-#endif
+#if 1
+/* Accelerator verification */
 #define REFERENCE_OUTPUTS data_y_hls_outputs
+#else
+/* Accelerator validation */
+#define REFERENCE_OUTPUTS data_y_outputs
+//#define REFERENCE_OUTPUTS data_y_keras_outputs
+#endif
 
+unsigned get_max(float *data, unsigned n_elements) {
+	float max_value = 0.0;
+	unsigned max_index = 0;
+	for (unsigned i = 0; i < n_elements; i++)
+		if (data[i] >= max_value) {
+			max_index = i;
+			max_value = data[i];
+		}
+	return max_index;
+}
 
 float *inputs_mem = NULL;
 float *outputs_mem = NULL;
@@ -55,27 +68,11 @@ void init_accelerators() {
     }
 }
 
-//#if defined(__HPC_ACCELERATOR__) || defined(__ACP_ACCELERATOR__)
-///*
-// *  TODO: remember to edit core_baremetal_polling_bsp/psu_cortexa53_0/libsrc/standalon_v6_5/src/bspconfig.h
-// *
-// *  #define EL1_NONSECURE 1
-// *
-// */
-//void init_accelerator_coherency(UINTPTR base_addr)
-//{
-//    /* Enable snooping of APU caches from CCI */
-//    Xil_Out32(0xFD6E4000, 0x1);
-//
-//    /* Configure AxCACHE for write-back read and write-allocate (ARCACHE is [7:4], AWCACHE is [11:8]) */
-//    /* Configure AxPROT[2:0] for data access [2], secure access [1], unprivileged access [0] */
-//    Xil_Out32(base_addr, 0xFF0);
-//}
-//#endif
-
 /* Reference implementation of the accelerator in software */
 int sw_reference_implementation(float *sw_inputs_mem, float *sw_outputs_mem, unsigned n_samples, unsigned n_X_inputs, unsigned n_y_ouputs) {
+#ifdef __DEBUG__
 	PRINTF("INFO: Reference outputs are pre-compiled. It would be nice to run a software model here.\r\n");
+#endif
     /* See data.h for inputs and outputs */
     for (unsigned i = 0; i < n_samples * n_y_ouputs; i++) {
     	sw_outputs_mem[i] = REFERENCE_OUTPUTS[i];
@@ -83,7 +80,7 @@ int sw_reference_implementation(float *sw_inputs_mem, float *sw_outputs_mem, uns
     return 0;
 }
 
-/* profiling function */
+/* Profiling function */
 double get_elapsed_time(XTime start, XTime stop) {
     return 1.0 * (stop - start) / (COUNTS_PER_SECOND);
 }
@@ -135,7 +132,7 @@ int main(int argc, char** argv) {
     calibration_time = get_elapsed_time(start, stop);
     PRINTF("INFO: Time calibration for one second (%lf sec)\r\n", calibration_time);
 
-    /* initialize memory */
+    /* Initialize memory */
     PRINTF("INFO: Initialize memory\r\n");
     PRINTF("INFO:   - Samples count: %u\r\n", N_SAMPLES); /* Same as dst_SAMPLE_COUNT */
     PRINTF("INFO:   - Inputs count: %u\r\n", N_X_INPUTS);
@@ -187,10 +184,10 @@ int main(int argc, char** argv) {
 
     	XMyproject_axi_Start(&accelerator); /* TODO: design-dependent name */
 
-    	/* polling */
+    	/* Polling */
     	while (!XMyproject_axi_IsDone(&accelerator)); /* TODO: design-dependent name */
 
-    	/* get error status */
+    	/* Get error status */
     	//hw_flags = XMyproject_axi_Get_return(&accelerator); /* TODO: design-dependent name */
     	XTime_GetTime(&stop);
     	hw_elapsed += get_elapsed_time(start, stop);
@@ -212,14 +209,20 @@ int main(int argc, char** argv) {
     dump_data("reference_mem", reference_mem, N_SAMPLES, N_Y_OUTPUTS);
 #endif
 
+#ifdef __DEBUG__
     PRINTF("INFO: SW execution time: %f sec\r\n", sw_elapsed);
-    PRINTF("INFO: Total HW-acceleration execution time (%d inferences): %f sec\r\n", N_SAMPLES, hw_elapsed);
-    PRINTF("INFO: Per-inference HW-acceleration execution time (average): %.12f sec (%f ns)\r\n", hw_elapsed / (N_SAMPLES), (hw_elapsed*1000.0) / (N_SAMPLES));
+#endif
+    PRINTF("INFO: HW-acceleration exec. time (%d inferences):\r\n", N_SAMPLES);
+    PRINTF("INFO:   - total %f sec\r\n", hw_elapsed);
+    PRINTF("INFO:   - per-inference %.12f sec (%f ns)\r\n", hw_elapsed / (N_SAMPLES), (hw_elapsed*1000.0) / (N_SAMPLES));
     PRINTF("INFO: Cache flush time: %f sec\r\n", cache_elapsed);
+#ifdef __DEBUG__
     PRINTF("INFO: HW/SW speedup (the software is fake so this does not count...): %.2f X\r\n", (sw_elapsed >= (hw_elapsed+cache_elapsed))?(sw_elapsed/(hw_elapsed+cache_elapsed)):-((hw_elapsed+cache_elapsed)/sw_elapsed));
+#endif
 
-    /* Accelerator validation */
     hw_errors = 0;
+#if 1
+    /* Accelerator verification */
     for (int i = 0; i < OUTPUT_N_ELEMENTS; i++) {
         if (outputs_mem[i] != reference_mem[i]) {
             PRINTF("ERROR: [%d]: Accelerator HW %f != SW %f\r\n", i, outputs_mem[i], reference_mem[i]);
@@ -231,7 +234,24 @@ int main(int argc, char** argv) {
         PRINTF("INFO: Verification: FAIL\r\n");
     else
         PRINTF("INFO: Verification: PASS!\r\n");
-
+#else
+    /* Accelerator validation */
+    for (unsigned s = 0; s < N_SAMPLES; s++) {
+    	unsigned ref_digit = get_max(reference_mem + s * N_Y_OUTPUTS, N_Y_OUTPUTS);
+    	unsigned hw_digit = get_max(outputs_mem + s * N_Y_OUTPUTS, N_Y_OUTPUTS);
+    	if (hw_digit != ref_digit) {
+#ifdef __DEBUG__
+    		PRINTF("ERROR: [%d]: Accelerator HW %u != SW %u\r\n", s, hw_digit, ref_digit);
+#endif
+    	    hw_errors++;
+    	}
+    }
+    float error_rate = (hw_errors / (float)(N_SAMPLES)) * 100.0;
+    float accuracy = 100 - ((hw_errors / (float)(N_SAMPLES)) * 100.0);
+    PRINTF("INFO: Total errors = %d (out of %d digits)\r\n", hw_errors, N_SAMPLES);
+    PRINTF("INFO: Error rate = %.2f %%\r\n", error_rate);
+    PRINTF("INFO: Accuracy = %.2f %%\r\n", accuracy);
+#endif
     PRINTF("INFO: ==================================================\r\n");
 
     cleanup_platform();
