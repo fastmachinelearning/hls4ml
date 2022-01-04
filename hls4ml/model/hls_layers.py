@@ -604,6 +604,9 @@ class Reshape(Layer):
         # take care of -1 shapes
         shape = self.infer_shape(input_shape, target_shape)
 
+        #update the target shape with chnges from above
+        self.set_attr('target_shape', shape)
+
         dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(len(shape))]
 
         self.add_output_variable(shape, dims)

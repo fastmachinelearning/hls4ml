@@ -34,6 +34,6 @@ def parse_flatten_layer(reader, node, inputs_map, input_shapes, graph, config):
     layer['class_name'] = 'Reshape'
     layer['inputs'] = node.input
     layer['outputs'] = node.output
-    layer['target_shape'] = [1, -1]
+    layer['target_shape'] = [-1]
 
     return layer
