@@ -99,8 +99,8 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 elif io_type == 'io_stream':
                     newline += indent + 'hls::stream<' + inp.type.name + '> in_local("input_1");\n'
                     newline += indent + 'hls::stream<' + out.type.name + '> out_local("output_1");\n\n'
-                    newline += indent + '#pragma HLS STREAM variable=in_local depth=N_IN\n'
-                    newline += indent + '#pragma HLS STREAM variable=out_local depth=N_OUT\n'
+                    newline += indent + '#pragma HLS STREAM variable=in_local depth=1 /*N_IN*/\n'
+                    newline += indent + '#pragma HLS STREAM variable=out_local depth=1 /*N_OUT*/\n'
             elif '//hls-fpga-machine-learning insert call' in line:
                 newline = indent + '{}(in_local, out_local, in_size, out_size);\n'.format(
                     model.config.get_project_name())
