@@ -7,6 +7,9 @@ if { $::argc == 1 } {
     createhw -name ${myproject}\_platform -hwspec ../hdf/${myproject}\_wrapper.hdf
     createapp -name ${myproject}\_standalone -app {Hello World} -proc ps7_cortexa9_0 -hwproject ${myproject}\_platform -os standalone
     configapp -app ${myproject}\_standalone build-config release
+    configapp -app ${myproject}\_standalone -add linker-misc {-Wl,--defsym=_HEAP_SIZE=0x1000000}
+    configapp -app ${myproject}\_standalone -add linker-misc {-Wl,--defsym=_STACK_SIZE=0x40000}
+
     #createapp -name ${myproject}\_standalone -app {Hello World} -proc psu_cortexa53_0 -hwproject ${myproject}\_platform -os standalone -arch 64
     #configapp -app ${myproject}\_standalone -add define-compiler-symbols {FLAG=VALUE}
     #projects -build
