@@ -3,7 +3,13 @@ This file includes optimizations related to quant nodes.
 
 As a first step, QuantConstantParameters converts the extra inputs to attributes. It is always the first step
 
-The next category is to check if scale and
+The next step differs between the case of (1) unitary scale and zero offset, or (2) nonunitary scale and/or nonzero offset.
+In the first case no scaling is required, so a Quant node effectively becomes a linear activation. For the common case when this
+is applied on a constant weight, the activation is immediately merged with the weight, qantizing the weights. In case 2,
+we need to explictly scale and unscale, so the Quant node becomes 3 nodes, an ApplyAlpha node to apply a scale/shift, a
+Linear node to apply the quantization, and another ApplyAlpha to unscale/shift. We depend on optimization steps to move the
+unscaling ApplyAlpha down as needed. Again, when the Quant is a applied ot a Constant, the scaling and Linear nodes are
+immediately merged into the Constant. This is done because it simplifies some of the other optimizations.
 '''
 from copy import deepcopy
 import numpy as np
@@ -206,8 +212,8 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
 
         # but now add the ApplyAlhpas before and after
 
-        scale = np.broadcast_to(node.get_attr("scale"), input_shape)
-        bias = np.broadcast_to(node.get_attr("zeropt"), input_shape)
+        scale = node.get_attr("scale")
+        bias = node.get_attr("zeropt")
 
         attributes_scale = {
             'n_in': n_in,
@@ -221,13 +227,21 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
         attributes_rescale = deepcopy(attributes_scale)
 
         scale_node = model.make_node('ApplyAlpha', node.name + '_scale', attributes_scale, [x for x in node.inputs])
-        scale_node.add_weights(1/scale)
-        scale_node.add_bias(bias)
+        firstscale = 1/scale
+        firstbias = bias
+        scale_node.set_attr("scale", firstscale)
+        scale_node.set_attr("bias", firstbias)
+        scale_node.add_weights(np.broadcast_to(firstscale, input_shape))
+        scale_node.add_bias(np.broadcast_to(firstbias, input_shape))
         model.insert_node(scale_node)
 
         rescale_node = model.make_node('ApplyAlpha', node.name + '_rescale', attributes_rescale, [x for x in new_node.outputs])
-        rescale_node.add_weights(scale)
-        rescale_node.add_bias(-bias*scale)
+        rescale = scale
+        rebias = -bias*scale
+        rescale_node.set_attr("scale", rescale)
+        rescale_node.set_attr("bias", rebias)
+        rescale_node.add_weights(np.broadcast_to(rescale, input_shape))
+        rescale_node.add_bias(np.broadcast_to(rebias, input_shape))
         model.insert_node(rescale_node)
 
         return True
@@ -275,8 +289,8 @@ class ConstQuantToConstAlpha(OptimizerPass):
 
         const_node = node.get_input_node(node.inputs[0])
 
-        scale = np.broadcast_to(node.get_attr("scale"), input_shape)
-        bias = np.broadcast_to(node.get_attr("zeropt"), input_shape)
+        scale = node.get_attr("scale")
+        bias = node.get_attr("zeropt")
 
         # caclucate the new value
         new_val = const_node.value / scale + bias
@@ -297,8 +311,12 @@ class ConstQuantToConstAlpha(OptimizerPass):
         }
 
         rescale_node = model.make_node('ApplyAlpha', node.name + '_rescale', attributes_rescale, [x for x in node.inputs])
-        rescale_node.add_weights(scale)
-        rescale_node.add_bias(-bias*scale)
+        rescale = scale
+        rebias = -bias*scale
+        rescale_node.set_attr("scale", rescale)
+        rescale_node.set_attr("bias", rebias)
+        rescale_node.add_weights(np.broadcast_to(rescale, input_shape))
+        rescale_node.add_bias(np.broadcast_to(rebias, input_shape))
         model.replace_node(node, rescale_node)
 
         return True
