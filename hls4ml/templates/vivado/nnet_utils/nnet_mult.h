@@ -26,6 +26,18 @@ class Product{
     static void limit(unsigned multiplier_limit) {} // Nothing to do here
 };
 
+template<class x_T, class w_T>
+class Product_nocast{
+    public:
+    static auto product(x_T a, w_T w) -> decltype(a*w)
+    {
+        // 'Normal' product
+        #pragma HLS INLINE
+        return a * w;
+    }
+    static void limit(unsigned multiplier_limit) {} // Nothing to do here
+};
+
 template<class x_T, class w_T, class y_T>
 class both_binary : public Product<x_T, w_T, y_T>{
     public:
@@ -72,6 +84,21 @@ template<class x_T, class w_T, class y_T>
 class mult : public Product<x_T, w_T, y_T>{
     public:
     static y_T product(x_T a, w_T w){
+        // 'Normal' product
+        #pragma HLS INLINE
+        return a * w;
+    }
+    static void limit(unsigned multiplier_limit){
+        #pragma HLS INLINE
+        #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+    }
+};
+
+template<class x_T, class w_T>
+class mult_nocast : public Product_nocast<x_T, w_T>{
+    public:
+    static auto product(x_T a, w_T w) -> decltype(a*w)
+    {
         // 'Normal' product
         #pragma HLS INLINE
         return a * w;
