@@ -88,4 +88,4 @@ report_utilization -file util.rpt -hierarchical -hierarchical_percentages
 
 # Export HDF file for SDK flow
 file mkdir ./hdf
-file copy -force ${myproject}_vivado_accelerator/${project_name}.runs/impl_1/${design_name}_wrapper.sysdef ../sdk/hdf/${design_name}_wrapper.hdf
+file copy -force ${myproject}_vivado_accelerator/${project_name}.runs/impl_1/${design_name}_wrapper.sysdef ./hdf/${design_name}_wrapper.hdf
