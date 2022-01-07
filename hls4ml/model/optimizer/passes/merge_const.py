@@ -86,16 +86,10 @@ class MergeToBatchNormalization(OptimizerPass):
 
 
         op = node.attributes["op"]
-        scale_precision = None
-        bias_precision = None
         if op in ('add', 'sum'):
             scale = np.ones(input_shape)
-            scale_precision = IntegerPrecisionType(2)
             bias = np.broadcast_to(const_node.value, input_shape)
-            bias_precision = const_node.get_attr("quant_precision")
         elif op == 'sub':
-            scale_precision = IntegerPrecisionType(2)
-            bias_precision = const_node.get_attr("quant_precision")
             if node1const:
                 scale = np.ones(input_shape)
                 bias = np.broadcast_to(-const_node.value, input_shape)
@@ -104,8 +98,6 @@ class MergeToBatchNormalization(OptimizerPass):
                 bias = np.broadcast_to(const_node.value, input_shape)
 
         elif op == 'mul':
-            scale_precision = const_node.get_attr("quant_precision")
-            bias_precision = IntegerPrecisionType(2)
             scale = np.broadcast_to(const_node.value, input_shape)
             bias = np.zeros(input_shape)
 
@@ -115,8 +107,6 @@ class MergeToBatchNormalization(OptimizerPass):
             "bias": bias,
             "quant_precision": node.get_attr("quant_precision"),
             "quantizer": node.get_attr("quantizer"),
-            "scale_precision": scale_precision,
-            "bias_precision": bias_precision,
             "n_in": n_in,
             "n_out": n_in,
             "n_filt": -1
@@ -145,8 +135,6 @@ class MergeToBatchNormalizationDiv(OptimizerPass):
         n_in = np.prod(input_shape)
         const_node = node.get_input_node(node.inputs[1])
         scale = 1/const_node.value
-        scale_precision = const_node.get_attr("quant_precision")
-        bias_precision = IntegerPrecisionType(2)
         bias = np.zeros(input_shape)
 
         attributes = {
@@ -155,8 +143,6 @@ class MergeToBatchNormalizationDiv(OptimizerPass):
             "bias": bias,
             "quant_precision": node.get_attr("quant_precision"),
             "quantizer": node.get_attr("quantizer"),
-            "scale_precision": scale_precision,
-            "bias_precision": bias_precision,
             "n_in": n_in,
             "n_out": n_in,
             "n_filt": -1

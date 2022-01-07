@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import pytest
 import hls4ml
 import numpy as np
@@ -27,6 +28,7 @@ def test_tfc_2w2a():
     # Execute QONNX model inference
     # TODO make the test bigger
     ishape = (1,1,28,28)
+    np.random.seed(0)
     X = np.random.uniform(low=-1, high=+1, size=np.product(ishape)).reshape(ishape).astype(np.float32)
     idict = {model.graph.input[0].name: X}
     y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
@@ -53,3 +55,6 @@ def test_tfc_2w2a():
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
+
+if __name__ == '__main__':
+    test_tfc_2w2a()
