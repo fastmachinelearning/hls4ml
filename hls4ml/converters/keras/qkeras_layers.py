@@ -110,3 +110,12 @@ def parse_qconv2dbatchnorm_layer(keras_layer, input_names, input_shapes, data_re
     temp_shape = intermediate_shape
     batch_layer, out_shape = parse_batchnorm_layer(keras_layer, input_names, temp_shape, data_reader, config)
     return {**conv_layer, **batch_layer}, out_shape
+
+@keras_handler('QDenseBatchnorm')
+def parse_qdensebatchnorm_layer(keras_layer, input_names, input_shapes, data_reader, config):
+    intermediate_shape = list()
+    dense_layer, shape_qdense = parse_qdense_layer(keras_layer, input_names, input_shapes, data_reader, config)
+    intermediate_shape.append(shape_qdense)
+    temp_shape = intermediate_shape
+    batch_layer, out_shape = parse_batchnorm_layer(keras_layer, input_names, temp_shape, data_reader, config)
+    return {**dense_layer, **batch_layer}, out_shape
