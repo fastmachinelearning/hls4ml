@@ -109,11 +109,12 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
     merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate', 'Dot']
     qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D', 'QBatchNormalization', 'QConv2DBatchnorm']
+    reshaping_layers = ['ZeroPadding1D', 'ZeroPadding2D']
+    graph_layers = ['GarNet', 'GarNetStack']
     #Define layers to skip because they're not configurable or not converted to HLS
     skip_layers = ['Dropout', 'Flatten', 'Reshape', 'Permute']
-    graph_layers = ['GarNet', 'GarNetStack']
     #All supported layers
-    supported_layers = core_layers + dense_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + graph_layers + skip_layers
+    supported_layers = core_layers + dense_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + reshaping_layers + graph_layers + skip_layers
 
     keras_layer_config = None
     if model_arch['class_name'] == 'Sequential':
