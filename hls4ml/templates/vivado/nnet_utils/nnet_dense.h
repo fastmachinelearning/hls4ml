@@ -28,6 +28,7 @@ struct dense_config
     static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
     static const unsigned n_zeros = 0;
+    static const bool remove_pipeline_pragma = false;
     // partitioning arrays cyclically to go with roll factors?
     // Product function to use
     template<class x_T, class y_T, class res_T>

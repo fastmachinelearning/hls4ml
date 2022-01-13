@@ -475,8 +475,11 @@ class HLSModel(object):
         model_outputs = node_outputs[np.isin(node_outputs, node_inputs, invert=True)]
         self.outputs = model_outputs.tolist()
 
-    def get_weights_data(self, layer_name, var_name):
-        return self.reader.get_weights_data(layer_name, var_name)
+    def get_weights_data(self, layer_name, var_name, module_name=None):
+        if module_name is not None:
+            return self.reader.get_weights_data(layer_name, var_name, module_name)
+        else:
+            return self.reader.get_weights_data(layer_name, var_name)
 
     def next_layer(self):
         self.index += 1

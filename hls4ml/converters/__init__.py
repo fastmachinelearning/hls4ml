@@ -11,6 +11,7 @@ from hls4ml.converters.keras_to_hls import keras_to_hls, get_supported_keras_lay
 #----------Make converters available if the libraries can be imported----------#       
 try:
     from hls4ml.converters.pytorch_to_hls import pytorch_to_hls, get_supported_pytorch_layers, register_pytorch_layer_handler
+    from hls4ml.converters.pyg_to_hls import pyg_to_hls, get_supported_pyg_blocks, register_pyg_block_handler
     __pytorch_enabled__ = True
 except ImportError:
     warnings.warn("WARNING: Pytorch converter is not enabled!")
@@ -31,7 +32,7 @@ except ImportError:
     __tensorflow_enabled__ = False
 
 #----------Layer handling register----------#
-model_types = ['keras', 'pytorch', 'onnx']
+model_types = ['keras', 'pytorch', 'onnx', 'pyg']
 
 for model_type in model_types:
     for module in os.listdir(os.path.dirname(__file__) + '/{}'.format(model_type)):
@@ -52,6 +53,8 @@ for model_type in model_types:
                             register_pytorch_layer_handler(layer, func)
                         elif model_type == 'onnx':
                             register_onnx_layer_handler(layer, func)
+                        elif model_type == 'pyg':
+                            register_pyg_block_handler(layer, func)
                             
         except ImportError:
             continue
@@ -297,6 +300,134 @@ def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', pro
     
     return pytorch_to_hls(config)
 
+def check_forward_dict(model, forward_dictionary):
+    for key in forward_dictionary:
+        try:
+            block = getattr(model, key)
+        except AttributeError:
+            raise AttributeError(f'Model is missing module "{key}" that is present in the provided forward dictionary; Check compatability')
+
+def convert_from_pyg_model(model, forward_dictionary, n_node, node_dim,
+                           n_edge, edge_dim, activate_final=None,
+                           output_dir='my-hls-test', project_name='myproject',
+                           part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
+    check_forward_dict(model, forward_dictionary)
+    """
+
+    Convert a Pytorch.Geometric model to an hls model.
+
+    Parameters
+    ----------
+    model : Pytorch.geometric model object.
+        Model to be converted to hls model object.
+    n_node, n_edge: int, int
+        These parameters define the size of the graphs that your hls GNN 
+        accepts as input. Inputs must be truncated or zero-padded to this 
+        size before feeding them to your model. This is necessary because 
+        each layer of the hls/hardware implementation has a fixed size 
+        and cannot be resized. 
+    node_dim, edge_dim: int, int
+        node_dim defines the length of the vector used to represent each 
+        node in the graph-input. For example, if each node is represented 
+        as a 1x3 vector, node_dim=3. 
+        Likewise, edge_dim defines the length of the vector used to 
+        represent each edge in the graph-input.
+        
+    forward_dictionary: OrderedDict object of the form {string: string}
+        Use this dictionary to define the order in which your model's
+        forward() method calls on the model's submodules. The keys
+        of the dictionary should be the names of your model's submodules, and the 
+        value stored in each key should indicate whether that submodule is an 
+        'EdgeBlock' (i.e. it predicts messages/edge-updates) or whether its a
+        'NodeBlock' (i.e. it predicts node-updates). 
+        
+        For example, consider this InteractionNetwork (https://github.com/GageDeZoort/interaction_network_paper/blob/pytorch_geometric/models/interaction_network.py),
+        whose forward() method calls on its submodules in the following order:
+        1. An EdgeBlock named 'R1'
+        2. A NodeBlock named 'O'
+        3. An EdgeBlock named 'R2'
+        
+        One would define its forward dictionary as such:
+        >>> forward_dictionary = OrderedDict()
+        >>> forward_dictionary['R1'] = 'EdgeBlock'
+        >>> forward_dictionary['O'] = 'NodeBlock'
+        >>> forward_dictionary['R2'] = 'EdgeBlock'
+        
+        It is really important to define the submodules in the same order with which the 
+        forward() method calls on them. hls4ml has no other way of inferring this order. 
+      
+    activate_final: string, optional 
+        If the activation of the final output is not already a layer in the corresponding
+        submodule, name the type of the activation function here. In the preceding example, 
+        one would pass the value 'sigmoid', because the final output of the model 
+        is the sigmoid-activated output of 'R2' (the last submodule called by the
+        forward() method). In other words, the model returns torch.sigmoid(self.R2(m2)). 
+        Other accepted values for this parameter include: 
+                                ['linear', 'relu', 'elu', 'selu', 'prelu', 'leaky_relu', 'softmax', 'tanh', 'softplus',  
+                                'softsign', 'hard_sigmoid','thresholded_relu', 'binary_tanh', 'ternary_tanh']
+    output_dir : string, optional
+        Output directory to write hls codes.
+    project_name : string, optional
+        hls project name.
+    part : string, optional
+        The particular FPGA part number that you are considering.
+    clock_period : int, optional
+        The clock period, in ns, at which your algorithm runs.
+    io_type : string, optional
+        Your options are 'io_parallel' or 'io_serial' where this really 
+        defines if you are pipelining your algorithm or not.
+    hls_config : dict, optional
+        Additional configuration dictionary for hls model.
+
+    Returns
+    -------
+    hls_model : hls4ml model object.
+
+    See Also
+    --------
+    hls4ml.convert_from_pytorch_model, hls4ml.convert_from_keras_model, 
+    hls4ml.convert_from_onnx_model
+
+    Example
+    --------
+    >>> import hls4ml
+    >>> config = hls4ml.utils.config_from_pyg_model(model, granularity='model')
+    >>>
+    >>> forward_dictionary = OrderedDict()
+    >>> forward_dictionary['R1'] = 'EdgeBlock'
+    >>> forward_dictionary['O'] = 'NodeBlock'
+    >>> forward_dictionary['R2'] = 'EdgeBlock'
+    >>> graph_dimensions = {"n_node": 112, "node_dim": 3, "n_edge": 148, "edge_dim": 4}
+    >>> hls_model = hls4ml.converters.convert_from_pyg_model(model, forward_dictionary,
+                                                             **graph_dimensions,
+                                                             activate_final='sigmoid'
+                                                             hls_config=config)
+
+    """
+
+    config = create_config(
+        output_dir=output_dir,
+        project_name=project_name,
+        part=part,
+        clock_period=clock_period,
+        io_type=io_type
+    )
+    
+    config['PytorchModel'] = model
+    config['InputShape'] = {
+        'NodeAttr': [n_node, node_dim],
+        'EdgeAttr': [n_edge, edge_dim],
+        'EdgeIndex': [n_edge, 2]
+    }
+    config['ForwardDictionary'] = forward_dictionary
+    config['ActivateFinal'] = activate_final
+
+    model_config = hls_config.get('Model', None)
+    config['HLSConfig']['Model'] = _check_model_config(model_config)
+    
+    _check_hls_config(config, hls_config)
+    
+    return pyg_to_hls(config)
 
 def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,
                              output_data_tb=None, backend='Vivado', board=None, part=None, clock_period=5, io_type='io_parallel',

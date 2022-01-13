@@ -51,6 +51,36 @@ void transpose_3d(
     }
 }
 
+struct matrix_config{
+    static const unsigned n_rows = 10;
+    static const unsigned n_cols = 10;
+};
+template<class data_T, class res_T, typename CONFIG_T>
+void vec_to_mat( //faster (I think)
+    data_T vec[CONFIG_T::n_rows*CONFIG_T::n_cols],
+    res_T mat[CONFIG_T::n_rows][CONFIG_T::n_cols]
+) {
+    for (int r=0; r < CONFIG_T::n_rows; r++){
+      for (int c=0; c < CONFIG_T::n_cols; c++){
+        #pragma HLS UNROLL
+        mat[r][c] = vec[r*CONFIG_T::n_cols+c];
+      }
+    }
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
+void mat_to_vec( //faster (I think)
+    data_T mat[CONFIG_T::n_rows][CONFIG_T::n_cols],
+    res_T vec[CONFIG_T::n_rows*CONFIG_T::n_cols]
+) {
+    for (int r=0; r < CONFIG_T::n_rows; r++){
+      for (int c=0; c<CONFIG_T::n_cols; c++){
+        #pragma HLS UNROLL
+        vec[r*CONFIG_T::n_cols+c] = mat[r][c];
+      }
+    }
+}
+
 }
 
 #endif

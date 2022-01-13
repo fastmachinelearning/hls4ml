@@ -62,7 +62,9 @@ void dense_resource_rf_leq_nin(
 
     ReuseLoop:
     for (int ir = 0; ir < rufactor; ir++) {
-        #pragma HLS PIPELINE II=1 rewind
+        if (!CONFIG_T::remove_pipeline_pragma) {
+            #pragma HLS PIPELINE II=1 rewind
+        }
 
         int w_index = ir;
         int in_index = ir;
@@ -149,7 +151,9 @@ void dense_resource_rf_gt_nin_rem0(
 
     ReuseLoop:
     for (int ir = 0; ir < rufactor; ir++) {
-        #pragma HLS PIPELINE II=1 rewind
+        if (!CONFIG_T::remove_pipeline_pragma) {
+            #pragma HLS PIPELINE II=1 rewind
+        }
 
         w_index = ir;
         out_index = outidx[ir]/*outstep*/;
@@ -213,7 +217,9 @@ void dense_resource_rf_gt_nin(
 
     ReuseLoop:
     for (int ir = 0; ir < rufactor; ir++) {
-        #pragma HLS PIPELINE II=1 rewind
+        if (!CONFIG_T::remove_pipeline_pragma) {
+            #pragma HLS PIPELINE II=1 rewind
+        }
         typename CONFIG_T::accum_t tmpmult[block_factor];
         #pragma HLS ARRAY_PARTITION variable=tmpmult complete
 
