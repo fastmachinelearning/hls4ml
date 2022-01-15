@@ -93,6 +93,7 @@ def test_cnv_2w2a():
     hls_model = hls4ml.converters.convert_from_onnx_model(model,
                                                           output_dir='hls4mlprj_qonnx_cnv-2w2a',
                                                           part='xcu250-figd2104-2L-e',
+                                                          io_type='io_stream',
                                                           hls_config=config)
     hls_model.compile()
     y_hls4ml = hls_model.predict(X)
