@@ -199,7 +199,7 @@ class InplaceVariable():
         self.shape = shape
         self.dim_names = dim_names
         self.type = proxy.type
-        self.cppname = proxy.name
+        self.name = proxy.name
         self.size = proxy.size
 
     def get_shape(self):
@@ -410,6 +410,10 @@ class Layer(object):
         else:
             return next(iter(self.variables.values()))
 
+    def set_output_variable(self, output_name, output_value):
+        self.variables[output_name] = output_value
+
+
     def get_weights(self, var_name=None):
         if var_name:
             return self.weights[var_name]
@@ -450,8 +454,6 @@ class Layer(object):
 
     def make_stream_variable(self, shape, dim_names, var_name='layer{index}_out', type_name='layer{index}_t', precision=None, depth=0):
         pack_factor = self.model.config.get_layer_config_value(self, 'PackFactor', default=1)
-        if depth == 0:
-            depth = self.model.config.get_layer_config_value(self, 'StreamDepth', default=0)
         
         return StreamVariable(shape, dim_names, var_name=var_name, type_name=type_name, precision=precision, n_pack=pack_factor, depth=depth, index=self.index)
 
@@ -522,8 +524,8 @@ class Layer(object):
         params['config'] = 'config{}'.format(self.index)
         params['input_t'] = self.get_input_variable().type.name
         params['output_t'] = self.get_output_variable().type.name
-        params['input'] = self.get_input_variable().cppname
-        params['output'] = self.get_output_variable().cppname
+        params['input'] = self.get_input_variable().name
+        params['output'] = self.get_output_variable().name
 
         return params
 
@@ -591,7 +593,6 @@ class Reshape(Layer):
         out_name = self.outputs[0]
         proxy = self.get_input_variable()
         out = InplaceVariable(shape, dims, proxy, index=self.get_input_node().index)
-
         self.variables[out_name] = out
         self.model.register_output_variable(out_name, out)
 
@@ -648,7 +649,8 @@ class Dense(Layer):
         params['nonzeros'] = self.get_weights('weight').nonzeros
         params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
         params['strategy'] = self.get_attr('strategy')
-
+        params['merged_relu'] = "false"
+        params['out_t'] = self.get_output_variable().type.name
         return self._config_template.format(**params)
 
 class Conv1D(Layer):
@@ -856,7 +858,11 @@ class Conv2D(Layer):
         else:
             shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
             dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+        # self.index = self.index + 2
+        # if(not bool(self.model.config.get_merged_relu())):
+        self.attributes['intermediate_index'] = self.index
         self.add_output_variable(shape, dims)
+        self.intermediate_op = self.get_output_variable()
         self.add_weights(quantizer=self.get_attr('weight_quantizer'))
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
         if len(self.weights['weight'].data.shape) == 2: # This can happen if we assign weights of Dense layer to 1x1 Conv2D
@@ -923,6 +929,8 @@ class Conv2D(Layer):
         mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
         mult_params['n_out'] = self.get_attr('n_filt')
         mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
+        mult_params['merged_relu'] = str(bool(self.model.config.get_merged_relu())).lower()
+        mult_params['out_t'] = self.intermediate_op.type.name
         mult_config = self._config_template[1].format(**mult_params)
 
         return mult_config + '\n' + conv_config
