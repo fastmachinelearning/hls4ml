@@ -19,8 +19,8 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
     typedef {index_t} index_t;
-    template<class x_T, class y_T, class res_T>
-    using product = nnet::product::{product_type}<x_T, y_T, res_T>;
+    template<class x_T, class y_T>
+    using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
 
 batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
@@ -32,7 +32,7 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     typedef {bias_t} bias_t;
     typedef {scale_t} scale_t;
     template<class x_T, class y_T>
-    using product = nnet::product::{product_type}_nocast<x_T, y_T>;
+    using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
 
 conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
@@ -68,8 +68,8 @@ conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     typedef {accum_t} accum_t;
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
-    template<class x_T, class y_T, class res_T>
-    using product = nnet::product::{product_type}<x_T, y_T, res_T>;
+    template<class x_T, class y_T>
+    using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
 
 conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
@@ -214,8 +214,8 @@ dot_config_template = """struct config{index} : nnet::dot_config {{
     static const unsigned n_out = {n_out};
     static const unsigned reuse_factor = {reuse};
     typedef {accum_t} accum_t;
-    template<class x_T, class y_T, class res_T>
-    using product = nnet::product::{product_type}<x_T, y_T, res_T>;
+    template<class x_T, class y_T>
+    using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
 
 concat_config_template = """struct config{index} : nnet::concat_config {{

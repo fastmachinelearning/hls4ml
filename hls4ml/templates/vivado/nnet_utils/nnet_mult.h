@@ -12,38 +12,17 @@ namespace nnet {
 namespace product{
 
 /* ---
- * 5 different methods to perform the product of input and weight, depending on the
+ * different methods to perform the product of input and weight, depending on the
  * types of each.
  * --- */
 
-template<class x_T, class w_T, class y_T>
 class Product{
     public:
-    static y_T product(x_T a, w_T w){
-        // 'Normal' product
-        #pragma HLS INLINE
-        return a * w;
-    }
     static void limit(unsigned multiplier_limit) {} // Nothing to do here
-};
-
-class Product_nocast{
-    public:
-    static void limit(unsigned multiplier_limit) {} // Nothing to do here
-};
-
-template<class x_T, class w_T, class y_T>
-class both_binary : public Product<x_T, w_T, y_T>{
-    public:
-    static y_T product(x_T a, w_T w){
-        // specialisation for 1-bit weights and incoming data
-        #pragma HLS INLINE
-        return a == w;
-    }
 };
 
 template<class x_T, class w_T>
-class both_binary_nocast : public Product_nocast{
+class both_binary : public Product{
     public:
     static x_T product(x_T a, w_T w){
         // specialisation for 1-bit weights and incoming data
@@ -52,18 +31,8 @@ class both_binary_nocast : public Product_nocast{
     }
 };
 
-template<class x_T, class w_T, class y_T>
-class weight_binary : public Product<x_T, w_T, y_T>{
-    public:
-    static y_T product(x_T a, w_T w){
-        // Specialisation for 1-bit weights, arbitrary data
-        #pragma HLS INLINE
-        return w == 0 ? (x_T) -a : a;
-    }
-};
-
 template<class x_T, class w_T>
-class weight_binary_nocast : public Product_nocast{
+class weight_binary : public Product{
     public:
     static x_T product(x_T a, w_T w){
         // Specialisation for 1-bit weights, arbitrary data
@@ -72,18 +41,8 @@ class weight_binary_nocast : public Product_nocast{
     }
 };
 
-template<class x_T, class w_T, class y_T>
-class data_binary : public Product<x_T, w_T, y_T>{
-    public:
-    static y_T product(x_T a, w_T w){
-        // Specialisation for 1-bit data, arbitrary weight
-        #pragma HLS INLINE
-        return a == 0 ? (w_T) -w : w;
-    }
-};
-
 template<class x_T, class w_T>
-class data_binary_nocast : public Product_nocast{
+class data_binary : public Product{
     public:
     static w_T product(x_T a, w_T w){
         // Specialisation for 1-bit data, arbitrary weight
@@ -92,20 +51,8 @@ class data_binary_nocast : public Product_nocast{
     }
 };
 
-template<class x_T, class w_T, class y_T>
-class weight_ternary : public Product<x_T, w_T, y_T>{
-    public:
-    static y_T product(x_T a, w_T w){
-        // Specialisation for 2-bit weights, arbitrary data
-        #pragma HLS INLINE
-        if (w == 0) return (x_T) 0;
-        else if(w == -1) return (x_T) -a;
-        else return (x_T) a; // if(w == 1)
-    }
-};
-
 template<class x_T, class w_T>
-class weight_ternary_nocast : public Product_nocast{
+class weight_ternary : public Product{
     public:
     static x_T product(x_T a, w_T w){
         // Specialisation for 2-bit weights, arbitrary data
@@ -116,22 +63,8 @@ class weight_ternary_nocast : public Product_nocast{
     }
 };
 
-template<class x_T, class w_T, class y_T>
-class mult : public Product<x_T, w_T, y_T>{
-    public:
-    static y_T product(x_T a, w_T w){
-        // 'Normal' product
-        #pragma HLS INLINE
-        return a * w;
-    }
-    static void limit(unsigned multiplier_limit){
-        #pragma HLS INLINE
-        #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
-    }
-};
-
 template<class x_T, class w_T>
-class mult_nocast : public Product_nocast{
+class mult : public Product{
     public:
     static auto product(x_T a, w_T w) -> decltype(a*w)
     {
@@ -145,21 +78,8 @@ class mult_nocast : public Product_nocast{
     }
 };
 
-template<class x_T, class w_T, class y_T>
-class weight_exponential : public Product<x_T, w_T, y_T>{
-    public:
-    static y_T product(x_T a, w_T w){
-        // Shift product for exponential weights
-        #pragma HLS INLINE
-        // shift by the exponent. Negative weights shift right
-        y_T y = a << w.weight;
-        // negate or not depending on weight sign
-        return w.sign == 1 ? (y_T) y : (y_T) -y;
-    }
-};
-
 template<class x_T, class w_T>
-class weight_exponential_nocast : public Product_nocast{
+class weight_exponential : public Product{
     public:
     using rt = x_T;
     static rt product(x_T a, w_T w){
@@ -174,7 +94,7 @@ class weight_exponential_nocast : public Product_nocast{
 };
 
 template<class w_T, int _AP_W>
-class weight_exponential_nocast<ap_int<_AP_W>, w_T> : public Product_nocast{
+class weight_exponential<ap_int<_AP_W>, w_T> : public Product{
     public:
     using rt = ap_fixed<_AP_W + 2*decltype(w_T::weight)::width, _AP_W + decltype(w_T::weight)::width>;
     static rt product(ap_int<_AP_W> a, w_T w){
@@ -188,7 +108,7 @@ class weight_exponential_nocast<ap_int<_AP_W>, w_T> : public Product_nocast{
 };
 
 template<class w_T, int _AP_W>
-class weight_exponential_nocast<ap_uint<_AP_W>, w_T> : public Product_nocast{
+class weight_exponential<ap_uint<_AP_W>, w_T> : public Product{
     public:
     using rt = ap_fixed<_AP_W + 2*decltype(w_T::weight)::width + 1, _AP_W + decltype(w_T::weight)::width + 1>;
     static rt product(ap_uint<_AP_W> a, w_T w){
@@ -202,7 +122,7 @@ class weight_exponential_nocast<ap_uint<_AP_W>, w_T> : public Product_nocast{
 };
 
 template<class w_T, int _AP_W, int _AP_I, ap_q_mode _AP_Q, ap_o_mode _AP_O, int _AP_N>
-class weight_exponential_nocast<ap_fixed<_AP_W,_AP_I,_AP_Q, _AP_O, _AP_N>, w_T> : public Product_nocast{
+class weight_exponential<ap_fixed<_AP_W,_AP_I,_AP_Q, _AP_O, _AP_N>, w_T> : public Product{
     public:
     using rt = ap_fixed<_AP_W + 2*decltype(w_T::weight)::width, _AP_I + decltype(w_T::weight)::width,
                         _AP_Q, _AP_O, _AP_N>;
@@ -217,7 +137,7 @@ class weight_exponential_nocast<ap_fixed<_AP_W,_AP_I,_AP_Q, _AP_O, _AP_N>, w_T> 
 };
 
 template<class w_T, int _AP_W, int _AP_I, ap_q_mode _AP_Q, ap_o_mode _AP_O, int _AP_N>
-class weight_exponential_nocast<ap_ufixed<_AP_W,_AP_I,_AP_Q, _AP_O, _AP_N>, w_T> : public Product_nocast{
+class weight_exponential<ap_ufixed<_AP_W,_AP_I,_AP_Q, _AP_O, _AP_N>, w_T> : public Product{
     public:
     using rt = ap_fixed<_AP_W + 2*decltype(w_T::weight)::width + 1, _AP_I + decltype(w_T::weight)::width + 1,
                         _AP_Q, _AP_O, _AP_N>;

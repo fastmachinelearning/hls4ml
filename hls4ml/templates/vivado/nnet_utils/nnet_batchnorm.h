@@ -44,7 +44,7 @@ struct batchnorm_config
     static const unsigned n_zeros = 0;
     // partitioning arrays cyclically to go with roll factors?
     template<class x_T, class y_T>
-    using product = nnet::product::mult_nocast<x_T, y_T>;
+    using product = nnet::product::mult<x_T, y_T>;
 };
 
 template<class data_T, class res_T, typename CONFIG_T>
