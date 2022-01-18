@@ -1,5 +1,4 @@
 from __future__ import print_function
-from email.policy import default
 import six
 import os
 import sys
