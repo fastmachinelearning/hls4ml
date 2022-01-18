@@ -34,32 +34,37 @@ class both_binary : public Product{
 template<class x_T, class w_T>
 class weight_binary : public Product{
     public:
-    static x_T product(x_T a, w_T w){
+    static auto product(x_T a, w_T w) -> decltype(-a)
+    {
         // Specialisation for 1-bit weights, arbitrary data
         #pragma HLS INLINE
-        return w == 0 ? (x_T) -a : a;
+        if (w == 0) return -a;
+        else return a;
     }
 };
 
 template<class x_T, class w_T>
 class data_binary : public Product{
     public:
-    static w_T product(x_T a, w_T w){
+    static auto product(x_T a, w_T w) -> decltype(-w)
+    {
         // Specialisation for 1-bit data, arbitrary weight
         #pragma HLS INLINE
-        return a == 0 ? (w_T) -w : w;
+        if (a == 0) return -w;
+        else return w;
     }
 };
 
 template<class x_T, class w_T>
 class weight_ternary : public Product{
     public:
-    static x_T product(x_T a, w_T w){
+    static auto product(x_T a, w_T w) -> decltype(-a)
+    {
         // Specialisation for 2-bit weights, arbitrary data
         #pragma HLS INLINE
-        if (w == 0) return (x_T) 0;
-        else if(w == -1) return (x_T) -a;
-        else return (x_T) a; // if(w == 1)
+        if (w == 0) return 0;
+        else if(w == -1) return -a;
+        else return a; // if(w == 1)
     }
 };
 
@@ -81,74 +86,17 @@ class mult : public Product{
 template<class x_T, class w_T>
 class weight_exponential : public Product{
     public:
-    using rt = x_T;
-    static rt product(x_T a, w_T w){
-        std::cerr << "Should not match to this function" << std::endl;
+    // Construct the return type from the multiplication equivalent to the largest shifts
+    // ap_int<pow2(decltype(w_T::weight)::width-1)-1> is the type if the multiplicand equivalent to the largest lshift <<
+    // ap_fixed<pow2(decltype(w_T::weight)::width-1)-1,0> is the type of the multiplicand equivalent to the largest rshift >>
+    using r_T = decltype(x_T(0) * (ap_int<pow2(decltype(w_T::weight)::width-1)-1>(1)+ap_fixed<pow2(decltype(w_T::weight)::width-1)-1,0>(1)));
+    static r_T product(x_T a, w_T w){
         // Shift product for exponential weights
         #pragma HLS INLINE
         // shift by the exponent. Negative weights shift right
-        rt y = static_cast<rt>(a) << w.weight;
+        r_T y = static_cast<r_T>(a) << w.weight;
         // negate or not depending on weight sign
-        return w.sign == 1 ? y : static_cast<rt>(-y);
-    }
-};
-
-template<class w_T, int _AP_W>
-class weight_exponential<ap_int<_AP_W>, w_T> : public Product{
-    public:
-    using rt = ap_fixed<_AP_W + 2*decltype(w_T::weight)::width, _AP_W + decltype(w_T::weight)::width>;
-    static rt product(ap_int<_AP_W> a, w_T w){
-        // Shift product for exponential weights
-        #pragma HLS INLINE
-        // shift by the exponent. Negative weights shift right
-        rt y = static_cast<rt>(a) << w.weight;
-        // negate or not depending on weight sign
-        return w.sign == 1 ? y : static_cast<rt>(-y);
-    }
-};
-
-template<class w_T, int _AP_W>
-class weight_exponential<ap_uint<_AP_W>, w_T> : public Product{
-    public:
-    using rt = ap_fixed<_AP_W + 2*decltype(w_T::weight)::width + 1, _AP_W + decltype(w_T::weight)::width + 1>;
-    static rt product(ap_uint<_AP_W> a, w_T w){
-        // Shift product for exponential weights
-        #pragma HLS INLINE
-        // shift by the exponent. Negative weights shift right
-        rt y = static_cast<rt>(a) << w.weight;
-        // negate or not depending on weight sign
-        return w.sign == 1 ? y : static_cast<rt>(-y);
-    }
-};
-
-template<class w_T, int _AP_W, int _AP_I, ap_q_mode _AP_Q, ap_o_mode _AP_O, int _AP_N>
-class weight_exponential<ap_fixed<_AP_W,_AP_I,_AP_Q, _AP_O, _AP_N>, w_T> : public Product{
-    public:
-    using rt = ap_fixed<_AP_W + 2*decltype(w_T::weight)::width, _AP_I + decltype(w_T::weight)::width,
-                        _AP_Q, _AP_O, _AP_N>;
-    static rt product(ap_fixed<_AP_W,_AP_I,_AP_Q, _AP_O, _AP_N> a, w_T w){
-        // Shift product for exponential weights
-        #pragma HLS INLINE
-        // shift by the exponent. Negative weights shift right
-        rt y = static_cast<rt>(a) << w.weight;
-        // negate or not depending on weight sign
-        return w.sign == 1 ? y : static_cast<rt>(-y);
-    }
-};
-
-template<class w_T, int _AP_W, int _AP_I, ap_q_mode _AP_Q, ap_o_mode _AP_O, int _AP_N>
-class weight_exponential<ap_ufixed<_AP_W,_AP_I,_AP_Q, _AP_O, _AP_N>, w_T> : public Product{
-    public:
-    using rt = ap_fixed<_AP_W + 2*decltype(w_T::weight)::width + 1, _AP_I + decltype(w_T::weight)::width + 1,
-                        _AP_Q, _AP_O, _AP_N>;
-    static rt product(ap_ufixed<_AP_W,_AP_I,_AP_Q, _AP_O, _AP_N> a, w_T w){
-        // Shift product for exponential weights
-        #pragma HLS INLINE
-        // shift by the exponent. Negative weights shift right
-        // shift by the exponent. Negative weights shift right
-        rt y = static_cast<rt>(a) << w.weight;
-        // negate or not depending on weight sign
-        return w.sign == 1 ? y : static_cast<rt>(-y);
+        return w.sign == 1 ? y : static_cast<r_T>(-y);
     }
 };
 
