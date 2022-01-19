@@ -91,3 +91,157 @@ class ApplyAlphaDownMatMul(OptimizerPass):
         model.insert_node(new_node)
         return True
 
+class ApplyAlphaDownConv(OptimizerPass):
+    '''Shift an ApplyAlpha on input below a Conv'''
+
+    def match(self, node):
+        '''Shift an ApplyAlpha from the Weight'''
+        is_match = (isinstance(node, Conv)
+                    and isinstance(node.get_input_node(node.inputs[0]), ApplyAlpha))
+
+        return is_match
+
+    def transform(self, model, node):
+
+        apply_alpha = node.get_input_node(node.inputs[0])
+
+        # Check if we can move
+        scale = apply_alpha.weights['scale'].data_unquantized
+        bias = apply_alpha.weights['bias'].data_unquantized
+
+        scale1d = np.ravel(scale)
+        if (scale1d[0] == scale).all():
+            # scalar scale
+            scale = np.array(scale1d[0])
+
+        bias1d = np.ravel(bias)
+        if (bias1d[0] == bias).all():
+            # scalar bias
+            bias = np.array(bias1d[0])
+
+        output = node.get_output_variable()
+
+        can_propagate = False
+        if not bias.shape and bias == 0:
+            # zero bias, propagate through, if possible
+            # (always possible if scale is scalar)
+            try:
+                newscale = np.broadcast_to(scale, output.shape)
+                newbias = np.zeros(output.shape)
+                can_propagate = True
+            except ValueError:
+                can_propagate = False
+   
+        if not can_propagate:
+            return False
+
+        model.remove_node(apply_alpha)
+
+        new_node = model.make_node('ApplyAlpha', apply_alpha.name, apply_alpha.attributes, [x for x in node.outputs])
+        new_node.add_weights(newscale)
+        new_node.add_bias(newbias)
+        model.insert_node(new_node)
+        return True
+
+class ApplyAlphaWeightDownConv(OptimizerPass):
+    '''Shift an ApplyAlpha weight (from conv side) below a Conv'''
+
+    def match(self, node):
+        '''Shift an ApplyAlpha from the Weight'''
+        is_match = (isinstance(node, Conv) and len(node.inputs) > 1
+                    and isinstance(node.get_input_node(node.inputs[1]), ApplyAlpha))
+
+        return is_match
+
+    def transform(self, model, node):
+
+        apply_alpha = node.get_input_node(node.inputs[1])
+
+        # Check if we can move
+        scale = apply_alpha.weights['scale'].data_unquantized
+        bias = apply_alpha.weights['bias'].data_unquantized
+
+        scale1d = np.ravel(scale)
+        if (scale1d[0] == scale).all():
+            # scalar scale
+            scale = np.array(scale1d[0])
+
+        bias1d = np.ravel(bias)
+        if (bias1d[0] == bias).all():
+            # scalar bias
+            bias = np.array(bias1d[0])
+
+        output = node.get_output_variable()
+
+        can_propagate = False
+        if not bias.shape and bias == 0:
+            # zero bias, propagate through, if possible
+            # (always possible if scale is scalar)
+            try:
+                newscale = np.broadcast_to(scale, output.shape)
+                newbias = np.zeros(output.shape)
+                can_propagate = True
+            except ValueError:
+                can_propagate = False
+   
+        if not can_propagate:
+            return False
+
+        model.remove_node(apply_alpha)
+
+        new_node = model.make_node('ApplyAlpha', apply_alpha.name, apply_alpha.attributes, [x for x in node.outputs])
+        new_node.add_weights(newscale)
+        new_node.add_bias(newbias)
+        model.insert_node(new_node)
+        return True
+
+class ApplyAlphaBiasDownConv(OptimizerPass):
+    '''Shift an ApplyAlpha bias (from conv side) below a Conv'''
+
+    def match(self, node):
+        '''Shift an ApplyAlpha from the Weight'''
+        is_match = (isinstance(node, Conv) and len(node.inputs) > 2
+                    and isinstance(node.get_input_node(node.inputs[2]), ApplyAlpha))
+
+        return is_match
+
+    def transform(self, model, node):
+
+        apply_alpha = node.get_input_node(node.inputs[2])
+
+        # Check if we can move
+        scale = apply_alpha.weights['scale'].data_unquantized
+        bias = apply_alpha.weights['bias'].data_unquantized
+
+        scale1d = np.ravel(scale)
+        if (scale1d[0] == scale).all():
+            # scalar scale
+            scale = np.array(scale1d[0])
+
+        bias1d = np.ravel(bias)
+        if (bias1d[0] == bias).all():
+            # scalar bias
+            bias = np.array(bias1d[0])
+
+        output = node.get_output_variable()
+
+        can_propagate = False
+        if not scale.shape and scale == 1:
+            # No scale, just additional bias
+            try:
+                newscale = np.ones(output.shape)
+                newbias = np.broadcast_to(bias, output.shape)
+                can_propagate = True
+            except ValueError:
+                can_propagate = False
+   
+        if not can_propagate:
+            return False
+
+        model.remove_node(apply_alpha)
+
+        new_node = model.make_node('ApplyAlpha', apply_alpha.name, apply_alpha.attributes, [x for x in node.outputs])
+        new_node.add_weights(newscale)
+        new_node.add_bias(newbias)
+        model.insert_node(new_node)
+        return True
