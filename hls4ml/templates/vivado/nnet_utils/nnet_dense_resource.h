@@ -73,7 +73,8 @@ void dense_resource_rf_leq_nin(
         for (int im = 0; im < block_factor; im++) {
             #pragma HLS UNROLL
 
-            acc[out_index] += CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data[in_index], weights[w_index]);
+            acc[out_index] += static_cast<typename CONFIG_T::accum_t>(
+              CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data[in_index], weights[w_index]));
 
             // Increment w_index
             w_index += rufactor;
@@ -157,7 +158,8 @@ void dense_resource_rf_gt_nin_rem0(
         MultLoop:
         for (int im = 0; im < block_factor; im++) {
             #pragma HLS UNROLL
-            acc[out_index] += CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data[in_index], weights[w_index]);
+            acc[out_index] += static_cast<typename CONFIG_T::accum_t>(
+              CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data[in_index], weights[w_index]));
 
             w_index += rufactor;
             if (w_index >= CONFIG_T::n_in * CONFIG_T::n_out) break; // check out of bounds
