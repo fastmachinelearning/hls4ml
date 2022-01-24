@@ -110,8 +110,8 @@ def randX_100_16():
 # Note 4-bit test can still fail sometimes depending on random seed
 # https://github.com/fastmachinelearning/hls4ml/issues/381
 #@pytest.mark.parametrize('bits', [4, 6, 8])
-@pytest.mark.parametrize('bits', [4])
-def test_single_dense_activation_exact(randX_100_16, bits):
+@pytest.mark.parametrize('bits,alpha', [(4, 1), (4, 'auto_po2')])
+def test_single_dense_activation_exact(randX_100_16, bits, alpha):
   '''
   Test a single Dense -> Activation layer topology for
   bit exactness with number of bits parameter
@@ -119,7 +119,7 @@ def test_single_dense_activation_exact(randX_100_16, bits):
   X = randX_100_16
   model = Sequential()
   model.add(QDense(16, input_shape=(16,), name='fc1',
-                  kernel_quantizer=quantized_bits(bits,0,alpha=1), bias_quantizer=quantized_bits(bits,0,alpha=1),
+                  kernel_quantizer=quantized_bits(bits,0,alpha=alpha), bias_quantizer=quantized_bits(bits,0,alpha=1),
                   kernel_initializer='lecun_uniform'))
   model.add(QActivation(activation=quantized_relu(bits,0), name='relu1'))
   model.compile()
