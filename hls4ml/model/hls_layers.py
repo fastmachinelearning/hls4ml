@@ -410,6 +410,10 @@ class Layer(object):
         else:
             return next(iter(self.variables.values()))
 
+    def set_output_variable(self, output_name, output_value):
+        self.variables[output_name] = output_value
+
+
     def get_weights(self, var_name=None):
         if var_name:
             return self.weights[var_name]
@@ -589,7 +593,6 @@ class Reshape(Layer):
         out_name = self.outputs[0]
         proxy = self.get_input_variable()
         out = InplaceVariable(shape, dims, proxy, index=self.get_input_node().index)
-
         self.variables[out_name] = out
         self.model.register_output_variable(out_name, out)
 
@@ -646,7 +649,8 @@ class Dense(Layer):
         params['nonzeros'] = self.get_weights('weight').nonzeros
         params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
         params['strategy'] = self.get_attr('strategy')
-
+        params['merged_relu'] = "false"
+        params['out_t'] = self.get_output_variable().type.name
         return self._config_template.format(**params)
 
 class Conv1D(Layer):
@@ -854,7 +858,11 @@ class Conv2D(Layer):
         else:
             shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
             dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+        # self.index = self.index + 2
+        # if(not bool(self.model.config.get_merged_relu())):
+        self.attributes['intermediate_index'] = self.index
         self.add_output_variable(shape, dims)
+        self.intermediate_op = self.get_output_variable()
         self.add_weights(quantizer=self.get_attr('weight_quantizer'))
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
         if len(self.weights['weight'].data.shape) == 2: # This can happen if we assign weights of Dense layer to 1x1 Conv2D
@@ -921,6 +929,8 @@ class Conv2D(Layer):
         mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
         mult_params['n_out'] = self.get_attr('n_filt')
         mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
+        mult_params['merged_relu'] = str(bool(self.model.config.get_merged_relu())).lower()
+        mult_params['out_t'] = self.intermediate_op.type.name
         mult_config = self._config_template[1].format(**mult_params)
 
         return mult_config + '\n' + conv_config

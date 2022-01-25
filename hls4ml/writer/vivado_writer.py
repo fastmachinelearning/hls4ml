@@ -663,7 +663,8 @@ class VivadoWriter(Writer):
         ###################
         # Tarball output
         ###################
-
+        if os.path.isfile(model.config.get_output_dir() + '.tar.gz'):
+            return
         with tarfile.open(model.config.get_output_dir() + '.tar.gz', mode='w:gz') as archive:
             archive.add(model.config.get_output_dir(), recursive=True)
 

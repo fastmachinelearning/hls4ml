@@ -11,6 +11,94 @@ array set opt {
   vsynth     0
 }
 
+set tcldir [file dirname [info script]]
+source [file join $tcldir project.tcl]
+
+proc remove_recursive_log_wave {} {
+    global myproject
+    set timestamp [clock format [clock seconds] -format {%Y%m%d%H%M%S}]
+
+    set filename ${myproject}_prj/solution1/sim/verilog/${myproject}_axi.tcl
+    set temp     $filename.new.$timestamp
+    # set backup   $filename.bak.$timestamp
+
+    set in  [open $filename r]
+    set out [open $temp     w]
+
+    # line-by-line, read the original file
+    while {[gets $in line] != -1} {
+        if {[string equal "$line" "log_wave -r /"]} {
+            set line { }
+        }
+        puts $out $line
+    }
+
+     close $in
+     close $out
+
+     # move the new data to the proper filename
+     file delete -force $filename
+     file rename -force $temp $filename
+}
+
+proc add_vcd_instructions_tcl {} {
+    global myproject
+    set timestamp [clock format [clock seconds] -format {%Y%m%d%H%M%S}]
+
+    set filename ${myproject}_prj/solution1/sim/verilog/${myproject}_axi.tcl
+    set temp     $filename.new.$timestamp
+    # set backup   $filename.bak.$timestamp
+
+    set in  [open $filename r]
+    set out [open $temp     w]
+
+    # line-by-line, read the original file
+    while {[gets $in line] != -1} {
+        if {[string equal "$line" "log_wave -r /"]} {
+            set line {current_scope /apatb_myproject_axi_top/AESL_inst_myproject_axi/myproject_U0
+set scopes [get_scopes -regexp {layer(\d*)_.*data_0_V_U.*}]
+current_scope /apatb_myproject_axi_top/AESL_inst_myproject_axi
+append scopes { }
+append scopes [get_scopes -regexp {.*local_V_data_0.*}]
+open_vcd fifo_opt.vcd
+foreach scope $scopes {
+    current_scope $scope
+    if {[catch [get_objects usedw]] == 0} {
+      puts "$scope skipped"
+      continue
+    }
+    set usedw [get_objects usedw]
+    set depth [get_objects DEPTH]
+    add_wave $usedw
+    log_vcd $usedw
+    log_wave $usedw
+    add_wave $depth
+    log_vcd $depth
+    log_wave $depth
+    }
+    }
+
+    set line [string map [list "myproject" $myproject] $line]
+        }
+
+        if {[string equal "$line" "quit"]} {
+            set line {flush_vcd
+close_vcd
+quit
+}
+        }
+        # then write the transformed line
+        puts $out $line
+    }
+
+    close $in
+    close $out
+
+    # move the new data to the proper filename
+    file delete -force $filename
+    file rename -force $temp $filename
+}
+
 foreach arg $::argv {
   foreach o [lsort [array names opt]] {
     regexp "$o=+(\\w+)" $arg unused opt($o)
@@ -91,7 +179,20 @@ if {$opt(cosim)} {
   # TODO: This is a workaround (Xilinx defines __RTL_SIMULATION__ only for SystemC testbenches).
   add_files -tb myproject_test.cpp -cflags "-std=c++0x -DRTL_SIM"
   set time_start [clock clicks -milliseconds]
-  cosim_design -trace_level all
+
+  cosim_design -trace_level all -setup
+
+  if {$fifo_opt} {
+    puts "\[hls4ml\] - FIFO optimization started"
+    add_vcd_instructions_tcl
+  }
+
+  remove_recursive_log_wave
+  set old_pwd [pwd]
+  cd ${myproject}_prj/solution1/sim/verilog/
+  source run_sim.tcl
+  cd $old_pwd
+
   set time_end [clock clicks -milliseconds]
   puts "INFO:"
   puts [read [open myproject_prj/solution1/sim/report/myproject_cosim.rpt r]]
