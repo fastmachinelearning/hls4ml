@@ -199,6 +199,7 @@ class InplaceVariable():
         self.shape = shape
         self.dim_names = dim_names
         self.type = proxy.type
+        self.cppname = proxy.name
         self.name = proxy.name
         self.size = proxy.size
 
