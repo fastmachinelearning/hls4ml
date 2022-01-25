@@ -44,7 +44,8 @@ class MatmulConstToDense(OptimizerPass):
             quant_precision = FixedPrecisionType(bitwidth, bitwidth, signed, rounding_mode, saturation_mode)
 
         #creating the attributes
-        attributes = {
+        attributes = matmul_node.attributes
+        attributes.update({
             "weight_data": const_node.value,
             "weight_precision": weight_precision,
             "weight_quantizer": const_node.get_attr("quantizer"),
@@ -52,7 +53,7 @@ class MatmulConstToDense(OptimizerPass):
             "omit_bias": True,
             "n_in": const_node.value.shape[0],
             "n_out": const_node.value.shape[1]
-        }
+        })
 
         #making new node
         new_dense = model.make_node("Dense", f"Dense_{matmul_node.name}", attributes, [matmul_node.inputs[other_inp_idx]], matmul_node.outputs)

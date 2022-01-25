@@ -101,16 +101,15 @@ class MergeToBatchNormalization(OptimizerPass):
             scale = np.broadcast_to(const_node.value, input_shape)
             bias = np.zeros(input_shape)
 
-        attributes = {
+        attributes = node.attributes
+        attributes.update({
             "simple": True,
             "scale": scale,
             "bias": bias,
-            "quant_precision": node.get_attr("quant_precision"),
-            "quantizer": node.get_attr("quantizer"),
             "n_in": n_in,
             "n_out": n_in,
             "n_filt": -1
-        }
+        })
 
         bn_layer = model.make_node("BatchNormalization", f"bn_{node.name}",
                                    attributes,

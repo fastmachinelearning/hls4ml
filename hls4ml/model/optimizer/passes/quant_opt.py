@@ -97,12 +97,13 @@ class QuantToActivation(OptimizerPass):
 
         precision, quantizer = _calculate_precision_quantizer(bitwidth, signed, narrow, rounding_mode)
 
-        attributes = {
+        attributes = node.attributes
+        attributes.update({
             'activation' : 'linear',
             'quant_precision'  : precision,
             'quantizer'  : quantizer,
             'n_in'       : n_in
-        }
+        })
 
         new_node = model.make_node('Activation', f'{node.name}_act',
                                    attributes, [node.inputs[0]], node.outputs)
@@ -198,12 +199,13 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
 
         precision, quantizer = _calculate_precision_quantizer(bitwidth, signed, narrow, rounding_mode)
 
-        attributes = {
+        attributes = deepcopy(node.attributes)
+        attributes.update({
             'activation' : 'linear',
             'quant_precision'  : precision,
             'quantizer'  : quantizer,
             'n_in'       : n_in
-        }
+        })
 
         new_node = model.make_node('Activation', f'{node.name}_act',
                                    attributes, [node.inputs[0]], node.outputs)
@@ -215,14 +217,12 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
         scale = node.get_attr("scale")
         bias = node.get_attr("zeropt")
 
-        attributes_scale = {
+        attributes_scale = node.attributes
+        attributes_scale.update({
             'n_in': n_in,
             'n_out': n_in,
-            'n_filt': -1,
-            'reuse_factor': node.get_attr("reuse_factor"),
-            'target_cycles': node.get_attr("target_cycles"),
-            'Trace'      : False
-        }
+            'n_filt': -1
+        })
 
         attributes_rescale = deepcopy(attributes_scale)
 
@@ -301,14 +301,12 @@ class ConstQuantToConstAlpha(OptimizerPass):
         # reinitialize (which also runs quantization if quantizer exists)
         const_node.initialize()
 
-        attributes_rescale = {
+        attributes_rescale = node.attributes
+        attributes_rescale.update({
             'n_in': n_in,
             'n_out': n_in,
-            'n_filt': -1,
-            'reuse_factor': node.get_attr("reuse_factor"),
-            'target_cycles': node.get_attr("target_cycles"),
-            'Trace'      : False
-        }
+            'n_filt': -1
+        })
 
         rescale_node = model.make_node('ApplyAlpha', node.name + '_rescale', attributes_rescale, [x for x in node.inputs])
         rescale = scale
