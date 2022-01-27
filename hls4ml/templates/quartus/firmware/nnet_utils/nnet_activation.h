@@ -103,7 +103,7 @@ void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     // Index into the lookup table based on data
     #pragma unroll
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        int data_round = (data[ii]*(CONFIG_T::table_size/16)).to_int();
+        int data_round = (data[ii]*CONFIG_T::table_size/16).to_int();
         int index = data_round + 8*CONFIG_T::table_size/16;
         if (index < 0)   index = 0;
         if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
@@ -124,7 +124,7 @@ void  softmax(  data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
   New_loop:
   #pragma unroll
   for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-      data_round[ii] = (data[ii] * (CONFIG_T::table_size/16)).to_int();
+      data_round[ii] = (data[ii] * CONFIG_T::table_size/16).to_int();
   }
   NN_Outer:
   #pragma unroll
@@ -168,7 +168,7 @@ void  dense_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     // Index into the lookup table based on data
     #pragma unroll
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        ac_int<16> data_round = (data[ii]*(CONFIG_T::table_size/8)).to_int();
+        ac_int<16> data_round = (data[ii]*CONFIG_T::table_size/8).to_int();
         ac_int<16> index = data_round +  4*CONFIG_T::table_size/8;
         //std::cout << "Input: "  << data[ii] << " Round: " << data_round << " Index: " << index << std::endl;
         if (index < 0)   index = 0;
@@ -233,7 +233,7 @@ void softplus(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     // Index into the lookup table based on data
     #pragma unroll
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        ac_int<16> data_round = (data[ii]*(CONFIG_T::table_size/16)).to_int();
+        ac_int<16> data_round = (data[ii]*CONFIG_T::table_size/16).to_int();
         ac_int<16> index = data_round + 8*CONFIG_T::table_size/16;
         if (index < 0)   index = 0;
         if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
@@ -253,7 +253,7 @@ void  softsign(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     // Index into the lookup table based on data
     #pragma unroll
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        ac_int<16> data_round = (data[ii]*(CONFIG_T::table_size/16)).to_int();
+        ac_int<16> data_round = (data[ii]*CONFIG_T::table_size/16).to_int();
         ac_int<16> index = data_round + 8*CONFIG_T::table_size/16;
         if (index < 0)   index = 0;
         if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
@@ -276,7 +276,7 @@ void  elu(data_T data[CONFIG_T::n_in], const res_T alpha, res_T res[CONFIG_T::n_
         if (datareg >= 0) {
             res[ii] = datareg;
         } else {
-            ac_int<16> index = (datareg*(CONFIG_T::table_size/-8)).to_int();
+            ac_int<16> index = (datareg*CONFIG_T::table_size/-8).to_int();
             if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
             res[ii] = alpha * elu_table[index];
         }
@@ -304,7 +304,7 @@ void  selu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
         if (datareg >= 0) {
             res[ii] = res_T(1.0507009873554804934193349852946) * datareg;
         } else {
-            ac_int<16> index = (datareg*(CONFIG_T::table_size/-8)).to_int();
+            ac_int<16> index = (datareg*CONFIG_T::table_size/-8).to_int();
             if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
             res[ii] = selu_table[index];
         }
@@ -315,7 +315,7 @@ void  selu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 //       PReLU Activation
 // *************************************************
 template<class data_T, class res_T, typename CONFIG_T>
-void  prelu(data_T data[CONFIG_T::n_in], data_T alpha[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
+void  prelu(data_T data[CONFIG_T::n_in], const data_T alpha[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
     #pragma unroll
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
