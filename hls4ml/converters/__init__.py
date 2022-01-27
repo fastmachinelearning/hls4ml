@@ -103,7 +103,7 @@ def convert_from_config(config):
             the filesystem or a dict containig the parsed configuration.
 
     Returns:
-        HLSModel: hls4ml model.
+        ModelGraph: hls4ml model.
     """
 
     if isinstance(config, str):
@@ -191,7 +191,7 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
     Raises:
         Exception: If precision and reuse factor are not present in 'hls_config'
     Returns:
-        HLSModel: hls4ml model.
+        ModelGraph: hls4ml model.
     """
 
     config = create_config(
@@ -249,7 +249,7 @@ def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', pro
 
     Returns
     -------
-    hls_model : hls4ml model object.
+    ModelGraph : hls4ml model object.
 
     See Also
     --------
@@ -322,7 +322,7 @@ def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='mypro
 
     Returns
     -------
-    hls_model : hls4ml model object.
+    ModelGraph : hls4ml model object.
 
     See Also
     --------

@@ -1,5 +1,5 @@
 
-from hls4ml.model.hls_layers import Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D
+from hls4ml.model.layers import Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D
 from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
 
 # Pooling templates

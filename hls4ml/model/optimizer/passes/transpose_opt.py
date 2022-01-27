@@ -1,5 +1,5 @@
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.hls_layers import Transpose
+from hls4ml.model.layers import Transpose
 
 class RemoveUselessTranspose(OptimizerPass):
     def match(self, node):

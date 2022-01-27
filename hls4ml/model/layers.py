@@ -1,13 +1,13 @@
 import numpy as np
 import six
 
-from hls4ml.model.hls_types import NamedType
-from hls4ml.model.hls_types import TensorVariable, WeightVariable, CompressedWeightVariable, ExponentWeightVariable, InplaceVariable
-from hls4ml.model.hls_types import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType
-from hls4ml.model.hls_types import find_minimum_width
+from hls4ml.model.types import NamedType
+from hls4ml.model.types import TensorVariable, WeightVariable, CompressedWeightVariable, ExponentWeightVariable, InplaceVariable
+from hls4ml.model.types import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType
+from hls4ml.model.types import find_minimum_width
 
-from hls4ml.model.hls_attributes import Attribute, TypeMapping, VariableMapping, WeightAttribute, TypeAttribute, ChoiceAttribute, WeightMapping
-from hls4ml.model.hls_attributes import AttributeDict, AttributeMapping
+from hls4ml.model.attributes import Attribute, TypeMapping, VariableMapping, WeightAttribute, TypeAttribute, ChoiceAttribute, WeightMapping
+from hls4ml.model.attributes import AttributeDict, AttributeMapping
 
 # TODO move this to some utility module
 class classproperty(object):

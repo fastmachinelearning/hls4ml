@@ -1,6 +1,6 @@
 
 from hls4ml.backends.backend import get_backend
-from hls4ml.model.hls_layers import Concatenate, Dot, Merge
+from hls4ml.model.layers import Concatenate, Dot, Merge
 from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
 
 # Merge templates

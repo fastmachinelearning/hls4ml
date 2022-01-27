@@ -3,7 +3,7 @@ import re
 from copy import copy
 
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.hls_layers import Conv1D, Conv2D, register_layer
+from hls4ml.model.layers import Conv1D, Conv2D, register_layer
 from hls4ml.backends.vivado.passes.convolution_templates import Conv1DConfigTemplate, Conv1DFunctionTemplate, Conv2DConfigTemplate, Conv2DFunctionTemplate, conv1d_config_template, conv2d_config_template, conv_mult_config_template
 
 class PointwiseConv1D(Conv1D):

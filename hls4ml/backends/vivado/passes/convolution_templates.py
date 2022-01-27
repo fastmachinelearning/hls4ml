@@ -1,6 +1,6 @@
 
 from hls4ml.backends.backend import get_backend
-from hls4ml.model.hls_layers import Conv1D, Conv2D, Conv2DBatchnorm, DepthwiseConv2D, SeparableConv1D, SeparableConv2D
+from hls4ml.model.layers import Conv1D, Conv2D, Conv2DBatchnorm, DepthwiseConv2D, SeparableConv1D, SeparableConv2D
 from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
 
 # Shared multiplication template

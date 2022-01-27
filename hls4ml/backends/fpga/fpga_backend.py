@@ -7,9 +7,9 @@ from collections.abc import Iterable
 import re
 
 from hls4ml.backends.backend import Backend
-from hls4ml.model.hls_layers import Layer
-from hls4ml.model.hls_attributes import Attribute
-from hls4ml.model.hls_types import IntegerPrecisionType, FixedPrecisionType, XnorPrecisionType, ExponentPrecisionType
+from hls4ml.model.layers import Layer
+from hls4ml.model.attributes import Attribute
+from hls4ml.model.types import IntegerPrecisionType, FixedPrecisionType, XnorPrecisionType, ExponentPrecisionType
 from hls4ml.writer import get_writer
 from hls4ml.model.optimizer import model_optimizer
 

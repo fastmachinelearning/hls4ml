@@ -1,5 +1,5 @@
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.hls_layers import Activation
+from hls4ml.model.layers import Activation
 
 class EliminateLinearActivation(OptimizerPass):
     def match(self, node):

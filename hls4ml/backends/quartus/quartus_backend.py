@@ -9,8 +9,8 @@ from tabulate import tabulate
 from ast import literal_eval
 from contextlib import contextmanager
 
-from hls4ml.model.hls_types import NamedType, IntegerPrecisionType, FixedPrecisionType
-from hls4ml.model.hls_layers import Layer, Dense, BatchNormalization, Activation, ParametrizedActivation, PReLU, Softmax
+from hls4ml.model.types import NamedType, IntegerPrecisionType, FixedPrecisionType
+from hls4ml.model.layers import Layer, Dense, BatchNormalization, Activation, ParametrizedActivation, PReLU, Softmax
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer, model_optimizer
 from hls4ml.model.flow import register_flow
 from hls4ml.backends import FPGABackend
@@ -110,11 +110,11 @@ class QuartusBackend(FPGABackend):
         """
         Builds the project using Intel HLS compiler.
 
-        Users should generally not call this function directly but instead use `HLSModel.build()`.
-        This function assumes the model was written with a call to `HLSModel.write()`
+        Users should generally not call this function directly but instead use `ModelGraph.build()`.
+        This function assumes the model was written with a call to `ModelGraph.write()`
 
         Args:
-            model (HLSModel): The model to build
+            model (ModelGraph): The model to build
             synth, optional: Whether to run synthesis
             fpgasynth, optional:  Whether to run fpga synthesis
 

@@ -1,6 +1,6 @@
 
 from hls4ml.model.optimizer import GlobalOptimizerPass
-from hls4ml.model.hls_types import InplaceVariable
+from hls4ml.model.types import InplaceVariable
 from hls4ml.backends.fpga.fpga_types import ACTypeConverter, QuartusArrayVariableConverter, HLSTypeConverter, QuartusInplaceVariableConverter, QuartusStructMemberVariableConverter, StaticWeightVariableConverter
 
 

@@ -1,5 +1,5 @@
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.hls_layers import BatchNormalization, Dense, Conv1D, Conv2D
+from hls4ml.model.layers import BatchNormalization, Dense, Conv1D, Conv2D
 
 class FuseBatchNormalization(OptimizerPass):
     def match(self, node):

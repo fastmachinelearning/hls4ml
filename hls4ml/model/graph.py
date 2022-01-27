@@ -6,7 +6,7 @@ import numpy as np
 import numpy.ctypeslib as npc
 from collections import OrderedDict
 
-from hls4ml.model.hls_layers import *
+from hls4ml.model.layers import *
 from hls4ml.backends import get_backend
 from hls4ml.model.optimizer import optimize_model, get_available_passes
 from hls4ml.model.flow import get_flow
@@ -296,7 +296,7 @@ class HLSConfig(object):
             print('WARNING: Changing model strategy to "Resource"')
             self.model_strategy = 'Resource'
 
-class HLSModel(object):
+class ModelGraph(object):
     def __init__(self, config, data_reader, layer_list, inputs=None, outputs=None):
         self.config = HLSConfig(config)
         self.reader = data_reader

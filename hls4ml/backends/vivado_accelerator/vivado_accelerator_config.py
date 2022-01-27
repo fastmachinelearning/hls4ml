@@ -2,7 +2,7 @@ import os
 import json
 import numpy as np
 
-from hls4ml.model.hls_layers import FixedPrecisionType, IntegerPrecisionType
+from hls4ml.model.layers import FixedPrecisionType, IntegerPrecisionType
 
 
 class VivadoAcceleratorConfig(object):

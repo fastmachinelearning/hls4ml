@@ -1,5 +1,5 @@
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.hls_model import Dense
+from hls4ml.model.layers import Dense
 import numpy as np
 
 class ReplaceMultidimensionalDenseWithConv(OptimizerPass):

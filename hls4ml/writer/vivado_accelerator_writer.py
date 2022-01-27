@@ -12,7 +12,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
     def write_axi_wrapper(self, model):
         ''' Write a top level HLS C++ file to wrap the hls4ml project with AXI interfaces
             Args:
-                model : The HLSModel to write the wrapper for
+                model : The ModelGraph to write the wrapper for
         '''
         inp_axi_t, out_axi_t, inp, out = self.vivado_accelerator_config.get_corrected_types()
         indent = '    '

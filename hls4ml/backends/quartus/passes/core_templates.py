@@ -1,6 +1,6 @@
 
 from hls4ml.backends.backend import get_backend
-from hls4ml.model.hls_layers import Activation, BatchNormalization, Dense, PReLU, ParametrizedActivation, Softmax
+from hls4ml.model.layers import Activation, BatchNormalization, Dense, PReLU, ParametrizedActivation, Softmax
 from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
 
 # Dense templates

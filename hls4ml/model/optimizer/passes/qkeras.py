@@ -1,6 +1,6 @@
 from hls4ml.model.optimizer import OptimizerPass, ConfigurableOptimizerPass, register_pass
-from hls4ml.model.hls_layers import BatchNormalization, Dense, Conv1D, Conv2D, register_layer, layer_map
-from hls4ml.model.hls_types import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType, NamedType
+from hls4ml.model.layers import BatchNormalization, Dense, Conv1D, Conv2D, register_layer, layer_map
+from hls4ml.model.types import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType, NamedType
 import tensorflow as tf
 import numpy as np
 from qkeras import get_quantizer

@@ -5,7 +5,7 @@ import math
 from onnx import ModelProto, GraphProto, NodeProto, TensorProto
 from onnx import  helper, numpy_helper, shape_inference
 
-from hls4ml.model import HLSModel
+from hls4ml.model import ModelGraph
 
 MAXMULT = 4096
 
@@ -178,7 +178,7 @@ def onnx_handler(*args):
 def get_onnx_input_name(node, graph):
     """
     In ONNX, when calling node.input, it returns the node input's index in the graph instead of the input's name.
-    However, the input's name is used for indexing in HLSModel's graph. This function return the input node's name instead.
+    However, the input's name is used for indexing in ModelGraph's graph. This function return the input node's name instead.
     """
     
     in_node = [in_node for in_node in graph.node if (in_node.output[0] in node.input)]
@@ -213,7 +213,7 @@ def onnx_to_hls(config):
         
     Returns
     -------
-    hls_model : hls4ml model object
+    ModelGraph : hls4ml model object
         
     """
 
@@ -315,5 +315,5 @@ def onnx_to_hls(config):
     #################
 
     print('Creating HLS model')
-    hls_model = HLSModel(config, reader, layer_list, input_layers, output_layers)
+    hls_model = ModelGraph(config, reader, layer_list, input_layers, output_layers)
     return hls_model

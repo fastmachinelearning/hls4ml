@@ -1,8 +1,8 @@
 import numpy as np
 
-from hls4ml.model.hls_types import FixedPrecisionType
+from hls4ml.model.types import FixedPrecisionType
 from hls4ml.backends.fpga.fpga_types import APTypeConverter
-from hls4ml.model.hls_layers import GarNet, GarNetStack
+from hls4ml.model.layers import GarNet, GarNetStack
 from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
 
 # GarNet templates

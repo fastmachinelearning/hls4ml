@@ -1,7 +1,7 @@
 import numpy as np
 
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.hls_layers import Layer, Merge, Reshape, register_layer
+from hls4ml.model.layers import Layer, Merge, Reshape, register_layer
 from hls4ml.backends import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 

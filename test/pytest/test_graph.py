@@ -22,7 +22,7 @@ def base_model(output_dir='hls4mlprj_graph_base_model', iotype = 'io_parallel'):
   config['ProjectName'] = 'myprj'
   config['IOType'] = iotype
   config['Backend'] = 'Vivado'
-  model = hls4ml.model.HLSModel(config, reader, layers)
+  model = hls4ml.model.ModelGraph(config, reader, layers)
   return model
 
 def branch_model(output_dir='hls4mlprj_graph_branch_model', iotype = 'io_parallel'):
@@ -35,7 +35,7 @@ def branch_model(output_dir='hls4mlprj_graph_branch_model', iotype = 'io_paralle
   config['OutputDir'] = output_dir
   config['ProjectName'] = 'myprj'
   config['IOType'] = iotype
-  model = hls4ml.model.HLSModel(config, reader, layers, inputs=['layer0_input0', 'layer0_input1'])
+  model = hls4ml.model.ModelGraph(config, reader, layers, inputs=['layer0_input0', 'layer0_input1'])
   return model
 
 def do_nop(model, node, layers):
@@ -124,7 +124,7 @@ def test_final_reshape(iotype):
   x = tf.keras.layers.Reshape((3,2))(x) # reshape the (1,1,6) output to (3,2)
   model = tf.keras.models.Model(inputs=inputs, outputs=x)
 
-  # create the HLSModel
+  # create the ModelGraph
   config = hls4ml.utils.config_from_keras_model(model, granularity='model')
   odir = str(test_root_path / 'hls4mlprj_graph_final_reshape_{}'.format(iotype))
   hls_model = hls4ml.converters.convert_from_keras_model(model,

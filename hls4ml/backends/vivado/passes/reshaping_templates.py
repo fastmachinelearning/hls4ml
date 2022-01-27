@@ -1,5 +1,5 @@
 
-from hls4ml.model.hls_layers import ZeroPadding1D, ZeroPadding2D, Resize, Transpose
+from hls4ml.model.layers import ZeroPadding1D, ZeroPadding2D, Resize, Transpose
 from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
 
 # ZeroPadding templates

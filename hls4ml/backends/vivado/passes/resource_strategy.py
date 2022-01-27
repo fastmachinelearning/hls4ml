@@ -1,7 +1,7 @@
 import numpy as np
 
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.hls_layers import Conv1D, Conv2D, Dense, SeparableConv1D, SeparableConv2D
+from hls4ml.model.layers import Conv1D, Conv2D, Dense, SeparableConv1D, SeparableConv2D
 
 class ApplyResourceStrategy(OptimizerPass):
     ''' Transposes the weights to use the dense_resource matrix multiply routine '''

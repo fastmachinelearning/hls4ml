@@ -1,6 +1,6 @@
 from collections.abc import MutableMapping
 
-from hls4ml.model.hls_types import InplaceVariable, NamedType, TensorVariable, WeightVariable
+from hls4ml.model.types import InplaceVariable, NamedType, TensorVariable, WeightVariable
 
 class Attribute(object):
     def __init__(self, name, value_type=int, default=None, configurable=False):
