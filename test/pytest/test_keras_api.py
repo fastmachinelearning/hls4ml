@@ -15,7 +15,8 @@ from tensorflow.keras import backend as K
 
 test_root_path = Path(__file__).parent
 
-def test_dense():
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_dense(backend):
     model = tf.keras.models.Sequential()
     model.add(Dense(2,
               input_shape=(1,),
@@ -38,7 +39,7 @@ def test_dense():
     config = hls4ml.utils.config_from_keras_model(model)
     output_dir = str(test_root_path / 'hls4mlprj_keras_api_dense')
 
-    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
 
     hls_model.compile()
 
@@ -63,7 +64,8 @@ def test_dense():
                                                  ELU(alpha=1.0),
                                                  PReLU(alpha_initializer="zeros",),])
                                                  #ThresholdedReLU(theta=1.0)])
-def test_activations(activation_function):
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_activations(activation_function, backend):
     model = tf.keras.models.Sequential()
     model.add(Dense(64,
               input_shape=(1,),
@@ -77,7 +79,7 @@ def test_activations(activation_function):
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(model)
     output_dir = str(test_root_path / 'hls4mlprj_keras_api_activations_{}'.format(activation_function.__class__.__name__))
-    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input)
 
