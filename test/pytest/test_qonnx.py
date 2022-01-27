@@ -87,6 +87,7 @@ def test_cnv_2w2a():
 
     # Convert QONNX model, compile, and run inference
     config = hls4ml.utils.config_from_onnx_model(model)
+    config['Model']['Precision'] = 'ap_fixed<32,16>'
     # Some hand-derived config
     # TODO should be auto-derived by QuantizeDenseOutput pass after some adaptation
 

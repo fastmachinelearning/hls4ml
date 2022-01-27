@@ -5,9 +5,9 @@ from hls4ml.model.hls_layers import FixedPrecisionType
 class ConvToConvXD(OptimizerPass):
     """ Convert Conv with constant to a Conv1D or Conv2D layer """
     def match(self, node):
-        is_match = (node.__class__.__name__ == 'Conv' 
+        is_match = (node.__class__.__name__ == 'Conv'
                     and ((len(node.inputs) == 2 and node.get_input_node(node.inputs[1]).__class__.__name__ == 'Constant')
-                          or (len(node.inputs) == 3 
+                          or (len(node.inputs) == 3
                               and node.get_input_node(node.inputs[1]).__class__.__name__ == 'Constant'
                               and node.get_input_node(node.inputs[2]).__class__.__name__ == 'Constant')))
 
@@ -32,7 +32,7 @@ class ConvToConvXD(OptimizerPass):
         quant_precision = None
 
         if weight_precision and input_precision and (bias_precision or not bias_node):
-            if (weight_precision.width != weight_precision.integer 
+            if (weight_precision.width != weight_precision.integer
                 or input_precision.width != input_precision.integer):
                 raise ValueError("quant_precisions must always have the same width and integer parameters")
 
@@ -51,7 +51,14 @@ class ConvToConvXD(OptimizerPass):
             quant_precision = FixedPrecisionType(bitwidth, bitwidth, signed, rounding_mode, saturation_mode)
 
         #creating the attributes
-        attributes["weight_data"] =  weight_node.value
+
+        # The ConvxD nodes expect the weight data to be in a different format, not (M, k1.., C)
+        if attributes['n_dim'] == 1:
+            nodetype = "Conv1D"
+            attributes["weight_data"] =  np.transpose(weight_node.value, (1, 2, 0))
+        else:
+            nodetype = "Conv2D"
+            attributes["weight_data"] =  np.transpose(weight_node.value, (1, 2, 3, 0))
         attributes["weight_precision"] = weight_precision
         attributes["weight_quantizer"] =  weight_node.get_attr("quantizer")
         attributes["quant_precision"] = quant_precision
@@ -60,10 +67,8 @@ class ConvToConvXD(OptimizerPass):
             attributes["bias_data"] =  bias_node.value
             attributes["bias_precision"] = bias_precision,
             attributes["bias_quantizer"] =  bias_node.get_attr("quantizer")
-           
 
         #making new node
-        nodetype = "Conv1D" if attributes['n_dim'] == 1 else "Conv2D"
         new_node = model.make_node(nodetype, f"{nodetype}_{node.name}", attributes, [node.inputs[0]], node.outputs)
 
         #removing and replacing old nodes
