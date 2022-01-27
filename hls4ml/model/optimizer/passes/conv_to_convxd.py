@@ -36,7 +36,8 @@ class ConvToConvXD(OptimizerPass):
                 or input_precision.width != input_precision.integer):
                 raise ValueError("quant_precisions must always have the same width and integer parameters")
 
-            Nacc = attributes['filt_width'] * attributes.get('filt_height', 1)
+            num_feature_maps = weight_node.value.shape[0]
+            Nacc = attributes['filt_width'] * attributes.get('filt_height', 1) * num_feature_maps
             bitwidth = weight_precision.width + input_precision.width + int(np.ceil(np.log2(Nacc)))
             signed = weight_precision.signed or input_precision.signed
             # copy staruation and rounding from "other"
