@@ -81,17 +81,6 @@ class QuartusBackend(FPGABackend):
 
         return config
 
-    def get_precision_string_backend(self, precision):
-        if isinstance(precision, IntegerPrecisionType):
-            typestring = 'ac_int<{width}, {signed}>'.format(width=precision.width, signed='false' if not precision.signed else 'true')
-        elif isinstance(precision, FixedPrecisionType):
-            args = [precision.width, precision.integer, 'false' if not precision.signed else 'true', precision.rounding_mode, precision.saturation_mode]
-            args = ','.join([str(arg) for arg in args if arg is not None])
-            typestring = 'ac_fixed<{args}>'.format(args=args)
-        else:
-            typestring = precision
-        return typestring
-
     def gen_quartus_weight_array(self, layer):
         rf = layer.get_attr('reuse_factor')
         block_factor = int((layer.attributes['n_in']*layer.attributes['n_out'])/rf)
@@ -116,12 +105,6 @@ class QuartusBackend(FPGABackend):
 
         layer.weights['weight'].data_length = layer.weights['weight'].data.size
         return
-
-    def validate_hls(self, config):
-        if config.model_strategy.lower() == 'latency' and config.model_compression:
-            print('WARNING: Compression enabled while model strategy set to "Latency".')
-            print('WARNING: Changing model strategy to "Resource"')
-            config.model_strategy = 'Resource'
 
     def build(self, model, synth=True, fpgasynth=False):
         """
@@ -154,31 +137,6 @@ class QuartusBackend(FPGABackend):
                 os.system('quartus_sh --flow compile quartus_compile')
 
         return parse_quartus_report(model.config.get_output_dir())
-
-    def get_supportedlayers(self):
-        #Define supported laers
-        core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Reshape']
-        dense_layers = ['Dense', 'BinaryDense', 'TernaryDense']
-        conv_layers = ['Conv1D', 'Conv2D', 'BinaryConv2D']
-        pooling_layers = ['MaxPooling1D', 'MaxPooling2D', 'AveragePooling1D', 'AveragePooling2D']
-        norm_layers = ['BatchNormalization']
-        activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU']
-        merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate']
-        qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D']
-        qkeras_dense = ['QDense', 'QActivation']
-        #Define layers to skip for conversion to HLS
-        skip_layers = ['Dropout', 'Flatten']
-        #All supported layers
-        return core_layers + dense_layers + norm_layers + activation_layers + qkeras_dense + skip_layers
-
-    def get_pstring (self, width, intbits, signed=True, rounding_mode=None, saturation_mode=None, saturation_bits=None):
-        decimal = width - intbits
-        if decimal > 0:
-            args = [width, intbits, 'false' if not signed else 'true', rounding_mode, saturation_mode]
-            args = ', '.join([str(arg) for arg in args if arg is not None])
-            return 'ac_fixed<{args}>'.format(args=args)
-        else:
-            return 'ac_int<{width}, {signed}>'.format(width=width, signed='false' if not signed else 'true')
 
     @layer_optimizer(Layer)
     def init_base_layer(self, layer):
