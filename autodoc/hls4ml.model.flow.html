@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hls4ml.converters.onnx package &mdash; hls4ml 0.5.1 documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <title>hls4ml.model.flow package &mdash; hls4ml 0.5.1 documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
@@ -17,8 +17,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="hls4ml.converters.pytorch package" href="hls4ml.converters.pytorch.html" />
-    <link rel="prev" title="hls4ml.converters.keras package" href="hls4ml.converters.keras.html" /> 
+    <link rel="next" title="hls4ml.model.optimizer package" href="hls4ml.model.optimizer.html" />
+    <link rel="prev" title="hls4ml.model package" href="hls4ml.model.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -63,19 +63,15 @@
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html">hls4ml.backends.vivado_accelerator package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.html">hls4ml.converters package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.keras.html">hls4ml.converters.keras package</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">hls4ml.converters.onnx package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-converters-onnx-convolution-module">hls4ml.converters.onnx.convolution module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-converters-onnx-core-module">hls4ml.converters.onnx.core module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-converters-onnx-merge-module">hls4ml.converters.onnx.merge module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-converters-onnx-pooling-module">hls4ml.converters.onnx.pooling module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-converters-onnx-reshape-module">hls4ml.converters.onnx.reshape module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module contents</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.onnx.html">hls4ml.converters.onnx package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.pytorch.html">hls4ml.converters.pytorch package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.model.html">hls4ml.model package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="hls4ml.model.flow.html">hls4ml.model.flow package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">hls4ml.model.flow package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.flow.flow">hls4ml.model.flow.flow module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.flow">Module contents</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.model.optimizer.html">hls4ml.model.optimizer package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.model.optimizer.passes.html">hls4ml.model.optimizer.passes package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.report.html">hls4ml.report package</a></li>
@@ -98,8 +94,8 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="hls4ml.html">hls4ml package</a> &raquo;</li>
-          <li><a href="hls4ml.converters.html">hls4ml.converters package</a> &raquo;</li>
-      <li>hls4ml.converters.onnx package</li>
+          <li><a href="hls4ml.model.html">hls4ml.model package</a> &raquo;</li>
+      <li>hls4ml.model.flow package</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -108,28 +104,42 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="hls4ml-converters-onnx-package">
-<h1>hls4ml.converters.onnx package<a class="headerlink" href="#hls4ml-converters-onnx-package" title="Permalink to this headline"></a></h1>
+  <div class="section" id="hls4ml-model-flow-package">
+<h1>hls4ml.model.flow package<a class="headerlink" href="#hls4ml-model-flow-package" title="Permalink to this headline"></a></h1>
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
 </div>
-<div class="section" id="hls4ml-converters-onnx-convolution-module">
-<h2>hls4ml.converters.onnx.convolution module<a class="headerlink" href="#hls4ml-converters-onnx-convolution-module" title="Permalink to this headline"></a></h2>
+<div class="section" id="module-hls4ml.model.flow.flow">
+<span id="hls4ml-model-flow-flow-module"></span><h2>hls4ml.model.flow.flow module<a class="headerlink" href="#module-hls4ml.model.flow.flow" title="Permalink to this headline"></a></h2>
+<dl class="class">
+<dt id="hls4ml.model.flow.flow.Flow">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.flow.flow.</code><code class="sig-name descname">Flow</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">optimizers</em>, <em class="sig-param">requires=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.Flow" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="hls4ml.model.flow.flow.get_available_flows">
+<code class="sig-prename descclassname">hls4ml.model.flow.flow.</code><code class="sig-name descname">get_available_flows</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.get_available_flows" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="hls4ml.model.flow.flow.get_backend_flows">
+<code class="sig-prename descclassname">hls4ml.model.flow.flow.</code><code class="sig-name descname">get_backend_flows</code><span class="sig-paren">(</span><em class="sig-param">backend</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.get_backend_flows" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="hls4ml.model.flow.flow.get_flow">
+<code class="sig-prename descclassname">hls4ml.model.flow.flow.</code><code class="sig-name descname">get_flow</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.get_flow" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="hls4ml.model.flow.flow.register_flow">
+<code class="sig-prename descclassname">hls4ml.model.flow.flow.</code><code class="sig-name descname">register_flow</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">optimizers</em>, <em class="sig-param">requires=None</em>, <em class="sig-param">backend=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.register_flow" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 </div>
-<div class="section" id="hls4ml-converters-onnx-core-module">
-<h2>hls4ml.converters.onnx.core module<a class="headerlink" href="#hls4ml-converters-onnx-core-module" title="Permalink to this headline"></a></h2>
-</div>
-<div class="section" id="hls4ml-converters-onnx-merge-module">
-<h2>hls4ml.converters.onnx.merge module<a class="headerlink" href="#hls4ml-converters-onnx-merge-module" title="Permalink to this headline"></a></h2>
-</div>
-<div class="section" id="hls4ml-converters-onnx-pooling-module">
-<h2>hls4ml.converters.onnx.pooling module<a class="headerlink" href="#hls4ml-converters-onnx-pooling-module" title="Permalink to this headline"></a></h2>
-</div>
-<div class="section" id="hls4ml-converters-onnx-reshape-module">
-<h2>hls4ml.converters.onnx.reshape module<a class="headerlink" href="#hls4ml-converters-onnx-reshape-module" title="Permalink to this headline"></a></h2>
-</div>
-<div class="section" id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline"></a></h2>
+<div class="section" id="module-hls4ml.model.flow">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.model.flow" title="Permalink to this headline"></a></h2>
 </div>
 </div>
 
@@ -137,8 +147,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="hls4ml.converters.keras.html" class="btn btn-neutral float-left" title="hls4ml.converters.keras package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="hls4ml.converters.pytorch.html" class="btn btn-neutral float-right" title="hls4ml.converters.pytorch package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="hls4ml.model.html" class="btn btn-neutral float-left" title="hls4ml.model package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hls4ml.model.optimizer.html" class="btn btn-neutral float-right" title="hls4ml.model.optimizer package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -1,0 +1,40 @@
+hls4ml.backends package
+=======================
+
+Subpackages
+-----------
+
+.. toctree::
+
+   hls4ml.backends.fpga
+   hls4ml.backends.quartus
+   hls4ml.backends.vivado
+   hls4ml.backends.vivado_accelerator
+
+Submodules
+----------
+
+hls4ml.backends.backend module
+------------------------------
+
+.. automodule:: hls4ml.backends.backend
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.template module
+-------------------------------
+
+.. automodule:: hls4ml.backends.template
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.backends
+   :members:
+   :undoc-members:
+   :show-inheritance:

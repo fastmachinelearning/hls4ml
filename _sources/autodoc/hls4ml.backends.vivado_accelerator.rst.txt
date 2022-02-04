@@ -1,0 +1,30 @@
+hls4ml.backends.vivado\_accelerator package
+===========================================
+
+Submodules
+----------
+
+hls4ml.backends.vivado\_accelerator.vivado\_accelerator\_backend module
+-----------------------------------------------------------------------
+
+.. automodule:: hls4ml.backends.vivado_accelerator.vivado_accelerator_backend
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.vivado\_accelerator.vivado\_accelerator\_config module
+----------------------------------------------------------------------
+
+.. automodule:: hls4ml.backends.vivado_accelerator.vivado_accelerator_config
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.backends.vivado_accelerator
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,30 @@
+hls4ml.backends.quartus.passes package
+======================================
+
+Submodules
+----------
+
+hls4ml.backends.quartus.passes.core\_templates module
+-----------------------------------------------------
+
+.. automodule:: hls4ml.backends.quartus.passes.core_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.quartus.passes.transform\_types module
+------------------------------------------------------
+
+.. automodule:: hls4ml.backends.quartus.passes.transform_types
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.backends.quartus.passes
+   :members:
+   :undoc-members:
+   :show-inheritance:

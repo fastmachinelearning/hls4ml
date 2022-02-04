@@ -1,0 +1,29 @@
+hls4ml.backends.quartus package
+===============================
+
+Subpackages
+-----------
+
+.. toctree::
+
+   hls4ml.backends.quartus.passes
+
+Submodules
+----------
+
+hls4ml.backends.quartus.quartus\_backend module
+-----------------------------------------------
+
+.. automodule:: hls4ml.backends.quartus.quartus_backend
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.backends.quartus
+   :members:
+   :undoc-members:
+   :show-inheritance:

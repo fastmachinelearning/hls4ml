@@ -1,0 +1,29 @@
+hls4ml.backends.vivado package
+==============================
+
+Subpackages
+-----------
+
+.. toctree::
+
+   hls4ml.backends.vivado.passes
+
+Submodules
+----------
+
+hls4ml.backends.vivado.vivado\_backend module
+---------------------------------------------
+
+.. automodule:: hls4ml.backends.vivado.vivado_backend
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.backends.vivado
+   :members:
+   :undoc-members:
+   :show-inheritance:

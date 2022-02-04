@@ -6,23 +6,32 @@ Subpackages
 
 .. toctree::
 
+   hls4ml.model.flow
    hls4ml.model.optimizer
 
 Submodules
 ----------
 
-hls4ml.model.hls\_layers module
--------------------------------
+hls4ml.model.attributes module
+------------------------------
 
-.. automodule:: hls4ml.model.hls_layers
+.. automodule:: hls4ml.model.attributes
    :members:
    :undoc-members:
    :show-inheritance:
 
-hls4ml.model.hls\_model module
-------------------------------
+hls4ml.model.graph module
+-------------------------
 
-.. automodule:: hls4ml.model.hls_model
+.. automodule:: hls4ml.model.graph
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.layers module
+--------------------------
+
+.. automodule:: hls4ml.model.layers
    :members:
    :undoc-members:
    :show-inheritance:
@@ -31,6 +40,14 @@ hls4ml.model.profiling module
 -----------------------------
 
 .. automodule:: hls4ml.model.profiling
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.model.types module
+-------------------------
+
+.. automodule:: hls4ml.model.types
    :members:
    :undoc-members:
    :show-inheritance:

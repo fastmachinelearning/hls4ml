@@ -4,6 +4,14 @@ hls4ml.report package
 Submodules
 ----------
 
+hls4ml.report.quartus\_report module
+------------------------------------
+
+.. automodule:: hls4ml.report.quartus_report
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.report.vivado\_report module
 -----------------------------------
 
