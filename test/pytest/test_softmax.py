@@ -3,7 +3,9 @@ import tensorflow as tf
 import numpy as np
 import pytest
 from sklearn.metrics import accuracy_score
+from pathlib import Path
 
+test_root_path = Path(__file__).parent
 
 def flat_distribution(shape):
     return np.random.rand(*shape)
@@ -41,8 +43,9 @@ def test_softmax(strategy, generate_data, input_shape, io_type):
     cfg['LayerName']['softmax']['Strategy'] = strategy
     cfg['LayerName']['softmax']['inv_table_t'] = 'ap_fixed<18,8,AP_RND,AP_SAT>'
     cfg['LayerName']['softmax']['exp_table_t'] = 'ap_fixed<18,8,AP_RND,AP_SAT>'
+    odir = str(test_root_path / 'hls4mlprj_softmax_{}'.format(strategy))
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=cfg, io_type=io_type,
-                                                           output_dir='hls4mlprj_softmax_{}'.format(strategy))
+                                                           output_dir=odir)
     hls_model.compile()
     y_keras = model.predict(X)
     y_hls4ml = hls_model.predict(X).reshape(y_keras.shape)

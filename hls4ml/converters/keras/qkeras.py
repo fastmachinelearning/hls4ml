@@ -1,4 +1,4 @@
-from hls4ml.model.hls_model import Quantizer, IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType, XnorPrecisionType
+from hls4ml.model.types import Quantizer, IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType, XnorPrecisionType
 from hls4ml.converters.keras.core import BinaryQuantizer
 
 from qkeras.quantizers import get_quantizer

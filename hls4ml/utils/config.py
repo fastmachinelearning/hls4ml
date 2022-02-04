@@ -3,15 +3,14 @@ import json
 
 import hls4ml
 
-
 def create_config(output_dir='my-hls-test', project_name='myproject',
     backend='Vivado', **kwargs):
 
-    backend_list = hls4ml.templates.get_available_backends()
-    if backend not in backend_list:
+    backend_list = hls4ml.backends.get_available_backends()
+    if backend.lower() not in backend_list:
         raise Exception('Unknown backend: {}'.format(backend))
 
-    backend = hls4ml.templates.get_backend(backend)
+    backend = hls4ml.backends.get_backend(backend)
 
     backend_config = backend.create_initial_config(**kwargs)
 
