@@ -17,50 +17,57 @@ class PyTorchModelReader(object):
         self.torch_model = config['PytorchModel']
         self.state_dict = self.torch_model.state_dict()
         self.input_shape = config['InputShape']
-    
-    def get_weights_data(self, layer_name, var_name):
-        """Get weights data from layers.
-        
-        The hls layer classes are based on Keras's default parameters.
-        Thus, this function will also need to account for some differences
-        between Keras and Pytorch terminology.
-        
-        Parameters
-        ----------
-        layer_name : string
-            layer's name in the ONNX model
-        var_name : string
-            variable to be extracted
 
-        Returns
-        -------
-        data : numpy array
-            extracted weights data 
-        
-        """
-        
+    def get_weights_data(self, layer_name, var_name, module_name=None):
+        """Get weights data from layers.
+
+                The hls layer classes are based on Keras's default parameters.
+                Thus, this function will also need to account for some differences
+                between Keras and Pytorch terminology.
+
+                Parameters
+                ----------
+                layer_name : string
+                    layer's name in the ONNX model
+                var_name : string
+                    variable to be extracted
+
+                Returns
+                -------
+                data : numpy array
+                    extracted weights data
+
+                """
+
         data = None
-        
-        #Parameter mapping from pytorch to keras
+
+        # Parameter mapping from pytorch to keras
         torch_paramap = {
-        #Conv
-        'kernel': 'weight', 
-        #Batchnorm
-        'gamma': 'weight',
-        'beta': 'bias',
-        'moving_mean':'running_mean',
-        'moving_variance': 'running_var'}
-            
+            # Conv
+            'kernel': 'weight',
+            # Batchnorm
+            'gamma': 'weight',
+            'beta': 'bias',
+            'moving_mean': 'running_mean',
+            'moving_variance': 'running_var'}
+
         if var_name not in list(torch_paramap.keys()) + ['weight', 'bias']:
             raise Exception('Pytorch parameter not yet supported!')
-        
         elif var_name in list(torch_paramap.keys()):
             var_name = torch_paramap[var_name]
-            
-        data = self.state_dict[layer_name + '.' + var_name].numpy().transpose() #Look at transpose when systhesis produce lousy results. Might need to remove it.
-        
+
+        if module_name is None:
+            data = self.state_dict[
+                layer_name + '.' + var_name].numpy().transpose()  # Look at transpose when systhesis produce lousy results. Might need to remove it.
+        else:
+            try:
+                data = self.state_dict[module_name + '.' + layer_name + '.' + var_name].numpy().transpose()
+            except KeyError:
+                data = self.state_dict[module_name + '.layers.' + layer_name + '.' + var_name].numpy().transpose()
+
         return data
-    
+
+
 class PyTorchFileReader(PyTorchModelReader): #Inherit get_weights_data method
     def __init__(self, config):
         self.config = config

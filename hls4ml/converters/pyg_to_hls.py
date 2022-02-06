@@ -13,39 +13,6 @@ class PygModelReader(PyTorchModelReader):
         self.node_dim = config['InputShape']['NodeAttr'][1]
         self.edge_dim = config['InputShape']['EdgeAttr'][1]
 
-    def get_weights_data(self, layer_name, var_name, module_name=None):
-        data = None
-
-        # Parameter mapping from pytorch to keras
-        torch_paramap = {
-            # Conv
-            'kernel': 'weight',
-            # Batchnorm
-            'gamma': 'weight',
-            'beta': 'bias',
-            'moving_mean': 'running_mean',
-            'moving_variance': 'running_var'}
-
-        if var_name not in list(torch_paramap.keys()) + ['weight', 'bias']:
-            raise Exception('Pytorch parameter not yet supported!')
-
-        if module_name is not None:
-            if var_name in list(torch_paramap.keys()):
-                var_name = torch_paramap[var_name]
-
-            try:
-                data = self.state_dict[module_name + '.' + layer_name + '.' + var_name].numpy().transpose()
-            except KeyError:
-                data = self.state_dict[module_name + '.layers.' + layer_name + '.' + var_name].numpy().transpose()
-
-        else:
-            if var_name in list(torch_paramap.keys()):
-                var_name = torch_paramap[var_name]
-
-            data = self.state_dict[layer_name + '.' + var_name].numpy().transpose()  # Look at transpose when systhesis produce lousy results. Might need to remove it.
-
-        return data
-
 # EdgeBlock/NodeBlock/Aggregate handlers
 block_handlers = {}
 
