@@ -662,11 +662,8 @@ class VivadoWriter(Writer):
             try:
                 yaml.dump(model.config.config, file)
             except:
-                import torch
-                model_path = model.config.get_output_dir() + "/torch_model_state_dict.pt"
-                torch.save(model.config.config["PytorchModel"].state_dict(), model_path)
-                model.config.config["PytorchModel"] = model_path
-                yaml.dump(model.config.config, file)
+                import warnings
+                warnings.warn("\nWARNING: hls4ml_config.yml file not YAML.dump-able\n")
 
     def write_tar(self, model):
         ###################
