@@ -55,7 +55,6 @@ def pyg_to_hls(config):
         'class_name': 'InputLayer',
         'input_shape': input_shapes['NodeAttr'],
         'inputs': 'input',
-        'dim_names': ['N_NODE', 'NODE_DIM'],
         'precision': fp_type
     }
     layer_list.append(NodeAttr_layer)
@@ -64,7 +63,6 @@ def pyg_to_hls(config):
         'class_name': 'InputLayer',
         'input_shape': input_shapes['EdgeAttr'],
         'inputs': 'input',
-        'dim_names': ['N_EDGE', 'EDGE_DIM'],
         'precision': fp_type
     }
     layer_list.append(EdgeAttr_layer)
@@ -73,7 +71,6 @@ def pyg_to_hls(config):
         'class_name': 'InputLayer',
         'input_shape': input_shapes['EdgeIndex'],
         'inputs': 'input',
-        'dim_names': ['N_EDGE', 'TWO'],
         'precision': int_type
     }
     layer_list.append(EdgeIndex_layer)

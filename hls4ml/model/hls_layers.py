@@ -564,10 +564,7 @@ class Input(Layer):
         shape = self.attributes['input_shape']
         if shape[0] is None:
             shape = shape[1:]
-        try:
-            dims = self.attributes['dim_names']
-        except KeyError:
-            dims = ['N_INPUT_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+        dims = ['N_INPUT_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
         if self.index == 1:
             default_type_name = 'input_t'
         else:
@@ -2281,7 +2278,7 @@ class EdgeAggregate(Layer):
 
         aggr_name = f"layer{self.index}_out"
         aggr_shape = [self.n_node, self.out_dim]
-        aggr_dims = ['N_NODE', f'LAYER{self.index}_OUT_DIM']
+        aggr_dims = ['N_NODE', f'LAYER{self.index}_OUT_DIM'] #todo: see if we can do without 'N_NODE'
         self.add_output_variable(shape=aggr_shape, dim_names=aggr_dims, out_name=aggr_name, var_name=aggr_name,
                                  precision=self.attributes.get('precision', None))
 
