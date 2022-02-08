@@ -662,13 +662,12 @@ class VivadoWriter(Writer):
             try:
                 yaml.dump(model.config.config, file)
             except ValueError:
-                try:
-                    temp_config = model.config.config
-                    del temp_config["PytorchModel"]
-                    yaml.dump(temp_config, file)
-                except KeyError:
-                    import warnings
-                    warnings.warn("\nWARNING: hls4ml_config.yml file not YAML.dump-able\n")
+                temp_config = model.config.config
+                del temp_config["PytorchModel"]
+                yaml.dump(temp_config, file)
+            finally:
+                import warnings
+                warnings.warn("\nWARNING: hls4ml_config.yml file not YAML.dump-able\n")
 
     def write_tar(self, model):
         ###################
