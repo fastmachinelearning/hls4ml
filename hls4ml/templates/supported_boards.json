@@ -22,5 +22,11 @@
     "tcl_scripts": {"axi_lite": "axi_lite_design.tcl", "axi_stream":  "axi_stream_design.tcl", "axi_master": "axi_master_design.tcl"},
     "python_drivers": {"axi_stream": "axi_stream_driver.py"},
     "c_drivers": { "axi_master": "axi_master_design.c"}
+  },
+  "arty-a7-100t": {
+    "part": "xc7a100tcsg324-1",
+    "tcl_scripts": {"axi_master": "axi_master_design.tcl"},
+    "python_drivers": {},
+    "c_drivers": { "axi_master": "axi_master_design.c"}
   }
 }
