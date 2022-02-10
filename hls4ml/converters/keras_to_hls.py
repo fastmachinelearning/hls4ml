@@ -4,7 +4,7 @@ import h5py
 import json
 import math
 
-from hls4ml.model import HLSModel
+from hls4ml.model import ModelGraph
 
 MAXMULT = 4096
 
@@ -336,5 +336,5 @@ def keras_to_hls(config):
     #################
 
     print('Creating HLS model')
-    hls_model = HLSModel(config, reader, layer_list, input_layers, output_layers)
+    hls_model = ModelGraph(config, reader, layer_list, input_layers, output_layers)
     return hls_model

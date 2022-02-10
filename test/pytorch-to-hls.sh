@@ -1,7 +1,7 @@
 #!/bin/bash
 
 pycmd=python
-xilinxpart="xc7vx690tffg1927-2"
+part="xc7vx690tffg1927-2"
 clock=5
 io=io_parallel
 rf=1
@@ -38,7 +38,7 @@ function print_usage {
 
 while getopts ":x:c:sr:g:t:d:h" opt; do
    case "$opt" in
-   x) xilinxpart=$OPTARG
+   x) part=$OPTARG
       ;;
    c) clock=$OPTARG
       ;;
@@ -80,9 +80,9 @@ do
    file="${basedir}/${base}.yml"
 
    echo "PytorchModel: ../example-models/pytorch/${model}.pt" > ${file}
-   echo "OutputDir: ${basedir}/${base}-${xilinxpart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}" >> ${file}
+   echo "OutputDir: ${basedir}/${base}-${part//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}" >> ${file}
    echo "ProjectName: myproject" >> ${file}
-   echo "XilinxPart: ${xilinxpart}" >> ${file}
+   echo "Part: ${part}" >> ${file}
    echo "ClockPeriod: ${clock}" >> ${file}
    echo "" >> ${file}
    echo "IOType: ${io}" >> ${file}

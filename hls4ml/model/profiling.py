@@ -1,5 +1,5 @@
-from hls4ml.model.hls_model import HLSModel
-from hls4ml.model.hls_layers import IntegerPrecisionType, FixedPrecisionType
+from hls4ml.model.graph import ModelGraph
+from hls4ml.model.types import IntegerPrecisionType, FixedPrecisionType
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas
@@ -9,8 +9,6 @@ import os
 import shutil
 import json
 from collections import defaultdict
-
-from hls4ml.model.hls_model import HLSModel
 
 try:
     from tensorflow import keras
@@ -160,8 +158,8 @@ types_plots = {'boxplot' : types_boxplot,
                'histogram' : types_histogram}
 
 def ap_fixed_WIFS(dtype):
-    from hls4ml.templates.vivado_template import VivadoBackend
-    dtype = VivadoBackend.convert_precision_string(None, dtype) 
+    from hls4ml.backends import VivadoBackend
+    dtype = VivadoBackend.convert_precision_string(dtype)
     W, I, F, S = dtype.width, dtype.integer, dtype.fractional, dtype.signed
     return W, I, F, S
 
@@ -270,7 +268,7 @@ def activations_hlsmodel(model, X, fmt='summary', plot='boxplot'):
     _, trace = model.trace(np.ascontiguousarray(X))
 
     if len(trace) == 0:
-        raise RuntimeError("HLSModel must have tracing on for at least 1 layer (this can be set in its config)")
+        raise RuntimeError("ModelGraph must have tracing on for at least 1 layer (this can be set in its config)")
 
     for layer in trace.keys():
         print("   {}".format(layer))
@@ -422,8 +420,8 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     ----------
     model : keras or pytorch model
         The model to profile
-    hls_model : HLSModel
-        The HLSModel to profile
+    hls_model : ModelGraph
+        The ModelGraph to profile
     X : array-like, optional
         Test data on which to evaluate the model to profile activations
         Must be formatted suitably for the ``model.predict(X)`` method
@@ -438,12 +436,12 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
         The quadruple of produced figures. First weights and biases
         for the pre- and post-optimization models respectively,
         then activations for the pre- and post-optimization models
-        respectively. (Optimizations are applied to an HLSModel by hls4ml,
-        a post-optimization HLSModel is a final model)
+        respectively. (Optimizations are applied to an ModelGraph by hls4ml,
+        a post-optimization ModelGraph is a final model)
     """
     wp, wph, ap, aph = None, None, None, None
 
-    hls_model_present = hls_model is not None and isinstance(hls_model, HLSModel)
+    hls_model_present = hls_model is not None and isinstance(hls_model, ModelGraph)
     model_present = model is not None
 
     if hls_model_present:
@@ -468,7 +466,7 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
             data = weights_torch(model, fmt='summary', plot=plot)
 
     if data is None:
-        print("Only keras, PyTorch (Sequential) and HLSModel models " +
+        print("Only keras, PyTorch (Sequential) and ModelGraph models " +
               "can currently be profiled")
 
         if hls_model_present and os.path.exists(tmp_output_dir):
@@ -663,7 +661,7 @@ def compare(keras_model, hls_model, X, plot_type = "dist_diff"):
     keras_model : 
         original keras model
     hls_model :
-        converted HLSModel, with "Trace:True" in the configuration file.
+        converted ModelGraph, with "Trace:True" in the configuration file.
     X : array-like 
         Input for the model. 
     plot_type : string

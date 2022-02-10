@@ -3,15 +3,14 @@ import json
 
 import hls4ml
 
-
 def create_config(output_dir='my-hls-test', project_name='myproject',
     backend='Vivado', **kwargs):
 
-    backend_list = hls4ml.templates.get_available_backends()
-    if backend not in backend_list:
+    backend_list = hls4ml.backends.get_available_backends()
+    if backend.lower() not in backend_list:
         raise Exception('Unknown backend: {}'.format(backend))
 
-    backend = hls4ml.templates.get_backend(backend)
+    backend = hls4ml.backends.get_backend(backend)
 
     backend_config = backend.create_initial_config(**kwargs)
 
@@ -109,11 +108,12 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
     merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate', 'Dot']
     qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D', 'QBatchNormalization', 'QConv2DBatchnorm']
+    reshaping_layers = ['ZeroPadding1D', 'ZeroPadding2D']
+    graph_layers = ['GarNet', 'GarNetStack']
     #Define layers to skip because they're not configurable or not converted to HLS
     skip_layers = ['Dropout', 'Flatten', 'Reshape', 'Permute']
-    graph_layers = ['GarNet', 'GarNetStack']
     #All supported layers
-    supported_layers = core_layers + dense_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + graph_layers + skip_layers
+    supported_layers = core_layers + dense_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + reshaping_layers + graph_layers + skip_layers
 
     keras_layer_config = None
     if model_arch['class_name'] == 'Sequential':

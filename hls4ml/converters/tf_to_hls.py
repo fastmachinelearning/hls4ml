@@ -7,7 +7,7 @@ import os
 import tensorflow as tf
 from tensorflow.python.framework import tensor_util
 
-from hls4ml.model import HLSModel
+from hls4ml.model import ModelGraph
 
 MAXMULT = 4096
 
@@ -372,5 +372,5 @@ def tf_to_hls(yamlConfig):
 
     reader = TFDataReader(graph)
     print('Creating HLS model')
-    hls_model = HLSModel(yamlConfig, reader, layer_list, input_layers, output_layers)
+    hls_model = ModelGraph(yamlConfig, reader, layer_list, input_layers, output_layers)
     return hls_model

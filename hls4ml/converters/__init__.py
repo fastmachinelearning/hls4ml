@@ -5,10 +5,9 @@ import importlib
 import warnings
 
 from hls4ml.utils.config import create_config
-
 from hls4ml.converters.keras_to_hls import keras_to_hls, get_supported_keras_layers, register_keras_layer_handler
 
-#----------Make converters available if the libraries can be imported----------#       
+#----------Make converters available if the libraries can be imported----------#
 try:
     from hls4ml.converters.pytorch_to_hls import pytorch_to_hls, get_supported_pytorch_layers, register_pytorch_layer_handler
     __pytorch_enabled__ = True
@@ -45,14 +44,14 @@ for model_type in model_types:
                 # and is defined in this module (i.e., not imported)
                 if callable(func) and hasattr(func, 'handles') and func.__module__ == lib.__name__:
                     for layer in func.handles:
-                        
+
                         if model_type == 'keras':
                             register_keras_layer_handler(layer, func)
                         elif model_type == 'pytorch':
                             register_pytorch_layer_handler(layer, func)
                         elif model_type == 'onnx':
                             register_onnx_layer_handler(layer, func)
-                            
+
         except ImportError:
             continue
 
@@ -67,7 +66,7 @@ def parse_yaml_config(config_file):
         KerasH5: my_keras_model.h5
         OutputDir: my-hls-test
         ProjectName: myproject
-        XilinxPart: xcku115-flvb2104-2-i
+        Part: xcku115-flvb2104-2-i
         ClockPeriod: 5
         IOType: io_stream
         HLSConfig:
@@ -104,14 +103,14 @@ def convert_from_config(config):
             the filesystem or a dict containig the parsed configuration.
 
     Returns:
-        HLSModel: hls4ml model.
+        ModelGraph: hls4ml model.
     """
 
     if isinstance(config, str):
         yamlConfig = parse_yaml_config(config)
     else:
         yamlConfig = config
-        
+
     model = None
     if 'OnnxModel' in yamlConfig:
         if __onnx_enabled__:
@@ -132,12 +131,12 @@ def convert_from_config(config):
         model = keras_to_hls(yamlConfig)
 
     return model
-  
-def _check_hls_config(config, hls_config):  
+
+def _check_hls_config(config, hls_config):
     """
     Check hls_config for to set appropriate parameters for config.
     """
-    
+
     if 'LayerName' in hls_config:
         config['HLSConfig']['LayerName'] = hls_config['LayerName']
 
@@ -149,10 +148,10 @@ def _check_hls_config(config, hls_config):
 
     if 'SkipOptimizers' in hls_config:
         config['HLSConfig']['SkipOptimizers'] = hls_config['SkipOptimizers']
-    
+
     return
 
-def _check_model_config(model_config):    
+def _check_model_config(model_config):
     if model_config is not None:
         if not all(k in model_config for k in ('Precision', 'ReuseFactor')):
             raise Exception('Precision and ReuseFactor must be provided in the hls_config')
@@ -160,12 +159,11 @@ def _check_model_config(model_config):
         model_config = {}
         model_config['Precision'] = 'ap_fixed<16,6>'
         model_config['ReuseFactor'] = '1'
-        
+
     return model_config
-  
+
 def convert_from_keras_model(model, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,
-                             output_data_tb=None, backend='Vivado', board=None, part=None, clock_period=5, io_type='io_parallel', 
-                             hls_config={}, **kwargs):
+                             output_data_tb=None, backend='Vivado', hls_config={}, **kwargs):
     """Convert to hls4ml model based on the provided configuration.
     Args:
         model: Keras model to convert
@@ -193,16 +191,12 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
     Raises:
         Exception: If precision and reuse factor are not present in 'hls_config'
     Returns:
-        HLSModel: hls4ml model.
+        ModelGraph: hls4ml model.
     """
 
     config = create_config(
         output_dir=output_dir,
         project_name=project_name,
-        board=board,
-        part=part,
-        clock_period=clock_period,
-        io_type=io_type,
         backend=backend,
         **kwargs
     )
@@ -214,19 +208,18 @@ def convert_from_keras_model(model, output_dir='my-hls-test', project_name='mypr
 
     model_config = hls_config.get('Model', None)
     config['HLSConfig']['Model'] = _check_model_config(model_config)
-    
+
     _check_hls_config(config, hls_config)
 
     return keras_to_hls(config)
 
 
 def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,
-                             output_data_tb=None, backend='Vivado', board=None, part=None, clock_period=5, io_type='io_parallel',
-                             hls_config={}, **kwargs):
+                             output_data_tb=None, backend='Vivado', hls_config={}, **kwargs):
     """
-    
+
     Convert a Pytorch model to a hls model.
-    
+
     Parameters
     ----------
     model : Pytorch model object.
@@ -253,21 +246,21 @@ def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', pro
         'io_parallel' or 'io_serial'. Defaults to 'io_parallel'.
     hls_config (dict, optional): The HLS config.
     kwargs** (dict, optional): Additional parameters that will be used to create the config of the specified backend
-        
+
     Returns
     -------
-    hls_model : hls4ml model object.
-        
+    ModelGraph : hls4ml model object.
+
     See Also
     --------
     hls4ml.convert_from_keras_model, hls4ml.convert_from_onnx_model
-    
+
     Examples
     --------
     >>> import hls4ml
     >>> config = hls4ml.utils.config_from_pytorch_model(model, granularity='model')
     >>> hls_model = hls4ml.converters.convert_from_pytorch_model(model, hls_config=config)
-    
+
     Notes
     -----
     Only sequential Pytorch models are supported for now.
@@ -276,14 +269,10 @@ def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', pro
     config = create_config(
         output_dir=output_dir,
         project_name=project_name,
-        board=board,
-        part=part,
-        clock_period=clock_period,
-        io_type=io_type,
         backend=backend,
         **kwargs
     )
-    
+
     config['PytorchModel'] = model
     config['InputShape'] = input_shape
     config['InputData'] = input_data_tb
@@ -292,19 +281,19 @@ def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', pro
 
     model_config = hls_config.get('Model', None)
     config['HLSConfig']['Model'] = _check_model_config(model_config)
-    
+
     _check_hls_config(config, hls_config)
-    
+
     return pytorch_to_hls(config)
 
 
 def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,
-                             output_data_tb=None, backend='Vivado', board=None, part=None, clock_period=5, io_type='io_parallel',
+                             output_data_tb=None, backend='Vivado',
                              hls_config={}, **kwargs):
     """
-    
+
     Convert an ONNX model to a hls model.
-    
+
     Parameters
     ----------
     model : ONNX model object.
@@ -330,15 +319,15 @@ def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='mypro
         'io_parallel' or 'io_serial'. Defaults to 'io_parallel'.
     hls_config (dict, optional): The HLS config.
     kwargs** (dict, optional): Additional parameters that will be used to create the config of the specified backend
-        
+
     Returns
     -------
-    hls_model : hls4ml model object.
-        
+    ModelGraph : hls4ml model object.
+
     See Also
     --------
     hls4ml.convert_from_keras_model, hls4ml.convert_from_pytorch_model
-    
+
     Examples
     --------
     >>> import hls4ml
@@ -349,10 +338,6 @@ def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='mypro
     config = create_config(
         output_dir=output_dir,
         project_name=project_name,
-        board=board,
-        part=part,
-        clock_period=clock_period,
-        io_type=io_type,
         backend=backend,
         **kwargs
     )
@@ -364,9 +349,9 @@ def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='mypro
 
     model_config = hls_config.get('Model', None)
     config['HLSConfig']['Model'] = _check_model_config(model_config)
-    
+
     _check_hls_config(config, hls_config)
-    
+
     return onnx_to_hls(config)
 
 
