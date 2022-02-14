@@ -118,6 +118,9 @@ class VivadoAcceleratorConfig(object):
     def get_board(self):
         return self.board
 
+    def get_clock_period(self):
+        return self.clock_period
+
     def get_driver_path(self):
         return '../templates/vivado_accelerator/' + self.board + '/' + self.driver + '_drivers/' + \
                self.get_driver_file()
@@ -125,6 +128,9 @@ class VivadoAcceleratorConfig(object):
     def get_driver_file(self):
         driver_ext = '.py' if self.driver == 'python' else '.h'
         return self.interface + '_driver' + driver_ext
+
+    def get_krnl_rtl_src_dir(self):
+        return '../templates/vivado_accelerator/' + self.board + '/krnl_rtl_src'
 
     def get_input_type(self):
         return self.input_type

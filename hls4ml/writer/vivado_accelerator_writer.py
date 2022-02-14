@@ -1,5 +1,5 @@
 import os
-from shutil import copyfile
+from shutil import copyfile, copytree
 
 from hls4ml.writer.vivado_writer import VivadoWriter
 
@@ -311,11 +311,15 @@ class VivadoAcceleratorWriter(VivadoWriter):
 
     def write_board_script(self, model):
         '''
-        Write the tcl scripts to create a Vivado IPI project for the VivadoAccelerator
+        Write the tcl scripts and kernel sources to create a Vivado IPI project for the VivadoAccelerator
         '''
         filedir = os.path.dirname(os.path.abspath(__file__))
         copyfile(os.path.join(filedir, self.vivado_accelerator_config.get_tcl_file_path()),
                  '{}/design.tcl'.format(model.config.get_output_dir()))
+        #TODO add generic alveo board
+        if self.vivado_accelerator_config.get_board() == 'alveo-u50':
+            copytree(os.path.join(filedir, self.vivado_accelerator_config.get_krnl_rtl_src_dir()),
+                 '{}/src'.format(model.config.get_output_dir()), dirs_exist_ok=True)
         f = open('{}/project.tcl'.format(model.config.get_output_dir()), 'w')
         f.write('variable myproject\n')
         f.write('set myproject "{}"\n'.format(model.config.get_project_name()))

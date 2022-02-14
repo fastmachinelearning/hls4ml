@@ -24,6 +24,29 @@ class VivadoAcceleratorBackend(VivadoBackend):
 
         return parse_vivado_report(model.config.get_output_dir())
 
+    def make_xclbin(model, platform='xilinx_u50_gen3x16_xdma_201920_3'):
+        curr_dir = os.getcwd()
+        os.chdir(model.config.get_output_dir())
+        os.makedirs('xo_files', exist_ok=True)
+        try:
+            os.system('vivado -mode batch -source design.tcl')
+        except:
+            print("Something went wrong, check the Vivado logs")
+        # These should work but Vivado seems to return before the files are written...
+        # copyfile('{}_vivado_accelerator/project_1.runs/impl_1/design_1_wrapper.bit'.format(model.config.get_project_name()), './{}.bit'.format(model.config.get_project_name()))
+        # copyfile('{}_vivado_accelerator/project_1.srcs/sources_1/bd/design_1/hw_handoff/design_1.hwh'.format(model.config.get_project_name()), './{}.hwh'.format(model.config.get_project_name()))
+        # TODO improve the line below
+        ip_repo_path = model.config.get_output_dir() + '/myproject_prj/solution1/impl/ip'
+        os.makedirs('xclbin_files', exist_ok=True)
+        os.chdir(model.config.get_output_dir() + '/xclbin_files')
+        # TODO Add other platforms
+        vitis_cmd = "v++ -t hw --platform " + platform + " --link ../xo_files/myproject_kernel.xo -o'myproject_kernel.xclbin' --user_ip_repo_paths " + ip_repo_path
+        try:
+            os.system(vitis_cmd)
+        except:
+            print("Something went wrong, check the Vitis/Vivado logs")
+        os.chdir(curr_dir)
+
     def create_initial_config(self, board='pynq-z2', part=None, clock_period=5, io_type='io_parallel', interface='axi_stream',
                               driver='python', input_type='float', output_type='float'):
         '''
