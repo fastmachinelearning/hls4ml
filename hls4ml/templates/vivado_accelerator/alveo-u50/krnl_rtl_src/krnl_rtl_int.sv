@@ -314,7 +314,7 @@ xpm_fifo_sync # (
 
 // NN inference
 myproject_axi_0 #()
-MNIST_CNN ( 
+hls4ml_IP (
   .ap_clk     ( ap_clk            ) ,
   .ap_rst_n   ( ap_rst_n          ) ,
 
