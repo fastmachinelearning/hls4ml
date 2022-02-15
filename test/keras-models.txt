@@ -29,7 +29,11 @@ KERAS_3layer_batch_norm
 KERAS_3layer_binary_smaller
 KERAS_3layer_ternary_small
 
+# Pynq backend
 KERAS_3layer b:pynq-z2 B:VivadoAccelerator x:xc7z020clg400-1 s:Resource
+
+# Alveo backend
+KERAS_3layer b:alveo-u50 B:VivadoAccelerator x:xcu50-fsvh2104-2-e s:Resource
 
 garnet_1layer x:xcku115-flvb2104-2-i y:garnet_1layer_config 
 

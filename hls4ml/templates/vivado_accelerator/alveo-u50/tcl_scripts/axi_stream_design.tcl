@@ -1,7 +1,7 @@
 set tcldir [file dirname [info script]]
 source [file join $tcldir project.tcl]
 
-create_project project_1 ${myproject}_vivado_accelerator -part xcu50-fsvh2104-2L-e -force
+create_project project_1 ${myproject}_vivado_accelerator -part xcu50-fsvh2104-2-e -force
 
 set_property  ip_repo_paths  ${myproject}_prj [current_project]
 update_ip_catalog
@@ -40,42 +40,42 @@ ipx::add_register length_r_out [ipx::get_address_blocks reg0 -of_objects [ipx::g
 
 # Commands to set the descrtiprion, address offset and size
 
-# CTRL register property
+# CTRL register properties
 set_property Description "Control Signals" [ipx::get_registers CTRL -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 set_property Address_Offset 0x000 [ipx::get_registers CTRL -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 set_property Size 32 [ipx::get_registers CTRL -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 
-# GIER register property
+# GIER register properties
 set_property Description "Global Interrupt Enable Register" [ipx::get_registers GIER -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 set_property Address_Offset 0x004 [ipx::get_registers GIER -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 set_property Size 32 [ipx::get_registers GIER -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 
-# IP_IER regisr property
+# IP_IER register properties
 set_property Description "IP Interrupt Enable Register" [ipx::get_registers IP_IER -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 set_property Address_Offset 0x008 [ipx::get_registers IP_IER -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 set_property Size 32 [ipx::get_registers IP_IER -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 
-# IP_ISR regisr property
+# IP_ISR register properties
 set_property Description "IP Interrupt Status Register" [ipx::get_registers IP_ISR -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 set_property Address_Offset 0x00C [ipx::get_registers IP_ISR -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 set_property Size 32 [ipx::get_registers IP_ISR -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 
-# fifo_in regisr property
+# fifo_in register properties
 set_property Description "fifo_in pointer argument" [ipx::get_registers fifo_in -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 set_property Address_Offset 0x010 [ipx::get_registers fifo_in -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 set_property Size 64 [ipx::get_registers fifo_in -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 
-# fifo_out regisr property
+# fifo_out register properties
 set_property Description "fifo_out pointer argument" [ipx::get_registers fifo_out -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 set_property Address_Offset 0x01C [ipx::get_registers fifo_out -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 set_property Size 64 [ipx::get_registers fifo_out -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 
-# length_r_in regisr property
+# length_r_in register properties
 set_property Description "length_r_in value" [ipx::get_registers length_r_in -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 set_property Address_Offset 0x028 [ipx::get_registers length_r_in -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 set_property Size 32 [ipx::get_registers length_r_in -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 
-# length_r_out regisr property
+# length_r_out register properties
 set_property Description "length_r_out value" [ipx::get_registers length_r_out -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 set_property Address_Offset 0x030 [ipx::get_registers length_r_out -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]
 set_property Size 32 [ipx::get_registers length_r_out -of_objects [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps s_axi_control -of_objects [ipx::current_core]]]]

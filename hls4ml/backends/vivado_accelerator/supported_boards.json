@@ -12,7 +12,7 @@
     "c_drivers": {}
   },
   "alveo-u50": {
-    "part": "xcu50-fsvh2104-2L-e",
+    "part": "xcu50-fsvh2104-2-e",
     "tcl_scripts": {"axi_stream": "axi_stream_design.tcl"},
     "python_drivers": {"axi_stream": "axi_stream_design.tcl"},
     "krnl_rtl_srcs": {"axi_stream":  "krnl_rtl_src"},
