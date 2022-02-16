@@ -14,7 +14,7 @@ class VivadoAcceleratorConfig(object):
             self.part = board_info['part']
         else:
             raise Exception('The board does not appear in supported_boards.json file')
-        
+
         if self.config.get('XilinxPart') is not None:
             if self.config.get('XilinxPart') != self.part:
                 print('WARNING: You set a XilinxPart that does not correspond to the Board you specified. The correct '
@@ -29,7 +29,7 @@ class VivadoAcceleratorConfig(object):
                 if prec.get('Input') is None or prec.get('Output') is None:
                     raise Exception('Input and Output fields must be provided in the AcceleratorConfig->Precision')
         else:
-            accel_config = {'Precision': 
+            accel_config = {'Precision':
                                 {
                                     'Input': 'float',
                                     'Output': 'float'
@@ -122,11 +122,17 @@ class VivadoAcceleratorConfig(object):
         return '../templates/vivado_accelerator/' + self.board + '/' + self.driver + '_drivers/' + \
                self.get_driver_files()
 
+    def get_vivado_ip_wrapper_path(self):
+        return '../templates/vivado_accelerator/' + self.board + '/verilog_wrappers'
+
+    def get_vivado_constratins_path(self):
+        return '../templates/vivado_accelerator/' + self.board + '/xdc_constraints'
+
     def get_driver_files(self):
         if self.driver == 'c':
             driver_dir = 'sdk'
             return driver_dir
-        elif self.driver == 'python': 
+        elif self.driver == 'python':
             driver_ext = '.py'
             return self.interface + '_driver' + driver_ext
 

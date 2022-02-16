@@ -1,6 +1,8 @@
 set tcldir [file dirname [info script]]
 source [file join $tcldir project.tcl]
 
+set eembc_power 1
+
 # Project names
 set project_name "project_1"
 set design_name "design_1"
@@ -57,15 +59,36 @@ apply_bd_automation -rule xilinx.com:bd_rule:microblaze -config { \
 # Enable full FPU
 set_property -dict [list CONFIG.C_USE_FPU {2}] [get_bd_cells microblaze_mcu]
 
-# Create UART-lite interface
-#create_bd_cell -type ip -vlnv xilinx.com:ip:axi_uartlite:2.0 axi_uart
-#apply_board_connection -board_interface "usb_uart" -ip_intf "axi_uart/UART" -diagram ${design_name}
-#set_property -dict [list CONFIG.C_BAUDRATE {115200}] [get_bd_cells axi_uart]
-
 # Create UART interface
-create_bd_cell -type ip -vlnv xilinx.com:ip:axi_uart16550:2.0 axi_uart
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/mig_7series_0/ui_clk (83 MHz)} Clk_slave {Auto} Clk_xbar {Auto} Master {/microblaze_mcu (Periph)} Slave {/axi_uart/S_AXI} intc_ip {New AXI Interconnect} master_apm {0}}  [get_bd_intf_pins axi_uart/S_AXI]
-apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {usb_uart ( USB UART ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_uart/UART]
+#create_bd_cell -type ip -vlnv xilinx.com:ip:axi_uart16550:2.0 axi_uart
+#apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/mig_7series_0/ui_clk (83 MHz)} Clk_slave {Auto} Clk_xbar {Auto} Master {/microblaze_mcu (Periph)} Slave {/axi_uart/S_AXI} intc_ip {New AXI Interconnect} master_apm {0}}  [get_bd_intf_pins axi_uart/S_AXI]
+#apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {usb_uart ( USB UART ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_uart/UART]
+
+# Create UART-lite interface
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_uartlite:2.0 axi_uart
+if { ${eembc_power} } {
+    set_property -dict [list CONFIG.C_BAUDRATE {9600}] [get_bd_cells axi_uart]
+} else {
+    apply_board_connection -board_interface "usb_uart" -ip_intf "axi_uart/UART" -diagram ${design_name}
+    set_property -dict [list CONFIG.C_BAUDRATE {115200}] [get_bd_cells axi_uart]
+}
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { \
+    Clk_master {/mig_7series_0/ui_clk (83 MHz)} \
+    Clk_slave {Auto} \
+    Clk_xbar {Auto} \
+    Master {/microblaze_mcu (Periph)} \
+    Slave {/axi_uart/S_AXI} \
+    intc_ip {New AXI Interconnect} \
+    master_apm {0}} [get_bd_intf_pins axi_uart/S_AXI]
+
+# Forward UART interface to PMOD pins
+if { ${eembc_power} } {
+    create_bd_port -dir O pmod_uart_txd
+    create_bd_port -dir I pmod_uart_rxd
+    connect_bd_net [get_bd_pins /axi_uart/tx] [get_bd_ports pmod_uart_txd]
+    connect_bd_net [get_bd_pins /axi_uart/rx] [get_bd_ports pmod_uart_rxd]
+    add_files -fileset constrs_1 -norecurse uart_pmod.xdc
+}
 
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { \
     Clk_master {/mig_7series_0/ui_clk (83 MHz)} \
@@ -101,6 +124,38 @@ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_timer:2.0 axi_timer_mcu
 # Wire timer
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/mig_7series_0/ui_clk (83 MHz)} Clk_slave {Auto} Clk_xbar {/mig_7series_0/ui_clk (83 MHz)} Master {/microblaze_mcu (Periph)} Slave {/axi_timer_mcu/S_AXI} intc_ip {/microblaze_mcu_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_timer_mcu/S_AXI]
 
+# Add AXI GPIO controlled pin
+if { ${eembc_power} } {
+    # Add AXI GPIO IP
+    create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio:2.0 axi_gpio_0
+    # Wire it up to a single output pin (to a PMOD)
+    set_property -dict [list CONFIG.C_GPIO_WIDTH {1} CONFIG.C_ALL_OUTPUTS {1}] [get_bd_cells axi_gpio_0]
+    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { \
+        Clk_master {/mig_7series_0/ui_clk (83 MHz)} \
+        Clk_slave {Auto} \
+        Clk_xbar {/mig_7series_0/ui_clk (83 MHz)} \
+        Master {/microblaze_mcu (Periph)} \
+        Slave {/axi_gpio_0/S_AXI} \
+        intc_ip {/microblaze_mcu_axi_periph} \
+        master_apm {0}} [get_bd_intf_pins axi_gpio_0/S_AXI]
+    create_bd_port -dir O pmod_pin
+    connect_bd_net [get_bd_ports pmod_pin] [get_bd_pins axi_gpio_0/gpio_io_o]
+
+    add_files -fileset constrs_1 -norecurse pin_pmod.xdc
+}
+
+# Add Quad SPI for cold boot
+if { ${eembc_power} } {
+    create_bd_cell -type ip -vlnv xilinx.com:ip:axi_quad_spi:3.2 axi_quad_spi_0
+    set_property -dict [list CONFIG.C_SPI_MEMORY {3} CONFIG.C_SPI_MODE {2} CONFIG.C_SCK_RATIO {2}] [get_bd_cells axi_quad_spi_0]
+    apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {qspi_flash ( Quad SPI Flash ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_quad_spi_0/SPI_0]
+    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/mig_7series_0/ui_clk (83 MHz)} Clk_slave {Auto} Clk_xbar {/mig_7series_0/ui_clk (83 MHz)} Master {/microblaze_mcu (Periph)} Slave {/axi_quad_spi_0/AXI_LITE} intc_ip {/microblaze_mcu_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_quad_spi_0/AXI_LITE]
+    set_property -dict [list CONFIG.CLKOUT3_USED {true} CONFIG.CLKOUT3_REQUESTED_OUT_FREQ {50} CONFIG.MMCM_CLKOUT2_DIVIDE {20} CONFIG.NUM_OUT_CLKS {3} CONFIG.CLKOUT3_JITTER {151.636} CONFIG.CLKOUT3_PHASE_ERROR {98.575}] [get_bd_cells clk_wizard]
+    connect_bd_net [get_bd_pins clk_wizard/clk_out3] [get_bd_pins axi_quad_spi_0/ext_spi_clk]
+    set_property -dict [list CONFIG.C_SPI_MEMORY {3}] [get_bd_cells axi_quad_spi_0]
+    add_files -fileset constrs_1 -norecurse qspi.xdc
+}
+
 # Validate the design block we created
 validate_bd_design
 
@@ -108,8 +163,9 @@ validate_bd_design
 save_bd_design
 
 # Top level wrapper
-make_wrapper -files [get_files ./${myproject}_vivado_accelerator/${project_name}.srcs/sources_1/bd/${design_name}/${design_name}.bd] -top
-add_files -norecurse ./${myproject}_vivado_accelerator/${project_name}.srcs/sources_1/bd/${design_name}/hdl/${design_name}_wrapper.v
+#make_wrapper -files [get_files ./${myproject}_vivado_accelerator/${project_name}.srcs/sources_1/bd/${design_name}/${design_name}.bd] -top
+#add_files -norecurse ./${myproject}_vivado_accelerator/${project_name}.srcs/sources_1/bd/${design_name}/hdl/${design_name}_wrapper.v
+add_files -norecurse $design_name\_wrapper.v
 
 # Run synthesis and implementation
 reset_run impl_1
