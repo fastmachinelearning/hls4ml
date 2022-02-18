@@ -1,5 +1,6 @@
 import os
 from shutil import copyfile
+from shutil import copytree
 
 from hls4ml.templates.vivado_accelerator_config import VivadoAcceleratorConfig
 from hls4ml.writer.vivado_writer import VivadoWriter
@@ -345,10 +346,70 @@ class VivadoAcceleratorWriter(VivadoWriter):
             f.write('set fifo_opt 0')
         f.close()
 
+    # TODO: Extract parameters from the model
+    def write_header_file(X, y, y_keras, y_hls, n_samples, filename='data.h'):
+        header_file = open(filename, 'w')
+        (n_X_samples, n_X_inputs) = X.shape
+        (n_y_samples, n_y_outputs) = y.shape
+        (n_y_keras_samples, n_y_keras_outputs) = y_keras.shape
+        (n_y_hls_samples, n_y_hls_outputs) = y_hls.shape
+   
+        header_file.write('#ifndef __DATA_H__\n')
+        header_file.write('#define __DATA_H__\n')
+        header_file.write('/* ouf of {} */\n'.format(n_X_samples))
+        header_file.write('#define N_SAMPLES {}\n'.format(n_samples))
+        header_file.write('\n')
+        header_file.write('#define N_X_INPUTS {}\n'.format(n_X_inputs))
+        header_file.write('const float data_X_inputs[N_SAMPLES*N_X_INPUTS] = {\n')
+        for s in range(n_samples):
+            header_file.write('    ')
+            for i in range(n_X_inputs):
+                header_file.write('{}, '.format(X[s][i]))
+            header_file.write('\n')
+        header_file.write('};\n')
+        header_file.write('\n')
+        header_file.write('/* Ground truth - for validation */\n')
+        header_file.write('#define N_Y_OUTPUTS {}\n'.format(n_y_outputs))
+        header_file.write('const float data_y_outputs[N_SAMPLES*N_Y_OUTPUTS] = {\n')
+        for s in range(n_samples):
+            header_file.write('    ')
+            for o in range(n_y_outputs):
+                header_file.write('{}, '.format(y[s][o]))
+            header_file.write('\n')
+        header_file.write('};\n')
+        header_file.write('\n')
+        header_file.write('/* Keras outputs - for validation */\n')
+        header_file.write('#define N_Y_KERAS_OUTPUTS {}\n'.format(n_y_keras_outputs))
+        header_file.write('')
+        header_file.write('const float data_y_keras_outputs[N_SAMPLES*N_Y_KERAS_OUTPUTS] = {\n')
+        for s in range(n_samples):
+            header_file.write('    ')
+            for o in range(n_y_keras_outputs):
+                header_file.write('{}, '.format(y_keras[s][o]))
+            header_file.write('\n')
+        header_file.write('};\n')
+        header_file.write('\n')
+        header_file.write('/* csim outputs - for verification */\n')
+        header_file.write('#define N_Y_HLS_OUTPUTS {}\n'.format(n_y_hls_outputs))
+        header_file.write('')
+        header_file.write('const float data_y_hls_outputs[N_SAMPLES*N_Y_HLS_OUTPUTS] = {\n')
+        for s in range(n_samples):
+            header_file.write('    ')
+            for o in range(n_y_hls_outputs):
+                header_file.write('{}, '.format(y_hls[s][o]))
+            header_file.write('\n')
+        header_file.write('};\n')
+        header_file.write('#endif\n')
+        header_file.close()
+ 
     def write_driver(self, model):
         filedir = os.path.dirname(os.path.abspath(__file__))
-        copyfile(os.path.join(filedir, self.vivado_accelerator_config.get_driver_path()),
-                 ('{}/' + self.vivado_accelerator_config.get_driver_file()).format(model.config.get_output_dir()))
+        srcfiles = os.path.join(filedir, self.vivado_accelerator_config.get_driver_path())
+        dstfiles = ('{}/' + self.vivado_accelerator_config.get_driver_files()).format(model.config.get_output_dir())
+        if os.path.isdir(srcfiles):
+            copytree(srcfiles, dstfiles, dirs_exist_ok=True)
+        else:
+            copyfile(srcfiles, dstfiles)
         
     def write_new_tar(self, model):
         os.remove(model.config.get_output_dir() + '.tar.gz')

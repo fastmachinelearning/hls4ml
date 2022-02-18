@@ -1,14 +1,32 @@
 {
+  "pynq-z1": {
+    "part": "xc7z020clg400-1",
+    "tcl_scripts": {"axi_lite": "axi_lite_design.tcl", "axi_stream":  "axi_stream_design.tcl", "axi_master": "axi_master_design.tcl"},
+    "python_drivers": {"axi_stream": "axi_stream_driver.py"},
+    "c_drivers": { "axi_master": "axi_master_design.c"}
+  },
   "pynq-z2": {
     "part": "xc7z020clg400-1",
-    "tcl_scripts": {"axi_lite": "axi_lite_design.tcl", "axi_stream":  "axi_stream_design.tcl"},
-    "python_drivers": {"axi_stream":  "axi_stream_driver.py"},
-    "c_drivers": {}
+    "tcl_scripts": {"axi_lite": "axi_lite_design.tcl", "axi_stream":  "axi_stream_design.tcl", "axi_master": "axi_master_design.tcl"},
+    "python_drivers": {"axi_stream": "axi_stream_driver.py"},
+    "c_drivers": { "axi_master": "axi_master_design.c"}
   },
   "zcu102": {
     "part": "xczu9eg-ffvb1156-2-e",
-    "tcl_scripts": { "axi_stream": "axi_stream_design.tcl"},
-    "python_drivers": {"axi_stream":  "axi_stream_driver.py"},
+    "tcl_scripts": {"axi_stream": "axi_stream_design.tcl"},
+    "python_drivers": {"axi_stream": "axi_stream_driver.py"},
     "c_drivers": {}
+  },
+  "ultra96v2": {
+    "part": "xczu3eg-sbva484-1-e",
+    "tcl_scripts": {"axi_lite": "axi_lite_design.tcl", "axi_stream":  "axi_stream_design.tcl", "axi_master": "axi_master_design.tcl"},
+    "python_drivers": {"axi_stream": "axi_stream_driver.py"},
+    "c_drivers": { "axi_master": "axi_master_design.c"}
+  },
+  "arty-a7-100t": {
+    "part": "xc7a100tcsg324-1",
+    "tcl_scripts": {"axi_master": "axi_master_design.tcl"},
+    "python_drivers": {},
+    "c_drivers": { "axi_master": "axi_master_design.c"}
   }
 }

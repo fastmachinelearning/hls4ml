@@ -14,11 +14,13 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
     static const unsigned n_nonzeros = {nonzeros};
+    static const bool merged_relu = {merged_relu};
     static const bool store_weights_in_bram = false;
     typedef {accum_t} accum_t;
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
     typedef {index_t} index_t;
+    typedef {out_t}:: value_type out_t;
     template<class x_T, class y_T, class res_T>
     using product = nnet::product::{product_type}<x_T, y_T, res_T>;
 }};\n"""
@@ -65,9 +67,11 @@ conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     static const unsigned n_out = {n_out};
     static const unsigned reuse_factor = {reuse};
     static const unsigned strategy = nnet::{strategy};
+    static const bool merged_relu = {merged_relu};
     typedef {accum_t} accum_t;
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
+    typedef {out_t}:: value_type out_t;
     template<class x_T, class y_T, class res_T>
     using product = nnet::product::{product_type}<x_T, y_T, res_T>;
 }};\n"""
