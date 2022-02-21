@@ -10,9 +10,10 @@ class MergeRelu(OptimizerPass):
         return is_match
 
     def transform(self, model, node):
-        # Merge ReLU and Convolution/Dense layer if needed
+        # Merge ReLU and Convolution/Dense layer
         previous_node = node.get_input_node()
         previous_node.index = node.index
+        previous_node.set_merged_relu(True) # Turn on merged_relu flag for this Conv/Dense layer
         print('current node_data_format: {}'.format(node.get_attr('data_format')))
         print('current node attributes: {}'.format(node.attributes))
 

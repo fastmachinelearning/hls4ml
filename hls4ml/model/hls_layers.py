@@ -366,6 +366,7 @@ class Layer(object):
         self.set_attr('accum_t', accum_t.precision)
         self.reuse_factor = self.model.config.get_reuse_factor(self)
         self.target_cycles = self.model.config.get_target_cycles(self)
+        self.merged_relu = False
 
         layer_config = self.model.config.get_layer_config(self)
         for config_key, config_value in layer_config.items():
@@ -546,6 +547,12 @@ class Layer(object):
     def get_layer_precision(self):
         return self.precision
 
+    def get_merged_relu(self):
+        return self.merged_relu
+    
+    def set_merged_relu(self, merged_relu):
+        self.merged_relu = merged_relu # Bool flag to set merged_relu
+
     # myproject.cpp/h
     def function_cpp(self):
         raise NotImplementedError
@@ -634,9 +641,6 @@ class Dense(Layer):
                     
         self.set_attr('index_t', index_t)
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
-        self.merged_relu = bool(self.model.config.get_merged_relu()) \
-            and (self.get_output_variable().__class__.__name__ == 'Activation')
-        print(f"output variable class name: {self.get_output_variable().__class__.__name__}")
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -653,7 +657,7 @@ class Dense(Layer):
         params['nonzeros'] = self.get_weights('weight').nonzeros
         params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
         params['strategy'] = self.get_attr('strategy')
-        params['merged_relu'] = "true" if self.merged_relu else "false"
+        params['merged_relu'] = "true" if self.get_merged_relu() else "false"
         # params['merged_relu'] = "false"
         params['out_t'] = self.get_output_variable().type.name
         return self._config_template.format(**params)
@@ -883,8 +887,6 @@ class Conv2D(Layer):
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
         else:
             self.set_attr('strategy', 'latency')
-        self.merged_relu = bool(self.model.config.get_merged_relu()) \
-            and (self.get_output_variable().__class__.__name__ == 'Activation')
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -936,7 +938,7 @@ class Conv2D(Layer):
         mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
         mult_params['n_out'] = self.get_attr('n_filt')
         mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
-        mult_params['merged_relu'] = "true" if self.merged_relu else "false"
+        mult_params['merged_relu'] = "true" if self.get_merged_relu() else "false"
         mult_params['out_t'] = self.intermediate_op.type.name
         mult_config = self._config_template[1].format(**mult_params)
 
