@@ -5,12 +5,12 @@ class MergeRelu(OptimizerPass):
         supported_layers = ['Conv2D', 'Conv2DBatchnorm', 'Dense', 'DenseBatchnorm']
         is_match = node.get_input_node().__class__.__name__ in supported_layers
 
-        #hls4ml names ReLU activations 'Activation'
+        # hls4ml names ReLU activations 'Activation'
         is_match = is_match and (node.__class__.__name__ == 'Activation') 
         return is_match
 
     def transform(self, model, node):
-        #Merge ReLU and Convolution layer if needed
+        # Merge ReLU and Convolution/Dense layer if needed
         previous_node = node.get_input_node()
         previous_node.index = node.index
         print('current node_data_format: {}'.format(node.get_attr('data_format')))

@@ -634,6 +634,8 @@ class Dense(Layer):
                     
         self.set_attr('index_t', index_t)
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+        self.merged_relu = bool(self.model.config.get_merged_relu()) \
+            and (self.get_output_variable().__class__.__name__ == 'Activation')
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -650,7 +652,7 @@ class Dense(Layer):
         params['nonzeros'] = self.get_weights('weight').nonzeros
         params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
         params['strategy'] = self.get_attr('strategy')
-        params['merged_relu'] = str(bool(self.model.config.get_merged_relu())).lower()
+        params['merged_relu'] = "true" if self.merged_relu else "false"
         # params['merged_relu'] = "false"
         params['out_t'] = self.get_output_variable().type.name
         return self._config_template.format(**params)
@@ -880,6 +882,8 @@ class Conv2D(Layer):
                 self.weights['weight'].data = np.transpose(self.weights['weight'].data, axes=[3, 0, 1, 2]) #(H,W,C,F) => (F,H,W,C)
         else:
             self.set_attr('strategy', 'latency')
+        self.merged_relu = bool(self.model.config.get_merged_relu()) \
+            and (self.get_output_variable().__class__.__name__ == 'Activation')
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -931,7 +935,7 @@ class Conv2D(Layer):
         mult_params['n_in'] = self.get_attr('n_chan') * self.get_attr('filt_height') * self.get_attr('filt_width')
         mult_params['n_out'] = self.get_attr('n_filt')
         mult_params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
-        mult_params['merged_relu'] = str(bool(self.model.config.get_merged_relu())).lower()
+        mult_params['merged_relu'] = "true" if self.merged_relu else "false"
         mult_params['out_t'] = self.intermediate_op.type.name
         mult_config = self._config_template[1].format(**mult_params)
 
