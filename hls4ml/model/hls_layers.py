@@ -650,7 +650,8 @@ class Dense(Layer):
         params['nonzeros'] = self.get_weights('weight').nonzeros
         params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
         params['strategy'] = self.get_attr('strategy')
-        params['merged_relu'] = "false"
+        params['merged_relu'] = str(bool(self.model.config.get_merged_relu())).lower()
+        # params['merged_relu'] = "false"
         params['out_t'] = self.get_output_variable().type.name
         return self._config_template.format(**params)
 
