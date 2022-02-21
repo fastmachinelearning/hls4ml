@@ -636,6 +636,7 @@ class Dense(Layer):
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
         self.merged_relu = bool(self.model.config.get_merged_relu()) \
             and (self.get_output_variable().__class__.__name__ == 'Activation')
+        print(f"output variable class name: {self.get_output_variable().__class__.__name__}")
 
     def function_cpp(self):
         params = self._default_function_params()
