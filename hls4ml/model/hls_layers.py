@@ -658,7 +658,6 @@ class Dense(Layer):
         params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
         params['strategy'] = self.get_attr('strategy')
         params['merged_relu'] = "true" if self.get_merged_relu() else "false"
-        # params['merged_relu'] = "false"
         params['out_t'] = self.get_output_variable().type.name
         return self._config_template.format(**params)
 
@@ -867,8 +866,6 @@ class Conv2D(Layer):
         else:
             shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
             dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
-        # self.index = self.index + 2
-        # if(not bool(self.model.config.get_merged_relu())):
         self.attributes['intermediate_index'] = self.index
         self.add_output_variable(shape, dims)
         self.intermediate_op = self.get_output_variable()

@@ -2,7 +2,7 @@ from hls4ml.model.optimizer import OptimizerPass
 
 class MergeRelu(OptimizerPass):
     def match(self, node):
-        supported_layers = ['Conv2D', 'Conv2DBatchnorm', 'Dense', 'DenseBatchnorm']
+        supported_layers = ['Conv2D', 'Conv2DBatchnorm', 'Dense']
         is_match = node.get_input_node().__class__.__name__ in supported_layers
 
         # hls4ml names ReLU activations 'Activation'
@@ -14,9 +14,6 @@ class MergeRelu(OptimizerPass):
         previous_node = node.get_input_node()
         previous_node.index = node.index
         previous_node.set_merged_relu(True) # Turn on merged_relu flag for this Conv/Dense layer
-        print('current node_data_format: {}'.format(node.get_attr('data_format')))
-        print('current node attributes: {}'.format(node.attributes))
-
         if 'Conv2D' in previous_node.__class__.__name__:
             if previous_node.get_attr('data_format') == 'channels_last':
                 shape = [previous_node.attributes['out_height'], previous_node.attributes['out_width'], previous_node.attributes['n_filt']]
