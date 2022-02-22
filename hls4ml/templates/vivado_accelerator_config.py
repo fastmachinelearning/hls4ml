@@ -125,7 +125,7 @@ class VivadoAcceleratorConfig(object):
     def get_vivado_ip_wrapper_path(self):
         return '../templates/vivado_accelerator/' + self.board + '/verilog_wrappers'
 
-    def get_vivado_constratins_path(self):
+    def get_vivado_constraints_path(self):
         return '../templates/vivado_accelerator/' + self.board + '/xdc_constraints'
 
     def get_driver_files(self):

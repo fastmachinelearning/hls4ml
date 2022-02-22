@@ -333,11 +333,11 @@ class VivadoAcceleratorWriter(VivadoWriter):
         filedir = os.path.dirname(os.path.abspath(__file__))
         copyfile(os.path.join(filedir, self.vivado_accelerator_config.get_tcl_file_path()),
                  '{}/design.tcl'.format(model.config.get_output_dir()))
-        if self.vivado_accelerator_config.get_interface() == 'axi_master':
+        if self.vivado_accelerator_config.get_interface() == 'axi_master' and self.vivado_accelerator_config.board == "arty-a7-100t":
             copytree(os.path.join(filedir, self.vivado_accelerator_config.get_vivado_ip_wrapper_path()),
                      '{}/'.format(model.config.get_output_dir()),
                      dirs_exist_ok=True)
-            copytree(os.path.join(filedir, self.vivado_accelerator_config.get_vivado_constratins_path()),
+            copytree(os.path.join(filedir, self.vivado_accelerator_config.get_vivado_constraints_path()),
                      '{}/'.format(model.config.get_output_dir()),
                      dirs_exist_ok=True)
         f = open('{}/project.tcl'.format(model.config.get_output_dir()), 'w')
