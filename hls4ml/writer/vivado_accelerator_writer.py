@@ -414,6 +414,127 @@ class VivadoAcceleratorWriter(VivadoWriter):
     def write_new_tar(self, model):
         os.remove(model.config.get_output_dir() + '.tar.gz')
         super(VivadoAcceleratorWriter, self).write_tar(model)
+
+    def apply_patches(self, model):
+        '''
+        Apply patches.
+        '''
+        filedir = os.path.dirname(os.path.abspath(__file__))
+
+        indent = '    '
+
+        ###################
+        # patch myproject_axi.h
+        ###################  
+        oldfile = '{}/firmware/{}_axi.h'.format(model.config.get_output_dir(), model.config.get_project_name())
+        newfile = '{}/firmware/{}_axi_patch.h'.format(model.config.get_output_dir(), model.config.get_project_name())
+
+        f = open(oldfile,'r')
+        fout = open(newfile, 'w')
+
+        for line in f.readlines():
+            if 'typedef' in line and 'input_axi_t;' in line:
+                # hardcoded ap_uint<8> input
+                newline = 'typedef ap_uint<8> input_axi_t;\n'
+            else:
+                newline = line
+            fout.write(newline)
+
+        f.close()
+        fout.close()
+        os.rename(newfile, oldfile)
+
+        ###################
+        # patch myproject_axi.cpp
+        ###################
+        oldfile = '{}/firmware/{}_axi.cpp'.format(model.config.get_output_dir(), model.config.get_project_name())
+        newfile = '{}/firmware/{}_axi_patch.cpp'.format(model.config.get_output_dir(), model.config.get_project_name())
+
+        f = open(oldfile,'r')
+        fout = open(newfile, 'w')
+
+        for line in f.readlines():
+            if 'ctype[j] = typename input_t::value_type' in line:
+                # these lines are hardcoded to do the bitshift by 256
+                newline = indent + indent + indent + 'ap_ufixed<16,8> tmp = in[i * input_t::size + j]; // store 8 bit input in a larger temp variable\n'
+                newline += indent + indent + indent + 'ctype[j] = typename input_t::value_type(tmp >> 8); // shift right by 8 (div by 256) and select only the decimal of the larger temp variable\n'
+            else:
+                newline = line
+            fout.write(newline)
+
+        f.close()
+        fout.close()
+        os.rename(newfile, oldfile)
+
+        ###################
+        # patch myproject_test.cpp
+        ###################
+        oldfile = '{}/{}_test.cpp'.format(model.config.get_output_dir(), model.config.get_project_name())
+        newfile = '{}/{}_test_patch.cpp'.format(model.config.get_output_dir(), model.config.get_project_name())
+
+        f = open(oldfile,'r')
+        fout = open(newfile, 'w')
+
+        inp = model.get_input_variables()[0]
+        out = model.get_output_variables()[0]
+
+        for line in f.readlines():
+            if '{}.h'.format(model.config.get_project_name()) in line:
+                newline = line.replace('{}.h'.format(model.config.get_project_name()), '{}_axi.h'.format(model.config.get_project_name()))            
+            elif self.variable_definition_cpp(model, inp) in line:
+                newline = line.replace(self.variable_definition_cpp(model, inp), 'input_axi_t inputs[N_IN]')
+            elif self.variable_definition_cpp(model, out) in line:
+                newline = line.replace(self.variable_definition_cpp(model, out), 'output_axi_t outputs[N_OUT]')
+            elif 'unsigned short' in line:
+                newline = ''
+            elif '{}('.format(model.config.get_project_name()) in line:
+                indent_amount = line.split(model.config.get_project_name())[0]
+                newline = indent_amount + '{}_axi(inputs,outputs);\n'.format(model.config.get_project_name())
+            elif inp.size_cpp() in line or inp.cppname in line or inp.type.name in line:
+                newline = line.replace(inp.size_cpp(), 'N_IN').replace(inp.cppname, 'inputs').replace(inp.type.name, 'input_axi_t')
+            elif out.size_cpp() in line or out.cppname in line or out.type.name in line:
+                newline = line.replace(out.size_cpp(), 'N_OUT').replace(out.cppname, 'outputs').replace(out.type.name, 'output_axi_t')
+            else:
+                newline = line
+            fout.write(newline)
+
+        f.close()
+        fout.close()
+        os.rename(newfile, oldfile)
+
+        ###################
+        # patch myproject_bridge.cpp
+        ###################
+        oldfile = '{}/{}_bridge.cpp'.format(model.config.get_output_dir(), model.config.get_project_name())
+        newfile = '{}/{}_bridge_patch.cpp'.format(model.config.get_output_dir(), model.config.get_project_name())
+
+        f = open(oldfile,'r')
+        fout = open(newfile, 'w')
+
+        inp = model.get_input_variables()[0]
+        out = model.get_output_variables()[0]
+
+        for line in f.readlines():
+            if '{}.h'.format(model.config.get_project_name()) in line:
+                newline = line.replace('{}.h'.format(model.config.get_project_name()), '{}_axi.h'.format(model.config.get_project_name()))            
+            elif self.variable_definition_cpp(model, inp, name_suffix='_ap') in line:
+                newline = line.replace(self.variable_definition_cpp(model, inp, name_suffix='_ap'), 'input_axi_t {}_ap[N_IN]'.format(inp.cppname))
+            elif self.variable_definition_cpp(model, out, name_suffix='_ap') in line:
+                newline = line.replace(self.variable_definition_cpp(model, out, name_suffix='_ap'), 'output_axi_t {}_ap[N_OUT]'.format(out.cppname))
+            elif '{}('.format(model.config.get_project_name()) in line:
+                indent_amount = line.split(model.config.get_project_name())[0]
+                newline = indent_amount + '{}_axi({}_ap,{}_ap);\n'.format(model.config.get_project_name(), inp.cppname,out.cppname)
+            elif inp.size_cpp() in line or inp.cppname in line or inp.type.name in line:
+                newline = line.replace(inp.size_cpp(),'N_IN').replace(inp.type.name, 'input_axi_t')
+            elif out.size_cpp() in line or out.cppname in line or out.type.name in line:
+                newline = line.replace(out.size_cpp(),'N_OUT').replace(out.type.name, 'output_axi_t')
+            else:
+                newline = line
+            fout.write(newline)
+
+        f.close()
+        fout.close()
+        os.rename(newfile, oldfile)
         
     def write_hls(self, model):
         """
@@ -427,5 +548,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
         self.write_wrapper_test(model)
         self.write_axi_wrapper(model)
         self.modify_build_script(model)
+        if model.config.get_config_value('ApplyPatches'):
+            self.apply_patches(model)
         self.write_new_tar(model)
 
