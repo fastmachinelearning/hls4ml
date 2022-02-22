@@ -29,7 +29,7 @@ except ImportError:
     __torch_profiling_enabled__ = False
 
 
-def optimize_fifos_depth(model, hls_model, init_large_fifo=True, reset=True, csim=True, synth=True,
+def optimize_fifos_depth(hls_model, init_large_fifo=True, reset=True, csim=True, synth=True,
                          cosim=True, validation=True, export=True, vsynth=True, **kwargs,):
 
     cfg = hls_model.config.config.copy()
