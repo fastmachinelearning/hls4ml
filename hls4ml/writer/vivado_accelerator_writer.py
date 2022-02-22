@@ -414,7 +414,58 @@ class VivadoAcceleratorWriter(VivadoWriter):
     def write_new_tar(self, model):
         os.remove(model.config.get_output_dir() + '.tar.gz')
         super(VivadoAcceleratorWriter, self).write_tar(model)
-        
+
+    def apply_patches(self, model):
+        '''
+        Apply patches.
+        '''
+        filedir = os.path.dirname(os.path.abspath(__file__))
+
+        indent = '    '
+
+        ###################
+        # patch myproject_axi.h
+        ###################  
+        oldfile = '{}/firmware/{}_axi.h'.format(model.config.get_output_dir(), model.config.get_project_name())
+        newfile = '{}/firmware/{}_axi_patch.h'.format(model.config.get_output_dir(), model.config.get_project_name())
+
+        f = open(oldfile,'r')
+        fout = open(newfile, 'w')
+
+        for line in f.readlines():
+            if 'typedef' in line and 'input_axi_t;' in line:
+                # hardcoded ap_uint<8> input
+                newline = 'typedef ap_uint<8> input_axi_t;\n'
+            else:
+                newline = line
+            fout.write(newline)
+
+        f.close()
+        fout.close()
+        os.rename(newfile, oldfile)
+
+        ###################
+        # patch myproject_axi.cpp
+        ###################
+        oldfile = '{}/firmware/{}_axi.cpp'.format(model.config.get_output_dir(), model.config.get_project_name())
+        newfile = '{}/firmware/{}_axi_patch.cpp'.format(model.config.get_output_dir(), model.config.get_project_name())
+
+        f = open(oldfile,'r')
+        fout = open(newfile, 'w')
+
+        for line in f.readlines():
+            if 'ctype[j] = typename input_t::value_type' in line:
+                # these lines are hardcoded to do the bitshift by 256
+                newline = indent + indent + indent + 'ap_ufixed<16,8> tmp = in[i * input_t::size + j]; // store 8 bit input in a larger temp variable\n'
+                newline += indent + indent + indent + 'ctype[j] = typename input_t::value_type(tmp >> 8); // shift right by 8 (div by 256) and select only the decimal of the larger temp variable\n'
+            else:
+                newline = line
+            fout.write(newline)
+
+        f.close()
+        fout.close()
+        os.rename(newfile, oldfile)
+
     def write_hls(self, model):
         """
         Write the HLS project. Calls the VivadoBackend writer, and extra steps for VivadoAccelerator/AXI interface
@@ -427,5 +478,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
         self.write_wrapper_test(model)
         self.write_axi_wrapper(model)
         self.modify_build_script(model)
+        if model.config.get_config_value('ApplyPatches'):
+            self.apply_patches(model)
         self.write_new_tar(model)
 
