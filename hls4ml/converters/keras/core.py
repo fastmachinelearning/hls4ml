@@ -3,8 +3,8 @@ import numpy as np
 from hls4ml.converters.keras_to_hls import parse_default_keras_layer
 from hls4ml.converters.keras_to_hls import keras_handler
 
-from hls4ml.model.hls_model import Quantizer
-from hls4ml.model.hls_model import IntegerPrecisionType
+from hls4ml.model.types import Quantizer
+from hls4ml.model.types import IntegerPrecisionType
 
 @keras_handler('InputLayer')
 def parse_input_layer(keras_layer, input_names, input_shapes, data_reader, config):
@@ -13,9 +13,15 @@ def parse_input_layer(keras_layer, input_names, input_shapes, data_reader, confi
     layer = parse_default_keras_layer(keras_layer, input_names)
 
     layer['input_shape'] = keras_layer['config']['batch_input_shape'][1:]
-    if keras_layer['config']['dtype'] == 'int32':
+
+    dtype = keras_layer['config']['dtype']
+    if dtype.startswith('int') or dtype.startswith('uint'):
         layer['type_name'] = 'integer_input_t'
-        layer['precision'] = IntegerPrecisionType(width=32)
+        width = int(dtype[dtype.index('int') + 3:])
+        signed = (not dtype.startswith('u'))
+        layer['precision'] = IntegerPrecisionType(width=width, signed=signed)
+    # elif bool, q[u]int, ...
+
     output_shape = keras_layer['config']['batch_input_shape']
     
     return layer, output_shape

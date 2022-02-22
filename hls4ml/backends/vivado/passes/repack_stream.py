@@ -1,9 +1,9 @@
 import numpy as np
 
 from hls4ml.model.optimizer import OptimizerPass
-
-from hls4ml.model.hls_model import Layer, register_layer
-from hls4ml.templates import templates
+from hls4ml.model.layers import Layer, Merge, Reshape, register_layer
+from hls4ml.backends import get_backend
+from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 
 class Repack(Layer):
     ''' Inserted between layers with different packing factors.'''
@@ -16,13 +16,19 @@ class Repack(Layer):
 
         self.add_output_variable(shape, dims)
 
-    def function_cpp(self):
-        params = self._default_function_params()
-        params['size'] = np.prod(self.get_output_variable().shape)
-        return [self._function_template.format(**params)]
+repack_function_template = 'nnet::repack_stream<{input_t}, {output_t}, {size}>({input}, {output});'
+repack_include_list = ['nnet_utils/nnet_stream.h']
 
-    def config_cpp(self):
-        return None
+class RepackFunctionTemplate(FunctionCallTemplate):
+    def __init__(self):
+        super().__init__(Repack, include_header=repack_include_list)
+        self.template = repack_function_template
+    
+    def format(self, node):
+        params = self._default_function_params(node)
+        params['size'] = np.prod(node.get_output_variable().shape)
+
+        return self.template.format(**params)
 
 class Broadcast(Layer):
     ''' Inserted between layers for broadcasting.'''
@@ -34,49 +40,61 @@ class Broadcast(Layer):
         dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
         self.add_output_variable(shape, dims)
 
-    def function_cpp(self):
-        params = self._default_function_params()
-        return [self._function_template.format(**params)]
-
-    def config_cpp(self):
-        params = self._default_config_params()
-        params['in_height'] = self.get_input_variable().shape[0]
-        params['in_width'] = self.get_input_variable().shape[1]
-        params['n_chan'] = self.get_input_variable().shape[2]
-        params['n_dupl'] = int(np.prod(self.get_output_variable().shape)/np.prod(self.get_input_variable().shape))
-        return self._config_template.format(**params)
-
-repack_function_template = 'nnet::repack_stream<{input_t}, {output_t}, {size}>({input}, {output});'
-repack_include_list = ['nnet_utils/nnet_stream.h']
-
 broadcast_function_template = 'nnet::broadcast_stream<{input_t}, {output_t}, {config}>({input}, {output});'
 broadcast_config_template = """struct config{index} : nnet::broadcast_config {{
-static const unsigned in_width = {in_width};
-static const unsigned in_height = {in_height};
-static const unsigned n_chan = {n_chan};
-static const unsigned n_dupl = {n_dupl};
+    static const unsigned in_width = {in_width};
+    static const unsigned in_height = {in_height};
+    static const unsigned n_chan = {n_chan};
+    static const unsigned n_dupl = {n_dupl};
 }};\n"""
 broadcast_include_list = ['nnet_utils/nnet_stream.h']
 
-# Register the layer types to the layer map
-register_layer('Repack', Repack)
-register_layer('Broadcast', Broadcast)
+class BroadcastConfigTemplate(LayerConfigTemplate):
+    def __init__(self):
+        super().__init__(Broadcast)
+        self.template = broadcast_config_template
+    
+    def format(self, node):
+        params = self._default_config_params(node)
+        params['in_height'] = node.get_input_variable().shape[0]
+        params['in_width'] = node.get_input_variable().shape[1]
+        params['n_chan'] = node.get_input_variable().shape[2]
+        params['n_dupl'] = int(np.prod(node.get_output_variable().shape) / np.prod(node.get_input_variable().shape))
 
-# Register the templates for config and function
-for backend in ['Vivado', 'VivadoAccelerator']:
-    templates.get_backend(backend).register_templates('Repack', repack_function_template, None, repack_include_list)
-    templates.get_backend(backend).register_templates('Broadcast', broadcast_function_template, broadcast_config_template, broadcast_include_list)
+        return self.template.format(**params)
 
+class BroadcastFunctionTemplate(FunctionCallTemplate):
+    def __init__(self):
+        super().__init__(Broadcast, include_header=broadcast_include_list)
+        self.template = broadcast_function_template
+    
+    def format(self, node):
+        params = self._default_function_params(node)
+        return self.template.format(**params)
+
+def register_repack_stream(backend):
+    # Register the layer types to the layer map
+    register_layer('Repack', Repack)
+    register_layer('Broadcast', Broadcast)
+    
+    # Register the optimization passes
+    backend.register_pass('remove_final_reshape', RemoveFinalReshape)
+    backend.register_pass('reshape_stream', ReshapeStream)
+    backend.register_pass('broadcast_stream', BroadcastStream)
+    
+    # Register template passes
+    backend.register_template(RepackFunctionTemplate)
+    backend.register_template(BroadcastConfigTemplate)
+    backend.register_template(BroadcastFunctionTemplate)
 
 class ReshapeStream(OptimizerPass):
     ''' Repacks stream for Reshape layer '''
     def match(self, node):
         # do not run optimizer pass for a flatten layer (1 output dimension)
-        return node.__class__.__name__ == 'Reshape' and len(node.get_output_variable().shape) > 1
+        return isinstance(node, Reshape) and len(node.get_output_variable().shape) > 1
 
     def transform(self, model, node):
-        if model.config.backend.name not in ['Vivado', 'VivadoAccelerator'] or \
-            model.config.get_config_value('IOType') != 'io_stream':
+        if model.config.get_config_value('IOType') != 'io_stream':
             return False
 
         attrs = {
@@ -84,14 +102,14 @@ class ReshapeStream(OptimizerPass):
         }
 
         # Insert new Repack node instead of Reshape
-        repack_layer = model.make_node('Repack', 'repack_' + node.name, attrs, node.inputs.copy())
+        repack_layer = model.make_node(Repack, 'repack_' + node.name, attrs, node.inputs.copy())
         model.replace_node(node, repack_layer)
 
         return True
 
 class BroadcastStream(OptimizerPass):
     def match(self, node):
-        if node.__class__.__name__ == 'Merge':
+        if isinstance(node, Merge):
             inp1 = node.get_input_variable(node.inputs[0])
             inp2 = node.get_input_variable(node.inputs[1])
             return inp1.shape != inp2.shape
@@ -127,7 +145,7 @@ class RemoveFinalReshape(OptimizerPass):
     ''' Remove reshape if final layer '''
     def match(self, node):
         # match if reshape is final node
-        return node.__class__.__name__ == 'Reshape' and not node.get_output_nodes()
+        return isinstance(node, Reshape) and not node.get_output_nodes()
 
     def transform(self, model, node):
         if model.config.get_config_value('IOType') == 'io_parallel':

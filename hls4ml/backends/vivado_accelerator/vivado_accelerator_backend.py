@@ -1,11 +1,12 @@
-from hls4ml.templates.vivado_template import VivadoBackend
 import os
-from shutil import copyfile
 
+from hls4ml.backends import VivadoBackend
+from hls4ml.model.flow import get_backend_flows, get_flow, register_flow
 
 class VivadoAcceleratorBackend(VivadoBackend):
     def __init__(self):
-        super(VivadoAcceleratorBackend, self).__init__(name='VivadoAccelerator')
+        super(VivadoBackend, self).__init__(name='VivadoAccelerator')
+        self._register_flows()
 
     def make_bitfile(model):
         curr_dir = os.getcwd()
@@ -24,7 +25,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
         '''
         Create initial accelerator config with default parameters
         Args:
-            device: one of the keys defined in supported_boards.json
+            board: one of the keys defined in supported_boards.json
             clock_period: clock period passed to hls project
             io_type: io_parallel or io_stream
             interface: `axi_stream`: generate hardware designs and drivers which exploit axi stream channels.
@@ -42,8 +43,9 @@ class VivadoAcceleratorBackend(VivadoBackend):
             populated config
         '''
         board = board if board is not None else 'pynq-z2'
-        config = super(VivadoAcceleratorBackend, self).create_initial_config(part, board, clock_period, io_type)
+        config = super(VivadoAcceleratorBackend, self).create_initial_config(part, clock_period, io_type)
         config['AcceleratorConfig'] = {}
+        config['AcceleratorConfig']['Board'] = board
         config['AcceleratorConfig']['Interface'] = interface  # axi_stream, axi_master, axi_lite
         config['AcceleratorConfig']['Driver'] = driver
         config['AcceleratorConfig']['Precision'] = {}
@@ -52,3 +54,13 @@ class VivadoAcceleratorBackend(VivadoBackend):
         config['AcceleratorConfig']['Precision']['Input'] = input_type  # float, double or ap_fixed<a,b>
         config['AcceleratorConfig']['Precision']['Output'] = output_type  # float, double or ap_fixed<a,b>
         return config
+
+    def _register_flows(self):
+        #TODO expand this to include new accelerator flow
+        parent_flows = get_backend_flows(backend='vivado')
+        for flow_name in parent_flows:
+            flow = get_flow(flow_name)
+            acc_flow = register_flow(flow_name.replace('vivado:', ''), flow.optimizers, requires=flow.requires, backend=self.name)
+            if ':write' in flow_name:
+                self._writer_flow = acc_flow
+        self._default_flow = 'vivadoaccelerator:ip'

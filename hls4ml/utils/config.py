@@ -3,15 +3,14 @@ import json
 
 import hls4ml
 
-
 def create_config(output_dir='my-hls-test', project_name='myproject',
     backend='Vivado', **kwargs):
 
-    backend_list = hls4ml.templates.get_available_backends()
-    if backend not in backend_list:
+    backend_list = hls4ml.backends.get_available_backends()
+    if backend.lower() not in backend_list:
         raise Exception('Unknown backend: {}'.format(backend))
 
-    backend = hls4ml.templates.get_backend(backend)
+    backend = hls4ml.backends.get_backend(backend)
 
     backend_config = backend.create_initial_config(**kwargs)
 
@@ -109,10 +108,12 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
     merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate', 'Dot']
     qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D', 'QBatchNormalization', 'QConv2DBatchnorm']
+    reshaping_layers = ['ZeroPadding1D', 'ZeroPadding2D']
+    graph_layers = ['GarNet', 'GarNetStack']
     #Define layers to skip because they're not configurable or not converted to HLS
     skip_layers = ['Dropout', 'Flatten', 'Reshape', 'Permute']
     #All supported layers
-    supported_layers = core_layers + dense_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + skip_layers
+    supported_layers = core_layers + dense_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + reshaping_layers + graph_layers + skip_layers
 
     keras_layer_config = None
     if model_arch['class_name'] == 'Sequential':
@@ -160,6 +161,17 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
                 elif qname == 'activation' and layer['class_name'] == 'QActivation':
                     precision = _get_precision_from_quantizer(qclass)
                     layer['precision']['result'] = precision
+
+        if layer['class_name'] in graph_layers:
+            # Graph layer config needs access to number of input vertices from the shape of the input tensor
+            # but to really compute it we'd have to track the full tensor flow as done in hls4ml.converters.keras_to_hls.
+            # So here we just assume that the first input layer of the model has shape [batch_size, n_vertices, n_features]
+            try:
+                first_input_layer = next(kl for kl in keras_layer_config if kl['class_name'] == 'InputLayer')
+                layer['n_vertices'] = first_input_layer['config']['batch_input_shape'][1]
+            except:
+                print('  Generating config for keras layer {}: could not estimate n_vertices. Defaulting to 128.')
+                layer['n_vertices'] = 128
 
         print('Layer name: {}, layer type: {}'.format(layer['name'], layer['class_name']))
         layer_list.append( layer )
@@ -210,9 +222,42 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
                 layer_config['Precision'] = default_precision
             layer_config['ReuseFactor'] = default_reuse_factor
 
+        elif layer['class_name'] in ['GarNet', 'GarNetStack']:
+            ## Following code copy-pasted from hls4ml.model.hls_layers - can we factor out commonalities between the two modules?
+
+            ## Define default precisions for various internal arrays (can be overridden from the config file)
+            import math
+            log2_reuse = int(math.log(default_reuse_factor, 2.))
+            n_vertices_width = int(math.log(layer['n_vertices'], 2.))
+
+            # We always give 10 digits for the subintegral part
+            fwidth = 10
+            # Integral precision for aggr_t depends on how large the temporary sum for weighed feature mean will be
+            aggr_intw = max(log2_reuse, n_vertices_width - log2_reuse) + 3 # safety factor 2**3
+            aggr_w = aggr_intw + fwidth
+            # edge_weight_aggr_t does not need the safety factor
+            ew_aggr_intw = aggr_intw - 3
+            ew_aggr_w = ew_aggr_intw + fwidth
+
+            layer_config['Precision'] = {}
+            layer_config['Precision']['edge_weight'] = 'ap_ufixed<10,0,AP_TRN,AP_SAT>'
+            layer_config['Precision']['edge_weight_aggr'] = 'ap_ufixed<{},{},AP_TRN,AP_SAT>'.format(ew_aggr_w, ew_aggr_intw)
+            layer_config['Precision']['aggr'] = 'ap_fixed<{},{},AP_TRN,AP_SAT>'.format(aggr_w, aggr_intw)
+            layer_config['Precision']['norm'] = 'ap_ufixed<14,4,AP_TRN,AP_SAT>'
+
+            layer_config['ReuseFactor'] = default_reuse_factor
+
         elif layer['class_name'] == 'Input':
             layer_config['Precision'] = {}
-            layer_config['Precision']['result'] = default_precision
+
+            dtype = layer['config']['dtype']
+            if dtype.startswith('int') or dtype.startswith('uint'):
+                typename = dtype[:dtype.index('int') + 3]
+                width = int(dtype[dtype.index('int') + 3:])
+                layer_config['Precision']['result'] = 'ap_{}<{}>'.format(typename, width)
+            # elif bool, q[u]int, ...
+            else:
+                layer_config['Precision']['result'] = default_precision
 
         else:
             layer_config['Precision'] = default_precision

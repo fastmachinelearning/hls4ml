@@ -1,25 +1,26 @@
+import os
+import json
 import numpy as np
 
-from hls4ml.model.hls_layers import FixedPrecisionType, IntegerPrecisionType
-from hls4ml.templates import get_supported_boards_dict
+from hls4ml.model.layers import FixedPrecisionType, IntegerPrecisionType
 
 
 class VivadoAcceleratorConfig(object):
     def __init__(self, config, model_inputs, model_outputs):
         self.config = config.config
-        self.board = self.config.get('Board', 'pynq-z2')
-        boards = get_supported_boards_dict()
-        if self.board in boards.keys():
-            board_info = boards[self.board]
+        self.board = self.config.get('AcceleratorConfig', {}).get('Board', 'pynq-z2')
+        self.supported_boards = json.load(open(os.path.dirname(__file__) + '/supported_boards.json'))
+        if self.board in self.supported_boards.keys():
+            board_info = self.supported_boards[self.board]
             self.part = board_info['part']
         else:
             raise Exception('The board does not appear in supported_boards.json file')
         
-        if self.config.get('XilinxPart') is not None:
-            if self.config.get('XilinxPart') != self.part:
-                print('WARNING: You set a XilinxPart that does not correspond to the Board you specified. The correct '
-                      'XilinxPart is now set.')
-                self.config['XilinxPart'] = self.part
+        if self.config.get('Part') is not None:
+            if self.config.get('Part') != self.part:
+                print('WARNING: You set a Part that does not correspond to the Board you specified. The correct '
+                      'Part is now set.')
+                self.config['Part'] = self.part
         accel_config = self.config.get('AcceleratorConfig', None)
         if accel_config is not None:
             prec = accel_config.get('Precision')
@@ -61,16 +62,16 @@ class VivadoAcceleratorConfig(object):
         if out_axi_t not in ['float', 'double']:
             self.output_type = self._next_factor8_type(config.backend.convert_precision_string(out_axi_t))
 
-        if self.input_type is 'float':
+        if self.input_type == 'float':
             self.input_bitwidth = 32
-        elif self.input_type is 'double':
+        elif self.input_type == 'double':
             self.input_bitwidth = 64
         else:
             self.input_bitwidth = config.backend.convert_precision_string(inp_axi_t).width
 
-        if out_axi_t is 'float':
+        if out_axi_t == 'float':
             self.output_bitwidth = 32
-        elif out_axi_t is 'double':
+        elif out_axi_t == 'double':
             self.output_bitwidth = 64
         else:
             self.output_bitwidth = config.backend.convert_precision_string(out_axi_t).width
@@ -101,11 +102,10 @@ class VivadoAcceleratorConfig(object):
         return self.interface
 
     def get_board_info(self, board=None):
-        boards = get_supported_boards_dict()
         if board is None:
             board = self.board
-        if board in boards.keys():
-            return boards[board]
+        if board in self.supported_boards.keys():
+            return self.supported_boards[board]
         else:
             raise Exception('The board is still not supported')
 

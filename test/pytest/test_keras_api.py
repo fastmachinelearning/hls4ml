@@ -2,6 +2,7 @@ import pytest
 import hls4ml
 import tensorflow as tf
 import numpy as np
+from pathlib import Path
 from tensorflow.keras import optimizers
 from tensorflow.keras.layers import Input, Dense, Activation, Conv1D, Conv2D, \
                                     Reshape, ELU, LeakyReLU, ThresholdedReLU, \
@@ -12,7 +13,10 @@ from tensorflow.keras.layers import Input, Dense, Activation, Conv1D, Conv2D, \
 import math
 from tensorflow.keras import backend as K
 
-def test_dense():
+test_root_path = Path(__file__).parent
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_dense(backend):
     model = tf.keras.models.Sequential()
     model.add(Dense(2,
               input_shape=(1,),
@@ -33,9 +37,9 @@ def test_dense():
     keras_prediction = model.predict(X_input)
 
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = 'hls4mlprj_keras_api_dense'
+    output_dir = str(test_root_path / 'hls4mlprj_keras_api_dense')
 
-    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
 
     hls_model.compile()
 
@@ -60,7 +64,8 @@ def test_dense():
                                                  ELU(alpha=1.0),
                                                  PReLU(alpha_initializer="zeros",),])
                                                  #ThresholdedReLU(theta=1.0)])
-def test_activations(activation_function):
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_activations(activation_function, backend):
     model = tf.keras.models.Sequential()
     model.add(Dense(64,
               input_shape=(1,),
@@ -73,8 +78,8 @@ def test_activations(activation_function):
     X_input = np.random.rand(100,1)
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = 'hls4mlprj_keras_api_activations_{}'.format(activation_function.__class__.__name__)
-    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
+    output_dir = str(test_root_path / 'hls4mlprj_keras_api_activations_{}'.format(activation_function.__class__.__name__))
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input)
 
@@ -107,7 +112,7 @@ def test_conv1d(conv1d, padds):
     X_input = np.random.rand(10,128,4)
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = 'hls4mlprj_keras_api_conv1d_{}'.format(padds)
+    output_dir = str(test_root_path / 'hls4mlprj_keras_api_conv1d_{}'.format(padds))
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input)
@@ -167,7 +172,7 @@ def test_conv2d(conv2d, chans, padds):
     X_input = np.random.rand(100, *input_shape)
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = 'hls4mlprj_keras_api_conv2d_{}_{}'.format(chans, padds)
+    output_dir = str(test_root_path / 'hls4mlprj_keras_api_conv2d_{}_{}'.format(chans, padds))
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
@@ -250,7 +255,7 @@ def test_pooling(pooling, padds, chans):
     X_input = np.random.rand(100, *input_shape)
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = 'hls4mlprj_keras_api_pooling_{}_{}_{}'.format(pooling.__name__, chans, padds)
+    output_dir = str(test_root_path / 'hls4mlprj_keras_api_pooling_{}_{}_{}'.format(pooling.__name__, chans, padds))
 
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
     hls_model.compile()
