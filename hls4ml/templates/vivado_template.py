@@ -390,6 +390,7 @@ class VivadoBackend(Backend):
         super(VivadoBackend, self).__init__(name)
         self.register_templates('Dense', dense_function_template, dense_config_template, dense_include_list)
         self.register_templates('BinaryDense'            , dense_function_template,       dense_config_template, dense_include_list)
+        self.register_templates('DenseBatchnorm'         , dense_function_template,       dense_config_template, dense_include_list)
         self.register_templates('BatchNormalization'     , batchnorm_function_template,   batchnorm_config_template, batchnorm_include_list)
         self.register_templates('Conv1D'                 , conv1d_function_template,      [conv1d_config_template, conv_mult_config_template], conv1d_include_list)
         self.register_templates('Conv2D'                 , conv2d_function_template,      [conv2d_config_template, conv_mult_config_template], conv2d_include_list)

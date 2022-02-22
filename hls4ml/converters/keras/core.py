@@ -104,7 +104,7 @@ def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader, 
 
 @keras_handler('BatchNormalization')
 def parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader, config):
-    assert('BatchNormalization' in keras_layer['class_name'] or 'QConv2DBatchnorm' in keras_layer['class_name'])
+    assert('BatchNormalization' in keras_layer['class_name'] or 'QConv2DBatchnorm' in keras_layer['class_name'] or 'QDenseBatchnorm' in keras_layer['class_name'])
 
     layer = parse_default_keras_layer(keras_layer, input_names)
 
