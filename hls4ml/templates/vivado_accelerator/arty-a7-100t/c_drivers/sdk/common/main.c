@@ -19,6 +19,24 @@
 
 #include "data.h"
 
+#define EEMBC_POWER 1
+
+#ifdef EEMBC_POWER
+#include "xgpio.h"       /* AXI GPIO drivers */
+
+#define PIN 0x01
+#define GPIO_PMOD_PIN_DEVICE_ID  XPAR_GPIO_0_DEVICE_ID
+
+#define set_pin_high(InstancePtr, Mask) \
+        XGpio_DiscreteWrite(InstancePtr, 1, Mask)
+
+#define set_pin_low(InstancePtr, Mask) \
+        XGpio_DiscreteClear(InstancePtr, 1, Mask)
+
+XGpio Gpio;
+#endif
+
+
 //#define __DEBUG__
 
 #define MAX_PRINT_ELEMENTS (16)
@@ -297,6 +315,33 @@ int main(int argc, char** argv) {
 #endif
 
     PRINTF("INFO: ==================================================\r\n");
+
+
+#ifdef EEMBC_POWER
+    /* Initialize the GPIO driver */
+	status = XGpio_Initialize(&Gpio, GPIO_PMOD_PIN_DEVICE_ID);
+	if (status != XST_SUCCESS) {
+		xil_printf("GPIO Initialization Failed\r\n");
+		return XST_FAILURE;
+	}
+
+	set_pin_low(&Gpio, PIN);
+
+    PRINTF("INFO: Connect logic analyzer to the pin 3 of Pmod D\r\n");
+    PRINTF("INFO: Press any key to start:\r\n");
+    dummy = inbyte();
+
+	/* Loop forever */
+	for (unsigned i; i < 100; i++) {
+		set_pin_high(&Gpio, PIN);
+
+        sleep(1);
+
+		set_pin_low(&Gpio, PIN);
+
+        sleep(1);
+	}
+#endif
 
     cleanup_platform();
 
