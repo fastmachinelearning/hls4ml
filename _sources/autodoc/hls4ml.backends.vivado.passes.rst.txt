@@ -92,6 +92,14 @@ hls4ml.backends.vivado.passes.pooling\_templates module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.vivado.passes.quantization\_templates module
+------------------------------------------------------------
+
+.. automodule:: hls4ml.backends.vivado.passes.quantization_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.backends.vivado.passes.repack\_stream module
 ---------------------------------------------------
 
