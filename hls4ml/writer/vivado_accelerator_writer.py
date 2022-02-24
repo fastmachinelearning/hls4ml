@@ -218,6 +218,9 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     model.config.get_project_name())
             elif 'myproject_cosim' in line:
                 newline = line.replace('myproject_cosim', 'myproject_axi_cosim')
+            elif self.vivado_accelerator_config.board == "arty-a7-100t" and 'myproject_U0' in line:
+                # eventually, generalize this with regex
+                newline = line.replace('myproject_U0', 'grp_myproject_fu_4358')
             else:
                 newline = line
             fout.write(newline)
