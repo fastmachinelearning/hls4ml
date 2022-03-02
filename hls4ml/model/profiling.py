@@ -34,6 +34,7 @@ def optimize_fifos_depth(hls_model, init_large_fifo=True, reset=True, csim=True,
 
     cfg = hls_model.config.config.copy()
     hls_config = cfg['HLSConfig']
+    out_dir = hls_model.config.get_output_dir()
 
     values = []
 
@@ -63,6 +64,8 @@ def optimize_fifos_depth(hls_model, init_large_fifo=True, reset=True, csim=True,
             hls_config['LayerName']['in_local'] = {'StreamDepth' : 10000}
             hls_config['LayerName']['out_local'] = {'StreamDepth': 10000}
 
+        cfg['OutputDir'] = out_dir + "_LARGE_FIFO"
+        cfg['HLSConfig'] = hls_config
         hls_model = hls4ml.converters.keras_to_hls(cfg)
 
 
@@ -111,8 +114,8 @@ def optimize_fifos_depth(hls_model, init_large_fifo=True, reset=True, csim=True,
             new_config['LayerName']['in_local'] = {'StreamDepth': x['max'] + 1}
         elif 'out_local' in x['name']:
             new_config['LayerName']['out_local'] = {'StreamDepth': x['max'] + 1}
-    out_dir = hls_model.config.get_output_dir() + '_FIFO_OPT'
-    cfg['OutputDir'] = out_dir
+
+    cfg['OutputDir'] = out_dir + '_FIFO_OPT'
     cfg['HLSConfig'] = new_config
     hls_model = hls4ml.converters.keras_to_hls(cfg)
     hls_model.write()
