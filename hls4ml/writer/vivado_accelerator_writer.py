@@ -359,8 +359,10 @@ class VivadoAcceleratorWriter(VivadoWriter):
             f.write('set fifo_opt 0')
         f.close()
 
-    # TODO: Extract parameters from the model
-    def write_header_file(X, y, y_keras, y_hls, n_samples, filename='data.h'):
+    def write_header_file(model, X, y, y_keras, y_hls, n_samples, filename='data.h'):
+        vivado_accelerator_config = VivadoAcceleratorConfig(model.config, model.get_input_variables(),
+                                                            model.get_output_variables())
+        inp_axi_t, out_axi_t, inp, out = vivado_accelerator_config.get_corrected_types()
         header_file = open(filename, 'w')
         (n_X_samples, n_X_inputs) = X.shape
         (n_y_samples, n_y_outputs) = y.shape
@@ -369,11 +371,11 @@ class VivadoAcceleratorWriter(VivadoWriter):
    
         header_file.write('#ifndef __DATA_H__\n')
         header_file.write('#define __DATA_H__\n')
-        header_file.write('/* ouf of {} */\n'.format(n_X_samples))
+        header_file.write('/* out of {} */\n'.format(n_X_samples))
         header_file.write('#define N_SAMPLES {}\n'.format(n_samples))
         header_file.write('\n')
         header_file.write('#define N_X_INPUTS {}\n'.format(n_X_inputs))
-        header_file.write('const float data_X_inputs[N_SAMPLES*N_X_INPUTS] = {\n')
+        header_file.write('const {} data_X_inputs[N_SAMPLES*N_X_INPUTS] = {{\n'.format(inp_axi_t))
         for s in range(n_samples):
             header_file.write('    ')
             for i in range(n_X_inputs):
@@ -405,7 +407,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
         header_file.write('/* csim outputs - for verification */\n')
         header_file.write('#define N_Y_HLS_OUTPUTS {}\n'.format(n_y_hls_outputs))
         header_file.write('')
-        header_file.write('const float data_y_hls_outputs[N_SAMPLES*N_Y_HLS_OUTPUTS] = {\n')
+        header_file.write('const {} data_y_hls_outputs[N_SAMPLES*N_Y_HLS_OUTPUTS] = {{\n'.format(out_axi_t))
         for s in range(n_samples):
             header_file.write('    ')
             for o in range(n_y_hls_outputs):
