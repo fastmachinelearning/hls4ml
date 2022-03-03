@@ -348,9 +348,13 @@ class VivadoAcceleratorWriter(VivadoWriter):
             f.write('set bit_width_hls_output {}\n'.format(in_bit))
             f.write('set bit_width_hls_input {}\n'.format(out_bit))
         if model.config.config['HLSConfig']['Model'].get('FIFO_opt'):
-            f.write('set fifo_opt 1')
+            f.write('set fifo_opt 1\n')
         else:
-            f.write('set fifo_opt 0')
+            f.write('set fifo_opt 0\n')
+        if model.config.config['HLSConfig']['Model'].get('EEMBC_power'):
+            f.write('set eembc_power 1\n')
+        else:
+            f.write('set eembc_power 0\n')
         f.close()
 
     def write_header_file(model, X, y, y_keras, y_hls, n_samples, filename='data.h'):

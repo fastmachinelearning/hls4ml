@@ -1,8 +1,6 @@
 set tcldir [file dirname [info script]]
 source [file join $tcldir project.tcl]
 
-set eembc_power 1
-
 # Project names
 set project_name "project_1"
 set design_name "design_1"
