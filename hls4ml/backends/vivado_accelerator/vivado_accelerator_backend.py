@@ -55,9 +55,17 @@ class VivadoAcceleratorBackend(VivadoBackend):
         config['AcceleratorConfig']['Precision']['Output'] = output_type  # float, double or ap_fixed<a,b>
         return config
 
+    def get_default_flow(self):
+        return self._default_flow
+
+    def get_writer_flow(self):
+        return self._writer_flow
+
     def _register_flows(self):
-        #TODO expand this to include new accelerator flow
         parent_flows = get_backend_flows(backend='vivado')
+        writer_passes = ['vivadoaccelerator:write_hls']
+        # vivado_writer_flow
+        # writer_flow = register_flow('vivadoaccelerator_writer', writer_passes, requires=)
         for flow_name in parent_flows:
             flow = get_flow(flow_name)
             acc_flow = register_flow(flow_name.replace('vivado:', ''), flow.optimizers, requires=flow.requires, backend=self.name)

@@ -317,8 +317,6 @@ class VivadoAcceleratorWriter(VivadoWriter):
         copyfile(os.path.join(filedir, self.vivado_accelerator_config.get_tcl_file_path()),
                  '{}/design.tcl'.format(model.config.get_output_dir()))
         f = open('{}/project.tcl'.format(model.config.get_output_dir()), 'w')
-        f.write('variable myproject\n')
-        f.write('set myproject "{}"\n'.format(model.config.get_project_name()))
         if self.vivado_accelerator_config.get_interface() == 'axi_stream':
             in_bit, out_bit = self.vivado_accelerator_config.get_io_bitwidth()
             f.write('set bit_width_hls_output {}\n'.format(in_bit))
