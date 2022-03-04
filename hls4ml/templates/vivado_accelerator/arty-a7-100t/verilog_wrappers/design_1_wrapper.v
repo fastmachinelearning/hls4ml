@@ -1,7 +1,5 @@
 `timescale 1 ps / 1 ps
 
-`define EEMBC_POWER 1
-
 module design_1_wrapper
    (ddr3_sdram_addr,
     ddr3_sdram_ba,

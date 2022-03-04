@@ -168,6 +168,11 @@ save_bd_design
 #add_files -norecurse ./${myproject}_vivado_accelerator/${project_name}.srcs/sources_1/bd/${design_name}/hdl/${design_name}_wrapper.v
 add_files -norecurse $design_name\_wrapper.v
 
+# In the Verilog wrapper, enable configuration for the EEMBC power setup
+if { ${eembc_power} } {
+    set_property verilog_define EEMBC_POWER=1 [current_fileset]
+}
+
 # Run synthesis and implementation
 reset_run impl_1
 reset_run synth_1
