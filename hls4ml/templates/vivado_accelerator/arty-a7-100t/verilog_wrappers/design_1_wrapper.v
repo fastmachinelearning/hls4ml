@@ -33,6 +33,10 @@ module design_1_wrapper
     pmod_uart_rxd,
     pmod_uart_txd,
     pmod_pin
+`else
+    ,
+    usb_uart_rxd,
+    usb_uart_txd
 `endif
     );
   output [13:0]ddr3_sdram_addr;
@@ -64,6 +68,9 @@ module design_1_wrapper
   input pmod_uart_rxd;
   output pmod_uart_txd;
   output pmod_pin;
+`else
+  input usb_uart_rxd;
+  output usb_uart_txd;
 `endif
 
 
@@ -107,6 +114,9 @@ module design_1_wrapper
   wire qspi_flash_ss_io;
   wire qspi_flash_ss_o;
   wire qspi_flash_ss_t;
+`else
+  wire usb_uart_rxd;
+  wire usb_uart_txd;
 `endif
   wire reset;
   wire sys_clock;
@@ -189,6 +199,10 @@ module design_1_wrapper
         .pmod_uart_rxd(pmod_uart_rxd),
         .pmod_uart_txd(pmod_uart_txd),
         .pmod_pin(pmod_pin)
+`else
+        ,
+        .usb_uart_rxd(usb_uart_rxd),
+        .usb_uart_txd(usb_uart_txd)
 `endif
 
         );
