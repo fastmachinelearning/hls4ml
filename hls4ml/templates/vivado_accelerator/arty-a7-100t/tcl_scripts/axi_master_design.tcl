@@ -121,6 +121,7 @@ apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {re
 
 # Add timer
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_timer:2.0 axi_timer_mcu
+set_property -dict [list CONFIG.enable_timer2 {1}] [get_bd_cells axi_timer_mcu]
 
 # Wire timer
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/mig_7series_0/ui_clk (83 MHz)} Clk_slave {Auto} Clk_xbar {/mig_7series_0/ui_clk (83 MHz)} Master {/microblaze_mcu (Periph)} Slave {/axi_timer_mcu/S_AXI} intc_ip {/microblaze_mcu_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_timer_mcu/S_AXI]
