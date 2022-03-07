@@ -128,7 +128,7 @@ def test_single_dense_activation_exact(randX_100_16, bits, alpha):
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
   hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                        hls_config=config,
-                                                       output_dir=str(test_root_path / 'hls4mlprj_qkeras_single_dense_activation_exact_{}'.format(bits)),
+                                                       output_dir=str(test_root_path / 'hls4mlprj_qkeras_single_dense_activation_exact_{}_{}'.format(bits, alpha)),
                                                        part='xcu250-figd2104-2L-e')
   hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=[])
   hls_model.compile()
