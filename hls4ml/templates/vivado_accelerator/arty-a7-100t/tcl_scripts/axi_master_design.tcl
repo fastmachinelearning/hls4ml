@@ -149,12 +149,16 @@ if { ${eembc_power} } {
 # Add Quad SPI for cold boot
 if { ${eembc_power} } {
     create_bd_cell -type ip -vlnv xilinx.com:ip:axi_quad_spi:3.2 axi_quad_spi_0
-    set_property -dict [list CONFIG.C_SPI_MEMORY {3} CONFIG.C_SPI_MODE {2} CONFIG.C_SCK_RATIO {2}] [get_bd_cells axi_quad_spi_0]
+    set_property -dict [list CONFIG.C_SPI_MEMORY {3}] [get_bd_cells axi_quad_spi_0]
     apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {qspi_flash ( Quad SPI Flash ) } Manual_Source {Auto}}  [get_bd_intf_pins axi_quad_spi_0/SPI_0]
     apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/mig_7series_0/ui_clk (83 MHz)} Clk_slave {Auto} Clk_xbar {/mig_7series_0/ui_clk (83 MHz)} Master {/microblaze_mcu (Periph)} Slave {/axi_quad_spi_0/AXI_LITE} intc_ip {/microblaze_mcu_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_quad_spi_0/AXI_LITE]
     set_property -dict [list CONFIG.CLKOUT3_USED {true} CONFIG.CLKOUT3_REQUESTED_OUT_FREQ {50} CONFIG.MMCM_CLKOUT2_DIVIDE {20} CONFIG.NUM_OUT_CLKS {3} CONFIG.CLKOUT3_JITTER {151.636} CONFIG.CLKOUT3_PHASE_ERROR {98.575}] [get_bd_cells clk_wizard]
     connect_bd_net [get_bd_pins clk_wizard/clk_out3] [get_bd_pins axi_quad_spi_0/ext_spi_clk]
-    set_property -dict [list CONFIG.C_SPI_MEMORY {3}] [get_bd_cells axi_quad_spi_0]
+
+    # BUG FIX
+    disconnect_bd_net /clk_wizard_clk_out1 [get_bd_pins axi_quad_spi_0/ext_spi_clk]
+    connect_bd_net [get_bd_pins axi_quad_spi_0/ext_spi_clk] [get_bd_pins mig_7series_0/ui_clk]
+
     add_files -fileset constrs_1 -norecurse qspi.xdc
 }
 
