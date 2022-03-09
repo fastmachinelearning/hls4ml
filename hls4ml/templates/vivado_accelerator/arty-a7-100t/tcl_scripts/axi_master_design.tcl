@@ -156,7 +156,7 @@ if { ${eembc_power} } {
     connect_bd_net [get_bd_pins clk_wizard/clk_out3] [get_bd_pins axi_quad_spi_0/ext_spi_clk]
 
     # BUG FIX
-    disconnect_bd_net /clk_wizard_clk_out1 [get_bd_pins axi_quad_spi_0/ext_spi_clk]
+    delete_bd_objs [get_bd_nets clk_wizard_clk_out3]
     connect_bd_net [get_bd_pins axi_quad_spi_0/ext_spi_clk] [get_bd_pins mig_7series_0/ui_clk]
 
     add_files -fileset constrs_1 -norecurse qspi.xdc
