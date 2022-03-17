@@ -1,8 +1,4 @@
 import os
-import shutil
-import tarfile
-import time
-import numpy as np
 
 from hls4ml.backends import VivadoBackend
 from hls4ml.model.flow import register_flow
@@ -13,34 +9,6 @@ class VivadoAcceleratorBackend(VivadoBackend):
         super(VivadoBackend, self).__init__(name='VivadoAccelerator')
         self._register_flows()
 
-    @staticmethod
-    def package(model, X=None, y=None, sleep_before_retry=60):
-        '''Package the hardware build results for HW inference, including test data'''
-
-        odir = model.config.get_output_dir()
-        name = model.config.get_project_name()
-
-        if os.path.isdir(f'{odir}/package/'):
-            print(f'Found existing package "{odir}/package/", overwriting')
-        os.makedirs(f'{odir}/package/', exist_ok=True)
-        if not X is None:
-            np.save(f'{odir}/package/X.npy', X)
-        if not y is None:
-            np.save(f'{odir}/package/y.npy', y)
-
-        src = f'{odir}/{name}_vivado_accelerator/project_1.runs/impl_1/design_1_wrapper.bit'
-        dst = f'{odir}/package/{name}.bit'
-        _copy_wait_retry(src, dst, sleep=sleep_before_retry)
-
-        src = f'{odir}/{name}_vivado_accelerator/project_1.srcs/sources_1/bd/design_1/hw_handoff/design_1.hwh'
-        dst = f'{odir}/package/{name}.hwh'
-        _copy_wait_retry(src, dst, sleep=sleep_before_retry)
-
-        driver = model.config.backend.writer.vivado_accelerator_config.get_driver_file()
-        shutil.copy(f'{odir}/{driver}', f'{odir}/package/{driver}')
-
-        _make_tarfile(f'{odir}/{name}.tar.gz', f'{odir}/package')
-
     def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False, bitfile=False):
         # run the VivadoBackend build
         report = super().build(model, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
@@ -48,15 +16,11 @@ class VivadoAcceleratorBackend(VivadoBackend):
         if bitfile:
             curr_dir = os.getcwd()
             os.chdir(model.config.get_output_dir())
-            success = False
             try:
                 os.system('vivado -mode batch -source design.tcl')
-                success = True
             except:
                 print("Something went wrong, check the Vivado logs")
             os.chdir(curr_dir)
-            if success:
-                VivadoAcceleratorBackend.package(model)
 
         return parse_vivado_report(model.config.get_output_dir())
 
@@ -100,13 +64,3 @@ class VivadoAcceleratorBackend(VivadoBackend):
         vivado_accel_writer = ['vivadoaccelerator:write_hls']
         self._writer_flow = register_flow('write', vivado_accel_writer, requires=vivado_writer, backend=self.name)
         self._default_flow = 'vivado:ip'
-
-def _make_tarfile(output_filename, source_dir):
-    with tarfile.open(output_filename, "w:gz") as tar:
-        tar.add(source_dir, arcname=os.path.basename(source_dir))
-
-def _copy_wait_retry(src, dst, sleep=60):
-    if not os.path.isfile(src):
-        print(f'File {src} not found, waiting {sleep}s before retry')
-        time.sleep(sleep)
-    shutil.copy(src, dst)
