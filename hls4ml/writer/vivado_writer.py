@@ -100,14 +100,20 @@ class VivadoWriter(Writer):
         ###################
 
         filedir = os.path.dirname(os.path.abspath(__file__))
-        f = open(os.path.join(filedir,'../templates/vivado/firmware/myproject.cpp'),'r')
-        fout = open('{}/firmware/{}.cpp'.format(model.config.get_output_dir(), model.config.get_project_name()),'w')
 
         # create project.tcl
         f = open('{}/project.tcl'.format(model.config.get_output_dir()), 'w')
         f.write('variable myproject\n')
         f.write('set myproject "{}"\n'.format(model.config.get_project_name()))
+        f.write('variable backend\n')
+        f.write('set backend "vivado"\n')
+        if model.fifo_opt:
+            f.write('variable fifo_opt\n')
+            f.write('set fifo_opt true\n')
         f.close()
+
+        f = open(os.path.join(filedir,'../templates/vivado/firmware/myproject.cpp'),'r')
+        fout = open('{}/firmware/{}.cpp'.format(model.config.get_output_dir(), model.config.get_project_name()),'w')
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()

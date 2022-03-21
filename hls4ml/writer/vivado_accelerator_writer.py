@@ -97,8 +97,10 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 elif io_type == 'io_stream':
                     newline += indent + 'hls::stream<' + inp.type.name + '> in_local("input_1");\n'
                     newline += indent + 'hls::stream<' + out.type.name + '> out_local("output_1");\n\n'
-                    newline += indent + '#pragma HLS STREAM variable=in_local depth=N_IN\n'
-                    newline += indent + '#pragma HLS STREAM variable=out_local depth=N_OUT\n'
+                    newline += indent + '#pragma HLS STREAM variable=in_local depth={}\n'\
+                        .format(model.get_input_variables()[0].pragma[1])
+                    newline += indent + '#pragma HLS STREAM variable=out_local depth={}\n'\
+                        .format(model.get_output_variables()[0].pragma[1])
             elif '//hls-fpga-machine-learning insert call' in line:
                 newline = indent + '{}(in_local, out_local, in_size, out_size);\n'.format(
                     model.config.get_project_name())
@@ -111,8 +113,10 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 elif self.vivado_accelerator_config.get_interface() == 'axi_master':
                     newline = ''
                     newline += indent + '#pragma HLS INTERFACE s_axilite port=return bundle=CTRL_BUS\n'
-                    newline += indent + '#pragma HLS INTERFACE m_axi depth=N_IN port=in offset=slave bundle=IN_BUS\n'
-                    newline += indent + '#pragma HLS INTERFACE m_axi depth=N_OUT port=out offset=slave bundle=OUT_BUS\n'
+                    newline += indent + '#pragma HLS INTERFACE m_axi depth={} port=in offset=slave bundle=IN_BUS\n'\
+                        .format(model.get_input_variables()[0].pragma[1])
+                    newline += indent + '#pragma HLS INTERFACE m_axi depth={} port=out offset=slave bundle=OUT_BUS\n'\
+                        .format(model.get_output_variables()[0].pragma[1])
                 elif self.vivado_accelerator_config.get_interface() == 'axi_stream':
                     newline = ''
                     newline += indent + '#pragma HLS INTERFACE axis port=in\n'
@@ -199,8 +203,10 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 newline = line[:-1] + '_axi\n'  # remove the newline from the line end and append _axi for the new top
                 newline += 'add_files firmware/{}_axi.cpp -cflags "-std=c++0x"\n'.format(
                     model.config.get_project_name())
-            elif 'myproject_cosim' in line:
-                newline = line.replace('myproject_cosim', 'myproject_axi_cosim')
+            elif '{}_cosim'.format(model.config.get_project_name()) in line:
+                newline = line.replace('{}_cosim'.format(model.config.get_project_name()), '{}_axi_cosim'.format(model.config.get_project_name()))
+            elif '${myproject}.tcl' in line:
+                newline = line.replace('${myproject}.tcl', '${myproject}_axi.tcl')
             else:
                 newline = line
             fout.write(newline)
@@ -316,7 +322,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
         filedir = os.path.dirname(os.path.abspath(__file__))
         copyfile(os.path.join(filedir, self.vivado_accelerator_config.get_tcl_file_path()),
                  '{}/design.tcl'.format(model.config.get_output_dir()))
-        f = open('{}/project.tcl'.format(model.config.get_output_dir()), 'w')
+        f = open('{}/project.tcl'.format(model.config.get_output_dir()), 'a')
         if self.vivado_accelerator_config.get_interface() == 'axi_stream':
             in_bit, out_bit = self.vivado_accelerator_config.get_io_bitwidth()
             f.write('set bit_width_hls_output {}\n'.format(in_bit))
@@ -331,6 +337,19 @@ class VivadoAcceleratorWriter(VivadoWriter):
     def write_new_tar(self, model):
         os.remove(model.config.get_output_dir() + '.tar.gz')
         super(VivadoAcceleratorWriter, self).write_tar(model)
+
+    def modify_project_tcl(self, model):
+        oldfile = open('{}/project.tcl'.format(model.config.get_output_dir()), 'r')
+        newfile = open('{}/project.temp.tcl'.format(model.config.get_output_dir()), 'w')
+        for l in oldfile.readlines():
+            if "backend \"vivado\"" in l:
+                l = l.replace("vivado", "vivadoaccelerator")
+            newfile.write(l)
+
+        oldfile.close()
+        newfile.close()
+        os.rename('{}/project.temp.tcl'.format(model.config.get_output_dir()), '{}/project.tcl'.format(model.config.get_output_dir()))
+
         
     def write_hls(self, model):
         """
@@ -341,6 +360,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
         self.vivado_accelerator_config = VivadoAcceleratorConfig(model.config, model.get_input_variables(),
                                                                  model.get_output_variables())
         super(VivadoAcceleratorWriter, self).write_hls(model)
+        self.modify_project_tcl(model)
         self.write_board_script(model)
         self.write_driver(model)
         self.write_wrapper_test(model)

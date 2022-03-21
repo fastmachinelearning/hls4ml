@@ -62,13 +62,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
         return self._writer_flow
 
     def _register_flows(self):
-        parent_flows = get_backend_flows(backend='vivado')
-        writer_passes = ['vivadoaccelerator:write_hls']
-        # vivado_writer_flow
-        # writer_flow = register_flow('vivadoaccelerator_writer', writer_passes, requires=)
-        for flow_name in parent_flows:
-            flow = get_flow(flow_name)
-            acc_flow = register_flow(flow_name.replace('vivado:', ''), flow.optimizers, requires=flow.requires, backend=self.name)
-            if ':write' in flow_name:
-                self._writer_flow = acc_flow
-        self._default_flow = 'vivadoaccelerator:ip'
+        vivado_writer = ['vivado:write']
+        vivado_accel_writer = ['vivadoaccelerator:write_hls']
+        self._writer_flow = register_flow('write', vivado_accel_writer, requires=vivado_writer, backend=self.name)
+        self._default_flow = 'vivado:ip'

@@ -15,10 +15,11 @@ set tcldir [file dirname [info script]]
 source [file join $tcldir project.tcl]
 
 proc remove_recursive_log_wave {} {
-    global myproject
-    set timestamp [clock format [clock seconds] -format {%Y%m%d%H%M%S}]
+    set tcldir [file dirname [info script]]
+    source [file join $tcldir project.tcl]
 
-    set filename ${myproject}_prj/solution1/sim/verilog/${myproject}_axi.tcl
+    set filename ${myproject}_prj/solution1/sim/verilog/${myproject}.tcl
+    set timestamp [clock format [clock seconds] -format {%Y%m%d%H%M%S}]
     set temp     $filename.new.$timestamp
     # set backup   $filename.bak.$timestamp
 
@@ -42,10 +43,11 @@ proc remove_recursive_log_wave {} {
 }
 
 proc add_vcd_instructions_tcl {} {
-    global myproject
-    set timestamp [clock format [clock seconds] -format {%Y%m%d%H%M%S}]
+    set tcldir [file dirname [info script]]
+    source [file join $tcldir project.tcl]
 
-    set filename ${myproject}_prj/solution1/sim/verilog/${myproject}_axi.tcl
+    set filename ${myproject}_prj/solution1/sim/verilog/${myproject}.tcl
+    set timestamp [clock format [clock seconds] -format {%Y%m%d%H%M%S}]
     set temp     $filename.new.$timestamp
     # set backup   $filename.bak.$timestamp
 
@@ -55,11 +57,19 @@ proc add_vcd_instructions_tcl {} {
     # line-by-line, read the original file
     while {[gets $in line] != -1} {
         if {[string equal "$line" "log_wave -r /"]} {
-            set line {current_scope [get_scopes -regex /apatb_myproject_axi_top/AESL_inst_myproject_axi/.*myproject.*]
-set scopes [get_scopes -regexp {layer(\d*)_.*data_0_V_U.*}]
-current_scope /apatb_myproject_axi_top/AESL_inst_myproject_axi
-append scopes { }
-append scopes [get_scopes -regexp {.*local_V_data_0.*}]
+        set line {source "../../../../project.tcl"
+if {[string equal "$backend" "vivadoaccelerator"]} {
+    current_scope [get_scopes -regex /apatb_${myproject}_axi_top/AESL_inst_${myproject}_axi/${myproject}_U0.*]
+    set scopes [get_scopes -regexp {layer(\d*)_.*data_0_V_U.*}]
+    append scopes { }
+    current_scope /apatb_${myproject}_axi_top/AESL_inst_${myproject}_axi
+    append scopes [get_scopes -regexp {(in_local_V_data.*_0_.*)}]
+    append scopes { }
+    append scopes [get_scopes -regexp {(out_local_V_data.*_0_.*)}]
+} else {
+    current_scope [get_scopes -regex /apatb_${myproject}_top/AESL_inst_${myproject}]
+    set scopes [get_scopes -regexp {layer(\d*)_.*data_0_V_U.*}]
+}
 open_vcd fifo_opt.vcd
 foreach scope $scopes {
     current_scope $scope
@@ -138,9 +148,9 @@ set CSIM_RESULTS "./tb_data/csim_results.log"
 set RTL_COSIM_RESULTS "./tb_data/rtl_cosim_results.log"
 
 if {$opt(reset)} {
-  open_project -reset myproject_prj
+  open_project -reset ${myproject}_prj
 } else {
-  open_project myproject_prj
+  open_project ${myproject}_prj
 }
 set_top myproject
 add_files firmware/myproject.cpp -cflags "-std=c++0x"
@@ -195,7 +205,11 @@ if {$opt(cosim)} {
 
   set time_end [clock clicks -milliseconds]
   puts "INFO:"
-  puts [read [open myproject_prj/solution1/sim/report/myproject_cosim.rpt r]]
+  if {[string equal "$backend" "vivadoaccelerator"]} {
+    puts [read [open ${myproject}_prj/solution1/sim/report/${myproject}_axi_cosim.rpt r]]
+  } else {
+    puts [read [open ${myproject}_prj/solution1/sim/report/${myproject}_cosim.rpt r]]
+  }
   report_time "C/RTL SIMULATION" $time_start $time_end
 }
 
@@ -221,7 +235,7 @@ if {$opt(export)} {
 
 if {$opt(vsynth)} {
   puts "***** VIVADO SYNTHESIS *****"
-  if {[file exist myproject_prj/solution1/syn/vhdl]} {
+  if {[file exist ${myproject}_prj/solution1/syn/vhdl]} {
     set time_start [clock clicks -milliseconds]
     exec vivado -mode batch -source vivado_synth.tcl >@ stdout
     set time_end [clock clicks -milliseconds]

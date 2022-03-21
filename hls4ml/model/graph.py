@@ -312,6 +312,7 @@ class ModelGraph(object):
         self.output_vars = {}
 
         self._top_function_lib = None
+        self.fifo_opt = False
 
         self._make_graph(layer_list)
 
