@@ -71,8 +71,6 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     static const bool store_weights_in_bram = false;
     typedef {bias_t.name} bias_t;
     typedef {scale_t.name} scale_t;
-    template<class x_T, class y_T, class res_T>
-    using product = nnet::product::{product_type}<x_T, y_T, res_T>;
 }};\n"""
 
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
