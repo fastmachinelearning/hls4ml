@@ -35,7 +35,7 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
         if profiling_fifo_depth:
 
             for k, v in model.output_vars.items():
-                if model.config.get_config_value('Backend') == 'Vivado' and (v == model.get_input_variables()[0] or v == model.get_output_variables()[0]):
+                if v == model.get_input_variables()[0] or v == model.get_output_variables()[0]:
                     continue
                 v.pragma = (v.pragma[0], profiling_fifo_depth)
 
