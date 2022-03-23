@@ -26,10 +26,13 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
         profiling_fifo_depth = getattr(self, 'profiling_fifo_depth', 100000)
 
         # check axi-stream or io-stream, if not one the 2 exit
-        if not(model.config.get_config_value('IOType') == 'io_stream'):
-            raise Exception('To use this optimization you have to set `IOType` field to `io_stream` in the HLS config')
+        if not(model.config.get_config_value('IOType') == 'io_stream' or
+               model.config.get_config_value('AcceleratorConfig')['Interface'] == 'axi_stream' or
+               model.config.get_config_value('AcceleratorConfig')['Interface'] == 'axi_master'):
+            raise Exception('To use this optimization you have to set `IOType` field to `io_stream` in the HLS config '
+                            'or `axi_stream` or `axi_master` in `AcceleratorConfig` interface field')
 
-        # initialize all the fifos to `profiling_fifo_depth` so that they will be automatically implemented in BRAMs and so they will be
+        # initialize all the fifos to 10000 so that they will be automatically implemented in BRAMs and so they will be
         # profiled
 
         if profiling_fifo_depth:
@@ -48,11 +51,17 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
             vcd.parse(vcd_file)
             data = vcd.scope.toJson()
 
-        n_elem = len(data['children'][0]['children'][0]['children'])
+        for i in range(1, len(data['children'][0]['children'][0]['children'])):
+            # wrapper fifos
+            self._populate_values(data['children'][0]['children'][0]['children'][i]['name'],
+                                  data['children'][0]['children'][0]['children'][i]['children'][0]['data'],
+                                  data['children'][0]['children'][0]['children'][i]['children'][1]['data'])
+
+        n_elem = len(data['children'][0]['children'][0]['children'][0]['children'])
         for i in range(n_elem):
-            name = data['children'][0]['children'][0]['children'][i]['name']
-            data_p = data['children'][0]['children'][0]['children'][i]['children'][0]['data']
-            depth = data['children'][0]['children'][0]['children'][i]['children'][1]['data']
+            name   = data['children'][0]['children'][0]['children'][0]['children'][i]['name']
+            data_p = data['children'][0]['children'][0]['children'][0]['children'][i]['children'][0]['data']
+            depth  = data['children'][0]['children'][0]['children'][0]['children'][i]['children'][1]['data']
             self._populate_values(name, data_p, depth)
 
         maxs = [{'name': i['name'], 'max': i['max'], 'depth': i['depth']} for i in self.values]
@@ -67,6 +76,14 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
             if len(filtered_max) > 1:
                 print('WARNING! Check names of FIFOs')
             v.pragma = (v.pragma[0], filtered_max[0] + 1)
+
+        inp = model.get_input_variables()[0]
+        out = model.get_output_variables()[0]
+        for x in maxs:
+            if 'in_local' in x['name']:
+                inp.pragma = (inp.pragma[0], x['max'] + 1)
+            elif 'out_local' in x['name']:
+                out.pragma = (out.pragma[0], x['max'] + 1)
 
         model.write()
         print('[hls4ml] - FIFO optimization completed')

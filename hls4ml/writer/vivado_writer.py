@@ -107,9 +107,12 @@ class VivadoWriter(Writer):
         f.write('set myproject "{}"\n'.format(model.config.get_project_name()))
         f.write('variable backend\n')
         f.write('set backend "vivado"\n')
-        if model.fifo_opt:
-            f.write('variable fifo_opt\n')
-            f.write('set fifo_opt true\n')
+        try:
+            if model.fifo_opt:
+                f.write('variable fifo_opt\n')
+                f.write('set fifo_opt true\n')
+        except Exception:
+            pass
         f.close()
 
         f = open(os.path.join(filedir,'../templates/vivado/firmware/myproject.cpp'),'r')

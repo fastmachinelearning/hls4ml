@@ -66,3 +66,9 @@ class VivadoAcceleratorBackend(VivadoBackend):
         vivado_accel_writer = ['vivadoaccelerator:write_hls']
         self._writer_flow = register_flow('write', vivado_accel_writer, requires=vivado_writer, backend=self.name)
         self._default_flow = 'vivado:ip'
+
+        fifo_depth_opt_passes = [
+            'vivadoaccelerator:fifo_depth_optimization'
+        ]
+
+        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=['vivado:ip'], backend=self.name)

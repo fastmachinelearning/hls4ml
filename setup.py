@@ -33,7 +33,8 @@ setup(name='hls4ml',
           'h5py',
           'onnx>=1.4.0',
           'calmjs.parse',
-          'tabulate'
+          'tabulate',
+          'pydigitalwavetools==1.1'
       ],
       extras_require={
         'profiling': [

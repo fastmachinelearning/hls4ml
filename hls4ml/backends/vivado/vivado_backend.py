@@ -63,11 +63,17 @@ class VivadoBackend(FPGABackend):
         writer_flow_requirements = ['optimize', vivado_types_flow, template_flow]
         self._writer_flow = register_flow('write', writer_passes, requires=writer_flow_requirements, backend=self.name)
 
+        fifo_depth_opt_passes = [
+            'vivado:fifo_depth_optimization'
+        ]
+
+        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=['vivado:ip'], backend=self.name)
+
         all_passes = get_backend_passes(self.name)
 
         extras = [
             # Ideally this should be empty
-            opt_pass for opt_pass in all_passes if opt_pass not in initializers + streaming_passes + quantization_passes + optimization_passes + vivado_types + templates + writer_passes
+            opt_pass for opt_pass in all_passes if opt_pass not in initializers + streaming_passes + quantization_passes + optimization_passes + vivado_types + templates + writer_passes + fifo_depth_opt_passes
         ]
 
         if len(extras) > 0:
