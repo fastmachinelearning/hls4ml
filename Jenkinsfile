@@ -16,7 +16,6 @@ pipeline {
           sh '''#!/bin/bash --login
               conda activate hls4ml-py36
               pip install tensorflow
-              pip install git+git://github.com/google/qkeras.git@v0.8.0#egg=qkeras
               pip install -U ../ --user
               ./convert-keras-models.sh -x -f keras-models.txt
               pip uninstall hls4ml -y'''
