@@ -18,6 +18,9 @@ http://www.h5py.org
 
 https://pypi.python.org/pypi/PyYAML 
 
+**QKeras**\ : for working with quantized models 
+
+https://github.com/google/qkeras
 
 **PyTorch**\ : for reading in Torch models
 
