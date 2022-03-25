@@ -9,6 +9,7 @@ array set opt {
   validation 1
   export     0
   vsynth     0
+  fifo_opt   0
 }
 
 set tcldir [file dirname [info script]]
@@ -192,7 +193,7 @@ if {$opt(cosim)} {
 
   cosim_design -trace_level all -setup
 
-  if {$fifo_opt} {
+  if {$opt(fifo_opt)} {
     puts "\[hls4ml\] - FIFO optimization started"
     add_vcd_instructions_tcl
   }
