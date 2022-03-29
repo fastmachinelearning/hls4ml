@@ -35,6 +35,7 @@ setup(name='hls4ml',
           'calmjs.parse',
           'tabulate',
           'pydigitalwavetools==1.1'
+          'qkeras',
       ],
       extras_require={
         'profiling': [

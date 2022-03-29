@@ -1,24 +1,28 @@
 import os
 
 from hls4ml.backends import VivadoBackend
-from hls4ml.model.flow import get_backend_flows, get_flow, register_flow
+from hls4ml.model.flow import register_flow
+from hls4ml.report import parse_vivado_report
 
 class VivadoAcceleratorBackend(VivadoBackend):
     def __init__(self):
         super(VivadoBackend, self).__init__(name='VivadoAccelerator')
         self._register_flows()
 
-    def make_bitfile(model):
-        curr_dir = os.getcwd()
-        os.chdir(model.config.get_output_dir())
-        try:
-            os.system('vivado -mode batch -source design.tcl')
-        except:
-            print("Something went wrong, check the Vivado logs")
-        # These should work but Vivado seems to return before the files are written...
-        # copyfile('{}_vivado_accelerator/project_1.runs/impl_1/design_1_wrapper.bit'.format(model.config.get_project_name()), './{}.bit'.format(model.config.get_project_name()))
-        # copyfile('{}_vivado_accelerator/project_1.srcs/sources_1/bd/design_1/hw_handoff/design_1.hwh'.format(model.config.get_project_name()), './{}.hwh'.format(model.config.get_project_name()))
-        os.chdir(curr_dir)
+    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False, bitfile=False):
+        # run the VivadoBackend build
+        report = super().build(model, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
+        # now make a bitfile
+        if bitfile:
+            curr_dir = os.getcwd()
+            os.chdir(model.config.get_output_dir())
+            try:
+                os.system('vivado -mode batch -source design.tcl')
+            except:
+                print("Something went wrong, check the Vivado logs")
+            os.chdir(curr_dir)
+
+        return parse_vivado_report(model.config.get_output_dir())
 
     def create_initial_config(self, board='pynq-z2', part=None, clock_period=5, io_type='io_parallel', interface='axi_stream',
                               driver='python', input_type='float', output_type='float'):
@@ -72,3 +76,4 @@ class VivadoAcceleratorBackend(VivadoBackend):
         ]
 
         register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=['vivado:ip'], backend=self.name)
+
