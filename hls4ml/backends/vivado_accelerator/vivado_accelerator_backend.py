@@ -9,9 +9,9 @@ class VivadoAcceleratorBackend(VivadoBackend):
         super(VivadoBackend, self).__init__(name='VivadoAccelerator')
         self._register_flows()
 
-    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False, bitfile=False):
+    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False, fifo_opt=False, bitfile=False):
         # run the VivadoBackend build
-        report = super().build(model, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
+        report = super().build(model, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth, fifo_opt=fifo_opt)
         # now make a bitfile
         if bitfile:
             curr_dir = os.getcwd()

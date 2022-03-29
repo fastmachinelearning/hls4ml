@@ -55,7 +55,6 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
         return True
 
     def transform(self, model):
-        model.fifo_opt = True
         # use `large_fifo_depth = 0` to keep the default fifo depth
         profiling_fifo_depth = getattr(self, 'profiling_fifo_depth', 100_000)
 
