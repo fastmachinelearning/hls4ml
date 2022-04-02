@@ -49,8 +49,7 @@ void resize_nearest(
     constexpr unsigned ratio_width = CONFIG_T::new_width / CONFIG_T::width;
     constexpr unsigned ii = ratio_height * ratio_width;
     
-    std::cout<<"test"<<std::endl;
-    
+        
     for (unsigned h = 0; h < CONFIG_T::height; h++) {
     #pragma HLS PIPELINE
     
