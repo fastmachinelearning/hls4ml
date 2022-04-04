@@ -112,16 +112,19 @@ class FPGABackend(Backend):
         else:
             return before
 
-    def set_closest_reuse_factor(self, layer):
+    def set_closest_reuse_factor(self, layer, attribute='reuse_factor'):
+        assert attribute is not None, 'Reuse factor attribute cannot be None'
+
         valid_rf = self.get_valid_reuse_factors(layer)
-        chosen_rf = layer.get_attr('reuse_factor')
+        chosen_rf = layer.get_attr(attribute)
         if chosen_rf not in valid_rf:
             closest_rf = self.get_closest_reuse_factor(valid_rf, chosen_rf)
             print('WARNING: Invalid ReuseFactor={} in layer "{}". Using ReuseFactor={} instead. Valid ReuseFactor(s): {}.'
                 .format(chosen_rf, layer.name, closest_rf, ','.join(map(str, valid_rf))))
-            layer.set_attr('reuse_factor', closest_rf)
+            layer.set_attr(attribute, closest_rf)
 
     def set_target_reuse_factor(self, layer):
+        # TODO update target reuse factor for the RNN layers
         targ_cycles = layer.get_attr('target_cycles')
 
         shuffle_cycles = 6 # Number of clock cycles to move data around
