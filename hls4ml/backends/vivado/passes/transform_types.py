@@ -1,14 +1,17 @@
 
+from numpy import isin
 from hls4ml.model.optimizer import GlobalOptimizerPass
 from hls4ml.backends.fpga.fpga_types import (
     APTypeConverter, HLSTypeConverter, StaticWeightVariableConverter,
-    VivadoArrayVariableConverter, VivadoStreamVariableConverter)
+    VivadoArrayVariableConverter, VivadoInplaceArrayVariableConverter, VivadoStreamVariableConverter)
+from hls4ml.model.types import InplaceTensorVariable
 
 
 class TransformTypes(GlobalOptimizerPass):
     def __init__(self):
         self.type_converter = HLSTypeConverter(precision_converter=APTypeConverter())
         self.array_var_converter = VivadoArrayVariableConverter(type_converter=self.type_converter)
+        self.inplace_array_var_converter = VivadoInplaceArrayVariableConverter(type_converter=self.type_converter)
         self.stream_var_converter = VivadoStreamVariableConverter(type_converter=self.type_converter)
         self.weight_var_converter = StaticWeightVariableConverter(type_converter=self.type_converter)
 
@@ -23,6 +26,8 @@ class TransformTypes(GlobalOptimizerPass):
             elif io_type == 'io_parallel':
                 if node.name in node.model.inputs:
                     new_var = self.array_var_converter.convert(var, pragma='reshape')
+                elif isinstance(var, InplaceTensorVariable):
+                    new_var = self.inplace_array_var_converter.convert(var, pragma='')
                 else:
                     new_var = self.array_var_converter.convert(var, pragma='partition')
             else:

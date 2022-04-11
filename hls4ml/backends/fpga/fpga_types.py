@@ -190,6 +190,14 @@ class QuartusArrayVariableDefinition(VariableDefinition):
     def definition_cpp(self, name_suffix='', as_reference=False):
         return '{type} {name}{suffix}[{shape}] {pragma}'.format(type=self.type.name, name=self.cppname, suffix=name_suffix, shape=self.size_cpp(), pragma=self.pragma)
 
+class VivadoInplaceArrayVariableDefinition(VariableDefinition):
+    def definition_cpp(self):
+        return f'auto& {self.cppname} = {self.input_name}'
+
+class QuartusInplaceArrayVariableDefinition(VariableDefinition):
+    def definition_cpp(self):
+        return f'auto& {self.cppname} = {self.input_name}'
+
 class ArrayVariableConverter(object):
     def __init__(self, type_converter, prefix, definition_cls):
         self.type_converter = type_converter
@@ -213,6 +221,14 @@ class VivadoArrayVariableConverter(ArrayVariableConverter):
 class QuartusArrayVariableConverter(ArrayVariableConverter):
     def __init__(self, type_converter):
         super().__init__(type_converter=type_converter, prefix='Quartus', definition_cls=QuartusArrayVariableDefinition)
+
+class VivadoInplaceArrayVariableConverter(ArrayVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Vivado', definition_cls=VivadoInplaceArrayVariableDefinition)
+
+class QuartusInplaceArrayVariableConverter(ArrayVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Quartus', definition_cls=QuartusInplaceArrayVariableDefinition)
 
 #endregion
 
