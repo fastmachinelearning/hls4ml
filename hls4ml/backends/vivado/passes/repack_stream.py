@@ -80,6 +80,7 @@ def register_repack_stream(backend):
     # Register the optimization passes
     backend.register_pass('remove_final_reshape', RemoveFinalReshape)
     backend.register_pass('reshape_stream', ReshapeStream)
+    backend.register_pass('eliminate_flatten_stream', EliminateFlattenStream)
     backend.register_pass('broadcast_stream', BroadcastStream)
     
     # Register template passes
@@ -105,6 +106,19 @@ class ReshapeStream(OptimizerPass):
         repack_layer = model.make_node(Repack, 'repack_' + node.name, attrs, node.inputs.copy())
         model.replace_node(node, repack_layer)
 
+        return True
+
+class EliminateFlattenStream(OptimizerPass):
+    ''' Remove Flatten layer in io_stream '''
+    def match(self, node):
+        # optimizer pass for a flatten layer (1 output dimension)
+        return isinstance(node, Reshape) and len(node.get_output_variable().shape) == 1
+
+    def transform(self, model, node):
+        if model.config.get_config_value('IOType') != 'io_stream':
+            return False
+
+        model.remove_node(node)
         return True
 
 class BroadcastStream(OptimizerPass):

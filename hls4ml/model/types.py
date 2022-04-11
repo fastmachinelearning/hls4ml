@@ -207,22 +207,6 @@ class TensorVariable(Variable):
         #TODO get rid of size_cpp() (and dim_names)
         return '*'.join([str(k) for k in self.dim_names])
 
-class InplaceVariable(Variable):
-    def __init__(self, shape, dim_names, proxy):
-        self.shape = shape
-        self.dim_names = dim_names
-        self.type = proxy.type
-        self.name = proxy.name
-        self.size = proxy.size
-
-    def get_shape(self):
-        return zip(self.dim_names, self.shape)
-
-    def size_cpp(self):
-        return '*'.join([str(k) for k in self.dim_names])
-
-    def definition_cpp(self, name_suffix='', as_reference=False):
-        return None
 
 class WeightVariable(Variable):
     def __init__(self, var_name, type_name, precision, data, quantizer=None, **kwargs):

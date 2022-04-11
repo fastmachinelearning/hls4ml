@@ -2,7 +2,7 @@ import numpy as np
 import six
 
 from hls4ml.model.types import NamedType
-from hls4ml.model.types import TensorVariable, WeightVariable, CompressedWeightVariable, ExponentWeightVariable, InplaceVariable
+from hls4ml.model.types import TensorVariable, WeightVariable, CompressedWeightVariable, ExponentWeightVariable
 from hls4ml.model.types import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType
 from hls4ml.model.types import find_minimum_width
 
@@ -271,11 +271,7 @@ class Reshape(Layer):
             shape = shape[1:]
         dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
 
-        out_name = self.outputs[0]
-        proxy = self.get_input_variable()
-        out = InplaceVariable(shape, dims, proxy)
-
-        self.set_attr(out_name, out)
+        self.add_output_variable(shape, dims)
 
 class Dense(Layer):
     _expected_attributes = [

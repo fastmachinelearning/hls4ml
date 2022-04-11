@@ -27,6 +27,7 @@ class VivadoBackend(FPGABackend):
         streaming_passes = [
             'vivado:remove_final_reshape',
             'vivado:reshape_stream',
+            'vivado:eliminate_flatten_stream',
             'vivado:clone_output',
             'vivado:insert_zero_padding_before_conv1d',
             'vivado:insert_zero_padding_before_conv2d',
