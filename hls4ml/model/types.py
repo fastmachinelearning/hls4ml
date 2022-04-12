@@ -209,10 +209,10 @@ class TensorVariable(Variable):
 
 class InplaceTensorVariable(TensorVariable):
     '''A TensorVariable that is just a link to another'''
-    def __init__(self, tv, input_name):
-        '''Always created with a passed in TesorVariable tv and the input_name it should link to'''
+    def __init__(self, tv, input_var):
+        '''Always created with a passed in TesorVariable tv and the input_var it should link to'''
         self.__dict__.update(tv.__dict__)
-        self.input_name = input_name
+        self.input_var = input_var
 
 class WeightVariable(Variable):
     def __init__(self, var_name, type_name, precision, data, quantizer=None, **kwargs):

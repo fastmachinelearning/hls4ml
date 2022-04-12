@@ -192,11 +192,11 @@ class QuartusArrayVariableDefinition(VariableDefinition):
 
 class VivadoInplaceArrayVariableDefinition(VariableDefinition):
     def definition_cpp(self):
-        return f'auto& {self.cppname} = {self.input_name}'
+        return f'auto& {self.cppname} = {self.input_var.cppname}'
 
 class QuartusInplaceArrayVariableDefinition(VariableDefinition):
     def definition_cpp(self):
-        return f'auto& {self.cppname} = {self.input_name}'
+        return f'auto& {self.cppname} = {self.input_var.cppname}'
 
 class ArrayVariableConverter(object):
     def __init__(self, type_converter, prefix, definition_cls):
@@ -274,6 +274,10 @@ class VivadoStreamVariableDefinition(VariableDefinition):
         else: # Declaration
             return 'hls::stream<{type}> {name}{suffix}("{name}")'.format(type=self.type.name, name=self.cppname, suffix=name_suffix)
 
+class VivadoInplaceStreamVariableDefinition(VariableDefinition):
+    def definition_cpp(self):
+        return f'auto& {self.cppname} = {self.input_var.cppname}'
+
 class StreamVariableConverter(object):
     def __init__(self, type_converter, prefix, definition_cls):
         self.type_converter = type_converter
@@ -292,9 +296,24 @@ class StreamVariableConverter(object):
         tensor_var.__class__ = type(self.prefix + 'StreamVariable', (type(tensor_var), self.definition_cls), {})
         return tensor_var
 
+class InplaceStreamVariableConverter(StreamVariableConverter):
+    def convert(self, tensor_var, n_pack=1, depth=0):
+        if isinstance(tensor_var, self.definition_cls): # Already converted
+            return tensor_var
+
+        tensor_var.pragma = None
+        tensor_var.type = self.type_converter.convert(PackedType(tensor_var.type.name, tensor_var.type.precision, tensor_var.input_var.shape[-1], n_pack))
+
+        tensor_var.__class__ = type(self.prefix + 'StreamVariable', (type(tensor_var), self.definition_cls), {})
+        return tensor_var
+
 class VivadoStreamVariableConverter(StreamVariableConverter):
     def __init__(self, type_converter):
         super().__init__(type_converter=type_converter, prefix='Vivado', definition_cls=VivadoStreamVariableDefinition)
+
+class VivadoInplaceStreamVariableConverter(InplaceStreamVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Vivado', definition_cls=VivadoInplaceStreamVariableDefinition)
 
 #endregion
 
