@@ -107,7 +107,6 @@ class ReshapeStream(OptimizerPass):
 
         return True
 
-
 class BroadcastStream(OptimizerPass):
     def match(self, node):
         if isinstance(node, Merge):

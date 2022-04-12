@@ -210,7 +210,10 @@ class TensorVariable(Variable):
 class InplaceTensorVariable(TensorVariable):
     '''A TensorVariable that is just a link to another'''
     def __init__(self, tv, input_var):
-        '''Always created with a passed in TesorVariable tv and the input_var it should link to'''
+        '''
+        Always created with a passed in TensorVariable tv
+        and the input_var variable it should link to.
+        '''
         self.__dict__.update(tv.__dict__)
         self.input_var = input_var
 
