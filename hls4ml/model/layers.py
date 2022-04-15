@@ -821,6 +821,28 @@ class Transpose(Layer):
             self.set_attr('width', inp.shape[2])
         self.add_output_variable(shape, dims, precision=inp.type.precision)
 
+class Embedding(Layer):
+    _expected_attributes = [
+        Attribute('n_in'),
+        Attribute('n_out'),
+        Attribute('vocab_size'),
+
+        WeightAttribute('embeddings'),
+        TypeAttribute('embeddings'),
+    ]
+
+    def initialize(self):
+        shape = self.get_input_variable().shape[:]
+        shape += [self.attributes['n_out']]
+        if len(shape) > 1:
+            dims = ['N_LAYER_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+        else:
+            dims = ['N_LAYER_{}'.format(self.index)]
+        self.add_output_variable(shape, dims)
+
+        data = self.model.get_weights_data(self.name, 'embeddings')
+        self.add_weights_variable(name='embeddings', var_name='e{index}', data=data)
+
 class SimpleRNN(Layer):
     _expected_attributes = [
         Attribute('n_out'),
@@ -1136,6 +1158,7 @@ layer_map = {
     'Resize'                 : Resize,
     'UpSampling2D'           : Resize,
     'Transpose'              : Transpose,
+    'Embedding'              : Embedding,
     'SimpleRNN'              : SimpleRNN,
     'LSTM'                   : LSTM,
     'GRU'                    : GRU,
