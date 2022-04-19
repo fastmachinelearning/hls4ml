@@ -2,10 +2,12 @@ import os
 from hls4ml.model.attributes import Attribute
 import numpy as np
 from contextlib import contextmanager
-
+from hls4ml.model.types import NamedType, IntegerPrecisionType, FixedPrecisionType
+from hls4ml.model.layers import Layer, Dense, Activation, Softmax, Conv1D, Conv2D, Embedding, GRU
+from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
+from hls4ml.model.flow import register_flow
 from hls4ml.backends import FPGABackend
 from hls4ml.model.types import NamedType, IntegerPrecisionType, FixedPrecisionType
-from hls4ml.model.layers import Embedding, Layer, Dense, Activation, Softmax, GRU
 from hls4ml.model.flow import register_flow
 from hls4ml.report import parse_quartus_report
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
@@ -43,7 +45,7 @@ class QuartusBackend(FPGABackend):
 
         quartus_types = [
             'quartus:transform_types',
-            'quartus:apply_resource_strategy'
+            'quartus:apply_resource_strategy',
         ]
         quartus_types_flow = register_flow('specific_types', quartus_types, requires=[init_flow], backend=self.name)
 
@@ -217,3 +219,37 @@ class QuartusBackend(FPGABackend):
             layer.set_attr('strategy', 'resource')
 
         layer.set_attr('index_t', index_t)
+
+    @layer_optimizer(Conv1D)
+    def init_conv1d(self, layer):
+        # This can happen if we assign weights of Dense layer to 1x1 Conv1D
+        if len(layer.weights['weight'].data.shape) == 2:
+            layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0,1))
+        
+        # Dense matrix multiply properties
+        layer.set_attr('rfpad', 0)
+        layer.set_attr('bfpad', 0)
+
+        # Reuse and parallelization factors
+        layer.set_attr('strategy', 'resource')
+        n_in, n_out = self.get_layer_mult_size(layer)
+        self.set_target_reuse_factor(layer)
+        self.set_closest_reuse_factor(layer, n_in, n_out)
+        layer.set_attr('parallelisation', layer.model.config.get_layer_config_value(layer, 'ParallelisationFactor', 1))
+
+    @layer_optimizer(Conv2D)
+    def init_conv2d(self, layer):
+        # This can happen if we assign weights of Dense layer to 1x1 Conv2D
+        if len(layer.weights['weight'].data.shape) == 2: 
+            layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0,1))
+
+        # Dense matrix multiply properties
+        layer.set_attr('rfpad', 0)
+        layer.set_attr('bfpad', 0)
+        
+        # Reuse and parallelization factors
+        layer.set_attr('strategy', 'resource')
+        n_in, n_out = self.get_layer_mult_size(layer)
+        self.set_target_reuse_factor(layer)
+        self.set_closest_reuse_factor(layer, n_in, n_out)
+        layer.set_attr('parallelisation', layer.model.config.get_layer_config_value(layer, 'ParallelisationFactor', 1))
