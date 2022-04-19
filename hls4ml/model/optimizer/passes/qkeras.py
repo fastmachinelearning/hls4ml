@@ -1,5 +1,5 @@
 from hls4ml.model.optimizer import OptimizerPass, ConfigurableOptimizerPass, register_pass
-from hls4ml.model.layers import BatchNormalization, Dense, Conv1D, Conv2D, register_layer, layer_map
+from hls4ml.model.layers import ApplyAlpha, register_layer
 from hls4ml.model.types import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType, NamedType
 import tensorflow as tf
 import numpy as np
@@ -78,39 +78,12 @@ class OutputRoundingSaturationMode(ConfigurableOptimizerPass):
         pstr = pstr.replace('>', mode)
         return pstr
 
-class ApplyAlpha(BatchNormalization):
-    ''' A custom layer to scale the output of a QDense layer which used 'alpha != 1'
-        Inference computation uses BatchNormalization methods'''
-
-    def initialize(self):
-        inp = self.get_input_variable()
-        shape = inp.shape
-        dims = inp.dim_names
-        self.add_output_variable(shape, dims)
-
-        scale = self.get_attr('scale_data')
-        scale_quantizer = self.get_attr('scale_quantizer')
-        bias = self.get_attr('bias_data')
-        bias_quantizer = self.get_attr('bias_quantizer')
-        
-        self.add_weights(scale, quantizer=scale_quantizer)
-        self.add_bias(bias, quantizer=bias_quantizer)
-
-    def add_weights(self, scale, quantizer=None):
-        self.add_weights_variable(name='scale', var_name='s{index}', data=scale, quantizer=quantizer)
-
-    def add_bias(self, bias, quantizer=None):
-        self.add_weights_variable(name='bias', var_name='b{index}', data=bias, quantizer=quantizer)
-
 def register_qkeras():
-    # Register the layer types to the layer map
-    register_layer('ApplyAlpha', ApplyAlpha)
-
     # Register the optimization passes
     register_pass('output_rounding_saturation_mode', OutputRoundingSaturationMode)
     register_pass('qkeras_factorize_alpha', QKerasFactorizeAlpha)
     register_pass('extract_ternary_threshold', ExtractTernaryThreshold)
-    register_pass('fuse_consecutive_batch_normalization', FuseConsecutiveBatchNormalization)
+    # register_pass('fuse_consecutive_batch_normalization', FuseConsecutiveBatchNormalization)
 
 class QKerasFactorizeAlpha(OptimizerPass):
     '''OptimizerPass for extracting alpha "scale" from QKeras quantized layer.
@@ -201,33 +174,36 @@ class QKerasFactorizeAlpha(OptimizerPass):
         model.insert_node(alpha_layer)
         return True
 
-class FuseConsecutiveBatchNormalization(OptimizerPass):
-    '''OptimizerPass to merge consecutive BatchNormalization layers.
-       These may exist in a model after QKerasFactorizeAlpha layer.
-       Scale and Bias of each layer are combined into scale and bias of a single layer.
-    '''
+# # This has been replaced with a more generic one, but I am not sure if it
+# # does the appropriate quantizations for keras. If needed, we can modfiy the other one.
 
-    def match(self, node):
-        return isinstance(node, BatchNormalization) and \
-               isinstance(node.get_input_node(), BatchNormalization)
+# class FuseConsecutiveBatchNormalization(OptimizerPass):
+#     '''OptimizerPass to merge consecutive BatchNormalization layers.
+#        These may exist in a model after QKerasFactorizeAlpha layer.
+#        Scale and Bias of each layer are combined into scale and bias of a single layer.
+#     '''
 
-    def transform(self, model, node):
-        bn0 = node.get_input_node()
-        bn1 = node
+#     def match(self, node):
+#         return isinstance(node, BatchNormalization) and \
+#                isinstance(node.get_input_node(), BatchNormalization)
 
-        s0 = bn0.weights['scale'].data
-        b0 = bn0.weights['bias'].data
-        s1 = bn1.weights['scale'].data
-        b1 = bn1.weights['bias'].data
+#     def transform(self, model, node):
+#         bn0 = node.get_input_node()
+#         bn1 = node
 
-        s2 = s0 * s1
-        b2 = s1 * b0 + b1
+#         s0 = bn0.weights['scale'].data
+#         b0 = bn0.weights['bias'].data
+#         s1 = bn1.weights['scale'].data
+#         b1 = bn1.weights['bias'].data
 
-        bn0.weights['scale'].data = s2
-        bn0.weights['bias'].data = b2
+#         s2 = s0 * s1
+#         b2 = s1 * b0 + b1
 
-        model.remove_node(node, rewire=True)
-        return True
+#         bn0.weights['scale'].data = s2
+#         bn0.weights['bias'].data = b2
+
+#         model.remove_node(node, rewire=True)
+#         return True
 
 class ExtractTernaryThreshold(OptimizerPass):
     ''' The input value (threshold) at which the output of a a ternary activation

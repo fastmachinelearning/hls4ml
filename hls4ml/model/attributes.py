@@ -1,9 +1,10 @@
 from collections.abc import MutableMapping
+from numbers import Integral
 
 from hls4ml.model.types import NamedType, TensorVariable, WeightVariable
 
 class Attribute(object):
-    def __init__(self, name, value_type=int, default=None, configurable=False):
+    def __init__(self, name, value_type=Integral, default=None, configurable=False):
         self.name = name
         self.value_type = value_type
         self.default = default

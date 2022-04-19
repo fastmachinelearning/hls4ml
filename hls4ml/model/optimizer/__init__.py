@@ -1,3 +1,4 @@
+from email.mime import base
 from hls4ml.model.flow.flow import register_flow
 import os
 
@@ -11,12 +12,36 @@ optimizers = extract_optimizers_from_path(opt_path, module_path)
 for opt_name, opt in optimizers.items():
     register_pass(opt_name, opt)
 
+
+base_convert = [
+    'fuse_bias_add', 
+    'remove_useless_transpose',
+    'reshape_constant',
+    'quant_constant_parameters',
+    'quant_to_activation',
+    'fuse_quant_with_constant',
+    'const_quant_to_const_alpha',
+    'batch_norm_onnx_constant_parameters',
+    'constant_batch_norm_fusion',
+    'merge_two_constants',
+    'scale_down_add',
+    'scale_down_mat_mul',
+    'scale_down_weight_conv',
+    'scale_down_bias_conv',
+    'scale_down_conv',
+    'merge_to_batch_normalization',
+    'merge_to_batch_normalization_div',
+
+    ]
+
 try:
     import qkeras
-    register_flow('convert', ['fuse_bias_add', 'remove_useless_transpose', 'output_rounding_saturation_mode', 'qkeras_factorize_alpha', 'extract_ternary_threshold', 'fuse_consecutive_batch_normalization']) # TODO Maybe not all QKeras optmizers belong here?
+    # TODO Maybe not all QKeras optmizers belong here?
+    register_flow('convert', base_convert 
+        + ['output_rounding_saturation_mode', 'qkeras_factorize_alpha', 'extract_ternary_threshold', 'fuse_consecutive_batch_normalization']) 
     register_flow('optimize', ['eliminate_linear_activation', 'fuse_consecutive_batch_normalization', 'fuse_batch_normalization', 'replace_multidimensional_dense_with_conv'], requires=['convert'])
 except:
-    register_flow('convert', ['fuse_bias_add', 'remove_useless_transpose'])
+    register_flow('convert', base_convert)
     register_flow('optimize', ['eliminate_linear_activation', 'fuse_batch_normalization', 'replace_multidimensional_dense_with_conv'], requires=['convert'])
 
 del opt_path

@@ -1,5 +1,6 @@
 import numpy as np
 import six
+import typing
 
 from hls4ml.model.types import NamedType
 from hls4ml.model.types import TensorVariable, WeightVariable, CompressedWeightVariable, ExponentWeightVariable
@@ -13,7 +14,7 @@ from hls4ml.model.attributes import AttributeDict, AttributeMapping
 class classproperty(object):
     def __init__(self, func):
         self.func = func
-    
+
     def __get__(self, obj, owner):
         return self.func(owner)
 
@@ -93,7 +94,7 @@ class Layer(object):
         all_attributes = {}
         for attr in self.expected_attributes:
             all_attributes[attr.name] = attr
-        
+
         # Validate existing attributes
         for attr_name, attr_value in self.attributes.items():
             exp_attr = all_attributes.pop(attr_name, None)
@@ -103,7 +104,7 @@ class Layer(object):
                         .format(attr_name, self.name, self.class_name, exp_attr.value_type, type(attr_value), attr_value))
             else:
                 pass # TODO layer contains attribute that is not expected. we can log this for debugging
-        
+
         # If any expected attributes remain, try adding their default values
         for attr_name, attr in all_attributes.items():
             if attr.default is not None:
@@ -264,14 +265,75 @@ class Input(Layer):
         precision = self.attributes.get('precision', None)
         self.add_output_variable(shape, dims, var_name=self.name, type_name=type_name, precision=precision)
 
-class Reshape(Layer):
+class Constant(Layer):
+    _expected_attributes = [
+        Attribute('value', value_type=np.ndarray),
+    ]
+
     def initialize(self):
-        shape = self.attributes['target_shape']
-        if shape[0] is None:
-            shape = shape[1:]
-        dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+        value = self.attributes['value']
+        # the weight variable seems to not be used, so no need to make it.
+        # self.add_weights_variable(name='value', data=value, precision=self.get_attr("quant_precision"), quantizer=self.get_attr("quantizer"))
+        self.value = value  # note, this is unquantized; Only here for easier access
+        shape = value.shape
+        if not shape:
+            shape = (1,)
+            self.value = np.array([self.value])
+        dims = [f'{self.name}_{i}' for i in range(len(shape))]
+        self.add_output_variable(shape, dims, var_name=self.name, precision=self.get_attr("precision"))
+
+class Quant(Layer):  # The QONNX quantization layer
+    """
+    This is a QONNX quantization layer. Optimizations should convert it
+    before HLS is produced.
+    """
+    _expected_attributes = [
+        Attribute('narrow', value_type=bool),
+        Attribute('rounding_mode', value_type=str),
+        Attribute('signed', value_type=bool)
+    ]
+
+    def initialize(self):
+        inp = self.get_input_variable(self.inputs[0])
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_output_variable(shape, dims)
+
+class Reshape(Layer):
+    _expected_attributes = [
+        Attribute('target_shape', value_type=typing.Sequence),
+    ]
+    def initialize(self):
+        input_shape =  self.get_input_variable(self.inputs[0]).shape
+        target_shape = self.get_attr('target_shape')
+        if target_shape is None:
+            # need to get it from the input
+
+            shape_node = self.get_input_node(self.inputs[1])
+            target_shape = shape_node.value
+
+        # remove Nones or leading ones
+        if target_shape[0] is None or (len(target_shape) > 1 and target_shape[0] == 1):
+            # the latter case is for QONNX
+            target_shape = target_shape[1:]
+        # take care of -1 shapes
+        shape = self.infer_shape(input_shape, target_shape)
+
+        #update the target shape with chnges from above
+        self.set_attr('target_shape', shape)
+
+        dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(len(shape))]
 
         self.add_output_variable(shape, dims)
+
+    @staticmethod
+    def infer_shape(input_shape, target_shape):
+        """This infers -1 shapes"""
+        if -1 in target_shape:  #Need to infer shape for -1
+            dummy_x = np.ones(input_shape)
+            dummy_y = np.reshape(dummy_x, target_shape)
+            target_shape = list(dummy_y.shape)
+        return target_shape
 
 class Dense(Layer):
     _expected_attributes = [
@@ -295,6 +357,25 @@ class Dense(Layer):
         self.add_output_variable(shape, dims)
         self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=self.model.config.get_compression(self))
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
+class Conv(Layer):
+    """
+    This is for the ONNX Conv node. Currently, it is only supported as an intermediate
+    form that gets converted to an explicit ConvXD.
+
+    Note:  these are always channels-last.
+    """
+    def initialize(self):
+        # use negative indexing because it is not clear if batch dimension is always stripped
+        if self.attributes['n_dim'] == 1:
+            # this is 1D convolution
+            shape = [self.attributes['n_out'], self.attributes['n_filt']]
+            dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+        else:
+            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
+            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+
+        self.add_output_variable(shape, dims)
 
 class Conv1D(Layer):
     _expected_attributes = [
@@ -342,7 +423,7 @@ class SeparableConv1D(Layer):
 
         Attribute('pad_left'),
         Attribute('pad_right'),
-        
+
         WeightAttribute('depthwise'),
         WeightAttribute('pointwise'),
         WeightAttribute('bias'),
@@ -360,13 +441,13 @@ class SeparableConv1D(Layer):
             shape = [self.attributes['n_filt'], self.attributes['out_width']]
             dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
-        
+
         depthwise_data = self.model.get_weights_data(self.name, 'depthwise_kernel')
         pointwise_data = self.model.get_weights_data(self.name, 'pointwise_kernel')
 
         self.add_weights_variable(name='depthwise', var_name='d{index}', data=depthwise_data, quantizer=self.get_attr('depthwise_quantizer'))
         self.add_weights_variable(name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer'))
-        
+
         zero_bias_data = np.zeros((self.attributes['n_chan'],))
         self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data)
 
@@ -476,7 +557,7 @@ class SeparableConv2D(Layer):
         Attribute('pad_bottom'),
         Attribute('pad_left'),
         Attribute('pad_right'),
-        
+
         WeightAttribute('depthwise'),
         WeightAttribute('pointwise'),
         WeightAttribute('bias'),
@@ -494,13 +575,13 @@ class SeparableConv2D(Layer):
             shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
             dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
-        
+
         depthwise_data = self.model.get_weights_data(self.name, 'depthwise_kernel')
         pointwise_data = self.model.get_weights_data(self.name, 'pointwise_kernel')
 
         self.add_weights_variable(name='depthwise', var_name='d{index}', data=depthwise_data, quantizer=self.get_attr('depthwise_quantizer'))
         self.add_weights_variable(name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer'))
-        
+
         zero_bias_data = np.zeros((self.attributes['n_chan'],))
         self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data)
 
@@ -661,7 +742,7 @@ class Activation(Layer):
         Attribute('n_in'),
         Attribute('activation', value_type=str),
         #Attribute('table_size', default=1024),
-        
+
         #TypeAttribute('table')
     ]
 
@@ -699,6 +780,17 @@ class TernaryTanh(Activation):
     def initialize(self):
         super(TernaryTanh, self).initialize()
 
+class BatchNormOnnx(Layer):
+    '''
+    A transient layer formed from ONNX BatchNormalization that gets converted to
+    BatchNormalization after the scale and bias are determined
+    '''
+    def initialize(self):
+        inp = self.get_input_variable()
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_output_variable(shape, dims)
+
 class BatchNormalization(Layer):
     _expected_attributes = [
         Attribute('n_in'),
@@ -717,16 +809,41 @@ class BatchNormalization(Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
-        gamma = self.model.get_weights_data(self.name, 'gamma')
-        beta = self.model.get_weights_data(self.name, 'beta')
-        mean = self.model.get_weights_data(self.name, 'moving_mean')
-        var = self.model.get_weights_data(self.name, 'moving_variance')
+        if not self.get_attr('scale'):
+            gamma = self.model.get_weights_data(self.name, 'gamma')
+            beta = self.model.get_weights_data(self.name, 'beta')
+            mean = self.model.get_weights_data(self.name, 'moving_mean')
+            var = self.model.get_weights_data(self.name, 'moving_variance')
 
-        scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
-        bias = beta - gamma * mean / np.sqrt(var + self.get_attr('epsilon'))
+            scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
+            bias = beta - gamma * mean / np.sqrt(var + self.get_attr('epsilon'))
 
-        self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
-        self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
+            self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
+            self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
+
+class ApplyAlpha(BatchNormalization):
+    ''' A custom layer to scale the output of a QDense layer which used 'alpha != 1'
+        Inference computation uses BatchNormalization methods'''
+
+    def initialize(self):
+        inp = self.get_input_variable()
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_output_variable(shape, dims)
+
+        scale = self.get_attr('scale_data')
+        scale_quantizer = self.get_attr('scale_quantizer')
+        bias = self.get_attr('bias_data')
+        bias_quantizer = self.get_attr('bias_quantizer')
+
+        self.add_weights(scale, quantizer=scale_quantizer)
+        self.add_bias(bias, quantizer=bias_quantizer)
+
+    def add_weights(self, scale, quantizer=None):
+        self.add_weights_variable(name='scale', var_name='s{index}', data=scale, quantizer=quantizer)
+
+    def add_bias(self, bias, quantizer=None):
+        self.add_weights_variable(name='bias', var_name='b{index}', data=bias, quantizer=quantizer)
 
 class Merge(Layer):
     def initialize(self):
@@ -739,6 +856,29 @@ class Merge(Layer):
         else:
             shape = inp1.shape
             dims = inp1.dim_names
+        self.add_output_variable(shape, dims)
+
+class MatMul(Layer):
+    """
+    This is a matrix multiply. Currently, it is only supported as an intermediate
+    form that gets converted to a Dense layer.
+    """
+    def initialize(self):
+        assert(len(self.inputs) == 2)
+        inp1 = self.get_input_variable(self.inputs[0])
+        inp2 = self.get_input_variable(self.inputs[1])
+        if len(inp2.shape) == 1:
+            # mat vec multiply
+            assert(inp1.shape[-1] == inp2.shape[0])
+            shape = inp1.shape[:-1] + [inp2.shape[0]]
+        else:
+            assert(inp1.shape[-1] == inp2.shape[-2])
+            shape = inp1.shape[:-1] + [inp2.shape[-1]]
+        if len(shape) > 1:
+            dims = ['N_LAYER_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+        else:
+            dims = ['N_LAYER_{}'.format(self.index)]
+
         self.add_output_variable(shape, dims)
 
 class Dot(Merge):
@@ -791,9 +931,9 @@ class Transpose(Layer):
 
         if len(perm) > 3:
             raise Exception('ERROR: Transpose of tensors with rank > 3 is not yet supported.')
-        
+
         #ONNX double transpose specific, sometimes ONNX injects
-        #useless double transpose layers when converting 
+        #useless double transpose layers when converting
         #from other frameworks
         if len(perm) == 1:
             shape = inp.shape #dummy shape
@@ -803,7 +943,7 @@ class Transpose(Layer):
             shape = [inp.shape[i] for i in perm]
 
         self.set_attr('perm_str', ','.join([str(i) for i in perm]))
-        
+
         if len(shape) == 2:
             self.set_attr('perm_str', ','.join(['0'] + [str(i+1) for i in perm]))
             dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
@@ -909,7 +1049,7 @@ class GarNet(Layer):
 
         # automatically make the variable unsigned if data are all positive
         signed = (np.amin(data) < 0.)
-        
+
         int_width = find_minimum_width(data, signed=signed)
 
         if quantize:
@@ -917,9 +1057,9 @@ class GarNet(Layer):
         else:
             width = int_width + frac_width
             precision = FixedPrecisionType(width=width, integer=int_width, signed=signed, rounding_mode='AP_RND', saturation_mode='AP_SAT')
-            
+
         self.add_weights_variable(name=name, var_name=var_name, data=data, precision=precision)
-        
+
 class GarNetStack(GarNet):
     def _initialize_transforms(self):
         self._sublayer_weights = []
@@ -942,13 +1082,13 @@ class GarNetStack(GarNet):
             name = 'input_transform_{}_biases'.format(il)
             self._add_variable(name, 'input_transform_{}_b{{index}}'.format(il), bias, frac_width=10, quantize=quantize)
             sublayer_weights['input_transform_biases'] = self.weights[name]
-        
+
             weights_source = [
                 ('aggregator_distance', 'S{}'.format(il), 'kernel'),
                 ('aggregator_distance', 'S{}'.format(il), 'bias'),
                 ('output_transform', 'Fout{}'.format(il), 'bias')
             ]
-    
+
             for op_name, lname, wtype in weights_source:
                 data = self.model.get_weights_data(self.name, '{name}/{lname}_{wtype}:0'.format(name=self.name, lname=lname, wtype=wtype))
                 if wtype == 'kernel':
@@ -970,6 +1110,7 @@ class GarNetStack(GarNet):
 layer_map = {
     'Input'                  : Input,
     'InputLayer'             : Input,
+    'Constant'               : Constant,
     'Activation'             : Activation,
     'QActivation'            : Activation,
     'LeakyReLU'              : ParametrizedActivation,
@@ -983,6 +1124,7 @@ layer_map = {
     'BinaryDense'            : Dense,
     'TernaryDense'           : Dense,
     'QDense'                 : Dense,
+    'Conv'                   : Conv,
     'Conv1D'                 : Conv1D,
     'QConv1D'                : Conv1D,
     'Conv2D'                 : Conv2D,
@@ -1005,6 +1147,7 @@ layer_map = {
     'ZeroPadding1D'          : ZeroPadding1D,
     'ZeroPadding2D'          : ZeroPadding2D,
     'Merge'                  : Merge,
+    'MatMul'                 : MatMul,
     'Dot'                    : Dot,
     'Concatenate'            : Concatenate,
     'Resize'                 : Resize,
@@ -1012,6 +1155,9 @@ layer_map = {
     'Transpose'              : Transpose,
     'GarNet'                 : GarNet,
     'GarNetStack'            : GarNetStack,
+    'Quant'                  : Quant,
+    'ApplyAlpha'             : ApplyAlpha,
+    'BatchNormOnnx'          : BatchNormOnnx,
     # TensorFlow-specific layers:
     'BiasAdd'                : BiasAdd,
 }
