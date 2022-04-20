@@ -113,14 +113,16 @@ class Layer(object):
                 raise Exception('Attribute "{}" of layer {} ({}) not set and no default value is specified.'.format(attr_name, self.name, self.class_name))
 
     def get_input_node(self, input_name=None):
-        if input_name is not None:
-            nodes = [node for node in self.model.graph.values() if input_name in node.outputs]
-            if len(nodes) == 0:
-                return None
+        if input_name is None:
+            if len(self.inputs > 0):
+                input_name = self.inputs[0]
             else:
-                return nodes[0]
+                return None
+        nodes = [node for node in self.model.graph.values() if input_name in node.outputs]
+        if len(nodes) == 0:
+            return None
         else:
-            return self.model.graph.get(self.inputs[0])
+            return nodes[0]
 
     def get_input_variable(self, input_name=None):
         if input_name is not None:
@@ -131,7 +133,7 @@ class Layer(object):
     def get_output_nodes(self, output_name=None):
         if output_name is None:
             output_name = self.outputs[0]
-        return [node for node in self.model.graph.values() if node.inputs[0] == output_name]
+        return [node for node in self.model.graph.values() if output_name in node.inputs]
 
     def get_output_variable(self, output_name=None):
         if output_name is not None:
@@ -809,7 +811,7 @@ class BatchNormalization(Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
-        if not self.get_attr('scale'):
+        if self.get_attr('scale') is None:
             gamma = self.model.get_weights_data(self.name, 'gamma')
             beta = self.model.get_weights_data(self.name, 'beta')
             mean = self.model.get_weights_data(self.name, 'moving_mean')
@@ -820,6 +822,16 @@ class BatchNormalization(Layer):
 
             self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
             self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
+        elif isinstance(self.get_attr('scale'), np.ndarray):
+            self.add_weights_variable('scale', var_name='s{index}',
+                                      data=self.get_attr('scale'),
+                                      precision=self.get_attr("scale_precision"),
+                                      quantizer=self.get_attr("bias_quantizer"))
+            self.add_weights_variable('bias', var_name='b{index}',
+                                      data=self.get_attr('bias'),
+                                      precision=self.get_attr("bias_precision"),
+                                      quantizer=self.get_attr("bias_quantizer"))
+
 
 class ApplyAlpha(BatchNormalization):
     ''' A custom layer to scale the output of a QDense layer which used 'alpha != 1'

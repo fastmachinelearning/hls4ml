@@ -31,7 +31,8 @@ base_convert = [
     'scale_down_conv',
     'merge_to_batch_normalization',
     'merge_to_batch_normalization_div',
-
+    'matmul_const_to_dense',
+    'conv_to_conv_x_d',
     ]
 
 try:
@@ -39,10 +40,21 @@ try:
     # TODO Maybe not all QKeras optmizers belong here?
     register_flow('convert', base_convert 
         + ['output_rounding_saturation_mode', 'qkeras_factorize_alpha', 'extract_ternary_threshold', 'fuse_consecutive_batch_normalization']) 
-    register_flow('optimize', ['eliminate_linear_activation', 'fuse_consecutive_batch_normalization', 'fuse_batch_normalization', 'replace_multidimensional_dense_with_conv'], requires=['convert'])
+    register_flow('optimize', [
+        'eliminate_linear_activation', 
+        'fuse_consecutive_batch_normalization', 
+        'fuse_batch_normalization', 
+        'replace_multidimensional_dense_with_conv',
+        'eliminate_linear_activation_quant'
+        ], requires=['convert'])
 except:
     register_flow('convert', base_convert)
-    register_flow('optimize', ['eliminate_linear_activation', 'fuse_batch_normalization', 'replace_multidimensional_dense_with_conv'], requires=['convert'])
+    register_flow('optimize', [
+        'eliminate_linear_activation', 
+        'fuse_batch_normalization', 
+        'replace_multidimensional_dense_with_conv',
+        'eliminate_linear_activation_quant'
+        ], requires=['convert'])
 
 del opt_path
 del module_path

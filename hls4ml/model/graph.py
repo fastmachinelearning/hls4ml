@@ -455,7 +455,7 @@ class ModelGraph(object):
             outputs = [outp for outp in node.outputs if outp]
             if len(inputs) > 1 or len(outputs) > 1:
                 raise Exception('Cannot rewire a node with multiple inputs/outputs')
-            prev_node = self.graph.get(node.inputs[0])
+            prev_node = node.get_input_node(node.inputs[0])
             next_node = next((x for x in self.graph.values() if node.outputs[0] in x.inputs), None)
             if prev_node is not None:
                 if next_node is not None:

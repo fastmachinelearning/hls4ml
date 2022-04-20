@@ -17,6 +17,7 @@ from hls4ml.model.types import FixedPrecisionType
 from hls4ml.model.layers import Quant, Constant
 from hls4ml.converters.onnx.quantizer import QuantNodeQuantizer
 from hls4ml.model.optimizer import OptimizerPass
+from numbers import Integral
 
 class QuantConstantParameters(OptimizerPass):
     """ Remove Constant from the Qaunt node parameters (but not input[0]) """
@@ -349,3 +350,22 @@ def _calculate_precision_quantizer(bitwidth, signed, narrow, rounding_mode):
     quantizer = QuantNodeQuantizer(precision)
     return (precision, quantizer)
 
+
+def propagete_type_mult(in1: FixedPrecisionType, in2: FixedPrecisionType, num_acc: Integral):
+    '''
+    Propagate the precion type across a multiply. Currently only "quant_precision" types (with no fractional bits)
+    are supported. Rounding modes are propagated from in1
+    '''
+    if in2 and in1:
+        if (in2.width != in2.integer
+            or in1.width != in1.integer):
+            raise ValueError("quant_precisions must always have the same width and integer parameters")
+
+        bitwidth = in2.width + in1.width + int(np.ceil(np.log2(num_acc)))
+        signed = in2.signed or in1.signed
+        # copy staruation and rounding from "in1"
+        rounding_mode = in1.rounding_mode
+        saturation_mode = in1.saturation_mode
+        return FixedPrecisionType(bitwidth, bitwidth, signed, rounding_mode, saturation_mode)
+    else:
+        return None

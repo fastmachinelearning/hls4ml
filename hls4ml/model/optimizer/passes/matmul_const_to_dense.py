@@ -1,67 +1,59 @@
 import numpy as np
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.types import FixedPrecisionType
+from hls4ml.model.types import IntegerPrecisionType
 from hls4ml.model.layers import MatMul, Constant, Dense
+from hls4ml.model.optimizer.passes.quant_opt import propagete_type_mult
 
 class MatmulConstToDense(OptimizerPass):
-    """ Convert MatMul with constant to a dense layer """
+    """
+    Convert MatMul with constant to a dense layer. Note, this only supports the second input
+    being the constant. If needed, one could add transposes to make that be the case in
+    other yet to be written optimizers.
+    """
     def match(self, node):
         is_match = (isinstance(node, MatMul) and len(node.inputs) == 2
-                    and (isinstance(node.get_input_node(node.inputs[0]), Constant)
-                         or isinstance(node.get_input_node(node.inputs[1]), Constant)))
+                    and isinstance(node.get_input_node(node.inputs[1]), Constant))
         return is_match
 
     def transform(self, model, node):
         """ Substitute Matmul + Constant for a single dense """
         #determining Constant layer input
-        matmul_node = node
-        const_node = None
-        const_inp_idx = 0
-        other_inp_idx = 1
-        if isinstance(matmul_node.get_input_node(matmul_node.inputs[0]), Constant):
-            const_node = matmul_node.get_input_node(matmul_node.inputs[0])
-            other_node = matmul_node.get_input_node(matmul_node.inputs[1])
-        else:
-            const_node = matmul_node.get_input_node(matmul_node.inputs[1])
-            other_node = matmul_node.get_input_node(matmul_node.inputs[0])
-            const_inp_idx = 1
-            other_inp_idx = 0
+        const_node = node.get_input_node(node.inputs[1])
+        other_node = node.get_input_node(node.inputs[0])
+        other_var = node.get_input_variable(node.inputs[0])
 
         quant_precision = None
         weight_precision = const_node.get_attr("quant_precision")
+        weight_quantizer = const_node.get_attr("quantizer")
         other_precision = other_node.get_attr("quant_precision")
 
-        if weight_precision and other_precision:
-            if (weight_precision.width != weight_precision.integer
-                or other_precision.width != other_precision.integer):
-                raise ValueError("quant_precisions must always have the same width and integer parameters")
+        in_shape = other_var.shape
+        node.set_attr('n_in', np.prod(in_shape))
+        out_shape = list(in_shape[:-1]) + [const_node.value.shape[-1]]
+        node.set_attr('n_out', np.prod(out_shape))
 
-            Nacc = matmul_node.get_input_variable(matmul_node.inputs[0]).shape[-1]
-            bitwidth = weight_precision.width + other_precision.width + int(np.ceil(np.log2(Nacc)))
-            signed = weight_precision.signed or other_precision.signed
-            # copy staruation and rounding from "other"
-            rounding_mode = other_precision.rounding_mode
-            saturation_mode = other_precision.saturation_mode
-            quant_precision = FixedPrecisionType(bitwidth, bitwidth, signed, rounding_mode, saturation_mode)
+        quant_precision = propagete_type_mult(other_precision, weight_precision, in_shape[-1])
+
+        node.add_weights_variable(name='weight', var_name='w{index}', data=const_node.value,
+                                  precision=weight_precision, quantizer=weight_quantizer)
+        # add a dummy bias
+        # (A real one can be added after with bn_fuse)
+        node.add_weights_variable(name='bias', var_name='b{index}', data=np.zeros(out_shape),
+                                  precision=IntegerPrecisionType(1, False))
 
         #creating the attributes
-        attributes = matmul_node.attributes
-        attributes.update({
-            "weight_data": const_node.value,
+        node.attributes.update({
             "weight_precision": weight_precision,
-            "weight_quantizer": const_node.get_attr("quantizer"),
+            "weight_quantizer": weight_quantizer,
             "quant_precision": quant_precision,
-            "omit_bias": True,
-            "n_in": const_node.value.shape[0],
-            "n_out": const_node.value.shape[1]
         })
 
         #making new node
-        new_dense = model.make_node(Dense, f"Dense_{matmul_node.name}", attributes,
-            [matmul_node.inputs[other_inp_idx]], [x for x in matmul_node.outputs])
+        new_dense = model.make_node(Dense, f"Dense_{node.name}", node.attributes,
+            [node.inputs[0]], [x for x in node.outputs])
 
         #removing and replacing old nodes
         model.remove_node(const_node, rewire=False)
-        model.replace_node(matmul_node, new_dense)
+        model.replace_node(node, new_dense)
 
         return True

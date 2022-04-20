@@ -52,8 +52,10 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
 
         scale = gamma / np.sqrt(moving_variance + node.get_attr('epsilon'))
         bias = beta - gamma * moving_mean / np.sqrt(moving_variance + node.get_attr('epsilon'))
-        node.add_weights_variable("scale", data=scale, precision=node.get_attr("scale_precision"), quantizer=node.get_attr("bias_quantizer"))
-        node.add_weights_variable("bias", data=bias, precision=node.get_attr("bias_precision"), quantizer=node.get_attr("bias_quantizer"))
+        node.set_attr("scale", scale)
+        node.set_attr("bias", bias)
+        #node.add_weights_variable("scale", data=scale, precision=node.get_attr("scale_precision"), quantizer=node.get_attr("bias_quantizer"))
+        #node.add_weights_variable("bias", data=bias, precision=node.get_attr("bias_precision"), quantizer=node.get_attr("bias_quantizer"))
 
         new_node = model.make_node(BatchNormalization, node.name, node.attributes, 
             [node.inputs[0]], [x for x in node.outputs])
