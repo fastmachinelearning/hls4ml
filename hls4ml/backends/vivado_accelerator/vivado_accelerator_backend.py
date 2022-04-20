@@ -24,7 +24,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
 
         return parse_vivado_report(model.config.get_output_dir())
 
-    def make_xclbin(model, platform='xilinx_u50_gen3x16_xdma_201920_3'):
+    def make_xclbin(model, platform='xilinx_u250_gen3x16_xdma_3_1_202020_1'):
         """
 
         Parameters

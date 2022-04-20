@@ -17,5 +17,12 @@
     "python_drivers": {"axi_stream": "axi_stream_design.tcl"},
     "krnl_rtl_srcs": {"axi_stream":  "krnl_rtl_src"},
     "c_drivers": {}
+  },
+  "alveo-u250": {
+    "part": "cu250-figd2104-2L-e",
+    "tcl_scripts": {"axi_stream": "axi_stream_design.tcl"},
+    "python_drivers": {"axi_stream": "axi_stream_design.tcl"},
+    "krnl_rtl_srcs": {"axi_stream":  "krnl_rtl_src"},
+    "c_drivers": {}
   }
 }
