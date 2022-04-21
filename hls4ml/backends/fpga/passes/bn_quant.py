@@ -15,7 +15,7 @@ batchnorm_quantized_tanh_config_template = """struct config{index} : nnet::batch
 
 batchnorm_quantized_tanh_function_template = 'nnet::normalize_{quantize}_tanh<{input_t}, {config}>({input}, {output}, {threshold});'
 
-bn_include_list = ['nnet_utils/nnet_batchnorm.h']
+bn_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
 
 class BatchNormalizationQuantizedTanhConfigTemplate(LayerConfigTemplate):
     def __init__(self):
