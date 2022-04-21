@@ -99,28 +99,28 @@ void  relu1(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 template<class data_T, class res_T, typename CONFIG_T>
 void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
-  static const int MAX_VALUE=8;
-  #include "activation_tables/sigmoid_table.tb"
-  #pragma unroll
-  for (int ii=0; ii < CONFIG_T::n_in; ii++) {
-      data_T absoluteValue  hls_register;
-      res_T  temp2 hls_register;
-      if(data[ii] < 0 ){
-        absoluteValue = - data[ii];
-      }
-      else{
-        absoluteValue = data[ii];
-      }
-      int index = ( absoluteValue *( CONFIG_T::table_size / MAX_VALUE)).to_int();
-      if (absoluteValue > MAX_VALUE ) index = CONFIG_T::table_size - 1;
-      temp2 = (res_T) sigmoid_table[index];
-      if(data[ii] < 0 ){
-        res[ii] = 1-temp2;
-      }
-      else{
-        res[ii] = temp2;
-      }
-  }
+    static const int MAX_VALUE=8;
+    #include "activation_tables/sigmoid_table.tb"
+    #pragma unroll
+    for (int ii=0; ii < CONFIG_T::n_in; ii++) {
+        data_T absoluteValue  hls_register;
+        res_T  temp2 hls_register;
+        if(data[ii] < 0 ){
+            absoluteValue = - data[ii];
+        }
+        else{
+            absoluteValue = data[ii];
+        }
+        int index = ( absoluteValue *( CONFIG_T::table_size / MAX_VALUE)).to_int();
+        if (absoluteValue > MAX_VALUE ) index = CONFIG_T::table_size - 1;
+        temp2 = (res_T) sigmoid_table[index];
+        if(data[ii] < 0 ){
+            res[ii] = 1-temp2;
+        }
+        else{
+            res[ii] = temp2;
+        }
+    }
 }
 
 // *************************************************
@@ -181,23 +181,23 @@ void  dense_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     // Index into the lookup table based on data
     #pragma unroll
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-      data_T temp  hls_register;
-      res_T  temp2 hls_register;
-      if(data[ii] < 0 ){
-        temp = -data[ii];
-      }
-      else{
-        temp = data[ii];
-      }
-      ac_int<16> index = ( temp *(CONFIG_T::table_size/MAX_VALUE)).to_int();
-      if (temp > MAX_VALUE ) index = CONFIG_T::table_size-1;
-      temp2 = (res_T) tanh_table[index];
-      if(data[ii] < 0 ){
-        res[ii] = -temp2;
-      }
-      else{
-        res[ii] = temp2;
-      }
+        data_T temp  hls_register;
+        res_T  temp2 hls_register;
+        if(data[ii] < 0 ){
+            temp = -data[ii];
+        }
+        else{
+            temp = data[ii];
+        }
+        ac_int<16> index = ( temp *(CONFIG_T::table_size/MAX_VALUE)).to_int();
+        if (temp > MAX_VALUE ) index = CONFIG_T::table_size-1;
+        temp2 = (res_T) tanh_table[index];
+        if(data[ii] < 0 ){
+            res[ii] = -temp2;
+        }
+        else{
+            res[ii] = temp2;
+        }
     }
 }
 
