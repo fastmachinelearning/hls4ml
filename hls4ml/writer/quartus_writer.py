@@ -509,18 +509,22 @@ class QuartusWriter(Writer):
         h_file.close()
 
         ###################
-        ## sigmoid_table
+        # sigmoid_table
         ###################
+        CENTERED = True
+        MAX_VALUE = 8
+        MIN_VALUE = 0
         for layer in model.get_layers():
             if(layer.get_attr('activation') == 'sigmoid'):
-                table_size = layer.get_attr('table_size')
-            else:
-                table_size = 1024
+                if(layer.get_attr('table_size') is not None):
+                    table_size = layer.get_attr('table_size')
+        if(table_size is None):
+            table_size = 1024
 
         table_name = 'sigmoid_table'
         h_file = open("{}/{}.tb".format(dstpath, table_name),"w")
 
-        #meta data
+        # meta data
         h_file.write("#ifndef {}_H_\n".format(table_name.upper()))
         h_file.write("#define {}_H_\n".format(table_name.upper()))
         h_file.write("\n")
@@ -534,28 +538,36 @@ class QuartusWriter(Writer):
 
         sep = ''
         for i in range(table_size):
-            in_val = 2*8.0*(i-float(table_size)/2.0)/float(table_size)
+            if CENTERED:
+                in_val = i  * (MAX_VALUE-MIN_VALUE)/float(table_size) + (MAX_VALUE-MIN_VALUE)/(float(table_size)*2) + MIN_VALUE
+            else:
+                in_val = (i  * (MAX_VALUE-MIN_VALUE)/float(table_size)) + MIN_VALUE
             real_val = 1.0 / (1 + np.exp(-in_val))
-            h_file.write(sep + str(real_val))
-            sep = ", "
+            if(real_val >= 0.5):
+                h_file.write(sep + str(real_val))
+                sep = ", "
 
         h_file.write("};\n")
         h_file.write("\n#endif\n")
         h_file.close()
 
         ###################
-        ## tanh_table
+        # tanh_table
         ###################
+        CENTERED = True
+        MAX_VALUE = 4
+        MIN_VALUE = 0
         for layer in model.get_layers():
             if(layer.get_attr('activation') == 'dense_tanh'):
-                table_size = layer.get_attr('table_size')
-            else:
-                table_size = 1024
+                if(layer.get_attr('table_size') is not None):
+                    table_size = layer.get_attr('table_size')
+        if(table_size is None):
+            table_size = 1024
 
         table_name = 'tanh_table'
-        h_file = open("{}/{}.tb".format(dstpath, table_name),"w")
+        h_file = open("{}/{}.tb".format(dstpath, table_name), "w")
 
-        #meta data
+        # meta data
         h_file.write("#ifndef {}_H_\n".format(table_name.upper()))
         h_file.write("#define {}_H_\n".format(table_name.upper()))
         h_file.write("\n")
@@ -569,10 +581,15 @@ class QuartusWriter(Writer):
 
         sep = ''
         for i in range(table_size):
-            in_val = 2*4.0*(i-float(table_size)/2.0)/float(table_size)
+            if CENTERED:
+                in_val = i*(MAX_VALUE-MIN_VALUE)/float(table_size) + (MAX_VALUE-MIN_VALUE)/(float(table_size)*2) + MIN_VALUE
+            else:
+                in_val = (i*(MAX_VALUE-MIN_VALUE)/float(table_size)) + MIN_VALUE
+
             real_val = np.tanh(in_val)
-            h_file.write(sep + str(real_val))
-            sep = ", "
+            if(real_val >= 0):
+                h_file.write(sep + str(real_val))
+                sep = ", "
 
         h_file.write("};\n")
         h_file.write("\n#endif\n")
