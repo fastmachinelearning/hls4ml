@@ -1,14 +1,16 @@
 import inspect
 import os
+from pathlib import Path
 
 from hls4ml.backends.template import Template
-from hls4ml.model.flow import get_backend_flows
+from hls4ml.model.flow import get_backend_flows, update_flow
 from hls4ml.model.optimizer import LayerOptimizerPass, register_pass, extract_optimizers_from_path, extract_optimizers_from_object, get_backend_passes, get_optimizer
 
 
 class Backend(object):
     def __init__(self, name):
         self.name = name
+        self.custom_source = {}
         self._init_optimizers()
 
     def _init_optimizers(self):
@@ -52,11 +54,29 @@ class Backend(object):
     def get_default_flow(self):
         raise NotImplementedError
 
-    def register_source(self, file_name, source, destination_dir='nnet_utils'):
-        raise NotImplementedError
+    def get_custom_source(self):
+        return self.custom_source
 
-    def register_pass(self, name, opt_cls):
-        register_pass(name, opt_cls, backend=self.name)
+    def register_source(self, source_file, destination_dir='nnet_utils'):
+        if isinstance(source_file, str):
+            if not os.path.isabs(source_file):
+                raise Exception(f'Expected absolute path to custom source file, got: "{source_file}"')
+            source_path = Path(source_file)
+        elif isinstance(source_file, Path):
+            source_path = source_file
+        else:
+            raise Exception(f'Expected string or Path, got: "{type(source_file)}"')
+        
+        self.custom_source[destination_dir + os.path.sep + source_path.name] = source_path
+
+    def register_pass(self, name, opt_cls, flow=None):
+        opt_name = register_pass(name, opt_cls, backend=self.name)
+        if flow is not None:
+            if not isinstance(flow, (list, tuple)):
+                flow = [flow]
+
+            for f in flow:
+                update_flow(f, add_optimizers=[opt_name])
 
     def register_template(self, template_cls):
         template = template_cls()

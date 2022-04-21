@@ -9,6 +9,7 @@ import glob
 from collections import OrderedDict
 
 from hls4ml.writer.writers import Writer
+from hls4ml.backends import get_backend
 
 config_filename = 'hls4ml_config.yml'
 
@@ -606,6 +607,17 @@ class VivadoWriter(Writer):
             rmtree(dstpath)
 
         copytree(srcpath, dstpath)
+
+        ###################
+        ## custom source
+        ###################
+
+        filedir = os.path.dirname(os.path.abspath(__file__))
+
+        custom_source = get_backend('Vivado').get_custom_source()
+        for dst, srcpath in custom_source.items():
+            dstpath = '{}/firmware/{}'.format(model.config.get_output_dir(), dst)
+            copyfile(srcpath, dstpath)
 
     def write_yml(self, model):
         ###################
