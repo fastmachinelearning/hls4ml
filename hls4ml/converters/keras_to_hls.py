@@ -88,11 +88,23 @@ def get_qkeras_quantization(layer, keras_layer):
 
 layer_handlers = {}
 
-def register_keras_layer_handler(layer_name, handler_func):
-    if layer_name in layer_handlers:
-        raise Exception('Layer {} already registered'.format(layer_name))
+def register_keras_layer_handler(layer_cname, handler_func):
+    """Register a handler function for the given layer class name.
+
+    The handler function should have the following signature:
+        parse_func(keras_layer, input_names, input_shapes, data_reader, config):
+
+    Args:
+        layer_cname (str): The name of Keras layer (the 'class_name' property in the layer's config)
+        handler_func (callable): The handler function
+
+    Raises:
+        Exception: If the layer class has already been registered.
+    """    
+    if layer_cname in layer_handlers:
+        raise Exception('Layer {} already registered'.format(layer_cname))
     else:
-        layer_handlers[layer_name] = handler_func
+        layer_handlers[layer_cname] = handler_func
 
 def get_supported_keras_layers():
     return list(layer_handlers.keys())
