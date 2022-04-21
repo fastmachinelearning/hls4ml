@@ -511,7 +511,6 @@ class QuartusWriter(Writer):
         ###################
         # sigmoid_table
         ###################
-        CENTERED = True
         MAX_VALUE = 8
         MIN_VALUE = 0
         for layer in model.get_layers():
@@ -537,10 +536,7 @@ class QuartusWriter(Writer):
 
         sep = ''
         for i in range(table_size):
-            if CENTERED:
-                in_val = i * (MAX_VALUE-MIN_VALUE)/float(table_size) + (MAX_VALUE-MIN_VALUE)/(float(table_size)*2) + MIN_VALUE
-            else:
-                in_val = (i * (MAX_VALUE-MIN_VALUE)/float(table_size)) + MIN_VALUE
+            in_val = i * (MAX_VALUE-MIN_VALUE)/float(table_size) + (MAX_VALUE-MIN_VALUE)/(float(table_size)*2) + MIN_VALUE
             real_val = 1.0 / (1 + np.exp(-in_val))
             if(real_val >= 0.5):
                 h_file.write(sep + str(real_val))
@@ -553,7 +549,6 @@ class QuartusWriter(Writer):
         ###################
         # tanh_table
         ###################
-        CENTERED = True
         MAX_VALUE = 4
         MIN_VALUE = 0
         for layer in model.get_layers():
@@ -579,11 +574,7 @@ class QuartusWriter(Writer):
 
         sep = ''
         for i in range(table_size):
-            if CENTERED:
-                in_val = i*(MAX_VALUE-MIN_VALUE)/float(table_size) + (MAX_VALUE-MIN_VALUE)/(float(table_size)*2) + MIN_VALUE
-            else:
-                in_val = (i*(MAX_VALUE-MIN_VALUE)/float(table_size)) + MIN_VALUE
-
+            in_val = i*(MAX_VALUE-MIN_VALUE)/float(table_size) + (MAX_VALUE-MIN_VALUE)/(float(table_size)*2) + MIN_VALUE
             real_val = np.tanh(in_val)
             if(real_val >= 0):
                 h_file.write(sep + str(real_val))
