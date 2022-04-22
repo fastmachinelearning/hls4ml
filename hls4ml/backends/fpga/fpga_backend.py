@@ -59,28 +59,48 @@ class FPGABackend(Backend):
     def get_writer_flow(self):
         raise NotImplementedError
 
-    def get_valid_reuse_factors(self, layer):
-        n_in = 0
-        n_out = 0
+    def get_layer_mult_size(self, layer):
         if 'Dense' in layer.class_name:
             n_in = layer.get_attr('n_in')
             n_out = layer.get_attr('n_out')
-        elif 'Conv1D' in layer.class_name:
+            return n_in, n_out
+
+        if 'Conv1D' in layer.class_name:
             n_in = layer.get_attr('n_chan') * layer.get_attr('filt_width')
             n_out = layer.get_attr('n_filt')
-        elif 'Conv2D' in layer.class_name:
+            return n_in, n_out
+
+        if 'Conv2D' in layer.class_name:
             n_in = layer.get_attr('n_chan') * layer.get_attr('filt_height') * layer.get_attr('filt_width')
             n_out = layer.get_attr('n_filt')
+            return n_in, n_out
 
+        if 'LSTM' in layer.class_name:
+            n_in = layer.get_attr('n_in')
+            n_out = layer.get_attr('n_out') * 4
+            n_in_recr = layer.get_attr('n_out')
+            n_out_recr = n_out
+            return n_in, n_out, n_in_recr, n_out_recr
+        
+        if 'GRU' in layer.class_name:
+            n_in = layer.get_attr('n_in')
+            n_out = layer.get_attr('n_out') * 3
+            n_in_recr = layer.get_attr('n_out')
+            n_out_recr = n_out
+            return n_in, n_out, n_in_recr, n_out_recr
+        
+        raise Exception(f'Cannot get mult size for layer {layer.name} ({layer.class_name})')
+
+    def get_valid_reuse_factors(self, n_in, n_out):
         max_rf = n_in * n_out
         valid_reuse_factors = []
         for rf in range(1, max_rf + 1):
-            _assert = self._check_conditions(n_in, n_out, rf)
+            _assert = self._validate_reuse_factor(n_in, n_out, rf)
             if _assert:
                 valid_reuse_factors.append(rf)
         return valid_reuse_factors
 
-    def _check_conditions(self, n_in, n_out, rf):
+    def _validate_reuse_factor(self, n_in, n_out, rf):
         multfactor = min(n_in, rf)
         multiplier_limit = int(math.ceil((n_in * n_out) / float(multfactor)))
         #
@@ -112,10 +132,10 @@ class FPGABackend(Backend):
         else:
             return before
 
-    def set_closest_reuse_factor(self, layer, attribute='reuse_factor'):
+    def set_closest_reuse_factor(self, layer, n_in, n_out, attribute='reuse_factor'):
         assert attribute is not None, 'Reuse factor attribute cannot be None'
 
-        valid_rf = self.get_valid_reuse_factors(layer)
+        valid_rf = self.get_valid_reuse_factors(n_in, n_out)
         chosen_rf = layer.get_attr(attribute)
         if chosen_rf not in valid_rf:
             closest_rf = self.get_closest_reuse_factor(valid_rf, chosen_rf)

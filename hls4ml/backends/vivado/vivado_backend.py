@@ -132,8 +132,9 @@ class VivadoBackend(FPGABackend):
         index_t = IntegerPrecisionType(width=1, signed=False)
         compression = layer.model.config.get_compression(layer)
         if layer.model.config.is_resource_strategy(layer):
+            n_in, n_out = self.get_layer_mult_size(layer)
             self.set_target_reuse_factor(layer)
-            self.set_closest_reuse_factor(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
             if compression:
                 layer.set_attr('strategy', 'compressed')
                 index_t = layer.get_weights('weight').type.index_precision
@@ -151,8 +152,9 @@ class VivadoBackend(FPGABackend):
 
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
+            n_in, n_out = self.get_layer_mult_size(layer)
             self.set_target_reuse_factor(layer)
-            self.set_closest_reuse_factor(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
         
@@ -162,7 +164,8 @@ class VivadoBackend(FPGABackend):
     def init_sepconv1d(self, layer):
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
-            self.set_closest_reuse_factor(layer)
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
         
@@ -176,7 +179,8 @@ class VivadoBackend(FPGABackend):
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
             self.set_target_reuse_factor(layer)
-            self.set_closest_reuse_factor(layer)
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
         
@@ -186,7 +190,8 @@ class VivadoBackend(FPGABackend):
     def init_sepconv2d(self, layer):
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
-            self.set_closest_reuse_factor(layer)
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
         
@@ -196,7 +201,8 @@ class VivadoBackend(FPGABackend):
     def init_depconv2d(self, layer):
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
-            self.set_closest_reuse_factor(layer)
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
         
@@ -245,8 +251,9 @@ class VivadoBackend(FPGABackend):
         if 'table_size' not in layer.attributes:
             layer.set_attr('table_size', 1024)
         if layer.model.config.is_resource_strategy(layer):
-            self.set_closest_reuse_factor(layer)
-            self.set_closest_reuse_factor(layer, attribute='recurrent_reuse_factor')
+            n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
+            self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
             layer.weights['weight'].data = np.transpose(layer.weights['weight'].data)
             layer.weights['recurrent_weight'].data = np.transpose(layer.weights['recurrent_weight'].data)
             layer.set_attr('strategy', 'resource')
@@ -270,8 +277,9 @@ class VivadoBackend(FPGABackend):
         if 'table_size' not in layer.attributes:
             layer.set_attr('table_size', 1024)
         if layer.model.config.is_resource_strategy(layer):
-            self.set_closest_reuse_factor(layer)
-            self.set_closest_reuse_factor(layer, attribute='recurrent_reuse_factor')
+            n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
+            self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
             layer.weights['weight'].data = np.transpose(layer.weights['weight'].data)
             layer.weights['recurrent_weight'].data = np.transpose(layer.weights['recurrent_weight'].data)
             layer.set_attr('strategy', 'resource')
