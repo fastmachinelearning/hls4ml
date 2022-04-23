@@ -6,7 +6,7 @@ This is based on the sample implementation in finn-base
 """
 
 import numpy as np
-from hls4ml.model.types import Quantizer
+from hls4ml.model.types import Quantizer, SaturationMode, RoundingMode
 
 class QuantNodeQuantizer(Quantizer):
     """ This implements a quantizer for a FixedPrecisionType with width==integer"""
@@ -46,9 +46,9 @@ class QuantNodeQuantizer(Quantizer):
             >>> min_int(signed=False, saturation_mode='AP_SAT_SYM', bit_width=8)
             int(0)
         """
-        if saturation_mode not in ("AP_SAT_SYM", "AP_SAT"):
+        if saturation_mode not in (SaturationMode.SAT_SYM, SaturationMode.SAT):
             raise ValueError(f"Saturation mode {saturation_mode} not supported. Only AP_SAT_SYM, AP_SAT supported")
-        if signed and saturation_mode == "AP_SAT_SYM":
+        if signed and saturation_mode == SaturationMode.SAT_SYM:
             value = -(2 ** (bit_width - 1)) + 1
         elif signed:
             value = -(2 ** (bit_width - 1))
@@ -79,14 +79,14 @@ class QuantNodeQuantizer(Quantizer):
         return value
 
     @staticmethod
-    def _resolve_rounding_mode(mode_string):
-        """Resolve the rounding mode string of Quant and Trunc ops
+    def _resolve_rounding_mode(mode):
+        """Resolve the rounding mode  of Quant and Trunc ops
         to the corresponding numpy functions."""
-        if mode_string == "AP_RND_CONV":
+        if mode == RoundingMode.RND_CONV:
             return np.round
         # elif mode_string == "CEIL":   # not supported
         #     return np.ceil
-        elif mode_string == "AP_TRN":
+        elif mode == RoundingMode.TRN:
             return np.floor
         else:
-            raise ValueError(f"Could not resolve rounding mode called: {mode_string}")
+            raise ValueError(f"Rounding mode {mode} not supported.")

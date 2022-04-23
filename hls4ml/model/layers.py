@@ -114,7 +114,7 @@ class Layer(object):
 
     def get_input_node(self, input_name=None):
         if input_name is None:
-            if len(self.inputs > 0):
+            if len(self.inputs) > 0:
                 input_name = self.inputs[0]
             else:
                 return None
@@ -357,8 +357,9 @@ class Dense(Layer):
         else:
             dims = ['N_LAYER_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
-        self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=self.model.config.get_compression(self))
-        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+        if self.get_attr("weight") is None:
+            self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=self.model.config.get_compression(self))
+            self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
 class Conv(Layer):
     """
