@@ -1,3 +1,9 @@
+#ifndef NNET_IMAGE_STREAM_H_
+#define NNET_IMAGE_STREAM_H_
+
+#include "nnet_common.h"
+#include "hls_stream.h"
+
 namespace nnet {
 
 template<class data_T, typename CONFIG_T>
