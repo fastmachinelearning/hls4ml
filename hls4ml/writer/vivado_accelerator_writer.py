@@ -317,7 +317,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
         copyfile(os.path.join(filedir, self.vivado_accelerator_config.get_tcl_file_path()),
                  '{}/design.tcl'.format(model.config.get_output_dir()))
         #TODO add generic alveo board
-        if self.vivado_accelerator_config.get_board() == 'alveo-u50' or self.vivado_accelerator_config.get_board() == 'alveo-u250':
+        if self.vivado_accelerator_config.get_board().startswith('alveo'):
             copytree(os.path.join(filedir, self.vivado_accelerator_config.get_krnl_rtl_src_dir()),
                  '{}/src'.format(model.config.get_output_dir()), dirs_exist_ok=True)
         f = open('{}/project.tcl'.format(model.config.get_output_dir()), 'w')
