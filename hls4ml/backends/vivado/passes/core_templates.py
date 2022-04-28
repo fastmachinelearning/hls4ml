@@ -57,7 +57,7 @@ class DenseFunctionTemplate(FunctionCallTemplate):
 batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_filt = {n_filt};
-    static const unsigned n_scale_bias = {n_scale_bias};
+    static const unsigned n_scale_bias = (n_filt == -1) ? n_in : n_filt;
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
     static const bool store_weights_in_bram = false;
@@ -79,7 +79,6 @@ class BatchNormalizationConfigTemplate(LayerConfigTemplate):
     def format(self, node):
         params = self._default_config_params(node)
         params['n_in'] = node.get_input_variable().size_cpp()
-        params['n_scale_bias'] = params['n_in'] if params['n_filt'] == -1 else params['n_filt']
         params['product_type'] = get_backend('vivado').product_type(node.get_input_variable().type.precision, node.get_weights('scale').type.precision)
 
         return self.template.format(**params)

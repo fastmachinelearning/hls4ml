@@ -11,7 +11,6 @@ class ApplyAlphaConfigTemplate(LayerConfigTemplate):
     def format(self, node):
         params = self._default_config_params(node)
         params['n_in'] = node.get_input_variable().size_cpp()
-        params['n_scale_bias'] = params['n_in'] if params['n_filt'] == -1 else params['n_filt']
         params['product_type'] = get_backend('vivado').product_type(node.get_input_variable().type.precision, node.get_weights('scale').type.precision)
 
         return self.template.format(**params)
