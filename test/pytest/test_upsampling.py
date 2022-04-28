@@ -3,7 +3,9 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import UpSampling1D, UpSampling2D
 import numpy as np
 import hls4ml
+from pathlib import Path
 
+test_root_path = Path(__file__).parent
 
 in_height = 6
 in_width = 8
@@ -51,10 +53,11 @@ def test_upsampling(keras_model_1d, keras_model_2d, data_1d, data_2d, model_type
     config = hls4ml.utils.config_from_keras_model(model,
                                                   default_precision='ap_fixed<32,1>',
                                                   granularity='name')
+    odir = str(test_root_path / f'hls4mlprj_upsampling_{model_type}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                            hls_config=config,
                                                            io_type=io_type,
-                                                           output_dir=f'hls4mlprj_upsampling_{model_type}_{io_type}',
+                                                           output_dir=odir,
                                                            part='xcvu9p-flgb2104-2-i')
     hls_model.compile()
 
