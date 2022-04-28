@@ -7,7 +7,7 @@ import torch
 import pickle
 import re
 
-from hls4ml.model import HLSModel
+from hls4ml.model import ModelGraph
 
 class PyTorchModelReader(object):
     """
@@ -113,7 +113,7 @@ def pytorch_to_hls(config):
         
     Returns
     -------
-    hls_model : hls4ml model object.
+    ModelGraph : hls4ml model object.
     
     Notes
     -----
@@ -205,5 +205,5 @@ def pytorch_to_hls(config):
     #################
     
     print('Creating HLS model')
-    hls_model = HLSModel(config, reader, layer_list)
+    hls_model = ModelGraph(config, reader, layer_list)
     return hls_model

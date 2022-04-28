@@ -1,25 +1,21 @@
 from __future__ import print_function
-import six
 import os
-import sys
 import platform
 import ctypes
-import re
 import numpy as np
 import numpy.ctypeslib as npc
 from collections import OrderedDict
 
-from hls4ml.model.hls_layers import *
-from hls4ml.templates import get_backend
-from hls4ml.writer import get_writer
+from hls4ml.model.layers import *
+from hls4ml.backends import get_backend
 from hls4ml.model.optimizer import optimize_model, get_available_passes
-from hls4ml.report.vivado_report import parse_vivado_report
+from hls4ml.model.flow import get_flow
+
 
 class HLSConfig(object):
     def __init__(self, config):
         self.config = config
         self.backend = get_backend(self.config.get('Backend', 'Vivado'))
-        self.writer = get_writer(self.config.get('Backend', 'Vivado'))
 
         self.model_precision = {}
         self.layer_type_precision = {}
@@ -66,7 +62,7 @@ class HLSConfig(object):
         if name_config is not None:
             return name_config.get(key, default)
 
-        type_config = hls_config.get('LayerType', {}).get(layer.__class__.__name__, None)
+        type_config = hls_config.get('LayerType', {}).get(layer.class_name, None)
         if type_config is not None:
             return type_config.get(key, default)
 
@@ -80,7 +76,7 @@ class HLSConfig(object):
         hls_config = self.config['HLSConfig']
         layer_config = {}
 
-        type_config = hls_config.get('LayerType', {}).get(layer.__class__.__name__, None)
+        type_config = hls_config.get('LayerType', {}).get(layer.class_name, None)
         if type_config is not None:
             layer_config.update(type_config)
 
@@ -98,11 +94,11 @@ class HLSConfig(object):
             type_name = layer.name.lower() + '_default_t'
 
         if precision is None:
-            precision = self.layer_type_precision.get(layer.__class__.__name__.lower() + '_' + var)
-            type_name = layer.__class__.__name__ + '_' + var + '_t'
+            precision = self.layer_type_precision.get(layer.class_name.lower() + '_' + var)
+            type_name = layer.class_name + '_' + var + '_t'
         if precision is None:
-            precision = self.layer_type_precision.get(layer.__class__.__name__.lower() + '_default')
-            type_name = layer.__class__.__name__ + '_default_t'
+            precision = self.layer_type_precision.get(layer.class_name.lower() + '_default')
+            type_name = layer.class_name + '_default_t'
 
         if precision is None:
             precision = self.model_precision.get(var)
@@ -125,7 +121,7 @@ class HLSConfig(object):
     def get_reuse_factor(self, layer):
         rf = self.layer_name_rf.get(layer.name.lower())
         if rf is None:
-            rf = self.layer_type_rf.get(layer.__class__.__name__.lower())
+            rf = self.layer_type_rf.get(layer.class_name.lower())
         if rf is None:
             rf = self.model_rf
 
@@ -146,7 +142,7 @@ class HLSConfig(object):
     def get_strategy(self, layer):
         strategy = self.layer_name_strategy.get(layer.name.lower())
         if strategy is None:
-            strategy = self.layer_type_strategy.get(layer.__class__.__name__.lower())
+            strategy = self.layer_type_strategy.get(layer.class_name.lower())
         if strategy is None:
             strategy = self.model_strategy
 
@@ -167,7 +163,7 @@ class HLSConfig(object):
     def get_compression(self, layer):
         compression = self.layer_name_compression.get(layer.name.lower())
         if compression is None:
-            compression = self.layer_type_compression.get(layer.__class__.__name__.lower())
+            compression = self.layer_type_compression.get(layer.class_name.lower())
         if compression is None:
             compression = self.model_compression
 
@@ -176,6 +172,11 @@ class HLSConfig(object):
     def _parse_hls_config(self):
         hls_config = self.config['HLSConfig']
         
+        self.flows = hls_config.get('Flows')
+        if self.flows is None:
+            self.flows = [self.backend.get_default_flow()]
+
+        # TODO this is now effectively broken
         self.optimizers = hls_config.get('Optimizers')
         if 'SkipOptimizers' in hls_config:
             if self.optimizers is not None:
@@ -295,10 +296,12 @@ class HLSConfig(object):
             print('WARNING: Changing model strategy to "Resource"')
             self.model_strategy = 'Resource'
 
-class HLSModel(object):
+class ModelGraph(object):
     def __init__(self, config, data_reader, layer_list, inputs=None, outputs=None):
         self.config = HLSConfig(config)
         self.reader = data_reader
+
+        self._applied_flows = []
 
         # If not provided, assumes layer_list[0] is input, and layer_list[-1] is output
         self.inputs = inputs if inputs is not None else [layer_list[0]['name']]
@@ -308,14 +311,12 @@ class HLSModel(object):
         self.graph = OrderedDict()
         self.output_vars = {}
 
-        # External BRAM 
-        self.bram_vars = {}
-
         self._top_function_lib = None
 
         self._make_graph(layer_list)
 
-        self._optimize_model(self.config.optimizers)
+        for flow in self.config.flows:
+            self.apply_flow(flow)
 
     def _make_graph(self, layer_list):
         for layer in layer_list:
@@ -332,8 +333,25 @@ class HLSModel(object):
 
             self.graph[name] = self.make_node(kind, name, layer, inputs, outputs)
 
-    def _optimize_model(self, optimizers):
-        optimize_model(self, optimizers)
+    def apply_flow(self, flow):
+        applied_flows = {}
+        self._apply_sub_flow(flow, applied_flows)
+        self._applied_flows.append(applied_flows)
+
+    def _apply_sub_flow(self, flow_name, applied_flows):
+        if flow_name in applied_flows:
+            return
+        flow = get_flow(flow_name)
+
+        for sub_flow in flow.requires:
+            if sub_flow not in applied_flows.keys():
+                self._apply_sub_flow(sub_flow, applied_flows)
+
+        if len(flow.optimizers) > 0:
+            applied_passes = optimize_model(self, flow.optimizers)
+        else:
+            applied_passes = []
+        applied_flows[flow.name] = applied_passes
 
     def make_node(self, kind, name, attributes, inputs, outputs=None):
         """ Make a new node not connected to the model graph.
@@ -344,7 +362,7 @@ class HLSModel(object):
         functions.
 
         Args:
-            kind (str): Type of node to add
+            kind (type or str): Type of node to add
             name (str): Name of the node
             attributes (dict): Initial set of attributes required to construct the node (Layer)
             inputs (list): List of inputs to the layer
@@ -358,10 +376,18 @@ class HLSModel(object):
             Layer: The node created.
         """
 
-        if kind not in layer_map:
-            raise Exception('Layer {} not found in registry.'.format(kind))
+        if isinstance(kind, str):
+            if kind not in layer_map:
+                raise Exception('Layer {} not found in registry.'.format(kind))
+            layer_cls = layer_map[kind]
+        else:
+            if kind not in layer_map.values():
+                raise Exception('Layer {} not found in registry.'.format(kind))
+            layer_cls = kind
 
-        node = layer_map[kind](self, name, attributes, inputs, outputs)
+        if self.config.backend is not None:
+            layer_cls = self.config.backend.create_layer_class(layer_cls)
+        node = layer_cls(self, name, attributes, inputs, outputs)
         for o in node.outputs:
             out_var = node.get_output_variable(output_name=o)
             if o in self.outputs:
@@ -491,12 +517,6 @@ class HLSModel(object):
             variables.append(self.graph[inp].get_output_variable())
         return variables
 
-    def register_bram_variable(self, out_name, variable):
-        self.bram_vars[out_name] = variable
-
-    def get_bram_variables(self):
-        return self.bram_vars.values()
-
     def register_output_variable(self, out_name, variable):
         if out_name in self.outputs:
             variable.type.name = 'result_t'
@@ -511,41 +531,52 @@ class HLSModel(object):
     def get_layer_output_variable(self, output_name):
         return self.output_vars.get(output_name, None)
 
+    def get_weight_variables(self):
+        variables = []
+        for layer in self.get_layers():
+            weights = layer.get_weights()
+            variables.extend(weights)
+        
+        return variables
+
     def write(self):
-        def make_stamp():
+        """Write the generated project to disk.
+
+        This function converts the model to C++ and writes the generated files in the output
+        directory specified in the `config`.
+        """
+
+        def _make_stamp():
+            """ Create a unique identifier for the generated code. This identifier is used to
+            compile a unique library and link it with python. """
             from string import hexdigits
             from random import choice
             length = 8
             return ''.join(choice(hexdigits) for m in range(length))
         
-        self.config.config['Stamp'] = make_stamp()
+        self.config.config['Stamp'] = _make_stamp()
 
-        self.config.writer.write_hls(self)
+        self.config.backend.write(self)
 
     def compile(self):
+        """Compile the generated project and link the library into current environment.
+
+        Users should call this function if they want to use `predict` functionality for simulation.
+        """
         self.write()
 
-        curr_dir = os.getcwd()
-        os.chdir(self.config.get_output_dir())
+        lib_name = self.config.backend.compile(self)
+        if self._top_function_lib is not None:
 
-        try:
-            ret_val = os.system('bash build_lib.sh')
-            if ret_val != 0:
-                raise Exception('Failed to compile project "{}"'.format(self.config.get_project_name()))
-            lib_name = 'firmware/{}-{}.so'.format(self.config.get_project_name(), self.config.get_config_value('Stamp'))
-            if self._top_function_lib is not None:
+            if platform.system() == "Linux":
+                dlclose_func = ctypes.CDLL('libdl.so').dlclose
+            elif platform.system() == "Darwin":
+                dlclose_func = ctypes.CDLL('libc.dylib').dlclose
 
-                if platform.system() == "Linux":
-                    dlclose_func = ctypes.CDLL('libdl.so').dlclose
-                elif platform.system() == "Darwin":
-                    dlclose_func = ctypes.CDLL('libc.dylib').dlclose
-
-                dlclose_func.argtypes = [ctypes.c_void_p]
-                dlclose_func.restype = ctypes.c_int
-                dlclose_func(self._top_function_lib._handle)
-            self._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
-        finally:
-            os.chdir(curr_dir)
+            dlclose_func.argtypes = [ctypes.c_void_p]
+            dlclose_func.restype = ctypes.c_int
+            dlclose_func(self._top_function_lib._handle)
+        self._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
 
     def _get_top_function(self, x):
         if self._top_function_lib is None:
@@ -651,7 +682,7 @@ class HLSModel(object):
         layer_sizes = {}
         n_traced = 0
         for layer in self.get_layers():
-            if layer.function_cpp() and layer.get_attr('Trace', False):
+            if layer.get_attr('function_cpp', None) and layer.get_attr('Trace', False):
                 n_traced += len(layer.get_variables())
                 trace_output[layer.name] = []
                 layer_sizes[layer.name] = layer.get_output_variable().shape
@@ -713,30 +744,13 @@ class HLSModel(object):
         else:
             return output, trace_output
 
-    def build(self, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
-        if 'linux' in sys.platform:
-            backend = self.config.get_config_value('Backend', 'Vivado')
-            if backend in ['Vivado', 'VivadoAccelerator']:
-                found = os.system('command -v vivado_hls > /dev/null')
-                if found != 0:
-                    raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
+    def build(self, **kwargs):
+        """ Builds the generated project using HLS compiler.
 
-            elif backend == 'Intel':
-                raise NotImplementedError
-            elif backend == 'Mentor':
-                raise NotImplementedError
-            else:
-                raise Exception('Backend values can be [Vivado, Intel, Mentor]')
-
+        Please see the `build()` function of backends for a list of possible arguments.
+        """
         if not os.path.exists(self.config.get_output_dir()):
             # Assume the project wasn't written before
             self.write()
 
-        curr_dir = os.getcwd()
-        os.chdir(self.config.get_output_dir())
-        os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
-            .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
-        os.chdir(curr_dir)
-
-        return parse_vivado_report(self.config.get_output_dir())
-
+        return self.config.backend.build(self, **kwargs)

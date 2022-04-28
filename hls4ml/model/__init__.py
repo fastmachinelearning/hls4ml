@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from hls4ml.model.hls_model import HLSModel, HLSConfig
+from hls4ml.model.graph import ModelGraph, HLSConfig
 
 try:
     from hls4ml.model import profiling

@@ -17,7 +17,7 @@ pytest.{}:
 def uses_example_model(test_filename):
     with open(test_filename, 'r') as f:
         content = f.read()
-        return 'example-models/' in content
+        return 'example-models' in content
 
 yml = None
 tests = glob.glob('test_*.py')

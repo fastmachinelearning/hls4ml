@@ -1,30 +1,35 @@
-from hls4ml.templates.vivado_template import VivadoBackend
 import os
-from shutil import copyfile
 
+from hls4ml.backends import VivadoBackend
+from hls4ml.model.flow import register_flow
+from hls4ml.report import parse_vivado_report
 
 class VivadoAcceleratorBackend(VivadoBackend):
     def __init__(self):
-        super(VivadoAcceleratorBackend, self).__init__(name='VivadoAccelerator')
+        super(VivadoBackend, self).__init__(name='VivadoAccelerator')
+        self._register_flows()
 
-    def make_bitfile(model):
-        curr_dir = os.getcwd()
-        os.chdir(model.config.get_output_dir())
-        try:
-            os.system('vivado -mode batch -source design.tcl')
-        except:
-            print("Something went wrong, check the Vivado logs")
-        # These should work but Vivado seems to return before the files are written...
-        # copyfile('{}_vivado_accelerator/project_1.runs/impl_1/design_1_wrapper.bit'.format(model.config.get_project_name()), './{}.bit'.format(model.config.get_project_name()))
-        # copyfile('{}_vivado_accelerator/project_1.srcs/sources_1/bd/design_1/hw_handoff/design_1.hwh'.format(model.config.get_project_name()), './{}.hwh'.format(model.config.get_project_name()))
-        os.chdir(curr_dir)
+    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False, bitfile=False):
+        # run the VivadoBackend build
+        report = super().build(model, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
+        # now make a bitfile
+        if bitfile:
+            curr_dir = os.getcwd()
+            os.chdir(model.config.get_output_dir())
+            try:
+                os.system('vivado -mode batch -source design.tcl')
+            except:
+                print("Something went wrong, check the Vivado logs")
+            os.chdir(curr_dir)
+
+        return parse_vivado_report(model.config.get_output_dir())
 
     def create_initial_config(self, board='pynq-z2', part=None, clock_period=5, io_type='io_parallel', interface='axi_stream',
                               driver='python', input_type='float', output_type='float'):
         '''
         Create initial accelerator config with default parameters
         Args:
-            device: one of the keys defined in supported_boards.json
+            board: one of the keys defined in supported_boards.json
             clock_period: clock period passed to hls project
             io_type: io_parallel or io_stream
             interface: `axi_stream`: generate hardware designs and drivers which exploit axi stream channels.
@@ -42,8 +47,9 @@ class VivadoAcceleratorBackend(VivadoBackend):
             populated config
         '''
         board = board if board is not None else 'pynq-z2'
-        config = super(VivadoAcceleratorBackend, self).create_initial_config(part, board, clock_period, io_type)
+        config = super(VivadoAcceleratorBackend, self).create_initial_config(part, clock_period, io_type)
         config['AcceleratorConfig'] = {}
+        config['AcceleratorConfig']['Board'] = board
         config['AcceleratorConfig']['Interface'] = interface  # axi_stream, axi_master, axi_lite
         config['AcceleratorConfig']['Driver'] = driver
         config['AcceleratorConfig']['Precision'] = {}
@@ -52,3 +58,9 @@ class VivadoAcceleratorBackend(VivadoBackend):
         config['AcceleratorConfig']['Precision']['Input'] = input_type  # float, double or ap_fixed<a,b>
         config['AcceleratorConfig']['Precision']['Output'] = output_type  # float, double or ap_fixed<a,b>
         return config
+
+    def _register_flows(self):
+        vivado_writer = ['vivado:write']
+        vivado_accel_writer = ['vivadoaccelerator:write_hls']
+        self._writer_flow = register_flow('write', vivado_accel_writer, requires=vivado_writer, backend=self.name)
+        self._default_flow = 'vivado:ip'
