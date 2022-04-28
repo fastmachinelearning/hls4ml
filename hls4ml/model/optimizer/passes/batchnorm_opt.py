@@ -145,10 +145,7 @@ class BroadcastWeightsBatchNormalization(OptimizerPass):
 
         n_filt = node.get_attr('n_filt', -1)
 
-        n_scale_bias = np.prod(input_shape) if n_filt == -1 else n_filt
-
         scale_bias_shape = input_shape if n_filt == -1 else (n_filt,)
-        node.set_attr("n_scale_bias", n_scale_bias)
 
         # Check shape, broadcast if needed.
         if scale.shape != scale_bias_shape:

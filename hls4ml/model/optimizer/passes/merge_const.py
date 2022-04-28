@@ -1,5 +1,5 @@
 import numpy as np
-from hls4ml.model.layers import Merge, Constant
+from hls4ml.model.layers import Merge, Constant, BatchNormalization
 from hls4ml.model.optimizer import OptimizerPass
 
 
@@ -111,7 +111,7 @@ class MergeToBatchNormalization(OptimizerPass):
             "n_filt": -1
         })
 
-        bn_layer = model.make_node("BatchNormalization", f"bn_{node.name}",
+        bn_layer = model.make_node(BatchNormalization, f"bn_{node.name}",
                                    attributes,
                                    [node.inputs[input_node_idx]], [x for x in node.outputs])
 
