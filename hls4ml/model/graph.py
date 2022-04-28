@@ -632,7 +632,7 @@ class ModelGraph(object):
         if not all([n_samples[i] == n_samples[i+1] for i in range(len(xlist)-1)]):
             raise Exception('Input size mismatch, not all inputs match')
 
-        return n_sample
+        return int(n_sample)
 
     def predict(self, x):
         top_function, ctype = self._get_top_function(x)
