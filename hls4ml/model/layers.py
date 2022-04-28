@@ -161,6 +161,11 @@ class Layer(object):
 
         self.set_attr(out_name, out)
 
+    def update_output_precision(self, precision, output_name=None):
+        if output_name is None:
+            output_name = self.outputs[0]
+        self.variables[output_name].type.precision = precision
+
     def add_weights(self, quantizer=None, compression=False):
         data = self.model.get_weights_data(self.name, 'kernel')
 
@@ -356,7 +361,7 @@ class Dense(Layer):
             dims = ['N_LAYER_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
         else:
             dims = ['N_LAYER_{}'.format(self.index)]
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape, dims, precision=self.get_attr("quant_precision"))
         if self.get_attr("weight") is None:
             self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=self.model.config.get_compression(self))
             self.add_bias(quantizer=self.get_attr('bias_quantizer'))

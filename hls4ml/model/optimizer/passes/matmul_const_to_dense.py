@@ -1,6 +1,6 @@
 import numpy as np
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.types import IntegerPrecisionType
+from hls4ml.model.types import IntegerPrecisionType, NamedType
 from hls4ml.model.layers import MatMul, Constant, Dense
 from hls4ml.model.optimizer.passes.quant_opt import propagete_type_mult
 
@@ -32,6 +32,8 @@ class MatmulConstToDense(OptimizerPass):
         out_shape = list(in_shape[:-1]) + [const_node.value.shape[-1]]
         node.set_attr('n_out', np.prod(out_shape))
 
+        node.set_attr('trace', True)
+
         quant_precision = propagete_type_mult(other_precision, weight_precision, in_shape[-1])
 
         node.add_weights_variable(name='weight', var_name='w{index}', data=const_node.value,
@@ -51,6 +53,10 @@ class MatmulConstToDense(OptimizerPass):
         #making new node
         new_dense = model.make_node(Dense, f"Dense_{node.name}", node.attributes,
             [node.inputs[0]], [x for x in node.outputs])
+
+        if quant_precision:
+            accum_t = NamedType('layer{}_accum_t'.format(new_dense.index), quant_precision)
+            new_dense.set_attr('accum_t', accum_t)
 
         #removing and replacing old nodes
         model.remove_node(const_node, rewire=False)

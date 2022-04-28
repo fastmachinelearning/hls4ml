@@ -14,7 +14,7 @@ for opt_name, opt in optimizers.items():
 
 
 base_convert = [
-    'fuse_bias_add', 
+    'fuse_bias_add',
     'remove_useless_transpose',
     'reshape_constant',
     'quant_constant_parameters',
@@ -38,22 +38,22 @@ base_convert = [
 try:
     import qkeras
     # TODO Maybe not all QKeras optmizers belong here?
-    register_flow('convert', base_convert 
-        + ['output_rounding_saturation_mode', 'qkeras_factorize_alpha', 'extract_ternary_threshold', 'fuse_consecutive_batch_normalization']) 
+    register_flow('convert', base_convert
+        + ['output_rounding_saturation_mode', 'qkeras_factorize_alpha', 'extract_ternary_threshold', 'fuse_consecutive_batch_normalization'])
     register_flow('optimize', [
-        'eliminate_linear_activation', 
-        'fuse_consecutive_batch_normalization', 
-        'fuse_batch_normalization', 
+        'fuse_consecutive_batch_normalization',
+        'fuse_batch_normalization',
         'replace_multidimensional_dense_with_conv',
-        'eliminate_linear_activation_quant'
+        'eliminate_linear_activation_quant',
+        'eliminate_linear_activation',
         ], requires=['convert'])
 except:
     register_flow('convert', base_convert)
     register_flow('optimize', [
-        'eliminate_linear_activation', 
-        'fuse_batch_normalization', 
+        'fuse_batch_normalization',
         'replace_multidimensional_dense_with_conv',
-        'eliminate_linear_activation_quant'
+        'eliminate_linear_activation_quant',
+        'eliminate_linear_activation',
         ], requires=['convert'])
 
 del opt_path

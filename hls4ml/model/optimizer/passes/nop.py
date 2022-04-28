@@ -1,11 +1,14 @@
 from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.model.layers import Activation
 
 class EliminateLinearActivation(OptimizerPass):
     def match(self, node):
         cast = False
-        if node.__class__.__name__ == 'Activation':
+        if isinstance(node, Activation):
             cast = node.get_input_variable().type.precision != node.get_output_variable().type.precision
-        return node.__class__.__name__ == 'Activation' and node.get_attr('activation') == 'linear' and not cast
+            return node.get_attr('activation') == 'linear' and not cast
+        else:
+            return False
     
     def transform(self, model, node):
         model.remove_node(node)
@@ -20,7 +23,7 @@ class EliminateLinearActivationQuant(OptimizerPass):
         '''
         Only match if this activation is from quant node and previous node precision is not set  by a quant node already.
         '''
-        is_match = (node.__class__.__name__ == 'Activation' and node.get_attr('activation') == 'linear'
+        is_match = (isinstance(node, Activation) and node.get_attr('activation') == 'linear'
                     and node.get_attr("quant_precision")
                     and not node.get_input_node(node.inputs[0]).get_attr("quant_precision"))
         return is_match

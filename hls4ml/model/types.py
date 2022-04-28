@@ -215,6 +215,7 @@ class InplaceTensorVariable(TensorVariable):
         and the input_var variable it should link to.
         '''
         self.__dict__.update(tv.__dict__)
+        self.type = input_var.type
         self.input_var = input_var
 
 class WeightVariable(Variable):
