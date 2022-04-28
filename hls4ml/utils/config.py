@@ -100,7 +100,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
         model_arch = json.loads(model.to_json())
 
     #Define supported layers
-    core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Reshape', 'Permute', 'UpSampling2D']
+    core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Reshape', 'Permute']
     dense_layers = ['Dense', 'BinaryDense', 'TernaryDense']
     conv_layers = ['Conv1D', 'Conv2D', 'BinaryConv2D']
     pooling_layers = ['MaxPooling1D', 'MaxPooling2D', 'GlobalMaxPooling1D', 'GlobalMaxPooling2D', 'AveragePooling1D', 'AveragePooling2D', 'GlobalAveragePooling1D', 'GlobalAveragePooling2D']
@@ -108,12 +108,13 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
     merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate', 'Dot']
     qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D', 'QBatchNormalization', 'QConv2DBatchnorm']
+    upsampling_layers = ['UpSampling1D', 'UpSampling2D']
     reshaping_layers = ['ZeroPadding1D', 'ZeroPadding2D']
     graph_layers = ['GarNet', 'GarNetStack']
     #Define layers to skip because they're not configurable or not converted to HLS
     skip_layers = ['Dropout', 'Flatten', 'Reshape', 'Permute']
     #All supported layers
-    supported_layers = core_layers + dense_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + reshaping_layers + graph_layers + skip_layers
+    supported_layers = core_layers + dense_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + upsampling_layers + reshaping_layers + graph_layers + skip_layers
 
     keras_layer_config = None
     if model_arch['class_name'] == 'Sequential':
