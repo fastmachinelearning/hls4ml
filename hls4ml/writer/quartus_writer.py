@@ -4,7 +4,6 @@ import yaml
 from shutil import copyfile, copytree, rmtree
 import numpy as np
 import os
-import re
 import glob
 from collections import OrderedDict
 
@@ -234,7 +233,6 @@ class QuartusWriter(Writer):
             for weights in layer.get_weights():
                 self.print_array_to_cpp(weights, layer, model.config.get_output_dir())
 
-
     def write_test_bench(self, model):
         ###################
         ## test bench
@@ -459,43 +457,29 @@ class QuartusWriter(Writer):
 
         copytree(srcpath, dstpath)
 
-    def write_activation_tables(self, model):
-
-        ###################
-        ## activation_tables
-        ###################
-
-        filedir = os.path.dirname(os.path.abspath(__file__))
-
-        #srcpath = os.path.join(filedir,'../templates/quartus/firmware/nnet_utils/activation_tables/')
-        dstpath = '{}/firmware/nnet_utils/activation_tables/'.format(model.config.get_output_dir())
-
-        if not os.path.exists(dstpath):
-            os.mkdir(dstpath)
-
-        ###################
-        ## elu_table
-        ###################
+    def __get_table_size(self, model, activation):
         for layer in model.get_layers():
-            if(layer.get_attr('activation') == 'elu'):
-                table_size = layer.get_attr('table_size')
-            else:
-                table_size = 1024
+            if layer.get_attr('activation') == activation and layer.get_attr('table_size') is not None:
+                return layer.get_attr('table_size')
+        return 1024
 
-        table_name = 'elu_table'
-        h_file = open("{}/{}.tb".format(dstpath, table_name),"w")
+    def __get_table_header(self, table_name, table_size):
+        table_header = '#ifndef {}_H_\n'.format(table_name.upper())
+        table_header += '#define {}_H_\n'.format(table_name.upper())
+        table_header += '\n'
 
-        #meta data
-        h_file.write("#ifndef {}_H_\n".format(table_name.upper()))
-        h_file.write("#define {}_H_\n".format(table_name.upper()))
-        h_file.write("\n")
-
-        table_header = '#ifdef __INTELFPGA_COMPILER__\n'
+        table_header += '#ifdef __INTELFPGA_COMPILER__\n'
         table_header += 'hls_init_on_powerup\n'
         table_header += '#endif\n'
         table_header += 'static const typename CONFIG_T::table_t {}[{}] = {{'.format(table_name, table_size)
+        return table_header
 
-        h_file.write(table_header)
+    def __write_elu_table(self, model, path):
+        table_name = 'elu_table'
+        table_size = self.__get_table_size(model, 'elu')
+        
+        h_file = open('{}/{}.tb'.format(path, table_name),'w')
+        h_file.write(self.__get_table_header(table_name, table_size))
 
         sep = ''
         for i in range(table_size):
@@ -504,103 +488,60 @@ class QuartusWriter(Writer):
             h_file.write(sep + str(real_val))
             sep = ", "
 
-        h_file.write("};\n")
-        h_file.write("\n#endif\n")
+        h_file.write('};\n')
+        h_file.write('\n#endif\n')
         h_file.close()
 
-        ###################
-        ## sigmoid_table
-        ###################
-        for layer in model.get_layers():
-            if(layer.get_attr('activation') == 'sigmoid'):
-                table_size = layer.get_attr('table_size')
-            else:
-                table_size = 1024
-
+    def __write_sigmoid_table(self, model, path):
+        MAX_VALUE = 8
+        MIN_VALUE = 0
+        
         table_name = 'sigmoid_table'
-        h_file = open("{}/{}.tb".format(dstpath, table_name),"w")
-
-        #meta data
-        h_file.write("#ifndef {}_H_\n".format(table_name.upper()))
-        h_file.write("#define {}_H_\n".format(table_name.upper()))
-        h_file.write("\n")
-
-        table_header = '#ifdef __INTELFPGA_COMPILER__\n'
-        table_header += 'hls_init_on_powerup\n'
-        table_header += '#endif\n'
-        table_header += 'static const typename CONFIG_T::table_t {}[{}] = {{'.format(table_name, table_size)
-
-        h_file.write(table_header)
+        table_size = self.__get_table_size(model, 'sigmoid')
+        
+        h_file = open('{}/{}.tb'.format(path, table_name), 'w')
+        h_file.write(self.__get_table_header(table_name, table_size))
 
         sep = ''
         for i in range(table_size):
-            in_val = 2*8.0*(i-float(table_size)/2.0)/float(table_size)
+            in_val = i * (MAX_VALUE-MIN_VALUE)/float(table_size) + (MAX_VALUE-MIN_VALUE)/(float(table_size)*2) + MIN_VALUE
             real_val = 1.0 / (1 + np.exp(-in_val))
-            h_file.write(sep + str(real_val))
-            sep = ", "
+            if(real_val >= 0.5):
+                h_file.write(sep + str(real_val))
+                sep = ", "
 
-        h_file.write("};\n")
-        h_file.write("\n#endif\n")
+        h_file.write('};\n')
+        h_file.write('\n#endif\n')
         h_file.close()
 
-        ###################
-        ## tanh_table
-        ###################
-        for layer in model.get_layers():
-            if(layer.get_attr('activation') == 'dense_tanh'):
-                table_size = layer.get_attr('table_size')
-            else:
-                table_size = 1024
-
+    def __write_tanh_table(self, model, path):
+        MAX_VALUE = 4
+        MIN_VALUE = 0
+        
         table_name = 'tanh_table'
-        h_file = open("{}/{}.tb".format(dstpath, table_name),"w")
+        table_size = self.__get_table_size(model, 'dense_tanh')
 
-        #meta data
-        h_file.write("#ifndef {}_H_\n".format(table_name.upper()))
-        h_file.write("#define {}_H_\n".format(table_name.upper()))
-        h_file.write("\n")
-
-        table_header = '#ifdef __INTELFPGA_COMPILER__\n'
-        table_header += 'hls_init_on_powerup\n'
-        table_header += '#endif\n'
-        table_header += 'static const typename CONFIG_T::table_t {}[{}] = {{'.format(table_name, table_size)
-
-        h_file.write(table_header)
-
+        h_file = open('{}/{}.tb'.format(path, table_name), 'w')
+        h_file.write(self.__get_table_header(table_name, table_size))
+        
         sep = ''
         for i in range(table_size):
-            in_val = 2*4.0*(i-float(table_size)/2.0)/float(table_size)
+            in_val = i*(MAX_VALUE-MIN_VALUE)/float(table_size) + (MAX_VALUE-MIN_VALUE)/(float(table_size)*2) + MIN_VALUE
             real_val = np.tanh(in_val)
-            h_file.write(sep + str(real_val))
-            sep = ", "
+            if(real_val >= 0):
+                h_file.write(sep + str(real_val))
+                sep = ", "
 
-        h_file.write("};\n")
-        h_file.write("\n#endif\n")
+        h_file.write('};\n')
+        h_file.write('\n#endif\n')
         h_file.close()
 
-        ###################
-        ## softplus_table
-        ###################
-        for layer in model.get_layers():
-            if(layer.get_attr('activation') == 'softplus'):
-                table_size = layer.get_attr('table_size')
-            else:
-                table_size = 1024
-
+    def __write_softplus_table(self, model, path):
         table_name = 'softplus_table'
-        h_file = open("{}/{}.tb".format(dstpath, table_name),"w")
+        table_size = self.__get_table_size(model, 'softplus')
 
-        #meta data
-        h_file.write("#ifndef {}_H_\n".format(table_name.upper()))
-        h_file.write("#define {}_H_\n".format(table_name.upper()))
-        h_file.write("\n")
-
-        table_header = '#ifdef __INTELFPGA_COMPILER__\n'
-        table_header += 'hls_init_on_powerup\n'
-        table_header += '#endif\n'
-        table_header += 'static const typename CONFIG_T::table_t {}[{}] = {{'.format(table_name, table_size)
-
-        h_file.write(table_header)
+        h_file = open('{}/{}.tb'.format(path, table_name), 'w')
+        h_file.write(self.__get_table_header(table_name, table_size))
 
         sep = ''
         for i in range(table_size):
@@ -608,34 +549,17 @@ class QuartusWriter(Writer):
             real_val = np.log(np.exp(in_val) + 1.)
             h_file.write(sep + str(real_val))
             sep = ", "
-
-        h_file.write("};\n")
-        h_file.write("\n#endif\n")
+        
+        h_file.write('};\n')
+        h_file.write('\n#endif\n')
         h_file.close()
 
-        ###################
-        ## softsign_table
-        ###################
-        for layer in model.get_layers():
-            if(layer.get_attr('activation') == 'softsign'):
-                table_size = layer.get_attr('table_size')
-            else:
-                table_size = 1024
-
+    def __write_softsign_table(self, model, path):
         table_name = 'softsign_table'
-        h_file = open("{}/{}.tb".format(dstpath, table_name),"w")
+        table_size = self.__get_table_size(model, 'softsign')
 
-        #meta data
-        h_file.write("#ifndef {}_H_\n".format(table_name.upper()))
-        h_file.write("#define {}_H_\n".format(table_name.upper()))
-        h_file.write("\n")
-
-        table_header = '#ifdef __INTELFPGA_COMPILER__\n'
-        table_header += 'hls_init_on_powerup\n'
-        table_header += '#endif\n'
-        table_header += 'static const typename CONFIG_T::table_t {}[{}] = {{'.format(table_name, table_size)
-
-        h_file.write(table_header)
+        h_file = open('{}/{}.tb'.format(path, table_name), 'w')
+        h_file.write(self.__get_table_header(table_name, table_size))
 
         sep = ''
         for i in range(table_size):
@@ -644,34 +568,17 @@ class QuartusWriter(Writer):
             h_file.write(sep + str(real_val))
             sep = ", "
 
-        h_file.write("};\n")
-        h_file.write("\n#endif\n")
+        h_file.write('};\n')
+        h_file.write('\n#endif\n')
         h_file.close()
 
-        ###################
-        ## selu_table
-        ###################
-        for layer in model.get_layers():
-            if(layer.get_attr('activation') == 'selu'):
-                table_size = layer.get_attr('table_size')
-            else:
-                table_size = 1024
-
+    def __write_selu_table(self, model, path):
         table_name = 'selu_table'
-        h_file = open("{}/{}.tb".format(dstpath, table_name),"w")
+        table_size = self.__get_table_size(model, 'selu')
 
-        #meta data
-        h_file.write("#ifndef {}_H_\n".format(table_name.upper()))
-        h_file.write("#define {}_H_\n".format(table_name.upper()))
-        h_file.write("\n")
-
-        table_header = '#ifdef __INTELFPGA_COMPILER__\n'
-        table_header += 'hls_init_on_powerup\n'
-        table_header += '#endif\n'
-        table_header += 'static const typename CONFIG_T::table_t {}[{}] = {{'.format(table_name, table_size)
-
-        h_file.write(table_header)
-
+        h_file = open('{}/{}.tb'.format(path, table_name), 'w')
+        h_file.write(self.__get_table_header(table_name, table_size))
+        
         sep = ''
         for i in range(table_size):
             in_val = -8.0*i/float(table_size)
@@ -679,34 +586,17 @@ class QuartusWriter(Writer):
             h_file.write(sep + str(real_val))
             sep = ", "
 
-        h_file.write("};\n")
-        h_file.write("\n#endif\n")
+        h_file.write('};\n')
+        h_file.write('\n#endif\n')
         h_file.close()
 
-        ###################
-        ## exp_table
-        ###################
-        for layer in model.get_layers():
-            if(layer.get_attr('activation') == 'softmax'):
-                table_size = layer.get_attr('table_size')
-            else:
-                table_size = 1024
-
+    def __write_exp_table(self, model, path):
         table_name = 'exp_table'
-        h_file = open("{}/{}.tb".format(dstpath, table_name),"w")
+        table_size = self.__get_table_size(model, 'softmax')
 
-        #meta data
-        h_file.write("#ifndef {}_H_\n".format(table_name.upper()))
-        h_file.write("#define {}_H_\n".format(table_name.upper()))
-        h_file.write("\n")
-
-        table_header = '#ifdef __INTELFPGA_COMPILER__\n'
-        table_header += 'hls_init_on_powerup\n'
-        table_header += '#endif\n'
-        table_header += 'static const typename CONFIG_T::table_t {}[{}] = {{'.format(table_name, table_size)
-
-        h_file.write(table_header)
-
+        h_file = open('{}/{}.tb'.format(path, table_name), 'w')
+        h_file.write(self.__get_table_header(table_name, table_size))
+        
         sep = ''
         for i in range(table_size):
             in_val = 2*8.0*(i-float(table_size)/2.0)/float(table_size)
@@ -714,34 +604,17 @@ class QuartusWriter(Writer):
             h_file.write(sep + str(real_val))
             sep = ", "
 
-        h_file.write("};\n")
-        h_file.write("\n#endif\n")
+        h_file.write('};\n')
+        h_file.write('\n#endif\n')
         h_file.close()
 
-        ###################
-        ## invert_table
-        ###################
-        for layer in model.get_layers():
-            if(layer.get_attr('activation') == 'softmax'):
-                table_size = layer.get_attr('table_size')
-            else:
-                table_size = 1024
-
+    def __write_invert_table(self, model, path):
         table_name = 'invert_table'
-        h_file = open("{}/{}.tb".format(dstpath, table_name),"w")
+        table_size = self.__get_table_size(model, 'softmax')
 
-        #meta data
-        h_file.write("#ifndef {}_H_\n".format(table_name.upper()))
-        h_file.write("#define {}_H_\n".format(table_name.upper()))
-        h_file.write("\n")
-
-        table_header = '#ifdef __INTELFPGA_COMPILER__\n'
-        table_header += 'hls_init_on_powerup\n'
-        table_header += '#endif\n'
-        table_header += 'static const typename CONFIG_T::table_t {}[{}] = {{'.format(table_name, table_size)
-
-        h_file.write(table_header)
-
+        h_file = open('{}/{}.tb'.format(path, table_name), 'w')
+        h_file.write(self.__get_table_header(table_name, table_size))
+        
         sep = ''
         for i in range(table_size):
             real_val = 0
@@ -750,11 +623,27 @@ class QuartusWriter(Writer):
                 real_val = 1.0/in_val
             h_file.write(sep + str(real_val))
             sep = ", "
-
-        h_file.write("};\n")
-        h_file.write("\n#endif\n")
+        
+        h_file.write('};\n')
+        h_file.write('\n#endif\n')
         h_file.close()
 
+    def write_activation_tables(self, model):
+        # Output path
+        dstpath = '{}/firmware/nnet_utils/activation_tables'.format(model.config.get_output_dir())
+        if not os.path.exists(dstpath):
+            os.mkdir(dstpath)
+        
+        # Tables
+        self.__write_elu_table(model, dstpath)
+        self.__write_sigmoid_table(model, dstpath)
+        self.__write_tanh_table(model, dstpath)
+        self.__write_softplus_table(model, dstpath)
+        self.__write_softsign_table(model, dstpath)
+        self.__write_selu_table(model, dstpath)
+        self.__write_exp_table(model, dstpath)
+        self.__write_invert_table(model, dstpath)
+       
     def write_yml(self, model):
         ###################
         # YAML config file

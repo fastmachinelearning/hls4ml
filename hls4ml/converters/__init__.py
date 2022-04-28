@@ -143,6 +143,9 @@ def _check_hls_config(config, hls_config):
     if 'LayerType' in hls_config:
         config['HLSConfig']['LayerType'] = hls_config['LayerType']
 
+    if 'Flows' in hls_config:
+        config['HLSConfig']['Flows'] = hls_config['Flows']
+
     if 'Optimizers' in hls_config:
         config['HLSConfig']['Optimizers'] = hls_config['Optimizers']
 

@@ -13,8 +13,8 @@ conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
-    template<class x_T, class y_T, class res_T>
-    using product = nnet::product::{product_type}<x_T, y_T, res_T>;
+    template<class x_T, class y_T>
+    using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
 
 # Conv1D templates

@@ -99,15 +99,27 @@ void  relu1(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 template<class data_T, class res_T, typename CONFIG_T>
 void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
+    static const int MAX_VALUE=8;
     #include "activation_tables/sigmoid_table.tb"
-    // Index into the lookup table based on data
     #pragma unroll
-    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        int data_round = (data[ii]*CONFIG_T::table_size/16).to_int();
-        int index = data_round + 8*CONFIG_T::table_size/16;
-        if (index < 0)   index = 0;
-        if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
-        res[ii] = (res_T) sigmoid_table[index];
+    for (int ii=0; ii < CONFIG_T::n_in; ii++) {
+        data_T absoluteValue  hls_register;
+        res_T  temp2 hls_register;
+        if(data[ii] < 0 ){
+            absoluteValue = - data[ii];
+        }
+        else{
+            absoluteValue = data[ii];
+        }
+        int index = ( absoluteValue *( CONFIG_T::table_size / MAX_VALUE)).to_int();
+        if (absoluteValue > MAX_VALUE ) index = CONFIG_T::table_size - 1;
+        temp2 = (res_T) sigmoid_table[index];
+        if(data[ii] < 0 ){
+            res[ii] = 1-temp2;
+        }
+        else{
+            res[ii] = temp2;
+        }
     }
 }
 
@@ -163,17 +175,29 @@ void  softmax(  data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 template<class data_T, class res_T, typename CONFIG_T>
 void  dense_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
+    static const int MAX_VALUE=4;
     // Initialize the lookup table
     #include "activation_tables/tanh_table.tb"
     // Index into the lookup table based on data
     #pragma unroll
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        ac_int<16> data_round = (data[ii]*CONFIG_T::table_size/8).to_int();
-        ac_int<16> index = data_round +  4*CONFIG_T::table_size/8;
-        //std::cout << "Input: "  << data[ii] << " Round: " << data_round << " Index: " << index << std::endl;
-        if (index < 0)   index = 0;
-        if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
-        res[ii] = (res_T) tanh_table[index];
+        data_T temp  hls_register;
+        res_T  temp2 hls_register;
+        if(data[ii] < 0 ){
+            temp = -data[ii];
+        }
+        else{
+            temp = data[ii];
+        }
+        ac_int<16> index = ( temp *(CONFIG_T::table_size/MAX_VALUE)).to_int();
+        if (temp > MAX_VALUE ) index = CONFIG_T::table_size-1;
+        temp2 = (res_T) tanh_table[index];
+        if(data[ii] < 0 ){
+            res[ii] = -temp2;
+        }
+        else{
+            res[ii] = temp2;
+        }
     }
 }
 
