@@ -156,7 +156,8 @@ class QuartusBackend(FPGABackend):
         if layer.model.config.get_compression(layer):
             layer.set_attr('strategy', 'compressed')
         else:
-            self.set_closest_reuse_factor(layer)
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
             self.gen_quartus_weight_array(layer)
             layer.set_attr('strategy', 'resource')
 
