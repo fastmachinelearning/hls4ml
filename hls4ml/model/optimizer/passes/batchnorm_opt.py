@@ -148,12 +148,12 @@ class BroadcastWeightsBatchNormalization(OptimizerPass):
         scale_bias_shape = input_shape if n_filt == -1 else (n_filt,)
 
         # Check shape, broadcast if needed.
-        if scale.shape != scale_bias_shape:
+        if np.squeeze(scale).shape != tuple(scale_bias_shape):
             node.add_weights_variable(name='scale', data=np.broadcast_to(scale, scale_bias_shape),
                                       precision=node.get_attr("scale_precision"),
                                       quantizer=node.get_attr("scale_quantizer"))
 
-        if bias.shape != scale_bias_shape:
+        if np.squeeze(bias).shape != tuple(scale_bias_shape):
             node.add_weights_variable(name='bias', data=np.broadcast_to(bias, scale_bias_shape),
                                       precision=node.get_attr("bias_precision"),
                                       quantizer=node.get_attr("bias_quantizer"))
