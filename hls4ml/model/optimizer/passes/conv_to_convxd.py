@@ -1,7 +1,8 @@
 import numpy as np
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.types import FixedPrecisionType
-from hls4ml.model.layers import Conv, Constant
+from hls4ml.model.types import IntegerPrecisionType
+from hls4ml.model.layers import Conv, Constant, Conv1D, Conv2D
+from hls4ml.model.optimizer.passes.quant_opt import propagete_type_conv
 
 class ConvToConvXD(OptimizerPass):
     """ Convert Conv with constant to a Conv1D or Conv2D layer """
@@ -33,42 +34,36 @@ class ConvToConvXD(OptimizerPass):
         quant_precision = None
 
         if weight_precision and input_precision and (bias_precision or not bias_node):
-            if (weight_precision.width != weight_precision.integer
-                or input_precision.width != input_precision.integer):
-                raise ValueError("quant_precisions must always have the same width and integer parameters")
-
-            num_feature_maps = weight_node.value.shape[0]
-            Nacc = attributes['filt_width'] * attributes.get('filt_height', 1) * num_feature_maps
-            bitwidth = weight_precision.width + input_precision.width + int(np.ceil(np.log2(Nacc)))
-            signed = weight_precision.signed or input_precision.signed
-            # copy staruation and rounding from "other"
-            rounding_mode = input_precision.rounding_mode
-            saturation_mode = input_precision.saturation_mode
-
-            # correct if bias
-            if bias_node:
-                bitwidth = max(bitwidth + (bias_precision.signed and not signed),
-                               bias_precision.width + (signed and not bias_precision.signed)) + 1
-                signed = signed or bias_precision.signed
-            quant_precision = FixedPrecisionType(bitwidth, bitwidth, signed, rounding_mode, saturation_mode)
+            quant_precision = propagete_type_conv(input_precision, weight_precision, bias_precision,
+                num_feature_maps=weight_node.value.shape[0], filt_width=attributes['filt_width'],
+                filt_height=attributes.get('filt_height', 1))
 
         #creating the attributes
 
         # The ConvxD nodes expect the weight data to be in a different format, not (M, k1.., C)
         if attributes['n_dim'] == 1:
-            nodetype = "Conv1D"
-            attributes["weight_data"] =  np.transpose(weight_node.value, (1, 2, 0))
+            nodetype = Conv1D
+            weight_data =  np.transpose(weight_node.value, (1, 2, 0))
         else:
-            nodetype = "Conv2D"
-            attributes["weight_data"] =  np.transpose(weight_node.value, (1, 2, 3, 0))
+            nodetype = Conv2D
+            weight_data =  np.transpose(weight_node.value, (1, 2, 3, 0))
         attributes["weight_precision"] = weight_precision
         attributes["weight_quantizer"] =  weight_node.get_attr("quantizer")
         attributes["quant_precision"] = quant_precision
 
+        node.add_weights_variable(name='weight', var_name='w{index}', data=weight_data,
+                                  precision=weight_precision, quantizer=attributes['weight_quantizer'])
+ 
         if bias_node:
-            attributes["bias_data"] =  bias_node.value
             attributes["bias_precision"] = bias_precision,
             attributes["bias_quantizer"] =  bias_node.get_attr("quantizer")
+            node.add_weights_variable(name='bias', var_name='b{index}', data=bias_node.value,
+                                      precision=bias_precision, quantizer=attributes['bias_quantizer'])
+        else:
+            node.add_weights_variable(name='bias', var_name='b{index}', data=np.zeros(node.get_output_variable().shape),
+                                      precision=IntegerPrecisionType(1, False))
+
+
 
         #making new node
         new_node = model.make_node(nodetype, f"{nodetype}_{node.name}", attributes,

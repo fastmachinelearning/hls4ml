@@ -25,6 +25,7 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
     if get_onnx_attribute(node, 'group') != 1:
         raise ValueError("Only 1 group supported corrently")
 
+    layer['in_width'] = input_shapes[0][-2]
     layer['n_chan'] = input_shapes[0][-1]
     layer['n_filt'] = input_shapes[1][0]
 
@@ -36,9 +37,9 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
     #set some values needed later
     if layer['n_dim'] == 1:
         # this is 1D convolution
-        full_width = input_shapes[0][-2] + pads[0] + pads[1]
+        full_width = layer['in_width'] + pads[0] + pads[1]
         eff_kernel_width = kernel_shape[0] * dilations[0]
-        layer['n_out'] = int(np.ceil((full_width - eff_kernel_width + 1) / strides[0]))
+        layer['out_width'] = int(np.ceil((full_width - eff_kernel_width + 1) / strides[0]))
         # for compatibility interpret some variables
         layer['pad_left'] = pads[0]
         layer['pad_right'] = pads[1]
@@ -47,7 +48,8 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
         layer['dilation_width'] = dilations[0]
     else:
         # 2d
-        full_height = input_shapes[0][-3] + pads[0] + pads[2]
+        layer['in_height'] = input_shapes[0][-3]
+        full_height = layer['in_height'] + pads[0] + pads[2]
         eff_kernel_height = kernel_shape[0] * dilations[0]
         out_height = int(np.ceil((full_height - eff_kernel_height + 1) / strides[0]))
         layer['out_height'] = out_height
