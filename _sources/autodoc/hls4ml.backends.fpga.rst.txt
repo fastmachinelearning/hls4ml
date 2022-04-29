@@ -1,6 +1,13 @@
 hls4ml.backends.fpga package
 ============================
 
+Subpackages
+-----------
+
+.. toctree::
+
+   hls4ml.backends.fpga.passes
+
 Submodules
 ----------
 
@@ -8,6 +15,14 @@ hls4ml.backends.fpga.fpga\_backend module
 -----------------------------------------
 
 .. automodule:: hls4ml.backends.fpga.fpga_backend
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.fpga.fpga\_layers module
+----------------------------------------
+
+.. automodule:: hls4ml.backends.fpga.fpga_layers
    :members:
    :undoc-members:
    :show-inheritance:

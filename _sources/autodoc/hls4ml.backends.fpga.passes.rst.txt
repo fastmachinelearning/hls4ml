@@ -1,0 +1,22 @@
+hls4ml.backends.fpga.passes package
+===================================
+
+Submodules
+----------
+
+hls4ml.backends.fpga.passes.bn\_quant module
+--------------------------------------------
+
+.. automodule:: hls4ml.backends.fpga.passes.bn_quant
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.backends.fpga.passes
+   :members:
+   :undoc-members:
+   :show-inheritance:

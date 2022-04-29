@@ -56,12 +56,12 @@
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.html">hls4ml package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.html">hls4ml.backends package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.fpga.html">hls4ml.backends.fpga package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.fpga.passes.html">hls4ml.backends.fpga.passes package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.quartus.html">hls4ml.backends.quartus package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.quartus.passes.html">hls4ml.backends.quartus.passes package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vivado.html">hls4ml.backends.vivado package</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">hls4ml.backends.vivado.passes package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.vivado.passes.bn_quant">hls4ml.backends.vivado.passes.bn_quant module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.vivado.passes.bram_weights">hls4ml.backends.vivado.passes.bram_weights module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hls4ml-backends-vivado-passes-clone-module">hls4ml.backends.vivado.passes.clone module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.vivado.passes.conv_same_pad">hls4ml.backends.vivado.passes.conv_same_pad module</a></li>
@@ -124,87 +124,6 @@
 <h1>hls4ml.backends.vivado.passes package<a class="headerlink" href="#hls4ml-backends-vivado-passes-package" title="Permalink to this headline"></a></h1>
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
-</div>
-<div class="section" id="module-hls4ml.backends.vivado.passes.bn_quant">
-<span id="hls4ml-backends-vivado-passes-bn-quant-module"></span><h2>hls4ml.backends.vivado.passes.bn_quant module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.bn_quant" title="Permalink to this headline"></a></h2>
-<dl class="class">
-<dt id="hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanh">
-<em class="property">class </em><code class="sig-prename descclassname">hls4ml.backends.vivado.passes.bn_quant.</code><code class="sig-name descname">BatchNormalizationQuantizedTanh</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">name</em>, <em class="sig-param">attributes</em>, <em class="sig-param">inputs</em>, <em class="sig-param">outputs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanh" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.layers.Layer</span></code></a></p>
-<p>Merged Batch Normalization and quantized (binary or ternary) Tanh layer.
-The mean, variance, beta, gamma parameters are folded into the threshold(s) at which the
-sign of the input flips after the quantized (binary or ternary) Tanh activation.</p>
-<dl class="method">
-<dt id="hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanh.initialize">
-<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanh.initialize" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanh.set_thresholds">
-<code class="sig-name descname">set_thresholds</code><span class="sig-paren">(</span><em class="sig-param">scale</em>, <em class="sig-param">bias</em>, <em class="sig-param">ternary_threshold=0.5</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanh.set_thresholds" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate">
-<em class="property">class </em><code class="sig-prename descclassname">hls4ml.backends.vivado.passes.bn_quant.</code><code class="sig-name descname">BatchNormalizationQuantizedTanhConfigTemplate</code><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.backends.template.LayerConfigTemplate</span></code></a></p>
-<dl class="method">
-<dt id="hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate.format">
-<code class="sig-name descname">format</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate.format" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate">
-<em class="property">class </em><code class="sig-prename descclassname">hls4ml.backends.vivado.passes.bn_quant.</code><code class="sig-name descname">BatchNormalizationQuantizedTanhFunctionTemplate</code><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.backends.template.FunctionCallTemplate</span></code></a></p>
-<dl class="method">
-<dt id="hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate.format">
-<code class="sig-name descname">format</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate.format" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh">
-<em class="property">class </em><code class="sig-prename descclassname">hls4ml.backends.vivado.passes.bn_quant.</code><code class="sig-name descname">MergeBatchNormAndQuantizedTanh</code><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
-<dl class="method">
-<dt id="hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh.match">
-<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh.match" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh.transform">
-<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh.transform" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="hls4ml.backends.vivado.passes.bn_quant.QuantizeDenseOutput">
-<em class="property">class </em><code class="sig-prename descclassname">hls4ml.backends.vivado.passes.bn_quant.</code><code class="sig-name descname">QuantizeDenseOutput</code><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.QuantizeDenseOutput" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
-<dl class="method">
-<dt id="hls4ml.backends.vivado.passes.bn_quant.QuantizeDenseOutput.match">
-<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.QuantizeDenseOutput.match" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="hls4ml.backends.vivado.passes.bn_quant.QuantizeDenseOutput.transform">
-<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.QuantizeDenseOutput.transform" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="hls4ml.backends.vivado.passes.bn_quant.register_bn_quant">
-<code class="sig-prename descclassname">hls4ml.backends.vivado.passes.bn_quant.</code><code class="sig-name descname">register_bn_quant</code><span class="sig-paren">(</span><em class="sig-param">backend</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.register_bn_quant" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 </div>
 <div class="section" id="module-hls4ml.backends.vivado.passes.bram_weights">
 <span id="hls4ml-backends-vivado-passes-bram-weights-module"></span><h2>hls4ml.backends.vivado.passes.bram_weights module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.bram_weights" title="Permalink to this headline"></a></h2>
