@@ -195,6 +195,30 @@ class VivadoBackend(FPGABackend):
         
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
+    @layer_optimizer(BatchNormalization)
+    def init_batchnormalization(self, layer):
+        '''Broadcast weights and scale if needed'''
+        input_shape = layer.get_input_variable().shape
+
+        scale = layer.weights['scale'].data_unquantized
+        bias = layer.weights['bias'].data_unquantized
+
+        n_filt = layer.get_attr('n_filt', -1)
+
+        scale_bias_shape = input_shape if n_filt == -1 else (n_filt,)
+
+        # Check shape, broadcast if needed. Don't broadcast if a squeeze makes them match.
+        if scale.shape != tuple(scale_bias_shape) and np.squeeze(scale).shape != tuple(scale_bias_shape):
+            layer.add_weights_variable(name='scale', data=np.broadcast_to(scale, scale_bias_shape),
+                                      precision=layer.get_attr("scale_precision"),
+                                      quantizer=layer.get_attr("scale_quantizer"))
+
+        if bias.shape != tuple(scale_bias_shape) and np.squeeze(bias).shape != tuple(scale_bias_shape):
+            layer.add_weights_variable(name='bias', data=np.broadcast_to(bias, scale_bias_shape),
+                                      precision=layer.get_attr("bias_precision"),
+                                      quantizer=layer.get_attr("bias_quantizer"))
+
+
     @layer_optimizer(Activation)
     def init_activation(self, layer):
         if 'table_t' not in layer.attributes:

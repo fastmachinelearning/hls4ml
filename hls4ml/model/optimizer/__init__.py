@@ -40,7 +40,6 @@ base_optimize = [
     'replace_multidimensional_dense_with_conv',
     'eliminate_linear_activation_quant',
     'eliminate_linear_activation',
-    'broadcast_weights_batch_normalization',
 ]
 
 try:

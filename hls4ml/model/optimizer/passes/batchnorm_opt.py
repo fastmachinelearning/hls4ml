@@ -125,38 +125,3 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
 
         model.remove_node(prev_node, rewire=True)
         return True
-
-
-class BroadcastWeightsBatchNormalization(OptimizerPass):
-    '''
-    The scale and bias need to be broadcast to appropriate size before systhesis
-    '''
-
-    def match(self, node):
-        return isinstance(node, BatchNormalization)
-
-
-    def transform(self, model, node):
-
-        input_shape = node.get_input_variable().shape
-
-        scale = node.weights['scale'].data_unquantized
-        bias = node.weights['bias'].data_unquantized
-
-        n_filt = node.get_attr('n_filt', -1)
-
-        scale_bias_shape = input_shape if n_filt == -1 else (n_filt,)
-
-        # Check shape, broadcast if needed.
-        if np.squeeze(scale).shape != tuple(scale_bias_shape):
-            node.add_weights_variable(name='scale', data=np.broadcast_to(scale, scale_bias_shape),
-                                      precision=node.get_attr("scale_precision"),
-                                      quantizer=node.get_attr("scale_quantizer"))
-
-        if np.squeeze(bias).shape != tuple(scale_bias_shape):
-            node.add_weights_variable(name='bias', data=np.broadcast_to(bias, scale_bias_shape),
-                                      precision=node.get_attr("bias_precision"),
-                                      quantizer=node.get_attr("bias_quantizer"))
-
-        # I think there's no need to restart; also, it prevents an infinite loop
-        return False
