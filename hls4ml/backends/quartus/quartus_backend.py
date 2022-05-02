@@ -39,6 +39,14 @@ class QuartusBackend(FPGABackend):
         ]
         quartus_types_flow = register_flow('specific_types', quartus_types, requires=[init_flow], backend=self.name)
 
+        quantization_passes = [
+            'quartus:merge_batch_norm_quantized_tanh',
+            'quartus:quantize_dense_output',
+            'fuse_consecutive_batch_normalization',
+        ]
+        quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
+
+
         templates = self._get_layer_templates()
         template_flow = register_flow('apply_templates', templates, requires=[init_flow], backend=self.name)
 
@@ -60,7 +68,7 @@ class QuartusBackend(FPGABackend):
         else:
             extras_flow = None
 
-        ip_flow_requirements = ['optimize', init_flow, quartus_types_flow, extras_flow, template_flow]
+        ip_flow_requirements = ['optimize', init_flow, quantization_flow, quartus_types_flow, extras_flow, template_flow]
         ip_flow_requirements = list(filter(None, ip_flow_requirements))
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
@@ -156,7 +164,8 @@ class QuartusBackend(FPGABackend):
         if layer.model.config.get_compression(layer):
             layer.set_attr('strategy', 'compressed')
         else:
-            self.set_closest_reuse_factor(layer)
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
             self.gen_quartus_weight_array(layer)
             layer.set_attr('strategy', 'resource')
 

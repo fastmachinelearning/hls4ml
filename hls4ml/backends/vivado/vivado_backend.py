@@ -7,7 +7,7 @@ from queue import Queue
 from collections.abc import Iterable
 
 from hls4ml.model.types import FixedPrecisionType, NamedType, IntegerPrecisionType
-from hls4ml.model.layers import Layer, Dense, BatchNormalization, Conv1D, Conv2D, Conv2DBatchnorm, SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Activation, ParametrizedActivation, PReLU, Softmax, Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D, ZeroPadding1D, ZeroPadding2D, Merge, Concatenate, Dot, Resize, Transpose, GarNet, GarNetStack
+from hls4ml.model.layers import Layer, Dense, BatchNormalization, Embedding, Conv1D, Conv2D, Conv2DBatchnorm, SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Activation, ParametrizedActivation, PReLU, Softmax, Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D, ZeroPadding1D, ZeroPadding2D, Merge, Concatenate, Dot, Resize, Transpose, SimpleRNN, LSTM, GRU, GarNet, GarNetStack
 from hls4ml.model.attributes import Attribute
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer, model_optimizer
 from hls4ml.model.flow import register_flow
@@ -18,7 +18,16 @@ from hls4ml.report import parse_vivado_report
 class VivadoBackend(FPGABackend):
     def __init__(self):
         super(VivadoBackend, self).__init__('Vivado')
+        self._register_layer_attributes()
         self._register_flows()
+
+    def _register_layer_attributes(self):
+        extended_attrs = {
+            SimpleRNN: [Attribute('recurrent_reuse_factor', default=1)],
+            LSTM: [Attribute('recurrent_reuse_factor', default=1)],
+            GRU: [Attribute('recurrent_reuse_factor', default=1)],
+        }
+        self.attribute_map.update(extended_attrs)
 
     def _register_flows(self):
         initializers = self._get_layer_initializers()
@@ -123,8 +132,9 @@ class VivadoBackend(FPGABackend):
         index_t = IntegerPrecisionType(width=1, signed=False)
         compression = layer.model.config.get_compression(layer)
         if layer.model.config.is_resource_strategy(layer):
+            n_in, n_out = self.get_layer_mult_size(layer)
             self.set_target_reuse_factor(layer)
-            self.set_closest_reuse_factor(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
             if compression:
                 layer.set_attr('strategy', 'compressed')
                 index_t = layer.get_weights('weight').type.index_precision
@@ -142,8 +152,9 @@ class VivadoBackend(FPGABackend):
 
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
+            n_in, n_out = self.get_layer_mult_size(layer)
             self.set_target_reuse_factor(layer)
-            self.set_closest_reuse_factor(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
         
@@ -153,7 +164,8 @@ class VivadoBackend(FPGABackend):
     def init_sepconv1d(self, layer):
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
-            self.set_closest_reuse_factor(layer)
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
         
@@ -167,7 +179,8 @@ class VivadoBackend(FPGABackend):
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
             self.set_target_reuse_factor(layer)
-            self.set_closest_reuse_factor(layer)
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
         
@@ -177,7 +190,8 @@ class VivadoBackend(FPGABackend):
     def init_sepconv2d(self, layer):
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
-            self.set_closest_reuse_factor(layer)
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
         
@@ -187,7 +201,8 @@ class VivadoBackend(FPGABackend):
     def init_depconv2d(self, layer):
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
-            self.set_closest_reuse_factor(layer)
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
         
@@ -214,6 +229,64 @@ class VivadoBackend(FPGABackend):
 
         if layer.model.config.get_config_value('IOType') == 'io_parallel':
             assert len(layer.get_input_variable().shape) == 1, 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
+
+    @layer_optimizer(Embedding)
+    def init_embed(self, layer):
+        if layer.attributes['n_in'] is None:
+           raise Exception('Input length of Embedding layer must be specified.')
+
+    @layer_optimizer(LSTM)
+    def init_lstm(self, layer):
+        # TODO Allow getting recurrent reuse factor from the config
+        reuse_factor = layer.model.config.get_reuse_factor(layer)
+        layer.set_attr('recurrent_reuse_factor', reuse_factor)
+
+        recurrent_bias = np.zeros(layer.weights['recurrent_weight'].shape[1])
+        layer.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
+
+        index_t = IntegerPrecisionType(width=1, signed=False)
+
+        if 'table_t' not in layer.attributes:
+            layer.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
+        if 'table_size' not in layer.attributes:
+            layer.set_attr('table_size', 1024)
+        if layer.model.config.is_resource_strategy(layer):
+            n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
+            self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
+            layer.weights['weight'].data = np.transpose(layer.weights['weight'].data)
+            layer.weights['recurrent_weight'].data = np.transpose(layer.weights['recurrent_weight'].data)
+            layer.set_attr('strategy', 'resource')
+        else:
+            layer.set_attr('strategy', 'latency')
+
+        layer.set_attr('index_t', index_t)
+
+    @layer_optimizer(GRU)
+    def init_gru(self, layer):
+        reuse_factor = layer.model.config.get_reuse_factor(layer)
+        layer.set_attr('recurrent_reuse_factor', reuse_factor)
+
+        recurrent_bias = np.zeros(layer.weights['recurrent_weight'].shape[1])
+        layer.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
+
+        index_t = IntegerPrecisionType(width=1, signed=False)
+
+        if 'table_t' not in layer.attributes:
+            layer.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
+        if 'table_size' not in layer.attributes:
+            layer.set_attr('table_size', 1024)
+        if layer.model.config.is_resource_strategy(layer):
+            n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
+            self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
+            layer.weights['weight'].data = np.transpose(layer.weights['weight'].data)
+            layer.weights['recurrent_weight'].data = np.transpose(layer.weights['recurrent_weight'].data)
+            layer.set_attr('strategy', 'resource')
+        else:
+            layer.set_attr('strategy', 'latency')
+
+        layer.set_attr('index_t', index_t)
 
     @layer_optimizer(GarNet)
     def init_garnet(self, layer):

@@ -63,7 +63,8 @@ void dense_compressed(
         for(int im = 0; im < CONFIG_T::compressed_block_factor; im++) {
             uint32 w = ir + CONFIG_T::reuse_factor * im;
             //if (w >= CONFIG_T::reuse_factor*CONFIG_T::compressed_block_factor) continue;
-            mult[im] = product<data_T, decltype(weights[w].weight), typename CONFIG_T::accum_t>(inputs[0][im], weights[w].weight);
+            typename CONFIG_T::accum_t prod = 
+            mult[im] = CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(inputs[0][im], weights[w].weight);
             #pragma unroll
             for (int is = 0; is < CONFIG_T::reuse_factor-1; is++) {
                 inputs[is][im] = inputs[is+1][im];
