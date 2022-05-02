@@ -50,6 +50,7 @@ def load_jettagging_model():
   model.load_weights(example_model_path / 'keras/qkeras_3layer_weights.h5')
   return model
 
+# TODO - Paramaterize for Quartus (different strategies?)
 @pytest.fixture
 @pytest.mark.parametrize('strategy', ['latency', 'resource'])
 def convert(load_jettagging_model, strategy):
@@ -111,7 +112,8 @@ def randX_100_16():
 # https://github.com/fastmachinelearning/hls4ml/issues/381
 #@pytest.mark.parametrize('bits', [4, 6, 8])
 @pytest.mark.parametrize('bits,alpha', [(4, 1), (4, 'auto_po2')])
-def test_single_dense_activation_exact(randX_100_16, bits, alpha):
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_single_dense_activation_exact(randX_100_16, bits, alpha, backend):
   '''
   Test a single Dense -> Activation layer topology for
   bit exactness with number of bits parameter
@@ -126,10 +128,11 @@ def test_single_dense_activation_exact(randX_100_16, bits, alpha):
 
   hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=['relu1'], rounding_mode='AP_RND_CONV', saturation_mode='AP_SAT')
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+  output_dir = str(test_root_path / 'hls4mlprj_qkeras_single_dense_activation_exact_{}_{}_{}'.format(bits, alpha, backend))
   hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                        hls_config=config,
-                                                       output_dir=str(test_root_path / 'hls4mlprj_qkeras_single_dense_activation_exact_{}_{}'.format(bits, alpha)),
-                                                       part='xcu250-figd2104-2L-e')
+                                                       output_dir=output_dir,
+                                                       backend=backend)
   hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=[])
   hls_model.compile()
 
@@ -164,11 +167,13 @@ def randX_100_10():
                            (5, 10, ternary(alpha='auto'), quantized_bits(5,2), ternary(threshold=0.2), True, False),
                            (6, 10, ternary(alpha='auto'), quantized_bits(5,2), ternary(threshold=0.8), True, False),
                            (7, 10, binary(), quantized_bits(5,2), binary(), False, True)])
-def test_btnn(make_btnn, randX_100_10):
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_btnn(make_btnn, randX_100_10, backend):
   model, is_xnor, test_no = make_btnn
   X = randX_100_10
   cfg = hls4ml.utils.config_from_keras_model(model, granularity='name')
-  hls_model = hls4ml.converters.convert_from_keras_model(model, output_dir=str(test_root_path / 'hls4mlprj_btnn_{}'.format(test_no)), hls_config=cfg)
+  output_dir = str(test_root_path / 'hls4mlprj_btnn_{}_{}'.format(test_no, backend))
+  hls_model = hls4ml.converters.convert_from_keras_model(model, output_dir=output_dir, hls_config=cfg, backend=backend)
   hls_model.compile()
   y_hls = hls_model.predict(X)
   # hls4ml may return XNOR binary
@@ -195,7 +200,8 @@ def randX_1000_1():
                                        (quantized_relu(8,4)),
                                        (quantized_relu(10)),
                                        (quantized_relu(10,5))])
-def test_quantizer(randX_1000_1, quantizer):
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_quantizer(randX_1000_1, quantizer, backend):
   '''
   Test a single quantizer as an Activation function.
   Checks the type inference through the conversion is correct without just
@@ -209,12 +215,12 @@ def test_quantizer(randX_1000_1, quantizer):
 
   hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=['quantizer'], rounding_mode='AP_RND_CONV', saturation_mode='AP_SAT')
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
-  output_dir = str(test_root_path / 'hls4mlprj_qkeras_quantizer_{}_{}_{}'.format(quantizer.__class__.__name__,
-                                                            quantizer.bits, quantizer.integer))
+  output_dir = str(test_root_path / 'hls4mlprj_qkeras_quantizer_{}_{}_{}_{}'.format(quantizer.__class__.__name__,
+                                                            quantizer.bits, quantizer.integer, backend))
   hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                        hls_config=config,
                                                        output_dir=output_dir,
-                                                       part='xcu250-figd2104-2L-e')
+                                                       backend=backend)
   hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=[])
   hls_model.compile()
 

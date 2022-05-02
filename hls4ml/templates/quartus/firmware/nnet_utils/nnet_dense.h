@@ -21,6 +21,8 @@
 #define NNET_DENSE_LARGE_H_
 
 #include "nnet_common.h"
+#include "nnet_helpers.h"
+#include "nnet_mult.h"
 
 namespace nnet {
 
@@ -49,50 +51,11 @@ struct dense_config
    static const bool store_weights_in_bram = false;
    static const unsigned n_zeros = 0;
    // partitioning arrays cyclically to go with roll factors?
+
+    // Default multiplication
+    template<class x_T, class y_T>
+    using product = nnet::product::mult<x_T, y_T>;
 };
-
-inline ac_int<1, false> product(ac_int<1, false> a, ac_int<1, false> w)
-{
-    // specialisation for 1-bit weights and incoming data
-    return (a == w);
-}
-
-template<class data_T>
-auto product(data_T a, ac_int<1, false> w) -> decltype(-a)
-{
-    // Specialisation for 1-bit weights, arbitrary data
-    if (w == 0) return -a;
-    else return a;
-}
-
-template<class data_T>
-auto product(data_T a, ac_int<2, true> w) -> decltype(-a)
-{
-    // Specialisation for 2-bit weights, arbitrary data
-    if (w == 0) return 0;
-    else if(w == -1) return -a;
-    else return a; // if(w == 1)
-}
-
-template<class data_T, class weight_T>
-auto product(data_T a, weight_T w) -> decltype(a*w)
-{
-    // 'Normal' product
-    return a * w;
-}
-
-template<class data_T, class res_T, typename CONFIG_T>
-inline typename std::enable_if<std::is_same<data_T, ac_int<1, false>>::value
-        and std::is_same<typename CONFIG_T::weight_t, ac_int<1, false>>::value, ac_int<nnet::ceillog2(CONFIG_T::n_in) + 2, true>>::type
-cast(typename CONFIG_T::accum_t x){
-  return (ac_int<nnet::ceillog2(CONFIG_T::n_in) + 2, true>) (x - CONFIG_T::n_in / 2) * 2;
-}
-
-template<class data_T, class res_T, typename CONFIG_T>
-inline typename std::enable_if<(not std::is_same<data_T, ac_int<1, false>>::value), res_T>::type
-cast(typename CONFIG_T::accum_t x){
-  return (res_T) x;
-}
 
 template<class data_T, class res_T, typename CONFIG_T>
 void dense_rf_gt(
@@ -134,7 +97,8 @@ void dense_rf_gt(
           uint32 w_index = ir + (CONFIG_T::reuse_factor_rounded) * im;
           if (w_index >= CONFIG_T::reuse_factor_rounded*CONFIG_T::block_factor_rounded) continue;
           int data_index = d_index[ir][im];
-          tmp_acc[im] = product(data[data_index], weights[w_index]);
+          // Modified this
+          tmp_acc[im] = CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data[data_index], weights[w_index]);
       }
       hls_register typename CONFIG_T::accum_t mult[CONFIG_T::multiplier_limit];
       ResetMult:
@@ -188,7 +152,8 @@ void dense_rf_lt(
        for (int im = 0, in_index = ir; im < CONFIG_T::block_factor; im++) {
             uint32 w_index = ir + (CONFIG_T::reuse_factor_rounded) * im;
             if (ir + CONFIG_T::reuse_factor * im >= CONFIG_T::n_in*CONFIG_T::n_out) continue;
-            mult[im] = product(data[in_index], weights[w_index]);
+            // Modified this
+            mult[im] = CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data[in_index], weights[w_index]);
             in_index += CONFIG_T::reuse_factor;
             if (in_index >=  CONFIG_T::n_in) in_index = ir;
        }
