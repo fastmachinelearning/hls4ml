@@ -24,5 +24,19 @@
     "python_drivers": {"axi_stream": "axi_stream_design.tcl"},
     "krnl_rtl_srcs": {"axi_stream":  "krnl_rtl_src"},
     "c_drivers": {}
+  },
+  "alveo-u200": {
+    "part": "xcu200-fsgd2104-2-e",
+    "tcl_scripts": {"axi_stream": "axi_stream_design.tcl"},
+    "python_drivers": {"axi_stream": "axi_stream_design.tcl"},
+    "krnl_rtl_srcs": {"axi_stream":  "krnl_rtl_src"},
+    "c_drivers": {}
+  },
+  "alveo-u280": {
+    "part": "xcu280-fsvh2892-2L-e",
+    "tcl_scripts": {"axi_stream": "axi_stream_design.tcl"},
+    "python_drivers": {"axi_stream": "axi_stream_design.tcl"},
+    "krnl_rtl_srcs": {"axi_stream":  "krnl_rtl_src"},
+    "c_drivers": {}
   }
 }
