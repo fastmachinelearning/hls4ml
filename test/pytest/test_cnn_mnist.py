@@ -7,6 +7,10 @@ import tensorflow as tf
 from tensorflow.keras.models import model_from_json
 from qkeras.utils import _add_supported_quantized_objects; co = {}; _add_supported_quantized_objects(co)
 import yaml
+from pathlib import Path
+
+test_root_path = Path(__file__).parent
+example_model_path = (test_root_path / '../../example-models').resolve()
 
 @pytest.fixture(scope='module')
 def mnist_data():
@@ -23,24 +27,27 @@ def mnist_data():
 
 @pytest.fixture(scope='module')
 def mnist_model():
-  jsons = open('../../example-models/keras/qkeras_mnist_cnn.json','r').read()
+  model_path = example_model_path / 'keras/qkeras_mnist_cnn.json'
+  with model_path.open('r') as f:
+    jsons = f.read()
   model = model_from_json(jsons, custom_objects=co)
-  model.load_weights('../../example-models/keras/qkeras_mnist_cnn_weights.h5')
+  model.load_weights(example_model_path / 'keras/qkeras_mnist_cnn_weights.h5')
   return model
 
-# TODO: add ('io_parallel', 'resource') when it can pass
-# https://github.com/fastmachinelearning/hls4ml/issues/375
 @pytest.fixture      
 @pytest.mark.parametrize('settings', [('io_parallel', 'latency'),
+                                      ('io_parallel', 'resource'),
                                       ('io_stream', 'latency'),
                                       ('io_stream', 'resource')])
 def hls_model(settings):
   io_type = settings[0]
   strategy = settings[1]
-  config = yaml.load(open('../../example-models/config-files/qkeras_mnist_cnn_config.yml').read())
-  config['KerasJson'] = '../../example-models/keras/qkeras_mnist_cnn.json'
-  config['KerasH5'] = '../../example-models/keras/qkeras_mnist_cnn_weights.h5'
-  config['OutputDir'] = 'hls4mlprj_cnn_mnist_{}_{}'.format(io_type, strategy)
+  yml_path = example_model_path / 'config-files/qkeras_mnist_cnn_config.yml'
+  with yml_path.open('r') as f:
+    config = yaml.safe_load(f.read())
+  config['KerasJson'] = str(example_model_path / 'keras/qkeras_mnist_cnn.json')
+  config['KerasH5'] = str(example_model_path / 'keras/qkeras_mnist_cnn_weights.h5')
+  config['OutputDir'] = str(test_root_path / 'hls4mlprj_cnn_mnist_{}_{}'.format(io_type, strategy))
   config['IOType'] = io_type
   config['HLSConfig']['Model']['Strategy'] = strategy
   config['HLSConfig']['LayerName']['softmax']['Strategy'] = 'Stable'
@@ -49,10 +56,12 @@ def hls_model(settings):
   return hls_model
 
 @pytest.mark.parametrize('settings', [('io_parallel', 'latency'),
+                                      ('io_parallel', 'resource'),
                                       ('io_stream', 'latency'),
                                       ('io_stream', 'resource')])
 def test_accuracy(mnist_data, mnist_model, hls_model):
   x_train, y_train, x_test, y_test = mnist_data
+  x_test, y_test = x_test[:5000], y_test[:5000]
   model = mnist_model
   # model under test predictions and accuracy
   y_keras = model.predict(x_test)

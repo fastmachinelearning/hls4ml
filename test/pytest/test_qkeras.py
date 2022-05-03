@@ -1,6 +1,7 @@
 import pytest
 import hls4ml
 import numpy as np
+from pathlib import Path
 from tensorflow.keras.utils import to_categorical
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
@@ -16,6 +17,9 @@ from qkeras.utils import _add_supported_quantized_objects; co = {}; _add_support
 import warnings
 warnings.filterwarnings("ignore", message="numpy.dtype size changed")
 warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+
+test_root_path = Path(__file__).parent
+example_model_path = (test_root_path / '../../example-models').resolve()
 
 @pytest.fixture(scope='module')
 def get_jettagging_data():
@@ -39,11 +43,14 @@ def load_jettagging_model():
   ''' 
   Load the 3 hidden layer QKeras example model trained on the jet tagging dataset
   '''
-  jsons = open('../../example-models/keras/qkeras_3layer.json','r').read()
+  model_path = example_model_path / 'keras/qkeras_3layer.json'
+  with model_path.open('r') as f:
+    jsons = f.read()
   model = model_from_json(jsons, custom_objects=co)
-  model.load_weights('../../example-models/keras/qkeras_3layer_weights.h5')
+  model.load_weights(example_model_path / 'keras/qkeras_3layer_weights.h5')
   return model
 
+# TODO - Paramaterize for Quartus (different strategies?)
 @pytest.fixture
 @pytest.mark.parametrize('strategy', ['latency', 'resource'])
 def convert(load_jettagging_model, strategy):
@@ -51,9 +58,7 @@ def convert(load_jettagging_model, strategy):
   Convert a QKeras model trained on the jet tagging dataset
   '''
   model = load_jettagging_model
-  hls4ml.model.optimizer.OutputRoundingSaturationMode.layers = ['Activation']
-  hls4ml.model.optimizer.OutputRoundingSaturationMode.rounding_mode = 'AP_RND'
-  hls4ml.model.optimizer.OutputRoundingSaturationMode.saturation_mode = 'AP_SAT'
+  hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=['Activation'], rounding_mode='AP_RND', saturation_mode='AP_SAT')
 
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
   config['Model']['Strategy'] = strategy
@@ -61,9 +66,9 @@ def convert(load_jettagging_model, strategy):
   config['LayerName']['softmax']['inv_table_t'] = 'ap_fixed<18,4>'
   hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                        hls_config=config,
-                                                       output_dir='hls4mlprj_qkeras_accuracy_{}'.format(strategy),
+                                                       output_dir=str(test_root_path / 'hls4mlprj_qkeras_accuracy_{}'.format(strategy)),
                                                        part='xcu250-figd2104-2L-e')
-  hls4ml.model.optimizer.OutputRoundingSaturationMode.layers = []                                                     
+  hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=[])
   hls_model.compile()
   return hls_model
 
@@ -106,8 +111,9 @@ def randX_100_16():
 # Note 4-bit test can still fail sometimes depending on random seed
 # https://github.com/fastmachinelearning/hls4ml/issues/381
 #@pytest.mark.parametrize('bits', [4, 6, 8])
-@pytest.mark.parametrize('bits', [4])
-def test_single_dense_activation_exact(randX_100_16, bits):
+@pytest.mark.parametrize('bits,alpha', [(4, 1), (4, 'auto_po2')])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_single_dense_activation_exact(randX_100_16, bits, alpha, backend):
   '''
   Test a single Dense -> Activation layer topology for
   bit exactness with number of bits parameter
@@ -115,20 +121,19 @@ def test_single_dense_activation_exact(randX_100_16, bits):
   X = randX_100_16
   model = Sequential()
   model.add(QDense(16, input_shape=(16,), name='fc1',
-                  kernel_quantizer=quantized_bits(bits,0,alpha=1), bias_quantizer=quantized_bits(bits,0,alpha=1),
+                  kernel_quantizer=quantized_bits(bits,0,alpha=alpha), bias_quantizer=quantized_bits(bits,0,alpha=1),
                   kernel_initializer='lecun_uniform'))
   model.add(QActivation(activation=quantized_relu(bits,0), name='relu1'))
   model.compile()
 
-  hls4ml.model.optimizer.OutputRoundingSaturationMode.layers = ['relu1']
-  hls4ml.model.optimizer.OutputRoundingSaturationMode.rounding_mode = 'AP_RND_CONV'
-  hls4ml.model.optimizer.OutputRoundingSaturationMode.saturation_mode = 'AP_SAT'
+  hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=['relu1'], rounding_mode='AP_RND_CONV', saturation_mode='AP_SAT')
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+  output_dir = str(test_root_path / 'hls4mlprj_qkeras_single_dense_activation_exact_{}_{}_{}'.format(bits, alpha, backend))
   hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                        hls_config=config,
-                                                       output_dir='hls4mlprj_qkeras_single_dense_activation_exact_{}'.format(bits),
-                                                       part='xcu250-figd2104-2L-e')
-  hls4ml.model.optimizer.OutputRoundingSaturationMode.layers = []                                                   
+                                                       output_dir=output_dir,
+                                                       backend=backend)
+  hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=[])
   hls_model.compile()
 
   y_qkeras = model.predict(X)
@@ -139,7 +144,7 @@ def test_single_dense_activation_exact(randX_100_16, bits):
   np.testing.assert_allclose(y_qkeras.ravel(), y_hls4ml.ravel(), atol=2**-bits, rtol=1.0)
 
 @pytest.fixture
-def make_btnn(N, kernel_quantizer, bias_quantizer, activation_quantizer, use_batchnorm, is_xnor):
+def make_btnn(test_no, N, kernel_quantizer, bias_quantizer, activation_quantizer, use_batchnorm, is_xnor):
   shape = (N,)
   model = Sequential()
   model.add(QDense(10, input_shape=shape, kernel_quantizer=kernel_quantizer,
@@ -148,25 +153,27 @@ def make_btnn(N, kernel_quantizer, bias_quantizer, activation_quantizer, use_bat
     model.add(BatchNormalization(name='bn'))
   model.add(QActivation(activation=activation_quantizer))
   model.compile()
-  return model, is_xnor
+  return model, is_xnor, test_no
 
 @pytest.fixture(scope='module')
 def randX_100_10():
   return randX(100, 10)
 
-@pytest.mark.parametrize('N,kernel_quantizer,bias_quantizer,activation_quantizer,use_batchnorm,is_xnor',
-                          [(10, ternary(alpha=1), quantized_bits(5,2), 'binary_tanh', False, False),
-                           (10, binary(), quantized_bits(5,2), 'binary_tanh', False, True),
-                           (10, ternary(alpha='auto'), quantized_bits(5,2), binary(), True, True),
-                           (10, ternary(alpha='auto'), quantized_bits(5,2), 'ternary', True, False),
-                           (10, ternary(alpha='auto'), quantized_bits(5,2), ternary(threshold=0.2), True, False),
-                           (10, ternary(alpha='auto'), quantized_bits(5,2), ternary(threshold=0.8), True, False),
-                           (10, binary(), quantized_bits(5,2), binary(), False, True)])
-def test_btnn(make_btnn, randX_100_10):
-  model, is_xnor = make_btnn
+@pytest.mark.parametrize('test_no,N,kernel_quantizer,bias_quantizer,activation_quantizer,use_batchnorm,is_xnor',
+                          [(1, 10, ternary(alpha=1), quantized_bits(5,2), 'binary_tanh', False, False),
+                           (2, 10, binary(), quantized_bits(5,2), 'binary_tanh', False, True),
+                           (3, 10, ternary(alpha='auto'), quantized_bits(5,2), binary(), True, True),
+                           (4, 10, ternary(alpha='auto'), quantized_bits(5,2), 'ternary', True, False),
+                           (5, 10, ternary(alpha='auto'), quantized_bits(5,2), ternary(threshold=0.2), True, False),
+                           (6, 10, ternary(alpha='auto'), quantized_bits(5,2), ternary(threshold=0.8), True, False),
+                           (7, 10, binary(), quantized_bits(5,2), binary(), False, True)])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_btnn(make_btnn, randX_100_10, backend):
+  model, is_xnor, test_no = make_btnn
   X = randX_100_10
   cfg = hls4ml.utils.config_from_keras_model(model, granularity='name')
-  hls_model = hls4ml.converters.convert_from_keras_model(model, output_dir='btnn', hls_config=cfg)
+  output_dir = str(test_root_path / 'hls4mlprj_btnn_{}_{}'.format(test_no, backend))
+  hls_model = hls4ml.converters.convert_from_keras_model(model, output_dir=output_dir, hls_config=cfg, backend=backend)
   hls_model.compile()
   y_hls = hls_model.predict(X)
   # hls4ml may return XNOR binary
@@ -186,10 +193,15 @@ def randX_1000_1():
                                        (quantized_bits(8,4)),
                                        (quantized_bits(4,2)),
                                        (quantized_bits(4,0)),
-                                       (quantized_bits(10,0)),])
-                                       #(quantized_relu(4)),
-                                       #(quantized_relu(10))])
-def test_quantizer(randX_1000_1, quantizer):
+                                       (quantized_bits(10,0)),
+                                       (quantized_relu(4)),
+                                       (quantized_relu(4,2)),
+                                       (quantized_relu(8)),
+                                       (quantized_relu(8,4)),
+                                       (quantized_relu(10)),
+                                       (quantized_relu(10,5))])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_quantizer(randX_1000_1, quantizer, backend):
   '''
   Test a single quantizer as an Activation function.
   Checks the type inference through the conversion is correct without just
@@ -201,17 +213,15 @@ def test_quantizer(randX_1000_1, quantizer):
   model.add(QActivation(input_shape=(1,), activation=quantizer, name='quantizer'))
   model.compile()
 
-  hls4ml.model.optimizer.OutputRoundingSaturationMode.layers = ['quantizer']
-  hls4ml.model.optimizer.OutputRoundingSaturationMode.rounding_mode = 'AP_RND_CONV'
-  hls4ml.model.optimizer.OutputRoundingSaturationMode.saturation_mode = 'AP_SAT'
+  hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=['quantizer'], rounding_mode='AP_RND_CONV', saturation_mode='AP_SAT')
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
-  output_dir = 'hls4mlprj_qkeras_quantizer_{}_{}_{}'.format(quantizer.__class__.__name__,
-                                                            quantizer.bits, quantizer.integer)
+  output_dir = str(test_root_path / 'hls4mlprj_qkeras_quantizer_{}_{}_{}_{}'.format(quantizer.__class__.__name__,
+                                                            quantizer.bits, quantizer.integer, backend))
   hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                        hls_config=config,
                                                        output_dir=output_dir,
-                                                       part='xcu250-figd2104-2L-e')
-  hls4ml.model.optimizer.OutputRoundingSaturationMode.layers = []                                                   
+                                                       backend=backend)
+  hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=[])
   hls_model.compile()
 
   y_qkeras = model.predict(X)

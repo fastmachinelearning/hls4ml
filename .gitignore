@@ -10,3 +10,4 @@ my-hls-test
 *.tar.gz
 docs/_build
 docs/autodoc/*
+hls4mlprj_*
