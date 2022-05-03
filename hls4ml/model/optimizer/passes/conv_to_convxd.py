@@ -7,7 +7,7 @@ from numbers import Integral
 
 _base_attributes = ('Trace', 'reuse_factor', 'in_width', 'out_width', 'n_chan', 'n_filt', 'pad_left', 'pad_right',
     'filt_width', 'stride_width', 'dilation_width', 'in_height', 'out_height', 'pad_top', 'pad_bottom',
-    'filt_height', 'stride_height', 'dilation_height')
+    'filt_height', 'stride_height', 'dilation_height', 'strategy')
 
 class ConvToConvXD(OptimizerPass):
     """ Convert Conv with constant to a Conv1D or Conv2D layer """
