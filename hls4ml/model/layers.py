@@ -430,7 +430,7 @@ class Conv1D(Layer):
             shape = [self.attributes['n_filt'], self.attributes['out_width']]
             dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
 
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape, dims, precision=self.get_attr("quant_precision"))
 
         if self.get_attr("weight_data") is not None:
             weight_data = self.get_attr("weight_data")
@@ -479,7 +479,7 @@ class SeparableConv1D(Layer):
         else:
             shape = [self.attributes['n_filt'], self.attributes['out_width']]
             dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape, dims, precision=self.get_attr("quant_precision"))
 
         depthwise_data = self.model.get_weights_data(self.name, 'depthwise_kernel')
         pointwise_data = self.model.get_weights_data(self.name, 'pointwise_kernel')
@@ -527,7 +527,7 @@ class Conv2D(Layer):
         else:
             shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
             dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape, dims, precision=self.get_attr("quant_precision"))
 
         if self.get_attr("weight_data") is not None:
             weight_data = self.get_attr("weight_data")
@@ -628,7 +628,7 @@ class SeparableConv2D(Layer):
         else:
             shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
             dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape, dims, precision=self.get_attr("quant_precision"))
 
         depthwise_data = self.model.get_weights_data(self.name, 'depthwise_kernel')
         pointwise_data = self.model.get_weights_data(self.name, 'pointwise_kernel')
@@ -649,7 +649,7 @@ class DepthwiseConv2D(Conv2D):
         else:
             shape = [self.attributes['n_chan'], self.attributes['out_height'], self.attributes['out_width']]
             dims = ['N_CHAN_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
-        self.add_output_variable(shape, dims)
+        self.add_output_variable(shape, dims, precision=self.get_attr("quant_precision"))
 
         depthwise_data = self.model.get_weights_data(self.name, 'depthwise_kernel')
         self.add_weights_variable(name='weight', var_name='w{index}', data=depthwise_data, quantizer=self.get_attr('depthwise_quantizer'))

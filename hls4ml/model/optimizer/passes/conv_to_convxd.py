@@ -7,7 +7,7 @@ from numbers import Integral
 
 _base_attributes = ('Trace', 'reuse_factor', 'in_width', 'out_width', 'n_chan', 'n_filt', 'pad_left', 'pad_right',
     'filt_width', 'stride_width', 'dilation_width', 'in_height', 'out_height', 'pad_top', 'pad_bottom',
-    'filt_height', 'stride_height', 'dilation_height', 'strategy')
+    'filt_height', 'stride_height', 'dilation_height', 'strategy', 'data_format')
 
 class ConvToConvXD(OptimizerPass):
     """ Convert Conv with constant to a Conv1D or Conv2D layer """
@@ -60,7 +60,7 @@ class ConvToConvXD(OptimizerPass):
             attributes["bias_precision"] = bias_precision,
             attributes["bias_quantizer"] =  bias_node.get_attr("quantizer")
         else:
-            attributes["bias_data"] = np.zeros(node.get_output_variable().shape)
+            attributes["bias_data"] = np.zeros(attributes['n_filt'])
             attributes["bias_precision"] = IntegerPrecisionType(1, False)
 
         #making new node
