@@ -2,6 +2,9 @@ import numpy as np
 from hls4ml.model.layers import Merge, Constant, BatchNormalization
 from hls4ml.model.optimizer import OptimizerPass
 
+_base_attributes = ('Trace', 'reuse_factor', 'n_in')
+
+#TODO This doesn't yet support quantization in the constants
 
 class MergeTwoConstants(OptimizerPass):
     """ Merge of two constants makes another constant """
@@ -101,11 +104,10 @@ class MergeToBatchNormalization(OptimizerPass):
             scale = const_node.value
             bias = np.array(0)
 
-        attributes = node.attributes
+        attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
         attributes.update({
-            "simple": True,
-            "scale": scale,
-            "bias": bias,
+            "scale_data": scale,
+            "bias_data": bias,
             "n_in": n_in,
             "n_out": n_in,
             "n_filt": -1
@@ -136,16 +138,15 @@ class MergeToBatchNormalizationDiv(OptimizerPass):
         scale = 1/const_node.value
         bias = np.array(0)
 
-        attributes = {
-            "simple": True,
-            "scale": scale,
-            "bias": bias,
-            "quant_precision": node.get_attr("quant_precision"),
-            "quantizer": node.get_attr("quantizer"),
+
+        attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
+        attributes.update({
+            "scale_data": scale,
+            "bias_data": bias,
             "n_in": n_in,
             "n_out": n_in,
             "n_filt": -1
-        }
+        })
 
         bn_layer = model.make_node("BatchNormalization", f"bn_{node.name}",
                                    attributes,

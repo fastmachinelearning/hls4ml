@@ -2,6 +2,8 @@ import numpy as np
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.layers import BatchNormalization, BatchNormOnnx, Constant
 
+_base_attributes = ('Trace', 'reuse_factor', 'n_in', 'n_filt')
+
 class BatchNormOnnxConstantParameters(OptimizerPass):
     """ Remove Constant from the BatchNormalization node parameters (but not input[0]) """
     def match(self, node):
@@ -18,11 +20,13 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
         if not (len(node.inputs) == 5 and all(node.inputs)):
             raise ValueError(f"All {len.node.inputs} BatchNormOnnnx inputs need to be defined")
 
+        attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
+
         gamma_node = node.get_input_node(node.inputs[1])
         if not isinstance(gamma_node, Constant):
             raise TypeError("Only consant gammas supported")
         gamma = gamma_node.value
-        node.set_attr('gamma', gamma)
+        attributes['gamma'] = gamma
         node.inputs[1] = ''
         model.remove_node(gamma_node, rewire=False)
 
@@ -30,7 +34,7 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
         if not isinstance(beta_node, Constant):
             raise TypeError("Only consant betas supported")
         beta = beta_node.value
-        node.set_attr('beta', beta)
+        attributes['beta'] = beta
         node.inputs[2] = ''
         model.remove_node(beta_node, rewire=False)
 
@@ -38,7 +42,7 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
         if not isinstance(moving_mean_node, Constant):
             raise TypeError("Only consant moving_means supported")
         moving_mean = moving_mean_node.value
-        node.set_attr('moving_mean', moving_mean)
+        attributes['moving_mean'] = moving_mean
         node.inputs[3] = ''
         model.remove_node(moving_mean_node, rewire=False)
 
@@ -46,18 +50,16 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
         if not isinstance(moving_variance_node, Constant):
             raise TypeError("Only consant moving_variances supported")
         moving_variance = moving_variance_node.value
-        node.set_attr('moving_variance', moving_variance)
+        attributes['moving_variance'] = moving_variance
         node.inputs[4] = ''
         model.remove_node(moving_variance_node, rewire=False)
 
         scale = gamma / np.sqrt(moving_variance + node.get_attr('epsilon'))
         bias = beta - gamma * moving_mean / np.sqrt(moving_variance + node.get_attr('epsilon'))
-        node.set_attr("scale", scale)
-        node.set_attr("bias", bias)
-        #node.add_weights_variable("scale", data=scale, precision=node.get_attr("scale_precision"), quantizer=node.get_attr("bias_quantizer"))
-        #node.add_weights_variable("bias", data=bias, precision=node.get_attr("bias_precision"), quantizer=node.get_attr("bias_quantizer"))
+        attributes["scale_data"] = scale
+        attributes["bias_data"] = bias
 
-        new_node = model.make_node(BatchNormalization, node.name, node.attributes, 
+        new_node = model.make_node(BatchNormalization, node.name, attributes,
             [node.inputs[0]], [x for x in node.outputs])
 
         model.replace_node(node, new_node)
@@ -120,8 +122,8 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
         bias_new = s1 * b0 + b1
 
         # call function so that quantizer would be called if needed
-        node.add_weights_variable(name='scale', data=scale_new, precision=node.get_attr("scale_precision"), quantizer=node.get_attr("scale_quantizer"))
-        node.add_weights_variable(name='bias', data=bias_new, precision=node.get_attr("bias_precision"), quantizer=node.get_attr("bias_quantizer"))
+        node.add_weights(scale_new, quantizer=node.get_attr("scale_quantizer"))
+        node.add_bias(bias_new, quantizer=node.get_attr("bias_quantizer"))
 
         model.remove_node(prev_node, rewire=True)
         return True

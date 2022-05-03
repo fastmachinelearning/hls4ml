@@ -13,11 +13,13 @@ immediately merged into the Constant. This is done because it simplifies some of
 '''
 from copy import deepcopy
 import numpy as np
+import math  # prefer to use math.ceil for scalar values
 from hls4ml.model.types import FixedPrecisionType
-from hls4ml.model.layers import Quant, Constant
+from hls4ml.model.layers import Quant, Constant, Activation, ApplyAlpha
 from hls4ml.converters.onnx.quantizer import QuantNodeQuantizer
 from hls4ml.model.optimizer import OptimizerPass
-from numbers import Integral
+
+_base_attributes = ('Trace', 'reuse_factor')
 
 class QuantConstantParameters(OptimizerPass):
     """ Remove Constant from the Qaunt node parameters (but not input[0]) """
@@ -53,6 +55,8 @@ class QuantConstantParameters(OptimizerPass):
         if node.get_input_node(node.inputs[3]):
             bitwidth_node = node.get_input_node(node.inputs[3])
             if isinstance(bitwidth_node, Constant):
+                if np.squeeze(bitwidth_node.value).shape:
+                    raise RuntimeError("Only scalar bitwidth values are supporeted by the Quant node")
                 node.set_attr('bitwidth', bitwidth_node.value)
                 node.inputs[3] = ''
                 model.remove_node(bitwidth_node, rewire=False)
@@ -99,7 +103,7 @@ class QuantToActivation(OptimizerPass):
 
         precision, quantizer = _calculate_precision_quantizer(bitwidth, signed, narrow, rounding_mode)
 
-        attributes = node.attributes
+        attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
         attributes.update({
             'activation' : 'linear',
             'quant_precision'  : precision,
@@ -107,7 +111,7 @@ class QuantToActivation(OptimizerPass):
             'n_in'       : n_in
         })
 
-        new_node = model.make_node('Activation', f'{node.name}_act',
+        new_node = model.make_node(Activation, f'{node.name}_act',
                                    attributes, [node.inputs[0]], [x for x in node.outputs])
         new_node.get_output_variable().type.precision = precision
         model.replace_node(node, new_node)
@@ -201,7 +205,7 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
 
         precision, quantizer = _calculate_precision_quantizer(bitwidth, signed, narrow, rounding_mode)
 
-        attributes = deepcopy(node.attributes)
+        attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
         attributes.update({
             'activation' : 'linear',
             'quant_precision'  : precision,
@@ -209,7 +213,7 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
             'n_in'       : n_in
         })
 
-        new_node = model.make_node('Activation', f'{node.name}_act',
+        new_node = model.make_node(Activation, f'{node.name}_act',
                                    attributes, [node.inputs[0]], [x for x in node.outputs])
         new_node.get_output_variable().type.precision = precision
         model.replace_node(node, new_node)
@@ -219,31 +223,34 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
         scale = node.get_attr("scale")
         bias = node.get_attr("zeropt")
 
-        attributes_scale = node.attributes
+        attributes_scale = {k: node.attributes.get(k, None) for k in _base_attributes}
         attributes_scale.update({
             'n_in': n_in,
             'n_out': n_in,
             'n_filt': -1
         })
 
-        attributes_rescale = deepcopy(attributes_scale)
+        attributes_rescale = {k: node.attributes.get(k, None) for k in _base_attributes}
+        attributes_rescale.update({
+            'n_in': n_in,
+            'n_out': n_in,
+            'n_filt': -1
+        })
 
-        scale_node = model.make_node('ApplyAlpha', node.name + '_scale', attributes_scale, [x for x in node.inputs])
         firstscale = 1/scale
         firstbias = bias
-        scale_node.set_attr("scale", firstscale)
-        scale_node.set_attr("bias", firstbias)
-        scale_node.add_weights(firstscale)
-        scale_node.add_bias(firstbias)
+        attributes_scale["scale_data"] = firstscale
+        attributes_scale["bias_data"] = firstbias
+
+        scale_node = model.make_node(ApplyAlpha, node.name + '_scale', attributes_scale, [node.inputs[0]])
         model.insert_node(scale_node)
 
-        rescale_node = model.make_node('ApplyAlpha', node.name + '_rescale', attributes_rescale, [x for x in new_node.outputs])
         rescale = scale
         rebias = -bias*scale
-        rescale_node.set_attr("scale", rescale)
-        rescale_node.set_attr("bias", rebias)
-        rescale_node.add_weights(rescale)
-        rescale_node.add_bias(rebias)
+        attributes_rescale["scale_data"] = rescale
+        attributes_rescale["bias_data"] = rebias
+
+        rescale_node = model.make_node(ApplyAlpha, node.name + '_rescale', attributes_rescale, [new_node.outputs[0]])
         model.insert_node(rescale_node)
 
         return True
@@ -303,21 +310,20 @@ class ConstQuantToConstAlpha(OptimizerPass):
         # reinitialize (which also runs quantization if quantizer exists)
         const_node.initialize()
 
-        attributes_rescale = node.attributes
+        attributes_rescale = {k: node.attributes.get(k, None) for k in _base_attributes}
         attributes_rescale.update({
             'n_in': n_in,
             'n_out': n_in,
             'n_filt': -1
         })
 
-        rescale_node = model.make_node('ApplyAlpha', node.name + '_rescale', attributes_rescale,
-             [x for x in node.inputs], [x for x in node.outputs])
         rescale = scale
         rebias = -bias*scale
-        rescale_node.set_attr("scale", rescale)
-        rescale_node.set_attr("bias", rebias)
-        rescale_node.add_weights(rescale)
-        rescale_node.add_bias(rebias)
+        attributes_rescale["scale_data"] = rescale
+        attributes_rescale["bias_data"] = rebias
+
+        rescale_node = model.make_node(ApplyAlpha, node.name + '_rescale', attributes_rescale,
+             [x for x in node.inputs], [x for x in node.outputs])
         model.replace_node(node, rescale_node)
 
         return True
@@ -342,58 +348,8 @@ def _calculate_precision_quantizer(bitwidth, signed, narrow, rounding_mode):
     else:
         bn_sat = "AP_SAT"
 
-    if np.squeeze(bitwidth).shape:
-        raise RuntimeError("Only scalar bitwidth values are supporeted by the Quant node")
-    bitwidth = int(bitwidth)
+    bitwidth = math.ceil(bitwidth)
 
     precision = FixedPrecisionType(bitwidth, bitwidth, signed, bn_round, bn_sat)
     quantizer = QuantNodeQuantizer(precision)
     return (precision, quantizer)
-
-
-def propagete_type_mult(in1: FixedPrecisionType, in2: FixedPrecisionType, num_acc: Integral):
-    '''
-    Propagate the precion type across a multiply. Currently only "quant_precision" types (with no fractional bits)
-    are supported. Rounding modes are propagated from in1
-    '''
-    if in2 and in1:
-        if (in2.width != in2.integer
-            or in1.width != in1.integer):
-            raise ValueError("quant_precisions must always have the same width and integer parameters")
-
-        bitwidth = in2.width + in1.width + int(np.ceil(np.log2(num_acc)))
-        signed = in2.signed or in1.signed
-        # copy staruation and rounding from "in1"
-        rounding_mode = in1.rounding_mode
-        saturation_mode = in1.saturation_mode
-        return FixedPrecisionType(bitwidth, bitwidth, signed, rounding_mode, saturation_mode)
-    else:
-        return None
-
-def propagete_type_conv(input_precision: FixedPrecisionType, weight_precision: FixedPrecisionType, bias_precision: FixedPrecisionType,
-     num_feature_maps: Integral, filt_width: Integral, filt_height: Integral):
-    '''
-    Propagate the precion type across a multiply. Currently only "quant_precision" types (with no fractional bits)
-    are supported. Rounding modes are propagated from in1
-    '''
-    if input_precision and weight_precision:
-        if (weight_precision.width != weight_precision.integer
-            or input_precision.width != input_precision.integer):
-            raise ValueError("quant_precisions must always have the same width and integer parameters")
-
-        Nacc = filt_width * filt_height * num_feature_maps
-        bitwidth = weight_precision.width + input_precision.width + int(np.ceil(np.log2(Nacc)))
-        signed = weight_precision.signed or input_precision.signed
-        # copy staruation and rounding from input
-        rounding_mode = input_precision.rounding_mode
-        saturation_mode = input_precision.saturation_mode
-
-        # correct if bias
-        if bias_precision:
-            bitwidth = max(bitwidth + (bias_precision.signed and not signed),
-                            bias_precision.width + (signed and not bias_precision.signed)) + 1
-            signed = signed or bias_precision.signed
-        return FixedPrecisionType(bitwidth, bitwidth, signed, rounding_mode, saturation_mode)
-
-    else:
-        return None

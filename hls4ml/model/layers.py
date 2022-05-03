@@ -248,6 +248,7 @@ class Layer(object):
             precision[data_type.name] = data_type
         return precision
 
+    #TODO  Should move this to a backend pass since it assumes C++ HLS output
     def get_numbers_cpp(self):
         numbers = ''
         for k, v in self.get_output_variable().get_shape():
@@ -255,6 +256,7 @@ class Layer(object):
 
         return numbers
 
+    #TODO same with this (though it doesn't seem to be used, so can maybe just be deleted)
     def precision_cpp(self):
         return 'typedef {precision} layer{index}_t;'.format(precision=self.get_output_variable().precision, index=self.index)
 
@@ -362,6 +364,20 @@ class Dense(Layer):
         else:
             dims = ['N_LAYER_{}'.format(self.index)]
         self.add_output_variable(shape, dims, precision=self.get_attr("quant_precision"))
+
+        if self.get_attr("weight_data") is not None:
+            weight_data = self.get_attr("weight_data")
+            weight_precision = self.get_attr("weight_precision")
+            weight_quantizer = self.get_attr("weight_quantizer")
+            self.add_weights_variable(name='weight', var_name='w{index}', data=weight_data,
+                                  precision=weight_precision, quantizer=weight_quantizer)
+
+            bias_data = self.get_attr("bias_data")
+            bias_precision = self.get_attr("bias_precision")
+            bias_quantizer = self.get_attr("bias_quantizer")
+            self.add_weights_variable(name='bias', var_name='b{index}', data=bias_data,
+                                  precision=bias_precision, quantizer=bias_quantizer)
+
         if self.get_attr("weight") is None:
             self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=self.model.config.get_compression(self))
             self.add_bias(quantizer=self.get_attr('bias_quantizer'))
@@ -415,6 +431,20 @@ class Conv1D(Layer):
             dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
 
         self.add_output_variable(shape, dims)
+
+        if self.get_attr("weight_data") is not None:
+            weight_data = self.get_attr("weight_data")
+            weight_precision = self.get_attr("weight_precision")
+            weight_quantizer = self.get_attr("weight_quantizer")
+            self.add_weights_variable(name='weight', var_name='w{index}', data=weight_data,
+                                  precision=weight_precision, quantizer=weight_quantizer)
+
+            bias_data = self.get_attr("bias_data")
+            bias_precision = self.get_attr("bias_precision")
+            bias_quantizer = self.get_attr("bias_quantizer")
+            self.add_weights_variable(name='bias', var_name='b{index}', data=bias_data,
+                                  precision=bias_precision, quantizer=bias_quantizer)
+
         if self.get_attr("weight") is None:
             self.add_weights(quantizer = self.get_attr('weight_quantizer'))
             self.add_bias(quantizer = self.get_attr('bias_quantizer'))
@@ -498,6 +528,20 @@ class Conv2D(Layer):
             shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
             dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
+
+        if self.get_attr("weight_data") is not None:
+            weight_data = self.get_attr("weight_data")
+            weight_precision = self.get_attr("weight_precision")
+            weight_quantizer = self.get_attr("weight_quantizer")
+            self.add_weights_variable(name='weight', var_name='w{index}', data=weight_data,
+                                  precision=weight_precision, quantizer=weight_quantizer)
+
+            bias_data = self.get_attr("bias_data")
+            bias_precision = self.get_attr("bias_precision")
+            bias_quantizer = self.get_attr("bias_quantizer")
+            self.add_weights_variable(name='bias', var_name='b{index}', data=bias_data,
+                                  precision=bias_precision, quantizer=bias_quantizer)
+
         if self.get_attr("weight") is None:
             self.add_weights(quantizer=self.get_attr('weight_quantizer'))
             self.add_bias(quantizer=self.get_attr('bias_quantizer'))
@@ -819,6 +863,15 @@ class BatchNormalization(Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
+        if self.get_attr("scale_data") is not None:
+            scale = self.get_attr('scale_data')
+            scale_quantizer = self.get_attr('scale_quantizer')
+            bias = self.get_attr('bias_data')
+            bias_quantizer = self.get_attr('bias_quantizer')
+
+            self.add_weights(scale, quantizer=scale_quantizer)
+            self.add_bias(bias, quantizer=bias_quantizer)
+
         if self.get_attr('scale') is None:
             gamma = self.model.get_weights_data(self.name, 'gamma')
             beta = self.model.get_weights_data(self.name, 'beta')
@@ -830,15 +883,12 @@ class BatchNormalization(Layer):
 
             self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
             self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
-        elif isinstance(self.get_attr('scale'), np.ndarray):
-            self.add_weights_variable('scale', var_name='s{index}',
-                                      data=self.get_attr('scale'),
-                                      precision=self.get_attr("scale_precision"),
-                                      quantizer=self.get_attr("bias_quantizer"))
-            self.add_weights_variable('bias', var_name='b{index}',
-                                      data=self.get_attr('bias'),
-                                      precision=self.get_attr("bias_precision"),
-                                      quantizer=self.get_attr("bias_quantizer"))
+
+    def add_weights(self, scale, quantizer=None):
+        self.add_weights_variable(name='scale', var_name='s{index}', data=scale, quantizer=quantizer)
+
+    def add_bias(self, bias, quantizer=None):
+        self.add_weights_variable(name='bias', var_name='b{index}', data=bias, quantizer=quantizer)
 
 
 class ApplyAlpha(BatchNormalization):
@@ -859,11 +909,6 @@ class ApplyAlpha(BatchNormalization):
         self.add_weights(scale, quantizer=scale_quantizer)
         self.add_bias(bias, quantizer=bias_quantizer)
 
-    def add_weights(self, scale, quantizer=None):
-        self.add_weights_variable(name='scale', var_name='s{index}', data=scale, quantizer=quantizer)
-
-    def add_bias(self, bias, quantizer=None):
-        self.add_weights_variable(name='bias', var_name='b{index}', data=bias, quantizer=quantizer)
 
 class Merge(Layer):
     def initialize(self):

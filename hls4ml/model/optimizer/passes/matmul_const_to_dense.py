@@ -1,8 +1,11 @@
 import numpy as np
+import math  # prefer to use math.ceil for scalar values (returns int)
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.types import IntegerPrecisionType, NamedType
+from hls4ml.model.types import IntegerPrecisionType, NamedType, FixedPrecisionType
 from hls4ml.model.layers import MatMul, Constant, Dense
-from hls4ml.model.optimizer.passes.quant_opt import propagete_type_mult
+from numbers import Integral
+
+_base_attributes = ('Trace', 'reuse_factor', 'weight', 'weight_t', 'bias', 'bias_t')
 
 class MatmulConstToDense(OptimizerPass):
     """
@@ -28,30 +31,27 @@ class MatmulConstToDense(OptimizerPass):
         other_precision = other_node.get_attr("quant_precision")
 
         in_shape = other_var.shape
-        node.set_attr('n_in', np.prod(in_shape))
+        n_in =  np.prod(in_shape)
         out_shape = list(in_shape[:-1]) + [const_node.value.shape[-1]]
-        node.set_attr('n_out', np.prod(out_shape))
+        n_out = np.prod(out_shape)
 
-        node.set_attr('trace', True)
-
-        quant_precision = propagete_type_mult(other_precision, weight_precision, in_shape[-1])
-
-        node.add_weights_variable(name='weight', var_name='w{index}', data=const_node.value,
-                                  precision=weight_precision, quantizer=weight_quantizer)
-        # add a dummy bias
-        # (A real one can be added after with bn_fuse)
-        node.add_weights_variable(name='bias', var_name='b{index}', data=np.zeros(out_shape),
-                                  precision=IntegerPrecisionType(1, False))
+        quant_precision = propagate_type_mult(other_precision, weight_precision, in_shape[-1])
 
         #creating the attributes
-        node.attributes.update({
+        attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
+        attributes.update({
+            "weight_data": const_node.value,
             "weight_precision": weight_precision,
             "weight_quantizer": weight_quantizer,
+            "bias_data": np.zeros(out_shape),
+            "bias_precision": IntegerPrecisionType(1, False),
             "quant_precision": quant_precision,
+            "n_in": n_in,
+            "n_out": n_out
         })
 
         #making new node
-        new_dense = model.make_node(Dense, f"Dense_{node.name}", node.attributes,
+        new_dense = model.make_node(Dense, f"Dense_{node.name}", attributes,
             [node.inputs[0]], [x for x in node.outputs])
 
         if quant_precision:
@@ -63,3 +63,22 @@ class MatmulConstToDense(OptimizerPass):
         model.replace_node(node, new_dense)
 
         return True
+
+def propagate_type_mult(in1: FixedPrecisionType, in2: FixedPrecisionType, num_acc: Integral):
+    '''
+    Propagate the precion type across a multiply. Currently only "quant_precision" types (with no fractional bits)
+    are supported. Rounding modes are propagated from in1
+    '''
+    if in2 and in1:
+        if (in2.width != in2.integer
+            or in1.width != in1.integer):
+            raise ValueError("quant_precisions must always have the same width and integer parameters")
+
+        bitwidth = in2.width + in1.width + math.ceil(np.log2(num_acc))
+        signed = in2.signed or in1.signed
+        # copy staruation and rounding from "in1"
+        rounding_mode = in1.rounding_mode
+        saturation_mode = in1.saturation_mode
+        return FixedPrecisionType(bitwidth, bitwidth, signed, rounding_mode, saturation_mode)
+    else:
+        return None
