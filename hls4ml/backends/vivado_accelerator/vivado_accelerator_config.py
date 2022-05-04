@@ -122,7 +122,11 @@ class VivadoAcceleratorConfig(object):
         return self.clock_period
 
     def get_driver_path(self):
-        return '../templates/vivado_accelerator/' + self.board + '/' + self.driver + '_drivers/' + \
+        if  self.board.startswith('alveo'):
+            return '../templates/vivado_accelerator/' + 'alveo/' + self.driver + '_drivers/' + \
+               self.get_driver_file()
+        else:
+            return '../templates/vivado_accelerator/' + self.board + '/' + self.driver + '_drivers/' + \
                self.get_driver_file()
 
     def get_driver_file(self):
@@ -130,7 +134,10 @@ class VivadoAcceleratorConfig(object):
         return self.interface + '_driver' + driver_ext
 
     def get_krnl_rtl_src_dir(self):
-        return '../templates/vivado_accelerator/' + self.board + '/krnl_rtl_src'
+        if  self.board.startswith('alveo'):
+            return '../templates/vivado_accelerator/' + 'alveo/' + '/krnl_rtl_src'
+        else: 
+            return return '../templates/vivado_accelerator/' + self.board + '/krnl_rtl_src'
 
     def get_input_type(self):
         return self.input_type
@@ -146,4 +153,8 @@ class VivadoAcceleratorConfig(object):
         tcl_script = tcl_scripts.get(self.interface, None)
         if tcl_script is None:
             raise Exception('No tcl script definition available for the desired interface in supported_board.json')
-        return '../templates/vivado_accelerator/' + self.board + '/tcl_scripts/' + tcl_script
+        if  self.board.startswith('alveo'):
+            return '../templates/vivado_accelerator/' + 'alveo/' + self.board + '/tcl_scripts/' + tcl_script
+        else: 
+            return '../templates/vivado_accelerator/' + self.board + '/tcl_scripts/' + tcl_script
+
