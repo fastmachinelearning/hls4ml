@@ -1,6 +1,6 @@
 """
-Quantizer for the Quant node, after scale and zeropoint hafe been extracted.
-(Thus at this point they are 1 and 0.)
+Quantizer for the Quant node, after scale and zeropoint hafe been extracted
+(unless scale is a power of 2, if doing special case po2)
 
 This is based on the sample implementation in finn-base
 """
@@ -11,11 +11,14 @@ from hls4ml.model.types import Quantizer, SaturationMode, RoundingMode
 class QuantNodeQuantizer(Quantizer):
     """ This implements a quantizer for a FixedPrecisionType with width==integer"""
     def __init__(self, precision):
-        assert(precision.width == precision.integer)
         super().__init__(precision.width, precision)
 
     def __call__(self, data):
         """ Apply the quantization on the data """
+
+        scale = 2**(self.hls_type.width - self.hls_type.integer)
+
+        data = data * scale  # (not using *= to avoid modifying data)
         # Clamping
         min_int_val = self._min_int(self.hls_type.signed, self.hls_type.saturation_mode, self.bits)
         max_int_val = self._max_int(self.hls_type.signed, self.bits)
@@ -23,7 +26,7 @@ class QuantNodeQuantizer(Quantizer):
         data = np.where(data < min_int_val, min_int_val, data)
         # Rounding
         rounding_fx = self._resolve_rounding_mode(self.hls_type.rounding_mode)
-        return rounding_fx(data)
+        return rounding_fx(data) / scale
 
 
     @staticmethod
