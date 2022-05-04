@@ -54,7 +54,7 @@ class ConvToConvXD(OptimizerPass):
         attributes["weight_precision"] = weight_precision
         attributes["weight_quantizer"] =  weight_node.get_attr("quantizer")
         attributes["quant_precision"] = quant_precision
- 
+
         if bias_node:
             attributes["bias_data"] = bias_node.value,
             attributes["bias_precision"] = bias_precision,
@@ -78,27 +78,27 @@ class ConvToConvXD(OptimizerPass):
 def propagate_type_conv(input_precision: FixedPrecisionType, weight_precision: FixedPrecisionType, bias_precision: FixedPrecisionType,
      num_feature_maps: Integral, filt_width: Integral, filt_height: Integral):
     '''
-    Propagate the precion type across a multiply. Currently only "quant_precision" types (with no fractional bits)
-    are supported. Rounding modes are propagated from in1
+    Propagate the precion type across a multiply. Rounding modes are propagated from input_precision
     '''
     if input_precision and weight_precision:
-        if (weight_precision.width != weight_precision.integer
-            or input_precision.width != input_precision.integer):
-            raise ValueError("quant_precisions must always have the same width and integer parameters")
 
         Nacc = filt_width * filt_height * num_feature_maps
         bitwidth = weight_precision.width + input_precision.width + math.ceil(np.log2(Nacc))
+        integer = weight_precision.integer + input_precision.integer + math.ceil(np.log2(Nacc))
         signed = weight_precision.signed or input_precision.signed
         # copy staruation and rounding from input
         rounding_mode = input_precision.rounding_mode
         saturation_mode = input_precision.saturation_mode
 
+        frac = bitwidth - integer
+
         # correct if bias
         if bias_precision:
-            bitwidth = max(bitwidth + (bias_precision.signed and not signed),
-                            bias_precision.width + (signed and not bias_precision.signed)) + 1
+            integer = max(integer + (bias_precision.signed and not signed),
+                          bias_precision.integer + (signed and not bias_precision.signed)) + 1
+            bitwidth = integer + max(frac, bias_precision.width - bias_precision.integer)
             signed = signed or bias_precision.signed
-        return FixedPrecisionType(bitwidth, bitwidth, signed, rounding_mode, saturation_mode)
+        return FixedPrecisionType(bitwidth, integer, signed, rounding_mode, saturation_mode)
 
     else:
         return None
