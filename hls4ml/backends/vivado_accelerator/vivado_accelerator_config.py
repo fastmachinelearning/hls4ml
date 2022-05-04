@@ -137,7 +137,7 @@ class VivadoAcceleratorConfig(object):
         if  self.board.startswith('alveo'):
             return '../templates/vivado_accelerator/' + 'alveo/' + '/krnl_rtl_src'
         else: 
-            return return '../templates/vivado_accelerator/' + self.board + '/krnl_rtl_src'
+            return '../templates/vivado_accelerator/' + self.board + '/krnl_rtl_src'
 
     def get_input_type(self):
         return self.input_type
