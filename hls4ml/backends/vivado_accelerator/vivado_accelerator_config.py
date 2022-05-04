@@ -134,10 +134,8 @@ class VivadoAcceleratorConfig(object):
         return self.interface + '_driver' + driver_ext
 
     def get_krnl_rtl_src_dir(self):
-        if  self.board.startswith('alveo'):
-            return '../templates/vivado_accelerator/' + 'alveo/' + '/krnl_rtl_src'
-        else: 
-            return '../templates/vivado_accelerator/' + self.board + '/krnl_rtl_src'
+        return '../templates/vivado_accelerator/' + 'alveo/' + '/krnl_rtl_src'
+ 
 
     def get_input_type(self):
         return self.input_type
