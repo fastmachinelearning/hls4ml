@@ -175,9 +175,42 @@ void softmax_stable(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
     }
 }
 
+// TODO - Improve accuracy
+template <class data_T, class res_T, typename CONFIG_T>
+void softmax_latency(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
+    /*
+    * Note: The latency tables are equivalent to stable tables
+    * However, the compiler cannot include the same table twice
+    * Therefore, an out-of-scope exception is thrown in one of the functions
+    * Temporary solution - Create the same table twice in quartus_writer.py
+    * Long-term solution - Only create tables needed by the network;
+    * Currently, quartus-writer.py generates LUTs for all activations,
+    * Regardless if they are present in the network or not
+    */
+    #include "activation_tables/exp_table_latency.tb"
+    #include "activation_tables/invert_table_latency.tb"
+    
+    // Calculate all the e^x's
+    hls_register typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
+    #pragma unroll
+    for(unsigned i = 0; i < CONFIG_T::n_in; i++) {
+        exp_res[i] = exp_table_latency[softmax_idx_from_real_val<data_T, CONFIG_T>(data[i])];
+    }
+
+    // Explicitly sum the results with an adder tree.
+    Op_add<typename CONFIG_T::exp_table_t> op_add;
+    hls_register typename CONFIG_T::exp_table_t exp_sum = reduce<typename CONFIG_T::exp_table_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::exp_table_t>>(exp_res, op_add);
+
+    // Multiply previously calculated exponetials with the reciprocal of the sum
+    hls_register typename CONFIG_T::inv_table_t inv_exp_sum = invert_table_latency[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
+    #pragma unroll
+    for(unsigned i = 0; i < CONFIG_T::n_in; i++){
+        res[i] = exp_res[i] * inv_exp_sum;
+    }
+}
+
 template<class data_T, class res_T, typename CONFIG_T>
-void softmax_legacy(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
-{
+void softmax_legacy(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
     #include "activation_tables/exp_table_legacy.tb"
     #include "activation_tables/invert_table_legacy.tb"
 
@@ -193,14 +226,11 @@ void softmax_legacy(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
         typename CONFIG_T::exp_table_t exp_res_temp = 0;
         NN_Inner:
         #pragma unroll
-        for (int jj=0; jj<CONFIG_T::n_in; jj++)
-        {
-            if (ii==jj)
-            {
+        for (int jj=0; jj<CONFIG_T::n_in; jj++) {
+            if (ii==jj) {
                 exp_res_temp += 1;
             }
-            else
-            {
+            else {
                 int _data_cache = (data_round[jj]-data_round[ii]);
                 int index = _data_cache + 8*CONFIG_T::table_size/16;
 
@@ -223,6 +253,9 @@ inline void softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
     switch(CONFIG_T::implementation) {
         case softmax_implementation::stable:
             softmax_stable<data_T, res_T, CONFIG_T>(data, res);
+            break;
+        case softmax_implementation::latency:
+            softmax_latency<data_T, res_T, CONFIG_T>(data, res);
             break;
         case softmax_implementation::legacy:
             softmax_legacy<data_T, res_T, CONFIG_T>(data, res);

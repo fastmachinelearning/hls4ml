@@ -695,6 +695,86 @@ class QuartusWriter(Writer):
         h_file.write('\n#endif\n')
         h_file.close()
 
+    def __write_exp_table_latency(self, model, path):
+        table_name = 'exp_table_latency'
+        table_size = self.__get_table_size(model, 'softmax')
+
+        h_file = open('{}/{}.tb'.format(path, table_name), 'w')
+        h_file.write(self.__get_table_header(table_name, table_size))
+
+        # Default fixed point precision
+        # 6 bits for integer part, 10 bits for decimal - total, 16
+        fp_bits = 16
+        fp_integer = 6
+        fp_signed = True
+
+        # Exp table should use the same precision as exp_table, as seen in Vivado code
+        # init_exp_table<data_T, CONFIG_T>(exp_table);
+        for layer in model.get_layers():
+            if layer.name == 'softmax':
+                ac_type = layer.get_input_variable().type
+                if ac_type is not None:
+                    try:
+                        fp_bits = ac_type.precision.integer + ac_type.precision.fractional
+                        fp_integer = ac_type.precision.integer
+                        fp_signed = ac_type.precision.signed
+                    except:
+                        # FixedPrecisionType wasn't correctly stored in layer attributes, use default values
+                        pass
+
+        sep = ''
+        N = ceil_log2(table_size)
+        for i in range(table_size):
+            f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
+            f.set_msb_bits(uint_to_binary(i, N))
+            real_val = f.exp_float()
+            h_file.write(sep + str(real_val))
+            sep = ", "
+
+        h_file.write('};\n')
+        h_file.write('\n#endif\n')
+        h_file.close()
+
+    def __write_invert_table_latency(self, model, path):
+        table_name = 'invert_table_latency'
+        table_size = self.__get_table_size(model, 'softmax')
+
+        h_file = open('{}/{}.tb'.format(path, table_name), 'w')
+        h_file.write(self.__get_table_header(table_name, table_size))
+
+        # Default fixed point precision, in case values from layer attributes cannot be extracted
+        # 8 bits for integer part, 10 bits for decimal - total, 18
+        fp_bits = 18
+        fp_integer = 8
+        fp_signed = True
+
+        # Invert table should use the same precision as exp_table, as seen in Vivado code
+        # init_invert_table<typename CONFIG_T::exp_table_t, CONFIG_T>(invert_table);
+        for layer in model.get_layers():
+            if layer.name == 'softmax':
+                ac_type = layer.get_attr('exp_table_t')
+                if ac_type is not None:
+                    try:
+                        fp_bits = ac_type.precision.integer + ac_type.precision.fractional
+                        fp_integer = ac_type.precision.integer
+                        fp_signed = ac_type.precision.signed
+                    except:
+                        # FixedPrecisionType wasn't correctly stored in layer attributes, use default values
+                        pass
+
+        sep = ''
+        N = ceil_log2(table_size)
+        for i in range(table_size):
+            f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
+            f.set_msb_bits(uint_to_binary(i, N))
+            real_val = f.inv_float()
+            h_file.write(sep + str(real_val))
+            sep = ", "
+
+        h_file.write('};\n')
+        h_file.write('\n#endif\n')
+        h_file.close()
+
     def __write_exp_table_legacy(self, model, path):
         table_name = 'exp_table_legacy'
         table_size = self.__get_table_size(model, 'softmax')
@@ -749,6 +829,8 @@ class QuartusWriter(Writer):
         self.__write_selu_table(model, dstpath)
         self.__write_exp_table(model, dstpath)
         self.__write_invert_table(model, dstpath)
+        self.__write_exp_table_latency(model, dstpath)
+        self.__write_invert_table_latency(model, dstpath)
         self.__write_exp_table_legacy(model, dstpath)
         self.__write_invert_table_legacy(model, dstpath)
 
