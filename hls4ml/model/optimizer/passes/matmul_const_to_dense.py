@@ -1,9 +1,7 @@
 import numpy as np
-import math  # prefer to use math.ceil for scalar values (returns int)
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.types import IntegerPrecisionType, NamedType, FixedPrecisionType
 from hls4ml.model.layers import MatMul, Constant, Dense
-from numbers import Integral
 
 _base_attributes = ('Trace', 'reuse_factor', 'weight', 'weight_t', 'bias', 'bias_t')
 
@@ -25,17 +23,13 @@ class MatmulConstToDense(OptimizerPass):
         other_node = node.get_input_node(node.inputs[0])
         other_var = node.get_input_variable(node.inputs[0])
 
-        quant_precision = None
         weight_precision = const_node.get_attr("quant_precision")
         weight_quantizer = const_node.get_attr("quantizer")
-        other_precision = other_node.get_attr("quant_precision")
 
         in_shape = other_var.shape
         n_in =  np.prod(in_shape)
         out_shape = list(in_shape[:-1]) + [const_node.value.shape[-1]]
         n_out = np.prod(out_shape)
-
-        quant_precision = propagate_type_mult(other_precision, weight_precision, in_shape[-1])
 
         #creating the attributes
         attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
@@ -45,7 +39,6 @@ class MatmulConstToDense(OptimizerPass):
             "weight_quantizer": weight_quantizer,
             "bias_data": np.zeros(out_shape),
             "bias_precision": IntegerPrecisionType(1, False),
-            "quant_precision": quant_precision,
             "n_in": n_in,
             "n_out": n_out
         })
@@ -54,28 +47,8 @@ class MatmulConstToDense(OptimizerPass):
         new_dense = model.make_node(Dense, f"Dense_{node.name}", attributes,
             [node.inputs[0]], [x for x in node.outputs])
 
-        if quant_precision:
-            accum_t = NamedType('layer{}_accum_t'.format(new_dense.index), quant_precision)
-            new_dense.set_attr('accum_t', accum_t)
-
         #removing and replacing old nodes
         model.remove_node(const_node, rewire=False)
         model.replace_node(node, new_dense)
 
         return True
-
-def propagate_type_mult(in1: FixedPrecisionType, in2: FixedPrecisionType, num_acc: Integral):
-    '''
-    Propagate the precion type across a multiply. Rounding modes are propagated from in1
-    '''
-    if in2 and in1:
-
-        bitwidth = in2.width + in1.width + math.ceil(np.log2(num_acc))
-        integer = in2.integer + in1.integer + math.ceil(np.log2(num_acc))
-        signed = in2.signed or in1.signed
-        # copy staruation and rounding from "in1"
-        rounding_mode = in1.rounding_mode
-        saturation_mode = in1.saturation_mode
-        return FixedPrecisionType(bitwidth, integer, signed, rounding_mode, saturation_mode)
-    else:
-        return None

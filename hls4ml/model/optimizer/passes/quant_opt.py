@@ -90,7 +90,6 @@ class QuantToActivation(OptimizerPass):
 
         # Only match if the scale is 1s and the zero-point is 0s
         if is_match: # to make sure this is a quant node with inputs
-            input_shape = node.get_input_variable().shape
             scale = node.get_attr("scale")
             bias = node.get_attr("zeropt")
             is_match = is_match and (bias == np.zeros_like(bias)).all()

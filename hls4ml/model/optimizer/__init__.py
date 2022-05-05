@@ -41,6 +41,10 @@ base_optimize = [
     'replace_multidimensional_dense_with_conv',
     'eliminate_linear_activation_quant',
     'eliminate_linear_activation',
+    'propagate_dense_precision',
+    'propagate_conv_precision',
+    'propagate_dense_precision',  # should be run twice if they influence each other
+    'propagate_conv_precision',
 ]
 
 try:
