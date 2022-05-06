@@ -1,6 +1,7 @@
 import numpy as np
 from hls4ml.model.layers import Merge, Constant, BatchNormalization
 from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.converters.onnx.quantizer import QuantNodeQuantizer
 
 _base_attributes = ('Trace', 'reuse_factor', 'n_in')
 
@@ -87,11 +88,17 @@ class MergeToBatchNormalization(OptimizerPass):
         input_shape = node.get_input_variable(node.inputs[input_node_idx]).shape
         n_in = np.prod(input_shape)
 
+        scale_precision = None
+        scale_quantizer = None
+        bias_precision = None
+        bias_quantizer = None
 
         op = node.attributes["op"]
         if op in ('add', 'sum'):
             scale = np.array(1)
             bias = const_node.value
+            bias_precision = const_node.get_attr("quant_precision")
+            bias_quantizer = const_node.get_attr("quantizer")
         elif op == 'sub':
             if node1const:
                 scale = np.array(1)
@@ -99,10 +106,20 @@ class MergeToBatchNormalization(OptimizerPass):
             else:
                 scale = np.array(-1)
                 bias = const_node.value
+            bias_precision = const_node.get_attr("quant_precision")
+            bias_quantizer = const_node.get_attr("quantizer")
+            if bias_precision and not bias_precision.signed:
+                # need to add a bit
+                bias_precision.signed = 1
+                bias_precision.width += 1
+                bias_precision.integer += 1
+                bias_quantizer = QuantNodeQuantizer(bias_precision)
 
         elif op == 'mul':
             scale = const_node.value
             bias = np.array(0)
+            scale_precision = const_node.get_attr("quant_precision")
+            scale_quantizer = const_node.get_attr("quantizer")
 
         attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
         attributes.update({
@@ -110,7 +127,11 @@ class MergeToBatchNormalization(OptimizerPass):
             "bias_data": bias,
             "n_in": n_in,
             "n_out": n_in,
-            "n_filt": -1
+            "n_filt": -1,
+            "scale_precision": scale_precision,
+            "scale_quantizer": scale_quantizer,
+            "bias_precision": bias_precision,
+            "bias_quantizer": bias_quantizer
         })
 
         bn_layer = model.make_node(BatchNormalization, f"bn_{node.name}",
@@ -123,7 +144,11 @@ class MergeToBatchNormalization(OptimizerPass):
         return True
 
 class MergeToBatchNormalizationDiv(OptimizerPass):
-    """ Convert Add, Sub, Mul, or Div Merges with consant to BatchNormalization """
+    """
+    Convert Div Merges with consant to BatchNormalization
+
+    TODO:  propagate precision
+    """
     def match(self, node):
         is_match = (isinstance(node, Merge)
                     and node.attributes["op"] == 'div'
