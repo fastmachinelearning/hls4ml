@@ -6,7 +6,8 @@ from hls4ml.model.layers import Conv1D, Conv2D
 from numbers import Integral
 
 class PropagateConvPrecision(OptimizerPass):
-    """ Propagate precision for conv nodes
+    """ Propagate precision for conv nodes. Restrict it to only cases where
+    the precision is set by a quant node, since otherwise the values get huge.
     """
     def match(self, node):
         is_match = isinstance(node, (Conv1D, Conv2D))
@@ -14,12 +15,12 @@ class PropagateConvPrecision(OptimizerPass):
 
     def transform(self, model, node):
 
-        input_precision = node.get_input_variable().type.precision
-        weight_precision = node.weights['weight'].type.precision
-        bias = node.weights['bias']
-        bias_values = bias.data_unquantized
-        bias_precision = None if (bias_values == np.zeros_like(bias_values)).all() else bias.type.precision
+        input_precision = node.get_input_node().get_attr("quant_precision")
+        weight_precision = node.get_attr("weight_precision")
+        if not input_precision or not weight_precision:
+            return False
 
+        bias_precision = node.get_attr("bias_precision")
         num_feature_maps = node.weights['weight'].data_unquantized.shape[-1]
         filt_width = node.get_attr('filt_width')
         filt_height = node.get_attr('filt_height', 1)

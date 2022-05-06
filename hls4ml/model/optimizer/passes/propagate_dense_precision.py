@@ -6,7 +6,9 @@ from hls4ml.model.layers import Dense
 
 
 class PropagateDensePrecision(OptimizerPass):
-    """ Propagate precion for Dense nodes
+    """
+    Propagate precision for Dense nodes. Restrict it to only cases where
+    the precision is set by a quant node, since otherwise the values get huge.
     """
     def match(self, node):
         is_match = isinstance(node, Dense)
@@ -14,13 +16,13 @@ class PropagateDensePrecision(OptimizerPass):
 
     def transform(self, model, node):
 
-        input_variable = node.get_input_variable()
-        input_precision = input_variable.type.precision
-        weight_precision = node.weights['weight'].type.precision
-        bias = node.weights['bias']
-        bias_values = bias.data_unquantized
-        bias_precision = None if (bias_values == np.zeros_like(bias_values)).all() else bias.type.precision
+        input_precision = node.get_input_node().get_attr("quant_precision")
+        weight_precision = node.get_attr("weight_precision")
+        if not input_precision or not weight_precision:
+            return False
 
+        bias_precision = node.get_attr("bias_precision")
+        input_variable = node.get_input_variable()
         num_acc = input_variable.shape[-1]
 
         accum_precision = _propagate_type_dense(input_precision, weight_precision, bias_precision, num_acc)
