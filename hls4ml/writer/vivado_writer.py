@@ -117,8 +117,8 @@ class VivadoWriter(Writer):
                 inputs_str = ', '.join([i.definition_cpp(as_reference=True) for i in model_inputs])
                 outputs_str = ', '.join([o.definition_cpp(as_reference=True) for o in model_outputs])
                 brams_str  = ', \n'.join([indent + b.definition_cpp(as_reference=False) for b in model_brams])
-                insize_str = ', '.join(['unsigned short &const_size_in_{}'.format(i) for i in range(1, len(model_inputs) + 1)])
-                outsize_str = ', '.join(['unsigned short &const_size_out_{}'.format(i) for i in range(1, len(model_outputs) + 1)])
+                insize_str = ', '.join(['unsigned int &const_size_in_{}'.format(i) for i in range(1, len(model_inputs) + 1)])
+                outsize_str = ', '.join(['unsigned int &const_size_out_{}'.format(i) for i in range(1, len(model_outputs) + 1)])
 
                 newline = ''
                 newline += indent + inputs_str + ',\n'
@@ -230,8 +230,8 @@ class VivadoWriter(Writer):
                 inputs_str = ', '.join([i.definition_cpp(as_reference=True) for i in model_inputs])
                 outputs_str = ', '.join([o.definition_cpp(as_reference=True) for o in model_outputs])
                 brams_str  = ', \n'.join([indent + b.definition_cpp(as_reference=False) for b in model_brams])
-                insize_str = ', '.join(['unsigned short &const_size_in_{}'.format(i) for i in range(1, len(model_inputs) + 1)])
-                outsize_str = ', '.join(['unsigned short &const_size_out_{}'.format(o) for o in range(1, len(model_outputs) + 1)])
+                insize_str = ', '.join(['unsigned int &const_size_in_{}'.format(i) for i in range(1, len(model_inputs) + 1)])
+                outsize_str = ', '.join(['unsigned int &const_size_out_{}'.format(o) for o in range(1, len(model_outputs) + 1)])
 
                 newline = ''
                 newline += indent + inputs_str + ',\n'
@@ -403,7 +403,7 @@ class VivadoWriter(Writer):
             elif '//hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
 
-                size_str = indent + 'unsigned short {},{};\n'
+                size_str = indent + 'unsigned int {},{};\n'
                 input_size_vars = ','.join(['size_in{}'.format(i) for i in range(1, len(model_inputs) + 1)])
                 output_size_vars = ','.join(['size_out{}'.format(o) for o in range(1, len(model_outputs) + 1)])
                 newline += size_str.format(input_size_vars, output_size_vars)
@@ -468,8 +468,8 @@ class VivadoWriter(Writer):
                 dtype = line.split('#', 1)[1].strip()
                 inputs_str = ', '.join(['{type} {name}[{shape}]'.format(type=dtype, name=i.cppname, shape=i.size_cpp()) for i in model_inputs])
                 outputs_str = ', '.join(['{type} {name}[{shape}]'.format(type=dtype, name=o.cppname, shape=o.size_cpp()) for o in model_outputs])
-                insize_str = ', '.join(['unsigned short &const_size_in_{}'.format(i) for i in range(1, len(model_inputs) + 1)])
-                outsize_str = ', '.join(['unsigned short &const_size_out_{}'.format(o) for o in range(1, len(model_outputs) + 1)])
+                insize_str = ', '.join(['unsigned int &const_size_in_{}'.format(i) for i in range(1, len(model_inputs) + 1)])
+                outsize_str = ', '.join(['unsigned int &const_size_out_{}'.format(o) for o in range(1, len(model_outputs) + 1)])
 
                 newline = ''
                 newline += indent + inputs_str + ',\n'
