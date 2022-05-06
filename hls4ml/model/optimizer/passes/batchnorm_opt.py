@@ -1,3 +1,4 @@
+from audioop import bias
 import numpy as np
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.layers import BatchNormalization, BatchNormOnnx, Constant
@@ -105,9 +106,30 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
     '''
 
     def match(self, node):
-        return (isinstance(node, BatchNormalization)
-                and isinstance(node.get_input_node(node.inputs[0]), BatchNormalization)
-                and not node.get_input_node(node.inputs[0]).get_attr("quant_precision"))
+        prev_node = node.get_input_node(node.inputs[0])
+        basic_match = (isinstance(node, BatchNormalization)
+                and isinstance(prev_node, BatchNormalization)
+                and not prev_node.get_attr("quant_precision"))
+
+        # check for compatibility to merge
+        if basic_match:
+            s0 = prev_node.weights['scale'].data_unquantized
+            b0 = prev_node.weights['bias'].data_unquantized
+            s1 = node.weights['scale'].data_unquantized
+            b1 = node.weights['bias'].data_unquantized
+            scale_compatible = (
+                (prev_node.get_attr("scale_quantizer") is None
+                 and node.get_attr("scale_quantizer") is None)
+                or (s0 == np.ones_like(s0)).all()
+                or (s1 == np.ones_like(s1)).all())
+            bias_compatible = (
+                (prev_node.get_attr("bias_quantizer") is None
+                 and node.get_attr("bias_quantizer") is None)
+                or (b0 == np.zeros_like(b0)).all()
+                or (b1 == np.zeros_like(b1)).all())
+            return scale_compatible and bias_compatible
+        else:
+            return False
 
 
     def transform(self, model, node):
@@ -118,12 +140,24 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
         s1 = node.weights['scale'].data_unquantized
         b1 = node.weights['bias'].data_unquantized
 
+        s_quantizer = (node.get_attr("scale_quantizer") if (s0 == np.ones_like(s0)).all()
+                       else prev_node.get_attr("scale_quantizer"))
+        b_quantizer = (node.get_attr("bias_quantizer") if (b0 == np.zeros_like(b0)).all()
+                       else prev_node.get_attr("bias_quantizer"))
+
+        node.set_attr("scale_quantizer", s_quantizer)
+        node.set_attr("bias_quantizer", b_quantizer)
+        if s_quantizer:
+            node.set_attr("scale_precision", s_quantizer.hls_type)
+        if b_quantizer:
+            node.set_attr("bias_precision", b_quantizer.hls_type)
+
         scale_new = s0 * s1
         bias_new = s1 * b0 + b1
 
         # call function so that quantizer would be called if needed
-        node.add_weights(scale_new, quantizer=node.get_attr("scale_quantizer"))
-        node.add_bias(bias_new, quantizer=node.get_attr("bias_quantizer"))
+        node.add_weights(scale_new, quantizer=s_quantizer)
+        node.add_bias(bias_new, quantizer=b_quantizer)
 
         model.remove_node(prev_node, rewire=True)
         return True

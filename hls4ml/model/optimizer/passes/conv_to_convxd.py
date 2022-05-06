@@ -1,9 +1,7 @@
 import numpy as np
-import math  # prefer to use math.ceil for scalar values (returns int)
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.types import IntegerPrecisionType, FixedPrecisionType
+from hls4ml.model.types import IntegerPrecisionType
 from hls4ml.model.layers import Conv, Constant, Conv1D, Conv2D
-from numbers import Integral
 
 _base_attributes = ('Trace', 'reuse_factor', 'in_width', 'out_width', 'n_chan', 'n_filt', 'pad_left', 'pad_right',
     'filt_width', 'stride_width', 'dilation_width', 'in_height', 'out_height', 'pad_top', 'pad_bottom',
@@ -23,8 +21,6 @@ class ConvToConvXD(OptimizerPass):
     def transform(self, model, node):
         """ Convert Conv with constant to a Conv1D or Conv2D layer """
 
-        input_node = node.get_input_node(node.inputs[0])
-        input_precision = input_node.get_attr("quant_precision")
         weight_node = node.get_input_node(node.inputs[1])
         weight_precision = weight_node.get_attr("quant_precision")
         bias_node = None
@@ -33,16 +29,8 @@ class ConvToConvXD(OptimizerPass):
             bias_node = node.get_input_node(node.inputs[2])
             bias_precision = bias_node.get_attr("quant_precision")
 
-        attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
-
-        quant_precision = None
-
-        if weight_precision and input_precision and (bias_precision or not bias_node):
-            quant_precision = propagate_type_conv(input_precision, weight_precision, bias_precision,
-                num_feature_maps=weight_node.value.shape[0], filt_width=attributes['filt_width'],
-                filt_height=attributes.get('filt_height', 1))
-
         #creating the attributes
+        attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
 
         # The ConvxD nodes expect the weight data to be in a different format, not (M, k1.., C)
         if node.attributes['n_dim'] == 1:
@@ -53,8 +41,7 @@ class ConvToConvXD(OptimizerPass):
             attributes["weight_data"] = np.transpose(weight_node.value, (1, 2, 3, 0))
         attributes["weight_precision"] = weight_precision
         attributes["weight_quantizer"] =  weight_node.get_attr("quantizer")
-        attributes["quant_precision"] = quant_precision
- 
+
         if bias_node:
             attributes["bias_data"] = bias_node.value,
             attributes["bias_precision"] = bias_precision,
@@ -74,31 +61,3 @@ class ConvToConvXD(OptimizerPass):
         model.replace_node(node, new_node)
 
         return True
-
-def propagate_type_conv(input_precision: FixedPrecisionType, weight_precision: FixedPrecisionType, bias_precision: FixedPrecisionType,
-     num_feature_maps: Integral, filt_width: Integral, filt_height: Integral):
-    '''
-    Propagate the precion type across a multiply. Currently only "quant_precision" types (with no fractional bits)
-    are supported. Rounding modes are propagated from in1
-    '''
-    if input_precision and weight_precision:
-        if (weight_precision.width != weight_precision.integer
-            or input_precision.width != input_precision.integer):
-            raise ValueError("quant_precisions must always have the same width and integer parameters")
-
-        Nacc = filt_width * filt_height * num_feature_maps
-        bitwidth = weight_precision.width + input_precision.width + math.ceil(np.log2(Nacc))
-        signed = weight_precision.signed or input_precision.signed
-        # copy staruation and rounding from input
-        rounding_mode = input_precision.rounding_mode
-        saturation_mode = input_precision.saturation_mode
-
-        # correct if bias
-        if bias_precision:
-            bitwidth = max(bitwidth + (bias_precision.signed and not signed),
-                            bias_precision.width + (signed and not bias_precision.signed)) + 1
-            signed = signed or bias_precision.signed
-        return FixedPrecisionType(bitwidth, bitwidth, signed, rounding_mode, saturation_mode)
-
-    else:
-        return None

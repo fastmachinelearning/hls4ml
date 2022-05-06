@@ -10,6 +10,10 @@ we need to explictly scale and unscale, so the Quant node becomes 3 nodes, an Ap
 Linear node to apply the quantization, and another ApplyAlpha to unscale/shift. We depend on optimization steps to move the
 unscaling ApplyAlpha down as needed. Again, when the Quant is a applied ot a Constant, the scaling and Linear nodes are
 immediately merged into the Constant. This is done because it simplifies some of the other optimizations.
+
+UPDATE:  Case 1 is loosened to also include power of 2 scalar scales, not just unitary scale, if 
+    _ALSO_INCLUDE_PO2 is set to true (the default)
+
 '''
 from copy import deepcopy
 import numpy as np
@@ -18,6 +22,8 @@ from hls4ml.model.types import FixedPrecisionType
 from hls4ml.model.layers import Quant, Constant, Activation, ApplyAlpha
 from hls4ml.converters.onnx.quantizer import QuantNodeQuantizer
 from hls4ml.model.optimizer import OptimizerPass
+
+_ALSO_MATCH_PO2 = True
 
 _base_attributes = ('Trace', 'reuse_factor')
 
@@ -70,9 +76,12 @@ class QuantToActivation(OptimizerPass):
     a Quant to an Activation.
 
     As an optimization, this is not called when the input is constant.
+
+    UPDATE:  this is also called when scale is scalar and power of 2, not just 1.
     '''
     def match(self, node):
         # only matches after the other inputs are already folded
+
         is_match = (isinstance(node, Quant)
                     and not isinstance(node.get_input_node(node.inputs[0]), Constant)
                     and not node.get_input_node(node.inputs[1])
@@ -81,11 +90,21 @@ class QuantToActivation(OptimizerPass):
 
         # Only match if the scale is 1s and the zero-point is 0s
         if is_match: # to make sure this is a quant node with inputs
-            input_shape = node.get_input_variable().shape
             scale = node.get_attr("scale")
             bias = node.get_attr("zeropt")
-            is_match = is_match and (scale == np.ones_like(scale)).all()
             is_match = is_match and (bias == np.zeros_like(bias)).all()
+
+            # check if scale is ones-like or a power of two
+            scale_unit_or_po2 = (scale == np.ones_like(scale)).all()
+            if not scale_unit_or_po2 and _ALSO_MATCH_PO2:
+                sqscale = np.squeeze(scale)
+                if not sqscale.shape:
+                    # not an array
+                    mantissa, _ = np.frexp(sqscale)
+                    scale_unit_or_po2 = mantissa == 0.5
+
+            is_match = is_match and scale_unit_or_po2
+
         return is_match
 
     def transform(self, model, node):
@@ -100,8 +119,13 @@ class QuantToActivation(OptimizerPass):
         narrow = node.get_attr("narrow")
         signed = node.get_attr("signed")
         bitwidth = node.get_attr("bitwidth")
+        integer = bitwidth
+        scale = node.get_attr("scale")
+        if _ALSO_MATCH_PO2 and not (scale == np.ones_like(scale)).all():
+            _, exp = np.frexp(np.squeeze(scale))
+            integer = bitwidth + exp - 1
 
-        precision, quantizer = _calculate_precision_quantizer(bitwidth, signed, narrow, rounding_mode)
+        precision, quantizer = _calculate_precision_quantizer(bitwidth, integer, signed, narrow, rounding_mode)
 
         attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
         attributes.update({
@@ -122,6 +146,7 @@ class QuantToActivation(OptimizerPass):
 class FuseQuantWithConstant(OptimizerPass):
     '''
     This is for the case when scale is 1 and zeropt is 0. It directly applies the quantization to a constant.
+    UPDATE:  this is also called when scale is scalar and power of 2, not just 1.
     '''
     def match(self, node):
         # only matches after the other inputs are already folded
@@ -136,8 +161,19 @@ class FuseQuantWithConstant(OptimizerPass):
             input_shape = node.get_input_variable().shape
             scale = node.get_attr("scale")
             bias = node.get_attr("zeropt")
-            is_match = is_match and (scale == np.ones_like(scale)).all()
             is_match = is_match and (bias == np.zeros_like(bias)).all()
+
+            # check if scale is ones-like or a power of two
+            scale_unit_or_po2 = (scale == np.ones_like(scale)).all()
+            if not scale_unit_or_po2 and _ALSO_MATCH_PO2:
+                sqscale = np.squeeze(scale)
+                if not sqscale.shape:
+                    # not an array
+                    mantissa, _ = np.frexp(sqscale)
+                    scale_unit_or_po2 = mantissa == 0.5
+
+            is_match = is_match and scale_unit_or_po2
+
         return is_match
 
     def transform(self, model, node):
@@ -149,8 +185,13 @@ class FuseQuantWithConstant(OptimizerPass):
         narrow = node.get_attr("narrow")
         signed = node.get_attr("signed")
         bitwidth = node.get_attr("bitwidth")
+        integer = bitwidth
+        scale = node.get_attr("scale")
+        if _ALSO_MATCH_PO2 and not (scale == np.ones_like(scale)).all():
+            _, exp = np.frexp(np.squeeze(scale))
+            integer = bitwidth + exp - 1
 
-        precision, quantizer = _calculate_precision_quantizer(bitwidth, signed, narrow, rounding_mode)
+        precision, quantizer = _calculate_precision_quantizer(bitwidth, integer, signed, narrow, rounding_mode)
 
         const_node = node.get_input_node(node.inputs[0])
         const_node.set_attr("quant_precision", precision)
@@ -203,7 +244,7 @@ class QuantToAlphaActivationAlpha(OptimizerPass):
         signed = node.get_attr("signed")
         bitwidth = node.get_attr("bitwidth")
 
-        precision, quantizer = _calculate_precision_quantizer(bitwidth, signed, narrow, rounding_mode)
+        precision, quantizer = _calculate_precision_quantizer(bitwidth, bitwidth, signed, narrow, rounding_mode)
 
         attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
         attributes.update({
@@ -294,7 +335,7 @@ class ConstQuantToConstAlpha(OptimizerPass):
         signed = node.get_attr("signed")
         bitwidth = node.get_attr("bitwidth")
 
-        precision, quantizer = _calculate_precision_quantizer(bitwidth, signed, narrow, rounding_mode)
+        precision, quantizer = _calculate_precision_quantizer(bitwidth, bitwidth, signed, narrow, rounding_mode)
 
         const_node = node.get_input_node(node.inputs[0])
 
@@ -329,7 +370,7 @@ class ConstQuantToConstAlpha(OptimizerPass):
         return True
 
 
-def _calculate_precision_quantizer(bitwidth, signed, narrow, rounding_mode):
+def _calculate_precision_quantizer(bitwidth, integer, signed, narrow, rounding_mode):
     '''
     A function to determine the precision and quantizer
     '''
@@ -349,7 +390,8 @@ def _calculate_precision_quantizer(bitwidth, signed, narrow, rounding_mode):
         bn_sat = "AP_SAT"
 
     bitwidth = math.ceil(bitwidth)
+    integer = math.ceil(integer)
 
-    precision = FixedPrecisionType(bitwidth, bitwidth, signed, bn_round, bn_sat)
+    precision = FixedPrecisionType(bitwidth, integer, signed, bn_round, bn_sat)
     quantizer = QuantNodeQuantizer(precision)
     return (precision, quantizer)
