@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VIVADO_INSTALL_DIR=/opt/Xilinx
+VIVADO_INSTALL_DIR=/xilinx
 VIVADO_VERSION=2020.1
 
 # If running in docker image we would first need to activate the proper conda environment
