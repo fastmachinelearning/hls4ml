@@ -20,6 +20,14 @@ hls4ml.utils.example\_models module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.utils.fixed\_point\_utils module
+---------------------------------------
+
+.. automodule:: hls4ml.utils.fixed_point_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.utils.plot module
 ------------------------
 

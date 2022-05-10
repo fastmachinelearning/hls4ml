@@ -75,6 +75,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.config">hls4ml.utils.config module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.example_models">hls4ml.utils.example_models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.fixed_point_utils">hls4ml.utils.fixed_point_utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils.plot">hls4ml.utils.plot module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.utils">Module contents</a></li>
 </ul>
@@ -255,6 +256,52 @@ data type (ap_int&lt;N&gt;, where N is a bit-size from 1 to 1024) can also be us
 </dd>
 </dl>
 </dd></dl>
+
+</div>
+<div class="section" id="module-hls4ml.utils.fixed_point_utils">
+<span id="hls4ml-utils-fixed-point-utils-module"></span><h2>hls4ml.utils.fixed_point_utils module<a class="headerlink" href="#module-hls4ml.utils.fixed_point_utils" title="Permalink to this headline"></a></h2>
+<dl class="class">
+<dt id="hls4ml.utils.fixed_point_utils.FixedPointEmulator">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.utils.fixed_point_utils.</code><code class="sig-name descname">FixedPointEmulator</code><span class="sig-paren">(</span><em class="sig-param">N</em>, <em class="sig-param">I</em>, <em class="sig-param">signed=True</em>, <em class="sig-param">integer_bits=None</em>, <em class="sig-param">decimal_bits=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.FixedPointEmulator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Default constructor
+:param - N: Total number of bits in the fixed point number
+:param - I: Integer bits in the fixed point number
+:param - F = N-I: Fixed point bits in the number
+:param - signed: True/False - If True, use 2’s complement when converting to float
+:param - self.integer_bits: Bits corresponding to the integer part of the number
+:param - self.decimal_bits: Bits corresponding to the decimal part of the number</p>
+<dl class="method">
+<dt id="hls4ml.utils.fixed_point_utils.FixedPointEmulator.exp_float">
+<code class="sig-name descname">exp_float</code><span class="sig-paren">(</span><em class="sig-param">sig_figs=6</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.FixedPointEmulator.exp_float" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.utils.fixed_point_utils.FixedPointEmulator.inv_float">
+<code class="sig-name descname">inv_float</code><span class="sig-paren">(</span><em class="sig-param">sig_figs=10</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.FixedPointEmulator.inv_float" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.utils.fixed_point_utils.FixedPointEmulator.set_msb_bits">
+<code class="sig-name descname">set_msb_bits</code><span class="sig-paren">(</span><em class="sig-param">bits</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.FixedPointEmulator.set_msb_bits" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.utils.fixed_point_utils.FixedPointEmulator.to_float">
+<code class="sig-name descname">to_float</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.FixedPointEmulator.to_float" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="hls4ml.utils.fixed_point_utils.ceil_log2">
+<code class="sig-prename descclassname">hls4ml.utils.fixed_point_utils.</code><code class="sig-name descname">ceil_log2</code><span class="sig-paren">(</span><em class="sig-param">i</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.ceil_log2" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="hls4ml.utils.fixed_point_utils.uint_to_binary">
+<code class="sig-prename descclassname">hls4ml.utils.fixed_point_utils.</code><code class="sig-name descname">uint_to_binary</code><span class="sig-paren">(</span><em class="sig-param">i</em>, <em class="sig-param">N</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.fixed_point_utils.uint_to_binary" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 </div>
 <div class="section" id="module-hls4ml.utils.plot">
