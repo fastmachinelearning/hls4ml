@@ -179,7 +179,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
 
         # insert a Batch Normalization layer to apply the alpha scale
         if alpha == 'auto_po2':
-            scale_bits = np.abs(np.log2(scale)).max().astype('int') + 1
+            scale_bits = np.maximum(np.abs(np.log2(scale)).max().astype('int') + 1, 2)
             scale_quantizer = QKerasPO2Quantizer({'class_name' : 'quantized_po2', 'config': {'bits': scale_bits}})
         else:
             scale_quantizer = None
