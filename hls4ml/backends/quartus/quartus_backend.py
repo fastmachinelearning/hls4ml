@@ -188,3 +188,8 @@ class QuartusBackend(FPGABackend):
             layer.set_attr('exp_table_t', layer.get_attr('table_t'))
         if 'inv_table_t' not in layer.attributes:
             layer.set_attr('inv_table_t', layer.get_attr('table_t'))
+        if layer.model.config.is_resource_strategy(layer):
+            # 'resource' strategy = 'latency' for Softmax
+            layer.set_attr('implementation', 'latency')
+        else:
+            layer.set_attr('implementation', layer.model.config.get_strategy(layer).lower())

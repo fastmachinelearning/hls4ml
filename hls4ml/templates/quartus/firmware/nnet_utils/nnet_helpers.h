@@ -26,7 +26,6 @@
 #include <fstream>
 #include <algorithm>
 #include <map>
-#include "nnet_common.h"
 
 namespace nnet {
 
@@ -50,6 +49,11 @@ extern size_t trace_type_size;
 constexpr int ceillog2(int x){
   return (x <= 2) ? 1 : 1 + ceillog2((x+1) / 2);
 }
+
+constexpr int floorlog2(int x){
+  return (x < 2) ? 0 : 1 + floorlog2(x / 2);
+}
+
 constexpr int pow2(int x){
   return x == 0 ? 1 : 2 * pow2(x - 1);
 }
