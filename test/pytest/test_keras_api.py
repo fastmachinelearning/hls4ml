@@ -62,7 +62,8 @@ def test_dense(backend):
 @pytest.mark.parametrize("activation_function", [Activation(activation='relu', name='Activation'),
                                                  LeakyReLU(alpha=1.0),
                                                  ELU(alpha=1.0),
-                                                 PReLU(alpha_initializer="zeros",),])
+                                                 PReLU(alpha_initializer="zeros",),
+                                                 Activation(activation='sigmoid', name='Activation')])
                                                  #ThresholdedReLU(theta=1.0)])
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 def test_activations(activation_function, backend):
