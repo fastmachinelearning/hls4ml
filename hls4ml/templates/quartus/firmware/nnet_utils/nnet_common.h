@@ -24,10 +24,12 @@
 #include "ac_int.h"
 #include "ac_fixed.h"
 #include "math.h"
+#include "nnet_helpers.h"
 #else
 #include "HLS/ac_int.h"
 #include "HLS/ac_fixed.h"
 #include "HLS/math.h"
+#include "nnet_helpers.h"
 #endif
 
 typedef ac_fixed<16,6> table_default_t;
@@ -57,6 +59,46 @@ typedef ac_fixed<32,10> accum_t_def;
      res[NIN1+ii] = data2[ii];
    }
  }
+
+  /* ---
+  * Balanced tree reduce implementation.
+  * For use in scenarios where Quartus cannot expression balance
+  * Reduces an array of inputs to a single value using the template binary operator 'Op',
+  * for example summing all elements with Op_add, or finding the maximum with Op_max
+  * Use only when the input array is fully unrolled. Or, slice out a fully unrolled section
+  * before applying and accumulate the result over the rolled dimension.
+  * --- */
+ template<class T, int N, class Op>
+ T reduce(const T* x, Op op)
+ {
+     static constexpr int leftN = pow2(floorlog2(N - 1)) > 0 ? pow2(floorlog2(N - 1)) : 0;
+     static constexpr int rightN = N - leftN > 0 ? N - leftN : 0;
+     if (N == 1){
+         return x[0];
+     }
+     if (N == 2){
+         return op(x[0],x[1]);
+     }
+     return op(reduce<T,leftN,Op>(x, op), reduce<T,rightN,Op>(x+leftN, op));
+ } 
+
+ 
+
+ template<class T>
+ class Op_add{
+ public:
+	 T operator()(T a, T b){
+		 return a + b;
+	 }
+ };
+
+ template<class T>
+ class Op_max{
+ public:
+     T operator()(T a, T b){
+        return a >= b ? a : b;
+     }
+ };
 
 }
 
