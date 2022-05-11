@@ -372,7 +372,8 @@ class SeparableConv1D(Layer):
         self.add_weights_variable(name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer'))
         
         zero_bias_data = np.zeros((self.attributes['n_chan'],))
-        self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data)
+        precision = IntegerPrecisionType(width=1, signed=False)
+        self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data, precision=precision)
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
@@ -506,7 +507,8 @@ class SeparableConv2D(Layer):
         self.add_weights_variable(name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer'))
         
         zero_bias_data = np.zeros((self.attributes['n_chan'],))
-        self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data)
+        precision = IntegerPrecisionType(width=1, signed=False)
+        self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data, precision=precision)
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
