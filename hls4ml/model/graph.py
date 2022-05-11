@@ -136,7 +136,7 @@ class HLSConfig(object):
             targ_cycles = self.layer_name_targ_cycles.get(layer.__class__.__name__.lower())
         if targ_cycles is None:
             targ_cycles = self.model_targ_cycles
- 
+
         return targ_cycles
 
     def get_strategy(self, layer):
@@ -147,7 +147,7 @@ class HLSConfig(object):
             strategy = self.model_strategy
 
         return strategy
-    
+
     def get_conv_implementation(self, layer):
         conv_implementation = self.layer_name_conv_implementation.get(layer.name.lower())
         if conv_implementation is None:
@@ -171,7 +171,7 @@ class HLSConfig(object):
 
     def _parse_hls_config(self):
         hls_config = self.config['HLSConfig']
-        
+
         self.flows = hls_config.get('Flows')
         if self.flows is None:
             self.flows = [self.backend.get_default_flow()]
@@ -187,9 +187,9 @@ class HLSConfig(object):
                 try:
                     selected_optimizers.remove(opt)
                 except ValueError:
-                    pass                
+                    pass
             self.optimizers = selected_optimizers
-        
+
         model_cfg = hls_config.get('Model')
         if model_cfg is not None:
             precision_cfg = model_cfg.get('Precision')
@@ -220,7 +220,7 @@ class HLSConfig(object):
                 rf = layer_cfg.get('ReuseFactor')
                 if rf is not None:
                     self.layer_type_rf[layer_type.lower()] = rf
-                
+
                 targ_cycles = layer_cfg.get('TargetCycles')
                 if targ_cycles is not None:
                     self.layer_type_targ_cycles[layer_type.lower()] = targ_cycles
@@ -303,9 +303,15 @@ class ModelGraph(object):
 
         self._applied_flows = []
 
-        # If not provided, assumes layer_list[0] is input, and layer_list[-1] is output
-        self.inputs = inputs if inputs is not None else [layer_list[0]['name']]
-        self.outputs = outputs if outputs is not None else [layer_list[-1]['name']]
+        # If not provided, assumes layer_list[0] is the input layer, and layer_list[-1] is output layer
+
+        # Note, these are actually the variable names, which may differ from the layer name
+        input_layers = inputs if inputs is not None else [layer_list[0]['name']]
+        output_layers = outputs if outputs is not None else [layer_list[-1]['name']]
+        self.inputs = self._find_variables(layer_list, input_layers)
+        if self.inputs != input_layers:
+            raise RuntimeError(f"Currently only support the case when input variables and input layer names match\nInput layers = {input_layers}, input_vars = {self.inputs}")
+        self.outputs = self._find_variables(layer_list, output_layers)
 
         self.index = 0
         self.graph = OrderedDict()
@@ -317,6 +323,12 @@ class ModelGraph(object):
 
         for flow in self.config.flows:
             self.apply_flow(flow)
+
+    @staticmethod
+    def _find_variables(layer_list, layers):
+        fullnodes = [node for node in layer_list if node['name'] in layers]
+        out_list_lists = [node['outputs'] if 'outputs' in node else [node['name']] for node in fullnodes]
+        return [item for sublist in out_list_lists for item in sublist]  # to flatten
 
     def _make_graph(self, layer_list):
         for layer in layer_list:
@@ -357,7 +369,7 @@ class ModelGraph(object):
         """ Make a new node not connected to the model graph.
 
         The 'kind' should be a valid layer registered with `register_layer`. If no outputs
-        are specified, a default output named the same as the node will be created. The 
+        are specified, a default output named the same as the node will be created. The
         returned node should be added to the graph with `insert_node` or `replace_node`
         functions.
 
@@ -398,13 +410,13 @@ class ModelGraph(object):
     def insert_node(self, node, before=None):
         """ Insert a new node into the model graph.
 
-        The node to be inserted should be created with `make_node()` function. The optional 
+        The node to be inserted should be created with `make_node()` function. The optional
         parameter `before` can be used to specify the node that follows in case of ambiguities.
 
         Args:
             node (Layer): Node to insert
             before (Layer, optional): The next node in sequence before which a
-                new node should be inserted. 
+                new node should be inserted.
         Raises:
             Exception: If an attempt to insert a node with multiple inputs is made or if
                 `before` does not specify a correct node in sequence.
@@ -468,7 +480,7 @@ class ModelGraph(object):
                         raise Exception('Cannot rewire a node without child')
             else:
                 raise Exception('Cannot rewire a node without a parent')
-        
+
         del self.output_vars[node.outputs[0]]
         del self.graph[node.name]
         self._update_model_outputs()
@@ -538,7 +550,7 @@ class ModelGraph(object):
         for layer in self.get_layers():
             weights = layer.get_weights()
             variables.extend(weights)
-        
+
         return variables
 
     def write(self):
@@ -555,7 +567,7 @@ class ModelGraph(object):
             from random import choice
             length = 8
             return ''.join(choice(hexdigits) for m in range(length))
-        
+
         self.config.config['Stamp'] = _make_stamp()
 
         self.config.backend.write(self)
@@ -585,9 +597,9 @@ class ModelGraph(object):
             raise Exception('Model not compiled')
         if len(self.get_input_variables()) == 1:
             xlist = [x]
-        else: 
+        else:
             xlist = x
-        
+
         for xi in xlist:
             if not isinstance(xi, np.ndarray):
                 raise Exception('Expected numpy.ndarray, but got {}'.format(type(x)))

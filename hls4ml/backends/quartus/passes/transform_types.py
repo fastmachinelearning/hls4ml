@@ -19,9 +19,9 @@ class TransformTypes(GlobalOptimizerPass):
             if io_type == 'io_stream':
                 raise Exception('Streaming IO is not supported in Quartus.')
             elif io_type == 'io_parallel':
-                if node.name in node.model.inputs:
+                if out_name in node.model.inputs:
                     new_var = self.struct_var_converter.convert(var, pragma='hls_register', struct_name='inputs')
-                elif node.name in node.model.outputs:
+                elif out_name in node.model.outputs:
                     new_var = self.struct_var_converter.convert(var, pragma='hls_register', struct_name='outputs')
                 else:
                     new_var = self.array_var_converter.convert(var, pragma='hls_register')
