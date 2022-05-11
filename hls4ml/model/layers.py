@@ -38,6 +38,9 @@ class Layer(object):
         return all_attributes
 
     def __init__(self, model, name, attributes, inputs, outputs=None):
+        if name == 'input':
+            raise RuntimeError("No model layer should be named 'input' because that is a reserved;" + \
+                               "layer name in ModelGraph; Please rename the layer in your model")
         self.model = model
         self.name = name
         self.index = model.next_layer()
