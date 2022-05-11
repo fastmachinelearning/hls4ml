@@ -1,7 +1,7 @@
 #!/bin/bash
 
 basedir=vivado_prj
-vivadodir=/opt/Xilinx
+vivadodir=/xilinx
 vivadover=2020.1
 parallel=1
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: UTF-8 -*-
 from __future__ import absolute_import
 from __future__ import print_function
 
@@ -141,7 +140,7 @@ def _build(args, extra_args):
         print('Project directory (-p or --project) must be provided.')
         sys.exit(1)
 
-    try:
+    try: 
         yamlConfig = hls4ml.converters.parse_yaml_config(args.project + '/' + config_filename)
     except:
         print('Project configuration file not found in "{}".'.format(args.project))
