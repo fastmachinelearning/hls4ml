@@ -24,20 +24,27 @@ def generate_data(function, input_shape):
     return function((1000, *input_shape))
 
 
-# TODO: include latency strategy with flat_distribution when it can be made to pass
+# TODO: Include latency strategy with flat_distribution when it can be made to pass
 @pytest.mark.parametrize('backend,strategy,function,input_shape,io_type', [   
-                            #('latency', flat_distribution, (8,), 'io_parallel'),
-                            #('latency', flat_distribution, (8, 8, 3), 'io_stream'),
                             ('Vivado', 'stable', flat_distribution, (8,), 'io_parallel'),
                             ('Vivado', 'stable', high_accuracy_distribution, (8,), 'io_parallel'),
-                            ('Quartus', 'resource', flat_distribution, (8,), 'io_parallel'),
-                            ('Quartus', 'resource', high_accuracy_distribution, (8,), 'io_parallel'),
+                            
+                            ('Quartus', 'stable', flat_distribution, (8,), 'io_parallel'),
+                            ('Quartus', 'stable', high_accuracy_distribution, (8,), 'io_parallel'),
+
+                            # Streaming, single-dimensional implementation (not supported on Quartus yet)
                             ('Vivado', 'stable', flat_distribution, (8,), 'io_stream'),
                             ('Vivado', 'stable', high_accuracy_distribution, (8,), 'io_stream'),
+                            
                             # Multi-dimensional tests, only for io_stream for now
                             ('Vivado', 'stable', flat_distribution, (8, 8, 3), 'io_stream'),
-                            ('Vivado', 'stable', high_accuracy_distribution, (8, 8, 3), 'io_stream')
-                        
+                            ('Vivado', 'stable', high_accuracy_distribution, (8, 8, 3), 'io_stream'),
+
+                            # Latency, include when test pass
+                            #('Vivado', 'latency', flat_distribution, (8,), 'io_parallel'),
+                            #('Vivado', 'latency', flat_distribution, (8, 8, 3), 'io_stream'),
+                            #('Quartus', 'latency', flat_distribution, (8,), 'io_parallel'),
+                            
                         ])
 def test_softmax(backend, strategy, generate_data, input_shape, io_type):
     X = generate_data
