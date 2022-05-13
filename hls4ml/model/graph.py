@@ -713,7 +713,7 @@ class ModelGraph(object):
             for i in range(n_samples):
                 predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
                 if n_inputs == 1:
-                    top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
+                    top_function( np.array(x[i]), predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
                 else:
                     inp = [xj[i] for xj in x]
                     argtuple = inp
