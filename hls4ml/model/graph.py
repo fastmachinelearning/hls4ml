@@ -395,7 +395,7 @@ class ModelGraph(object):
             self.output_vars[o] = out_var
         return node
 
-    def insert_node(self, node, before=None):
+    def insert_node(self, node, before=None, input_idx=0):
         """ Insert a new node into the model graph.
 
         The node to be inserted should be created with `make_node()` function. The optional 
@@ -405,6 +405,7 @@ class ModelGraph(object):
             node (Layer): Node to insert
             before (Layer, optional): The next node in sequence before which a
                 new node should be inserted. 
+           input_idx (int, optional): If the next node takes multiple inputs, the input index
         Raises:
             Exception: If an attempt to insert a node with multiple inputs is made or if
                 `before` does not specify a correct node in sequence.
@@ -414,7 +415,12 @@ class ModelGraph(object):
             raise Exception('Cannot insert a node with more than one input (for now).')
 
         prev_node = node.get_input_node(node.inputs[0])
-        next_nodes = [x for x in self.graph.values() if x.inputs[0] in prev_node.outputs]
+        next_nodes = []
+        for x in self.graph.values():
+            overlap = [value for value in x.inputs if value in prev_node.outputs]
+            if overlap: 
+                next_nodes.append(x)
+
         if before is None:
             next_node = next((x for x in self.graph.values() if x.inputs[0] in prev_node.outputs), None)
         else:
@@ -423,7 +429,7 @@ class ModelGraph(object):
             next_node = before
 
         if next_node is not None:
-            next_node.inputs[0] = node.outputs[0]
+            next_node.inputs[input_idx] = node.outputs[0]
 
         new_graph = OrderedDict()
         for k, v in self.graph.items():
@@ -497,10 +503,9 @@ class ModelGraph(object):
         All node outputs and inputs are found. The model outputs are set to all node outputs
         that are not also node inputs.
         '''
-        node_outputs = np.array([out for node in self.graph.values() for out in node.outputs])
-        node_inputs = np.array([inp for node in self.graph.values() for inp in node.inputs])
-        model_outputs = node_outputs[np.isin(node_outputs, node_inputs, invert=True)]
-        self.outputs = model_outputs.tolist()
+        node_outputs = [out for node in self.graph.values() for out in node.outputs]
+        node_inputs = [inp for node in self.graph.values() for inp in node.inputs]
+        self.outputs = [out for out in node_outputs if out not in node_inputs]
 
     def get_weights_data(self, layer_name, var_name):
         return self.reader.get_weights_data(layer_name, var_name)
