@@ -131,7 +131,7 @@ do
    else
       echo "${hlscfg}" >> ${file}
    fi
-   # Add condition that only when accelerator backend and precision use default.
+   # Adding VivadoAccelerator config to file
    if [ "${backend}" = "VivadoAccelerator" ]; 
    then 
      echo "AcceleratorConfig:" >> ${file}

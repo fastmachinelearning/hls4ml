@@ -40,9 +40,6 @@ class VivadoAcceleratorBackend(VivadoBackend):
             os.system('vivado -mode batch -source design.tcl')
         except:
             print("Something went wrong, check the Vivado logs")
-        # These should work but Vivado seems to return before the files are written...
-        # copyfile('{}_vivado_accelerator/project_1.runs/impl_1/design_1_wrapper.bit'.format(model.config.get_project_name()), './{}.bit'.format(model.config.get_project_name()))
-        # copyfile('{}_vivado_accelerator/project_1.srcs/sources_1/bd/design_1/hw_handoff/design_1.hwh'.format(model.config.get_project_name()), './{}.hwh'.format(model.config.get_project_name()))
         # TODO improve the line below
         ip_repo_path = model.config.get_output_dir() + '/myproject_prj/solution1/impl/ip'
         os.makedirs('xclbin_files', exist_ok=True)
