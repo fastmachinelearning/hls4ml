@@ -1,7 +1,7 @@
 import numpy as np
 
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.layers import Layer, Merge, Reshape, register_layer
+from hls4ml.model.layers import Layer, Merge, Reshape, Concatenate, register_layer
 from hls4ml.backends import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 
@@ -109,7 +109,7 @@ class ReshapeStream(OptimizerPass):
 
 class BroadcastStream(OptimizerPass):
     def match(self, node):
-        if isinstance(node, Merge):
+        if isinstance(node, Merge) and not isinstance(node, Concatenate):
             inp1 = node.get_input_variable(node.inputs[0])
             inp2 = node.get_input_variable(node.inputs[1])
             return inp1.shape != inp2.shape
