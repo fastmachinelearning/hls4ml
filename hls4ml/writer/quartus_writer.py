@@ -503,11 +503,7 @@ class QuartusWriter(Writer):
         return 1024
 
     def __get_table_header(self, table_name, table_size):
-        table_header = '#ifndef {}_H_\n'.format(table_name.upper())
-        table_header += '#define {}_H_\n'.format(table_name.upper())
-        table_header += '\n'
-
-        table_header += '#ifdef __INTELFPGA_COMPILER__\n'
+        table_header = '#ifdef __INTELFPGA_COMPILER__\n'
         table_header += 'hls_init_on_powerup\n'
         table_header += '#endif\n'
         table_header += 'static const typename CONFIG_T::table_t {}[{}] = {{'.format(table_name, table_size)
@@ -528,7 +524,6 @@ class QuartusWriter(Writer):
             sep = ", "
 
         h_file.write('};\n')
-        h_file.write('\n#endif\n')
         h_file.close()
 
     def __write_sigmoid_table(self, model, path):
@@ -551,7 +546,6 @@ class QuartusWriter(Writer):
                 sep = ", "
 
         h_file.write('};\n')
-        h_file.write('\n#endif\n')
         h_file.close()
 
     def __write_tanh_table(self, model, path):
@@ -574,7 +568,6 @@ class QuartusWriter(Writer):
                 sep = ", "
 
         h_file.write('};\n')
-        h_file.write('\n#endif\n')
         h_file.close()
 
     def __write_softplus_table(self, model, path):
@@ -592,7 +585,6 @@ class QuartusWriter(Writer):
             sep = ", "
 
         h_file.write('};\n')
-        h_file.write('\n#endif\n')
         h_file.close()
 
     def __write_softsign_table(self, model, path):
@@ -610,7 +602,6 @@ class QuartusWriter(Writer):
             sep = ", "
 
         h_file.write('};\n')
-        h_file.write('\n#endif\n')
         h_file.close()
 
     def __write_selu_table(self, model, path):
@@ -628,7 +619,6 @@ class QuartusWriter(Writer):
             sep = ", "
 
         h_file.write('};\n')
-        h_file.write('\n#endif\n')
         h_file.close()
 
     def __write_exp_table(self, model, path):
@@ -668,7 +658,6 @@ class QuartusWriter(Writer):
             sep = ", "
 
         h_file.write('};\n')
-        h_file.write('\n#endif\n')
         h_file.close()
 
     def __write_invert_table(self, model, path):
@@ -708,7 +697,6 @@ class QuartusWriter(Writer):
             sep = ", "
 
         h_file.write('};\n')
-        h_file.write('\n#endif\n')
         h_file.close()
 
     def __write_exp_table_latency(self, model, path):
@@ -748,7 +736,6 @@ class QuartusWriter(Writer):
             sep = ", "
 
         h_file.write('};\n')
-        h_file.write('\n#endif\n')
         h_file.close()
 
     def __write_invert_table_latency(self, model, path):
@@ -788,7 +775,6 @@ class QuartusWriter(Writer):
             sep = ", "
 
         h_file.write('};\n')
-        h_file.write('\n#endif\n')
         h_file.close()
 
     def __write_exp_table_legacy(self, model, path):
@@ -806,7 +792,6 @@ class QuartusWriter(Writer):
             sep = ", "
 
         h_file.write('};\n')
-        h_file.write('\n#endif\n')
         h_file.close()
 
     def __write_invert_table_legacy(self, model, path):
@@ -826,7 +811,6 @@ class QuartusWriter(Writer):
             sep = ", "
 
         h_file.write('};\n')
-        h_file.write('\n#endif\n')
         h_file.close()
 
     def write_activation_tables(self, model):
