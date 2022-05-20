@@ -130,7 +130,7 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
 param_activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {param}, {output});'
 
-activ_include_list = ['nnet_utils/nnet_activation.h']
+activ_include_list = ['nnet_utils/nnet_activation.h', 'nnet_utils/nnet_activation_stream.h']
 
 class ActivationConfigTemplate(LayerConfigTemplate):
     def __init__(self):

@@ -23,30 +23,17 @@ def high_accuracy_distribution(shape):
 def generate_data(function, input_shape):
     return function((1000, *input_shape))
 
-
-# TODO: Include latency strategy with flat_distribution when it can be made to pass
-@pytest.mark.parametrize('backend,strategy,function,input_shape,io_type', [   
-                            ('Vivado', 'stable', flat_distribution, (8,), 'io_parallel'),
-                            ('Vivado', 'stable', high_accuracy_distribution, (8,), 'io_parallel'),
-                            
-                            ('Quartus', 'stable', flat_distribution, (8,), 'io_parallel'),
-                            ('Quartus', 'stable', high_accuracy_distribution, (8,), 'io_parallel'),
-
-                            # Streaming, single-dimensional implementation (not supported on Quartus yet)
-                            ('Vivado', 'stable', flat_distribution, (8,), 'io_stream'),
-                            ('Vivado', 'stable', high_accuracy_distribution, (8,), 'io_stream'),
-                            
-                            # Multi-dimensional tests, only for io_stream for now
-                            ('Vivado', 'stable', flat_distribution, (8, 8, 3), 'io_stream'),
-                            ('Vivado', 'stable', high_accuracy_distribution, (8, 8, 3), 'io_stream'),
-
-                            # Latency, include when test pass
-                            #('Vivado', 'latency', flat_distribution, (8,), 'io_parallel'),
-                            #('Vivado', 'latency', flat_distribution, (8, 8, 3), 'io_stream'),
-                            #('Quartus', 'latency', flat_distribution, (8,), 'io_parallel'),
-                            
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('strategy', ['stable'])
+@pytest.mark.parametrize('function,input_shape,io_type', [
+                            (flat_distribution, (8,), 'io_parallel'),
+                            (high_accuracy_distribution, (8,), 'io_parallel'),
+                            (flat_distribution, (8,), 'io_stream'),
+                            (high_accuracy_distribution, (8,), 'io_stream'),
+                            (flat_distribution, (8, 8, 3), 'io_stream'),
+                            (high_accuracy_distribution, (8, 8, 3), 'io_stream')
                         ])
-def test_softmax(backend, strategy, generate_data, input_shape, io_type):
+def test_softmax(backend, strategy, generate_data, input_shape, io_type, function):
     X = generate_data
     model = tf.keras.models.Sequential()
     model.add(tf.keras.layers.Activation(input_shape=input_shape, activation='softmax', name='softmax'))
@@ -58,7 +45,7 @@ def test_softmax(backend, strategy, generate_data, input_shape, io_type):
     cfg['LayerName']['softmax']['inv_table_t'] = f_type
     cfg['LayerName']['softmax']['exp_table_t'] = f_type
     
-    odir = str(test_root_path / 'hls4mlprj_softmax_{}'.format(strategy))
+    odir = str(test_root_path / 'hls4mlprj_softmax_{}_{}_{}_{}_{}').format(backend, io_type, strategy, function.__name__, str(input_shape))
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=cfg, io_type=io_type,
                                                            output_dir=odir, backend=backend)
     hls_model.compile()
