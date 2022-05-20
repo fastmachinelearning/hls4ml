@@ -39,6 +39,9 @@ using stream_out = ihc::stream_out<T>;
 
 #endif
 
+// Include nnet::array - a custom array-like struct, mainly used with io_stream
+#include "nnet_utils/nnet_types.h"
+
 //hls-fpga-machine-learning insert numbers
 
 

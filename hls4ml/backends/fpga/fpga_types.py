@@ -258,6 +258,13 @@ class VivadoStreamVariableDefinition(VariableDefinition):
         else: # Declaration
             return 'hls::stream<{type}> {name}{suffix}("{name}")'.format(type=self.type.name, name=self.name, suffix=name_suffix)
 
+class QuartusStreamVariableDefinition(VariableDefinition):
+    def definition_cpp(self, name_suffix='', as_reference=False):
+        if as_reference: # Function parameter
+            return 'stream<{type}> &{name}{suffix}'.format(type=self.type.name, name=self.name, suffix=name_suffix)
+        else:            # Declaration
+            return 'stream<{type}> {name}{suffix}'.format(type=self.type.name, name=self.name, suffix=name_suffix)
+
 class StreamVariableConverter(object):
     def __init__(self, type_converter, prefix, definition_cls):
         self.type_converter = type_converter
@@ -279,6 +286,10 @@ class StreamVariableConverter(object):
 class VivadoStreamVariableConverter(StreamVariableConverter):
     def __init__(self, type_converter):
         super().__init__(type_converter=type_converter, prefix='Vivado', definition_cls=VivadoStreamVariableDefinition)
+
+class QuartusStreamVariableConverter(StreamVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Quartus', definition_cls=QuartusStreamVariableDefinition)
 
 #endregion
 
