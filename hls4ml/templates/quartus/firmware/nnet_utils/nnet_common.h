@@ -24,20 +24,24 @@
 #include "ac_int.h"
 #include "ac_fixed.h"
 #include "math.h"
-#include "nnet_helpers.h"
 #else
 #include "HLS/ac_int.h"
 #include "HLS/ac_fixed.h"
 #include "HLS/math.h"
-#include "nnet_helpers.h"
 #endif
+
+#include "nnet_helpers.h"
 
 typedef ac_fixed<16,6> table_default_t;
 
 namespace nnet {
 
 // Common type definitions
+<<<<<<< HEAD
 enum io_type {io_parallel = 0, io_stream};
+=======
+enum io_type {io_parallel = 0, io_serial, io_stream};
+>>>>>>> ea9eb66a (Quartus Stream Variable Converter & Backend io_stream enabled)
 
 // Default data types (??) TODO: Deprecate
 typedef ac_fixed<16,4>  weight_t_def;

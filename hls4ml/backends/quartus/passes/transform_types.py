@@ -1,14 +1,14 @@
 
 from hls4ml.model.optimizer import GlobalOptimizerPass
 from hls4ml.model.types import InplaceVariable
-from hls4ml.backends.fpga.fpga_types import ACTypeConverter, QuartusArrayVariableConverter, HLSTypeConverter, QuartusInplaceVariableConverter, QuartusStructMemberVariableConverter, StaticWeightVariableConverter
-
+from hls4ml.backends.fpga.fpga_types import ACTypeConverter, QuartusArrayVariableConverter, HLSTypeConverter, QuartusInplaceVariableConverter, QuartusStreamVariableConverter, QuartusStructMemberVariableConverter, StaticWeightVariableConverter
 
 class TransformTypes(GlobalOptimizerPass):
     def __init__(self):
         self.type_converter = HLSTypeConverter(precision_converter=ACTypeConverter())
         self.array_var_converter = QuartusArrayVariableConverter(type_converter=self.type_converter)
         self.struct_var_converter = QuartusStructMemberVariableConverter(type_converter=self.type_converter)
+        self.stream_var_converter = QuartusStreamVariableConverter(type_converter=self.type_converter)
         self.weight_var_converter = StaticWeightVariableConverter(type_converter=self.type_converter)
         self.inplace_var_converter = QuartusInplaceVariableConverter(type_converter=self.type_converter)
 
@@ -18,9 +18,8 @@ class TransformTypes(GlobalOptimizerPass):
         for out_name, var in node.variables.items():
             if isinstance(var, InplaceVariable):
                 new_var = self.inplace_var_converter.convert(var, io_type)
-
             if io_type == 'io_stream':
-                raise Exception('Streaming IO is not supported in Quartus.')
+                new_var = self.stream_var_converter.convert(var)
             elif io_type == 'io_parallel':
                 if node.name in node.model.inputs:
                     new_var = self.struct_var_converter.convert(var, pragma='hls_register', struct_name='inputs')
