@@ -29,6 +29,26 @@
 #include <sstream>
 #include <iostream>
 
+#ifndef __INTELFPGA_COMPILER__
+#include "stream.h"
+template<typename T>
+using stream = nnet::stream<T>;
+template<typename T>
+using stream_in = nnet::stream<T>;
+template<typename T>
+using stream_out = nnet::stream<T>;
+#else
+#include "HLS/hls.h"
+#include "HLS/ac_int.h"
+#include "HLS/ac_fixed.h"
+template<typename T>
+using stream = ihc::stream<T>;
+template<typename T>
+using stream_in = ihc::stream_in<T>;
+template<typename T>
+using stream_out = ihc::stream_out<T>;
+#endif
+
 namespace nnet {
 
 template<class srcType, class dstType, size_t SIZE>
@@ -37,16 +57,38 @@ void convert_data(srcType *src, dstType *dst) {
     dst[i] = dstType(src[i]);
   }
 }
+
 template<class srcType, class dstType, size_t SIZE>
 void convert_data_back(srcType *src, dstType *dst) {
   for (size_t i = 0; i < SIZE; i++) {
     dst[i] = static_cast<dstType>(src[i].to_double());
   }
 }
+
+template<class srcType, class dstType, size_t SIZE>
+void convert_data(srcType *src, stream_in<dstType> &dst) {
+    for (size_t i = 0; i < SIZE / dstType::size; i++) {
+        dstType ctype;
+        for (size_t j = 0; j < dstType::size; j++) {
+            ctype[j] = typename dstType::value_type(src[i * dstType::size + j]);
+        }
+        dst.write(ctype);
+    }
+}
+
+template<class srcType, class dstType, size_t SIZE>
+void convert_data_back(stream_out<srcType> &src, dstType *dst) {
+    for (size_t i = 0; i < SIZE / srcType::size; i++) {
+        srcType ctype = src.read();
+        for (size_t j = 0; j < srcType::size; j++) {
+            dst[i * srcType::size + j] = dstType(ctype[j].to_double());
+        }
+    }
+}
+
 extern bool trace_enabled;
 extern std::map<std::string, void *> *trace_outputs;
 extern size_t trace_type_size;
-
 
 constexpr int ceillog2(int x){
   return (x <= 2) ? 1 : 1 + ceillog2((x+1) / 2);
