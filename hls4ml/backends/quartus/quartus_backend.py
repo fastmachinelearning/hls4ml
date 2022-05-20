@@ -1,17 +1,9 @@
 import numpy as np
-import math
 import os
-import copy
-import webbrowser
-from calmjs.parse import es5
-from calmjs.parse import asttypes
-from tabulate import tabulate
-from ast import literal_eval
 from contextlib import contextmanager
-
 from hls4ml.model.types import NamedType, IntegerPrecisionType, FixedPrecisionType
-from hls4ml.model.layers import Embedding, Layer, Dense, BatchNormalization, Activation, ParametrizedActivation, PReLU, Softmax
-from hls4ml.model.optimizer import get_backend_passes, layer_optimizer, model_optimizer
+from hls4ml.model.layers import Layer, Dense, Activation, Softmax, Embedding
+from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.flow import register_flow
 from hls4ml.backends import FPGABackend
 from hls4ml.report import parse_quartus_report
@@ -34,6 +26,11 @@ class QuartusBackend(FPGABackend):
         initializers = self._get_layer_initializers()
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
+        streaming_passes = [
+            'quartus:clone_output'
+        ]
+        streaming_flow = register_flow('streaming', streaming_passes, requires=[init_flow], backend=self.name)
+
         quartus_types = [
             'quartus:transform_types',
         ]
@@ -45,7 +42,6 @@ class QuartusBackend(FPGABackend):
             'fuse_consecutive_batch_normalization',
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
-
 
         templates = self._get_layer_templates()
         template_flow = register_flow('apply_templates', templates, requires=[init_flow], backend=self.name)
@@ -69,7 +65,7 @@ class QuartusBackend(FPGABackend):
         else:
             extras_flow = None
 
-        ip_flow_requirements = ['optimize', init_flow, quantization_flow, quartus_types_flow, extras_flow, template_flow]
+        ip_flow_requirements = ['optimize', init_flow, streaming_flow, quantization_flow, quartus_types_flow, extras_flow, template_flow]
         ip_flow_requirements = list(filter(None, ip_flow_requirements))
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
