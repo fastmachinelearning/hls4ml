@@ -270,8 +270,7 @@ inline void softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
 //       TanH Activation
 // *************************************************
 template<class data_T, class res_T, typename CONFIG_T>
-void  dense_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
-{
+void dense_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
     static const int MAX_VALUE=4;
     // Initialize the lookup table
     #include "activation_tables/tanh_table.tb"

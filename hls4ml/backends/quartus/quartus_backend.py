@@ -174,6 +174,8 @@ class QuartusBackend(FPGABackend):
 
     @layer_optimizer(Activation)
     def init_activation(self, layer):
+        if layer.get_attr('activation') == 'tanh':
+            layer.set_attr('activation', 'dense_tanh')
         if 'table_t' not in layer.attributes:
             layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
         if 'table_size' not in layer.attributes:
