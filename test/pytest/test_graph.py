@@ -142,6 +142,31 @@ def test_final_reshape(iotype):
   # because of integer inputs and integer weights, we can expect exact matching
   np.testing.assert_allclose(y, y_hls, rtol=0)
 
+@pytest.mark.parametrize('shapes', [((2, 2, 3), (2, 2, 1)),
+                                    ((2, 2, 1), (2, 2, 3))])
+@pytest.mark.parametrize('layer', [tf.keras.layers.Concatenate(),
+                                   tf.keras.layers.Add()])
+def test_broadcast_stream(shapes, layer):
+  ''' Test case for stream broadcast before Add but not before Concatenate '''
+  input1 = tf.keras.layers.Input(shape=shapes[0])
+  input2 = tf.keras.layers.Input(shape=shapes[1])
+  inputs = [input1, input2]
+  outputs = layer(inputs)
+  model = tf.keras.models.Model(inputs=inputs, outputs=outputs)
 
+  # create the ModelGraph
+  config = hls4ml.utils.config_from_keras_model(model, granularity='model', default_precision='ap_fixed<32,16>')
+  odir = str(test_root_path / 'hls4mlprj_graph_broadcast_stream_{}'.format(layer))
+  hls_model = hls4ml.converters.convert_from_keras_model(model,
+                                                         output_dir=odir,
+                                                         backend='Vivado',
+                                                         io_type='io_stream',
+                                                         hls_config=config)
+  hls_model.compile()
 
-
+  # Test with integers (for exact agreement)
+  X1 = np.random.randint(0, 100, size=(1,)+shapes[0]).astype(float)
+  X2 = np.random.randint(0, 100, size=(1,)+shapes[1]).astype(float)
+  y = model.predict([X1, X2])
+  y_hls = hls_model.predict([X1, X2]).reshape(y.shape)
+  np.testing.assert_allclose(y, y_hls, rtol=0)
