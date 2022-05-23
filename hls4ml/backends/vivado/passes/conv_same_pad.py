@@ -18,6 +18,10 @@ class InsertZeroPaddingBeforeConv1D(OptimizerPass):
         pad_left = node.get_attr('pad_left')
         pad_right = node.get_attr('pad_right')
 
+        # Check if no padding needs to be done
+        if pad_left == pad_right == 0:
+            return False
+
         out_width = pad_left + node.get_attr('in_width') + pad_right
 
         attrs = {
@@ -60,6 +64,10 @@ class InsertZeroPaddingBeforeConv2D(OptimizerPass):
         pad_bottom = node.get_attr('pad_bottom')
         pad_left = node.get_attr('pad_left')
         pad_right = node.get_attr('pad_right')
+
+        # Check if no padding neeeds to be done
+        if pad_top == pad_bottom == pad_left == pad_right == 0:
+            return False
 
         out_height = pad_top + node.get_attr('in_height') + pad_bottom
         out_width = pad_left + node.get_attr('in_width') + pad_right
