@@ -80,7 +80,7 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
 
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
 
-batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h']
+batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
 
 class BatchNormalizationConfigTemplate(LayerConfigTemplate):
     def __init__(self):
