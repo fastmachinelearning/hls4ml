@@ -6,6 +6,247 @@
 
 namespace nnet{
 
+// *************************************************
+//       Linear Activation
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void linear(stream<data_T> &data, stream<res_T> &res) {
+    LinearActLoop:
+    #pragma ii 1
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        data_T in_data = data.read();
+        res_T out_data;
+
+        LinearPackLoop:
+        #pragma unroll
+        for (int j = 0; j < res_T::size; j++) {
+            out_data[j] = in_data[j];
+        }
+
+        res.write(out_data);
+    }
+}
+
+// *************************************************
+//       ReLU Activation
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void relu(stream<data_T> &data, stream<res_T> &res) {
+    ReLUActLoop:
+    #pragma ii 1
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        data_T in_data = data.read();
+        res_T out_data;
+
+        ReLUPackLoop:
+        #pragma unroll
+        for (int j = 0; j < res_T::size; j++) {
+            if (in_data[j] > 0) out_data[j] = in_data[j];
+            else out_data[j] = 0;
+        }
+
+        res.write(out_data);
+    }
+}
+
+// *************************************************
+//       Leaky RELU Activation
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void leaky_relu(stream<data_T> &data, const typename data_T::value_type alpha, stream<res_T> &res) {
+    constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_T::size, CONFIG_T::reuse_factor);
+    constexpr unsigned pipeline = data_T::size / multiplier_limit;
+    
+    LeakyReLUActLoop:
+    #pragma ii pipeline
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        data_T in_data = data.read();
+        res_T out_data;
+
+        LeakyReLUPackLoop:
+        #pragma unroll
+        for (int j = 0; j < res_T::size; j++) {
+            if (in_data[j] > 0) out_data[j] = in_data[j];
+            else out_data[j] = alpha * in_data[j];
+        }
+
+        res.write(out_data);
+    }
+}
+
+// *************************************************
+//       Thresholded RELU Activation
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void thresholded_relu(stream<data_T> &data, const typename data_T::value_type theta, stream<res_T> &res) {
+    ThresholdedReLUActLoop:
+    #pragma ii 1
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        data_T in_data = data.read();
+        res_T out_data;
+
+        ThresholdedReLUPackLoop:
+        #pragma unroll
+        for (int j = 0; j < res_T::size; j++) {
+            if (in_data[j] > theta) out_data[j] = in_data[j];
+            else out_data[j] = 0;
+        }
+
+        res.write(out_data);
+    }
+}
+
+// *************************************************
+//       ELU Activation
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void elu(stream<data_T> &data, const typename data_T::value_type alpha, stream<res_T> &res) {
+    #include "activation_tables/elu_table.tb"
+
+    constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_T::size, CONFIG_T::reuse_factor);
+    constexpr unsigned pipeline = data_T::size / multiplier_limit;
+
+    EluActLoop:
+    #pragma ii pipeline
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        data_T in_data = data.read();
+        res_T out_data;
+
+        EluPackLoop:
+        #pragma unroll
+        for (int j = 0; j < res_T::size; j++) {
+            hls_register typename data_T::value_type datareg = in_data[j];
+            if (datareg >= 0) {
+                out_data[j] = datareg;
+            } else {
+                int index = (datareg*CONFIG_T::table_size/-8).to_int();
+                if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+                out_data[j] = alpha * elu_table[index];
+            }
+        }
+
+        res.write(out_data);
+    }
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
+void elu(stream<data_T> &data, stream<res_T> &res) {
+    elu<data_T, res_T, CONFIG_T>(data, 1.0, res);
+}
+
+// *************************************************
+//       SeLU Activation
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void selu(stream<data_T> &data, stream<res_T> &res) {
+    #include "activation_tables/selu_table.tb"
+
+    SeluActLoop:
+    #pragma ii 1
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        data_T in_data = data.read();
+        res_T out_data;
+
+        SeluPackLoop:
+        #pragma unroll
+        for (int j = 0; j < res_T::size; j++) {
+            hls_register typename data_T::value_type datareg = in_data[j];
+            if (datareg >= 0) {
+                out_data[j] = typename data_T::value_type (1.0507009873554804934193349852946) * datareg;
+            } else {
+                int index = (datareg*CONFIG_T::table_size/-8).to_int();
+                if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+                out_data[j] = selu_table[index];
+            }
+        }
+
+        res.write(out_data);
+    }
+}
+
+// *************************************************
+//       PReLU Activation
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void prelu(stream<data_T> &data, const typename data_T::value_type alpha[CONFIG_T::n_in], stream<res_T> &res) {
+    constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_T::size, CONFIG_T::reuse_factor);
+    constexpr unsigned pipeline = data_T::size / multiplier_limit;
+    
+    PReLUActLoop:
+    #pragma ii pipeline
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        data_T in_data = data.read();
+        res_T out_data;
+
+        PReLUPackLoop:
+        #pragma unroll
+        for (int j = 0; j < res_T::size; j++) {
+            if (in_data[j] > 0) out_data[j] = in_data[j];
+            else out_data[j] = alpha[i*res_T::size+j] * in_data[j];
+        }
+
+        res.write(out_data);
+    }
+}
+
+// *************************************************
+//       Softplus Activation
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void softplus(stream<data_T> &data, stream<res_T> &res) {
+    #include "activation_tables/softplus_table.tb"
+
+    SoftplusActLoop:
+    #pragma ii 1
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        data_T in_data = data.read();
+        res_T out_data;
+
+        SoftplusPackLoop:
+        #pragma unroll
+        for (int j = 0; j < res_T::size; j++) {
+            hls_register int data_round = (in_data[j]*CONFIG_T::table_size/16).to_int();
+            hls_register int index = data_round + 8*CONFIG_T::table_size/16;
+            if (index < 0) index = 0;
+            else if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+            out_data[j] = softplus_table[index];
+        }
+
+        res.write(out_data);
+    }
+}
+
+// *************************************************
+//       Softsign Activation
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void softsign(stream<data_T> &data, stream<res_T> &res) {
+    #include "activation_tables/softsign_table.tb"
+
+    SoftsignActLoop:
+    #pragma ii 1
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        data_T in_data = data.read();
+        res_T out_data;
+
+        SoftsignPackLoop:
+        #pragma unroll
+        for (int j = 0; j < res_T::size; j++) {
+            hls_register int data_round = (in_data[j]*CONFIG_T::table_size/16).to_int();
+            hls_register int index = data_round + 8*CONFIG_T::table_size/16;
+            if (index < 0) index = 0;
+            else if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+            out_data[j] = softsign_table[index];
+        }
+
+        res.write(out_data);
+    }
+}
+
+// *************************************************
+//       Softmax Activation
+// *************************************************
+
 template <class data_T, class res_T, typename CONFIG_T>
 void softmax_stable(stream<data_T> &data, stream<res_T> &res) {
     #include "activation_tables/exp_table.tb"
@@ -180,6 +421,113 @@ void softmax(stream<data_T> &data, stream<res_T> &res) {
             softmax_stable<data_T, res_T, CONFIG_T>(data, res);
             break;
     }    
+}
+
+// *************************************************
+//       TanH Activation
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void dense_tanh(stream<data_T> &data, stream<res_T> &res) {
+    #include "activation_tables/tanh_table.tb"
+    static const int MAX_VALUE=4;
+
+    constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_T::size, CONFIG_T::reuse_factor);
+    constexpr unsigned pipeline = data_T::size / multiplier_limit;
+
+    TanHActLoop:
+    #pragma ii pipeline
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+
+        data_T in_data = data.read();
+        res_T out_data;
+
+        TanHPackLoop:
+        #pragma unroll
+        for (int j = 0; j < res_T::size; j++) {
+            hls_register typename data_T::value_type absoluteValue;
+
+            if(in_data[j] < 0) absoluteValue = (-1)*in_data[j];
+            else absoluteValue = in_data[j];
+
+            hls_register int index;
+            if (absoluteValue <= MAX_VALUE) index = (absoluteValue*(CONFIG_T::table_size/MAX_VALUE)).to_int();
+            else index = CONFIG_T::table_size-1;
+
+            if(in_data[j] > 0) out_data[j] = tanh_table[index];
+            else out_data[j] = -tanh_table[index];
+        }
+
+        res.write(out_data);
+    }
+}
+
+// *************************************************
+//       Sigmoid Activation
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void sigmoid(stream<data_T> &data, stream<res_T> &res) {
+    #include "activation_tables/sigmoid_table.tb"
+    static const int MAX_VALUE=8;
+
+    constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_T::size, CONFIG_T::reuse_factor);
+    constexpr unsigned pipeline = data_T::size / multiplier_limit;
+
+    SigmoidActLoop:
+    #pragma ii pipeline
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        data_T in_data = data.read();
+        res_T out_data;
+
+        SigmoidPackLoop:
+        #pragma unroll
+        for (int j = 0; j < res_T::size; j++) {
+            hls_register typename data_T::value_type absoluteValue;
+
+            if(in_data[j] < 0) absoluteValue = (-1)*in_data[j];
+            else absoluteValue = in_data[j];
+
+            hls_register int index;
+            if (absoluteValue <= MAX_VALUE) index = (absoluteValue*(CONFIG_T::table_size/MAX_VALUE)).to_int();
+            else index = CONFIG_T::table_size-1;
+
+            if(in_data[j] > 0) out_data[j] = sigmoid_table[index];
+            else out_data[j] = 1 - sigmoid_table[index];
+        }
+
+        res.write(out_data);
+    }
+}
+
+// *************************************************
+//       Hard sigmoid Activation
+// *************************************************
+// Note - Theano and Tensorflow might have different definitions for hard sigmoid; could provide two implementations
+template<class data_T, class res_T, typename CONFIG_T>
+void hard_sigmoid(stream<data_T> &data, stream<res_T> &res) {
+    static const typename data_T::value_type slope = (typename data_T::value_type) 0.2;
+    static const typename data_T::value_type shift = (typename data_T::value_type) 0.5;
+
+    constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_T::size, CONFIG_T::reuse_factor);
+    constexpr unsigned pipeline = data_T::size / multiplier_limit;
+
+    HardSigmoidActLoop:
+    #pragma ii pipeline
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+
+        data_T in_data = data.read();
+        res_T out_data;
+
+        HardSigmoidPackLoop:
+        #pragma unroll
+        for (int j = 0; j < res_T::size; j++) {
+            hls_register typename data_T::value_type datareg = slope * in_data[j] + shift;
+            if (datareg > 1) datareg = 1;
+            else if (datareg < 0) datareg = 0;
+            out_data[j] = datareg;
+        }
+
+        res.write(out_data);
+    }
 }
 
 }
