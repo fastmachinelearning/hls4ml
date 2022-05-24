@@ -530,6 +530,54 @@ void hard_sigmoid(stream<data_T> &data, stream<res_T> &res) {
     }
 }
 
+// *************************************************
+//       Binary TanH Activation
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void binary_tanh(stream<data_T> &data, stream<res_T> &res) {
+    BinaryTanHActLoop: 
+    #pragma ii 1
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        
+        hls_register data_T in_data = data.read();
+        hls_register res_T out_data;
+
+        BinaryTanHPackLoop: 
+        #pragma unroll
+        for (int j = 0; j < res_T::size; j++) {
+            if(in_data[j] > 0) out_data[j] = (typename res_T::value_type) 1;
+            else out_data[j] = (typename res_T::value_type) -1;
+        }
+
+        res.write(out_data);
+    }
+}
+
+// *************************************************
+//       Ternary TanH Activation
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void ternary_tanh(stream<data_T> &data, stream<res_T> &res) {
+  TernaryTanHActLoop: 
+    #pragma ii 1
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        
+        hls_register data_T in_data = data.read();
+        hls_register res_T out_data;
+
+        TernaryTanHPackLoop: 
+        #pragma unroll
+        for (int j = 0; j < res_T::size; j++) {
+            if(in_data[j] > 1) out_data[j] = (typename res_T::value_type) 1;
+            else if (in_data[j] <=-1) out_data[j] = (typename res_T::value_type) -1;
+            else out_data[j] = (typename res_T::value_type) 0;
+        }
+
+        res.write(out_data);
+    }
+  
+}
+
 }
 
 #endif
