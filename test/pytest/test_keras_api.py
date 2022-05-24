@@ -16,7 +16,8 @@ from tensorflow.keras import backend as K
 test_root_path = Path(__file__).parent
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
-def test_dense(backend):
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_dense(backend, io_type):
     model = tf.keras.models.Sequential()
     model.add(Dense(2,
               input_shape=(1,),
@@ -37,9 +38,9 @@ def test_dense(backend):
     keras_prediction = model.predict(X_input)
 
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = str(test_root_path / f'hls4mlprj_keras_api_dense_{backend}')
+    output_dir = str(test_root_path / f'hls4mlprj_keras_api_dense_{backend}_{io_type}')
 
-    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
 
     hls_model.compile()
 
@@ -66,7 +67,8 @@ def test_dense(backend):
                                                  Activation(activation='sigmoid', name='Activation')])
                                                  #ThresholdedReLU(theta=1.0)])
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
-def test_activations(activation_function, backend):
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_activations(activation_function, backend, io_type):
     model = tf.keras.models.Sequential()
     model.add(Dense(64,
               input_shape=(1,),
@@ -79,8 +81,8 @@ def test_activations(activation_function, backend):
     X_input = np.random.rand(100,1)
     keras_prediction = model.predict(X_input)
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = str(test_root_path / 'hls4mlprj_keras_api_activations_{}_{}'.format(activation_function.__class__.__name__, backend))
-    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
+    output_dir = str(test_root_path / 'hls4mlprj_keras_api_activations_{}_{}_{}'.format(activation_function.__class__.__name__, backend, io_type))
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input)
 

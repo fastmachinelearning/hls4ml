@@ -36,7 +36,7 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
 
 dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 
-dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h']
+dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_stream.h']
 
 class DenseConfigTemplate(LayerConfigTemplate):
     def __init__(self):
