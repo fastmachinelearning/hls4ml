@@ -95,6 +95,13 @@ class QuartusBackend(FPGABackend):
         bf_rounded = int(pow(2, np.ceil(np.log2(block_factor))))
         rf_rounded = int(pow(2, np.ceil(np.log2(rf))))
 
+        print(" ==== NVT: gen_quartus_weight_array, RF: ", rf, ",", rf_rounded)        
+        print(" ==== NVT: gen_quartus_weight_array, BF: ", block_factor, ",", bf_rounded)        
+        rf_rounded = rf
+        bf_rounded = block_factor
+        print(" ==== NVT: gen_quartus_weight_array, RF2: ", rf, ",", rf_rounded)        
+        print(" ==== NVT: gen_quartus_weight_array, BF2: ", block_factor, ",", bf_rounded)        
+
         layer.weights['weight'].data = np.transpose(layer.weights['weight'].data).flatten()
 
         if(layer.attributes['n_in']*layer.attributes['n_out'] > 2048 and rf_rounded != rf):
@@ -149,6 +156,9 @@ class QuartusBackend(FPGABackend):
     @layer_optimizer(Layer)
     def init_base_layer(self, layer):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
+
+        print(" ==== NVT: init_base_layer: ", reuse_factor)
+
         layer.set_attr('reuse_factor', reuse_factor)
 
         target_cycles = layer.model.config.get_target_cycles(layer)
