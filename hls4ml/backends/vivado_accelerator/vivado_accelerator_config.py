@@ -47,6 +47,7 @@ class VivadoAcceleratorConfig(object):
                                                                             'float')  # float, double or ap_fixed<a,b>
         self.output_type = self.config['AcceleratorConfig']['Precision'].get('Output',
                                                                              'float')  # float, double or ap_fixed<a,b>
+        self.platform= self.config['AcceleratorConfig'].get('Platform', 'xilinx_u250_xdma_201830_2') # Get platform folder name
 
         assert len(
             model_inputs) == 1, "Only models with one input tensor are currently supported by VivadoAcceleratorBackend"
@@ -118,6 +119,9 @@ class VivadoAcceleratorConfig(object):
     def get_board(self):
         return self.board
 
+    def get_platform(self):
+        return self.platform
+
     def get_clock_period(self):
         return self.clock_period
 
@@ -152,7 +156,7 @@ class VivadoAcceleratorConfig(object):
         if tcl_script is None:
             raise Exception('No tcl script definition available for the desired interface in supported_board.json')
         if  self.board.startswith('alveo'):
-            return '../templates/vivado_accelerator/' + 'alveo/' + self.board + '/tcl_scripts/' + tcl_script
+            return '../templates/vivado_accelerator/' + 'alveo/'  + '/tcl_scripts/' + tcl_script
         else: 
             return '../templates/vivado_accelerator/' + self.board + '/tcl_scripts/' + tcl_script
 

@@ -1,7 +1,7 @@
 set tcldir [file dirname [info script]]
 source [file join $tcldir project.tcl]
 
-create_project project_1 ${myproject}_vivado_accelerator -part xcu280-fsvh2892-2L-e -force
+create_project project_1 ${myproject}_vivado_accelerator -part ${part} -force
 
 set_property  ip_repo_paths  ${myproject}_prj [current_project]
 update_ip_catalog

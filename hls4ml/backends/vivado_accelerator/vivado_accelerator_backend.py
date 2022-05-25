@@ -3,6 +3,7 @@ import os
 from hls4ml.backends import VivadoBackend
 from hls4ml.model.flow import register_flow
 from hls4ml.report import parse_vivado_report
+from hls4ml.backends import VivadoAcceleratorConfig
 
 class VivadoAcceleratorBackend(VivadoBackend):
     def __init__(self):
@@ -12,19 +13,24 @@ class VivadoAcceleratorBackend(VivadoBackend):
     def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False, bitfile=False):
         # run the VivadoBackend build
         report = super().build(model, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
+        # Get Config to view Board and Platform
+        vivado_accelerator_config=VivadoAcceleratorConfig(model.config, model.get_input_variables(),model.get_output_variables())
         # now make a bitfile
         if bitfile:
-            curr_dir = os.getcwd()
-            os.chdir(model.config.get_output_dir())
-            try:
-                os.system('vivado -mode batch -source design.tcl')
-            except:
-                print("Something went wrong, check the Vivado logs")
-            os.chdir(curr_dir)
+            if(vivado_accelerator_config.get_board().startswith('alveo')):
+                self.make_xclbin(model,vivado_accelerator_config.get_platform())       
+            else:
+                curr_dir = os.getcwd()
+                os.chdir(model.config.get_output_dir())
+                try:
+                    os.system('vivado -mode batch -source design.tcl')
+                except:
+                    print("Something went wrong, check the Vivado logs")
+                os.chdir(curr_dir)
 
         return parse_vivado_report(model.config.get_output_dir())
 
-    def make_xclbin(model, platform='xilinx_u250_gen3x16_xdma_3_1_202020_1'):
+    def make_xclbin(model, platform='xilinx_u250_xdma_201830_2'):
         """
 
         Parameters
@@ -40,8 +46,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
             os.system('vivado -mode batch -source design.tcl')
         except:
             print("Something went wrong, check the Vivado logs")
-        # TODO improve the line below
-        ip_repo_path = model.config.get_output_dir() + '/myproject_prj/solution1/impl/ip'
+        ip_repo_path = model.config.get_output_dir() + '/'+model.config.get_project_name()+'_prj'+'/solution1/impl/ip'
         os.makedirs('xclbin_files', exist_ok=True)
         os.chdir(model.config.get_output_dir() + '/xclbin_files')
         # TODO Add other platforms
@@ -53,7 +58,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
         os.chdir(curr_dir)
 
     def create_initial_config(self, board='pynq-z2', part=None, clock_period=5, io_type='io_parallel', interface='axi_stream',
-                              driver='python', input_type='float', output_type='float'):
+                              driver='python', input_type='float', output_type='float',platform='xilinx_u250_xdma_201830_2'):
         '''
         Create initial accelerator config with default parameters
         Args:
@@ -70,6 +75,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
                              will round the number of bits used to the next power-of-2 value.
             output_type: the wrapper output precision. Can be `float` or an `ap_type`. Note:
                               VivadoAcceleratorBackend will round the number of bits used to the next power-of-2 value.
+            platform: development target platform 
 
         Returns:
             populated config
@@ -80,6 +86,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
         config['AcceleratorConfig']['Board'] = board
         config['AcceleratorConfig']['Interface'] = interface  # axi_stream, axi_master, axi_lite
         config['AcceleratorConfig']['Driver'] = driver
+        config['AcceleratorConfig']['Platform'] = platform
         config['AcceleratorConfig']['Precision'] = {}
         config['AcceleratorConfig']['Precision']['Input'] = {}
         config['AcceleratorConfig']['Precision']['Output'] = {}

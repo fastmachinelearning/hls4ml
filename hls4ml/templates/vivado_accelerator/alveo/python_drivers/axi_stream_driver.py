@@ -9,6 +9,8 @@ class NeuralNetworkOverlay(Overlay):
     def __init__(self, xclbin_name, dtbo=None, download=True, ignore_version=False, device=None):
 
         super().__init__(xclbin_name, dtbo=dtbo, download=download, ignore_version=ignore_version, device=device)
+        self.input_buffer=None
+        self.output_buffer=None
 
     def allocate_mem(self, X_shape, y_shape, dtype=np.float32, trg_in=None, trg_out=None):
         """
@@ -39,16 +41,17 @@ class NeuralNetworkOverlay(Overlay):
         trg_out : output buffer target memory.By default the v++ command
                   set it to HBM[0] for alveo-u50.
 
-        Returns
+        Assigns
         -------
+        input_buffer : input PYNQ buffer, must be allocated first and just once.
+        output_buffer : output PYNQ buffer, must be allocated first and just once.
         input_buffer, output_buffer : input and output PYNQ buffers
 
         """
-        input_buffer  = allocate(shape=X_shape, dtype=dtype, target=trg_in )
-        output_buffer = allocate(shape=y_shape, dtype=dtype, target=trg_out)
-        return input_buffer, output_buffer
+        self.input_buffer  = allocate(shape=X_shape, dtype=dtype, target=trg_in )
+        self.output_buffer = allocate(shape=y_shape, dtype=dtype, target=trg_out)
 
-    def predict(self, X, y_shape, input_buffer, output_buffer, debug=None, profile=False, encode=None,
+    def predict(self, X, y_shape, dtype=np.float32, debug=None, profile=False, encode=None,
                 decode=None):
         """
         Obtain the predictions of the NN implemented in the FPGA.
@@ -56,44 +59,40 @@ class NeuralNetworkOverlay(Overlay):
         - X : the input vector. Should be numpy ndarray.
         - y_shape : the shape of the output vector. Needed to the accelerator to set the TLAST bit properly and
                     for sizing the output vector shape.
-        - input_buffer : input PYNQ buffer, must be allocated first and just once.
-        - output_buffer : output PYNQ buffer, must be allocated first and just once.
+        - dtype   : the data type of the elements of the input/output vectors.
         - debug : boolean, if set the function will print information about the data transfers status.
         - profile : boolean. Set it to `True` to print the performance of the algorithm in term of `inference/s`.
         - encode/decode: function pointers. See `dtype` section for more information.
         - return: an output array based on `np.ndarray` with a shape equal to `y_shape` and a `dtype` equal to
                   the namesake parameter.
         """
+        self.allocate_mem(X_shape=X.shape, y_shape=y_shape, dtype=dtype)
         if profile:
             timea = datetime.now()
         if encode is not None:
             X = encode(X)
         in_size  = np.prod(X.shape)
         out_size = np.prod(y_shape)
-        input_buffer[:] = X
-        input_buffer.sync_to_device()
+        self.input_buffer[:] = X
+        self.input_buffer.sync_to_device()
         if debug:
             print("Send OK")
-        self.krnl_rtl_1.call(input_buffer, output_buffer, in_size, out_size)
+        self.krnl_rtl_1.call(self.input_buffer, self.output_buffer, in_size, out_size)
         if debug:
             print("Kernel call OK")
-        output_buffer.sync_from_device()
+        self.output_buffer.sync_from_device()
         if debug:
             print("Recieve OK")
-        result = output_buffer.copy()
+        result = self.output_buffer.copy()
         if profile:
             timeb = datetime.now()
             dts, rate = self._print_dt(timea, timeb, len(X))
-            input_buffer.flush()
-            output_buffer.flush()
-            del input_buffer
-            del output_buffer
+            self.input_buffer.flush()
+            self.output_buffer.flush()
             self.free()
             return result, dts, rate
-        input_buffer.flush()
-        output_buffer.flush()
-        del input_buffer
-        del output_buffer
+        self.input_buffer.flush()
+        self.output_buffer.flush()
         return result
 
     def free_overlay(self):

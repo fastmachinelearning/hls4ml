@@ -323,6 +323,9 @@ class VivadoAcceleratorWriter(VivadoWriter):
         f = open('{}/project.tcl'.format(model.config.get_output_dir()), 'w')
         f.write('variable myproject\n')
         f.write('set myproject "{}"\n'.format(model.config.get_project_name()))
+        if self.vivado_accelerator_config.get_board().startswith('alveo'):
+             f.write('variable part\n')
+             f.write('set part "{}"\n'.format(self.vivado_accelerator_config.get_part()))
         if self.vivado_accelerator_config.get_interface() == 'axi_stream':
             in_bit, out_bit = self.vivado_accelerator_config.get_io_bitwidth()
             f.write('set bit_width_hls_output {}\n'.format(in_bit))
