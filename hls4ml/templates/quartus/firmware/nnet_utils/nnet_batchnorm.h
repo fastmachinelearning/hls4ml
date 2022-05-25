@@ -21,6 +21,8 @@
 #define NNET_BATCHNORM_H_
 
 #include "nnet_common.h"
+#include "nnet_helpers.h"
+#include "nnet_mult.h"
 
 namespace nnet {
 
@@ -40,6 +42,10 @@ struct batchnorm_config
     static const bool store_weights_in_bram = false;
     static const unsigned n_zeros = 0;
     // partitioning arrays cyclically to go with roll factors?
+
+    // Default multiplication
+    template<class x_T, class y_T>
+    using product = nnet::product::mult<x_T, y_T>;
 };
 
 template<class data_T, class res_T, typename CONFIG_T>
@@ -54,12 +60,12 @@ void normalize(
     Result:
     #pragma unroll
     for (int ires = 0; ires < CONFIG_T::n_in; ires++) {
+        // TODO - Explore  MULADD instruction in HLS - less clock cycles
         if (CONFIG_T::n_filt==-1) {
-            res[ires] = data[ires] * scale[ires] + bias[ires];
-	      }
-        else {
+            res[ires] = CONFIG_T::template product<data_T, typename CONFIG_T::scale_t>::product(data[ires], scale[ires]) + bias[ires];
+	    } else {
             int norm_index = ires%CONFIG_T::n_filt;
-            res[ires] = data[ires] * scale[norm_index] + bias[norm_index];
+            res[ires] = CONFIG_T::template product<data_T, typename CONFIG_T::scale_t>::product(data[ires], scale[norm_index]) + bias[norm_index];
         }
 	}
 }
