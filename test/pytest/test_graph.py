@@ -142,21 +142,26 @@ def test_final_reshape(iotype):
   # because of integer inputs and integer weights, we can expect exact matching
   np.testing.assert_allclose(y, y_hls, rtol=0)
 
-@pytest.mark.parametrize('shapes', [((2, 2, 3), (2, 2, 1)),
-                                    ((2, 2, 1), (2, 2, 3))])
-@pytest.mark.parametrize('layer', [tf.keras.layers.Concatenate(),
-                                   tf.keras.layers.Add()])
+@pytest.mark.parametrize('shapes, layer', [
+    (((2, 2, 3), (2, 2, 1)), tf.keras.layers.Concatenate),
+    (((2, 2, 1), (2, 2, 3)), tf.keras.layers.Concatenate),
+    (((2, 2, 3), (2, 2, 1)), tf.keras.layers.Add),
+    (((2, 2, 1), (2, 2, 3)), tf.keras.layers.Add),
+    (((1, 1, 2), (3, 4, 2)), tf.keras.layers.Add),
+    (((3, 4, 2), (1, 1, 2)), tf.keras.layers.Add)])
 def test_broadcast_stream(shapes, layer):
   ''' Test case for stream broadcast before Add but not before Concatenate '''
   input1 = tf.keras.layers.Input(shape=shapes[0])
   input2 = tf.keras.layers.Input(shape=shapes[1])
   inputs = [input1, input2]
-  outputs = layer(inputs)
+  outputs = layer()(inputs)
   model = tf.keras.models.Model(inputs=inputs, outputs=outputs)
 
   # create the ModelGraph
   config = hls4ml.utils.config_from_keras_model(model, granularity='model', default_precision='ap_fixed<32,16>')
-  odir = str(test_root_path / 'hls4mlprj_graph_broadcast_stream_{}'.format(layer))
+  odir = str(test_root_path / 'hls4mlprj_graph_broadcast_shapes_{}_{}_stream_{}'.format(str(shapes[0]).replace(' ','').replace(',','_').replace('(','').replace(')',''),
+                                                                                        str(shapes[1]).replace(' ','').replace(',','_').replace('(','').replace(')',''),
+                                                                                        layer.__name__.lower()))
   hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                          output_dir=odir,
                                                          backend='Vivado',
