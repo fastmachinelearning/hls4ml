@@ -5,7 +5,7 @@ import numpy as np
 class ReplaceMultidimensionalDenseWithConv(OptimizerPass):
     def match(self, node):
         return isinstance(node, Dense) and \
-            len(node.get_input_variable().shape) > 1
+            len(node.get_input_variable().shape) - sum(d==1 for d in node.get_input_variable().shape) > 1
 
     def transform(self, model, node):
         dim = len(node.get_input_variable().shape) - 1        
