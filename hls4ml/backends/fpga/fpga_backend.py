@@ -33,6 +33,17 @@ class FPGABackend(Backend):
         return type(self.name + layer_class.__name__, (layer_class,), {'_expected_attributes': new_attrubutes, '_wrapped': True})
 
     def compile(self, model):
+        """Compile the generated project that can be linked into Python runtime.
+
+        Args:
+            model (ModelGraph): Model to compile.
+
+        Raises:
+            Exception: If the project failed to compile
+
+        Returns:
+            string: Returns the name of the compiled library.
+        """        
         curr_dir = os.getcwd()
         os.chdir(model.config.get_output_dir())
 
@@ -52,6 +63,9 @@ class FPGABackend(Backend):
 
         This function converts the model to C++ and writes the generated files in the output
         directory specified in the `config`.
+
+        Args:
+            model (ModelGraph): Model to write.
         """
 
         model.apply_flow(self.get_writer_flow())
