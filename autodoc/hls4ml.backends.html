@@ -197,37 +197,107 @@
 <dl class="method">
 <dt id="hls4ml.backends.backend.Backend.create_initial_config">
 <code class="sig-name descname">create_initial_config</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.create_initial_config" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Create the minimal conversion config for the backend.</p>
+<p>Subclasses should implement this method to provide the initial configuration for the conversion.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="hls4ml.backends.backend.Backend.create_layer_class">
 <code class="sig-name descname">create_layer_class</code><span class="sig-paren">(</span><em class="sig-param">layer_class</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.create_layer_class" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Wrap the original layer class into the backend-specific layer class.</p>
+<p>Backends should extend base layer classes with new attributes and variables as needed. These new classes are then
+used within the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>layer_class</strong> (<em>class</em>) – Base class to extend</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hls4ml.backends.backend.Backend.get_available_flows">
 <code class="sig-name descname">get_available_flows</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.get_available_flows" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Returns the list of flows registered for this backend.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The list of registered flows.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.backends.backend.Backend.get_custom_source">
+<code class="sig-name descname">get_custom_source</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.get_custom_source" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the registered custom source files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>Custom source files. Keys represent destination paths, values are absolute paths to registered source</dt><dd><p>files.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hls4ml.backends.backend.Backend.get_default_flow">
 <code class="sig-name descname">get_default_flow</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.get_default_flow" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>The name of the default flow of the backend.</p>
+<p>Default flow is used as the conversion target if the target flow has not been specified.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="hls4ml.backends.backend.Backend.register_pass">
-<code class="sig-name descname">register_pass</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">opt_cls</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.register_pass" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">register_pass</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">opt_cls</em>, <em class="sig-param">flow=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.register_pass" title="Permalink to this definition"></a></dt>
+<dd><p>Register an optimizer path for the backend.</p>
+<p>Note that user-provided optimizers registered without specifying any flow will not be invoked.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of the optimizer</p></li>
+<li><p><strong>opt_cls</strong> (<em>class</em>) – Optimizer class</p></li>
+<li><p><strong>flow</strong> (<em>str</em><em>, </em><em>list</em><em> or </em><em>tuple</em><em>, </em><em>optional</em>) – Existing flow(s) to add the optimizer to. Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hls4ml.backends.backend.Backend.register_source">
-<code class="sig-name descname">register_source</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">source</em>, <em class="sig-param">destination_dir='nnet_utils'</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.register_source" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">register_source</code><span class="sig-paren">(</span><em class="sig-param">source_file</em>, <em class="sig-param">destination_dir='nnet_utils'</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.register_source" title="Permalink to this definition"></a></dt>
+<dd><p>Register custom source that is not part of the backend’s templates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_file</strong> (<em>str</em><em> or </em><em>Path</em>) – Absolute path to the source file.</p></li>
+<li><p><strong>destination_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – The sub-directory of the output project to write the source file to.
+Defaults to ‘nnet_utils’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>Exception</strong> – If the source file is not a str or Path, or if the path is not absolute</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hls4ml.backends.backend.Backend.register_template">
 <code class="sig-name descname">register_template</code><span class="sig-paren">(</span><em class="sig-param">template_cls</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.register_template" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Register a template “optimizer”.</p>
+<p>E.g., function call template or op configuration template.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>template_cls</strong> (<em>class</em>) – Template to register.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -244,7 +314,19 @@
 <dl class="function">
 <dt id="hls4ml.backends.backend.register_backend">
 <code class="sig-prename descclassname">hls4ml.backends.backend.</code><code class="sig-name descname">register_backend</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">backend_cls</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.register_backend" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Create the backend instance and add it to the registry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of the backend.</p></li>
+<li><p><strong>backend_cls</strong> (<em>class</em>) – Backend class to instantiate. Class must implement a constructor without parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>Exception</strong> – If the backend has already been registered.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </div>
 <div class="section" id="module-hls4ml.backends.template">
@@ -256,7 +338,17 @@
 <dl class="method">
 <dt id="hls4ml.backends.template.FunctionCallTemplate.transform">
 <code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.FunctionCallTemplate.transform" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -283,12 +375,28 @@
 <dl class="method">
 <dt id="hls4ml.backends.template.Template.match">
 <code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.Template.match" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hls4ml.backends.template.Template.transform">
 <code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.Template.transform" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 

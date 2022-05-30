@@ -134,12 +134,28 @@
 <dl class="method">
 <dt id="hls4ml.backends.vivado.passes.bram_weights.RegisterBramWeights.match">
 <code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bram_weights.RegisterBramWeights.match" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hls4ml.backends.vivado.passes.bram_weights.RegisterBramWeights.transform">
 <code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bram_weights.RegisterBramWeights.transform" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -156,7 +172,13 @@
 <dl class="method">
 <dt id="hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.match">
 <code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.match" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.name">
@@ -166,7 +188,17 @@
 <dl class="method">
 <dt id="hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.transform">
 <code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.transform" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -177,7 +209,13 @@
 <dl class="method">
 <dt id="hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.match">
 <code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.match" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.name">
@@ -187,7 +225,17 @@
 <dl class="method">
 <dt id="hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.transform">
 <code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.transform" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -202,12 +250,28 @@
 <dl class="method">
 <dt id="hls4ml.backends.vivado.passes.conv_stream.GenerateConvStreamingInstructions.match">
 <code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.conv_stream.GenerateConvStreamingInstructions.match" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hls4ml.backends.vivado.passes.conv_stream.GenerateConvStreamingInstructions.transform">
 <code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.conv_stream.GenerateConvStreamingInstructions.transform" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -531,12 +595,28 @@
 <dl class="method">
 <dt id="hls4ml.backends.vivado.passes.pointwise.OptimizePointwiseConv.match">
 <code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.pointwise.OptimizePointwiseConv.match" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hls4ml.backends.vivado.passes.pointwise.OptimizePointwiseConv.transform">
 <code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.pointwise.OptimizePointwiseConv.transform" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -694,12 +774,28 @@
 <dl class="method">
 <dt id="hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy.match">
 <code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy.match" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy.transform">
 <code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy.transform" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -713,7 +809,17 @@
 <dl class="method">
 <dt id="hls4ml.backends.vivado.passes.transform_types.TransformTypes.transform">
 <code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.transform_types.TransformTypes.transform" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 

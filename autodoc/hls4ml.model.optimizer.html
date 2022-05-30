@@ -135,6 +135,9 @@
 <dt id="hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass">
 <em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.optimizer.</code><code class="sig-name descname">ConfigurableOptimizerPass</code><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
+<p>An optimizer that can be configured.</p>
+<p>Existing instances of this class in the registry can be configured with the configure() method. Multiple instances
+with different configuration can co-exist if registered with different names.</p>
 <dl class="method">
 <dt id="hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass.configure">
 <code class="sig-name descname">configure</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass.configure" title="Permalink to this definition"></a></dt>
@@ -151,10 +154,17 @@
 <dt id="hls4ml.model.optimizer.optimizer.GlobalOptimizerPass">
 <em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.optimizer.</code><code class="sig-name descname">GlobalOptimizerPass</code><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.GlobalOptimizerPass" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
+<p>Global optimizer that matches on every node in the model graph.</p>
 <dl class="method">
 <dt id="hls4ml.model.optimizer.optimizer.GlobalOptimizerPass.match">
 <code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.GlobalOptimizerPass.match" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -162,16 +172,30 @@
 <dt id="hls4ml.model.optimizer.optimizer.LayerOptimizerPass">
 <em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.optimizer.</code><code class="sig-name descname">LayerOptimizerPass</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">layer_class</em>, <em class="sig-param">transform</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.LayerOptimizerPass" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass" title="hls4ml.model.optimizer.optimizer.WrappedOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.WrappedOptimizerPass</span></code></a></p>
+<p>An wrapper optimizer specific to a layer class.</p>
+<p>Commonly used by backends to add extra initialization to a layer instance.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="hls4ml.model.optimizer.optimizer.ModelOptimizerPass">
 <em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.optimizer.</code><code class="sig-name descname">ModelOptimizerPass</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">transform</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.ModelOptimizerPass" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
+<p>A special optimizer that works with the model itself.</p>
+<p>Examples include writing the model to C++/HLS.</p>
 <dl class="method">
 <dt id="hls4ml.model.optimizer.optimizer.ModelOptimizerPass.transform">
 <code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.ModelOptimizerPass.transform" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -179,6 +203,7 @@
 <dt id="hls4ml.model.optimizer.optimizer.OptimizerPass">
 <em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.optimizer.</code><code class="sig-name descname">OptimizerPass</code><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base optimizer class from which all other optimizer types are derived.</p>
 <dl class="method">
 <dt id="hls4ml.model.optimizer.optimizer.OptimizerPass.get_name">
 <em class="property">classmethod </em><code class="sig-name descname">get_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass.get_name" title="Permalink to this definition"></a></dt>
@@ -187,7 +212,13 @@
 <dl class="method">
 <dt id="hls4ml.model.optimizer.optimizer.OptimizerPass.match">
 <code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass.match" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="hls4ml.model.optimizer.optimizer.OptimizerPass.name">
@@ -197,7 +228,17 @@
 <dl class="method">
 <dt id="hls4ml.model.optimizer.optimizer.OptimizerPass.transform">
 <code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass.transform" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -205,6 +246,8 @@
 <dt id="hls4ml.model.optimizer.optimizer.WrappedOptimizerPass">
 <em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.optimizer.</code><code class="sig-name descname">WrappedOptimizerPass</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">condition</em>, <em class="sig-param">transform</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
+<p>An optimizer class created by wrapping a function call.</p>
+<p>Users should generally not create any wrapped optimizer passes manually.</p>
 <dl class="method">
 <dt id="hls4ml.model.optimizer.optimizer.WrappedOptimizerPass.get_name">
 <code class="sig-name descname">get_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass.get_name" title="Permalink to this definition"></a></dt>
@@ -213,12 +256,28 @@
 <dl class="method">
 <dt id="hls4ml.model.optimizer.optimizer.WrappedOptimizerPass.match">
 <code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass.match" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hls4ml.model.optimizer.optimizer.WrappedOptimizerPass.transform">
 <code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass.transform" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -235,32 +294,97 @@
 <dl class="function">
 <dt id="hls4ml.model.optimizer.optimizer.get_available_passes">
 <code class="sig-prename descclassname">hls4ml.model.optimizer.optimizer.</code><code class="sig-name descname">get_available_passes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.get_available_passes" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Return the list of all registered optimizer passes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>List of registered passes.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
 <dt id="hls4ml.model.optimizer.optimizer.get_backend_passes">
 <code class="sig-prename descclassname">hls4ml.model.optimizer.optimizer.</code><code class="sig-name descname">get_backend_passes</code><span class="sig-paren">(</span><em class="sig-param">backend</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.get_backend_passes" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Returns the list of optimizer passes belonging to a backend</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>backend</strong> (<em>str</em>) – Name of the backend.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of optimizer names registered with the given backend.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
 <dt id="hls4ml.model.optimizer.optimizer.get_optimizer">
 <code class="sig-prename descclassname">hls4ml.model.optimizer.optimizer.</code><code class="sig-name descname">get_optimizer</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.get_optimizer" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Return the optimizer instance registered with the given name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the optimizer in the registry.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>Exception</strong> – If the optimizer with the given name is not found in the registry.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The optimizer from the registry.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass">OptimizerPass</a></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
 <dt id="hls4ml.model.optimizer.optimizer.layer_optimizer">
 <code class="sig-prename descclassname">hls4ml.model.optimizer.optimizer.</code><code class="sig-name descname">layer_optimizer</code><span class="sig-paren">(</span><em class="sig-param">layer</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.layer_optimizer" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Decorator to turn a function into the optimization pass.</p>
+<p class="rubric">Example</p>
+<p>&#64;layer_optimizer(MyLayer)
+def init_mylayer(self, layer):</p>
+<blockquote>
+<div><p>layer.set_attr(‘new_attribute’, ‘some_value’)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>layer</strong> (<em>_type_</em>) – _description_</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
 <dt id="hls4ml.model.optimizer.optimizer.model_optimizer">
 <code class="sig-prename descclassname">hls4ml.model.optimizer.optimizer.</code><code class="sig-name descname">model_optimizer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.model_optimizer" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Decorator to turn a function into a model optimizer.</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="hls4ml.model.optimizer.optimizer.optimize_model">
 <code class="sig-prename descclassname">hls4ml.model.optimizer.optimizer.</code><code class="sig-name descname">optimize_model</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">passes</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.optimize_model" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Optimize a given model with the given passes.</p>
+<p>The passes are attempted until all passes no longer match or no changes to the model graph occur.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – The model to optimize.</p></li>
+<li><p><strong>passes</strong> (<em>list</em>) – List of passes to apply.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The set of applied passes (the pases that matched the predicate).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>set</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
 <dt id="hls4ml.model.optimizer.optimizer.optimizer_pass">
@@ -270,7 +394,27 @@
 <dl class="function">
 <dt id="hls4ml.model.optimizer.optimizer.register_pass">
 <code class="sig-prename descclassname">hls4ml.model.optimizer.optimizer.</code><code class="sig-name descname">register_pass</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">opt_cls</em>, <em class="sig-param">backend=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.register_pass" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Register a new optimizer pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of the optimizer</p></li>
+<li><p><strong>opt_cls</strong> (<em>class</em>) – The class of the optimizer.</p></li>
+<li><p><strong>backend</strong> (<em>str</em><em>, </em><em>optional</em>) – Optional backend to register the optimizer to. If not None, the name of the backend
+will be appended to the name of the registered flow. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>Exception</strong> – If the optimization pass has already been registered with the given name.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The name of the registered optimizer.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
 
 </div>
 <div class="section" id="module-hls4ml.model.optimizer">

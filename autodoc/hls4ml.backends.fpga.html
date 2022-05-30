@@ -135,7 +135,22 @@
 <dl class="method">
 <dt id="hls4ml.backends.fpga.fpga_backend.FPGABackend.compile">
 <code class="sig-name descname">compile</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_backend.FPGABackend.compile" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Compile the generated project that can be linked into Python runtime.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – Model to compile.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>Exception</strong> – If the project failed to compile</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Returns the name of the compiled library.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hls4ml.backends.fpga.fpga_backend.FPGABackend.compute_conv1d_instructions">
@@ -155,7 +170,15 @@
 <dl class="method">
 <dt id="hls4ml.backends.fpga.fpga_backend.FPGABackend.create_layer_class">
 <code class="sig-name descname">create_layer_class</code><span class="sig-paren">(</span><em class="sig-param">layer_class</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_backend.FPGABackend.create_layer_class" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Wrap the original layer class into the backend-specific layer class.</p>
+<p>Backends should extend base layer classes with new attributes and variables as needed. These new classes are then
+used within the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>layer_class</strong> (<em>class</em>) – Base class to extend</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="hls4ml.backends.fpga.fpga_backend.FPGABackend.get_closest_reuse_factor">
@@ -201,6 +224,11 @@ If two numbers are equally close, return the smallest number.</p>
 <dd><p>Write the generated project to disk.</p>
 <p>This function converts the model to C++ and writes the generated files in the output
 directory specified in the <cite>config</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – Model to write.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">

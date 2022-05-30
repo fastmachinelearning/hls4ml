@@ -113,9 +113,29 @@
 <div class="section" id="module-hls4ml.model.flow.flow">
 <span id="hls4ml-model-flow-flow-module"></span><h2>hls4ml.model.flow.flow module<a class="headerlink" href="#module-hls4ml.model.flow.flow" title="Permalink to this headline"></a></h2>
 <dl class="class">
+<dt id="hls4ml.model.flow.flow.DynamicFlow">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.flow.flow.</code><code class="sig-name descname">DynamicFlow</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">optimizer_func</em>, <em class="sig-param">requires=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.DynamicFlow" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.flow.flow.Flow" title="hls4ml.model.flow.flow.Flow"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.flow.flow.Flow</span></code></a></p>
+<p>A dynamically updated flow.</p>
+<p>This flow will get the list of optimizers by calling optimizer_func. Useful to represent a view of all available
+optimizers of a certain type.</p>
+<dl class="method">
+<dt id="hls4ml.model.flow.flow.DynamicFlow.optimizers">
+<em class="property">property </em><code class="sig-name descname">optimizers</code><a class="headerlink" href="#hls4ml.model.flow.flow.DynamicFlow.optimizers" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="hls4ml.model.flow.flow.Flow">
 <em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.flow.flow.</code><code class="sig-name descname">Flow</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">optimizers</em>, <em class="sig-param">requires=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.Flow" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class represents a collection of optimizers. The flow can optionally depend on other flows.</p>
+<dl class="method">
+<dt id="hls4ml.model.flow.flow.Flow.optimizers">
+<em class="property">property </em><code class="sig-name descname">optimizers</code><a class="headerlink" href="#hls4ml.model.flow.flow.Flow.optimizers" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="function">
@@ -136,7 +156,43 @@
 <dl class="function">
 <dt id="hls4ml.model.flow.flow.register_flow">
 <code class="sig-prename descclassname">hls4ml.model.flow.flow.</code><code class="sig-name descname">register_flow</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">optimizers</em>, <em class="sig-param">requires=None</em>, <em class="sig-param">backend=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.register_flow" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Create a flow and add it to the registry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – _description_</p></li>
+<li><p><strong>optimizers</strong> (<em>list</em>) – List of optimizers.</p></li>
+<li><p><strong>requires</strong> (<em>list</em><em>, </em><em>optional</em>) – List (str) of flows which have to be applied before this flow. Defaults to None.</p></li>
+<li><p><strong>backend</strong> (<em>str</em><em>, </em><em>optional</em>) – Backend to which the flow will belong. If not None, the name of the backend will be
+appended to the name of the registered flow. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>Exception</strong> – If the flow has already been registered.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The name of the registered flow.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="hls4ml.model.flow.flow.update_flow">
+<code class="sig-prename descclassname">hls4ml.model.flow.flow.</code><code class="sig-name descname">update_flow</code><span class="sig-paren">(</span><em class="sig-param">flow_name</em>, <em class="sig-param">add_optimizers=None</em>, <em class="sig-param">remove_optimizers=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.flow.flow.update_flow" title="Permalink to this definition"></a></dt>
+<dd><p>Add or remove optimizers to/from an existing flow.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>flow_name</strong> (<em>str</em>) – The name of the flow to update.</p></li>
+<li><p><strong>add_optimizers</strong> (<em>list</em><em>, </em><em>optional</em>) – List (str) of optimizers to add. Defaults to None.</p></li>
+<li><p><strong>remove_optimizers</strong> (<em>list</em><em>, </em><em>optional</em>) – List (str) of optimizers to remove. Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </div>
 <div class="section" id="module-hls4ml.model.flow">
