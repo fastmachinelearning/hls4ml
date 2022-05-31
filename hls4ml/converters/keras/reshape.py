@@ -27,9 +27,34 @@ def parse_reshape_layer(keras_layer, input_names, input_shapes, data_reader, con
     
     return layer, output_shape
 
+@keras_handler('UpSampling1D')
+def parse_upsampling1d_layer(keras_layer, input_names, input_shapes, data_reader, config):
+    assert('UpSampling' in keras_layer['class_name'])
+
+    layer = parse_default_keras_layer(keras_layer, input_names)
+
+    layer['in_height'] = 1
+    (
+        layer['in_width'],
+        layer['n_chan']
+    ) = parse_data_format(input_shapes[0], layer['data_format'])
+
+    layer['algorithm'] = 'nearest'
+
+    layer['width_factor'] = keras_layer['config']['size']
+
+    layer['out_height'] = 1
+    layer['out_width'] = layer['in_width'] * layer['width_factor']
+
+    if layer['data_format'] == 'channels_first':
+        output_shape = [input_shapes[0][0], layer['n_chan'], layer['out_width']]
+    else:
+        output_shape = [input_shapes[0][0], layer['out_width'], layer['n_chan']]
+
+    return layer, output_shape
 
 @keras_handler('UpSampling2D')
-def parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_upsampling2d_layer(keras_layer, input_names, input_shapes, data_reader, config):
     assert('UpSampling2D' in keras_layer['class_name'])
 
     layer = parse_default_keras_layer(keras_layer, input_names)

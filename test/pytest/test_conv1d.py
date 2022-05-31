@@ -6,6 +6,10 @@ from sklearn.metrics import accuracy_score
 import tensorflow as tf
 from tensorflow.keras.models import model_from_json
 import yaml
+from pathlib import Path
+
+test_root_path = Path(__file__).parent
+example_model_path = (test_root_path / '../../example-models').resolve()
 
 @pytest.fixture(scope='module')
 def data():
@@ -14,9 +18,11 @@ def data():
 
 @pytest.fixture(scope='module')
 def keras_model():
-    jsons = open('../../example-models/keras/KERAS_conv1d.json','r').read()
+    model_path = example_model_path / 'keras/KERAS_conv1d.json'
+    with model_path.open('r') as f:
+        jsons = f.read()
     model = model_from_json(jsons)
-    model.load_weights('../../example-models/keras/KERAS_conv1d_weights.h5')
+    model.load_weights(example_model_path / 'keras/KERAS_conv1d_weights.h5')
     return model
 
 @pytest.fixture      
@@ -28,9 +34,9 @@ def hls_model(settings):
     io_type = settings[0]
     strategy = settings[1]
     config = hls4ml.converters.create_config(output_dir = 'hls4mlprj_conv1d_{}_{}'.format(io_type, strategy))
-    config['KerasJson'] = '../../example-models/keras/KERAS_conv1d.json'
-    config['KerasH5'] = '../../example-models/keras/KERAS_conv1d_weights.h5'
-    config['OutputDir'] = 'hls4mlprj_conv1d_{}_{}'.format(io_type, strategy)
+    config['KerasJson'] = str(example_model_path / 'keras/KERAS_conv1d.json')
+    config['KerasH5'] = str(example_model_path / 'keras/KERAS_conv1d_weights.h5')
+    config['OutputDir'] = str(test_root_path / 'hls4mlprj_conv1d_{}_{}'.format(io_type, strategy))
     config['IOType'] = io_type
     
     hls_config = {'Model' : {'Strategy' : strategy,

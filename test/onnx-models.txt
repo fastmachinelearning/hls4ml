@@ -1,10 +1,10 @@
 # ONNX models from examples directory that will be used for testing
 #
 # Synthax:
-#    MODEL_NAME [x:XILINXPART] [c:CLOCK_PERIOD] [io:s] [r:REUSE_FACTOR] [t:AP_TYPE] [s:STRATEGY]
+#    MODEL_NAME [x:PART] [c:CLOCK_PERIOD] [io:s] [r:REUSE_FACTOR] [t:AP_TYPE] [s:STRATEGY]
 # where
 #    MODEL_NAME - Name of the file containing the model (without ".onnx")
-#    x:XILINXPART - Xilinx part number to use
+#    x:PART - FPGA part number to use
 #    c:CLOCK_PERIOD - Clock period
 #    io:s - User streaming I/O, otherwise use parallel I/O
 #    r:REUSE_FACTOR - Reuse factor

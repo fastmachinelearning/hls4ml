@@ -8,7 +8,7 @@ Using a low precision can help reduce the FPGA resource usage of a model, but ma
 
 Profiling uses some extra dependencies, to install these, run ``pip install hls4ml[profiling]``. The profiling tools are provided as a ``Python`` module which you can use.
 
-Three types of objects can be provided: **a Keras model object**\ , **test data**\ , and an **HLSModel object**.
+Three types of objects can be provided: **a Keras model object**\ , **test data**\ , and an **ModelGraph object**.
 You will need to initialise these objects by using a trained model, loading a model from a file, and loading your data. The Keras model and data each need to be in the format that would normally allow you to run, e.g. ``model.predict(X)``.
 
 .. code-block:: python
@@ -47,11 +47,11 @@ When different combinations of the input objects are given, different plots will
 
 1) Only Keras model: only the weights profile plot will be produced, the activation profile will be ``None``. No grey boxes representing the data types will be shown.
 
-2) Only HLSModel (or HLSModel and Keras model): only the weights profile plot will be produced, with grey boxes indicating the data types from the HLSModel. 
+2) Only ModelGraph (or ModelGraph and Keras model): only the weights profile plot will be produced, with grey boxes indicating the data types from the ModelGraph. 
 
 3) Keras model and data (\ ``X``\ ): both the weights profile and activation profile will be produced. No grey boxes representing the data types will be shown.
 
-4) Keras model, HLSModel, and data: both weights and activation profiles are produced, with grey boxes indicating the data types from the HLSModel.
+4) Keras model, ModelGraph, and data: both weights and activation profiles are produced, with grey boxes indicating the data types from the ModelGraph.
 
 Each box shows the median and quartiles of the distribution. The grey shaded boxes show the range which can be represented with the ``hls4ml`` config file used.
 

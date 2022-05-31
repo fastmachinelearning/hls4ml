@@ -43,8 +43,8 @@ struct batchnorm_config
     static const bool store_weights_in_bram = false;
     static const unsigned n_zeros = 0;
     // partitioning arrays cyclically to go with roll factors?
-    template<class x_T, class y_T, class res_T>
-    using product = nnet::product::mult<x_T, y_T, res_T>;
+    template<class x_T, class y_T>
+    using product = nnet::product::mult<x_T, y_T>;
 };
 
 template<class data_T, class res_T, typename CONFIG_T>
@@ -71,7 +71,7 @@ void normalize(
         #pragma HLS ARRAY_PARTITION variable=bias complete
 
         int multiplier_limit  = ceil(float(CONFIG_T::n_in) / float(CONFIG_T::reuse_factor));
-        CONFIG_T::template product<data_T, typename CONFIG_T::scale_t, res_T>::limit(multiplier_limit);
+        CONFIG_T::template product<data_T, typename CONFIG_T::scale_t>::limit(multiplier_limit);
 
     } else if (CONFIG_T::io_type == io_serial) {
         #pragma HLS ARRAY_RESHAPE variable=scale complete dim=1
@@ -87,10 +87,10 @@ void normalize(
         }
         
         if (CONFIG_T::n_filt==-1) {
-            res[ires] = CONFIG_T::template product<data_T, typename CONFIG_T::scale_t, res_T>::product(data[ires], scale[ires]) + bias[ires];
+            res[ires] = CONFIG_T::template product<data_T, typename CONFIG_T::scale_t>::product(data[ires], scale[ires]) + bias[ires];
 	    } else {
             int norm_index = ires%CONFIG_T::n_filt;
-            res[ires] = CONFIG_T::template product<data_T, typename CONFIG_T::scale_t, res_T>::product(data[ires], scale[norm_index]) + bias[norm_index];
+            res[ires] = CONFIG_T::template product<data_T, typename CONFIG_T::scale_t>::product(data[ires], scale[norm_index]) + bias[norm_index];
         }
 	}
 }

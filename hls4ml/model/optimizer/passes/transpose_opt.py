@@ -1,8 +1,9 @@
 from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.model.layers import Transpose
 
 class RemoveUselessTranspose(OptimizerPass):
     def match(self, node):
-        is_match = node.__class__.__name__ == 'Transpose' and\
+        is_match = isinstance(node, Transpose) and\
                    node.get_attr('perm') == [0] #Useless transpose
         return is_match
     

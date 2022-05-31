@@ -65,7 +65,7 @@ It looks like this:
    OutputPredictions: keras/KERAS_3layer_predictions.dat
    OutputDir: my-hls-test
    ProjectName: myproject
-   XilinxPart: xcku115-flvb2104-2-i
+   Device: xcku115-flvb2104-2-i
    ClockPeriod: 5
 
    IOType: io_parallel # options: io_serial/io_parallel
@@ -88,7 +88,7 @@ There are a number of configuration options that you have.  Let's go through the
 * **InputData/OutputPredictions**\ : path to your input/predictions of the model. If none is supplied, then hls4ml will create aritificial data for simulation. The data used above in the example can be found `here <https://cernbox.cern.ch/index.php/s/2LTJVVwCYFfkg59>`__. We also support ``npy`` data files. We welcome suggestions on more input data types to support. 
 * **OutputDir**\ : the output directory where you want your HLS project to appear
 * **ProjectName**\ : the name of the HLS project IP that is produced
-* **XilinxPart**\ : the particular FPGA part number that you are considering, here it's a Xilinx Virtex-7 FPGA
+* **Device**\ : the particular FPGA part number that you are considering, here it's a Xilinx Virtex-7 FPGA
 * **ClockPeriod**\ : the clock period, in ns, at which your algorithm runs
   Then you have some optimization parameters for how your algorithm runs:
 * **IOType**\ : your options are ``io_parallel`` or ``io_serial`` where this really defines if you are pipelining your algorithm or not
