@@ -57,6 +57,7 @@ class DenseFunctionTemplate(FunctionCallTemplate):
 batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_filt = {n_filt};
+    static const unsigned n_scale_bias = (n_filt == -1) ? n_in : n_filt;
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
     static const bool store_weights_in_bram = false;
