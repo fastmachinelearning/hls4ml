@@ -161,7 +161,7 @@ def _check_model_config(model_config):
     else:
         model_config = {}
         model_config['Precision'] = 'ap_fixed<16,6>'
-        model_config['ReuseFactor'] = '1'
+        model_config['ReuseFactor'] = 1
 
     return model_config
 
