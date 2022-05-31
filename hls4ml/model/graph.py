@@ -611,7 +611,6 @@ class ModelGraph(object):
 
         top_function.restype = None
         top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS") for i in range(len(xlist)+1)]
-        top_function.argtypes += [ctypes.POINTER(ctypes.c_ushort) for i in range(len(xlist)+1)]
 
         return top_function, ctype
 
@@ -650,12 +649,11 @@ class ModelGraph(object):
             for i in range(n_samples):
                 predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
                 if n_inputs == 1:
-                    top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
+                    top_function(x[i], predictions)
                 else:
                     inp = [xj[i] for xj in x]
                     argtuple = inp
                     argtuple += [predictions]
-                    argtuple += [ctypes.byref(ctypes.c_ushort()) for k in range(len(inp)+1)]
                     argtuple = tuple(argtuple)
                     top_function(*argtuple)
                 output.append(predictions)
