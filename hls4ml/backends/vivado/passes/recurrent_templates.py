@@ -61,7 +61,6 @@ lstm_config_template = """struct config{index} : nnet::lstm_config {{
     static const unsigned io_type = nnet::{strategy};
     static const unsigned reuse_factor = {reuse};
     static const bool store_weights_in_bram = false;
-    static const bool enable_mask = false;
     static const bool use_static = {static};
 }};\n"""
 
@@ -87,7 +86,6 @@ gru_config_template = """struct config{index} : nnet::gru_config {{
     static const unsigned io_type = nnet::{strategy};
     static const unsigned reuse_factor = {reuse};
     static const bool store_weights_in_bram = false;
-    static const bool enable_mask = false;
     static const bool use_static = {static};
 }};\n"""
 
