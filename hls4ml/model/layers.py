@@ -918,11 +918,15 @@ class LSTM(Layer):
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t')
 
         data = self.model.get_weights_data(self.name, 'kernel')
-        self.add_weights_variable(name='weight', var_name='w{index}', data=np.transpose(data), quantizer=None, compression=False)
+        if self.model.config.is_resource_strategy(self) and self.model.config.backend.name in ['Vivado', 'VivadoAccelerator']:
+            data = np.transpose(data)
+        self.add_weights_variable(name='weight', var_name='w{index}', data=data)
         self.add_bias()
 
         recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
-        self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=np.transpose(recurrent_weight))
+        if self.model.config.is_resource_strategy(self) and self.model.config.backend.name in ['Vivado', 'VivadoAccelerator']:
+            recurrent_weight = np.transpose(recurrent_weight)
+        self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
 
 class GRU(Layer):
     _expected_attributes = [
@@ -961,11 +965,15 @@ class GRU(Layer):
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t')
 
         data = self.model.get_weights_data(self.name, 'kernel')
-        self.add_weights_variable(name='weight', var_name='w{index}', data=np.transpose(data), quantizer=None, compression=False)
+        if self.model.config.is_resource_strategy(self) and self.model.config.backend.name in ['Vivado', 'VivadoAccelerator']:
+            data = np.transpose(data)
+        self.add_weights_variable(name='weight', var_name='w{index}', data=data)
         self.add_bias()
 
         recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
-        self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=np.transpose(recurrent_weight))
+        if self.model.config.is_resource_strategy(self) and self.model.config.backend.name in ['Vivado', 'VivadoAccelerator']:
+            recurrent_weight = np.transpose(recurrent_weight)
+        self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
 
 class GarNet(Layer):
     ref_impl = False
