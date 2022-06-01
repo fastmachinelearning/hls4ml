@@ -171,5 +171,45 @@ def test_jet_tagging():
 
     np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
 
+
+def test_jet_tagging_quartus():
+    # download test model
+    dl_dir = "./"
+    dl_file = dl_dir + "qkeras_jettagging.onnx"
+    jet_tagging_qonnx_url = (
+        "https://raw.githubusercontent.com/fastmachinelearning/"
+        "QONNX_model_zoo/main/models/JetTagging/QKeras_hls4ml_3layer/qkeras_jettagging.onnx"
+    )
+    urllib.request.urlretrieve(jet_tagging_qonnx_url, dl_file)
+    assert os.path.isfile(dl_file)
+    out_file = dl_dir + "/qkeras_jettagging-clean.onnx"
+
+    # cleanup
+    qonnx.util.cleanup.cleanup(dl_file, out_file=out_file)
+    model = ModelWrapper(out_file)
+
+    # Execute QONNX model inference
+    # TODO make the test bigger
+    ishape = (1,16)
+    np.random.seed(0)
+    X = np.random.uniform(low=-1, high=+1, size=np.product(ishape)).reshape(ishape).astype(np.float32)
+    idict = {model.graph.input[0].name: X}
+    y_qonnx = oxe.execute_onnx(model, idict)[model.graph.output[0].name]
+
+    # Convert QONNX model, compile, and run inference
+    config = hls4ml.utils.config_from_onnx_model(model)
+    # Some hand-derived config
+    # TODO should be auto-derived by QuantizeDenseOutput pass after some adaptation
+
+    hls_model = hls4ml.converters.convert_from_onnx_model(model,
+                                                          output_dir='hls4mlprj_qonnx_jettag_quartus',
+                                                          part='Arria10',
+                                                          backend='Quartus',
+                                                          hls_config=config)
+    hls_model.compile()
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
+
 if __name__ == '__main__':
     test_tfc_2w2a_quartus()
