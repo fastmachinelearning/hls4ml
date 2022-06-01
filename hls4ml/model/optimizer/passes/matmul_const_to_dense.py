@@ -1,6 +1,6 @@
 import numpy as np
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.types import IntegerPrecisionType, NamedType, FixedPrecisionType
+from hls4ml.model.types import IntegerPrecisionType
 from hls4ml.model.layers import MatMul, Constant, Dense
 
 _base_attributes = ('Trace', 'reuse_factor', 'weight', 'weight_t', 'bias', 'bias_t')
