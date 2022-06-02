@@ -1,71 +1,74 @@
-from hls4ml.converters.keras_to_hls import keras_to_hls
 import pytest
 import hls4ml
 import numpy as np
 from sklearn.metrics import accuracy_score
-import tensorflow as tf
-from tensorflow.keras.models import model_from_json
-from qkeras.utils import _add_supported_quantized_objects; co = {}; _add_supported_quantized_objects(co)
-import yaml
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Activation, Conv2D, Flatten, MaxPooling2D, AveragePooling2D
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.utils import to_categorical
+
 from pathlib import Path
 
 test_root_path = Path(__file__).parent
-example_model_path = (test_root_path / '../../example-models').resolve()
 
 @pytest.fixture(scope='module')
 def mnist_data():
-  (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
-  # Scale images to the [0, 1] range
-  x_train = x_train.astype("float32") / 255
-  x_test = x_test.astype("float32") / 255
-  # Make sure images have shape (28, 28, 1)
+  (x_train, y_train), (x_test, y_test) = mnist.load_data()
+  x_train = x_train.astype("float32") / 255.
+  x_test = x_test.astype("float32") / 255.
   x_train = np.expand_dims(x_train, -1)
   x_test = np.expand_dims(x_test, -1)
-  y_train = tf.keras.utils.to_categorical(y_train, 10)
-  y_test = tf.keras.utils.to_categorical(y_test, 10)
+  y_train = to_categorical(y_train, 10)
+  y_test = to_categorical(y_test, 10)
+  x_test, y_test = x_test[:5000], y_test[:5000]
   return x_train, y_train, x_test, y_test
 
 @pytest.fixture(scope='module')
-def mnist_model():
-  model_path = example_model_path / 'keras/qkeras_mnist_cnn.json'
-  with model_path.open('r') as f:
-    jsons = f.read()
-  model = model_from_json(jsons, custom_objects=co)
-  model.load_weights(example_model_path / 'keras/qkeras_mnist_cnn_weights.h5')
-  return model
-
-@pytest.fixture      
-@pytest.mark.parametrize('settings', [('io_parallel', 'latency'),
-                                      ('io_parallel', 'resource'),
-                                      ('io_stream', 'latency'),
-                                      ('io_stream', 'resource')])
-def hls_model(settings):
-  io_type = settings[0]
-  strategy = settings[1]
-  yml_path = example_model_path / 'config-files/qkeras_mnist_cnn_config.yml'
-  with yml_path.open('r') as f:
-    config = yaml.safe_load(f.read())
-  config['KerasJson'] = str(example_model_path / 'keras/qkeras_mnist_cnn.json')
-  config['KerasH5'] = str(example_model_path / 'keras/qkeras_mnist_cnn_weights.h5')
-  config['OutputDir'] = str(test_root_path / 'hls4mlprj_cnn_mnist_{}_{}'.format(io_type, strategy))
-  config['IOType'] = io_type
-  config['HLSConfig']['Model']['Strategy'] = strategy
-  config['HLSConfig']['LayerName']['softmax']['Strategy'] = 'Stable'
-  hls_model = keras_to_hls(config)
-  hls_model.compile()
-  return hls_model
-
-@pytest.mark.parametrize('settings', [('io_parallel', 'latency'),
-                                      ('io_parallel', 'resource'),
-                                      ('io_stream', 'latency'),
-                                      ('io_stream', 'resource')])
-def test_accuracy(mnist_data, mnist_model, hls_model):
+def keras_model(mnist_data):
+  # Aim of this model is to test different CNN paramaters, including:
+  # The common filter sizes, 3x3 and 5x5
+  # A non-power of 2 number of filters
+  # Both Average and Max Pooling
+  # Both Same and Valid Padding
   x_train, y_train, x_test, y_test = mnist_data
-  x_test, y_test = x_test[:5000], y_test[:5000]
-  model = mnist_model
-  # model under test predictions and accuracy
-  y_keras = model.predict(x_test)
-  y_hls4ml   = hls_model.predict(x_test)
+  keras_model = Sequential()
+  keras_model.add(Conv2D(4, (3,3), input_shape=(28, 28, 1), padding='same'))
+  keras_model.add(Activation('relu'))
+  keras_model.add(MaxPooling2D())
+  keras_model.add(Conv2D(6, (5,5), padding='valid'))
+  keras_model.add(Activation('relu'))
+  keras_model.add(AveragePooling2D())
+  keras_model.add(Flatten())
+  keras_model.add(Dense(10, kernel_initializer='lecun_uniform'))
+  keras_model.add(Activation('softmax', name='softmax'))
+  keras_model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+  keras_model.fit(x_train, y_train, batch_size=32, epochs=5,  verbose=0)
+  return keras_model
+
+@pytest.mark.parametrize('backend, io_type, strategy', [
+                                      ('Quartus', 'io_parallel', 'resource'),
+                                      ('Vivado', 'io_parallel', 'resource'),
+                                      ('Vivado', 'io_parallel', 'latency')
+                                    ])
+def test_mnist_cnn(keras_model, mnist_data, backend, io_type, strategy):
+  x_train, y_train, x_test, y_test = mnist_data
+  
+  hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name')     
+  hls_config['Model']['Strategy'] = strategy
+  hls_config['LayerName']['softmax']['Strategy'] = 'Stable'
+  output_dir = str(test_root_path / 'hls4mlprj_cnn_mnist_{}_{}_{}'.format(backend, io_type, strategy))
+
+  hls_model = hls4ml.converters.convert_from_keras_model(
+                        keras_model, 
+                        hls_config=hls_config, 
+                        output_dir=output_dir, 
+                        backend=backend,
+                        io_type=io_type)
+  hls_model.compile()
+
+  # Model under test predictions and accuracy
+  y_keras = keras_model.predict(x_test)
+  y_hls4ml = hls_model.predict(x_test)
 
   acc_keras = accuracy_score(np.argmax(y_test, axis=1), np.argmax(y_keras, axis=1))
   acc_hls4ml = accuracy_score(np.argmax(y_test, axis=1), np.argmax(y_hls4ml, axis=1))
@@ -75,4 +78,4 @@ def test_accuracy(mnist_data, mnist_model, hls_model):
   print('Accuracy hls4ml:     {}'.format(acc_hls4ml))
   print('Relative difference: {}'.format(rel_diff))
 
-  assert acc_keras > 0.95 and rel_diff < 0.01
+  assert acc_keras > 0.95 and rel_diff < 0.03

@@ -1,11 +1,8 @@
-from hls4ml.converters.keras_to_hls import keras_to_hls
 import pytest
 import hls4ml
 import numpy as np
 from sklearn.metrics import accuracy_score
-import tensorflow as tf
 from tensorflow.keras.models import model_from_json
-import yaml
 from pathlib import Path
 
 test_root_path = Path(__file__).parent
@@ -25,46 +22,58 @@ def keras_model():
     model.load_weights(example_model_path / 'keras/KERAS_conv1d_weights.h5')
     return model
 
-@pytest.fixture      
-@pytest.mark.parametrize('settings', [('io_parallel', 'latency'),
-                                      ('io_parallel', 'resource'),
-                                      ('io_stream', 'latency'),
-                                      ('io_stream', 'resource')])
-def hls_model(settings):
-    io_type = settings[0]
-    strategy = settings[1]
-    config = hls4ml.converters.create_config(output_dir = 'hls4mlprj_conv1d_{}_{}'.format(io_type, strategy))
-    config['KerasJson'] = str(example_model_path / 'keras/KERAS_conv1d.json')
-    config['KerasH5'] = str(example_model_path / 'keras/KERAS_conv1d_weights.h5')
-    config['OutputDir'] = str(test_root_path / 'hls4mlprj_conv1d_{}_{}'.format(io_type, strategy))
-    config['IOType'] = io_type
+@pytest.fixture   
+@pytest.mark.parametrize('backend, io_type, strategy', [
+                                      ('Quartus', 'io_parallel', 'resource'),
+                                      ('Vivado', 'io_parallel', 'resource'),
+
+                                      ('Vivado', 'io_parallel', 'latency'),
+                                      
+                                      ('Vivado', 'io_stream', 'latency'),
+                                      ('Vivado', 'io_stream', 'resource')
+                                    ])
+def hls_model(keras_model, backend, io_type, strategy):
+    default_precision = 'ap_fixed<16,3,AP_RND_CONV,AP_SAT>' if backend=='Vivado' else 'ac_fixed<16,3,true,AC_RND_CONV,AC_SAT>'
+    fc1_weight_precision = 'ap_fixed<16,3>' if backend=='Vivado' else 'ac_fixed<16,3,true>'
+    fc1_result_precision = 'ap_fixed<16,6,AP_RND_CONV,AP_SAT>' if backend=='Vivado' else 'ac_fixed<16,6,true,AC_RND_CONV,AC_SAT>'
+    output_softmax_weight_precision = 'ap_fixed<16,6>' if backend=='Vivado' else 'ac_fixed<16,6,true>'
+    output_softmax_result_precision = 'ap_fixed<16,6,AP_RND_CONV,AP_SAT>' if backend=='Vivado' else 'ac_fixed<16,6,true,AP_RND_CONV,AP_SAT>'
+
+    # Default config
+    hls_config = hls4ml.utils.config_from_keras_model(keras_model)
+    hls_config['Model']['Strategy'] = strategy
+    hls_config['Model']['ReuseFactor'] = 1
+    hls_config['Model']['Precision'] = default_precision
+
+    # Some model-specific precision tuning
+    hls_config['LayerName'] = {}
+    hls_config['LayerName']['fc1_relu'] = {'Precision':{'weight' : fc1_weight_precision, 'result' : fc1_result_precision}}
+    hls_config['LayerName']['output_softmax'] = {'Precision':{'weight' : output_softmax_weight_precision, 'result' : output_softmax_result_precision}}
+    hls_config['LayerName']['output_softmax_softmax'] = {'Strategy':'Stable'}
     
-    hls_config = {'Model' : {'Strategy' : strategy,
-                             'ReuseFactor' : 1,
-                             'Precision' : 'ap_fixed<16,3,AP_RND_CONV,AP_SAT>'}}
-    # Some model specific precision tuning
-    config['LayerName'] = {}
-    config['LayerName']['fc1_relu'] = {'Precision':{'weight' : 'ap_fixed<16,3>', 'result' : 'ap_fixed<16,6,AP_RND_CONV,AP_SAT>'}}
-    config['LayerName']['output_softmax'] = {'Precision':{'weight' : 'ap_fixed<16,6>', 'result' : 'ap_fixed<16,6,AP_RND_CONV,AP_SAT>'}}
-    config['LayerName']['output_softmax_softmax'] = {'Strategy':'Stable'}
-    config['HLSConfig'] = hls_config
-    hls_model = keras_to_hls(config)
+    output_dir = str(test_root_path / 'hls4mlprj_conv1d_{}_{}_{}'.format(backend, io_type, strategy))
+    hls_model = hls4ml.converters.convert_from_keras_model(keras_model, hls_config=hls_config, backend=backend, io_type=io_type, output_dir=output_dir)
     hls_model.compile()
     return hls_model
 
-@pytest.mark.parametrize('settings', [('io_parallel', 'latency'),
-                                      ('io_parallel', 'resource'),
-                                      ('io_stream', 'latency'),
-                                      ('io_stream', 'resource')])
+@pytest.mark.parametrize('backend, io_type, strategy', [
+                                      ('Quartus', 'io_parallel', 'resource'),
+                                      ('Vivado', 'io_parallel', 'resource'),
+
+                                      ('Vivado', 'io_parallel', 'latency'),
+                                      
+                                      ('Vivado', 'io_stream', 'latency'),
+                                      ('Vivado', 'io_stream', 'resource')
+                                    ])
 def test_accuracy(data, keras_model, hls_model):
     X = data
     model = keras_model
-    # model under test predictions and accuracy
+
+    # Model under test predictions and accuracy
     y_keras = model.predict(X)
     y_hls4ml   = hls_model.predict(X)
-    # "accuracy" of hls4ml predictions vs keras
+    
+    # "Accuracy" of hls4ml predictions vs keras
     rel_acc = accuracy_score(np.argmax(y_keras, axis=1), np.argmax(y_hls4ml, axis=1))
-
     print('hls4ml accuracy relative to keras: {}'.format(rel_acc))
-
     assert rel_acc > 0.98
