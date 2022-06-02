@@ -79,13 +79,13 @@ template<class data_T, class res_T, typename CONFIG_T>
 	    ) {
   // Initialize the state variable -- will maintain state between function calls
 
-  res_T tmpres      [CONFIG_T::n_state*4];
-  res_T tmpres_state[CONFIG_T::n_state*4];
-  res_T tmpres_ifo  [CONFIG_T::n_state*3]; //activated i,f,o matrices (keras notation)
-  res_T tmpres_c    [CONFIG_T::n_state];   //activated c-matrix (keras notation)
-  res_T inputacc_ifo[CONFIG_T::n_state*3]; //i,f,o matrices (keras notation)
-  res_T inputacc_c  [CONFIG_T::n_state]; //c-matrix (keras notation)
-  res_T s_actstate[CONFIG_T::n_state];
+  typename CONFIG_T::accum_t tmpres      [CONFIG_T::n_state*4];
+  typename CONFIG_T::accum_t tmpres_state[CONFIG_T::n_state*4];
+  typename CONFIG_T::accum_t tmpres_ifo  [CONFIG_T::n_state*3]; //activated i,f,o matrices (keras notation)
+  typename CONFIG_T::accum_t tmpres_c    [CONFIG_T::n_state];   //activated c-matrix (keras notation)
+  typename CONFIG_T::accum_t inputacc_ifo[CONFIG_T::n_state*3]; //i,f,o matrices (keras notation)
+  typename CONFIG_T::accum_t inputacc_c  [CONFIG_T::n_state]; //c-matrix (keras notation)
+  typename CONFIG_T::accum_t s_actstate[CONFIG_T::n_state];
 
   #pragma HLS ARRAY_PARTITION variable=h_newstate   complete
   #pragma HLS ARRAY_PARTITION variable=s_newstate   complete
@@ -220,8 +220,8 @@ template<class data_T, class res_T, typename CONFIG_T>
 
     res_T     h_newstate[CONFIG_T::n_state];
     res_T     s_newstate[CONFIG_T::n_state];
-    data_T data_in[CONFIG_T::n_in];
-    bool reset_state = true;
+    data_T    data_in[CONFIG_T::n_in];
+    bool      reset_state = true;
 
     #pragma HLS ARRAY_PARTITION variable=h_newstate complete
     #pragma HLS ARRAY_PARTITION variable=s_newstate complete
@@ -355,7 +355,6 @@ template<class data_T, class res_T, typename CONFIG_T>
             typename CONFIG_T::bias_t       param_br [CONFIG_T::n_state*3]
 	    ) {
     // Initialize the state variable -- will maintain state between function calls
-    typename CONFIG_T::accum_t h_state_hin [CONFIG_T::n_state];
     typename CONFIG_T::accum_t tmpres      [CONFIG_T::n_state*3];
     typename CONFIG_T::accum_t tmpres_state_zr[CONFIG_T::n_state*3];
     typename CONFIG_T::accum_t tmpres_state_h [CONFIG_T::n_state];
@@ -365,7 +364,6 @@ template<class data_T, class res_T, typename CONFIG_T>
     typename CONFIG_T::accum_t inputacc_h  [CONFIG_T::n_state]; //c-matrix (keras notation)
 
     #pragma HLS ARRAY_PARTITION variable=h_newstate      complete
-    #pragma HLS ARRAY_PARTITION variable=h_newstate_hin  complete
     #pragma HLS ARRAY_PARTITION variable=tmpres          complete
     #pragma HLS ARRAY_PARTITION variable=tmpres_state_zr complete
     #pragma HLS ARRAY_PARTITION variable=tmpres_state_h  complete
@@ -414,11 +412,11 @@ template<class data_T, class res_T, typename CONFIG_T>
 
 template<class data_T, class res_T, typename CONFIG_T>
   void gru_static(bool reset_state,
-		  data_T    data      [CONFIG_T::n_in],
-	    res_T     h_newstate[CONFIG_T::n_state],
-	    typename CONFIG_T::weight_t     param   [CONFIG_T::n_state*3*CONFIG_T::n_in],
-	    typename CONFIG_T::weight_t     param_zr[CONFIG_T::n_state*3*CONFIG_T::n_state],
-	    typename CONFIG_T::bias_t       param_b [CONFIG_T::n_state*3],
+            data_T    data      [CONFIG_T::n_in],
+            res_T     h_newstate[CONFIG_T::n_state],
+            typename CONFIG_T::weight_t     param   [CONFIG_T::n_state*3*CONFIG_T::n_in],
+            typename CONFIG_T::weight_t     param_zr[CONFIG_T::n_state*3*CONFIG_T::n_state],
+            typename CONFIG_T::bias_t       param_b [CONFIG_T::n_state*3],
             typename CONFIG_T::bias_t       param_br [CONFIG_T::n_state*3]
 	    ) {
     // Initialize the state variable -- will maintain state between function calls
@@ -498,9 +496,9 @@ template<class data_T, class res_T, typename CONFIG_T>
         typename CONFIG_T::bias_t       param_br [CONFIG_T::n_state*3]
         ) {
 
-      res_T h_state[CONFIG_T::n_state];
-      data_T data_in[CONFIG_T::n_in];
-      bool reset_state = true;
+      res_T   h_state[CONFIG_T::n_state];
+      data_T  data_in[CONFIG_T::n_in];
+      bool    reset_state = true;
 
       #pragma HLS ARRAY_PARTITION variable=h_state complete
       #pragma HLS ARRAY_PARTITION variable=data_in complete
