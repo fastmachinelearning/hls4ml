@@ -608,8 +608,6 @@ class GlobalPooling2D(Layer):
     _expected_attributes = [
         Attribute('in_height'),
         Attribute('in_width'),
-        Attribute('out_height'),
-        Attribute('out_width'),
         Attribute('n_filt'),
 
         ChoiceAttribute('pool_op', ['Max', 'Average'])
