@@ -224,9 +224,8 @@ template<class data_T, class res_T, typename CONFIG_T>
     bool reset_state = true;
 
     #pragma HLS ARRAY_PARTITION variable=h_newstate complete
-    if (!CONFIG_T::use_static) {
-      #pragma HLS ARRAY_PARTITION variable=s_newstate complete
-    }
+    #pragma HLS ARRAY_PARTITION variable=s_newstate complete
+
     for(int ii = 0; ii < CONFIG_T::n_state; ii++) {
       #pragma HLS UNROLL
       h_newstate[ii] = 0;
@@ -243,12 +242,14 @@ template<class data_T, class res_T, typename CONFIG_T>
         nnet::lstm<data_T, res_T, CONFIG_T>(reset_state,data_in,h_newstate, s_newstate, param,param_r,param_b, param_br);
       if (CONFIG_T::n_sequence_out > 1)
         for(int i=CONFIG_T::n_state*iloop, j=0; i<(CONFIG_T::n_state*(iloop+1)); i++,j++){
+          #pragma HLS UNROLL
           res[i] = h_newstate[j];
         }
       reset_state = false;
     }
     if (CONFIG_T::n_sequence_out == 1)
       for(int i=0; i<(CONFIG_T::n_state); i++){
+        #pragma HLS UNROLL
         res[i] = h_newstate[i];
       }
 }
@@ -266,9 +267,8 @@ template<class data_T, class res_T, typename CONFIG_T>
     typename res_T::value_type  h_newstate[CONFIG_T::n_state];
     typename res_T::value_type  s_newstate[CONFIG_T::n_state];
     #pragma HLS ARRAY_PARTITION variable=h_newstate complete
-    if (CONFIG_T::use_static) {
-      #pragma HLS ARRAY_PARTITION variable=s_newstate complete
-    }
+    #pragma HLS ARRAY_PARTITION variable=s_newstate complete
+
     for(int ii = 0; ii < CONFIG_T::n_state; ii++) {
       #pragma HLS UNROLL
       h_newstate[ii] = 0;
@@ -505,7 +505,10 @@ template<class data_T, class res_T, typename CONFIG_T>
       #pragma HLS ARRAY_PARTITION variable=h_state complete
       #pragma HLS ARRAY_PARTITION variable=data_in complete
 
-      for(int ii = 0; ii < CONFIG_T::n_state; ii++) h_state[ii] = 0;
+      for(int ii = 0; ii < CONFIG_T::n_state; ii++) {
+        #pragma HLS UNROLL
+        h_state[ii] = 0;
+      }
       for(int iloop = 0; iloop < CONFIG_T::n_sequence; iloop++) {
         for(int j = 0; j < CONFIG_T::n_in; j++) {
         #pragma HLS UNROLL
@@ -517,12 +520,14 @@ template<class data_T, class res_T, typename CONFIG_T>
           nnet::gru<data_T, res_T, CONFIG_T>(reset_state,data_in,h_state,param,param_zr,param_b, param_br);
         if (CONFIG_T::n_sequence_out > 1)
           for(int i=CONFIG_T::n_state*iloop, j=0; i<(CONFIG_T::n_state*(iloop+1)); i++,j++){
+            #pragma HLS UNROLL
             res[i] = h_state[j];
           }
         reset_state = false;
       }
       if (CONFIG_T::n_sequence_out == 1)
         for(int i=0; i<(CONFIG_T::n_state); i++){
+          #pragma HLS UNROLL
           res[i] = h_state[i];
         }
     }
@@ -539,7 +544,10 @@ template<class data_T, class res_T, typename CONFIG_T>
 
     typename res_T::value_type  h_newstate[CONFIG_T::n_state];
     #pragma HLS ARRAY_PARTITION variable=h_newstate complete
-    for(int ii = 0; ii < CONFIG_T::n_state; ii++) h_newstate[ii] = 0;
+    for(int ii = 0; ii < CONFIG_T::n_state; ii++) {
+      #pragma HLS UNROLL
+      h_newstate[ii] = 0;
+    }
 
     typename data_T::value_type data_in[CONFIG_T::n_in];
     bool reset_state = true;
