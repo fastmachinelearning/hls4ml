@@ -186,7 +186,6 @@ class Variable(object):
     def __init__(self, var_name, atype, **kwargs):
         self.name = var_name.format(**kwargs)
         self.type = atype
-        self.cppname = re.sub(r'\W|^(?=\d)','_', self.name)
 
 class TensorVariable(Variable):
     def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, **kwargs):
