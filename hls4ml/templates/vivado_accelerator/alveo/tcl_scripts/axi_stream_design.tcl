@@ -12,7 +12,7 @@ import_files {src/krnl_rtl_int.sv src/krnl_rtl_axi_read_master.sv src/krnl_rtl_c
 
 
 
-create_ip -vlnv xilinx.com:hls:${myproject}_axi:1.0 -module_name ${myproject}_axi_0
+create_ip -vlnv xilinx.com:hls:${myproject}_axi:1.0 -module_name myproject_axi_0
 
 
 ipx::package_project -root_dir hls4ml_IP -vendor fastmachinelearning.org -library hls4ml -taxonomy /UserIP -import_files -set_current false
