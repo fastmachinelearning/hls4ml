@@ -12,6 +12,14 @@ hls4ml.backends.fpga.passes.bn\_quant module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.fpga.passes.embedding module
+--------------------------------------------
+
+.. automodule:: hls4ml.backends.fpga.passes.embedding
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 
 Module contents
 ---------------
