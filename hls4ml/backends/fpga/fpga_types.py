@@ -192,11 +192,11 @@ class QuartusArrayVariableDefinition(VariableDefinition):
 
 class VivadoInplaceArrayVariableDefinition(VariableDefinition):
     def definition_cpp(self):
-        return f'auto& {self.cppname} = {self.input_var.cppname}'
+        return f'auto& {self.name} = {self.input_var.name}'
 
 class QuartusInplaceArrayVariableDefinition(VariableDefinition):
     def definition_cpp(self):
-        return f'auto& {self.cppname} = {self.input_var.cppname}'
+        return f'auto& {self.name} = {self.input_var.name}'
 
 class ArrayVariableConverter(object):
     def __init__(self, type_converter, prefix, definition_cls):
@@ -276,7 +276,7 @@ class VivadoStreamVariableDefinition(VariableDefinition):
 
 class VivadoInplaceStreamVariableDefinition(VariableDefinition):
     def definition_cpp(self):
-        return f'auto& {self.cppname} = {self.input_var.cppname}'
+        return f'auto& {self.name} = {self.input_var.name}'
 
 class StreamVariableConverter(object):
     def __init__(self, type_converter, prefix, definition_cls):
