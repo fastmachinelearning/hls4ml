@@ -23,9 +23,9 @@ class VivadoBackend(FPGABackend):
 
     def _register_layer_attributes(self):
         extended_attrs = {
-            SimpleRNN: [Attribute('recurrent_reuse_factor', default=1)],
-            LSTM: [Attribute('recurrent_reuse_factor', default=1)],
-            GRU: [Attribute('recurrent_reuse_factor', default=1)],
+            SimpleRNN: [Attribute('recurrent_reuse_factor', default=1), Attribute('static', value_type=bool, default=True)],
+            LSTM: [Attribute('recurrent_reuse_factor', default=1), Attribute('static', value_type=bool, default=True)],
+            GRU: [Attribute('recurrent_reuse_factor', default=1), Attribute('static', value_type=bool, default=True)],
         }
         self.attribute_map.update(extended_attrs)
 

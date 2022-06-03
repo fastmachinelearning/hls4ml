@@ -850,7 +850,6 @@ class SimpleRNN(Layer):
         Attribute('return_sequences', value_type=bool, default=False),
         Attribute('return_state', value_type=bool, default=False),
         ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
-        Attribute('static', value_type=bool, default=True),
 
         WeightAttribute('weight'),
         WeightAttribute('bias'),
@@ -891,7 +890,6 @@ class LSTM(Layer):
         Attribute('return_state', value_type=bool, default=False),
         ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
         Attribute('time_major', value_type=bool, default=False),
-        Attribute('static', value_type=bool, default=True),
 
         WeightAttribute('weight'),
         WeightAttribute('bias'),
@@ -938,7 +936,6 @@ class GRU(Layer):
         ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
         Attribute('time_major', value_type=bool, default=False),
         ChoiceAttribute('apply_reset_gate', ['before', 'after'], default='after'),
-        Attribute('static', value_type=bool, default=True),
 
         WeightAttribute('weight'),
         WeightAttribute('bias'),
