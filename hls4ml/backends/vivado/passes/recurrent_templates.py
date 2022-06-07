@@ -108,9 +108,14 @@ class LSTMConfigTemplate(LayerConfigTemplate):
 
         params['n_in'] = node.get_input_variable().dim_names[1]
         params['n_sequence'] = node.get_input_variable().dim_names[0]
-        params['n_sequence_out'] = node.get_output_variable().dim_names[0]
-        params['n_state'] = node.get_output_variable().dim_names[1]
-        params['n_out'] = node.get_output_variable().dim_names[1]
+        if node.get_attr('return_sequences'):
+            params['n_sequence_out'] = node.get_output_variable().dim_names[0]
+            params['n_state'] = node.get_output_variable().dim_names[1]
+            params['n_out'] = node.get_output_variable().dim_names[1]
+        else:
+            params['n_sequence_out'] = 1
+            params['n_state'] = node.get_output_variable().dim_names[0]
+            params['n_out'] = node.get_output_variable().dim_names[0]
         params['config_mult_t1'] = 'config{}_1'.format(node.index)
         params['config_mult_t2'] = 'config{}_2'.format(node.index)
         params['lstm_act_t'] = '{}_config{}_recr'.format(node.get_attr('recurrent_activation'), node.index)
@@ -124,9 +129,13 @@ class LSTMConfigTemplate(LayerConfigTemplate):
         recr_act_params = self._default_config_params(node)
 
         act_params['type'] = node.get_attr('activation')
-        act_params['n_in'] = node.get_output_variable().dim_names[1]
         recr_act_params['type'] = node.get_attr('recurrent_activation')
-        recr_act_params['n_in'] = node.get_output_variable().dim_names[1] + ' * 3'
+        if node.get_attr('return_sequences'):
+            act_params['n_in'] = node.get_output_variable().dim_names[1]
+            recr_act_params['n_in'] = node.get_output_variable().dim_names[1] + ' * 3'
+        else:
+            act_params['n_in'] = node.get_output_variable().dim_names[0]
+            recr_act_params['n_in'] = node.get_output_variable().dim_names[0] + ' * 3'
 
         act_config = self.act_template.format(**act_params)
         recr_act_config = self.recr_act_template.format(**recr_act_params)
@@ -135,14 +144,21 @@ class LSTMConfigTemplate(LayerConfigTemplate):
         mult_params2 = self._default_config_params(node)
 
         mult_params1['n_in'] = node.get_input_variable().dim_names[1]
-        mult_params1['n_out'] = node.get_output_variable().dim_names[1] + ' * 4'
+        if node.get_attr('return_sequences'):
+            mult_params1['n_out'] = node.get_output_variable().dim_names[1] + ' * 4'
+        else:
+            mult_params1['n_out'] = node.get_output_variable().dim_names[0] + ' * 4'
         mult_params1['product_type'] = get_backend('vivado').product_type(node.get_input_variable().type.precision, node.get_weights('weight').type.precision)
         mult_params1['reuse'] = params['reuse']
         mult_params1['index'] = str(node.index) + '_1'
         mult_params1['nzeros'] = node.get_weights('weight').nzeros
         mult_params1['nonzeros'] = node.get_weights('weight').nonzeros
-        mult_params2['n_in'] = node.get_output_variable().dim_names[1]
-        mult_params2['n_out'] = node.get_output_variable().dim_names[1] + ' * 4'
+        if node.get_attr('return_sequences'):
+            mult_params2['n_in'] = node.get_output_variable().dim_names[1]
+            mult_params2['n_out'] = node.get_output_variable().dim_names[1] + ' * 4'
+        else:
+            mult_params2['n_in'] = node.get_output_variable().dim_names[0]
+            mult_params2['n_out'] = node.get_output_variable().dim_names[0] + ' * 4'
         mult_params2['product_type'] = get_backend('vivado').product_type(node.get_input_variable().type.precision, node.get_weights('recurrent_weight').type.precision)
         mult_params2['reuse'] = node.attributes['recurrent_reuse_factor']
         mult_params2['index'] = str(node.index) + '_2'
@@ -185,9 +201,14 @@ class GRUConfigTemplate(LayerConfigTemplate):
 
         params['n_in'] = node.get_input_variable().dim_names[1]
         params['n_sequence'] = node.get_input_variable().dim_names[0]
-        params['n_sequence_out'] = node.get_output_variable().dim_names[0]
-        params['n_state'] = node.get_output_variable().dim_names[1]
-        params['n_out'] = node.get_output_variable().dim_names[1]
+        if node.get_attr('return_sequences'):
+            params['n_sequence_out'] = node.get_output_variable().dim_names[0]
+            params['n_state'] = node.get_output_variable().dim_names[1]
+            params['n_out'] = node.get_output_variable().dim_names[1]
+        else:
+            params['n_sequence_out'] = 1
+            params['n_state'] = node.get_output_variable().dim_names[0]
+            params['n_out'] = node.get_output_variable().dim_names[0]
         params['config_mult_t1'] = 'config{}_1'.format(node.index)
         params['config_mult_t2'] = 'config{}_2'.format(node.index)
         params['gru_act_t'] = '{}_config{}_recr'.format(node.get_attr('recurrent_activation'), node.index)
@@ -201,9 +222,13 @@ class GRUConfigTemplate(LayerConfigTemplate):
         recr_act_params = self._default_config_params(node)
 
         act_params['type'] = node.get_attr('activation')
-        act_params['n_in'] = node.get_output_variable().dim_names[1]
         recr_act_params['type'] = node.get_attr('recurrent_activation')
-        recr_act_params['n_in'] = node.get_output_variable().dim_names[1] + ' * 2'
+        if node.get_attr('return_sequences'):
+            act_params['n_in'] = node.get_output_variable().dim_names[1]
+            recr_act_params['n_in'] = node.get_output_variable().dim_names[1] + ' * 2'
+        else:
+            act_params['n_in'] = node.get_output_variable().dim_names[0]
+            recr_act_params['n_in'] = node.get_output_variable().dim_names[0] + ' * 2'
 
         act_config = self.act_template.format(**act_params)
         recr_act_config = self.recr_act_template.format(**recr_act_params)
@@ -212,14 +237,21 @@ class GRUConfigTemplate(LayerConfigTemplate):
         mult_params2 = self._default_config_params(node)
 
         mult_params1['n_in'] = node.get_input_variable().dim_names[1]
-        mult_params1['n_out'] = node.get_output_variable().dim_names[1] + ' * 3'
+        if node.get_attr('return_sequences'):
+            mult_params1['n_out'] = node.get_output_variable().dim_names[1] + ' * 3'
+        else:
+            mult_params1['n_out'] = node.get_output_variable().dim_names[0] + ' * 3'
         mult_params1['product_type'] = get_backend('vivado').product_type(node.get_input_variable().type.precision, node.get_weights('weight').type.precision)
         mult_params1['reuse'] = params['reuse']
         mult_params1['index'] = str(node.index) + '_1'
         mult_params1['nzeros'] = node.get_weights('weight').nzeros
         mult_params1['nonzeros'] = node.get_weights('weight').nonzeros
-        mult_params2['n_in'] = node.get_output_variable().dim_names[1]
-        mult_params2['n_out'] = node.get_output_variable().dim_names[1] + ' * 3'
+        if node.get_attr('return_sequences'):
+            mult_params2['n_in'] = node.get_output_variable().dim_names[1]
+            mult_params2['n_out'] = node.get_output_variable().dim_names[1] + ' * 3'
+        else:
+            mult_params2['n_in'] = node.get_output_variable().dim_names[0]
+            mult_params2['n_out'] = node.get_output_variable().dim_names[0] + ' * 3'
         mult_params2['product_type'] = get_backend('vivado').product_type(node.get_input_variable().type.precision, node.get_weights('recurrent_weight').type.precision)
         mult_params2['reuse'] = node.attributes['recurrent_reuse_factor']
         mult_params2['index'] = str(node.index) + '_2'
