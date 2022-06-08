@@ -11,7 +11,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.regularizers import l1
 from tensorflow.keras.layers import Activation, BatchNormalization, Input
 from qkeras.qlayers import QDense, QActivation
-from qkeras.quantizers import quantized_bits, quantized_relu, ternary, binary
+from qkeras.quantizers import quantized_bits, quantized_relu, ternary, binary, quantized_tanh, quantized_sigmoid
 from qkeras.utils import _add_supported_quantized_objects; co = {}; _add_supported_quantized_objects(co)
 
 import warnings
@@ -199,7 +199,14 @@ def randX_1000_1():
                                        (quantized_relu(8)),
                                        (quantized_relu(8,4)),
                                        (quantized_relu(10)),
-                                       (quantized_relu(10,5))])
+                                       (quantized_relu(10,5)),
+                                       (quantized_tanh(4)),
+                                       (quantized_tanh(8)),
+                                       (quantized_tanh(10)),
+                                       (quantized_sigmoid(4)),
+                                       (quantized_sigmoid(8)),
+                                       (quantized_sigmoid(10))])
+
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 def test_quantizer(randX_1000_1, quantizer, backend):
   '''
@@ -215,8 +222,12 @@ def test_quantizer(randX_1000_1, quantizer, backend):
 
   hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=['quantizer'], rounding_mode='AP_RND_CONV', saturation_mode='AP_SAT')
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+  try:
+    integer = quantizer.integer
+  except AttributeError:
+    integer = 0
   output_dir = str(test_root_path / 'hls4mlprj_qkeras_quantizer_{}_{}_{}_{}'.format(quantizer.__class__.__name__,
-                                                            quantizer.bits, quantizer.integer, backend))
+                                                            quantizer.bits, integer, backend))
   hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                        hls_config=config,
                                                        output_dir=output_dir,

@@ -32,12 +32,16 @@ def _get_precision_from_quantizer(quantizer):
             quantizer['class_name'] = quantizer_obj.__class__.__name__
             quantizer['config'] = quantizer_obj.get_config()
         # Some activations are just functions
-        else: 
+        else:
             quantizer['class_name'] = quantizer_obj.__name__
 
-    supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh', 'quantized_po2', 'quantized_relu_po2']
+    supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh',
+                            'quantized_sigmoid', 'quantized_po2', 'quantized_relu_po2']
     signed = True
-    if quantizer['class_name'] in supported_quantizers:
+    if quantizer['class_name'] == 'quantized_tanh':
+        bits = int(quantizer['config']['bits'])
+        integer = 1
+    elif quantizer['class_name'] in supported_quantizers:
         bits = int(quantizer['config']['bits'])
         # if integer isn't specified, it should be the same as bits
         integer = int(quantizer['config'].get('integer', bits-1)) + 1
@@ -47,7 +51,7 @@ def _get_precision_from_quantizer(quantizer):
     elif quantizer['class_name'] in ['binary', 'stochastic_binary', 'binary_tanh']:
         bits = 2
         integer = 2
-    
+
     elif quantizer['class_name'] in ['ternary', 'stochastic_ternary', 'ternary_tanh']:
         bits = 2
         integer = 2
@@ -216,13 +220,13 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
                layer_config['inv_table_t'] = 'ap_fixed<18,8,AP_RND,AP_SAT>'
             else:
                 layer_config['table_t'] = 'ap_fixed<18,8>'
-        
+
         elif layer['class_name'] in norm_layers:
             layer_config['Precision'] = {}
             layer_config['Precision']['scale'] = default_precision
             layer_config['Precision']['bias'] = default_precision
             layer_config['ReuseFactor'] = default_reuse_factor
-        
+
         elif layer['class_name'] in qkeras_layers:
             if 'precision' in layer:
                 layer_config['Precision'] = {}
@@ -272,7 +276,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
 
         else:
             layer_config['Precision'] = default_precision
-        
+
         return layer_config
 
     config = {}
@@ -285,7 +289,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     #model_config['Trace'] = False
 
     config['Model'] = model_config
-    
+
     if granularity.lower() == 'type':
         type_config = {}
         for layer in layer_list:
@@ -293,7 +297,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
                 continue
             layer_config = make_layer_config(layer)
             type_config[layer['class_name']] = layer_config
-        
+
         config['LayerType'] = type_config
 
     elif granularity.lower() == 'name':
@@ -301,7 +305,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
         for layer in layer_list:
             layer_config = make_layer_config(layer)
             name_config[layer['name']] = layer_config
-        
+
         config['LayerName'] = name_config
 
     return config
@@ -309,7 +313,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
 
 def config_from_pytorch_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1):
     """Generate configuration dictionary from a Pytorch model.
-    
+
     Parameters
     ----------
     model : Pytorch model object.
@@ -318,22 +322,22 @@ def config_from_pytorch_model(model, granularity='model', default_precision='ap_
         How granular you want the configuration to be.
     default_precision : string, optional
         Defines the precsion of your inputs, outputs, weights and biases.
-        It is denoted by ap_fixed<X,Y>, where Y is the number of bits representing 
+        It is denoted by ap_fixed<X,Y>, where Y is the number of bits representing
         the signed number above the binary point (i.e. the integer part),
-        and X is the total number of bits. Additionally, integers in fixed precision 
-        data type (ap_int<N>, where N is a bit-size from 1 to 1024) can also be used. 
+        and X is the total number of bits. Additionally, integers in fixed precision
+        data type (ap_int<N>, where N is a bit-size from 1 to 1024) can also be used.
     default_reuse_factor : int, optional
         Reuse factor for hls model
-        
+
     Returns
     -------
     config : dict
         configuration dictionary to be used in Pytorch converter.
-        
+
     See Also
     --------
     hls4ml.config_from_keras_model, hls4ml.convert_from_onnx_model
-    
+
     Examples
     --------
     >>> import hls4ml
@@ -341,7 +345,7 @@ def config_from_pytorch_model(model, granularity='model', default_precision='ap_
     >>> hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config)
 
     """
-    
+
     config = {}
 
     model_config = {}
@@ -350,13 +354,13 @@ def config_from_pytorch_model(model, granularity='model', default_precision='ap_
     model_config['Strategy'] = 'Latency'
 
     config['Model'] = model_config
-    
+
     return config
 
 
 def config_from_onnx_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1):
     """Generate configuration dictionary from an ONNX model.
-    
+
     Parameters
     ----------
     model : ONNX model object.
@@ -365,22 +369,22 @@ def config_from_onnx_model(model, granularity='model', default_precision='ap_fix
         How granular you want the configuration to be.
     default_precision : string, optional
         Defines the precsion of your inputs, outputs, weights and biases.
-        It is denoted by ap_fixed<X,Y>, where Y is the number of bits representing 
+        It is denoted by ap_fixed<X,Y>, where Y is the number of bits representing
         the signed number above the binary point (i.e. the integer part),
-        and X is the total number of bits. Additionally, integers in fixed precision 
-        data type (ap_int<N>, where N is a bit-size from 1 to 1024) can also be used. 
+        and X is the total number of bits. Additionally, integers in fixed precision
+        data type (ap_int<N>, where N is a bit-size from 1 to 1024) can also be used.
     default_reuse_factor : int, optional
         Reuse factor for hls model
-        
+
     Returns
     -------
     config : dict
         configuration dictionary to be used in ONNX converter.
-        
+
     See Also
     --------
     hls4ml.config_from_keras_model, hls4ml.convert_from_pytorch_model
-    
+
     Examples
     --------
     >>> import hls4ml
@@ -388,7 +392,7 @@ def config_from_onnx_model(model, granularity='model', default_precision='ap_fix
     >>> hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config)
 
     """
-    
+
     config = {}
 
     model_config = {}
@@ -397,5 +401,5 @@ def config_from_onnx_model(model, granularity='model', default_precision='ap_fix
     model_config['Strategy'] = 'Latency'
 
     config['Model'] = model_config
-    
+
     return config

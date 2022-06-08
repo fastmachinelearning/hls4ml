@@ -46,7 +46,8 @@ def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader, confi
 @keras_handler('QActivation')
 def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader, config):
     assert(keras_layer['class_name'] == 'QActivation')
-    supported_activations = ['quantized_relu', 'quantized_tanh', 'binary_tanh', 'ternary_tanh', 'quantized_bits', 'binary', 'ternary']
+    supported_activations = ['quantized_relu', 'quantized_tanh', 'binary_tanh', 'ternary_tanh',
+                             'quantized_sigmoid', 'quantized_bits', 'binary', 'ternary']
     
     layer = parse_default_keras_layer(keras_layer, input_names)
 
