@@ -918,12 +918,19 @@ class QuartusWriter(Writer):
                     except:
                         # FixedPrecisionType wasn't correctly stored in layer attributes, use default values
                         pass
+                    if fp_signed is False:
+                        raise Exception('Softmax types need to be signed')
 
         sep = ''
         N = ceil_log2(table_size)
         for i in range(table_size):
             f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
-            f.set_msb_bits(uint_to_binary(i, N))
+            b = uint_to_binary(i, N)
+            if i == 0:
+                b.insert(0, 0)
+            else:
+                b.insert(0, 1)
+            f.set_msb_bits(b)
             real_val = f.exp_float()
             h_file.write(sep + str(real_val))
             sep = ", "
@@ -957,19 +964,23 @@ class QuartusWriter(Writer):
                     except:
                         # FixedPrecisionType wasn't correctly stored in layer attributes, use default values
                         pass
+                    if fp_signed is False:
+                        raise Exception('Softmax types need to be signed')
 
         sep = ''
         N = ceil_log2(table_size)
         for i in range(table_size):
             f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
-            f.set_msb_bits(uint_to_binary(i, N))
+            b = uint_to_binary(i, N)
+            b.insert(0, 0)
+            f.set_msb_bits(b)
             real_val = f.inv_float()
             h_file.write(sep + str(real_val))
             sep = ", "
 
         h_file.write('};\n')
         h_file.close()
-
+        
     def __write_exp_table_latency(self, model, path):
         table_name = 'exp_table_latency'
         table_size = self.__get_table_size(model, 'softmax')
