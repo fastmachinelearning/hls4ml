@@ -199,14 +199,7 @@ def randX_1000_1():
                                        (quantized_relu(8)),
                                        (quantized_relu(8,4)),
                                        (quantized_relu(10)),
-                                       (quantized_relu(10,5)),
-                                       (quantized_tanh(4)),
-                                       (quantized_tanh(8)),
-                                       (quantized_tanh(10)),
-                                       (quantized_sigmoid(4)),
-                                       (quantized_sigmoid(8)),
-                                       (quantized_sigmoid(10))])
-
+                                       (quantized_relu(10,5))])
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 def test_quantizer(randX_1000_1, quantizer, backend):
   '''
@@ -222,12 +215,8 @@ def test_quantizer(randX_1000_1, quantizer, backend):
 
   hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=['quantizer'], rounding_mode='AP_RND_CONV', saturation_mode='AP_SAT')
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
-  try:
-    integer = quantizer.integer
-  except AttributeError:
-    integer = 0
   output_dir = str(test_root_path / 'hls4mlprj_qkeras_quantizer_{}_{}_{}_{}'.format(quantizer.__class__.__name__,
-                                                            quantizer.bits, integer, backend))
+                                                            quantizer.bits, quantizer.integer, backend))
   hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                        hls_config=config,
                                                        output_dir=output_dir,
@@ -240,6 +229,45 @@ def test_quantizer(randX_1000_1, quantizer, backend):
   # Goal is to get it passing with all equal
   np.testing.assert_array_equal(y_qkeras, y_hls4ml)
 
+def sigmoid(x):
+  return 1/(1 + np.exp(-x))
+
+@pytest.mark.parametrize('quantizer_pars', [(quantized_tanh(4), np.tanh, 0.07),
+                                       (quantized_tanh(8), np.tanh, 0.012),
+                                       (quantized_tanh(10), np.tanh, 0.009),
+                                       (quantized_sigmoid(3), sigmoid, 0.066),
+                                       (quantized_sigmoid(7), sigmoid, 0.009),
+                                       (quantized_sigmoid(9), sigmoid, 0.006)])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_quantizer_alt(randX_1000_1, quantizer_pars, backend):
+  '''
+  Test a single quantizer as an Activation function.
+  Checks the type inference through the conversion is correct without just
+  using the same logic.
+  '''
+  quantizer = quantizer_pars[0]
+  func = quantizer_pars[1]
+  tol = quantizer_pars[2]
+  X = randX_1000_1
+  X = np.round(X * 2**10) * 2**-10 # make it an exact ap_fixed<16,6>
+  model = Sequential()
+  model.add(QActivation(input_shape=(1,), activation=quantizer, name='quantizer'))
+  model.compile()
+
+  config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+
+  output_dir = str(test_root_path / 'hls4mlprj_qkeras_quantizer_alt_{}_{}_{}'.format(quantizer.__class__.__name__,
+                                                            quantizer.bits, backend))
+  hls_model = hls4ml.converters.convert_from_keras_model(model,
+                                                       hls_config=config,
+                                                       output_dir=output_dir,
+                                                       backend=backend)
+  hls_model.compile()
+
+  y_calc = func(X)
+  y_hls4ml = hls_model.predict(X)
+  # Goal is to have the difference be smaller than quntization (plus a little)
+  assert np.amax(abs(y_hls4ml - y_calc)) < tol
 
 @pytest.mark.parametrize(
     'weight_quantizer,activation_quantizer,', [

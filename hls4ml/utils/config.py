@@ -38,9 +38,17 @@ def _get_precision_from_quantizer(quantizer):
     supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh',
                             'quantized_sigmoid', 'quantized_po2', 'quantized_relu_po2']
     signed = True
+    rnd = "AP_RND_CONV"
+    overflow = "AP_SAT"
+
     if quantizer['class_name'] == 'quantized_tanh':
+        overflow = "AP_SAT_SYM" if quantizer['config']['symmetric'] else "AP_SAT"
         bits = int(quantizer['config']['bits'])
         integer = 1
+    elif quantizer['class_name'] == 'quantized_sigmoid':
+        bits = int(quantizer['config']['bits'])
+        integer = 0
+        signed = False
     elif quantizer['class_name'] in supported_quantizers:
         bits = int(quantizer['config']['bits'])
         # if integer isn't specified, it should be the same as bits
@@ -61,7 +69,7 @@ def _get_precision_from_quantizer(quantizer):
     decimal = bits - integer
     signed = '' if signed else 'u'
     if decimal > 0:
-        return 'ap_{}fixed<{},{}>'.format(signed, bits, integer)
+        return 'ap_{}fixed<{},{},{},{}>'.format(signed, bits, integer, rnd, overflow)
     else:
         return 'ap_{}int<{}>'.format(signed, bits)
 

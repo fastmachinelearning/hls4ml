@@ -124,7 +124,7 @@ class QuartusWriter(Writer):
                             if def_cpp is not None:
                                 newline += '    ' + def_cpp + ';\n'
                     if layer.get_attr('activation') == 'tanh':  # TODO move this to an optimizer
-                        layer.set_attr('activation') == 'dense_tanh'
+                        layer.set_attr('activation', 'dense_tanh')
                     func = layer.get_attr('function_cpp', None)
                     if func:
                         newline += '    ' + func + '\n'
