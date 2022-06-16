@@ -1,8 +1,5 @@
 import sys
 import math
-from unicodedata import decimal
-
-from numpy import integer
 
 '''
 A helper class for handling fixed point methods
@@ -70,7 +67,6 @@ class FixedPointEmulator:
                 self.integer_bits[i] = bits[i]
             elif i >= self.I and i<self.N:
                 self.decimal_bits[i-self.I] = bits[i]
-        # print('Len bits ' + str(len(bits)) + ' Inside FPU ' + str(self.integer_bits) + str(self.decimal_bits))
 
     '''
     Returns e^x, where x is the current fixed point number
