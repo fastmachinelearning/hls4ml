@@ -1,5 +1,5 @@
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.hls_model import FixedPrecisionType
+from hls4ml.model.types import FixedPrecisionType
 
 def get_concat_type(itype1, itype2):
     newwidth = max(itype1.width, itype2.width)
