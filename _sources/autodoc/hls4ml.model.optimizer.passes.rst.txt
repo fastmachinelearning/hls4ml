@@ -36,6 +36,14 @@ hls4ml.model.optimizer.passes.nop module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.model.optimizer.passes.precision\_merge module
+-----------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.precision_merge
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.model.optimizer.passes.qkeras module
 -------------------------------------------
 
