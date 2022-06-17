@@ -100,7 +100,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     newline += indent + '#pragma HLS STREAM variable=in_local depth=N_IN\n'
                     newline += indent + '#pragma HLS STREAM variable=out_local depth=N_OUT\n'
             elif '//hls-fpga-machine-learning insert call' in line:
-                newline = indent + '{}(in_local, out_local, in_size, out_size);\n'.format(
+                newline = indent + '{}(in_local, out_local);\n'.format(
                     model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert interface' in line:
                 if self.vivado_accelerator_config.get_interface() == 'axi_lite':
