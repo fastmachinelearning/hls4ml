@@ -2,7 +2,6 @@
 #ifndef NNET_STREAM_H
 #define NNET_STREAM_H
 
-#include "nnet_array.h"
 #include "hls_stream.h"
 
 namespace nnet {
