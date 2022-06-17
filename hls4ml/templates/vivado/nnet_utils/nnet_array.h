@@ -26,7 +26,7 @@ void transpose_2d(
     }
 }
 
- template<class data_T, class res_T, typename CONFIG_T>
+template<class data_T, class res_T, typename CONFIG_T>
 void transpose_3d(
     data_T data[CONFIG_T::depth * CONFIG_T::height * CONFIG_T::width],
     res_T data_t[CONFIG_T::depth * CONFIG_T::height * CONFIG_T::width]
