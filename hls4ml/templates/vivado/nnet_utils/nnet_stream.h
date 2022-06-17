@@ -171,6 +171,8 @@ void broadcast_stream(hls::stream<data_T> &data, hls::stream<res_T> &res) {
         broadcast_stream_HxWx1<data_T, res_T, CONFIG_T>(data, res);
     }
 }
+
+template<class data_T, class res_T, typename CONFIG_T>
 void transpose_2d(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     typename data_T::value_type data_array[CONFIG_T::height * CONFIG_T::width];   
     #pragma HLS ARRAY_PARTITION variable=data_array complete
