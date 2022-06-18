@@ -103,7 +103,7 @@
 <p>In the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> configuration file, it is possible to specify the model <code class="docutils literal notranslate"><span class="pre">Precision</span></code> and <code class="docutils literal notranslate"><span class="pre">ReuseFactor</span></code> with fine granularity.</p>
 <p>Using a low precision can help reduce the FPGA resource usage of a model, but may result in loss of model performance if chosen inappropriately. The profiling tools in <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> help you to decide the appropriate model precision.</p>
 <p>Profiling uses some extra dependencies, to install these, run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">hls4ml[profiling]</span></code>. The profiling tools are provided as a <code class="docutils literal notranslate"><span class="pre">Python</span></code> module which you can use.</p>
-<p>Three types of objects can be provided: <strong>a Keras model object</strong>, <strong>test data</strong>, and an <strong>ModelGraph object</strong>.
+<p>Three types of objects can be provided: <strong>a model object</strong>, <strong>test data</strong>, and a <strong>ModelGraph object</strong>. The model can be Keras or PyTorch.
 You will need to initialise these objects by using a trained model, loading a model from a file, and loading your data. The Keras model and data each need to be in the format that would normally allow you to run, e.g. <code class="docutils literal notranslate"><span class="pre">model.predict(X)</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">hls4ml.model.profiling</span> <span class="kn">import</span> <span class="n">numerical</span>
 <span class="kn">from</span> <span class="nn">hls4ml.converters</span> <span class="kn">import</span> <span class="n">keras_to_hls</span>
@@ -121,22 +121,30 @@ You will need to initialise these objects by using a trained model, loading a mo
 
 <span class="n">hls_model</span> <span class="o">=</span> <span class="n">keras_to_hls</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
-<span class="c1"># produce an activation profile (ap)</span>
-<span class="c1"># and weights profile (wp)</span>
-<span class="n">ap</span><span class="p">,</span> <span class="n">wp</span> <span class="o">=</span> <span class="n">numerical</span><span class="p">(</span><span class="n">keras_model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls_model</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">)</span>
+<span class="c1"># produce 4 plots</span>
+<span class="n">plots</span> <span class="o">=</span> <span class="n">numerical</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls_model</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Calling the <code class="docutils literal notranslate"><span class="pre">hls4ml.model.profiling.numerical</span></code> method with these three objects provided will produce two figures as below:</p>
-<a class="reference internal image-reference" href="../_images/activations.png"><img alt="../_images/activations.png" src="../_images/activations.png" style="width: 45%;" /></a>
-<a class="reference internal image-reference" href="../_images/weights.png"><img alt="../_images/weights.png" src="../_images/weights.png" style="width: 45%;" /></a>
+<p>Calling the <code class="docutils literal notranslate"><span class="pre">hls4ml.model.profiling.numerical</span></code> method with these three objects provided will produce four figures as below:</p>
+<a class="reference internal image-reference" href="../_images/weights_keras.png"><img alt="../_images/weights_keras.png" src="../_images/weights_keras.png" style="width: 45%;" /></a>
+<a class="reference internal image-reference" href="../_images/weights_hls4ml.png"><img alt="../_images/weights_hls4ml.png" src="../_images/weights_hls4ml.png" style="width: 45%;" /></a>
+<a class="reference internal image-reference" href="../_images/act_keras.png"><img alt="../_images/act_keras.png" src="../_images/act_keras.png" style="width: 45%;" /></a>
+<a class="reference internal image-reference" href="../_images/act_hls4ml.png"><img alt="../_images/act_hls4ml.png" src="../_images/act_hls4ml.png" style="width: 45%;" /></a>
+<p>Plots are title “before optimization” and “final / after optimization”.
+The “before optimization” plots show the distributions of the original Keras or PyTorch model, while the “after optimization” plots show the distributions of the ModelGraph.
+In the example images, notice the “bn1”, “bn2”, “bn3” labels in the “before optimization” plots which are missing from the “after optimization”.
+These layer are BatchNormalization layers, which hls4ml has fused into the preceding Dense layers (labelled “fc{1,2,3}”).
+Because of this optimization, the weights of “fc1” of the ModelGraph are actually the product of the weights of the Keras model “fc1” with “bn1”.
+Similarly, the output of “fc1” of the ModelGraph should correspond to the output of the Keras model “bn1”.
+When optimizing precision, the data types should be chosen to work well for the “after optimization” model.</p>
 <p>Different plots styles are available with the <code class="docutils literal notranslate"><span class="pre">plot</span></code> keyword argument. Valid options are <code class="docutils literal notranslate"><span class="pre">boxplot</span></code> (default), <code class="docutils literal notranslate"><span class="pre">histogram</span></code>, <code class="docutils literal notranslate"><span class="pre">violinplot</span></code>. In the default boxplot style, each variable in the neural network is evaluated using the given test data and the distribution of (non-zero) values is shown with a box and whisker diagram.</p>
 <p>When different combinations of the input objects are given, different plots will be produced:</p>
 <ol class="arabic simple">
-<li><p>Only Keras model: only the weights profile plot will be produced, the activation profile will be <code class="docutils literal notranslate"><span class="pre">None</span></code>. No grey boxes representing the data types will be shown.</p></li>
-<li><p>Only ModelGraph (or ModelGraph and Keras model): only the weights profile plot will be produced, with grey boxes indicating the data types from the ModelGraph.</p></li>
-<li><p>Keras model and data (<code class="docutils literal notranslate"><span class="pre">X</span></code>): both the weights profile and activation profile will be produced. No grey boxes representing the data types will be shown.</p></li>
-<li><p>Keras model, ModelGraph, and data: both weights and activation profiles are produced, with grey boxes indicating the data types from the ModelGraph.</p></li>
+<li><p>Only Keras or PyTorch model: only the weights profile plot will be produced, the activation profile will be <code class="docutils literal notranslate"><span class="pre">None</span></code>. No grey boxes representing the data types will be shown.</p></li>
+<li><p>Only ModelGraph (or ModelGraph and Keras or PyTorch model): two weights profile plots will be produced, with grey boxes indicating the data types from the ModelGraph. The first plot is the “before optimization” model, while the second plot is the “after optimization” model.</p></li>
+<li><p>Keras or PyTorch model and data (<code class="docutils literal notranslate"><span class="pre">X</span></code>): both the weights profile and activation profile will be produced. No grey boxes representing the data types will be shown.</p></li>
+<li><p>Keras or PyTorch model, ModelGraph, and data: both weights and activation profiles are produced, with grey boxes indicating the data types from the ModelGraph.</p></li>
 </ol>
 <p>Each box shows the median and quartiles of the distribution. The grey shaded boxes show the range which can be represented with the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> config file used.</p>
 <p>As a starting point, a good configuration would at least cover the box and whisker for each variable with the grey box. Make sure the box and whisker is contained to the right by using sufficient integer bits to avoid overflow. It might be that more precision is needed (grey boxes extend further to the left) to achieve satisfactory performance. In some cases, it is safe to barely cover the values and still achieve good accuracy.</p>

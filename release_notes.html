@@ -102,6 +102,29 @@
 <h1>Release Notes<a class="headerlink" href="#release-notes" title="Permalink to this headline"></a></h1>
 <p>See <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/releases">here</a> for official releases on Github.</p>
 <hr class="docutils" />
+<p><strong>v0.6.0 / coris</strong></p>
+<p>## What’s Changed
+* <cite>VivadoAccelerator</cite> backend: target <cite>pynq-z2</cite> and <cite>zcu102</cite> boards directly from hls4ml by &#64;nicologhielmetti
+* Updated <cite>PyTorch</cite> and <cite>ONNX</cite> converters by &#64;Duchstf
+* <cite>line_buffer</cite> Conv2D implementation for <cite>io_stream</cite>: reduced resource usage and latency by &#64;Keb-L, &#64;violatingcp, &#64;vloncar
+* Support <cite>QConv2DBatchnorm</cite> layer from <cite>QKeras</cite> by &#64;nicologhielmetti
+* Improved profiling plots - easier to compare original vs <cite>hls4ml</cite> converted models by &#64;maksgraczyk
+* Better derivation of data types for <cite>QKeras</cite> models by &#64;jmduarte, &#64;thesps
+* Improved CI by &#64;thesps
+* More support for models with branches, skip connections, <cite>Merge</cite> and <cite>Concatenate</cite> layers by &#64;jmduarte, &#64;vloncar
+* Support for <cite>Dense</cite> layers over multi-dimensional tensors by &#64;vloncar
+* Overall improvements by &#64;vloncar, &#64;jmduarte, &#64;thesps, &#64;jmitrevs &amp; others</p>
+<p>## New Contributors
+* &#64;siorpaes made their first contribution in <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/pull/424">https://github.com/fastmachinelearning/hls4ml/pull/424</a>
+* &#64;jmitrevs made their first contribution in <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/pull/403">https://github.com/fastmachinelearning/hls4ml/pull/403</a>
+* &#64;anders-wind made their first contribution in <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/pull/302">https://github.com/fastmachinelearning/hls4ml/pull/302</a>
+* &#64;KOVI89alipes made their first contribution in <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/pull/318">https://github.com/fastmachinelearning/hls4ml/pull/318</a>
+* &#64;maksgraczyk made their first contribution in <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/pull/323">https://github.com/fastmachinelearning/hls4ml/pull/323</a>
+* &#64;Keb-L made their first contribution in <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/pull/332">https://github.com/fastmachinelearning/hls4ml/pull/332</a>
+* &#64;ConsVin made their first contribution in <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/pull/307">https://github.com/fastmachinelearning/hls4ml/pull/307</a>
+* &#64;nicologhielmetti made their first contribution in <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/pull/298">https://github.com/fastmachinelearning/hls4ml/pull/298</a></p>
+<p><strong>Full Changelog</strong>: <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/compare/v0.5.0...v0.6.0">https://github.com/fastmachinelearning/hls4ml/compare/v0.5.0…v0.6.0</a></p>
+<hr class="docutils" />
 <p><strong>v0.5.0 / bartsia</strong></p>
 <p>What’s new:</p>
 <ul class="simple">

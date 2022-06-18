@@ -153,16 +153,21 @@
 <h3><a class="toc-backref" href="#id5">2.1 Top Level Configuration</a><a class="headerlink" href="#top-level-configuration" title="Permalink to this headline"></a></h3>
 <p>Configuration files are YAML files in hls4ml (<code class="docutils literal notranslate"><span class="pre">*.yml</span></code>). An example configuration file is <a class="reference external" href="https://github.com/hls-fpga-machine-learning/example-models/blob/master/keras-config.yml">here</a>.</p>
 <p>It looks like this:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">KerasJson</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">keras/KERAS_3layer.json</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Project section</span>
+<span class="nt">OutputDir</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">my-hls-test</span>
+<span class="nt">ProjectName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">myproject</span>
+
+<span class="c1"># Model section (Keras model)</span>
+<span class="nt">KerasJson</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">keras/KERAS_3layer.json</span>
 <span class="nt">KerasH5</span><span class="p">:</span>   <span class="l l-Scalar l-Scalar-Plain">keras/KERAS_3layer_weights.h5</span> <span class="c1">#You can also use h5 file from Keras&#39;s model.save() without supplying json file.</span>
 <span class="nt">InputData</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">keras/KERAS_3layer_input_features.dat</span>
 <span class="nt">OutputPredictions</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">keras/KERAS_3layer_predictions.dat</span>
-<span class="nt">OutputDir</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">my-hls-test</span>
-<span class="nt">ProjectName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">myproject</span>
-<span class="nt">Device</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">xcku115-flvb2104-2-i</span>
-<span class="nt">ClockPeriod</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">5</span>
 
+<span class="c1"># Backend section (Vivado backend)</span>
+<span class="nt">Part</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">xcku115-flvb2104-2-i</span>
+<span class="nt">ClockPeriod</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">5</span>
 <span class="nt">IOType</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">io_parallel</span> <span class="c1"># options: io_parallel/io_stream</span>
+
 <span class="nt">HLSConfig</span><span class="p">:</span>
   <span class="nt">Model</span><span class="p">:</span>
     <span class="nt">Precision</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ap_fixed&lt;16,6&gt;</span>
@@ -177,18 +182,23 @@
 </div>
 <p>There are a number of configuration options that you have.  Let’s go through them.  You have basic setup parameters:</p>
 <ul class="simple">
+<li><p><strong>OutputDir</strong>: the output directory where you want your HLS project to appear</p></li>
+<li><p><strong>ProjectName</strong>: the name of the HLS project IP that is produced</p></li>
 <li><p><strong>KerasJson/KerasH5</strong>: for Keras, the model architecture and weights are stored in a <code class="docutils literal notranslate"><span class="pre">json</span></code> and <code class="docutils literal notranslate"><span class="pre">h5</span></code> file.  The path to those files are required here.
 We also support keras model’s file obtained just from <code class="docutils literal notranslate"><span class="pre">model.save()</span></code>. In this case you can just supply the <code class="docutils literal notranslate"><span class="pre">h5</span></code> file in <code class="docutils literal notranslate"><span class="pre">KerasH5:</span></code> field.</p></li>
 <li><p><strong>InputData/OutputPredictions</strong>: path to your input/predictions of the model. If none is supplied, then hls4ml will create aritificial data for simulation. The data used above in the example can be found <a class="reference external" href="https://cernbox.cern.ch/index.php/s/2LTJVVwCYFfkg59">here</a>. We also support <code class="docutils literal notranslate"><span class="pre">npy</span></code> data files. We welcome suggestions on more input data types to support.</p></li>
-<li><p><strong>OutputDir</strong>: the output directory where you want your HLS project to appear</p></li>
-<li><p><strong>ProjectName</strong>: the name of the HLS project IP that is produced</p></li>
-<li><p><strong>Device</strong>: the particular FPGA part number that you are considering, here it’s a Xilinx Virtex-7 FPGA</p></li>
+</ul>
+<p>The backend-specific section of the configuration depends on the backend. You can get a starting point for the necessary settings using, for example <cite>hls4ml.templates.get_backend(‘Vivado’).create_initial_config()</cite>.
+For Vivado backend the options are:</p>
+<ul class="simple">
+<li><p><strong>Part</strong>: the particular FPGA part number that you are considering, here it’s a Xilinx Virtex-7 FPGA</p></li>
 <li><p><strong>ClockPeriod</strong>: the clock period, in ns, at which your algorithm runs
 Then you have some optimization parameters for how your algorithm runs:</p></li>
 <li><p><strong>IOType</strong>: your options are <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code> or <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> which defines the type of data structure used for inputs, intermediate activations between layers, and outputs. For <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code>, arrays are used that, in principle, can be fully unrolled and are typically implemented in RAMs. For <code class="docutils literal notranslate"><span class="pre">io_stream</span></code>, HLS streams are used, which are a more efficient/scalable mechanism to represent data that are produced and consumed in a sequential manner. Typically, HLS streams are implemented with FIFOs instead of RAMs. For more information see <a class="reference external" href="https://docs.xilinx.com/r/en-US/ug1399-vitis-hls/pragma-HLS-stream">here</a>.</p></li>
-<li><p><strong>ReuseFactor</strong>: in the case that you are pipelining, this defines the pipeline interval or initiation interval</p></li>
-<li><p><strong>Strategy</strong>: Optimization strategy on FPGA, either “Latency” or “Resource”. If none is supplied then hl4ml uses “Latency” as default. Note that a reuse factor larger than 1 should be specified when using “resource” strategy. An example of using larger reuse factor can be found <a class="reference external" href="https://github.com/hls-fpga-machine-learning/models/tree/master/keras/KERAS_dense">here.</a></p></li>
-<li><p><strong>Precision</strong>: this defines the precsion of your inputs, outputs, weights and biases. It is denoted by <code class="docutils literal notranslate"><span class="pre">ap_fixed&lt;X,Y&gt;</span></code>, where <code class="docutils literal notranslate"><span class="pre">Y</span></code> is the number of bits representing the signed number above the binary point (i.e. the integer part), and <code class="docutils literal notranslate"><span class="pre">X</span></code> is the total number of bits.
+<li><p><strong>HLSConfig</strong>: the detailed configuration of precision and parallelism, including:
+* <strong>ReuseFactor</strong>: in the case that you are pipelining, this defines the pipeline interval or initiation interval
+* <strong>Strategy</strong>: Optimization strategy on FPGA, either “Latency” or “Resource”. If none is supplied then hl4ml uses “Latency” as default. Note that a reuse factor larger than 1 should be specified when using “resource” strategy. An example of using larger reuse factor can be found <a class="reference external" href="https://github.com/fastmachinelearning/models/tree/master/keras/KERAS_dense">here.</a>
+* <strong>Precision</strong>: this defines the precsion of your inputs, outputs, weights and biases. It is denoted by <code class="docutils literal notranslate"><span class="pre">ap_fixed&lt;X,Y&gt;</span></code>, where <code class="docutils literal notranslate"><span class="pre">Y</span></code> is the number of bits representing the signed number above the binary point (i.e. the integer part), and <code class="docutils literal notranslate"><span class="pre">X</span></code> is the total number of bits.
 Additionally, integers in fixed precision data type (<code class="docutils literal notranslate"><span class="pre">ap_int&lt;N&gt;</span></code>, where <code class="docutils literal notranslate"><span class="pre">N</span></code> is a bit-size from 1 to 1024) can also be used. You have a chance to further configure this more finely with per-layer configuration described below.</p></li>
 </ul>
 </div>
