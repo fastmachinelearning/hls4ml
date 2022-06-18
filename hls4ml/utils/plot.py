@@ -92,7 +92,7 @@ def model_to_dot(model,
 
         # Append a wrapped layer's label to node's label, if it exists.
         layer_name = layer.name
-        class_name = layer.__class__.__name__
+        class_name = layer.class_name
 
         # Create node's label.
         if show_layer_names:

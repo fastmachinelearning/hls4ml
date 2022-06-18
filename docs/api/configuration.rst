@@ -70,9 +70,10 @@ It looks like this:
    OutputPredictions: keras/KERAS_3layer_predictions.dat
 
    # Backend section (Vivado backend)
-   XilinxPart: xcku115-flvb2104-2-i
+   Part: xcku115-flvb2104-2-i
    ClockPeriod: 5
-   IOType: io_parallel # options: io_serial/io_parallel
+   IOType: io_parallel # options: io_parallel/io_stream
+   
    HLSConfig:
      Model:
        Precision: ap_fixed<16,6>
@@ -96,13 +97,13 @@ There are a number of configuration options that you have.  Let's go through the
 The backend-specific section of the configuration depends on the backend. You can get a starting point for the necessary settings using, for example `hls4ml.templates.get_backend('Vivado').create_initial_config()`.
 For Vivado backend the options are:
 
-* **XilinxPart**\ : the particular FPGA part number that you are considering, here it's a Xilinx Virtex-7 FPGA
+* **Part**\ : the particular FPGA part number that you are considering, here it's a Xilinx Virtex-7 FPGA
 * **ClockPeriod**\ : the clock period, in ns, at which your algorithm runs
   Then you have some optimization parameters for how your algorithm runs:
-* **IOType**\ : your options are ``io_parallel`` or ``io_serial`` where this really defines if you are pipelining your algorithm or not
+* **IOType**\ : your options are ``io_parallel`` or ``io_stream`` which defines the type of data structure used for inputs, intermediate activations between layers, and outputs. For ``io_parallel``, arrays are used that, in principle, can be fully unrolled and are typically implemented in RAMs. For ``io_stream``, HLS streams are used, which are a more efficient/scalable mechanism to represent data that are produced and consumed in a sequential manner. Typically, HLS streams are implemented with FIFOs instead of RAMs. For more information see `here <https://docs.xilinx.com/r/en-US/ug1399-vitis-hls/pragma-HLS-stream>`__.
 * **HLSConfig**\: the detailed configuration of precision and parallelism, including:
   * **ReuseFactor**\ : in the case that you are pipelining, this defines the pipeline interval or initiation interval
-  * **Strategy**\ : Optimization strategy on FPGA, either "Latency" or "Resource". If none is supplied then hl4ml uses "Latency" as default. Note that a reuse factor larger than 1 should be specified when using "resource" strategy. An example of using larger reuse factor can be found `here. <https://github.com/hls-fpga-machine-learning/models/tree/master/keras/KERAS_dense>`__
+  * **Strategy**\ : Optimization strategy on FPGA, either "Latency" or "Resource". If none is supplied then hl4ml uses "Latency" as default. Note that a reuse factor larger than 1 should be specified when using "resource" strategy. An example of using larger reuse factor can be found `here. <https://github.com/fastmachinelearning/models/tree/master/keras/KERAS_dense>`__
   * **Precision**\ : this defines the precsion of your inputs, outputs, weights and biases. It is denoted by ``ap_fixed<X,Y>``\ , where ``Y`` is the number of bits representing the signed number above the binary point (i.e. the integer part), and ``X`` is the total number of bits.
   Additionally, integers in fixed precision data type (\ ``ap_int<N>``\ , where ``N`` is a bit-size from 1 to 1024) can also be used. You have a chance to further configure this more finely with per-layer configuration described below.
 

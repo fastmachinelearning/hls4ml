@@ -8,8 +8,8 @@ def parse_garnet_layer(keras_layer, input_names, input_shapes, data_reader, conf
 
     if not keras_layer['config']['simplified']:
         raise Exception('HLS GarNet is compatible only with keras GarNet with simplified=True')
-    if keras_layer['config']['output_activation'] is not None:
-        raise Exception('HLS GarNet cannot have output activation')
+    if keras_layer['config']['output_activation'] not in [None, 'linear']:
+        raise Exception('HLS GarNet cannot have nonlinear output activation')
 
     layer = parse_default_keras_layer(keras_layer, input_names)
 

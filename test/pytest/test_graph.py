@@ -2,6 +2,10 @@ import hls4ml
 import numpy as np
 import pytest
 import tensorflow as tf
+from pathlib import Path
+
+test_root_path = Path(__file__).parent
+
 
 class Reader:
     def get_weights_data(self, name, var):
@@ -17,7 +21,8 @@ def base_model(output_dir='hls4mlprj_graph_base_model', iotype = 'io_parallel'):
   config['OutputDir'] = output_dir
   config['ProjectName'] = 'myprj'
   config['IOType'] = iotype
-  model = hls4ml.model.HLSModel(config, reader, layers)
+  config['Backend'] = 'Vivado'
+  model = hls4ml.model.ModelGraph(config, reader, layers)
   return model
 
 def branch_model(output_dir='hls4mlprj_graph_branch_model', iotype = 'io_parallel'):
@@ -30,7 +35,7 @@ def branch_model(output_dir='hls4mlprj_graph_branch_model', iotype = 'io_paralle
   config['OutputDir'] = output_dir
   config['ProjectName'] = 'myprj'
   config['IOType'] = iotype
-  model = hls4ml.model.HLSModel(config, reader, layers, inputs=['layer0_input0', 'layer0_input1'])
+  model = hls4ml.model.ModelGraph(config, reader, layers, inputs=['layer0_input0', 'layer0_input1'])
   return model
 
 def do_nop(model, node, layers):
@@ -78,7 +83,7 @@ graph_ops = {'insert'  : do_insert,
 @pytest.mark.parametrize('iotype', ['io_parallel', 'io_stream'])
 def test_graph_manipulation(parameters, iotype):
   model, op, node, expected, skip_layers_check = parameters[0], parameters[1], parameters[2], parameters[3], parameters[4]
-  odir = 'hls4mlprj_graph_{}_{}_{}'.format(model.__name__, op, node)
+  odir = str(test_root_path / 'hls4mlprj_graph_{}_{}_{}'.format(model.__name__, op, node))
   model = model(odir, iotype)
   original_layers = np.array([layer.name for layer in list(model.get_layers())])
   model, expected_layers = graph_ops[op](model, node, original_layers)
@@ -97,7 +102,7 @@ def test_graph_manipulation(parameters, iotype):
 @pytest.mark.parametrize('iotype', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('batch', [1, 100])
 def test_graph_branch(iotype, batch):
-  odir = 'hls4mlprj_graph_branch_model_{}_batch{}'.format(iotype, batch)
+  odir = str(test_root_path / 'hls4mlprj_graph_branch_model_{}_batch{}'.format(iotype, batch))
   model = branch_model(odir, iotype)
   original_layers = np.array([layer.name for layer in list(model.get_layers())])
   model.compile()
@@ -119,10 +124,11 @@ def test_final_reshape(iotype):
   x = tf.keras.layers.Reshape((3,2))(x) # reshape the (1,1,6) output to (3,2)
   model = tf.keras.models.Model(inputs=inputs, outputs=x)
 
-  # create the HLSModel
+  # create the ModelGraph
   config = hls4ml.utils.config_from_keras_model(model, granularity='model')
+  odir = str(test_root_path / 'hls4mlprj_graph_final_reshape_{}'.format(iotype))
   hls_model = hls4ml.converters.convert_from_keras_model(model,
-                                                         output_dir=f'hls4mlprj_graph_final_reshape_{iotype}',
+                                                         output_dir=odir,
                                                          backend='Vivado',
                                                          io_type = iotype,
                                                          hls_config=config)
@@ -136,6 +142,36 @@ def test_final_reshape(iotype):
   # because of integer inputs and integer weights, we can expect exact matching
   np.testing.assert_allclose(y, y_hls, rtol=0)
 
+@pytest.mark.parametrize('shapes, layer', [
+    (((2, 2, 3), (2, 2, 1)), tf.keras.layers.Concatenate),
+    (((2, 2, 1), (2, 2, 3)), tf.keras.layers.Concatenate),
+    (((2, 2, 3), (2, 2, 1)), tf.keras.layers.Add),
+    (((2, 2, 1), (2, 2, 3)), tf.keras.layers.Add),
+    (((1, 1, 2), (3, 4, 2)), tf.keras.layers.Add),
+    (((3, 4, 2), (1, 1, 2)), tf.keras.layers.Add)])
+def test_broadcast_stream(shapes, layer):
+  ''' Test case for stream broadcast before Add but not before Concatenate '''
+  input1 = tf.keras.layers.Input(shape=shapes[0])
+  input2 = tf.keras.layers.Input(shape=shapes[1])
+  inputs = [input1, input2]
+  outputs = layer()(inputs)
+  model = tf.keras.models.Model(inputs=inputs, outputs=outputs)
 
+  # create the ModelGraph
+  config = hls4ml.utils.config_from_keras_model(model, granularity='model', default_precision='ap_fixed<32,16>')
+  odir = str(test_root_path / 'hls4mlprj_graph_broadcast_shapes_{}_{}_stream_{}'.format(str(shapes[0]).replace(' ','').replace(',','_').replace('(','').replace(')',''),
+                                                                                        str(shapes[1]).replace(' ','').replace(',','_').replace('(','').replace(')',''),
+                                                                                        layer.__name__.lower()))
+  hls_model = hls4ml.converters.convert_from_keras_model(model,
+                                                         output_dir=odir,
+                                                         backend='Vivado',
+                                                         io_type='io_stream',
+                                                         hls_config=config)
+  hls_model.compile()
 
-
+  # Test with integers (for exact agreement)
+  X1 = np.random.randint(0, 100, size=(1,)+shapes[0]).astype(float)
+  X2 = np.random.randint(0, 100, size=(1,)+shapes[1]).astype(float)
+  y = model.predict([X1, X2])
+  y_hls = hls_model.predict([X1, X2]).reshape(y.shape)
+  np.testing.assert_allclose(y, y_hls, rtol=0)

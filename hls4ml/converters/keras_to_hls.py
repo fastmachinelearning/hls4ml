@@ -4,7 +4,7 @@ import h5py
 import json
 import math
 
-from hls4ml.model import HLSModel
+from hls4ml.model import ModelGraph
 
 MAXMULT = 4096
 
@@ -88,11 +88,23 @@ def get_qkeras_quantization(layer, keras_layer):
 
 layer_handlers = {}
 
-def register_keras_layer_handler(layer_name, handler_func):
-    if layer_name in layer_handlers:
-        raise Exception('Layer {} already registered'.format(layer_name))
+def register_keras_layer_handler(layer_cname, handler_func):
+    """Register a handler function for the given layer class name.
+
+    The handler function should have the following signature:
+        parse_func(keras_layer, input_names, input_shapes, data_reader, config):
+
+    Args:
+        layer_cname (str): The name of Keras layer (the 'class_name' property in the layer's config)
+        handler_func (callable): The handler function
+
+    Raises:
+        Exception: If the layer class has already been registered.
+    """    
+    if layer_cname in layer_handlers:
+        raise Exception('Layer {} already registered'.format(layer_cname))
     else:
-        layer_handlers[layer_name] = handler_func
+        layer_handlers[layer_cname] = handler_func
 
 def get_supported_keras_layers():
     return list(layer_handlers.keys())
@@ -229,6 +241,10 @@ def keras_to_hls(config):
 
     #Define layers to skip for conversion to HLS
     skip_layers = ['Dropout']
+    # Activation layers
+    activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'TernaryTanh']
+    # Recurrent layers
+    recurrent_layers = ['SimpleRNN', 'LSTM', 'GRU']
     #All supported layers
     supported_layers = get_supported_keras_layers() + skip_layers
 
@@ -310,18 +326,34 @@ def keras_to_hls(config):
 
         print('Layer name: {}, layer type: {}, input shapes: {}, output shape: {}'.format(layer['name'], layer['class_name'], input_shapes, output_shape))
         layer_list.append( layer )
-        if 'activation' in layer and layer['class_name'] not in ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'TernaryTanh']:# + qkeras_layers:
+        if 'activation' in layer and layer['class_name'] not in activation_layers + recurrent_layers:# + qkeras_layers:
             act_layer = {}
-            act_layer['name'] = layer['name'] + '_' + layer['activation']
-            act_layer['activation'] = layer['activation']
-            if 'activ_param' in layer:
-                act_layer['activ_param'] = layer['activ_param']
-                act_layer['class_name'] = layer['activation']
-            elif layer['activation'] == 'softmax':
-                act_layer['class_name'] = 'Softmax'
-                act_layer['axis'] = -1
+            # Workaround for QKeras activations passed as an argument
+            if isinstance(layer['activation'], dict):
+                act_details = layer['activation']
+                act_layer['class_name'] = 'QActivation'
+                act_layer['config'] = {
+                    'name': layer['name'] + '_' + act_details['class_name'],
+                    'activation': act_details['class_name']
+                }
+                act_layer, output_shape = layer_handlers['QActivation'](
+                    act_layer,
+                    None,
+                    [output_shape],
+                    reader,
+                    config
+                )
             else:
-                act_layer['class_name'] = 'Activation'
+                act_layer['name'] = layer['name'] + '_' + layer['activation']
+                act_layer['activation'] = layer['activation']
+                if 'activ_param' in layer:
+                    act_layer['activ_param'] = layer['activ_param']
+                    act_layer['class_name'] = layer['activation']
+                elif layer['activation'] == 'softmax':
+                    act_layer['class_name'] = 'Softmax'
+                    act_layer['axis'] = -1
+                else:
+                    act_layer['class_name'] = 'Activation'
             inputs_map[layer['name']] = act_layer['name']
             if output_layers is not None and layer['name'] in output_layers:
                 output_layers = [act_layer['name'] if name == layer['name'] else name for name in output_layers]
@@ -336,5 +368,5 @@ def keras_to_hls(config):
     #################
 
     print('Creating HLS model')
-    hls_model = HLSModel(config, reader, layer_list, input_layers, output_layers)
+    hls_model = ModelGraph(config, reader, layer_list, input_layers, output_layers)
     return hls_model

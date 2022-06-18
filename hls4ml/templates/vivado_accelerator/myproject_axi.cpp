@@ -7,9 +7,6 @@ void myproject(
 
     //hls-fpga-machine-learning insert interface
 
-    unsigned short in_size = 0;
-    unsigned short out_size = 0;
-
     //hls-fpga-machine-learning insert local vars
 
     //hls-fpga-machine-learning insert enqueue

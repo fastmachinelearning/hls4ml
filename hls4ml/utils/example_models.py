@@ -41,7 +41,7 @@ def _create_default_config(model_name, model_config, backend):
     config[model_config] = model_name
     config['HLSConfig']['Model'] = {}
     config['HLSConfig']['Model']['Precision'] = 'ap_fixed<16,6>'
-    config['HLSConfig']['Model']['ReuseFactor'] = '1'
+    config['HLSConfig']['Model']['ReuseFactor'] = 1
 
     return config
 
@@ -101,10 +101,11 @@ def fetch_example_model(model_name, backend='Vivado'):
     Use fetch_example_list() to see all the available models.
 
     Args:
-        - model_name: string, name of the example model in the repo. Example: fetch_example_model('KERAS_3layer.json')
+        model_name (str): Name of the example model in the repo. Example: fetch_example_model('KERAS_3layer.json')
+        backend (str, optional): Name of the backend to use for model conversion.
     
     Return:
-        - Dictionary that stores the configuration to the model
+        dict: Dictionary that stores the configuration to the model
     """
 
     #Initilize the download link and model type
@@ -133,7 +134,7 @@ def fetch_example_model(model_name, backend='Vivado'):
 
     #Download the example model
     print("Downloading example model files ...")
-    urlretrieve(download_link_model, model_name)
+    urlretrieve(download_link_model, model_name,)
 
     #Check if the example data and configuration for the model are available
     if _data_is_available(model_name):

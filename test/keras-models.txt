@@ -1,11 +1,11 @@
 # Keras models from examples directory that will be used for testing
 #
 # Synthax:
-#    MODEL_NAME[:WEIGHTS_FILE] [x:XILINXPART] [b:BOARD] [B:BACKEND] [c:CLOCK_PERIOD] [io:s] [r:REUSE_FACTOR] [t:AP_TYPE] [s:STRATEGY] [y:CONFIG_FILE]
+#    MODEL_NAME[:WEIGHTS_FILE] [x:PART] [b:BOARD] [B:BACKEND] [c:CLOCK_PERIOD] [io:s] [r:REUSE_FACTOR] [t:AP_TYPE] [s:STRATEGY] [y:CONFIG_FILE]
 # where
 #    MODEL_NAME - Name of the file containing json model (without ".json")
 #    WEIGHTS_FILE - Name of the HDF5 file containing model weights (without ".h5")
-#    x:XILINXPART - Xilinx part number to use
+#    x:PART - FPGA part number to use
 #    b:BOARD - name of one board defined in supported_board.json file
 #    B:BACKEND - name of the backend to be used (Vivado, VivadoAccelerator)
 #    c:CLOCK_PERIOD - Clock period

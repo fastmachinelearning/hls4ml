@@ -3,7 +3,9 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import GlobalAveragePooling1D, GlobalMaxPooling1D
 import numpy as np
 import hls4ml
+from pathlib import Path
 
+test_root_path = Path(__file__).parent
 
 in_shape = 8
 in_feat = 4
@@ -46,7 +48,7 @@ def test_global_pool1d(keras_model_max, keras_model_ave, data, model_type, io_ty
     hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                            hls_config=config,
                                                            io_type=io_type,
-                                                           output_dir=f'hls4mlprj_globalplool1d_{model_type}_{io_type}',
+                                                           output_dir=str(test_root_path / f'hls4mlprj_globalplool1d_{model_type}_{io_type}'),
                                                            part='xcvu9p-flgb2104-2-i')
     hls_model.compile()
     

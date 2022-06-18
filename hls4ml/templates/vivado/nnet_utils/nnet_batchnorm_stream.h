@@ -35,15 +35,15 @@ template<class data_T, class res_T, typename CONFIG_T>
 void normalize(
     hls::stream<data_T> &data,
     hls::stream<res_T>  &res,
-    typename CONFIG_T::scale_t scale[CONFIG_T::n_in],
-    typename CONFIG_T::bias_t  bias[CONFIG_T::n_in]
+    typename CONFIG_T::scale_t scale[CONFIG_T::n_scale_bias],
+    typename CONFIG_T::bias_t  bias[CONFIG_T::n_scale_bias]
 ) {
     #pragma HLS ARRAY_PARTITION variable=scale complete
     #pragma HLS ARRAY_PARTITION variable=bias complete
 
     constexpr unsigned multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in, CONFIG_T::reuse_factor);
     constexpr unsigned ii = CONFIG_T::n_in / multiplier_limit;
-    CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::scale_t, typename res_T::value_type>::limit(multiplier_limit);
+    CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::scale_t>::limit(multiplier_limit);
 
     BatchNormLoop: for (int i = 0; i < CONFIG_T::n_in / data_T::size; i++) {
         #pragma HLS PIPELINE II=ii
@@ -60,7 +60,7 @@ void normalize(
             } else {
                 norm_index = j % CONFIG_T::n_filt;
             }
-            out_data[j] = CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::scale_t, typename res_T::value_type>::product(in_data[j], scale[norm_index]) + bias[norm_index];
+            out_data[j] = CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::scale_t>::product(in_data[j], scale[norm_index]) + bias[norm_index];
         }
 
         res.write(out_data);

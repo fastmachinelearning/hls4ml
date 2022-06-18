@@ -282,7 +282,7 @@ void conv_2d_latency_cl(
 }//end conv2d
 
 template<class data_T, class res_T, typename CONFIG_T>
-void pointwise_conv_2d_cl(
+void pointwise_conv_2d_latency_cl(
     data_T data[CONFIG_T::in_height*CONFIG_T::in_width*CONFIG_T::n_chan],
     res_T  res[CONFIG_T::out_height*CONFIG_T::out_width*CONFIG_T::n_filt],
     typename CONFIG_T::weight_t weights[CONFIG_T::n_chan * CONFIG_T::n_filt],

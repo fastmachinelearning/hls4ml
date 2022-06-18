@@ -1,7 +1,7 @@
 #!/bin/bash
 
 pycmd=python
-xilinxpart="xcvu9p-flgb2104-2-e"
+part="xcvu9p-flgb2104-2-e"
 board="None"
 backend="Vivado"
 clock=5
@@ -23,8 +23,8 @@ function print_usage {
    echo "Multiple models can be specified."
    echo ""
    echo "Options are:"
-   echo "   -x XILINXPART"
-   echo "      Xilinx device part number. Defaults to 'xcvu9p-flgb2104-2-e'."
+   echo "   -x PART"
+   echo "      FPGA device part number. Defaults to 'xcvu9p-flgb2104-2-e'."
    echo "   -b BOARD"
    echo "      Board used. Defaults to 'pynq-z2'."
    echo "   -B BACKEND"
@@ -49,7 +49,7 @@ function print_usage {
 
 while getopts ":x:b:B:c:sr:g:t:d:y:h" opt; do
    case "$opt" in
-   x) xilinxpart=$OPTARG
+   x) part=$OPTARG
       ;;
    b) board=$OPTARG
       ;;
@@ -103,7 +103,7 @@ do
    echo "Creating config file for model '${model}'"
    base=`echo "${h5}" | sed -e 's/\(_weights\)*$//g'`
    file="${basedir}/${base}.yml"
-   prjdir="${basedir}/${base}-backend${backend}-board${board//${sanitizer}/_}-${xilinxpart//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}"
+   prjdir="${basedir}/${base}-backend${backend}-board${board//${sanitizer}/_}-${part//${sanitizer}/_}-c${clock}-${io}-rf${rf}-${type//${sanitizer}/_}-${strategy}"
 
    hlscfg=""
    if [ ! -z "${yml}" ]; then
@@ -114,7 +114,7 @@ do
    echo "KerasH5:   ../example-models/keras/${h5}.h5" >> ${file}
    echo "OutputDir: ${prjdir}" >> ${file}
    echo "ProjectName: myproject" >> ${file}
-   echo "XilinxPart: ${xilinxpart}" >> ${file}
+   echo "Part: ${part}" >> ${file}
    echo "Board: ${board}" >> ${file}
    echo "Backend: ${backend}" >> ${file}
    echo "ClockPeriod: ${clock}" >> ${file}
