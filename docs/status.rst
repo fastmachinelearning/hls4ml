@@ -5,7 +5,7 @@ Status and Features
 Status
 ========
 
-The latest stable release is :doc:`v0.5.0 <release_notes>`. This release brings the new `IOType: io_stream` and support for larger CNN models, see: <https://arxiv.org/abs/2101.05108>.
+The latest stable release is :doc:`v0.6.0 <release_notes>`. This release brings the new VivadoAccelerator backend to easily target boards like pynq-z2 and zcu102, with support for more boards like Alveo planned.
 
 
 Features
