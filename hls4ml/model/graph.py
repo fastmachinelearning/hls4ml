@@ -658,11 +658,11 @@ class ModelGraph(object):
                 argtuple += predictions
                 argtuple = tuple(argtuple)
                 top_function(*argtuple)
-                output.append(predictions)
+                output.extend(predictions)
 
 
             #Convert to numpy array
-            output = np.asarray(output, dtype=object)
+            output = [np.asarray(output_i) for output_i in output]
         finally:
             os.chdir(curr_dir)
 
