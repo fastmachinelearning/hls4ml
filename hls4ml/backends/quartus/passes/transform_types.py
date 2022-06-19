@@ -27,7 +27,7 @@ class TransformTypes(GlobalOptimizerPass):
                 elif node.name in node.model.outputs:
                     new_var = self.struct_var_converter.convert(var, pragma='hls_register', struct_name='outputs')
                 else:
-                    new_var = self.array_var_converter.convert(var, pragma='hls_register')
+                    new_var = self.array_var_converter.convert(var, pragma=' ')
             else:
                 raise Exception('Unknown IOType {} in {} ({})'.format(io_type, node.name, node.class_name))
 

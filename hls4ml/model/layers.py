@@ -880,11 +880,17 @@ class SimpleRNN(Layer):
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t')
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t')
 
-        self.add_weights()
-        self.add_bias()
 
-        recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
-        self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=self.model.config.get_compression(self))
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
+        data  = self.model.get_weights_data(self.name, 'kernel')
+        data2 = self.model.get_weights_data(self.name, 'recurrent_kernel')
+        data3 = self.model.get_weights_data(self.name, 'bias')
+
+        self.add_weights_variable(name='weight', var_name='kernel_{index}' , data=data[0][0:self.get_attr('n_out')], quantizer=self.get_attr('weight_quantizer'), compression=None)
+        self.add_weights_variable(name='recurrent_weight', var_name='recurrent_kernel_{index}', data=data2[0:self.get_attr('n_out'),0:self.get_attr('n_out')], quantizer=self.get_attr('weight_quantizer'), compression=None)
+        self.add_weights_variable(name='bias', var_name='bias_{index}', data=data3[0:self.get_attr('n_out')], quantizer=self.get_attr('weight_quantizer'), compression=None)
 
 class LSTM(Layer):
     _expected_attributes = [
@@ -900,9 +906,41 @@ class LSTM(Layer):
         WeightAttribute('bias'),
         WeightAttribute('recurrent_weight'),
 
+        WeightAttribute('weight_i'),
+        WeightAttribute('bias_i'),
+        WeightAttribute('recurrent_weight_i'),
+
+        WeightAttribute('weight_f'),
+        WeightAttribute('bias_f'),
+        WeightAttribute('recurrent_weight_f'),
+
+        WeightAttribute('weight_c'),
+        WeightAttribute('bias_c'),
+        WeightAttribute('recurrent_weight_c'),
+
+        WeightAttribute('weight_o'),
+        WeightAttribute('bias_o'),
+        WeightAttribute('recurrent_weight_o'),
+
         TypeAttribute('weight'),
         TypeAttribute('bias'),
         TypeAttribute('recurrent_weight'),
+
+        TypeAttribute('weight_i'),
+        TypeAttribute('bias_i'),
+        TypeAttribute('recurrent_weight_i'),
+        
+        TypeAttribute('weight_f'),
+        TypeAttribute('bias_f'),
+        TypeAttribute('recurrent_weight_f'),
+
+        TypeAttribute('weight_c'),
+        TypeAttribute('bias_c'),
+        TypeAttribute('recurrent_weight_c'),
+
+        TypeAttribute('weight_o'),
+        TypeAttribute('bias_o'),
+        TypeAttribute('recurrent_weight_o'),
     ]
 
     def initialize(self):
@@ -969,6 +1007,19 @@ class GRU(Layer):
         recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
         self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
 
+        data  = self.model.get_weights_data(self.name, 'kernel')
+        data2 = self.model.get_weights_data(self.name, 'recurrent_kernel')
+        data3 = self.model.get_weights_data(self.name, 'bias')
+
+        weight_types=["i","f","c","o"]
+        for i in range (0,4):
+          self.add_weights_variable(name='weight_{}'.format(weight_types[i]), var_name='kernel_{}_{{index}}'.format(weight_types [i]) , data=data[0][i*self.get_attr('n_out'):(i+1)*(self.get_attr('n_out'))], quantizer=self.get_attr('weight_quantizer'), compression=None)
+          self.add_weights_variable(name='recurrent_weight_{}'.format( weight_types [i] ), var_name='recurrent_kernel_{}_{{index}}'.format(weight_types [i]), data=data2[0:self.get_attr('n_out'),i*self.get_attr('n_out'):(i+1)*(self.get_attr('n_out'))], quantizer=self.get_attr('weight_quantizer'), compression=None)
+          self.add_weights_variable(name='bias_{}'.format(weight_types [i]), var_name='bias_{}_{{index}}'.format(weight_types [i]), data=data3[i*self.get_attr('n_out'):(i+1)*(self.get_attr('n_out'))], quantizer=self.get_attr('weight_quantizer'), compression=None)
+
+
+
+
 class GarNet(Layer):
     ref_impl = False
 
@@ -985,8 +1036,7 @@ class GarNet(Layer):
         else:
             shape = [self.attributes['n_vertices'], self._output_features]
             dims = ['VERTICES_{}'.format(self.index),'OUT_FEATURES_{}'.format(self.index)]
-            partition_factor = self._output_features * (self.attributes['n_vertices'] // reuse_factor)
-
+            
         self.add_output_variable(shape, dims)
 
     def _initialize_transforms(self):

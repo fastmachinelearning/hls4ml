@@ -65,12 +65,19 @@ int main(int argc, char **argv)
   std::vector<input_data> inputs;
   std::vector<output_data> outputs;
 
+  //Interrupted number of interactions before the end of the data
+  bool break_interation = true;
+  int max_interaction = 10;
+  
   if (fin.is_open() && fpr.is_open()) {
     std::vector<std::vector<float> > predictions;
     unsigned int num_iterations = 0;
     for (; std::getline(fin,iline) && std::getline (fpr,pline); num_iterations++) {
       if (num_iterations % CHECKPOINT == 0) {
         std::cout << "Processing input "  << num_iterations << std::endl;
+        if(num_iterations == max_interaction && break_interation == true){
+          break;
+        }
       }
 
       std::vector<float> in;
