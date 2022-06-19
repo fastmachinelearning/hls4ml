@@ -651,9 +651,9 @@ class ModelGraph(object):
             for i in range(n_samples):
                 predictions = [np.zeros(yj.size(), dtype=ctype) for yj in self.get_output_variables()]
                 if n_inputs == 1:
-                    inp = [x[i]]
+                    inp = [np.asarray(x[i])]
                 else:
-                    inp = [xj[i] for xj in x]
+                    inp = [np.asarray(xj[i]) for xj in x]
                 argtuple = inp
                 argtuple += predictions
                 argtuple = tuple(argtuple)
@@ -724,9 +724,9 @@ class ModelGraph(object):
             for i in range(n_samples):
                 predictions = [np.zeros(yj.size(), dtype=ctype) for yj in self.get_output_variables()]
                 if n_inputs == 1:
-                    inp = [x[i]]
+                    inp = [np.asarray(x[i])]
                 else:
-                    inp = [xj[i] for xj in x]
+                    inp = [np.asarray(xj[i]) for xj in x]
                 argtuple = inp
                 argtuple += predictions
                 argtuple = tuple(argtuple)
