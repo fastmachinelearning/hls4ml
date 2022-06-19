@@ -200,6 +200,8 @@ def test_multiple_outputs(batch):
   X1 = np.random.randint(0, 100, size=(batch, 10)).astype(float)
   y = model.predict(X1)
   y_hls = hls_model.predict(X1)
+  # test trace as well
+  y_hls, hls_trace = hls_model.trace(X1)
   for y_i, y_hls_i in zip(y, y_hls):
     y_hls_i = y_hls_i.reshape(y_i.shape)
     np.testing.assert_allclose(y_i, y_hls_i, rtol=0)
