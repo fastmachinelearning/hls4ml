@@ -658,16 +658,20 @@ class ModelGraph(object):
                 argtuple += predictions
                 argtuple = tuple(argtuple)
                 top_function(*argtuple)
-                output.extend(predictions)
+                output.append(predictions)
 
 
-            #Convert to numpy array
-            output = [np.asarray(output_i) for output_i in output]
+            # Convert to list of numpy arrays (one for each output)
+            output = [np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)]
         finally:
             os.chdir(curr_dir)
-
-        if n_samples == 1:
+            
+        if n_samples == 1 and n_outputs == 1:
+            return output[0][0]
+        elif n_outputs == 1:
             return output[0]
+        elif n_samples == 1:
+            return [output_i[0] for output_i in output]
         else:
             return output
 
