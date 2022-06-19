@@ -11,7 +11,7 @@ The latest stable release is :doc:`v0.6.0 <release_notes>`. This release brings 
 Features
 ========
 
-A list of suppported ML codes and architectures, including a summary table is below.  Dependences are given in the :doc:`Setup <setup>` page.
+A list of supported ML codes and architectures, including a summary table is below.  Dependencies are given in the :doc:`Setup <setup>` page.
 
 ML code support: 
 

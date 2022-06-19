@@ -160,7 +160,7 @@
 <span class="n">hls4ml</span><span class="o">.</span><span class="n">report</span><span class="o">.</span><span class="n">read_vivado_report</span><span class="p">(</span><span class="s1">&#39;my-hls-test&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Done! you’ve built your first project using <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> ! To learn more about our various API functionalities, check out our tutorials <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml-tutorial">here</a>.</p>
+<p>Done! You’ve built your first project using <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> ! To learn more about our various API functionalities, check out our tutorials <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml-tutorial">here</a>.</p>
 <p>If you want to configure your model further, check out our <a class="reference internal" href="api/configuration.html"><span class="doc">Configuration</span></a> page.</p>
 <p>Apart from our main API, we also support model conversion using a command line interface, check out our next section to find out more:</p>
 <div class="section" id="getting-started-with-hls4ml-commands-optional">
@@ -185,7 +185,7 @@ To build the HLS project, do:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hls4ml build -p my-hls-test -a
 </pre></div>
 </div>
-<p>This will create a Vivado HLS project with your model implmentation!</p>
+<p>This will create a Vivado HLS project with your model implementation!</p>
 <p><strong>NOTE:</strong> For the last step, you can alternatively do the following to build the HLS project:</p>
 <div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> my-hls-test
 vivado_hls -f build_prj.tcl
@@ -195,7 +195,7 @@ vivado_hls -f build_prj.tcl
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vivado_hls -f build_prj.tcl <span class="s2">&quot;csim=1 synth=1 cosim=1 export=1&quot;</span>
 </pre></div>
 </div>
-<p>Setting the additional parameters to <code class="docutils literal notranslate"><span class="pre">1</span></code> to <code class="docutils literal notranslate"><span class="pre">0</span></code> disables that step, but disabling <code class="docutils literal notranslate"><span class="pre">synth</span></code> also disables <code class="docutils literal notranslate"><span class="pre">cosim</span></code> and <code class="docutils literal notranslate"><span class="pre">export</span></code>.</p>
+<p>Setting the additional parameters from <code class="docutils literal notranslate"><span class="pre">1</span></code> to <code class="docutils literal notranslate"><span class="pre">0</span></code> disables that step, but disabling <code class="docutils literal notranslate"><span class="pre">synth</span></code> also disables <code class="docutils literal notranslate"><span class="pre">cosim</span></code> and <code class="docutils literal notranslate"><span class="pre">export</span></code>.</p>
 </div>
 <div class="section" id="further-help">
 <h4>Further help<a class="headerlink" href="#further-help" title="Permalink to this headline"></a></h4>
@@ -218,7 +218,7 @@ vivado_hls -f build_prj.tcl
 <ul class="simple">
 <li><p>Examples of model files and weights can be found in <a class="reference external" href="https://github.com/fastmachinelearning/example-models">example_models</a> directory.</p></li>
 <li><p>Training codes and examples of resources needed to train the models can be found <a class="reference external" href="https://github.com/fastmachinelearning/keras-training">here</a>.</p></li>
-<li><p>Other examples of various HLS projects with examples of different machine learning algorithm implementations is in the directory <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/tree/master/example-prjs">example-prjs</a>.</p></li>
+<li><p>Other examples of various HLS projects with examples of different machine learning algorithm implementations are in the directory <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/tree/master/example-prjs">example-prjs</a>.</p></li>
 </ul>
 </div>
 </div>
