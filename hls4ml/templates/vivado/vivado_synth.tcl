@@ -1,6 +1,3 @@
-set tcldir [file dirname [info script]]
-source [file join $tcldir project.tcl]
-
-add_files ${project_name}_prj/solution1/syn/vhdl
-synth_design -top ${project_name} -part $part
+add_files myproject_prj/solution1/syn/vhdl
+synth_design -top myproject -part xcku115-flvb2104-2-i
 report_utilization -file vivado_synth.rpt

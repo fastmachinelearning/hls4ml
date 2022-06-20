@@ -43,17 +43,27 @@ class VivadoWriter(Writer):
             h_file.write(var.definition_cpp() + ";\n")
             h_file.write("#else\n")
 
-        h_file.write(var.definition_cpp() + " = {")
+        h_file.write(var.definition_cpp() + " = ")
 
-        # fill c++ array.
-        # not including internal brackets for multidimensional case
-        sep = ''
-        for x in var:
-            h_file.write(sep + x)
+        factors = np.ones(len(var.shape)+1)
+        for idx in range(len(var.shape)-1, -1, -1):
+            factors[idx] = var.shape[idx] * factors[idx+1]
+        #fill c++ array, keeping the first keep_dims dimensions in-tact.
+        for idx, x in enumerate(var):
+            for dim in range(var.keep_dims+1):
+                if idx % factors[dim] == 0:
+                    h_file.write("{")
+            h_file.write(x)
             if write_txt_file:
-                txt_file.write(sep + x)
-            sep = ", "
-        h_file.write("};\n")
+                txt_file.write(x)
+            for dim in range(var.keep_dims+1):
+                if idx % factors[dim] == factors[dim]-1:
+                    h_file.write("}")
+            if idx < factors[0]-1: # only don't put comma at the end
+                h_file.write(", ")
+                if write_txt_file:
+                    txt_file.write(", ")
+        h_file.write(";\n")
         if write_txt_file:
             h_file.write("#endif\n")
             txt_file.close()
@@ -150,9 +160,12 @@ class VivadoWriter(Writer):
                                 w.type.name, w.data_length, w.name, w.name
                             )
                         else:
-                            newline += indent + '    nnet::load_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
-                                w.type.name, w.data_length, w.name, w.name
-                            )
+                            dim_info = w.data_length
+                            if w.keep_dims == 1:
+                                dim_info = '{}, {}'.format(w.shape[0], w.data_length//w.shape[0])
+                            if w.keep_dims == 2:
+                                dim_info = '{}, {}, {}'.format(w.shape[0], w.shape[1], w.data_length//(w.shape[0]*w.shape[1]))
+                            newline += indent + '    nnet::load_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, dim_info, w.name, w.name)
 
             # Add input/output type
             elif '//hls-fpga-machine-learning insert IO' in line:
@@ -578,10 +591,6 @@ class VivadoWriter(Writer):
         f.write(f'set project_name "{model.config.get_project_name()}"\n')
         f.write('variable backend\n')
         f.write('set backend "vivado"\n')
-        f.write('variable part\n')
-        f.write('set part "{}"\n'.format(model.config.get_config_value('Part')))
-        f.write('variable clock_period\n')
-        f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
         f.close()
 
         # build_prj.tcl

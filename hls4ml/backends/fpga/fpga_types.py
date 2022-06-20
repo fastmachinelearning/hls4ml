@@ -326,6 +326,15 @@ class QuartusInplaceVariableConverter(InplaceVariableConverter):
 
 class StaticWeightVariableDefinition(VariableDefinition):
     def definition_cpp(self, name_suffix='', as_reference=False):
+        if self.keep_dims > 0:
+            size_str = ''
+            for dim in range(self.keep_dims):
+                size_str += '[{cur_dim}]'.format(cur_dim=self.shape[dim])
+            final_dim = 1
+            for dim in range(self.keep_dims, len(self.shape)):
+                final_dim *= self.shape[dim]
+            size_str += '[{last_dim}]'.format(last_dim=final_dim)
+            return '{type} {name}{sizes}'.format(type=self.type.name, name=self.name, sizes=size_str)
         return '{type} {name}[{size}]'.format(type=self.type.name, name=self.name, size=self.data_length)
 
 class StaticWeightVariableConverter(object):

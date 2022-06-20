@@ -45,6 +45,21 @@ def compute_padding_1d(pad_type, in_size, stride, filt_size):
 
     return (n_out, pad_left, pad_right)
 
+def compute_padding_1d_transpose(pad_type, in_size, stride, filt_size):
+    if pad_type.lower() == 'same':
+        n_out = stride*in_size
+        pad_along_size = max(filt_size-stride, 0)
+        pad_left = pad_along_size//2
+        pad_right = pad_along_size-pad_left
+    elif pad_type.lower() == 'valid':
+        n_out = stride*(in_size-1) + filt_size
+        pad_left = 0
+        pad_right = 0
+    else:
+        raise Exception('Unknown padding type: {}'.format(pad_type))
+
+    return (n_out, pad_left, pad_right)
+
 def compute_padding_2d(pad_type, in_height, in_width, stride_height, stride_width, filt_height, filt_width):
     if pad_type.lower() == 'same':
         #Height
@@ -67,6 +82,32 @@ def compute_padding_2d(pad_type, in_height, in_width, stride_height, stride_widt
         out_height = int(math.ceil(float(in_height - filt_height + 1) / float(stride_height)))
         out_width = int(math.ceil(float(in_width - filt_width + 1) / float(stride_width)))
         
+        pad_top = 0
+        pad_bottom = 0
+        pad_left = 0
+        pad_right = 0
+    else:
+        raise Exception('Unknown padding type: {}'.format(pad_type))
+
+    return (out_height, out_width, pad_top, pad_bottom, pad_left, pad_right)
+
+def compute_padding_2d_transpose(pad_type, in_height, in_width, stride_height, stride_width, filt_height, filt_width):
+    if pad_type.lower() == 'same':
+        #Height
+        out_height = stride_height*in_height
+        pad_along_height = max(filt_height-stride_height, 0)
+        pad_top = pad_along_height//2
+        pad_bottom = pad_along_height-pad_top
+        #Width
+        out_width = stride_width*in_width
+        pad_along_width = max(filt_width-stride_width, 0)
+        pad_left = pad_along_width//2
+        pad_right = pad_along_width-pad_left
+    elif pad_type.lower() == 'valid':
+        #something
+        out_height = stride_height*in_height
+        out_width = stride_width*in_width
+
         pad_top = 0
         pad_bottom = 0
         pad_left = 0

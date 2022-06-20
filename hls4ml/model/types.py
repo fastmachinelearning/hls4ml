@@ -104,9 +104,12 @@ class FixedPrecisionType(PrecisionType):
         args = [self.width, self.integer, self.rounding_mode, self.saturation_mode, self.saturation_bits]
         args = ','.join([str(arg) for arg in args if arg is not None])
         typestring = '{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
+        typestring = 'ap_{signed}fixed<{args}>'.format(signed='u' if not self.signed else '', args=args)
         return typestring
 
     def __eq__(self, other):
+        if not isinstance(other, FixedPrecisionType):
+            return False
         eq = self.width == other.width
         eq = eq and self.integer == other.integer
         eq = eq and self.fractional == other.fractional
@@ -224,7 +227,7 @@ class InplaceVariable(Variable):
         return None
 
 class WeightVariable(Variable):
-    def __init__(self, var_name, type_name, precision, data, quantizer=None, **kwargs):
+    def __init__(self, var_name, type_name, precision, data, quantizer=None, keep_dims=0, **kwargs):
         super(WeightVariable, self).__init__(var_name, NamedType(type_name, precision, **kwargs), **kwargs)
         self.data = data
         self.nzeros = -1
@@ -237,6 +240,7 @@ class WeightVariable(Variable):
         self._iterator = None
         self.update_precision(precision)
         self.quantizer = quantizer
+        self.keep_dims = keep_dims
 
     def __iter__(self):
         self._iterator = np.nditer(self.data, order='C')

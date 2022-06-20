@@ -232,11 +232,11 @@ class Layer:
 
         self.set_attr(out_name, out)
 
-    def add_weights(self, quantizer=None, compression=False):
+    def add_weights(self, quantizer=None, compression=False, keep_dims=0):
         data = self.model.get_weights_data(self.name, 'kernel')
 
         self.add_weights_variable(
-            name='weight', var_name='w{index}', data=data, quantizer=quantizer, compression=compression
+            name='weight', var_name='w{index}', data=data, quantizer=quantizer, compression=compression, keep_dims=keep_dims
         )
 
     def add_bias(self, quantizer=None):
@@ -254,7 +254,7 @@ class Layer:
         )
 
     def add_weights_variable(
-        self, name, var_name=None, type_name=None, precision=None, data=None, quantizer=None, compression=False
+        self, name, var_name=None, type_name=None, precision=None, data=None, quantizer=None, compression=False, keep_dims=0
     ):
         if var_name is None:
             var_name = name + '{index}'
@@ -300,7 +300,7 @@ class Layer:
             )
         else:
             var = WeightVariable(
-                var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, index=self.index
+                var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, index=self.index, keep_dims=keep_dims
             )
 
         var.data_unquantized = data_unquantized
@@ -423,6 +423,60 @@ class Conv1D(Layer):
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
 
+class Conv1DTranspose(Layer):
+    _expected_attributes = [
+        Attribute('in_width'),
+        Attribute('out_width'),
+
+        Attribute('n_chan'),
+        Attribute('n_filt'),
+
+        Attribute('filt_width'),
+        Attribute('stride_width'),
+
+        Attribute('pad_left'),
+        Attribute('pad_right'),
+
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+    ]
+
+    def initialize(self):
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['out_width'], self.attributes['n_filt']]
+            dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+        else:
+            shape = [self.attributes['n_filt'], self.attributes['out_width']]
+            dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
+
+        data = self.model.get_weights_data(self.name, 'kernel')
+        # now we transform the entire kernel
+
+        #(W,F,C) => (F,W,C)
+        data = np.transpose(data, axes=[1, 0, 2]) 
+        # now split the kernel into stride width kernels (F, W, C) -> (S, F, W/S, C)
+        n_filts, kern_width, n_chan = data.shape
+        new_weights = np.zeros((self.attributes['stride_width'], n_filts, self.attributes['trfilt_width'], n_chan))
+        for i_sw in range(self.attributes['stride_width']):
+            for i_fw in range(self.attributes['trfilt_width']):
+                filt_ind = i_sw + (self.attributes['trfilt_width']-i_fw-1) * self.attributes['stride_width']
+                for i_nf in range(n_filts):
+                    for i_nc in range(n_chan):
+                        if filt_ind < kern_width:
+                            new_weights[i_sw][i_nf][i_fw][i_nc] = \
+                                data[i_nf][filt_ind][i_nc]
+        data = new_weights
+
+        self.add_output_variable(shape, dims)
+        # self.add_weights(quantizer = self.get_attr('weight_quantizer'), keep_dims=1)
+        self.add_weights_variable(name='weight', var_name='w{index}', \
+            data=data, quantizer=self.get_attr('weight_quantizer'), keep_dims=1)
+        self.add_bias(quantizer = self.get_attr('bias_quantizer'))
+
+
 class SeparableConv1D(Layer):
     _expected_attributes = [
         Attribute('in_width'),
@@ -498,6 +552,69 @@ class Conv2D(Layer):
             dims = [f'N_FILT_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims)
         self.add_weights(quantizer=self.get_attr('weight_quantizer'))
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
+class Conv2DTranspose(Layer):
+    _expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+
+        Attribute('out_height'),
+        Attribute('out_width'),
+
+        Attribute('n_chan'),
+        Attribute('n_filt'),
+
+        Attribute('filt_height'),
+        Attribute('filt_width'),
+        Attribute('stride_height'),
+        Attribute('stride_width'),
+
+        Attribute('pad_top'),
+        Attribute('pad_bottom'),
+        Attribute('pad_left'),
+        Attribute('pad_right'),
+
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+    ]
+
+    def initialize(self):
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
+            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+        else:
+            shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
+            dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+
+        data = self.model.get_weights_data(self.name, 'kernel')
+        # now we transform the entire kernel
+
+        #(H,W,F,C) => (F,H,W,C)
+        data = np.transpose(data, axes=[2, 0, 1, 3]) 
+        # now split the kernel into stride width kernels (F, W, C) -> (Sh, Sw, F, H/Sh, W/Sw, C)
+        n_filts, kern_height, kern_width, n_chan = data.shape
+        new_weights = np.zeros((self.attributes['stride_height'], self.attributes['stride_width'], \
+            n_filts, self.attributes['trfilt_height'], self.attributes['trfilt_width'], n_chan))
+        for i_sh in range(self.attributes['stride_height']):
+            for i_sw in range(self.attributes['stride_width']):
+                for i_fh in range(self.attributes['trfilt_height']):
+                    for i_fw in range(self.attributes['trfilt_width']):
+                        filt_h_ind = i_sh + (self.attributes['trfilt_height']-i_fh-1)*self.attributes['stride_height']
+                        filt_w_ind = i_sw + (self.attributes['trfilt_width']-i_fw-1)*self.attributes['stride_width']
+                        for i_nf in range(n_filts):
+                            for i_nc in range(n_chan):
+                                if filt_h_ind < kern_height and filt_w_ind < kern_width:
+                                    new_weights[i_sh][i_sw][i_nf][i_fh][i_fw][i_nc] = \
+                                        data[i_nf][filt_h_ind][filt_w_ind][i_nc]
+        data = new_weights
+
+        self.add_output_variable(shape, dims)
+        self.add_weights_variable(name='weight', var_name='w{index}', \
+            data=data, quantizer=self.get_attr('weight_quantizer'), keep_dims=2)
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
 
@@ -1274,6 +1391,8 @@ layer_map = {
     'Conv2D': Conv2D,
     'BinaryConv2D': Conv2D,
     'QConv2D': Conv2D,
+    'Conv1DTranspose': Conv1DTranspose,
+    'Conv2DTranspose': Conv2DTranspose,
     'QConv2DBatchnorm': Conv2DBatchnorm,
     'SeparableConv1D': SeparableConv1D,
     'SeparableConv2D': SeparableConv2D,
