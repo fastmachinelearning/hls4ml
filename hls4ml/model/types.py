@@ -301,6 +301,8 @@ class FixedPrecisionType(PrecisionType):
         return typestring
 
     def __eq__(self, other):
+        if not isinstance(other, FixedPrecisionType):
+            return False
         eq = self.width == other.width
         eq = eq and self.integer == other.integer
         eq = eq and self.fractional == other.fractional
@@ -512,9 +514,10 @@ class WeightVariable(Variable):
         precision (PrecisionType, optional): Precision data type.
         data (ndarray): The data array.
         quantizer (_type_, optional): Quantizer to apply to the data array. Defaults to ``None``.
+        keep_dims (int, optional): ADD A DESCRIPTION HERE.
     """
 
-    def __init__(self, var_name, type_name, precision, data, quantizer=None, **kwargs):
+    def __init__(self, var_name, type_name, precision, data, quantizer=None, keep_dims=0, **kwargs):
         super().__init__(var_name, NamedType(type_name, precision, **kwargs), **kwargs)
         self.data = data
         self.nzeros = -1
@@ -527,6 +530,7 @@ class WeightVariable(Variable):
         self._iterator = None
         self.update_precision(precision)
         self.quantizer = quantizer
+        self.keep_dims = keep_dims
 
     def __iter__(self):
         self._iterator = np.nditer(self.data, order='C')

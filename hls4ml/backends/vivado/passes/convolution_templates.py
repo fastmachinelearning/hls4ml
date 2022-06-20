@@ -1,6 +1,15 @@
 from hls4ml.backends.backend import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
-from hls4ml.model.layers import Conv1D, Conv2D, Conv2DBatchnorm, DepthwiseConv2D, SeparableConv1D, SeparableConv2D
+from hls4ml.model.layers import (
+    Conv1D,
+    Conv1DTranspose,
+    Conv2D,
+    Conv2DBatchnorm,
+    Conv2DTranspose,
+    DepthwiseConv2D,
+    SeparableConv1D,
+    SeparableConv2D,
+)
 
 # Shared multiplication template
 
@@ -96,6 +105,93 @@ class Conv1DFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(Conv1D, include_header=conv1d_include_list)
         self.template = conv1d_function_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        params['data_format'] = 'cf' if node.get_attr('data_format') == 'channels_first' else 'cl'
+        params['w'] = node.get_weights('weight').name
+        params['b'] = node.get_weights('bias').name
+
+        return self.template.format(**params)
+
+
+# Conv1DTranspose Templates
+
+conv1dtranspose_config_template = """struct config{index} : nnet::conv1dtranspose_config {{
+    static const unsigned pad_left = {pad_left};
+    static const unsigned pad_right = {pad_right};
+    static const unsigned in_width = {in_width};
+    static const unsigned n_chan = {n_chan};
+    static const unsigned filt_width = {filt_width};
+    static const unsigned kernel_size = filt_width;
+    static const unsigned n_filt = {n_filt};
+    static const unsigned stride_width = {stride_width};
+    static const unsigned dilation = {dilation};
+    static const unsigned out_width = {out_width};
+    static const unsigned reuse_factor = {reuse};
+    static const unsigned n_zeros = {nzeros};
+    static const unsigned trfilt_width = {trfilt_width};
+    static const bool store_weights_in_bram = false;
+    static const unsigned strategy = nnet::{strategy};
+    static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
+    static const unsigned min_width = {min_width};
+    static const ap_uint<trfilt_width> pixels[min_width];
+    static const unsigned n_partitions = {n_partitions};
+    static const unsigned proc_width = {proc_width};
+    static const unsigned n_pixels = proc_width / n_partitions;
+    template<class data_T, class CONFIG_T>
+    using fill_buffer = nnet::{fill_fn}<data_T, CONFIG_T>;
+    typedef {accum_t.name} accum_t;
+    typedef {bias_t.name} bias_t;
+    typedef {weight_t.name} weight_t;
+    typedef {config_t} mult_config;
+}};
+const ap_uint<config{index}::trfilt_width> config{index}::pixels[] = {{{instructions}}};\n"""
+
+conv1dtranspose_function_template = (
+    'nnet::conv_1d_transpose_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+)
+
+conv1dtranspose_include_list = ['nnet_utils/nnet_conv1dtranspose.h', 'nnet_utils/nnet_conv1dtranspose_stream.h']
+
+
+class Conv1DTransposeConfigTemplate(LayerConfigTemplate):
+    def __init__(self):
+        super().__init__(Conv1DTranspose)
+        self.template = conv1dtranspose_config_template
+        self.mult_template = conv_mult_config_template
+
+    def format(self, node):
+        params = self._default_config_params(node)
+        params['dilation'] = node.get_attr('dilation', 1)
+        params['nzeros'] = node.get_weights('weight').nzeros
+
+        params['config_t'] = f'config{node.index}_mult'
+        if node.model.config.get_config_value('IOType') == 'io_parallel':
+            params['fill_fn'] = f'fill_buffer_{node.index}'
+        else:
+            params['fill_fn'] = 'FillConv1DBuffer'
+        conv_config = self.template.format(**params)
+
+        mult_params = self._default_config_params(node)
+        mult_params['n_in'] = (
+            node.get_attr('n_chan')
+            * (node.get_attr('filt_width') + node.get_attr('stride_width') - 1)
+            // node.get_attr('stride_width')
+        )
+        mult_params['n_out'] = node.get_attr('n_filt')
+        mult_params['product_type'] = get_backend('vivado').product_type(
+            node.get_input_variable().type.precision, node.get_weights('weight').type.precision
+        )
+        mult_config = self.mult_template.format(**mult_params)
+
+        return mult_config + '\n' + conv_config
+
+
+class Conv1DTransposeFunctionTemplate(FunctionCallTemplate):
+    def __init__(self):
+        super().__init__(Conv1DTranspose, include_header=conv1dtranspose_include_list)
+        self.template = conv1dtranspose_function_template
 
     def format(self, node):
         params = self._default_function_params(node)
@@ -217,6 +313,102 @@ class DepthwiseConv2DFunctionTemplate(Conv2DFunctionTemplate):
     def __init__(self):
         super(Conv2DFunctionTemplate, self).__init__(DepthwiseConv2D, include_header=sepconv2d_include_list)
         self.template = depthconv2d_function_template
+
+
+# Conv2DTranspose Templates
+conv2dtranspose_config_template = """struct config{index} : nnet::conv2dtranspose_config {{
+    static const unsigned pad_top = {pad_top};
+    static const unsigned pad_bottom = {pad_bottom};
+    static const unsigned pad_left = {pad_left};
+    static const unsigned pad_right = {pad_right};
+    static const unsigned in_height = {in_height};
+    static const unsigned in_width = {in_width};
+    static const unsigned n_chan = {n_chan};
+    static const unsigned filt_height = {filt_height};
+    static const unsigned filt_width = {filt_width};
+    static const unsigned kernel_size = filt_height * filt_width;
+    static const unsigned n_filt = {n_filt};
+    static const unsigned stride_height = {stride_height};
+    static const unsigned stride_width = {stride_width};
+    static const unsigned out_height = {out_height};
+    static const unsigned out_width = {out_width};
+    static const unsigned reuse_factor = {reuse};
+    static const unsigned n_zeros = {nzeros};
+    static const unsigned trfilt_width = {trfilt_width};
+    static const unsigned trfilt_height = {trfilt_height};
+    static const bool store_weights_in_bram = false;
+    static const unsigned strategy = nnet::{strategy};
+    static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
+    static const unsigned min_height = {min_height};
+    static const unsigned min_width = {min_width};
+    static const ap_uint<trfilt_height * trfilt_width> pixels[min_height * min_width];
+    static const unsigned n_partitions = {n_partitions};
+    static const unsigned proc_height = {proc_height};
+    static const unsigned proc_width = {proc_width};
+    static const unsigned n_pixels = proc_height * proc_width / n_partitions;
+    template<class data_T, class CONFIG_T>
+    using fill_buffer = nnet::{fill_fn}<data_T, CONFIG_T>;
+    typedef {accum_t.name} accum_t;
+    typedef {bias_t.name} bias_t;
+    typedef {weight_t.name} weight_t;
+    typedef {config_t} mult_config;
+}};
+const ap_uint<config{index}::trfilt_height * config{index}::trfilt_width> config{index}::pixels[] = {{{instructions}}};\n"""
+
+conv2dtranspose_function_template = (
+    'nnet::conv_2d_transpose_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+)
+
+conv2dtranspose_include_list = ['nnet_utils/nnet_conv2dtranspose.h', 'nnet_utils/nnet_conv2dtranspose_stream.h']
+
+
+class Conv2DTransposeConfigTemplate(LayerConfigTemplate):
+    def __init__(self):
+        super().__init__(Conv2DTranspose)
+        self.template = conv2dtranspose_config_template
+        self.mult_template = conv_mult_config_template
+
+    def format(self, node):
+        params = self._default_config_params(node)
+        params['dilation'] = node.get_attr('dilation', 1)
+        params['nzeros'] = node.get_weights('weight').nzeros
+        params['trfilt_width'] = (node.get_attr('filt_width') + node.get_attr('stride_width') - 1) // node.get_attr(
+            'stride_width'
+        )
+        params['trfilt_height'] = (node.get_attr('filt_height') + node.get_attr('stride_height') - 1) // node.get_attr(
+            'stride_height'
+        )
+
+        params['config_t'] = f'config{node.index}_mult'
+        if node.model.config.get_config_value('IOType') == 'io_parallel':
+            params['fill_fn'] = f'fill_buffer_{node.index}'
+        else:
+            params['fill_fn'] = 'FillConv2DBuffer'
+        conv_config = self.template.format(**params)
+
+        mult_params = self._default_config_params(node)
+        mult_params['n_in'] = node.get_attr('n_chan') * params['trfilt_width'] * params['trfilt_height']
+        mult_params['n_out'] = node.get_attr('n_filt')
+        mult_params['product_type'] = get_backend('vivado').product_type(
+            node.get_input_variable().type.precision, node.get_weights('weight').type.precision
+        )
+        mult_config = self.mult_template.format(**mult_params)
+
+        return mult_config + '\n' + conv_config
+
+
+class Conv2DTransposeFunctionTemplate(FunctionCallTemplate):
+    def __init__(self):
+        super().__init__(Conv2DTranspose, include_header=conv2dtranspose_include_list)
+        self.template = conv2dtranspose_function_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        params['data_format'] = 'cf' if node.get_attr('data_format') == 'channels_first' else 'cl'
+        params['w'] = node.get_weights('weight').name
+        params['b'] = node.get_weights('bias').name
+
+        return self.template.format(**params)
 
 
 # SeparableConv1D/2D Templates

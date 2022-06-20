@@ -428,7 +428,17 @@ class QuartusInplaceStreamVariableConverter(InplaceStreamVariableConverter):
 
 class StaticWeightVariableDefinition(VariableDefinition):
     def definition_cpp(self, name_suffix='', as_reference=False):
-        return f'{self.type.name} {self.name}[{self.data_length}]'
+        if self.keep_dims > 0:
+            size_str = ''
+            for dim in range(self.keep_dims):
+                size_str += f'[{self.shape[dim]}]'
+            final_dim = 1
+            for dim in range(self.keep_dims, len(self.shape)):
+                final_dim *= self.shape[dim]
+            size_str += f'[{final_dim}]'
+            return f'{self.type.name} {self.name}{size_str}'
+        else:
+            return f'{self.type.name} {self.name}[{self.data_length}]'
 
 
 class StaticWeightVariableConverter:

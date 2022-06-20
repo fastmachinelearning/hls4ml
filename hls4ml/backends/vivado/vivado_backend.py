@@ -11,7 +11,9 @@ from hls4ml.model.layers import (
     GRU,
     LSTM,
     Conv1D,
+    Conv1DTranspose,
     Conv2D,
+    Conv2DTranspose,
     Dense,
     DepthwiseConv2D,
     Embedding,
@@ -84,6 +86,8 @@ class VivadoBackend(FPGABackend):
             'vivado:clone_output',
             'vivado:insert_zero_padding_before_conv1d',
             'vivado:insert_zero_padding_before_conv2d',
+            'vivado:insert_zero_padding_before_conv1dtranspose',
+            'vivado:insert_zero_padding_before_conv2dtranspose',
             'vivado:broadcast_stream',
         ]
         streaming_flow = register_flow('streaming', streaming_passes, requires=[init_flow], backend=self.name)
@@ -273,6 +277,37 @@ class VivadoBackend(FPGABackend):
 
         self._validate_conv_strategy(layer)
 
+    @layer_optimizer(Conv1DTranspose)
+    def init_conv1dtranspose(self, layer):
+        if layer.model.config.is_resource_strategy(layer):
+            layer.set_attr('strategy', 'resource')
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_target_reuse_factor(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
+        else:
+            layer.set_attr('strategy', 'latency')
+
+        proc_width = (
+            layer.get_output_variable().shape[0] + layer.get_attr('pad_left') + layer.get_attr('stride_width') - 1
+        ) // layer.get_attr('stride_width')
+        chosen_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1)
+        valid_pf = self.get_valid_conv_partition_splits(1, proc_width)
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            valid_pf_str = ','.join(map(str, valid_pf))
+            print(
+                f'WARNING: Invalid ParallelizationFactor={chosen_pf} in layer "{layer.name}".'
+                f'Using ParallelizationFactor={closest_pf} instead. Valid ParallelizationFactor(s): {valid_pf_str}.'
+            )
+        else:
+            closest_pf = chosen_pf
+        layer.set_attr('n_partitions', proc_width // closest_pf)
+        layer.set_attr('proc_width', proc_width)
+
+        layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+        self._validate_conv_strategy(layer)
+
     @layer_optimizer(SeparableConv1D)
     def init_sepconv1d(self, layer):
         if layer.model.config.is_resource_strategy(layer):
@@ -314,6 +349,44 @@ class VivadoBackend(FPGABackend):
         else:
             closest_pf = chosen_pf
         layer.set_attr('n_partitions', out_height * out_width // closest_pf)
+
+        layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+        self._validate_conv_strategy(layer)
+
+    @layer_optimizer(Conv2DTranspose)
+    def init_conv2dtranspose(self, layer):
+        if len(layer.weights['weight'].data.shape) == 2:  # This can happen if we assign weights of Dense layer to 1x1 Conv2D
+            layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0, 1))
+
+        if layer.model.config.is_resource_strategy(layer):
+            layer.set_attr('strategy', 'resource')
+            self.set_target_reuse_factor(layer)
+            n_in, n_out = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
+        else:
+            layer.set_attr('strategy', 'latency')
+
+        proc_height = (
+            layer.get_output_variable().shape[0] + layer.get_attr('pad_top') + layer.get_attr('stride_height') - 1
+        ) // layer.get_attr('stride_height')
+        proc_width = (
+            layer.get_output_variable().shape[1] + layer.get_attr('pad_left') + layer.get_attr('stride_width') - 1
+        ) // layer.get_attr('stride_width')
+        chosen_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1)
+        valid_pf = self.get_valid_conv_partition_splits(proc_height, proc_width)
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            valid_pf_str = ','.join(map(str, valid_pf))
+            print(
+                f'WARNING: Invalid ParallelizationFactor={chosen_pf} in layer "{layer.name}".'
+                f'Using ParallelizationFactor={closest_pf} instead. Valid ParallelizationFactor(s): {valid_pf_str}.'
+            )
+        else:
+            closest_pf = chosen_pf
+        layer.set_attr('n_partitions', proc_height * proc_width // closest_pf)
+        layer.set_attr('proc_height', proc_height)
+        layer.set_attr('proc_width', proc_width)
 
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
