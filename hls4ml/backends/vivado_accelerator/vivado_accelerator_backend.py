@@ -88,12 +88,14 @@ class VivadoAcceleratorBackend(VivadoBackend):
         config['AcceleratorConfig']['Board'] = board
         config['AcceleratorConfig']['Interface'] = interface  # axi_stream, axi_master, axi_lite
         config['AcceleratorConfig']['Driver'] = driver
-        config['AcceleratorConfig']['Platform'] = platform
         config['AcceleratorConfig']['Precision'] = {}
         config['AcceleratorConfig']['Precision']['Input'] = {}
         config['AcceleratorConfig']['Precision']['Output'] = {}
         config['AcceleratorConfig']['Precision']['Input'] = input_type  # float, double or ap_fixed<a,b>
         config['AcceleratorConfig']['Precision']['Output'] = output_type  # float, double or ap_fixed<a,b>
+        if board.startswith('alveo'):
+            config['AcceleratorConfig']['Platform'] = platform  
+
         return config
 
     def _register_flows(self):
