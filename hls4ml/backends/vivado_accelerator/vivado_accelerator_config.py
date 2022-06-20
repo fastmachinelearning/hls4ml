@@ -47,6 +47,7 @@ class VivadoAcceleratorConfig(object):
                                                                             'float')  # float, double or ap_fixed<a,b>
         self.output_type = self.config['AcceleratorConfig']['Precision'].get('Output',
                                                                              'float')  # float, double or ap_fixed<a,b>
+        self.platform= self.config['AcceleratorConfig'].get('Platform', 'xilinx_u250_xdma_201830_2') # Get platform folder name
 
         assert len(
             model_inputs) == 1, "Only models with one input tensor are currently supported by VivadoAcceleratorBackend"
@@ -118,13 +119,27 @@ class VivadoAcceleratorConfig(object):
     def get_board(self):
         return self.board
 
+    def get_platform(self):
+        return self.platform
+
+    def get_clock_period(self):
+        return self.clock_period
+
     def get_driver_path(self):
-        return '../templates/vivado_accelerator/' + self.board + '/' + self.driver + '_drivers/' + \
+        if  self.board.startswith('alveo'):
+            return '../templates/vivado_accelerator/' + 'alveo/' + self.driver + '_drivers/' + \
+               self.get_driver_file()
+        else:
+            return '../templates/vivado_accelerator/' + self.board + '/' + self.driver + '_drivers/' + \
                self.get_driver_file()
 
     def get_driver_file(self):
         driver_ext = '.py' if self.driver == 'python' else '.h'
         return self.interface + '_driver' + driver_ext
+
+    def get_krnl_rtl_src_dir(self):
+        return '../templates/vivado_accelerator/' + 'alveo/' + '/krnl_rtl_src'
+ 
 
     def get_input_type(self):
         return self.input_type
@@ -140,4 +155,8 @@ class VivadoAcceleratorConfig(object):
         tcl_script = tcl_scripts.get(self.interface, None)
         if tcl_script is None:
             raise Exception('No tcl script definition available for the desired interface in supported_board.json')
-        return '../templates/vivado_accelerator/' + self.board + '/tcl_scripts/' + tcl_script
+        if  self.board.startswith('alveo'):
+            return '../templates/vivado_accelerator/' + 'alveo/'  + '/tcl_scripts/' + tcl_script
+        else: 
+            return '../templates/vivado_accelerator/' + self.board + '/tcl_scripts/' + tcl_script
+
