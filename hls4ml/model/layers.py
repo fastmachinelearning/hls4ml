@@ -872,9 +872,10 @@ class SimpleRNN(Layer):
     def initialize(self):
         if self.attributes['return_sequences']:
             shape = [self.attributes['n_timesteps'], self.attributes['n_out']]
+            dims = ['N_TIME_STEPS_{}'.format(self.index), 'N_OUT_{}'.format(self.index)]
         else:
-            shape = [1, self.attributes['n_out']]
-        dims = ['N_TIME_STEPS_{}'.format(self.index), 'N_OUT_{}'.format(self.index)]
+            shape = [self.attributes['n_out']]
+            dims = ['N_OUT_{}'.format(self.index)]
         
         self.add_output_variable(shape, dims)
 
