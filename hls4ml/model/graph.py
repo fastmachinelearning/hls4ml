@@ -58,7 +58,7 @@ class HLSConfig(object):
     def get_layer_config_value(self, layer, key, default=None):
         hls_config = self.config['HLSConfig']
 
-        name_config = hls_config.get('LayerName', {}).get(layer.name.lower(), None)
+        name_config = hls_config.get('LayerName', {}).get(layer.name, None)
         if name_config is not None:
             return name_config.get(key, default)
 
@@ -80,7 +80,7 @@ class HLSConfig(object):
         if type_config is not None:
             layer_config.update(type_config)
 
-        name_config = hls_config.get('LayerName', {}).get(layer.name.lower(), None)
+        name_config = hls_config.get('LayerName', {}).get(layer.name, None)
         if name_config is not None:
             layer_config.update(name_config)
 
