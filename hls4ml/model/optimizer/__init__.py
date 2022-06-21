@@ -20,6 +20,8 @@ base_convert = [
     'quant_constant_parameters',
     'quant_to_activation',
     'fuse_quant_with_constant',
+    'reshape_constant_fusion',
+    'transpose_constant_fusion',
     'quant_to_alpha_activation_alpha',
     'const_quant_to_const_alpha',
     'batch_norm_onnx_constant_parameters',

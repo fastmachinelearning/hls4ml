@@ -1,14 +1,16 @@
 
+from numpy import isin
 from hls4ml.model.optimizer import GlobalOptimizerPass
 from hls4ml.backends.fpga.fpga_types import (
-    ACTypeConverter, QuartusArrayVariableConverter, HLSTypeConverter,
+    ACTypeConverter, HLSTypeConverter, QuartusArrayVariableConverter, QuartusInplaceArrayVariableConverter,
     QuartusStructMemberVariableConverter, StaticWeightVariableConverter)
-
+from hls4ml.model.types import InplaceTensorVariable
 
 class TransformTypes(GlobalOptimizerPass):
     def __init__(self):
         self.type_converter = HLSTypeConverter(precision_converter=ACTypeConverter())
         self.array_var_converter = QuartusArrayVariableConverter(type_converter=self.type_converter)
+        self.inplace_array_var_converter = QuartusInplaceArrayVariableConverter(type_converter=self.type_converter)
         self.struct_var_converter = QuartusStructMemberVariableConverter(type_converter=self.type_converter)
         self.weight_var_converter = StaticWeightVariableConverter(type_converter=self.type_converter)
 
@@ -23,6 +25,8 @@ class TransformTypes(GlobalOptimizerPass):
                     new_var = self.struct_var_converter.convert(var, pragma='hls_register', struct_name='inputs')
                 elif out_name in node.model.outputs:
                     new_var = self.struct_var_converter.convert(var, pragma='hls_register', struct_name='outputs')
+                elif isinstance(var, InplaceTensorVariable):
+                    new_var = self.inplace_array_var_converter.convert(var, pragma='')
                 else:
                     new_var = self.array_var_converter.convert(var, pragma='hls_register')
             else:

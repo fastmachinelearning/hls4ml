@@ -46,6 +46,10 @@ class QuartusBackend(FPGABackend):
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
+        optimization_passes = [
+            'quartus:inplace_parallel_reshape',
+        ]
+        optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
         templates = self._get_layer_templates()
         template_flow = register_flow('apply_templates', templates, requires=[init_flow], backend=self.name)
@@ -68,7 +72,7 @@ class QuartusBackend(FPGABackend):
         else:
             extras_flow = None
 
-        ip_flow_requirements = ['optimize', init_flow, quantization_flow, quartus_types_flow, extras_flow, template_flow]
+        ip_flow_requirements = ['optimize', init_flow, quantization_flow, optimization_flow, quartus_types_flow, extras_flow, template_flow]
         ip_flow_requirements = list(filter(None, ip_flow_requirements))
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)

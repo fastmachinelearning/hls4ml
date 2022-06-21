@@ -8,8 +8,8 @@ import numpy as np
 from tensorflow.keras import optimizers
 from tensorflow.keras.layers import Input, Dense, Reshape, Softmax
 
-
-def test_reshape_parallel():
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_reshape_parallel(backend):
     model = tf.keras.models.Sequential([
         tf.keras.layers.Input((10)),
         tf.keras.layers.Dense(10*3),
@@ -18,8 +18,10 @@ def test_reshape_parallel():
     ])
     model.compile(optimizer='adam', loss='mse')
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = 'hls4mlprj_reshape_parallel'
-    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
+    output_dir = f'hls4mlprj_reshape_parallel_{backend}'
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config,
+                                                           output_dir=output_dir,
+                                                           backend=backend)
     hls_model.compile()
 
 def test_reshape_stream():
