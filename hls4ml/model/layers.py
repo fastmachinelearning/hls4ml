@@ -39,6 +39,9 @@ class Layer(object):
         return all_attributes
 
     def __init__(self, model, name, attributes, inputs, outputs=None):
+        if name == 'input':
+            raise RuntimeError("No model layer should be named 'input' because that is a reserved;" + \
+                               "layer name in ModelGraph; Please rename the layer in your model")
         self.model = model
         self.name = name
         self.index = model.next_layer()
@@ -488,7 +491,8 @@ class SeparableConv1D(Layer):
         self.add_weights_variable(name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer'))
 
         zero_bias_data = np.zeros((self.attributes['n_chan'],))
-        self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data)
+        precision = IntegerPrecisionType(width=1, signed=False)
+        self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data, precision=precision)
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
@@ -637,7 +641,8 @@ class SeparableConv2D(Layer):
         self.add_weights_variable(name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer'))
 
         zero_bias_data = np.zeros((self.attributes['n_chan'],))
-        self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data)
+        precision = IntegerPrecisionType(width=1, signed=False)
+        self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data, precision=precision)
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 

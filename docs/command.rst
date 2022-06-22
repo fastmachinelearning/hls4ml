@@ -9,7 +9,7 @@ This page documents all the commands that ``hls4ml`` supports.
 Overview
 =========
 
-To start you can just type in ``hls4ml -h`` or ``hls4ml  --help`` in your command line, a messege will show up like below: 
+To start you can just type in ``hls4ml -h`` or ``hls4ml  --help`` in your command line, a message will show up like below: 
 
 .. code-block::
 

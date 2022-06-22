@@ -27,12 +27,12 @@ void depthwise_product(
     #pragma HLS ARRAY_PARTITION variable=mult complete
 
     int multiplier_limit  = ceil(float(CONFIG_T::kernel_size * CONFIG_T::n_chan) / float(CONFIG_T::reuse_factor)) - floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
-    CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t, typename CONFIG_T::mult_config::accum_t>::limit(multiplier_limit);
+    CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::limit(multiplier_limit);
 
     // Do the matrix-multiply
     Product: for(int ii = 0; ii < CONFIG_T::kernel_size * CONFIG_T::n_chan; ii++) {
         #pragma HLS UNROLL
-        mult[ii] = CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t, typename CONFIG_T::mult_config::accum_t>::product(data[ii], weights[ii]);
+        mult[ii] = CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(data[ii], weights[ii]);
     }
 
     // Initialize accumulator with input biases

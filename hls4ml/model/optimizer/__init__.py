@@ -45,6 +45,7 @@ base_optimize = [
     'eliminate_linear_activation',
     'propagate_dense_precision',
     'propagate_conv_precision',
+    'set_precision_concat'
 ]
 
 try:

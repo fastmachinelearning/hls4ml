@@ -25,7 +25,7 @@ class TransposeConstantFusion(OptimizerPass):
     """ Remove Constant from new shape input """
     def match(self, node):
         is_match = (isinstance(node, Transpose)
-                    and len(node.input) >= 0
+                    and len(node.inputs) >= 0
                     and isinstance(node.get_input_node(node.inputs[0]), Constant)
                     and list(node.get_attr('perm')) != [0])
 

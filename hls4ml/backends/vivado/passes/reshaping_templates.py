@@ -101,9 +101,9 @@ transpose_config_template = """struct config{index} : nnet::transpose_config {{
     static constexpr unsigned perm[3] = {{{perm_str}}};
 }};\n"""
 
-transpose_function_template = 'nnet::transpose_{dim}<{input_t}, {config}>({input}, {output});'
+transpose_function_template = 'nnet::transpose_{dim}<{input_t}, {output_t}, {config}>({input}, {output});'
 
-transpose_include_list = ['nnet_utils/nnet_array.h']
+transpose_include_list = ['nnet_utils/nnet_array.h', 'nnet_utils/nnet_stream.h']
 
 class TransposeConfigTemplate(LayerConfigTemplate):
     def __init__(self):
@@ -111,7 +111,7 @@ class TransposeConfigTemplate(LayerConfigTemplate):
         self.template = transpose_config_template
 
     def format(self, node):
-        params = self._default_config_params()
+        params = self._default_config_params(node)
 
         return self.template.format(**params)
 

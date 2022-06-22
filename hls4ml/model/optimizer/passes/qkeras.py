@@ -59,7 +59,12 @@ class OutputRoundingSaturationMode(ConfigurableOptimizerPass):
             new_precision = FixedPrecisionType(old_precision.width, old_precision.integer, old_precision.signed, self.rounding_mode, self.saturation_mode, self.saturation_bits)
         else: # in case the precision is a string
             new_precision = self.precision_string_modify(old_precision)
-        node.get_output_variable().type.precision = new_precision
+
+        out_var = node.get_output_variable()
+        out_t = NamedType(out_var.type.name, new_precision)
+        out_var.type = out_t
+        node.attributes['result_t'] = out_t
+
         if node.get_attr('accum_t') is not None:
             accum_t = NamedType('layer{}_accum_t'.format(node.index), new_precision)
             node.set_attr('accum_t', new_precision)
