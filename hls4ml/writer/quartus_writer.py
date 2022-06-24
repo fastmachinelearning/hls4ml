@@ -406,8 +406,7 @@ class QuartusWriter(Writer):
                 newline = ''
                 for layer in model.get_layers():
                     func = layer.get_attr('function_cpp')
-                    if func and model.config.trace_output and model.config.get_layer_config_value(layer, 'Trace',
-                                                                                                  False):
+                    if func and model.config.trace_output and layer.get_attr('Trace', False):
                         vars = layer.get_variables()
                         for var in vars:
                             newline += indent + 'nnet::trace_outputs->insert(std::pair<std::string, void *>("{}", (void *) malloc({} * element_size)));\n'.format(
