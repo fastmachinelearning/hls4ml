@@ -129,6 +129,12 @@ class QuartusWriter(Writer):
                     if func:
                         newline += '    ' + func + '\n'
                         newline += '\n'
+                    if model.config.trace_output and layer.get_attr('Trace', False):
+                        newline += '#ifndef HLS_SYNTHESIS\n'
+                        for var in vars:
+                            newline += '    nnet::save_layer_output<{}>({}, "{}", {});\n'.format(var.type.name, var.name, layer.name, var.size_cpp())
+                        newline += '#endif\n'
+                    newline += '\n'
 
             # Just copy line
             else:
