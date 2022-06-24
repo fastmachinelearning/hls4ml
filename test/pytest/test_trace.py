@@ -9,6 +9,7 @@ test_root_path = Path(__file__).parent
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 def test_trace(backend):
+    '''Test the tracing feature with a simple Keras model.'''
     model = tf.keras.models.Sequential()
     model.add(Dense(2,
               input_shape=(1,),
@@ -42,4 +43,3 @@ def test_trace(backend):
 
     np.testing.assert_allclose(hls4ml_trace['Dense'], keras_trace['Dense'], rtol=1e-2, atol=0.01)
     np.testing.assert_allclose(hls4ml_pred, keras_prediction, rtol=1e-2, atol=0.01)
-
