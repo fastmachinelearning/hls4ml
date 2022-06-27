@@ -10,7 +10,7 @@ from ast import literal_eval
 from contextlib import contextmanager
 
 from hls4ml.model.types import NamedType, IntegerPrecisionType, FixedPrecisionType
-from hls4ml.model.layers import Layer, Dense, BatchNormalization, Activation, ParametrizedActivation, PReLU, Softmax
+from hls4ml.model.layers import Embedding, Layer, Dense, BatchNormalization, Activation, ParametrizedActivation, PReLU, Softmax
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer, model_optimizer
 from hls4ml.model.flow import register_flow
 from hls4ml.backends import FPGABackend
@@ -188,3 +188,13 @@ class QuartusBackend(FPGABackend):
             layer.set_attr('exp_table_t', layer.get_attr('table_t'))
         if 'inv_table_t' not in layer.attributes:
             layer.set_attr('inv_table_t', layer.get_attr('table_t'))
+        if layer.model.config.is_resource_strategy(layer):
+            # 'resource' strategy = 'latency' for Softmax
+            layer.set_attr('implementation', 'latency')
+        else:
+            layer.set_attr('implementation', layer.model.config.get_strategy(layer).lower())
+
+    @layer_optimizer(Embedding)
+    def init_embed(self, layer):
+        if layer.attributes['n_in'] is None:
+           raise Exception('Input length of Embedding layer must be specified.')

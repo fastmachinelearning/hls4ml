@@ -102,7 +102,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     #Define supported layers
     core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Reshape', 'Permute', 'Embedding']
     dense_layers = ['Dense', 'BinaryDense', 'TernaryDense']
-    conv_layers = ['Conv1D', 'Conv2D', 'BinaryConv2D']
+    conv_layers = ['Conv1D', 'Conv2D', 'BinaryConv2D', 'SeparableConv2D']
     pooling_layers = ['MaxPooling1D', 'MaxPooling2D', 'GlobalMaxPooling1D', 'GlobalMaxPooling2D', 'AveragePooling1D', 'AveragePooling2D', 'GlobalAveragePooling1D', 'GlobalAveragePooling2D']
     norm_layers = ['BatchNormalization']
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
@@ -177,13 +177,20 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
 
         print('Layer name: {}, layer type: {}'.format(layer['name'], layer['class_name']))
         layer_list.append( layer )
-        if 'activation' in layer['config'] and layer['class_name'] not in activation_layers + qkeras_layers:
+        if 'activation' in layer['config'] and layer['class_name'] not in activation_layers:
             act_layer = {}
-            act_layer['name'] = layer['name'] + '_' + layer['config']['activation']
-            act_layer['class_name'] = 'Activation'
-            print('  -> Activation ({}), layer name: {}'.format(layer['config']['activation'], layer['name']))
+            act_details = layer['config']['activation']
+            if isinstance(act_details, dict):
+                precision = _get_precision_from_quantizer(act_details)
+                act_details = act_details['class_name']
+                act_layer['precision'] = {}
+                act_layer['precision']['result'] = precision
+                act_layer['class_name'] = 'QActivation'
+            else:
+                act_layer['class_name'] = 'Activation'
+            act_layer['name'] = layer['name'] + '_' + act_details
+            print('  -> Activation ({}), layer name: {}'.format(act_details, layer['name']))
             layer_list.append(act_layer)
-
 
     def make_layer_config(layer):
         layer_config = {}

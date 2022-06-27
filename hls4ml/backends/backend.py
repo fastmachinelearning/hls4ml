@@ -1,14 +1,16 @@
 import inspect
 import os
+from pathlib import Path
 
 from hls4ml.backends.template import Template
-from hls4ml.model.flow import get_backend_flows
+from hls4ml.model.flow import get_backend_flows, update_flow
 from hls4ml.model.optimizer import LayerOptimizerPass, register_pass, extract_optimizers_from_path, extract_optimizers_from_object, get_backend_passes, get_optimizer
 
 
 class Backend(object):
     def __init__(self, name):
         self.name = name
+        self.custom_source = {}
         self._init_optimizers()
 
     def _init_optimizers(self):
@@ -46,24 +48,95 @@ class Backend(object):
         return [name for name in get_backend_passes(self.name) if isinstance(get_optimizer(name), Template)]
 
     def create_initial_config(self, **kwargs):
+        """Create the minimal conversion config for the backend.
+
+        Subclasses should implement this method to provide the initial configuration for the conversion.
+        """
         raise NotImplementedError
 
     def create_layer_class(self, layer_class):
+        """Wrap the original layer class into the backend-specific layer class.
+
+        Backends should extend base layer classes with new attributes and variables as needed. These new classes are then
+        used within the model.
+
+        Args:
+            layer_class (class): Base class to extend
+        """
         raise NotImplementedError
 
     def get_available_flows(self):
+        """Returns the list of flows registered for this backend.
+
+        Returns:
+            list: The list of registered flows.
+        """
         return get_backend_flows(self.name)
 
     def get_default_flow(self):
+        """The name of the default flow of the backend.
+
+        Default flow is used as the conversion target if the target flow has not been specified.
+        """
         raise NotImplementedError
 
-    def register_source(self, file_name, source, destination_dir='nnet_utils'):
-        raise NotImplementedError
+    def get_custom_source(self):
+        """Returns the registered custom source files.
 
-    def register_pass(self, name, opt_cls):
-        register_pass(name, opt_cls, backend=self.name)
+        Returns:
+            dict: Custom source files. Keys represent destination paths, values are absolute paths to registered source
+                files.
+        """
+        return self.custom_source
+
+    def register_source(self, source_file, destination_dir='nnet_utils'):
+        """Register custom source that is not part of the backend's templates.
+
+        Args:
+            source_file (str or Path): Absolute path to the source file.
+            destination_dir (str, optional): The sub-directory of the output project to write the source file to.
+                Defaults to 'nnet_utils'.
+
+        Raises:
+            Exception: If the source file is not a str or Path, or if the path is not absolute
+        """
+        if isinstance(source_file, str):
+            if not os.path.isabs(source_file):
+                raise Exception(f'Expected absolute path to custom source file, got: "{source_file}"')
+            source_path = Path(source_file)
+        elif isinstance(source_file, Path):
+            source_path = source_file
+        else:
+            raise Exception(f'Expected string or Path, got: "{type(source_file)}"')
+
+        self.custom_source[destination_dir + os.path.sep + source_path.name] = source_path
+
+    def register_pass(self, name, opt_cls, flow=None):
+        """Register an optimizer path for the backend.
+
+        Note that user-provided optimizers registered without specifying any flow will not be invoked.
+
+        Args:
+            name (str): Name of the optimizer
+            opt_cls (class): Optimizer class
+            flow (str, list or tuple, optional): Existing flow(s) to add the optimizer to. Defaults to None.
+        """
+        opt_name = register_pass(name, opt_cls, backend=self.name)
+        if flow is not None:
+            if not isinstance(flow, (list, tuple)):
+                flow = [flow]
+
+            for f in flow:
+                update_flow(f, add_optimizers=[opt_name])
 
     def register_template(self, template_cls):
+        """Register a template "optimizer".
+
+        E.g., function call template or op configuration template.
+
+        Args:
+            template_cls (class): Template to register.
+        """
         template = template_cls()
         register_pass(template.get_name(), template, backend=self.name)
 
@@ -71,6 +144,15 @@ class Backend(object):
 backend_map = {}
 
 def register_backend(name, backend_cls):
+    """Create the backend instance and add it to the registry.
+
+    Args:
+        name (str): Name of the backend.
+        backend_cls (class): Backend class to instantiate. Class must implement a constructor without parameters.
+
+    Raises:
+        Exception: If the backend has already been registered.
+    """
     if name.lower() in backend_map:
         raise Exception('Backend {} already registered'.format(name))
 

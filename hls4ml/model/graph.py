@@ -58,7 +58,7 @@ class HLSConfig(object):
     def get_layer_config_value(self, layer, key, default=None):
         hls_config = self.config['HLSConfig']
 
-        name_config = hls_config.get('LayerName', {}).get(layer.name.lower(), None)
+        name_config = hls_config.get('LayerName', {}).get(layer.name, None)
         if name_config is not None:
             return name_config.get(key, default)
 
@@ -80,7 +80,7 @@ class HLSConfig(object):
         if type_config is not None:
             layer_config.update(type_config)
 
-        name_config = hls_config.get('LayerName', {}).get(layer.name.lower(), None)
+        name_config = hls_config.get('LayerName', {}).get(layer.name, None)
         if name_config is not None:
             layer_config.update(name_config)
 
@@ -395,7 +395,7 @@ class ModelGraph(object):
             self.output_vars[o] = out_var
         return node
 
-    def insert_node(self, node, before=None):
+    def insert_node(self, node, before=None, input_idx=0):
         """ Insert a new node into the model graph.
 
         The node to be inserted should be created with `make_node()` function. The optional 
@@ -405,6 +405,7 @@ class ModelGraph(object):
             node (Layer): Node to insert
             before (Layer, optional): The next node in sequence before which a
                 new node should be inserted. 
+           input_idx (int, optional): If the next node takes multiple inputs, the input index
         Raises:
             Exception: If an attempt to insert a node with multiple inputs is made or if
                 `before` does not specify a correct node in sequence.
@@ -414,7 +415,12 @@ class ModelGraph(object):
             raise Exception('Cannot insert a node with more than one input (for now).')
 
         prev_node = node.get_input_node(node.inputs[0])
-        next_nodes = [x for x in self.graph.values() if x.inputs[0] in prev_node.outputs]
+        next_nodes = []
+        for x in self.graph.values():
+            overlap = [value for value in x.inputs if value in prev_node.outputs]
+            if overlap: 
+                next_nodes.append(x)
+
         if before is None:
             next_node = next((x for x in self.graph.values() if x.inputs[0] in prev_node.outputs), None)
         else:
@@ -423,7 +429,7 @@ class ModelGraph(object):
             next_node = before
 
         if next_node is not None:
-            next_node.inputs[0] = node.outputs[0]
+            next_node.inputs[input_idx] = node.outputs[0]
 
         new_graph = OrderedDict()
         for k, v in self.graph.items():
@@ -454,13 +460,14 @@ class ModelGraph(object):
             if len(node.inputs) > 1 or len(node.outputs) > 1:
                 raise Exception('Cannot rewire a node with multiple inputs/outputs')
             prev_node = self.graph.get(node.inputs[0])
-            next_node = next((x for x in self.graph.values() if node.outputs[0] in x.inputs), None)
+            next_nodes = [x for x in self.graph.values() if node.outputs[0] in x.inputs]
             if prev_node is not None:
-                if next_node is not None:
-                    for i,_ in enumerate(next_node.inputs):
-                        if node.outputs[0] == next_node.inputs[i]:
-                            next_node.inputs[i] = prev_node.outputs[0]
-                            break
+                if len(next_nodes) > 0:
+                    for next_node in next_nodes:
+                        for i,_ in enumerate(next_node.inputs):
+                            if node.outputs[0] == next_node.inputs[i]:
+                                next_node.inputs[i] = prev_node.outputs[0]
+                                break
                 else:
                     if not node.outputs[0] in self.outputs:
                         raise Exception('Cannot rewire a node without child')
@@ -496,10 +503,9 @@ class ModelGraph(object):
         All node outputs and inputs are found. The model outputs are set to all node outputs
         that are not also node inputs.
         '''
-        node_outputs = np.array([out for node in self.graph.values() for out in node.outputs])
-        node_inputs = np.array([inp for node in self.graph.values() for inp in node.inputs])
-        model_outputs = node_outputs[np.isin(node_outputs, node_inputs, invert=True)]
-        self.outputs = model_outputs.tolist()
+        node_outputs = [out for node in self.graph.values() for out in node.outputs]
+        node_inputs = [inp for node in self.graph.values() for inp in node.inputs]
+        self.outputs = [out for out in node_outputs if out not in node_inputs]
 
     def get_weights_data(self, layer_name, var_name):
         return self.reader.get_weights_data(layer_name, var_name)
@@ -585,6 +591,7 @@ class ModelGraph(object):
             xlist = [x]
         else: 
             xlist = x
+        n_outputs = len(self.get_output_variables())
         
         for xi in xlist:
             if not isinstance(xi, np.ndarray):
@@ -604,8 +611,7 @@ class ModelGraph(object):
 
 
         top_function.restype = None
-        top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS") for i in range(len(xlist)+1)]
-        top_function.argtypes += [ctypes.POINTER(ctypes.c_ushort) for i in range(len(xlist)+1)]
+        top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS") for i in range(len(xlist) + n_outputs)]
 
         return top_function, ctype
 
@@ -626,12 +632,13 @@ class ModelGraph(object):
         if not all([n_samples[i] == n_samples[i+1] for i in range(len(xlist)-1)]):
             raise Exception('Input size mismatch, not all inputs match')
 
-        return n_sample
+        return int(n_sample)
 
     def predict(self, x):
         top_function, ctype = self._get_top_function(x)
         n_samples = self._compute_n_samples(x)
         n_inputs = len(self.get_input_variables())
+        n_outputs = len(self.get_output_variables())
 
         curr_dir = os.getcwd()
         os.chdir(self.config.get_output_dir() + '/firmware')
@@ -642,26 +649,29 @@ class ModelGraph(object):
 
         try:
             for i in range(n_samples):
-                predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
+                predictions = [np.zeros(yj.size(), dtype=ctype) for yj in self.get_output_variables()]
                 if n_inputs == 1:
-                    top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
+                    inp = [np.asarray(x[i])]
                 else:
-                    inp = [xj[i] for xj in x]
-                    argtuple = inp
-                    argtuple += [predictions]
-                    argtuple += [ctypes.byref(ctypes.c_ushort()) for k in range(len(inp)+1)]
-                    argtuple = tuple(argtuple)
-                    top_function(*argtuple)
+                    inp = [np.asarray(xj[i]) for xj in x]
+                argtuple = inp
+                argtuple += predictions
+                argtuple = tuple(argtuple)
+                top_function(*argtuple)
                 output.append(predictions)
 
 
-            #Convert to numpy array
-            output = np.asarray(output)
+            # Convert to list of numpy arrays (one for each output)
+            output = [np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)]
         finally:
             os.chdir(curr_dir)
-
-        if n_samples == 1:
+            
+        if n_samples == 1 and n_outputs == 1:
+            return output[0][0]
+        elif n_outputs == 1:
             return output[0]
+        elif n_samples == 1:
+            return [output_i[0] for output_i in output]
         else:
             return output
 
@@ -673,6 +683,7 @@ class ModelGraph(object):
         top_function, ctype = self._get_top_function(x)
         n_samples = self._compute_n_samples(x)
         n_inputs = len(self.get_input_variables())
+        n_outputs = len(self.get_output_variables())
 
         class TraceData(ctypes.Structure):
             _fields_ = [('name', ctypes.c_char_p),
@@ -711,16 +722,15 @@ class ModelGraph(object):
             alloc_func(ctypes.sizeof(ctype))
 
             for i in range(n_samples):
-                predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
+                predictions = [np.zeros(yj.size(), dtype=ctype) for yj in self.get_output_variables()]
                 if n_inputs == 1:
-                    top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
+                    inp = [np.asarray(x[i])]
                 else:
-                    inp = [xj[i] for xj in x]
-                    argtuple = inp
-                    argtuple += [predictions]
-                    argtuple += [ctypes.byref(ctypes.c_ushort()) for k in range(len(inp)+1)]
-                    argtuple = tuple(argtuple)
-                    top_function(*argtuple)
+                    inp = [np.asarray(xj[i]) for xj in x]
+                argtuple = inp
+                argtuple += predictions
+                argtuple = tuple(argtuple)
+                top_function(*argtuple)
                 output.append(predictions)
                 collect_func(trace_data)
                 for trace in trace_data:
@@ -732,15 +742,19 @@ class ModelGraph(object):
             for key in trace_output.keys():
                 trace_output[key] = np.asarray(trace_output[key])
 
-            #Convert to numpy array
-            output = np.asarray(output)
+            # Convert to list of numpy arrays (one for each output)
+            output = [np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)]
 
             free_func()
         finally:
             os.chdir(curr_dir)
 
-        if n_samples == 1:
+        if n_samples == 1 and n_outputs == 1:
+            return output[0][0], trace_output
+        elif n_outputs == 1:
             return output[0], trace_output
+        elif n_samples == 1:
+            return [output_i[0] for output_i in output], trace_output
         else:
             return output, trace_output
 

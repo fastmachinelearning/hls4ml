@@ -23,9 +23,9 @@ class VivadoBackend(FPGABackend):
 
     def _register_layer_attributes(self):
         extended_attrs = {
-            SimpleRNN: [Attribute('recurrent_reuse_factor', default=1)],
-            LSTM: [Attribute('recurrent_reuse_factor', default=1)],
-            GRU: [Attribute('recurrent_reuse_factor', default=1)],
+            SimpleRNN: [Attribute('recurrent_reuse_factor', default=1), Attribute('static', value_type=bool, default=True)],
+            LSTM: [Attribute('recurrent_reuse_factor', default=1), Attribute('static', value_type=bool, default=True)],
+            GRU: [Attribute('recurrent_reuse_factor', default=1), Attribute('static', value_type=bool, default=True)],
         }
         self.attribute_map.update(extended_attrs)
 
@@ -64,7 +64,7 @@ class VivadoBackend(FPGABackend):
         vivado_types_flow = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
 
         templates = self._get_layer_templates()
-        template_flow = register_flow('apply_templates', templates, requires=[init_flow], backend=self.name)
+        template_flow = register_flow('apply_templates', self._get_layer_templates, requires=[init_flow], backend=self.name)
 
         writer_passes = [
             'vivado:write_hls'
