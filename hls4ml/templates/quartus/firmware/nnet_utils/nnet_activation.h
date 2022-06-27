@@ -271,17 +271,30 @@ void softplus(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 template<class data_T, class res_T, typename CONFIG_T>
 void  softsign(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
+    static const int MAX_VALUE=8;
     // Initialize the lookup table
     #include "activation_tables/softsign_table.tb"
 
     // Index into the lookup table based on data
     #pragma unroll
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        ac_int<16> data_round = (data[ii]*CONFIG_T::table_size/16).to_int();
-        ac_int<16> index = data_round + 8*CONFIG_T::table_size/16;
-        if (index < 0)   index = 0;
-        if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
-        res[ii] = (res_T) softsign_table[index];
+        data_T temp  hls_register;
+        res_T  temp2 hls_register;
+        if(data[ii] < 0 ){
+            temp = -data[ii];
+        }
+        else{
+            temp = data[ii];
+        }
+        ac_int<16> index = (temp*CONFIG_T::table_size/MAX_VALUE).to_int();
+        if (temp > MAX_VALUE) index = CONFIG_T::table_size-1;
+        temp2 = (res_T) softsign_table[index];
+        if(data[ii] < 0 ){
+            res[ii] = -temp2;
+        }
+        else{
+            res[ii] = temp2;
+        }
     }
 }
 
