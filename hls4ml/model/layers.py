@@ -957,13 +957,24 @@ class LSTM(Layer):
             state_shape = [self.attributes['n_out']]
             state_dims = ['N_OUT_{}'.format(self.index)]
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t')
-            self.add_output_variable(state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t')
+            self.add_output_variable(state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t')        
 
         self.add_weights()
         self.add_bias()
 
         recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
         self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
+
+        data  = self.model.get_weights_data(self.name, 'kernel')
+        data2 = self.model.get_weights_data(self.name, 'recurrent_kernel')
+        data3 = self.model.get_weights_data(self.name, 'bias')
+
+        weight_types=["i","f","c","o"]
+        for i in range (0,4):
+          self.add_weights_variable(name='weight_{}'.format(weight_types[i]), var_name='kernel_{}_{{index}}'.format(weight_types [i]) , data=data[0][i*self.get_attr('n_out'):(i+1)*(self.get_attr('n_out'))], quantizer=self.get_attr('weight_quantizer'), compression=None)
+          self.add_weights_variable(name='recurrent_weight_{}'.format( weight_types [i] ), var_name='recurrent_kernel_{}_{{index}}'.format(weight_types [i]), data=data2[0:self.get_attr('n_out'),i*self.get_attr('n_out'):(i+1)*(self.get_attr('n_out'))], quantizer=self.get_attr('weight_quantizer'), compression=None)
+          self.add_weights_variable(name='bias_{}'.format(weight_types [i]), var_name='bias_{}_{{index}}'.format(weight_types [i]), data=data3[i*self.get_attr('n_out'):(i+1)*(self.get_attr('n_out'))], quantizer=self.get_attr('weight_quantizer'), compression=None)
+
 
 class GRU(Layer):
     _expected_attributes = [
@@ -1006,19 +1017,6 @@ class GRU(Layer):
 
         recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
         self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
-
-        data  = self.model.get_weights_data(self.name, 'kernel')
-        data2 = self.model.get_weights_data(self.name, 'recurrent_kernel')
-        data3 = self.model.get_weights_data(self.name, 'bias')
-
-        weight_types=["i","f","c","o"]
-        for i in range (0,4):
-          self.add_weights_variable(name='weight_{}'.format(weight_types[i]), var_name='kernel_{}_{{index}}'.format(weight_types [i]) , data=data[0][i*self.get_attr('n_out'):(i+1)*(self.get_attr('n_out'))], quantizer=self.get_attr('weight_quantizer'), compression=None)
-          self.add_weights_variable(name='recurrent_weight_{}'.format( weight_types [i] ), var_name='recurrent_kernel_{}_{{index}}'.format(weight_types [i]), data=data2[0:self.get_attr('n_out'),i*self.get_attr('n_out'):(i+1)*(self.get_attr('n_out'))], quantizer=self.get_attr('weight_quantizer'), compression=None)
-          self.add_weights_variable(name='bias_{}'.format(weight_types [i]), var_name='bias_{}_{{index}}'.format(weight_types [i]), data=data3[i*self.get_attr('n_out'):(i+1)*(self.get_attr('n_out'))], quantizer=self.get_attr('weight_quantizer'), compression=None)
-
-
-
 
 class GarNet(Layer):
     ref_impl = False
