@@ -880,10 +880,6 @@ class SimpleRNN(Layer):
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t')
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t')
 
-
-        self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=self.model.config.get_compression(self))
-        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
-
         data  = self.model.get_weights_data(self.name, 'kernel')
         data2 = self.model.get_weights_data(self.name, 'recurrent_kernel')
         data3 = self.model.get_weights_data(self.name, 'bias')
