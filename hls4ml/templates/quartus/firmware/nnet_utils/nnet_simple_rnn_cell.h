@@ -144,21 +144,14 @@ void simpleRNN_cell(
 }
 
 template<class data_T, class res_T, typename CONFIG_T, class WEIGHT_T>
-  void simple_rnn_network(data_T *input0, res_T *res,
+  void simple_rnn_network(data_T input0[CONFIG_T::n_timestamp*CONFIG_T::n_in], res_T res[CONFIG_T::n_timestamp*CONFIG_T::n_out],
   const WEIGHT_T *kernel, const WEIGHT_T *rec_kernel, const WEIGHT_T *bias){
 
     data_T hidden_state[CONFIG_T::n_out][CONFIG_T::n_timestamp + 1]     ;
     data_T hidden_state_temp[CONFIG_T::n_out]  ;
     data_T h[CONFIG_T::n_out] hls_register    ;
 
-    if (CONFIG_T::return_sequences == false ) {
-      static data_T inputs[CONFIG_T::n_timestamp] ;
-    }
-    else{
-      static data_T inputs[CONFIG_T::n_timestamp][CONFIG_T::n_out] ;
-    }
-
-    static data_T inputs[CONFIG_T::n_timestamp] hls_register;
+    static data_T inputs[CONFIG_T::n_timestamp*CONFIG_T::n_in] hls_register;
 
     INIT_LOOP:
     #pragma unroll
@@ -168,18 +161,14 @@ template<class data_T, class res_T, typename CONFIG_T, class WEIGHT_T>
 
     #pragma unroll
     #pragma ivdep
-    //Write input dimention
+ 
+    //Input dimention
 
-    //Single input dimention
-    for (int j=0; j<CONFIG_T::n_timestamp; j++){
-      inputs[j] = input0[j];
-    }
-    //Multi input dimention
-    //for (int j=0; j<CONFIG_T::n_timestamp; j++){
-    //  for (int z=0; z<CONFIG_T::n_out; z++){
-    //  inputs[j][z] = input0[z * CONFIG_T::n_out + j];
-      //}
-    //}
+      for (int j=0; j<CONFIG_T::n_timestamp; j++){
+        for (int z=0; z<CONFIG_T::n_in; z++){
+          inputs[z* CONFIG_T::n_in + j] = input0[z * CONFIG_T::n_in + j];
+        }
+      }
 
     #pragma unroll TIMESTAMP_UNROLLING
     for (int i=0; i < CONFIG_T::n_timestamp; i++){
@@ -188,26 +177,31 @@ template<class data_T, class res_T, typename CONFIG_T, class WEIGHT_T>
         hidden_state_temp[x] = hidden_state[x][i];
       }
 
-      simpleRNN_cell<data_T,CONFIG_T,WEIGHT_T>(hidden_state_temp,h,inputs[i], kernel, rec_kernel, bias);
+      for (int j=0; j<CONFIG_T::n_in; j++){
+        simpleRNN_cell<data_T,CONFIG_T,WEIGHT_T>(hidden_state_temp,h,inputs[i], kernel, rec_kernel, bias);
+      }
+
       #pragma unroll
       for (int x = 0; x < CONFIG_T::n_out; x++) {
         hidden_state[x][i+1]=h[x];
       }
     }
+
     #pragma unroll
-    //Output when return_sequences
-
-    //Output when return_sequences is false            
-    for (int x = 0; x < CONFIG_T::n_out; x++) {
+    if(CONFIG_T::return_sequences == 0){
+      //Output when return_sequences is false            
+      for (int x = 0; x < CONFIG_T::n_out; x++) {
         res[x]= hidden_state[x][CONFIG_T::n_timestamp];
+      }
     }
-
-    //Output when return_sequences is true
-    //for(int x = 0; x < CONFIG_T::n_timestamp; x++){ 
-    //  for(int h = 0; h < CONFIG_T::n_out; h++){
-    //      res[x * CONFIG_T::n_out + h] = hidden_state[h][x+1];
-    //  }
-    //}
+    else{
+      //Output when return_sequences is true
+      for(int x = 0; x < CONFIG_T::n_timestamp; x++){ 
+        for(int h = 0; h < CONFIG_T::n_out; h++){
+            res[x + h * CONFIG_T::n_out ] = hidden_state[h][x+1];
+        }
+      }
+    }
   }
 
 template<class data_T, class res_T, typename CONFIG_T, class WEIGHT_T>
@@ -247,21 +241,22 @@ template<class data_T, class res_T, typename CONFIG_T, class WEIGHT_T>
         hidden_state[x][i+1]=h[x];
       }
     }
+    
     #pragma unroll
-
-    //Output when return_sequences
-
-    //Output for Sliding Window when return_sequences is false
-    for (int x = 0; x < CONFIG_T::n_out; x++) {
+    if(CONFIG_T::return_sequences == 0){
+      //Output when return_sequences is false            
+      for (int x = 0; x < CONFIG_T::n_out; x++) {
         res[x]= hidden_state[x][CONFIG_T::n_timestamp];
+      }
     }
-
-    //Output for Sliding Window when return_sequences is true
-    //for(int x = 0; x < CONFIG_T::n_timestamp; x++){
-    //  for(int h = 0; h < CONFIG_T::n_out; h++){
-    //    res[x][h]= hidden_state[h][x+1];
-    //  }
-    //}
+    else{
+      //Output when return_sequences is true
+      for(int x = 0; x < CONFIG_T::n_timestamp; x++){ 
+        for(int h = 0; h < CONFIG_T::n_out; h++){
+            res[x + h * CONFIG_T::n_out ] = hidden_state[h][x+1];
+        }
+      }
+    }
   }
 
 }

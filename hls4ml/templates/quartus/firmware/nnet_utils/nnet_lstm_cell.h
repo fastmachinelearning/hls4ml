@@ -238,7 +238,7 @@ template<class data_T, class res_T,class CONFIG_T ,class WEIGHT_T>
     data_T h[CONFIG_T::n_out]    ;
     data_T c[CONFIG_T::n_out]    ;
 
-    static data_T inputs[CONFIG_T::n_timestamp*CONFIG_T::n_in] ;
+    static data_T inputs[CONFIG_T::n_timestamp*CONFIG_T::n_in] hls_register;
     
     INIT_LOOP:
     #pragma unroll
@@ -250,26 +250,13 @@ template<class data_T, class res_T,class CONFIG_T ,class WEIGHT_T>
     #pragma unroll
     #pragma ivdep
 
-    //Write input dimention
+    //Input dimention
 
       for (int j=0; j<CONFIG_T::n_timestamp; j++){
         for (int z=0; z<CONFIG_T::n_in; z++){
           inputs[z* CONFIG_T::n_in + j] = input0[z * CONFIG_T::n_in + j];
-          #ifndef HLS_SYNTHESIS
-            std::cout<<"Multiple A"<<inputs[z * CONFIG_T::n_in + j] <<std::endl;
-          #endif
         }
       }
-
-      //Single input dimention
-      //for (int j=0; j<CONFIG_T::n_timestamp; j++){
-      //  inputs[j] = input0[j];
-      //  #ifndef HLS_SYNTHESIS
-      //      std::cout<<"Multiple B"<<inputs[j] <<std::endl;
-      //  #endif
-      //}
-
-
 
     #pragma unroll TIMESTAMP_UNROLLING
     for (int i=0; i < CONFIG_T::n_timestamp; i++){
@@ -283,9 +270,6 @@ template<class data_T, class res_T,class CONFIG_T ,class WEIGHT_T>
         lstm_cell<data_T,CONFIG_T,WEIGHT_T>(hidden_state_temp,h,cell_state_temp,c,inputs[i + j* CONFIG_T::n_in],WI,WF,WC,WO,RWI,RWF,RWC,RWO,BI,BF,BC,BO);
       }
     
-
-
-
       #pragma unroll
       for (int x = 0; x < CONFIG_T::n_out; x++) {
         hidden_state[x][i+1]=h[x];
@@ -294,7 +278,6 @@ template<class data_T, class res_T,class CONFIG_T ,class WEIGHT_T>
     }
 
     #pragma unroll
-    //Output when return_sequences
     if(CONFIG_T::return_sequences == 0){
       //Output when return_sequences is false            
       for (int x = 0; x < CONFIG_T::n_out; x++) {
@@ -358,7 +341,6 @@ template<class data_T, class res_T,class CONFIG_T ,class WEIGHT_T>
     }
 
     #pragma unroll
-    //Output when return_sequences
     if(CONFIG_T::return_sequences == 0){
       //Output when return_sequences is false            
       for (int x = 0; x < CONFIG_T::n_out; x++) {
