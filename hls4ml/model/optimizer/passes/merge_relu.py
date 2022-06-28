@@ -5,8 +5,12 @@ class MergeRelu(OptimizerPass):
         supported_layers = ['Conv2D', 'Conv2DBatchnorm', 'Dense']
         is_match = node.get_input_node().__class__.__name__ in supported_layers
 
-        # hls4ml names ReLU activations 'Activation'
+        # hls4ml names ReLU activations 'Activation' TODO: Node class name isn't
+        # Activation anymore.. it can change and in our test case is called
+        # VivadoAcceleratorActivation
         is_match = is_match and (node.__class__.__name__ == 'Activation') 
+        print(f"Node class name = {node.__class__.__name__}")
+        print(f"Does layer {node.__class__.__name__} match Relu merge? {is_match}")
         return is_match
 
     def transform(self, model, node):

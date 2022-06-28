@@ -264,6 +264,7 @@ void dense_resource_rf_gt_nin(
 }
 
 // Dense (with ReLU)
+
 template<class data_T, class res_T, typename CONFIG_T>
 void dense_relu_resource_rf_leq_nin(
     data_T data[CONFIG_T::n_in],
@@ -309,7 +310,8 @@ void dense_relu_resource_rf_leq_nin(
         for (int im = 0; im < block_factor; im++) {
             #pragma HLS UNROLL
 
-            acc[out_index] += CONFIG_T::template product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>::product(data[in_index], weights[w_index]);
+            acc[out_index] += static_cast<typename CONFIG_T::accum_t>(
+              CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data[in_index], weights[w_index]));
 
             // Increment w_index
             w_index += rufactor;
@@ -395,7 +397,8 @@ void dense_relu_resource_rf_gt_nin_rem0(
         MultLoop:
         for (int im = 0; im < block_factor; im++) {
             #pragma HLS UNROLL
-            acc[out_index] += CONFIG_T::template product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>::product(data[in_index], weights[w_index]);
+            acc[out_index] += static_cast<typename CONFIG_T::accum_t>(
+              CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data[in_index], weights[w_index]));
 
             w_index += rufactor;
             if (w_index >= CONFIG_T::n_in * CONFIG_T::n_out) break; // check out of bounds
@@ -463,7 +466,7 @@ void dense_relu_resource_rf_gt_nin(
             int w_index = ir + rufactor * im;
             int in_index = w_index % nin;
             if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
-            tmpmult[im] = CONFIG_T::template product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>::product(data[in_index], weights[w_index]);
+            tmpmult[im] = CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data[in_index], weights[w_index]);
         }
 
         typename CONFIG_T::accum_t mult[multiplier_limit];
