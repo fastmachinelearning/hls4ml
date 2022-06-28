@@ -803,83 +803,14 @@ class QuartusWriter(Writer):
         with open(dstpath, "w") as myfile:
             myfile.writelines(my_lines)
 
-
-    def write_out_dimention(self, model, name):
-        dstpath = './{}/firmware/nnet_utils/{}.h'.format(model.config.get_output_dir(), name)
-        layer_return_sequences = 0
-
-        with open(dstpath, "r") as myfile:
-            my_lines = myfile.read()
-
-        for layer in model.get_layers():
-            if(layer_return_sequences == 1):
-                return_sequences = layer.get_attr('return_sequences')
-                layer_return_sequences += 1
-            else:
-                layer_return_sequences += 1
-        if not return_sequences:
-
-            res_return_sequences = """
-    //Output when not return_sequences  
-    for (int x = 0; x < CONFIG_T::n_in; x++) {
-        res[x]= hidden_state[x][CONFIG_T::n_timestamp];
-    }
-            """
-
-
-        else:
-            res_return_sequences = """
-    //Output when return_sequences
-    for(int x = 0; x < CONFIG_T::n_timestamp; x++){ 
-        for(int h = 0; h < CONFIG_T::n_out; h++){
-            res[x * CONFIG_T::n_out + h] = hidden_state[h][x+1];
-        }
-    }
-            """
-        my_lines = my_lines.replace('//Output when return_sequences', res_return_sequences)
-
-        with open(dstpath, "w") as myfile:
-            myfile.writelines(my_lines)
-
-    def write_in_dimention(self, model, name):
-        dstpath = './{}/firmware/nnet_utils/{}.h'.format(model.config.get_output_dir(), name)
-        with open(dstpath, "r") as myfile:
-            my_lines = myfile.read()
-        if model.sliding_window:
-
-            input_dimention = """
-            for (int j=1;j<CONFIG_T::n_timestamp; j++){
-                inputs[j-1] = inputs[j];
-            }
-            inputs[CONFIG_T::n_timestamp-1]=input0;
-             """
-
-        else:
-            input_type = "void lstm_network(data_T *"
-            my_lines = my_lines.replace('void lstm_network(data_T ', input_type)
-            input_dimention = """
-                      for (int j=0; j<CONFIG_T::n_timestamp; j++){
-                      inputs[j] = input0[j];
-                    }
-             """
-
-        my_lines = my_lines.replace('//Write input dimention', input_dimention)
-        with open(dstpath, "w") as myfile:
-            myfile.writelines(my_lines)
-
     def write_rnn(self, model):
-        #pass
         if(model._class_name == 'LSTM'):
             name = 'nnet_lstm_cell'
             self.write_activation_lstm(model)
-            #self.write_out_dimention(model, name)
-            #self.write_in_dimention(model, name)
 
         if(model._class_name == 'SimpleRNN'):
             name = 'nnet_simple_rnn_cell'
             self.write_activation_simple_rnn(model)
-            #self.write_out_dimention(model, name)
-            #self.write_in_dimention(model, name)
 
 
     def write_hls(self, model):

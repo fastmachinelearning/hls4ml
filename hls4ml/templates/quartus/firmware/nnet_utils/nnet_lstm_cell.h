@@ -226,7 +226,7 @@ template<class data_T, typename CONFIG_T, typename WEIGHT_T>
 
 
 template<class data_T, class res_T,class CONFIG_T ,class WEIGHT_T>
-  void lstm_network( data_T *input0, res_T *res,
+  void lstm_network( data_T input0[CONFIG_T::n_timestamp*CONFIG_T::n_in], res_T res[CONFIG_T::n_timestamp*CONFIG_T::n_out],
             const WEIGHT_T *WI   , const WEIGHT_T *WF   , const WEIGHT_T *WC   , const WEIGHT_T *WO  ,
             const WEIGHT_T *RWI  , const WEIGHT_T *RWF  , const WEIGHT_T *RWC  , const WEIGHT_T *RWO ,
             const WEIGHT_T *BI   , const WEIGHT_T *BF   , const WEIGHT_T *BC   , const WEIGHT_T *BO){
@@ -238,16 +238,8 @@ template<class data_T, class res_T,class CONFIG_T ,class WEIGHT_T>
     data_T h[CONFIG_T::n_out]    ;
     data_T c[CONFIG_T::n_out]    ;
 
-    //Multi inputs
-    if (CONFIG_T::return_sequences == false ) {
-      static data_T inputs[CONFIG_T::n_timestamp] ;
-    }
-    else{
-      static data_T inputs[CONFIG_T::n_timestamp][CONFIG_T::n_out] ;
-    }
-
-    static data_T inputs[CONFIG_T::n_timestamp] ;
-
+    static data_T inputs[CONFIG_T::n_timestamp*CONFIG_T::n_in] ;
+    
     INIT_LOOP:
     #pragma unroll
     for (int x = 0; x < CONFIG_T::n_out; x++) {
@@ -257,19 +249,27 @@ template<class data_T, class res_T,class CONFIG_T ,class WEIGHT_T>
 
     #pragma unroll
     #pragma ivdep
+
     //Write input dimention
 
-    //Single input dimention
-    for (int j=0; j<CONFIG_T::n_timestamp; j++){
-      inputs[j] = input0[j];
-    }
+      for (int j=0; j<CONFIG_T::n_timestamp; j++){
+        for (int z=0; z<CONFIG_T::n_in; z++){
+          inputs[z* CONFIG_T::n_in + j] = input0[z * CONFIG_T::n_in + j];
+          #ifndef HLS_SYNTHESIS
+            std::cout<<"Multiple A"<<inputs[z * CONFIG_T::n_in + j] <<std::endl;
+          #endif
+        }
+      }
 
-    //Multi input dimention
-    //for (int j=0; j<CONFIG_T::n_timestamp; j++){
-    //  for (int z=0; z<CONFIG_T::n_out; z++){
-    //  inputs[j][z] = input0[z * CONFIG_T::n_out + j];
+      //Single input dimention
+      //for (int j=0; j<CONFIG_T::n_timestamp; j++){
+      //  inputs[j] = input0[j];
+      //  #ifndef HLS_SYNTHESIS
+      //      std::cout<<"Multiple B"<<inputs[j] <<std::endl;
+      //  #endif
       //}
-    //}
+
+
 
     #pragma unroll TIMESTAMP_UNROLLING
     for (int i=0; i < CONFIG_T::n_timestamp; i++){
@@ -279,7 +279,12 @@ template<class data_T, class res_T,class CONFIG_T ,class WEIGHT_T>
         cell_state_temp[x]   = cell_state[x][i];
       }
 
-      lstm_cell<data_T,CONFIG_T,WEIGHT_T>(hidden_state_temp,h,cell_state_temp,c,inputs[i],WI,WF,WC,WO,RWI,RWF,RWC,RWO,BI,BF,BC,BO);
+      for (int j=0; j<CONFIG_T::n_in; j++){
+        lstm_cell<data_T,CONFIG_T,WEIGHT_T>(hidden_state_temp,h,cell_state_temp,c,inputs[i + j* CONFIG_T::n_in],WI,WF,WC,WO,RWI,RWF,RWC,RWO,BI,BF,BC,BO);
+      }
+    
+
+
 
       #pragma unroll
       for (int x = 0; x < CONFIG_T::n_out; x++) {
@@ -290,18 +295,20 @@ template<class data_T, class res_T,class CONFIG_T ,class WEIGHT_T>
 
     #pragma unroll
     //Output when return_sequences
-
-    //Output when return_sequences is false            
-    for (int x = 0; x < CONFIG_T::n_out; x++) {
+    if(CONFIG_T::return_sequences == 0){
+      //Output when return_sequences is false            
+      for (int x = 0; x < CONFIG_T::n_out; x++) {
         res[x]= hidden_state[x][CONFIG_T::n_timestamp];
+      }
     }
-
-    //Output when return_sequences is true
-    //for(int x = 0; x < CONFIG_T::n_timestamp; x++){ 
-    //  for(int h = 0; h < CONFIG_T::n_out; h++){
-    //      res[x * CONFIG_T::n_out + h] = hidden_state[h][x+1];
-    //  }
-    //}
+    else{
+      //Output when return_sequences is true
+      for(int x = 0; x < CONFIG_T::n_timestamp; x++){ 
+        for(int h = 0; h < CONFIG_T::n_out; h++){
+            res[x + h * CONFIG_T::n_out ] = hidden_state[h][x+1];
+        }
+      }
+    }
   }
 
   template<class data_T, class res_T,class CONFIG_T ,class WEIGHT_T>
@@ -352,18 +359,21 @@ template<class data_T, class res_T,class CONFIG_T ,class WEIGHT_T>
 
     #pragma unroll
     //Output when return_sequences
-
-    //Output for Sliding Window when return_sequences is false
-    for (int x = 0; x < CONFIG_T::n_out; x++) {
+    if(CONFIG_T::return_sequences == 0){
+      //Output when return_sequences is false            
+      for (int x = 0; x < CONFIG_T::n_out; x++) {
         res[x]= hidden_state[x][CONFIG_T::n_timestamp];
+      }
     }
-
-    //Output for Sliding Window when return_sequences is true
-    //for(int x = 0; x < CONFIG_T::n_timestamp; x++){
-    //  for(int h = 0; h < CONFIG_T::n_out; h++){
-    //    res[x][h]= hidden_state[h][x+1];
-    //  }
-    //}
+    else{
+      //Output when return_sequences is true
+      for(int x = 0; x < CONFIG_T::n_timestamp; x++){ 
+        for(int h = 0; h < CONFIG_T::n_out; h++){
+            res[x + h * CONFIG_T::n_out ] = hidden_state[h][x+1];
+        }
+      }
+    }
   }
+
 }
 #endif
