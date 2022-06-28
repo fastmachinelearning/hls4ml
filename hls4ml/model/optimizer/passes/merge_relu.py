@@ -1,22 +1,18 @@
 from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.model.layers import Activation, Dense, Conv2D, Conv2DBatchnorm
 
 class MergeRelu(OptimizerPass):
     def match(self, node):
-        supported_layers = ['Conv2D', 'Conv2DBatchnorm', 'Dense']
-        is_match = node.get_input_node().__class__.__name__ in supported_layers
+        supported_layers = (Dense, Conv2D, Conv2DBatchnorm)
 
-        # hls4ml names ReLU activations 'Activation' TODO: Node class name isn't
-        # Activation anymore.. it can change and in our test case is called
-        # VivadoAcceleratorActivation
-        is_match = is_match and (node.__class__.__name__ == 'Activation') 
-        print(f"Node class name = {node.__class__.__name__}")
-        print(f"Does layer {node.__class__.__name__} match Relu merge? {is_match}")
+        is_match = issubclass(node.get_input_node().__class__, supported_layers)
+        # ReLU layers are of class Activation
+        is_match = is_match and issubclass(node.__class__, Activation)
         return is_match
 
     def transform(self, model, node):
         # Merge ReLU and Convolution/Dense layer
         previous_node = node.get_input_node()
-        previous_node.index = node.index
         previous_node.set_merged_relu(True) # Turn on merged_relu flag for this Conv/Dense layer
         if 'Conv2D' in previous_node.__class__.__name__:
             if previous_node.get_attr('data_format') == 'channels_last':
