@@ -237,5 +237,5 @@ class QuartusBackend(FPGABackend):
             layer.set_attr('strategy', 'resource')
         else:
             layer.set_attr('strategy', 'latency')
-
+            
         layer.set_attr('index_t', index_t)
