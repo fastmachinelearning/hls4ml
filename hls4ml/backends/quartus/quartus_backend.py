@@ -208,21 +208,6 @@ class QuartusBackend(FPGABackend):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
-        recurrent_bias = np.zeros(layer.weights['recurrent_weight'].shape[1])
-        layer.add_weights_variable(name='recurrent_bias', var_name='br_{index}', data=recurrent_bias)
-
-        recurrent_bias_i = np.zeros(layer.weights['recurrent_weight_i'].shape[1])
-        layer.add_weights_variable(name='recurrent_bias_i', var_name='br_i_{index}', data=recurrent_bias_i)
-
-        recurrent_bias_f = np.zeros(layer.weights['recurrent_weight_f'].shape[1])
-        layer.add_weights_variable(name='recurrent_bias_f', var_name='br_f_{index}', data=recurrent_bias_f)
-
-        recurrent_bias_c = np.zeros(layer.weights['recurrent_weight_c'].shape[1])
-        layer.add_weights_variable(name='recurrent_bias_c', var_name='br_c_{index}', data=recurrent_bias_c)
-
-        recurrent_bias_o = np.zeros(layer.weights['recurrent_weight_o'].shape[1])
-        layer.add_weights_variable(name='recurrent_bias_o', var_name='br_o_{index}', data=recurrent_bias_o)
-
         index_t = IntegerPrecisionType(width=1, signed=False)
 
         if 'table_t' not in layer.attributes:
