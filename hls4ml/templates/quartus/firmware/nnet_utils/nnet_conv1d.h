@@ -7,16 +7,23 @@
 namespace nnet {
 
 struct conv1d_config {
-    
-    // Convolutional parameters
+    // I/O sizes
     static const unsigned in_width = 10;
     static const unsigned out_width = 10;
-    static const unsigned n_chan = 0;
-   
-    static const unsigned filt_width = 1;
+    
+    // Number of channels, filters
+    static const unsigned n_chan = 1;
     static const unsigned n_filt = 1;
+
+    // Original filter size
+    static const unsigned filt_width = 1;
     static const unsigned kernel_size = filt_width;
     
+    // Modified filter size (post-Wionograd transformation, if applied)
+    static const unsigned impl_filt_height = 1;
+    static const unsigned impl_filt_width = 1;
+
+    // Padding, stride, dilation
     static const unsigned pad_left = 0;
     static const unsigned pad_right = 0;
     static const unsigned stride_width = 1;

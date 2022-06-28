@@ -34,6 +34,7 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     static const unsigned n_chan = {n_chan};
 
     static const unsigned filt_width = {filt_width};
+    static const unsigned impl_filt_width = {impl_filt_width};
     static const unsigned kernel_size = filt_width;
     
     static const unsigned n_filt = {n_filt};
@@ -107,6 +108,8 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned n_filt = {n_filt};
     static const unsigned filt_height = {filt_height};
     static const unsigned filt_width = {filt_width};
+    static const unsigned impl_filt_height = {impl_filt_height};
+    static const unsigned impl_filt_width = {impl_filt_width};
     static const unsigned kernel_size = filt_height * filt_width;
     
     static const unsigned pad_top = {pad_top};

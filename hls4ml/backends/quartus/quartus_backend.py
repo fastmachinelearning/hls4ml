@@ -46,6 +46,7 @@ class QuartusBackend(FPGABackend):
         quartus_types = [
             'quartus:transform_types',
             'quartus:apply_resource_strategy',
+            'quartus:apply_winograd_kernel_transformation'
         ]
         quartus_types_flow = register_flow('specific_types', quartus_types, requires=[init_flow], backend=self.name)
 
@@ -237,6 +238,9 @@ class QuartusBackend(FPGABackend):
         self.set_closest_reuse_factor(layer, n_in, n_out)
         layer.set_attr('parallelisation', layer.model.config.get_layer_config_value(layer, 'ParallelisationFactor', 1))
 
+        # impl_filt_width determines the filter size post-Winograd transformation
+        layer.set_attr('impl_filt_width', layer.get_attr('filt_width'))
+
     @layer_optimizer(Conv2D)
     def init_conv2d(self, layer):
         # This can happen if we assign weights of Dense layer to 1x1 Conv2D
@@ -253,3 +257,7 @@ class QuartusBackend(FPGABackend):
         self.set_target_reuse_factor(layer)
         self.set_closest_reuse_factor(layer, n_in, n_out)
         layer.set_attr('parallelisation', layer.model.config.get_layer_config_value(layer, 'ParallelisationFactor', 1))
+
+        # impl_filt_width & impl_filt_height determine the filter size post-Winograd transformation
+        layer.set_attr('impl_filt_height', layer.get_attr('filt_height'))
+        layer.set_attr('impl_filt_width', layer.get_attr('filt_width'))
