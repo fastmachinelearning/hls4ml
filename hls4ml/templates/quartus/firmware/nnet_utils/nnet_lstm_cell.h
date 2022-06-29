@@ -277,15 +277,17 @@ template<class data_T, class res_T,class CONFIG_T ,class WEIGHT_T>
       }
     }
 
-    #pragma unroll
+
     if(CONFIG_T::return_sequences == 0){
-      //Output when return_sequences is false            
+      //Output when return_sequences is false    
+      #pragma unroll        
       for (int x = 0; x < CONFIG_T::n_out; x++) {
         res[x]= hidden_state[x][CONFIG_T::n_timestamp];
       }
     }
     else{
       //Output when return_sequences is true
+      #pragma unroll
       for(int x = 0; x < CONFIG_T::n_timestamp; x++){ 
         for(int h = 0; h < CONFIG_T::n_out; h++){
             res[x + h * CONFIG_T::n_out ] = hidden_state[h][x+1];
@@ -340,15 +342,17 @@ template<class data_T, class res_T,class CONFIG_T ,class WEIGHT_T>
       }
     }
 
-    #pragma unroll
+
     if(CONFIG_T::return_sequences == 0){
-      //Output when return_sequences is false            
+      //Output when return_sequences is false  
+      #pragma unroll          
       for (int x = 0; x < CONFIG_T::n_out; x++) {
         res[x]= hidden_state[x][CONFIG_T::n_timestamp];
       }
     }
     else{
       //Output when return_sequences is true
+      #pragma unroll
       for(int x = 0; x < CONFIG_T::n_timestamp; x++){ 
         for(int h = 0; h < CONFIG_T::n_out; h++){
             res[x + h * CONFIG_T::n_out ] = hidden_state[h][x+1];
