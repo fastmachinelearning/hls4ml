@@ -34,7 +34,7 @@ struct lstm_config {
 //----------------------
 
 template<class data_T, class res_T,typename CONFIG_T,class WEIGHT_T>
-void multiply_W(data_T input, res_T *out, const WEIGHT_T *weight) {
+void multiply_W(data_T input, res_T out[], const WEIGHT_T *weight) {
 
     MULTIPLY_W_LOOP:
     if(input != 1){
@@ -56,7 +56,7 @@ void multiply_W(data_T input, res_T *out, const WEIGHT_T *weight) {
     }
 }
 template<class data_T, class res_T,typename CONFIG_T,class WEIGHT_T>
-void multiply_U(data_T *inputs, res_T out[], const WEIGHT_T *weight) {
+void multiply_U(data_T inputs[], res_T out[], const WEIGHT_T *weight) {
 
     MULTIPLY_U_LOOP_I:
     #pragma unroll
@@ -72,7 +72,7 @@ void multiply_U(data_T *inputs, res_T out[], const WEIGHT_T *weight) {
 }
 
 template<class data_T,class res_T, typename CONFIG_T, class WEIGHT_T>
-void add_bias(data_T *inputs,res_T *out,const WEIGHT_T *bias) {
+void add_bias(data_T inputs[],res_T out[],const WEIGHT_T *bias) {
 
     ADD_BIAS_LOOP:
     #pragma unroll
@@ -82,7 +82,7 @@ void add_bias(data_T *inputs,res_T *out,const WEIGHT_T *bias) {
 
 }
 template<class data_T, class res_T, typename CONFIG_T>
-void multiply_vectors(data_T *in1, data_T *in2, res_T *out) {
+void multiply_vectors(data_T *in1, data_T *in2, res_T out[]) {
 
     MULTIPLY_VECT_LOOP:
     #pragma unroll
@@ -92,7 +92,7 @@ void multiply_vectors(data_T *in1, data_T *in2, res_T *out) {
     }
 }
 template<class data_T, class res_T,typename CONFIG_T>
-void add_vectors(data_T *in1,data_T *in2,res_T *out) {
+void add_vectors(data_T *in1,data_T *in2,res_T out[]) {
 
     ADD_VECTOR_LOOP:
     #pragma unroll
@@ -297,7 +297,7 @@ template<class data_T, class res_T,class CONFIG_T ,class WEIGHT_T>
   }
 
   template<class data_T, class res_T,class CONFIG_T ,class WEIGHT_T>
-  void lstm_network(data_T input0,res_T *res,
+  void lstm_network(data_T input0,res_T res[CONFIG_T::n_timestamp*CONFIG_T::n_out],
             const WEIGHT_T *WI   , const WEIGHT_T *WF   , const WEIGHT_T *WC   , const WEIGHT_T *WO  ,
             const WEIGHT_T *RWI  , const WEIGHT_T *RWF  , const WEIGHT_T *RWC  , const WEIGHT_T *RWO ,
             const WEIGHT_T *BI   , const WEIGHT_T *BF   , const WEIGHT_T *BC   , const WEIGHT_T *BO){

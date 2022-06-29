@@ -38,7 +38,7 @@ struct simpleRNN_config {
 
 template<class data_T, typename res_T, typename CONFIG_T, class WEIGHT_T>
 void multiply_W(data_T input,
-                res_T *out,
+                res_T out[],
                 const WEIGHT_T *kernel) {
     MULTIPLY_W_LOOP:
     #pragma unroll
@@ -48,7 +48,7 @@ void multiply_W(data_T input,
 }
 
 template<class data_T, typename res_T, typename CONFIG_T, class WEIGHT_T>
-void multiply_U(data_T *inputs,
+void multiply_U(data_T inputs[],
                 res_T out[],
                 const WEIGHT_T *recurrent_kernel) {
   MULTIPLY_U_LOOP_I:
@@ -63,8 +63,8 @@ void multiply_U(data_T *inputs,
 }
 
 template<typename res_T, typename CONFIG_T, class WEIGHT_T>
-void add_bias(res_T *inputs,
-              res_T *out,
+void add_bias(res_T inputs[],
+              res_T out[],
               const WEIGHT_T *bias) {
 
     ADD_BIAS_LOOP:
@@ -207,7 +207,7 @@ template<class data_T, class res_T, typename CONFIG_T, class WEIGHT_T>
   }
 
 template<class data_T, class res_T, typename CONFIG_T, class WEIGHT_T>
-  void simple_rnn_network(data_T input0, res_T *res,
+  void simple_rnn_network(data_T input0, res_T res[CONFIG_T::n_timestamp*CONFIG_T::n_out],
   const WEIGHT_T *kernel, const WEIGHT_T *rec_kernel, const WEIGHT_T *bias){
 
     data_T hidden_state[CONFIG_T::n_out][CONFIG_T::n_timestamp + 1]     ;
