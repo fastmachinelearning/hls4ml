@@ -3,11 +3,21 @@ from hls4ml.model.layers import Activation, Dense, Conv2D, Conv2DBatchnorm
 
 class MergeRelu(OptimizerPass):
     def match(self, node):
-        supported_layers = (Dense, Conv2D, Conv2DBatchnorm)
+        backends = ['VivadoAccelerator', 'Vivado']
+        supported_layers = ['Dense', 'Conv2D', 'Conv2DBatchNorm']
+        # By the time this optimization pass runs, the Layer nodes' class names
+        # have been prepended with the name of the backend, e.g., a Conv2D
+        # layer is renamed VivadoAcceleratorConv2D. Thus, we strip the backend
+        # name for more streamlined matching. 
+        input_node_class = node.get_input_node().__class__.__name__
+        curr_node_class = node.__class__.__name__
+        for b in backends:
+            input_node_class = input_node_class.replace(b, '')
+            curr_node_class = curr_node_class.replace(b, '')
 
-        is_match = issubclass(node.get_input_node().__class__, supported_layers)
+        is_match = input_node_class in supported_layers
         # ReLU layers are of class Activation
-        is_match = is_match and issubclass(node.__class__, Activation)
+        is_match = is_match and (curr_node_class == 'Activation')
         return is_match
 
     def transform(self, model, node):
