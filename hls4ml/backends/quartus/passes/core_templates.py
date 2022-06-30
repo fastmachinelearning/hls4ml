@@ -29,6 +29,9 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
     typedef {index_t.name} index_t;
+
+    template<class x_T, class y_T>
+    using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
 
 dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
@@ -44,7 +47,7 @@ class DenseConfigTemplate(LayerConfigTemplate):
         params = self._default_config_params(node)
         params['nzeros'] = node.get_weights('weight').nzeros
         params['nonzeros'] = node.get_weights('weight').nonzeros
-        params['product_type'] = get_backend('vivado').product_type(node.get_input_variable().type.precision, node.get_weights('weight').type.precision)
+        params['product_type'] = get_backend('quartus').product_type(node.get_input_variable().type.precision, node.get_weights('weight').type.precision)
 
         return self.template.format(**params)
 
@@ -71,6 +74,8 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     static const bool store_weights_in_bram = false;
     typedef {bias_t.name} bias_t;
     typedef {scale_t.name} scale_t;
+    template<class x_T, class y_T>
+    using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
 
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
@@ -85,7 +90,7 @@ class BatchNormalizationConfigTemplate(LayerConfigTemplate):
     def format(self, node):
         params = self._default_config_params(node)
         params['n_in'] = node.get_input_variable().size_cpp()
-        params['product_type'] = get_backend('vivado').product_type(node.get_input_variable().type.precision, node.get_weights('scale').type.precision)
+        params['product_type'] = get_backend('quartus').product_type(node.get_input_variable().type.precision, node.get_weights('scale').type.precision)
 
         return self.template.format(**params)
 
@@ -117,6 +122,7 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned table_size = {table_size};
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
+    static const nnet::softmax_implementation implementation = nnet::softmax_implementation::{implementation};
     typedef {exp_table_t.name} exp_table_t;
     typedef {inv_table_t.name} inv_table_t;
 }};\n"""

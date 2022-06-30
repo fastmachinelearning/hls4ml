@@ -38,6 +38,9 @@ class Layer(object):
         return all_attributes
 
     def __init__(self, model, name, attributes, inputs, outputs=None):
+        if name == 'input':
+            raise RuntimeError("No model layer should be named 'input' because that is a reserved;" + \
+                               "layer name in ModelGraph; Please rename the layer in your model")
         self.model = model
         self.name = name
         self.index = model.next_layer()
@@ -372,7 +375,8 @@ class SeparableConv1D(Layer):
         self.add_weights_variable(name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer'))
         
         zero_bias_data = np.zeros((self.attributes['n_chan'],))
-        self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data)
+        precision = IntegerPrecisionType(width=1, signed=False)
+        self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data, precision=precision)
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
@@ -506,7 +510,8 @@ class SeparableConv2D(Layer):
         self.add_weights_variable(name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer'))
         
         zero_bias_data = np.zeros((self.attributes['n_chan'],))
-        self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data)
+        precision = IntegerPrecisionType(width=1, signed=False)
+        self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data, precision=precision)
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
@@ -783,8 +788,12 @@ class BiasAdd(Merge): # TensorFlow's operator that gets merged into Dense/Conv
 class Resize(Layer):
     def initialize(self):
         inp = self.get_input_variable()
-        shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
-        dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
+        if len(inp.shape) == 2: # 1D -> width + chan
+            shape = [self.get_attr('out_width'), self.get_attr('n_chan')]
+            dims = ['OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
+        elif len(inp.shape) == 3: # 2D -> height + width + chan
+            shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
+            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
         self.add_output_variable(shape, dims, precision=inp.type.precision)
 
 class Transpose(Layer):
@@ -820,6 +829,150 @@ class Transpose(Layer):
             self.set_attr('height', inp.shape[1])
             self.set_attr('width', inp.shape[2])
         self.add_output_variable(shape, dims, precision=inp.type.precision)
+
+class Embedding(Layer):
+    _expected_attributes = [
+        Attribute('n_in'),
+        Attribute('n_out'),
+        Attribute('vocab_size'),
+
+        WeightAttribute('embeddings'),
+        TypeAttribute('embeddings'),
+    ]
+
+    def initialize(self):
+        shape = self.get_input_variable().shape[:]
+        shape += [self.attributes['n_out']]
+        if len(shape) > 1:
+            dims = ['N_LAYER_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+        else:
+            dims = ['N_LAYER_{}'.format(self.index)]
+        self.add_output_variable(shape, dims)
+
+        data = self.model.get_weights_data(self.name, 'embeddings')
+        self.add_weights_variable(name='embeddings', var_name='e{index}', data=data)
+
+class SimpleRNN(Layer):
+    _expected_attributes = [
+        Attribute('n_out'),
+        Attribute('activation', value_type=str),
+        Attribute('return_sequences', value_type=bool, default=False),
+        Attribute('return_state', value_type=bool, default=False),
+        ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
+
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        WeightAttribute('recurrent_weight'),
+
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+        TypeAttribute('recurrent_weight'),
+    ]
+
+    def initialize(self):
+        if self.attributes['return_sequences']:
+            shape = [self.attributes['n_timesteps'], self.attributes['n_out']]
+            dims = ['N_TIME_STEPS_{}'.format(self.index), 'N_OUT_{}'.format(self.index)]
+        else:
+            shape = [self.attributes['n_out']]
+            dims = ['N_OUT_{}'.format(self.index)]
+        
+        self.add_output_variable(shape, dims)
+
+        if self.attributes['return_state']:
+            state_shape = [self.attributes['n_out']]
+            state_dims = ['N_OUT_{}'.format(self.index)]
+            self.add_output_variable(state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t')
+            self.add_output_variable(state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t')
+
+        self.add_weights()
+        self.add_bias()
+
+        recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
+        self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
+
+class LSTM(Layer):
+    _expected_attributes = [
+        Attribute('n_out'),
+        Attribute('activation', value_type=str),
+        Attribute('recurrent_activation', value_type=str),
+        Attribute('return_sequences', value_type=bool, default=False),
+        Attribute('return_state', value_type=bool, default=False),
+        ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
+        Attribute('time_major', value_type=bool, default=False),
+
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        WeightAttribute('recurrent_weight'),
+
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+        TypeAttribute('recurrent_weight'),
+    ]
+
+    def initialize(self):
+        if self.attributes['return_sequences']:
+            shape = [self.attributes['n_timesteps'], self.attributes['n_out']]
+            dims = ['N_TIME_STEPS_{}'.format(self.index), 'N_OUT_{}'.format(self.index)]
+        else:
+            shape = [self.attributes['n_out']]
+            dims = ['N_OUT_{}'.format(self.index)]
+
+        self.add_output_variable(shape, dims)
+
+        if self.attributes['return_state']:
+            state_shape = [self.attributes['n_out']]
+            state_dims = ['N_OUT_{}'.format(self.index)]
+            self.add_output_variable(state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t')
+            self.add_output_variable(state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t')
+
+        self.add_weights()
+        self.add_bias()
+
+        recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
+        self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
+
+class GRU(Layer):
+    _expected_attributes = [
+        Attribute('n_out'),
+        Attribute('activation', value_type=str),
+        Attribute('recurrent_activation', value_type=str),
+        Attribute('return_sequences', value_type=bool, default=False),
+        Attribute('return_state', value_type=bool, default=False),
+        ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
+        Attribute('time_major', value_type=bool, default=False),
+        ChoiceAttribute('apply_reset_gate', ['before', 'after'], default='after'),
+
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        WeightAttribute('recurrent_weight'),
+
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+        TypeAttribute('recurrent_weight'),
+    ]
+
+    def initialize(self):
+        if self.attributes['return_sequences']:
+            shape = [self.attributes['n_timesteps'], self.attributes['n_out']]
+            dims = ['N_TIME_STEPS_{}'.format(self.index), 'N_OUT_{}'.format(self.index)]
+        else:
+            shape = [self.attributes['n_out']]
+            dims = ['N_OUT_{}'.format(self.index)]
+
+        self.add_output_variable(shape, dims)
+
+        if self.attributes['return_state']:
+            state_shape = [self.attributes['n_out']]
+            state_dims = ['N_OUT_{}'.format(self.index)]
+            self.add_output_variable(state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t')
+            self.add_output_variable(state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t')
+
+        self.add_weights()
+        self.add_bias()
+
+        recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
+        self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
 
 class GarNet(Layer):
     ref_impl = False
@@ -1012,8 +1165,13 @@ layer_map = {
     'Dot'                    : Dot,
     'Concatenate'            : Concatenate,
     'Resize'                 : Resize,
+    'UpSampling1D'           : Resize,
     'UpSampling2D'           : Resize,
     'Transpose'              : Transpose,
+    'Embedding'              : Embedding,
+    'SimpleRNN'              : SimpleRNN,
+    'LSTM'                   : LSTM,
+    'GRU'                    : GRU,
     'GarNet'                 : GarNet,
     'GarNetStack'            : GarNetStack,
     # TensorFlow-specific layers:

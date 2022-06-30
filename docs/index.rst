@@ -48,4 +48,4 @@ Tutorials
 =================================
 Detailed tutorials on how to use ``hls4ml``'s various functionalities can be found at:
 
-https://github.com/hls-fpga-machine-learning/hls4ml-tutorial
+https://github.com/fastmachinelearning/hls4ml-tutorial
