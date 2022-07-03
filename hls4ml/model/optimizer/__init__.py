@@ -1,7 +1,7 @@
 from hls4ml.model.flow.flow import register_flow
 import os
 
-from hls4ml.model.optimizer.optimizer import OptimizerPass, GlobalOptimizerPass, LayerOptimizerPass, ConfigurableOptimizerPass, register_pass, get_optimizer, optimize_model, get_available_passes, get_backend_passes, optimizer_pass, layer_optimizer, model_optimizer, extract_optimizers_from_path, extract_optimizers_from_object
+from hls4ml.model.optimizer.optimizer import OptimizerPass, GlobalOptimizerPass, LayerOptimizerPass, ModelOptimizerPass, ConfigurableOptimizerPass, register_pass, get_optimizer, optimize_model, get_available_passes, get_backend_passes, optimizer_pass, layer_optimizer, model_optimizer, extract_optimizers_from_path, extract_optimizers_from_object
 
 
 opt_path = os.path.dirname(__file__) + '/passes'

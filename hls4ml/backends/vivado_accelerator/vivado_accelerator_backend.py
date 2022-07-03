@@ -99,7 +99,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
         return config
 
     def _register_flows(self):
-        vivado_writer = ['vivado:write']
-        vivado_accel_writer = ['vivadoaccelerator:write_hls']
-        self._writer_flow = register_flow('write', vivado_accel_writer, requires=vivado_writer, backend=self.name)
-        self._default_flow = 'vivado:ip'
+        vivado_ip = 'vivado:ip'
+        writer_passes = ['make_stamp', 'vivadoaccelerator:write_hls']
+        self._writer_flow = register_flow('write', writer_passes, requires=[vivado_ip], backend=self.name)
+        self._default_flow = vivado_ip

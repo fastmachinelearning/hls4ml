@@ -67,10 +67,10 @@ class VivadoBackend(FPGABackend):
         template_flow = register_flow('apply_templates', self._get_layer_templates, requires=[init_flow], backend=self.name)
 
         writer_passes = [
+            'make_stamp',
             'vivado:write_hls'
         ]
-        writer_flow_requirements = ['optimize', vivado_types_flow, template_flow]
-        self._writer_flow = register_flow('write', writer_passes, requires=writer_flow_requirements, backend=self.name)
+        self._writer_flow = register_flow('write', writer_passes, requires=['vivado:ip'], backend=self.name)
 
         all_passes = get_backend_passes(self.name)
 
@@ -173,6 +173,7 @@ class VivadoBackend(FPGABackend):
 
     @layer_optimizer(Conv2D)
     def init_conv2d(self, layer):
+        print('here in conv2d')
         if len(layer.weights['weight'].data.shape) == 2: # This can happen if we assign weights of Dense layer to 1x1 Conv2D
             layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0,1))
 
