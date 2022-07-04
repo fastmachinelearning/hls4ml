@@ -14,7 +14,7 @@ conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
-    typedef {out_t}:: value_type out_t;
+    typedef {out_t} out_t;
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
@@ -68,6 +68,8 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_width')
         mult_params['n_out'] = node.get_attr('n_filt')
         mult_params['product_type'] = get_backend('vivado').product_type(node.get_input_variable().type.precision, node.get_weights('weight').type.precision)
+        mult_params['merged_relu'] = "true" if node.get_merged_relu() else "false"
+        mult_params['out_t'] = node.get_output_variable().type.name
         mult_config = self.mult_template.format(**mult_params)
 
         return mult_config + '\n' + conv_config
@@ -142,7 +144,14 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
         mult_params['n_out'] = node.get_attr('n_filt')
         mult_params['product_type'] = get_backend('vivado').product_type(node.get_input_variable().type.precision, node.get_weights('weight').type.precision)
         mult_params['merged_relu'] = "true" if node.get_merged_relu() else "false"
-        mult_params['out_t'] = node.intermediate_op.type.name
+        print(f"My out_t Class = {type(node.intermediate_op.type)}")
+        # TODO: Need to figure out when to append ::value_type (when
+        # node.intermediate_op's type is nnet::array but how to get that from a
+        # layer class?) and when not to Try: I think only io_stream IOType uses
+        # PackedType (io_parallel does not). Could grab IOType from layer
+        # class?? Turns out this isn't all that's needed--unclear what else.
+        # Also might need to add relu merge into dense_latency.h 
+        mult_params['out_t'] = node.intermediate_op.type.name + '::value_type' if node.model.config.get_config_value('IOType') == 'io_stream' else node.intermediate_op.type.name
         mult_config = self.mult_template.format(**mult_params)
 
         return mult_config + '\n' + conv_config

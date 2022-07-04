@@ -19,7 +19,7 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
     typedef {index_t.name} index_t;
-    typedef {out_t}:: value_type out_t;
+    typedef {out_t} out_t;
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
