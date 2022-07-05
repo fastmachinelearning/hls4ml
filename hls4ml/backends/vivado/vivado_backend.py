@@ -60,6 +60,7 @@ class VivadoBackend(FPGABackend):
             'vivado:transform_types',
             'vivado:generate_conv_streaming_instructions',
             'vivado:apply_resource_strategy',
+            'vivado:generate_conv_im2col',
         ]
         vivado_types_flow = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
 
@@ -157,7 +158,18 @@ class VivadoBackend(FPGABackend):
             self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
-        
+
+        out_width = layer.get_output_variable().shape[0]
+        chosen_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1)
+        valid_pf = self.get_valid_conv_partition_splits(1, out_width)
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            print('WARNING: Invalid ParallelizationFactor={} in layer "{}". Using ParallelizationFactor={} instead. Valid ParallelizationFactor(s): {}.'
+                  .format(chosen_pf, layer.name, closest_pf, ','.join(map(str, valid_pf))))
+        else:
+            closest_pf = chosen_pf
+        layer.set_attr('n_partitions', out_width // closest_pf)
+
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(SeparableConv1D)
@@ -183,7 +195,19 @@ class VivadoBackend(FPGABackend):
             self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
-        
+
+        out_height = layer.get_output_variable().shape[0]
+        out_width = layer.get_output_variable().shape[1]
+        chosen_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1)
+        valid_pf = self.get_valid_conv_partition_splits(out_height, out_width)
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            print('WARNING: Invalid ParallelizationFactor={} in layer "{}". Using ParallelizationFactor={} instead. Valid ParallelizationFactor(s): {}.'
+                .format(chosen_pf, layer.name, closest_pf, ','.join(map(str, valid_pf))))
+        else:
+            closest_pf = chosen_pf
+        layer.set_attr('n_partitions', out_height * out_width // closest_pf)
+
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(SeparableConv2D)

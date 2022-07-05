@@ -5,6 +5,7 @@
 #include "ap_fixed.h"
 
 #include "nnet_utils/nnet_helpers.h"
+#include "nnet_utils/nnet_code_gen.h"
 //hls-fpga-machine-learning insert includes
  
 //hls-fpga-machine-learning insert weights

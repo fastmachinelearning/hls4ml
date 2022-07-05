@@ -596,6 +596,29 @@ class VivadoWriter(Writer):
             dstpath = '{}/firmware/{}'.format(model.config.get_output_dir(), dst)
             copyfile(srcpath, dstpath)
 
+    def write_generated_code(self, model):
+        ###################
+        ## nnet_code_gen.h
+        ###################
+
+        path = '{}/firmware/nnet_utils/nnet_code_gen.h'.format(model.config.get_output_dir())
+        f = open(path,'r')
+        contents = f.readlines()
+        f.close()
+        f = open(path,'w')
+
+        for line in contents:
+            if '//hls4ml insert code' in line:
+                newline = line
+                for layer in model.get_layers():
+                    for generated_code in layer.code.values():
+                        newline += str(generated_code)
+            else:
+                newline = line
+            f.write(newline)
+        f.close()
+
+
     def write_yml(self, model):
         ###################
         # YAML config file
@@ -635,6 +658,7 @@ class VivadoWriter(Writer):
         self.write_bridge(model)
         self.write_build_script(model)
         self.write_nnet_utils(model)
+        self.write_generated_code(model)
         self.write_yml(model)
         self.write_tar(model)
         print('Done')

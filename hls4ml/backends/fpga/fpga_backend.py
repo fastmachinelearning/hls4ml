@@ -181,6 +181,27 @@ class FPGABackend(Backend):
 
             layer.set_attr('reuse_factor', float(rf) / kernel_multiplies)
 
+    def get_valid_conv_partition_splits(self, out_height, out_width):
+        """Generate valid partition splits of a Conv1D/2D layer.
+        
+        Essentially a list of divisors of the number of pixels of the output image.
+
+        Args:
+            out_height (int): The height of the output image
+            out_width (int): The width of the output image
+
+        Returns:
+            list: List of valid partition splits
+        """        
+        n_pixels = out_height * out_width
+        valid_n_partitions = []
+        for i in range(1, int(n_pixels / 2) + 1):
+            if n_pixels % i == 0:
+                valid_n_partitions.append(i)
+        valid_n_partitions.append(n_pixels)
+
+        return valid_n_partitions
+
     @classmethod
     def convert_precision_string(cls, precision):
         if isinstance(precision, IntegerPrecisionType) or isinstance(precision, FixedPrecisionType):
@@ -383,6 +404,155 @@ class FPGABackend(Backend):
                 windows_int.append((int(''.join(str(p) for p in reversed(windows_bin[i * min_W + j])), 2)))
 
         return (min_H, min_W, windows_int)
+
+    def _compute_conv1d_im2col(self, input_shape, kernel=3, stride=1, pad=(0,0)):
+        W, C = input_shape
+        pad_l, pad_r = pad
+
+        out_w = (W + pad_l + pad_r - kernel) // stride + 1
+
+        input_img = np.arange(1, W * C + 1).reshape(W, C)
+
+        img = np.pad(input_img, [(pad_l, pad_r), (0,0)], 'constant')
+        col = np.zeros((out_w, kernel, C))
+
+        for x in range(kernel):
+            x_max = x + stride * out_w
+            col[:, x, :] = img[x:x_max:stride, :]
+
+        col = col.reshape(out_w, -1)
+        return col
+
+    def generate_conv1d_line_buffer_fn(self, layer_idx, n_partitions, in_W, in_C, kernel=3, stride=1, pad=0):
+        if isinstance(pad, Iterable):
+            pad_left = pad[0]
+            pad_right = pad[1]
+        else:
+            pad_left = pad
+            pad_right = pad
+
+        im2col_matrix = self._compute_conv1d_im2col(
+            (in_W, in_C),
+            kernel,
+            stride,
+            (pad_left, pad_right)
+        )
+
+        generated_code = (
+            "template<class data_T, typename CONFIG_T>\n"
+            "class fill_buffer_{index} : public FillConv1DBuffer<data_T, CONFIG_T> {{\n"
+            "    public:\n"
+            "    static void fill_buffer(\n"
+            "        data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],\n"
+            "        data_T buffer[CONFIG_T::n_pixels][CONFIG_T::filt_width * CONFIG_T::n_chan],\n"
+            "        const unsigned partition\n"
+            "    ) {{\n"
+        ).format(index=layer_idx)
+        indent = '    '
+
+        for partition_idx, partition in enumerate(np.split(im2col_matrix, n_partitions)):
+            generated_code += indent * 2 + 'if (partition == {:>3}) {{\n'.format(partition_idx)
+            for pixel_idx, arr in enumerate(partition):
+                buffer_stmts = []
+                for j, v in enumerate(arr):
+                    if v == 0:
+                        val = '0'
+                    else:
+                        val = 'data[{}]'.format(int(v-1))
+                    buffer_stmts.append('buffer[{}][{}] = {:>10};'.format(pixel_idx, j, val))
+                generated_code += indent * 3 + ' '.join(buffer_stmts) + '\n'
+            generated_code += '\n' + indent * 2 + '}\n'
+
+        generated_code += indent + '}\n'
+        generated_code += '};\n'
+
+        return generated_code
+
+    def _compute_conv2d_im2col(self, input_shape, kernel=(3,3), stride=(1,1), pad=(0,0,0,0)):
+        H, W, C = input_shape
+        kernel_h, kernel_w = kernel
+        stride_h, stride_w = stride
+        pad_t, pad_b, pad_l, pad_r = pad
+
+        out_h = (H + pad_t + pad_b - kernel_h) // stride_h + 1
+        out_w = (W + pad_l + pad_r - kernel_w) // stride_w + 1
+
+        input_img = np.arange(1, C * H * W + 1).reshape(C, H, W)
+
+        img = np.pad(input_img, [(0,0), (pad_t, pad_b), (pad_l, pad_r)], 'constant')
+        col = np.zeros((C, kernel_h, kernel_w, out_h, out_w))
+
+        for y in range(kernel_h):
+            y_max = y + stride_h * out_h
+            for x in range(kernel_w):
+                x_max = x + stride_w * out_w
+                col[:, y, x, :, :] = img[:, y:y_max:stride_h, x:x_max:stride_w]
+
+        col = col.transpose(3, 4, 0, 1, 2).reshape(out_h * out_w, -1)
+        return col
+
+    def generate_conv2d_line_buffer_fn(self, layer_idx, n_partitions, in_H, in_W, in_C, kernel=(3, 3), stride=(1, 1), pad=(0, 0, 0, 0)):
+        if isinstance(kernel, Iterable):
+            kernel_height = kernel[0]
+            kernel_width = kernel[1]
+        else:
+            kernel_height = kernel
+            kernel_width = kernel
+
+        if isinstance(stride, Iterable):
+            stride_height = stride[0]
+            stride_width = stride[1]
+        else:
+            stride_height = stride
+            stride_width = stride
+
+        if isinstance(pad, Iterable):
+            pad_top = pad[0]
+            pad_bottom = pad[1]
+            pad_left = pad[2]
+            pad_right = pad[3]
+        else:
+            pad_top = pad
+            pad_bottom = pad
+            pad_left = pad
+            pad_right = pad
+
+        im2col_matrix = self._compute_conv2d_im2col(
+            (in_H, in_W, in_C),
+            (kernel_height, kernel_width),
+            (stride_height, stride_width),
+            (pad_top, pad_bottom, pad_left, pad_right)
+        )
+
+        generated_code = (
+            "template<class data_T, typename CONFIG_T>\n"
+            "class fill_buffer_{index} : public FillConv2DBuffer<data_T, CONFIG_T> {{\n"
+            "    public:\n"
+            "    static void fill_buffer(\n"
+            "        data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],\n"
+            "        data_T buffer[CONFIG_T::n_pixels][CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan],\n"
+            "        const unsigned partition\n"
+            "    ) {{\n"
+        ).format(index=layer_idx)
+        indent = '    '
+
+        for partition_idx, partition in enumerate(np.split(im2col_matrix, n_partitions)):
+            generated_code += indent * 2 + 'if (partition == {:>3}) {{\n'.format(partition_idx)
+            for pixel_idx, arr in enumerate(partition):
+                buffer_stmts = []
+                for j, v in enumerate(arr):
+                    if v == 0:
+                        val = '0'
+                    else:
+                        val = 'data[{}]'.format(int(v-1))
+                    buffer_stmts.append('buffer[{}][{}] = {:>10};'.format(pixel_idx, j, val))
+                generated_code += indent * 3 + ' '.join(buffer_stmts) + '\n'
+            generated_code += '\n' + indent * 2 + '}\n'
+
+        generated_code += indent + '}\n'
+        generated_code += '};\n'
+
+        return generated_code
 
     @model_optimizer()
     def write_hls(self, model):

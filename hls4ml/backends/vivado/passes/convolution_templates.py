@@ -37,6 +37,10 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
     static const unsigned min_width = {min_width};
     static const ap_uint<filt_width> pixels[min_width];
+    static const unsigned n_partitions = {n_partitions};
+    static const unsigned n_pixels = out_width / n_partitions;
+    template<class data_T, class CONFIG_T>
+    using fill_buffer = nnet::{fill_fn}<data_T, CONFIG_T>;
     typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
@@ -60,6 +64,10 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         params['nzeros'] = node.get_weights('weight').nzeros
 
         params['config_t'] = 'config{}_mult'.format(node.index)
+        if node.model.config.get_config_value('IOType') == 'io_parallel':
+            params['fill_fn'] = 'fill_buffer_{}'.format(node.index)
+        else:
+            params['fill_fn'] = 'FillConv1DBuffer'
         conv_config = self.template.format(**params)
 
         mult_params = self._default_config_params(node)
@@ -109,6 +117,10 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned min_height = {min_height};
     static const unsigned min_width = {min_width};
     static const ap_uint<filt_height * filt_width> pixels[min_height * min_width];
+    static const unsigned n_partitions = {n_partitions};
+    static const unsigned n_pixels = out_height * out_width / n_partitions;
+    template<class data_T, class CONFIG_T>
+    using fill_buffer = nnet::{fill_fn}<data_T, CONFIG_T>;
     typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
@@ -133,6 +145,10 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
         params['nzeros'] = node.get_weights('weight').nzeros
 
         params['config_t'] = 'config{}_mult'.format(node.index)
+        if node.model.config.get_config_value('IOType') == 'io_parallel':
+            params['fill_fn'] = 'fill_buffer_{}'.format(node.index)
+        else:
+            params['fill_fn'] = 'FillConv2DBuffer'
         conv_config = self.template.format(**params)
 
         mult_params = self._default_config_params(node)
