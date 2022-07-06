@@ -1,6 +1,6 @@
 import os
-from shutil import copyfile
-
+from shutil import copyfile, copytree
+from distutils.dir_util import copy_tree
 from hls4ml.writer.vivado_writer import VivadoWriter
 
 class VivadoAcceleratorWriter(VivadoWriter):
@@ -311,14 +311,22 @@ class VivadoAcceleratorWriter(VivadoWriter):
 
     def write_board_script(self, model):
         '''
-        Write the tcl scripts to create a Vivado IPI project for the VivadoAccelerator
+        Write the tcl scripts and kernel sources to create a Vivado IPI project for the VivadoAccelerator
         '''
         filedir = os.path.dirname(os.path.abspath(__file__))
         copyfile(os.path.join(filedir, self.vivado_accelerator_config.get_tcl_file_path()),
                  '{}/design.tcl'.format(model.config.get_output_dir()))
+        # Generic alveo board
+        if self.vivado_accelerator_config.get_board().startswith('alveo'):
+            src_dir=os.path.join(filedir, self.vivado_accelerator_config.get_krnl_rtl_src_dir())
+            dst_dir= os.path.abspath(model.config.get_output_dir())+'/src'
+            copy_tree(src_dir,dst_dir)
         f = open('{}/project.tcl'.format(model.config.get_output_dir()), 'w')
         f.write('variable myproject\n')
         f.write('set myproject "{}"\n'.format(model.config.get_project_name()))
+        if self.vivado_accelerator_config.get_board().startswith('alveo'):
+             f.write('variable part\n')
+             f.write('set part "{}"\n'.format(self.vivado_accelerator_config.get_part()))
         if self.vivado_accelerator_config.get_interface() == 'axi_stream':
             in_bit, out_bit = self.vivado_accelerator_config.get_io_bitwidth()
             f.write('set bit_width_hls_output {}\n'.format(in_bit))

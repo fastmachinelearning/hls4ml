@@ -175,3 +175,33 @@ def test_broadcast_stream(shapes, layer):
   y = model.predict([X1, X2])
   y_hls = hls_model.predict([X1, X2]).reshape(y.shape)
   np.testing.assert_allclose(y, y_hls, rtol=0)
+
+@pytest.mark.parametrize('batch', [1, 32])
+def test_multiple_outputs(batch):
+  ''' Test case for multple outputs '''
+  input1 = tf.keras.layers.Input(shape=(10,))
+  inputs = [input1]
+  output1 = tf.keras.layers.Dense(5, kernel_initializer='ones', use_bias=False)(input1)
+  output2 = tf.keras.layers.Dense(2, kernel_initializer='ones', use_bias=False)(input1)
+  outputs = [output1, output2]
+  model = tf.keras.models.Model(inputs=inputs, outputs=outputs)
+
+  # create the ModelGraph
+  config = hls4ml.utils.config_from_keras_model(model, granularity='model', default_precision='ap_fixed<32,16>')
+  odir = str(test_root_path / 'hls4mlprj_graph_multiple_outputs')
+  hls_model = hls4ml.converters.convert_from_keras_model(model,
+                                                         output_dir=odir,
+                                                         backend='Vivado',
+                                                         io_type='io_serial',
+                                                         hls_config=config)
+  hls_model.compile()
+
+  # Test with integers (for exact agreement)
+  X1 = np.random.randint(0, 100, size=(batch, 10)).astype(float)
+  y = model.predict(X1)
+  y_hls = hls_model.predict(X1)
+  # test trace as well
+  y_hls, hls_trace = hls_model.trace(X1)
+  for y_i, y_hls_i in zip(y, y_hls):
+    y_hls_i = y_hls_i.reshape(y_i.shape)
+    np.testing.assert_allclose(y_i, y_hls_i, rtol=0)
