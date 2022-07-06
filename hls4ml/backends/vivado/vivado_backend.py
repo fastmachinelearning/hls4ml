@@ -173,7 +173,6 @@ class VivadoBackend(FPGABackend):
 
     @layer_optimizer(Conv2D)
     def init_conv2d(self, layer):
-        print('here in conv2d')
         if len(layer.weights['weight'].data.shape) == 2: # This can happen if we assign weights of Dense layer to 1x1 Conv2D
             layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0,1))
 
