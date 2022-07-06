@@ -7,12 +7,11 @@ from collections.abc import Iterable
 import re
 
 from hls4ml.backends.backend import Backend
-from hls4ml.model.layers import Layer
+from hls4ml.model.layers import Layer, BatchNormalization
 from hls4ml.model.attributes import Attribute
 from hls4ml.model.types import IntegerPrecisionType, FixedPrecisionType, XnorPrecisionType, ExponentPrecisionType
 from hls4ml.writer import get_writer
-from hls4ml.model.optimizer import model_optimizer
-
+from hls4ml.model.optimizer import layer_optimizer, model_optimizer
 
 class FPGABackend(Backend):
     def __init__(self, name):
@@ -388,3 +387,26 @@ class FPGABackend(Backend):
     def write_hls(self, model):
         self.writer.write_hls(model)
         return True
+
+    @layer_optimizer(BatchNormalization)
+    def init_batchnormalization(self, layer):
+        '''Broadcast weights and scale if needed'''
+        input_shape = layer.get_input_variable().shape
+
+        scale = layer.weights['scale'].data_unquantized
+        bias = layer.weights['bias'].data_unquantized
+
+        n_filt = layer.get_attr('n_filt', -1)
+
+        scale_bias_shape = input_shape if n_filt == -1 else (n_filt,)
+
+        # Check shape, broadcast if needed. Don't broadcast if a squeeze makes them match.
+        if scale.shape != tuple(scale_bias_shape) and np.squeeze(scale).shape != tuple(scale_bias_shape):
+            layer.add_weights_variable(name='scale', data=np.broadcast_to(scale, scale_bias_shape),
+                                      precision=layer.get_attr("scale_precision"),
+                                      quantizer=layer.get_attr("scale_quantizer"))
+
+        if bias.shape != tuple(scale_bias_shape) and np.squeeze(bias).shape != tuple(scale_bias_shape):
+            layer.add_weights_variable(name='bias', data=np.broadcast_to(bias, scale_bias_shape),
+                                      precision=layer.get_attr("bias_precision"),
+                                      quantizer=layer.get_attr("bias_quantizer"))

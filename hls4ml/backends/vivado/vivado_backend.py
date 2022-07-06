@@ -7,7 +7,7 @@ from queue import Queue
 from collections.abc import Iterable
 
 from hls4ml.model.types import FixedPrecisionType, NamedType, IntegerPrecisionType
-from hls4ml.model.layers import Layer, Dense, BatchNormalization, Embedding, Conv1D, Conv2D, Conv2DBatchnorm, SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Activation, ParametrizedActivation, PReLU, Softmax, Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D, ZeroPadding1D, ZeroPadding2D, Merge, Concatenate, Dot, Resize, Transpose, SimpleRNN, LSTM, GRU, GarNet, GarNetStack
+from hls4ml.model.layers import Layer, Dense, Embedding, Conv1D, Conv2D, Conv2DBatchnorm, SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Activation, ParametrizedActivation, PReLU, Softmax, Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D, ZeroPadding1D, ZeroPadding2D, Merge, Concatenate, Dot, Resize, Transpose, SimpleRNN, LSTM, GRU, GarNet, GarNetStack
 from hls4ml.model.attributes import Attribute
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer, model_optimizer
 from hls4ml.model.flow import register_flow
@@ -209,29 +209,6 @@ class VivadoBackend(FPGABackend):
             layer.set_attr('strategy', 'latency')
         
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
-
-    @layer_optimizer(BatchNormalization)
-    def init_batchnormalization(self, layer):
-        '''Broadcast weights and scale if needed'''
-        input_shape = layer.get_input_variable().shape
-
-        scale = layer.weights['scale'].data_unquantized
-        bias = layer.weights['bias'].data_unquantized
-
-        n_filt = layer.get_attr('n_filt', -1)
-
-        scale_bias_shape = input_shape if n_filt == -1 else (n_filt,)
-
-        # Check shape, broadcast if needed. Don't broadcast if a squeeze makes them match.
-        if scale.shape != tuple(scale_bias_shape) and np.squeeze(scale).shape != tuple(scale_bias_shape):
-            layer.add_weights_variable(name='scale', data=np.broadcast_to(scale, scale_bias_shape),
-                                      precision=layer.get_attr("scale_precision"),
-                                      quantizer=layer.get_attr("scale_quantizer"))
-
-        if bias.shape != tuple(scale_bias_shape) and np.squeeze(bias).shape != tuple(scale_bias_shape):
-            layer.add_weights_variable(name='bias', data=np.broadcast_to(bias, scale_bias_shape),
-                                      precision=layer.get_attr("bias_precision"),
-                                      quantizer=layer.get_attr("bias_quantizer"))
 
 
     @layer_optimizer(Activation)
