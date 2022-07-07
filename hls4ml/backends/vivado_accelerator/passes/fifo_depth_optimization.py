@@ -7,9 +7,6 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
     def __init__(self):
         self.values = []
 
-    def match(self, node):
-        return True
-
     def transform(self, model):
         # use `large_fifo_depth = 0` to keep the default fifo depth
         profiling_fifo_depth = getattr(self, 'profiling_fifo_depth', 100_000)
@@ -57,6 +54,5 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
             elif 'out_local' in x['name']:
                 out.pragma = (out.pragma[0], x['max'] + 1)
 
-        model.write()
         print('[hls4ml] - FIFO optimization completed')
         return False
