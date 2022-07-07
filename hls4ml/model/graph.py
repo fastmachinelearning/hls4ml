@@ -58,7 +58,7 @@ class HLSConfig(object):
     def get_layer_config_value(self, layer, key, default=None):
         hls_config = self.config['HLSConfig']
 
-        name_config = hls_config.get('LayerName', {}).get(layer.name.lower(), None)
+        name_config = hls_config.get('LayerName', {}).get(layer.name, None)
         if name_config is not None:
             return name_config.get(key, default)
 
@@ -80,7 +80,7 @@ class HLSConfig(object):
         if type_config is not None:
             layer_config.update(type_config)
 
-        name_config = hls_config.get('LayerName', {}).get(layer.name.lower(), None)
+        name_config = hls_config.get('LayerName', {}).get(layer.name, None)
         if name_config is not None:
             layer_config.update(name_config)
 
@@ -333,8 +333,37 @@ class ModelGraph(object):
 
             self.graph[name] = self.make_node(kind, name, layer, inputs, outputs)
 
-    def apply_flow(self, flow):
-        applied_flows = {}
+    def apply_flow(self, flow, reapply='single'):
+        """Applies a flow (a collection of optimizers).
+        Args:
+            flow (str): The name of the flow to apply
+            reapply (str, optional): Determines the action to take if the flow and its requirements have already been
+                applied. Possible values are:
+                - 'all': Apply the flow and all its requirements.
+                - 'single': Apply only the given flow, but skip the already applied requirements.
+                - 'none': Skip applying the flow.
+                Defaults to 'single'.
+        """
+        def all_applied_flows():
+            applied_flows = {}
+
+            for flow_group in self._applied_flows:
+                applied_flows.update({flow: [] for flow in flow_group.keys()})
+
+            return applied_flows
+
+        assert reapply in ['all', 'single', 'none']
+
+        if reapply == 'all':
+            applied_flows = {}
+        elif reapply == 'single':
+            applied_flows = all_applied_flows()
+            applied_flows.pop(flow, None)
+        else:  # reapply == 'none'
+            applied_flows = all_applied_flows()
+            if flow in applied_flows:
+                return
+
         self._apply_sub_flow(flow, applied_flows)
         self._applied_flows.append(applied_flows)
 
@@ -552,16 +581,6 @@ class ModelGraph(object):
         directory specified in the `config`.
         """
 
-        def _make_stamp():
-            """ Create a unique identifier for the generated code. This identifier is used to
-            compile a unique library and link it with python. """
-            from string import hexdigits
-            from random import choice
-            length = 8
-            return ''.join(choice(hexdigits) for m in range(length))
-        
-        self.config.config['Stamp'] = _make_stamp()
-
         self.config.backend.write(self)
 
     def compile(self):
@@ -591,6 +610,7 @@ class ModelGraph(object):
             xlist = [x]
         else: 
             xlist = x
+        n_outputs = len(self.get_output_variables())
         
         for xi in xlist:
             if not isinstance(xi, np.ndarray):
@@ -610,8 +630,7 @@ class ModelGraph(object):
 
 
         top_function.restype = None
-        top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS") for i in range(len(xlist)+1)]
-        top_function.argtypes += [ctypes.POINTER(ctypes.c_ushort) for i in range(len(xlist)+1)]
+        top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS") for i in range(len(xlist) + n_outputs)]
 
         return top_function, ctype
 
@@ -632,12 +651,13 @@ class ModelGraph(object):
         if not all([n_samples[i] == n_samples[i+1] for i in range(len(xlist)-1)]):
             raise Exception('Input size mismatch, not all inputs match')
 
-        return n_sample
+        return int(n_sample)
 
     def predict(self, x):
         top_function, ctype = self._get_top_function(x)
         n_samples = self._compute_n_samples(x)
         n_inputs = len(self.get_input_variables())
+        n_outputs = len(self.get_output_variables())
 
         curr_dir = os.getcwd()
         os.chdir(self.config.get_output_dir() + '/firmware')
@@ -648,26 +668,29 @@ class ModelGraph(object):
 
         try:
             for i in range(n_samples):
-                predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
+                predictions = [np.zeros(yj.size(), dtype=ctype) for yj in self.get_output_variables()]
                 if n_inputs == 1:
-                    top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
+                    inp = [np.asarray(x[i])]
                 else:
-                    inp = [xj[i] for xj in x]
-                    argtuple = inp
-                    argtuple += [predictions]
-                    argtuple += [ctypes.byref(ctypes.c_ushort()) for k in range(len(inp)+1)]
-                    argtuple = tuple(argtuple)
-                    top_function(*argtuple)
+                    inp = [np.asarray(xj[i]) for xj in x]
+                argtuple = inp
+                argtuple += predictions
+                argtuple = tuple(argtuple)
+                top_function(*argtuple)
                 output.append(predictions)
 
 
-            #Convert to numpy array
-            output = np.asarray(output)
+            # Convert to list of numpy arrays (one for each output)
+            output = [np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)]
         finally:
             os.chdir(curr_dir)
-
-        if n_samples == 1:
+            
+        if n_samples == 1 and n_outputs == 1:
+            return output[0][0]
+        elif n_outputs == 1:
             return output[0]
+        elif n_samples == 1:
+            return [output_i[0] for output_i in output]
         else:
             return output
 
@@ -679,6 +702,7 @@ class ModelGraph(object):
         top_function, ctype = self._get_top_function(x)
         n_samples = self._compute_n_samples(x)
         n_inputs = len(self.get_input_variables())
+        n_outputs = len(self.get_output_variables())
 
         class TraceData(ctypes.Structure):
             _fields_ = [('name', ctypes.c_char_p),
@@ -717,16 +741,15 @@ class ModelGraph(object):
             alloc_func(ctypes.sizeof(ctype))
 
             for i in range(n_samples):
-                predictions = np.zeros(self.get_output_variables()[0].size(), dtype=ctype)
+                predictions = [np.zeros(yj.size(), dtype=ctype) for yj in self.get_output_variables()]
                 if n_inputs == 1:
-                    top_function(x[i], predictions, ctypes.byref(ctypes.c_ushort()), ctypes.byref(ctypes.c_ushort()))
+                    inp = [np.asarray(x[i])]
                 else:
-                    inp = [xj[i] for xj in x]
-                    argtuple = inp
-                    argtuple += [predictions]
-                    argtuple += [ctypes.byref(ctypes.c_ushort()) for k in range(len(inp)+1)]
-                    argtuple = tuple(argtuple)
-                    top_function(*argtuple)
+                    inp = [np.asarray(xj[i]) for xj in x]
+                argtuple = inp
+                argtuple += predictions
+                argtuple = tuple(argtuple)
+                top_function(*argtuple)
                 output.append(predictions)
                 collect_func(trace_data)
                 for trace in trace_data:
@@ -738,15 +761,19 @@ class ModelGraph(object):
             for key in trace_output.keys():
                 trace_output[key] = np.asarray(trace_output[key])
 
-            #Convert to numpy array
-            output = np.asarray(output)
+            # Convert to list of numpy arrays (one for each output)
+            output = [np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)]
 
             free_func()
         finally:
             os.chdir(curr_dir)
 
-        if n_samples == 1:
+        if n_samples == 1 and n_outputs == 1:
+            return output[0][0], trace_output
+        elif n_outputs == 1:
             return output[0], trace_output
+        elif n_samples == 1:
+            return [output_i[0] for output_i in output], trace_output
         else:
             return output, trace_output
 

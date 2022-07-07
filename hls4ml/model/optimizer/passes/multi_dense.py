@@ -5,7 +5,10 @@ import numpy as np
 class ReplaceMultidimensionalDenseWithConv(OptimizerPass):
     def match(self, node):
         return isinstance(node, Dense) and \
-            len(node.get_input_variable().shape) > 1
+            len(node.get_input_variable().shape) - sum(d==1 for d in node.get_input_variable().shape) > 1 
+            # The above sum checks for the number of dimensions in the Dense with size 1
+            # The subtraction allows the check to only count the number of dimensions with non-1 size
+            # For example, this prevents matching for a Dense layer with shape (1,N)
 
     def transform(self, model, node):
         dim = len(node.get_input_variable().shape) - 1        

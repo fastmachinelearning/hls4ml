@@ -10,7 +10,7 @@ from ast import literal_eval
 from contextlib import contextmanager
 
 from hls4ml.model.types import NamedType, IntegerPrecisionType, FixedPrecisionType
-from hls4ml.model.layers import Layer, Dense, BatchNormalization, Activation, ParametrizedActivation, PReLU, Softmax
+from hls4ml.model.layers import Embedding, Layer, Dense, BatchNormalization, Activation, ParametrizedActivation, PReLU, Softmax
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer, model_optimizer
 from hls4ml.model.flow import register_flow
 from hls4ml.backends import FPGABackend
@@ -51,6 +51,7 @@ class QuartusBackend(FPGABackend):
         template_flow = register_flow('apply_templates', templates, requires=[init_flow], backend=self.name)
 
         writer_passes = [
+            'make_stamp',
             'quartus:write_hls'
         ]
         writer_flow_requirements = ['optimize', quartus_types_flow, template_flow]
@@ -193,3 +194,8 @@ class QuartusBackend(FPGABackend):
             layer.set_attr('implementation', 'latency')
         else:
             layer.set_attr('implementation', layer.model.config.get_strategy(layer).lower())
+
+    @layer_optimizer(Embedding)
+    def init_embed(self, layer):
+        if layer.attributes['n_in'] is None:
+           raise Exception('Input length of Embedding layer must be specified.')

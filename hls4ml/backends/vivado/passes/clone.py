@@ -11,21 +11,25 @@ class Clone(Layer):
 
     def initialize(self):
         inp = self.get_input_variable()
-        self.add_output_variable(inp.shape, inp.dim_names, out_name=self.outputs[0], var_name='layer{index}_cpy1')
-        self.add_output_variable(inp.shape, inp.dim_names, out_name=self.outputs[1], var_name='layer{index}_cpy2')
+        for i, out_name in enumerate(self.outputs):
+            self.add_output_variable(inp.shape, inp.dim_names, out_name=out_name, var_name='layer{index}_cpy' + str(i + 1))
 
-clone_function_template = 'nnet::clone_stream<{input_t}, {output_t}, {size}>({input}, {output1}, {output2});'
 clone_include_list = ['nnet_utils/nnet_stream.h']
 
 class CloneFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(Clone, include_header=clone_include_list)
-        self.template = clone_function_template
+        self.template = None # to be filled once number of clones known
     
     def format(self, node):
         params = self._default_function_params(node)
-        params['output1'] = node.variables[node.outputs[0]].name
-        params['output2'] = node.variables[node.outputs[1]].name
+        for i, output in enumerate(node.outputs):
+            params['output' + str(i + 1)] = node.variables[node.outputs[i]].name
+        
+        if self.template is None:
+            self.template = 'nnet::clone_stream<{input_t}, {output_t}, {size}>({input}, ' + \
+                            ', '.join(['{output' + str(i + 1) + '}' for i in range(len(node.outputs))]) + \
+                            ');'
 
         return self.template.format(**params)
 
@@ -63,8 +67,8 @@ class CloneOutput(OptimizerPass):
         transformed = False
         for output in node.outputs:
             if len(output_map[output]) > 1:
-                if len(output_map[output]) > 2:
-                    print('WARN: Cannot clone output {} of {} ({})'.format(output, node.class_name, node.name))
+                if len(output_map[output]) > 3:
+                    print('WARNING: Cloning output {} of {} ({}) more than 3 times not currently supported'.format(output, node.__class__.__name__, node.name))
                     return False
                 out_var = node.get_output_variable(output)
                 for i, layer in enumerate(output_map[output], 1):
@@ -73,7 +77,7 @@ class CloneOutput(OptimizerPass):
                     }
                     idx = layer.inputs.index(output)
                     layer.inputs[idx] = output + '_cpy' + str(i)
-                clone_layer = model.make_node(Clone, 'clone_' + node.name, attrs, [output], [output + '_cpy1', output + '_cpy2'])
+                clone_layer = model.make_node(Clone, 'clone_' + node.name, attrs, [output], [output + '_cpy' + str(i + 1) for i in range(len(output_map[output]))])
                 model.insert_node(clone_layer)
                 transformed = True
         
