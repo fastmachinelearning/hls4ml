@@ -2,6 +2,7 @@ stages:
   - generate
   - trigger
   - test
+  - gather
 
 generator:
   stage: generate
@@ -25,3 +26,21 @@ pytests:
       - artifact: test/pytest/pytests.yml
         job: generator
     strategy: depend
+
+coverage:
+  stage: gather
+  image: python:3.7-alpine
+  tags:
+    - docker
+  before_script:
+    - pip install coverage
+  script:
+    - cd test/pytest
+    - coverage combine test*.coverage
+    - coverage report
+    - coverage xml 
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: test/pytest/coverage.xml

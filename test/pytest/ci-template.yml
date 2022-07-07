@@ -11,6 +11,7 @@
   script:
     - cd test/pytest
     - pytest $PYTESTFILE -rA --cov-report xml --cov-report term --cov=hls4ml --junitxml=report.xml --randomly-seed=42 --randomly-dont-reorganize --randomly-dont-reset-seed
+    - mv .coverage $PYTESTFILE.coverage
   artifacts:
     when: always
     reports:
@@ -21,3 +22,4 @@
         path: test/pytest/coverage.xml
     paths:
       - test/pytest/hls4mlprj*.tar.gz
+      - test/pytest/*.coverage
