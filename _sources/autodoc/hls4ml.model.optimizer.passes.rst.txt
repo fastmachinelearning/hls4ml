@@ -52,6 +52,14 @@ hls4ml.model.optimizer.passes.qkeras module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.model.optimizer.passes.stamp module
+------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.stamp
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.model.optimizer.passes.transpose\_opt module
 ---------------------------------------------------
 

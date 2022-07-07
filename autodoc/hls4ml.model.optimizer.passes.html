@@ -77,6 +77,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes.nop">hls4ml.model.optimizer.passes.nop module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes.precision_merge">hls4ml.model.optimizer.passes.precision_merge module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hls4ml-model-optimizer-passes-qkeras-module">hls4ml.model.optimizer.passes.qkeras module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes.stamp">hls4ml.model.optimizer.passes.stamp module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes.transpose_opt">hls4ml.model.optimizer.passes.transpose_opt module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.model.optimizer.passes">Module contents</a></li>
 </ul>
@@ -291,6 +292,30 @@
 </div>
 <div class="section" id="hls4ml-model-optimizer-passes-qkeras-module">
 <h2>hls4ml.model.optimizer.passes.qkeras module<a class="headerlink" href="#hls4ml-model-optimizer-passes-qkeras-module" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="module-hls4ml.model.optimizer.passes.stamp">
+<span id="hls4ml-model-optimizer-passes-stamp-module"></span><h2>hls4ml.model.optimizer.passes.stamp module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.stamp" title="Permalink to this headline"></a></h2>
+<dl class="class">
+<dt id="hls4ml.model.optimizer.passes.stamp.MakeStamp">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.model.optimizer.passes.stamp.</code><code class="sig-name descname">MakeStamp</code><a class="headerlink" href="#hls4ml.model.optimizer.passes.stamp.MakeStamp" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.ModelOptimizerPass" title="hls4ml.model.optimizer.optimizer.ModelOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.ModelOptimizerPass</span></code></a></p>
+<dl class="method">
+<dt id="hls4ml.model.optimizer.passes.stamp.MakeStamp.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.stamp.MakeStamp.transform" title="Permalink to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 <div class="section" id="module-hls4ml.model.optimizer.passes.transpose_opt">
 <span id="hls4ml-model-optimizer-passes-transpose-opt-module"></span><h2>hls4ml.model.optimizer.passes.transpose_opt module<a class="headerlink" href="#module-hls4ml.model.optimizer.passes.transpose_opt" title="Permalink to this headline"></a></h2>
