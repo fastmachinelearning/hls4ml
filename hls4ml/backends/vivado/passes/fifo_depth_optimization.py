@@ -20,7 +20,6 @@ def set_big_fifos(vars_to_profile, profiling_fifo_depth):
 
 
 def get_vcd_data(model):
-    model.write()
     model.build(reset=False, csim=True, synth=True, cosim=True, validation=False, export=False, vsynth=False,
                 fifo_opt=True)
 
@@ -50,9 +49,6 @@ def set_fifo_depth(model, maxs):
 class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
     def __init__(self):
         self.values = []
-
-    def match(self, node):
-        return True
 
     def transform(self, model):
         # use `large_fifo_depth = 0` to keep the default fifo depth
@@ -85,6 +81,5 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
 
         set_fifo_depth(model, maxs)
 
-        model.write()
         print('[hls4ml] - FIFO optimization completed')
         return False
