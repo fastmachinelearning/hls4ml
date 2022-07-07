@@ -17,7 +17,7 @@ def base_model(output_dir='hls4mlprj_graph_base_model', iotype = 'io_parallel'):
   layers = [{'class_name' : 'Input', 'name' : 'layer0_input', 'input_shape' : [1]},
             {'class_name' : 'Dense', 'name' : 'layer0', 'n_in' : 1, 'n_out' : 1},
             {'class_name' : 'Dense', 'name' : 'layer1', 'n_in' : 1, 'n_out' : 1}]
-  config = {'HLSConfig':{'Model':{'Precision':'ap_fixed<32,16>','ReuseFactor' : 1}}}
+  config = {'HLSConfig':{'Model':{'Precision':'ap_fixed<32,16>','ReuseFactor' : 1}, 'Flows': []}}
   config['OutputDir'] = output_dir
   config['ProjectName'] = 'myprj'
   config['IOType'] = iotype
