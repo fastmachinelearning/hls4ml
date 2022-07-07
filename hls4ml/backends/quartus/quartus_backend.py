@@ -55,6 +55,7 @@ class QuartusBackend(FPGABackend):
         template_flow = register_flow('apply_templates', templates, requires=[init_flow], backend=self.name)
 
         writer_passes = [
+            'make_stamp',
             'quartus:write_hls'
         ]
         writer_flow_requirements = ['optimize', quartus_types_flow, template_flow]
