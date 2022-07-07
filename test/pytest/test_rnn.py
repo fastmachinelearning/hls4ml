@@ -1,13 +1,11 @@
 import pytest
 import hls4ml
-import tensorflow as tf
 import numpy as np
 from pathlib import Path
-from tensorflow.keras import optimizers
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Embedding, SimpleRNN, LSTM, GRU
-import math
-from tensorflow.keras import backend as K
+
+from traitlets import default
+from tensorflow.keras.models import Model, Sequential
+from tensorflow.keras.layers import Input, SimpleRNN, LSTM, GRU
 
 test_root_path = Path(__file__).parent
 
@@ -56,3 +54,42 @@ def test_rnn_parsing(rnn_layer, return_sequences):
     np.testing.assert_array_equal(hls_weights[0].data, rnn_weights[0])
     np.testing.assert_array_equal(hls_weights[2].data, rnn_weights[1])
     np.testing.assert_array_equal(hls_weights[1].data, rnn_weights[2])
+
+@pytest.mark.parametrize('rnn_layer', [LSTM, GRU])
+@pytest.mark.parametrize('return_sequences', [True, False])
+@pytest.mark.parametrize('backend', ['Vivado'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('static', [True, False])
+def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, static):
+    # Subtract 0.5 to include negative values
+    input_shape = (5, 8)
+    X = np.random.rand(50, *input_shape) - 0.5      
+    
+    layer_name = rnn_layer.__class__.__name__.lower()
+    keras_model = Sequential()
+    keras_model.add(rnn_layer(units=32, input_shape=input_shape, kernel_initializer='lecun_uniform', bias_initializer='lecun_uniform', return_sequences=return_sequences, name=layer_name))
+    keras_model.compile()
+
+    default_precision = 'ap_fixed<32, 16>' if backend == 'Vivado' else 'ac_fixed<32, 16, true>'
+    hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', default_precision=default_precision)
+    hls_config['LayerName'][layer_name]['static'] = static
+    output_dir = 'hls4mlprj_rnn_accuracy_{}_static_{}_ret_seq_{}_{}_{}'.format(
+        rnn_layer.__class__.__name__.lower(),
+        int(static),
+        int(return_sequences),
+        backend,
+        io_type
+    )
+
+    hls_model = hls4ml.converters.convert_from_keras_model(
+                            keras_model, 
+                            hls_config=hls_config,
+                            output_dir=output_dir, 
+                            backend=backend,
+                            io_type=io_type
+    )
+    hls_model.compile()
+
+    keras_prediction = keras_model.predict(X)
+    hls_prediction = hls_model.predict(X)
+    np.testing.assert_allclose(hls_prediction.flatten(), keras_prediction.flatten(), rtol=0.0, atol=3e-2)
