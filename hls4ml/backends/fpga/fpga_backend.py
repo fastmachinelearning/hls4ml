@@ -405,25 +405,31 @@ class FPGABackend(Backend):
 
         return (min_H, min_W, windows_int)
 
-    def _compute_conv1d_im2col(self, input_shape, kernel=3, stride=1, pad=(0,0)):
+    def _compute_conv1d_im2col(self, input_shape, kernel=3, stride=1, pad=(0,0), dilation=1):
         W, C = input_shape
         pad_l, pad_r = pad
 
-        out_w = (W + pad_l + pad_r - kernel) // stride + 1
+        out_w = (W + pad_l + pad_r - (dilation * (kernel - 1) + 1)) // stride + 1
 
-        input_img = np.arange(1, W * C + 1).reshape(W, C)
+        input_img = np.arange(1, W * C + 1)
+        im_matrix = np.zeros((kernel * C * out_w, ))
 
-        img = np.pad(input_img, [(pad_l, pad_r), (0,0)], 'constant')
-        col = np.zeros((out_w, kernel, C))
+        index = 0
+        for i_ow in range(out_w):
+            for i_kw in range(kernel):
+                for i_c in range(C):
+                    input_col = -pad_l + i_kw * dilation + i_ow * stride
+                    if (input_col >= 0 and input_col < W):
+                        im_matrix[index] = input_img[input_col * C + i_c]
+                    else:
+                        im_matrix[index] = 0
+                    index += 1
+        
+        im_matrix = im_matrix.reshape(out_w, -1)
+        return im_matrix
 
-        for x in range(kernel):
-            x_max = x + stride * out_w
-            col[:, x, :] = img[x:x_max:stride, :]
 
-        col = col.reshape(out_w, -1)
-        return col
-
-    def generate_conv1d_line_buffer_fn(self, layer_idx, n_partitions, in_W, in_C, kernel=3, stride=1, pad=0):
+    def generate_conv1d_line_buffer_fn(self, layer_idx, n_partitions, in_W, in_C, kernel=3, stride=1, pad=0, dilation=1):
         if isinstance(pad, Iterable):
             pad_left = pad[0]
             pad_right = pad[1]
@@ -435,7 +441,8 @@ class FPGABackend(Backend):
             (in_W, in_C),
             kernel,
             stride,
-            (pad_left, pad_right)
+            (pad_left, pad_right),
+            dilation
         )
 
         generated_code = (
@@ -468,30 +475,41 @@ class FPGABackend(Backend):
 
         return generated_code
 
-    def _compute_conv2d_im2col(self, input_shape, kernel=(3,3), stride=(1,1), pad=(0,0,0,0)):
+    def _compute_conv2d_im2col(self, input_shape, kernel=(3, 3), stride=(1, 1), pad=(0, 0, 0, 0), dilation=(1,1)):
         H, W, C = input_shape
         kernel_h, kernel_w = kernel
         stride_h, stride_w = stride
         pad_t, pad_b, pad_l, pad_r = pad
+        dilation_h, dilation_w = dilation
 
-        out_h = (H + pad_t + pad_b - kernel_h) // stride_h + 1
-        out_w = (W + pad_l + pad_r - kernel_w) // stride_w + 1
+        out_h = (H + pad_t + pad_b - (dilation_h * (kernel_h - 1) + 1)) // stride_h + 1
+        out_w = (W + pad_l + pad_r - (dilation_w * (kernel_w - 1) + 1)) // stride_w + 1
 
-        input_img = np.arange(1, C * H * W + 1).reshape(C, H, W)
+        input_img = np.arange(1, H * W * C + 1)
+        im_matrix = np.zeros((kernel_h * kernel_w * C * out_h * out_w, ))
 
-        img = np.pad(input_img, [(0,0), (pad_t, pad_b), (pad_l, pad_r)], 'constant')
-        col = np.zeros((C, kernel_h, kernel_w, out_h, out_w))
+        index = 0
+        for i_oh in range(out_h):
+            for i_ow in range(out_w):
+                for i_kh in range(kernel_h):
+                    input_row = -pad_t + i_kh * dilation_h + i_oh * stride_h
+                    for i_kw in range(kernel_w):
+                        for i_c in range(C):
+                            if (input_row < 0 or input_row >= H):
+                                im_matrix[index] = 0
+                            else:
+                                input_col = -pad_l + i_kw * dilation_w + i_ow * stride_w
+                                if (input_col >= 0 and input_col < W):
+                                    im_matrix[index] = input_img[input_row * W * C + input_col * C + i_c]
+                                else:
+                                    im_matrix[index] = 0
+                            index += 1
+        
+        im_matrix = im_matrix.reshape(out_h * out_w, -1)
+        return im_matrix
 
-        for y in range(kernel_h):
-            y_max = y + stride_h * out_h
-            for x in range(kernel_w):
-                x_max = x + stride_w * out_w
-                col[:, y, x, :, :] = img[:, y:y_max:stride_h, x:x_max:stride_w]
 
-        col = col.transpose(3, 4, 0, 1, 2).reshape(out_h * out_w, -1)
-        return col
-
-    def generate_conv2d_line_buffer_fn(self, layer_idx, n_partitions, in_H, in_W, in_C, kernel=(3, 3), stride=(1, 1), pad=(0, 0, 0, 0)):
+    def generate_conv2d_line_buffer_fn(self, layer_idx, n_partitions, in_H, in_W, in_C, kernel=(3, 3), stride=(1, 1), pad=(0, 0, 0, 0), dilation=(1, 1)):
         if isinstance(kernel, Iterable):
             kernel_height = kernel[0]
             kernel_width = kernel[1]
@@ -517,11 +535,19 @@ class FPGABackend(Backend):
             pad_left = pad
             pad_right = pad
 
+        if isinstance(dilation, Iterable):
+            dilation_height = dilation[0]
+            dilation_width = dilation[1]
+        else:
+            dilation_height = dilation
+            dilation_width = dilation
+
         im2col_matrix = self._compute_conv2d_im2col(
             (in_H, in_W, in_C),
             (kernel_height, kernel_width),
             (stride_height, stride_width),
-            (pad_top, pad_bottom, pad_left, pad_right)
+            (pad_top, pad_bottom, pad_left, pad_right),
+            (dilation_height, dilation_width)
         )
 
         generated_code = (
