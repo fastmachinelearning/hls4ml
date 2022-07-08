@@ -330,6 +330,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
         f = open('{}/project.tcl'.format(model.config.get_output_dir()), 'w')
         f.write('variable myproject\n')
         f.write('set myproject "{}"\n'.format(model.config.get_project_name()))
+        f.write('variable backend\nset backend vivadoaccelerator\n')
         if self.vivado_accelerator_config.get_board().startswith('alveo'):
              f.write('variable part\n')
              f.write('set part "{}"\n'.format(self.vivado_accelerator_config.get_part()))
@@ -348,18 +349,6 @@ class VivadoAcceleratorWriter(VivadoWriter):
         os.remove(model.config.get_output_dir() + '.tar.gz')
         super(VivadoAcceleratorWriter, self).write_tar(model)
 
-    def modify_project_tcl(self, model):
-        oldfile = open('{}/project.tcl'.format(model.config.get_output_dir()), 'r')
-        newfile = open('{}/project.temp.tcl'.format(model.config.get_output_dir()), 'w')
-        for l in oldfile.readlines():
-            if "backend \"vivado\"" in l:
-                l = l.replace("vivado", "vivadoaccelerator")
-            newfile.write(l)
-
-        oldfile.close()
-        newfile.close()
-        os.rename('{}/project.temp.tcl'.format(model.config.get_output_dir()), '{}/project.tcl'.format(model.config.get_output_dir()))
-
         
     def write_hls(self, model):
         """
@@ -370,7 +359,6 @@ class VivadoAcceleratorWriter(VivadoWriter):
         self.vivado_accelerator_config = VivadoAcceleratorConfig(model.config, model.get_input_variables(),
                                                                  model.get_output_variables())
         super(VivadoAcceleratorWriter, self).write_hls(model)
-        self.modify_project_tcl(model)
         self.write_board_script(model)
         self.write_driver(model)
         self.write_wrapper_test(model)

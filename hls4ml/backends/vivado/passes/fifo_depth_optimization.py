@@ -68,6 +68,10 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
 
         data = get_vcd_data(model)
 
+        if len(data['children']) == 0:
+            print("FIFO depth optimization found no FIFOs implemented using BRAMs in the design, no optimization is possible. Consider increasing profiling_fifo_depth.")
+            return False
+
         n_elem = len(data['children'][0]['children'][0]['children'])
         for i in range(n_elem):
             name = data['children'][0]['children'][0]['children'][i]['name']
