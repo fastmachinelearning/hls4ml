@@ -7,8 +7,8 @@ import qonnx.util.to_channels_last
 import urllib
 import os
 # To conveniently run QONNX inference
-from finn.core.modelwrapper import ModelWrapper
-import finn.core.onnx_exec as oxe
+from qonnx.core.modelwrapper import ModelWrapper
+import qonnx.core.onnx_exec as oxe
 
 def test_tfc_2w2a():
     # download test model
