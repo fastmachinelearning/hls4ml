@@ -41,21 +41,20 @@ def _get_precision_from_quantizer(quantizer):
     rnd = "AP_RND_CONV"
     overflow = "AP_SAT"
 
-    if quantizer['class_name'] == 'quantized_tanh':
-        overflow = "AP_SAT_SYM" if quantizer['config']['symmetric'] else "AP_SAT"
-        bits = int(quantizer['config']['bits'])
-        integer = 1
-    elif quantizer['class_name'] == 'quantized_sigmoid':
-        bits = int(quantizer['config']['bits'])
-        integer = 0
-        signed = False
-    elif quantizer['class_name'] in supported_quantizers:
+    if quantizer['class_name'] in supported_quantizers:
         bits = int(quantizer['config']['bits'])
         # if integer isn't specified, it should be the same as bits
         integer = int(quantizer['config'].get('integer', bits-1)) + 1
         if quantizer['class_name'] == 'quantized_relu':
             signed = False
             integer -= 1
+        elif quantizer['class_name'] == 'quantized_tanh':
+            overflow = "AP_SAT_SYM" if quantizer['config']['symmetric'] else "AP_SAT"
+            integer = 1
+        elif quantizer['class_name'] == 'quantized_sigmoid':
+            integer = 0
+            signed = False
+
     elif quantizer['class_name'] in ['binary', 'stochastic_binary', 'binary_tanh']:
         bits = 2
         integer = 2
