@@ -703,12 +703,21 @@ class HardActivation(Activation):
         Attribute('slope', value_type=float, default=0.2, configurable=True),
         Attribute('shift', value_type=float, default=0.5, configurable=True),
 
-        TypeAttribute('slope_t', default=NamedType('slope_t', precision=FixedPrecisionType(width=1, integer=0, signed=False))),
-        TypeAttribute('shift_t', default=NamedType('shift_t', precision=FixedPrecisionType(width=16, integer=0, signed=False)))
+        TypeAttribute('slope_t'),
+        TypeAttribute('shift_t')
     ]
 
     def initialize(self):
-        return super().initialize()
+        super().initialize()
+        slope_prec = self.get_attr('slope_prec',
+            FixedPrecisionType(width=1, integer=0, signed=False))
+        shift_prec = self.get_attr('shift_prec',
+            FixedPrecisionType(width=16, integer=0, signed=False))
+        index = self.get_attr('index')
+        slope_t = NamedType(f'slope{index}_t', precision=slope_prec)
+        shift_t = NamedType(f'shift{index}_t', precision=shift_prec)
+        self.set_attr('slope_t', slope_t)
+        self.set_attr('shift_t', shift_t)
 
 class PReLU(Activation):
     def initialize(self):

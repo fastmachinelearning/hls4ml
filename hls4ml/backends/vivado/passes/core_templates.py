@@ -108,16 +108,14 @@ activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
 }};\n"""
 
 hard_activ_config_template = """struct {type}_config{index} {{
-    typedef {slope_t.name} slope_t;
-    typedef {shift_t.name} shift_t;
     static const unsigned n_in = {n_in};
-    static const slope_t slope;
-    static const shift_t shift;
+    static const {slope_t.name} slope;
+    static const {shift_t.name} shift;
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
 }};
-const slope_t {type}_config{index}::slope = {slope};
-const shift_t {type}_config{index}::shift = {shift};\n"""
+const {slope_t.name} {type}_config{index}::slope = {slope};
+const {shift_t.name} {type}_config{index}::shift = {shift};\n"""
 
 softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned n_in = {n_in};

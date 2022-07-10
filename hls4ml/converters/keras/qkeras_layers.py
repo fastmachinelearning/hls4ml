@@ -95,8 +95,8 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader,
         layer['class_name'] = 'HardActivation'
         layer['slope'] = 0.5   # the default values in QKeras
         layer['shift'] = 0.5
-        layer['slope_t'] = NamedType('slope_t', precision=FixedPrecisionType(width=1, integer=0, signed=False))
-        layer['shift_t'] = NamedType('shift_t', precision=FixedPrecisionType(width=1, integer=0, signed=False))
+        layer['slope_prec'] = FixedPrecisionType(width=1, integer=0, signed=False)
+        layer['shift_prec'] = FixedPrecisionType(width=1, integer=0, signed=False)
         layer['activation'] = activation_config['class_name'].replace('quantized_', 'hard_')
     else:
         layer['class_name'] = 'Activation'
