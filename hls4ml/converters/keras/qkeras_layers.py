@@ -7,13 +7,15 @@ from hls4ml.converters.keras.convolution import parse_conv1d_layer
 from hls4ml.converters.keras.convolution import parse_conv2d_layer
 from hls4ml.converters.keras.qkeras import *
 
+from hls4ml.model.types import NamedType, FixedPrecisionType
+
 import tensorflow as tf
 
 
 @keras_handler('QDense')
 def parse_qdense_layer(keras_layer, input_names, input_shapes, data_reader, config):
-    
-    
+
+
     layer, output_shape = parse_dense_layer(keras_layer, input_names, input_shapes, data_reader, config)
 
     layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
@@ -28,7 +30,7 @@ def parse_qdense_layer(keras_layer, input_names, input_shapes, data_reader, conf
 @keras_handler('QConv1D', 'QConv2D')
 def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader, config):
     assert('QConv' in keras_layer['class_name'])
-    
+
     if '1D' in keras_layer['class_name']:
         layer, output_shape = parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader, config)
     elif '2D' in keras_layer['class_name']:
@@ -39,7 +41,7 @@ def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader, confi
         layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
     else:
         layer['bias_quantizer'] = None
-    
+
     return layer, output_shape
 
 
@@ -48,13 +50,13 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader,
     assert(keras_layer['class_name'] == 'QActivation')
     supported_activations = ['quantized_relu', 'quantized_tanh', 'binary_tanh', 'ternary_tanh',
                              'quantized_sigmoid', 'quantized_bits', 'binary', 'ternary']
-    
+
     layer = parse_default_keras_layer(keras_layer, input_names)
 
     activation_config = keras_layer['config']['activation']
     quantizer_obj = get_quantizer(activation_config)
     activation_config = {}
-    # some activations are classes 
+    # some activations are classes
     if hasattr(quantizer_obj, 'get_config'):
         activation_config['class_name'] = quantizer_obj.__class__.__name__
         if activation_config['class_name'] == 'ternary' or activation_config['class_name'] == 'binary':
@@ -73,26 +75,38 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader,
             activation_config['config']['integer'] = 2
         else:
             activation_config['class_name'] = 'unknown'
-    
+
     if activation_config['class_name'] not in supported_activations:
         raise Exception('Unsupported QKeras activation: {}'.format(activation_config['class_name']))
 
+    if activation_config['class_name'] == 'quantized_bits':
+        activation_config['class_name'] = 'linear'
 
     if activation_config['class_name'] == 'ternary_tanh':
         layer['class_name'] = 'TernaryTanh'
         layer['threshold'] = activation_config.get('config', {}).get('threshold', 0.33)
         if layer['threshold'] is None:
             layer['threshold'] = 0.33 # the default ternary tanh threshold for QKeras
+        layer['activation'] = 'ternary_tanh'
+    elif ((activation_config['class_name'] == 'quantized_sigmoid'
+          and not activation_config['config']['use_real_sigmoid'])
+          or (activation_config['class_name'] == 'quantized_tanh'
+          and not activation_config['config']['use_real_tanh'])):
+        layer['class_name'] = 'HardActivation'
+        layer['slope'] = 0.5   # the default values in QKeras
+        layer['shift'] = 0.5
+        layer['slope_t'] = NamedType('slope_t', precision=FixedPrecisionType(width=1, integer=0, signed=False))
+        layer['shift_t'] = NamedType('shift_t', precision=FixedPrecisionType(width=1, integer=0, signed=False))
+        layer['activation'] = activation_config['class_name'].replace('quantized_', 'hard_')
     else:
         layer['class_name'] = 'Activation'
-    if activation_config['class_name'] == 'quantized_bits':
-        activation_config['class_name'] = 'linear'
-    layer['activation'] = activation_config['class_name'].replace('quantized_', '')
+        layer['activation'] = activation_config['class_name'].replace('quantized_', '')
+
     return layer, [shape for shape in input_shapes[0]]
 
 @keras_handler('QBatchNormalization')
 def parse_qbatchnorm_layer(keras_layer, input_names, input_shapes, data_reader, config):
-    
+
     layer, output_shape = parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader, config)
 
     layer['mean_quantizer'] = get_quantizer_from_config(keras_layer, 'mean')

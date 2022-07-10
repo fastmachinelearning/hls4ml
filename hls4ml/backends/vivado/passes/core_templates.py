@@ -1,6 +1,7 @@
 
 from hls4ml.backends.backend import get_backend
-from hls4ml.model.layers import Activation, BatchNormalization, Dense, Embedding, PReLU, ParametrizedActivation, Softmax
+from hls4ml.model.layers import (Activation, BatchNormalization, Dense, Embedding, PReLU,
+    ParametrizedActivation, Softmax, HardActivation)
 from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
 
 # Dense templates
@@ -30,7 +31,7 @@ class DenseConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(Dense)
         self.template = dense_config_template
-    
+
     def format(self, node):
         params = self._default_config_params(node)
         params['nzeros'] = node.get_weights('weight').nzeros
@@ -43,7 +44,7 @@ class DenseFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(Dense, include_header=dense_include_list)
         self.template = dense_function_template
-    
+
     def format(self, node):
         params = self._default_function_params(node)
         params['w'] = node.get_weights('weight').name
@@ -75,7 +76,7 @@ class BatchNormalizationConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(BatchNormalization)
         self.template = batchnorm_config_template
-    
+
     def format(self, node):
         params = self._default_config_params(node)
         params['n_in'] = node.get_input_variable().size_cpp()
@@ -87,7 +88,7 @@ class BatchNormalizationFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(BatchNormalization, include_header=batchnorm_include_list)
         self.template = batchnorm_function_template
-    
+
     def format(self, node):
         params = self._default_function_params(node)
         params['scale'] = node.get_weights('scale').name
@@ -105,6 +106,18 @@ activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned reuse_factor = {reuse};
     typedef {table_t.name} table_t;
 }};\n"""
+
+hard_activ_config_template = """struct {type}_config{index} {{
+    typedef {slope_t.name} slope_t;
+    typedef {shift_t.name} shift_t;
+    static const unsigned n_in = {n_in};
+    static const slope_t slope;
+    static const shift_t shift;
+    static const unsigned io_type = nnet::{iotype};
+    static const unsigned reuse_factor = {reuse};
+}};
+const slope_t {type}_config{index}::slope = {slope};
+const shift_t {type}_config{index}::shift = {shift};\n"""
 
 softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned n_in = {n_in};
@@ -133,6 +146,17 @@ class ActivationConfigTemplate(LayerConfigTemplate):
 
         return self.template.format(**params)
 
+class HardActivationConfigTemplate(LayerConfigTemplate):
+    def __init__(self):
+        super().__init__(HardActivation)
+        self.template = hard_activ_config_template
+
+    def format(self, node):
+        params = self._default_config_params(node)
+        params['type'] = node.get_attr('activation')
+
+        return self.template.format(**params)
+
 class SoftmaxConfigTemplate(ActivationConfigTemplate):
     def __init__(self):
         super(ActivationConfigTemplate, self).__init__(Softmax) # Skip ActivationConfigTemplate's __init__
@@ -140,9 +164,9 @@ class SoftmaxConfigTemplate(ActivationConfigTemplate):
 
 class ActivationFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__((Activation, Softmax), include_header=activ_include_list)
+        super().__init__((Activation, HardActivation, Softmax), include_header=activ_include_list)
         self.template = activ_function_template
-    
+
     def format(self, node):
         params = self._default_function_params(node)
         params['activation'] = node.get_attr('activation').lower()

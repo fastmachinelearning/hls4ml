@@ -102,6 +102,8 @@ def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader, 
 
     if layer['class_name'] == 'Activation' and layer['activation'] == 'softmax':
         layer['class_name'] = 'Softmax'
+    if layer['class_name'] == 'Activation' and layer['activation'] == 'hard_sigmoid':
+        layer['class_name'] = 'HardActivation'
     if layer['class_name'] == 'Softmax':
         layer['axis'] = keras_layer['config'].get('axis', -1)
     

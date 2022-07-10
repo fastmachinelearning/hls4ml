@@ -488,17 +488,32 @@ void  hard_sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
         #pragma HLS PIPELINE
     }
 
-    data_T datareg;
-    data_T slope = (data_T) 0.2;
-    data_T shift = (data_T) 0.5;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
         if (CONFIG_T::io_type == io_serial){
             #pragma HLS PIPELINE
         }
-        datareg = slope * data[ii] + shift;
+        auto datareg = CONFIG_T::slope * data[ii] + CONFIG_T::shift;
         if (datareg > 1) datareg = 1;
         else if (datareg < 0) datareg = 0;
         res[ii] = datareg;
+    }
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
+void  hard_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
+{
+    if (CONFIG_T::io_type == io_parallel){
+        #pragma HLS PIPELINE
+    }
+
+    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+        if (CONFIG_T::io_type == io_serial){
+            #pragma HLS PIPELINE
+        }
+        auto sigmoid = CONFIG_T::slope * data[ii] + CONFIG_T::shift;
+        if (sigmoid > 1) sigmoid = 1;
+        else if (sigmoid < 0) sigmoid = 0;
+        res[ii] = 2*sigmoid - 1;
     }
 }
 

@@ -1,3 +1,4 @@
+from matplotlib.pyplot import flag
 import numpy as np
 import six
 
@@ -691,6 +692,24 @@ class ParametrizedActivation(Activation):
         else:
             return act # ELU activation
 
+class HardActivation(Activation):
+    '''
+    Implements the hard sigmoid and tan function in keras and qkeras
+    (Default parameters in qkeras are different, so should be configured)
+    The hard sigmoid unction is clip(slope * x + shift, 0, 1), and the
+    hard tanh function is 2 * hard_sigmoid - 1
+    '''
+    _expected_attributes = [
+        Attribute('slope', value_type=float, default=0.2, configurable=True),
+        Attribute('shift', value_type=float, default=0.5, configurable=True),
+
+        TypeAttribute('slope_t', default=NamedType('slope_t', precision=FixedPrecisionType(width=1, integer=0, signed=False))),
+        TypeAttribute('shift_t', default=NamedType('shift_t', precision=FixedPrecisionType(width=16, integer=0, signed=False)))
+    ]
+
+    def initialize(self):
+        return super().initialize()
+
 class PReLU(Activation):
     def initialize(self):
         super(PReLU, self).initialize()
@@ -1135,6 +1154,7 @@ layer_map = {
     'PReLU'                  : PReLU,
     'Softmax'                : Softmax,
     'TernaryTanh'            : TernaryTanh,
+    'HardActivation'         : HardActivation,
     'Reshape'                : Reshape,
     'Dense'                  : Dense,
     'BinaryDense'            : Dense,
