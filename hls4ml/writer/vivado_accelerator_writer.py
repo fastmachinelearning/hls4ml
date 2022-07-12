@@ -1,6 +1,6 @@
 import os
-from shutil import copyfile
-
+from shutil import copyfile, copytree
+from distutils.dir_util import copy_tree
 from hls4ml.writer.vivado_writer import VivadoWriter
 
 class VivadoAcceleratorWriter(VivadoWriter):
@@ -100,7 +100,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     newline += indent + '#pragma HLS STREAM variable=in_local depth=N_IN\n'
                     newline += indent + '#pragma HLS STREAM variable=out_local depth=N_OUT\n'
             elif '//hls-fpga-machine-learning insert call' in line:
-                newline = indent + '{}(in_local, out_local, in_size, out_size);\n'.format(
+                newline = indent + '{}(in_local, out_local);\n'.format(
                     model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert interface' in line:
                 if self.vivado_accelerator_config.get_interface() == 'axi_lite':
@@ -251,11 +251,11 @@ class VivadoAcceleratorWriter(VivadoWriter):
             elif '{}('.format(model.config.get_project_name()) in line:
                 indent_amount = line.split(model.config.get_project_name())[0]
                 newline = indent_amount + '{}_axi(inputs,outputs);\n'.format(model.config.get_project_name())
-            elif inp.size_cpp() in line or inp.cppname in line or inp.type.name in line:
-                newline = line.replace(inp.size_cpp(), 'N_IN').replace(inp.cppname, 'inputs').replace(inp.type.name,
+            elif inp.size_cpp() in line or inp.name in line or inp.type.name in line:
+                newline = line.replace(inp.size_cpp(), 'N_IN').replace(inp.name, 'inputs').replace(inp.type.name,
                                                                                                       'input_axi_t')
-            elif out.size_cpp() in line or out.cppname in line or out.type.name in line:
-                newline = line.replace(out.size_cpp(), 'N_OUT').replace(out.cppname, 'outputs').replace(out.type.name,
+            elif out.size_cpp() in line or out.name in line or out.type.name in line:
+                newline = line.replace(out.size_cpp(), 'N_OUT').replace(out.name, 'outputs').replace(out.type.name,
                                                                                                         'output_axi_t')
             else:
                 newline = line
@@ -289,17 +289,17 @@ class VivadoAcceleratorWriter(VivadoWriter):
                                        '{}_axi.h'.format(model.config.get_project_name()))
             elif inp.definition_cpp(name_suffix='_ap') in line:
                 newline = line.replace(inp.definition_cpp(name_suffix='_ap'),
-                                       'input_axi_t {}_ap[N_IN]'.format(inp.cppname))
+                                       'input_axi_t {}_ap[N_IN]'.format(inp.name))
             elif out.definition_cpp(name_suffix='_ap') in line:
                 newline = line.replace(out.definition_cpp(name_suffix='_ap'),
-                                       'output_axi_t {}_ap[N_OUT]'.format(out.cppname))
+                                       'output_axi_t {}_ap[N_OUT]'.format(out.name))
             elif '{}('.format(model.config.get_project_name()) in line:
                 indent_amount = line.split(model.config.get_project_name())[0]
-                newline = indent_amount + '{}_axi({}_ap,{}_ap);\n'.format(model.config.get_project_name(), inp.cppname,
-                                                                          out.cppname)
-            elif inp.size_cpp() in line or inp.cppname in line or inp.type.name in line:
+                newline = indent_amount + '{}_axi({}_ap,{}_ap);\n'.format(model.config.get_project_name(), inp.name,
+                                                                          out.name)
+            elif inp.size_cpp() in line or inp.name in line or inp.type.name in line:
                 newline = line.replace(inp.size_cpp(), 'N_IN').replace(inp.type.name, 'input_axi_t')
-            elif out.size_cpp() in line or out.cppname in line or out.type.name in line:
+            elif out.size_cpp() in line or out.name in line or out.type.name in line:
                 newline = line.replace(out.size_cpp(), 'N_OUT').replace(out.type.name, 'output_axi_t')
             else:
                 newline = line
@@ -311,14 +311,22 @@ class VivadoAcceleratorWriter(VivadoWriter):
 
     def write_board_script(self, model):
         '''
-        Write the tcl scripts to create a Vivado IPI project for the VivadoAccelerator
+        Write the tcl scripts and kernel sources to create a Vivado IPI project for the VivadoAccelerator
         '''
         filedir = os.path.dirname(os.path.abspath(__file__))
         copyfile(os.path.join(filedir, self.vivado_accelerator_config.get_tcl_file_path()),
                  '{}/design.tcl'.format(model.config.get_output_dir()))
+        # Generic alveo board
+        if self.vivado_accelerator_config.get_board().startswith('alveo'):
+            src_dir=os.path.join(filedir, self.vivado_accelerator_config.get_krnl_rtl_src_dir())
+            dst_dir= os.path.abspath(model.config.get_output_dir())+'/src'
+            copy_tree(src_dir,dst_dir)
         f = open('{}/project.tcl'.format(model.config.get_output_dir()), 'w')
         f.write('variable myproject\n')
         f.write('set myproject "{}"\n'.format(model.config.get_project_name()))
+        if self.vivado_accelerator_config.get_board().startswith('alveo'):
+             f.write('variable part\n')
+             f.write('set part "{}"\n'.format(self.vivado_accelerator_config.get_part()))
         if self.vivado_accelerator_config.get_interface() == 'axi_stream':
             in_bit, out_bit = self.vivado_accelerator_config.get_io_bitwidth()
             f.write('set bit_width_hls_output {}\n'.format(in_bit))

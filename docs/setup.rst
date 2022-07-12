@@ -85,7 +85,7 @@ After that, you can use :code:`Vivado HLS` to synthesize the model:
    #Print out the report if you want
    hls4ml.report.read_vivado_report('my-hls-test')
 
-Done! you've built your first project using ``hls4ml`` ! To learn more about our various API functionalities, check out our tutorials `here <https://github.com/fastmachinelearning/hls4ml-tutorial>`__.
+Done! You've built your first project using ``hls4ml`` ! To learn more about our various API functionalities, check out our tutorials `here <https://github.com/fastmachinelearning/hls4ml-tutorial>`__.
 
 If you want to configure your model further, check out our :doc:`Configuration <api/configuration>` page. 
 
@@ -126,7 +126,7 @@ To build the HLS project, do:
 
    hls4ml build -p my-hls-test -a
 
-This will create a Vivado HLS project with your model implmentation!
+This will create a Vivado HLS project with your model implementation!
 
 **NOTE:** For the last step, you can alternatively do the following to build the HLS project:
 
@@ -141,7 +141,7 @@ This will create a Vivado HLS project with your model implmentation!
 
    vivado_hls -f build_prj.tcl "csim=1 synth=1 cosim=1 export=1"
 
-Setting the additional parameters to ``1`` to ``0`` disables that step, but disabling ``synth`` also disables ``cosim`` and ``export``.
+Setting the additional parameters from ``1`` to ``0`` disables that step, but disabling ``synth`` also disables ``cosim`` and ``export``.
 
 Further help
 ^^^^^^^^^^^^^^^^
@@ -176,4 +176,4 @@ Existing examples
   Training codes and examples of resources needed to train the models can be found `here <https://github.com/fastmachinelearning/keras-training>`__.
 
 * 
-  Other examples of various HLS projects with examples of different machine learning algorithm implementations is in the directory `example-prjs <https://github.com/fastmachinelearning/hls4ml/tree/master/example-prjs>`_.
+  Other examples of various HLS projects with examples of different machine learning algorithm implementations are in the directory `example-prjs <https://github.com/fastmachinelearning/hls4ml/tree/master/example-prjs>`_.

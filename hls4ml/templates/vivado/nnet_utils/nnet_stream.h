@@ -39,6 +39,32 @@ void clone_stream(hls::stream<data_T> &data, hls::stream<res_T> &res1, hls::stre
 }
 
 template<class data_T, class res_T, int N>
+void clone_stream(hls::stream<data_T> &data, hls::stream<res_T> &res1, hls::stream<res_T> &res2, hls::stream<res_T> &res3) {
+    CloneLoop: for (int i = 0; i < N / data_T::size; i++) {
+        #pragma HLS PIPELINE
+
+        data_T in_data = data.read();
+        res_T out_data1;
+        res_T out_data2;
+        res_T out_data3;
+        #pragma HLS DATA_PACK variable=out_data1
+        #pragma HLS DATA_PACK variable=out_data2
+        #pragma HLS DATA_PACK variable=out_data3
+
+        ClonePack: for (int j = 0; j < data_T::size; j++) {
+            #pragma HLS UNROLL
+            out_data1[j] = in_data[j];
+            out_data2[j] = in_data[j];
+            out_data3[j] = in_data[j];
+        }
+
+        res1.write(out_data1);
+        res2.write(out_data2);
+        res3.write(out_data3);
+    }
+}
+
+template<class data_T, class res_T, int N>
 void repack_stream(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     if (data_T::size == res_T::size) {
         for (int i = 0; i < N / data_T::size; i++) {
@@ -145,6 +171,30 @@ void broadcast_stream(hls::stream<data_T> &data, hls::stream<res_T> &res) {
         broadcast_stream_HxWx1<data_T, res_T, CONFIG_T>(data, res);
     }
 }
+
+template<class data_T, class res_T, typename CONFIG_T>
+void transpose_2d(hls::stream<data_T> &data, hls::stream<res_T> &res) {
+    typename data_T::value_type data_array[CONFIG_T::height * CONFIG_T::width];   
+    #pragma HLS ARRAY_PARTITION variable=data_array complete
+
+    for (int i = 0; i < CONFIG_T::height * CONFIG_T::width / data_T::size; i++) {
+        #pragma HLS PIPELINE
+        data_T in_data = data.read();
+	for (int j = 0; j < data_T::size; j++) {
+	    data_array[i * data_T::size + j] = typename data_T::value_type(in_data[j]);
+        }
+    }
+  
+    for (int i = 0; i < CONFIG_T::height * CONFIG_T::width / res_T::size; i++) {
+        #pragma HLS PIPELINE
+        res_T out_data;
+        #pragma HLS DATA_PACK variable=out_data
+        for (int j = 0; j < res_T::size; j++) {
+	    out_data[j] = typename res_T::value_type(data_array[j * data_T::size + i]);
+        }
+	res.write(out_data);
+    }
+} 
 }
 
 #endif

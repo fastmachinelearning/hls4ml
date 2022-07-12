@@ -6,6 +6,34 @@ See `here <https://github.com/fastmachinelearning/hls4ml/releases>`__ for offici
 
 ----
 
+**v0.6.0 / coris**
+
+## What's Changed
+* `VivadoAccelerator` backend: target `pynq-z2` and `zcu102` boards directly from hls4ml by @nicologhielmetti
+* Updated `PyTorch` and `ONNX` converters by @Duchstf 
+* `line_buffer` Conv2D implementation for `io_stream`: reduced resource usage and latency by @Keb-L, @violatingcp, @vloncar 
+* Support `QConv2DBatchnorm` layer from `QKeras` by @nicologhielmetti 
+* Improved profiling plots - easier to compare original vs `hls4ml` converted models by @maksgraczyk 
+* Better derivation of data types for `QKeras` models by @jmduarte, @thesps 
+* Improved CI by @thesps
+* More support for models with branches, skip connections, `Merge` and `Concatenate` layers by @jmduarte, @vloncar 
+* Support for `Dense` layers over multi-dimensional tensors by @vloncar 
+* Overall improvements by @vloncar, @jmduarte, @thesps, @jmitrevs & others
+
+## New Contributors
+* @siorpaes made their first contribution in https://github.com/fastmachinelearning/hls4ml/pull/424
+* @jmitrevs made their first contribution in https://github.com/fastmachinelearning/hls4ml/pull/403
+* @anders-wind made their first contribution in https://github.com/fastmachinelearning/hls4ml/pull/302
+* @KOVI89alipes made their first contribution in https://github.com/fastmachinelearning/hls4ml/pull/318
+* @maksgraczyk made their first contribution in https://github.com/fastmachinelearning/hls4ml/pull/323
+* @Keb-L made their first contribution in https://github.com/fastmachinelearning/hls4ml/pull/332
+* @ConsVin made their first contribution in https://github.com/fastmachinelearning/hls4ml/pull/307
+* @nicologhielmetti made their first contribution in https://github.com/fastmachinelearning/hls4ml/pull/298
+
+**Full Changelog**: https://github.com/fastmachinelearning/hls4ml/compare/v0.5.0...v0.6.0
+
+----
+
 **v0.5.0 / bartsia**
 
 What's new:
