@@ -1,4 +1,3 @@
-from matplotlib.pyplot import flag
 import numpy as np
 import six
 
