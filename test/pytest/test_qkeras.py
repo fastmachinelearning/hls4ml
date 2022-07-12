@@ -40,7 +40,7 @@ def get_jettagging_data():
 
 @pytest.fixture(scope='module')
 def load_jettagging_model():
-  ''' 
+  '''
   Load the 3 hidden layer QKeras example model trained on the jet tagging dataset
   '''
   model_path = example_model_path / 'keras/qkeras_3layer.json'
@@ -213,7 +213,6 @@ def test_quantizer(randX_1000_1, quantizer, backend):
   model.add(QActivation(input_shape=(1,), activation=quantizer, name='quantizer'))
   model.compile()
 
-  hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=['quantizer'], rounding_mode='AP_RND_CONV', saturation_mode='AP_SAT')
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
   output_dir = str(test_root_path / 'hls4mlprj_qkeras_quantizer_{}_{}_{}_{}'.format(quantizer.__class__.__name__,
                                                             quantizer.bits, quantizer.integer, backend))
@@ -229,25 +228,20 @@ def test_quantizer(randX_1000_1, quantizer, backend):
   # Goal is to get it passing with all equal
   np.testing.assert_array_equal(y_qkeras, y_hls4ml)
 
-def sigmoid(x):
-  return 1/(1 + np.exp(-x))
-
-@pytest.mark.parametrize('quantizer_pars', [(quantized_tanh(4), np.tanh, 0.07),
-                                       (quantized_tanh(8), np.tanh, 0.012),
-                                       (quantized_tanh(10), np.tanh, 0.009),
-                                       (quantized_sigmoid(3), sigmoid, 0.066),
-                                       (quantized_sigmoid(7), sigmoid, 0.009),
-                                       (quantized_sigmoid(9), sigmoid, 0.006)])
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
-def test_quantizer_alt(randX_1000_1, quantizer_pars, backend):
+# TODO: include quantized_relu tests when they are made to pass
+# https://github.com/fastmachinelearning/hls4ml/issues/377
+@pytest.mark.parametrize('quantizer', [(quantized_tanh(8)),
+                                       (quantized_tanh(12, use_real_tanh=True)),
+                                       (quantized_sigmoid(5)),
+                                       (quantized_sigmoid(7, use_real_sigmoid=True))
+                                       ])
+@pytest.mark.parametrize('backend', ['Vivado'])   # Vivado only for now
+def test_quantizer_special(randX_1000_1, quantizer, backend):
   '''
-  Test a single quantizer as an Activation function.
+  Test a single quantizer (tanh or sigmoid) as an Activation function.
   Checks the type inference through the conversion is correct without just
   using the same logic.
   '''
-  quantizer = quantizer_pars[0]
-  func = quantizer_pars[1]
-  tol = quantizer_pars[2]
   X = randX_1000_1
   X = np.round(X * 2**10) * 2**-10 # make it an exact ap_fixed<16,6>
   model = Sequential()
@@ -255,19 +249,20 @@ def test_quantizer_alt(randX_1000_1, quantizer_pars, backend):
   model.compile()
 
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
-
-  output_dir = str(test_root_path / 'hls4mlprj_qkeras_quantizer_alt_{}_{}_{}'.format(quantizer.__class__.__name__,
+  output_dir = str(test_root_path / 'hls4mlprj_qkeras_quantizer_{}_{}_{}'.format(quantizer.__class__.__name__,
                                                             quantizer.bits, backend))
   hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                        hls_config=config,
                                                        output_dir=output_dir,
                                                        backend=backend)
+  hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=[])
   hls_model.compile()
 
-  y_calc = func(X)
+  y_qkeras = model.predict(X)
   y_hls4ml = hls_model.predict(X)
-  # Goal is to have the difference be smaller than quntization (plus a little)
-  assert np.amax(abs(y_hls4ml - y_calc)) < tol
+  # Goal is to get it passing with all equal
+  np.testing.assert_allclose(y_qkeras, y_hls4ml, rtol=1e-2, atol=0.02)
+
 
 @pytest.mark.parametrize(
     'weight_quantizer,activation_quantizer,', [
