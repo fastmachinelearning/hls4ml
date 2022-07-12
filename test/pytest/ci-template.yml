@@ -16,7 +16,8 @@
     reports:
       junit: 
         - test/pytest/report.xml
-      cobertura:
-        - test/pytest/coverage.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: test/pytest/coverage.xml
     paths:
       - test/pytest/hls4mlprj*.tar.gz

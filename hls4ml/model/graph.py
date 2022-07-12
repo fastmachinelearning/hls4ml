@@ -333,8 +333,37 @@ class ModelGraph(object):
 
             self.graph[name] = self.make_node(kind, name, layer, inputs, outputs)
 
-    def apply_flow(self, flow):
-        applied_flows = {}
+    def apply_flow(self, flow, reapply='single'):
+        """Applies a flow (a collection of optimizers).
+        Args:
+            flow (str): The name of the flow to apply
+            reapply (str, optional): Determines the action to take if the flow and its requirements have already been
+                applied. Possible values are:
+                - 'all': Apply the flow and all its requirements.
+                - 'single': Apply only the given flow, but skip the already applied requirements.
+                - 'none': Skip applying the flow.
+                Defaults to 'single'.
+        """
+        def all_applied_flows():
+            applied_flows = {}
+
+            for flow_group in self._applied_flows:
+                applied_flows.update({flow: [] for flow in flow_group.keys()})
+
+            return applied_flows
+
+        assert reapply in ['all', 'single', 'none']
+
+        if reapply == 'all':
+            applied_flows = {}
+        elif reapply == 'single':
+            applied_flows = all_applied_flows()
+            applied_flows.pop(flow, None)
+        else:  # reapply == 'none'
+            applied_flows = all_applied_flows()
+            if flow in applied_flows:
+                return
+
         self._apply_sub_flow(flow, applied_flows)
         self._applied_flows.append(applied_flows)
 
@@ -551,16 +580,6 @@ class ModelGraph(object):
         This function converts the model to C++ and writes the generated files in the output
         directory specified in the `config`.
         """
-
-        def _make_stamp():
-            """ Create a unique identifier for the generated code. This identifier is used to
-            compile a unique library and link it with python. """
-            from string import hexdigits
-            from random import choice
-            length = 8
-            return ''.join(choice(hexdigits) for m in range(length))
-        
-        self.config.config['Stamp'] = _make_stamp()
 
         self.config.backend.write(self)
 
