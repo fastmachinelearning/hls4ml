@@ -120,6 +120,11 @@ class VivadoBackend(FPGABackend):
 
         return parse_vivado_report(model.config.get_output_dir())
 
+    def _validate_conv_strategy(self, layer):
+        if layer.model.config.model_strategy.lower() != 'resource':
+            print('WARNING: Cannot use "Latency" model strategy for {} layer. Switching to "Resource" strategy.')
+            layer.model.config.model_strategy = 'Resource'
+
     @layer_optimizer(Layer)
     def init_base_layer(self, layer):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
@@ -172,6 +177,8 @@ class VivadoBackend(FPGABackend):
 
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
+        self._validate_conv_strategy(layer)
+
     @layer_optimizer(SeparableConv1D)
     def init_sepconv1d(self, layer):
         if layer.model.config.is_resource_strategy(layer):
@@ -209,6 +216,8 @@ class VivadoBackend(FPGABackend):
         layer.set_attr('n_partitions', out_height * out_width // closest_pf)
 
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+        self._validate_conv_strategy(layer)
 
     @layer_optimizer(SeparableConv2D)
     def init_sepconv2d(self, layer):

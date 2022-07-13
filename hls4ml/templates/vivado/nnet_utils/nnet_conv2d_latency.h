@@ -169,8 +169,8 @@ void conv_2d_latency_cf(
 
 template<class data_T, class res_T, typename CONFIG_T>
 void conv_2d_latency_cl(
-    data_T data[CONFIG_T::in_height*CONFIG_T::in_width*CONFIG_T::n_chan],
-    res_T  res[CONFIG_T::out_height*CONFIG_T::out_width*CONFIG_T::n_filt],
+    data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],
+    res_T  res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt],
     typename CONFIG_T::weight_t weights[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
     typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt])
 {
@@ -189,7 +189,7 @@ void conv_2d_latency_cl(
     #pragma HLS ARRAY_PARTITION variable=weights complete
     #pragma HLS ARRAY_PARTITION variable=biases complete
 
-    int multiplier_limit = CONFIG_T::n_pixels * (float(mult_n_in * mult_n_out) - float(CONFIG_T::mult_config::n_zeros));
+    int multiplier_limit  = CONFIG_T::n_pixels * (ceil(float(mult_n_in * mult_n_out) / float(CONFIG_T::reuse_factor)) - floor(float(CONFIG_T::mult_config::n_zeros) / float(CONFIG_T::reuse_factor)));
     CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::limit(multiplier_limit);
 
     PartitionLoop:
@@ -208,7 +208,7 @@ void conv_2d_latency_cl(
             Product1: for(int i_in = 0; i_in < mult_n_in; i_in++) {
                 cache = data_buf[i_pxl][i_in];
                 Product2: for(int i_out = 0; i_out < mult_n_out; i_out++) {
-                    mult[i_in * mult_n_out + i_out] = CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(cache, weights[i_out * mult_n_in + i_in/*i_in * mult_n_out + i_out*/]);
+                    mult[i_in * mult_n_out + i_out] = CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(cache, weights[i_in * mult_n_out + i_out]);
                 }
             }
 
