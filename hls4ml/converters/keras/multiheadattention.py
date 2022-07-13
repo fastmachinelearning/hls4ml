@@ -20,13 +20,11 @@ def parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader, conf
     # the maxium of seq_length is not defined in the config file.
 
     if keras_layer['config']['output_shape']: 
-        # out_shape = keras_layer['config']['output_shape']
-        # out_shape = (layer['query_shape'][:2]).extend(out_shape)
+        # output_shape = keras_layer['config']['output_shape']
+        # output_shape = (layer['query_shape'][:2]).extend(out_shape)
         raise Exception('hls4ml does not support a defined output shape, the output shape must equal to the query shape')
     else:  # by default output shape in config is False, and thus select the output shape equal query shape
-        out_shape = layer['query_shape']
-        
-    output_shape = layer['output_shape']
+        output_shape = layer['query_shape']
     
     layer['attention_axes'] = keras_layer['config']['attention_axes'] if (keras_layer['config']['attention_axes'][0]==1) else False
     if layer['attention_axes'] is False: 
