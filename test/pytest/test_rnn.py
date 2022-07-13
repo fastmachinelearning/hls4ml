@@ -2,8 +2,8 @@ import pytest
 import hls4ml
 import numpy as np
 from pathlib import Path
-
-from traitlets import default
+import math
+from tensorflow.keras import backend as K
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Input, SimpleRNN, LSTM, GRU
 
