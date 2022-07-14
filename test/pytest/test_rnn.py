@@ -44,16 +44,16 @@ def test_rnn_parsing(rnn_layer, return_sequences):
     assert hls_layer.get_output_variable().shape == model_output.shape.as_list()[1:] # Ignore the batch size
 
     # Compare weights
-    hls_weights = list(hls_layer.get_weights()) # [weights, bias, recurrent_weights, "recurrent_bias" hack]
+    hls_weights = list(hls_layer.get_weights()) # [weights, recurrent_weights, bias, recurrent_bias]
     rnn_weights = keras_layer.get_weights() # [weights, recurrent_weights, bias]
 
     assert hls_weights[0].data.shape == rnn_weights[0].shape
-    assert hls_weights[2].data.shape == rnn_weights[1].shape
-    assert hls_weights[1].data.shape == rnn_weights[2].shape
+    assert hls_weights[1].data.shape == rnn_weights[1].shape
+    assert hls_weights[2].data.shape == rnn_weights[2].shape
 
     np.testing.assert_array_equal(hls_weights[0].data, rnn_weights[0])
-    np.testing.assert_array_equal(hls_weights[2].data, rnn_weights[1])
-    np.testing.assert_array_equal(hls_weights[1].data, rnn_weights[2])
+    np.testing.assert_array_equal(hls_weights[1].data, rnn_weights[1])
+    np.testing.assert_array_equal(hls_weights[2].data, rnn_weights[2])
 
 @pytest.mark.parametrize('rnn_layer', [LSTM, GRU])
 @pytest.mark.parametrize('return_sequences', [True, False])
