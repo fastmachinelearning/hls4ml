@@ -18,7 +18,7 @@ pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
     static const unsigned stride_width = {stride_width};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
-    static const unsigned reuse = {reuse};
+    static const unsigned reuse_factor = {reuse};
     typedef {accum_t.name} accum_t;
 }};\n"""
 
@@ -43,7 +43,7 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
     static const unsigned pad_right = {pad_right};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
-    static const unsigned reuse = {reuse};
+    static const unsigned reuse_factor = {reuse};
     typedef {accum_t.name} accum_t;
 }};\n"""
 
@@ -51,7 +51,7 @@ global_pooling1d_config_template = """struct config{index} : nnet::pooling1d_con
     static const unsigned n_in = {n_in};
     static const unsigned n_filt = {n_filt};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
-    static const unsigned reuse = {reuse};
+    static const unsigned reuse_factor = {reuse};
     typedef {accum_t.name} accum_t;
 }};\n"""
 
@@ -60,7 +60,7 @@ global_pooling2d_config_template = """struct config{index} : nnet::pooling2d_con
     static const unsigned in_width = {in_width};
     static const unsigned n_filt = {n_filt};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
-    static const unsigned reuse = {reuse};
+    static const unsigned reuse_factor = {reuse};
     typedef {accum_t.name} accum_t;
 }};\n"""
 
