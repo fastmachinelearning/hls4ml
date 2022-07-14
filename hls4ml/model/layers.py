@@ -1071,7 +1071,7 @@ class Embedding(Layer):
 class SimpleRNN(Layer):
     _expected_attributes = [
         Attribute('n_out'),
-        Attribute('activation', value_type=str),
+        Attribute('activation', value_type=str), 
         Attribute('return_sequences', value_type=bool, default=False),
         Attribute('return_state', value_type=bool, default=False),
         ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
@@ -1118,11 +1118,11 @@ class SimpleRNN(Layer):
 class LSTM(Layer):
     _expected_attributes = [
         Attribute('n_out'),
-        Attribute('activation', value_type=str),
+        Attribute('activation', value_type=str),  ## not defined in the paser, when do we need this data
         Attribute('recurrent_activation', value_type=str),
         Attribute('return_sequences', value_type=bool, default=False),
         Attribute('return_state', value_type=bool, default=False),
-        ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
+        ChoiceAttribute('direction', ['forward', 'backward'], default='forward'), ## not defined in the paser, how can we know when to be backward
         Attribute('time_major', value_type=bool, default=False),
         WeightAttribute('weight'),
         WeightAttribute('bias'),
@@ -1413,6 +1413,75 @@ class SymbolicExpression(Layer):
         self.add_output_variable([len(self.get_attr('expression'))], [f'N_OUTPUTS_{self.index}'], var_name='y')
 
 
+class MultiHeadAttention(Layer):
+    _expected_attributes = [
+        # does Attribute define the i/o for the template?
+        Attribute('num_heads'),
+        Attribute('head_dim_key'),
+        Attribute('head_dim_value'),
+        # Attribute('query_shape'),  // I guess we do not need shape here?
+        # Attribute('key_shape'),
+        # Attribute('value_shape'),
+        Attribute('feature_dim'), # 'feature_dim' is n_out and n_in
+        # Attribute('attention_axes'),
+        # Attribute('softmax_axis'),
+
+        WeightAttribute('attention_output_weight'),
+        WeightAttribute('attention_output_bias'),
+        WeightAttribute('key_weight'),
+        WeightAttribute('key_bias'),
+        WeightAttribute('query_weight'),
+        WeightAttribute('query_bias'),
+        WeightAttribute('value_weight'),
+        WeightAttribute('value_bias'),
+
+        TypeAttribute('attention_output_weight'),
+        TypeAttribute('attention_output_bias'),
+        TypeAttribute('key_weight'),
+        TypeAttribute('key_bias'),
+        TypeAttribute('query_weight'),
+        TypeAttribute('query_bias'),
+        TypeAttribute('value_weight'),
+        TypeAttribute('value_bias'),
+    ]
+
+    def initialize(self):
+
+        # is these two needed?
+        # self.add_weights()
+        # self.add_bias()
+
+        recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
+        self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
+    
+        weights_source = [
+                ('attention_output', 'kernel'),
+                ('attention_output', 'bias'),
+                ('key', 'kernel'),
+                ('key', 'bias'),
+                ('query', 'kernel'),
+                ('query', 'bias'),
+                ('value', 'kernel'),
+                ('value', 'bias'),
+            ]
+        
+        for lname, wtype in weights_source:                            ##/
+            data = self.model.get_weights_data(self.name, '{name}/{lname}_{wtype}:0'.format(name=self.name, lname=lname, wtype=wtype))
+            if wtype == 'kernel':
+                # data = data.transpose((1, 0)) # reshaping need a discussion
+                vtype = 'weights'
+            else:
+                vtype = 'biases'
+
+            name = '{}_{}'.format(lname, vtype)
+            var_name = '{}_{}{{index}}'.format(lname, vtype)
+
+            self._add_variable(name, var_name, data, frac_width=10, quantize=False) # how to decide frac_width
+        
+        shape = self.attributes['query_shape'][1:]  ## how to deal with the case that seq_len is undefined?
+        dims = ['seq_out_{}'.format(self.index), 'feature_out_{}'.format(self.index)]
+        self.add_output_variable(shape, dims)
+
 layer_map = {
     'Input': Input,
     'InputLayer': Input,
@@ -1473,6 +1542,8 @@ layer_map = {
     'GarNetStack': GarNetStack,
     'LayerGroup': LayerGroup,
     'SymbolicExpression': SymbolicExpression,
+    'MultiHeadAttention'     : MultiHeadAttention,
+
     # TensorFlow-specific layers:
     'BiasAdd': BiasAdd,
 }

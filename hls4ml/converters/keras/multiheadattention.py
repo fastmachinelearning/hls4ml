@@ -34,6 +34,6 @@ def parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader, conf
         raise Exception('muti-dimension of feature dim is not currently supported by hls4ml')
 
     attn_scores_rank = 4
-    layer['softmax_axis'] = tuple(range(attn_scores_rank - len(layer['attention_axes']), attn_scores_rank ))
+    layer['softmax_axis'] = list(range(attn_scores_rank - len(layer['attention_axes']), attn_scores_rank ))
 
     return layer, output_shape
