@@ -49,11 +49,21 @@ def test_rnn_parsing(rnn_layer, return_sequences):
 
     assert hls_weights[0].data.shape == rnn_weights[0].shape
     assert hls_weights[1].data.shape == rnn_weights[1].shape
-    assert hls_weights[2].data.shape == rnn_weights[2].shape
-
+    if 'gru' in rnn_layer.__name__.lower():
+        # GRU has both bias and recurrent bias
+        assert hls_weights[2].data.shape == rnn_weights[2][0].shape
+        assert hls_weights[3].data.shape == rnn_weights[2][1].shape
+    else:
+        # LSTM and SimpleRNN only have bias
+        assert hls_weights[2].data.shape == rnn_weights[2].shape
+        
     np.testing.assert_array_equal(hls_weights[0].data, rnn_weights[0])
     np.testing.assert_array_equal(hls_weights[1].data, rnn_weights[1])
-    np.testing.assert_array_equal(hls_weights[2].data, rnn_weights[2])
+    if 'gru' in rnn_layer.__name__.lower():
+        np.testing.assert_array_equal(hls_weights[2].data, rnn_weights[2][0])
+        np.testing.assert_array_equal(hls_weights[3].data, rnn_weights[2][1])
+    else:
+        np.testing.assert_array_equal(hls_weights[2].data, rnn_weights[2])
 
 @pytest.mark.parametrize('rnn_layer', [LSTM, GRU])
 @pytest.mark.parametrize('return_sequences', [True, False])
