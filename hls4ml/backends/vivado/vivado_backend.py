@@ -241,9 +241,6 @@ class VivadoBackend(FPGABackend):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
-        recurrent_bias = np.zeros(layer.weights['recurrent_weight'].shape[1])
-        layer.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
-
         index_t = IntegerPrecisionType(width=1, signed=False)
 
         if 'table_t' not in layer.attributes:
@@ -266,9 +263,6 @@ class VivadoBackend(FPGABackend):
     def init_gru(self, layer):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
-
-        recurrent_bias = np.zeros(layer.weights['recurrent_weight'].shape[1])
-        layer.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
 
         index_t = IntegerPrecisionType(width=1, signed=False)
 
