@@ -1,24 +1,29 @@
+"""
+    Usage example for a custom KL loss layer
+    Takes as an input two arrays: z_mean and z_log_var
+    and computes KL "distance" between normal distribution
+    and Gaussian with mu=z_mean and sigma=z_log_var
+
+    The HLS part is in hls4ml/templates/vivado/nnet_utils/nnet_distance.h
+"""
 import argparse
 import pickle
 import hls4ml
+import numpy as np
+
 import tensorflow as tf
 from tensorflow.python.keras.layers.merge import _Merge as Merge
-from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 from tensorflow.python.keras.utils import tf_utils
 from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import array_ops
-import numpy as np
-import yaml
+
 from pathlib import Path
 from hls4ml.converters.keras_to_hls import parse_default_keras_layer
-from hls4ml.model.types import NamedType, FixedPrecisionType, ExponentPrecisionType
+from hls4ml.model.types import NamedType, FixedPrecisionType
 
 test_root_path = Path(__file__).parent
 
-#tf.compat.v1.disable_eager_execution()
 
-# Keras implementation of a custom layer
-
+# Keras implementation of a KL layer
 class Distance(Merge):
     def _check_inputs(self, inputs):
         if len(inputs) not in  [2,3]:
@@ -30,11 +35,9 @@ class Distance(Merge):
         super(Distance, self).build(input_shape)
         self._check_inputs(input_shape)
 
+
 class KLLoss(Distance):
     ''' Keras implementation of a KL loss custom layer '''
-    # def __init__(self):
-    #     super(KLLoss, self).__init__()
-
     def _merge_function(self, inputs):
         self._check_inputs(inputs)
 
@@ -46,11 +49,10 @@ class KLLoss(Distance):
 
         return kl
 
-# hls4ml implementations
 
+# hls4ml implementations
 class HKLLoss(hls4ml.model.layers.Layer):
     ''' hls4ml implementation of a KL loss custom layer '''
-
     def initialize(self):
         assert(len(self.inputs) == 2)
         self.add_output_variable(shape=[1], dim_names=['KL_LOSS_{}'.format(self.index)])
@@ -107,7 +109,6 @@ class HKLLossFunctionTemplate(hls4ml.backends.template.FunctionCallTemplate):
 
         return self.template.format(**params)
 
-
 # Parser for converter
 def parse_klloss_layer(keras_layer, input_names, input_shapes, data_reader, config):
     assert('KLLoss' in keras_layer['class_name'])
@@ -118,7 +119,7 @@ def parse_klloss_layer(keras_layer, input_names, input_shapes, data_reader, conf
 
     return layer, output_shape
 
-def test_extensions(tmp_path, dnn):
+def test_extensions(tmp_path):
     # Register the converter for custom Keras layer
     hls4ml.converters.register_keras_layer_handler('KLLoss', parse_klloss_layer)
 
@@ -133,73 +134,56 @@ def test_extensions(tmp_path, dnn):
     backend.register_template(HKLLossFunctionTemplate)
 
     # Register HLS implementation
-    backend.register_source('nnet_distance.h')
-
-    if dnn:
-        model_file = 'output/custom-dnn_vae.h5'
-        config_file = 'output/custom-dnn_vae.pickle'
-    else:
-        model_file = 'output/custom-ptq-conv_vae-8-b0.8-q0-pruned.h5'
-        config_file = 'hls/ptq-conv_vae-8-b0.8-q0-pruned/config.pickle'
+    p =  Path('../hls4ml/templates/vivado/nnet_utils/nnet_distance.h')
+    backend.register_source(p)
 
     # Test if it works
-    kmodel = tf.keras.models.load_model(model_file,
-          custom_objects={'PruneLowMagnitude': pruning_wrapper.PruneLowMagnitude,
-          'KLLoss': KLLoss})
-
+    # Create a dummy Keras model with KL loss layer
+    inp = tf.keras.layers.Input(shape=(19,3,1))
+    z_mean = tf.keras.layers.Dense(10)(inp)
+    z_log_var = tf.keras.layers.Dense(10)(inp)
+    custom_output = KLLoss()([z_mean, z_log_var])
+    # create new model
+    kmodel = tf.keras.models.Model(
+        inputs=inp,
+        outputs=custom_output
+        )
     kmodel.summary()
-    print(f'if dnn {dnn}')
 
+    # test on random inputs
     x = np.random.randint(-5, 5, (1, 19,3,1), dtype='int32')
-    if dnn: x=x.reshape((1,-1))
     kres = kmodel(x)
 
-    # load config
-    with open(config_file, 'rb') as handle:
-        config = pickle.load(handle)
-    #for layer in config['LayerName'].keys():
-    #     config['LayerName'][layer]['Trace'] = True
+    # Create dummy config
     config = {}
-
     config['Model'] = {
         'Precision': 'ap_fixed<16,6>',
         'ReuseFactor': 1,
         'ParallelizationFactor': 1,
         'Strategy': 'Resource',
-    }
-    config['LayerName'] = {
-        'conv2d': {
-            'ParallelizationFactor': 9,
-            'ReuseFactor': 3,
-            'Strategy': 'Latency',
-        },
-        'conv2d_1': {
-            'ParallelizationFactor': 2,
-            'ReuseFactor': 4,
-            'Strategy': 'Latency',
         }
-    }
-    print(yaml.dump(config, default_flow_style=False))
-
     hmodel = hls4ml.converters.convert_from_keras_model(
         kmodel,
-        output_dir=str(test_root_path / 'hls4mlprj_extensions'),
+        output_dir=str(tmp_path / 'hls4mlprj_extensions'),
         backend='Vivado',
         io_type='io_parallel',
         part='xcvu9p-flga2577-2-e',
-        hls_config=config)
+        hls_config=config
+        )
 
     hmodel.compile()
     hres = hmodel.predict(x.astype('float32'))
 
-    #np.testing.assert_array_equal(kres, hres)
-
     print('Building model')
-    report = hmodel.build(reset=True, csim=False, cosim=True, synth=True, vsynth=True)
+    report = hmodel.build(
+        reset=True,
+        csim=False,
+        cosim=True,
+        synth=True,
+        vsynth=True
+        )
     print(report)
 
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--dnn', action='store_true')
-    args = parser.parse_args()
-    test_extensions(test_root_path, **vars(args))
+    test_extensions(test_root_path)
