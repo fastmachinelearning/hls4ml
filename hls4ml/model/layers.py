@@ -1451,9 +1451,6 @@ class MultiHeadAttention(Layer):
         # self.add_weights()
         # self.add_bias()
 
-        recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
-        self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
-    
         weights_source = [
                 ('attention_output', 'kernel'),
                 ('attention_output', 'bias'),
@@ -1465,20 +1462,18 @@ class MultiHeadAttention(Layer):
                 ('value', 'bias'),
             ]
         
-        for lname, wtype in weights_source:                            ##/
-            data = self.model.get_weights_data(self.name, '{name}/{lname}_{wtype}:0'.format(name=self.name, lname=lname, wtype=wtype))
+        for lname, wtype in weights_source:                         
+            data = self.model.get_weights_data(self.name, '{lname}/{wtype}'.format(lname=lname, wtype=wtype))
             if wtype == 'kernel':
-                # data = data.transpose((1, 0)) # reshaping need a discussion
-                vtype = 'weights'
+                vtype = 'weight'
             else:
-                vtype = 'biases'
+                vtype = 'bias'
 
             name = '{}_{}'.format(lname, vtype)
             var_name = '{}_{}{{index}}'.format(lname, vtype)
-
-            self._add_variable(name, var_name, data, frac_width=10, quantize=False) # how to decide frac_width
+            self.add_weights_variable(name=name, var_name=var_name, data=data)
         
-        shape = self.attributes['query_shape'][1:]  ## how to deal with the case that seq_len is undefined?
+        shape = self.attributes['query_shape'][1:]
         dims = ['seq_out_{}'.format(self.index), 'feature_out_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
 
