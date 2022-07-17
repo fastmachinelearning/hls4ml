@@ -155,7 +155,7 @@ class VivadoWriter(Writer):
                         newline += indent + '#pragma HLS DATAFLOW \n'
                     else:
                         newline += indent + '#pragma HLS PIPELINE \n'
-                if io_type == 'io_serial' or io_type == 'io_stream':
+                if io_type == 'io_stream':
                     newline += indent + '#pragma HLS INTERFACE axis port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
                     if all_brams:
                         newline += indent + '#pragma HLS INTERFACE bram port={} \n'.format(','.join(all_brams))
