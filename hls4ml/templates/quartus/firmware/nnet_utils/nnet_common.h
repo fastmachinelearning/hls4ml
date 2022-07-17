@@ -37,7 +37,7 @@ typedef ac_fixed<16,6> table_default_t;
 namespace nnet {
 
 // Common type definitions
-enum io_type {io_parallel = 0, io_serial};
+enum io_type {io_parallel = 0, io_stream};
 
 // Default data types (??) TODO: Deprecate
 typedef ac_fixed<16,4>  weight_t_def;
