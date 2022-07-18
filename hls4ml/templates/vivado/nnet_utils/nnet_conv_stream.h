@@ -57,10 +57,14 @@ unsigned scale_index_K_lt_S(const unsigned idx) {
     return S - K + (idx - (S - K)) % S;
 }
 
-template<unsigned K, unsigned S, unsigned W>
+template<unsigned K, unsigned S, unsigned W, unsigned min_width>
 unsigned scale_index(const unsigned idx) {
     #pragma HLS INLINE
     
+    if (W == min_width) {
+        return idx;
+    }
+
     if (K >= S) {
         return scale_index_K_gte_S<K, S, W>(idx);
     } else {

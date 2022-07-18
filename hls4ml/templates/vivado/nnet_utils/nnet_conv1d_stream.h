@@ -16,8 +16,7 @@ void compute_scaled_indices_1d(
 
     ComputeIndex: for (unsigned p = 0; p < data_T::size / CONFIG_T::n_chan; p++) {
         #pragma HLS UNROLL
-
-        unsigned sw_idx = scale_index<CONFIG_T::filt_width, CONFIG_T::stride_width, CONFIG_T::in_width>(wp_idx + p);
+        unsigned sw_idx = scale_index<CONFIG_T::filt_width, CONFIG_T::stride_width, CONFIG_T::in_width, CONFIG_T::min_width>(wp_idx + p);
         pixel_idx[p] = CONFIG_T::pixels[sw_idx];
     }
 }
