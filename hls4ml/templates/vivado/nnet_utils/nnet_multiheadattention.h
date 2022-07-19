@@ -29,8 +29,8 @@ struct multiheadattention_config
     static const unsigned strategy = latency; 
     static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
-    static const unsigned n_zeros = 0;  // where is defined? meaning?
-    static const bool use_static = true; // where is defined? meaning?
+    static const unsigned n_zeros = 0;  // where is it defined? meaning?
+    static const bool use_static = true; // where is it defined? meaning?
     
     template<class x_T, class y_T>
     using product = nnet::product::mult<x_T, y_T>;
@@ -38,24 +38,23 @@ struct multiheadattention_config
 
 template<class data_T, class res_T, typename CONFIG_T>
 void multiheadattention(
-    data_T    data_q[CONFIG_T::n_in],
-    data_T    data_vk[CONFIG_T::n_in],
-    res_T     res[CONFIG_T::n_out],
-    typename CONFIG_T::weight_t  attention_output_weight[CONFIG_T::xxx*CONFIG_T::xxx],
-    typename CONFIG_T::bias_t    attention_output_bias[CONFIG_T::xxx],
-    typename CONFIG_T::weight_t  key_weight[CONFIG_T::xxx*CONFIG_T::xxx],
-    typename CONFIG_T::bias_t    key_bias[CONFIG_T::xxx],
-    typename CONFIG_T::weight_t  query_weight[CONFIG_T::xxx*CONFIG_T::xxx],
-    typename CONFIG_T::bias_t    query_bias[CONFIG_T::xxx],
-    typename CONFIG_T::weight_t  value_weight[CONFIG_T::xxx*CONFIG_T::xxx],
-    typename CONFIG_T::bias_t    value_bias[CONFIG_T::xxx])
+    data_T    data_q[CONFIG_T::seq_len * CONFIG_T::feature_dim],
+    data_T    data_vk[CONFIG_T::seq_len * CONFIG_T::feature_dim],
+    res_T     res[CONFIG_T::seq_len * CONFIG_T::feature_dim],
+    typename CONFIG_T::weight_t  attention_output_weight[CONFIG_T::num_heads * CONFIG_T::head_dim_value * CONFIG_T::feature_dim],  // num_heads,head_size_v,dim
+    typename CONFIG_T::bias_t    attention_output_bias[CONFIG_T::feature_dim],
+    typename CONFIG_T::weight_t  key_weight[CONFIG_T::feature_dim * CONFIG_T::num_heads * CONFIG_T::head_dim_key],  // (dim,num_head,head_size)
+    typename CONFIG_T::bias_t    key_bias[CONFIG_T::num_heads * CONFIG_T::head_dim_key],
+    typename CONFIG_T::weight_t  query_weight[CONFIG_T::feature_dim * CONFIG_T::num_heads * CONFIG_T::head_dim_key], //same shape as key
+    typename CONFIG_T::bias_t    query_bias[CONFIG_T::num_heads * CONFIG_T::head_dim_key],
+    typename CONFIG_T::weight_t  value_weight[CONFIG_T::feature_dim * CONFIG_T::num_heads * CONFIG_T::head_dim_value],
+    typename CONFIG_T::bias_t    value_bias[CONFIG_T::num_heads * CONFIG_T::head_dim_value])
 {
-    #pragma HLS inline
-    if (CONFIG_T::strategy == nnet::latency) {
-        dense_latency<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-    } else {
-        dense_resource<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-    }
+    // a dummy algo
+    for (i=0; i <= (CONFIG_T::seq_len * CONFIG_T::feature_dim); i++)
+        {
+            res[i] = data_q[i] + data_vk[i];
+        }
 }
 
 }

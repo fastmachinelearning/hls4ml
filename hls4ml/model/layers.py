@@ -1419,7 +1419,8 @@ class MultiHeadAttention(Layer):
         Attribute('num_heads'),
         Attribute('head_dim_key'),
         Attribute('head_dim_value'),
-        Attribute('feature_dim'), # 'feature_dim' is n_out and n_in
+        Attribute('feature_dim'),
+        Attribute('seq_len'),
 
         WeightAttribute('attention_output_weight'),
         WeightAttribute('attention_output_bias'),

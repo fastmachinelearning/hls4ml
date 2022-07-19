@@ -16,8 +16,7 @@ def parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader, conf
     layer['key_shape'] = keras_layer['config']['key_shape']
     layer['value_shape'] = keras_layer['config']['value_shape']
     layer['feature_dim'] = layer['query_shape'][-1]
-    # seq_length is not included, because it varies each time. 
-    # the maxium of seq_length is not defined in the config file.
+    layer['seq_len'] = layer['query_shape'][-2]
 
     if keras_layer['config']['output_shape']: 
         # output_shape = keras_layer['config']['output_shape']
