@@ -189,11 +189,18 @@ class QKerasFactorizeAlpha(OptimizerPass):
         else:
             scale_quantizer = None
 
+        if 'Dense' in node.class_name:
+            n_in = node.get_attr('n_out')
+        elif 'Conv' in node.class_name:
+            n_in = node.get_attr('out_width') * node.get_attr('out_height', 1) * node.get_attr('n_filt')
+        else:
+            n_in = node.get_attr('n_out')
+
         attrs = {
             'name' : node.get_attr('name') + '_alpha',
             'class_name' : 'Alpha',
             'inputs' : node.outputs,
-            'n_in' : node.get_attr('n_out'),
+            'n_in' : n_in,
             'n_filt' : node.get_attr('n_filt', -1),
             'reuse_factor' : node.get_attr('reuse_factor'),
             'scale_data': scale,
