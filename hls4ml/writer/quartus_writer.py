@@ -358,10 +358,10 @@ class QuartusWriter(Writer):
             elif '//hls-fpga-machine-learning insert header' in line:
                 dtype = line.split('#', 1)[1].strip()
                 inputs_str = ', '.join(
-                    ['{type} {name}[{shape}]'.format(type=dtype, name=i.cppname, shape=i.size_cpp()) for i in
+                    ['{type} {name}[{shape}]'.format(type=dtype, name=i.member_name, shape=i.size_cpp()) for i in
                      model_inputs])
                 outputs_str = ', '.join(
-                    ['{type} {name}[{shape}]'.format(type=dtype, name=o.cppname, shape=o.size_cpp()) for o in
+                    ['{type} {name}[{shape}]'.format(type=dtype, name=o.member_name, shape=o.size_cpp()) for o in
                      model_outputs])
                 insize_str = ', '.join(
                     ['unsigned short &const_size_in_{}'.format(i) for i in range(1, len(model_inputs) + 1)])
@@ -381,8 +381,8 @@ class QuartusWriter(Writer):
                 for i in model_inputs:
                     newline += indent + 'nnet::convert_data<{}, {}, {}>({}, inputs_ap.{});\n'.format(dtype, i.type.name,
                                                                                                      i.size_cpp(),
-                                                                                                     i.cppname,
-                                                                                                     i.cppname)
+                                                                                                     i.member_name,
+                                                                                                     i.member_name)
                 newline += '\n'
 
                 newline += indent + 'output_data outputs_ap;\n'
@@ -394,8 +394,8 @@ class QuartusWriter(Writer):
                     newline += indent + 'nnet::convert_data_back<{}, {}, {}>(outputs_ap.{}, {});\n'.format(o.type.name,
                                                                                                            dtype,
                                                                                                            o.size_cpp(),
-                                                                                                           o.cppname,
-                                                                                                           o.cppname)
+                                                                                                           o.member_name,
+                                                                                                           o.member_name)
             elif '//hls-fpga-machine-learning insert trace_outputs' in line:
                 newline = ''
                 for layer in model.get_layers():

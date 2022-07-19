@@ -257,11 +257,11 @@ class VivadoAcceleratorWriter(VivadoWriter):
             elif '{}('.format(model.config.get_project_name()) in line:
                 indent_amount = line.split(model.config.get_project_name())[0]
                 newline = indent_amount + '{}_axi(inputs,outputs);\n'.format(model.config.get_project_name())
-            elif inp.size_cpp() in line or inp.cppname in line or inp.type.name in line:
-                newline = line.replace(inp.size_cpp(), 'N_IN').replace(inp.cppname, 'inputs').replace(inp.type.name,
+            elif inp.size_cpp() in line or inp.name in line or inp.type.name in line:
+                newline = line.replace(inp.size_cpp(), 'N_IN').replace(inp.name, 'inputs').replace(inp.type.name,
                                                                                                       'input_axi_t')
-            elif out.size_cpp() in line or out.cppname in line or out.type.name in line:
-                newline = line.replace(out.size_cpp(), 'N_OUT').replace(out.cppname, 'outputs').replace(out.type.name,
+            elif out.size_cpp() in line or out.name in line or out.type.name in line:
+                newline = line.replace(out.size_cpp(), 'N_OUT').replace(out.name, 'outputs').replace(out.type.name,
                                                                                                         'output_axi_t')
             else:
                 newline = line
@@ -295,17 +295,17 @@ class VivadoAcceleratorWriter(VivadoWriter):
                                        '{}_axi.h'.format(model.config.get_project_name()))
             elif inp.definition_cpp(name_suffix='_ap') in line:
                 newline = line.replace(inp.definition_cpp(name_suffix='_ap'),
-                                       'input_axi_t {}_ap[N_IN]'.format(inp.cppname))
+                                       'input_axi_t {}_ap[N_IN]'.format(inp.name))
             elif out.definition_cpp(name_suffix='_ap') in line:
                 newline = line.replace(out.definition_cpp(name_suffix='_ap'),
-                                       'output_axi_t {}_ap[N_OUT]'.format(out.cppname))
+                                       'output_axi_t {}_ap[N_OUT]'.format(out.name))
             elif '{}('.format(model.config.get_project_name()) in line:
                 indent_amount = line.split(model.config.get_project_name())[0]
-                newline = indent_amount + '{}_axi({}_ap,{}_ap);\n'.format(model.config.get_project_name(), inp.cppname,
-                                                                          out.cppname)
-            elif inp.size_cpp() in line or inp.cppname in line or inp.type.name in line:
+                newline = indent_amount + '{}_axi({}_ap,{}_ap);\n'.format(model.config.get_project_name(), inp.name,
+                                                                          out.name)
+            elif inp.size_cpp() in line or inp.name in line or inp.type.name in line:
                 newline = line.replace(inp.size_cpp(), 'N_IN').replace(inp.type.name, 'input_axi_t')
-            elif out.size_cpp() in line or out.cppname in line or out.type.name in line:
+            elif out.size_cpp() in line or out.name in line or out.type.name in line:
                 newline = line.replace(out.size_cpp(), 'N_OUT').replace(out.type.name, 'output_axi_t')
             else:
                 newline = line

@@ -25,14 +25,12 @@ class Backend(object):
         return class_optimizers
 
     def _init_file_optimizers(self):
-        opt_path = os.path.dirname(inspect.getfile(self.__class__)) + '/passes'
-        module_path = self.__module__[:self.__module__.rfind('.')] + '.passes'
-        file_optimizers = extract_optimizers_from_path(opt_path, module_path, self)
-        for base in self.__class__.__bases__:
-            opt_path = os.path.dirname(inspect.getfile(base)) + '/passes'
-            module_path = base.__module__[:base.__module__.rfind('.')] + '.passes'
-            base_optimizers = extract_optimizers_from_path(opt_path, module_path, self)
-            file_optimizers.update(base_optimizers)
+        file_optimizers = {}
+        for cls in [*self.__class__.__bases__, self.__class__]:
+            opt_path = os.path.dirname(inspect.getfile(cls)) + '/passes'
+            module_path = cls.__module__[:cls.__module__.rfind('.')] + '.passes'
+            cls_optimizers = extract_optimizers_from_path(opt_path, module_path, self)
+            file_optimizers.update(cls_optimizers)
         return file_optimizers
 
     def _get_layer_initializers(self):

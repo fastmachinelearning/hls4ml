@@ -885,11 +885,16 @@ class SimpleRNN(Layer):
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t')
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t')
 
+        #weights
         self.add_weights()
-        self.add_bias()
 
+        #recurrent weights
         recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
         self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
+
+        #biases
+        biases = self.model.get_weights_data(self.name , 'bias')
+        self.add_weights_variable(name='bias', var_name='b{index}', data=biases)
 
 class LSTM(Layer):
     _expected_attributes = [
@@ -904,10 +909,12 @@ class LSTM(Layer):
         WeightAttribute('weight'),
         WeightAttribute('bias'),
         WeightAttribute('recurrent_weight'),
+        WeightAttribute('recurrent_bias'),
 
         TypeAttribute('weight'),
         TypeAttribute('bias'),
         TypeAttribute('recurrent_weight'),
+        TypeAttribute('recurrent_bias'),
     ]
 
     def initialize(self):
@@ -926,11 +933,19 @@ class LSTM(Layer):
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t')
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t')
 
+        #weights
         self.add_weights()
-        self.add_bias()
 
+        #recurrent weights
         recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
         self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
+
+        #biases
+        biases = self.model.get_weights_data(self.name , 'bias')
+        self.add_weights_variable(name='bias', var_name='b{index}', data=biases)
+
+        recurrent_bias = np.zeros(recurrent_weight.shape[1])
+        self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
 
 class GRU(Layer):
     _expected_attributes = [
@@ -946,10 +961,12 @@ class GRU(Layer):
         WeightAttribute('weight'),
         WeightAttribute('bias'),
         WeightAttribute('recurrent_weight'),
+        WeightAttribute('recurrent_bias'),
 
         TypeAttribute('weight'),
         TypeAttribute('bias'),
         TypeAttribute('recurrent_weight'),
+        TypeAttribute('recurrent_bias'),
     ]
 
     def initialize(self):
@@ -968,11 +985,18 @@ class GRU(Layer):
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t')
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t')
 
+        #weights
         self.add_weights()
-        self.add_bias()
 
+        #recurrent weights
         recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
         self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
+
+        #biases array is actually a 2-dim array of arrays (bias + recurrent bias)
+        #both arrays have shape: n_units * 3 (z, r, h_cand)
+        biases = self.model.get_weights_data(self.name , 'bias')
+        self.add_weights_variable(name='bias', var_name='b{index}', data=biases[0])
+        self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=biases[1])
 
 class GarNet(Layer):
     ref_impl = False
