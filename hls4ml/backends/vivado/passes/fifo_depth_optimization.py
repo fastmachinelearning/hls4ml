@@ -20,6 +20,7 @@ def set_big_fifos(vars_to_profile, profiling_fifo_depth):
 
 
 def get_vcd_data(model):
+    model.write()
     model.build(reset=False, csim=True, synth=True, cosim=True, validation=False, export=False, vsynth=False,
                 fifo_opt=True)
 
@@ -38,7 +39,7 @@ def generate_max_depth_file(model, maxs):
 
 def set_fifo_depth(model, maxs):
     for k, v in model.output_vars.items():
-        filtered_max = [x['max'] for x in maxs if v.cppname in x['name']]
+        filtered_max = [x['max'] for x in maxs if v.name in x['name']]
         if len(filtered_max) == 0:
             continue
         if len(filtered_max) > 1:
