@@ -1419,12 +1419,7 @@ class MultiHeadAttention(Layer):
         Attribute('num_heads'),
         Attribute('head_dim_key'),
         Attribute('head_dim_value'),
-        # Attribute('query_shape'),  // I guess we do not need shape here?
-        # Attribute('key_shape'),
-        # Attribute('value_shape'),
         Attribute('feature_dim'), # 'feature_dim' is n_out and n_in
-        # Attribute('attention_axes'),
-        # Attribute('softmax_axis'),
 
         WeightAttribute('attention_output_weight'),
         WeightAttribute('attention_output_bias'),

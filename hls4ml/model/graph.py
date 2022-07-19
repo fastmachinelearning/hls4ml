@@ -588,7 +588,8 @@ class ModelGraph:
                                 next_node.inputs[i] = prev_node.outputs[0]
                                 break
                 else:
-                    if not node.outputs[0] in self.outputs:
+                    # if not node.outputs[0] in self.outputs: ## would this be the key output_vars? because the self.outputs is the model final output
+                    if not node.outputs[0] in self.output_vars.keys(): ## my change
                         raise Exception('Cannot rewire a node without child')
             else:
                 raise Exception('Cannot rewire a node without a parent')
