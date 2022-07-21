@@ -58,14 +58,13 @@ class QuartusBackend(FPGABackend):
             'make_stamp',
             'quartus:write_hls'
         ]
-        writer_flow_requirements = ['optimize', quartus_types_flow, template_flow]
-        self._writer_flow = register_flow('write', writer_passes, requires=writer_flow_requirements, backend=self.name)
+        self._writer_flow = register_flow('write', writer_passes, requires=['quartus:ip'], backend=self.name)
 
         all_passes = get_backend_passes(self.name)
 
         extras = [
             # Ideally this should be empty
-            opt_pass for opt_pass in all_passes if opt_pass not in initializers + quartus_types + templates + writer_passes
+            opt_pass for opt_pass in all_passes if opt_pass not in initializers + optimization_passes + quartus_types + templates + writer_passes
         ]
 
         if len(extras) > 0:
