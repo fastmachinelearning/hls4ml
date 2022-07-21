@@ -3,7 +3,7 @@ from hls4ml.backends.backend import get_backend
 from hls4ml.model.layers import MultiHeadAttention
 from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
                                                                   
-mha_config_template = """struct config{index} : nnet::multiHeadAttention_config {{ 
+mha_config_template = """struct config{index} : nnet::multiheadattention_config {{ 
     typedef {accum_t.name} accum_t;
     typedef {attention_output_bias_t.name} bias_t;
     typedef {attention_output_weight_t.name} weight_t;
@@ -12,14 +12,13 @@ mha_config_template = """struct config{index} : nnet::multiHeadAttention_config 
     static const unsigned head_dim_key = {head_dim_key};
     static const unsigned head_dim_value = {head_dim_value};
     static const unsigned feature_dim = {feature_dim};
-    static const unsigned feature_dim = {seq_len};
+    static const unsigned seq_len = {seq_len};
 
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
     static const bool store_weights_in_bram = false;
-
 }};\n"""
-#///////////////////////////////////
+
 mha_function_template = 'nnet::multiheadattention<{input_t}, {output_t}, {config}>({input_q}, {input_kv}, {output}, {w_o}, {b_o}, {w_k}, {b_k}, {w_q}, {b_q}, {w_v}, {b_v});'
 
 mha_include_list = ['nnet_utils/nnet_multiheadattention.h']

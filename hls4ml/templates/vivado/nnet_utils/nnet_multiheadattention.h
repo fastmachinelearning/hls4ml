@@ -48,7 +48,7 @@ void multiheadattention(
     typename CONFIG_T::bias_t    value_bias[CONFIG_T::num_heads * CONFIG_T::head_dim_value])
 {
     // a dummy algo
-    for (i=0; i <= (CONFIG_T::seq_len * CONFIG_T::feature_dim); i++)
+    for (int i=0; i <= (CONFIG_T::seq_len * CONFIG_T::feature_dim); i++)
         {
             res[i] = data_q[i] + data_vk[i];
         }
