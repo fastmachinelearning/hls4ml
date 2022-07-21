@@ -15,7 +15,6 @@ mha_config_template = """struct config{index} : nnet::multiHeadAttention_config 
     static const unsigned feature_dim = {seq_len};
 
     static const unsigned io_type = nnet::{iotype};
-    static const unsigned strategy = nnet::{strategy};
     static const unsigned reuse_factor = {reuse};
     static const bool store_weights_in_bram = false;
 
@@ -57,8 +56,8 @@ class RecurrentFunctionTemplate(FunctionCallTemplate):
         params['input_t'] = node.get_input_variable().type.name
         params['output_t'] = node.get_output_variable().type.name
         
-        params['input_q'] = node.model.get_layer_output_variable(self.inputs[0]).name
-        params['input_kv'] = node.model.get_layer_output_variable(self.inputs[1]).name
+        params['input_q'] = node.model.get_layer_output_variable(node.inputs[0]).name
+        params['input_kv'] = node.model.get_layer_output_variable(node.inputs[1]).name
         params['output'] = node.get_output_variable().name
         params['w_o'] = node.get_weights('attention_output_weight').name
         params['b_o'] = node.get_weights('attention_output_bias').name
