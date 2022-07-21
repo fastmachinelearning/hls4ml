@@ -66,11 +66,6 @@ class ONNXDataReader:
                 else:
                     data = data.transpose()
 
-            #Check for transB in Gemm
-            if node.op_type == 'Gemm':
-                if not get_onnx_attribute(node, 'transB'):
-                    data = data.transpose()
-
         return data
 
     def add_input(self, layer_name, inputs, transpose=True, perm=None):

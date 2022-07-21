@@ -1,24 +1,6 @@
 import numpy as np
 from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute
 
-@onnx_handler(*['Gemm'])
-def parse_gemm_layer(reader, node, inputs_map, input_shapes, graph, config):
-
-    layer = {}
-
-    layer['class_name'] = 'Dense'
-    layer['name'] = node.name
-    layer['inputs'] = node.input
-    layer['outputs'] = node.output
-
-    tran_weight = get_onnx_attribute(node, 'transB', 0)
-    reader.add_input(layer['name'], node.input, tran_weight)
-
-    weights_shape = input_shapes[1][:]
-    layer['n_in'] = weights_shape[0]
-    layer['n_out'] = weights_shape[1]
-
-    return layer
 
 @onnx_handler('MatMul')
 def parse_matmul_layer(reader, node, inputs_map, input_shapes, graph, config):
