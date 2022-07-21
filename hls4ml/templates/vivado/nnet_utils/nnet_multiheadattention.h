@@ -17,20 +17,17 @@ struct multiheadattention_config
     typedef float accum_t;  // where this type will be used
 
     // Layer Sizes
-    // static const unsigned n_in = 10;
-    // static const unsigned n_out = 10;
     static const unsigned num_heads = 10;
     static const unsigned head_dim_key = 10;
     static const unsigned head_dim_value = 10;
     static const unsigned feature_dim = 10;
+    static const unsigned seq_len = 500;
 
     // Resource reuse info  // not sure how to write this part
     static const unsigned io_type = io_parallel;
     static const unsigned strategy = latency; 
     static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
-    static const unsigned n_zeros = 0;  // where is it defined? meaning?
-    static const bool use_static = true; // where is it defined? meaning?
     
     template<class x_T, class y_T>
     using product = nnet::product::mult<x_T, y_T>;
