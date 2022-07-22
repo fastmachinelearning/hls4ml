@@ -60,10 +60,6 @@ constexpr int pow2(int x){
   return x == 0 ? 1 : 2 * pow2(x - 1);
 }
 
-extern bool trace_enabled;
-extern std::map<std::string, void *> *trace_outputs;
-extern size_t trace_type_size;
-
 template<class data_T, class save_T>
 void save_output_array(data_T *data, save_T *ptr, size_t layer_size) {
     for(int i = 0; i < layer_size; i++) {

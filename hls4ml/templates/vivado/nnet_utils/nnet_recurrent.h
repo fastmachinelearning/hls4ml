@@ -288,7 +288,7 @@ template<class data_T, class res_T, typename CONFIG_T>
           data_in[i_pack] = data_pack[i_pack];
       }
       if (CONFIG_T::use_static)
-        nnet::lstm_static<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(reset_state,data_in,h_newstate, param,param_r,param_b, param_br);
+        nnet::lstm_static<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(reset_state,data_in,h_newstate, s_newstate, param,param_r,param_b, param_br);
       else
         nnet::lstm<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(reset_state,data_in,h_newstate, s_newstate, param,param_r,param_b, param_br);
       if (CONFIG_T::n_sequence_out > 1){

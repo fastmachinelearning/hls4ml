@@ -1,5 +1,6 @@
 import pytest
 import hls4ml
+import hls4ml.model.profiling
 import tensorflow as tf
 import numpy as np
 from pathlib import Path
