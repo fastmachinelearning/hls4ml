@@ -34,6 +34,7 @@ setup(name='hls4ml',
           'onnx>=1.4.0',
           'calmjs.parse',
           'tabulate',
+          'pydigitalwavetools==1.1',
           'qkeras',
       ],
       extras_require={

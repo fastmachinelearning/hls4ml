@@ -59,6 +59,8 @@ void add(
     input2_T data2[CONFIG_T::n_elem],
     res_T res[CONFIG_T::n_elem])
 {
+    #pragma HLS PIPELINE
+
     for (int ii=0; ii<CONFIG_T::n_elem; ii++) {
         res[ii] = data1[ii] + data2[ii];
     }
@@ -71,6 +73,8 @@ void subtract(
     input2_T data2[CONFIG_T::n_elem],
     res_T res[CONFIG_T::n_elem])
 {
+    #pragma HLS PIPELINE
+
     for (int ii=0; ii<CONFIG_T::n_elem; ii++) {
         res[ii] = data1[ii] - data2[ii];
     }
@@ -82,6 +86,8 @@ void multiply(
     input2_T data2[CONFIG_T::n_elem],
     res_T res[CONFIG_T::n_elem])
 {
+    #pragma HLS PIPELINE
+
     for (int ii=0; ii<CONFIG_T::n_elem; ii++) {
         res[ii] = data1[ii] * data2[ii];
     }
@@ -93,6 +99,8 @@ void average(
     input2_T data2[CONFIG_T::n_elem],
     res_T res[CONFIG_T::n_elem])
 {
+    #pragma HLS PIPELINE
+
     for (int ii=0; ii<CONFIG_T::n_elem; ii++) {
         res[ii] = (data1[ii] + data2[ii]) / (res_T) 2;
     }
@@ -104,6 +112,8 @@ void maximum(
     input2_T data2[CONFIG_T::n_elem],
     res_T res[CONFIG_T::n_elem])
 {
+    #pragma HLS PIPELINE
+
     for (int ii=0; ii<CONFIG_T::n_elem; ii++) {
         res[ii] = (data1[ii] > data2[ii]) ? data1[ii] : data2[ii];
     }
@@ -115,6 +125,8 @@ void minimum(
     input2_T data2[CONFIG_T::n_elem],
     res_T res[CONFIG_T::n_elem])
 {
+    #pragma HLS PIPELINE
+
     for (int ii=0; ii<CONFIG_T::n_elem; ii++) {
         res[ii] = (data1[ii] < data2[ii]) ? data1[ii] : data2[ii];
     }
@@ -155,6 +167,8 @@ void concatenate1d(
     input2_T data2[CONFIG_T::n_elem2_0],
     res_T res[CONFIG_T::n_elem1_0 + CONFIG_T::n_elem2_0])
 {
+    #pragma HLS PIPELINE
+
     for (int ii=0; ii<CONFIG_T::n_elem1_0; ii++) {
         res[ii] = data1[ii];
     }
@@ -169,6 +183,8 @@ void concatenate2d_0(
     input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1])
 {
+    #pragma HLS PIPELINE
+
     for (int ii=0; ii<CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1; ii++) {
         res[ii] = data1[ii];
     }
@@ -183,6 +199,8 @@ void concatenate2d_1(
     input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1])
 {
+    #pragma HLS PIPELINE
+
     for (int ii=0; ii<CONFIG_T::n_elem1_0; ii++) {
         for (int jj=0; jj<CONFIG_T::n_elem1_1; jj++) {
             res[ii * (CONFIG_T::n_elem1_1 + CONFIG_T::n_elem2_1) + jj] = data1[ii * CONFIG_T::n_elem1_1 + jj];
@@ -199,6 +217,8 @@ void concatenate2d(
     input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1])
 {
+    #pragma HLS INLINE
+
     if (CONFIG_T::axis == 2 || CONFIG_T::axis == -1) {
         concatenate2d_1<input1_T, input2_T, res_T, CONFIG_T>(data1, data2, res);
     } else {
@@ -212,6 +232,8 @@ input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
     input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2])
 {
+    #pragma HLS PIPELINE
+
     for (int ii=0; ii<CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2; ii++) {
         res[ii] = data1[ii];
     }
@@ -226,6 +248,8 @@ input1_T data1[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2],
     input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2])
 {
+    #pragma HLS PIPELINE
+
     for (int ii=0; ii<CONFIG_T::n_elem1_0; ii++) {
         for (int jj=0; jj<CONFIG_T::n_elem1_1; jj++) {
             for (int kk=0; kk<CONFIG_T::n_elem1_2; kk++) {
@@ -258,6 +282,8 @@ void concatenate3d_2(
     input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2])
 {
+    #pragma HLS PIPELINE
+
     for (int ii=0; ii<CONFIG_T::n_elem1_0; ii++) {
         for (int jj=0; jj<CONFIG_T::n_elem1_1; jj++) {
             for (int kk=0; kk<CONFIG_T::n_elem1_2; kk++) {
@@ -288,6 +314,8 @@ void concatenate3d(
     input2_T data2[CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2],
     res_T res[CONFIG_T::n_elem1_0 * CONFIG_T::n_elem1_1 * CONFIG_T::n_elem1_2 + CONFIG_T::n_elem2_0 * CONFIG_T::n_elem2_1 * CONFIG_T::n_elem2_2])
 {
+    #pragma HLS INLINE
+
     if (CONFIG_T::axis == 3 || CONFIG_T::axis == -1) {
         concatenate3d_2<input1_T, input2_T, res_T, CONFIG_T>(data1, data2, res);
     } else if (CONFIG_T::axis == 2 || CONFIG_T::axis == -2) {

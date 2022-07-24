@@ -192,7 +192,7 @@ def test_multiple_outputs(batch):
   hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                          output_dir=odir,
                                                          backend='Vivado',
-                                                         io_type='io_serial',
+                                                         io_type='io_parallel',
                                                          hls_config=config)
   hls_model.compile()
 
