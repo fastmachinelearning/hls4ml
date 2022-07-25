@@ -111,35 +111,43 @@ class QuartusBackend(FPGABackend):
         layer.weights['weight'].data_length = layer.weights['weight'].data.size
         return
 
-    def build(self, model, synth=True, fpgasynth=False):
+    def build(self, model, synth=True, fpgasynth=False, log_level=1, cont_if_large_area=False):
         """
         Builds the project using Intel HLS compiler.
 
-        Users should generally not call this function directly but instead use `ModelGraph.build()`.
-        This function assumes the model was written with a call to `ModelGraph.write()`
-
         Args:
             model (ModelGraph): The model to build
-            synth, optional: Whether to run synthesis
-            fpgasynth, optional:  Whether to run fpga synthesis
-
+            synth, optional: Whether to run HLS synthesis
+            fpgasynth, optional:  Whether to run FPGA synthesis (Quartus Compile)
+            log_level, optional: Logging level to be displayed during HLS synthesis (0, 1, 2)
+            cont_if_large_area: Instruct the HLS compiler to continue synthesis if the estimated resource usaga exceeds device resources
         Errors raise exceptions
         """
+
+        # Check software needed is present
         found = os.system('command -v i++ > /dev/null')
         if found != 0:
             raise Exception('Intel HLS installation not found. Make sure "i++" is on PATH.')
 
-        with chdir(model.config.get_output_dir()):
-            if synth:
-                os.system('make {}-fpga'.format(model.config.get_project_name()))
-                os.system('./{}-fpga'.format(model.config.get_project_name()))
-
-            if fpgasynth:
+        if fpgasynth:
+                if fpgasynth and not synth:
+                    raise Exception('HLS Synthesis needs to be run before FPGA synthesis')
                 found = os.system('command -v quartus_sh > /dev/null')
                 if found != 0:
                     raise Exception('Quartus installation not found. Make sure "quartus_sh" is on PATH.')
-                os.chdir(model.config.get_project_name() + '-fpga.prj/quartus')
-                os.system('quartus_sh --flow compile quartus_compile')
+
+        with chdir(model.config.get_output_dir()):
+            if synth:
+                quartus_compile = 'QUARTUS_COMPILE=--quartus-compile' if fpgasynth else ''
+                cont_synth = 'CONT_IF_LARGE_AREA=--dont-error-if-large-area-est' if cont_if_large_area else ''
+                log_1 = 'LOGGING_1=-v ' if log_level >= 1 else ''
+                log_2 = 'LOGGING_2=-v ' if log_level >= 2 else '' 
+                os.system(f'make {model.config.get_project_name()}-fpga {log_1} {log_2} {cont_synth} {quartus_compile}')
+                
+                # If running i++ through a container, such a singularity, this command will throw an exception, because the host OS doesn't have access to HLS simulation tools
+                # To avoid the exception, shell into the container (e.g. singularity shell ....) and then execute the following command manually
+                # This command simply tests the IP using a simulation tool and obtains the latency and initiation interval
+                os.system('./{}-fpga'.format(model.config.get_project_name()))
 
         return parse_quartus_report(model.config.get_output_dir())
 
