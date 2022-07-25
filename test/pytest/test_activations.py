@@ -1,6 +1,6 @@
 import hls4ml
-from keras.models import Model
-from keras.layers import ReLU, LeakyReLU, ELU, PReLU, Activation, ThresholdedReLU, Input 
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import ReLU, LeakyReLU, ELU, PReLU, Activation, ThresholdedReLU, Input 
 import numpy as np
 import pytest
 from pathlib import Path
