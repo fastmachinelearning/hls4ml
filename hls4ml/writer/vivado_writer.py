@@ -101,6 +101,7 @@ class VivadoWriter(Writer):
         ###################
 
         filedir = os.path.dirname(os.path.abspath(__file__))
+
         f = open(os.path.join(filedir,'../templates/vivado/firmware/myproject.cpp'),'r')
         fout = open('{}/firmware/{}.cpp'.format(model.config.get_output_dir(), model.config.get_project_name()),'w')
 
@@ -155,7 +156,7 @@ class VivadoWriter(Writer):
                         newline += indent + '#pragma HLS DATAFLOW \n'
                     else:
                         newline += indent + '#pragma HLS PIPELINE \n'
-                if io_type == 'io_serial' or io_type == 'io_stream':
+                if io_type == 'io_stream':
                     newline += indent + '#pragma HLS INTERFACE axis port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
                     if all_brams:
                         newline += indent + '#pragma HLS INTERFACE bram port={} \n'.format(','.join(all_brams))
@@ -522,6 +523,15 @@ class VivadoWriter(Writer):
         f.close()
         fout.close()
 
+        ###################
+        # project.tcl
+        ###################
+        f = open('{}/project.tcl'.format(model.config.get_output_dir()), 'w')
+        f.write('variable myproject\n')
+        f.write('set myproject "{}"\n'.format(model.config.get_project_name()))
+        f.write('variable backend\n')
+        f.write('set backend "vivado"\n')
+        f.close()
 
         ###################
         # vivado_synth.tcl
