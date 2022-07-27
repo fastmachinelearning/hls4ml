@@ -7,6 +7,7 @@ mha_config_template = """struct config{index} : nnet::multiheadattention_config 
     typedef {accum_t.name} accum_t;
     typedef {attention_output_bias_t.name} bias_t;
     typedef {attention_output_weight_t.name} weight_t;
+    typedef {config_mult_t1} mult_config1;
     
     static const unsigned num_heads = {num_heads};
     static const unsigned head_dim_key = {head_dim_key};
@@ -19,6 +20,24 @@ mha_config_template = """struct config{index} : nnet::multiheadattention_config 
     static const bool store_weights_in_bram = false;
 }};\n"""
 
+# qkv projection dense layer template
+qkv_projection_config_template = """struct config{index} : nnet::dense_config {{
+    static const unsigned n_in = {n_in};
+    static const unsigned n_out = {n_out};
+    static const unsigned strategy = nnet::{strategy};
+    static const unsigned reuse_factor = {reuse};
+    static const unsigned n_zeros = {nzeros};
+    static const unsigned n_nonzeros = {nonzeros};
+    static const bool store_weights_in_bram = false;
+    typedef {accum_t.name} accum_t;
+    typedef {bias_t.name} bias_t;
+    typedef {weight_t.name} weight_t;
+    typedef ap_{index_t} index_t;
+    template<class x_T, class y_T>
+    using product = nnet::product::{product_type}<x_T, y_T>;
+}};\n"""
+
+
 mha_function_template = 'nnet::multiheadattention<{input_t}, {output_t}, {config}>({input_q}, {input_kv}, {output}, {w_o}, {b_o}, {w_k}, {b_k}, {w_q}, {b_q}, {w_v}, {b_v});'
 
 mha_include_list = ['nnet_utils/nnet_multiheadattention.h']
@@ -27,7 +46,7 @@ class MhaConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(MultiHeadAttention)
         self.template = mha_config_template
-        # self.mult1_template = recr_mult_config_template
+        self.mult1_template = qkv_projection_config_template
     
     def format(self, node):
 
@@ -38,10 +57,21 @@ class MhaConfigTemplate(LayerConfigTemplate):
         params['head_dim_value'] = node.get_attr('head_dim_value')
         params['feature_dim'] = node.get_attr('feature_dim')
         params['seq_len'] = node.get_attr('seq_len')
-
+        params['config_mult_t1'] = 'config{}_1'.format(node.index)
         mht_config = self.template.format(**params)
 
-        return mht_config
+        mult_params1 = self._default_config_params(node)
+        mult_params1['n_in'] = node.get_attr('feature_dim')
+        mult_params1['n_out'] = node.get_attr('head_dim_key')
+        mult_params1['product_type'] = get_backend('vivado').product_type(node.get_input_variable().type.precision, node.get_weights('query_weight').type.precision)
+        mult_params1['reuse'] = params['reuse']
+        mult_params1['index'] = str(node.index)
+        mult_params1['nzeros'] = 0
+        mult_params1['nonzeros'] = node.get_weights('query_weight').nonzeros
+
+        mult_config1 = self.mult1_template.format(**mult_params1)
+
+        return mult_config1 + '\n' +mht_config
 
 class RecurrentFunctionTemplate(FunctionCallTemplate):
     def __init__(self):

@@ -20,7 +20,7 @@ struct multiheadattention_config
     static const unsigned num_heads = 10;
     static const unsigned head_dim_key = 10;
     static const unsigned head_dim_value = 10;
-    static const unsigned feature_dim = 10;
+    static const unsigned feature_dim = 20;
     static const unsigned seq_len = 500;
 
     // Resource reuse info  // not sure how to write this part
@@ -47,13 +47,21 @@ void multiheadattention(
     typename CONFIG_T::weight_t  value_weight[CONFIG_T::feature_dim * CONFIG_T::num_heads * CONFIG_T::head_dim_value],
     typename CONFIG_T::bias_t    value_bias[CONFIG_T::num_heads * CONFIG_T::head_dim_value])
 {
-    // a dummy algo
-    for (int i=0; i <= (CONFIG_T::seq_len * CONFIG_T::feature_dim); i++)
+    typename CONFIG_T::accum_t q_proj[CONFIG_T::num_heads][CONFIG_T::seq_len * CONFIG_T::head_dim_key];
+    typename CONFIG_T::accum_t v_proj[CONFIG_T::num_heads][CONFIG_T::seq_len * CONFIG_T::head_dim_value];
+    typename CONFIG_T::accum_t k_proj[CONFIG_T::num_heads][CONFIG_T::seq_len * CONFIG_T::head_dim_key];
+
+    // linear projection
+    for (int i=0; i <= CONFIG_T::num_heads; i++)
         {
-            res[i] = data_q[i] + data_vk[i];
+            for (int j=0; j <=CONFIG_T::seq_len; j++)
+            {
+            dense<data_T, res_T, typename CONFIG_T::mult_config1>(data_q,  q_proj[i]+(CONFIG_T::head_dim_key*j), query_weight+(CONFIG_T::head_dim_key * CONFIG_T::feature_dim*i), query_bias+(CONFIG_T::head_dim_key*i));
+            dense<data_T, res_T, typename CONFIG_T::mult_config1>(data_vk, v_proj[i]+(CONFIG_T::head_dim_value*j), value_weight+(CONFIG_T::head_dim_value * CONFIG_T::feature_dim*i), value_bias+(CONFIG_T::head_dim_value*i));
+            dense<data_T, res_T, typename CONFIG_T::mult_config1>(data_vk, k_proj[i]+(CONFIG_T::head_dim_key*j), key_weight+(CONFIG_T::head_dim_key * CONFIG_T::feature_dim*i), key_bias+(CONFIG_T::head_dim_key*i));
+            }
         }
 }
-
 }
 
 #endif
