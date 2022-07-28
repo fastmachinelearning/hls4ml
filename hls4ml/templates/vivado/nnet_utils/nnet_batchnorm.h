@@ -70,18 +70,17 @@ void normalize(
     #pragma HLS ARRAY_PARTITION variable=scale complete
     #pragma HLS ARRAY_PARTITION variable=bias complete
 
-    int multiplier_limit  = ceil(float(CONFIG_T::n_in) / float(CONFIG_T::reuse_factor));
-    CONFIG_T::template product<data_T, typename CONFIG_T::scale_t>::limit(multiplier_limit);
+    #pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::multiplier_limit
 
     // Calcuate result
     Result: for (int ires = 0; ires < CONFIG_T::n_in; ires++) {
         if (CONFIG_T::n_filt==-1) {
             res[ires] = CONFIG_T::template product<data_T, typename CONFIG_T::scale_t>::product(data[ires], scale[ires]) + bias[ires];
-	    } else {
+        } else {
             int norm_index = ires%CONFIG_T::n_filt;
             res[ires] = CONFIG_T::template product<data_T, typename CONFIG_T::scale_t>::product(data[ires], scale[norm_index]) + bias[norm_index];
         }
-	}
+    }
 }
 
 // ****************************************************
@@ -108,13 +107,12 @@ void  normalize_binary_tanh(data_T data[CONFIG_T::n_in], ap_uint<1> res[CONFIG_T
     data_T datareg;   
     ap_uint<1> cache; 
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        datareg = data[ii];	 
+        datareg = data[ii];     
         int norm_index = CONFIG_T::n_filt==-1 ? ii : ii%CONFIG_T::n_filt;
         if( datareg > threshold[norm_index] ) cache = 1;
         else cache = 0;
 
         res[ii] = (ap_uint<1>) cache;
- 
     }   
 }
 
@@ -134,7 +132,6 @@ void  normalize_ternary_tanh(data_T data[CONFIG_T::n_in], ap_int<2> res[CONFIG_T
         else cache = 0;
 
         res[ii] = (ap_int<2>) cache;
-
     }
 }
 

@@ -10,6 +10,8 @@ conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     static const unsigned n_out = {n_out};
     static const unsigned reuse_factor = {reuse};
     static const unsigned strategy = nnet::{strategy};
+    static const unsigned n_zeros = 0;
+    static const unsigned multiplier_limit = DIV_ROUNDUP(n_in * n_out, reuse_factor) - n_zeros / reuse_factor;
     typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
@@ -103,6 +105,7 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const unsigned out_width = {out_width};
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
+    static const unsigned multiplier_limit = DIV_ROUNDUP(kernel_size * n_chan * n_filt, reuse_factor) - n_zeros / reuse_factor;
     static const bool store_weights_in_bram = false;
     static const unsigned strategy = nnet::{strategy};
     static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
@@ -278,6 +281,10 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
 
         # Depthwise config
         params = self._default_config_params(node)
+        # Override bias and bias_t since these are zeros in depthwise step of SepConv2D
+        params['bias'] = params['zero_bias']
+        params['bias_t'] = params['zero_bias_t']
+
         params['n_filt'] = params['n_chan'] # In depthwise step n_chan == n_filt
         params['dilation'] = node.get_attr('dilation', 1)
         params['nzeros'] = node.get_weights('depthwise').nzeros
