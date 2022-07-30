@@ -9,9 +9,9 @@ class VivadoAcceleratorBackend(VivadoBackend):
         super(VivadoBackend, self).__init__(name='VivadoAccelerator')
         self._register_flows()
 
-    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False, bitfile=False):
+    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False, fifo_opt=False, bitfile=False):
         # run the VivadoBackend build
-        report = super().build(model, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth)
+        report = super().build(model, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth, fifo_opt=fifo_opt)
         # Get Config to view Board and Platform
         from hls4ml.backends import VivadoAcceleratorConfig
         vivado_accelerator_config=VivadoAcceleratorConfig(model.config, model.get_input_variables(),model.get_output_variables())
@@ -98,8 +98,20 @@ class VivadoAcceleratorBackend(VivadoBackend):
 
         return config
 
+    def get_default_flow(self):
+        return self._default_flow
+
+    def get_writer_flow(self):
+        return self._writer_flow
+
     def _register_flows(self):
         vivado_ip = 'vivado:ip'
         writer_passes = ['make_stamp', 'vivadoaccelerator:write_hls']
         self._writer_flow = register_flow('write', writer_passes, requires=[vivado_ip], backend=self.name)
         self._default_flow = vivado_ip
+
+        fifo_depth_opt_passes = [
+            'vivadoaccelerator:fifo_depth_optimization'
+        ] + writer_passes
+
+        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=[self._writer_flow], backend=self.name)

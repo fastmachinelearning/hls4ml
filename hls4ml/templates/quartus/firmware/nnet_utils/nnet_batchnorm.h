@@ -60,7 +60,6 @@ void normalize(
     Result:
     #pragma unroll
     for (int ires = 0; ires < CONFIG_T::n_in; ires++) {
-        // TODO - Explore  MULADD instruction in HLS - less clock cycles
         if (CONFIG_T::n_filt==-1) {
             res[ires] = CONFIG_T::template product<data_T, typename CONFIG_T::scale_t>::product(data[ires], scale[ires]) + bias[ires];
 	    } else {
