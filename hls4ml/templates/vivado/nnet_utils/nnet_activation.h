@@ -471,9 +471,6 @@ void  hard_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     }
 
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        if (CONFIG_T::io_type == io_serial){
-            #pragma HLS PIPELINE
-        }
         auto sigmoid = CONFIG_T::slope * data[ii] + CONFIG_T::shift;
         if (sigmoid > 1) sigmoid = 1;
         else if (sigmoid < 0) sigmoid = 0;
