@@ -49,7 +49,7 @@ void normalize(
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
         BatchNormpack: for (int j = 0; j < data_T::size; j++) {
             #pragma HLS UNROLL
@@ -82,7 +82,7 @@ void normalize_binary_tanh(
 
         data_T in_data = data.read();
         nnet::array<ap_uint<1>, CONFIG_T::n_in> out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
         BatchNormPack: for (int j = 0; j < data_T::size; j++) {
             #pragma HLS UNROLL
@@ -108,7 +108,7 @@ void normalize_ternary_tanh(
 
         data_T in_data = data.read();
         nnet::array<ap_int<2>, CONFIG_T::n_in> out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
         BatchNormPack: for (int j = 0; j < data_T::size; j++) {
             #pragma HLS UNROLL
