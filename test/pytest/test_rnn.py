@@ -69,6 +69,7 @@ def test_rnn_parsing(rnn_layer, return_sequences):
                             (GRU, 'Vivado', 'io_parallel'), 
                             (GRU, 'Vivado', 'io_stream'),
                             (GRU, 'Quartus', 'io_parallel'), 
+                            (GRU, 'Quartus', 'io_stream'), 
                         ])
 @pytest.mark.parametrize('return_sequences', [True, False])
 @pytest.mark.parametrize('static', [True, False])
