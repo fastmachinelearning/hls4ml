@@ -245,7 +245,7 @@ void pooling2d_cl(
     hls::stream<data_T> &data,
     hls::stream<res_T> &res
 ) {
-    #pragma HLS inline region
+    #pragma HLS inline recursive
     switch(CONFIG_T::implementation){
         case conv_implementation::linebuffer:
             pooling2d_buffer_cl<data_T, res_T, CONFIG_T>(data, res);
@@ -441,7 +441,7 @@ void pooling1d_cl(
     hls::stream<data_T> &data,
     hls::stream<res_T> &res
 ) {
-    #pragma HLS inline region
+    #pragma HLS inline recursive
     switch(CONFIG_T::implementation){
         case conv_implementation::linebuffer:
             pooling1d_buffer_cl<data_T, res_T, CONFIG_T>(data, res);

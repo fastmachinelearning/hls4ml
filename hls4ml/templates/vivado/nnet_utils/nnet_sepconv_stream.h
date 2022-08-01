@@ -76,7 +76,7 @@ void depthwise_mult_buffer(
         data[id] = data_window[id].read();
     }
 
-    #pragma HLS INLINE region
+    #pragma HLS INLINE recursive
     if (CONFIG_T::strategy == nnet::latency) {
         depthwise_product<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(data, res, weights, biases);
     } else {
@@ -156,7 +156,7 @@ void pointwise_mult_buffer(
         data[id] = data_pack[id];
     }
 
-    #pragma HLS INLINE region
+    #pragma HLS INLINE recursive
     if (CONFIG_T::strategy == nnet::latency) {
         dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(data, res, weights, biases);
     } else {
@@ -203,7 +203,7 @@ void compute_depthwise_output_buffer_1d(
     // Check to see if we have a full kernel
     if ((sX - lShiftX) == 0 && pX > lShiftX - 1) { 
       // Dense multiply
-      #pragma HLS INLINE region
+      #pragma HLS INLINE recursive
       if (CONFIG_T::strategy == nnet::latency) {
         depthwise_product<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(kernel_data, res_out, weights, biases);
       } else {
@@ -267,7 +267,7 @@ void compute_depthwise_output_buffer_2d(
     // Check to see if we have a full kernel
     if ((sX - lShiftX) == 0 && (sY - lShiftY) == 0 && pY > lShiftY - 1 && pX > lShiftX - 1) { 
       // Dense multiply
-      #pragma HLS INLINE region
+      #pragma HLS INLINE recursive
       if (CONFIG_T::strategy == nnet::latency) {
         depthwise_product<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(kernel_data, res_out, weights, biases);
       } else {

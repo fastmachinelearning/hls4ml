@@ -81,7 +81,7 @@ void conv_1d_cl(
     typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
     typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt])
 {
-    #pragma HLS inline region
+    #pragma HLS inline recursive
     switch(CONFIG_T::implementation){
         case conv_implementation::linebuffer:
             conv_1d_buffer_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
