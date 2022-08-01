@@ -16,7 +16,7 @@ void dense_wrapper(
     typename CONFIG_T::weight_t weights[CONFIG_T::n_in*CONFIG_T::n_out],
     typename CONFIG_T::bias_t   biases[CONFIG_T::n_out]
 ) {
-    #pragma HLS INLINE region
+    #pragma HLS INLINE recursive
     if (CONFIG_T::strategy == nnet::latency) {
         #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
         dense_latency<data_T, res_T, CONFIG_T>(data, res, weights, biases);
