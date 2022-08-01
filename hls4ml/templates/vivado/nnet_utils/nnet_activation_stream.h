@@ -167,7 +167,7 @@ void softmax_latency(hls::stream<data_T> &data, hls::stream<res_T> &res){
         PRAGMA_DATA_PACK(out_pack)
         SoftmaxInvPackLoop: for(unsigned j = 0; j < res_T::size; j++){
             #pragma HLS UNROLL
-            #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+            #pragma HLS ALLOCATION operation instances=mul limit=multiplier_limit
             out_pack[j] = exp_res[j] * inv_exp_sum;
         }
         res.write(out_pack);
@@ -241,7 +241,7 @@ void softmax_stable(hls::stream<data_T> &data, hls::stream<res_T> &res){
         PRAGMA_DATA_PACK(out_pack)
         SoftmaxInvPackLoop: for(unsigned j = 0; j < res_T::size; j++){
             #pragma HLS UNROLL
-            #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+            #pragma HLS ALLOCATION operation instances=mul limit=multiplier_limit
             out_pack[j] = exp_res[j] * inv_exp_sum;
         }
         res.write(out_pack);
