@@ -512,8 +512,6 @@ class VivadoWriter(Writer):
 
         for line in f.readlines():
 
-            line = line.replace('myproject',model.config.get_project_name())
-
             if 'set_part {xcku115-flvb2104-2-i}' in line:
                 line = 'set_part {{{}}}\n'.format(model.config.get_config_value('Part'))
             elif 'create_clock -period 5 -name default' in line:
