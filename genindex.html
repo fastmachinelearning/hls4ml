@@ -61,6 +61,7 @@
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.backends.vivado.html">hls4ml.backends.vivado package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.backends.vivado.passes.html">hls4ml.backends.vivado.passes package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.backends.vivado_accelerator.html">hls4ml.backends.vivado_accelerator package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.backends.vivado_accelerator.passes.html">hls4ml.backends.vivado_accelerator.passes package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.converters.html">hls4ml.converters package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.converters.keras.html">hls4ml.converters.keras package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.converters.onnx.html">hls4ml.converters.onnx package</a></li>
@@ -211,6 +212,12 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.classproperty">classproperty (class in hls4ml.model.layers)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.clone.Clone">Clone (class in hls4ml.backends.fpga.passes.clone)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.clone.CloneFunctionTemplate">CloneFunctionTemplate (class in hls4ml.backends.fpga.passes.clone)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.clone.CloneOutput">CloneOutput (class in hls4ml.backends.fpga.passes.clone)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.compile">compile() (hls4ml.backends.fpga.fpga_backend.FPGABackend method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.CompressedType">CompressedType (class in hls4ml.model.types)</a>
@@ -239,12 +246,12 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Conv1D">Conv1D (class in hls4ml.model.layers)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.convolution_templates.Conv1DConfigTemplate">Conv1DConfigTemplate (class in hls4ml.backends.vivado.passes.convolution_templates)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.convolution_templates.Conv1DFunctionTemplate">Conv1DFunctionTemplate (class in hls4ml.backends.vivado.passes.convolution_templates)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Conv2D">Conv2D (class in hls4ml.model.layers)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Conv2DBatchnorm">Conv2DBatchnorm (class in hls4ml.model.layers)</a>
@@ -319,6 +326,8 @@
         <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.PrecisionDefinition.definition_cpp">(hls4ml.backends.fpga.fpga_types.PrecisionDefinition method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusArrayVariableDefinition.definition_cpp">(hls4ml.backends.fpga.fpga_types.QuartusArrayVariableDefinition method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusStreamVariableDefinition.definition_cpp">(hls4ml.backends.fpga.fpga_types.QuartusStreamVariableDefinition method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusStructMemberVariableDefinition.definition_cpp">(hls4ml.backends.fpga.fpga_types.QuartusStructMemberVariableDefinition method)</a>
 </li>
@@ -409,6 +418,8 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate.format">(hls4ml.backends.fpga.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.clone.CloneFunctionTemplate.format">(hls4ml.backends.fpga.passes.clone.CloneFunctionTemplate method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.embedding.EmbeddingConfigTemplate.format">(hls4ml.backends.fpga.passes.embedding.EmbeddingConfigTemplate method)</a>
 </li>
@@ -625,6 +636,8 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.bn_quant">hls4ml.backends.fpga.passes.bn_quant (module)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.clone">hls4ml.backends.fpga.passes.clone (module)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.embedding">hls4ml.backends.fpga.passes.embedding (module)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.html#module-hls4ml.backends.template">hls4ml.backends.template (module)</a>
@@ -724,6 +737,8 @@
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh.initialize">initialize() (hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh method)</a>
 
       <ul>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.clone.Clone.initialize">(hls4ml.backends.fpga.passes.clone.Clone method)</a>
+</li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Activation.initialize">(hls4ml.model.layers.Activation method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.BatchNormalization.initialize">(hls4ml.model.layers.BatchNormalization method)</a>
@@ -835,6 +850,8 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.bn_quant.QuantizeDenseOutput.match">(hls4ml.backends.fpga.passes.bn_quant.QuantizeDenseOutput method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.clone.CloneOutput.match">(hls4ml.backends.fpga.passes.clone.CloneOutput method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.template.Template.match">(hls4ml.backends.template.Template method)</a>
 </li>
@@ -1013,9 +1030,13 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusArrayVariableDefinition">QuartusArrayVariableDefinition (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusInplaceVariableConverter">QuartusInplaceVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusInplaceVariableConverter">QuartusInplaceVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
+      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusStreamVariableConverter">QuartusStreamVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusStreamVariableDefinition">QuartusStreamVariableDefinition (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusStructMemberVariableConverter">QuartusStructMemberVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
@@ -1041,6 +1062,8 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.bn_quant.register_bn_quant">register_bn_quant() (in module hls4ml.backends.fpga.passes.bn_quant)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.clone.register_clone">register_clone() (in module hls4ml.backends.fpga.passes.clone)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.flow.html#hls4ml.model.flow.flow.register_flow">register_flow() (in module hls4ml.model.flow.flow)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.register_layer">register_layer() (in module hls4ml.model.layers)</a>
@@ -1057,10 +1080,10 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.backend.Backend.register_template">register_template() (hls4ml.backends.backend.Backend method)</a>
 </li>
-      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.writers.register_writer">register_writer() (in module hls4ml.writer.writers)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.writers.register_writer">register_writer() (in module hls4ml.writer.writers)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.bram_weights.RegisterBramWeights">RegisterBramWeights (class in hls4ml.backends.vivado.passes.bram_weights)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.transpose_opt.RemoveUselessTranspose">RemoveUselessTranspose (class in hls4ml.model.optimizer.passes.transpose_opt)</a>
@@ -1171,6 +1194,8 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.bn_quant.QuantizeDenseOutput.transform">(hls4ml.backends.fpga.passes.bn_quant.QuantizeDenseOutput method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.clone.CloneOutput.transform">(hls4ml.backends.fpga.passes.clone.CloneOutput method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate.transform">(hls4ml.backends.template.FunctionCallTemplate method)</a>
 </li>
@@ -1339,10 +1364,10 @@
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.writers.Writer.write_hls">(hls4ml.writer.writers.Writer method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_new_tar">write_new_tar() (hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.quartus_writer.QuartusWriter.write_nnet_utils">write_nnet_utils() (hls4ml.writer.quartus_writer.QuartusWriter method)</a>
 
       <ul>
@@ -1385,6 +1410,10 @@
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_test_bench">(hls4ml.writer.vivado_writer.VivadoWriter method)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.quartus_writer.QuartusWriter.write_testbench_parallel">write_testbench_parallel() (hls4ml.writer.quartus_writer.QuartusWriter method)</a>
+</li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.quartus_writer.QuartusWriter.write_testbench_stream">write_testbench_stream() (hls4ml.writer.quartus_writer.QuartusWriter method)</a>
+</li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.quartus_writer.QuartusWriter.write_weights">write_weights() (hls4ml.writer.quartus_writer.QuartusWriter method)</a>
 
       <ul>

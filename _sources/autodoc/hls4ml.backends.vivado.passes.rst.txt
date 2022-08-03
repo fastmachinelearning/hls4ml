@@ -12,14 +12,6 @@ hls4ml.backends.vivado.passes.bram\_weights module
    :undoc-members:
    :show-inheritance:
 
-hls4ml.backends.vivado.passes.clone module
-------------------------------------------
-
-.. automodule:: hls4ml.backends.vivado.passes.clone
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 hls4ml.backends.vivado.passes.conv\_same\_pad module
 ----------------------------------------------------
 
@@ -48,6 +40,14 @@ hls4ml.backends.vivado.passes.core\_templates module
 ----------------------------------------------------
 
 .. automodule:: hls4ml.backends.vivado.passes.core_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.vivado.passes.fifo\_depth\_optimization module
+--------------------------------------------------------------
+
+.. automodule:: hls4ml.backends.vivado.passes.fifo_depth_optimization
    :members:
    :undoc-members:
    :show-inheritance:

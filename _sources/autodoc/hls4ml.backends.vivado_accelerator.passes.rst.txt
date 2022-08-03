@@ -1,0 +1,22 @@
+hls4ml.backends.vivado\_accelerator.passes package
+==================================================
+
+Submodules
+----------
+
+hls4ml.backends.vivado\_accelerator.passes.fifo\_depth\_optimization module
+---------------------------------------------------------------------------
+
+.. automodule:: hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.backends.vivado_accelerator.passes
+   :members:
+   :undoc-members:
+   :show-inheritance:

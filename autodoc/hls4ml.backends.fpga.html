@@ -70,6 +70,7 @@
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vivado.html">hls4ml.backends.vivado package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vivado.passes.html">hls4ml.backends.vivado.passes package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html">hls4ml.backends.vivado_accelerator package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.passes.html">hls4ml.backends.vivado_accelerator.passes package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.html">hls4ml.converters package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.keras.html">hls4ml.converters.keras package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.onnx.html">hls4ml.converters.onnx package</a></li>
@@ -117,6 +118,7 @@
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.fpga.passes.html">hls4ml.backends.fpga.passes package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.passes.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.bn_quant">hls4ml.backends.fpga.passes.bn_quant module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.clone">hls4ml.backends.fpga.passes.clone module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.embedding">hls4ml.backends.fpga.passes.embedding module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes">Module contents</a></li>
 </ul>
@@ -472,6 +474,23 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 <dt id="hls4ml.backends.fpga.fpga_types.QuartusInplaceVariableConverter">
 <em class="property">class </em><code class="sig-prename descclassname">hls4ml.backends.fpga.fpga_types.</code><code class="sig-name descname">QuartusInplaceVariableConverter</code><span class="sig-paren">(</span><em class="sig-param">type_converter</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.QuartusInplaceVariableConverter" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.InplaceVariableConverter" title="hls4ml.backends.fpga.fpga_types.InplaceVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.backends.fpga.fpga_types.InplaceVariableConverter</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="hls4ml.backends.fpga.fpga_types.QuartusStreamVariableConverter">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.backends.fpga.fpga_types.</code><code class="sig-name descname">QuartusStreamVariableConverter</code><span class="sig-paren">(</span><em class="sig-param">type_converter</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.QuartusStreamVariableConverter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.StreamVariableConverter" title="hls4ml.backends.fpga.fpga_types.StreamVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.backends.fpga.fpga_types.StreamVariableConverter</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="hls4ml.backends.fpga.fpga_types.QuartusStreamVariableDefinition">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.backends.fpga.fpga_types.</code><code class="sig-name descname">QuartusStreamVariableDefinition</code><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.QuartusStreamVariableDefinition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.backends.fpga.fpga_types.VariableDefinition</span></code></a></p>
+<dl class="method">
+<dt id="hls4ml.backends.fpga.fpga_types.QuartusStreamVariableDefinition.definition_cpp">
+<code class="sig-name descname">definition_cpp</code><span class="sig-paren">(</span><em class="sig-param">name_suffix=''</em>, <em class="sig-param">as_reference=False</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.QuartusStreamVariableDefinition.definition_cpp" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">

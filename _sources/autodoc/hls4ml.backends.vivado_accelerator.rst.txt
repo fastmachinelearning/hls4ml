@@ -1,6 +1,13 @@
 hls4ml.backends.vivado\_accelerator package
 ===========================================
 
+Subpackages
+-----------
+
+.. toctree::
+
+   hls4ml.backends.vivado_accelerator.passes
+
 Submodules
 ----------
 
