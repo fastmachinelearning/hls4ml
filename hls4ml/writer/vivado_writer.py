@@ -508,14 +508,14 @@ class VivadoWriter(Writer):
         # project.tcl
         ###################
         f = open('{}/project.tcl'.format(model.config.get_output_dir()), 'w')
-        f.write('variable myproject\n')
-        f.write('set myproject "{}"\n'.format(model.config.get_project_name()))
+        f.write('variable project_name\n')
+        f.write('set project_name "{}"\n'.format(model.config.get_project_name()))
         f.write('variable backend\n')
         f.write('set backend "vivado"\n')
         f.write('variable part\n')
         f.write('set part "{}"\n'.format(model.config.get_config_value('Part')))
         f.write('variable clock_period\n')
-        f.write('set clock_period "{}"\n'.format(model.config.get_config_value('ClockPeriod')))
+        f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
         f.close()
 
         ###################

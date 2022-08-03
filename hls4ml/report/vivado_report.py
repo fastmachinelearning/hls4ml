@@ -39,7 +39,7 @@ def _parse_project_script(path):
 
     with open(project_path, 'r') as f:
         for line in f.readlines():
-            if 'set myproject' in line:
+            if 'set project_name' in line:
                 top_func_name = line.split('"')[-2]
                 prj_dir = top_func_name + '_prj'
 
