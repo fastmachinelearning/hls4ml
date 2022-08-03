@@ -43,21 +43,24 @@ class QuartusBackend(FPGABackend):
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
+        optimization_passes = []
+        optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
+
         templates = self._get_layer_templates()
-        template_flow = register_flow('apply_templates', templates, requires=[init_flow], backend=self.name)
+        template_flow = register_flow('apply_templates', self._get_layer_templates, requires=[init_flow], backend=self.name)
 
         writer_passes = [
             'make_stamp',
             'quartus:write_hls'
         ]
-        writer_flow_requirements = ['optimize', quartus_types_flow, template_flow]
-        self._writer_flow = register_flow('write', writer_passes, requires=writer_flow_requirements, backend=self.name)
+
+        self._writer_flow = register_flow('write', writer_passes, requires=['quartus:ip'], backend=self.name)
 
         all_passes = get_backend_passes(self.name)
 
         extras = [
             # Ideally this should be empty
-            opt_pass for opt_pass in all_passes if opt_pass not in initializers + quartus_types + templates + writer_passes
+            opt_pass for opt_pass in all_passes if opt_pass not in initializers + streaming_passes + quartus_types + quantization_passes + templates + optimization_passes + writer_passes
         ]
 
         if len(extras) > 0:
@@ -65,7 +68,7 @@ class QuartusBackend(FPGABackend):
         else:
             extras_flow = None
 
-        ip_flow_requirements = ['optimize', init_flow, streaming_flow, quantization_flow, quartus_types_flow, extras_flow, template_flow]
+        ip_flow_requirements = ['optimize', init_flow, streaming_flow, quantization_flow, optimization_flow, quartus_types_flow, extras_flow, template_flow]
         ip_flow_requirements = list(filter(None, ip_flow_requirements))
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
