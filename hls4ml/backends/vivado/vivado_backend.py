@@ -52,6 +52,7 @@ class VivadoBackend(FPGABackend):
 
         optimization_passes = [
             'vivado:optimize_pointwise_conv',
+            'vivado:skip_softmax'
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
