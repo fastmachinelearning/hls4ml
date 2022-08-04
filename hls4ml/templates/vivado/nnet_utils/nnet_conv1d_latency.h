@@ -6,40 +6,6 @@
 
 namespace nnet {
 
-//Computes multiplier limit
-//This function should not be synthesized into firmware
-template<typename CONFIG_T>
-int compute_multiplier_limit(
-    typename CONFIG_T::weight_t  weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt]
-)
-{
-    int n_mult = 0;
-    for(int ii = 0; ii < CONFIG_T::out_width; ii++) {
-        for(int ff = 0; ff < CONFIG_T::n_filt; ff++){
-            for(int cc = 0; cc < CONFIG_T::n_chan; cc++){
-                for(int jj = 0; jj < CONFIG_T::filt_width; jj++){
-
-                    int index_weight = jj*CONFIG_T::n_chan*CONFIG_T::n_filt + cc*CONFIG_T::n_filt + ff;
-
-                    if((ii*CONFIG_T::stride_width+jj) < CONFIG_T::pad_left || (ii*CONFIG_T::stride_width+jj) >= (CONFIG_T::pad_left + CONFIG_T::in_width)){
-                        //padded -- do nothing
-                        continue;
-                    } else {
-                        //need to tune this cut?
-                        if( weights[index_weight] > 1e-20 || weights[index_weight] < -1e-20 ){
-                            n_mult++;
-                        }//end if nonzero weight
-                    }//end not padding
-                }//end loop accross filter
-            }//end channel loop
-        }//end filter loop
-    }//end output loop
-
-    return ceil( float(n_mult) / float(CONFIG_T::reuse_factor) );
-
-}//end compute_n_mult
-
-
 template<class data_T, class res_T, typename CONFIG_T>
 void conv_1d_latency_cl(
     data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],
@@ -63,8 +29,7 @@ void conv_1d_latency_cl(
     #pragma HLS ARRAY_PARTITION variable=biases complete dim=0
 
     // Limit multipliers to control parallelization
-    const int multiplier_limit = compute_multiplier_limit<CONFIG_T>(weights);
-    #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+    #pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::multiplier_limit
 
     // Convolve, saving all multiplication results to accumulate later
     ConvOut: for(int ii = 0; ii < CONFIG_T::out_width; ii++) {
@@ -141,8 +106,7 @@ void pointwise_conv_1d_latency_cl(
     #pragma HLS ARRAY_PARTITION variable=biases complete dim=0
 
     // Limit multipliers to control parallelization
-    const int multiplier_limit = compute_multiplier_limit<CONFIG_T>(weights);
-    #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+    #pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::multiplier_limit
 
     // Convolve, saving all multiplication results to accumulate later
     ConvOut: for(int ii = 0; ii < CONFIG_T::out_width; ii++) {
