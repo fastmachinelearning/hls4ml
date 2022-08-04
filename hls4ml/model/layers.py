@@ -1118,11 +1118,11 @@ class SimpleRNN(Layer):
 class LSTM(Layer):
     _expected_attributes = [
         Attribute('n_out'),
-        Attribute('activation', value_type=str),  ## not defined in the paser, when do we need this data
+        Attribute('activation', value_type=str),
         Attribute('recurrent_activation', value_type=str),
         Attribute('return_sequences', value_type=bool, default=False),
         Attribute('return_state', value_type=bool, default=False),
-        ChoiceAttribute('direction', ['forward', 'backward'], default='forward'), ## not defined in the paser, how can we know when to be backward
+        ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
         Attribute('time_major', value_type=bool, default=False),
         WeightAttribute('weight'),
         WeightAttribute('bias'),

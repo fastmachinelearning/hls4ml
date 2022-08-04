@@ -562,3 +562,18 @@ class VivadoBackend(FPGABackend):
     @layer_optimizer(GarNetStack)
     def init_garnet_stack(self, layer):
         self.init_garnet(layer)
+
+    @layer_optimizer(MultiHeadAttention)
+    def init_mha(self, layer):
+        # TODO Allow getting recurrent reuse factor from the config
+        reuse_factor = layer.model.config.get_reuse_factor(layer)
+        layer.set_attr('reuse_factor', reuse_factor)
+        index_t = IntegerPrecisionType(width=1, signed=False)
+        layer.set_attr('index_t', index_t)
+        if 'table_t' not in layer.attributes:
+            layer.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
+        if 'table_size' not in layer.attributes:
+            layer.set_attr('table_size', 1024)
+        layer.set_attr('strategy', 'latency')
+
+
