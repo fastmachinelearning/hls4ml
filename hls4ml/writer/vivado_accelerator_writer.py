@@ -205,8 +205,8 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     model.config.get_project_name())
             elif '{}_cosim'.format(model.config.get_project_name()) in line:
                 newline = line.replace('{}_cosim'.format(model.config.get_project_name()), '{}_axi_cosim'.format(model.config.get_project_name()))
-            elif '${myproject}.tcl' in line:
-                newline = line.replace('${myproject}.tcl', '${myproject}_axi.tcl')
+            elif '${project_name}.tcl' in line:
+                newline = line.replace('${project_name}.tcl', '${project_name}_axi.tcl')
             else:
                 newline = line
             fout.write(newline)
