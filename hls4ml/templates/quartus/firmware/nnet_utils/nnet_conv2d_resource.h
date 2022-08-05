@@ -201,6 +201,75 @@ void winograd_conv2d_3x3_kernel_cl(
 }
 
 // ****************************************************************
+//       2D Convolution for 1x1 kernels using optimized im2col
+// ****************************************************************
+
+template<class data_T, typename CONFIG_T>
+void im2col_2d_pointwise_cl(
+    data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],
+    data_T data_col[CONFIG_T::n_chan],
+    const int row,
+    const int col
+) {
+    // pointwise_im2col can be unrolled fully, only one loop with n_chan iterations
+
+    hls_register int index = 0;
+
+    ChannelLoop:
+    #pragma unroll
+    for (int channel = 0; channel < CONFIG_T::n_chan; channel++) {
+
+        hls_register int input_row = -CONFIG_T::pad_top + row * CONFIG_T::stride_height;
+        hls_register int input_col = -CONFIG_T::pad_left + col * CONFIG_T::stride_width;
+    
+        if (input_row >= 0 && input_row < CONFIG_T::in_height && input_col >= 0 && input_col < CONFIG_T::in_width) {            
+            data_col[index++] = data[input_row * CONFIG_T::in_width * CONFIG_T::n_chan + input_col * CONFIG_T::n_chan + channel];
+        } else {
+            data_col[index++] = 0;
+        }
+    }
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
+void pointwise_conv_2d_resource_cl(
+    data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],
+    res_T  res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt],
+    const typename CONFIG_T::weight_t weights[CONFIG_T::n_chan * CONFIG_T::n_filt],
+    const typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt]
+) {
+    assert(CONFIG_T::filt_height == 1 && CONFIG_T::filt_width == 1);
+
+    // Unroll factors for loop traversing input image, derived from parallelisation_factor
+    // Outer loop only gets unrolled after inner loop is fully unrolled
+    static constexpr int pfc = MIN(CONFIG_T::parallelisation_factor, CONFIG_T::out_width);
+    static constexpr int pfr = MIN((CONFIG_T::parallelisation_factor / pfc), CONFIG_T::out_height);
+
+    HeightLoop: 
+    #pragma unroll pfr
+    for (int row = 0; row < CONFIG_T::out_height; row++) {
+        WidthLoop: 
+        #pragma unroll pfc
+        #pragma ii CONFIG_T::reuse_factor
+        for (int col = 0; col < CONFIG_T::out_width; col++) {
+            // Loop variables should always be declared in the deepest scope available
+            // See Intel's HLS - Loop Best Practices https://www.intel.com/content/www/us/en/docs/programmable/683152/22-2/declare-variables-in-the-deepest-scope.html 
+            
+            hls_register data_T data_col[CONFIG_T::n_chan];
+            im2col_2d_pointwise_cl<data_T, CONFIG_T>(data, data_col, row, col);
+            
+            hls_register res_T res_col[CONFIG_T::n_filt];
+            dense_resource<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
+
+            FiltLoop:
+            #pragma unroll
+            for (int k = 0; k < CONFIG_T::n_filt; k++) {
+                res[row * CONFIG_T::out_width * CONFIG_T::n_filt + col * CONFIG_T::n_filt + k] = res_col[k];
+            }
+        }
+    }
+}
+
+// ****************************************************************
 //      Top-level function - handles different implementations
 // ****************************************************************
 template<class data_T, class res_T, typename CONFIG_T>

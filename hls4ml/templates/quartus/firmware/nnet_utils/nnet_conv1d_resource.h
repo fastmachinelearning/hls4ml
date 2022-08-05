@@ -153,6 +153,64 @@ void winograd_conv1d_3x1_kernel_cl(
 }
 
 // ****************************************************************
+//       1D Convolution for 1x1 kernels using optimized im2col
+// ****************************************************************
+
+template<class data_T, typename CONFIG_T>
+void im2col_1d_pointwise_cl(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan], data_T data_col[CONFIG_T::n_chan], const int col) {
+    // pointwise_im2col can be unrolled fully, only one loop with n_chan iterations
+    
+    hls_register int index = 0;
+    
+    ChannelLoop:
+    #pragma unroll
+    for (int channel = 0; channel < CONFIG_T::n_chan; channel++) {
+        hls_register int index_data = (col * CONFIG_T::stride_width - CONFIG_T::pad_left) * CONFIG_T::n_chan + channel;
+        if (index_data >= 0 && index_data < CONFIG_T::in_width * CONFIG_T::n_chan) {
+            data_col[index++] = data[index_data];
+        } else {
+            data_col[index++] = 0;
+        }
+    }
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
+void pointwise_conv_1d_resource_cl(
+    data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],
+    res_T  res[CONFIG_T::out_width * CONFIG_T::n_filt],
+    const typename CONFIG_T::weight_t weights[CONFIG_T::n_chan * CONFIG_T::n_filt],
+    const typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt]
+) {
+    assert(CONFIG_T::filt_width == 1);
+
+    // Unroll factor for loop traversing input image, derived from parallelisation_factor
+    static constexpr int pf = MIN(CONFIG_T::parallelisation_factor, CONFIG_T::out_width);
+
+    ColLoop:
+    #pragma unroll pf
+    #pragma ii CONFIG_T::reuse_factor
+    for (int col = 0; col < CONFIG_T::out_width; col++) {
+        // Loop variables should always be declared in the deepest scope available
+        // See Intel's HLS - Loop Best Practices https://www.intel.com/content/www/us/en/docs/programmable/683152/22-2/declare-variables-in-the-deepest-scope.html 
+            
+        hls_register data_T data_col[CONFIG_T::n_chan];
+        im2col_1d_pointwise_cl<data_T, CONFIG_T>(data, data_col, col);
+        
+        hls_register res_T res_col[CONFIG_T::n_filt];
+        dense_resource<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
+        
+        // Unroll fully, since
+        // (1) n_filt is usually low in io_parallel (< 32)
+        // (2) no complex operations handled in loop, this loop performs a simple register writing operation    
+        FiltLoop:
+        #pragma unroll
+        for (int k = 0; k < CONFIG_T::n_filt; k++) {
+            res[col * CONFIG_T::n_filt + k] = res_col[k];
+        }
+    }
+}
+
+// ****************************************************************
 //      Top-level function - handles different implementations
 // ****************************************************************
 template<class data_T, class res_T, typename CONFIG_T>
