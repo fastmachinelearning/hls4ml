@@ -60,15 +60,15 @@ proc add_vcd_instructions_tcl {} {
         if {[string equal "$line" "log_wave -r /"]} {
             set line {source "../../../../project.tcl"
                 if {[string equal "$backend" "vivadoaccelerator"]} {
-                    current_scope [get_scopes -regex /apatb_${project_name}_axi_top/AESL_inst_${project_name}_axi/${project_name}_U0.*]
+                    current_scope [get_scopes -regex "/apatb_${project_name}_axi_top/AESL_inst_${project_name}_axi/${project_name}_U0.*"]
                     set scopes [get_scopes -regexp {layer(\d*)_.*data_0_V_U.*}]
                     append scopes { }
-                    current_scope /apatb_${project_name}_axi_top/AESL_inst_${project_name}_axi
+                    current_scope "/apatb_${project_name}_axi_top/AESL_inst_${project_name}_axi"
                     append scopes [get_scopes -regexp {(in_local_V_data.*_0_.*)}]
                     append scopes { }
                     append scopes [get_scopes -regexp {(out_local_V_data.*_0_.*)}]
                 } else {
-                    current_scope [get_scopes -regex /apatb_${project_name}_top/AESL_inst_${project_name}]
+                    current_scope [get_scopes -regex "/apatb_${project_name}_top/AESL_inst_${project_name}"]
                     set scopes [get_scopes -regexp {layer(\d*)_.*data_0_V_U.*}]
                 }
                 open_vcd fifo_opt.vcd
@@ -88,8 +88,6 @@ proc add_vcd_instructions_tcl {} {
                     log_wave $depth
                 }
             }
-
-            set line [string map [list "project_name" $project_name] $line]
         }
 
         if {[string equal "$line" "quit"]} {
