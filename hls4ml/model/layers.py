@@ -1071,7 +1071,7 @@ class Embedding(Layer):
 class SimpleRNN(Layer):
     _expected_attributes = [
         Attribute('n_out'),
-        Attribute('activation', value_type=str), 
+        Attribute('activation', value_type=str),
         Attribute('return_sequences', value_type=bool, default=False),
         Attribute('return_state', value_type=bool, default=False),
         ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
@@ -1441,11 +1441,6 @@ class MultiHeadAttention(Layer):
     ]
 
     def initialize(self):
-
-        # is these two needed?
-        # self.add_weights()
-        # self.add_bias()
-
         weights_source = [
                 ('attention_output', 'kernel'),
                 ('attention_output', 'bias'),
