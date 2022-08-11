@@ -571,9 +571,9 @@ class VivadoBackend(FPGABackend):
         index_t = IntegerPrecisionType(width=1, signed=False)
         layer.set_attr('index_t', index_t)
         if 'table_t' not in layer.attributes:
-            layer.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
+            layer.set_attr('table_t', FixedPrecisionType(width=32, integer=5))
         if 'table_size' not in layer.attributes:
-            layer.set_attr('table_size', 1024)
+            layer.set_attr('table_size', 4096)
         layer.set_attr('strategy', 'latency')
 
 

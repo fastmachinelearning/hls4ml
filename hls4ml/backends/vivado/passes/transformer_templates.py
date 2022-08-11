@@ -74,7 +74,7 @@ class MhaConfigTemplate(LayerConfigTemplate):
         params['seq_len'] = node.get_attr('seq_len')
         params['config_mult_t1'] = 'config{}_1'.format(node.index)
         params['config_mult_t2'] = 'config{}_2'.format(node.index)
-        params['config_activ_t1'] = '{}_config{}'.format("softmax", node.index) ## not sure
+        params['config_activ_t1'] = '{}_config{}'.format("softmax", node.index)
         params['strategy'] = node.get_attr('strategy')
         mha_config = self.template.format(**params)
 
@@ -86,7 +86,7 @@ class MhaConfigTemplate(LayerConfigTemplate):
         mult_params1['reuse'] = params['reuse']
         mult_params1['index'] = str(node.index)
         mult_params1['nzeros'] = 0
-        mult_params1['nonzeros'] = node.get_weights('query_weight').nonzeros
+        mult_params1['nonzeros'] = params['feature_dim']*params['num_heads']*params['head_dim_key']
         mult_config1 = self.mult1_template.format(**mult_params1)
 
         mult_params2 = self._default_config_params(node)
@@ -97,18 +97,18 @@ class MhaConfigTemplate(LayerConfigTemplate):
         mult_params2['reuse'] = params['reuse']
         mult_params2['index'] = str(node.index)
         mult_params2['nzeros'] = 0
-        mult_params2['nonzeros'] = node.get_weights('attention_output_weight').nonzeros
+        mult_params2['nonzeros'] = params['feature_dim']*params['num_heads']*params['head_dim_key']
         mult_config2 = self.mult2_template.format(**mult_params2)
 
         act_params = self._default_config_params(node)
-        act_params['n_in'] = node.get_attr('head_dim_key')
+        act_params['n_in'] = node.get_attr('seq_len')
         act_params['type'] = 'softmax'
-        act_params['implementation'] = 'latency'
+        act_params['implementation'] = 'legacy' #latency,stable not work
         act_config = self.activ1_template.format(**act_params)
 
         return mult_config1 + '\n' + mult_config2 + '\n' + act_config + '\n' + mha_config
 
-class RecurrentFunctionTemplate(FunctionCallTemplate):
+class MhaFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(MultiHeadAttention, include_header=mha_include_list)
         self.template = mha_function_template
