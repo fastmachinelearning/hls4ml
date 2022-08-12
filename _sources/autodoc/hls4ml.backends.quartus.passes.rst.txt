@@ -20,6 +20,22 @@ hls4ml.backends.quartus.passes.quantization\_templates module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.quartus.passes.recurrent\_templates module
+----------------------------------------------------------
+
+.. automodule:: hls4ml.backends.quartus.passes.recurrent_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.quartus.passes.resource\_strategy module
+--------------------------------------------------------
+
+.. automodule:: hls4ml.backends.quartus.passes.resource_strategy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.backends.quartus.passes.transform\_types module
 ------------------------------------------------------
 
