@@ -283,7 +283,7 @@ void softmax_stable(stream<data_T> &data, stream<res_T> &res) {
         hls_register typename CONFIG_T::exp_table_t exp_res[data_T::size];
         #pragma unroll
         for(unsigned j = 0; j < data_T::size; j++) {
-            exp_res[j] = exp_table[softmax_idx_from_real_val<typename data_T::value_type, CONFIG_T>(d_xi_xmax[j])];
+            exp_res[j] = exp_table[softmax_stable_idx_from_real_val<typename data_T::value_type, CONFIG_T>(d_xi_xmax[j])];
         }
 
         // Explicitly sum the results with an adder tree.
@@ -291,7 +291,7 @@ void softmax_stable(stream<data_T> &data, stream<res_T> &res) {
         Op_add<typename CONFIG_T::exp_table_t> op_add;
         hls_register typename CONFIG_T::exp_table_t exp_sum = reduce<typename CONFIG_T::exp_table_t, data_T::size, Op_add<typename CONFIG_T::exp_table_t>>(exp_res, op_add);
 
-        hls_register typename CONFIG_T::inv_table_t inv_exp_sum = invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
+        hls_register typename CONFIG_T::inv_table_t inv_exp_sum = invert_table[softmax_stable_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
         res_T out_pack;
         
         SoftmaxInvPackLoop: 
@@ -327,7 +327,7 @@ void softmax_latency(stream<data_T> &data, stream<res_T> &res){
         SoftmaxExpPackLoop: 
         #pragma unroll
         for(unsigned j = 0; j < data_T::size; j++) {
-            exp_res[j] = exp_table_latency[softmax_idx_from_real_val<typename data_T::value_type, CONFIG_T>(in_pack[j])];
+            exp_res[j] = exp_table_latency[softmax_latency_idx_from_real_val<typename data_T::value_type, CONFIG_T>(in_pack[j])];
         }
 
         // Explicitly sum the results with an adder tree.
@@ -336,7 +336,7 @@ void softmax_latency(stream<data_T> &data, stream<res_T> &res){
         hls_register typename CONFIG_T::exp_table_t exp_sum = reduce<typename CONFIG_T::exp_table_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::exp_table_t>>(exp_res, op_add);
 
         // Multiply previously calculated exponetials with the reciprocal of the sum
-        hls_register typename CONFIG_T::inv_table_t inv_exp_sum = invert_table_latency[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
+        hls_register typename CONFIG_T::inv_table_t inv_exp_sum = invert_table_latency[softmax_latency_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
 
         res_T out_pack;
         SoftmaxInvPackLoop: 

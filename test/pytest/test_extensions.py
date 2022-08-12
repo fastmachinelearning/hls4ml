@@ -1,13 +1,12 @@
-import hls4ml
-import tensorflow as tf
-import numpy as np
 import pytest
+import hls4ml
+import numpy as np
+import tensorflow as tf
 from pathlib import Path
 
 test_root_path = Path(__file__).parent
 
 # Keras implementation of a custom layer
-
 class KReverse(tf.keras.layers.Layer):
     ''' Keras implementation of a hypothetical custom layer '''
     def __init__(self):
@@ -16,8 +15,7 @@ class KReverse(tf.keras.layers.Layer):
     def call(self, inputs):
         return tf.reverse(inputs, axis=[-1])
 
-# hls4ml implementations
-
+# hls4ml layer implementation
 class HReverse(hls4ml.model.layers.Layer):
     ''' hls4ml implementation of a hypothetical custom layer '''
 
@@ -27,65 +25,7 @@ class HReverse(hls4ml.model.layers.Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
-
-# Templates
-
-rev_config_template = """struct config{index} : nnet::reverse_config {{
-    static const unsigned n_in = {n_in};
-}};\n"""
-
-rev_function_template = 'nnet::reverse<{input_t}, {config}>({input}, {output});'
-rev_include_list = ['nnet_utils/nnet_reverse.h']
-
-class HReverseConfigTemplate(hls4ml.backends.template.LayerConfigTemplate):
-    def __init__(self):
-        super().__init__(HReverse)
-        self.template = rev_config_template
-    
-    def format(self, node):
-        params = self._default_config_params(node)        
-        return self.template.format(**params)
-
-class HReverseFunctionTemplate(hls4ml.backends.template.FunctionCallTemplate):
-    def __init__(self):
-        super().__init__(HReverse, include_header=rev_include_list)
-        self.template = rev_function_template
-    
-    def format(self, node):
-        params = self._default_function_params(node)
-        return self.template.format(**params)
-
-
-# HLS implementation
-rev_hls = \
-"""#ifndef NNET_REVERSE_H_
-#define NNET_REVERSE_H_
-
-#include "nnet_common.h"
-
-namespace nnet {
-
-struct reverse_config {
-    static const unsigned n_in = 10;
-};
-
-template<class data_T, typename CONFIG_T>
-void reverse(
-    data_T input[CONFIG_T::n_in],
-    data_T reversed[CONFIG_T::n_in]
-) {
-    #pragma HLS PIPELINE
-
-    for (int i = 0; i < CONFIG_T::n_in; i++) {
-        reversed[CONFIG_T::n_in - 1 - i] = input[i];
-    }
-}
-
-}
-
-#endif
-"""
-
+# hls4ml optimizer to remove duplicate optimizer
 class RemoveDuplicateReverse(hls4ml.model.optimizer.OptimizerPass):
     '''OptimizerPass to remove consecutive HReverse layers.'''
 
@@ -113,16 +53,73 @@ def parse_reverse_layer(keras_layer, input_names, input_shapes, data_reader, con
 
     return layer, [shape for shape in input_shapes[0]]
 
-def test_extensions(tmp_path):
+# HLS Templates - No specific pragmas used; generic enough for both Intel and Vivado
+
+rev_config_template = """struct config{index} : nnet::reverse_config {{
+    static const unsigned n_in = {n_in};
+}};\n"""
+
+rev_function_template = 'nnet::reverse<{input_t}, {config}>({input}, {output});'
+rev_include_list = ['nnet_utils/nnet_reverse.h']
+
+class HReverseConfigTemplate(hls4ml.backends.template.LayerConfigTemplate):
+    def __init__(self):
+        super().__init__(HReverse)
+        self.template = rev_config_template
+    
+    def format(self, node):
+        params = self._default_config_params(node)        
+        return self.template.format(**params)
+
+class HReverseFunctionTemplate(hls4ml.backends.template.FunctionCallTemplate):
+    def __init__(self):
+        super().__init__(HReverse, include_header=rev_include_list)
+        self.template = rev_function_template
+    
+    def format(self, node):
+        params = self._default_function_params(node)
+        return self.template.format(**params)
+
+rev_hls = \
+"""#ifndef NNET_REVERSE_H_
+#define NNET_REVERSE_H_
+
+#include "nnet_common.h"
+
+namespace nnet {
+
+struct reverse_config {
+    static const unsigned n_in = 10;
+};
+
+template<class data_T, typename CONFIG_T>
+void reverse(
+    data_T input[CONFIG_T::n_in],
+    data_T reversed[CONFIG_T::n_in]
+) {
+    for (int i = 0; i < CONFIG_T::n_in; i++) {
+        reversed[CONFIG_T::n_in - 1 - i] = input[i];
+    }
+}
+
+}
+
+#endif
+"""
+
+@pytest.fixture(scope='session', autouse=True)
+def regsister_custom_layer():
     # Register the converter for custom Keras layer
     hls4ml.converters.register_keras_layer_handler('KReverse', parse_reverse_layer)
 
     # Register the hls4ml's IR layer
     hls4ml.model.layers.register_layer('HReverse', HReverse)
 
+@pytest.mark.parametrize('backend_id', ['Vivado', 'Quartus'])
+def test_extensions(tmp_path, backend_id):
     # Register the optimization passes (if any)
-    backend = hls4ml.backends.get_backend('Vivado')
-    backend.register_pass('remove_duplicate_reverse', RemoveDuplicateReverse, flow='vivado:optimize')
+    backend = hls4ml.backends.get_backend(backend_id)
+    backend.register_pass('remove_duplicate_reverse', RemoveDuplicateReverse, flow=f'{backend_id.lower()}:optimize')
 
     # Register template passes for the given backend
     backend.register_template(HReverseConfigTemplate)
@@ -148,15 +145,15 @@ def test_extensions(tmp_path):
 
     hmodel = hls4ml.converters.convert_from_keras_model(
         kmodel,
-        output_dir=str(test_root_path / 'hls4mlprj_extensions'),
-        backend='Vivado',
+        output_dir=str(test_root_path / f'hls4mlprj_extensions_{backend_id}'),
+        backend=backend_id,
         io_type='io_parallel',
-        hls_config={ 'Model': { 'Precision': 'ap_int<4>', 'ReuseFactor': 1} })
+        hls_config={ 'Model': { 'Precision': 'ap_int<6>', 'ReuseFactor': 1} })
 
     hmodel.compile()
     hres = hmodel.predict(x.astype('float32'))
 
     # Check if the optimizer pass was applied
-    assert 'vivado:remove_duplicate_reverse' in hmodel._applied_flows[0]['vivado:optimize']
+    assert f'{backend_id.lower()}:remove_duplicate_reverse' in hmodel._applied_flows[0][f'{backend_id.lower()}:optimize']
 
     np.testing.assert_array_equal(kres, hres)

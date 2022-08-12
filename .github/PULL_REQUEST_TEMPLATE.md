@@ -30,7 +30,7 @@ Note: Please delete options that are not relevant.
 
 ## Checklist
 
-- [ ] I have read the [guidelines for contributing](https://github.com/fastmachinelearning/hls4ml/blob/master/CONTRIBUTING.md).
+- [ ] I have read the [guidelines for contributing](https://github.com/fastmachinelearning/hls4ml/blob/main/CONTRIBUTING.md).
 - [ ] I have commented my code, particularly in hard-to-understand areas.
 - [ ] I have made corresponding changes to the documentation.
 - [ ] My changes generate no new warnings.

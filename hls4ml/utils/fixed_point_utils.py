@@ -65,7 +65,7 @@ class FixedPointEmulator:
         for i in range(0, len(bits)):
             if i < self.I:
                 self.integer_bits[i] = bits[i]
-            elif i >= self.I and i<self.F:
+            elif i >= self.I and i<self.N:
                 self.decimal_bits[i-self.I] = bits[i]
 
     '''
@@ -77,7 +77,7 @@ class FixedPointEmulator:
     Notice:
         - If e^x overflow, maximum value of float is used
     '''
-    def exp_float(self, sig_figs=6):
+    def exp_float(self, sig_figs=12):
         try:
             return round(math.exp(self.to_float()), sig_figs)
         except OverflowError:
@@ -89,7 +89,7 @@ class FixedPointEmulator:
     Returns:
         - Float : 1/x, rounded some number of decimal points
     '''
-    def inv_float(self, sig_figs=10):
+    def inv_float(self, sig_figs=12):
         if self.to_float()!=0:
             return round(1.0/self.to_float(), sig_figs)
         else:
