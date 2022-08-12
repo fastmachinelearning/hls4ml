@@ -1,12 +1,14 @@
-import numpy as np
 import os
+from hls4ml.model.attributes import Attribute
+import numpy as np
 from contextlib import contextmanager
-from hls4ml.model.types import NamedType, IntegerPrecisionType, FixedPrecisionType
-from hls4ml.model.layers import Layer, Dense, Activation, Softmax, Embedding
-from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
-from hls4ml.model.flow import register_flow
+
 from hls4ml.backends import FPGABackend
+from hls4ml.model.types import NamedType, IntegerPrecisionType, FixedPrecisionType
+from hls4ml.model.layers import Embedding, Layer, Dense, Activation, Softmax, GRU
+from hls4ml.model.flow import register_flow
 from hls4ml.report import parse_quartus_report
+from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 
 @contextmanager
 def chdir(newdir):
@@ -20,7 +22,15 @@ def chdir(newdir):
 class QuartusBackend(FPGABackend):
     def __init__(self):
         super(QuartusBackend, self).__init__('Quartus')
+        self._register_layer_attributes()
         self._register_flows()
+
+    def _register_layer_attributes(self):
+        extended_attrs = {
+            GRU: [Attribute('recurrent_reuse_factor', default=1)],
+        }
+        self.attribute_map.update(extended_attrs)
+    
 
     def _register_flows(self):
         initializers = self._get_layer_initializers()
@@ -33,6 +43,7 @@ class QuartusBackend(FPGABackend):
 
         quartus_types = [
             'quartus:transform_types',
+            'quartus:apply_resource_strategy'
         ]
         quartus_types_flow = register_flow('specific_types', quartus_types, requires=[init_flow], backend=self.name)
 
@@ -89,32 +100,8 @@ class QuartusBackend(FPGABackend):
 
         return config
 
-    def gen_quartus_weight_array(self, layer):
-        rf = layer.get_attr('reuse_factor')
-        block_factor = int((layer.attributes['n_in']*layer.attributes['n_out'])/rf)
-        bf_rounded = int(pow(2, np.ceil(np.log2(block_factor))))
-        rf_rounded = int(pow(2, np.ceil(np.log2(rf))))
-
-        layer.weights['weight'].data = np.transpose(layer.weights['weight'].data).flatten()
-
-        if(layer.attributes['n_in']*layer.attributes['n_out'] > 2048 and rf_rounded != rf):
-            layer.set_attr('rfpad', rf_rounded-rf)
-            layer.set_attr('bfpad', bf_rounded-block_factor)
-
-            temp = np.empty([bf_rounded, rf_rounded])
-            for i in range(rf_rounded):
-                for j in range (bf_rounded):
-                    if (i < rf and j < block_factor):
-                        w_index = i + rf * j
-                        temp[j][i] = layer.weights['weight'].data[w_index]
-                    else:
-                        temp[j][i] = 0
-            layer.weights['weight'].data = temp.flatten()
-
-        layer.weights['weight'].data_length = layer.weights['weight'].data.size
-        return
-
     def build(self, model, synth=True, fpgasynth=False, log_level=1, cont_if_large_area=False):
+
         """
         Builds the project using Intel HLS compiler.
 
@@ -174,7 +161,6 @@ class QuartusBackend(FPGABackend):
         else:
             n_in, n_out = self.get_layer_mult_size(layer)
             self.set_closest_reuse_factor(layer, n_in, n_out)
-            self.gen_quartus_weight_array(layer)
             layer.set_attr('strategy', 'resource')
 
         if layer.model.config.is_resource_strategy(layer):
@@ -208,3 +194,26 @@ class QuartusBackend(FPGABackend):
     def init_embed(self, layer):
         if layer.attributes['n_in'] is None:
            raise Exception('Input length of Embedding layer must be specified.')
+
+    @layer_optimizer(GRU)
+    def init_gru(self, layer):
+        reuse_factor = layer.model.config.get_reuse_factor(layer)
+        layer.set_attr('recurrent_reuse_factor', reuse_factor)
+
+        # Dense multiplication properties
+        layer.set_attr('rfpad', 0)
+        layer.set_attr('bfpad', 0)
+
+        index_t = IntegerPrecisionType(width=1, signed=False)
+
+        if 'table_t' not in layer.attributes:
+            layer.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
+        if 'table_size' not in layer.attributes:
+            layer.set_attr('table_size', 1024)
+        if True: # layer.model.config.is_resource_strategy(layer): ... Quartus only supports Dense resource multiplication
+            n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
+            self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
+            layer.set_attr('strategy', 'resource')
+
+        layer.set_attr('index_t', index_t)
