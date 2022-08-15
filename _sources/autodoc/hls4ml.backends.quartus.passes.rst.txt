@@ -12,6 +12,14 @@ hls4ml.backends.quartus.passes.core\_templates module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.quartus.passes.merge\_templates module
+------------------------------------------------------
+
+.. automodule:: hls4ml.backends.quartus.passes.merge_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.backends.quartus.passes.quantization\_templates module
 -------------------------------------------------------------
 
