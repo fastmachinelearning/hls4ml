@@ -169,19 +169,23 @@ def parse_vivado_report(hls_dir):
     if os.path.isfile(vivado_syn_file):
         vivado_synth_rpt = {}
         with open(vivado_syn_file) as f:
+            section = 0
             for line in f.readlines():
+                match = re.match(r'^(\d)\.', line)
+                if match:
+                    section = int(match.group(1))
                 # Sometimes, phrases such as 'CLB Registers' can show up in the non-tabular sections of the report
                 if '|' in line:
-                    if 'CLB LUTs' in line:
+                    if 'CLB LUTs' in line and section == 1:
                         vivado_synth_rpt['LUT'] = line.split('|')[2].strip()
-                    elif 'CLB Registers' in line:
+                    elif 'CLB Registers' in line and section == 1:
                         vivado_synth_rpt['FF'] = line.split('|')[2].strip()
-                    elif 'RAMB18 ' in line:
+                    elif 'Block RAM Tile' in line and section == 2:
                         vivado_synth_rpt['BRAM_18K'] = line.split('|')[2].strip()
-                    elif 'DSPs' in line:
-                        vivado_synth_rpt['DSP48E'] = line.split('|')[2].strip()
-                    elif 'URAM' in line:
+                    elif 'URAM' in line and section == 2:
                         vivado_synth_rpt['URAM'] = line.split('|')[2].strip()
+                    elif 'DSPs' in line and section == 3:
+                        vivado_synth_rpt['DSP48E'] = line.split('|')[2].strip()
         report['VivadoSynthReport'] = vivado_synth_rpt
     else:
         print('Vivado synthesis report not found.')
