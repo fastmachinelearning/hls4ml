@@ -804,13 +804,18 @@ class QuartusWriter(Writer):
             myfile.writelines(my_lines)
 
     def write_rnn(self, model):
-        if(model._class_name == 'LSTM'):
-            name = 'nnet_lstm_cell'
-            self.write_activation_lstm(model)
+        if hasattr(model, '_class_name'):
+            if(model._class_name == 'LSTM'):
+                name = 'nnet_lstm_cell'
+                self.write_activation_lstm(model)
 
-        if(model._class_name == 'SimpleRNN'):
-            name = 'nnet_simple_rnn_cell'
-            self.write_activation_simple_rnn(model)
+            elif(model._class_name == 'SimpleRNN'):
+                name = 'nnet_simple_rnn_cell'
+                self.write_activation_simple_rnn(model)
+            else:
+                pass
+        else: 
+            pass
 
 
     def write_hls(self, model):

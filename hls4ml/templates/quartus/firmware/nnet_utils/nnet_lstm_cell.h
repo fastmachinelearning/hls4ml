@@ -217,7 +217,7 @@ template<class data_T, typename CONFIG_T, typename WEIGHT_T>
 
     OUTPUT_WRITE_LOOP:
     #pragma unroll
-    for (int x = 0; x < CONFIG_T::n_out; x++) {
+    for (int x = (CONFIG_T::n_out - 1); x >= 0; x--) {
       hidden_state_o[x]=h[x];
       cell_state_o[x]=cell_act_add[x];
     }
