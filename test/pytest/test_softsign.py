@@ -11,14 +11,6 @@ def flat_distribution(shape):
     return np.random.rand(*shape)
 
 
-def high_accuracy_distribution(shape):
-    '''Start with a flat distribution, then pick a random member of each row to amplify'''
-    x = np.random.rand(*shape)
-    imax = np.random.randint(0, shape[1], size=shape[0])
-    x[:, imax] *= 10
-    return x
-
-
 @pytest.fixture()
 def generate_data(function, input_shape):
     return function((1000, *input_shape))
@@ -26,8 +18,12 @@ def generate_data(function, input_shape):
 
 # TODO: include latency strategy with flat_distribution when it can be made to pass
 @pytest.mark.parametrize('backend,strategy,function,input_shape,io_type', [   
-                            ('Quartus', 'resource', flat_distribution, (8,), 'io_parallel'),
-                            ('Quartus', 'resource', high_accuracy_distribution, (8,), 'io_parallel')
+                            ('Vivado', 'stable', flat_distribution, (4,), 'io_parallel'),
+                            ('Quartus', 'stable', flat_distribution, (4,), 'io_parallel'),
+
+                            # IO_stram avaliable just for VIVADO
+                            ('Vivado', 'stable', flat_distribution, (4,), 'io_stream'),
+                            ('Vivado', 'stable', flat_distribution, (4, 4, 3), 'io_stream')
                         ])
 def test_softsign(backend, strategy, generate_data, input_shape, io_type):
     X = generate_data
@@ -53,6 +49,6 @@ def test_softsign(backend, strategy, generate_data, input_shape, io_type):
 
     print('Accuracy hls4ml relative to keras: {}'.format(acc_hls4ml))
 
-    assert acc_hls4ml >= 0.7
+    assert acc_hls4ml >= 0.98
 
 
