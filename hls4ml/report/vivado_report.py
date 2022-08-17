@@ -12,8 +12,8 @@ def read_vivado_report(hls_dir, full_report=False):
     prj_dir = None
     top_func_name = None
 
-    if os.path.isfile(hls_dir + '/build_prj.tcl'):
-        prj_dir, top_func_name = _parse_build_script(hls_dir + '/build_prj.tcl')
+    if os.path.isfile(hls_dir + '/project.tcl'):
+        prj_dir, top_func_name = _parse_project_script(hls_dir)
 
     if prj_dir is None or top_func_name is None:
         print('Unable to read project data. Exiting.')
@@ -31,21 +31,17 @@ def read_vivado_report(hls_dir, full_report=False):
         print('Reports for solution "{}":\n'.format(sln))
         _find_reports(sln_dir + '/' + sln, top_func_name, full_report)
 
-def _parse_build_script(path):
+def _parse_project_script(path):
     prj_dir = None
     top_func_name = None
 
-    build_path = path + '/build_prj.tcl'
     project_path = path + '/project.tcl'
-    with open(build_path, 'r') as f:
-        for line in f.readlines():
-            if 'set_top' in line:
-                top_func_name = line.split()[-1]
 
     with open(project_path, 'r') as f:
         for line in f.readlines():
-            if 'set myproject' in line:
-                prj_dir = line.split('"')[-2] + '_prj'
+            if 'set project_name' in line:
+                top_func_name = line.split('"')[-2]
+                prj_dir = top_func_name + '_prj'
 
     return prj_dir, top_func_name
 
@@ -119,8 +115,8 @@ def parse_vivado_report(hls_dir):
     prj_dir = None
     top_func_name = None
 
-    if os.path.isfile(hls_dir + '/build_prj.tcl'):
-        prj_dir, top_func_name = _parse_build_script(hls_dir)
+    if os.path.isfile(hls_dir + '/project.tcl'):
+        prj_dir, top_func_name = _parse_project_script(hls_dir)
 
     if prj_dir is None or top_func_name is None:
         print('Unable to read project data. Exiting.')
@@ -179,19 +175,23 @@ def parse_vivado_report(hls_dir):
     if os.path.isfile(vivado_syn_file):
         vivado_synth_rpt = {}
         with open(vivado_syn_file) as f:
+            section = 0
             for line in f.readlines():
+                match = re.match(r'^(\d)\.', line)
+                if match:
+                    section = int(match.group(1))
                 # Sometimes, phrases such as 'CLB Registers' can show up in the non-tabular sections of the report
                 if '|' in line:
-                    if 'CLB LUTs' in line:
+                    if 'CLB LUTs' in line and section == 1:
                         vivado_synth_rpt['LUT'] = line.split('|')[2].strip()
-                    elif 'CLB Registers' in line:
+                    elif 'CLB Registers' in line and section == 1:
                         vivado_synth_rpt['FF'] = line.split('|')[2].strip()
-                    elif 'RAMB18 ' in line:
+                    elif 'Block RAM Tile' in line and section == 2:
                         vivado_synth_rpt['BRAM_18K'] = line.split('|')[2].strip()
-                    elif 'DSPs' in line:
-                        vivado_synth_rpt['DSP48E'] = line.split('|')[2].strip()
-                    elif 'URAM' in line:
+                    elif 'URAM' in line and section == 2:
                         vivado_synth_rpt['URAM'] = line.split('|')[2].strip()
+                    elif 'DSPs' in line and section == 3:
+                        vivado_synth_rpt['DSP48E'] = line.split('|')[2].strip()
         report['VivadoSynthReport'] = vivado_synth_rpt
     else:
         print('Vivado synthesis report not found.')
