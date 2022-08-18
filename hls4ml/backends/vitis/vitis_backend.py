@@ -9,6 +9,7 @@ from hls4ml.report import parse_vivado_report
 class VitisBackend(VivadoBackend):
     def __init__(self):
         super(VivadoBackend, self).__init__(name='Vitis')
+        self._register_layer_attributes()
         self._register_flows()
 
     def _register_flows(self):
