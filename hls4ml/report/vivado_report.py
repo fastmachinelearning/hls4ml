@@ -164,8 +164,13 @@ def parse_vivado_report(hls_dir):
         # Area
         area_node = root.find('./AreaEstimates')
         for child in area_node.find('./Resources'):
+            # DSPs are called 'DSP48E' in Vivado and just 'DSP' in Vitis. Overriding here to have consistent keys
+            if child.tag == 'DSP48E':
+                child.tag = 'DSP'
             c_synth_report[child.tag] = child.text
         for child in area_node.find('./AvailableResources'):
+            if child.tag == 'DSP48E':
+                child.tag = 'DSP'
             c_synth_report['Available' + child.tag] = child.text
         report['CSynthesisReport'] = c_synth_report
     else:
