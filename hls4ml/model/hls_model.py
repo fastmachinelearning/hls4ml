@@ -359,6 +359,7 @@ class HLSModel(object):
         """
 
         if kind not in layer_map:
+            print(f"layer_map:{layer_map}")
             raise Exception('Layer {} not found in registry.'.format(kind))
 
         node = layer_map[kind](self, name, attributes, inputs, outputs)
@@ -546,6 +547,7 @@ class HLSModel(object):
                 dlclose_func.argtypes = [ctypes.c_void_p]
                 dlclose_func.restype = ctypes.c_int
                 dlclose_func(self._top_function_lib._handle)
+            print(f"lib_name: {lib_name}")
             self._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
         finally:
             os.chdir(curr_dir)

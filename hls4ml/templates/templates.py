@@ -38,6 +38,7 @@ def get_backend(name):
     return backend_map[name]
 
 def get_available_backends():
+    # so far, returns ['Vivado', 'VivadoAccelerator']
     return list(backend_map.keys())
 
 def get_supported_boards_dict():

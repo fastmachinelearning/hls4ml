@@ -1,0 +1,22 @@
+look at where they define the config in:
+nnet::edgeblock<input2_t, input3_t, layer4_t, config4>
+for node, edge, and aggregate
+
+might be faster to add in a new aggregate function
+use aggregate sum block as the basis for the residual function
+
+
+aggr was zero before
+pipeline: 
+compile -> write_hls->bash build_lib.sh
+
+what role does #pragma HLS UNROLL play? -> parallization
+what is par_factor from nnet_graph.h? -> par_factor == parallelization factor
+
+
+at /home/swissman777/projects/pyg_to_hls_hls4ml/hls4ml/converters/pyg/interaction_network_blocks.py,
+the pyg_handlers show the forward pipeline via update_dict. For arbitrary residual blocks, this will be a bit difficult.
+You may want to integrate residual block as a new nodeblock class
+
+
+merge_function_template

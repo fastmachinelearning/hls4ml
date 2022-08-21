@@ -324,7 +324,7 @@ def pyg_to_hls(config):
     activate_final = config['ActivateFinal']
 
     # get precisions
-    backend = get_backend(config.get('Backend', 'Vivado'))
+    backend = get_backend(config.get('Backend', 'Vivado'))  #returns backend object
     fp_type = backend.convert_precision_string(config['HLSConfig']['Model']['Precision'])
     int_type = backend.convert_precision_string(config['HLSConfig']['Model']['IndexPrecision'])
 
@@ -336,7 +336,7 @@ def pyg_to_hls(config):
     edge_dim = reader.edge_dim
 
     # initiate layer list with inputs: node_attr, edge_attr, edge_index
-    layer_list = []
+    layer_list = [] # the order of this list doesn't matter
     input_shapes = reader.input_shape
 
     NodeAttr_layer = {
@@ -375,9 +375,14 @@ def pyg_to_hls(config):
     forward_dict_new = OrderedDict()
     for key, val in forward_dict.items():
         if val == "NodeBlock":
+            # add EdgeAggregate b4 NodeBlock in forward dict
             aggr_count += 1
             aggr_key = f"aggr{aggr_count}"
+            # just to give a distinction as aggregation blocks are not
+            # named variables in the pyg model
             aggr_val = "EdgeAggregate"
+            # my guess is that EdgeAggregate block is equivalent to 
+            # aggregate() portion of pyg model
             forward_dict_new[aggr_key] = aggr_val
         forward_dict_new[key] = val
 
@@ -386,6 +391,7 @@ def pyg_to_hls(config):
         # get inputs, outputs
         index = len(layer_list)+1
         layer_dict, update_dict = block_handlers[val](key, config, update_dict, index, n_node, n_edge, node_dim, edge_dim)
+        # possible block hander is [parse_NodeBlock, parse_EdgeBlock, parse_EdgeAggregate]
         layer_list.append(layer_dict)
 
     # handle dataflow optimization

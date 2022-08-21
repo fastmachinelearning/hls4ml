@@ -72,6 +72,12 @@ namespace nnet {
      static const unsigned par_factor = 16;
   };
 
+  struct residual_config
+  {
+     static const unsigned n_elem = 7;
+     static const bool gnn_resource_limit = false;
+  };
+
   struct block_activation_config
   {
     // IO size
@@ -244,6 +250,10 @@ namespace nnet {
   }
 
     // generalized block-activation function for dataflow
+    /*
+    data_T data[CONFIG_T::n_in] is the input,
+    res_T res[CONFIG_T::n_in] is the output
+    */
   template<class data_T, class res_T, typename CONFIG_T>
   void  block_activation(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
     if (CONFIG_T::activation==relu_act){
@@ -662,6 +672,12 @@ namespace nnet {
   }
 
   ////////////////////////////////////pipeline////////////////////////////////////
+  // this one seems to be throughput oriented version since there is no
+  // par_factor (parallization factor)
+  /*
+    data_T data[CONFIG_T::n_in] is the input,
+    res_T res[CONFIG_T::n_in] is the output
+    */
   template<class data_T, class index_T, class res_T, typename CONFIG_T>
     void edge_aggregate_pipeline(
             data_T    edge_attr_1D[CONFIG_T::n_edge*CONFIG_T::edge_dim],
@@ -698,7 +714,7 @@ namespace nnet {
         }
       }
     }
-    else{ //CONFIG_T:aggr==aggr_max, we want to initialize this with the most negative number we can represent
+    else{ //CONFIG_T:aggr==aggr_max, we want to initialize this with the most negative number we can represent ->why?
       res_T most_negative_num = -hls::numeric_limits<res_T>::max();
       for(int i=0; i < CONFIG_T::n_node; i++){
         for(int j=0; j<CONFIG_T::edge_dim; j++){
@@ -723,6 +739,7 @@ namespace nnet {
       num_edge_per_node[r] += 1;
       edge_aggr_mask[r] = 1;
 
+      // if sum or mean
       if((CONFIG_T::aggr == aggr_sum)||(CONFIG_T::aggr==aggr_mean)){
         for(int j=0; j<CONFIG_T::edge_dim; j++){
           #pragma HLS UNROLL
@@ -964,6 +981,56 @@ namespace nnet {
       }
   }
 
-}
 
+
+  /*
+  Hyeon-Seo Code
+  */
+  template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
+    void residualBlock(
+      input1_T data1[CONFIG_T::n_elem],
+      input2_T data2[CONFIG_T::n_elem],
+      res_T res[CONFIG_T::n_elem])
+    /*
+    
+    */
+  {
+    if(CONFIG_T::gnn_resource_limit){
+        //#pragma DATAFLOW
+      }
+      for (int ii=0; ii<CONFIG_T::n_elem; ii++) {
+        if(CONFIG_T::gnn_resource_limit){
+          #pragma HLS UNROLL
+          //#pragma HLS PIPELINE II=1
+        }
+        res[ii] = data1[ii] + data2[ii];
+      }
+  }
+
+
+  // template<class input1_T, class input2_T, class res_T, typename CONFIG_T>
+  // void concatenate1d(
+  //     input1_T data1[CONFIG_T::n_elem1_0],
+  //     input2_T data2[CONFIG_T::n_elem2_0],
+  //     res_T res[CONFIG_T::n_elem1_0 + CONFIG_T::n_elem2_0])
+  // {
+  //     if(CONFIG_T::gnn_resource_limit){
+  //       //#pragma DATAFLOW
+  //     }
+  //     for (int ii=0; ii<CONFIG_T::n_elem1_0; ii++) {
+  //       if(CONFIG_T::gnn_resource_limit){
+  //         #pragma HLS UNROLL
+  //         //#pragma HLS PIPELINE II=1
+  //       }
+  //       res[ii] = data1[ii];
+  //     }
+  //     for (int ii=0; ii<CONFIG_T::n_elem2_0; ii++) {
+  //       if(CONFIG_T::gnn_resource_limit){
+  //         #pragma HLS UNROLL
+  //       }
+  //       res[CONFIG_T::n_elem1_0 + ii] = data2[ii];
+  //     }
+  // }
+
+}
 #endif

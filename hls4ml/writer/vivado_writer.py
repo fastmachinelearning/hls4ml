@@ -249,7 +249,8 @@ class VivadoWriter(Writer):
                                 newline += '    ' + def_cpp + ';\n'
                                 if var.pragma:
                                     newline += '    ' + self._make_array_pragma(var) + '\n'
-                    func = layer.function_cpp()
+                    func = layer.function_cpp() #ie: 'nnet::edgeblock<input2_t, input3_t, layer4_t, config4>(node_attr, edge_attr, edge_index, layer4_out, R1_w0, R1_b0, R1_w1, R1_b1, R1_w2, R1_b2, R1_w3, R1_b3);'
+                    print(f"layer name: {layer.name}. func: {func}")
                     if func:
                         if len(func) == 1:
                             newline += '    ' + func[0] + ' // ' + layer.name + '\n'
@@ -597,6 +598,9 @@ class VivadoWriter(Writer):
         ###################
         # build_prj.tcl
         ###################
+        """
+        just changes project name and clock from template
+        """
 
         filedir = os.path.dirname(os.path.abspath(__file__))
 
@@ -651,6 +655,9 @@ class VivadoWriter(Writer):
         ###################
         ## nnet_utils
         ###################
+        """
+        copies relevant nnet h files from the package directory to local project directory
+        """
 
         filedir = os.path.dirname(os.path.abspath(__file__))
 

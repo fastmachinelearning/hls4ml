@@ -33,7 +33,7 @@ def parse_GraphBlock(block_name, config, n_node, n_edge, node_dim, edge_dim):
 def parse_NodeBlock(block_name, config, update_dict, index, n_node, n_edge, node_dim, edge_dim):
     layer_dict = parse_GraphBlock(block_name, config, n_node, n_edge, node_dim, edge_dim)
     layer_dict["class_name"] = "NodeBlock"
-    layer_dict["inputs"] = [update_dict["last_node_update"], update_dict["last_edge_aggr_update"]]
+    layer_dict["inputs"] = [update_dict["last_node_update"], update_dict["last_edge_aggr_update"]]#this is where the concat method is described
     layer_dict["outputs"] = [f"layer{index}_out"]
     update_dict["last_node_update"] = f"layer{index}_out"
     return layer_dict, update_dict
@@ -60,4 +60,17 @@ def parse_EdgeAggregate(block_name, config, update_dict, index, n_node, n_edge, 
                   "outputs": [f"layer{index}_out"],
                   "activate_final": "false"}
     update_dict["last_edge_aggr_update"] = f"layer{index}_out"
+    return layer_dict, update_dict
+
+
+@pyg_handler('ResidualBlock')
+def parse_ResidualBlock(block_name, config, update_dict, index, n_node, n_edge, node_dim, edge_dim):
+    layer_dict = {"name": f"aggr{index}",
+                  "class_name": "ResidualBlock",
+                  "n_node": n_node,
+                  "node_dim": node_dim,
+                  "inputs": [update_dict["last_node_update"],update_dict["last_node_update"],],
+                  "outputs": [f"layer{index}_out"],
+                  "activate_final": "false"}
+    update_dict["last_node_update"] = f"layer{index}_out" #bc it comes right after nodeblock
     return layer_dict, update_dict

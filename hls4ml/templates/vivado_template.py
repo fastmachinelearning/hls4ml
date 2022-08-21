@@ -410,6 +410,12 @@ edge_aggregate_config_template = """struct aggregation_config{index}: nnet::edge
     static const unsigned par_factor = {par_factor};
 }};"""
 
+residual_config_template = """struct config{index} : nnet::residual_config{{
+    static const unsigned n_elem = {n_elem};
+    static const bool gnn_resource_limit = {gnn_resource_limit};
+
+}};\n"""
+
 
 dense_function_template = 'nnet::dense<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
@@ -465,6 +471,7 @@ nodeblock_include_list = ['nnet_utils/nnet_common.h',
                           'nnet_utils/nnet_merge.h',
                           'nnet_utils/nnet_array.h']
 edge_aggregate_include_list = ['nnet_utils/nnet_graph.h']
+residual_include_list = ['nnet_utils/nnet_merge.h', 'nnet_utils/nnet_merge_stream.h', 'nnet_utils/nnet_graph.h']
 
 class VivadoBackend(Backend):
     def __init__(self, name='Vivado'):
@@ -500,7 +507,8 @@ class VivadoBackend(Backend):
         self.register_templates('EdgeBlock'              , edgeblock_function_template, edgeblock_config_template, edgeblock_include_list)
         self.register_templates('NodeBlock'              , nodeblock_function_template, nodeblock_config_template, nodeblock_include_list)
         self.register_templates('EdgeAggregate'              , edge_aggregate_function_template, edge_aggregate_config_template, edge_aggregate_include_list)
-    
+        self.register_templates('ResidualBlock'            , merge_function_template,       residual_config_template, residual_include_list)
+
     def create_initial_config(self, part='xcku115-flvb2104-2-i', board=None, clock_period=5, io_type='io_parallel'):
         config = {}
         config['XilinxPart'] = part if part is not None else 'xcku115-flvb2104-2-i'
