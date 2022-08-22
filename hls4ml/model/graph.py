@@ -348,7 +348,7 @@ class ModelGraph(object):
             applied_flows = {}
 
             for flow_group in self._applied_flows:
-                applied_flows.update({flow: [] for flow in flow_group.keys()})
+                applied_flows.update({flow: set() for flow in flow_group.keys()})
 
             return applied_flows
 
@@ -364,8 +364,8 @@ class ModelGraph(object):
             if flow in applied_flows:
                 return
 
-        self._apply_sub_flow(flow, applied_flows)
         self._applied_flows.append(applied_flows)
+        self._apply_sub_flow(flow, applied_flows)
 
     def _apply_sub_flow(self, flow_name, applied_flows):
         if flow_name in applied_flows:
@@ -379,7 +379,7 @@ class ModelGraph(object):
         if len(flow.optimizers) > 0:
             applied_passes = optimize_model(self, flow.optimizers)
         else:
-            applied_passes = []
+            applied_passes = set()
         applied_flows[flow.name] = applied_passes
 
     def make_node(self, kind, name, attributes, inputs, outputs=None):
