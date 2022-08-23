@@ -74,7 +74,7 @@ class VivadoBackend(FPGABackend):
 
         fifo_depth_opt_passes = [
             'vivado:fifo_depth_optimization'
-        ]
+        ] + writer_passes
 
         register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=['vivado:ip'], backend=self.name)
 

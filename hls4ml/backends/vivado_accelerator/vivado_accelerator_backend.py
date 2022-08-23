@@ -114,4 +114,4 @@ class VivadoAcceleratorBackend(VivadoBackend):
             'vivadoaccelerator:fifo_depth_optimization'
         ] + writer_passes
 
-        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=[self._writer_flow], backend=self.name)
+        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=[vivado_ip], backend=self.name)
