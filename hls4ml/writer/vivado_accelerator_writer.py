@@ -17,6 +17,10 @@ class VivadoAcceleratorWriter(VivadoWriter):
         inp_axi_t, out_axi_t, inp, out = self.vivado_accelerator_config.get_corrected_types()
         indent = '    '
 
+        io_type = model.config.get_config_value('IOType')
+        interface = model.config.get_config_value('AcceleratorConfig')['Interface']
+        config_weights = (io_type == 'io_stream') and (interface == 'axi_master')
+
         #######################
         ## myproject_axi.h
         #######################
@@ -32,6 +36,11 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 newline = '#include "{}.h"\n'.format(model.config.get_project_name())
             elif 'void myproject(' in line:
                 newline = 'void {}_axi(\n'.format(model.config.get_project_name())
+            elif config_weights and '//hls-fpga-machine-learning insert weights' in line:
+                newline = ''
+                for v in model.get_weight_variables():
+                    newline += indent + ', model_axi_t {name} [{shape}]\n'.format(name=v.name, shape=v.data_length)
+                newline += ', char load_weights'
             elif '//hls-fpga-machine-learning insert definitions' in line:
                 newline = ''
                 newline += 'static const unsigned N_IN = {};\n'.format(inp.size())
@@ -66,6 +75,9 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 else:
                     newline += 'typedef {} input_axi_t;\n'.format(inp_axi_t)
                     newline += 'typedef {} output_axi_t;\n'.format(out_axi_t)
+                    if config_weights:
+                        newline += 'typedef {} model_axi_t; // FIXME: Arbitrary choice type of the inputs and weights are the same\n'\
+                                .format(inp_axi_t)
             else:
                 newline = line
             fout.write(newline)
@@ -87,6 +99,11 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 newline = 'void {}_axi(\n'.format(model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert include' in line:
                 newline = '#include "{}_axi.h"\n'.format(model.config.get_project_name())
+            elif config_weights and '//hls-fpga-machine-learning insert weights' in line:
+                newline = ''
+                for v in model.get_weight_variables():
+                    newline += indent + ', model_axi_t {name} [{shape}]\n'.format(name=v.name, shape=v.data_length)
+                newline += indent + ', char load_weights'
             elif '//hls-fpga-machine-learning insert local vars' in line:
                 newline = ''
                 if self.vivado_accelerator_config.get_interface() == 'axi_stream':
@@ -101,9 +118,22 @@ class VivadoAcceleratorWriter(VivadoWriter):
                         .format(model.get_input_variables()[0].pragma[1])
                     newline += indent + '#pragma HLS STREAM variable=out_local depth={}\n'\
                         .format(model.get_output_variables()[0].pragma[1])
+                    if config_weights:
+                        newline += '\n'
+                        for v in model.get_weight_variables():
+                            newline += indent + 'static {dtype} {name}_local [{shape}];\n'.format(dtype=v.type.name, name=v.name, shape=v.data_length)
             elif '//hls-fpga-machine-learning insert call' in line:
-                newline = indent + '{}(in_local, out_local);\n'.format(
-                    model.config.get_project_name())
+                if config_weights:
+                    newline = ''
+                    weight_string=''
+                    for v in model.get_weight_variables():
+                        weight_string+=','+v.name+'_local'
+                    newline = indent + indent + '{}(in_local, out_local'.format(model.config.get_project_name())
+                    newline += weight_string
+                    newline += ');\n'
+                else:
+                    newline = indent + '{}(in_local, out_local);\n'.format(
+                        model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert interface' in line:
                 if self.vivado_accelerator_config.get_interface() == 'axi_lite':
                     newline = ''
@@ -117,6 +147,11 @@ class VivadoAcceleratorWriter(VivadoWriter):
                         .format(model.get_input_variables()[0].pragma[1])
                     newline += indent + '#pragma HLS INTERFACE m_axi depth={} port=out offset=slave bundle=OUT_BUS\n'\
                         .format(model.get_output_variables()[0].pragma[1])
+                    if config_weights:
+                        newline += '\n'
+                        for v in model.get_weight_variables():
+                            newline += indent + '#pragma HLS INTERFACE m_axi depth=1 port={} offset=slave bundle=MODEL_BUS\n'\
+                                .format(v.name)
                 elif self.vivado_accelerator_config.get_interface() == 'axi_stream':
                     newline = ''
                     newline += indent + '#pragma HLS INTERFACE axis port=in\n'
@@ -124,6 +159,15 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     newline += indent + '#pragma HLS INTERFACE ap_ctrl_none port=return\n'
                     if model.config.get_config_value("IOType") == 'io_stream':
                         newline += indent + '#pragma HLS DATAFLOW\n'
+            elif config_weights and '//hls-fpga-machine-learning insert enqueue weights' in line:
+                    newline = ''
+                    newline += indent + 'if (load_weights) {'
+                    for v in model.get_weight_variables():
+                        newline += indent + indent + 'for (unsigned i = 0; i < {shape}; i++)\n'\
+                                .format(shape=v.data_length)
+                        newline += indent + indent + indent + '{name}_local[i] = {name}[i];\n'\
+                                .format(dtype=v.type.name, name=v.name, shape=v.data_length)
+                    newline += indent + '} else {'
             elif '//hls-fpga-machine-learning insert enqueue' in line:
                 io_type = model.config.get_config_value("IOType")
                 if io_type == 'io_parallel':
@@ -138,6 +182,8 @@ class VivadoAcceleratorWriter(VivadoWriter):
                         newline += indent + indent + 'in_local[i] = in[i]; // Read input with cast\n'
                     newline += indent + '}\n'
                 elif io_type == 'io_stream':
+                    if config_weights:
+                        indent = indent + indent
                     newline = ''
                     newline += indent + 'for(unsigned i = 0; i < N_IN / {input_t}::size; ++i) {{\n'
                     # newline += indent + indent + '#pragma HLS PIPELINE\n'
@@ -154,6 +200,8 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     newline += indent + indent + 'in_local.write(ctype);\n'
                     newline += indent + '}}\n'
                     newline = newline.format(input_t=inp.type.name)
+                    if config_weights:
+                        indent = '    '
             elif '//hls-fpga-machine-learning insert dequeue' in line:
                 io_type = model.config.get_config_value("IOType")
                 if io_type == 'io_parallel':
@@ -168,6 +216,8 @@ class VivadoAcceleratorWriter(VivadoWriter):
                         newline += indent + indent + 'out[i] = out_local[i]; // Write output with cast\n'
                     newline += indent + '}\n'
                 elif io_type == 'io_stream':
+                    if config_weights:
+                        indent = indent + indent
                     newline = ''
                     newline += indent + 'for(unsigned i = 0; i < N_OUT / {result_t}::size; ++i) {{\n'
                     # newline += indent + indent + '#pragma HLS PIPELINE\n'
@@ -182,6 +232,9 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     newline += indent + indent + '}}\n'
                     newline += indent + '}}\n'
                     newline = newline.format(result_t=out.type.name)
+                    if config_weights:
+                        indent = '    '
+                        newline += indent + '}'
             else:
                 newline = line
             fout.write(newline)
@@ -232,6 +285,10 @@ class VivadoAcceleratorWriter(VivadoWriter):
 
     def write_wrapper_test(self, model):
 
+        io_type = model.config.get_config_value('IOType')
+        interface = model.config.get_config_value('AcceleratorConfig')['Interface']
+        config_weights = (io_type == 'io_stream') and (interface == 'axi_master')
+
         ###################
         # write myproject_test_wrapper.cpp
         ###################
@@ -256,7 +313,11 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 newline = ''
             elif '{}('.format(model.config.get_project_name()) in line:
                 indent_amount = line.split(model.config.get_project_name())[0]
-                newline = indent_amount + '{}_axi(inputs,outputs);\n'.format(model.config.get_project_name())
+                if config_weights:
+                    newline = line.replace(model.config.get_project_name(),model.config.get_project_name()+'_axi').\
+                            replace(inp.name,'inputs').replace(out.name,'outputs')
+                else:
+                    newline = indent_amount + '{}_axi(inputs,outputs);\n'.format(model.config.get_project_name())
             elif inp.size_cpp() in line or inp.name in line or inp.type.name in line:
                 newline = line.replace(inp.size_cpp(), 'N_IN').replace(inp.name, 'inputs').replace(inp.type.name,
                                                                                                       'input_axi_t')
@@ -288,6 +349,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
 
         inp = model.get_input_variables()[0]
         out = model.get_output_variables()[0]
+        brams = model.get_weight_variables()
 
         for line in f.readlines():
             if '{}.h'.format(model.config.get_project_name()) in line:
@@ -301,8 +363,13 @@ class VivadoAcceleratorWriter(VivadoWriter):
                                        'output_axi_t {}_ap[N_OUT]'.format(out.name))
             elif '{}('.format(model.config.get_project_name()) in line:
                 indent_amount = line.split(model.config.get_project_name())[0]
-                newline = indent_amount + '{}_axi({}_ap,{}_ap);\n'.format(model.config.get_project_name(), inp.name,
-                                                                          out.name)
+                if config_weights:
+                    newline = line.replace(model.config.get_project_name(),model.config.get_project_name()+'_axi')
+                    for b in brams:
+                        newline = newline.replace(b.name, b.name+'_ap')
+                else:
+                    newline = indent_amount + '{}_axi({}_ap,{}_ap);\n'.format(model.config.get_project_name(), inp.name,
+                                                                              out.name)
             elif inp.size_cpp() in line or inp.name in line or inp.type.name in line:
                 newline = line.replace(inp.size_cpp(), 'N_IN').replace(inp.type.name, 'input_axi_t')
             elif out.size_cpp() in line or out.name in line or out.type.name in line:
@@ -355,7 +422,67 @@ class VivadoAcceleratorWriter(VivadoWriter):
         os.remove(model.config.get_output_dir() + '.tar.gz')
         super(VivadoAcceleratorWriter, self).write_tar(model)
 
-        
+    def write_header_file(model, X, y, y_keras, y_hls, n_samples, filename='data.h'):
+        #TODO temporarily move config import here to avoid cyclic dependency, until config is moved to its own package
+        from hls4ml.backends import VivadoAcceleratorConfig
+        vivado_accelerator_config = VivadoAcceleratorConfig(model.config, model.get_input_variables(),
+                                                            model.get_output_variables())
+        inp_axi_t, out_axi_t, inp, out = vivado_accelerator_config.get_corrected_types()
+        header_file = open(filename, 'w')
+        (n_X_samples, n_X_inputs) = X.shape
+        (n_y_samples, n_y_outputs) = y.shape
+        (n_y_keras_samples, n_y_keras_outputs) = y_keras.shape
+        (n_y_hls_samples, n_y_hls_outputs) = y_hls.shape
+
+        header_file.write('#ifndef __DATA_H__\n')
+        header_file.write('#define __DATA_H__\n')
+        header_file.write('/* out of {} */\n'.format(n_X_samples))
+        header_file.write('#define N_SAMPLES {}\n'.format(n_samples))
+        header_file.write('\n')
+        header_file.write('#define N_X_INPUTS {}\n'.format(n_X_inputs))
+        header_file.write('const {} data_X_inputs[N_SAMPLES*N_X_INPUTS] = {{\n'.format(inp_axi_t))
+        for s in range(n_samples):
+            header_file.write('    ')
+            for i in range(n_X_inputs):
+                header_file.write('{}, '.format(X[s][i]))
+            header_file.write('\n')
+        header_file.write('};\n')
+        header_file.write('\n')
+        header_file.write('/* Ground truth - for validation */\n')
+        header_file.write('#define N_Y_OUTPUTS {}\n'.format(n_y_outputs))
+        header_file.write('const float data_y_outputs[N_SAMPLES*N_Y_OUTPUTS] = {\n')
+        for s in range(n_samples):
+            header_file.write('    ')
+            for o in range(n_y_outputs):
+                header_file.write('{}, '.format(y[s][o]))
+            header_file.write('\n')
+        header_file.write('};\n')
+        header_file.write('\n')
+        header_file.write('/* Keras outputs - for validation */\n')
+        header_file.write('#define N_Y_KERAS_OUTPUTS {}\n'.format(n_y_keras_outputs))
+        header_file.write('')
+        header_file.write('const float data_y_keras_outputs[N_SAMPLES*N_Y_KERAS_OUTPUTS] = {\n')
+        for s in range(n_samples):
+            header_file.write('    ')
+            for o in range(n_y_keras_outputs):
+                header_file.write('{}, '.format(y_keras[s][o]))
+            header_file.write('\n')
+        header_file.write('};\n')
+        header_file.write('\n')
+        header_file.write('/* csim outputs - for verification */\n')
+        header_file.write('#define N_Y_HLS_OUTPUTS {}\n'.format(n_y_hls_outputs))
+        header_file.write('')
+        header_file.write('const {} data_y_hls_outputs[N_SAMPLES*N_Y_HLS_OUTPUTS] = {{\n'.format(out_axi_t))
+        for s in range(n_samples):
+            header_file.write('    ')
+            for o in range(n_y_hls_outputs):
+                header_file.write('{}, '.format(y_hls[s][o]))
+            header_file.write('\n')
+        header_file.write('};\n')
+        header_file.write('#endif\n')
+        header_file.close()
+
+
     def write_hls(self, model):
         """
         Write the HLS project. Calls the VivadoBackend writer, and extra steps for VivadoAccelerator/AXI interface
