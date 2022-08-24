@@ -606,7 +606,7 @@ class ModelGraph(object):
     def _get_top_function(self, x):
 
         io_type = self.config.get_config_value('IOType')
-        interface = self.config.get_config_value('AcceleratorConfig')['Interface']
+        interface = self.config.get_config_value('AcceleratorConfig')['Interface'] if self.config.get_config_value('AcceleratorConfig') else None
         config_weights = (io_type == 'io_stream') and (interface == 'axi_master')
 
         if self._top_function_lib is None:
@@ -662,7 +662,7 @@ class ModelGraph(object):
     def predict(self, x):
 
         io_type = self.config.get_config_value('IOType')
-        interface = self.config.get_config_value('AcceleratorConfig')['Interface']
+        interface = self.config.get_config_value('AcceleratorConfig')['Interface'] if self.config.get_config_value('AcceleratorConfig') else None
         config_weights = (io_type == 'io_stream') and (interface == 'axi_master')
 
         top_function, ctype = self._get_top_function(x)

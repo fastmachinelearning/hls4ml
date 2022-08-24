@@ -338,7 +338,7 @@ class VivadoWriter(Writer):
         ###################
 
         io_type = model.config.get_config_value('IOType')
-        interface = model.config.get_config_value('AcceleratorConfig')['Interface']
+        interface = model.config.get_config_value('AcceleratorConfig')['Interface'] if model.config.get_config_value('AcceleratorConfig') else None
         config_weights = (io_type == 'io_stream') and (interface == 'axi_master')
 
         filedir = os.path.dirname(os.path.abspath(__file__))
@@ -448,7 +448,7 @@ class VivadoWriter(Writer):
         ###################
 
         io_type = model.config.get_config_value('IOType')
-        interface = model.config.get_config_value('AcceleratorConfig')['Interface']
+        interface = model.config.get_config_value('AcceleratorConfig')['Interface'] if model.config.get_config_value('AcceleratorConfig') else None
         config_weights = (io_type == 'io_stream') and (interface == 'axi_master')
 
         filedir = os.path.dirname(os.path.abspath(__file__))
