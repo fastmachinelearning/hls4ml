@@ -173,6 +173,13 @@ int main(int argc, char** argv) {
     XTime_GetTime(&stop);
     cache_elapsed = get_elapsed_time(start, stop);
 
+    /*hls-fpga-machine-learning insert configure weights*/
+
+    /*hls-fpga-machine-learning insert load weights on*/
+
+    /*hls-fpga-machine-learning insert start and wait*/
+
+
     for (unsigned j = 0; j < N_SAMPLES; j++) {
     	float *inputs_mem_i = inputs_mem + j * N_X_INPUTS;
     	float *outputs_mem_i = outputs_mem + j * N_Y_OUTPUTS;
@@ -182,9 +189,9 @@ int main(int argc, char** argv) {
         XMyproject_axi_Set_in_r(&accelerator, (unsigned)inputs_mem_i); /* TODO: design-dependent name */
     	XMyproject_axi_Set_out_r(&accelerator, (unsigned)outputs_mem_i); /* TODO: design-dependent name */
 
-    	XMyproject_axi_Start(&accelerator); /* TODO: design-dependent name */
+        /*hls-fpga-machine-learning insert load weights off*/
 
-    	/* Polling */
+    	XMyproject_axi_Start(&accelerator); /* TODO: design-dependent name */
     	while (!XMyproject_axi_IsDone(&accelerator)); /* TODO: design-dependent name */
 
     	/* Get error status */

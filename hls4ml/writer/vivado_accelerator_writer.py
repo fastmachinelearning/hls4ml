@@ -152,6 +152,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
                         for v in model.get_weight_variables():
                             newline += indent + '#pragma HLS INTERFACE m_axi depth=1 port={} offset=slave bundle=MODEL_BUS\n'\
                                 .format(v.name)
+                        newline += indent + '#pragma HLS INTERFACE s_axilite port=load_weights bundle=CTRL_BUS\n'
                 elif self.vivado_accelerator_config.get_interface() == 'axi_stream':
                     newline = ''
                     newline += indent + '#pragma HLS INTERFACE axis port=in\n'
@@ -415,12 +416,57 @@ class VivadoAcceleratorWriter(VivadoWriter):
 
     def write_driver(self, model):
         filedir = os.path.dirname(os.path.abspath(__file__))
-        copyfile(os.path.join(filedir, self.vivado_accelerator_config.get_driver_path()),
-                 ('{}/' + self.vivado_accelerator_config.get_driver_file()).format(model.config.get_output_dir()))
-        
+        srcfiles = os.path.join(filedir, self.vivado_accelerator_config.get_driver_path())
+        dstfiles = ('{}/' + self.vivado_accelerator_config.get_driver_files()).format(model.config.get_output_dir())
+        if os.path.isdir(srcfiles):
+            copytree(srcfiles, dstfiles, dirs_exist_ok=True)
+        else:
+            copyfile(srcfiles, dstfiles)
+
     def write_new_tar(self, model):
         os.remove(model.config.get_output_dir() + '.tar.gz')
         super(VivadoAcceleratorWriter, self).write_tar(model)
+
+    def write_standalone_app(self, model):
+
+        indent = '    '
+
+        weights = model.get_weight_variables()
+
+        io_type = model.config.get_config_value('IOType')
+        interface = model.config.get_config_value('AcceleratorConfig')['Interface'] if model.config.get_config_value('AcceleratorConfig') else None
+        config_weights = (io_type == 'io_stream') and (interface == 'axi_master')
+
+        #######################
+        ## main.c
+        #######################
+
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        f = open(os.path.join(filedir, '../templates/vivado_accelerator/standalone_main.c'), 'r')
+        fout = open('{}/sdk/common/main.c'.format(model.config.get_output_dir()), 'w')
+
+        for line in f.readlines():
+
+            if config_weights and '/*hls-fpga-machine-learning insert configure weights*/' in line:
+                newline = line
+                for w in weights:
+                    newline += indent + 'XMyproject_axi_Set_{name}(&accelerator, {name}); /* TODO: design-dependent name */\n'.format(name=w.name)
+            elif config_weights and '/*hls-fpga-machine-learning insert load weights on*/' in line:
+                newline = line
+                newline += indent + 'XMyproject_axi_Set_load_weights(&accelerator, 1); /* TODO: design-dependent name */\n'
+            elif config_weights and '/*hls-fpga-machine-learning insert load weights off*/' in line:
+                newline = line
+                newline += indent + indent + 'XMyproject_axi_Set_load_weights(&accelerator, 0); /* TODO: design-dependent name */\n'
+            elif config_weights and '/*hls-fpga-machine-learning insert start and wait*/' in line:
+                newline = line
+                newline += indent + 'XMyproject_axi_Start(&accelerator); /* TODO: design-dependent name */\n'
+                newline += indent + 'while (!XMyproject_axi_IsDone(&accelerator)); /* TODO: design-dependent name */\n'
+            else:
+                newline = line
+            fout.write(newline)
+
+        f.close()
+        fout.close()
 
     def write_header_file(model, X, y, y_keras, y_hls, n_samples, filename='data.h'):
         #TODO temporarily move config import here to avoid cyclic dependency, until config is moved to its own package
@@ -439,6 +485,16 @@ class VivadoAcceleratorWriter(VivadoWriter):
         header_file.write('/* out of {} */\n'.format(n_X_samples))
         header_file.write('#define N_SAMPLES {}\n'.format(n_samples))
         header_file.write('\n')
+
+        import numpy as np
+        for layer in model.get_layers():
+            for weights in layer.get_weights():
+                header_file.write('#define N_{name} {size}\n'.format(name=weights.name.upper(), size=np.prod(weights.shape)))
+                header_file.write('const {dtype} {name}[N_{uname}] = {{\n'.format(dtype=inp_axi_t, name=weights.name, uname=weights.name.upper()))
+                for w in weights:
+                    header_file.write(w + ',')
+                header_file.write('};\n\n')
+
         header_file.write('#define N_X_INPUTS {}\n'.format(n_X_inputs))
         header_file.write('const {} data_X_inputs[N_SAMPLES*N_X_INPUTS] = {{\n'.format(inp_axi_t))
         for s in range(n_samples):
@@ -496,6 +552,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
         self.write_driver(model)
         self.write_wrapper_test(model)
         self.write_axi_wrapper(model)
+        self.write_standalone_app(model)
         self.modify_build_script(model)
         self.write_new_tar(model)
 

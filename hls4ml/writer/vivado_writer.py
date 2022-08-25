@@ -109,6 +109,10 @@ class VivadoWriter(Writer):
         model_outputs = model.get_output_variables()
         model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
+        io_type = model.config.get_config_value('IOType')
+        interface = model.config.get_config_value('AcceleratorConfig')['Interface'] if model.config.get_config_value('AcceleratorConfig') else None
+        config_weights = (io_type == 'io_stream') and (interface == 'axi_master')
+
         indent = '    '
 
         for line in f.readlines():
@@ -159,7 +163,11 @@ class VivadoWriter(Writer):
                 if io_type == 'io_stream':
                     newline += indent + '#pragma HLS INTERFACE axis port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
                     if all_brams:
-                        newline += indent + '#pragma HLS INTERFACE bram port={} \n'.format(','.join(all_brams))
+                        if config_weights:
+                            newline += indent + '//#pragma HLS INTERFACE bram port={} // Disabled (it fails on FPGA otherwise)\n'\
+                                    .format(','.join(all_brams))
+                        else:
+                            newline += indent + '#pragma HLS INTERFACE bram port={} \n'.format(','.join(all_brams))
                     newline += indent + '#pragma HLS DATAFLOW \n'
 
             elif '//hls-fpga-machine-learning insert layers' in line:

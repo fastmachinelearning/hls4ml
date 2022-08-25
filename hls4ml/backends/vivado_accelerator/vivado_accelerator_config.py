@@ -128,14 +128,22 @@ class VivadoAcceleratorConfig(object):
     def get_driver_path(self):
         if  self.board.startswith('alveo'):
             return '../templates/vivado_accelerator/' + 'alveo/' + self.driver + '_drivers/' + \
-               self.get_driver_file()
+               self.get_driver_files()
         else:
             return '../templates/vivado_accelerator/' + self.board + '/' + self.driver + '_drivers/' + \
-               self.get_driver_file()
+               self.get_driver_files()
 
-    def get_driver_file(self):
-        driver_ext = '.py' if self.driver == 'python' else '.h'
-        return self.interface + '_driver' + driver_ext
+    #def get_driver_file(self):
+    #    driver_ext = '.py' if self.driver == 'python' else '.h'
+    #    return self.interface + '_driver' + driver_ext
+
+    def get_driver_files(self):
+        if self.driver == 'c':
+            driver_dir = 'sdk'
+            return driver_dir
+        elif self.driver == 'python':
+            driver_ext = '.py'
+            return self.interface + '_driver' + driver_ext
 
     def get_krnl_rtl_src_dir(self):
         return '../templates/vivado_accelerator/' + 'alveo/' + '/krnl_rtl_src'
