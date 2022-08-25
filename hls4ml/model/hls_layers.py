@@ -2428,98 +2428,7 @@ class EdgeAggregate(Layer):
 """
 Hyeon-Seo code begin
 """
-# class ResidualBlock(Layer):
-#     def initialize(self):
-#         assert(len(self.inputs) == 2) # expect input1 and input2
-#         inp1 = self.get_input_variable(self.inputs[0])
-#         inp2 = self.get_input_variable(self.inputs[1])
-#         print(f"inp1.shape: {inp1.shape}")
-#         assert(inp1.shape == inp2.shape )
 
-#         # add ResidualBlock variable
-#         res_name = f"layer{self.index}_out"
-#         res_shape = inp1.shape
-#         res_dims = [self.n_node_cppname, self.out_dim_cppname]
-#         print(f"res_dims: {res_dims}")
-#         print([self.n_node, self.out_dim])
-#         """
-#         #if shape and dims don't work, try this:
-#         out_shape = [self.n_node, self.out_dim]
-#         out_dims = [self.n_node_cppname, self.out_dim_cppname]
-#         """
-
-#         # self.add_output_variable(shape=inp1.shape , dim_names=['OUT_DOT_{}'.format(self.index)])
-#         self.add_output_variable(shape=res_shape , dim_names=res_dims, out_name=aggr_name, var_name=aggr_name,
-#                                  precision=self.attributes.get('precision', None),
-#                                  pragma=self.attributes.get("pragma", "auto"))
-
-#     def function_cpp(self):
-#         params = {}
-#         params['config'] = f'residual_config{self.index}'
-#         params['input_t'] = self.model.get_layer_output_variable('edge_attr').type.name
-#         params['index_t'] = self.model.get_layer_output_variable('edge_index').type.name
-#         params['output_t'] = self.get_output_variable().type.name
-
-#         params['edge_attr'] = self.attributes["inputs"][0]
-#         params['edge_index'] = self.attributes["inputs"][1]
-#         params['out'] = f"layer{self.index}_out"
-#         return [self._function_template.format(**params)]
-
-#     def config_cpp(self):
-#         params = self.get_top_params()
-#         print(f"residual block params: {params}")
-
-#         top_config = self._config_template.format(**params)
-#         top_config = top_config.split('\n')[:-1]
-#         top_config = '\n'.join(top_config)
-
-#         sub_configs = self._config_misc()
-#         for layer, config in sub_configs.items():
-#             config = ['    ' + i for i in config.split('\n')]
-#             config = '\n'.join(config)
-
-#             top_config += '\n\n'
-#             top_config += config
-
-#         top_config += '\n};'
-#         print(f"edge aggr top_config: {top_config}")
-#         return top_config
-
-#     def get_top_params(self):
-#         params = {}
-#         params["index"] = self.index
-#         params['n_node'] = self.n_node_cppname
-#         params['node_dim'] = self.node_dim_cppname
-#         params['table_t'] = f'layer{self.index}_t'
-#         params['reuse'] = self.reuse_factor
-
-#         flow_map = {"source_to_target": 0, "target_to_source": 1}
-#         params['flow'] = flow_map[self.model.reader.torch_model.flow]
-
-
-#         params['io_type'] = 'io_parallel'
-#         params['gnn_resource_limit'] = self.model.config.config['gnn_resource_limit']
-#         params['par_factor'] = self.model.config.config["ParallelizationFactor"]
-#         params['activate_final'] = self.attributes['activate_final']
-
-#         return params
-
-#     def _config_misc(self):
-#         # matrix configs
-#         configs = {}
-#         matrix_config_template = """struct {matrix_name}_config: nnet::matrix_config{{
-#                             static const unsigned n_rows = {n_rows};
-#                             static const unsigned n_cols = {n_cols};
-#                             static const bool gnn_resource_limit = {gnn_resource_limit};
-#                         }};"""
-
-#         configs['residual_block_config'] = matrix_config_template.format(matrix_name="residual_block",
-#                                                                     n_rows=self.n_node_cppname,
-#                                                                     n_cols=f"LAYER{self.index}_OUT_DIM",
-#                                                                     gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
-
-        
-#         return configs
 
 class ResidualBlock(Merge):
     def initialize(self):
@@ -2534,20 +2443,7 @@ class ResidualBlock(Merge):
 
         self.add_output_variable(shape, dims)
 
-    # def config_cpp(self):
-    #     params = self._default_config_params()
-    #     print(f"params b4 set default: {params}")
-    #     for i in range(3):
-    #         params.setdefault('n_elem1_{}'.format(i), 0)
-    #         params.setdefault('n_elem2_{}'.format(i), 0)
-    #     print(f"params after set default: {params}")
-    #     inp1 = self.get_input_variable(self.inputs[0])
-    #     inp2 = self.get_input_variable(self.inputs[1])
-    #     for i, (s1, s2) in enumerate(zip(inp1.shape, inp2.shape)):
-    #         params['n_elem1_{}'.format(i)] = s1
-    #         params['n_elem2_{}'.format(i)] = s2
 
-    #     return self._config_template.format(**params)
 
     def function_cpp(self):
         params = {}
