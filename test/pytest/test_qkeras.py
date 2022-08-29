@@ -217,6 +217,7 @@ def test_quantizer(randX_1000_1, quantizer, backend, io_type):
   model.add(QActivation(input_shape=(1,), activation=quantizer, name='quantizer'))
   model.compile()
 
+  hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=['quantizer'], rounding_mode='AP_RND_CONV', saturation_mode='AP_SAT')
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
   output_dir = str(test_root_path / 'hls4mlprj_qkeras_quantizer_{}_{}_{}_{}_{}'.format(quantizer.__class__.__name__,
                                                             quantizer.bits, quantizer.integer, backend, io_type))
@@ -233,8 +234,7 @@ def test_quantizer(randX_1000_1, quantizer, backend, io_type):
   # Goal is to get it passing with all equal
   np.testing.assert_array_equal(y_qkeras, y_hls4ml)
 
-# TODO: include quantized_relu tests when they are made to pass
-# https://github.com/fastmachinelearning/hls4ml/issues/377
+
 @pytest.mark.parametrize('quantizer', [(quantized_tanh(8)),
                                        (quantized_tanh(12, use_real_tanh=True)),
                                        (quantized_sigmoid(5)),
@@ -253,6 +253,7 @@ def test_quantizer_special(randX_1000_1, quantizer, backend):
   model.add(QActivation(input_shape=(1,), activation=quantizer, name='quantizer'))
   model.compile()
 
+  hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=['quantizer'], rounding_mode='AP_RND_CONV', saturation_mode='AP_SAT')
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
   output_dir = str(test_root_path / 'hls4mlprj_qkeras_quantizer_{}_{}_{}'.format(quantizer.__class__.__name__,
                                                             quantizer.bits, backend))

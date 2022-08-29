@@ -38,8 +38,8 @@ def _get_precision_from_quantizer(quantizer):
     supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh',
                             'quantized_sigmoid', 'quantized_po2', 'quantized_relu_po2']
     signed = True
-    rnd = "AP_RND_CONV"
-    overflow = "AP_SAT"
+    rnd = "AP_TRN"
+    overflow = "AP_WRAP"
 
     if quantizer['class_name'] in supported_quantizers:
         bits = int(quantizer['config']['bits'])
