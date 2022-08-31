@@ -82,11 +82,15 @@ class VivadoAcceleratorWriter(VivadoWriter):
 
         io_type = model.config.get_config_value("IOType")
 
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
+
         for line in f.readlines():
             if 'void myproject(' in line:
                 newline = 'void {}_axi(\n'.format(model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert include' in line:
                 newline = '#include "{}_axi.h"\n'.format(model.config.get_project_name())
+                for b in model_brams:
+                    newline += '#include "weights/{}.h"\n'.format(b.name)
             elif '//hls-fpga-machine-learning insert local vars' in line:
                 newline = ''
                 if self.vivado_accelerator_config.get_interface() == 'axi_stream':
@@ -102,8 +106,8 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     newline += indent + '#pragma HLS STREAM variable=out_local depth={}\n'\
                         .format(model.get_output_variables()[0].pragma[1])
             elif '//hls-fpga-machine-learning insert call' in line:
-                newline = indent + '{}(in_local, out_local);\n'.format(
-                    model.config.get_project_name())
+                brams_str = (''.join([', ' + b.name for b in model_brams])) if len(model_brams) > 0 else "";
+                newline = indent + '{}(in_local, out_local{});\n'.format(model.config.get_project_name(), brams_str)
             elif '//hls-fpga-machine-learning insert interface' in line:
                 if self.vivado_accelerator_config.get_interface() == 'axi_lite':
                     newline = ''
