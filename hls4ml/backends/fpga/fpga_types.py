@@ -278,6 +278,18 @@ class VivadoInplaceStreamVariableDefinition(VariableDefinition):
     def definition_cpp(self):
         return f'auto& {self.name} = {self.input_var.name}'
 
+
+class QuartusStreamVariableDefinition(VariableDefinition):
+    def definition_cpp(self, name_suffix='', as_reference=False):
+        if as_reference: # Function parameter
+            return 'stream<{type}> &{name}{suffix}'.format(type=self.type.name, name=self.name, suffix=name_suffix)
+        else:            # Declaration
+            return 'stream<{type}> {name}{suffix}'.format(type=self.type.name, name=self.name, suffix=name_suffix)
+
+class QuartusInplaceStreamVariableDefinition(VariableDefinition):
+    def definition_cpp(self):
+        return f'auto& {self.name} = {self.input_var.name}'
+
 class StreamVariableConverter(object):
     def __init__(self, type_converter, prefix, definition_cls):
         self.type_converter = type_converter
@@ -296,6 +308,18 @@ class StreamVariableConverter(object):
         tensor_var.__class__ = type(self.prefix + 'StreamVariable', (type(tensor_var), self.definition_cls), {})
         return tensor_var
 
+class VivadoStreamVariableConverter(StreamVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Vivado', definition_cls=VivadoStreamVariableDefinition)
+
+class QuartusStreamVariableConverter(StreamVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Quartus', definition_cls=QuartusStreamVariableDefinition)
+
+#endregion
+
+#region InplaceStreamVariable
+
 class InplaceStreamVariableConverter(StreamVariableConverter):
     def convert(self, tensor_var, n_pack=1, depth=0):
         if isinstance(tensor_var, self.definition_cls): # Already converted
@@ -307,13 +331,13 @@ class InplaceStreamVariableConverter(StreamVariableConverter):
         tensor_var.__class__ = type(self.prefix + 'StreamVariable', (type(tensor_var), self.definition_cls), {})
         return tensor_var
 
-class VivadoStreamVariableConverter(StreamVariableConverter):
-    def __init__(self, type_converter):
-        super().__init__(type_converter=type_converter, prefix='Vivado', definition_cls=VivadoStreamVariableDefinition)
-
 class VivadoInplaceStreamVariableConverter(InplaceStreamVariableConverter):
     def __init__(self, type_converter):
         super().__init__(type_converter=type_converter, prefix='Vivado', definition_cls=VivadoInplaceStreamVariableDefinition)
+
+class QuartusInplaceStreamVariableConverter(InplaceStreamVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Quartus', definition_cls=VivadoInplaceStreamVariableDefinition)
 
 #endregion
 

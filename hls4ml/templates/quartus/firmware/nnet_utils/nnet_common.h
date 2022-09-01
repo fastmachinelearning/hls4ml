@@ -24,13 +24,13 @@
 #include "ac_int.h"
 #include "ac_fixed.h"
 #include "math.h"
-#include "nnet_helpers.h"
 #else
 #include "HLS/ac_int.h"
 #include "HLS/ac_fixed.h"
 #include "HLS/math.h"
-#include "nnet_helpers.h"
 #endif
+
+#include "nnet_helpers.h"
 
 typedef ac_fixed<16,6> table_default_t;
 

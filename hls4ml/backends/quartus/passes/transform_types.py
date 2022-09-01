@@ -3,7 +3,8 @@ from numpy import isin
 from hls4ml.model.optimizer import GlobalOptimizerPass
 from hls4ml.backends.fpga.fpga_types import (
     ACTypeConverter, HLSTypeConverter, QuartusArrayVariableConverter, QuartusInplaceArrayVariableConverter,
-    QuartusStructMemberVariableConverter, StaticWeightVariableConverter)
+    QuartusStructMemberVariableConverter, StaticWeightVariableConverter,
+    QuartusStreamVariableConverter, QuartusInplaceStreamVariableConverter)
 from hls4ml.model.types import InplaceTensorVariable
 
 class TransformTypes(GlobalOptimizerPass):
@@ -12,6 +13,8 @@ class TransformTypes(GlobalOptimizerPass):
         self.array_var_converter = QuartusArrayVariableConverter(type_converter=self.type_converter)
         self.inplace_array_var_converter = QuartusInplaceArrayVariableConverter(type_converter=self.type_converter)
         self.struct_var_converter = QuartusStructMemberVariableConverter(type_converter=self.type_converter)
+        self.stream_var_converter = QuartusStreamVariableConverter(type_converter=self.type_converter)
+        self.inplace_stream_var_converter = QuartusInplaceStreamVariableConverter(type_converter=self.type_converter)
         self.weight_var_converter = StaticWeightVariableConverter(type_converter=self.type_converter)
 
     def transform(self, model, node):
@@ -19,7 +22,10 @@ class TransformTypes(GlobalOptimizerPass):
 
         for out_name, var in node.variables.items():
             if io_type == 'io_stream':
-                raise Exception('Streaming IO is not supported in Quartus.')
+                if isinstance(var, InplaceTensorVariable):
+                    new_var = self.inplace_stream_var_converter.convert(var)
+                else:
+                    new_var = self.stream_var_converter.convert(var)
             elif io_type == 'io_parallel':
                 if out_name in node.model.inputs:
                     new_var = self.struct_var_converter.convert(var, pragma='hls_register', struct_name='inputs')

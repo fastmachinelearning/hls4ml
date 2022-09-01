@@ -205,8 +205,8 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     model.config.get_project_name())
             elif '{}_cosim'.format(model.config.get_project_name()) in line:
                 newline = line.replace('{}_cosim'.format(model.config.get_project_name()), '{}_axi_cosim'.format(model.config.get_project_name()))
-            elif '${myproject}.tcl' in line:
-                newline = line.replace('${myproject}.tcl', '${myproject}_axi.tcl')
+            elif '${project_name}.tcl' in line:
+                newline = line.replace('${project_name}.tcl', '${project_name}_axi.tcl')
             else:
                 newline = line
             fout.write(newline)
@@ -327,13 +327,19 @@ class VivadoAcceleratorWriter(VivadoWriter):
             src_dir=os.path.join(filedir, self.vivado_accelerator_config.get_krnl_rtl_src_dir())
             dst_dir= os.path.abspath(model.config.get_output_dir())+'/src'
             copy_tree(src_dir,dst_dir)
+
+        ###################
+        # project.tcl
+        ###################
         f = open('{}/project.tcl'.format(model.config.get_output_dir()), 'w')
-        f.write('variable myproject\n')
-        f.write('set myproject "{}"\n'.format(model.config.get_project_name()))
-        f.write('variable backend\nset backend vivadoaccelerator\n')
-        if self.vivado_accelerator_config.get_board().startswith('alveo'):
-             f.write('variable part\n')
-             f.write('set part "{}"\n'.format(self.vivado_accelerator_config.get_part()))
+        f.write('variable project_name\n')
+        f.write('set project_name "{}"\n'.format(model.config.get_project_name()))
+        f.write('variable backend\n')
+        f.write('set backend "vivadoaccelerator"\n')
+        f.write('variable part\n')
+        f.write('set part "{}"\n'.format(self.vivado_accelerator_config.get_part()))
+        f.write('variable clock_period\n')
+        f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
         if self.vivado_accelerator_config.get_interface() == 'axi_stream':
             in_bit, out_bit = self.vivado_accelerator_config.get_io_bitwidth()
             f.write('set bit_width_hls_output {}\n'.format(in_bit))

@@ -2,10 +2,10 @@
 set tcldir [file dirname [info script]]
 source [file join $tcldir project.tcl]
 
-create_project project_1 ${myproject}_vivado_accelerator -part xc7z020clg400-1 -force
+create_project project_1 ${project_name}_vivado_accelerator -part xc7z020clg400-1 -force
 
 set_property board_part tul.com.tw:pynq-z2:part0:1.0 [current_project]
-set_property  ip_repo_paths  ${myproject}_prj [current_project]
+set_property  ip_repo_paths  ${project_name}_prj [current_project]
 update_ip_catalog
 
 create_bd_design "design_1"
@@ -36,19 +36,19 @@ endgroup
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {/processing_system7_0/FCLK_CLK0 (100 MHz)} Clk_xbar {/processing_system7_0/FCLK_CLK0 (100 MHz)} Master {/axi_dma_0/M_AXI_S2MM} Slave {/processing_system7_0/S_AXI_HP0} ddr_seg {Auto} intc_ip {/axi_mem_intercon} master_apm {0}}  [get_bd_intf_pins axi_dma_0/M_AXI_S2MM]
 
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:hls:${myproject}_axi:1.0 ${myproject}_axi_0
+create_bd_cell -type ip -vlnv xilinx.com:hls:${project_name}_axi:1.0 ${project_name}_axi_0
 endgroup
 
-connect_bd_intf_net [get_bd_intf_pins axi_dma_0/M_AXIS_MM2S] [get_bd_intf_pins ${myproject}_axi_0/in_r]
-connect_bd_intf_net [get_bd_intf_pins ${myproject}_axi_0/out_r] [get_bd_intf_pins axi_dma_0/S_AXIS_S2MM]
+connect_bd_intf_net [get_bd_intf_pins axi_dma_0/M_AXIS_MM2S] [get_bd_intf_pins ${project_name}_axi_0/in_r]
+connect_bd_intf_net [get_bd_intf_pins ${project_name}_axi_0/out_r] [get_bd_intf_pins axi_dma_0/S_AXIS_S2MM]
 
-apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config { Clk {/processing_system7_0/FCLK_CLK0 (100 MHz)} Freq {100} Ref_Clk0 {} Ref_Clk1 {} Ref_Clk2 {}}  [get_bd_pins ${myproject}_axi_0/ap_clk]
+apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config { Clk {/processing_system7_0/FCLK_CLK0 (100 MHz)} Freq {100} Ref_Clk0 {} Ref_Clk1 {} Ref_Clk2 {}}  [get_bd_pins ${project_name}_axi_0/ap_clk]
 
-group_bd_cells hier_0 [get_bd_cells axi_dma_0] [get_bd_cells ${myproject}_axi_0]
+group_bd_cells hier_0 [get_bd_cells axi_dma_0] [get_bd_cells ${project_name}_axi_0]
 
-make_wrapper -files [get_files ./${myproject}_vivado_accelerator/project_1.srcs/sources_1/bd/design_1/design_1.bd] -top
+make_wrapper -files [get_files ./${project_name}_vivado_accelerator/project_1.srcs/sources_1/bd/design_1/design_1.bd] -top
 
-add_files -norecurse ./${myproject}_vivado_accelerator/project_1.srcs/sources_1/bd/design_1/hdl/design_1_wrapper.v
+add_files -norecurse ./${project_name}_vivado_accelerator/project_1.srcs/sources_1/bd/design_1/hdl/design_1_wrapper.v
 
 reset_run impl_1
 reset_run synth_1
