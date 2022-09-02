@@ -92,7 +92,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 for b in model_brams:
                     newline += '#include "weights/{}.h"\n'.format(b.name)
                 newline += '\n'
-                newline += '#include "parameters.h"\n'
+                newline += '#include "nnet_utils/nnet_helpers.h"\n'
             elif '//hls-fpga-machine-learning insert local vars' in line:
                 newline = ''
                 if self.vivado_accelerator_config.get_interface() == 'axi_stream':
