@@ -12,8 +12,16 @@ class PygModelReader(PyTorchModelReader):
         super().__init__(config)
         self.n_node = config['InputShape']['NodeAttr'][0]
         self.n_edge = config['InputShape']['EdgeAttr'][0]
-        self.node_dim = config['InputShape']['NodeAttr'][1]
-        self.edge_dim = config['InputShape']['EdgeAttr'][1]
+        # self.node_dim = config['InputShape']['NodeAttr'][1]
+        # self.edge_dim = config['InputShape']['EdgeAttr'][1]
+        # self.common_dim = config['InputShape']['CommonDim']
+        self.node_attr = config['InputShape']['NodeAttr'][1]
+        self.edge_attr = config['InputShape']['EdgeAttr'][1]
+        
+        self.node_dim = config['InputShape']['NodeDim']
+        self.edge_dim = config['InputShape']['EdgeDim']
+        # it should be node_dim == edge_dim
+        assert(self.node_dim == self.edge_dim )
 
     def get_weights_data(self, layer_name, var_name, module_name=None):
         data = None
@@ -44,6 +52,8 @@ class PygModelReader(PyTorchModelReader):
             if var_name in list(torch_paramap.keys()):
                 var_name = torch_paramap[var_name]
 
+            print(f"self.state_dict.keys(): {self.state_dict.keys()}")
+            print(f"layer_name + '.' + var_name: {layer_name + '.' + var_name}")
             data = self.state_dict[layer_name + '.' + var_name].numpy().transpose()  # Look at transpose when systhesis produce lousy results. Might need to remove it.
 
         return data
@@ -60,9 +70,10 @@ def register_pyg_block_handler(block_name, handler_func):
 def get_supported_pyg_blocks():
     return list(block_handlers.keys())
 
-def pyg_handler(*args):
+def pyg_handler(*args): #used by block_handlers
     def decorator(function):
         function.handles = [arg for arg in args]
+        print(f"handler args: {args}")
         return function
     return decorator
 
@@ -329,11 +340,18 @@ def pyg_to_hls(config):
     int_type = backend.convert_precision_string(config['HLSConfig']['Model']['IndexPrecision'])
 
     # make reader
+    
     reader = PygModelReader(config)
     n_node = reader.n_node
     n_edge = reader.n_edge
     node_dim = reader.node_dim
     edge_dim = reader.edge_dim
+    node_attr = reader.node_attr
+    edge_attr = reader.edge_attr
+    print(f"PygModelReader node_dim: {node_dim}")
+    print(f"PygModelReader edge_dim: {edge_dim}")
+    print(f"PygModelReader node_attr: {node_attr}")
+    print(f"PygModelReader edge_attr: {edge_attr}")
 
     # initiate layer list with inputs: node_attr, edge_attr, edge_index
     layer_list = [] # the order of this list doesn't matter
@@ -344,7 +362,7 @@ def pyg_to_hls(config):
         'class_name': 'InputLayer',
         'input_shape': input_shapes['NodeAttr'],
         'inputs': 'input',
-        'dim_names': ['N_NODE', 'NODE_DIM'],
+        'dim_names': ['N_NODE', 'NODE_DIM'], # here, NODE_DIM == node_attr. possible point of confusion
         'precision': fp_type
     }
     layer_list.append(NodeAttr_layer)
@@ -354,7 +372,7 @@ def pyg_to_hls(config):
         'class_name': 'InputLayer',
         'input_shape': input_shapes['EdgeAttr'],
         'inputs': 'input',
-        'dim_names': ['N_EDGE', 'EDGE_DIM'],
+        'dim_names': ['N_EDGE', 'EDGE_DIM'],# here, EDGE_DIM == edge_attr. possible point of confusion
         'precision': fp_type
     }
     layer_list.append(EdgeAttr_layer)
@@ -390,7 +408,8 @@ def pyg_to_hls(config):
     for i, (key, val) in enumerate(forward_dict_new.items()):
         # get inputs, outputs
         index = len(layer_list)+1
-        layer_dict, update_dict = block_handlers[val](key, config, update_dict, index, n_node, n_edge, node_dim, edge_dim)
+        # print(f"block_handlers.keys(): {block_handlers.keys()}")
+        layer_dict, update_dict = block_handlers[val](key, config, update_dict, index, n_node, n_edge, node_dim, edge_dim, node_attr, edge_attr)
         # possible block hander is [parse_NodeBlock, parse_EdgeBlock, parse_EdgeAggregate]
         layer_list.append(layer_dict)
 

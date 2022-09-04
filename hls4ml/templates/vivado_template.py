@@ -508,6 +508,8 @@ class VivadoBackend(Backend):
         self.register_templates('NodeBlock'              , nodeblock_function_template, nodeblock_config_template, nodeblock_include_list)
         self.register_templates('EdgeAggregate'              , edge_aggregate_function_template, edge_aggregate_config_template, edge_aggregate_include_list)
         self.register_templates('ResidualBlock'            , merge_function_template,       residual_config_template, residual_include_list)
+        self.register_templates('NodeEncoder'            , dense_function_template,       dense_config_template, dense_include_list)
+        self.register_templates('EdgeEncoder'            , dense_function_template,       dense_config_template, dense_include_list)
 
     def create_initial_config(self, part='xcku115-flvb2104-2-i', board=None, clock_period=5, io_type='io_parallel'):
         config = {}

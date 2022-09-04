@@ -1862,12 +1862,16 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
         self.n_edge = self.attributes['n_edge']
         self.node_dim = self.attributes['node_dim']
         self.edge_dim = self.attributes['edge_dim']
+        print(f"self.attributes.keys(): {self.attributes.keys()}")
         self.out_dim = self.attributes['out_dim']
         self._check_inputs()
-
+        
+        print(f"self.model.output_vars.keys(): {self.model.output_vars.keys()}")
+        
         self.n_node_cppname, self.node_dim_cppname = self.model.get_layer_output_variable(self.inputs[0]).dim_names
         self.n_edge_cppname, self.edge_dim_cppname = self.model.get_layer_output_variable(self.inputs[1]).dim_names
         self.out_dim_cppname = f"LAYER{self.index}_OUT_DIM"
+        print(f"self.edge_dim_cppname: {self.node_dim_cppname}")
 
         self.torch_module = getattr(self.model.reader.torch_model, self.name)
         submodules = OrderedDict()
@@ -1889,6 +1893,8 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
         params['output_t'] = self.get_output_variable().type.name
         params['node_attr'] = self.attributes['inputs'][0]
         params['edge_attr'] = self.attributes['inputs'][1]
+        print(f"GraphBlock params['node_attr']: {params['node_attr']}")
+        print(f"GraphBlock params['edge_attr']: {params['edge_attr']}")
         params['out'] = f"layer{self.index}_out"
 
         params['w0'] = self.get_weights(f"{self.name}_w0").name
@@ -1929,6 +1935,7 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
         params['n_edge'] = self.n_edge_cppname
         params['node_dim'] = self.node_dim_cppname
         params['edge_dim'] = self.edge_dim_cppname
+        # params['common_dim'] = self.common_dim_cppname
         params['out_dim'] = self.out_dim
         params['n_layers'] = self.attributes["n_layers"]
         params['io_type'] = 'io_parallel'
@@ -2204,9 +2211,11 @@ class EdgeBlock(GraphBlock):
 
         node_attr = self.model.get_layer_output_variable(self.inputs[0])
         assert(node_attr.shape==[self.n_node, self.node_dim])
+        # assert(node_attr.shape==[self.n_node, self.common_dim])
 
         edge_attr = self.model.get_layer_output_variable(self.inputs[1])
         assert(edge_attr.shape==[self.n_edge, self.edge_dim])
+        # assert(edge_attr.shape==[self.n_edge, self.common_dim])
 
         edge_index = self.model.get_layer_output_variable(self.inputs[2])
         assert(edge_index.shape==[self.n_edge, 2])
@@ -2279,20 +2288,31 @@ class NodeBlock(GraphBlock):
                                                                       n_cols=f"LAYER{self.index}_OUT_DIM",
                                                                       gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
 
-        # concatenation configs
-        concat_config_template = self.model.config.backend.get_config_template('Concatenate')
+        # # concatenation configs
+        # ResidualBlock configs (Add == ResidualBlock)
+        print(f"self.model.config.backend.config_templates.keys(): {self.model.config.backend.config_templates.keys()}")
+        # concat_config_template = self.model.config.backend.get_config_template('Concatenate')
+        concat_config_template = self.model.config.backend.get_config_template('ResidualBlock')
+        print(f"concat_config_template b4: {concat_config_template}")
         concat_config_template = re.sub('config{index}', 'merge_config{index}', concat_config_template)
+        # merge_config1_params = {
+        #     'index': 1,
+        #     'n_elem1_0': self.node_dim_cppname,
+        #     'n_elem1_1': 1,
+        #     'n_elem1_2': 0,
+        #     'n_elem2_0': self.edge_dim_cppname,
+        #     'n_elem2_1': 1,
+        #     'n_elem2_2': 0,
+        #     'axis': 0,
+        #     'gnn_resource_limit': self.model.config.config['gnn_resource_limit']
+        # }
         merge_config1_params = {
             'index': 1,
-            'n_elem1_0': self.node_dim_cppname,
-            'n_elem1_1': 1,
-            'n_elem1_2': 0,
-            'n_elem2_0': self.edge_dim_cppname,
-            'n_elem2_1': 1,
-            'n_elem2_2': 0,
-            'axis': 0,
+            'n_elem': self.node_dim_cppname, # the node dime is the common dim
             'gnn_resource_limit': self.model.config.config['gnn_resource_limit']
         }
+        print(f"concat_config_template after: {concat_config_template}")
+        print(f"merge_config1_params: {merge_config1_params}")
         merge_config1 = concat_config_template.format(**merge_config1_params)
         configs['merge_config1'] = merge_config1
 
@@ -2304,9 +2324,15 @@ class NodeBlock(GraphBlock):
 
         node_attr = self.model.get_layer_output_variable(self.inputs[0])
         assert(node_attr.shape==[self.n_node, self.node_dim])
+        # assert(node_attr.shape==[self.n_node, self.common_dim])
 
+        # edge_attr_aggr = self.model.get_layer_output_variable(self.inputs[1])
         edge_attr_aggr = self.model.get_layer_output_variable(self.inputs[1])
+        print(f"self.inputs[1]: {self.inputs[1]}")
         assert(edge_attr_aggr.shape==[self.n_node, self.edge_dim])
+        # print(f"[self.n_node, self.common_dim]: {[self.n_node, self.common_dim]}")
+        # print(f"edge_attr_aggr.shape: {edge_attr_aggr.shape}")
+        # assert(edge_attr_aggr.shape==[self.n_node, self.common_dim])
 
         #expected outputs: node_update
         assert(len(self.outputs)==1)
@@ -2319,6 +2345,7 @@ class EdgeAggregate(Layer):
         self.node_dim = self.attributes['node_dim']
         self.edge_dim = self.attributes['edge_dim']
         self.out_dim = self.attributes['out_dim']
+        # self.common_dim = self.attributes['common_dim']
         self._check_inputs()
 
         self.n_node_cppname, self.node_dim_cppname = self.model.get_layer_output_variable('node_attr').dim_names
@@ -2418,6 +2445,10 @@ class EdgeAggregate(Layer):
 
         edge_attr = self.model.get_layer_output_variable(self.inputs[0])
         assert(edge_attr.shape==[self.n_edge, self.edge_dim])
+        # print(f"edge_attr.shape: {edge_attr.shape}")
+        # print(f"self.n_edge: {self.n_edge}")
+        # print(f"assert check: {edge_attr.shape==[self.n_edge, self.common_dim]}")
+        # assert(edge_attr.shape==[self.n_edge, self.common_dim])
 
         edge_index = self.model.get_layer_output_variable(self.inputs[1])
         assert(edge_index.shape==[self.n_edge, 2])
@@ -2440,8 +2471,8 @@ class ResidualBlock(Merge):
         rank = len(shape)
         print(f"rank: {rank}")
         dims = ['N_NODE', f'LAYER{self.index}_OUT_DIM']
-
         self.add_output_variable(shape, dims)
+        print(f"resblock name: {self.name}")
 
 
 
@@ -2458,7 +2489,7 @@ class ResidualBlock(Merge):
         print(f"residualBlock template: {self._function_template}")
         out =  self._function_template.format(**params)
         print(f"final residualBlock template: {out}")
-        # print(f"resblock name: {self.name}")
+        
         return [out]
 
     def config_cpp(self):
@@ -2466,11 +2497,86 @@ class ResidualBlock(Merge):
         params['gnn_resource_limit'] = 'false'
         inp1 = self.get_input_variable(self.inputs[0])
         inp2 = self.get_input_variable(self.inputs[1])
-        assert(inp1.size_cpp() == inp2.size_cpp())
+        # print(f"inp1.size_cpp(): {inp1.size_cpp()}")
+        # print(f"inp2.size_cpp(): {inp2.size_cpp()}")
+        # assert(inp1.size_cpp() == inp2.size_cpp()) # the assertion should give same numerical value, but gives different string values
         params['n_elem'] = inp1.size_cpp()
         print(f"params['n_elem']: {params['n_elem']}")
 
         return self._config_template.format(**params)
+
+class NodeEncoder(Dense):
+    """
+    just copying Dense layer, but changing the class name
+    """
+    def initialize(self):
+        print(f"NodeEncoder name: {self.name}")
+        shape = self.get_input_variable().shape[:]
+        shape[-1] = self.attributes['n_out']
+        if len(shape) > 1:
+            dims = ['N_LAYER_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+        else:
+            dims = ['N_LAYER_{}'.format(self.index)]
+        compression = self.model.config.get_compression(self)
+        if self.model.config.is_resource_strategy(self):
+            if self.model.config.backend.name in ['Vivado', 'VivadoAccelerator']:
+                self.model.config.backend.set_target_reuse_factor(self)
+                self.model.config.backend.set_closest_reuse_factor(self)
+            if compression:
+                self.set_attr('strategy', 'compressed')
+            else:
+                self.set_attr('strategy', 'resource')
+        else:
+            self.set_attr('strategy', 'latency')
+        self.add_output_variable(shape, dims)
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=compression)
+        index_t = IntegerPrecisionType(width=1, signed=False)
+        if self.model.config.is_resource_strategy(self):
+            if self.model.config.get_compression(self):
+                index_t = self.get_weights('weight').type.index_precision
+            else:
+                if self.model.config.backend.name in ['Vivado', 'VivadoAccelerator']:
+                    self.weights['weight'].data = np.transpose(self.weights['weight'].data)
+                    
+        self.set_attr('index_t', index_t)
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
+class EdgeEncoder(Dense):
+    """
+    just copying Dense layer, but changing the class name
+    """
+    def initialize(self):
+        print(f"EdgeEncoder name: {self.name}")
+        shape = self.get_input_variable().shape[:]
+        shape[-1] = self.attributes['n_out']
+        if len(shape) > 1:
+            dims = ['N_LAYER_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+        else:
+            dims = ['N_LAYER_{}'.format(self.index)]
+        compression = self.model.config.get_compression(self)
+        if self.model.config.is_resource_strategy(self):
+            if self.model.config.backend.name in ['Vivado', 'VivadoAccelerator']:
+                self.model.config.backend.set_target_reuse_factor(self)
+                self.model.config.backend.set_closest_reuse_factor(self)
+            if compression:
+                self.set_attr('strategy', 'compressed')
+            else:
+                self.set_attr('strategy', 'resource')
+        else:
+            self.set_attr('strategy', 'latency')
+        self.add_output_variable(shape, dims)
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=compression)
+        index_t = IntegerPrecisionType(width=1, signed=False)
+        if self.model.config.is_resource_strategy(self):
+            if self.model.config.get_compression(self):
+                index_t = self.get_weights('weight').type.index_precision
+            else:
+                if self.model.config.backend.name in ['Vivado', 'VivadoAccelerator']:
+                    self.weights['weight'].data = np.transpose(self.weights['weight'].data)
+                    
+        self.set_attr('index_t', index_t)
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
 
 """
 Hyeon-Seo code end
@@ -2525,6 +2631,8 @@ layer_map = {
     'NodeBlock'              : NodeBlock,
     'EdgeAggregate'              : EdgeAggregate,
     'ResidualBlock'          : ResidualBlock,
+    'NodeEncoder'          : NodeEncoder,
+    'EdgeEncoder'          : EdgeEncoder,
     # TensorFlow-specific layers:
     'BiasAdd'                : BiasAdd,
 }

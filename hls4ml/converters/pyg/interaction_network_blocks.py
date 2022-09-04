@@ -1,7 +1,10 @@
 import numpy as np
 from hls4ml.converters.pyg_to_hls import pyg_handler
 
-def parse_GraphBlock(block_name, config, n_node, n_edge, node_dim, edge_dim):
+def parse_GraphBlock(block_name, config, n_node, n_edge, node_dim, edge_dim, node_attr, edge_attr):
+    """
+    graphblocks don't need node_attr and edge_attr
+    """
     layer_dict = {
         "name": block_name,
         "n_node": n_node,
@@ -9,7 +12,7 @@ def parse_GraphBlock(block_name, config, n_node, n_edge, node_dim, edge_dim):
         "node_dim": node_dim,
         "edge_dim": edge_dim,
         "activate_final": "false",
-        "activation": "linear"
+        "activation": "linear",
     }
 
     # get n_layers, out_dim
@@ -30,25 +33,29 @@ def parse_GraphBlock(block_name, config, n_node, n_edge, node_dim, edge_dim):
     return layer_dict
 
 @pyg_handler('NodeBlock')
-def parse_NodeBlock(block_name, config, update_dict, index, n_node, n_edge, node_dim, edge_dim):
-    layer_dict = parse_GraphBlock(block_name, config, n_node, n_edge, node_dim, edge_dim)
+def parse_NodeBlock(block_name, config, update_dict, index, n_node, n_edge, node_dim, edge_dim, node_attr, edge_attr):
+    layer_dict = parse_GraphBlock(block_name, config, n_node, n_edge, node_dim, edge_dim, node_attr, edge_attr)
     layer_dict["class_name"] = "NodeBlock"
     layer_dict["inputs"] = [update_dict["last_node_update"], update_dict["last_edge_aggr_update"]]#this is where the concat method is described
     layer_dict["outputs"] = [f"layer{index}_out"]
+    print(f"type(update_dict): {type(update_dict)}")
+    update_dict["last_last_node_update"] = update_dict["last_node_update"] #for residual block
     update_dict["last_node_update"] = f"layer{index}_out"
     return layer_dict, update_dict
 
 @pyg_handler('EdgeBlock')
-def parse_EdgeBlock(block_name, config, update_dict, index, n_node, n_edge, node_dim, edge_dim):
-    layer_dict = parse_GraphBlock(block_name, config, n_node, n_edge, node_dim, edge_dim)
+def parse_EdgeBlock(block_name, config, update_dict, index, n_node, n_edge, node_dim, edge_dim, node_attr, edge_attr):
+    layer_dict = parse_GraphBlock(block_name, config, n_node, n_edge, node_dim, edge_dim, node_attr, edge_attr)
     layer_dict["class_name"] = "EdgeBlock"
     layer_dict["inputs"] = [update_dict["last_node_update"], update_dict["last_edge_update"], "edge_index"]
     layer_dict["outputs"] = [f"layer{index}_out"]
+    print(f'EdgeBlock update_dict["last_edge_update"] b4: {update_dict["last_edge_update"] }')
     update_dict["last_edge_update"] = f"layer{index}_out"
+    print(f'EdgeBlock update_dict["last_edge_update"] after: {update_dict["last_edge_update"] }')
     return layer_dict, update_dict
 
 @pyg_handler('EdgeAggregate')
-def parse_EdgeAggregate(block_name, config, update_dict, index, n_node, n_edge, node_dim, edge_dim):
+def parse_EdgeAggregate(block_name, config, update_dict, index, n_node, n_edge, node_dim, edge_dim, node_attr, edge_attr):
     layer_dict = {"name": f"aggr{index}",
                   "class_name": "EdgeAggregate",
                   "n_node": n_node,
@@ -64,13 +71,57 @@ def parse_EdgeAggregate(block_name, config, update_dict, index, n_node, n_edge, 
 
 
 @pyg_handler('ResidualBlock')
-def parse_ResidualBlock(block_name, config, update_dict, index, n_node, n_edge, node_dim, edge_dim):
-    layer_dict = {"name": f"aggr{index}",
-                  "class_name": "ResidualBlock",
-                  "n_node": n_node,
-                  "node_dim": node_dim,
-                  "inputs": [update_dict["last_node_update"],update_dict["last_node_update"],],
-                  "outputs": [f"layer{index}_out"],
-                  "activate_final": "false"}
+def parse_ResidualBlock(block_name, config, update_dict, index, n_node, n_edge, node_dim, edge_dim, node_attr, edge_attr):
+    layer_dict = {
+                "name": f"aggr{index}",
+                "class_name": "ResidualBlock",
+                "n_node": n_node,
+                "node_dim": node_dim,
+                "inputs": [update_dict["last_last_node_update"],update_dict["last_node_update"],],
+                "outputs": [f"layer{index}_out"],
+                "activate_final": "false"}
+    print(f"layer_dict['inputs']: {layer_dict['inputs']}")
     update_dict["last_node_update"] = f"layer{index}_out" #bc it comes right after nodeblock
     return layer_dict, update_dict
+
+
+@pyg_handler('NodeEncoder')
+def parse_NodeEncoder(block_name, config, update_dict, index, n_node, n_edge, node_dim, edge_dim, node_attr, edge_attr):
+    layer_dict = {
+                "name": f"node_encoder",
+                "class_name": "NodeEncoder", #"Dense", 
+                "n_in": node_attr,
+                "n_out": node_dim,
+                "inputs": [update_dict["last_node_update"]],
+                "outputs": [f"layer{index}_out"],
+                "activate_final": "false"}
+    update_dict["last_node_update"] = f"layer{index}_out" 
+    print(f"node encoder layer_dict['n_in']: {layer_dict['n_in']}")
+    print(f"node encoder layer_dict['n_out']: {layer_dict['n_out']}")
+    return layer_dict, update_dict
+
+@pyg_handler('EdgeEncoder')
+def parse_EdgeEncoder(block_name, config, update_dict, index, n_node, n_edge, node_dim, edge_dim, node_attr, edge_attr):
+    layer_dict = {
+                "name": f"edge_encoder",
+                "class_name": "EdgeEncoder", #"Dense",
+                "n_in": edge_attr,
+                "n_out": edge_dim,
+                "inputs": [update_dict["last_edge_update"]],
+                "outputs": [f"layer{index}_out"],
+                "activate_final": "false"}
+    print(f'edge encoder b4 update_dict["last_edge_update"]: {update_dict["last_edge_update"]}')
+    update_dict["last_edge_update"] = f"layer{index}_out" 
+    print(f'edge encoder after update_dict["last_edge_update"]: {update_dict["last_edge_update"]}')
+    return layer_dict, update_dict
+
+
+"""
+note: 
+-parse nodeblock, edgeblock and edgaggregates don't need node_dim nor edge_dims anymore
+
+-I tried class_name of Node and Edge Encoders to be "Dense", so that 
+I could directly call dense layers, but then I would get errors like
+'aggr4.weight' for layer_name + '.' + var_name
+
+"""

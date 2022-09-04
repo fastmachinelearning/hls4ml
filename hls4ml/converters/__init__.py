@@ -311,8 +311,8 @@ def check_forward_dict(model, forward_dictionary):
         except AttributeError:
             raise AttributeError(f'Model is missing module "{key}" that is present in the provided forward dictionary; Check compatability')
 
-def convert_from_pyg_model(model, forward_dictionary, n_node, node_dim,
-                           n_edge, edge_dim, activate_final=None,
+def convert_from_pyg_model(model, forward_dictionary, n_node, node_attr, node_dim,
+                           n_edge, edge_attr, edge_dim, activate_final=None,
                            output_dir='my-hls-test', project_name='myproject',
                            part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={},
                            resource_limit=False, par_factor=16):
@@ -420,9 +420,11 @@ def convert_from_pyg_model(model, forward_dictionary, n_node, node_dim,
     
     config['PytorchModel'] = model
     config['InputShape'] = {
-        'NodeAttr': [n_node, node_dim],
-        'EdgeAttr': [n_edge, edge_dim],
-        'EdgeIndex': [n_edge, 2]
+        'NodeAttr': [n_node, node_attr],
+        'EdgeAttr': [n_edge, edge_attr],
+        'EdgeIndex': [n_edge, 2],
+        'NodeDim' : node_dim,
+        'EdgeDim' : node_dim,
     }
     config['ForwardDictionary'] = forward_dictionary
     config['ActivateFinal'] = activate_final
