@@ -81,6 +81,7 @@ void dense_latency(
         }
     }
 
+    std::cout<< "dense_latency CONFIG_T::n_out: " << CONFIG_T::n_out << "\n";
     // Do the matrix-multiply
     Product1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
         if (CONFIG_T::io_type == io_serial){
@@ -94,6 +95,8 @@ void dense_latency(
             }
         int index = ii*CONFIG_T::n_out+jj;
         mult[index] = CONFIG_T::template product<data_T, typename CONFIG_T::weight_t, typename CONFIG_T::accum_t>::product(cache, weights[index]);
+        // std::cout<<"ii: "<< ii << ", jj: <<"", mult[index]: "<< mult[index] << "\n";
+        // std::cout<<"ii: "<< ii << ", jj: " << jj<<", index: "<< index <<" , weights[index]: "<< weights[index] << "\n";
         }
     }
 
@@ -123,6 +126,7 @@ void dense_latency(
         }
         //res[ires] = (res_T) (acc[ires]);
         res[ires] = cast<data_T, res_T, CONFIG_T>(acc[ires]);
+        // std::cout << "ires: " << ires <<", acc[ires]: "<< acc[ires] << "\n";
     }
 }
 

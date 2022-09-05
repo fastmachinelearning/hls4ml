@@ -99,6 +99,7 @@ void dense_resource_rf_leq_nin(
     for (int ires = 0; ires < CONFIG_T::n_out; ires++) {
         #pragma HLS UNROLL
         res[ires] = cast<data_T, res_T, CONFIG_T>(acc[ires]);
+        // std::cout << "CONFIG_T::n_out: " << CONFIG_T::n_out << ", ires: " << ires <<", acc[ires]: "<< acc[ires] << "\n";
     }
 }
 
@@ -180,6 +181,7 @@ void dense_resource_rf_gt_nin_rem0(
     for (int ires = 0; ires < CONFIG_T::n_out; ires++) {
         #pragma HLS UNROLL
         res[ires] = cast<data_T, res_T, CONFIG_T>(acc[ires]);
+        // std::cout << "CONFIG_T::n_out: " << CONFIG_T::n_out << ", ires: " << ires <<", acc[ires]: "<< acc[ires] << "\n";
     }
 }
 
@@ -264,6 +266,7 @@ void dense_resource_rf_gt_nin(
     for (int ires = 0; ires < CONFIG_T::n_out; ires++) {
         #pragma HLS UNROLL
         res[ires] = cast<data_T, res_T, CONFIG_T>(acc[ires]);
+        // std::cout << "CONFIG_T::n_out: " << CONFIG_T::n_out << ", ires: " << ires <<", acc[ires]: "<< acc[ires] << "\n";
     }
 }
 

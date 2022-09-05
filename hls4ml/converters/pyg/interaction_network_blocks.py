@@ -41,6 +41,7 @@ def parse_NodeBlock(block_name, config, update_dict, index, n_node, n_edge, node
     print(f"type(update_dict): {type(update_dict)}")
     update_dict["last_last_node_update"] = update_dict["last_node_update"] #for residual block
     update_dict["last_node_update"] = f"layer{index}_out"
+    print(f"nodeblock layer_dict: {layer_dict}")
     return layer_dict, update_dict
 
 @pyg_handler('EdgeBlock')
@@ -92,12 +93,15 @@ def parse_NodeEncoder(block_name, config, update_dict, index, n_node, n_edge, no
                 "class_name": "NodeEncoder", #"Dense", 
                 "n_in": node_attr,
                 "n_out": node_dim,
+                "n_rows" : n_node,
+                "n_cols" : node_attr,
                 "inputs": [update_dict["last_node_update"]],
                 "outputs": [f"layer{index}_out"],
                 "activate_final": "false"}
     update_dict["last_node_update"] = f"layer{index}_out" 
     print(f"node encoder layer_dict['n_in']: {layer_dict['n_in']}")
     print(f"node encoder layer_dict['n_out']: {layer_dict['n_out']}")
+    
     return layer_dict, update_dict
 
 @pyg_handler('EdgeEncoder')
@@ -107,6 +111,8 @@ def parse_EdgeEncoder(block_name, config, update_dict, index, n_node, n_edge, no
                 "class_name": "EdgeEncoder", #"Dense",
                 "n_in": edge_attr,
                 "n_out": edge_dim,
+                "n_rows" : n_edge,
+                "n_cols" : edge_attr,
                 "inputs": [update_dict["last_edge_update"]],
                 "outputs": [f"layer{index}_out"],
                 "activate_final": "false"}

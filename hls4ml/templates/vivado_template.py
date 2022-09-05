@@ -416,6 +416,27 @@ residual_config_template = """struct config{index} : nnet::residual_config{{
 
 }};\n"""
 
+encoder_config_template = """struct config{index} : nnet::dense_config {{
+    static const unsigned n_in = {n_in};
+    static const unsigned n_out = {n_out};
+    static const unsigned n_rows = {n_rows};
+    static const unsigned n_cols = {n_cols};
+    static const unsigned io_type = nnet::{iotype};
+    static const unsigned strategy = nnet::{strategy};
+    static const unsigned reuse_factor = {reuse};
+    static const unsigned n_zeros = {nzeros};
+    static const unsigned n_nonzeros = {nonzeros};
+    static const bool store_weights_in_bram = false;
+    typedef {accum_t} accum_t;
+    typedef {bias_t} bias_t;
+    typedef {weight_t} weight_t;
+    typedef {index_t} index_t;
+    static const bool remove_pipeline_pragma = {remove_pipeline_pragma};
+    template<class x_T, class y_T, class res_T>
+    using product = nnet::product::{product_type}<x_T, y_T, res_T>;
+    static const bool gnn_resource_limit = {gnn_resource_limit};
+}};\n"""
+
 
 dense_function_template = 'nnet::dense<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
@@ -441,6 +462,7 @@ garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t
 edgeblock_function_template = 'nnet::edgeblock<{input_t}, {index_t}, {output_t}, {config}>({node_attr}, {edge_attr}, {edge_index}, {out}, {w0}, {b0}, {w1}, {b1}, {w2}, {b2}, {w3}, {b3});'
 nodeblock_function_template = 'nnet::nodeblock<{input_t}, {output_t}, {config}>({node_attr}, {edge_attr_aggr}, {out}, {w0}, {b0}, {w1}, {b1}, {w2}, {b2}, {w3}, {b3});'
 edge_aggregate_function_template = 'nnet::edge_aggregate<{input_t}, {index_t}, {output_t}, {config}>({edge_attr}, {edge_index}, {out});'
+encoder_function_template = 'nnet::encoder<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 
 dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_stream.h']
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
@@ -472,6 +494,7 @@ nodeblock_include_list = ['nnet_utils/nnet_common.h',
                           'nnet_utils/nnet_array.h']
 edge_aggregate_include_list = ['nnet_utils/nnet_graph.h']
 residual_include_list = ['nnet_utils/nnet_merge.h', 'nnet_utils/nnet_merge_stream.h', 'nnet_utils/nnet_graph.h']
+
 
 class VivadoBackend(Backend):
     def __init__(self, name='Vivado'):
@@ -508,8 +531,8 @@ class VivadoBackend(Backend):
         self.register_templates('NodeBlock'              , nodeblock_function_template, nodeblock_config_template, nodeblock_include_list)
         self.register_templates('EdgeAggregate'              , edge_aggregate_function_template, edge_aggregate_config_template, edge_aggregate_include_list)
         self.register_templates('ResidualBlock'            , merge_function_template,       residual_config_template, residual_include_list)
-        self.register_templates('NodeEncoder'            , dense_function_template,       dense_config_template, dense_include_list)
-        self.register_templates('EdgeEncoder'            , dense_function_template,       dense_config_template, dense_include_list)
+        self.register_templates('NodeEncoder'            , encoder_function_template,       encoder_config_template, nodeblock_include_list)
+        self.register_templates('EdgeEncoder'            , encoder_function_template,       encoder_config_template, nodeblock_include_list)
 
     def create_initial_config(self, part='xcku115-flvb2104-2-i', board=None, clock_period=5, io_type='io_parallel'):
         config = {}

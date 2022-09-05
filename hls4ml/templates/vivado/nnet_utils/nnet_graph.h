@@ -3,7 +3,7 @@
 
 #include "nnet_common.h"
 #include "nnet_merge.h"
-#include "nnet_dense.h"
+// #include "nnet_dense.h"
 #include "nnet_dense_resource.h"
 #include "nnet_activation.h"
 #include "nnet_array.h"
@@ -1046,23 +1046,42 @@ namespace nnet {
 
       // construct NN input: <node, edge_attr_aggr>
       // data_T phi_input[CONFIG_T::common_dim];
-      data_T phi_input[CONFIG_T::node_dim];
-      #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
-      // nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
-      nnet::residualBlock<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
+      // data_T phi_input[CONFIG_T::node_dim];
+      // #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
+      // // nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
+      // nnet::residualBlock<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
+      // // send it through NN
+      //   if(CONFIG_T::n_layers == 1){
+	    //   nnet::dense_mult_1lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0);
+      //   }
+      //   else if(CONFIG_T::n_layers == 2){
+	    //   nnet::dense_mult_2lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1);
+      //   }
+      //   else if(CONFIG_T::n_layers == 3){
+	    //   nnet::dense_mult_3lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2);
+      //   }
+      //   else { // CONFIG_T::n_layers == 4
+	    //   nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2, core_node_w3, core_node_b3);
+      //   }
+
       // send it through NN
         if(CONFIG_T::n_layers == 1){
-	      nnet::dense_mult_1lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0);
+	      nnet::dense_mult_1lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0);
         }
         else if(CONFIG_T::n_layers == 2){
-	      nnet::dense_mult_2lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1);
+	      nnet::dense_mult_2lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1);
         }
         else if(CONFIG_T::n_layers == 3){
-	      nnet::dense_mult_3lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2);
+	      nnet::dense_mult_3lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2);
         }
         else { // CONFIG_T::n_layers == 4
-	      nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2, core_node_w3, core_node_b3);
+	      nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2, core_node_w3, core_node_b3);
         }
+
+
+
+
+
     }
 
     // output array --> output vector
@@ -1071,31 +1090,52 @@ namespace nnet {
   }
 
   template<class data_T, class res_T, typename CONFIG_T>
-    void NodeEncoder(
-      data_T    data[CONFIG_T::n_in],
-      res_T     res[CONFIG_T::n_out],
-      typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
-      typename CONFIG_T::bias_t    biases[CONFIG_T::n_out]
+    void encoder(
+      data_T    node_attr_1D[CONFIG_T::n_rows*CONFIG_T::n_in],
+			res_T     node_update_1D[CONFIG_T::n_rows*CONFIG_T::n_out],
+      typename CONFIG_T::weight_t  core_node_w0[CONFIG_T::n_in*CONFIG_T::n_out],
+			typename CONFIG_T::bias_t    core_node_b0[CONFIG_T::n_out]
     )
   {
-    /*
-    Just copy dense
-    */
-    nnet::dense(data, res, weights, biases);
+    // std::cout << "NodeEncoder CONFIG_T::n_out : " << CONFIG_T::n_out<<"\n";
+    // std::cout << "NodeEncoder CONFIG_T::n_rows : " << CONFIG_T::n_rows<<"\n";
+
+    //initialize arrays
+    //1. node_attr (input)
+    data_T node_attr[CONFIG_T::n_rows][CONFIG_T::n_in];
+    #pragma HLS ARRAY_PARTITION variable=node_attr complete dim=0
+    nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::input_config>(node_attr_1D, node_attr);
+
+    // 2. node_update (output)
+    res_T node_update[CONFIG_T::n_rows][CONFIG_T::n_out];
+    #pragma HLS ARRAY_PARTITION variable=node_update complete dim=0
+
+    #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+    node_loop: for(int i = 0; i < CONFIG_T::n_rows; i++){ //for each node
+      #pragma HLS UNROLL
+
+      // construct NN input: <node, edge_attr_aggr>
+      // send it through NN
+      nnet::dense_resource<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0);
+    }
+
+    // output array --> output vector
+    nnet::mat_to_vec<res_T, res_T, typename CONFIG_T::output_config>(node_update, node_update_1D);
+
   }
 
-  template<class data_T, class res_T, typename CONFIG_T>
-    void EdgeEncoder(
-      data_T    data[CONFIG_T::n_in],
-      res_T     res[CONFIG_T::n_out],
-      typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
-      typename CONFIG_T::bias_t    biases[CONFIG_T::n_out]
-    )
-  {
-    /*
-    Just copy dense
-    */
-    nnet::dense(data, res, weights, biases);
-  }
+  // template<class data_T, class res_T, typename CONFIG_T>
+  //   void EdgeEncoder(
+  //     data_T    data[CONFIG_T::n_in],
+  //     res_T     res[CONFIG_T::n_out],
+  //     typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
+  //     typename CONFIG_T::bias_t    biases[CONFIG_T::n_out]
+  //   )
+  // {
+  //   // nnet::dense(data, res, weights, biases);
+  //   std::cout << "EdgeEncoder CONFIG_T::n_out : " << CONFIG_T::n_out<<"\n";
+  //   nnet::dense_resource(data, res, weights, biases);//same as dense_mult_1lyr
+  //   // it says resource, but if CONFIG_T::gnn_resource_limit == false, it just does pragma #HLS INLINE region
+  // }
 }
 #endif

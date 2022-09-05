@@ -654,7 +654,7 @@ class Dense(Layer):
             params['remove_pipeline_pragma'] = self.get_attr('remove_pipeline_pragma')
         else:
             params['remove_pipeline_pragma'] = "false"
-        print(f"Dense config cpp")
+        print(f"Dense config cpp: {self._config_template.format(**params)}")
         return self._config_template.format(**params)
 
 class Conv1D(Layer):
@@ -1913,6 +1913,7 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
         top_config = top_config.split('\n')[:-1]
         top_config = '\n'.join(top_config)
 
+        # print(f"top_config b4 sublayers: {top_config}")
         sublayer_configs = self._config_sublayers()
         sublayer_configs.update(self._config_misc())
         for layer, config in sublayer_configs.items():
@@ -1923,6 +1924,7 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
             top_config += config
 
         top_config += '\n};'
+        print(f"top_config after sublayers: {top_config}")
         return top_config
 
     def get_top_params_graphblock(self):
@@ -2541,6 +2543,47 @@ class NodeEncoder(Dense):
         self.set_attr('index_t', index_t)
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
+    def config_cpp(self):
+        params = self._default_config_params()
+        params['n_in'] = self.attributes['n_in']
+        params['n_out'] = self.attributes['n_out']
+        params['nzeros'] = self.get_weights('weight').nzeros
+        params['nonzeros'] = self.get_weights('weight').nonzeros
+        params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
+        params['strategy'] = self.get_attr('strategy')
+        params['gnn_resource_limit'] = 'false'
+        if self.get_attr('remove_pipeline_pragma') is not None:
+            params['remove_pipeline_pragma'] = self.get_attr('remove_pipeline_pragma')
+        else:
+            params['remove_pipeline_pragma'] = "false"
+        # print(f"encoder config cpp: {self._config_template.format(**params)}")
+        
+        config = self._config_template.format(**params)
+        # print(f"encoder config cpp pre cut: {config}")
+        config = config[:-3] # get rid of '};'
+        # print(f"encoder config cpp after cut: {config}")
+
+        # matrix configs
+        matrix_config_template = """\n    struct {matrix_name}_config: nnet::matrix_config{{
+                    static const unsigned n_rows = {n_rows};
+                    static const unsigned n_cols = {n_cols};
+                    static const bool gnn_resource_limit = {gnn_resource_limit};
+                }};"""
+
+        input_config = matrix_config_template.format(matrix_name="input",
+                                                                    n_rows=self.attributes['n_rows'],
+                                                                    n_cols=self.attributes['n_in'],
+                                                                    gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
+        output_config = matrix_config_template.format(matrix_name="output",
+                                                                    n_rows=self.attributes['n_rows'],
+                                                                    n_cols=self.attributes['n_out'],
+                                                                    gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
+        config += input_config + "\n"
+        config += output_config + "\n"
+        config += "};"
+        print(f"node encoder config cpp final: {config}")
+        return config
+
 class EdgeEncoder(Dense):
     """
     just copying Dense layer, but changing the class name
@@ -2576,8 +2619,46 @@ class EdgeEncoder(Dense):
                     
         self.set_attr('index_t', index_t)
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+    def config_cpp(self):
+        params = self._default_config_params()
+        params['n_in'] = self.attributes['n_in']
+        params['n_out'] = self.attributes['n_out']
+        params['nzeros'] = self.get_weights('weight').nzeros
+        params['nonzeros'] = self.get_weights('weight').nonzeros
+        params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
+        params['strategy'] = self.get_attr('strategy')
+        params['gnn_resource_limit'] = 'false'
+        if self.get_attr('remove_pipeline_pragma') is not None:
+            params['remove_pipeline_pragma'] = self.get_attr('remove_pipeline_pragma')
+        else:
+            params['remove_pipeline_pragma'] = "false"
+        # print(f"encoder config cpp: {self._config_template.format(**params)}")
+        
+        config = self._config_template.format(**params)
+        # print(f"encoder config cpp pre cut: {config}")
+        config = config[:-3] # get rid of '};'
+        # print(f"encoder config cpp after cut: {config}")
 
+        # matrix configs
+        matrix_config_template = """\n    struct {matrix_name}_config: nnet::matrix_config{{
+                    static const unsigned n_rows = {n_rows};
+                    static const unsigned n_cols = {n_cols};
+                    static const bool gnn_resource_limit = {gnn_resource_limit};
+                }};"""
 
+        input_config = matrix_config_template.format(matrix_name="input",
+                                                                    n_rows=self.attributes['n_rows'],
+                                                                    n_cols=self.attributes['n_in'],
+                                                                    gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
+        output_config = matrix_config_template.format(matrix_name="output",
+                                                                    n_rows=self.attributes['n_rows'],
+                                                                    n_cols=self.attributes['n_out'],
+                                                                    gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
+        config += input_config + "\n"
+        config += output_config + "\n"
+        config += "};"
+        print(f"edge encoder config cpp final: {config}")
+        return config
 """
 Hyeon-Seo code end
 """
