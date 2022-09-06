@@ -383,6 +383,71 @@ class VivadoAcceleratorWriter(VivadoWriter):
         fout.close()
         os.rename(newfile, oldfile)
 
+    def modify_python_driver(self, model):
+
+        io_type = model.config.get_config_value('IOType')
+        interface = model.config.get_config_value('AcceleratorConfig')['Interface'] if model.config.get_config_value('AcceleratorConfig') else None
+        driver = model.config.get_config_value('AcceleratorConfig')['Driver'] if model.config.get_config_value('AcceleratorConfig') else None
+        config_weights = (io_type == 'io_stream') and (interface == 'axi_master')
+
+        if driver == 'c' or io_type != 'io_stream' or interface != 'axi_master':
+            return;
+
+        ###################
+        # write axi_master_driver.py
+        ###################
+        oldfile = '{}/axi_master_driver.py'.format(model.config.get_output_dir(), model.config.get_project_name())
+        newfile = '{}/axi_master_driveri.NEW.py'.format(model.config.get_output_dir(), model.config.get_project_name())
+
+        f = open(oldfile, 'r')
+        fout = open(newfile, 'w')
+
+        indent = '    '
+        brams = model.get_weight_variables()
+
+        for line in f.readlines():
+            if '#hls-fpga-machine-learning insert init' in line:
+                newline = line
+                w_shapes = ''
+                for b in brams:
+                    w_shapes += b.name + '_shape, '
+                newline += indent + 'def __init__(self, bitfile_name, x_shape, y_shape, {}dtype=np.float32, dtbo=None, download=True, ignore_version=False, device=None):\n'\
+                        .format(w_shapes)
+            elif '#hls-fpga-machine-learning insert registers' in line:
+                newline = line
+                for b in brams:
+                    newline += indent + indent + 'self.reg{} = self.myproject_axi_0.register_map.{}.address\n'.format(b.name, b.name)
+            elif '#hls-fpga-machine-learning insert buffers' in line:
+                newline = line
+                for b in brams:
+                    newline += indent + indent + 'self.{}_buffer = allocate(shape={}_shape, dtype=dtype)\n'.format(b.name, b.name)
+            elif '#hls-fpga-machine-learning insert load weights' in line:
+                newline = line
+                weights = ''
+                for b in brams:
+                    weights += b.name + ', '
+                newline = 'def load_weights(self, {}debug=False, profile=False, encode=None):\n'.format(weights)
+            elif '#hls-fpga-machine-learning insert encode' in line:
+                newline = line
+                for b in brams:
+                    newline += indent + indent + '{} = encode({})\n'.format(b.name, b.name)
+            elif '#hls-fpga-machine-learning insert set buffers' in line:
+                newline = line
+                for b in brams:
+                    newline += indent + indent + 'self.{}_buffer[:] = {}\n'.format(b.name, b.name)
+            elif '#hls-fpga-machine-learning insert set registers' in line:
+                newline = line
+                for b in brams:
+                    newline += indent + indent + 'self.myproject_axi_0.write(self.reg{}, self.{}_buffer.physical_address)\n'.format(b.name, b.name)
+            else:
+                newline = line
+            fout.write(newline)
+
+        f.close()
+        fout.close()
+        os.rename(newfile, oldfile)
+
+
     def write_board_script(self, model):
         '''
         Write the tcl scripts and kernel sources to create a Vivado IPI project for the VivadoAccelerator
@@ -435,7 +500,11 @@ class VivadoAcceleratorWriter(VivadoWriter):
 
         io_type = model.config.get_config_value('IOType')
         interface = model.config.get_config_value('AcceleratorConfig')['Interface'] if model.config.get_config_value('AcceleratorConfig') else None
+        driver = model.config.get_config_value('AcceleratorConfig')['Driver'] if model.config.get_config_value('AcceleratorConfig') else None
         config_weights = (io_type == 'io_stream') and (interface == 'axi_master')
+
+        if driver == 'python':
+            return;
 
         #######################
         ## main.c
@@ -553,6 +622,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
         self.write_wrapper_test(model)
         self.write_axi_wrapper(model)
         self.write_standalone_app(model)
+        self.modify_python_driver(model)
         self.modify_build_script(model)
         self.write_new_tar(model)
 

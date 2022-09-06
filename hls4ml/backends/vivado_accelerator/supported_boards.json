@@ -42,7 +42,7 @@
   "ultra96v2": {
     "part": "xczu3eg-sbva484-1-e",
     "tcl_scripts": {"axi_lite": "axi_lite_design.tcl", "axi_stream":  "axi_stream_design.tcl", "axi_master": "axi_master_design.tcl"},
-    "python_drivers": {"axi_stream": "axi_stream_driver.py"},
+    "python_drivers": {"axi_stream": "axi_master_driver.py"},
     "c_drivers": { "axi_master": "axi_master_design.c"}
   }
 }
