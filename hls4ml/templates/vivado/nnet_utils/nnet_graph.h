@@ -1046,37 +1046,37 @@ namespace nnet {
 
       // construct NN input: <node, edge_attr_aggr>
       // data_T phi_input[CONFIG_T::common_dim];
-      // data_T phi_input[CONFIG_T::node_dim];
-      // #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
-      // // nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
-      // nnet::residualBlock<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
-      // // send it through NN
-      //   if(CONFIG_T::n_layers == 1){
-	    //   nnet::dense_mult_1lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0);
-      //   }
-      //   else if(CONFIG_T::n_layers == 2){
-	    //   nnet::dense_mult_2lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1);
-      //   }
-      //   else if(CONFIG_T::n_layers == 3){
-	    //   nnet::dense_mult_3lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2);
-      //   }
-      //   else { // CONFIG_T::n_layers == 4
-	    //   nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2, core_node_w3, core_node_b3);
-      //   }
-
+      data_T phi_input[CONFIG_T::node_dim];
+      #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
+      // nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
+      nnet::residualBlock<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
       // send it through NN
         if(CONFIG_T::n_layers == 1){
-	      nnet::dense_mult_1lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0);
+	      nnet::dense_mult_1lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0);
         }
         else if(CONFIG_T::n_layers == 2){
-	      nnet::dense_mult_2lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1);
+	      nnet::dense_mult_2lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1);
         }
         else if(CONFIG_T::n_layers == 3){
-	      nnet::dense_mult_3lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2);
+	      nnet::dense_mult_3lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2);
         }
         else { // CONFIG_T::n_layers == 4
-	      nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2, core_node_w3, core_node_b3);
+	      nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2, core_node_w3, core_node_b3);
         }
+
+      // // send it through NN
+      //   if(CONFIG_T::n_layers == 1){
+	    //   nnet::dense_mult_1lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0);
+      //   }
+      //   else if(CONFIG_T::n_layers == 2){
+	    //   nnet::dense_mult_2lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1);
+      //   }
+      //   else if(CONFIG_T::n_layers == 3){
+	    //   nnet::dense_mult_3lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2);
+      //   }
+      //   else { // CONFIG_T::n_layers == 4
+	    //   nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2, core_node_w3, core_node_b3);
+      //   }
 
 
 
