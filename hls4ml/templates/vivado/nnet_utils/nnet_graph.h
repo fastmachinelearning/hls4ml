@@ -995,21 +995,23 @@ namespace nnet {
     
     */
   {
-    if(CONFIG_T::gnn_resource_limit){
-        //#pragma DATAFLOW
-      }
-      for (int ii=0; ii<CONFIG_T::n_elem; ii++) {
-        if(CONFIG_T::gnn_resource_limit){
-          #pragma HLS UNROLL
-          //#pragma HLS PIPELINE II=1
-        }
-        res[ii] = data1[ii] + data2[ii];
-      }
+    // if(CONFIG_T::gnn_resource_limit){
+    //     //#pragma DATAFLOW
+    //   }
+    for (int ii=0; ii<CONFIG_T::n_elem; ii++) {
+      // if(CONFIG_T::gnn_resource_limit){
+      //   #pragma HLS UNROLL
+      //   //#pragma HLS PIPELINE II=1
+      // }
+      res[ii] = data1[ii] + data2[ii];
+      std::cout << "Residual output index: " << ii << ", output: "<< res[ii]<< ", input1: "<< data1[ii] <<", input2: "<< data2[ii]<<"\n";
+    }
   }
 
+  
 
   template<class data_T, class res_T, typename CONFIG_T>
-    void nodeblock(
+    void nodeblock_pipeline(
 			data_T    node_attr_1D[CONFIG_T::n_node*CONFIG_T::node_dim],
 			data_T    edge_attr_aggr_1D[CONFIG_T::n_node*CONFIG_T::edge_dim],
 			res_T     node_update_1D[CONFIG_T::n_node*CONFIG_T::out_dim],
@@ -1050,6 +1052,7 @@ namespace nnet {
       #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
       // nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
       nnet::residualBlock<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
+      // nnet::add<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
       // send it through NN
         if(CONFIG_T::n_layers == 1){
 	      nnet::dense_mult_1lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0);
@@ -1087,6 +1090,93 @@ namespace nnet {
     // output array --> output vector
     nnet::mat_to_vec<res_T, res_T, typename CONFIG_T::node_update_config>(node_update, node_update_1D);
 
+  }
+
+  template<class data_T, class res_T, typename CONFIG_T>
+    void nodeblock_residual(
+			data_T    node_attr_1D[CONFIG_T::n_node*CONFIG_T::node_dim],
+			data_T    edge_attr_aggr_1D[CONFIG_T::n_node*CONFIG_T::edge_dim],
+			res_T     node_update_1D[CONFIG_T::n_node*CONFIG_T::out_dim],
+			typename CONFIG_T::dense_config1::weight_t  core_node_w0[CONFIG_T::dense_config1::n_in*CONFIG_T::dense_config1::n_out],
+			typename CONFIG_T::dense_config1::bias_t    core_node_b0[CONFIG_T::dense_config1::n_out],
+			typename CONFIG_T::dense_config2::weight_t  core_node_w1[CONFIG_T::dense_config2::n_in*CONFIG_T::dense_config2::n_out],
+			typename CONFIG_T::dense_config2::bias_t    core_node_b1[CONFIG_T::dense_config2::n_out],
+			typename CONFIG_T::dense_config3::weight_t  core_node_w2[CONFIG_T::dense_config3::n_in*CONFIG_T::dense_config3::n_out],
+			typename CONFIG_T::dense_config3::bias_t    core_node_b2[CONFIG_T::dense_config3::n_out],
+			typename CONFIG_T::dense_config4::weight_t  core_node_w3[CONFIG_T::dense_config4::n_in*CONFIG_T::dense_config4::n_out],
+			typename CONFIG_T::dense_config4::bias_t    core_node_b3[CONFIG_T::dense_config4::n_out])
+  /*
+  This is the pipeline version. dataflow is not yet supported
+  */
+  {
+    //initialize arrays
+    //1. node_attr (input)
+    data_T node_attr[CONFIG_T::n_node][CONFIG_T::node_dim];
+    #pragma HLS ARRAY_PARTITION variable=node_attr complete dim=0
+    nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::node_attr_config>(node_attr_1D, node_attr);
+
+    //2. edge_attr_aggr (input)
+    data_T edge_attr_aggr[CONFIG_T::n_node][CONFIG_T::edge_dim];
+    #pragma HLS ARRAY_PARTITION variable=edge_attr_aggr complete dim=0
+    nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::edge_attr_aggr_config>(edge_attr_aggr_1D, edge_attr_aggr);
+
+    // 3. node_update (output)
+    res_T node_update[CONFIG_T::n_node][CONFIG_T::out_dim];
+    #pragma HLS ARRAY_PARTITION variable=node_update complete dim=0
+
+    // 3. node_update_update (output)
+    res_T node_update_update[CONFIG_T::n_node][CONFIG_T::out_dim];
+    #pragma HLS ARRAY_PARTITION variable=node_update_update complete dim=0
+
+    #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+    node_loop: for(int i = 0; i < CONFIG_T::n_node; i++){ //for each node
+      #pragma HLS UNROLL
+
+      // construct NN input: <node, edge_attr_aggr>
+      // data_T phi_input[CONFIG_T::common_dim];
+      data_T phi_input[CONFIG_T::node_dim];
+      #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
+      // nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
+      nnet::residualBlock<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
+      // nnet::add<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
+      // send it through NN
+        if(CONFIG_T::n_layers == 1){
+	      nnet::dense_mult_1lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0);
+        }
+        else if(CONFIG_T::n_layers == 2){
+	      nnet::dense_mult_2lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1);
+        }
+        else if(CONFIG_T::n_layers == 3){
+	      nnet::dense_mult_3lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2);
+        }
+        else { // CONFIG_T::n_layers == 4
+	      nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2, core_node_w3, core_node_b3);
+        }
+      nnet::residualBlock<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(phi_input, node_update[i], node_update_update[i]);
+    }
+
+    // output array --> output vector
+    nnet::mat_to_vec<res_T, res_T, typename CONFIG_T::node_update_config>(node_update_update, node_update_1D);
+
+  }
+
+  template<class data_T, class res_T, typename CONFIG_T>
+    void nodeblock(
+			data_T    node_attr_1D[CONFIG_T::n_node*CONFIG_T::node_dim],
+			data_T    edge_attr_aggr_1D[CONFIG_T::n_node*CONFIG_T::edge_dim],
+			res_T     node_update_1D[CONFIG_T::n_node*CONFIG_T::out_dim],
+			typename CONFIG_T::dense_config1::weight_t  core_node_w0[CONFIG_T::dense_config1::n_in*CONFIG_T::dense_config1::n_out],
+			typename CONFIG_T::dense_config1::bias_t    core_node_b0[CONFIG_T::dense_config1::n_out],
+			typename CONFIG_T::dense_config2::weight_t  core_node_w1[CONFIG_T::dense_config2::n_in*CONFIG_T::dense_config2::n_out],
+			typename CONFIG_T::dense_config2::bias_t    core_node_b1[CONFIG_T::dense_config2::n_out],
+			typename CONFIG_T::dense_config3::weight_t  core_node_w2[CONFIG_T::dense_config3::n_in*CONFIG_T::dense_config3::n_out],
+			typename CONFIG_T::dense_config3::bias_t    core_node_b2[CONFIG_T::dense_config3::n_out],
+			typename CONFIG_T::dense_config4::weight_t  core_node_w3[CONFIG_T::dense_config4::n_in*CONFIG_T::dense_config4::n_out],
+			typename CONFIG_T::dense_config4::bias_t    core_node_b3[CONFIG_T::dense_config4::n_out])
+  {
+
+    // nodeblock_pipeline<data_T,res_T,CONFIG_T>(node_attr_1D,edge_attr_aggr_1D,node_update_1D,core_node_w0,core_node_b0,core_node_w1,core_node_b1,core_node_w2,core_node_b2,core_node_w3,core_node_b3);
+    nodeblock_residual<data_T,res_T,CONFIG_T>(node_attr_1D,edge_attr_aggr_1D,node_update_1D,core_node_w0,core_node_b0,core_node_w1,core_node_b1,core_node_w2,core_node_b2,core_node_w3,core_node_b3);
   }
 
   template<class data_T, class res_T, typename CONFIG_T>

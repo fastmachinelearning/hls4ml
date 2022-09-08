@@ -241,6 +241,7 @@ class VivadoWriter(Writer):
                 inputs = model.get_input_variables()
                 outputs = model.get_output_variables()
                 for layer in model.get_layers():
+                    print(f"layer: {layer}")
                     vars = layer.get_variables()
                     print(f"layer.get_variables(): {vars}")
                     for var in vars:
