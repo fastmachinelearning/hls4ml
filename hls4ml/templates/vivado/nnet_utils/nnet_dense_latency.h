@@ -81,7 +81,7 @@ void dense_latency(
         }
     }
 
-    std::cout<< "dense_latency CONFIG_T::n_out: " << CONFIG_T::n_out << "\n";
+    // std::cout<< "dense_latency CONFIG_T::n_out: " << CONFIG_T::n_out << "\n";
     // Do the matrix-multiply
     Product1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
         if (CONFIG_T::io_type == io_serial){

@@ -14,9 +14,48 @@ what role does #pragma HLS UNROLL play? -> parallization
 what is par_factor from nnet_graph.h? -> par_factor == parallelization factor
 
 
-at /home/swissman777/projects/pyg_to_hls_hls4ml/hls4ml/converters/pyg/interaction_network_blocks.py,
+at /projects/pyg_to_hls_hls4ml/hls4ml/converters/pyg/interaction_network_blocks.py,
 the pyg_handlers show the forward pipeline via update_dict. For arbitrary residual blocks, this will be a bit difficult.
 You may want to integrate residual block as a new nodeblock class
 
 
 merge_function_template
+
+When I convert dense I get pointwise_conv_1d_cl in myproject.cpp, idk why
+
+also you gotta update the residual in myproject.cpp to actually do something
+
+also maybe double checking the latency of pipeline vs dataflow by testing their latency may be a good idea.
+
+add in node_attr and edge_attr
+
+you may want to make residualblock a 1d block, like concateneate_1D, or make residual 1D be called by ResidualBlock wrapper --> turns out this 1d seperation is not necessary, since Duarte's group needed this to paraellize per node due to concatenation
+
+
+
+MSE_l :[0.10423261 0.02610505 0.10171182 ... 0.12116043 0.06076918 0.04062333]
+MSE means: 0.0676359012722969
+
+MSE_l :[0.0221072  0.0078117  0.01286493 ... 0.00261977 0.01158217 0.00487536]
+MSE means: 0.007289031986147165
+
+If a sepearte residual block doesn't work, just try making nodeblock residual
+(have something like nodeblock_residual be called with nodeblock for rapid prototyping)
+
+
+
+merg_config1 from concatenate n_elem is prob wrong
+
+
+IMPORTANT: using dense_resource gives innaccuracy problems (even with ap_fixed<64,8>) whereas invoking  nnet::dense_latency (which I got from using default nnet::dense) gives good accuracy  
+
+MY precision setting (ap_fixed<64,8) seems to be different from From the activation precision (which seems to be ap_fixed<18,8>???) 
+struct activation_config : nnet::activ_config {
+        static const unsigned n_in = LAYER7_OUT_DIM;
+        static const unsigned table_size = 1024;
+        static const unsigned io_type = nnet::io_parallel;
+        static const unsigned reuse_factor = 1;
+        static const unsigned activation = 0;
+        typedef ap_fixed<18,8> table_t;
+    };
+
