@@ -47,7 +47,9 @@ If a sepearte residual block doesn't work, just try making nodeblock residual
 merg_config1 from concatenate n_elem is prob wrong
 
 
-IMPORTANT: using dense_resource gives innaccuracy problems (even with ap_fixed<64,8>) whereas invoking  nnet::dense_latency (which I got from using default nnet::dense) gives good accuracy  
+IMPORTANT: using dense_resource gives innaccuracy problems (even with ap_fixed<64,8>) whereas invoking  nnet::dense_latency (which I got from using default nnet::dense) gives good accuracy for Encoder. 
+HOWEVER: using normal dense is detrimental for nnet::dense_mult_3lyr in nodeblock. 
+My guess is that this has something to do with the flags 
 
 MY precision setting (ap_fixed<64,8) seems to be different from From the activation precision (which seems to be ap_fixed<18,8>???) 
 struct activation_config : nnet::activ_config {
