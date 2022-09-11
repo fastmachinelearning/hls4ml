@@ -1014,7 +1014,7 @@ namespace nnet {
       //   //#pragma HLS PIPELINE II=1
       // }
       res[ii] = data1[ii] + data2[ii];
-      // std::cout << "Residual output index: " << ii << ", output: "<< res[ii]<< ", input1: "<< data1[ii] <<", input2: "<< data2[ii]<<"\n";
+      std::cout << "Residual output index: " << ii << ", output: "<< res[ii]<< ", input1: "<< data1[ii] <<", input2: "<< data2[ii]<<"\n";
     }
   }
 
@@ -1147,11 +1147,12 @@ namespace nnet {
       // data_T phi_input[CONFIG_T::common_dim];
       data_T phi_input[CONFIG_T::node_dim];
       #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
-      // std::cout << "c = x + aggr_out\n";
+      std::cout << "c = x + aggr_out\n";
       // nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
       nnet::residualBlock<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
       // nnet::add<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
       // send it through NN
+      std::cout << "n_layers: " <<  CONFIG_T::n_layers<< "\n";
         if(CONFIG_T::n_layers == 1){
 	      nnet::dense_mult_1lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0);
         }
@@ -1159,19 +1160,18 @@ namespace nnet {
 	      nnet::dense_mult_2lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1);
         }
         else if(CONFIG_T::n_layers == 3){
-        std::cout << "n_layers == 3" << "\n";
 	      nnet::dense_mult_3lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2);
         }
         else { // CONFIG_T::n_layers == 4
 	      nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2, core_node_w3, core_node_b3);
         }
 
-      // std::cout << "node update row: " << i <<"\n";
-      // for (int j=0; j<CONFIG_T::node_update_config::n_cols; j++){
-      //     std::cout << "col: " << j << ", output: "<< node_update[i][j]<<"\n";
-      // }
+      std::cout << "node update row: " << i <<"\n";
+      for (int j=0; j<CONFIG_T::node_update_config::n_cols; j++){
+          std::cout << "col: " << j << ", output: "<< node_update[i][j]<<"\n";
+      }
 
-      // std::cout << "ResidualBlock row: " << i <<"\n";
+      std::cout << "ResidualBlock row: " << i <<"\n";
       nnet::residualBlock<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], node_update[i], node_update_update[i]);
     }
 
