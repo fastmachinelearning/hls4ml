@@ -2061,6 +2061,12 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
                 relu_config = self.config_layer('Activation', relu_params)
                 configs[f"relu_config{relu_count}"] = relu_config
                 last_n_out = relu_params['n_in']
+            elif module.__class__.__name__ == "LeakyReLU":
+                relu_count += 1
+                relu_params = self.get_relu_params(relu_count, last_n_out)
+                relu_config = self.config_layer('Activation', relu_params)
+                configs[f"relu_config{relu_count}"] = relu_config
+                last_n_out = relu_params['n_in']
 
         # DUMMIES
         if linear_count < 4:

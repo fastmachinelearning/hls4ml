@@ -114,6 +114,24 @@ void  relu1(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     relu_max<data_T, res_T, 1, CONFIG_T>(data, res);
 }
 
+template<class data_T, class res_T, typename CONFIG_T>
+void  leaky_relu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
+{
+    if (CONFIG_T::io_type == io_parallel){
+        #pragma HLS PIPELINE
+    }
+
+    data_T datareg;
+    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
+        if (CONFIG_T::io_type == io_serial){
+            #pragma HLS PIPELINE
+        }
+        datareg = data[ii];
+        if (datareg > 0) res[ii] = datareg;
+        else res[ii] = datareg/100;
+    }
+}
+
 // *************************************************
 //       Sigmoid Activation
 // *************************************************

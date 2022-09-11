@@ -61,3 +61,5 @@ struct activation_config : nnet::activ_config {
         typedef ap_fixed<18,8> table_t;
     };
 
+
+using standardscaler for tau3mu dataset is no longer necessary. Just make sure you have enough integer bit width

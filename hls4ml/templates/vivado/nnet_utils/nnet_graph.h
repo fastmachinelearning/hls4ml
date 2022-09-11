@@ -163,7 +163,8 @@ namespace nnet {
     // nnet::dense<data_T, data_T, typename CONFIG_T::dense_config1>(data, data0_logits, weights0, biases0);
     data_T data0[CONFIG_T::dense_config1::n_out];
     #pragma HLS ARRAY_PARTITION variable=data0 complete dim=0
-    nnet::relu<data_T, data_T, typename CONFIG_T::relu_config1>(data0_logits, data0);
+    // nnet::relu<data_T, data_T, typename CONFIG_T::relu_config1>(data0_logits, data0);
+    nnet::leaky_relu<data_T, data_T, typename CONFIG_T::relu_config1>(data0_logits, data0);
 
     nnet::dense_resource<data_T, res_T, typename CONFIG_T::dense_config2>(data0, res, weights1, biases1);
     // nnet::dense<data_T, res_T, typename CONFIG_T::dense_config2>(data0, res, weights1, biases1);
@@ -1014,7 +1015,7 @@ namespace nnet {
       //   //#pragma HLS PIPELINE II=1
       // }
       res[ii] = data1[ii] + data2[ii];
-      std::cout << "Residual output index: " << ii << ", output: "<< res[ii]<< ", input1: "<< data1[ii] <<", input2: "<< data2[ii]<<"\n";
+      // std::cout << "Residual output index: " << ii << ", output: "<< res[ii]<< ", input1: "<< data1[ii] <<", input2: "<< data2[ii]<<"\n";
     }
   }
 
@@ -1166,12 +1167,12 @@ namespace nnet {
 	      nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2, core_node_w3, core_node_b3);
         }
 
-      std::cout << "node update row: " << i <<"\n";
-      for (int j=0; j<CONFIG_T::node_update_config::n_cols; j++){
-          std::cout << "col: " << j << ", output: "<< node_update[i][j]<<"\n";
-      }
+      // std::cout << "node update row: " << i <<"\n";
+      // for (int j=0; j<CONFIG_T::node_update_config::n_cols; j++){
+      //     std::cout << "col: " << j << ", output: "<< node_update[i][j]<<"\n";
+      // }
 
-      std::cout << "ResidualBlock row: " << i <<"\n";
+      // std::cout << "ResidualBlock row: " << i <<"\n";
       nnet::residualBlock<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], node_update[i], node_update_update[i]);
     }
 
