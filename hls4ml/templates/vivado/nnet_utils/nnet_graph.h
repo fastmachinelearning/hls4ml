@@ -144,8 +144,8 @@ namespace nnet {
 			 typename CONFIG_T::dense_config1::weight_t weights0[CONFIG_T::dense_config1::n_in*CONFIG_T::dense_config1::n_out],
 			 typename CONFIG_T::dense_config1::bias_t   biases0[CONFIG_T::dense_config1::n_out])
   {
-    // nnet::dense_resource<data_T, res_T, typename CONFIG_T::dense_config1>(data, res, weights0, biases0);
-    nnet::dense<data_T, res_T, typename CONFIG_T::dense_config1>(data, res, weights0, biases0);
+    nnet::dense_resource<data_T, res_T, typename CONFIG_T::dense_config1>(data, res, weights0, biases0);
+    // nnet::dense<data_T, res_T, typename CONFIG_T::dense_config1>(data, res, weights0, biases0);
   }
 
   template<class data_T, class res_T, typename CONFIG_T>
@@ -159,14 +159,14 @@ namespace nnet {
   {
     data_T data0_logits[CONFIG_T::dense_config1::n_out];
     #pragma HLS ARRAY_PARTITION variable=data0_logits complete dim=0
-    // nnet::dense_resource<data_T, data_T, typename CONFIG_T::dense_config1>(data, data0_logits, weights0, biases0);
-    nnet::dense<data_T, data_T, typename CONFIG_T::dense_config1>(data, data0_logits, weights0, biases0);
+    nnet::dense_resource<data_T, data_T, typename CONFIG_T::dense_config1>(data, data0_logits, weights0, biases0);
+    // nnet::dense<data_T, data_T, typename CONFIG_T::dense_config1>(data, data0_logits, weights0, biases0);
     data_T data0[CONFIG_T::dense_config1::n_out];
     #pragma HLS ARRAY_PARTITION variable=data0 complete dim=0
     nnet::relu<data_T, data_T, typename CONFIG_T::relu_config1>(data0_logits, data0);
 
-    // nnet::dense_resource<data_T, res_T, typename CONFIG_T::dense_config2>(data0, res, weights1, biases1);
-    nnet::dense<data_T, res_T, typename CONFIG_T::dense_config2>(data0, res, weights1, biases1);
+    nnet::dense_resource<data_T, res_T, typename CONFIG_T::dense_config2>(data0, res, weights1, biases1);
+    // nnet::dense<data_T, res_T, typename CONFIG_T::dense_config2>(data0, res, weights1, biases1);
   }
 
   template<class data_T, class res_T, typename CONFIG_T>
@@ -182,22 +182,22 @@ namespace nnet {
   {
     data_T data0_logits[CONFIG_T::dense_config1::n_out];
     #pragma HLS ARRAY_PARTITION variable=data0_logits complete dim=0
-    // nnet::dense_resource<data_T, data_T, typename CONFIG_T::dense_config1>(data, data0_logits, weights0, biases0);
-    nnet::dense<data_T, data_T, typename CONFIG_T::dense_config1>(data, data0_logits, weights0, biases0);
+    nnet::dense_resource<data_T, data_T, typename CONFIG_T::dense_config1>(data, data0_logits, weights0, biases0);
+    // nnet::dense<data_T, data_T, typename CONFIG_T::dense_config1>(data, data0_logits, weights0, biases0);
     data_T data0[CONFIG_T::dense_config1::n_out];
     #pragma HLS ARRAY_PARTITION variable=data0 complete dim=0
     nnet::relu<data_T, data_T, typename CONFIG_T::relu_config1>(data0_logits, data0);
 
     data_T data1_logits[CONFIG_T::dense_config2::n_out];
     #pragma HLS ARRAY_PARTITION variable=data1_logits complete dim=0
-    // nnet::dense_resource<data_T, data_T, typename CONFIG_T::dense_config2>(data0, data1_logits, weights1, biases1);
-    nnet::dense<data_T, data_T, typename CONFIG_T::dense_config2>(data0, data1_logits, weights1, biases1);
+    nnet::dense_resource<data_T, data_T, typename CONFIG_T::dense_config2>(data0, data1_logits, weights1, biases1);
+    // nnet::dense<data_T, data_T, typename CONFIG_T::dense_config2>(data0, data1_logits, weights1, biases1);
     data_T data1[CONFIG_T::dense_config2::n_out];
     #pragma HLS ARRAY_PARTITION variable=data1 complete dim=0
     nnet::relu<data_T, data_T, typename CONFIG_T::relu_config2>(data1_logits, data1);
 
-    // nnet::dense_resource<data_T, res_T, typename CONFIG_T::dense_config3>(data1, res, weights2, biases2);
-    nnet::dense<data_T, res_T, typename CONFIG_T::dense_config3>(data1, res, weights2, biases2);
+    nnet::dense_resource<data_T, res_T, typename CONFIG_T::dense_config3>(data1, res, weights2, biases2);
+    // nnet::dense<data_T, res_T, typename CONFIG_T::dense_config3>(data1, res, weights2, biases2);
   }
 
   template<class data_T, class res_T, typename CONFIG_T>
@@ -215,30 +215,30 @@ namespace nnet {
   {
     data_T data0_logits[CONFIG_T::dense_config1::n_out];
     #pragma HLS ARRAY_PARTITION variable=data0_logits complete dim=0
-    // nnet::dense_resource<data_T, data_T, typename CONFIG_T::dense_config1>(data, data0_logits, weights0, biases0);
-    nnet::dense<data_T, data_T, typename CONFIG_T::dense_config1>(data, data0_logits, weights0, biases0);
+    nnet::dense_resource<data_T, data_T, typename CONFIG_T::dense_config1>(data, data0_logits, weights0, biases0);
+    // nnet::dense<data_T, data_T, typename CONFIG_T::dense_config1>(data, data0_logits, weights0, biases0);
     data_T data0[CONFIG_T::dense_config1::n_out];
     #pragma HLS ARRAY_PARTITION variable=data0 complete dim=0
     nnet::relu<data_T, data_T, typename CONFIG_T::relu_config1>(data0_logits, data0);
 
     data_T data1_logits[CONFIG_T::dense_config2::n_out];
     #pragma HLS ARRAY_PARTITION variable=data1_logits complete dim=0
-    // nnet::dense_resource<data_T, data_T, typename CONFIG_T::dense_config2>(data0, data1_logits, weights1, biases1);
-    nnet::dense<data_T, data_T, typename CONFIG_T::dense_config2>(data0, data1_logits, weights1, biases1);
+    nnet::dense_resource<data_T, data_T, typename CONFIG_T::dense_config2>(data0, data1_logits, weights1, biases1);
+    // nnet::dense<data_T, data_T, typename CONFIG_T::dense_config2>(data0, data1_logits, weights1, biases1);
     data_T data1[CONFIG_T::dense_config2::n_out];
     #pragma HLS ARRAY_PARTITION variable=data1 complete dim=0
     nnet::relu<data_T, data_T, typename CONFIG_T::relu_config2>(data1_logits, data1);
 
     data_T data2_logits[CONFIG_T::dense_config3::n_out];
     #pragma HLS ARRAY_PARTITION variable=data2_logits complete dim=0
-    // nnet::dense_resource<data_T, data_T, typename CONFIG_T::dense_config3>(data1, data2_logits, weights2, biases2);
-    nnet::dense<data_T, data_T, typename CONFIG_T::dense_config3>(data1, data2_logits, weights2, biases2);
+    nnet::dense_resource<data_T, data_T, typename CONFIG_T::dense_config3>(data1, data2_logits, weights2, biases2);
+    // nnet::dense<data_T, data_T, typename CONFIG_T::dense_config3>(data1, data2_logits, weights2, biases2);
     data_T data2[CONFIG_T::dense_config3::n_out];
     #pragma HLS ARRAY_PARTITION variable=data2 complete dim=0
     nnet::relu<data_T, data_T, typename CONFIG_T::relu_config3>(data2_logits, data2);
 
-    // nnet::dense_resource<data_T, res_T, typename CONFIG_T::dense_config4>(data2, res, weights3, biases3);
-    nnet::dense<data_T, res_T, typename CONFIG_T::dense_config4>(data2, res, weights3, biases3);
+    nnet::dense_resource<data_T, res_T, typename CONFIG_T::dense_config4>(data2, res, weights3, biases3);
+    // nnet::dense<data_T, res_T, typename CONFIG_T::dense_config4>(data2, res, weights3, biases3);
   }
 
   //////////////////////////////dataflow/////////////////////////////////////
@@ -1060,6 +1060,7 @@ namespace nnet {
       // data_T phi_input[CONFIG_T::common_dim];
       data_T phi_input[CONFIG_T::node_dim];
       #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
+      std::cout << "c = x + aggr_out\n";
       // nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
       nnet::residualBlock<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
       // nnet::add<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
@@ -1146,6 +1147,7 @@ namespace nnet {
       // data_T phi_input[CONFIG_T::common_dim];
       data_T phi_input[CONFIG_T::node_dim];
       #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
+      // std::cout << "c = x + aggr_out\n";
       // nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
       nnet::residualBlock<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
       // nnet::add<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
@@ -1157,12 +1159,20 @@ namespace nnet {
 	      nnet::dense_mult_2lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1);
         }
         else if(CONFIG_T::n_layers == 3){
+        std::cout << "n_layers == 3" << "\n";
 	      nnet::dense_mult_3lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2);
         }
         else { // CONFIG_T::n_layers == 4
 	      nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2, core_node_w3, core_node_b3);
         }
-      nnet::residualBlock<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(phi_input, node_update[i], node_update_update[i]);
+
+      // std::cout << "node update row: " << i <<"\n";
+      // for (int j=0; j<CONFIG_T::node_update_config::n_cols; j++){
+      //     std::cout << "col: " << j << ", output: "<< node_update[i][j]<<"\n";
+      // }
+
+      // std::cout << "ResidualBlock row: " << i <<"\n";
+      nnet::residualBlock<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], node_update[i], node_update_update[i]);
     }
 
     // output array --> output vector
@@ -1184,7 +1194,7 @@ namespace nnet {
 			typename CONFIG_T::dense_config4::weight_t  core_node_w3[CONFIG_T::dense_config4::n_in*CONFIG_T::dense_config4::n_out],
 			typename CONFIG_T::dense_config4::bias_t    core_node_b3[CONFIG_T::dense_config4::n_out])
   {
-
+    std::cout << "Nodeblock start \n";
     // nodeblock_pipeline<data_T,res_T,CONFIG_T>(node_attr_1D,edge_attr_aggr_1D,node_update_1D,core_node_w0,core_node_b0,core_node_w1,core_node_b1,core_node_w2,core_node_b2,core_node_w3,core_node_b3);
     nodeblock_residual<data_T,res_T,CONFIG_T>(node_attr_1D,edge_attr_aggr_1D,node_update_1D,core_node_w0,core_node_b0,core_node_w1,core_node_b1,core_node_w2,core_node_b2,core_node_w3,core_node_b3);
   }
@@ -1199,7 +1209,7 @@ namespace nnet {
   {
     // std::cout << "NodeEncoder CONFIG_T::n_out : " << CONFIG_T::n_out<<"\n";
     // std::cout << "NodeEncoder CONFIG_T::n_rows : " << CONFIG_T::n_rows<<"\n";
-    // std::cout << "Encoder starting with n_in: "  << CONFIG_T::n_in<<" \n";
+    std::cout << "Encoder starting with n_in: "  << CONFIG_T::n_in<<" \n";
 
     //initialize arrays
     //1. node_attr (input)
