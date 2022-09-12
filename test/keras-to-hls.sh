@@ -11,7 +11,7 @@ strategy="Latency"
 type="ap_fixed<16,6>"
 yml=""
 basedir=vivado_prj
-
+precision="float"
 sanitizer="[^A-Za-z0-9._]"
 
 function print_usage {
@@ -47,9 +47,9 @@ function print_usage {
    echo "      Prints this help message."
 }
 
-while getopts ":x:b:B:c:sr:g:t:d:y:h" opt; do
+while getopts ":x:b:B:c:sr:g:t:d:y:p:h" opt; do
    case "$opt" in
-   x) part=$OPTARG
+   x) part=$OPTARG 
       ;;
    b) board=$OPTARG
       ;;
@@ -68,6 +68,8 @@ while getopts ":x:b:B:c:sr:g:t:d:y:h" opt; do
    d) basedir=$OPTARG
       ;;
    y) yml=$OPTARG
+      ;;
+   p) precision=$OPTARG
       ;;
    h)
       print_usage
@@ -109,7 +111,6 @@ do
    if [ ! -z "${yml}" ]; then
       hlscfg=`sed -ne '/HLSConfig/,$p' ../example-models/config-files/${yml}`
    fi
-
    echo "KerasJson: ../example-models/keras/${name}.json" > ${file}
    echo "KerasH5:   ../example-models/keras/${h5}.h5" >> ${file}
    echo "OutputDir: ${prjdir}" >> ${file}
@@ -120,7 +121,6 @@ do
    echo "ClockPeriod: ${clock}" >> ${file}
    echo "" >> ${file}
    echo "IOType: ${io}" >> ${file}
-   
    if [ -z "${hlscfg}" ]
    then
       echo "HLSConfig:" >> ${file}
@@ -131,7 +131,16 @@ do
    else
       echo "${hlscfg}" >> ${file}
    fi
-
+   # Adding VivadoAccelerator config to file
+   if [ "${backend}" = "VivadoAccelerator" ]; 
+   then 
+     echo "AcceleratorConfig:" >> ${file}
+     echo "  Board: ${board}" >> ${file}
+     echo "  Precision:" >> ${file}
+     echo "    Input: ${precision}" >> ${file}
+     echo "    Output: ${precision}" >> ${file}
+   fi
+   
    ${pycmd} ../scripts/hls4ml convert -c ${file} || exit 1
    rm ${file}
    rm -rf "${prjdir}"

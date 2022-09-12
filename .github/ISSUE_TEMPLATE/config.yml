@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Talk and engage with the comunity
+    url: https://github.com/fastmachinelearning/hls4ml/discussions/categories/general
+    about: Check out the GitHub discusisons page for hls4ml. This is the best way to get in touch with us. In particular, if you have a question about hls4ml or a general problem that is likely not a bug.

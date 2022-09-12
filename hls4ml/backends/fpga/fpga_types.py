@@ -184,11 +184,11 @@ class VariableDefinition(object):
 
 class VivadoArrayVariableDefinition(VariableDefinition):
     def definition_cpp(self, name_suffix='', as_reference=False):
-        return '{type} {name}{suffix}[{shape}]'.format(type=self.type.name, name=self.cppname, suffix=name_suffix, shape=self.size_cpp())
+        return '{type} {name}{suffix}[{shape}]'.format(type=self.type.name, name=self.name, suffix=name_suffix, shape=self.size_cpp())
 
 class QuartusArrayVariableDefinition(VariableDefinition):
     def definition_cpp(self, name_suffix='', as_reference=False):
-        return '{type} {name}{suffix}[{shape}] {pragma}'.format(type=self.type.name, name=self.cppname, suffix=name_suffix, shape=self.size_cpp(), pragma=self.pragma)
+        return '{type} {name}{suffix}[{shape}] {pragma}'.format(type=self.type.name, name=self.name, suffix=name_suffix, shape=self.size_cpp(), pragma=self.pragma)
 
 class ArrayVariableConverter(object):
     def __init__(self, type_converter, prefix, definition_cls):
@@ -254,9 +254,16 @@ class QuartusStructMemberVariableConverter(StructMemberVariableConverter):
 class VivadoStreamVariableDefinition(VariableDefinition):
     def definition_cpp(self, name_suffix='', as_reference=False):
         if as_reference: # Function parameter
-            return 'hls::stream<{type}> &{name}{suffix}'.format(type=self.type.name, name=self.cppname, suffix=name_suffix)
+            return 'hls::stream<{type}> &{name}{suffix}'.format(type=self.type.name, name=self.name, suffix=name_suffix)
         else: # Declaration
-            return 'hls::stream<{type}> {name}{suffix}("{name}")'.format(type=self.type.name, name=self.cppname, suffix=name_suffix)
+            return 'hls::stream<{type}> {name}{suffix}("{name}")'.format(type=self.type.name, name=self.name, suffix=name_suffix)
+
+class QuartusStreamVariableDefinition(VariableDefinition):
+    def definition_cpp(self, name_suffix='', as_reference=False):
+        if as_reference: # Function parameter
+            return 'stream<{type}> &{name}{suffix}'.format(type=self.type.name, name=self.name, suffix=name_suffix)
+        else:            # Declaration
+            return 'stream<{type}> {name}{suffix}'.format(type=self.type.name, name=self.name, suffix=name_suffix)
 
 class StreamVariableConverter(object):
     def __init__(self, type_converter, prefix, definition_cls):
@@ -279,6 +286,10 @@ class StreamVariableConverter(object):
 class VivadoStreamVariableConverter(StreamVariableConverter):
     def __init__(self, type_converter):
         super().__init__(type_converter=type_converter, prefix='Vivado', definition_cls=VivadoStreamVariableDefinition)
+
+class QuartusStreamVariableConverter(StreamVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Quartus', definition_cls=QuartusStreamVariableDefinition)
 
 #endregion
 
@@ -315,7 +326,7 @@ class QuartusInplaceVariableConverter(InplaceVariableConverter):
 
 class StaticWeightVariableDefinition(VariableDefinition):
     def definition_cpp(self, name_suffix='', as_reference=False):
-        return '{type} {name}[{size}]'.format(type=self.type.name, name=self.cppname, size=self.data_length)
+        return '{type} {name}[{size}]'.format(type=self.type.name, name=self.name, size=self.data_length)
 
 class StaticWeightVariableConverter(object):
     def __init__(self, type_converter):

@@ -23,9 +23,9 @@ class VivadoBackend(FPGABackend):
 
     def _register_layer_attributes(self):
         extended_attrs = {
-            SimpleRNN: [Attribute('recurrent_reuse_factor', default=1)],
-            LSTM: [Attribute('recurrent_reuse_factor', default=1)],
-            GRU: [Attribute('recurrent_reuse_factor', default=1)],
+            SimpleRNN: [Attribute('recurrent_reuse_factor', default=1), Attribute('static', value_type=bool, default=True)],
+            LSTM: [Attribute('recurrent_reuse_factor', default=1), Attribute('static', value_type=bool, default=True)],
+            GRU: [Attribute('recurrent_reuse_factor', default=1), Attribute('static', value_type=bool, default=True)],
         }
         self.attribute_map.update(extended_attrs)
 
@@ -56,27 +56,33 @@ class VivadoBackend(FPGABackend):
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
         vivado_types = [
-            'vivado:register_bram_weights',
             'vivado:transform_types',
+            'vivado:register_bram_weights',
             'vivado:generate_conv_streaming_instructions',
             'vivado:apply_resource_strategy',
         ]
         vivado_types_flow = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
 
         templates = self._get_layer_templates()
-        template_flow = register_flow('apply_templates', templates, requires=[init_flow], backend=self.name)
+        template_flow = register_flow('apply_templates', self._get_layer_templates, requires=[init_flow], backend=self.name)
 
         writer_passes = [
+            'make_stamp',
             'vivado:write_hls'
         ]
-        writer_flow_requirements = ['optimize', vivado_types_flow, template_flow]
-        self._writer_flow = register_flow('write', writer_passes, requires=writer_flow_requirements, backend=self.name)
+        self._writer_flow = register_flow('write', writer_passes, requires=['vivado:ip'], backend=self.name)
+
+        fifo_depth_opt_passes = [
+            'vivado:fifo_depth_optimization'
+        ] + writer_passes # After optimization, a new project will be written
+
+        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=[self._writer_flow], backend=self.name)
 
         all_passes = get_backend_passes(self.name)
 
         extras = [
             # Ideally this should be empty
-            opt_pass for opt_pass in all_passes if opt_pass not in initializers + streaming_passes + quantization_passes + optimization_passes + vivado_types + templates + writer_passes
+            opt_pass for opt_pass in all_passes if opt_pass not in initializers + streaming_passes + quantization_passes + optimization_passes + vivado_types + templates + writer_passes + fifo_depth_opt_passes
         ]
 
         if len(extras) > 0:
@@ -105,7 +111,7 @@ class VivadoBackend(FPGABackend):
 
         return config
 
-    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
+    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False, fifo_opt=False):
         if 'linux' in sys.platform:
             found = os.system('command -v vivado_hls > /dev/null')
             if found != 0:
@@ -113,8 +119,8 @@ class VivadoBackend(FPGABackend):
         
         curr_dir = os.getcwd()
         os.chdir(model.config.get_output_dir())
-        os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
-            .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
+        os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt}"'
+            .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth, fifo_opt=fifo_opt))
         os.chdir(curr_dir)
 
         return parse_vivado_report(model.config.get_output_dir())
@@ -241,9 +247,6 @@ class VivadoBackend(FPGABackend):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
-        recurrent_bias = np.zeros(layer.weights['recurrent_weight'].shape[1])
-        layer.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
-
         index_t = IntegerPrecisionType(width=1, signed=False)
 
         if 'table_t' not in layer.attributes:
@@ -266,9 +269,6 @@ class VivadoBackend(FPGABackend):
     def init_gru(self, layer):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
-
-        recurrent_bias = np.zeros(layer.weights['recurrent_weight'].shape[1])
-        layer.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
 
         index_t = IntegerPrecisionType(width=1, signed=False)
 

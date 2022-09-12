@@ -174,6 +174,32 @@ void im2col_2d_cl(
     }
 }
 
+template<class data_T, typename CONFIG_T>
+void im2col_2d_pointwise_cl(
+    data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],
+    data_T data_col[CONFIG_T::n_chan],
+    const int row,
+    const int col)
+{
+    int index = 0;
+    int input_row = -CONFIG_T::pad_top + row * CONFIG_T::stride_height;
+
+    ChannelLoop:
+    for (int channel = 0; channel < CONFIG_T::n_chan; channel++) {
+        #pragma HLS UNROLL
+        if (input_row < 0 || input_row >= CONFIG_T::in_height) {
+            data_col[index++] = 0;
+        } else {
+            int input_col = -CONFIG_T::pad_left + col * CONFIG_T::stride_width;
+            if (input_col >= 0 && input_col < CONFIG_T::in_width) {
+                data_col[index++] = data[input_row * CONFIG_T::in_width * CONFIG_T::n_chan + input_col * CONFIG_T::n_chan + channel];
+            } else {
+                data_col[index++] = 0;
+            }
+        }
+    }
+}
+
 template<class data_T, class res_T, typename CONFIG_T>
 void conv_2d_resource_cl(
     data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],
@@ -203,6 +229,48 @@ void conv_2d_resource_cl(
         for (int j = 0; j < CONFIG_T::out_width; j++) {
             #pragma HLS PIPELINE
             im2col_2d_cl<data_T, CONFIG_T>(data, data_col, i, j);
+            dense<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
+            FiltLoop:
+            for (int k = 0; k < CONFIG_T::n_filt; k++) {
+                res[i * CONFIG_T::out_width * CONFIG_T::n_filt + j * CONFIG_T::n_filt + k] = res_col[k];
+            }
+        }
+    }
+}
+
+
+template<class data_T, class res_T, typename CONFIG_T>
+void pointwise_conv_2d_resource_cl(
+    data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],
+    res_T  res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt],
+    typename CONFIG_T::weight_t weights[CONFIG_T::n_chan * CONFIG_T::n_filt],
+    typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt]
+)
+{
+    assert(CONFIG_T::filt_height == 1 && CONFIG_T::filt_width == 1);
+
+    const int nin = CONFIG_T::n_chan;
+    const int nout = CONFIG_T::n_filt;
+    const int rufactor = CONFIG_T::reuse_factor;
+    const int block_factor = DIV_ROUNDUP(nin*nout, rufactor);
+
+    //#pragma HLS function_instantiate variable=weights,biases
+    //#pragma HLS RESOURCE         variable=weights core=RAM_2P_BRAM Commenting out the deisgnation HLS seems to choose correctly
+    //#pragma HLS ARRAY_RESHAPE   variable=weights block factor=block_factor
+    //#pragma HLS ARRAY_PARTITION variable=biases complete
+
+    data_T data_col[CONFIG_T::n_chan];
+    res_T res_col[CONFIG_T::n_filt];
+
+    #pragma HLS ARRAY_PARTITION variable=data_col complete
+    #pragma HLS ARRAY_PARTITION variable=res_col complete
+
+    HeightLoop:
+    for (int i = 0; i < CONFIG_T::out_height; i++) {
+        WidthLoop:
+        for (int j = 0; j < CONFIG_T::out_width; j++) {
+            #pragma HLS PIPELINE
+            im2col_2d_pointwise_cl<data_T, CONFIG_T>(data, data_col, i, j);
             dense<data_T, res_T, typename CONFIG_T::mult_config>(data_col, res_col, weights, biases);
             FiltLoop:
             for (int k = 0; k < CONFIG_T::n_filt; k++) {

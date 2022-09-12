@@ -26,6 +26,8 @@ def parse_zeropadding1d_layer(keras_layer, input_names, input_shapes, data_reade
         ]
         layer['out_width'] = output_shape[2]
         layer['n_chan'] = output_shape[1]
+
+        layer['in_width'] = input_shapes[0][2]
     else:
         output_shape = [
             input_shapes[0][0], # Batch
@@ -34,6 +36,8 @@ def parse_zeropadding1d_layer(keras_layer, input_names, input_shapes, data_reade
         ]
         layer['out_width'] = output_shape[1]
         layer['n_chan'] = output_shape[2]
+
+        layer['in_width'] = input_shapes[0][1]
 
     return layer, output_shape
 
@@ -74,6 +78,9 @@ def parse_zeropadding2d_layer(keras_layer, input_names, input_shapes, data_reade
         layer['out_height'] = output_shape[2]
         layer['out_width'] = output_shape[3]
         layer['n_chan'] = output_shape[1]
+
+        layer['in_height'] = input_shapes[0][2]
+        layer['in_width'] = input_shapes[0][3]
     else:
         output_shape = [
             input_shapes[0][0], # Batch
@@ -84,5 +91,8 @@ def parse_zeropadding2d_layer(keras_layer, input_names, input_shapes, data_reade
         layer['out_height'] = output_shape[1]
         layer['out_width'] = output_shape[2]
         layer['n_chan'] = output_shape[3]
+
+        layer['in_height'] = input_shapes[0][1]
+        layer['in_width'] = input_shapes[0][2]
 
     return layer, output_shape

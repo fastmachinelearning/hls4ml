@@ -59,7 +59,12 @@ class OutputRoundingSaturationMode(ConfigurableOptimizerPass):
             new_precision = FixedPrecisionType(old_precision.width, old_precision.integer, old_precision.signed, self.rounding_mode, self.saturation_mode, self.saturation_bits)
         else: # in case the precision is a string
             new_precision = self.precision_string_modify(old_precision)
-        node.get_output_variable().type.precision = new_precision
+
+        out_var = node.get_output_variable()
+        out_t = NamedType(out_var.type.name, new_precision)
+        out_var.type = out_t
+        node.attributes['result_t'] = out_t
+
         if node.get_attr('accum_t') is not None:
             accum_t = NamedType('layer{}_accum_t'.format(node.index), new_precision)
             node.set_attr('accum_t', new_precision)
@@ -179,16 +184,23 @@ class QKerasFactorizeAlpha(OptimizerPass):
 
         # insert a Batch Normalization layer to apply the alpha scale
         if alpha == 'auto_po2':
-            scale_bits = np.abs(np.log2(scale)).max().astype('int') + 1
+            scale_bits = np.maximum(np.abs(np.log2(scale)).max().astype('int') + 1, 2)
             scale_quantizer = QKerasPO2Quantizer({'class_name' : 'quantized_po2', 'config': {'bits': scale_bits}})
         else:
             scale_quantizer = None
+
+        if 'Dense' in node.class_name:
+            n_in = node.get_attr('n_out')
+        elif 'Conv' in node.class_name:
+            n_in = node.get_attr('out_width') * node.get_attr('out_height', 1) * node.get_attr('n_filt')
+        else:
+            n_in = node.get_attr('n_out')
 
         attrs = {
             'name' : node.get_attr('name') + '_alpha',
             'class_name' : 'Alpha',
             'inputs' : node.outputs,
-            'n_in' : node.get_attr('n_out'),
+            'n_in' : n_in,
             'n_filt' : node.get_attr('n_filt', -1),
             'reuse_factor' : node.get_attr('reuse_factor'),
             'scale_data': scale,

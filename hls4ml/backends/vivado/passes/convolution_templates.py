@@ -222,6 +222,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
             params['n_chan'] = input_shape[0]
         
         params['filt_width'] = 1
+        params['stride_width'] = 1
         params['dilation'] = node.get_attr('dilation', 1)
         params['nzeros'] = node.get_weights('pointwise').nzeros
         params['index'] = str(node.index) + '_pointwise'
@@ -305,6 +306,7 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
             params['in_width'] = node.get_output_variable().shape[2]
 
         params['filt_height'] = params['filt_width'] = 1
+        params['stride_height'] = params['stride_width'] = 1
         params['dilation'] = node.get_attr('dilation', 1)
         params['nzeros'] = node.get_weights('pointwise').nzeros
         params['index'] = str(node.index) + '_pointwise'

@@ -1,10 +1,142 @@
 from hls4ml.model.layers import LSTM, SimpleRNN
+from hls4ml.backends.backend import get_backend
+from hls4ml.model.layers import GRU
 from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
+
+recurrent_include_list = ['nnet_utils/nnet_recurrent.h', 'nnet_utils/nnet_recurrent_stream.h']
+
+# Shared Matrix Multiplication Template (Dense)
+recr_mult_config_template = '''struct config{index}_mult : nnet::dense_config {{
+    static const unsigned n_in = {n_in};
+    static const unsigned n_out = {n_out};
+        
+    static const unsigned rf_pad = {rfpad};
+    static const unsigned bf_pad = {bfpad};
+    static const unsigned reuse_factor = {reuse};
+    static const unsigned reuse_factor_rounded = reuse_factor + rf_pad;
+    static const unsigned block_factor = DIV_ROUNDUP(n_in*n_out, reuse_factor);
+    static const unsigned block_factor_rounded = block_factor + bf_pad;
+    static const unsigned multiplier_factor = MIN(n_in, reuse_factor);
+    static const unsigned multiplier_limit = DIV_ROUNDUP(n_in*n_out, multiplier_factor);
+    static const unsigned multiplier_scale = multiplier_limit/n_out;
+    typedef {accum_t.name} accum_t;
+    typedef {bias_t.name} bias_t;
+    typedef {weight_t.name} weight_t;
+    
+    template<class x_T, class y_T>
+    using product = nnet::product::{product_type}<x_T, y_T>;
+}};\n'''
+
+# Activation Template 
+activ_config_template = '''struct {type}_config{index} : nnet::activ_config {{
+    static const unsigned n_in = {n_in};
+    static const unsigned table_size = {table_size};
+    static const unsigned io_type = nnet::{iotype};
+    static const unsigned reuse_factor = {reuse};
+}};\n'''
+
+# GRU Template
+gru_config_template = '''struct config{index} : nnet::gru_config {{
+    static const unsigned n_in  = {n_in};
+    static const unsigned n_out = {n_out};
+    static const unsigned n_units = {n_units};
+    static const unsigned n_timesteps = {n_timesteps};
+    static const unsigned n_outputs = {n_outputs};
+    static const bool return_sequences = {return_sequences};
+    
+    typedef {accum_t.name} accum_t;
+    typedef {weight_t.name} weight_t;
+    typedef {bias_t.name} bias_t;
+    
+    typedef {config_mult_x} mult_config_x;
+    typedef {config_mult_h} mult_config_h;
+    
+    typedef {act_t} ACT_CONFIG_T;
+    template<class x_T, class y_T, class config_T>
+    using activation = nnet::activation::{activation}<x_T, y_T, config_T>;
+
+    typedef {act_recurrent_t} ACT_CONFIG_RECURRENT_T;
+    template<class x_T, class y_T, class config_T>
+    using activation_recr = nnet::activation::{recurrent_activation}<x_T, y_T, config_T>;
+    
+    static const unsigned reuse_factor = {reuse};
+    static const bool store_weights_in_bram = false;
+}};\n'''
+
+gru_function_template = 'nnet::gru<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {wr}, {b}, {br});'
+
+class GRUConfigTemplate(LayerConfigTemplate):
+    def __init__(self):
+        super().__init__(GRU)
+        self.gru_template = gru_config_template
+        self.act_template = activ_config_template
+        self.recr_act_template = activ_config_template
+        self.mult_x_template = recr_mult_config_template
+        self.mult_h_template = recr_mult_config_template
+    
+    def format(self, node):
+        # Input has shape (n_timesteps, inp_dimensionality)
+        # Output / hidden units has shape (1 if !return_sequences else n_timesteps , n_units)
+        params = self._default_config_params(node)
+        params['n_units'] = node.get_attr('n_out')
+        params['n_outputs'] = node.get_attr('n_timesteps') if node.get_attr('return_sequences', False) else '1' 
+        params['return_sequences'] ='true' if node.get_attr('return_sequences', False) else 'false'
+        params['config_mult_x'] = 'config{}_x_mult'.format(node.index)
+        params['config_mult_h'] = 'config{}_h_mult'.format(node.index)
+        params['act_t'] = '{}_config{}'.format(node.get_attr('activation'), str(node.index) + '_act')
+        params['act_recurrent_t'] = '{}_config{}'.format(node.get_attr('recurrent_activation'), str(node.index) + '_rec_act')
+        gru_config = self.gru_template.format(**params)
+
+        # Activation is on candidate hidden state, dimensionality (1, n_units)
+        act_params = self._default_config_params(node)
+        act_params['type'] = node.get_attr('activation')
+        act_params['n_in'] = node.get_attr('n_out')
+        act_params['index'] = str(node.index) + '_act'
+        act_config = self.act_template.format(**act_params)
+
+        # Recurrent activation is on reset and update gates (therefore x2), dimensionality (1, n_units)
+        recr_act_params = self._default_config_params(node)
+        recr_act_params['type'] = node.get_attr('recurrent_activation')
+        recr_act_params['n_in'] = str(node.get_attr('n_out')) + ' * 2'
+        recr_act_params['index'] = str(node.index) + '_rec_act'
+        recr_act_config = self.recr_act_template.format(**recr_act_params)
+
+        # Multiplication config for matrix multiplications of type Wx (reset, update and candidate states)
+        mult_params_x = self._default_config_params(node)
+        mult_params_x['n_in'] = node.get_attr('n_in')
+        mult_params_x['n_out'] = str(node.get_attr('n_out')) + ' * 3'
+        mult_params_x['product_type'] = get_backend('quartus').product_type(node.get_input_variable().type.precision, node.get_weights('weight').type.precision)
+        mult_params_x['index'] = str(node.index) + '_x'
+        mult_config_x = self.mult_x_template.format(**mult_params_x)
+    
+        # Multiplication config for matrix multiplications of type Wh (reset, update and candidate states)
+        mult_params_h = self._default_config_params(node)
+        mult_params_h['n_in'] = node.get_attr('n_out')
+        mult_params_h['n_out'] = str(node.get_attr('n_out')) + ' * 3'
+        mult_params_h['reuse_factor'] = params['recurrent_reuse_factor']
+        mult_params_h['product_type'] = get_backend('quartus').product_type(node.get_input_variable().type.precision, node.get_weights('recurrent_weight').type.precision)
+        mult_params_h['index'] = str(node.index) + '_h'
+        mult_config_h = self.mult_h_template.format(**mult_params_h)
+
+        return mult_config_x + '\n' + mult_config_h + '\n' + recr_act_config + '\n' + act_config + '\n' + gru_config
+
+class GRUFunctionTemplate(FunctionCallTemplate):
+    def __init__(self):
+        super().__init__(GRU, include_header=recurrent_include_list)
+        self.template = gru_function_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        params['w'] = node.get_weights('weight').name
+        params['b'] = node.get_weights('bias').name
+        params['wr'] = node.get_weights('recurrent_weight').name
+        params['br'] = node.get_weights('recurrent_bias').name
+        return self.template.format(**params)
+
 
 #####################
 # activation templates
 #####################
-
 rnn_activ_config_template = """struct lstm_activ_config{index} : nnet::activ_config {{
     static const unsigned n_in = {n_in};
     static const unsigned table_size = {table_size};
@@ -34,20 +166,19 @@ class LstmConfigTemplate(LayerConfigTemplate):
 
     def format(self, node):
         lstm_params = self._default_config_params(node)
-        lstm_params ['n_in'] = node.get_attr('n_in')
-        lstm_params ['n_out'] = node.get_attr('n_out')
-        lstm_params ['n_timestamp'] = node.get_attr('n_timestamp', 5)
-        lstm_params ['sliding_window'] = str(node.get_attr('Sliding_window')).lower()
-        lstm_params ['return_sequences'] = str(node.get_attr('return_sequences')).lower()
-        lstm_params ['config_t'] = 'lstm_activ_config{}'.format(node.index)
-        lstm_params ['table_size'] = node.get_attr('table_size', 1024)
-
+        lstm_params['n_in'] = node.get_attr('n_in')
+        lstm_params['n_out'] = node.get_attr('n_out')
+        lstm_params['n_timestamp'] = node.get_attr('n_timestamp', 5)
+        lstm_params['sliding_window'] = str(node.get_attr('Sliding_window')).lower()
+        lstm_params['return_sequences'] = str(node.get_attr('return_sequences')).lower()
+        lstm_params['config_t'] = 'lstm_activ_config{}'.format(node.index)
+        lstm_params['table_size'] = node.get_attr('table_size', 1024)
 
         activ_params = self._default_config_params(node)
-        activ_params ['n_in'] = node.get_attr('n_out')
-        activ_params ['table_size'] = node.get_attr('table_size', 1024)
+        activ_params['n_in'] = node.get_attr('n_out')
+        activ_params['table_size'] = node.get_attr('table_size', 1024)
 
-        return  self.activ_template.format(**activ_params) + "\n" + self.template.format(**lstm_params) 
+        return self.activ_template.format(**activ_params) + "\n" + self.template.format(**lstm_params)
 
 
 class LstmFunctionTemplate(FunctionCallTemplate):
@@ -72,6 +203,7 @@ class LstmFunctionTemplate(FunctionCallTemplate):
 #####################
 # activation templates
 #####################
+
 
 simple_rnn_activ_config_template = """struct simple_rnn_activ_config{index} : nnet::activ_config {{
     static const unsigned n_in = {n_in};
@@ -104,7 +236,7 @@ class SimpleRNNConfigTemplate(LayerConfigTemplate):
     def format(self, node):
         simple_rrn_params = self._default_config_params(node)
         simple_rrn_params['n_in'] = node.get_attr('n_in')
-        simple_rrn_params ['n_out'] = node.get_attr('n_out')
+        simple_rrn_params['n_out'] = node.get_attr('n_out')
         simple_rrn_params['n_timestamp'] = node.get_attr('n_timestamp', 5)
         simple_rrn_params['table_size'] = node.get_attr('table_size', 1024)
         simple_rrn_params['sliding_window'] = str(node.get_attr('Sliding_window')).lower()
@@ -112,10 +244,10 @@ class SimpleRNNConfigTemplate(LayerConfigTemplate):
         simple_rrn_params['config_t'] = 'simple_rnn_activ_config{}'.format(node.index)
 
         activ_params = self._default_config_params(node)
-        activ_params ['n_in'] = node.get_attr('n_out')
-        activ_params ['table_size'] = node.get_attr('table_size', 1024)
+        activ_params['n_in'] = node.get_attr('n_out')
+        activ_params['table_size'] = node.get_attr('table_size', 1024)
 
-        return self.activ_template.format(**activ_params) + "\n" + self.template.format(**simple_rrn_params)        
+        return self.activ_template.format(**activ_params) + "\n" + self.template.format(**simple_rrn_params)
 
 
 class SimpleRNNFunctionTemplate(FunctionCallTemplate):

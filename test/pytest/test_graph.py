@@ -17,7 +17,7 @@ def base_model(output_dir='hls4mlprj_graph_base_model', iotype = 'io_parallel'):
   layers = [{'class_name' : 'Input', 'name' : 'layer0_input', 'input_shape' : [1]},
             {'class_name' : 'Dense', 'name' : 'layer0', 'n_in' : 1, 'n_out' : 1},
             {'class_name' : 'Dense', 'name' : 'layer1', 'n_in' : 1, 'n_out' : 1}]
-  config = {'HLSConfig':{'Model':{'Precision':'ap_fixed<32,16>','ReuseFactor' : 1}}}
+  config = {'HLSConfig':{'Model':{'Precision':'ap_fixed<32,16>','ReuseFactor' : 1}, 'Flows': []}}
   config['OutputDir'] = output_dir
   config['ProjectName'] = 'myprj'
   config['IOType'] = iotype
@@ -142,6 +142,66 @@ def test_final_reshape(iotype):
   # because of integer inputs and integer weights, we can expect exact matching
   np.testing.assert_allclose(y, y_hls, rtol=0)
 
+@pytest.mark.parametrize('shapes, layer', [
+    (((2, 2, 3), (2, 2, 1)), tf.keras.layers.Concatenate),
+    (((2, 2, 1), (2, 2, 3)), tf.keras.layers.Concatenate),
+    (((2, 2, 3), (2, 2, 1)), tf.keras.layers.Add),
+    (((2, 2, 1), (2, 2, 3)), tf.keras.layers.Add),
+    (((1, 1, 2), (3, 4, 2)), tf.keras.layers.Add),
+    (((3, 4, 2), (1, 1, 2)), tf.keras.layers.Add)])
+def test_broadcast_stream(shapes, layer):
+  ''' Test case for stream broadcast before Add but not before Concatenate '''
+  input1 = tf.keras.layers.Input(shape=shapes[0])
+  input2 = tf.keras.layers.Input(shape=shapes[1])
+  inputs = [input1, input2]
+  outputs = layer()(inputs)
+  model = tf.keras.models.Model(inputs=inputs, outputs=outputs)
 
+  # create the ModelGraph
+  config = hls4ml.utils.config_from_keras_model(model, granularity='model', default_precision='ap_fixed<32,16>')
+  odir = str(test_root_path / 'hls4mlprj_graph_broadcast_shapes_{}_{}_stream_{}'.format(str(shapes[0]).replace(' ','').replace(',','_').replace('(','').replace(')',''),
+                                                                                        str(shapes[1]).replace(' ','').replace(',','_').replace('(','').replace(')',''),
+                                                                                        layer.__name__.lower()))
+  hls_model = hls4ml.converters.convert_from_keras_model(model,
+                                                         output_dir=odir,
+                                                         backend='Vivado',
+                                                         io_type='io_stream',
+                                                         hls_config=config)
+  hls_model.compile()
 
+  # Test with integers (for exact agreement)
+  X1 = np.random.randint(0, 100, size=(1,)+shapes[0]).astype(float)
+  X2 = np.random.randint(0, 100, size=(1,)+shapes[1]).astype(float)
+  y = model.predict([X1, X2])
+  y_hls = hls_model.predict([X1, X2]).reshape(y.shape)
+  np.testing.assert_allclose(y, y_hls, rtol=0)
 
+@pytest.mark.parametrize('batch', [1, 32])
+def test_multiple_outputs(batch):
+  ''' Test case for multple outputs '''
+  input1 = tf.keras.layers.Input(shape=(10,))
+  inputs = [input1]
+  output1 = tf.keras.layers.Dense(5, kernel_initializer='ones', use_bias=False)(input1)
+  output2 = tf.keras.layers.Dense(2, kernel_initializer='ones', use_bias=False)(input1)
+  outputs = [output1, output2]
+  model = tf.keras.models.Model(inputs=inputs, outputs=outputs)
+
+  # create the ModelGraph
+  config = hls4ml.utils.config_from_keras_model(model, granularity='model', default_precision='ap_fixed<32,16>')
+  odir = str(test_root_path / 'hls4mlprj_graph_multiple_outputs')
+  hls_model = hls4ml.converters.convert_from_keras_model(model,
+                                                         output_dir=odir,
+                                                         backend='Vivado',
+                                                         io_type='io_parallel',
+                                                         hls_config=config)
+  hls_model.compile()
+
+  # Test with integers (for exact agreement)
+  X1 = np.random.randint(0, 100, size=(batch, 10)).astype(float)
+  y = model.predict(X1)
+  y_hls = hls_model.predict(X1)
+  # test trace as well
+  y_hls, hls_trace = hls_model.trace(X1)
+  for y_i, y_hls_i in zip(y, y_hls):
+    y_hls_i = y_hls_i.reshape(y_i.shape)
+    np.testing.assert_allclose(y_i, y_hls_i, rtol=0)

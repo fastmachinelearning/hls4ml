@@ -38,6 +38,9 @@ class Layer(object):
         return all_attributes
 
     def __init__(self, model, name, attributes, inputs, outputs=None):
+        if name == 'input':
+            raise RuntimeError("No model layer should be named 'input' because that is a reserved;" + \
+                               "layer name in ModelGraph; Please rename the layer in your model")
         self.model = model
         self.name = name
         self.index = model.next_layer()
@@ -372,7 +375,8 @@ class SeparableConv1D(Layer):
         self.add_weights_variable(name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer'))
         
         zero_bias_data = np.zeros((self.attributes['n_chan'],))
-        self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data)
+        precision = IntegerPrecisionType(width=1, signed=False)
+        self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data, precision=precision)
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
@@ -506,7 +510,8 @@ class SeparableConv2D(Layer):
         self.add_weights_variable(name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer'))
         
         zero_bias_data = np.zeros((self.attributes['n_chan'],))
-        self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data)
+        precision = IntegerPrecisionType(width=1, signed=False)
+        self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data, precision=precision)
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
@@ -880,13 +885,16 @@ class SimpleRNN(Layer):
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t')
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t')
 
-        data  = self.model.get_weights_data(self.name, 'kernel')
-        data2 = self.model.get_weights_data(self.name, 'recurrent_kernel')
-        data3 = self.model.get_weights_data(self.name, 'bias')
+        #weights
+        self.add_weights()
 
-        self.add_weights_variable(name='weight', var_name='kernel_{index}' , data=data[0][0:self.get_attr('n_out')], quantizer=self.get_attr('weight_quantizer'), compression=None)
-        self.add_weights_variable(name='recurrent_weight', var_name='recurrent_kernel_{index}', data=data2[0:self.get_attr('n_out'),0:self.get_attr('n_out')], quantizer=self.get_attr('weight_quantizer'), compression=None)
-        self.add_weights_variable(name='bias', var_name='bias_{index}', data=data3[0:self.get_attr('n_out')], quantizer=self.get_attr('weight_quantizer'), compression=None)
+        #recurrent weights
+        recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
+        self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
+
+        #biases
+        biases = self.model.get_weights_data(self.name , 'bias')
+        self.add_weights_variable(name='bias', var_name='b{index}', data=biases)
 
 class LSTM(Layer):
     _expected_attributes = [
@@ -901,6 +909,7 @@ class LSTM(Layer):
         WeightAttribute('weight'),
         WeightAttribute('bias'),
         WeightAttribute('recurrent_weight'),
+        WeightAttribute('recurrent_bias'),
 
         WeightAttribute('weight_i'),
         WeightAttribute('bias_i'),
@@ -921,22 +930,7 @@ class LSTM(Layer):
         TypeAttribute('weight'),
         TypeAttribute('bias'),
         TypeAttribute('recurrent_weight'),
-
-        TypeAttribute('weight_i'),
-        TypeAttribute('bias_i'),
-        TypeAttribute('recurrent_weight_i'),
-        
-        TypeAttribute('weight_f'),
-        TypeAttribute('bias_f'),
-        TypeAttribute('recurrent_weight_f'),
-
-        TypeAttribute('weight_c'),
-        TypeAttribute('bias_c'),
-        TypeAttribute('recurrent_weight_c'),
-
-        TypeAttribute('weight_o'),
-        TypeAttribute('bias_o'),
-        TypeAttribute('recurrent_weight_o'),
+        TypeAttribute('recurrent_bias'),
     ]
 
     def initialize(self):
@@ -955,22 +949,19 @@ class LSTM(Layer):
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t')
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t')        
 
+        #weights
         self.add_weights()
-        self.add_bias()
 
+        #recurrent weights
         recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
         self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
 
-        data  = self.model.get_weights_data(self.name, 'kernel')
-        data2 = self.model.get_weights_data(self.name, 'recurrent_kernel')
-        data3 = self.model.get_weights_data(self.name, 'bias')
+        #biases
+        biases = self.model.get_weights_data(self.name , 'bias')
+        self.add_weights_variable(name='bias', var_name='b{index}', data=biases)
 
-        weight_types=["i","f","c","o"]
-        for i in range (0,4):
-          self.add_weights_variable(name='weight_{}'.format(weight_types[i]), var_name='kernel_{}_{{index}}'.format(weight_types [i]) , data=data[0][i*self.get_attr('n_out'):(i+1)*(self.get_attr('n_out'))], quantizer=self.get_attr('weight_quantizer'), compression=None)
-          self.add_weights_variable(name='recurrent_weight_{}'.format( weight_types [i] ), var_name='recurrent_kernel_{}_{{index}}'.format(weight_types [i]), data=data2[0:self.get_attr('n_out'),i*self.get_attr('n_out'):(i+1)*(self.get_attr('n_out'))], quantizer=self.get_attr('weight_quantizer'), compression=None)
-          self.add_weights_variable(name='bias_{}'.format(weight_types [i]), var_name='bias_{}_{{index}}'.format(weight_types [i]), data=data3[i*self.get_attr('n_out'):(i+1)*(self.get_attr('n_out'))], quantizer=self.get_attr('weight_quantizer'), compression=None)
-
+        recurrent_bias = np.zeros(recurrent_weight.shape[1])
+        self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
 
 class GRU(Layer):
     _expected_attributes = [
@@ -986,10 +977,12 @@ class GRU(Layer):
         WeightAttribute('weight'),
         WeightAttribute('bias'),
         WeightAttribute('recurrent_weight'),
+        WeightAttribute('recurrent_bias'),
 
         TypeAttribute('weight'),
         TypeAttribute('bias'),
         TypeAttribute('recurrent_weight'),
+        TypeAttribute('recurrent_bias'),
     ]
 
     def initialize(self):
@@ -1008,11 +1001,18 @@ class GRU(Layer):
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t')
             self.add_output_variable(state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t')
 
+        #weights
         self.add_weights()
-        self.add_bias()
 
+        #recurrent weights
         recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
         self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
+
+        #biases array is actually a 2-dim array of arrays (bias + recurrent bias)
+        #both arrays have shape: n_units * 3 (z, r, h_cand)
+        biases = self.model.get_weights_data(self.name , 'bias')
+        self.add_weights_variable(name='bias', var_name='b{index}', data=biases[0])
+        self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=biases[1])
 
 class GarNet(Layer):
     ref_impl = False

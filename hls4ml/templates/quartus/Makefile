@@ -1,12 +1,16 @@
 DEVICE   := Arria10
 TARGETS  := myproject-fpga
 
-CXX          := i++
-CXXFLAGS     := $(USERCXXFLAGS) -Ifirmware/ap_types/ -march=$(DEVICE)#--quartus-compile
-RM           := rm -rf
-DEBUG_FLAGS  = --time $@_time.log -v
-SOURCE_FILES := myproject_test.cpp firmware/myproject.cpp
-HEADER_FILES := firmware/myproject.h
+CXX          		:= i++
+CXXFLAGS     		:= -march=$(DEVICE)
+RM           		:= rm -rf
+DEBUG_FLAGS  		:= --time quartus-hlssynt.log
+SOURCE_FILES 		:= myproject_test.cpp firmware/myproject.cpp
+HEADER_FILES 		:= firmware/myproject.h
+LOGGING_1			:= 
+LOGGING_2			:= 
+QUARTUS_COMPILE 	:= 
+CONT_IF_LARGE_AREA 	:=
 
 .PHONY: test
 test: $(TARGETS)
@@ -23,4 +27,4 @@ clean:
 myproject-fpga: CXXFLAGS := $(CXXFLAGS)
 
 $(TARGETS) : $(SOURCE_FILES) $(HEADER_FILES)
-	$(CXX) $(CXXFLAGS) $(DEBUG_FLAGS) $(SOURCE_FILES) -o $@
+	$(CXX) $(LOGGING_1) $(LOGGING_2) $(CXXFLAGS) $(DEBUG_FLAGS) $(SOURCE_FILES) $(CONT_IF_LARGE_AREA) $(QUARTUS_COMPILE) -o $@
