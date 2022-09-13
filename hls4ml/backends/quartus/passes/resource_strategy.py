@@ -1,11 +1,11 @@
 import numpy as np
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.layers import Dense, GRU
+from hls4ml.model.layers import LSTM, Dense, GRU, SimpleRNN
 
 class ApplyResourceStrategy(OptimizerPass):
     ''' Transposes the weights to use the dense_resource matrix multiply routine '''
     def match(self, node):
-        node_matches = isinstance(node, (Dense, GRU))
+        node_matches = isinstance(node, (Dense, SimpleRNN, LSTM, GRU))
         is_resource_strategy = True # node.get_attr('strategy', '').lower() == 'resource' ... Quartus only supports resource strategy
         already_transformed = node.get_attr('_weights_transposed', False) == True
         return node_matches and is_resource_strategy and not already_transformed
@@ -34,10 +34,21 @@ class ApplyResourceStrategy(OptimizerPass):
                 node.weights['weight'].data = temp.flatten()
                 node.weights['weight'].data_length = node.weights['weight'].data.size
         
-        elif isinstance(node, GRU):
+        elif isinstance(node, SimpleRNN):
             node.weights['weight'].data = np.transpose(node.weights['weight'].data)
             node.weights['recurrent_weight'].data = np.transpose(node.weights['recurrent_weight'].data)
+
+        elif isinstance(node, LSTM):
+            node.weights['weight'].data = np.transpose(node.weights['weight'].data)
+            node.weights['recurrent_weight'].data = np.transpose(node.weights['recurrent_weight'].data)
+
+            for weight_type in ['i', 'f', 'c', 'o']:
+                node.weights[f'weight_{weight_type}'].data = np.transpose(node.weights[f'weight_{weight_type}'].data)
+                node.weights[f'recurrent_weight_{weight_type}'].data = np.transpose(node.weights[f'recurrent_weight_{weight_type}'].data)
         
+        elif isinstance(node, GRU):
+            node.weights['weight'].data = np.transpose(node.weights['weight'].data)
+            node.weights['recurrent_weight'].data = np.transpose(node.weights['recurrent_weight'].data)        
         else:
             raise Exception('Unexpected layer {} with resource strategy'.format(node.class_name))
 

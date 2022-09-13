@@ -43,8 +43,6 @@ class HLSConfig(object):
 
         self.trace_output = self.get_config_value('TraceOutput', False)
 
-        self.layer_sliding_window = None
-
         self._parse_hls_config()
         self._validate_hls_config()
 
@@ -170,21 +168,6 @@ class HLSConfig(object):
             compression = self.model_compression
 
         return compression
-
-    def get_sliding_window(self, layer):
-        config = self.config['HLSConfig']
-        print("CONFIGURATION FILE: ", config)
-
-        try:
-            try:
-                sliding_window = self.config['HLSConfig'].get('LayerName', {}).get('lstm', None).get('Sliding_window', None)
-            except:
-                sliding_window = self.config['HLSConfig'].get('LayerName', {}).get('simple_rnn', None).get('Sliding_window', None)
-        except:
-            sliding_window = False
-
-        print(sliding_window)
-        return sliding_window
 
     def _parse_hls_config(self):
         hls_config = self.config['HLSConfig']
@@ -332,17 +315,8 @@ class ModelGraph(object):
 
         self._make_graph(layer_list)
 
-        self._sliding_window(layer_list)
-
         for flow in self.config.flows:
             self.apply_flow(flow)
-            
-    def _sliding_window(self, layer_list):
-        for layer in layer_list:
-            name = layer['class_name']
-            if name == 'LSTM' or name == 'SimpleRNN':
-                self._class_name = name
-                self.config.sliding_window = self.config.get_sliding_window(layer)
 
     def _make_graph(self, layer_list):
         for layer in layer_list:

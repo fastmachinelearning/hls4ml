@@ -5,7 +5,6 @@ from hls4ml.converters.keras_to_hls import keras_handler
 
 from hls4ml.model.types import Quantizer
 from hls4ml.model.types import IntegerPrecisionType
-from hls4ml.model.types import FixedPrecisionType
 
 @keras_handler('InputLayer')
 def parse_input_layer(keras_layer, input_names, input_shapes, data_reader, config):

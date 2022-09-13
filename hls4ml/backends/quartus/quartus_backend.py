@@ -1,9 +1,8 @@
 import os
-import numpy as np
 from contextlib import contextmanager
 
 from hls4ml.backends import FPGABackend
-from hls4ml.model.attributes import Attribute, TypeAttribute
+from hls4ml.model.attributes import Attribute
 from hls4ml.model.flow import register_flow
 from hls4ml.model.types import NamedType, IntegerPrecisionType, FixedPrecisionType
 from hls4ml.model.layers import Layer, Dense, Embedding, Activation, Softmax, LSTM, SimpleRNN, GRU
@@ -28,24 +27,7 @@ class QuartusBackend(FPGABackend):
     def _register_layer_attributes(self):
         extended_attrs = {
             SimpleRNN: [Attribute('recurrent_reuse_factor', default=1)],
-            LSTM: [
-                Attribute('recurrent_reuse_factor', default=1),
-                TypeAttribute('weight_i'),
-                TypeAttribute('bias_i'),
-                TypeAttribute('recurrent_weight_i'),
-
-                TypeAttribute('weight_f'),
-                TypeAttribute('bias_f'),
-                TypeAttribute('recurrent_weight_f'),
-
-                TypeAttribute('weight_c'),
-                TypeAttribute('bias_c'),
-                TypeAttribute('recurrent_weight_c'),
-
-                TypeAttribute('weight_o'),
-                TypeAttribute('bias_o'),
-                TypeAttribute('recurrent_weight_o'),
-            ],
+            LSTM: [Attribute('recurrent_reuse_factor', default=1)],
             GRU: [Attribute('recurrent_reuse_factor', default=1)],
         }
         self.attribute_map.update(extended_attrs)
@@ -229,7 +211,7 @@ class QuartusBackend(FPGABackend):
         layer.set_attr('index_t', index_t)
 
         if 'table_t' not in layer.attributes:
-            layer.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
+            layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
         if 'table_size' not in layer.attributes:
             layer.set_attr('table_size', 1024)
         if True: # layer.model.config.is_resource_strategy(layer): ... Quartus only supports Dense resource multiplication
@@ -238,63 +220,48 @@ class QuartusBackend(FPGABackend):
             self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
             layer.set_attr('strategy', 'resource')
 
-    @layer_optimizer(SimpleRNN)
-    def init_simplernn(self, layer):
-        weights_data = layer.model.get_weights_data(layer.name, 'kernel')
-        rec_weights_data = layer.model.get_weights_data(layer.name, 'recurrent_kernel')
-        bias_data = layer.model.get_weights_data(layer.name, 'bias')
-
-        layer.add_weights_variable(name='weight', var_name='kernel_{index}' , data=weights_data[0][0:layer.get_attr('n_out')], quantizer=layer.get_attr('weight_quantizer'), compression=None)
-        layer.add_weights_variable(name='recurrent_weight', var_name='recurrent_kernel_{index}', data=rec_weights_data[0:layer.get_attr('n_out'),0:layer.get_attr('n_out')], quantizer=layer.get_attr('weight_quantizer'), compression=None)
-        layer.add_weights_variable(name='bias', var_name='bias_{index}', data=bias_data[0:layer.get_attr('n_out')], quantizer=layer.get_attr('weight_quantizer'), compression=None)
-
-
     @layer_optimizer(LSTM)
     def init_lstm(self, layer):
-        # TODO Allow getting recurrent reuse factor from the config
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
         index_t = IntegerPrecisionType(width=1, signed=False)
         layer.set_attr('index_t', index_t)
 
-        weights_data = self.model.get_weights_data(self.name, 'kernel')
-        rec_weights_data = self.model.get_weights_data(self.name, 'recurrent_kernel')
-        bias_data = self.model.get_weights_data(self.name, 'bias')
-
-        weight_types=["i","f","c","o"]
-        for i in range (0,4):
-          self.add_weights_variable(name='weight_{}'.format(weight_types[i]), var_name='kernel_{}_{{index}}'.format(weight_types [i]) , data=weights_data[0][i*self.get_attr('n_out'):(i+1)*(self.get_attr('n_out'))], quantizer=self.get_attr('weight_quantizer'), compression=None)
-          self.add_weights_variable(name='recurrent_weight_{}'.format( weight_types [i] ), var_name='recurrent_kernel_{}_{{index}}'.format(weight_types [i]), data=rec_weights_data[0:self.get_attr('n_out'),i*self.get_attr('n_out'):(i+1)*(self.get_attr('n_out'))], quantizer=self.get_attr('weight_quantizer'), compression=None)
-          self.add_weights_variable(name='bias_{}'.format(weight_types [i]), var_name='bias_{}_{{index}}'.format(weight_types [i]), data=bias_data[i*self.get_attr('n_out'):(i+1)*(self.get_attr('n_out'))], quantizer=self.get_attr('weight_quantizer'), compression=None)
-
-
-
         if 'table_t' not in layer.attributes:
-            layer.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
+            layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
         if 'table_size' not in layer.attributes:
             layer.set_attr('table_size', 1024)
+
+        # We don't use RF yet
         if True: # layer.model.config.is_resource_strategy(layer): ... Quartus only supports Dense resource multiplication
             n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
             self.set_closest_reuse_factor(layer, n_in, n_out)
             self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
-
-            layer.weights['weight'].data = np.transpose(layer.weights['weight'].data)
-            layer.weights['recurrent_weight'].data = np.transpose(layer.weights['recurrent_weight'].data)
-
-            layer.weights['weight_i'].data = np.transpose(layer.weights['weight_i'].data)
-            layer.weights['recurrent_weight_i'].data = np.transpose(layer.weights['recurrent_weight_i'].data)
-
-            layer.weights['weight_f'].data = np.transpose(layer.weights['weight_f'].data)
-            layer.weights['recurrent_weight_f'].data = np.transpose(layer.weights['recurrent_weight_f'].data)
-
-            layer.weights['weight_c'].data = np.transpose(layer.weights['weight_c'].data)
-            layer.weights['recurrent_weight_c'].data = np.transpose(layer.weights['recurrent_weight_c'].data)
-
-            layer.weights['weight_o'].data = np.transpose(layer.weights['weight_o'].data)
-            layer.weights['recurrent_weight_o'].data = np.transpose(layer.weights['recurrent_weight_o'].data)
-
-
             layer.set_attr('strategy', 'resource')
-        else:
-            layer.set_attr('strategy', 'latency')
+
+        # Split weights for easier storage in on-chip memory and implementation in HLS
+        weights_data = layer.weights['weight'].data
+        rec_weights_data = layer.weights['recurrent_weight'].data
+        bias_data = layer.weights['bias'].data
+        
+        weight_types=['i', 'f', 'c', 'o']
+        for i in range (0,4):
+          layer.add_weights_variable(name='weight_{}'.format(weight_types[i]), var_name='kernel_{}_{{index}}'.format(weight_types[i]), data=weights_data[0:layer.get_attr('n_in'), i*layer.get_attr('n_out'):(i+1)*layer.get_attr('n_out')], quantizer=layer.get_attr('weight_quantizer'), compression=None)
+          layer.add_weights_variable(name='recurrent_weight_{}'.format(weight_types[i]), var_name='recurrent_kernel_{}_{{index}}'.format(weight_types[i]), data=rec_weights_data[0:layer.get_attr('n_out'),i*layer.get_attr('n_out'):(i+1)*layer.get_attr('n_out')], quantizer=layer.get_attr('weight_quantizer'), compression=None)
+          layer.add_weights_variable(name='bias_{}'.format(weight_types[i]), var_name='bias_{}_{{index}}'.format(weight_types[i]), data=bias_data[i*layer.get_attr('n_out'):(i+1)*(layer.get_attr('n_out'))], quantizer=layer.get_attr('weight_quantizer'), compression=None)
+
+    @layer_optimizer(SimpleRNN)
+    def init_simple_rnn(self, layer):
+        reuse_factor = layer.model.config.get_reuse_factor(layer)
+        layer.set_attr('recurrent_reuse_factor', reuse_factor)
+
+        index_t = IntegerPrecisionType(width=1, signed=False)
+        layer.set_attr('index_t', index_t)
+
+        if 'table_t' not in layer.attributes:
+            layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
+        if 'table_size' not in layer.attributes:
+            layer.set_attr('table_size', 1024)
+
+        # TODO - Consider setting and using RF
