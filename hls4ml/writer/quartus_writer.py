@@ -885,6 +885,8 @@ class QuartusWriter(Writer):
         h_file.close()
 
     def __write_softsign_table(self, model, path):
+        MAX_VALUE = 8
+        MIN_VALUE = 0
         table_name = 'softsign_table'
         table_size = self.__get_table_size(model, 'softsign')
 
@@ -893,10 +895,13 @@ class QuartusWriter(Writer):
 
         sep = ''
         for i in range(table_size):
-            in_val = 2 * 8.0 * (i - float(table_size) / 2.0) / float(table_size)
+
+            in_val = i * (MAX_VALUE-MIN_VALUE)/float(table_size) + (MAX_VALUE-MIN_VALUE)/(float(table_size)*2) + MIN_VALUE
+
             real_val = in_val / (np.fabs(in_val) + 1.)
-            h_file.write(sep + str(real_val))
-            sep = ", "
+            if(real_val >= 0):
+                h_file.write(sep + str(real_val))
+                sep = ", "
 
         h_file.write('};\n')
         h_file.close()
