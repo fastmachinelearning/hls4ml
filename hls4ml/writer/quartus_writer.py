@@ -178,6 +178,8 @@ class QuartusWriter(Writer):
             # Neural net instantiation
             elif '//hls-fpga-machine-learning insert layers' in line:
                 newline = line + '\n'
+                model_inputs = model.get_input_variables()
+                model_outputs = model.get_output_variables()
                 for layer in model.get_layers():
                     if io_type != 'io_stream':
                         vars = layer.get_variables()
@@ -793,8 +795,8 @@ class QuartusWriter(Writer):
 
     def __get_table_size(self, model, activation):
         for layer in model.get_layers():
-            if layer.get_attr('activation') == activation and layer.get_attr('table_size') is not None:
-                return layer.get_attr('table_size')
+            if layer.get_attr('activation') == activation or layer.get_attr('recurrent_activation') == activation and layer.get_attr('table_size') is not None:
+                return int(layer.get_attr('table_size'))
         return 1024
 
     def __get_table_header(self, table_name, table_size):
@@ -832,7 +834,7 @@ class QuartusWriter(Writer):
         h_file.write(self.__get_table_header(table_name, table_size))
 
         sep = ''
-        for i in range(table_size):
+        for i in range(int(table_size)):
             in_val = i * (MAX_VALUE - MIN_VALUE) / float(table_size) + (MAX_VALUE - MIN_VALUE) / (
                         float(table_size) * 2) + MIN_VALUE
             real_val = 1.0 / (1 + np.exp(-in_val))
@@ -848,7 +850,7 @@ class QuartusWriter(Writer):
         MIN_VALUE = 0
 
         table_name = 'tanh_table'
-        table_size = self.__get_table_size(model, 'dense_tanh')
+        table_size = self.__get_table_size(model, 'tanh')
 
         h_file = open('{}/{}.tb'.format(path, table_name), 'w')
         h_file.write(self.__get_table_header(table_name, table_size))
