@@ -20,7 +20,7 @@ def mnist_data():
   x_test = np.expand_dims(x_test, -1)
   y_train = to_categorical(y_train, 10)
   y_test = to_categorical(y_test, 10)
-  x_test, y_test = x_test[:5000], y_test[:5000]
+  x_test, y_test = x_test[:1000], y_test[:1000]
   return x_train, y_train, x_test, y_test
 
 @pytest.fixture(scope='module')

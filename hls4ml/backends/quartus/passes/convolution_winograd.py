@@ -12,7 +12,10 @@ class ApplyWinogradKernelTransformation(OptimizerPass):
         node_matches = isinstance(node, (Conv1D, Conv2D))
 
         # This optimizer works only after the Resource Strategy Optimizer, since order of transposition matters
-        weights_transformed = node.get_attr('_weights_transposed', False) == True               
+        weights_transformed = node.get_attr('_weights_transposed', False) == True
+
+        # User opted for Winograd
+        implementation_is_winograd = node.get_attr('implementation', 'combination') == 'combination' or node.get_attr('implementation', 'combination') == 'winograd'          
 
         # Winograd algorithm-specific conditions
         if isinstance(node, Conv1D):
@@ -49,7 +52,10 @@ class ApplyWinogradKernelTransformation(OptimizerPass):
         # Check any previous transformations
         already_transformed = node.get_attr('_winograd_transformation_applied', False) == True
 
-        return node_matches and weights_transformed and winograd_conditions and not already_transformed
+        if not winograd_conditions and node.get_attr('implementation', 'combination') == 'winograd':
+            raise Exception('Not possible to use Winograd algorithm with current architecture. Please set implementation to im2col or combination') 
+
+        return node_matches and weights_transformed and winograd_conditions and not already_transformed and implementation_is_winograd
 
     def transform(self, model, node):
         if isinstance(node, Conv1D):

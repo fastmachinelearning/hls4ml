@@ -6,6 +6,8 @@
 
 namespace nnet {
 
+enum class conv1d_implementation {combination, im2col, winograd};
+
 struct conv1d_config {
     // I/O sizes
     static const unsigned in_width = 10;

@@ -21,11 +21,12 @@ void resize_nearest(
     int y_ratio = (int)((CONFIG_T::height << 16) / CONFIG_T::new_height) + 1;
     int x_ratio = (int)((CONFIG_T::width << 16) / CONFIG_T::new_width) + 1;
 
-    for (int i = 0; i < CONFIG_T::new_height; i++) {
-        for (int j = 0; j < CONFIG_T::new_width; j++) {
+    for (int i = 0; i < CONFIG_T::new_height; i++) {     
+        for (int j = 0; j < CONFIG_T::new_width; j++) {        
             int x = ((j * x_ratio) >> 16);
             int y = ((i * y_ratio) >> 16);
             
+            #pragma unroll
             for (int k = 0; k < CONFIG_T::n_chan; k++) {
                 resized[(i * CONFIG_T::new_width * CONFIG_T::n_chan) + j * CONFIG_T::n_chan + k] = image[(y * CONFIG_T::width * CONFIG_T::n_chan) + x * CONFIG_T::n_chan + k];
             }

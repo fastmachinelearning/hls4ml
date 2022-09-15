@@ -7,7 +7,7 @@
 namespace nnet {
 
 // ****************************************************************
-//      im2col - General-purpose 2D Convolution algorithm
+//      im2col - General-purpose 1D Convolution algorithm
 // ****************************************************************
 
 template<class data_T, typename CONFIG_T>
@@ -70,7 +70,7 @@ void conv_1d_im2col_cl(
 }
 
 // ****************************************************************
-//       2D Convolution for 3x3 kernels from Winograd's algoirithm
+//       1D Convolution for 3x1 kernels from Winograd's algoirithm
 // ****************************************************************
 
 // Explicity transofrmed input (B'dB) needed for Winograd convolution, as explained by Lavin & Gray (2015)
@@ -109,7 +109,6 @@ void winograd_conv1d_3x1_kernel_cl(
     }
 
     WidthLoop:
-    #pragma ii CONFIG_T::reuse_factor
     #pragma unroll pf
     for (int col = 0; col < CONFIG_T::out_width; col+=2) {            
         ChannelLoop:
@@ -225,8 +224,11 @@ void conv_1d_resource_cl(
                                                 CONFIG_T::stride_width == 1 &&         
 
                                                 // Intel HLS will fail to pipeline the entire component if the Winograd loop only runs once
-                                                CONFIG_T::out_width > 2;
+                                                CONFIG_T::out_width > 2 &&
 
+                                                // Verify user opted for Winograd
+                                                CONFIG_T::implementation == nnet::conv1d_implementation::combination || CONFIG_T::implementation == nnet::conv1d_implementation::winograd;
+    
     if (CONFIG_T::filt_width == 3 && winograd_conditions) {
         winograd_conv1d_3x1_kernel_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     } else {

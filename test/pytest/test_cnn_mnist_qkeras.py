@@ -70,7 +70,7 @@ def hls_model(mnist_model, backend, io_type, strategy):
                                     ])
 def test_accuracy(mnist_data, mnist_model, hls_model):
   x_train, y_train, x_test, y_test = mnist_data
-  x_test, y_test = x_test[:5000], y_test[:5000]
+  x_test, y_test = x_test[:1000], y_test[:1000]
   # model under test predictions and accuracy
   y_keras = mnist_model.predict(x_test)
   y_hls4ml = hls_model.predict(x_test)

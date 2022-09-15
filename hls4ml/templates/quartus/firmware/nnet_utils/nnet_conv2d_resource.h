@@ -7,6 +7,8 @@
 
 namespace nnet {
 
+enum class conv2d_implementation {combination, im2col, winograd};
+
 // ****************************************************************
 //      im2col - General-purpose 2D Convolution algorithm
 // ****************************************************************
@@ -149,7 +151,6 @@ void winograd_conv2d_3x3_kernel_cl(
     #pragma unroll pfr
     for (int row = 0; row < CONFIG_T::out_height; row+=2) {
         WidthLoop:
-        #pragma ii CONFIG_T::reuse_factor
         #pragma unroll pfc
         for (int col = 0; col < CONFIG_T::out_width; col+=2) {            
             ChannelLoop:
@@ -286,9 +287,9 @@ void conv_2d_resource_cl(
                                                 // Intel HLS will fail to pipeline the entire component if the Winograd loop only runs once
                                                 CONFIG_T::out_height > 2 && CONFIG_T::out_width > 2 &&
 
-                                                // Basic sanity check
-                                                CONFIG_T::pad_left == CONFIG_T::pad_right && CONFIG_T::pad_top == CONFIG_T::pad_bottom;
-    
+                                                // Verify user opted for Winograd
+                                                CONFIG_T::implementation == nnet::conv2d_implementation::combination || CONFIG_T::implementation == nnet::conv2d_implementation::winograd;
+
     if (CONFIG_T::filt_height == 3 && CONFIG_T::filt_width == 3 && winograd_conditions) {
         winograd_conv2d_3x3_kernel_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     } else {

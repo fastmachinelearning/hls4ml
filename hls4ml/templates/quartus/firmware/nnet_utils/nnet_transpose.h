@@ -16,6 +16,7 @@ void transpose_2d(
     res_T  res[CONFIG_T::height * CONFIG_T::width]
 ) {
     for (int i = 0; i < CONFIG_T::height; i++) {
+        #pragma unroll
         for (int j = 0; j < CONFIG_T::width; j++) {
             res[j * CONFIG_T::height + i] = static_cast<res_T>(data[i * CONFIG_T::width + j]);
         }
@@ -33,9 +34,10 @@ void transpose_3d(
     int index_data[3] = {0}, index_res[3] = {0};
     
     for (index_data[0] = 0; index_data[0] < dim_data[0]; index_data[0]++) {
+        #pragma unroll
         for (index_data[1] = 0; index_data[1] < dim_data[1]; index_data[1]++) {
+            #pragma unroll
             for (index_data[2] = 0; index_data[2] < dim_data[2]; index_data[2]++) {
-                
                 index_res[0] = index_data[CONFIG_T::perm[0]];
                 index_res[1] = index_data[CONFIG_T::perm[1]];
                 index_res[2] = index_data[CONFIG_T::perm[2]];
