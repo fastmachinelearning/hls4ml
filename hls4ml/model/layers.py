@@ -1458,6 +1458,9 @@ class MultiHeadAttention(Layer):
                 vtype = 'weight'
                 if lname in ['key', 'query', 'value']:
                     data = data.transpose((1, 0, 2))
+                    data = data.transpose((0, 2, 1)) ###
+                if lname in ['attention_output']:
+                    data = data.transpose((2,0,1)) ###
             else:
                 vtype = 'bias'
 

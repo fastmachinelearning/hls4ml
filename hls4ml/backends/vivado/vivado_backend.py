@@ -493,6 +493,18 @@ class VivadoBackend(FPGABackend):
 
     @layer_optimizer(Softmax)
     def init_softmax(self, layer):
+        if 'exp_table_t' not in layer.attributes:
+            layer.set_attr('exp_table_t', layer.get_attr('table_t'))
+        if 'inv_table_t' not in layer.attributes:
+            layer.set_attr('inv_table_t', layer.get_attr('table_t'))
+        if layer.model.config.is_resource_strategy(layer):
+            # 'resource' strategy = 'latency' for Softmax
+            layer.set_attr('implementation', 'legacy') # latency legacy stable
+            # layer.set_attr('implementation', 'latency')
+        else:
+            # layer.set_attr('implementation', layer.model.config.get_strategy(layer).lower())
+            layer.set_attr('implementation', 'legacy') # latency legacy stable
+
         if layer.model.config.get_config_value('IOType') == 'io_parallel':
             assert (
                 len(layer.get_input_variable().shape) == 1
@@ -573,7 +585,7 @@ class VivadoBackend(FPGABackend):
         if 'table_t' not in layer.attributes:
             layer.set_attr('table_t', FixedPrecisionType(width=32, integer=5))
         if 'table_size' not in layer.attributes:
-            layer.set_attr('table_size', 4096)
-        layer.set_attr('strategy', 'latency')
+            layer.set_attr('table_size', 2048)
+        layer.set_attr('strategy', 'resource')  #latency
 
 

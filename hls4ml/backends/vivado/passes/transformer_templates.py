@@ -103,7 +103,7 @@ class MhaConfigTemplate(LayerConfigTemplate):
         act_params = self._default_config_params(node)
         act_params['n_in'] = node.get_attr('seq_len')
         act_params['type'] = 'softmax'
-        act_params['implementation'] = 'legacy' #latency,stable not work
+        act_params['implementation'] = 'legacy' #latency,stable not work， legacy works
         act_config = self.activ1_template.format(**act_params)
 
         return mult_config1 + '\n' + mult_config2 + '\n' + act_config + '\n' + mha_config

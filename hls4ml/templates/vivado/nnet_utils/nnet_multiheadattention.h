@@ -41,29 +41,31 @@ void matrixmul_transpose(
     data_T  K[CONFIG_T::seq_len][CONFIG_T::head_dim_key], 
     res_T  QK[CONFIG_T::seq_len][CONFIG_T::seq_len]) // seq_Q, seq_K
 {
-    // #pragma HLS ARRAY RESHAPE variable=Q complete dim=2
-    // #pragma HLS ARRAY RESHAPE variable=K complete dim=1
     const data_T dk = sqrt(CONFIG_T::head_dim_key);
-
-    data_T Product[CONFIG_T::seq_len][CONFIG_T::seq_len];
-    
+    data_T QKij;
+    data_T Product[CONFIG_T::seq_len];
+#pragma HLS ARRAY_PARTITION variable=K complete dim=2
+#pragma HLS ARRAY_PARTITION variable=Q complete dim=2
+#pragma HLS ARRAY_PARTITION variable=Product complete
     // for each row and column of AB
     row: for(int i = 0; i < CONFIG_T::seq_len; ++i) {
+        #pragma HLS unroll factor=1
         col: for(int j = 0; j < CONFIG_T::seq_len; ++j) {
-            #pragma HLS PIPELINE II=1
+#pragma HLS PIPELINE
             // compute (QK)i,j
-            data_T QKij = 0;
+            QKij = 0;
             product: for(int k = 0; k < CONFIG_T::head_dim_key; ++k) {
                 QKij += Q[i][k]* K[j][k];
             }
-            Product[i][j] = QKij / dk ;
+            Product[j] = QKij/dk;
         }
-        softmax<data_T, res_T, typename CONFIG_T::softmax_config1>(Product[i], QK[i]); // can this two parameters be the same?
-        // test: for (int k = 0; k < CONFIG_T::seq_len-1; ++k) {
-        //     QK[i][k]=QK[i][1];
-        // }
-        // nnet::print_result<result_t, CONFIG_T::seq_len>(Product[i], std::cout);
-        // nnet::print_result<result_t, CONFIG_T::seq_len>(QK[i], std::cout);
+        // std::cout << "input to softmax: " << std::endl;
+        // nnet::print_result<result_t, CONFIG_T::seq_len>(Product, std::cout);
+
+        softmax<data_T, res_T, typename CONFIG_T::softmax_config1>(Product, QK[i]);
+        
+        // std::cout << "output from softmax: " << std::endl;
+        // nnet::print_result<result_t, CONFIG_T::seq_len>( QK[i], std::cout);
     }
 }
 
@@ -75,18 +77,20 @@ void matrixmul(
     res_T   S[CONFIG_T::seq_len][CONFIG_T::num_heads * CONFIG_T::head_dim_value],
     T       head) // S: attention score
 {
-    #pragma HLS ARRAY RESHAPE variable=QK complete dim=2
+	#pragma HLS ARRAY RESHAPE variable=QK complete dim=2
     #pragma HLS ARRAY RESHAPE variable=V complete dim=1
     // for each row and column of AB
+    data_T Sij;
     row: for(int i = 0; i < CONFIG_T::seq_len; ++i) {
+        #pragma HLS unroll factor=1
         col: for(int j = 0; j < CONFIG_T::head_dim_value; ++j) {
-            #pragma HLS PIPELINE II=1
+#pragma HLS PIPELINE
             // compute (S)i,j
-            data_T Sij = 0;
+            Sij = 0;
             product: for(int k = 0; k < CONFIG_T::seq_len; ++k) {
                 Sij += QK[i][k] * V[k][j];
             }
-            S[i][CONFIG_T::head_dim_value*head+j] = Sij; // double check
+            S[i][CONFIG_T::head_dim_value*head+j] = Sij;
         }
     }
 }
@@ -105,51 +109,66 @@ void multiheadattention(
     typename CONFIG_T::weight_t  value_weight[CONFIG_T::feature_dim * CONFIG_T::num_heads * CONFIG_T::head_dim_value],
     typename CONFIG_T::bias_t    value_bias[CONFIG_T::num_heads * CONFIG_T::head_dim_value])
 {
-    #pragma HLS ARRAY_PARTITION variable=res complete
-    #pragma HLS ARRAY_PARTITION variable=attention_output_weight complete
-    #pragma HLS ARRAY_PARTITION variable=attention_output_bias complete
-    #pragma HLS ARRAY_PARTITION variable=key_weight complete
-    #pragma HLS ARRAY_PARTITION variable=key_bias complete
-    #pragma HLS ARRAY_PARTITION variable=query_weight complete
-    #pragma HLS ARRAY_PARTITION variable=query_bias complete
-    #pragma HLS ARRAY_PARTITION variable=value_weight complete
-    #pragma HLS ARRAY_PARTITION variable=value_bias complete
 
     data_T q_proj[CONFIG_T::num_heads][CONFIG_T::seq_len][CONFIG_T::head_dim_key];
     data_T v_proj[CONFIG_T::num_heads][CONFIG_T::seq_len][CONFIG_T::head_dim_value];
     data_T k_proj[CONFIG_T::num_heads][CONFIG_T::seq_len][CONFIG_T::head_dim_key];
     data_T qk_mul[CONFIG_T::num_heads][CONFIG_T::seq_len][CONFIG_T::seq_len];
-
-    // #pragma HLS ARRAY_PARTITION variable=q_proj type=complete dim=3
-    // #pragma HLS ARRAY_PARTITION variable=v_proj type=complete dim=3
-    // #pragma HLS ARRAY_PARTITION variable=k_proj type=complete dim=3
-    // #pragma HLS ARRAY_PARTITION variable=qk_mul type=complete dim=3
-
-    // linear projection
-    seq: for (int j=0; j <CONFIG_T::seq_len; ++j){
-        dense_for_each_head: for (int i=0; i < CONFIG_T::num_heads; ++i){
-            #pragma HLS UNROLL
-            dense<data_T, res_T, typename CONFIG_T::config_mult1>(data_q +(CONFIG_T::feature_dim*j), q_proj[i][j], query_weight+(CONFIG_T::head_dim_key  *CONFIG_T::feature_dim*i), query_bias+(CONFIG_T::head_dim_key*i));
-            dense<data_T, res_T, typename CONFIG_T::config_mult1>(data_vk+(CONFIG_T::feature_dim*j), v_proj[i][j], value_weight+(CONFIG_T::head_dim_value*CONFIG_T::feature_dim*i), value_bias+(CONFIG_T::head_dim_value*i));
-            dense<data_T, res_T, typename CONFIG_T::config_mult1>(data_vk+(CONFIG_T::feature_dim*j), k_proj[i][j], key_weight  +(CONFIG_T::head_dim_key  *CONFIG_T::feature_dim*i), key_bias  +(CONFIG_T::head_dim_key*i));
-        }
-    }
+    data_T qk_mul_sm[CONFIG_T::num_heads][CONFIG_T::seq_len][CONFIG_T::seq_len];
 
     data_T dense_in[CONFIG_T::seq_len][CONFIG_T::num_heads * CONFIG_T::head_dim_value];
+#pragma HLS ARRAY_PARTITION variable=dense_in complete dim=0
 
-    matrix_mult: for (int i=0; i < CONFIG_T::num_heads; ++i){
-        #pragma HLS UNROLL
+#pragma HLS ARRAY_PARTITION variable=q_proj complete dim=1  // partition the 1-dim
+//#pragma HLS ARRAY_PARTITION variable=v_proj complete dim=1
+#pragma HLS ARRAY_PARTITION variable=k_proj complete dim=1
+//#pragma HLS ARRAY_PARTITION variable=qk_mul complete dim=1
+
+// #pragma HLS ARRAY_RESHAPE variable=q_proj complete dim=3
+// #pragma HLS ARRAY_RESHAPE variable=v_proj complete dim=3
+// #pragma HLS ARRAY_RESHAPE variable=k_proj complete dim=3
+// #pragma HLS ARRAY_RESHAPE variable=qk_mul complete dim=3
+
+    // linear projection
+    dense_for_each_head: for (int i=0; i < CONFIG_T::num_heads; ++i){
+#pragma HLS DATAFLOW
+// or #pragma HLS unroll // less BRAM slower
+        // seq: for (int j=0; j <CONFIG_T::seq_len; ++j){
+        //     dense<data_T, res_T, typename CONFIG_T::config_mult1>(data_q +(CONFIG_T::feature_dim*j), q_proj[i][j], query_weight+(CONFIG_T::head_dim_key  *CONFIG_T::feature_dim*i), query_bias+(CONFIG_T::head_dim_key*i));
+        //     dense<data_T, res_T, typename CONFIG_T::config_mult1>(data_vk+(CONFIG_T::feature_dim*j), v_proj[i][j], value_weight+(CONFIG_T::head_dim_value*CONFIG_T::feature_dim*i), value_bias+(CONFIG_T::head_dim_value*i));
+        //     dense<data_T, res_T, typename CONFIG_T::config_mult1>(data_vk+(CONFIG_T::feature_dim*j), k_proj[i][j], key_weight  +(CONFIG_T::head_dim_key  *CONFIG_T::feature_dim*i), key_bias  +(CONFIG_T::head_dim_key*i));
+        // }
+        // std::cout << "input to q of head "<< i << std::endl;
+        seq1: for (int j=0; j <CONFIG_T::seq_len; ++j){
+            // nnet::print_result<result_t, CONFIG_T::feature_dim>(data_q +(CONFIG_T::feature_dim*j), std::cout);
+            dense<data_T, res_T, typename CONFIG_T::config_mult1>(data_q +(CONFIG_T::feature_dim*j), q_proj[i][j], query_weight+(CONFIG_T::head_dim_key  *CONFIG_T::feature_dim*i), query_bias+(CONFIG_T::head_dim_key*i));
+        }
+        
+        seq2: for (int j=0; j <CONFIG_T::seq_len; ++j){
+            dense<data_T, res_T, typename CONFIG_T::config_mult1>(data_vk+(CONFIG_T::feature_dim*j), v_proj[i][j], value_weight+(CONFIG_T::head_dim_value*CONFIG_T::feature_dim*i), value_bias+(CONFIG_T::head_dim_value*i));
+        }
+
+        seq3: for (int j=0; j <CONFIG_T::seq_len; ++j){
+            dense<data_T, res_T, typename CONFIG_T::config_mult1>(data_vk+(CONFIG_T::feature_dim*j), k_proj[i][j], key_weight  +(CONFIG_T::head_dim_key  *CONFIG_T::feature_dim*i), key_bias  +(CONFIG_T::head_dim_key*i));
+        }
+
         nnet::matrixmul_transpose<data_T, res_T, CONFIG_T>(q_proj[i], k_proj[i], qk_mul[i]);
         nnet::matrixmul<data_T, res_T, CONFIG_T, int>(qk_mul[i], v_proj[i], dense_in, i);
     }
+
+
+
+//     matrix_mult: for (int i=0; i < CONFIG_T::num_heads; ++i){
+// // #pragma HLS DEPENDENCE variable=qk_mul inter false
+//         nnet::matrixmul_transpose<data_T, res_T, CONFIG_T>(q_proj[i], k_proj[i], qk_mul[i]);
+//         nnet::matrixmul<data_T, res_T, CONFIG_T, int>(qk_mul[i], v_proj[i], dense_in, i);
+//     }
 
     output_dense: for (int j=0; j <CONFIG_T::seq_len; ++j){ 
         // nnet::print_result<result_t, CONFIG_T::num_heads*CONFIG_T::head_dim_value>(dense_in[j], std::cout);
         dense<data_T, res_T, typename CONFIG_T::config_mult2>(dense_in[j], res+(CONFIG_T::feature_dim*j), attention_output_weight, attention_output_bias);
     }
 }
-
-
 }
 
 #endif
