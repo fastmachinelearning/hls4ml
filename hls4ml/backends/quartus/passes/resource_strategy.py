@@ -1,11 +1,11 @@
 import numpy as np
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.layers import Dense, Conv1D, Conv2D, GRU
+from hls4ml.model.layers import Dense, Conv1D, Conv2D, GRU, LSTM, SimpleRNN
 
 class ApplyResourceStrategy(OptimizerPass):
     ''' Transposes the weights to use the dense_resource matrix multiply routine '''
     def match(self, node):
-        node_matches = isinstance(node, (Dense, Conv1D, Conv2D, GRU))
+        node_matches = isinstance(node, (Dense, Conv1D, Conv2D, GRU, LSTM, SimpleRNN))
         is_resource_strategy = True # node.get_attr('strategy', '').lower() == 'resource' -> Quartus only supportr Resource strategy
         already_transformed = node.get_attr('_weights_transposed', False) == True
         return node_matches and is_resource_strategy and not already_transformed
@@ -33,19 +33,35 @@ class ApplyResourceStrategy(OptimizerPass):
                             temp[j][i] = 0
                 node.weights['weight'].data = temp.flatten()
                 node.weights['weight'].data_length = node.weights['weight'].data.size
+        
         elif isinstance(node, Conv1D):
             # (W,C,F) => (F,W,C)
             # IMPORTANT - This format only works with im2col convolution
             #           - Future commits add new optimizers that further transpose THIS format to a format useful for Winograd's minimal filtering algorithm
             node.weights['weight'].data = np.transpose(node.weights['weight'].data, axes=[2, 0, 1])         
+        
         elif isinstance(node, Conv2D):
             # (H,W,C,F) => (F,H,W,C)
             # IMPORTANT - This format only works with im2col convolution
             #           - Future commits add new optimizers that further transpose THIS format to a format useful for Winograd's minimal filtering algorithm
             node.weights['weight'].data = np.transpose(node.weights['weight'].data, axes=[3, 0, 1, 2])     
+        
         elif isinstance(node, GRU):
             node.weights['weight'].data = np.transpose(node.weights['weight'].data)
             node.weights['recurrent_weight'].data = np.transpose(node.weights['recurrent_weight'].data)
+        
+        elif isinstance(node, SimpleRNN):
+            node.weights['weight'].data = np.transpose(node.weights['weight'].data)
+            node.weights['recurrent_weight'].data = np.transpose(node.weights['recurrent_weight'].data)
+
+        elif isinstance(node, LSTM):
+            node.weights['weight'].data = np.transpose(node.weights['weight'].data)
+            node.weights['recurrent_weight'].data = np.transpose(node.weights['recurrent_weight'].data)
+
+            for weight_type in ['i', 'f', 'c', 'o']:
+                node.weights[f'weight_{weight_type}'].data = np.transpose(node.weights[f'weight_{weight_type}'].data)
+                node.weights[f'recurrent_weight_{weight_type}'].data = np.transpose(node.weights[f'recurrent_weight_{weight_type}'].data)
+           
         else:
             raise Exception('Unexpected layer {} with resource strategy'.format(node.class_name))
         node.set_attr('_weights_transposed', True)
