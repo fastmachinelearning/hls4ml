@@ -6,6 +6,8 @@
 
 namespace nnet {
 
+enum class conv1d_implementation {combination, im2col, winograd};
+
 // ****************************************************************
 //      im2col - General-purpose 1D Convolution algorithm
 // ****************************************************************

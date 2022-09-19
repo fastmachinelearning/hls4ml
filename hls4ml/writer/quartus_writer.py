@@ -1,6 +1,6 @@
 from __future__ import print_function
 import tarfile
-from hls4ml.model.layers import Conv1D, Conv2D, Conv2DBatchnorm
+from hls4ml.model.layers import Conv1D, Conv2D, Conv2DBatchnorm, Dense
 import yaml
 from shutil import copyfile, copytree, rmtree
 import numpy as np
@@ -78,7 +78,7 @@ class QuartusWriter(Writer):
             weight_size = layer.get_attr('impl_filt_height') * layer.get_attr('impl_filt_width') * layer.get_attr('n_filt') * layer.get_attr('n_chan')      
         elif isinstance(layer, (Conv1D)):
             weight_size = layer.get_attr('impl_filt_width') * layer.get_attr('n_filt') * layer.get_attr('n_chan')      
-        else:
+        elif isinstance(layer, (Dense)):
             weight_size = layer.get_attr('n_in') * layer.get_attr('n_out')         
         
         if (rf == 1 or var.name[0] == 'b' or weight_size <= 2048
@@ -831,7 +831,7 @@ class QuartusWriter(Writer):
 
     def __get_table_size(self, model, activation):
         for layer in model.get_layers():
-            if layer.get_attr('activation') == activation or layer.get_attr('recurrent_activation') == activation and layer.get_attr('table_size') is not None:
+            if (layer.get_attr('activation') == activation or layer.get_attr('recurrent_activation') == activation) and layer.get_attr('table_size') is not None:
                 return int(layer.get_attr('table_size'))
         return 1024
 
