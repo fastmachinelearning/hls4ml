@@ -72,7 +72,7 @@ resize_config_template = """struct config{index} : nnet::resize_config {{
 }};\n"""
 
 resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
-resize_include_list = ['nnet_utils/nnet_resize.h']
+resize_include_list = ['nnet_utils/nnet_resize.h', 'nnet_utils/nnet_resize_stream.h']
 
 class ResizeConfigTemplate(LayerConfigTemplate):
     def __init__(self):
