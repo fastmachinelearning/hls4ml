@@ -4,6 +4,22 @@ hls4ml.backends.quartus.passes package
 Submodules
 ----------
 
+hls4ml.backends.quartus.passes.convolution\_templates module
+------------------------------------------------------------
+
+.. automodule:: hls4ml.backends.quartus.passes.convolution_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.quartus.passes.convolution\_winograd module
+-----------------------------------------------------------
+
+.. automodule:: hls4ml.backends.quartus.passes.convolution_winograd
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.backends.quartus.passes.core\_templates module
 -----------------------------------------------------
 
@@ -20,6 +36,22 @@ hls4ml.backends.quartus.passes.merge\_templates module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.quartus.passes.pointwise module
+-----------------------------------------------
+
+.. automodule:: hls4ml.backends.quartus.passes.pointwise
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.quartus.passes.pooling\_templates module
+--------------------------------------------------------
+
+.. automodule:: hls4ml.backends.quartus.passes.pooling_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.backends.quartus.passes.quantization\_templates module
 -------------------------------------------------------------
 
@@ -32,6 +64,14 @@ hls4ml.backends.quartus.passes.recurrent\_templates module
 ----------------------------------------------------------
 
 .. automodule:: hls4ml.backends.quartus.passes.recurrent_templates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.quartus.passes.reshaping\_templates module
+----------------------------------------------------------
+
+.. automodule:: hls4ml.backends.quartus.passes.reshaping_templates
    :members:
    :undoc-members:
    :show-inheritance:
