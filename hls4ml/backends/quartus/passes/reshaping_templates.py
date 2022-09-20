@@ -28,7 +28,7 @@ zeropad2d_config_template = """struct config{index} : nnet::padding2d_config {{
 zeropad1d_function_template = 'nnet::zeropad1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 zeropad2d_function_template = 'nnet::zeropad2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 
-padding_include_list = ['nnet_utils/nnet_padding.h']
+padding_include_list = ['nnet_utils/nnet_padding.h', 'nnet_utils/nnet_padding_stream.h']
 
 class ZeroPaddingConfigTemplate(LayerConfigTemplate):
     def __init__(self):
