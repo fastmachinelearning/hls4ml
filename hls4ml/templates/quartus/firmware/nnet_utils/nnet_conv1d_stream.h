@@ -2,6 +2,7 @@
 #define NNET_CONV1D_STREAM_H_
 
 #include "nnet_types.h"
+#include "nnet_dense.h"
 
 namespace nnet {
 

@@ -2,6 +2,7 @@
 #define NNET_CONV2D_STREAM_H_
 
 #include "nnet_types.h"
+#include "nnet_dense.h"
 
 namespace nnet {
 
@@ -230,6 +231,6 @@ void conv_2d_cl(
     }
 }
 
-#endif
-
 }
+
+#endif
