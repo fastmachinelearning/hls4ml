@@ -58,7 +58,8 @@ class OptimizePointwiseConv(OptimizerPass):
     def match(self, node):
         return node.class_name in ('Conv1D', 'Conv2D') and \
             node.get_attr('filt_height', 1) == 1 and \
-            node.get_attr('filt_width') == 1
+            node.get_attr('filt_width') == 1 and \
+            node.model.config.get_config_value('IOType') == 'io_parallel'
 
     def transform(self, model, node):
         dim = node.__class__.__name__[-2:] # '1D' or '2D'
