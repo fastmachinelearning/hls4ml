@@ -1,6 +1,9 @@
 import os
 from contextlib import contextmanager
-
+from hls4ml.model.types import NamedType, IntegerPrecisionType, FixedPrecisionType
+from hls4ml.model.layers import Layer, Dense, Activation, Softmax, Conv1D, Conv2D, Embedding, GRU
+from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
+from hls4ml.model.flow import register_flow
 from hls4ml.backends import FPGABackend
 from hls4ml.model.attributes import Attribute
 from hls4ml.model.flow import register_flow
@@ -44,7 +47,8 @@ class QuartusBackend(FPGABackend):
 
         quartus_types = [
             'quartus:transform_types',
-            'quartus:apply_resource_strategy'
+            'quartus:apply_resource_strategy',
+            'quartus:apply_winograd_kernel_transformation'
         ]
         quartus_types_flow = register_flow('specific_types', quartus_types, requires=[init_flow], backend=self.name)
 
@@ -55,7 +59,9 @@ class QuartusBackend(FPGABackend):
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
-        optimization_passes = []
+        optimization_passes = [
+            'quartus:optimize_pointwise_conv',
+        ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
         templates = self._get_layer_templates()
@@ -220,6 +226,61 @@ class QuartusBackend(FPGABackend):
             self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
             layer.set_attr('strategy', 'resource')
 
+        layer.set_attr('index_t', index_t)
+
+    @layer_optimizer(Conv1D)
+    def init_conv1d(self, layer):
+        # This can happen if we assign weights of Dense layer to 1x1 Conv1D
+        if len(layer.weights['weight'].data.shape) == 2:
+            layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0,1))
+        
+        # Dense matrix multiply properties
+        layer.set_attr('rfpad', 0)
+        layer.set_attr('bfpad', 0)
+
+        # Reuse and parallelization factors
+        layer.set_attr('strategy', 'resource')
+        n_in, n_out = self.get_layer_mult_size(layer)
+        self.set_target_reuse_factor(layer)
+        self.set_closest_reuse_factor(layer, n_in, n_out)
+        layer.set_attr('parallelization', layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1))
+
+        # impl_filt_width determines the filter size post-Winograd transformation
+        layer.set_attr('impl_filt_width', layer.get_attr('filt_width'))
+
+        # Implementation:
+        # - combination - at compile-time, the decision between Winograd and im2col is made
+        # - im2col - specifically use im2col
+        # - Winograd - use Winograd, if possible
+        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'combination'))
+
+    @layer_optimizer(Conv2D)
+    def init_conv2d(self, layer):
+        # This can happen if we assign weights of Dense layer to 1x1 Conv2D
+        if len(layer.weights['weight'].data.shape) == 2: 
+            layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0,1))
+
+        # Dense matrix multiply properties
+        layer.set_attr('rfpad', 0)
+        layer.set_attr('bfpad', 0)
+        
+        # Reuse and parallelization factors
+        layer.set_attr('strategy', 'resource')
+        n_in, n_out = self.get_layer_mult_size(layer)
+        self.set_target_reuse_factor(layer)
+        self.set_closest_reuse_factor(layer, n_in, n_out)
+        layer.set_attr('parallelization', layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1))
+
+        # impl_filt_width & impl_filt_height determine the filter size post-Winograd transformation
+        layer.set_attr('impl_filt_height', layer.get_attr('filt_height'))
+        layer.set_attr('impl_filt_width', layer.get_attr('filt_width'))
+
+        # Implementation:
+        # - combination - at compile-time, the decision between Winograd and im2col is made
+        # - im2col - specifically use im2col
+        # - Winograd - use Winograd, if possible
+        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'combination'))
+    
     @layer_optimizer(LSTM)
     def init_lstm(self, layer):
         reuse_factor = layer.model.config.get_reuse_factor(layer)

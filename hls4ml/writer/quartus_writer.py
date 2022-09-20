@@ -1,5 +1,6 @@
 from __future__ import print_function
 import tarfile
+from hls4ml.model.layers import Conv1D, Conv2D, Conv2DBatchnorm, Dense
 import yaml
 from shutil import copyfile, copytree, rmtree
 import numpy as np
@@ -17,6 +18,33 @@ class QuartusWriter(Writer):
 
     def next_pow2(self, x):
         return 1 << (x - 1).bit_length()
+    
+
+    def __make_dat_file(self, original_path, project_path):
+        """
+        Convert other input/output data types into a dat file, which is
+        a text file with the falttened matrix printed out. Note that ' ' is
+        assumed to be the delimiter.
+        """
+
+        #Take in data from current supported data files
+        if original_path[-3:] == "npy":
+            data = np.load(original_path)
+        else:
+            raise Exception("Unsupported input/output data files.")
+
+        #Faltten data, just keep first dimension
+        data = data.reshape(data.shape[0], -1)
+
+        def print_data(f):
+            for i in range(data.shape[0]):
+                for j in range(data.shape[1]):
+                    f.write(str(data[i][j]) + " ")
+                f.write("\n")
+
+        #Print out in dat file
+        with open(project_path, "w" ) as f:
+            print_data(f)
 
     def get_max_reuse_factor(self, model):
         max_rf = 0
@@ -45,7 +73,15 @@ class QuartusWriter(Writer):
 
         rf = int(layer.get_attr('reuse_factor'))
         weight_header = '#ifdef __INTELFPGA_COMPILER__\n'
-        if (rf == 1 or var.name[0] == 'b' or layer.get_attr('n_in') * layer.get_attr('n_out') <= 2048
+
+        if isinstance(layer, (Conv2D, Conv2DBatchnorm)):
+            weight_size = layer.get_attr('impl_filt_height') * layer.get_attr('impl_filt_width') * layer.get_attr('n_filt') * layer.get_attr('n_chan')      
+        elif isinstance(layer, (Conv1D)):
+            weight_size = layer.get_attr('impl_filt_width') * layer.get_attr('n_filt') * layer.get_attr('n_chan')      
+        elif isinstance(layer, (Dense)):
+            weight_size = layer.get_attr('n_in') * layer.get_attr('n_out')         
+        
+        if (rf == 1 or var.name[0] == 'b' or weight_size <= 2048
                 or (var.name[0] == 'w' and var.type.precision.width < 3)):
             weight_header += 'hls_init_on_powerup\n'
         else:
@@ -795,7 +831,7 @@ class QuartusWriter(Writer):
 
     def __get_table_size(self, model, activation):
         for layer in model.get_layers():
-            if layer.get_attr('activation') == activation or layer.get_attr('recurrent_activation') == activation and layer.get_attr('table_size') is not None:
+            if (layer.get_attr('activation') == activation or layer.get_attr('recurrent_activation') == activation) and layer.get_attr('table_size') is not None:
                 return int(layer.get_attr('table_size'))
         return 1024
 
