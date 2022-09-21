@@ -86,10 +86,18 @@ void normalize(
             #pragma HLS PIPELINE
         }
         
+        // std::cout << "CONFIG_T::n_filt: " << CONFIG_T::n_filt << "\n";
+        // std::cout << "CONFIG_T::iotype: " << CONFIG_T::iotype << "\n";
+        // std::cout << "CONFIG_T::reuse_factor: " << CONFIG_T::reuse_factor << "\n";
+        
+        
         if (CONFIG_T::n_filt==-1) {
+            // std::cout << "ires: " << ires << "\n";
             res[ires] = CONFIG_T::template product<data_T, typename CONFIG_T::scale_t, res_T>::product(data[ires], scale[ires]) + bias[ires];
+            // std::cout << "index: "<< ires << ", input: "<< data[ires]<<", output: " << res[ires] << "\n";
 	    } else {
             int norm_index = ires%CONFIG_T::n_filt;
+            std::cout << "ires: " << ires <<", norm_index: " << norm_index << "\n";
             res[ires] = CONFIG_T::template product<data_T, typename CONFIG_T::scale_t, res_T>::product(data[ires], scale[norm_index]) + bias[norm_index];
         }
 	}

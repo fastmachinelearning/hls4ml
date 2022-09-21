@@ -411,9 +411,9 @@ class Layer(object):
             return next(iter(self.variables.values()))
 
     def get_weights(self, var_name=None):
+        print(f"Layer self.weights: {self.weights}")
         if var_name:
             return self.weights[var_name]
-
         return self.weights.values()
 
     def get_variables(self):
@@ -1401,6 +1401,7 @@ class TernaryTanh(Activation):
 
 class BatchNormalization(Layer):
     def initialize(self):
+        print(f"batchnorm initialized")
         inp = self.get_input_variable()
         shape = inp.shape
         dims = inp.dim_names
@@ -1905,6 +1906,8 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
         params['b2'] = self.get_weights(f"{self.name}_b2").name
         params['w3'] = self.get_weights(f"{self.name}_w3").name
         params['b3'] = self.get_weights(f"{self.name}_b3").name
+        params['norm_s0'] = self.get_weights(f"{self.name}_norm_s0").name
+        params['norm_b0'] = self.get_weights(f"{self.name}_norm_b0").name
         return params
 
     def config_cpp(self):
@@ -1915,7 +1918,9 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
 
         # print(f"top_config b4 sublayers: {top_config}")
         sublayer_configs = self._config_sublayers()
+        print(f"sublayer_configs b4 update: {sublayer_configs}")
         sublayer_configs.update(self._config_misc())
+        print(f"sublayer_configs after update: {sublayer_configs}")
         for layer, config in sublayer_configs.items():
             config = ['    ' + i for i in config.split('\n')]
             config = '\n'.join(config)
@@ -1950,14 +1955,50 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
 
     def add_weights(self, quantizer=None, compression=False):
         linear_count = 0
+        norm_count = 0
+        layer_count = 0
 
         for name, module in self.submodules.items():
+            print(f"module.__class__.__name__: {module.__class__.__name__}")
             if module.__class__.__name__ == 'Linear':
+                print(f"add_weights Linear activated")
                 data = self.model.get_weights_data(name, 'kernel', self.name).transpose()
                 var_name = f"{self.name}_w{linear_count}"
                 self.add_weights_variable(name=var_name, var_name=var_name, data=data, quantizer=quantizer,
                                               compression=compression)
                 linear_count += 1
+            elif module.__class__.__name__ == 'BatchNorm1d':
+                print(f"add_weights BatchNorm1d activated")
+                print(self.name+f".layers.{layer_count}")
+                batchnorm_name = self.name+f".layers.{layer_count}"
+                gamma = self.model.get_weights_data(batchnorm_name,'gamma')
+                beta = self.model.get_weights_data(batchnorm_name, 'beta')
+                mean = self.model.get_weights_data(batchnorm_name, 'moving_mean')
+                var = self.model.get_weights_data(batchnorm_name, 'moving_variance')
+                # print(f"gamma: {gamma}")
+                # print(f"beta: {beta}")
+                # print(f"mean: {mean}")
+                # print(f"var: {var}")
+
+                epsilon = 1e-05 # default value. make sure this is the same with the torch one
+                scale = gamma / np.sqrt(var + epsilon)
+                bias = beta - gamma * mean / np.sqrt(var + epsilon)
+
+                print(f"scale: {scale}")
+                print(f"bias: {bias}")
+                # print(f"self.model: {self.model}")
+
+                var_name = f"{self.name}_norm_s{norm_count}"
+                self.add_weights_variable(name=var_name, var_name=var_name, data=scale, quantizer=quantizer,
+                                              compression=compression)
+                var_name = f"{self.name}_norm_b{norm_count}"
+                self.add_weights_variable(name=var_name, var_name=var_name, data=bias, quantizer=quantizer,
+                                              compression=compression)
+                norm_count += 1
+            
+            elif module.__class__.__name__ == 'Sequential':
+                continue
+            layer_count += 1
 
         # DUMMIES
         if linear_count <= 3:
@@ -1969,6 +2010,7 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
         precision = None
         type_name = None
         linear_count = 0
+        norm_count = 0
 
         for name, module in self.submodules.items():
             if module.__class__.__name__ == 'Linear':
@@ -1977,6 +2019,13 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
                 self.add_weights_variable(name=var_name, var_name=var_name, type_name=type_name, precision=precision,
                                               data=data, quantizer=quantizer)
                 linear_count += 1
+            # elif module.__class__.__name__ == 'BatchNorm1d':
+            #     print(f"add_bias BatchNorm1d activated")
+            #     data = self.model.get_weights_data(name, 'bias', self.name)
+            #     var_name = f"{self.name}_b{linear_count}"
+            #     self.add_weights_variable(name=var_name, var_name=var_name, type_name=type_name, precision=precision,
+            #                                   data=data, quantizer=quantizer)
+            #     norm_count += 1
 
         # DUMMIES
         if linear_count <= 3:
@@ -2002,6 +2051,21 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
 
         return params
 
+    def get_batchnorm_params(self, batchnorm_layer, norm_count):  # hard-coded for now
+        params = {}
+        params['type'] = 'norm'
+        params['index'] = norm_count
+        params['n_in'] = batchnorm_layer.num_features
+        params['iotype'] = 'io_parallel'
+        params['reuse'] = 1
+        params['n_filt'] = -1
+        params['gnn_resource_limit'] = self.model.config.config['gnn_resource_limit']
+
+        params['scale_t'] = f'layer{self.index}_t'
+        params['bias_t'] = f'layer{self.index}_t'
+
+        return params
+
     def get_relu_params(self, relu_count, last_n_out):
         params = {}
         params['type'] = 'relu'
@@ -2013,7 +2077,9 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
 
     def config_layer(self, layer_type, layer_params):
         all_lines = self.model.config.backend.get_config_template(layer_type).split('\n')
+        print(f"all_lines[0] b4: {all_lines[0]}")
         all_lines[0] = re.sub('struct config{index}', 'struct {type}_config{index}', all_lines[0])
+        print(f"all_lines[0] after: {all_lines[0]}")
         param_lines = []
         out = []
 
@@ -2027,6 +2093,7 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
                 pass
 
         for line in all_lines:
+            # print(f"line: {line}")
             if line in param_lines:
                 out.append(line)
             else:
@@ -2036,15 +2103,18 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
                         out.append(line)
 
         out = '\n'.join(out)
+        print(f"config_layer b4 format: {out}")
         out = out.format(**layer_params)
         return out
 
     def _config_sublayers(self):
         linear_count = 0
         relu_count = 0
+        norm_count = 0 # not sure where this is supposed to be used, TBH
         configs = OrderedDict()
 
         for name, module in self.submodules.items():
+            # print(f"module.__class__.__name__: {module.__class__.__name__}")
             if module.__class__.__name__==self.model.reader.torch_model.__class__.__name__:
                 continue
 
@@ -2067,6 +2137,15 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
                 relu_config = self.config_layer('Activation', relu_params)
                 configs[f"relu_config{relu_count}"] = relu_config
                 last_n_out = relu_params['n_in']
+
+            elif module.__class__.__name__ == "BatchNorm1d":
+                # print("Batchnorm")
+                norm_count += 1
+                norm_params = self.get_batchnorm_params(module, norm_count)
+                norm_config = self.config_layer('BatchNormalization', norm_params) #I think it is supposed to be hls_layer name?
+                configs[f"batchnorm_config{norm_count}"] = norm_config
+                last_n_out = norm_params['n_in']
+                print(f"batchnorm configs: {norm_config}")
 
         # DUMMIES
         if linear_count < 4:
@@ -2261,10 +2340,11 @@ class NodeBlock(GraphBlock):
         params = self.function_cpp_graphblock()
         params['input_t'] = self.model.get_layer_output_variable('node_attr').type.name
         params['edge_attr_aggr'] = self.attributes["inputs"][1]
-        print(f"nodeblock index: {self.index}")
-        print(f"nodeblock _function_template: {self._function_template}")
+        # print(f"nodeblock index: {self.index}")
+        # print(f"nodeblock _function_template: {self._function_template}")
+        # print(f"nodeblock params: {params}")
         out = self._function_template.format(**params)
-        print(f"nodeblock final _function_template: {out}")
+        # print(f"nodeblock final _function_template: {out}")
         return [out]
 
     def get_top_params(self):

@@ -362,6 +362,8 @@ class VivadoWriter(Writer):
         fout.close()
 
     def write_parameters(self, model):
+        for layer in model.get_layers():
+            print(f"write parameters one of many layers: {layer}")
         filedir = os.path.dirname(os.path.abspath(__file__))
         f = open(os.path.join(filedir,'../templates/vivado/firmware/parameters.h'),'r')
         fout = open('{}/firmware/parameters.h'.format(model.config.get_output_dir()),'w')

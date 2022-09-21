@@ -441,6 +441,7 @@ def convert_from_pyg_model(model, forward_dictionary, n_node, node_attr, node_di
 
     _check_hls_config(config, hls_config)
     
+    print(f"pyg_to_hls config: {config}")
     return pyg_to_hls(config)
 
 def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,

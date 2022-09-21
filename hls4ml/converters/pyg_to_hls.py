@@ -411,6 +411,7 @@ def pyg_to_hls(config):
         # print(f"block_handlers.keys(): {block_handlers.keys()}")
         layer_dict, update_dict = block_handlers[val](key, config, update_dict, index, n_node, n_edge, node_dim, edge_dim, node_attr, edge_attr)
         # possible block hander is [parse_NodeBlock, parse_EdgeBlock, parse_EdgeAggregate]
+        print(f"{key} layer_dict: {layer_dict}")
         layer_list.append(layer_dict)
 
     # handle dataflow optimization

@@ -155,16 +155,22 @@ namespace nnet {
 			 typename CONFIG_T::dense_config1::weight_t weights0[CONFIG_T::dense_config1::n_in*CONFIG_T::dense_config1::n_out],
 			 typename CONFIG_T::dense_config1::bias_t   biases0[CONFIG_T::dense_config1::n_out],
 			 typename CONFIG_T::dense_config2::weight_t weights1[CONFIG_T::dense_config2::n_in*CONFIG_T::dense_config2::n_out],
-			 typename CONFIG_T::dense_config2::bias_t   biases1[CONFIG_T::dense_config2::n_out])
+			 typename CONFIG_T::dense_config2::bias_t   biases1[CONFIG_T::dense_config2::n_out],
+       typename CONFIG_T::norm_config1::scale_t   norm_scales0[CONFIG_T::norm_config1::n_in],
+       typename CONFIG_T::norm_config1::bias_t   norm_biases0[CONFIG_T::norm_config1::n_in]
+       )
   {
     data_T data0_logits[CONFIG_T::dense_config1::n_out];
     #pragma HLS ARRAY_PARTITION variable=data0_logits complete dim=0
     nnet::dense_resource<data_T, data_T, typename CONFIG_T::dense_config1>(data, data0_logits, weights0, biases0);
     // nnet::dense<data_T, data_T, typename CONFIG_T::dense_config1>(data, data0_logits, weights0, biases0);
+    data_T norm_data0[CONFIG_T::norm_config1::n_in];
+    #pragma HLS ARRAY_PARTITION variable=norm_data0 complete dim=0
+    nnet::normalize<data_T, data_T, typename CONFIG_T::norm_config1>(data0_logits, norm_data0, norm_scales0, norm_biases0);
     data_T data0[CONFIG_T::dense_config1::n_out];
     #pragma HLS ARRAY_PARTITION variable=data0 complete dim=0
     // nnet::relu<data_T, data_T, typename CONFIG_T::relu_config1>(data0_logits, data0);
-    nnet::leaky_relu<data_T, data_T, typename CONFIG_T::relu_config1>(data0_logits, data0);
+    nnet::leaky_relu<data_T, data_T, typename CONFIG_T::relu_config1>(norm_data0, data0);
 
     nnet::dense_resource<data_T, res_T, typename CONFIG_T::dense_config2>(data0, res, weights1, biases1);
     // nnet::dense<data_T, res_T, typename CONFIG_T::dense_config2>(data0, res, weights1, biases1);
@@ -1116,7 +1122,9 @@ namespace nnet {
 			typename CONFIG_T::dense_config3::weight_t  core_node_w2[CONFIG_T::dense_config3::n_in*CONFIG_T::dense_config3::n_out],
 			typename CONFIG_T::dense_config3::bias_t    core_node_b2[CONFIG_T::dense_config3::n_out],
 			typename CONFIG_T::dense_config4::weight_t  core_node_w3[CONFIG_T::dense_config4::n_in*CONFIG_T::dense_config4::n_out],
-			typename CONFIG_T::dense_config4::bias_t    core_node_b3[CONFIG_T::dense_config4::n_out])
+			typename CONFIG_T::dense_config4::bias_t    core_node_b3[CONFIG_T::dense_config4::n_out],
+      typename CONFIG_T::norm_config1::scale_t   norm_s0[CONFIG_T::norm_config1::n_in],
+      typename CONFIG_T::norm_config1::bias_t   norm_b0[CONFIG_T::norm_config1::n_in])
   /*
   This is the pipeline version. dataflow is not yet supported
   */
@@ -1148,17 +1156,17 @@ namespace nnet {
       // data_T phi_input[CONFIG_T::common_dim];
       data_T phi_input[CONFIG_T::node_dim];
       #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
-      std::cout << "c = x + aggr_out\n";
+      // std::cout << "c = x + aggr_out\n";
       // nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
       nnet::residualBlock<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
       // nnet::add<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
       // send it through NN
-      std::cout << "n_layers: " <<  CONFIG_T::n_layers<< "\n";
+      // std::cout << "n_layers: " <<  CONFIG_T::n_layers<< "\n";
         if(CONFIG_T::n_layers == 1){
 	      nnet::dense_mult_1lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0);
         }
         else if(CONFIG_T::n_layers == 2){
-	      nnet::dense_mult_2lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1);
+	      nnet::dense_mult_2lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, norm_s0, norm_b0);
         }
         else if(CONFIG_T::n_layers == 3){
 	      nnet::dense_mult_3lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2);
@@ -1193,11 +1201,13 @@ namespace nnet {
 			typename CONFIG_T::dense_config3::weight_t  core_node_w2[CONFIG_T::dense_config3::n_in*CONFIG_T::dense_config3::n_out],
 			typename CONFIG_T::dense_config3::bias_t    core_node_b2[CONFIG_T::dense_config3::n_out],
 			typename CONFIG_T::dense_config4::weight_t  core_node_w3[CONFIG_T::dense_config4::n_in*CONFIG_T::dense_config4::n_out],
-			typename CONFIG_T::dense_config4::bias_t    core_node_b3[CONFIG_T::dense_config4::n_out])
+			typename CONFIG_T::dense_config4::bias_t    core_node_b3[CONFIG_T::dense_config4::n_out],
+      typename CONFIG_T::norm_config1::scale_t   norm_s0[CONFIG_T::norm_config1::n_in],
+      typename CONFIG_T::norm_config1::bias_t   norm_b0[CONFIG_T::norm_config1::n_in])
   {
-    std::cout << "Nodeblock start \n";
+    // std::cout << "Nodeblock start \n";
     // nodeblock_pipeline<data_T,res_T,CONFIG_T>(node_attr_1D,edge_attr_aggr_1D,node_update_1D,core_node_w0,core_node_b0,core_node_w1,core_node_b1,core_node_w2,core_node_b2,core_node_w3,core_node_b3);
-    nodeblock_residual<data_T,res_T,CONFIG_T>(node_attr_1D,edge_attr_aggr_1D,node_update_1D,core_node_w0,core_node_b0,core_node_w1,core_node_b1,core_node_w2,core_node_b2,core_node_w3,core_node_b3);
+    nodeblock_residual<data_T,res_T,CONFIG_T>(node_attr_1D,edge_attr_aggr_1D,node_update_1D,core_node_w0,core_node_b0,core_node_w1,core_node_b1,core_node_w2,core_node_b2,core_node_w3,core_node_b3, norm_s0, norm_b0);
   }
 
   template<class data_T, class res_T, typename CONFIG_T>
@@ -1210,7 +1220,7 @@ namespace nnet {
   {
     // std::cout << "NodeEncoder CONFIG_T::n_out : " << CONFIG_T::n_out<<"\n";
     // std::cout << "NodeEncoder CONFIG_T::n_rows : " << CONFIG_T::n_rows<<"\n";
-    std::cout << "Encoder starting with n_in: "  << CONFIG_T::n_in<<" \n";
+    // std::cout << "Encoder starting with n_in: "  << CONFIG_T::n_in<<" \n";
 
     //initialize arrays
     //1. node_attr (input)

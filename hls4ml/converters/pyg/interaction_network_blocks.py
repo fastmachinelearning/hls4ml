@@ -36,7 +36,7 @@ def parse_GraphBlock(block_name, config, n_node, n_edge, node_dim, edge_dim, nod
 def parse_NodeBlock(block_name, config, update_dict, index, n_node, n_edge, node_dim, edge_dim, node_attr, edge_attr):
     layer_dict = parse_GraphBlock(block_name, config, n_node, n_edge, node_dim, edge_dim, node_attr, edge_attr)
     layer_dict["class_name"] = "NodeBlock"
-    layer_dict["inputs"] = [update_dict["last_node_update"], update_dict["last_edge_aggr_update"]]#this is where the concat method is described
+    layer_dict["inputs"] = [update_dict["last_node_update"], update_dict["last_edge_aggr_update"]]
     layer_dict["outputs"] = [f"layer{index}_out"]
     print(f"type(update_dict): {type(update_dict)}")
     update_dict["last_last_node_update"] = update_dict["last_node_update"] #for residual block

@@ -460,7 +460,8 @@ transpose_function_template = 'nnet::transpose_{dim}<{input_t}, {config}>({input
 garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
 garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
 edgeblock_function_template = 'nnet::edgeblock<{input_t}, {index_t}, {output_t}, {config}>({node_attr}, {edge_attr}, {edge_index}, {out}, {w0}, {b0}, {w1}, {b1}, {w2}, {b2}, {w3}, {b3});'
-nodeblock_function_template = 'nnet::nodeblock<{input_t}, {output_t}, {config}>({node_attr}, {edge_attr_aggr}, {out}, {w0}, {b0}, {w1}, {b1}, {w2}, {b2}, {w3}, {b3});'
+# nodeblock_function_template = 'nnet::nodeblock<{input_t}, {output_t}, {config}>({node_attr}, {edge_attr_aggr}, {out}, {w0}, {b0}, {w1}, {b1}, {w2}, {b2}, {w3}, {b3});'
+nodeblock_function_template = 'nnet::nodeblock<{input_t}, {output_t}, {config}>({node_attr}, {edge_attr_aggr}, {out}, {w0}, {b0}, {w1}, {b1}, {w2}, {b2}, {w3}, {b3}, {norm_s0}, {norm_b0});'
 edge_aggregate_function_template = 'nnet::edge_aggregate<{input_t}, {index_t}, {output_t}, {config}>({edge_attr}, {edge_index}, {out});'
 encoder_function_template = 'nnet::encoder<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 
@@ -491,7 +492,9 @@ nodeblock_include_list = ['nnet_utils/nnet_common.h',
                           'nnet_utils/nnet_activation.h',
                           'nnet_utils/nnet_graph.h',
                           'nnet_utils/nnet_merge.h',
-                          'nnet_utils/nnet_array.h']
+                          'nnet_utils/nnet_array.h',
+                          'nnet_utils/nnet_batchnorm.h', 
+                          'nnet_utils/nnet_batchnorm_stream.h']
 edge_aggregate_include_list = ['nnet_utils/nnet_graph.h']
 residual_include_list = ['nnet_utils/nnet_merge.h', 'nnet_utils/nnet_merge_stream.h', 'nnet_utils/nnet_graph.h']
 
