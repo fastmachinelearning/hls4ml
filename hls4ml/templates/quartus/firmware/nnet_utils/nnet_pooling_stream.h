@@ -1,6 +1,7 @@
 #ifndef NNET_POOLING_STREAM_H_
 #define NNET_POOLING_STREAM_H_
 
+#include "nnet_pooling.h"
 #include "nnet_conv1d_stream.h"
 #include "nnet_conv2d_stream.h"
 #include "nnet_types.h"
@@ -203,6 +204,117 @@ void pooling2d_cl(stream<data_T> &data, stream<res_T>  &res) {
         }
     }
 }
+
+/*
+* A function used with Global Pooling
+* Returns the value before pooling
+* Max : Return the minimal possible value
+* Avg : Return 0
+*/
+template<typename T, Pool_Op op>
+inline T init_pool_value() {
+    switch(op){
+      case Max: { 
+        T x = 0;
+        x[x.width - 1] = 1;
+        return x;
+      }
+      case Average: return 0;
+    }
+}
+
+/*
+* A function used with Global Pooling
+* Updates the output pooling value
+* Max : Return the maximum between the previous maximum and current input
+* Avg : Returns the cumulative sum
+*/
+template <class T_y, class T_x, Pool_Op op>
+inline T_y reduce_global_pool(T_y y, T_x x) {
+    if (op == Max) {
+        return (x > y) ? (T_y) x : y;
+    } else {
+        return (T_y) (x + y);
+    }
+}
+
+/*
+* A function used with Global Pooling
+* For every filter, it updates the value by summing the current input (Average) or updating the maximum value (Max)
+*/
+template<class data_T, class res_T, typename CONFIG_T>
+void compute_global_pool(const data_T& in_elem, typename CONFIG_T::accum_t data_input[CONFIG_T::n_filt]) {
+    #pragma unroll
+    for (unsigned i = 0; i < CONFIG_T::n_filt; i++) {
+        data_input[i] = reduce_global_pool<typename CONFIG_T::accum_t, typename data_T::value_type, CONFIG_T::pool_op >(data_input[i], in_elem[i]);
+    }
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
+void global_pooling1d_cl(stream<data_T> &data, stream<res_T> &res) {
+    assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
+
+    hls_register typename CONFIG_T::accum_t data_input[CONFIG_T::n_filt];
+
+    #pragma unroll
+    for (int i = 0; i < CONFIG_T::n_filt; i++) {
+        data_input[i] = init_pool_value<typename CONFIG_T::accum_t, CONFIG_T::pool_op>();
+    }
+
+    for (int i = 0; i < CONFIG_T::n_in; i++) {
+        compute_global_pool<data_T, res_T, CONFIG_T>(data.read(), data_input);
+    }
+
+    hls_register res_T res_pack;
+    if (CONFIG_T::pool_op == Average) {
+        #pragma unroll
+        for (int i = 0; i < CONFIG_T::n_filt; i++) {
+            res_pack[i] = static_cast<typename res_T::value_type>(data_input[i] / CONFIG_T::n_in);
+        }
+    } else {
+        #pragma unroll
+        for (int i = 0; i < CONFIG_T::n_filt; i++) {
+            res_pack[i] = static_cast<typename res_T::value_type>(data_input[i]);
+        }
+    }
+    
+    res.write(res_pack);
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
+void global_pooling2d_cl(stream<data_T> &data, stream<res_T> &res) {
+    assert(CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
+    assert(CONFIG_T::pad_top == 0 && CONFIG_T::pad_bottom == 0);
+
+    hls_register typename CONFIG_T::accum_t data_input[CONFIG_T::n_filt];
+
+    #pragma unroll
+    for (int i = 0; i < CONFIG_T::n_filt; i++) {
+        data_input[i] = init_pool_value<typename CONFIG_T::accum_t, CONFIG_T::pool_op>();
+    }
+
+    for (int i = 0; i < CONFIG_T::in_height; i++) {
+        for (int j = 0; j < CONFIG_T::in_width; j++) {
+            compute_global_pool<data_T, res_T, CONFIG_T>(data.read(), data_input);
+        }
+    }
+
+    hls_register res_T res_pack;
+    if (CONFIG_T::pool_op == Average) {
+        #pragma unroll
+        for (int i = 0; i < CONFIG_T::n_filt; i++) {
+            res_pack[i] = static_cast<typename res_T::value_type>(data_input[i] / (CONFIG_T::in_width * CONFIG_T::in_height));
+        }
+    } else {
+        #pragma unroll
+        for (int i = 0; i < CONFIG_T::n_filt; i++) {
+            res_pack[i] = static_cast<typename res_T::value_type>(data_input[i]);
+        }
+    }
+    
+    res.write(res_pack);
+}
+
 
 }
 
