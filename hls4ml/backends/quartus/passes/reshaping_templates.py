@@ -108,7 +108,7 @@ transpose_config_template = """struct config{index} : nnet::transpose_config {{
 }};\n"""
 
 transpose_function_template = 'nnet::transpose_{dim}<{input_t}, {output_t}, {config}>({input}, {output});'
-transpose_include_list = ['nnet_utils/nnet_transpose.h']
+transpose_include_list = ['nnet_utils/nnet_transpose.h', 'nnet_utils/nnet_transpose_stream.h']
 
 class TransposeConfigTemplate(LayerConfigTemplate):
     def __init__(self):
