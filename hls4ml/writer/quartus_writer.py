@@ -175,8 +175,9 @@ class QuartusWriter(Writer):
             # Insert HLS pragmas such as maximum frequency, initiation interval etc.
             elif '//hls-fpga-machine-learning insert cpragmas' in line:
                 newline = line
-                newline += 'hls_max_concurrency(0)\n'
-                newline += 'hls_component_ii({})\n'.format(self.get_max_reuse_factor(model))
+                if io_type == 'io_parallel':
+                    newline += 'hls_max_concurrency(0)\n'
+                    newline += 'hls_component_ii({})\n'.format(self.get_max_reuse_factor(model))
                 clock_mhz = 1000 / (model.config.get_config_value('ClockPeriod'))
                 newline += 'hls_scheduler_target_fmax_mhz({})\n'.format(np.ceil(clock_mhz).astype(np.int))
 
@@ -314,8 +315,9 @@ class QuartusWriter(Writer):
         
             elif '//hls-fpga-machine-learning insert cpragmas' in line:
                 newline = line
-                newline += 'hls_max_concurrency(0)\n'
-                newline += 'hls_component_ii({})\n'.format(self.get_max_reuse_factor(model))
+                if io_type == 'io_parallel':
+                    newline += 'hls_max_concurrency(0)\n'
+                    newline += 'hls_component_ii({})\n'.format(self.get_max_reuse_factor(model))
                 clock_mhz = 1000 / (model.config.get_config_value('ClockPeriod'))
                 newline += 'hls_scheduler_target_fmax_mhz({})\n'.format(np.ceil(clock_mhz).astype(np.int))
             
