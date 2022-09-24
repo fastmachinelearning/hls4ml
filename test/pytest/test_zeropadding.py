@@ -44,9 +44,14 @@ def keras_model_2d():
     return model
 
 
-@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('backend, io_type', [
+                            ('Quartus', 'io_parallel'),
+
+                            ('Vivado', 'io_parallel'),
+                            ('Vivado','io_stream')
+                        ])
 @pytest.mark.parametrize('model_type', ['1d', '2d'])
-def test_zeropadding(keras_model_1d, keras_model_2d, data_1d, data_2d, model_type, io_type):
+def test_zeropadding(keras_model_1d, keras_model_2d, data_1d, data_2d, model_type, io_type, backend):
     if model_type == '1d':
         model = keras_model_1d
         data = data_1d
@@ -57,12 +62,12 @@ def test_zeropadding(keras_model_1d, keras_model_2d, data_1d, data_2d, model_typ
     config = hls4ml.utils.config_from_keras_model(model,
                                                   default_precision='ap_fixed<32,1>',
                                                   granularity='name')
-    odir = str(test_root_path / f'hls4mlprj_zeropadding_{model_type}_{io_type}')
+    odir = str(test_root_path / f'hls4mlprj_zeropadding_{model_type}_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                            hls_config=config,
                                                            io_type=io_type,
                                                            output_dir=odir,
-                                                           part='xcvu9p-flgb2104-2-i')
+                                                           backend=backend)
     hls_model.compile()
 
     # Predict

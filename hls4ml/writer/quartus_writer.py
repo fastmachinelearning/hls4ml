@@ -1,5 +1,6 @@
 from __future__ import print_function
 import tarfile
+from hls4ml.model.layers import Conv1D, Conv2D, Conv2DBatchnorm, Dense
 import yaml
 from shutil import copyfile, copytree, rmtree
 import numpy as np
@@ -17,6 +18,33 @@ class QuartusWriter(Writer):
 
     def next_pow2(self, x):
         return 1 << (x - 1).bit_length()
+    
+
+    def __make_dat_file(self, original_path, project_path):
+        """
+        Convert other input/output data types into a dat file, which is
+        a text file with the falttened matrix printed out. Note that ' ' is
+        assumed to be the delimiter.
+        """
+
+        #Take in data from current supported data files
+        if original_path[-3:] == "npy":
+            data = np.load(original_path)
+        else:
+            raise Exception("Unsupported input/output data files.")
+
+        #Faltten data, just keep first dimension
+        data = data.reshape(data.shape[0], -1)
+
+        def print_data(f):
+            for i in range(data.shape[0]):
+                for j in range(data.shape[1]):
+                    f.write(str(data[i][j]) + " ")
+                f.write("\n")
+
+        #Print out in dat file
+        with open(project_path, "w" ) as f:
+            print_data(f)
 
     def get_max_reuse_factor(self, model):
         max_rf = 0
@@ -45,7 +73,15 @@ class QuartusWriter(Writer):
 
         rf = int(layer.get_attr('reuse_factor'))
         weight_header = '#ifdef __INTELFPGA_COMPILER__\n'
-        if (rf == 1 or var.name[0] == 'b' or layer.get_attr('n_in') * layer.get_attr('n_out') <= 2048
+
+        if isinstance(layer, (Conv2D, Conv2DBatchnorm)):
+            weight_size = layer.get_attr('impl_filt_height') * layer.get_attr('impl_filt_width') * layer.get_attr('n_filt') * layer.get_attr('n_chan')      
+        elif isinstance(layer, (Conv1D)):
+            weight_size = layer.get_attr('impl_filt_width') * layer.get_attr('n_filt') * layer.get_attr('n_chan')      
+        elif isinstance(layer, (Dense)):
+            weight_size = layer.get_attr('n_in') * layer.get_attr('n_out')         
+        
+        if (rf == 1 or var.name[0] == 'b' or weight_size <= 2048
                 or (var.name[0] == 'w' and var.type.precision.width < 3)):
             weight_header += 'hls_init_on_powerup\n'
         else:
@@ -178,6 +214,8 @@ class QuartusWriter(Writer):
             # Neural net instantiation
             elif '//hls-fpga-machine-learning insert layers' in line:
                 newline = line + '\n'
+                model_inputs = model.get_input_variables()
+                model_outputs = model.get_output_variables()
                 for layer in model.get_layers():
                     if io_type != 'io_stream':
                         vars = layer.get_variables()
@@ -793,8 +831,8 @@ class QuartusWriter(Writer):
 
     def __get_table_size(self, model, activation):
         for layer in model.get_layers():
-            if layer.get_attr('activation') == activation and layer.get_attr('table_size') is not None:
-                return layer.get_attr('table_size')
+            if (layer.get_attr('activation') == activation or layer.get_attr('recurrent_activation') == activation) and layer.get_attr('table_size') is not None:
+                return int(layer.get_attr('table_size'))
         return 1024
 
     def __get_table_header(self, table_name, table_size):
@@ -832,7 +870,7 @@ class QuartusWriter(Writer):
         h_file.write(self.__get_table_header(table_name, table_size))
 
         sep = ''
-        for i in range(table_size):
+        for i in range(int(table_size)):
             in_val = i * (MAX_VALUE - MIN_VALUE) / float(table_size) + (MAX_VALUE - MIN_VALUE) / (
                         float(table_size) * 2) + MIN_VALUE
             real_val = 1.0 / (1 + np.exp(-in_val))
@@ -848,7 +886,7 @@ class QuartusWriter(Writer):
         MIN_VALUE = 0
 
         table_name = 'tanh_table'
-        table_size = self.__get_table_size(model, 'dense_tanh')
+        table_size = self.__get_table_size(model, 'tanh')
 
         h_file = open('{}/{}.tb'.format(path, table_name), 'w')
         h_file.write(self.__get_table_header(table_name, table_size))
@@ -883,6 +921,8 @@ class QuartusWriter(Writer):
         h_file.close()
 
     def __write_softsign_table(self, model, path):
+        MAX_VALUE = 8
+        MIN_VALUE = 0
         table_name = 'softsign_table'
         table_size = self.__get_table_size(model, 'softsign')
 
@@ -891,10 +931,13 @@ class QuartusWriter(Writer):
 
         sep = ''
         for i in range(table_size):
-            in_val = 2 * 8.0 * (i - float(table_size) / 2.0) / float(table_size)
+
+            in_val = i * (MAX_VALUE-MIN_VALUE)/float(table_size) + (MAX_VALUE-MIN_VALUE)/(float(table_size)*2) + MIN_VALUE
+
             real_val = in_val / (np.fabs(in_val) + 1.)
-            h_file.write(sep + str(real_val))
-            sep = ", "
+            if(real_val >= 0):
+                h_file.write(sep + str(real_val))
+                sep = ", "
 
         h_file.write('};\n')
         h_file.close()

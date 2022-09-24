@@ -1,14 +1,16 @@
 import os
-from hls4ml.model.attributes import Attribute
-import numpy as np
 from contextlib import contextmanager
-
-from hls4ml.backends import FPGABackend
 from hls4ml.model.types import NamedType, IntegerPrecisionType, FixedPrecisionType
-from hls4ml.model.layers import Embedding, Layer, Dense, Activation, Softmax, GRU
-from hls4ml.model.flow import register_flow
-from hls4ml.report import parse_quartus_report
+from hls4ml.model.layers import Layer, Dense, Activation, Softmax, Conv1D, Conv2D, Embedding, GRU
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
+from hls4ml.model.flow import register_flow
+from hls4ml.backends import FPGABackend
+from hls4ml.model.attributes import Attribute
+from hls4ml.model.flow import register_flow
+from hls4ml.model.types import NamedType, IntegerPrecisionType, FixedPrecisionType
+from hls4ml.model.layers import Layer, Dense, Embedding, Activation, Softmax, LSTM, SimpleRNN, GRU
+from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
+from hls4ml.report import parse_quartus_report
 
 @contextmanager
 def chdir(newdir):
@@ -27,6 +29,8 @@ class QuartusBackend(FPGABackend):
 
     def _register_layer_attributes(self):
         extended_attrs = {
+            SimpleRNN: [Attribute('recurrent_reuse_factor', default=1)],
+            LSTM: [Attribute('recurrent_reuse_factor', default=1)],
             GRU: [Attribute('recurrent_reuse_factor', default=1)],
         }
         self.attribute_map.update(extended_attrs)
@@ -43,7 +47,8 @@ class QuartusBackend(FPGABackend):
 
         quartus_types = [
             'quartus:transform_types',
-            'quartus:apply_resource_strategy'
+            'quartus:apply_resource_strategy',
+            'quartus:apply_winograd_kernel_transformation'
         ]
         quartus_types_flow = register_flow('specific_types', quartus_types, requires=[init_flow], backend=self.name)
 
@@ -56,6 +61,7 @@ class QuartusBackend(FPGABackend):
 
         optimization_passes = [
             'quartus:inplace_parallel_reshape',
+            'quartus:optimize_pointwise_conv',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -174,6 +180,8 @@ class QuartusBackend(FPGABackend):
     def init_activation(self, layer):
         if layer.get_attr('activation') == 'tanh':
             layer.set_attr('activation', 'dense_tanh')
+        if layer.get_attr('recurrent_activation') == 'tanh':
+            layer.set_attr('recurrent_activation', 'dense_tanh')
         if 'table_t' not in layer.attributes:
             layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
         if 'table_size' not in layer.attributes:
@@ -206,9 +214,10 @@ class QuartusBackend(FPGABackend):
         layer.set_attr('bfpad', 0)
 
         index_t = IntegerPrecisionType(width=1, signed=False)
+        layer.set_attr('index_t', index_t)
 
         if 'table_t' not in layer.attributes:
-            layer.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
+            layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
         if 'table_size' not in layer.attributes:
             layer.set_attr('table_size', 1024)
         if True: # layer.model.config.is_resource_strategy(layer): ... Quartus only supports Dense resource multiplication
@@ -218,3 +227,102 @@ class QuartusBackend(FPGABackend):
             layer.set_attr('strategy', 'resource')
 
         layer.set_attr('index_t', index_t)
+
+    @layer_optimizer(Conv1D)
+    def init_conv1d(self, layer):
+        # This can happen if we assign weights of Dense layer to 1x1 Conv1D
+        if len(layer.weights['weight'].data.shape) == 2:
+            layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0,1))
+        
+        # Dense matrix multiply properties
+        layer.set_attr('rfpad', 0)
+        layer.set_attr('bfpad', 0)
+
+        # Reuse and parallelization factors
+        layer.set_attr('strategy', 'resource')
+        n_in, n_out = self.get_layer_mult_size(layer)
+        self.set_target_reuse_factor(layer)
+        self.set_closest_reuse_factor(layer, n_in, n_out)
+        layer.set_attr('parallelization', layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1))
+
+        # impl_filt_width determines the filter size post-Winograd transformation
+        layer.set_attr('impl_filt_width', layer.get_attr('filt_width'))
+
+        # Implementation:
+        # - combination - at compile-time, the decision between Winograd and im2col is made
+        # - im2col - specifically use im2col
+        # - Winograd - use Winograd, if possible
+        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'combination'))
+
+    @layer_optimizer(Conv2D)
+    def init_conv2d(self, layer):
+        # This can happen if we assign weights of Dense layer to 1x1 Conv2D
+        if len(layer.weights['weight'].data.shape) == 2: 
+            layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0,1))
+
+        # Dense matrix multiply properties
+        layer.set_attr('rfpad', 0)
+        layer.set_attr('bfpad', 0)
+        
+        # Reuse and parallelization factors
+        layer.set_attr('strategy', 'resource')
+        n_in, n_out = self.get_layer_mult_size(layer)
+        self.set_target_reuse_factor(layer)
+        self.set_closest_reuse_factor(layer, n_in, n_out)
+        layer.set_attr('parallelization', layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1))
+
+        # impl_filt_width & impl_filt_height determine the filter size post-Winograd transformation
+        layer.set_attr('impl_filt_height', layer.get_attr('filt_height'))
+        layer.set_attr('impl_filt_width', layer.get_attr('filt_width'))
+
+        # Implementation:
+        # - combination - at compile-time, the decision between Winograd and im2col is made
+        # - im2col - specifically use im2col
+        # - Winograd - use Winograd, if possible
+        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'combination'))
+    
+    @layer_optimizer(LSTM)
+    def init_lstm(self, layer):
+        reuse_factor = layer.model.config.get_reuse_factor(layer)
+        layer.set_attr('recurrent_reuse_factor', reuse_factor)
+
+        index_t = IntegerPrecisionType(width=1, signed=False)
+        layer.set_attr('index_t', index_t)
+
+        if 'table_t' not in layer.attributes:
+            layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
+        if 'table_size' not in layer.attributes:
+            layer.set_attr('table_size', 1024)
+
+        # We don't use RF yet
+        if True: # layer.model.config.is_resource_strategy(layer): ... Quartus only supports Dense resource multiplication
+            n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
+            self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
+            layer.set_attr('strategy', 'resource')
+
+        # Split weights for easier storage in on-chip memory and implementation in HLS
+        weights_data = layer.weights['weight'].data
+        rec_weights_data = layer.weights['recurrent_weight'].data
+        bias_data = layer.weights['bias'].data
+        
+        weight_types=['i', 'f', 'c', 'o']
+        for i in range (0,4):
+          layer.add_weights_variable(name='weight_{}'.format(weight_types[i]), var_name='kernel_{}_{{index}}'.format(weight_types[i]), data=weights_data[0:layer.get_attr('n_in'), i*layer.get_attr('n_out'):(i+1)*layer.get_attr('n_out')], quantizer=layer.get_attr('weight_quantizer'), compression=None)
+          layer.add_weights_variable(name='recurrent_weight_{}'.format(weight_types[i]), var_name='recurrent_kernel_{}_{{index}}'.format(weight_types[i]), data=rec_weights_data[0:layer.get_attr('n_out'),i*layer.get_attr('n_out'):(i+1)*layer.get_attr('n_out')], quantizer=layer.get_attr('weight_quantizer'), compression=None)
+          layer.add_weights_variable(name='bias_{}'.format(weight_types[i]), var_name='bias_{}_{{index}}'.format(weight_types[i]), data=bias_data[i*layer.get_attr('n_out'):(i+1)*(layer.get_attr('n_out'))], quantizer=layer.get_attr('weight_quantizer'), compression=None)
+
+    @layer_optimizer(SimpleRNN)
+    def init_simple_rnn(self, layer):
+        reuse_factor = layer.model.config.get_reuse_factor(layer)
+        layer.set_attr('recurrent_reuse_factor', reuse_factor)
+
+        index_t = IntegerPrecisionType(width=1, signed=False)
+        layer.set_attr('index_t', index_t)
+
+        if 'table_t' not in layer.attributes:
+            layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
+        if 'table_size' not in layer.attributes:
+            layer.set_attr('table_size', 1024)
+
+        # TODO - Consider setting and using RF
