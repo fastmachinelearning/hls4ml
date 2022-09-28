@@ -610,7 +610,7 @@ class GlobalPooling2D(Layer):
         Attribute('in_width'),
         Attribute('n_filt'),
 
-        ChoiceAttribute('pool_op', ['Max', 'Average'])
+        ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False)
     ]
 
     def initialize(self):
@@ -1146,6 +1146,15 @@ class GarNetStack(GarNet):
 
         self._output_features = self.attributes['n_out_features'][-1]
 
+class SymbolicExpression(Layer):
+    _expected_attributes = [
+        Attribute('expression', value_type=str),
+        Attribute('n_symbols'),
+    ]
+
+    def initialize(self):
+        self.add_output_variable([1], ['N_OUTPUTS_{}'.format(self.index)], var_name='y')
+
 layer_map = {
     'Input'                  : Input,
     'InputLayer'             : Input,
@@ -1196,6 +1205,7 @@ layer_map = {
     'GRU'                    : GRU,
     'GarNet'                 : GarNet,
     'GarNetStack'            : GarNetStack,
+    'SymbolicExpression'     : SymbolicExpression,
     # TensorFlow-specific layers:
     'BiasAdd'                : BiasAdd,
 }

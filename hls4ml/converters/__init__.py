@@ -4,6 +4,7 @@ import yaml
 import importlib
 import warnings
 
+from hls4ml.model import ModelGraph
 from hls4ml.utils.config import create_config
 from hls4ml.converters.keras_to_hls import keras_to_hls, get_supported_keras_layers, register_keras_layer_handler
 
@@ -357,4 +358,50 @@ def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='mypro
 
     return onnx_to_hls(config)
 
+def convert_from_symbolic_expression(expr, n_symbols=None, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,
+                             output_data_tb=None, precision='ap_fixed<16,6>', **kwargs):
+    import sympy
 
+    if not isinstance(expr, sympy.Expr):
+        expr = sympy.parsing.sympy_parser.parse_expr(expr)
+
+    if n_symbols is None:
+        n_symbols = max([int(d.name.replace('x', '')) for d in expr.free_symbols]) + 1
+
+    layer_list = []
+
+    input_layer = {}
+    input_layer['name'] = 'x'
+    input_layer['class_name'] = 'InputLayer'
+    input_layer['input_shape'] = [n_symbols]
+    layer_list.append(input_layer)
+
+    expr_layer = {}
+    expr_layer['name'] = 'expr1'
+    expr_layer['class_name'] = 'SymbolicExpression'
+    expr_layer['expression'] = str(expr)
+    expr_layer['n_symbols'] = n_symbols
+    layer_list.append(expr_layer)
+
+    config = create_config(
+        output_dir=output_dir,
+        project_name=project_name,
+        backend='SymbolicExpression',
+        **kwargs
+    )
+
+    config['Expression'] = str(expr)
+    config['NSymbols'] = n_symbols
+    config['InputData'] = input_data_tb
+    config['OutputPredictions'] = output_data_tb
+
+    config['HLSConfig'] = {
+        'Model': {
+            'Precision': precision,
+            'ReuseFactor': 1
+        }
+    }
+
+    hls_model = ModelGraph(config, None, layer_list)
+
+    return hls_model
