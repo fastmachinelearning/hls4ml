@@ -1329,9 +1329,11 @@ class Activation(Layer):
         self.add_output_variable(shape, dims)
         if self.model.config.backend.name in ['Vivado', 'VivadoAccelerator']:
             if 'table_t' not in self.attributes:
-                self.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
+                # self.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
+                self.set_attr('table_t', FixedPrecisionType(width=52, integer=20))#
             if 'table_size' not in self.attributes:
                 self.set_attr('table_size', 1024)
+                # self.set_attr('table_size', 10000)
 
     def function_cpp(self):
         params = self._default_function_params()
@@ -1344,6 +1346,7 @@ class Activation(Layer):
         params = self._default_config_params()
         params['type'] = self.get_attr('activation')
         params['n_in'] = self.get_input_variable().size_cpp()
+        params['axis'] = -1
 
         return self._config_template.format(**params)
 
@@ -1984,8 +1987,8 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
                 scale = gamma / np.sqrt(var + epsilon)
                 bias = beta - gamma * mean / np.sqrt(var + epsilon)
 
-                print(f"scale: {scale}")
-                print(f"bias: {bias}")
+                # print(f"scale: {scale}")
+                # print(f"bias: {bias}")
                 # print(f"self.model: {self.model}")
 
                 var_name = f"{self.name}_norm_s{norm_count}"
@@ -2497,7 +2500,7 @@ class EdgeAggregate(Layer):
 
         aggr_map = {"add": 0, "mean": 1, "max": 2}
         # print(f"self.model: {self.model}")
-        params['aggr'] = aggr_map[self.model.reader.torch_model.aggr]
+        params['aggr'] = 3 #aggr_map[self.model.reader.torch_model.aggr]
 
         params['io_type'] = 'io_parallel'
         params['gnn_resource_limit'] = self.model.config.config['gnn_resource_limit']

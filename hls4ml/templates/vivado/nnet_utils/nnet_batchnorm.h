@@ -94,7 +94,7 @@ void normalize(
         if (CONFIG_T::n_filt==-1) {
             // std::cout << "ires: " << ires << "\n";
             res[ires] = CONFIG_T::template product<data_T, typename CONFIG_T::scale_t, res_T>::product(data[ires], scale[ires]) + bias[ires];
-            // std::cout << "index: "<< ires << ", input: "<< data[ires]<<", output: " << res[ires] << "\n";
+            // std::cout << "normalize index: "<< ires << ", input: "<< data[ires]<<", output: " << res[ires] << "\n";
 	    } else {
             int norm_index = ires%CONFIG_T::n_filt;
             std::cout << "ires: " << ires <<", norm_index: " << norm_index << "\n";

@@ -397,8 +397,11 @@ nodeblock_config_template = """struct config{index}: nnet::graph_config{{
 
 edge_aggregate_config_template = """struct aggregation_config{index}: nnet::edge_aggregate_config{{
     typedef {table_t} table_t;
+    typedef {table_t} exp_table_t;
+    typedef {table_t} inv_table_t;
     static const unsigned n_node = {n_node};
     static const unsigned n_edge = {n_edge};
+    static const unsigned node_dim = {edge_dim};
     static const unsigned edge_dim = {edge_dim};
     static const unsigned aggr = {aggr};
     static const unsigned flow = {flow};
@@ -408,7 +411,9 @@ edge_aggregate_config_template = """struct aggregation_config{index}: nnet::edge
     static const bool activate_final = {activate_final};
     static const bool gnn_resource_limit = {gnn_resource_limit};
     static const unsigned par_factor = {par_factor};
-}};"""
+    static const unsigned table_size = 1024;
+    static constexpr float Beta = 0.01;
+}};""" #table size may have to be later edited
 
 residual_config_template = """struct config{index} : nnet::residual_config{{
     static const unsigned n_elem = {n_elem};

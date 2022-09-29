@@ -68,6 +68,7 @@ void  linear(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 template<class data_T, class res_T, typename CONFIG_T>
 void  relu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
+    std::cout << "test \n";
     if (CONFIG_T::io_type == io_parallel){
         #pragma HLS PIPELINE
     }
@@ -204,9 +205,24 @@ inline float softmax_real_val_from_idx(unsigned i){
     // Treat the index as the top N bits
     static constexpr int N = ceillog2(CONFIG_T::table_size); // number of address bits for table
     data_T x(0);
+    // std::cout << "x before: " << x << "\n";
     x(x.width-1, x.width-N) = i;
+    // std::cout << "N: " << N << "\n";
+    // std::cout << "x after: " << x << "\n";
+    // std::cout << "x.width: " << x.width <<", x(x.width-1, x.width-N): " << x(x.width-1, x.width-N) << "\n";
     return (float) x;
 }
+
+// template<class data_T, typename CONFIG_T>
+// inline float softmax_real_val_from_idx(unsigned i){
+//     // Treat the index as the top N bits
+//     data_T max_val = 5;
+//     data_T min_val = - max_val;
+//     data_T n_intervals = CONFIG_T::table_size;
+//     data_T interval = (max_val - min_val)/ n_intervals;
+//     float x = min_val + interval*i;
+//     return x;
+// }
 
 template<class data_T, typename CONFIG_T>
 inline unsigned softmax_idx_from_real_val(data_T x){
@@ -218,12 +234,14 @@ inline unsigned softmax_idx_from_real_val(data_T x){
 
 template<class data_T, typename CONFIG_T>
 void init_exp_table(typename CONFIG_T::exp_table_t table_out[CONFIG_T::table_size]){
+    // std::cout << "CONFIG_T::table_size: " << CONFIG_T::table_size << "\n";
     // The template data_T is the data type used to address the table
     for(unsigned i = 0; i < CONFIG_T::table_size; i++){
         // Slicing bits for address is going to round towards 0, so take the central value
         float x = softmax_real_val_from_idx<data_T, CONFIG_T>(i);
         typename CONFIG_T::exp_table_t exp_x = exp_fcn_float(x);
         table_out[i] = exp_x;
+        // std::cout << "table_out float x:" << x << ", idx: " << i << ", exp_x:" << exp_x << "\n";
     }
 }
 
@@ -428,6 +446,7 @@ void  softmax_legacy(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 
 template<class data_T, class res_T, typename CONFIG_T>
 void softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
+    std::cout << "softmax normal ver activated " << CONFIG_T::table_size << "\n";
     #pragma HLS inline
     switch(CONFIG_T::implementation){
     case softmax_implementation::latency:

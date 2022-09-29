@@ -9,10 +9,11 @@
 #include "nnet_array.h"
 #include <math.h>
 #include "utils/x_hls_utils.h"
+#include "nnet_activation.h" // for softmax_idx_from_real_val, init_exp_table, init_invert_table
 
 namespace nnet {
   enum flow {source_to_target=0, target_to_source=1};
-  enum aggr {aggr_sum=0, aggr_mean=1, aggr_max=2};
+  enum aggr {aggr_sum=0, aggr_mean=1, aggr_max=2, aggr_softmax=3};
   enum activation {
     //linear_act=0=default,
     relu_act=1,
@@ -695,107 +696,108 @@ namespace nnet {
     data_T data[CONFIG_T::n_in] is the input,
     res_T res[CONFIG_T::n_in] is the output
     */
-  template<class data_T, class index_T, class res_T, typename CONFIG_T>
-    void edge_aggregate_pipeline(
-            data_T    edge_attr_1D[CONFIG_T::n_edge*CONFIG_T::edge_dim],
-            index_T   edge_index_1D[CONFIG_T::n_edge*2],
-            res_T     edge_attr_aggr_1D[CONFIG_T::n_node*CONFIG_T::edge_dim])
-  {
-    //initialize arrays
-    // 1. edge_attr (input)
-    data_T edge_attr[CONFIG_T::n_edge][CONFIG_T::edge_dim];
-    #pragma HLS ARRAY_PARTITION variable=edge_attr complete dim=0
-    nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::edge_attr_config>(edge_attr_1D, edge_attr);
+  // template<class data_T, class index_T, class res_T, typename CONFIG_T>
+  //   void edge_aggregate_pipeline(
+  //           data_T    edge_attr_1D[CONFIG_T::n_edge*CONFIG_T::edge_dim],
+  //           index_T   edge_index_1D[CONFIG_T::n_edge*2],
+  //           res_T     edge_attr_aggr_1D[CONFIG_T::n_node*CONFIG_T::edge_dim])
+  // {
+  //   //initialize arrays
+  //   std::cout << "CONFIG_T::aggr: " << CONFIG_T::aggr << "\n";
+  //   // 1. edge_attr (input)
+  //   data_T edge_attr[CONFIG_T::n_edge][CONFIG_T::edge_dim];
+  //   #pragma HLS ARRAY_PARTITION variable=edge_attr complete dim=0
+  //   nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::edge_attr_config>(edge_attr_1D, edge_attr);
 
-    //2. num_edge_per_node (intermediate), 3. edge_aggr_mask (intermediate)
-    index_T num_edge_per_node[CONFIG_T::n_node];
-    #pragma HLS ARRAY_PARTITION variable=num_edge_per_node complete dim=0
-    ap_uint<1> edge_aggr_mask[CONFIG_T::n_node];
-    #pragma HLS ARRAY_PARTITION variable=edge_aggr_mask complete dim=0
-    for(int i=0; i<CONFIG_T::n_node; i++){
-      #pragma HLS UNROLL
-      num_edge_per_node[i] = 0;
-      if(CONFIG_T::aggr==aggr_max){
-        edge_aggr_mask[i] = 0;
-      }
-    }
+  //   //2. num_edge_per_node (intermediate), 3. edge_aggr_mask (intermediate)
+  //   index_T num_edge_per_node[CONFIG_T::n_node]; // Think this is the list of degrees for each node
+  //   #pragma HLS ARRAY_PARTITION variable=num_edge_per_node complete dim=0
+  //   ap_uint<1> edge_aggr_mask[CONFIG_T::n_node];
+  //   #pragma HLS ARRAY_PARTITION variable=edge_aggr_mask complete dim=0
+  //   for(int i=0; i<CONFIG_T::n_node; i++){
+  //     #pragma HLS UNROLL
+  //     num_edge_per_node[i] = 0;
+  //     if(CONFIG_T::aggr==aggr_max){
+  //       edge_aggr_mask[i] = 0;
+  //     }
+  //   }
 
-    //4. edge_attr_aggr (output)
-    res_T edge_attr_aggr[CONFIG_T::n_node][CONFIG_T::edge_dim];
-    #pragma HLS ARRAY_PARTITION variable=edge_attr_aggr complete dim=0
-    if((CONFIG_T::aggr==aggr_sum)||(CONFIG_T::aggr==aggr_mean)){
-      for(int i=0; i < CONFIG_T::n_node; i++){
-        for(int j=0; j<CONFIG_T::edge_dim; j++){
-          #pragma HLS UNROLL
-          edge_attr_aggr[i][j] = 0;
-        }
-      }
-    }
-    else{ //CONFIG_T:aggr==aggr_max, we want to initialize this with the most negative number we can represent ->why?
-      res_T most_negative_num = -hls::numeric_limits<res_T>::max();
-      for(int i=0; i < CONFIG_T::n_node; i++){
-        for(int j=0; j<CONFIG_T::edge_dim; j++){
-          #pragma HLS UNROLL
-          edge_attr_aggr[i][j] = most_negative_num;
-        }
-      }
-    }
+  //   //4. edge_attr_aggr (output)
+  //   res_T edge_attr_aggr[CONFIG_T::n_node][CONFIG_T::edge_dim];
+  //   #pragma HLS ARRAY_PARTITION variable=edge_attr_aggr complete dim=0
+  //   if((CONFIG_T::aggr==aggr_sum)||(CONFIG_T::aggr==aggr_mean)){
+  //     for(int i=0; i < CONFIG_T::n_node; i++){
+  //       for(int j=0; j<CONFIG_T::edge_dim; j++){
+  //         #pragma HLS UNROLL
+  //         edge_attr_aggr[i][j] = 0;
+  //       }
+  //     }
+  //   }
+  //   else{ //CONFIG_T:aggr==aggr_max, we want to initialize this with the most negative number we can represent ->why?
+  //     res_T most_negative_num = -hls::numeric_limits<res_T>::max();
+  //     for(int i=0; i < CONFIG_T::n_node; i++){
+  //       for(int j=0; j<CONFIG_T::edge_dim; j++){
+  //         #pragma HLS UNROLL
+  //         edge_attr_aggr[i][j] = most_negative_num;
+  //       }
+  //     }
+  //   }
 
-    int receiver_col;
-    if(CONFIG_T::flow == source_to_target){
-      receiver_col = 1;
-    }
-    else{
-      receiver_col = 0;
-    }
+  //   int receiver_col;
+  //   if(CONFIG_T::flow == source_to_target){
+  //     receiver_col = 1;
+  //   }
+  //   else{
+  //     receiver_col = 0;
+  //   }
 
-    #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
-    for(int i=0; i<CONFIG_T::n_edge; i++){
-      #pragma HLS UNROLL
-      index_T r = edge_index_1D[2*i+receiver_col];
-      num_edge_per_node[r] += 1;
-      edge_aggr_mask[r] = 1;
+  //   #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+  //   for(int i=0; i<CONFIG_T::n_edge; i++){
+  //     #pragma HLS UNROLL
+  //     index_T r = edge_index_1D[2*i+receiver_col];
+  //     num_edge_per_node[r] += 1;
+  //     edge_aggr_mask[r] = 1;
 
-      // if sum or mean
-      if((CONFIG_T::aggr == aggr_sum)||(CONFIG_T::aggr==aggr_mean)){
-        for(int j=0; j<CONFIG_T::edge_dim; j++){
-          #pragma HLS UNROLL
-          edge_attr_aggr[r][j] += edge_attr[i][j];
-        }
-      }
-      else{ //CONFIG_T::aggr==aggr_max
-        for(int j=0; j<CONFIG_T::edge_dim; j++){
-          #pragma HLS UNROLL
-          edge_attr_aggr[r][j] = edge_attr[i][j] > edge_attr_aggr[r][j] ? edge_attr[i][j] : edge_attr_aggr[r][j];
-        }
-      }
-    }
+  //     // if sum or mean
+  //     if((CONFIG_T::aggr == aggr_sum)||(CONFIG_T::aggr==aggr_mean)){
+  //       for(int j=0; j<CONFIG_T::edge_dim; j++){
+  //         #pragma HLS UNROLL
+  //         edge_attr_aggr[r][j] += edge_attr[i][j];
+  //       }
+  //     }
+  //     else{ //CONFIG_T::aggr==aggr_max
+  //       for(int j=0; j<CONFIG_T::edge_dim; j++){
+  //         #pragma HLS UNROLL
+  //         edge_attr_aggr[r][j] = edge_attr[i][j] > edge_attr_aggr[r][j] ? edge_attr[i][j] : edge_attr_aggr[r][j];
+  //       }
+  //     }
+  //   }
 
-    // sum --> mean
-    if(CONFIG_T::aggr == aggr_mean){
-      for(int i=0; i < CONFIG_T::n_node; i++){
-        for (int j=0; j<CONFIG_T::edge_dim; j++){
-          #pragma HLS UNROLL
-          res_T edge_mean_j;
-          nnet::edge_divide<res_T, index_T, res_T, CONFIG_T>(edge_attr_aggr[i][j], num_edge_per_node[i], edge_mean_j);
-          edge_attr_aggr[i][j] = edge_mean_j;
-        }
-      }
-    }
+  //   // sum --> mean
+  //   if(CONFIG_T::aggr == aggr_mean){
+  //     for(int i=0; i < CONFIG_T::n_node; i++){
+  //       for (int j=0; j<CONFIG_T::edge_dim; j++){
+  //         #pragma HLS UNROLL
+  //         res_T edge_mean_j;
+  //         nnet::edge_divide<res_T, index_T, res_T, CONFIG_T>(edge_attr_aggr[i][j], num_edge_per_node[i], edge_mean_j);
+  //         edge_attr_aggr[i][j] = edge_mean_j;
+  //       }
+  //     }
+  //   }
 
-    // None --> max
-    if(CONFIG_T::aggr == aggr_max){ //note: the edge_attr_aggr array has been initialized but IS NOT ZEROS
-      for(int i=0; i < CONFIG_T::n_node; i++){
-        for(int j=0; j<CONFIG_T::edge_dim; j++){
-          #pragma HLS UNROLL
-          edge_attr_aggr[i][j] = edge_aggr_mask[i]*edge_attr_aggr[i][j];
-        }
-      }
-    }
+  //   // None --> max
+  //   if(CONFIG_T::aggr == aggr_max){ //note: the edge_attr_aggr array has been initialized but IS NOT ZEROS
+  //     for(int i=0; i < CONFIG_T::n_node; i++){
+  //       for(int j=0; j<CONFIG_T::edge_dim; j++){
+  //         #pragma HLS UNROLL
+  //         edge_attr_aggr[i][j] = edge_aggr_mask[i]*edge_attr_aggr[i][j];
+  //       }
+  //     }
+  //   }
 
-    //output array --> output vec
-    nnet::mat_to_vec<res_T, res_T, typename CONFIG_T::edge_attr_aggr_config>(edge_attr_aggr, edge_attr_aggr_1D);
-  }
+  //   //output array --> output vec
+  //   nnet::mat_to_vec<res_T, res_T, typename CONFIG_T::edge_attr_aggr_config>(edge_attr_aggr, edge_attr_aggr_1D);
+  // }
 
   template<class data_T, class index_T, class res_T, typename CONFIG_T>
     void edgeblock_pipeline(
@@ -939,19 +941,22 @@ namespace nnet {
   // }
 
   ////////////////////////////////////top-level//////////////////////////////////////
-  template<class data_T, class index_T, class res_T, typename CONFIG_T>
-    void edge_aggregate(
-            data_T    edge_attr_1D[CONFIG_T::n_edge*CONFIG_T::edge_dim],
-            index_T   edge_index_1D[CONFIG_T::n_edge*2],
-            res_T     edge_attr_aggr_1D[CONFIG_T::n_node*CONFIG_T::edge_dim])
-  {
-      if(CONFIG_T::gnn_resource_limit){
-        edge_aggregate_dataflow<data_T,index_T,res_T,CONFIG_T>(edge_attr_1D,edge_index_1D,edge_attr_aggr_1D);
-      }
-      else{
-        edge_aggregate_pipeline<data_T,index_T,res_T,CONFIG_T>(edge_attr_1D,edge_index_1D,edge_attr_aggr_1D);
-      }
-  }
+  // template<class data_T, class index_T, class res_T, typename CONFIG_T>
+  //   void edge_aggregate(
+  //           data_T    edge_attr_1D[CONFIG_T::n_edge*CONFIG_T::edge_dim],
+  //           index_T   edge_index_1D[CONFIG_T::n_edge*2],
+  //           res_T     edge_attr_aggr_1D[CONFIG_T::n_node*CONFIG_T::edge_dim])
+  // {
+  //   std::cout << "edge_aggregate \n";
+  //     if(CONFIG_T::gnn_resource_limit){
+  //       std::cout << "edge_aggregate_dataflow \n";
+  //       edge_aggregate_dataflow<data_T,index_T,res_T,CONFIG_T>(edge_attr_1D,edge_index_1D,edge_attr_aggr_1D);
+  //     }
+  //     else{
+  //       std::cout << "edge_aggregate_pipeline \n";
+  //       edge_aggregate_pipeline<data_T,index_T,res_T,CONFIG_T>(edge_attr_1D,edge_index_1D,edge_attr_aggr_1D);
+  //     }
+  // }
 
   template<class data_T, class index_T, class res_T, typename CONFIG_T>
     void edgeblock(
@@ -1260,5 +1265,196 @@ namespace nnet {
   //   nnet::dense_resource(data, res, weights, biases);//same as dense_mult_1lyr
   //   // it says resource, but if CONFIG_T::gnn_resource_limit == false, it just does pragma #HLS INLINE region
   // }
+
+  template<class data_T, class index_T, class res_T, typename CONFIG_T>
+    void edge_aggregate(
+            data_T    edge_attr_1D[CONFIG_T::n_edge*CONFIG_T::edge_dim],
+            index_T   edge_index_1D[CONFIG_T::n_edge*2],
+            res_T     edge_attr_aggr_1D[CONFIG_T::n_node*CONFIG_T::edge_dim])
+  {
+    //initialize arrays
+    std::cout << "CONFIG_T::aggr: " << CONFIG_T::aggr << "\n";
+
+    // // assign CONFIG_T::aggr to softmax bc I can't be bothered to change the code up in the chain
+    // CONFIG_T::aggr = 0;
+    // std::cout << "CONFIG_T::table_size: " << CONFIG_T::table_size << "\n";
+    // std::cout << "CONFIG_T::aggr: " << CONFIG_T::aggr << "\n";
+
+    // // just printing out stuff
+    // for(int i=0; i<CONFIG_T::n_edge*2; i++){
+    //   std::cout << "edge_index_1D index: " << i << ", value: " << edge_index_1D[i] <<"\n";
+    // }
+
+    // 1. edge_attr (input)
+    data_T edge_attr[CONFIG_T::n_edge][CONFIG_T::edge_dim];
+    #pragma HLS ARRAY_PARTITION variable=edge_attr complete dim=0
+    nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::edge_attr_config>(edge_attr_1D, edge_attr);
+
+    /*2. num_edge_per_node (intermediate) -> for aggr_mean, 
+    edge_aggr_mask (intermediate) -> for aggr_max,
+    normalization_value (intermediate) -> for aggr_softmax,
+    */
+    index_T num_edge_per_node[CONFIG_T::n_node]; // Think this is the list of degrees for each node
+    #pragma HLS ARRAY_PARTITION variable=num_edge_per_node complete dim=0
+    ap_uint<1> edge_aggr_mask[CONFIG_T::n_node];
+    #pragma HLS ARRAY_PARTITION variable=edge_aggr_mask complete dim=0
+    data_T normalization_value[CONFIG_T::n_node][CONFIG_T::node_dim]; // Normalization value for softmax
+    #pragma HLS ARRAY_PARTITION variable=normalization_value complete dim=0
+    for(int i=0; i<CONFIG_T::n_node; i++){
+      #pragma HLS UNROLL
+      num_edge_per_node[i] = 0;
+      if(CONFIG_T::aggr==aggr_max){
+        edge_aggr_mask[i] = 0;
+      }
+      for(int j=0; j<CONFIG_T::node_dim; j++){ // node_dim == edge_dim
+        normalization_value[i][j] = 0; //initialize normalization for softmax aggr
+      }
+    }
+    
+
+    // Initialize the lookup tables for softmax aggr
+    #ifdef __HLS_SYN__
+        bool initialized = false;
+        data_T exp_table[CONFIG_T::table_size];
+        data_T invert_table[CONFIG_T::table_size];
+    #else
+        bool initialized = false;
+        data_T exp_table[CONFIG_T::table_size];
+        data_T invert_table[CONFIG_T::table_size];
+
+    #endif
+        if (!initialized) {
+            // std::cout << "not initialized, idk what that means tho \n";
+            // Note we are exponentiating the inputs, which have type data_T
+            init_exp_table<data_T, CONFIG_T>(exp_table);
+            // Note we are inverting the exponentials, which have type exp_table_t
+            init_invert_table<data_T, CONFIG_T>(invert_table);
+            initialized = true;
+        }
+
+
+    //3. edge_attr_aggr (output)
+    res_T edge_attr_aggr[CONFIG_T::n_node][CONFIG_T::edge_dim];
+    #pragma HLS ARRAY_PARTITION variable=edge_attr_aggr complete dim=0
+    if((CONFIG_T::aggr==aggr_sum)||(CONFIG_T::aggr==aggr_mean)||(CONFIG_T::aggr==aggr_softmax)){
+      for(int i=0; i < CONFIG_T::n_node; i++){
+        for(int j=0; j<CONFIG_T::edge_dim; j++){
+          #pragma HLS UNROLL
+          edge_attr_aggr[i][j] = 0;
+        }
+      }
+    }
+    else{ //CONFIG_T:aggr==aggr_max, we want to initialize this with the most negative number we can represent ->why?
+      res_T most_negative_num = -hls::numeric_limits<res_T>::max();
+      for(int i=0; i < CONFIG_T::n_node; i++){
+        for(int j=0; j<CONFIG_T::edge_dim; j++){
+          #pragma HLS UNROLL
+          edge_attr_aggr[i][j] = most_negative_num;
+        }
+      }
+    }
+
+    int receiver_col;
+    if(CONFIG_T::flow == source_to_target){
+      receiver_col = 1;
+    }
+    else{
+      receiver_col = 0;
+    }
+
+    #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+    for(int i=0; i<CONFIG_T::n_edge; i++){
+      #pragma HLS UNROLL
+      index_T r = edge_index_1D[2*i+receiver_col];
+      num_edge_per_node[r] += 1;
+      edge_aggr_mask[r] = 1;
+      
+
+      // if sum or mean
+      if((CONFIG_T::aggr == aggr_sum)||(CONFIG_T::aggr==aggr_mean)){
+        for(int j=0; j<CONFIG_T::edge_dim; j++){
+          #pragma HLS UNROLL
+          edge_attr_aggr[r][j] += edge_attr[i][j];
+        }
+      }
+      else if ((CONFIG_T::aggr==aggr_softmax)){
+        // Calculate all the e^x's
+        data_T exp_sum(0);
+        data_T beta = CONFIG_T::Beta;
+        
+        for(unsigned j = 0; j < CONFIG_T::edge_dim; j++){
+            #pragma HLS unroll
+            unsigned x = softmax_idx_from_real_val<data_T, CONFIG_T>(
+              edge_attr[i][j] * beta // may have to convert Beta to data_T first
+            );
+            // data_T exp_x = exp_table[x];
+            data_T exp_x = exp_fcn_float(edge_attr[i][j] * beta);
+            edge_attr_aggr[r][j] += exp_x*edge_attr[i][j];
+            normalization_value[r][j] += exp_x;
+            // std::cout << "aggregate index i:" << i << ", j:" << j << ", edge_attr: " << edge_attr[i][j] << ", exp_x:" << exp_x << ", exp_x*edge_attr: " << exp_x*edge_attr[i][j] << "\n";
+        }
+        // // debugging
+        // for(unsigned j = 0; j < CONFIG_T::edge_dim; j++){
+        //   std::cout << "aggregate index i:" << i << ", j:" << j << ", edge_attr: " << edge_attr[i][j] << "\n";
+        // }
+        // // Explicitly sum the results with an adder tree.
+        // // Rounding & Saturation mode, which improve accuracy, prevent Vivado from expression balancing
+        // Op_add<data_T> op_add;
+        // exp_sum = reduce<data_T, CONFIG_T::edge_dim, Op_add<data_T>>(edge_attr_aggr[r], op_add);
+
+        // typename CONFIG_T::inv_table_t inv_exp_sum = invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
+        // for(unsigned i = 0; i < CONFIG_T::n_in; i++){
+        //     #pragma HLS unroll
+        //     res[i] = exp_res[i] * inv_exp_sum;
+        // }  
+      }
+      else{ //CONFIG_T::aggr==aggr_max
+        for(int j=0; j<CONFIG_T::edge_dim; j++){
+          #pragma HLS UNROLL
+          edge_attr_aggr[r][j] = edge_attr[i][j] > edge_attr_aggr[r][j] ? edge_attr[i][j] : edge_attr_aggr[r][j];
+        }
+      }
+    }
+
+    // sum --> mean
+    if(CONFIG_T::aggr == aggr_mean){
+      for(int i=0; i < CONFIG_T::n_node; i++){
+        for (int j=0; j<CONFIG_T::edge_dim; j++){
+          #pragma HLS UNROLL
+          res_T edge_mean_j;
+          nnet::edge_divide<res_T, index_T, res_T, CONFIG_T>(edge_attr_aggr[i][j], num_edge_per_node[i], edge_mean_j);
+          edge_attr_aggr[i][j] = edge_mean_j;
+        }
+      }
+    }
+    else if(CONFIG_T::aggr == aggr_softmax){
+      for(int i=0; i < CONFIG_T::n_node; i++){
+        for (int j=0; j<CONFIG_T::edge_dim; j++){
+          // #pragma HLS UNROLL
+          // res_T normalized_val_j;
+          // nnet::edge_divide<res_T, index_T, res_T, CONFIG_T>(edge_attr_aggr[i][j], normalization_value[i], normalized_val_j);
+          // edge_attr_aggr[i][j] = normalized_val_j;
+          if (normalization_value[i][j] != 0){
+            edge_attr_aggr[i][j] = edge_attr_aggr[i][j]/ normalization_value[i][j];
+          }
+          // std::cout << "final aggregate index i:" << i << ", j:" << j << ", normalization_value: "<<normalization_value[i][j]<<", attr output: " << edge_attr_aggr[i][j] << "\n";
+        }
+      }
+    }
+
+    // None --> max
+    if(CONFIG_T::aggr == aggr_max){ //note: the edge_attr_aggr array has been initialized but IS NOT ZEROS
+      for(int i=0; i < CONFIG_T::n_node; i++){
+        for(int j=0; j<CONFIG_T::edge_dim; j++){
+          #pragma HLS UNROLL
+          edge_attr_aggr[i][j] = edge_aggr_mask[i]*edge_attr_aggr[i][j];
+        }
+      }
+    }
+
+    //output array --> output vec
+    nnet::mat_to_vec<res_T, res_T, typename CONFIG_T::edge_attr_aggr_config>(edge_attr_aggr, edge_attr_aggr_1D);
+  }
+
 }
 #endif

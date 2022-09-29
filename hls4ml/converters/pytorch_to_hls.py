@@ -82,7 +82,7 @@ class PyTorchFileReader(PyTorchModelReader): #Inherit get_weights_data method
 
         self.state_dict = self.torch_model.state_dict()
         
-        return data
+        # return data
 
 ####----------------------Layer handling---------------------######
 layer_handlers = {}
