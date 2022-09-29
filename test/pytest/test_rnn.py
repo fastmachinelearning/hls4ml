@@ -2,8 +2,6 @@ import pytest
 import hls4ml
 import numpy as np
 from pathlib import Path
-import math
-from tensorflow.keras import backend as K
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Input, SimpleRNN, LSTM, GRU
 
@@ -65,19 +63,26 @@ def test_rnn_parsing(rnn_layer, return_sequences):
     else:
         np.testing.assert_array_equal(hls_weights[2].data, rnn_weights[2])
 
-@pytest.mark.parametrize('rnn_layer', [LSTM, GRU])
+@pytest.mark.parametrize('rnn_layer,backend, io_type', [
+                            (SimpleRNN, 'Quartus', 'io_parallel'),
+                            (LSTM, 'Vivado', 'io_parallel'),
+                            (LSTM, 'Quartus', 'io_parallel'),
+                            (LSTM, 'Vivado', 'io_stream'),
+                            (GRU, 'Vivado', 'io_parallel'), 
+                            (GRU, 'Vivado', 'io_stream'),
+                            (GRU, 'Quartus', 'io_parallel'), 
+                            (GRU, 'Quartus', 'io_stream'), 
+                        ])
 @pytest.mark.parametrize('return_sequences', [True, False])
-@pytest.mark.parametrize('backend', ['Vivado'])
-@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('static', [True, False])
 def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, static):
     # Subtract 0.5 to include negative values
-    input_shape = (5, 8)
+    input_shape = (12, 8)
     X = np.random.rand(50, *input_shape) - 0.5      
     
     layer_name = rnn_layer.__class__.__name__.lower()
     keras_model = Sequential()
-    keras_model.add(rnn_layer(units=32, input_shape=input_shape, kernel_initializer='lecun_uniform', bias_initializer='lecun_uniform', return_sequences=return_sequences, name=layer_name))
+    keras_model.add(rnn_layer(units=32, input_shape=input_shape, kernel_initializer='lecun_uniform', recurrent_initializer='lecun_uniform', bias_initializer='lecun_uniform', return_sequences=return_sequences, name=layer_name))
     keras_model.compile()
 
     default_precision = 'ap_fixed<32, 16>' if backend == 'Vivado' else 'ac_fixed<32, 16, true>'

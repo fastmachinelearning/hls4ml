@@ -130,7 +130,17 @@ void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 enum class softmax_implementation {latency=0, legacy=1, stable=2};
 
 template<class data_T, typename CONFIG_T>
-inline unsigned softmax_idx_from_real_val(const data_T x){
+inline unsigned softmax_stable_idx_from_real_val(const data_T x){
+    // Number of address bits for table
+    static constexpr int N = ceillog2(CONFIG_T::table_size);    
+
+    // Slice the top N bits of the input
+    hls_register ac_int<N, false> y = x.template slc<N>(x.width-N-1);             
+    return y.to_uint();
+}
+
+template<class data_T, typename CONFIG_T>
+inline unsigned softmax_latency_idx_from_real_val(const data_T x){
     // Number of address bits for table
     static constexpr int N = ceillog2(CONFIG_T::table_size);    
 
@@ -148,19 +158,12 @@ void softmax_stable(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
     // Find maximum
     Op_max<data_T> op_max;
     hls_register data_T x_max = reduce<data_T, CONFIG_T::n_in, Op_max<data_T>>(data, op_max);
-    
-    // Calculate differences from the maximum, forcing rounding and saturation for better accuracy
-    hls_register ac_fixed<data_T::width, data_T::i_width, true, AC_RND, AC_SAT> d_xi_xmax[CONFIG_T::n_in];
-    #pragma unroll
-    for(unsigned i = 0; i < CONFIG_T::n_in; i++) {
-        d_xi_xmax[i] = data[i] - x_max;
-    }
 
     // Calculate all the e^x's
     hls_register typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
     #pragma unroll
     for(unsigned i = 0; i < CONFIG_T::n_in; i++) {
-        exp_res[i] = exp_table[softmax_idx_from_real_val<data_T, CONFIG_T>(d_xi_xmax[i])];
+        exp_res[i] = exp_table[softmax_stable_idx_from_real_val<data_T, CONFIG_T>(data[i] - x_max)];
     }
 
     // Explicitly sum previously calculated exponentials with an adder tree
@@ -168,7 +171,7 @@ void softmax_stable(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
     hls_register typename CONFIG_T::exp_table_t exp_sum = reduce<typename CONFIG_T::exp_table_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::exp_table_t>>(exp_res, op_add);
 
     // Multiply previously calculated exponetials with the reciprocal of the sum
-    hls_register typename CONFIG_T::inv_table_t inv_exp_sum = invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
+    hls_register typename CONFIG_T::inv_table_t inv_exp_sum = invert_table[softmax_stable_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
     #pragma unroll
     for(unsigned i = 0; i < CONFIG_T::n_in; i++) {
         res[i] = exp_res[i] * inv_exp_sum;
@@ -178,15 +181,6 @@ void softmax_stable(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
 // TODO - Improve accuracy
 template <class data_T, class res_T, typename CONFIG_T>
 void softmax_latency(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
-    /*
-    * Note: The latency tables are equivalent to stable tables
-    * However, the compiler cannot include the same table twice
-    * Therefore, an out-of-scope exception is thrown in one of the functions
-    * Temporary solution - Create the same table twice in quartus_writer.py
-    * Long-term solution - Only create tables needed by the network;
-    * Currently, quartus-writer.py generates LUTs for all activations,
-    * Regardless if they are present in the network or not
-    */
     #include "activation_tables/exp_table_latency.tb"
     #include "activation_tables/invert_table_latency.tb"
     
@@ -194,7 +188,7 @@ void softmax_latency(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
     hls_register typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
     #pragma unroll
     for(unsigned i = 0; i < CONFIG_T::n_in; i++) {
-        exp_res[i] = exp_table_latency[softmax_idx_from_real_val<data_T, CONFIG_T>(data[i])];
+        exp_res[i] = exp_table_latency[softmax_latency_idx_from_real_val<data_T, CONFIG_T>(data[i])];
     }
 
     // Explicitly sum the results with an adder tree.
@@ -202,7 +196,7 @@ void softmax_latency(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
     hls_register typename CONFIG_T::exp_table_t exp_sum = reduce<typename CONFIG_T::exp_table_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::exp_table_t>>(exp_res, op_add);
 
     // Multiply previously calculated exponetials with the reciprocal of the sum
-    hls_register typename CONFIG_T::inv_table_t inv_exp_sum = invert_table_latency[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
+    hls_register typename CONFIG_T::inv_table_t inv_exp_sum = invert_table_latency[softmax_latency_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
     #pragma unroll
     for(unsigned i = 0; i < CONFIG_T::n_in; i++){
         res[i] = exp_res[i] * inv_exp_sum;
@@ -367,17 +361,30 @@ void softplus(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 template<class data_T, class res_T, typename CONFIG_T>
 void  softsign(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
+    static const int MAX_VALUE=8;
     // Initialize the lookup table
     #include "activation_tables/softsign_table.tb"
 
     // Index into the lookup table based on data
     #pragma unroll
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        ac_int<16> data_round = (data[ii]*CONFIG_T::table_size/16).to_int();
-        ac_int<16> index = data_round + 8*CONFIG_T::table_size/16;
-        if (index < 0)   index = 0;
-        if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
-        res[ii] = (res_T) softsign_table[index];
+        data_T temp  hls_register;
+        res_T  temp2 hls_register;
+        if(data[ii] < 0 ){
+            temp = -data[ii];
+        }
+        else{
+            temp = data[ii];
+        }
+        ac_int<16> index = (temp*CONFIG_T::table_size/MAX_VALUE).to_int();
+        if (temp > MAX_VALUE) index = CONFIG_T::table_size-1;
+        temp2 = (res_T) softsign_table[index];
+        if(data[ii] < 0 ){
+            res[ii] = -temp2;
+        }
+        else{
+            res[ii] = temp2;
+        }
     }
 }
 
