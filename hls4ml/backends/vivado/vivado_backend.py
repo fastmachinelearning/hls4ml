@@ -499,8 +499,9 @@ class VivadoBackend(FPGABackend):
             layer.set_attr('inv_table_t', layer.get_attr('table_t'))
         if layer.model.config.is_resource_strategy(layer):
             # 'resource' strategy = 'latency' for Softmax
-            layer.set_attr('implementation', 'legacy') # latency legacy stable
             # layer.set_attr('implementation', 'latency')
+            layer.set_attr('implementation', 'legacy') # latency legacy stable
+            
         else:
             # layer.set_attr('implementation', layer.model.config.get_strategy(layer).lower())
             layer.set_attr('implementation', 'legacy') # latency legacy stable
