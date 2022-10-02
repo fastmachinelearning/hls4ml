@@ -241,9 +241,9 @@ class VivadoWriter(Writer):
                 inputs = model.get_input_variables()
                 outputs = model.get_output_variables()
                 for layer in model.get_layers():
-                    print(f"layer: {layer}")
+                    # print(f"layer: {layer}")
                     vars = layer.get_variables()
-                    print(f"layer.get_variables(): {vars}")
+                    # print(f"layer.get_variables(): {vars}")
                     for var in vars:
                         if var not in inputs and var not in outputs:
                             def_cpp = self.variable_definition_cpp(model, var)
@@ -253,7 +253,7 @@ class VivadoWriter(Writer):
                                 if var.pragma:
                                     newline += '    ' + self._make_array_pragma(var) + '\n'
                     func = layer.function_cpp() #ie: 'nnet::edgeblock<input2_t, input3_t, layer4_t, config4>(node_attr, edge_attr, edge_index, layer4_out, R1_w0, R1_b0, R1_w1, R1_b1, R1_w2, R1_b2, R1_w3, R1_b3);'
-                    print(f"layer name: {layer.name}. func: {func}")
+                    # print(f"layer name: {layer.name}. func: {func}")
                     if func:
                         if len(func) == 1:
                             newline += '    ' + func[0] + ' // ' + layer.name + '\n'
@@ -362,8 +362,8 @@ class VivadoWriter(Writer):
         fout.close()
 
     def write_parameters(self, model):
-        for layer in model.get_layers():
-            print(f"write parameters one of many layers: {layer}")
+        # for layer in model.get_layers():
+            # print(f"write parameters one of many layers: {layer}")
         filedir = os.path.dirname(os.path.abspath(__file__))
         f = open(os.path.join(filedir,'../templates/vivado/firmware/parameters.h'),'r')
         fout = open('{}/firmware/parameters.h'.format(model.config.get_output_dir()),'w')

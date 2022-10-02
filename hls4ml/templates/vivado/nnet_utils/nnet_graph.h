@@ -9,7 +9,7 @@
 #include "nnet_array.h"
 #include <math.h>
 #include "utils/x_hls_utils.h"
-#include "nnet_activation.h" // for softmax_idx_from_real_val, init_exp_table, init_invert_table
+#include "nnet_activation.h" // for softmax_idx_from_real_val, init_exp_table, init_invert_table, relu_0D
 
 namespace nnet {
   enum flow {source_to_target=0, target_to_source=1};
@@ -1252,28 +1252,16 @@ namespace nnet {
 
   }
 
-  // template<class data_T, class res_T, typename CONFIG_T>
-  //   void EdgeEncoder(
-  //     data_T    data[CONFIG_T::n_in],
-  //     res_T     res[CONFIG_T::n_out],
-  //     typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
-  //     typename CONFIG_T::bias_t    biases[CONFIG_T::n_out]
-  //   )
-  // {
-  //   // nnet::dense(data, res, weights, biases);
-  //   std::cout << "EdgeEncoder CONFIG_T::n_out : " << CONFIG_T::n_out<<"\n";
-  //   nnet::dense_resource(data, res, weights, biases);//same as dense_mult_1lyr
-  //   // it says resource, but if CONFIG_T::gnn_resource_limit == false, it just does pragma #HLS INLINE region
-  // }
 
   template<class data_T, class index_T, class res_T, typename CONFIG_T>
     void edge_aggregate(
+            data_T    node_attr_1D[CONFIG_T::n_node*CONFIG_T::node_dim],
             data_T    edge_attr_1D[CONFIG_T::n_edge*CONFIG_T::edge_dim],
             index_T   edge_index_1D[CONFIG_T::n_edge*2],
             res_T     edge_attr_aggr_1D[CONFIG_T::n_node*CONFIG_T::edge_dim])
   {
     //initialize arrays
-    std::cout << "CONFIG_T::aggr: " << CONFIG_T::aggr << "\n";
+    // std::cout << "CONFIG_T::aggr: " << CONFIG_T::aggr << "\n";
 
     // // assign CONFIG_T::aggr to softmax bc I can't be bothered to change the code up in the chain
     // CONFIG_T::aggr = 0;
@@ -1285,10 +1273,15 @@ namespace nnet {
     //   std::cout << "edge_index_1D index: " << i << ", value: " << edge_index_1D[i] <<"\n";
     // }
 
-    // 1. edge_attr (input)
+    // 1. edge_attr (input), node_attr
     data_T edge_attr[CONFIG_T::n_edge][CONFIG_T::edge_dim];
     #pragma HLS ARRAY_PARTITION variable=edge_attr complete dim=0
     nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::edge_attr_config>(edge_attr_1D, edge_attr);
+
+    // std::cout << "CONFIG_T::node_dim:" << CONFIG_T::node_dim << "\n";
+    data_T node_attr[CONFIG_T::n_node][CONFIG_T::node_dim];
+    #pragma HLS ARRAY_PARTITION variable=node_attr complete dim=0
+    nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::node_attr_config>(node_attr_1D, node_attr);
 
     /*2. num_edge_per_node (intermediate) -> for aggr_mean, 
     edge_aggr_mask (intermediate) -> for aggr_max,
@@ -1355,12 +1348,22 @@ namespace nnet {
     }
 
     int receiver_col;
+    int sender_col;
     if(CONFIG_T::flow == source_to_target){
       receiver_col = 1;
+      sender_col = 0;
     }
     else{
       receiver_col = 0;
+      sender_col = 1;
     }
+
+    
+    // for(int i=0; i<CONFIG_T::n_node; i++){
+    //   for(int j = 0; j < CONFIG_T::node_dim; j++){
+    //     std::cout << "node_attr index i:" << i << ", j:" << j << ", node_attr:" << node_attr[i][j] << "\n";
+    //   }
+    // }
 
     #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
     for(int i=0; i<CONFIG_T::n_edge; i++){
@@ -1368,7 +1371,8 @@ namespace nnet {
       index_T r = edge_index_1D[2*i+receiver_col];
       num_edge_per_node[r] += 1;
       edge_aggr_mask[r] = 1;
-      
+      index_T s = edge_index_1D[2*i+sender_col];
+      // std::cout << "index s: " << s << "\n";
 
       // if sum or mean
       if((CONFIG_T::aggr == aggr_sum)||(CONFIG_T::aggr==aggr_mean)){
@@ -1384,14 +1388,23 @@ namespace nnet {
         
         for(unsigned j = 0; j < CONFIG_T::edge_dim; j++){
             #pragma HLS unroll
-            unsigned x = softmax_idx_from_real_val<data_T, CONFIG_T>(
-              edge_attr[i][j] * beta // may have to convert Beta to data_T first
-            );
+            // unsigned x = softmax_idx_from_real_val<data_T, CONFIG_T>(
+            //   edge_attr[i][j] * beta // may have to convert Beta to data_T first
+            // );
             // data_T exp_x = exp_table[x];
-            data_T exp_x = exp_fcn_float(edge_attr[i][j] * beta);
-            edge_attr_aggr[r][j] += exp_x*edge_attr[i][j];
+            // data_T msg;
+            // #pragma HLS ARRAY_PARTITION variable=msg complete dim=0
+            // nnet::relu<data_T, data_T, typename CONFIG_T>(edge_attr[i][j] + node_attr[s][j], data0);
+            data_T eps = CONFIG_T::eps;
+            data_T msg =  relu_0D(edge_attr[i][j] + node_attr[s][j]) + eps;
+            data_T exp_x = exp_fcn_float(msg * beta);
+            edge_attr_aggr[r][j] += exp_x*msg;
             normalization_value[r][j] += exp_x;
-            // std::cout << "aggregate index i:" << i << ", j:" << j << ", edge_attr: " << edge_attr[i][j] << ", exp_x:" << exp_x << ", exp_x*edge_attr: " << exp_x*edge_attr[i][j] << "\n";
+            // std::cout << "index s: " << s << "\n";
+            // std::cout << "index r: " << r << "\n";
+            // std::cout << "aggregate index i:" << i << ", j:" << j << ", edge_attr: " << edge_attr[i][j] << ", node_attr:" << node_attr[s][j] << "\n";
+            // std::cout << "aggregate index i:" << i << ", j:" << j << ", msg b4: " << edge_attr[i][j] + node_attr[s][j] << ", msg after: " << msg << "\n";
+            // std::cout << "aggregate index i:" << i << ", j:" << j << ", exp_x:" << exp_x << ", exp_x*msg: " << exp_x*msg << "\n";
         }
         // // debugging
         // for(unsigned j = 0; j < CONFIG_T::edge_dim; j++){
@@ -1437,6 +1450,9 @@ namespace nnet {
           if (normalization_value[i][j] != 0){
             edge_attr_aggr[i][j] = edge_attr_aggr[i][j]/ normalization_value[i][j];
           }
+          // else{
+          //   std::cout << "edge_attr_aggr: " <<edge_attr_aggr[i][j] <<"\n";
+          // }
           // std::cout << "final aggregate index i:" << i << ", j:" << j << ", normalization_value: "<<normalization_value[i][j]<<", attr output: " << edge_attr_aggr[i][j] << "\n";
         }
       }

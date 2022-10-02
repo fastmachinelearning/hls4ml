@@ -411,7 +411,7 @@ class Layer(object):
             return next(iter(self.variables.values()))
 
     def get_weights(self, var_name=None):
-        print(f"Layer self.weights: {self.weights}")
+        # print(f"Layer self.weights: {self.weights}")
         if var_name:
             return self.weights[var_name]
         return self.weights.values()
@@ -1866,16 +1866,16 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
         self.n_edge = self.attributes['n_edge']
         self.node_dim = self.attributes['node_dim']
         self.edge_dim = self.attributes['edge_dim']
-        print(f"self.attributes.keys(): {self.attributes.keys()}")
+        # print(f"self.attributes.keys(): {self.attributes.keys()}")
         self.out_dim = self.attributes['out_dim']
         self._check_inputs()
         
-        print(f"self.model.output_vars.keys(): {self.model.output_vars.keys()}")
+        # print(f"self.model.output_vars.keys(): {self.model.output_vars.keys()}")
         
         self.n_node_cppname, self.node_dim_cppname = self.model.get_layer_output_variable(self.inputs[0]).dim_names
         self.n_edge_cppname, self.edge_dim_cppname = self.model.get_layer_output_variable(self.inputs[1]).dim_names
         self.out_dim_cppname = f"LAYER{self.index}_OUT_DIM"
-        print(f"self.edge_dim_cppname: {self.node_dim_cppname}")
+        # print(f"self.edge_dim_cppname: {self.node_dim_cppname}")
 
         self.torch_module = getattr(self.model.reader.torch_model, self.name)
         submodules = OrderedDict()
@@ -1897,8 +1897,8 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
         params['output_t'] = self.get_output_variable().type.name
         params['node_attr'] = self.attributes['inputs'][0]
         params['edge_attr'] = self.attributes['inputs'][1]
-        print(f"GraphBlock params['node_attr']: {params['node_attr']}")
-        print(f"GraphBlock params['edge_attr']: {params['edge_attr']}")
+        # print(f"GraphBlock params['node_attr']: {params['node_attr']}")
+        # print(f"GraphBlock params['edge_attr']: {params['edge_attr']}")
         params['out'] = f"layer{self.index}_out"
 
         params['w0'] = self.get_weights(f"{self.name}_w0").name
@@ -1921,9 +1921,9 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
 
         # print(f"top_config b4 sublayers: {top_config}")
         sublayer_configs = self._config_sublayers()
-        print(f"sublayer_configs b4 update: {sublayer_configs}")
+        # print(f"sublayer_configs b4 update: {sublayer_configs}")
         sublayer_configs.update(self._config_misc())
-        print(f"sublayer_configs after update: {sublayer_configs}")
+        # print(f"sublayer_configs after update: {sublayer_configs}")
         for layer, config in sublayer_configs.items():
             config = ['    ' + i for i in config.split('\n')]
             config = '\n'.join(config)
@@ -1932,7 +1932,7 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
             top_config += config
 
         top_config += '\n};'
-        print(f"top_config after sublayers: {top_config}")
+        # print(f"top_config after sublayers: {top_config}")
         return top_config
 
     def get_top_params_graphblock(self):
@@ -2080,9 +2080,9 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
 
     def config_layer(self, layer_type, layer_params):
         all_lines = self.model.config.backend.get_config_template(layer_type).split('\n')
-        print(f"all_lines[0] b4: {all_lines[0]}")
+        # print(f"all_lines[0] b4: {all_lines[0]}")
         all_lines[0] = re.sub('struct config{index}', 'struct {type}_config{index}', all_lines[0])
-        print(f"all_lines[0] after: {all_lines[0]}")
+        # print(f"all_lines[0] after: {all_lines[0]}")
         param_lines = []
         out = []
 
@@ -2106,7 +2106,7 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
                         out.append(line)
 
         out = '\n'.join(out)
-        print(f"config_layer b4 format: {out}")
+        # print(f"config_layer b4 format: {out}")
         out = out.format(**layer_params)
         return out
 
@@ -2148,7 +2148,7 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
                 norm_config = self.config_layer('BatchNormalization', norm_params) #I think it is supposed to be hls_layer name?
                 configs[f"batchnorm_config{norm_count}"] = norm_config
                 last_n_out = norm_params['n_in']
-                print(f"batchnorm configs: {norm_config}")
+                # print(f"batchnorm configs: {norm_config}")
 
         # DUMMIES
         if linear_count < 4:
@@ -2381,10 +2381,10 @@ class NodeBlock(GraphBlock):
 
         # # concatenation configs
         # ResidualBlock configs (Add == ResidualBlock)
-        print(f"self.model.config.backend.config_templates.keys(): {self.model.config.backend.config_templates.keys()}")
+        # print(f"self.model.config.backend.config_templates.keys(): {self.model.config.backend.config_templates.keys()}")
         # concat_config_template = self.model.config.backend.get_config_template('Concatenate')
         concat_config_template = self.model.config.backend.get_config_template('ResidualBlock')
-        print(f"concat_config_template b4: {concat_config_template}")
+        # print(f"concat_config_template b4: {concat_config_template}")
         concat_config_template = re.sub('config{index}', 'merge_config{index}', concat_config_template)
         # merge_config1_params = {
         #     'index': 1,
@@ -2402,8 +2402,8 @@ class NodeBlock(GraphBlock):
             'n_elem': self.node_dim_cppname, # the node dime is the common dim
             'gnn_resource_limit': self.model.config.config['gnn_resource_limit']
         }
-        print(f"concat_config_template after: {concat_config_template}")
-        print(f"merge_config1_params: {merge_config1_params}")
+        # print(f"concat_config_template after: {concat_config_template}")
+        # print(f"merge_config1_params: {merge_config1_params}")
         merge_config1 = concat_config_template.format(**merge_config1_params)
         configs['merge_config1'] = merge_config1
 
@@ -2458,8 +2458,9 @@ class EdgeAggregate(Layer):
         params['index_t'] = self.model.get_layer_output_variable('edge_index').type.name
         params['output_t'] = self.get_output_variable().type.name
 
-        params['edge_attr'] = self.attributes["inputs"][0]
-        params['edge_index'] = self.attributes["inputs"][1]
+        params['node_attr'] = self.attributes["inputs"][0]
+        params['edge_attr'] = self.attributes["inputs"][1]
+        params['edge_index'] = self.attributes["inputs"][2]
         params['out'] = f"layer{self.index}_out"
         return [self._function_template.format(**params)]
 
@@ -2527,21 +2528,28 @@ class EdgeAggregate(Layer):
                                                                          n_rows=self.n_node_cppname,
                                                                          n_cols=f"LAYER{self.index}_OUT_DIM",
                                                                          gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
-
+        
+        configs['node_attr_config'] = matrix_config_template.format(matrix_name="node_attr",
+                                                                    n_rows=self.n_node_cppname,
+                                                                    n_cols=self.edge_dim_cppname, #node_dim_cppname == 3, which is NOT what we want
+                                                                    gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
         return configs
 
     def _check_inputs(self):
         #expected inputs: edge_attr, edge_index
-        assert(len(self.inputs)==2)
+        assert(len(self.inputs)==3)
+        
+        node_attr = self.model.get_layer_output_variable(self.inputs[0])
+        assert(node_attr.shape==[self.n_node, self.node_dim])
 
-        edge_attr = self.model.get_layer_output_variable(self.inputs[0])
+        edge_attr = self.model.get_layer_output_variable(self.inputs[1])
         assert(edge_attr.shape==[self.n_edge, self.edge_dim])
         # print(f"edge_attr.shape: {edge_attr.shape}")
         # print(f"self.n_edge: {self.n_edge}")
         # print(f"assert check: {edge_attr.shape==[self.n_edge, self.common_dim]}")
         # assert(edge_attr.shape==[self.n_edge, self.common_dim])
 
-        edge_index = self.model.get_layer_output_variable(self.inputs[1])
+        edge_index = self.model.get_layer_output_variable(self.inputs[2])
         assert(edge_index.shape==[self.n_edge, 2])
 
         #expected outputs: edge_attr_aggr
@@ -2670,7 +2678,7 @@ class NodeEncoder(Dense):
         config += input_config + "\n"
         config += output_config + "\n"
         config += "};"
-        print(f"node encoder config cpp final: {config}")
+        # print(f"node encoder config cpp final: {config}")
         return config
 
 class EdgeEncoder(Dense):
@@ -2678,7 +2686,7 @@ class EdgeEncoder(Dense):
     just copying Dense layer, but changing the class name
     """
     def initialize(self):
-        print(f"EdgeEncoder name: {self.name}")
+        # print(f"EdgeEncoder name: {self.name}")
         shape = self.get_input_variable().shape[:]
         shape[-1] = self.attributes['n_out']
         if len(shape) > 1:
@@ -2746,7 +2754,7 @@ class EdgeEncoder(Dense):
         config += input_config + "\n"
         config += output_config + "\n"
         config += "};"
-        print(f"edge encoder config cpp final: {config}")
+        # print(f"edge encoder config cpp final: {config}")
         return config
 """
 Hyeon-Seo code end

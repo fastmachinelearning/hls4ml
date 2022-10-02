@@ -64,10 +64,11 @@ def parse_EdgeAggregate(block_name, config, update_dict, index, n_node, n_edge, 
                   "node_dim": node_dim,
                   "edge_dim": edge_dim,
                   "out_dim": edge_dim,
-                  "inputs": [update_dict["last_edge_update"], "edge_index"],
+                  "inputs": [update_dict["last_node_update"], update_dict["last_edge_update"], "edge_index"],
                   "outputs": [f"layer{index}_out"],
                   "activate_final": "false"}
     update_dict["last_edge_aggr_update"] = f"layer{index}_out"
+    # print(f"aggregate last_node_update: {update_dict['last_node_update']}, last_edge_update: {update_dict['last_edge_update']}")
     return layer_dict, update_dict
 
 

@@ -50,14 +50,14 @@ for model_type in model_types:
                         if model_type == 'keras':
                             register_keras_layer_handler(layer, func)
                         elif model_type == 'pytorch':
-                            print(f"layer: {layer}")
-                            print(f"func: {func}")
+                            # print(f"layer: {layer}")
+                            # print(f"func: {func}")
                             register_pytorch_layer_handler(layer, func)
                         elif model_type == 'onnx':
                             register_onnx_layer_handler(layer, func)
                         elif model_type == 'pyg':
-                            print(f"layer: {layer}")
-                            print(f"func: {func}")
+                            # print(f"layer: {layer}")
+                            # print(f"func: {func}")
                             register_pyg_block_handler(layer, func)
                             
         except ImportError:

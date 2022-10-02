@@ -35,6 +35,7 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     typedef {scale_t} scale_t;
     template<class x_T, class y_T, class res_T>
     using product = nnet::product::{product_type}<x_T, y_T, res_T>;
+    static const bool gnn_resource_limit = {gnn_resource_limit};
 }};\n"""
 
 conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
@@ -413,6 +414,7 @@ edge_aggregate_config_template = """struct aggregation_config{index}: nnet::edge
     static const unsigned par_factor = {par_factor};
     static const unsigned table_size = 1024;
     static constexpr float Beta = 0.01;
+    static constexpr float eps  = 1e-7;
 }};""" #table size may have to be later edited
 
 residual_config_template = """struct config{index} : nnet::residual_config{{
@@ -467,7 +469,7 @@ garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t
 edgeblock_function_template = 'nnet::edgeblock<{input_t}, {index_t}, {output_t}, {config}>({node_attr}, {edge_attr}, {edge_index}, {out}, {w0}, {b0}, {w1}, {b1}, {w2}, {b2}, {w3}, {b3});'
 # nodeblock_function_template = 'nnet::nodeblock<{input_t}, {output_t}, {config}>({node_attr}, {edge_attr_aggr}, {out}, {w0}, {b0}, {w1}, {b1}, {w2}, {b2}, {w3}, {b3});'
 nodeblock_function_template = 'nnet::nodeblock<{input_t}, {output_t}, {config}>({node_attr}, {edge_attr_aggr}, {out}, {w0}, {b0}, {w1}, {b1}, {w2}, {b2}, {w3}, {b3}, {norm_s0}, {norm_b0});'
-edge_aggregate_function_template = 'nnet::edge_aggregate<{input_t}, {index_t}, {output_t}, {config}>({edge_attr}, {edge_index}, {out});'
+edge_aggregate_function_template = 'nnet::edge_aggregate<{input_t}, {index_t}, {output_t}, {config}>({node_attr}, {edge_attr}, {edge_index}, {out});'
 encoder_function_template = 'nnet::encoder<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 
 dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_stream.h']

@@ -84,6 +84,15 @@ void  relu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     }
 }
 
+template<class data_T>
+data_T  relu_0D(data_T data)
+{
+    data_T res;
+    if (data > 0) res = data;
+    else res = 0;
+    return res;
+}
+
 template<class data_T, class res_T, int MAX_INT, typename CONFIG_T>
 void  relu_max(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
