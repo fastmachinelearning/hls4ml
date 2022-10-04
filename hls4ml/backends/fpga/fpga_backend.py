@@ -430,6 +430,26 @@ class FPGABackend(Backend):
 
 
     def generate_conv1d_line_buffer_fn(self, layer_idx, n_partitions, in_W, in_C, kernel=3, stride=1, pad=0, dilation=1):
+        """Generate a C++ function that mimics the im2col algorithm. This function works for 1D convolution.
+
+        The HLS compiler produces suboptimal designs for a im2col algorithm implementation, so a trick we use is
+        to generate a resulting a result of im2col transformation explicitly, instead of relying on loops. Since
+        the result depends on the paraleters of the convolution layer (the input size, the kernel size, stride etc),
+        we need to do this for every convolution layer. 
+
+        Args:
+            layer_idx (int): Index of layer ('index' attribute).
+            n_partitions (int): Number of partitions to divide the input into. The pixels in each partition will be processed in parallel.
+            in_W (int): Width of input.
+            in_C (int): Number of channels.
+            kernel (int, optional): Size of the kernel. Defaults to 3.
+            stride (int, optional): Stride length. Defaults to 1.
+            pad (int or Iterable, optional): Padding to apply. Specified as either a number or a list [left_pad, right_pad]. Defaults to 0.
+            dilation (int, optional): Dilation rate. Defaults to 1.
+
+        Returns:
+            str: Generated C++ function
+        """        
         if isinstance(pad, Iterable):
             pad_left = pad[0]
             pad_right = pad[1]
@@ -510,6 +530,28 @@ class FPGABackend(Backend):
 
 
     def generate_conv2d_line_buffer_fn(self, layer_idx, n_partitions, in_H, in_W, in_C, kernel=(3, 3), stride=(1, 1), pad=(0, 0, 0, 0), dilation=(1, 1)):
+        """Generate a C++ function that mimics the im2col algorithm. This function works for 2D convolution.
+
+        The HLS compiler produces suboptimal designs for a im2col algorithm implementation, so a trick we use is
+        to generate a resulting a result of im2col transformation explicitly, instead of relying on loops. Since
+        the result depends on the paraleters of the convolution layer (the input size, the kernel size, stride etc),
+        we need to do this for every convolution layer. 
+
+        Args:
+            layer_idx (int): Index of layer ('index' attribute).
+            n_partitions (int): Number of partitions to divide the input into. The pixels in each partition will be processed in parallel.
+            in_H (int): Height of input.
+            in_W (int): Width of input.
+            in_C (int): Number of channels.
+            kernel (int or Iterable, optional): Size of the kernel. Defaults to (3,3).
+            stride (int or Iterable, optional): Stride length. Defaults to (1,1).
+            pad (int or Iterable, optional): Padding to apply. Specified as either a number or a list [top_pad, bottom_pad, left_pad, right_pad]. Defaults to 0.
+            dilation (int or Iterable, optional): Dilation rate. Defaults to (1,1).
+
+        Returns:
+            str: Generated C++ function
+        """  
+        
         if isinstance(kernel, Iterable):
             kernel_height = kernel[0]
             kernel_width = kernel[1]
