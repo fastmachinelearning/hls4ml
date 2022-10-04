@@ -34,7 +34,6 @@ class VivadoBackend(FPGABackend):
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
         streaming_passes = [
-            'vivado:remove_final_reshape',
             'vivado:reshape_stream',
             'vivado:clone_output',
             'vivado:insert_zero_padding_before_conv1d',
@@ -51,6 +50,7 @@ class VivadoBackend(FPGABackend):
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
         optimization_passes = [
+            'vivado:remove_final_reshape',
             'vivado:optimize_pointwise_conv',
             'vivado:inplace_parallel_reshape',
             'vivado:inplace_stream_flatten',
@@ -62,6 +62,7 @@ class VivadoBackend(FPGABackend):
             'vivado:register_bram_weights',
             'vivado:generate_conv_streaming_instructions',
             'vivado:apply_resource_strategy',
+            'vivado:generate_conv_im2col',
         ]
         vivado_types_flow = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
 
@@ -127,6 +128,11 @@ class VivadoBackend(FPGABackend):
 
         return parse_vivado_report(model.config.get_output_dir())
 
+    def _validate_conv_strategy(self, layer):
+        if layer.model.config.model_strategy.lower() != 'resource':
+            print('WARNING: Cannot use "Latency" model strategy for {} layer. Switching to "Resource" strategy.')
+            layer.model.config.model_strategy = 'Resource'
+
     @layer_optimizer(Layer)
     def init_base_layer(self, layer):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
@@ -165,8 +171,21 @@ class VivadoBackend(FPGABackend):
             self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
-        
+
+        out_width = layer.get_output_variable().shape[0]
+        chosen_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1)
+        valid_pf = self.get_valid_conv_partition_splits(1, out_width)
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            print('WARNING: Invalid ParallelizationFactor={} in layer "{}". Using ParallelizationFactor={} instead. Valid ParallelizationFactor(s): {}.'
+                  .format(chosen_pf, layer.name, closest_pf, ','.join(map(str, valid_pf))))
+        else:
+            closest_pf = chosen_pf
+        layer.set_attr('n_partitions', out_width // closest_pf)
+
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+        self._validate_conv_strategy(layer)
 
     @layer_optimizer(SeparableConv1D)
     def init_sepconv1d(self, layer):
@@ -177,6 +196,7 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
         
+        layer.set_attr('n_partitions', 1) #TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(Conv2D)
@@ -191,8 +211,22 @@ class VivadoBackend(FPGABackend):
             self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
-        
+
+        out_height = layer.get_output_variable().shape[0]
+        out_width = layer.get_output_variable().shape[1]
+        chosen_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1)
+        valid_pf = self.get_valid_conv_partition_splits(out_height, out_width)
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            print('WARNING: Invalid ParallelizationFactor={} in layer "{}". Using ParallelizationFactor={} instead. Valid ParallelizationFactor(s): {}.'
+                .format(chosen_pf, layer.name, closest_pf, ','.join(map(str, valid_pf))))
+        else:
+            closest_pf = chosen_pf
+        layer.set_attr('n_partitions', out_height * out_width // closest_pf)
+
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+        self._validate_conv_strategy(layer)
 
     @layer_optimizer(SeparableConv2D)
     def init_sepconv2d(self, layer):
@@ -203,6 +237,7 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
         
+        layer.set_attr('n_partitions', 1) #TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(DepthwiseConv2D)
@@ -214,6 +249,7 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
         
+        layer.set_attr('n_partitions', 1) #TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
 
