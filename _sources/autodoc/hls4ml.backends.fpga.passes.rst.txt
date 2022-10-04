@@ -20,6 +20,14 @@ hls4ml.backends.fpga.passes.clone module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.fpga.passes.codegen module
+------------------------------------------
+
+.. automodule:: hls4ml.backends.fpga.passes.codegen
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.backends.fpga.passes.embedding module
 --------------------------------------------
 
