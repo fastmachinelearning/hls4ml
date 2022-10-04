@@ -214,6 +214,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         params['nzeros'] = node.get_weights('depthwise').nzeros
         params['index'] = str(node.index) + '_depthwise'
         params['weight_t'] = node.get_weights('depthwise').type
+        params['fill_fn'] = 'FillConv1DBuffer'
 
         params['config_t'] = 'config{}_depthwise_mult'.format(node.index)
         depthwise_config = self.depthwise_template.format(**params)
@@ -245,6 +246,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         params['weight_t'] = node.get_weights('pointwise').type
         params['min_width'] = params['in_width']
         params['instructions'] = '0'
+        params['fill_fn'] = 'FillConv1DBuffer'
 
         params['config_t'] = 'config{}_pointwise_mult'.format(node.index)
         pointwise_config = self.pointwise_template.format(**params)
@@ -299,6 +301,7 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         params['nzeros'] = node.get_weights('depthwise').nzeros
         params['index'] = str(node.index) + '_depthwise'
         params['weight_t'] = node.get_weights('depthwise').type
+        params['fill_fn'] = 'FillConv2DBuffer'
 
         params['config_t'] = 'config{}_depthwise_mult'.format(node.index)
         depthwise_config = self.depthwise_template.format(**params)
@@ -330,6 +333,7 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         params['min_height'] = params['in_height']
         params['min_width'] = params['in_width']
         params['instructions'] = '0'
+        params['fill_fn'] = 'FillConv2DBuffer'
 
         params['config_t'] = 'config{}_pointwise_mult'.format(node.index)
         pointwise_config = self.pointwise_template.format(**params)

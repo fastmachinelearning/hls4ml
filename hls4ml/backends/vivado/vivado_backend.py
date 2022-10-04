@@ -194,6 +194,7 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
         
+        layer.set_attr('n_partitions', 1) #TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(Conv2D)
@@ -234,6 +235,7 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
         
+        layer.set_attr('n_partitions', 1) #TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(DepthwiseConv2D)
@@ -245,6 +247,7 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
         
+        layer.set_attr('n_partitions', 1) #TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(Activation)
