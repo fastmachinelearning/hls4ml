@@ -85,10 +85,11 @@ void pointwise_conv_2d_cl(
 
     #pragma HLS INLINE region
 
+    // Nothing special to be done for io_parallel implementation
     if (CONFIG_T::strategy == nnet::latency) {
-        pointwise_conv_2d_latency_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+        conv_2d_latency_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     } else {
-        pointwise_conv_2d_resource_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+        conv_2d_resource_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     }
 }
 
