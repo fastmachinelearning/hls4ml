@@ -60,6 +60,7 @@ class QuartusBackend(FPGABackend):
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
         optimization_passes = [
+            'quartus:remove_final_reshape',
             'quartus:optimize_pointwise_conv',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)

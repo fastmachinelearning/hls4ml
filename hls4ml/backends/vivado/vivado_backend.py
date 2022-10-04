@@ -34,7 +34,6 @@ class VivadoBackend(FPGABackend):
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
         streaming_passes = [
-            'vivado:remove_final_reshape',
             'vivado:reshape_stream',
             'vivado:clone_output',
             'vivado:insert_zero_padding_before_conv1d',
@@ -51,6 +50,7 @@ class VivadoBackend(FPGABackend):
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
         optimization_passes = [
+            'vivado:remove_final_reshape',
             'vivado:optimize_pointwise_conv',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
