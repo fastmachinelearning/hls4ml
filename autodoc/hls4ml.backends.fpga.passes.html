@@ -61,6 +61,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.fpga.passes.bn_quant">hls4ml.backends.fpga.passes.bn_quant module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.fpga.passes.clone">hls4ml.backends.fpga.passes.clone module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.fpga.passes.embedding">hls4ml.backends.fpga.passes.embedding module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.fpga.passes.final_reshape">hls4ml.backends.fpga.passes.final_reshape module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.fpga.passes">Module contents</a></li>
 </ul>
 </li>
@@ -293,6 +294,42 @@
 <dt id="hls4ml.backends.fpga.passes.embedding.EmbeddingFunctionTemplate.format">
 <code class="sig-name descname">format</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.embedding.EmbeddingFunctionTemplate.format" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-hls4ml.backends.fpga.passes.final_reshape">
+<span id="hls4ml-backends-fpga-passes-final-reshape-module"></span><h2>hls4ml.backends.fpga.passes.final_reshape module<a class="headerlink" href="#module-hls4ml.backends.fpga.passes.final_reshape" title="Permalink to this headline"></a></h2>
+<dl class="class">
+<dt id="hls4ml.backends.fpga.passes.final_reshape.RemoveFinalReshape">
+<em class="property">class </em><code class="sig-prename descclassname">hls4ml.backends.fpga.passes.final_reshape.</code><code class="sig-name descname">RemoveFinalReshape</code><a class="headerlink" href="#hls4ml.backends.fpga.passes.final_reshape.RemoveFinalReshape" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.optimizer.OptimizerPass</span></code></a></p>
+<p>Remove reshape if final layer</p>
+<dl class="method">
+<dt id="hls4ml.backends.fpga.passes.final_reshape.RemoveFinalReshape.match">
+<code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.final_reshape.RemoveFinalReshape.match" title="Permalink to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hls4ml.backends.fpga.passes.final_reshape.RemoveFinalReshape.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.final_reshape.RemoveFinalReshape.transform" title="Permalink to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 

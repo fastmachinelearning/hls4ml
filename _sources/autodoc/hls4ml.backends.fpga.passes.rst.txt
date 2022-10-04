@@ -28,6 +28,14 @@ hls4ml.backends.fpga.passes.embedding module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.fpga.passes.final\_reshape module
+-------------------------------------------------
+
+.. automodule:: hls4ml.backends.fpga.passes.final_reshape
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 
 Module contents
 ---------------
