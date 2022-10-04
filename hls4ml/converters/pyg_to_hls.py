@@ -52,8 +52,8 @@ class PygModelReader(PyTorchModelReader):
             if var_name in list(torch_paramap.keys()):
                 var_name = torch_paramap[var_name]
 
-            # print(f"self.state_dict.keys(): {self.state_dict.keys()}")
-            # print(f"layer_name + '.' + var_name: {layer_name + '.' + var_name}")
+            print(f"self.state_dict.keys(): {self.state_dict.keys()}")
+            print(f"layer_name + '.' + var_name: {layer_name + '.' + var_name}")
             data = self.state_dict[layer_name + '.' + var_name].numpy().transpose()  # Look at transpose when systhesis produce lousy results. Might need to remove it.
 
         return data

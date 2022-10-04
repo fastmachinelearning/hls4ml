@@ -95,7 +95,7 @@ namespace nnet {
     static const unsigned reuse_factor = 1;
 
     // Internal data type definitions
-    typedef ap_fixed<18,8> table_t;
+    typedef ap_fixed<52,20> table_t; // ap_fixed<18,8>
   };
 
   // LUT-division for mean-aggregation
@@ -1032,88 +1032,88 @@ namespace nnet {
 
   
 
-  template<class data_T, class res_T, typename CONFIG_T>
-    void nodeblock_pipeline(
-			data_T    node_attr_1D[CONFIG_T::n_node*CONFIG_T::node_dim],
-			data_T    edge_attr_aggr_1D[CONFIG_T::n_node*CONFIG_T::edge_dim],
-			res_T     node_update_1D[CONFIG_T::n_node*CONFIG_T::out_dim],
-			typename CONFIG_T::dense_config1::weight_t  core_node_w0[CONFIG_T::dense_config1::n_in*CONFIG_T::dense_config1::n_out],
-			typename CONFIG_T::dense_config1::bias_t    core_node_b0[CONFIG_T::dense_config1::n_out],
-			typename CONFIG_T::dense_config2::weight_t  core_node_w1[CONFIG_T::dense_config2::n_in*CONFIG_T::dense_config2::n_out],
-			typename CONFIG_T::dense_config2::bias_t    core_node_b1[CONFIG_T::dense_config2::n_out],
-			typename CONFIG_T::dense_config3::weight_t  core_node_w2[CONFIG_T::dense_config3::n_in*CONFIG_T::dense_config3::n_out],
-			typename CONFIG_T::dense_config3::bias_t    core_node_b2[CONFIG_T::dense_config3::n_out],
-			typename CONFIG_T::dense_config4::weight_t  core_node_w3[CONFIG_T::dense_config4::n_in*CONFIG_T::dense_config4::n_out],
-			typename CONFIG_T::dense_config4::bias_t    core_node_b3[CONFIG_T::dense_config4::n_out])
-  /*
-  This is the pipeline version. dataflow is not yet supported
-  */
-  {
-    //initialize arrays
-    //1. node_attr (input)
-    data_T node_attr[CONFIG_T::n_node][CONFIG_T::node_dim];
-    #pragma HLS ARRAY_PARTITION variable=node_attr complete dim=0
-    nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::node_attr_config>(node_attr_1D, node_attr);
+  // template<class data_T, class res_T, typename CONFIG_T>
+  //   void nodeblock_pipeline(
+	// 		data_T    node_attr_1D[CONFIG_T::n_node*CONFIG_T::node_dim],
+	// 		data_T    edge_attr_aggr_1D[CONFIG_T::n_node*CONFIG_T::edge_dim],
+	// 		res_T     node_update_1D[CONFIG_T::n_node*CONFIG_T::out_dim],
+	// 		typename CONFIG_T::dense_config1::weight_t  core_node_w0[CONFIG_T::dense_config1::n_in*CONFIG_T::dense_config1::n_out],
+	// 		typename CONFIG_T::dense_config1::bias_t    core_node_b0[CONFIG_T::dense_config1::n_out],
+	// 		typename CONFIG_T::dense_config2::weight_t  core_node_w1[CONFIG_T::dense_config2::n_in*CONFIG_T::dense_config2::n_out],
+	// 		typename CONFIG_T::dense_config2::bias_t    core_node_b1[CONFIG_T::dense_config2::n_out],
+	// 		typename CONFIG_T::dense_config3::weight_t  core_node_w2[CONFIG_T::dense_config3::n_in*CONFIG_T::dense_config3::n_out],
+	// 		typename CONFIG_T::dense_config3::bias_t    core_node_b2[CONFIG_T::dense_config3::n_out],
+	// 		typename CONFIG_T::dense_config4::weight_t  core_node_w3[CONFIG_T::dense_config4::n_in*CONFIG_T::dense_config4::n_out],
+	// 		typename CONFIG_T::dense_config4::bias_t    core_node_b3[CONFIG_T::dense_config4::n_out])
+  // /*
+  // This is the pipeline version. dataflow is not yet supported
+  // */
+  // {
+  //   //initialize arrays
+  //   //1. node_attr (input)
+  //   data_T node_attr[CONFIG_T::n_node][CONFIG_T::node_dim];
+  //   #pragma HLS ARRAY_PARTITION variable=node_attr complete dim=0
+  //   nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::node_attr_config>(node_attr_1D, node_attr);
 
-    //2. edge_attr_aggr (input)
-    data_T edge_attr_aggr[CONFIG_T::n_node][CONFIG_T::edge_dim];
-    #pragma HLS ARRAY_PARTITION variable=edge_attr_aggr complete dim=0
-    nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::edge_attr_aggr_config>(edge_attr_aggr_1D, edge_attr_aggr);
+  //   //2. edge_attr_aggr (input)
+  //   data_T edge_attr_aggr[CONFIG_T::n_node][CONFIG_T::edge_dim];
+  //   #pragma HLS ARRAY_PARTITION variable=edge_attr_aggr complete dim=0
+  //   nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::edge_attr_aggr_config>(edge_attr_aggr_1D, edge_attr_aggr);
 
-    // 3. node_update (output)
-    res_T node_update[CONFIG_T::n_node][CONFIG_T::out_dim];
-    #pragma HLS ARRAY_PARTITION variable=node_update complete dim=0
+  //   // 3. node_update (output)
+  //   res_T node_update[CONFIG_T::n_node][CONFIG_T::out_dim];
+  //   #pragma HLS ARRAY_PARTITION variable=node_update complete dim=0
 
-    #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
-    node_loop: for(int i = 0; i < CONFIG_T::n_node; i++){ //for each node
-      #pragma HLS UNROLL
+  //   #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+  //   node_loop: for(int i = 0; i < CONFIG_T::n_node; i++){ //for each node
+  //     #pragma HLS UNROLL
 
-      // construct NN input: <node, edge_attr_aggr>
-      // data_T phi_input[CONFIG_T::common_dim];
-      data_T phi_input[CONFIG_T::node_dim];
-      #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
-      std::cout << "c = x + aggr_out\n";
-      // nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
-      nnet::residualBlock<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
-      // nnet::add<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
-      // send it through NN
-        if(CONFIG_T::n_layers == 1){
-	      nnet::dense_mult_1lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0);
-        }
-        else if(CONFIG_T::n_layers == 2){
-	      nnet::dense_mult_2lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1);
-        }
-        else if(CONFIG_T::n_layers == 3){
-	      nnet::dense_mult_3lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2);
-        }
-        else { // CONFIG_T::n_layers == 4
-	      nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2, core_node_w3, core_node_b3);
-        }
+  //     // construct NN input: <node, edge_attr_aggr>
+  //     // data_T phi_input[CONFIG_T::common_dim];
+  //     data_T phi_input[CONFIG_T::node_dim];
+  //     #pragma HLS ARRAY_PARTITION variable=phi_input complete dim=0
+  //     std::cout << "c = x + aggr_out\n";
+  //     // nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
+  //     nnet::residualBlock<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
+  //     // nnet::add<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
+  //     // send it through NN
+  //       if(CONFIG_T::n_layers == 1){
+	//       nnet::dense_mult_1lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0);
+  //       }
+  //       else if(CONFIG_T::n_layers == 2){
+	//       nnet::dense_mult_2lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1);
+  //       }
+  //       else if(CONFIG_T::n_layers == 3){
+	//       nnet::dense_mult_3lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2);
+  //       }
+  //       else { // CONFIG_T::n_layers == 4
+	//       nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2, core_node_w3, core_node_b3);
+  //       }
 
-      // // send it through NN
-      //   if(CONFIG_T::n_layers == 1){
-	    //   nnet::dense_mult_1lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0);
-      //   }
-      //   else if(CONFIG_T::n_layers == 2){
-	    //   nnet::dense_mult_2lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1);
-      //   }
-      //   else if(CONFIG_T::n_layers == 3){
-	    //   nnet::dense_mult_3lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2);
-      //   }
-      //   else { // CONFIG_T::n_layers == 4
-	    //   nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2, core_node_w3, core_node_b3);
-      //   }
-
-
+  //     // // send it through NN
+  //     //   if(CONFIG_T::n_layers == 1){
+	//     //   nnet::dense_mult_1lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0);
+  //     //   }
+  //     //   else if(CONFIG_T::n_layers == 2){
+	//     //   nnet::dense_mult_2lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1);
+  //     //   }
+  //     //   else if(CONFIG_T::n_layers == 3){
+	//     //   nnet::dense_mult_3lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2);
+  //     //   }
+  //     //   else { // CONFIG_T::n_layers == 4
+	//     //   nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(node_attr[i], node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2, core_node_w3, core_node_b3);
+  //     //   }
 
 
 
-    }
 
-    // output array --> output vector
-    nnet::mat_to_vec<res_T, res_T, typename CONFIG_T::node_update_config>(node_update, node_update_1D);
 
-  }
+  //   }
+
+  //   // output array --> output vector
+  //   nnet::mat_to_vec<res_T, res_T, typename CONFIG_T::node_update_config>(node_update, node_update_1D);
+
+  // }
 
   template<class data_T, class res_T, typename CONFIG_T>
     void nodeblock_residual(
@@ -1145,6 +1145,16 @@ namespace nnet {
     #pragma HLS ARRAY_PARTITION variable=edge_attr_aggr complete dim=0
     nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::edge_attr_aggr_config>(edge_attr_aggr_1D, edge_attr_aggr);
 
+    // //debugging
+    // for (unsigned i = 0; i < CONFIG_T::n_node; i++) {
+    //   for (unsigned j = 0; j < CONFIG_T::edge_dim; j++) {
+    //     std::cout << "nodeblock index i:" << i << ", j:" << j << ", edge_attr_aggr:" << edge_attr_aggr[i][j] << "\n";
+    //     // std::cout << "nodeblock index i:" << i << ", j:" << j << ", node_attr:" << node_attr[i][j] << "\n";
+        
+    //   }
+    // }
+
+
     // 3. node_update (output)
     res_T node_update[CONFIG_T::n_node][CONFIG_T::out_dim];
     #pragma HLS ARRAY_PARTITION variable=node_update complete dim=0
@@ -1155,6 +1165,7 @@ namespace nnet {
 
     #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
     node_loop: for(int i = 0; i < CONFIG_T::n_node; i++){ //for each node
+      // std::cout << "nodeblock index i: " << i << "\n";
       #pragma HLS UNROLL
 
       // construct NN input: <node, edge_attr_aggr>
@@ -1167,22 +1178,29 @@ namespace nnet {
       // nnet::add<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], edge_attr_aggr[i], phi_input);
       // send it through NN
       // std::cout << "n_layers: " <<  CONFIG_T::n_layers<< "\n";
-        if(CONFIG_T::n_layers == 1){
-	      nnet::dense_mult_1lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0);
-        }
-        else if(CONFIG_T::n_layers == 2){
-	      nnet::dense_mult_2lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, norm_s0, norm_b0);
-        }
-        else if(CONFIG_T::n_layers == 3){
-	      nnet::dense_mult_3lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2);
-        }
-        else { // CONFIG_T::n_layers == 4
-	      nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2, core_node_w3, core_node_b3);
-        }
 
-      // std::cout << "node update row: " << i <<"\n";
+
+      // debugging
+      // for (unsigned j = 0; j < CONFIG_T::edge_dim; j++) {
+      //   std::cout << "nodeblock index i:" << i << ", j:" << j << ", phi_input:" << phi_input[j] << "\n";
+      // }
+
+      if(CONFIG_T::n_layers == 1){
+      nnet::dense_mult_1lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0);
+      }
+      else if(CONFIG_T::n_layers == 2){
+      nnet::dense_mult_2lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, norm_s0, norm_b0);
+      }
+      else if(CONFIG_T::n_layers == 3){
+      nnet::dense_mult_3lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2);
+      }
+      else { // CONFIG_T::n_layers == 4
+      nnet::dense_mult_4lyr<data_T, res_T, CONFIG_T>(phi_input, node_update[i], core_node_w0, core_node_b0, core_node_w1, core_node_b1, core_node_w2, core_node_b2, core_node_w3, core_node_b3);
+      }
+
+      // std::cout << "nodeblock index i: " << i << "\n";
       // for (int j=0; j<CONFIG_T::node_update_config::n_cols; j++){
-      //     std::cout << "col: " << j << ", output: "<< node_update[i][j]<<"\n";
+      //     std::cout << "j: " << j << ", output: "<< node_update[i][j]<<"\n";
       // }
 
       // std::cout << "ResidualBlock row: " << i <<"\n";
@@ -1372,6 +1390,9 @@ namespace nnet {
       num_edge_per_node[r] += 1;
       edge_aggr_mask[r] = 1;
       index_T s = edge_index_1D[2*i+sender_col];
+      // std::cout << "index r: " << r << "\n";
+      // std::cout << "n_edge: " << CONFIG_T::n_edge << "\n";
+      
       // std::cout << "index s: " << s << "\n";
 
       // if sum or mean
@@ -1402,9 +1423,13 @@ namespace nnet {
             normalization_value[r][j] += exp_x;
             // std::cout << "index s: " << s << "\n";
             // std::cout << "index r: " << r << "\n";
+
             // std::cout << "aggregate index i:" << i << ", j:" << j << ", edge_attr: " << edge_attr[i][j] << ", node_attr:" << node_attr[s][j] << "\n";
             // std::cout << "aggregate index i:" << i << ", j:" << j << ", msg b4: " << edge_attr[i][j] + node_attr[s][j] << ", msg after: " << msg << "\n";
             // std::cout << "aggregate index i:" << i << ", j:" << j << ", exp_x:" << exp_x << ", exp_x*msg: " << exp_x*msg << "\n";
+            // std::cout << "current edge_attr_aggr index: "<< r << ", val: " << edge_attr_aggr[r][j] << "\n";
+
+            
         }
         // // debugging
         // for(unsigned j = 0; j < CONFIG_T::edge_dim; j++){
@@ -1447,12 +1472,17 @@ namespace nnet {
           // res_T normalized_val_j;
           // nnet::edge_divide<res_T, index_T, res_T, CONFIG_T>(edge_attr_aggr[i][j], normalization_value[i], normalized_val_j);
           // edge_attr_aggr[i][j] = normalized_val_j;
-          if (normalization_value[i][j] != 0){
-            edge_attr_aggr[i][j] = edge_attr_aggr[i][j]/ normalization_value[i][j];
-          }
-          // else{
-          //   std::cout << "edge_attr_aggr: " <<edge_attr_aggr[i][j] <<"\n";
+
+
+          // if (normalization_value[i][j] != 0){
+          //   edge_attr_aggr[i][j] = edge_attr_aggr[i][j]/ normalization_value[i][j];
           // }
+          edge_attr_aggr[i][j] = edge_attr_aggr[i][j]/ normalization_value[i][j];
+
+
+          
+          // std::cout << "final aggregate index i:" << i << ", j:" << j << ", normalization_value: "<<normalization_value[i][j]<<", attr output: " << edge_attr_aggr[i][j] << "\n";
+          
           // std::cout << "final aggregate index i:" << i << ", j:" << j << ", normalization_value: "<<normalization_value[i][j]<<", attr output: " << edge_attr_aggr[i][j] << "\n";
         }
       }
@@ -1470,6 +1500,44 @@ namespace nnet {
 
     //output array --> output vec
     nnet::mat_to_vec<res_T, res_T, typename CONFIG_T::edge_attr_aggr_config>(edge_attr_aggr, edge_attr_aggr_1D);
+  }
+
+  template<class data_T, class res_T, typename CONFIG_T>
+    void normalize_2D(
+      data_T    data_1D[CONFIG_T::n_rows*CONFIG_T::n_in],
+			res_T     res_1D[CONFIG_T::n_rows*CONFIG_T::n_in],
+      typename CONFIG_T::scale_t  scale[CONFIG_T::n_in],
+      typename CONFIG_T::bias_t   bias[CONFIG_T::n_in]
+    )
+    /*
+    normalize, but for 2 dimensional data like graphs
+    */
+  {
+
+    //initialize arrays
+    //1. data (input)
+    data_T data[CONFIG_T::n_rows][CONFIG_T::n_in];
+    #pragma HLS ARRAY_PARTITION variable=data complete dim=0
+    nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::matrix_op_config>(data_1D, data);
+
+    // 2. res (output)
+    res_T res[CONFIG_T::n_rows][CONFIG_T::n_in];
+    #pragma HLS ARRAY_PARTITION variable=res complete dim=0
+
+    #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+    //for each node/edge, we normalize
+    for(int i = 0; i < CONFIG_T::n_rows; i++){ 
+      #pragma HLS UNROLL
+
+      // construct NN input: <node, edge_attr_aggr>
+      // send it through NN
+      // std::cout << "normalize row: " << i << "\n";
+      nnet::normalize<data_T, res_T, CONFIG_T>(data[i], res[i], scale, bias);
+    }
+
+    // output array --> output vector
+    nnet::mat_to_vec<res_T, res_T, typename CONFIG_T::matrix_op_config>(res, res_1D);
+
   }
 
 }

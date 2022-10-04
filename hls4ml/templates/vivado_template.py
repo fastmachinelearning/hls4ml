@@ -38,6 +38,25 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     static const bool gnn_resource_limit = {gnn_resource_limit};
 }};\n"""
 
+batchnorm2d_config_template = """struct config{index} : nnet::batchnorm_config {{
+    static const unsigned n_rows = {n_rows};
+    static const unsigned n_in = {n_in}; // n_in == n_cols
+    static const unsigned n_filt = {n_filt};
+    static const unsigned io_type = nnet::{iotype};
+    static const unsigned reuse_factor = {reuse};
+    static const bool store_weights_in_bram = false;
+    typedef {bias_t} bias_t;
+    typedef {scale_t} scale_t;
+    template<class x_T, class y_T, class res_T>
+    using product = nnet::product::{product_type}<x_T, y_T, res_T>;
+    static const bool gnn_resource_limit = {gnn_resource_limit};
+    struct matrix_op_config : nnet::matrix_config {{
+        static const unsigned n_rows = {n_rows};
+        static const unsigned n_cols = {n_in};
+        static const bool gnn_resource_limit = {gnn_resource_limit};
+    }};
+}};\n"""
+
 conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     static const unsigned pad_left = {pad_left};
     static const unsigned pad_right = {pad_right};
@@ -413,9 +432,9 @@ edge_aggregate_config_template = """struct aggregation_config{index}: nnet::edge
     static const bool gnn_resource_limit = {gnn_resource_limit};
     static const unsigned par_factor = {par_factor};
     static const unsigned table_size = 1024;
-    static constexpr float Beta = 0.01;
+    static constexpr float Beta = {Beta};
     static constexpr float eps  = 1e-7;
-}};""" #table size may have to be later edited
+}};""" #NOTE: eps is HARD coded in.
 
 residual_config_template = """struct config{index} : nnet::residual_config{{
     static const unsigned n_elem = {n_elem};
@@ -471,6 +490,7 @@ edgeblock_function_template = 'nnet::edgeblock<{input_t}, {index_t}, {output_t},
 nodeblock_function_template = 'nnet::nodeblock<{input_t}, {output_t}, {config}>({node_attr}, {edge_attr_aggr}, {out}, {w0}, {b0}, {w1}, {b1}, {w2}, {b2}, {w3}, {b3}, {norm_s0}, {norm_b0});'
 edge_aggregate_function_template = 'nnet::edge_aggregate<{input_t}, {index_t}, {output_t}, {config}>({node_attr}, {edge_attr}, {edge_index}, {out});'
 encoder_function_template = 'nnet::encoder<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+batchnorm2d_function_template = 'nnet::normalize_2D<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
 
 dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_stream.h']
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
@@ -543,6 +563,7 @@ class VivadoBackend(Backend):
         self.register_templates('ResidualBlock'            , merge_function_template,       residual_config_template, residual_include_list)
         self.register_templates('NodeEncoder'            , encoder_function_template,       encoder_config_template, nodeblock_include_list)
         self.register_templates('EdgeEncoder'            , encoder_function_template,       encoder_config_template, nodeblock_include_list)
+        self.register_templates('BatchNorm2D'     , batchnorm2d_function_template,   batchnorm2d_config_template, batchnorm_include_list)
 
     def create_initial_config(self, part='xcku115-flvb2104-2-i', board=None, clock_period=5, io_type='io_parallel'):
         config = {}

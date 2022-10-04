@@ -69,6 +69,7 @@ void vec_to_mat( //faster (I think)
       for (int c=0; c < CONFIG_T::n_cols; c++){
         #pragma HLS UNROLL
         mat[r][c] = vec[r*CONFIG_T::n_cols+c];
+        // std::cout << "Mat row:"  << r<< " col: " << c <<" value:"<< mat[r][c]<<" \n";
       }
     }
 }

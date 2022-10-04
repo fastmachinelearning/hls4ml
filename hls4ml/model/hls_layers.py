@@ -1410,13 +1410,25 @@ class BatchNormalization(Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
+        # print(f"batchnorm self.name: {self.name}")
         gamma = self.model.get_weights_data(self.name, 'gamma')
         beta = self.model.get_weights_data(self.name, 'beta')
         mean = self.model.get_weights_data(self.name, 'moving_mean')
         var = self.model.get_weights_data(self.name, 'moving_variance')
 
-        scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
-        bias = beta - gamma * mean / np.sqrt(var + self.get_attr('epsilon'))
+        # print(f"gamma: {gamma}")
+        # print(f"beta: {beta}")
+        # print(f"mean: {mean}")
+        # print(f"var: {var}")
+
+
+        # commented out bc self.get_attr('epsilon') returns None
+        # scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
+        # bias = beta - gamma * mean / np.sqrt(var + self.get_attr('epsilon'))
+
+        epsilon = 1e-05 # default value. make sure this is the same with the torch one
+        scale = gamma / np.sqrt(var + epsilon)
+        bias = beta - gamma * mean / np.sqrt(var + epsilon)
 
         self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
         self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
@@ -1430,10 +1442,58 @@ class BatchNormalization(Layer):
 
     def config_cpp(self):
         params = self._default_config_params()
+        # print(f"BatchNormalization params: {params}")
         params['n_in'] = self.get_input_variable().size_cpp()
         params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('scale').type.precision)
-
+        params['gnn_resource_limit'] = 'false'
         return self._config_template.format(**params)
+
+class BatchNorm2D(Layer):
+    def initialize(self):
+        print(f"batchnorm 2d initialized")
+        inp = self.get_input_variable()
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_output_variable(shape, dims)
+
+        # print(f"batchnorm self.name: {self.name}")
+        gamma = self.model.get_weights_data(self.name, 'gamma')
+        beta = self.model.get_weights_data(self.name, 'beta')
+        mean = self.model.get_weights_data(self.name, 'moving_mean')
+        var = self.model.get_weights_data(self.name, 'moving_variance')
+
+        # print(f"gamma: {gamma}")
+        # print(f"beta: {beta}")
+        # print(f"mean: {mean}")
+        # print(f"var: {var}")
+
+
+        # commented out bc self.get_attr('epsilon') returns None
+        # scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
+        # bias = beta - gamma * mean / np.sqrt(var + self.get_attr('epsilon'))
+
+        epsilon = 1e-05 # default value. make sure this is the same with the torch one
+        scale = gamma / np.sqrt(var + epsilon)
+        bias = beta - gamma * mean / np.sqrt(var + epsilon)
+
+        self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
+        self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
+
+    def function_cpp(self):
+        params = self._default_function_params()
+        params['scale'] = self.get_weights('scale').name
+        params['bias'] = self.get_weights('bias').name
+
+        return [self._function_template.format(**params)]
+
+    def config_cpp(self):
+        params = self._default_config_params()
+        # print(f"BatchNormalization params: {params}")
+        # params['n_in'] = self.get_input_variable().size_cpp()
+        params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('scale').type.precision)
+        params['gnn_resource_limit'] = 'false'
+        return self._config_template.format(**params)
+
 
 class Merge(Layer):
     def initialize(self):
@@ -1978,6 +2038,7 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
                 beta = self.model.get_weights_data(batchnorm_name, 'beta')
                 mean = self.model.get_weights_data(batchnorm_name, 'moving_mean')
                 var = self.model.get_weights_data(batchnorm_name, 'moving_variance')
+                # print("batchnorm withnin nodeblock")
                 # print(f"gamma: {gamma}")
                 # print(f"beta: {beta}")
                 # print(f"mean: {mean}")
@@ -2184,7 +2245,7 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
             "table_size": 1024,
             "iotype": "io_parallel",
             "reuse": 1,
-            "table_t": "ap_fixed<18,8>",
+            "table_t": "ap_fixed<52,20>", #"ap_fixed<18,8>"
             "activation": activation_dict[self.attributes["activation"]]
         }
         activation_config = self.config_layer("BlockActivation", activation_params)
@@ -2461,7 +2522,7 @@ class EdgeAggregate(Layer):
         params['node_attr'] = self.attributes["inputs"][0]
         params['edge_attr'] = self.attributes["inputs"][1]
         params['edge_index'] = self.attributes["inputs"][2]
-        params['out'] = f"layer{self.index}_out"
+        params['out'] = f"layer{self.index}_out"        
         return [self._function_template.format(**params)]
 
     def config_cpp(self):
@@ -2489,12 +2550,17 @@ class EdgeAggregate(Layer):
     def get_top_params(self):
         params = {}
         params["index"] = self.index
-        params['n_node'] = self.n_node_cppname
-        params['node_dim'] = self.node_dim_cppname
-        params['n_edge'] = self.n_edge_cppname
-        params['edge_dim'] = self.edge_dim_cppname
+        # params['n_node'] = self.n_node_cppname
+        # params['node_dim'] = self.node_dim_cppname
+        # params['n_edge'] = self.n_edge_cppname # this gives errors
+        # params['edge_dim'] = self.edge_dim_cppname
+        params['n_node'] = self.n_node
+        params['node_dim'] = self.node_dim
+        params['n_edge'] = self.n_edge
+        params['edge_dim'] = self.edge_dim
         params['table_t'] = f'layer{self.index}_t'
         params['reuse'] = self.reuse_factor
+        params["Beta"] = self.attributes["Beta"] # inv temp for softmax aggr
 
         flow_map = {"source_to_target": 0, "target_to_source": 1}
         params['flow'] = flow_map[self.model.reader.torch_model.flow]
@@ -2811,6 +2877,7 @@ layer_map = {
     'ResidualBlock'          : ResidualBlock,
     'NodeEncoder'          : NodeEncoder,
     'EdgeEncoder'          : EdgeEncoder,
+    'BatchNorm2D'          : BatchNorm2D,
     # TensorFlow-specific layers:
     'BiasAdd'                : BiasAdd,
 }
