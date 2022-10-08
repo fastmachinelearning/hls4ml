@@ -20,6 +20,8 @@ class PygModelReader(PyTorchModelReader):
         
         self.node_dim = config['InputShape']['NodeDim']
         self.edge_dim = config['InputShape']['EdgeDim']
+        self.misc_config = config["MiscConfig"]
+        print(f"misc_config: {self.misc_config}")
         # it should be node_dim == edge_dim
         assert(self.node_dim == self.edge_dim )
 
@@ -52,8 +54,8 @@ class PygModelReader(PyTorchModelReader):
             if var_name in list(torch_paramap.keys()):
                 var_name = torch_paramap[var_name]
 
-            print(f"self.state_dict.keys(): {self.state_dict.keys()}")
-            print(f"layer_name + '.' + var_name: {layer_name + '.' + var_name}")
+            # print(f"self.state_dict.keys(): {self.state_dict.keys()}")
+            # print(f"layer_name + '.' + var_name: {layer_name + '.' + var_name}")
             data = self.state_dict[layer_name + '.' + var_name].numpy().transpose()  # Look at transpose when systhesis produce lousy results. Might need to remove it.
 
         return data
@@ -348,10 +350,12 @@ def pyg_to_hls(config):
     edge_dim = reader.edge_dim
     node_attr = reader.node_attr
     edge_attr = reader.edge_attr
-    print(f"PygModelReader node_dim: {node_dim}")
-    print(f"PygModelReader edge_dim: {edge_dim}")
-    print(f"PygModelReader node_attr: {node_attr}")
-    print(f"PygModelReader edge_attr: {edge_attr}")
+    Betas = reader.misc_config["Betas"]
+    # print(f"Beta: {Betas}")
+    # print(f"PygModelReader node_dim: {node_dim}")
+    # print(f"PygModelReader edge_dim: {edge_dim}")
+    # print(f"PygModelReader node_attr: {node_attr}")
+    # print(f"PygModelReader edge_attr: {edge_attr}")
 
     # initiate layer list with inputs: node_attr, edge_attr, edge_index
     layer_list = [] # the order of this list doesn't matter
@@ -409,7 +413,12 @@ def pyg_to_hls(config):
         # get inputs, outputs
         index = len(layer_list)+1
         # print(f"block_handlers.keys(): {block_handlers.keys()}")
-        layer_dict, update_dict = block_handlers[val](key, config, update_dict, index, n_node, n_edge, node_dim, edge_dim, node_attr, edge_attr)
+        # print("Parsing Torch Layers into HLS ones")
+        if 'aggr' in key: # aggregate layer
+            Beta = Betas.pop(0)
+            layer_dict, update_dict = block_handlers[val](key, config, update_dict, index, n_node, n_edge, node_dim, edge_dim, node_attr, edge_attr, Beta)
+        else:
+            layer_dict, update_dict = block_handlers[val](key, config, update_dict, index, n_node, n_edge, node_dim, edge_dim, node_attr, edge_attr)
         # possible block hander is [parse_NodeBlock, parse_EdgeBlock, parse_EdgeAggregate]
         print(f"{key} layer_dict: {layer_dict}")
         layer_list.append(layer_dict)

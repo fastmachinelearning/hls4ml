@@ -1450,7 +1450,7 @@ class BatchNormalization(Layer):
 
 class BatchNorm2D(Layer):
     def initialize(self):
-        print(f"batchnorm 2d initialized")
+        # print(f"batchnorm 2d initialized")
         inp = self.get_input_variable()
         shape = inp.shape
         dims = inp.dim_names
@@ -2001,10 +2001,14 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
         params['bias_t'] = f'layer{self.index}_t'
         params['weight_t'] = f'layer{self.index}_t'
         params['table_t'] = f'layer{self.index}_t'
-        params['n_node'] = self.n_node_cppname
-        params['n_edge'] = self.n_edge_cppname
-        params['node_dim'] = self.node_dim_cppname
-        params['edge_dim'] = self.edge_dim_cppname
+        # params['n_node'] = self.n_node_cppname
+        # params['n_edge'] = self.n_edge_cppname
+        # params['node_dim'] = self.node_dim_cppname
+        # params['edge_dim'] = self.edge_dim_cppname
+        params['n_node'] = self.n_node
+        params['n_edge'] = self.n_edge
+        params['node_dim'] = self.node_dim
+        params['edge_dim'] = self.edge_dim
         # params['common_dim'] = self.common_dim_cppname
         params['out_dim'] = self.out_dim
         params['n_layers'] = self.attributes["n_layers"]
@@ -2022,17 +2026,17 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
         layer_count = 0
 
         for name, module in self.submodules.items():
-            print(f"module.__class__.__name__: {module.__class__.__name__}")
+            # print(f"module.__class__.__name__: {module.__class__.__name__}")
             if module.__class__.__name__ == 'Linear':
-                print(f"add_weights Linear activated")
+                # print(f"add_weights Linear activated")
                 data = self.model.get_weights_data(name, 'kernel', self.name).transpose()
                 var_name = f"{self.name}_w{linear_count}"
                 self.add_weights_variable(name=var_name, var_name=var_name, data=data, quantizer=quantizer,
                                               compression=compression)
                 linear_count += 1
             elif module.__class__.__name__ == 'BatchNorm1d':
-                print(f"add_weights BatchNorm1d activated")
-                print(self.name+f".layers.{layer_count}")
+                # print(f"add_weights BatchNorm1d activated")
+                # print(self.name+f".layers.{layer_count}")
                 batchnorm_name = self.name+f".layers.{layer_count}"
                 gamma = self.model.get_weights_data(batchnorm_name,'gamma')
                 beta = self.model.get_weights_data(batchnorm_name, 'beta')
@@ -2426,17 +2430,17 @@ class NodeBlock(GraphBlock):
                         }};"""
 
         configs['node_attr_config'] = matrix_config_template.format(matrix_name="node_attr",
-                                                                    n_rows=self.n_node_cppname,
-                                                                    n_cols=self.node_dim_cppname,
+                                                                    n_rows=self.n_node,
+                                                                    n_cols=self.node_dim,
                                                                     gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
 
         configs['edge_attr_aggr_config'] = matrix_config_template.format(matrix_name="edge_attr_aggr",
-                                                                         n_rows=self.n_node_cppname,
+                                                                         n_rows=self.n_node,
                                                                          n_cols=f"LAYER{self.index - 1}_OUT_DIM",
                                                                          gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
 
         configs['node_update_config'] = matrix_config_template.format(matrix_name="node_update",
-                                                                      n_rows=self.n_node_cppname,
+                                                                      n_rows=self.n_node,
                                                                       n_cols=f"LAYER{self.index}_OUT_DIM",
                                                                       gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
 
@@ -2480,7 +2484,7 @@ class NodeBlock(GraphBlock):
 
         # edge_attr_aggr = self.model.get_layer_output_variable(self.inputs[1])
         edge_attr_aggr = self.model.get_layer_output_variable(self.inputs[1])
-        print(f"self.inputs[1]: {self.inputs[1]}")
+        # print(f"self.inputs[1]: {self.inputs[1]}")
         assert(edge_attr_aggr.shape==[self.n_node, self.edge_dim])
         # print(f"[self.n_node, self.common_dim]: {[self.n_node, self.common_dim]}")
         # print(f"edge_attr_aggr.shape: {edge_attr_aggr.shape}")
@@ -2586,18 +2590,18 @@ class EdgeAggregate(Layer):
                         }};"""
 
         configs['edge_attr_config'] = matrix_config_template.format(matrix_name="edge_attr",
-                                                                    n_rows=self.n_edge_cppname,
-                                                                    n_cols=self.edge_dim_cppname,
+                                                                    n_rows=self.n_edge,
+                                                                    n_cols=self.edge_dim,
                                                                     gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
 
         configs['edge_attr_aggr_config'] = matrix_config_template.format(matrix_name="edge_attr_aggr",
-                                                                         n_rows=self.n_node_cppname,
+                                                                         n_rows=self.n_node,
                                                                          n_cols=f"LAYER{self.index}_OUT_DIM",
                                                                          gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
         
         configs['node_attr_config'] = matrix_config_template.format(matrix_name="node_attr",
-                                                                    n_rows=self.n_node_cppname,
-                                                                    n_cols=self.edge_dim_cppname, #node_dim_cppname == 3, which is NOT what we want
+                                                                    n_rows=self.n_node,
+                                                                    n_cols=self.node_dim,
                                                                     gnn_resource_limit=self.model.config.config['gnn_resource_limit'])
         return configs
 
@@ -2675,7 +2679,7 @@ class NodeEncoder(Dense):
     just copying Dense layer, but changing the class name
     """
     def initialize(self):
-        print(f"NodeEncoder name: {self.name}")
+        # print(f"NodeEncoder name: {self.name}")
         shape = self.get_input_variable().shape[:]
         shape[-1] = self.attributes['n_out']
         if len(shape) > 1:

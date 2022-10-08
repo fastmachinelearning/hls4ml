@@ -247,7 +247,7 @@ class VivadoWriter(Writer):
                     for var in vars:
                         if var not in inputs and var not in outputs:
                             def_cpp = self.variable_definition_cpp(model, var)
-                            print(f"def_cpp: {def_cpp}")
+                            # print(f"def_cpp: {def_cpp}")
                             if def_cpp is not None:
                                 newline += '    ' + def_cpp + ';\n'
                                 if var.pragma:
@@ -267,12 +267,11 @@ class VivadoWriter(Writer):
                                 newline += '    nnet::save_layer_output<{}>({}, "{}", {});\n'.format(var.type.name, var.name, layer.name, var.size_cpp())
                             newline += '#endif\n'
                         newline += '\n'
+                        # newline += f'std::cout << "Past layer: {layer.name} " << std::endl;'
+                        # newline += '\n'
                 # newline += 'std::cout << "test";'
                 newline += '\n'
-                # newline += 'std::cout << "R1_w0: " << *R1_w0;'
-                # newline += 'std::cout << "layer10_out: " << *layer10_out;'
-                # newline += 'std::cout << "layer4_out: " << layer4_out.Base;'
-                # newline += '\n'
+                
             #Just copy line
             else:
                 newline = line

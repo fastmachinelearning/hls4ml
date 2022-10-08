@@ -1145,14 +1145,14 @@ namespace nnet {
     #pragma HLS ARRAY_PARTITION variable=edge_attr_aggr complete dim=0
     nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::edge_attr_aggr_config>(edge_attr_aggr_1D, edge_attr_aggr);
 
-    // //debugging
-    // for (unsigned i = 0; i < CONFIG_T::n_node; i++) {
-    //   for (unsigned j = 0; j < CONFIG_T::edge_dim; j++) {
-    //     std::cout << "nodeblock index i:" << i << ", j:" << j << ", edge_attr_aggr:" << edge_attr_aggr[i][j] << "\n";
-    //     // std::cout << "nodeblock index i:" << i << ", j:" << j << ", node_attr:" << node_attr[i][j] << "\n";
+    //debugging
+    for (unsigned i = 0; i < CONFIG_T::n_node; i++) {
+      for (unsigned j = 0; j < CONFIG_T::edge_dim; j++) {
+        // std::cout << "nodeblock index i:" << i << ", j:" << j << ", edge_attr_aggr:" << edge_attr_aggr[i][j] << "\n";
+        // std::cout << "nodeblock index i:" << i << ", j:" << j << ", node_attr:" << node_attr[i][j] << "\n";
         
-    //   }
-    // }
+      }
+    }
 
 
     // 3. node_update (output)
@@ -1205,6 +1205,11 @@ namespace nnet {
 
       // std::cout << "ResidualBlock row: " << i <<"\n";
       nnet::residualBlock<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(node_attr[i], node_update[i], node_update_update[i]);
+
+      // std::cout << "nodeblock index i: " << i << "\n";
+      // for (int j=0; j<CONFIG_T::node_update_config::n_cols; j++){
+      //     std::cout << "nodeblock residual j: " << j << ", output: "<< node_update_update[i][j]<<"\n";
+      // }
     }
 
     // output array --> output vector
@@ -1280,6 +1285,7 @@ namespace nnet {
   {
     //initialize arrays
     // std::cout << "CONFIG_T::aggr: " << CONFIG_T::aggr << "\n";
+    // std::cout << "edge_aggregate started \n";
 
     // // assign CONFIG_T::aggr to softmax bc I can't be bothered to change the code up in the chain
     // CONFIG_T::aggr = 0;
@@ -1375,6 +1381,7 @@ namespace nnet {
       receiver_col = 0;
       sender_col = 1;
     }
+
 
     
     // for(int i=0; i<CONFIG_T::n_node; i++){
@@ -1480,8 +1487,6 @@ namespace nnet {
           edge_attr_aggr[i][j] = edge_attr_aggr[i][j]/ normalization_value[i][j];
 
 
-          
-          // std::cout << "final aggregate index i:" << i << ", j:" << j << ", normalization_value: "<<normalization_value[i][j]<<", attr output: " << edge_attr_aggr[i][j] << "\n";
           
           // std::cout << "final aggregate index i:" << i << ", j:" << j << ", normalization_value: "<<normalization_value[i][j]<<", attr output: " << edge_attr_aggr[i][j] << "\n";
         }

@@ -312,7 +312,7 @@ def check_forward_dict(model, forward_dictionary):
             raise AttributeError(f'Model is missing module "{key}" that is present in the provided forward dictionary; Check compatability')
 
 def convert_from_pyg_model(model, forward_dictionary, n_node, node_attr, node_dim,
-                           n_edge, edge_attr, edge_dim, activate_final=None,
+                           n_edge, edge_attr, edge_dim, activate_final=None, misc_config = {},
                            output_dir='my-hls-test', project_name='myproject',
                            part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={},
                            resource_limit=False, par_factor=16):
@@ -426,6 +426,7 @@ def convert_from_pyg_model(model, forward_dictionary, n_node, node_attr, node_di
         'NodeDim' : node_dim,
         'EdgeDim' : node_dim,
     }
+    config["MiscConfig"] = misc_config
     config['ForwardDictionary'] = forward_dictionary
     config['ActivateFinal'] = activate_final
     config["ParallelizationFactor"] = par_factor
@@ -441,7 +442,7 @@ def convert_from_pyg_model(model, forward_dictionary, n_node, node_attr, node_di
 
     _check_hls_config(config, hls_config)
     
-    print(f"pyg_to_hls config: {config}")
+    # print(f"pyg_to_hls config: {config}")
     return pyg_to_hls(config)
 
 def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,
