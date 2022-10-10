@@ -36,6 +36,7 @@ def hls_model(keras_model, io_type):
     hls_model.compile()
     return hls_model
 
+# TODO - Add Quartus test after merging PR #634
 @pytest.mark.parametrize('io_type', ['io_parallel', 
                                      'io_stream'])
 def test_accuracy(data, keras_model, hls_model):

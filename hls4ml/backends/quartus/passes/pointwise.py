@@ -4,13 +4,18 @@ from copy import copy
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.layers import register_layer
 from hls4ml.backends.fpga.fpga_layers import PointwiseConv1D, PointwiseConv2D
-from hls4ml.backends.vivado.passes.convolution_templates import Conv1DConfigTemplate, Conv1DFunctionTemplate, Conv2DConfigTemplate, Conv2DFunctionTemplate, conv1d_config_template, conv2d_config_template, conv_mult_config_template
+from hls4ml.backends.quartus.passes.convolution_templates import  Conv1DConfigTemplate, Conv1DFunctionTemplate, Conv2DConfigTemplate, Conv2DFunctionTemplate, conv1d_config_template, conv2d_config_template, conv_mult_config_template
+
+'''
+Custom hls4ml layer implementation for 1x1 Conv filters using im2col
+Allows lower latency andresource usage, due to less loop invocations
+'''
 
 pointwise_conv1d_function_template = 'nnet::pointwise_conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 pointwise_conv2d_function_template = 'nnet::pointwise_conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 
-sepconv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_sepconv1d_stream.h']
-sepconv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_sepconv2d_stream.h']
+sepconv1d_include_list = ['nnet_utils/nnet_conv1d.h']
+sepconv2d_include_list = ['nnet_utils/nnet_conv2d.h']
 
 class PointwiseConv1DConfigTemplate(Conv1DConfigTemplate):
     def __init__(self):
@@ -57,10 +62,12 @@ class OptimizePointwiseConv(OptimizerPass):
 
     def transform(self, model, node):
         dim = node.__class__.__name__[-2:] # '1D' or '2D'
-        pw_node = model.make_node('PointwiseConv' + dim, node.name, copy(node.attributes), node.inputs.copy())
+        pw_node = model.make_node('PointwiseConv' + dim, node.name, copy(node.attributes), node.inputs.copy(), outputs=node.outputs.copy())
         if len(node.weights['weight'].data.shape) == 2: # This can happen if we assign weights of Dense layer to 1x1 Conv2D
             pw_node.weights['weight'].data = np.expand_dims(node.weights['weight'].data, axis=(0,1))
         pw_node.weights['bias'].data = node.weights['bias'].data
+        # pw_node.weights['bias'].data = node.weights['bias'].data
+        print("Here")
         model.replace_node(node, pw_node)
         
         return True
