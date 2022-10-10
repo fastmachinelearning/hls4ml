@@ -49,9 +49,10 @@ def _propagate_type_conv(input_precision, weight_precision, bias_precision,
     bitwidth = weight_precision.width + input_precision.width + math.ceil(np.log2(Nacc))
     integer = weight_precision.integer + input_precision.integer + math.ceil(np.log2(Nacc))
     signed = weight_precision.signed or input_precision.signed
-    # copy staruation and rounding from input
-    rounding_mode = input_precision.rounding_mode
-    saturation_mode = input_precision.saturation_mode
+
+    # Because calculating precision, no need to round or sautration
+    rounding_mode = None
+    saturation_mode = None
 
     frac = bitwidth - integer
 
