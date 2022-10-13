@@ -230,7 +230,6 @@ def test_quantizer(randX_1000_1, quantizer, backend, io_type):
 
 
 @pytest.mark.parametrize('quantizer', [(quantized_tanh(8)),
-                                       (quantized_tanh(12, use_real_tanh=True)),
                                        (quantized_sigmoid(5)),
                                        (quantized_sigmoid(7, use_real_sigmoid=True))
                                        ])
