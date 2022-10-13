@@ -89,9 +89,9 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader,
             layer['threshold'] = 0.33 # the default ternary tanh threshold for QKeras
         layer['activation'] = 'ternary_tanh'
     elif ((activation_config['class_name'] == 'quantized_sigmoid'
-          and not activation_config['config']['use_real_sigmoid'])
+          and not activation_config['config'].get('use_real_sigmoid', False))
           or (activation_config['class_name'] == 'quantized_tanh'
-          and not activation_config['config']['use_real_tanh'])):
+          and not activation_config['config'].get('use_real_tanh', False))):
         layer['class_name'] = 'HardActivation'
         layer['slope'] = 0.5   # the default values in QKeras
         layer['shift'] = 0.5
