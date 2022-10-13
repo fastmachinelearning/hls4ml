@@ -58,7 +58,6 @@ def convert(load_jettagging_model, strategy):
   Convert a QKeras model trained on the jet tagging dataset
   '''
   model = load_jettagging_model
-  hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=['Activation'], rounding_mode='AP_RND', saturation_mode='AP_SAT')
 
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
   config['Model']['Strategy'] = strategy
@@ -68,7 +67,6 @@ def convert(load_jettagging_model, strategy):
                                                        hls_config=config,
                                                        output_dir=str(test_root_path / 'hls4mlprj_qkeras_accuracy_{}'.format(strategy)),
                                                        part='xcu250-figd2104-2L-e')
-  hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=[])
   hls_model.compile()
   return hls_model
 
@@ -127,7 +125,6 @@ def test_single_dense_activation_exact(randX_100_16, bits, alpha, backend, io_ty
   model.add(QActivation(activation=quantized_relu(bits,0), name='relu1'))
   model.compile()
 
-  hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=['relu1'], rounding_mode='AP_RND_CONV', saturation_mode='AP_SAT')
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
   output_dir = str(test_root_path / 'hls4mlprj_qkeras_single_dense_activation_exact_{}_{}_{}_{}'.format(bits, alpha, backend, io_type))
   hls_model = hls4ml.converters.convert_from_keras_model(model,
@@ -135,7 +132,6 @@ def test_single_dense_activation_exact(randX_100_16, bits, alpha, backend, io_ty
                                                        output_dir=output_dir,
                                                        backend=backend,
                                                        io_type=io_type)
-  hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=[])
   hls_model.compile()
 
   y_qkeras = model.predict(X)
@@ -217,7 +213,6 @@ def test_quantizer(randX_1000_1, quantizer, backend, io_type):
   model.add(QActivation(input_shape=(1,), activation=quantizer, name='quantizer'))
   model.compile()
 
-  hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=['quantizer'], rounding_mode='AP_RND_CONV', saturation_mode='AP_SAT')
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
   output_dir = str(test_root_path / 'hls4mlprj_qkeras_quantizer_{}_{}_{}_{}_{}'.format(quantizer.__class__.__name__,
                                                             quantizer.bits, quantizer.integer, backend, io_type))
@@ -226,7 +221,6 @@ def test_quantizer(randX_1000_1, quantizer, backend, io_type):
                                                        output_dir=output_dir,
                                                        backend=backend,
                                                        io_type=io_type)
-  hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=[])
   hls_model.compile()
 
   y_qkeras = model.predict(X)
@@ -253,7 +247,6 @@ def test_quantizer_special(randX_1000_1, quantizer, backend):
   model.add(QActivation(input_shape=(1,), activation=quantizer, name='quantizer'))
   model.compile()
 
-  hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=['quantizer'], rounding_mode='AP_RND_CONV', saturation_mode='AP_SAT')
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
   output_dir = str(test_root_path / 'hls4mlprj_qkeras_quantizer_{}_{}_{}'.format(quantizer.__class__.__name__,
                                                             quantizer.bits, backend))
@@ -261,7 +254,6 @@ def test_quantizer_special(randX_1000_1, quantizer, backend):
                                                        hls_config=config,
                                                        output_dir=output_dir,
                                                        backend=backend)
-  hls4ml.model.optimizer.get_optimizer('output_rounding_saturation_mode').configure(layers=[])
   hls_model.compile()
 
   y_qkeras = model.predict(X)
@@ -300,13 +292,6 @@ def test_qactivation_kwarg(randX_100_10,
     )(inputs)
     model = Model(inputs, outputs)
 
-    hls4ml.model.optimizer.get_optimizer(
-        'output_rounding_saturation_mode'
-    ).configure(
-        layers=[name],
-        rounding_mode='AP_RND_CONV',
-        saturation_mode='AP_SAT'
-    )
     config = hls4ml.utils.config_from_keras_model(
         model,
         granularity='name'
@@ -323,9 +308,6 @@ def test_qactivation_kwarg(randX_100_10,
         hls_config=config,
         output_dir=out_dir
     )
-    hls4ml.model.optimizer.get_optimizer(
-        'output_rounding_saturation_mode'
-    ).configure(layers=[])
     hls_model.compile()
 
     # Verify if activation in hls_model

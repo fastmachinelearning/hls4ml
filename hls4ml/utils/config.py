@@ -45,7 +45,10 @@ def _get_precision_from_quantizer(quantizer):
         bits = int(quantizer['config']['bits'])
         # if integer isn't specified, it should be the same as bits
         integer = int(quantizer['config'].get('integer', bits-1)) + 1
-        if quantizer['class_name'] == 'quantized_relu':
+        # for quantizers use the following default rounding and overflow
+        rnd = "AP_RND_CONV"
+        overflow = "AP_SAT"
+        if quantizer['class_name'] in ('quantized_relu', 'quantized_relu_po2'):
             signed = False
             integer -= 1
         elif quantizer['class_name'] == 'quantized_tanh':
