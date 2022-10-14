@@ -232,7 +232,10 @@ def keras_to_hls(config):
             if model_arch is None:
                 raise ValueError('No model found in config file.')
             else:
-                model_arch = json.loads(model_arch.decode('utf-8'))
+                # model_arch should be a string by default. Keeping this if just for compatibility.
+                if isinstance(model_arch, bytes): 
+                    model_arch = model_arch.decode('utf-8')
+                model_arch = json.loads(model_arch) 
         reader = KerasFileReader(config)
     else:
         raise ValueError('No model found in config file.')
