@@ -287,6 +287,8 @@ class FPGABackend(Backend):
         else:
             min_W = (math.ceil(stride / kernel_size) - 1) * stride + kernel_size
 
+        # if the standard min_W is smaller than the in_W, then have to do alternate
+        # "narrow" encoding.
         if min_W > in_W:
             min_W = in_W
 

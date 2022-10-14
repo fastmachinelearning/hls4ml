@@ -61,6 +61,7 @@ template<unsigned K, unsigned S, unsigned W, unsigned min_width>
 unsigned scale_index(const unsigned idx) {
     #pragma HLS INLINE
     
+    // althernate version when W == min_width
     if (W == min_width) {
         return idx;
     }
