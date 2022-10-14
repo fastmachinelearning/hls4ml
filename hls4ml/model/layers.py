@@ -709,9 +709,9 @@ class HardActivation(Activation):
     def initialize(self):
         super().initialize()
         slope_prec = self.get_attr('slope_prec',
-            FixedPrecisionType(width=1, integer=0, signed=False))
-        shift_prec = self.get_attr('shift_prec',
             FixedPrecisionType(width=16, integer=0, signed=False))
+        shift_prec = self.get_attr('shift_prec',
+            FixedPrecisionType(width=1, integer=0, signed=False))
         index = self.get_attr('index')
         slope_t = NamedType(f'slope{index}_t', precision=slope_prec)
         shift_t = NamedType(f'shift{index}_t', precision=shift_prec)
