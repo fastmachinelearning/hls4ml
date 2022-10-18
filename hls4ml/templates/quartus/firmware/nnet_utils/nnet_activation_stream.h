@@ -406,14 +406,14 @@ void softmax_legacy(stream<data_T> &data, stream<res_T> &res) {
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-void softmax_argmax(stream<data_T> &data, stream<res_T> &res) {    
+void softmax_argmax(stream<data_T> &data, stream<res_T> &res) {
     #pragma ii 1
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         data_T in_data = data.read();
         res_T out_data;
 
         #pragma unroll
-        for (int i = 0; i < CONFIG_T::n_in; i++) {
+        for (int i = 0; i < res_T::size; i++) {
             out_data[i] = (typename res_T::value_type) 0;
         }
 
@@ -421,7 +421,7 @@ void softmax_argmax(stream<data_T> &data, stream<res_T> &res) {
         hls_register int idx = 0; 
 
         #pragma ii 1
-        for (int i = 1; i < CONFIG_T::n_in; i++) {
+        for (int i = 1; i < res_T::size; i++) {
             if (in_data[i] > maximum) {
                 maximum = in_data[i];
                 idx = i;

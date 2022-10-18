@@ -315,13 +315,13 @@ void softmax_legacy(hls::stream<data_T> &data, hls::stream<res_T> &res) {
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-void softmax_argmax(hls::stream<data_T> &data, hls::stream<res_T> &res) {    
+void softmax_argmax(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         #pragma HLS PIPELINE
         data_T in_data = data.read();
         res_T out_data;
 
-        for (int i = 0; i < CONFIG_T::n_in; i++) {
+        for (int i = 0; i < res_T::size; i++) {
             #pragma HLS UNROLL
             out_data[i] = (typename res_T::value_type) 0;
         }
@@ -329,7 +329,7 @@ void softmax_argmax(hls::stream<data_T> &data, hls::stream<res_T> &res) {
         typename data_T::value_type maximum = in_data[0];
         int idx = 0; 
 
-        for (int i = 1; i < CONFIG_T::n_in; i++) {
+        for (int i = 1; i < res_T::size; i++) {
             #pragma HLS PIPELINE
             if (in_data[i] > maximum) {
                 maximum = in_data[i];
@@ -664,6 +664,49 @@ void prelu(hls::stream<data_T> &data, typename data_T::value_type alpha[CONFIG_T
             #pragma HLS UNROLL
             if (in_data[j] > 0) out_data[j] = in_data[j];
             else out_data[j] = alpha[i*res_T::size+j] * in_data[j];
+        }
+        res.write(out_data);
+    }
+}
+
+// *************************************************
+//       Binary TanH Activation
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void binary_tanh(hls::stream<data_T> &data, hls::stream<res_T> &res) {
+    PReLUActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        #pragma HLS PIPELINE
+
+        data_T in_data = data.read();
+        res_T out_data;
+        #pragma HLS DATA_PACK variable=out_data
+
+        PReLUPackLoop: for (int j = 0; j < res_T::size; j++) {
+            #pragma HLS UNROLL
+            if(in_data[j] > 0) out_data[j] = (typename res_T::value_type) 1;
+            else out_data[j] = (typename res_T::value_type) -1;
+        }
+        res.write(out_data);
+    }
+}
+
+// *************************************************
+//       Ternary TanH Activation
+// *************************************************
+template<class data_T, class res_T, typename CONFIG_T>
+void ternary_tanh(hls::stream<data_T> &data, hls::stream<res_T> &res) {
+    PReLUActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        #pragma HLS PIPELINE
+
+        data_T in_data = data.read();
+        res_T out_data;
+        #pragma HLS DATA_PACK variable=out_data
+
+        PReLUPackLoop: for (int j = 0; j < res_T::size; j++) {
+            #pragma HLS UNROLL
+            if(in_data[j] > 1) out_data[j] = (typename res_T::value_type) 1;
+            else if (in_data[j] <=-1) out_data[j] = (typename res_T::value_type) -1;
+            else out_data[j] = (typename res_T::value_type) 0;
         }
         res.write(out_data);
     }
