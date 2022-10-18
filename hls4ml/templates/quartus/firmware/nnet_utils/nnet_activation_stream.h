@@ -223,6 +223,8 @@ template<class data_T, class res_T, typename CONFIG_T>
 void softsign(stream<data_T> &data, stream<res_T> &res) {
     #include "activation_tables/softsign_table.tb"
 
+    static const int MAX_VALUE = 8;
+
     SoftsignActLoop:
     #pragma ii 1
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
@@ -232,11 +234,21 @@ void softsign(stream<data_T> &data, stream<res_T> &res) {
         SoftsignPackLoop:
         #pragma unroll
         for (int j = 0; j < res_T::size; j++) {
-            hls_register int data_round = (in_data[j]*CONFIG_T::table_size/16).to_int();
-            hls_register int index = data_round + 8*CONFIG_T::table_size/16;
-            if (index < 0) index = 0;
-            else if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
-            out_data[j] = softsign_table[index];
+            hls_register typename data_T::value_type absValue;;
+            if(in_data[j] < 0){
+                absValue = -in_data[j];
+            }
+            else{
+                absValue = in_data[j];
+            }
+            ac_int<16> index = (absValue * CONFIG_T::table_size / MAX_VALUE).to_int();
+            if (absValue > MAX_VALUE) index = CONFIG_T::table_size - 1;
+            if(in_data[j] < 0) {
+                out_data[j] = -(typename res_T::value_type) softsign_table[index];
+            }
+            else {
+                out_data[j] = (typename res_T::value_type) softsign_table[index];
+            }
         }
 
         res.write(out_data);
@@ -283,7 +295,7 @@ void softmax_stable(stream<data_T> &data, stream<res_T> &res) {
         hls_register typename CONFIG_T::exp_table_t exp_res[data_T::size];
         #pragma unroll
         for(unsigned j = 0; j < data_T::size; j++) {
-            exp_res[j] = exp_table[softmax_idx_from_real_val<typename data_T::value_type, CONFIG_T>(d_xi_xmax[j])];
+            exp_res[j] = exp_table[softmax_stable_idx_from_real_val<typename data_T::value_type, CONFIG_T>(d_xi_xmax[j])];
         }
 
         // Explicitly sum the results with an adder tree.
@@ -291,7 +303,7 @@ void softmax_stable(stream<data_T> &data, stream<res_T> &res) {
         Op_add<typename CONFIG_T::exp_table_t> op_add;
         hls_register typename CONFIG_T::exp_table_t exp_sum = reduce<typename CONFIG_T::exp_table_t, data_T::size, Op_add<typename CONFIG_T::exp_table_t>>(exp_res, op_add);
 
-        hls_register typename CONFIG_T::inv_table_t inv_exp_sum = invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
+        hls_register typename CONFIG_T::inv_table_t inv_exp_sum = invert_table[softmax_stable_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
         res_T out_pack;
         
         SoftmaxInvPackLoop: 
@@ -327,7 +339,7 @@ void softmax_latency(stream<data_T> &data, stream<res_T> &res){
         SoftmaxExpPackLoop: 
         #pragma unroll
         for(unsigned j = 0; j < data_T::size; j++) {
-            exp_res[j] = exp_table_latency[softmax_idx_from_real_val<typename data_T::value_type, CONFIG_T>(in_pack[j])];
+            exp_res[j] = exp_table_latency[softmax_latency_idx_from_real_val<typename data_T::value_type, CONFIG_T>(in_pack[j])];
         }
 
         // Explicitly sum the results with an adder tree.
@@ -336,7 +348,7 @@ void softmax_latency(stream<data_T> &data, stream<res_T> &res){
         hls_register typename CONFIG_T::exp_table_t exp_sum = reduce<typename CONFIG_T::exp_table_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::exp_table_t>>(exp_res, op_add);
 
         // Multiply previously calculated exponetials with the reciprocal of the sum
-        hls_register typename CONFIG_T::inv_table_t inv_exp_sum = invert_table_latency[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
+        hls_register typename CONFIG_T::inv_table_t inv_exp_sum = invert_table_latency[softmax_latency_idx_from_real_val<typename CONFIG_T::exp_table_t,CONFIG_T>(exp_sum)];
 
         res_T out_pack;
         SoftmaxInvPackLoop: 

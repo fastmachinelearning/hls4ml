@@ -1,5 +1,6 @@
 from __future__ import print_function
 import tarfile
+from hls4ml.model.layers import Conv1D, Conv2D, Conv2DBatchnorm, Dense
 import yaml
 from shutil import copyfile, copytree, rmtree
 import numpy as np
@@ -17,6 +18,33 @@ class QuartusWriter(Writer):
 
     def next_pow2(self, x):
         return 1 << (x - 1).bit_length()
+    
+
+    def __make_dat_file(self, original_path, project_path):
+        """
+        Convert other input/output data types into a dat file, which is
+        a text file with the falttened matrix printed out. Note that ' ' is
+        assumed to be the delimiter.
+        """
+
+        #Take in data from current supported data files
+        if original_path[-3:] == "npy":
+            data = np.load(original_path)
+        else:
+            raise Exception("Unsupported input/output data files.")
+
+        #Faltten data, just keep first dimension
+        data = data.reshape(data.shape[0], -1)
+
+        def print_data(f):
+            for i in range(data.shape[0]):
+                for j in range(data.shape[1]):
+                    f.write(str(data[i][j]) + " ")
+                f.write("\n")
+
+        #Print out in dat file
+        with open(project_path, "w" ) as f:
+            print_data(f)
 
     def get_max_reuse_factor(self, model):
         max_rf = 0
@@ -45,7 +73,15 @@ class QuartusWriter(Writer):
 
         rf = int(layer.get_attr('reuse_factor'))
         weight_header = '#ifdef __INTELFPGA_COMPILER__\n'
-        if (rf == 1 or var.name[0] == 'b' or layer.get_attr('n_in') * layer.get_attr('n_out') <= 2048
+
+        if isinstance(layer, (Conv2D, Conv2DBatchnorm)):
+            weight_size = layer.get_attr('impl_filt_height') * layer.get_attr('impl_filt_width') * layer.get_attr('n_filt') * layer.get_attr('n_chan')      
+        elif isinstance(layer, (Conv1D)):
+            weight_size = layer.get_attr('impl_filt_width') * layer.get_attr('n_filt') * layer.get_attr('n_chan')      
+        elif isinstance(layer, (Dense)):
+            weight_size = layer.get_attr('n_in') * layer.get_attr('n_out')         
+        
+        if (rf == 1 or var.name[0] == 'b' or weight_size <= 2048
                 or (var.name[0] == 'w' and var.type.precision.width < 3)):
             weight_header += 'hls_init_on_powerup\n'
         else:
@@ -111,8 +147,10 @@ class QuartusWriter(Writer):
                 newline = line
                 if io_type == 'io_stream':
                     newline += 'void myproject(\n'
-                    newline += indent+'stream_in<{}> &input_stream,\n'.format(model_inputs[0].type.name)
-                    newline += indent+'stream_out<{}> &output_stream\n'.format(model_outputs[0].type.name)
+                    for inp in model_inputs:
+                        newline += indent+'stream_in<{}> &{}_stream,\n'.format(inp.type.name, inp.name)
+                    for out in model_outputs:
+                        newline += indent+'stream_out<{}> &{}_stream\n'.format(out.type.name, out.name)
                     newline += ') {\n'
                 if io_type == 'io_parallel':
                     newline = 'output_data myproject(\n'
@@ -124,8 +162,10 @@ class QuartusWriter(Writer):
                 newline = line
                 if io_type == 'io_stream':
                     newline += 'component void myproject(\n'
-                    newline += indent+'stream_in<{}> &input_stream,\n'.format(model_inputs[0].type.name)
-                    newline += indent+'stream_out<{}> &output_stream\n'.format(model_outputs[0].type.name)
+                    for inp in model_inputs:
+                        newline += indent+'stream_in<{}> &{}_stream,\n'.format(inp.type.name, inp.name)
+                    for out in model_outputs:
+                        newline += indent+'stream_out<{}> &{}_stream\n'.format(out.type.name, out.name)
                     newline += ') {\n'
                 if io_type == 'io_parallel':
                     newline += 'component output_data myproject(\n'
@@ -148,10 +188,11 @@ class QuartusWriter(Writer):
             elif '//hls-fpga-machine-learning initialize input/output' in line:
                 if io_type == 'io_stream':
                     newline = line
-                    newline += indent + f'for (size_t i = 0; i < {model_inputs[0].size_cpp()} / {model_inputs[0].type.name}::size; i++) {{\n'
-                    newline += indent + f'  {model_inputs[0].type.name} tmp = input_stream.read();\n'
-                    newline += indent + f'  {model_inputs[0].name}.write(tmp);\n'
-                    newline += indent + f'}}\n'
+                    for inp in model_inputs:
+                        newline += indent + f'for (size_t i = 0; i < {inp.size_cpp()} / {inp.type.name}::size; i++) {{\n'
+                        newline += indent + f'  {inp.type.name} tmp = {inp.name}_stream.read();\n'
+                        newline += indent + f'  {inp.name}.write(tmp);\n'
+                        newline += indent + f'}}\n'
                 else:
                     newline = line
                     newline += indent+'hls_register output_data outputs;\n'
@@ -173,6 +214,8 @@ class QuartusWriter(Writer):
             # Neural net instantiation
             elif '//hls-fpga-machine-learning insert layers' in line:
                 newline = line + '\n'
+                model_inputs = model.get_input_variables()
+                model_outputs = model.get_output_variables()
                 for layer in model.get_layers():
                     if io_type != 'io_stream':
                         vars = layer.get_variables()
@@ -195,11 +238,12 @@ class QuartusWriter(Writer):
             elif '//hls-fpga-machine-learning return' in line:
                 if io_type == 'io_stream':
                     newline = line
-                    newline += indent + f'for (size_t i = 0; i < {model_outputs[0].size_cpp()} / {model_outputs[0].type.name}::size; i++) {{\n'
-                    newline += indent + f'  {model_outputs[0].type.name} tmp = {model_outputs[0].name}.read();\n'
-                    newline += indent + f'  output_stream.write(tmp);\n'
-                    newline += indent + f'}}\n'
-                    newline += '}\n'
+                    for out in model_outputs:
+                        newline += indent + f'for (size_t i = 0; i < {out.size_cpp()} / {out.type.name}::size; i++) {{\n'
+                        newline += indent + f'  {out.type.name} tmp = {out.name}.read();\n'
+                        newline += indent + f'  {out.name}_stream.write(tmp);\n'
+                        newline += indent + f'}}\n'
+                        newline += '}\n'
                 else:
                     newline = line
                     newline += indent+'return outputs;\n'
@@ -242,8 +286,10 @@ class QuartusWriter(Writer):
                 # For io_stream, input and output are passed by reference; see myproject.h & myproject.cpp for more details
                 if io_type == 'io_stream':
                     newline += 'void myproject(\n'
-                    newline += indent+'stream_in<{}> &input_stream,\n'.format(model_inputs[0].type.name)
-                    newline += indent+'stream_out<{}> &output_stream\n'.format(model_outputs[0].type.name)
+                    for inp in model_inputs:
+                        newline += indent+'stream_in<{}> &{}_stream,\n'.format(inp.type.name, inp.name)
+                    for out in model_outputs:
+                        newline += indent+'stream_out<{}> &{}_stream\n'.format(out.type.name, out.name)
                     newline += ');\n'
                 # In io_parallel, a struct is returned; see myproject.h & myproject.cpp for more details
                 else:
@@ -256,8 +302,10 @@ class QuartusWriter(Writer):
                 newline = line
                 if io_type == 'io_stream':
                     newline += 'component void myproject(\n'
-                    newline += indent+'stream_in<{}> &input_stream,\n'.format(model_inputs[0].type.name)
-                    newline += indent+'stream_out<{}> &output_stream\n'.format(model_outputs[0].type.name)
+                    for inp in model_inputs:
+                        newline += indent+'stream_in<{}> &{}_stream,\n'.format(inp.type.name, inp.name)
+                    for out in model_outputs:
+                        newline += indent+'stream_out<{}> &{}_stream\n'.format(out.type.name, out.name)
                     newline += ');\n'
                 else:
                     newline += 'component output_data myproject(\n'
@@ -452,7 +500,9 @@ class QuartusWriter(Writer):
             return
 
         outvar = model.get_output_variables()[0]
-        invar = model.get_input_variables()[0]
+
+        model_inputs = model.get_input_variables()
+        model_outputs = model.get_output_variables()
 
         filedir = os.path.dirname(os.path.abspath(__file__))
 
@@ -479,10 +529,7 @@ class QuartusWriter(Writer):
         
         f = open(os.path.join(filedir, '../templates/quartus/myproject_test_stream.cpp'), 'r')
         fout = open('{}/{}_test.cpp'.format(model.config.get_output_dir(), model.config.get_project_name()), 'w')
-
-        if len(model.get_input_variables()) > 1 or len(model.get_output_variables()) > 1:
-                raise Exception('Quartus io_stream supports exactly one input/output per model')
-            
+    
         for line in f.readlines():
             indent = ' ' * (len(line) - len(line.lstrip(' ')))
 
@@ -491,29 +538,39 @@ class QuartusWriter(Writer):
             
             elif '//hls-fpga-machine learning instantiate inputs and outputs' in line:
                 newline = line
-                newline += indent + 'stream_in<{}> inputs;\n'.format(invar.type.name)
-                newline += indent + 'stream_out<{}> outputs;\n'.format(outvar.type.name)
-
+                for inp in model_inputs:
+                    newline += indent+'stream_in<{}> {}_input;\n'.format(inp.type.name, inp.name)
+                for out in model_outputs:
+                    newline += indent+'stream_out<{}> {}_output;\n'.format(out.type.name, out.name)
+                
             # TODO - This is one-input specific (are multiple model inputs needed at all?)
             elif '//hls-fpga-machine-learning insert data' in line:
                 newline = line
-                newline += indent + f'float vals[{invar.size_cpp()}]; \n'
-                newline += indent + f'for (int j = 0 ; j < {invar.size_cpp()} ; j++) {{\n'
-                newline += indent + f'  vals[j] = in[j]; \n'
-                newline += indent + f'}}'
-                newline += indent + f'nnet::convert_data<float, {invar.type.name}, {invar.size_cpp()}>(vals, inputs);\n'
-            
+                c = 0
+                for inp in model_inputs:
+                    newline += indent + f'float vals_{c}[{inp.size_cpp()}]; \n'
+                    newline += indent + f'for (int j = 0 ; j < {inp.size_cpp()} ; j++) {{\n'
+                    newline += indent + indent + f'vals_{c}[j] = in[j]; \n'
+                    newline += indent + f'}}\n'
+                    newline += indent + f'nnet::convert_data<float, {inp.type.name}, {inp.size_cpp()}>(vals_{c}, {inp.name}_input);\n'
+                    c += 1
+
             elif '//hls-fpga-machine-learning insert zero' in line:
                 newline = line
-                newline += indent + f'float vals[{invar.size_cpp()}]; \n'
-                newline += indent + f'for (int j = 0 ; j < {invar.size_cpp()} ; j++) {{'
-                newline += indent + f'  vals[j] = 0.0; \n'
-                newline += indent + f'}}'
-                newline += indent + f'nnet::convert_data<float, {invar.type.name}, {invar.size_cpp()}>(vals, inputs);\n'
+                c = 0
+                for inp in model_inputs:
+                    newline += indent + f'float vals_{c}[{inp.size_cpp()}]; \n'
+                    newline += indent + f'for (int j = 0 ; j < {inp.size_cpp()} ; j++) {{\n'
+                    newline += indent + indent + f'vals_{c}[j] = 0.0; \n'
+                    newline += indent + f'}}\n'
+                    newline += indent + f'nnet::convert_data<float, {inp.type.name}, {inp.size_cpp()}>(vals_{c}, {inp.name}_input);\n'
+                    c += 1
 
             elif '//hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
-                newline += indent + f'ihc_hls_enqueue_noret(&{model.config.get_project_name()}, inputs, outputs); \n'
+                input_params = ', '.join([f'{i.name}_input' for i in model_inputs])
+                output_params = ', '.join([f'{o.name}_output' for o in model_outputs])
+                newline += indent + f'ihc_hls_enqueue_noret(&{model.config.get_project_name()}, {input_params}, {output_params}); \n'
             
             elif 'hls-fpga-machine-learning insert run' in line:
                 newline = line
@@ -522,8 +579,9 @@ class QuartusWriter(Writer):
             elif '//hls-fpga-machine-learning convert output' in line:
                 newline = line
                 newline += indent + 'float res[{}];\n'.format(outvar.size_cpp())
-                newline += indent + 'nnet::convert_data_back<{}, float, {}>(outputs, res);\n'.format(outvar.type.name,
-                                                                                                    outvar.size_cpp())
+                newline += indent + 'nnet::convert_data_back<{}, float, {}>({}_output, res);\n'.format(outvar.type.name,
+                                                                                                    outvar.size_cpp(),
+                                                                                                    outvar.name)
 
             elif '//hls-fpga-machine-learning insert tb-output' in line:
                 newline += indent + 'for(int i = 0; i < {}; i++) {{\n'.format(outvar.size_cpp())
@@ -617,32 +675,36 @@ class QuartusWriter(Writer):
             elif '//hls-fpga-machine-learning insert wrapper' in line:
                 dtype = line.split('#', 1)[1].strip()
                 if io_type == 'io_stream':
-                    if len(model_inputs) > 1 or len(model_outputs) > 1:
-                        raise Exception('io_stream Quartus supports exactly one input/output')
-                    i = model_inputs[0]
-                    o = model_outputs[0]
-
-                    # Initialise stream object and store input data (C-array) to a 'stream' object
-                    newline = indent + 'stream_in<{}> inputs;\n'.format(model_inputs[0].type.name)
-                    newline += indent + 'nnet::convert_data<{}, {}, {}>({}, inputs);\n'.format(dtype, 
-                                                                                            i.type.name,
-                                                                                            i.size_cpp(),
-                                                                                            i.name,
-                                                                                        )
-                    
+                    newline = ''
+                    for i in model_inputs:
+                        # Initialise stream object and store input data (C-array) to a 'stream' object
+                        newline += indent + 'stream_in<{}> {}_input;\n'.format(i.type.name, i.name)
+                        newline += indent + 'nnet::convert_data<{}, {}, {}>({}, {}_input);\n'.format(dtype, 
+                                                                                                i.type.name,
+                                                                                                i.size_cpp(),
+                                                                                                i.name,
+                                                                                                i.name
+                                                                                            )
+                        
                     # Initialise stream output
-                    newline += '\n'
-                    newline += indent + 'stream_out<{}> outputs;\n'.format(model_outputs[0].type.name)                    
-                    
+                    for o in model_outputs:
+                        newline += '\n'
+                        newline += indent + 'stream_out<{}> {}_output;\n'.format(o.type.name, o.name)                    
+                        
                     # Execute top-level function
-                    top_level = indent + '{}(inputs, outputs);\n'.format(model.config.get_project_name())
+                    input_params = ', '.join([f'{i.name}_input' for i in model_inputs])
+                    output_params = ', '.join([f'{o.name}_output' for o in model_outputs])
+
+                    top_level = indent + '{}({}, {});\n'.format(model.config.get_project_name(), input_params, output_params)
                     newline += top_level
                     newline += '\n'
 
                     # Store data from 'stream' output to C-array, to be then returned and handled in Python
-                    newline += indent + 'nnet::convert_data_back<{}, {}, {}>(outputs, {});\n'.format(o.type.name,
+                    for o in model_outputs:
+                        newline += indent + 'nnet::convert_data_back<{}, {}, {}>({}_output, {});\n'.format(o.type.name,
                                                                                                 dtype,
                                                                                                 o.size_cpp(),
+                                                                                                o.name,
                                                                                                 o.name
                                                                                             )
                 
@@ -769,8 +831,8 @@ class QuartusWriter(Writer):
 
     def __get_table_size(self, model, activation):
         for layer in model.get_layers():
-            if layer.get_attr('activation') == activation and layer.get_attr('table_size') is not None:
-                return layer.get_attr('table_size')
+            if (layer.get_attr('activation') == activation or layer.get_attr('recurrent_activation') == activation) and layer.get_attr('table_size') is not None:
+                return int(layer.get_attr('table_size'))
         return 1024
 
     def __get_table_header(self, table_name, table_size):
@@ -808,7 +870,7 @@ class QuartusWriter(Writer):
         h_file.write(self.__get_table_header(table_name, table_size))
 
         sep = ''
-        for i in range(table_size):
+        for i in range(int(table_size)):
             in_val = i * (MAX_VALUE - MIN_VALUE) / float(table_size) + (MAX_VALUE - MIN_VALUE) / (
                         float(table_size) * 2) + MIN_VALUE
             real_val = 1.0 / (1 + np.exp(-in_val))
@@ -824,7 +886,7 @@ class QuartusWriter(Writer):
         MIN_VALUE = 0
 
         table_name = 'tanh_table'
-        table_size = self.__get_table_size(model, 'dense_tanh')
+        table_size = self.__get_table_size(model, 'tanh')
 
         h_file = open('{}/{}.tb'.format(path, table_name), 'w')
         h_file.write(self.__get_table_header(table_name, table_size))
@@ -859,6 +921,8 @@ class QuartusWriter(Writer):
         h_file.close()
 
     def __write_softsign_table(self, model, path):
+        MAX_VALUE = 8
+        MIN_VALUE = 0
         table_name = 'softsign_table'
         table_size = self.__get_table_size(model, 'softsign')
 
@@ -867,10 +931,13 @@ class QuartusWriter(Writer):
 
         sep = ''
         for i in range(table_size):
-            in_val = 2 * 8.0 * (i - float(table_size) / 2.0) / float(table_size)
+
+            in_val = i * (MAX_VALUE-MIN_VALUE)/float(table_size) + (MAX_VALUE-MIN_VALUE)/(float(table_size)*2) + MIN_VALUE
+
             real_val = in_val / (np.fabs(in_val) + 1.)
-            h_file.write(sep + str(real_val))
-            sep = ", "
+            if(real_val >= 0):
+                h_file.write(sep + str(real_val))
+                sep = ", "
 
         h_file.write('};\n')
         h_file.close()
@@ -918,12 +985,19 @@ class QuartusWriter(Writer):
                     except:
                         # FixedPrecisionType wasn't correctly stored in layer attributes, use default values
                         pass
+                    if fp_signed is False:
+                        raise Exception('Softmax types need to be signed')
 
         sep = ''
         N = ceil_log2(table_size)
         for i in range(table_size):
             f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
-            f.set_msb_bits(uint_to_binary(i, N))
+            b = uint_to_binary(i, N)
+            if i == 0:
+                b.insert(0, 0)
+            else:
+                b.insert(0, 1)
+            f.set_msb_bits(b)
             real_val = f.exp_float()
             h_file.write(sep + str(real_val))
             sep = ", "
@@ -957,19 +1031,23 @@ class QuartusWriter(Writer):
                     except:
                         # FixedPrecisionType wasn't correctly stored in layer attributes, use default values
                         pass
+                    if fp_signed is False:
+                        raise Exception('Softmax types need to be signed')
 
         sep = ''
         N = ceil_log2(table_size)
         for i in range(table_size):
             f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
-            f.set_msb_bits(uint_to_binary(i, N))
+            b = uint_to_binary(i, N)
+            b.insert(0, 0)
+            f.set_msb_bits(b)
             real_val = f.inv_float()
             h_file.write(sep + str(real_val))
             sep = ", "
 
         h_file.write('};\n')
         h_file.close()
-
+        
     def __write_exp_table_latency(self, model, path):
         table_name = 'exp_table_latency'
         table_size = self.__get_table_size(model, 'softmax')

@@ -350,3 +350,10 @@ class ExponentWeightVariable(WeightVariable):
         return '{%d, %s}' % (value[0], value_fmt)
 
     next = __next__
+
+class Source(object):
+    def __init__(self, code):
+        self.code = code
+    
+    def __str__(self):
+        return str(self.code)

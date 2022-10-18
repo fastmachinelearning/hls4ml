@@ -501,52 +501,38 @@ class VivadoWriter(Writer):
         fout.close()
 
     def write_build_script(self, model):
-        ###################
-        # build_prj.tcl
-        ###################
 
         filedir = os.path.dirname(os.path.abspath(__file__))
-
-        f = open(os.path.join(filedir,'../templates/vivado/build_prj.tcl'),'r')
-        fout = open('{}/build_prj.tcl'.format(model.config.get_output_dir()),'w')
-
-        for line in f.readlines():
-
-            line = line.replace('myproject',model.config.get_project_name())
-
-            if 'set_part {xcku115-flvb2104-2-i}' in line:
-                line = 'set_part {{{}}}\n'.format(model.config.get_config_value('Part'))
-            elif 'create_clock -period 5 -name default' in line:
-                line = 'create_clock -period {} -name default\n'.format(model.config.get_config_value('ClockPeriod'))
-
-            fout.write(line)
-        f.close()
-        fout.close()
 
         ###################
         # project.tcl
         ###################
         f = open('{}/project.tcl'.format(model.config.get_output_dir()), 'w')
-        f.write('variable myproject\n')
-        f.write('set myproject "{}"\n'.format(model.config.get_project_name()))
+        f.write('variable project_name\n')
+        f.write('set project_name "{}"\n'.format(model.config.get_project_name()))
         f.write('variable backend\n')
         f.write('set backend "vivado"\n')
+        f.write('variable part\n')
+        f.write('set part "{}"\n'.format(model.config.get_config_value('Part')))
+        f.write('variable clock_period\n')
+        f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
         f.close()
+
+        ###################
+        # build_prj.tcl
+        ###################
+
+        srcpath = os.path.join(filedir,'../templates/vivado/build_prj.tcl')
+        dstpath = '{}/build_prj.tcl'.format(model.config.get_output_dir())
+        copyfile(srcpath, dstpath)
 
         ###################
         # vivado_synth.tcl
         ###################
 
-        f = open(os.path.join(filedir,'../templates/vivado/vivado_synth.tcl'),'r')
-        fout = open('{}/vivado_synth.tcl'.format(model.config.get_output_dir()),'w')
-        for line in f.readlines():
-            line = line.replace('myproject', model.config.get_project_name())
-            if '-part' in line:
-                line = 'synth_design -top {} -part {}\n'.format(model.config.get_project_name(), model.config.get_config_value('Part'))
-
-            fout.write(line)
-        f.close()
-        fout.close()
+        srcpath = os.path.join(filedir,'../templates/vivado/vivado_synth.tcl')
+        dstpath = '{}/vivado_synth.tcl'.format(model.config.get_output_dir())
+        copyfile(srcpath, dstpath)
 
         ###################
         # build_lib.sh
@@ -606,6 +592,29 @@ class VivadoWriter(Writer):
             dstpath = '{}/firmware/{}'.format(model.config.get_output_dir(), dst)
             copyfile(srcpath, dstpath)
 
+    def write_generated_code(self, model):
+        ###################
+        ## nnet_code_gen.h
+        ###################
+
+        path = '{}/firmware/nnet_utils/nnet_code_gen.h'.format(model.config.get_output_dir())
+        f = open(path,'r')
+        contents = f.readlines()
+        f.close()
+        f = open(path,'w')
+
+        for line in contents:
+            if '//hls4ml insert code' in line:
+                newline = line
+                for layer in model.get_layers():
+                    for generated_code in layer.code.values():
+                        newline += str(generated_code)
+            else:
+                newline = line
+            f.write(newline)
+        f.close()
+
+
     def write_yml(self, model):
         ###################
         # YAML config file
@@ -645,6 +654,7 @@ class VivadoWriter(Writer):
         self.write_bridge(model)
         self.write_build_script(model)
         self.write_nnet_utils(model)
+        self.write_generated_code(model)
         self.write_yml(model)
         self.write_tar(model)
         print('Done')

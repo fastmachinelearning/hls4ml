@@ -6,7 +6,7 @@ from hls4ml.model.types import TensorVariable, WeightVariable, CompressedWeightV
 from hls4ml.model.types import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType
 from hls4ml.model.types import find_minimum_width
 
-from hls4ml.model.attributes import Attribute, TypeMapping, VariableMapping, WeightAttribute, TypeAttribute, ChoiceAttribute, WeightMapping
+from hls4ml.model.attributes import Attribute, CodeMapping, TypeMapping, VariableMapping, WeightAttribute, TypeAttribute, ChoiceAttribute, WeightMapping
 from hls4ml.model.attributes import AttributeDict, AttributeMapping
 
 # TODO move this to some utility module
@@ -57,6 +57,7 @@ class Layer(object):
         self.weights = WeightMapping(self.attributes)
         self.variables = VariableMapping(self.attributes)
         self.types = TypeMapping(self.attributes)
+        self.code = CodeMapping(self.attributes)
 
         accum_t = NamedType(*reversed(self.model.config.get_precision(self, 'accum')))
         self.set_attr('accum_t', accum_t)
@@ -608,8 +609,6 @@ class GlobalPooling2D(Layer):
     _expected_attributes = [
         Attribute('in_height'),
         Attribute('in_width'),
-        Attribute('out_height'),
-        Attribute('out_width'),
         Attribute('n_filt'),
 
         ChoiceAttribute('pool_op', ['Max', 'Average'])
