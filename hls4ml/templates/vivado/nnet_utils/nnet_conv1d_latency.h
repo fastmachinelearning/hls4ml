@@ -30,7 +30,7 @@ void conv_1d_latency_cl(
     #pragma HLS ARRAY_PARTITION variable=biases complete
 
     // Limit multipliers to control parallelization
-    #pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::multiplier_limit
+    #pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::mult_config::multiplier_limit
 
     PartitionLoop:
     for (int i_part = 0; i_part < CONFIG_T::n_partitions; i_part++) {
