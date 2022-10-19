@@ -1,16 +1,11 @@
-from hls4ml.converters.keras_to_hls import keras_to_hls
 import pytest
 import hls4ml
 import numpy as np
-from sklearn.metrics import accuracy_score
-import tensorflow as tf
-from tensorflow.keras.models import model_from_json, Sequential
+from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv1D
-import yaml
 from pathlib import Path
 
 test_root_path = Path(__file__).parent
-example_model_path = (test_root_path / '../../example-models').resolve()
 
 @pytest.fixture(scope='module')
 def data():
