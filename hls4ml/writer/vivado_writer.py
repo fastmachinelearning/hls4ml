@@ -516,6 +516,8 @@ class VivadoWriter(Writer):
         f.write('set part "{}"\n'.format(model.config.get_config_value('Part')))
         f.write('variable clock_period\n')
         f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
+        f.write('variable clock_uncertainty\n')
+        f.write('set clock_uncertainty {}\n'.format(model.config.get_config_value('ClockUncertainty', '12.5%')))
         f.close()
 
         ###################

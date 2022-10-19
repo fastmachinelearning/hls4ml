@@ -166,7 +166,7 @@ config_compile -name_max_length 80
 set_part $part
 config_schedule -enable_dsp_full_reg=false
 create_clock -period $clock_period -name default
-set_clock_uncertainty 12.5% default
+set_clock_uncertainty $clock_uncertainty default
 
 
 if {$opt(csim)} {
