@@ -22,4 +22,7 @@ class ValidateStrategy(OptimizerPass):
         return is_resource_layer and is_resource_strategy
 
     def transform(self, model, node):
-        print(f'WARNING: "Resource" strategy in "{node.name}" ({node.class_name}) may have suboptimal QoR in Vitis backend due to use of "urem" cores. Consider switching to "Latency" strategy.')
+        n_in, _ = model.config.backend.get_layer_mult_size(node)
+        rf = node.get_attr('reuse_factor')
+        if rf > n_in and rf % n_in > 0:
+            print(f'WARNING: "Resource" strategy in "{node.name}" ({node.class_name}) may have suboptimal QoR in Vitis backend due to use of "urem" cores. Consider using a different ReuseFactor or switching to "Latency" strategy.')
