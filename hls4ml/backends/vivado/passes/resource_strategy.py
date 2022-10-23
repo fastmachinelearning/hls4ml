@@ -1,8 +1,7 @@
 import numpy as np
 
-from hls4ml.model.layers import GRU, LSTM, Conv1D, Conv2D, Dense, SeparableConv1D, SeparableConv2D
+from hls4ml.model.layers import GRU, LSTM, Conv1D, Conv2D, Dense, SeparableConv1D, SeparableConv2D, MultiHeadAttention
 from hls4ml.model.optimizer import OptimizerPass
-
 
 class ApplyResourceStrategy(OptimizerPass):
     '''Transposes the weights to use the dense_resource matrix multiply routine'''
@@ -40,6 +39,11 @@ class ApplyResourceStrategy(OptimizerPass):
         elif isinstance(node, (LSTM, GRU)):
             node.weights['weight'].data = np.transpose(node.weights['weight'].data)
             node.weights['recurrent_weight'].data = np.transpose(node.weights['recurrent_weight'].data)
+        elif isinstance(node, (MultiHeadAttention)):               
+            node.weights['key_weight'].data   = np.transpose(node.weights['key_weight'].data,   axes=[0, 2, 1])
+            node.weights['query_weight'].data = np.transpose(node.weights['query_weight'].data, axes=[0, 2, 1])
+            node.weights['value_weight'].data = np.transpose(node.weights['value_weight'].data, axes=[0, 2, 1])
+            node.weights['attention_output_weight'].data = np.transpose(node.weights['attention_output_weight'].data, axes=[2, 0, 1])
         else:
             raise Exception(f'Unexpected layer {node.class_name} with resource strategy')
 

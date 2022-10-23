@@ -117,7 +117,7 @@ void multiheadattention(
     data_T dense_in[CONFIG_T::seq_len][CONFIG_T::num_heads * CONFIG_T::head_dim_value];
 #pragma HLS ARRAY_PARTITION variable=v_row complete dim=0
 #pragma HLS ARRAY_PARTITION variable=dense_in complete dim=2
-#pragma HLS ARRAY_RESHAPE variable=v_proj2 complete dim=1
+#pragma HLS ARRAY_RESHAPE variable=v_proj complete dim=1
 
     // linear projection
     dense_for_each_head: for (int i=0; i < CONFIG_T::num_heads; ++i){
