@@ -362,11 +362,19 @@ def convert_from_symbolic_expression(expr, n_symbols=None, output_dir='my-hls-te
                              output_data_tb=None, precision='ap_fixed<16,6>', **kwargs):
     import sympy
 
-    if not isinstance(expr, sympy.Expr):
-        expr = sympy.parsing.sympy_parser.parse_expr(expr)
+    if not isinstance(expr, (list, set)):
+        expr = [expr]
+    for i, e in enumerate(expr):
+        if not isinstance(e, sympy.Expr):
+            sympy_expr = sympy.parsing.sympy_parser.parse_expr(e)
+            expr[i] = sympy_expr
 
     if n_symbols is None:
-        n_symbols = max([int(d.name.replace('x', '')) for d in expr.free_symbols]) + 1
+        n_symbols = 0
+        for e in expr:
+            symbols = max([int(d.name.replace('x', '')) for d in expr.free_symbols]) + 1
+            if symbols > n_symbols:
+                n_symbols = symbols
 
     layer_list = []
 
@@ -379,7 +387,7 @@ def convert_from_symbolic_expression(expr, n_symbols=None, output_dir='my-hls-te
     expr_layer = {}
     expr_layer['name'] = 'expr1'
     expr_layer['class_name'] = 'SymbolicExpression'
-    expr_layer['expression'] = str(expr)
+    expr_layer['expression'] = [str(e) for e in expr]
     expr_layer['n_symbols'] = n_symbols
     layer_list.append(expr_layer)
 
@@ -390,7 +398,7 @@ def convert_from_symbolic_expression(expr, n_symbols=None, output_dir='my-hls-te
         **kwargs
     )
 
-    config['Expression'] = str(expr)
+    #config['Expression'] = str(expr)
     config['NSymbols'] = n_symbols
     config['InputData'] = input_data_tb
     config['OutputPredictions'] = output_data_tb

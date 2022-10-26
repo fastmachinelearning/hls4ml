@@ -8,7 +8,7 @@ from sympy.core.numbers import Integer
 
 # Expression templates
 
-expr_function_template = 'y[0] = {expr_str};'
+expr_function_template = 'y[{y_index}] = {expr_str};'
 
 expr_include_list = ['hls_math.h']
 
@@ -46,5 +46,11 @@ class ExpressionFunctionTemplate(FunctionCallTemplate):
     
     def format(self, node):
         params = self._default_function_params(node)
-        params['expr_str'] = HLSCodePrinter().doprint(node.attributes['expression'])
-        return self.template.format(**params)
+
+        fn_templates = []
+        for i, expr in enumerate(node.attributes['expression']):
+            params['expr_str'] = HLSCodePrinter().doprint(expr)
+            params['y_index'] = str(i)
+            fn_templates.append(self.template.format(**params))
+
+        return fn_templates

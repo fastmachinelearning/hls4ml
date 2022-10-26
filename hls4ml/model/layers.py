@@ -1149,12 +1149,12 @@ class GarNetStack(GarNet):
 
 class SymbolicExpression(Layer):
     _expected_attributes = [
-        Attribute('expression', value_type=str),
+        Attribute('expression', value_type=list),
         Attribute('n_symbols'),
     ]
 
     def initialize(self):
-        self.add_output_variable([1], ['N_OUTPUTS_{}'.format(self.index)], var_name='y')
+        self.add_output_variable([len(self.get_attr('expression'))], ['N_OUTPUTS_{}'.format(self.index)], var_name='y')
 
 layer_map = {
     'Input'                  : Input,
