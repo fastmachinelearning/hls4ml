@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - uses: ammaraskar/sphinx-action@master
+    - uses: ferdnyc/sphinx-action@controlled-apt
       with:
         docs-folder: "docs/"
-        pre-build-command: apt-get install --yes git
+        install: git
