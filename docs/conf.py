@@ -14,14 +14,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../'))
 
-import datetime
-def get_version(rel_path):
-    for line in open(rel_path):
-        if line.startswith('__version__'):
-            delim = '"' if '"' in line else "'"
-            return line.split(delim)[1]
-    else:
-        raise RuntimeError("Unable to find version string.")
+from setuptools_scm import get_version
 
 # -- Project information -----------------------------------------------------
 
@@ -30,7 +23,7 @@ copyright = str(datetime.datetime.now().year)+', Fast Machine Learning Lab'
 author = 'Fast Machine Learning Lab'
 
 # The full version, including alpha/beta/rc tags
-release = get_version("../hls4ml/_version.py")
+release = get_version()
 
 # -- General configuration ---------------------------------------------------
 
