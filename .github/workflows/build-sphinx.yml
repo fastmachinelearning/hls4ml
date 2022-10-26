@@ -11,10 +11,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - uses: ferdnyc/sphinx-action@controlled-apt
+    - uses: erpcya/sphinx-action@feature/#update-sphinx-base-image
       with:
         docs-folder: "docs/"
-        install: git
+        pre-build-command: "apt -y install git"
     - name: Commit Documentation Changes
       run: |
         git clone https://github.com/fastmachinelearning/hls4ml.git --branch gh-pages --single-branch gh-pages

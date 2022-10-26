@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
-    - uses: ferdnyc/sphinx-action@controlled-apt
+    - uses: actions/checkout@v1    
+    - uses: erpcya/sphinx-action@feature/#update-sphinx-base-image
       with:
         docs-folder: "docs/"
-        install: git
+        pre-build-command: "apt -y install git"
