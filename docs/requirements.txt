@@ -1,0 +1,4 @@
+sphinx>=3.2.1
+sphinx_rtd_theme
+toposort>=1.5.0
+-e .[profiling]
