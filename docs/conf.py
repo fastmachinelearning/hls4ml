@@ -30,7 +30,7 @@ copyright = str(datetime.datetime.now().year)+', Fast Machine Learning Lab'
 author = 'Fast Machine Learning Lab'
 
 # The full version, including alpha/beta/rc tags
-release = get_version("../hls4ml/__init__.py")
+release = get_version("../hls4ml/_version.py")
 
 # -- General configuration ---------------------------------------------------
 
