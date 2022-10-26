@@ -14,7 +14,7 @@ jobs:
     - uses: ammaraskar/sphinx-action@master
       with:
         docs-folder: "docs/"
-        pre-build-command: apt install --yes git
+        pre-build-command: apt-get install --yes git
     - name: Commit Documentation Changes
       run: |
         git clone https://github.com/fastmachinelearning/hls4ml.git --branch gh-pages --single-branch gh-pages
