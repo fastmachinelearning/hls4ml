@@ -60,6 +60,7 @@ class QuartusBackend(FPGABackend):
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
         optimization_passes = [
+            'quartus:remove_final_reshape',
             'quartus:optimize_pointwise_conv',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
@@ -254,6 +255,8 @@ class QuartusBackend(FPGABackend):
         # - Winograd - use Winograd, if possible
         layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'combination'))
 
+        layer.set_attr('n_partitions', 1) #TODO Not used yet as there is no codegen implementation of CNNs for Quartus backend
+
     @layer_optimizer(Conv2D)
     def init_conv2d(self, layer):
         # This can happen if we assign weights of Dense layer to 1x1 Conv2D
@@ -280,6 +283,8 @@ class QuartusBackend(FPGABackend):
         # - im2col - specifically use im2col
         # - Winograd - use Winograd, if possible
         layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'combination'))
+
+        layer.set_attr('n_partitions', 1) #TODO Not used yet as there is no codegen implementation of CNNs for Quartus backend
     
     @layer_optimizer(LSTM)
     def init_lstm(self, layer):
