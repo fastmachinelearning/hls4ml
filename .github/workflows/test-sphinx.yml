@@ -11,7 +11,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1    
-    - uses: erpcya/sphinx-action@feature/#update-sphinx-base-image
+    - uses: jmduarte/sphinx-action@main
       with:
         docs-folder: "docs/"
-        pre-build-command: "apt -y install git"
