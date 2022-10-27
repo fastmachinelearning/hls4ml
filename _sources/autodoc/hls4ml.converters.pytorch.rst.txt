@@ -28,7 +28,6 @@ hls4ml.converters.pytorch.pooling module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

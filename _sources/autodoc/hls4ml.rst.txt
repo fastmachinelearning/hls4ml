@@ -5,6 +5,7 @@ Subpackages
 -----------
 
 .. toctree::
+   :maxdepth: 4
 
    hls4ml.backends
    hls4ml.converters

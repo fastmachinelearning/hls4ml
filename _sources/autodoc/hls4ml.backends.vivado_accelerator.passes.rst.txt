@@ -12,7 +12,6 @@ hls4ml.backends.vivado\_accelerator.passes.fifo\_depth\_optimization module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

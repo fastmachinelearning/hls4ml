@@ -5,6 +5,7 @@ Subpackages
 -----------
 
 .. toctree::
+   :maxdepth: 4
 
    hls4ml.converters.keras
    hls4ml.converters.onnx
@@ -52,7 +53,6 @@ hls4ml.converters.utils module
    :members:
    :undoc-members:
    :show-inheritance:
-
 
 Module contents
 ---------------

@@ -92,7 +92,6 @@ hls4ml.backends.quartus.passes.transform\_types module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

@@ -5,6 +5,7 @@ Subpackages
 -----------
 
 .. toctree::
+   :maxdepth: 4
 
    hls4ml.model.flow
    hls4ml.model.optimizer
@@ -51,7 +52,6 @@ hls4ml.model.types module
    :members:
    :undoc-members:
    :show-inheritance:
-
 
 Module contents
 ---------------

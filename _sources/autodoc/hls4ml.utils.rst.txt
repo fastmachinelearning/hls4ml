@@ -36,7 +36,6 @@ hls4ml.utils.plot module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

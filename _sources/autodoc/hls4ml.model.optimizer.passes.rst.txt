@@ -68,7 +68,6 @@ hls4ml.model.optimizer.passes.transpose\_opt module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

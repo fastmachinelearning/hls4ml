@@ -36,7 +36,6 @@ hls4ml.writer.writers module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

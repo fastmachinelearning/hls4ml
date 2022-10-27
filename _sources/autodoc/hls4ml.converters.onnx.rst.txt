@@ -44,7 +44,6 @@ hls4ml.converters.onnx.reshape module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

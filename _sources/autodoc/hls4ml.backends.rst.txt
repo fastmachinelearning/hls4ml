@@ -5,6 +5,7 @@ Subpackages
 -----------
 
 .. toctree::
+   :maxdepth: 4
 
    hls4ml.backends.fpga
    hls4ml.backends.quartus
@@ -29,7 +30,6 @@ hls4ml.backends.template module
    :members:
    :undoc-members:
    :show-inheritance:
-
 
 Module contents
 ---------------

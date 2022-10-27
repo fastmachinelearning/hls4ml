@@ -12,7 +12,6 @@ hls4ml.model.flow.flow module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

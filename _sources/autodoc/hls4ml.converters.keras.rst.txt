@@ -84,7 +84,6 @@ hls4ml.converters.keras.reshaping module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

@@ -5,6 +5,7 @@ Subpackages
 -----------
 
 .. toctree::
+   :maxdepth: 4
 
    hls4ml.backends.fpga.passes
 
@@ -34,7 +35,6 @@ hls4ml.backends.fpga.fpga\_types module
    :members:
    :undoc-members:
    :show-inheritance:
-
 
 Module contents
 ---------------

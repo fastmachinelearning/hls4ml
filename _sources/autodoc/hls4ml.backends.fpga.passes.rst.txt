@@ -44,6 +44,13 @@ hls4ml.backends.fpga.passes.final\_reshape module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.fpga.passes.remove\_softmax module
+--------------------------------------------------
+
+.. automodule:: hls4ml.backends.fpga.passes.remove_softmax
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Module contents
 ---------------

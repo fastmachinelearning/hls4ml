@@ -5,6 +5,7 @@ Subpackages
 -----------
 
 .. toctree::
+   :maxdepth: 4
 
    hls4ml.backends.vivado.passes
 
@@ -18,7 +19,6 @@ hls4ml.backends.vivado.vivado\_backend module
    :members:
    :undoc-members:
    :show-inheritance:
-
 
 Module contents
 ---------------
