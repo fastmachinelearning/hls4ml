@@ -7,8 +7,6 @@ from pathlib import Path
 
 test_root_path = Path(__file__).parent
 
-test_root_path = Path('/tmp')
-
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 def test_keras_h5_loader(backend):
@@ -20,14 +18,15 @@ def test_keras_h5_loader(backend):
 
     hls_config = hls4ml.utils.config_from_keras_model(model, granularity='name')
 
-    config = {'OutputDir': f'KerasH5_loader_test_{backend}',
-              'ProjectName': f'KerasH5_loader_test_{backend}',
-              'Backend': backend,
-              'ClockPeriod': 25.0,
-              'IOType': 'io_parallel',
-              'HLSConfig': hls_config,
-              'KerasH5': str(test_root_path / f'KerasH5_loader_test_{backend}.h5'),
-              'output_dir': str(test_root_path / f'KerasH5_loader_test_{backend}')}
+    config = {
+        'OutputDir': str(test_root_path / f'hls4mlprj_KerasH5_loader_test_{backend}'),
+        'ProjectName': f'KerasH5_loader_test_{backend}',
+        'Backend': backend,
+        'ClockPeriod': 25.0,
+        'IOType': 'io_parallel',
+        'HLSConfig': hls_config,
+        'KerasH5': str(test_root_path / f'hls4mlprj_KerasH5_loader_test_{backend}/model.h5'),
+    }
 
     model.save(config['KerasH5'])
     hls_model = hls4ml.converters.keras_to_hls(config)
