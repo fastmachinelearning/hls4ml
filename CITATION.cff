@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "Please cite the following works when using this software."
+type: software
+authors:
+- given-names: "FastML Team"
+title: "hls4ml"
+doi: 10.5281/zenodo.1201549
+repository-code: "https://github.com/fastmachinelearning/hls4ml"
+url: "https://fastmachinelearning.org/hls4ml"
+keywords:
+  - python
+  - machine-learning
+  - FPGA
+  - physics
+  - tensorflow
+  - pytorch
+  - onnx
+  - qonnx
+license: "Apache-2.0"
+abstract: |
+  hls4ml is an open-source software-hardware codesign workflow 
+  to interpret and translate machine learning algorithms for 
+  implementations in hardware, including FPGAs and ASICs.

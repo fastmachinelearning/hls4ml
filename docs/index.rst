@@ -55,12 +55,11 @@ If you use this software in a publication, please cite the software
 ..  code-block:: bibtex
 
     @software{vloncar_2021_5680908,
-    author       = {Loncar, Vladimir and others},
-    title        = {fastmachinelearning/hls4ml: coris},
+    author       = {{FastML Team}},
+    title        = {fastmachinelearning/hls4ml},
     year         = 2021,
     publisher    = {Zenodo},
-    version      = {v0.6.0},
-    doi          = {10.5281/zenodo.5680908},
+    doi          = {10.5281/zenodo.1201549},
     url          = {https://github.com/fastmachinelearning/hls4ml}
     }
 
@@ -100,6 +99,17 @@ Additionally, if you use specific features developed in later papers, please cit
         number = "4",
         pages = "045015",
         year = "2021"
+    }
+    @article{Ghielmetti:2022ndm,
+        author = "Ghielmetti, Nicol\`{o} and others",
+        title = "{Real-time semantic segmentation on FPGAs for autonomous vehicles with hls4ml}",
+        eprint = "2205.07690",
+        archivePrefix = "arXiv",
+        primaryClass = "cs.CV",
+        reportNumber = "FERMILAB-PUB-22-435-PPD",
+        doi = "10.1088/2632-2153/ac9cb5",
+        journal ="Mach. Learn. Sci. Tech.",
+        year = "2022"
     }
 
 binary/ternary networks:
