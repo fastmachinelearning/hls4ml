@@ -44,8 +44,8 @@ void zeropad1d_cl(stream<data_T> &data, stream<res_T> &res) {
 
 template<class data_T, class res_T, typename CONFIG_T>
 void zeropad2d_cl(stream<data_T> &data, stream<res_T> &res) {
+    PadTop:
     #pragma loop_coalesce 2
-    PadTop: 
     for (int i = 0; i < CONFIG_T::pad_top; i++) {
         PadTopWidth: 
         for (int j = 0; j < CONFIG_T::out_width; j++) {
@@ -53,8 +53,8 @@ void zeropad2d_cl(stream<data_T> &data, stream<res_T> &res) {
         }
     }
 
+    PadMain:
     #pragma loop_coalesce 2
-    PadMain: 
     for (int i = 0; i < CONFIG_T::in_height; i++) {
         
         PadLeft: 
