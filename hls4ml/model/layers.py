@@ -697,7 +697,8 @@ class PReLU(Activation):
 
 class Softmax(Activation):
     _expected_attributes = [
-        ChoiceAttribute('implementation', ['latency', 'stable', 'legacy'], default='stable')
+        ChoiceAttribute('implementation', ['latency', 'stable', 'argmax', 'legacy'], default='stable'),
+        Attribute('skip', value_type=bool, default=False),
     ]
 
     def initialize(self):
