@@ -62,7 +62,7 @@ If you use this software in a publication, please cite the software
 ```bibtex
 @software{vloncar_2021_5680908,
   author       = {{FastML Team}},
-  title        = {fastmacheinelearning/hls4ml},
+  title        = {fastmachinelearning/hls4ml},
   year         = 2021,
   publisher    = {Zenodo},
   doi          = {10.5281/zenodo.1201549},
