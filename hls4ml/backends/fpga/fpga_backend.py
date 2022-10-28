@@ -289,8 +289,10 @@ class FPGABackend(Backend):
 
         # if the standard min_W is smaller than the in_W, then have to do alternate
         # "narrow" encoding.
+        narrow = False
         if min_W > in_W:
             min_W = in_W
+            narrow = True
 
         min_oW = int((min_W - kernel_size) // stride + 1)
 
@@ -312,7 +314,7 @@ class FPGABackend(Backend):
         for i in range(min_W):
             windows_int.append((int(''.join(str(p) for p in reversed(windows_bin[i])), 2)))
 
-        return (min_W, windows_int)
+        return (min_W, windows_int, narrow)
 
     def compute_conv2d_instructions(self, in_H, in_W, in_C, kernel_size=3, stride=1, pad=0):
 
@@ -340,10 +342,20 @@ class FPGABackend(Backend):
         else:
             min_H = (math.ceil(stride_height / kernel_height) - 1) * stride_height + kernel_height
         
+        narrow_H = False
+        if min_H > in_H:
+            min_H = in_H
+            narrow_H = True
+
         if kernel_width >= stride_width:
             min_W = (math.ceil(kernel_width / stride_width) - 1) * stride_width + kernel_width
         else:
             min_W = (math.ceil(stride_width / kernel_width) - 1) * stride_width + kernel_width
+
+        narrow_W = False
+        if min_W > in_W:
+            min_W = in_W
+            narrow_W = True
 
         min_oH = int((min_H - kernel_height) // stride_height + 1)
         min_oW = int((min_W - kernel_width) // stride_width + 1)
@@ -387,7 +399,7 @@ class FPGABackend(Backend):
             for j in range(min_W):
                 windows_int.append((int(''.join(str(p) for p in reversed(windows_bin[i * min_W + j])), 2)))
 
-        return (min_H, min_W, windows_int)
+        return (min_H, min_W, windows_int, narrow_H, narrow_W)
 
     @model_optimizer()
     def write_hls(self, model):

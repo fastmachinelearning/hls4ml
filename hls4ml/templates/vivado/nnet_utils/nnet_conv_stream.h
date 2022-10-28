@@ -57,21 +57,30 @@ unsigned scale_index_K_lt_S(const unsigned idx) {
     return S - K + (idx - (S - K)) % S;
 }
 
-template<unsigned K, unsigned S, unsigned W, unsigned min_width>
-unsigned scale_index(const unsigned idx) {
-    #pragma HLS INLINE
-    
-    // althernate version when W == min_width
-    if (W == min_width) {
+template<unsigned K, unsigned S, unsigned W>
+class scale_index_regular {
+    public:
+    static unsigned scale_index(const unsigned idx) {
+        #pragma HLS INLINE
+
+        if (K >= S) {
+            return scale_index_K_gte_S<K, S, W>(idx);
+        } else {
+            return scale_index_K_lt_S<K, S, W>(idx);
+        }
+    }
+};
+
+
+template<unsigned K, unsigned S, unsigned W>
+class scale_index_narrow {
+    public:
+    static unsigned scale_index(const unsigned idx) {
+        #pragma HLS INLINE
         return idx;
     }
+};
 
-    if (K >= S) {
-        return scale_index_K_gte_S<K, S, W>(idx);
-    } else {
-        return scale_index_K_lt_S<K, S, W>(idx);
-    }
-}
 
 template<class data_T, class res_T, typename CONFIG_T>
 void mult_buffer(
@@ -162,7 +171,7 @@ void kernel_shift_1d(
 ) {
     #pragma HLS inline
     #pragma HLS PIPELINE II = 1
-    
+
     // Shift kernel_window by one step to the left (manual shift operation)
     static const int filt_width = CONFIG_T::filt_width - 1;
     KernelShiftWidth: for (int i_iw = 0; i_iw < filt_width; i_iw++) {
@@ -187,7 +196,7 @@ void kernel_shift_2d(
     typename data_T::value_type kernel_window[CONFIG_T::filt_width * CONFIG_T::filt_height * CONFIG_T::n_chan]
 ) {
     #pragma HLS inline
-        
+
     // Shift kernel_window by one step to the left (manual shift operation)
     static const int filt_width = CONFIG_T::filt_width - 1;
     KernelShiftWidth: for (int i_iw = 0; i_iw < filt_width; i_iw++) {
@@ -211,11 +220,11 @@ void kernel_shift_2d(
 }
 
 template <class data_T, typename CONFIG_T>
-void shift_line_buffer(const data_T& in_elem, 
+void shift_line_buffer(const data_T& in_elem,
                     ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[MAX(CONFIG_T::filt_height - 1,1)][CONFIG_T::n_chan],
                     typename data_T::value_type kernel_window[CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan]
 ) {
-    
+
     #pragma HLS PIPELINE
 
     // Temporary buffer for popped (shifted) elements
@@ -275,7 +284,7 @@ void compute_output_buffer_2d(
 
     // Check to see if we have a full kernel
     if ( (sX - lShiftX) == 0 && (sY - lShiftY) == 0 && pY > lShiftY - 1 && pX > lShiftX - 1) {
-        
+
         // Dense multiply
         #pragma HLS INLINE region
         if (CONFIG_T::strategy == nnet::latency) {
@@ -297,20 +306,20 @@ void compute_output_buffer_2d(
     // Counter Housekeeping
     if (pX + 1 == CONFIG_T::in_width)  // Includes padding, end of line (padded)
     {
-        pX = 0; 
+        pX = 0;
         sX = 0;
         if (pY + 1 == CONFIG_T::in_height) {  // Reached bottom of image
-            pY = 0; 
+            pY = 0;
             sY = 0;
         } else {
             pY = pY + 1;
             // Update stride (threshold) ? subtract stride : increment stride
-            sY = ((sY - lShiftY) == 0) ? sY - CONFIG_T::stride_height + 1 : sY + 1; 
+            sY = ((sY - lShiftY) == 0) ? sY - CONFIG_T::stride_height + 1 : sY + 1;
         }
     } else {
         pX = pX + 1;
         // Update stride (threshold) ? subtract stride : increment stride
-        sX = ((sX - lShiftX) == 0) ? sX - CONFIG_T::stride_width + 1 : sX + 1; 
+        sX = ((sX - lShiftX) == 0) ? sX - CONFIG_T::stride_width + 1 : sX + 1;
     }
 }
 
@@ -345,7 +354,7 @@ void compute_output_buffer_1d(
 
     // Check to see if we have a full kernel
     if ( (sX - lShiftX) == 0 && pX > lShiftX - 1 ) {
-        
+
         // Dense multiply
         #pragma HLS INLINE region
         if (CONFIG_T::strategy == nnet::latency) {
@@ -372,7 +381,7 @@ void compute_output_buffer_1d(
     } else {
         pX = pX + 1;
         // Update stride (threshold) ? subtract stride : increment stride
-        sX = ((sX - lShiftX) == 0) ? sX - CONFIG_T::stride_width + 1 : sX + 1; 
+        sX = ((sX - lShiftX) == 0) ? sX - CONFIG_T::stride_width + 1 : sX + 1;
     }
 }
 

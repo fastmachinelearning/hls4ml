@@ -17,7 +17,7 @@ class GenerateConvStreamingInstructions(OptimizerPass):
     
     def _generate_1d_instructions(self, node):
         if node.model.config.get_config_value('IOType') == 'io_stream':
-            min_w, instructions = node.model.config.backend.compute_conv1d_instructions(
+            min_w, instructions, narrow = node.model.config.backend.compute_conv1d_instructions(
                 node.get_input_variable().shape[0],
                 node.get_input_variable().shape[1],
                 node.get_attr('filt_width'),
@@ -25,13 +25,16 @@ class GenerateConvStreamingInstructions(OptimizerPass):
             instructions_str = ','.join(str(i) for i in instructions)
             node.set_attr('min_width', min_w)
             node.set_attr('instructions', instructions_str)
+            node.set_attr('narrow', narrow)
         else:
+            # these are unused; just put dummy values
             node.set_attr('min_width', node.get_attr('in_width'))
             node.set_attr('instructions', '0')
+            node.set_attr('narrow', True)
 
     def _generate_2d_instructions(self, node):
         if node.model.config.get_config_value('IOType') == 'io_stream':
-            min_h, min_w, instructions = node.model.config.backend.compute_conv2d_instructions(
+            min_h, min_w, instructions, narrow_h, narrow_w= node.model.config.backend.compute_conv2d_instructions(
                 node.get_input_variable().shape[0],
                 node.get_input_variable().shape[1],
                 node.get_input_variable().shape[2],
@@ -41,7 +44,11 @@ class GenerateConvStreamingInstructions(OptimizerPass):
             node.set_attr('min_height', min_h)
             node.set_attr('min_width', min_w)
             node.set_attr('instructions', instructions_str)
+            node.set_attr('narrow_h', narrow_h)
+            node.set_attr('narrow_w', narrow_w)
         else:
             node.set_attr('min_height', node.get_attr('in_height'))
             node.set_attr('min_width', node.get_attr('in_width'))
             node.set_attr('instructions', '0')
+            node.set_attr('narrow_h', True)
+            node.set_attr('narrow_w', True)

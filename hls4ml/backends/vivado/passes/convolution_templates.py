@@ -41,6 +41,8 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
     typedef {config_t} mult_config;
+    template<unsigned K, unsigned S, unsigned W>
+    using scale_index = nnet::{scale_index_type}<K, S, W>;
 }};
 const ap_uint<config{index}::filt_width> config{index}::pixels[] = {{{instructions}}};\n"""
 
@@ -53,13 +55,17 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         super().__init__(Conv1D)
         self.template = conv1d_config_template
         self.mult_template = conv_mult_config_template
-    
+
     def format(self, node):
         params = self._default_config_params(node)
         params['dilation'] = node.get_attr('dilation', 1)
         params['nzeros'] = node.get_weights('weight').nzeros
 
         params['config_t'] = 'config{}_mult'.format(node.index)
+        if node.get_attr("narrow"):
+            params['scale_index_type'] = 'scale_index_narrow'
+        else:
+            params['scale_index_type'] = 'scale_index_regular'
         conv_config = self.template.format(**params)
 
         mult_params = self._default_config_params(node)
@@ -113,6 +119,10 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
     typedef {config_t} mult_config;
+    template<unsigned K, unsigned S, unsigned W>
+    using scale_index_height = nnet::{scale_index_height_type}<K, S, W>;
+    template<unsigned K, unsigned S, unsigned W>
+    using scale_index_width = nnet::{scale_index_width_type}<K, S, W>;
 }};
 const ap_uint<config{index}::filt_height * config{index}::filt_width> config{index}::pixels[] = {{{instructions}}};\n"""
 
@@ -133,6 +143,17 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
         params['nzeros'] = node.get_weights('weight').nzeros
 
         params['config_t'] = 'config{}_mult'.format(node.index)
+
+        if node.get_attr("narrow_h"):
+            params['scale_index_height_type'] = 'scale_index_narrow'
+        else:
+            params['scale_index_height_type'] = 'scale_index_regular'
+
+        if node.get_attr("narrow_w"):
+            params['scale_index_width_type'] = 'scale_index_narrow'
+        else:
+            params['scale_index_width_type'] = 'scale_index_regular'
+
         conv_config = self.template.format(**params)
 
         mult_params = self._default_config_params(node)
@@ -147,7 +168,7 @@ class Conv2DFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__((Conv2D, Conv2DBatchnorm), include_header=conv2d_include_list)
         self.template = conv2d_function_template
-    
+
     def format(self, node):
         params = self._default_function_params(node)
         params['data_format'] = 'cf' if node.get_attr('data_format') == 'channels_first' else 'cl'
@@ -220,7 +241,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         else:
             params['in_width'] = '*'.join([str(k) for k in input_shape[1:]])
             params['n_chan'] = input_shape[0]
-        
+
         params['filt_width'] = 1
         params['stride_width'] = 1
         params['dilation'] = node.get_attr('dilation', 1)
@@ -248,7 +269,7 @@ class SeparableConv1DFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(SeparableConv1D, include_header=sepconv1d_include_list)
         self.template = sepconv1d_function_template
-    
+
     def format(self, node):
         params = self._default_function_params(node)
         params['data_format'] = 'cf' if node.get_attr('data_format') == 'channels_first' else 'cl'
@@ -333,7 +354,7 @@ class SeparableConv2DFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(SeparableConv2D, include_header=sepconv2d_include_list)
         self.template = sepconv2d_function_template
-    
+
     def format(self, node):
         params = self._default_function_params(node)
         params['data_format'] = 'cf' if node.get_attr('data_format') == 'channels_first' else 'cl'
