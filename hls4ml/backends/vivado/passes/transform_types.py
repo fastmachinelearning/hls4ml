@@ -20,8 +20,6 @@ class TransformTypes(GlobalOptimizerPass):
                 new_var = self.inplace_var_converter.convert(var, io_type)
             if io_type == 'io_stream':
                 new_var = self.stream_var_converter.convert(var)
-            elif io_type == 'io_serial':
-                new_var = self.array_var_converter.convert(var, pragma='stream')
             elif io_type == 'io_parallel':
                 if node.name in node.model.inputs:
                     new_var = self.array_var_converter.convert(var, pragma='reshape')

@@ -34,7 +34,6 @@ class VivadoBackend(FPGABackend):
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
         streaming_passes = [
-            'vivado:remove_final_reshape',
             'vivado:reshape_stream',
             'vivado:clone_output',
             'vivado:insert_zero_padding_before_conv1d',
@@ -51,15 +50,18 @@ class VivadoBackend(FPGABackend):
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
         optimization_passes = [
+            'vivado:remove_final_reshape',
             'vivado:optimize_pointwise_conv',
+            'vivado:skip_softmax'
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
         vivado_types = [
-            'vivado:register_bram_weights',
             'vivado:transform_types',
+            'vivado:register_bram_weights',
             'vivado:generate_conv_streaming_instructions',
             'vivado:apply_resource_strategy',
+            'vivado:generate_conv_im2col',
         ]
         vivado_types_flow = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
 
@@ -72,11 +74,17 @@ class VivadoBackend(FPGABackend):
         ]
         self._writer_flow = register_flow('write', writer_passes, requires=['vivado:ip'], backend=self.name)
 
+        fifo_depth_opt_passes = [
+            'vivado:fifo_depth_optimization'
+        ] + writer_passes # After optimization, a new project will be written
+
+        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=[self._writer_flow], backend=self.name)
+
         all_passes = get_backend_passes(self.name)
 
         extras = [
             # Ideally this should be empty
-            opt_pass for opt_pass in all_passes if opt_pass not in initializers + streaming_passes + quantization_passes + optimization_passes + vivado_types + templates + writer_passes
+            opt_pass for opt_pass in all_passes if opt_pass not in initializers + streaming_passes + quantization_passes + optimization_passes + vivado_types + templates + writer_passes + fifo_depth_opt_passes
         ]
 
         if len(extras) > 0:
@@ -105,7 +113,7 @@ class VivadoBackend(FPGABackend):
 
         return config
 
-    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False):
+    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False, fifo_opt=False):
         if 'linux' in sys.platform:
             found = os.system('command -v vivado_hls > /dev/null')
             if found != 0:
@@ -113,11 +121,16 @@ class VivadoBackend(FPGABackend):
         
         curr_dir = os.getcwd()
         os.chdir(model.config.get_output_dir())
-        os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth}"'
-            .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
+        os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt}"'
+            .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth, fifo_opt=fifo_opt))
         os.chdir(curr_dir)
 
         return parse_vivado_report(model.config.get_output_dir())
+
+    def _validate_conv_strategy(self, layer):
+        if layer.model.config.model_strategy.lower() != 'resource':
+            print('WARNING: Cannot use "Latency" model strategy for {} layer. Switching to "Resource" strategy.')
+            layer.model.config.model_strategy = 'Resource'
 
     @layer_optimizer(Layer)
     def init_base_layer(self, layer):
@@ -157,8 +170,21 @@ class VivadoBackend(FPGABackend):
             self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
-        
+
+        out_width = layer.get_output_variable().shape[0]
+        chosen_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1)
+        valid_pf = self.get_valid_conv_partition_splits(1, out_width)
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            print('WARNING: Invalid ParallelizationFactor={} in layer "{}". Using ParallelizationFactor={} instead. Valid ParallelizationFactor(s): {}.'
+                  .format(chosen_pf, layer.name, closest_pf, ','.join(map(str, valid_pf))))
+        else:
+            closest_pf = chosen_pf
+        layer.set_attr('n_partitions', out_width // closest_pf)
+
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+        self._validate_conv_strategy(layer)
 
     @layer_optimizer(SeparableConv1D)
     def init_sepconv1d(self, layer):
@@ -169,6 +195,7 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
         
+        layer.set_attr('n_partitions', 1) #TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(Conv2D)
@@ -183,8 +210,22 @@ class VivadoBackend(FPGABackend):
             self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
-        
+
+        out_height = layer.get_output_variable().shape[0]
+        out_width = layer.get_output_variable().shape[1]
+        chosen_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1)
+        valid_pf = self.get_valid_conv_partition_splits(out_height, out_width)
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            print('WARNING: Invalid ParallelizationFactor={} in layer "{}". Using ParallelizationFactor={} instead. Valid ParallelizationFactor(s): {}.'
+                .format(chosen_pf, layer.name, closest_pf, ','.join(map(str, valid_pf))))
+        else:
+            closest_pf = chosen_pf
+        layer.set_attr('n_partitions', out_height * out_width // closest_pf)
+
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+        self._validate_conv_strategy(layer)
 
     @layer_optimizer(SeparableConv2D)
     def init_sepconv2d(self, layer):
@@ -195,6 +236,7 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
         
+        layer.set_attr('n_partitions', 1) #TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(DepthwiseConv2D)
@@ -206,6 +248,7 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
         
+        layer.set_attr('n_partitions', 1) #TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(Activation)

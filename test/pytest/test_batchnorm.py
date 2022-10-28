@@ -24,17 +24,20 @@ def model():
 
   
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_global_pool1d(model, data, io_type):
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_global_pool1d(model, data, backend, io_type):
+
+    default_precision = 'ac_fixed<32, 1, true>' if backend == 'Quartus' else 'ac_fixed<32, 1>'
 
     config = hls4ml.utils.config_from_keras_model(model, 
-                                                  default_precision='ap_fixed<32,1>',
+                                                  default_precision=default_precision,
                                                   granularity='name')
 
     hls_model = hls4ml.converters.convert_from_keras_model(model,
+                                                           backend=backend,
                                                            hls_config=config,
                                                            io_type=io_type,
-                                                           output_dir=f'hls4mlprj_batchnorm_{io_type}',
-                                                           part='xcvu9p-flgb2104-2-i')
+                                                           output_dir=f'hls4mlprj_batchnorm_{backend}_{io_type}')
     hls_model.compile()
     
 

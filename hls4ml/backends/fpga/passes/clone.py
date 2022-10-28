@@ -3,7 +3,6 @@ import numpy as np
 from hls4ml.model.optimizer import OptimizerPass
 
 from hls4ml.model.layers import Layer, register_layer
-from hls4ml.backends import get_backend
 from hls4ml.backends.template import FunctionCallTemplate
 
 class Clone(Layer):
