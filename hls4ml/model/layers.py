@@ -152,7 +152,7 @@ class Layer(object):
                 for inp in layer.inputs:
                     if output == inp:
                         output_nodes.append(layer)
-        return output_nodes                
+        return output_nodes
 
     def get_output_variable(self, output_name=None):
         if output_name is not None:
