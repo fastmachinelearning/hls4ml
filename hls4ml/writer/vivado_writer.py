@@ -180,7 +180,7 @@ class VivadoWriter(Writer):
                         if len(func) == 1:
                             newline += '    ' + func[0] + ' // ' + layer.name + '\n'
                         else:
-                            newline += '// ' + layer.name + '\n'
+                            newline += '    // ' + layer.name + '\n'
                             for line in func:
                                 newline += '    ' + line + '\n'
                         if model.config.trace_output and layer.get_attr('Trace', False):
