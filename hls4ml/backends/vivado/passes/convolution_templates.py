@@ -240,6 +240,11 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         params['weight_t'] = node.get_weights('depthwise').type
         params['fill_fn'] = 'FillConv1DBuffer'
 
+        if node.get_attr("narrow"):
+            params['scale_index_type'] = 'scale_index_narrow'
+        else:
+            params['scale_index_type'] = 'scale_index_regular'
+
         params['config_t'] = 'config{}_depthwise_mult'.format(node.index)
         depthwise_config = self.depthwise_template.format(**params)
 
@@ -271,6 +276,11 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         params['min_width'] = params['in_width']
         params['instructions'] = '0'
         params['fill_fn'] = 'FillConv1DBuffer'
+
+        if node.get_attr("narrow"):
+            params['scale_index_type'] = 'scale_index_narrow'
+        else:
+            params['scale_index_type'] = 'scale_index_regular'
 
         params['config_t'] = 'config{}_pointwise_mult'.format(node.index)
         pointwise_config = self.pointwise_template.format(**params)
@@ -327,6 +337,16 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         params['weight_t'] = node.get_weights('depthwise').type
         params['fill_fn'] = 'FillConv2DBuffer'
 
+        if node.get_attr("narrow_h"):
+            params['scale_index_height_type'] = 'scale_index_narrow'
+        else:
+            params['scale_index_height_type'] = 'scale_index_regular'
+
+        if node.get_attr("narrow_w"):
+            params['scale_index_width_type'] = 'scale_index_narrow'
+        else:
+            params['scale_index_width_type'] = 'scale_index_regular'
+
         params['config_t'] = 'config{}_depthwise_mult'.format(node.index)
         depthwise_config = self.depthwise_template.format(**params)
 
@@ -359,6 +379,15 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         params['instructions'] = '0'
         params['fill_fn'] = 'FillConv2DBuffer'
 
+        if node.get_attr("narrow_h"):
+            params['scale_index_height_type'] = 'scale_index_narrow'
+        else:
+            params['scale_index_height_type'] = 'scale_index_regular'
+
+        if node.get_attr("narrow_w"):
+            params['scale_index_width_type'] = 'scale_index_narrow'
+        else:
+            params['scale_index_width_type'] = 'scale_index_regular'
         params['config_t'] = 'config{}_pointwise_mult'.format(node.index)
         pointwise_config = self.pointwise_template.format(**params)
 
