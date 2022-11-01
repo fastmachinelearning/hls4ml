@@ -392,18 +392,19 @@ class FPGABackend(Backend):
             min_W += 1
 
         # Let's hardcode a few common cases:
-        if kernel_height == 1 and kernel_width == 1 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
-            return (1, 1, map(str, [1]))
-        if kernel_height == 3 and kernel_width == 3 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
-            return (5, 5, map(str, [1,3,7,6,4,9,27,63,54,36,73,219,511,438,292,72,216,504,432,288,64,192,448,384,256]))
-        if kernel_height == 5 and kernel_width == 5 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
-            return (9, 9, map(str, [1,3,7,15,31,30,28,24,16,33,99,231,495,1023,990,924,792,528,1057,3171,7399,15855,
+        if not narrow_W and not narrow_H:
+            if kernel_height == 1 and kernel_width == 1 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
+                return (1, 1, map(str, [1]), False, False)
+            if kernel_height == 3 and kernel_width == 3 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
+                return (5, 5, map(str, [1,3,7,6,4,9,27,63,54,36,73,219,511,438,292,72,216,504,432,288,64,192,448,384,256]), False, False)
+            if kernel_height == 5 and kernel_width == 5 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
+                return (9, 9, map(str, [1,3,7,15,31,30,28,24,16,33,99,231,495,1023,990,924,792,528,1057,3171,7399,15855,
                              32767,31710,29596,25368,16912,33825,101475,236775,507375,1048575,1014750,947100,
                              811800,541200,1082401,3247203,7576807,16236015,33554431,32472030,30307228,25977624,
                              17318416,1082400,3247200,7576800,16236000,33554400,32472000,30307200,25977600,17318400,
                              1082368,3247104,7576576,16235520,33553408,32471040,30306304,25976832,17317888,1081344,
                              3244032,7569408,16220160,33521664,32440320,30277632,25952256,17301504,1048576,3145728,
-                             7340032,15728640,32505856,31457280,29360128,25165824,16777216]))
+                             7340032,15728640,32505856,31457280,29360128,25165824,16777216]), False, False)
 
         windows_bin = [[0 for _ in range(kernel_height * kernel_width)] for _ in range(min_H * min_W)]
 
