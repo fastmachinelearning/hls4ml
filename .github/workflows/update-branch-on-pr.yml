@@ -18,5 +18,5 @@ jobs:
       if: ${{ github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name }}
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: 'pr/${{ github.event.pull_request.number }}'
+        branch: 'HEAD:refs/heads/pr/${{ github.event.pull_request.number }}'
         force: true
