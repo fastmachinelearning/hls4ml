@@ -226,6 +226,10 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
     def transform(self, model, node):
         bn0 = node.get_input_node()
         bn1 = node
+        bn0_map = bn0.get_output_use_map()
+        bn1_map = bn1.get_output_use_map()
+        if len(bn0_map[bn0.name]) > 1 or len(bn1_map[bn1.name]) > 1:
+            return False
 
         s0 = bn0.weights['scale'].data
         b0 = bn0.weights['bias'].data

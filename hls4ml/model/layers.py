@@ -131,10 +131,28 @@ class Layer(object):
         else:
             return self.model.get_layer_output_variable(self.inputs[0])
 
+    def get_output_use_map(self):
+        output_map = {}
+        for output in self.outputs:
+            output_map[output] = []
+            for layer in self.model.get_layers():
+                for inp in layer.inputs:
+                    if output == inp:
+                        output_map[output].append(layer)
+        return output_map
+
     def get_output_nodes(self, output_name=None):
-        if output_name is None:
-            output_name = self.outputs[0]
-        return [node for node in self.model.graph.values() if node.inputs[0] == output_name]
+        output_nodes = []
+        if output_name is not None:
+            outputs = [output_name]
+        else:
+            outputs = self.outputs
+        for output in outputs:
+            for layer in self.model.get_layers():
+                for inp in layer.inputs:
+                    if output == inp:
+                        output_nodes.append(layer)
+        return output_nodes
 
     def get_output_variable(self, output_name=None):
         if output_name is not None:
