@@ -1,29 +1,18 @@
 on:
-  workflow_dispatch:
+  pull_request:
+    types: [opened]
+    branches: [main]
 
-name: Create/update branch on dispatch
+name: Create branch on PR from fork
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: peterjgrainger/action-create-branch@v2.2.0
-      id: create
-      if: steps.check.outputs.triggered == 'true'
+    - name: Create branch
+      uses: peterjgrainger/action-create-branch@v2.2.0
+      if: github.event.pull_request.head.repo.full_name != github.repository
       env: 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         branch: 'pr/${{ github.event.pull_request.number }}'
         sha: '${{ github.event.pull_request.head.sha }}'
-    - uses: actions/checkout@v3
-      if: steps.create.outputs.created == 'false'
-      with:
-        fetch-depth: 0
-        ref: ${{ github.event.pull_request.head.sha }}
-    - name: Push changes
-      uses: ad-m/github-push-action@master
-      if: steps.create.outputs.created == 'false'
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: 'pr/${{ github.event.pull_request.number }}'
-        force: true
-

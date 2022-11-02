@@ -1,0 +1,23 @@
+on:
+  pull_request:
+    types: [synchronize]
+    branches: [main]
+
+name: Update branch on PR from fork
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+      if: github.event.pull_request.head.repo.full_name != github.repository
+      with:
+        fetch-depth: 0
+        ref: ${{ github.event.pull_request.head.sha }}
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      if: github.event.pull_request.head.repo.full_name != github.repository
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: 'pr/${{ github.event.pull_request.number }}'
+        force: true
