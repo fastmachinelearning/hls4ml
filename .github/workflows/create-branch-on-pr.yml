@@ -1,21 +1,11 @@
 on:
-  pull_request:
-    types: [opened]
-  issue_comment:
-    types: [created]
+  workflow_dispatch:
 
-name: Create/update branch on PR comment
+name: Create/update branch on dispatch
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: khan/pull-request-comment-trigger@v1.1.0
-      id: check
-      with:
-        trigger: '@test'
-        reaction: rocket
-      env:
-        GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
     - uses: peterjgrainger/action-create-branch@v2.2.0
       id: create
       if: steps.check.outputs.triggered == 'true'
@@ -25,15 +15,13 @@ jobs:
         branch: 'pr/${{ github.event.pull_request.number }}'
         sha: '${{ github.event.pull_request.head.sha }}'
     - uses: actions/checkout@v3
-      if: |
-        steps.check.outputs.triggered == 'true' && steps.create.outputs.created == 'false'
+      if: steps.create.outputs.created == 'false'
       with:
         fetch-depth: 0
         ref: ${{ github.event.pull_request.head.sha }}
     - name: Push changes
       uses: ad-m/github-push-action@master
-      if: |
-        steps.check.outputs.triggered == 'true' && steps.create.outputs.created == 'false'
+      if: steps.create.outputs.created == 'false'
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: 'pr/${{ github.event.pull_request.number }}'
