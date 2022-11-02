@@ -1,8 +1,7 @@
-include LICENSE
-include README.md
+include LICENSE README.md CONTRIBUTING.md pyproject.toml setup.py setup.cfg .clang-format
 graft example-prjs
 graft example-models
 graft test
 recursive-include hls4ml/templates *
-global-exclude .git .gitmodules
+global-exclude .git .gitmodules .gitlab-ci.yml
 include hls4ml/backends/vivado_accelerator/supported_boards.json
