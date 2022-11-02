@@ -10,7 +10,7 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
-      if: github.event.pull_request.head.repo.full_name != github.repository
+      if: ${{ github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name }}
       with:
         ref: ${{ github.event.pull_request.head.sha }}
     - run: |
