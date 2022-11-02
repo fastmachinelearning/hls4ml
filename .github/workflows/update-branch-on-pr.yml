@@ -14,9 +14,7 @@ jobs:
       with:
         ref: ${{ github.event.pull_request.head.sha }}
     - name: Push changes
-      uses: ad-m/github-push-action@master
       if: ${{ github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name }}
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: 'HEAD:refs/heads/pr/${{ github.event.pull_request.number }}'
-        force: true
+      run: |
+        git checkout -b pr/${{ github.event.pull_request.number }}
+        git push --force pr/${{ github.event.pull_request.number }}
