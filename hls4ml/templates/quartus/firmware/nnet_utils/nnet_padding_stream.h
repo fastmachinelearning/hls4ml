@@ -6,9 +6,9 @@ namespace nnet {
 template<class res_T, typename CONFIG_T>
 inline void fill_zero(stream<res_T> &res) {
     hls_register res_T res_part;
-	#pragma unroll
+    #pragma unroll
     for (int i = 0; i < CONFIG_T::n_chan; i++) {
-	    res_part[i] = 0;
+        res_part[i] = 0;
     }
     res.write(res_part);
 }

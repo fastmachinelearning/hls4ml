@@ -363,7 +363,7 @@ class QuartusWriter(Writer):
                 newline = line
                 numbers = OrderedDict.fromkeys([layer.get_numbers_cpp() for layer in model.get_layers()])
                 newline += ''.join(numbers)
-  
+
             elif '//hls-fpga-machine-learning insert layer-precision' in line:
                 newline = line
                 all_precision = OrderedDict()
