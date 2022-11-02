@@ -52,7 +52,7 @@ repos:
     stages: [manual]
 
 - repo: https://github.com/jmduarte/p-clang-format
-  rev: "v1.0.0"
+  rev: "v1.0.2"
   hooks:
     - id: p-clang-format
       types_or: [c++, c, cuda]
