@@ -1,6 +1,6 @@
 on:
   pull_request:
-    types: [synchronize]
+    types: [opened, reopened, synchronize]
     branches: [main]
 
 name: Update branch on PR from fork
@@ -12,12 +12,7 @@ jobs:
       uses: actions/checkout@v3
       if: github.event.pull_request.head.repo.full_name != github.repository
       with:
-        fetch-depth: 0
         ref: ${{ github.event.pull_request.head.sha }}
-    - name: Push changes
-      uses: ad-m/github-push-action@master
-      if: github.event.pull_request.head.repo.full_name != github.repository
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: 'pr/${{ github.event.pull_request.number }}'
-        force: true
+    - run: |
+        git checkout -b pr/${{ github.event.pull_request.number }}
+        git push --force origin pr/${{ github.event.pull_request.number }}
