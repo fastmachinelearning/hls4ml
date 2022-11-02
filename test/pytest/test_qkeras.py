@@ -305,7 +305,7 @@ def test_qactivation_kwarg(randX_100_10,
         np.testing.assert_allclose(
             y_qkeras.ravel(),
             y_hls4ml.ravel(),
-            atol=2**-eval(activation_quantizer).bits,
+            atol=2**-(eval(activation_quantizer).bits-1),
             rtol=1.0
         )
     else:

@@ -10,16 +10,16 @@ example_model_path = (test_root_path / '../../example-models').resolve()
 
 @pytest.fixture(scope='module')
 def data():
-    X = np.random.rand(100,100,7)
+    X = np.random.rand(100,10,4)
     return X
 
 @pytest.fixture(scope='module')
 def keras_model():
-    model_path = example_model_path / 'keras/KERAS_conv1d.json'
+    model_path = example_model_path / 'keras/KERAS_conv1d_small.json'
     with model_path.open('r') as f:
         jsons = f.read()
     model = model_from_json(jsons)
-    model.load_weights(example_model_path / 'keras/KERAS_conv1d_weights.h5')
+    model.load_weights(example_model_path / 'keras/KERAS_conv1d_small_weights.h5')
     return model
 
 @pytest.fixture   

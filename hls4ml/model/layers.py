@@ -6,7 +6,7 @@ from hls4ml.model.types import TensorVariable, WeightVariable, CompressedWeightV
 from hls4ml.model.types import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType
 from hls4ml.model.types import find_minimum_width
 
-from hls4ml.model.attributes import Attribute, TypeMapping, VariableMapping, WeightAttribute, TypeAttribute, ChoiceAttribute, WeightMapping
+from hls4ml.model.attributes import Attribute, CodeMapping, TypeMapping, VariableMapping, WeightAttribute, TypeAttribute, ChoiceAttribute, WeightMapping
 from hls4ml.model.attributes import AttributeDict, AttributeMapping
 
 # TODO move this to some utility module
@@ -57,6 +57,7 @@ class Layer(object):
         self.weights = WeightMapping(self.attributes)
         self.variables = VariableMapping(self.attributes)
         self.types = TypeMapping(self.attributes)
+        self.code = CodeMapping(self.attributes)
 
         accum_t = NamedType(*reversed(self.model.config.get_precision(self, 'accum')))
         self.set_attr('accum_t', accum_t)
@@ -130,10 +131,28 @@ class Layer(object):
         else:
             return self.model.get_layer_output_variable(self.inputs[0])
 
+    def get_output_use_map(self):
+        output_map = {}
+        for output in self.outputs:
+            output_map[output] = []
+            for layer in self.model.get_layers():
+                for inp in layer.inputs:
+                    if output == inp:
+                        output_map[output].append(layer)
+        return output_map
+
     def get_output_nodes(self, output_name=None):
-        if output_name is None:
-            output_name = self.outputs[0]
-        return [node for node in self.model.graph.values() if node.inputs[0] == output_name]
+        output_nodes = []
+        if output_name is not None:
+            outputs = [output_name]
+        else:
+            outputs = self.outputs
+        for output in outputs:
+            for layer in self.model.get_layers():
+                for inp in layer.inputs:
+                    if output == inp:
+                        output_nodes.append(layer)
+        return output_nodes
 
     def get_output_variable(self, output_name=None):
         if output_name is not None:
@@ -696,7 +715,8 @@ class PReLU(Activation):
 
 class Softmax(Activation):
     _expected_attributes = [
-        ChoiceAttribute('implementation', ['latency', 'stable', 'legacy'], default='stable')
+        ChoiceAttribute('implementation', ['latency', 'stable', 'argmax', 'legacy'], default='stable'),
+        Attribute('skip', value_type=bool, default=False),
     ]
 
     def initialize(self):
