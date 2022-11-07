@@ -109,6 +109,17 @@ void save_output_array(data_T *data, save_T *ptr, size_t layer_size) {
     }
 }
 
+template<class data_T, class save_T>
+void save_output_array(stream<data_T> &data, save_T *ptr, size_t layer_size) {
+    for (size_t i = 0; i < layer_size / data_T::size; i++) {
+        data_T ctype = data.read();
+        for (size_t j = 0; j < data_T::size; j++) {
+            ptr[i * data_T::size + j] = static_cast<save_T>(ctype[j].to_double());
+        }
+        data.write(ctype);
+    }
+}
+
 // We don't want to include save_T in this function because it will be inserted into myproject.cpp
 // so a workaround with element size is used
 template<class data_T>
@@ -135,6 +146,40 @@ void save_layer_output(data_T *data, const char *layer_name, size_t layer_size) 
         assert(out.is_open());
         for(int i = 0; i < layer_size; i++) {
             out << data[i] << " "; // We don't care about precision in text files
+        }
+        out << std::endl;
+        out.close();
+    }
+}
+
+template<class data_T>
+void save_layer_output(stream<data_T> &data, const char *layer_name, size_t layer_size) {
+    if (!trace_enabled) return;
+    
+    if (trace_outputs) {
+        if (trace_outputs->count(layer_name) > 0) {
+            if (trace_type_size == 4) {
+                save_output_array<data_T, float>(data, (float *) (*trace_outputs)[layer_name], layer_size);
+            } else if (trace_type_size == 8) {
+                save_output_array<data_T, double>(data, (double *) (*trace_outputs)[layer_name], layer_size);
+            } else {
+                std::cout << "Unknown trace type!" << std::endl;
+            }
+        } else {
+            std::cout << "Layer name: " << layer_name << " not found in debug storage!" << std::endl;
+        }
+    } else {
+        std::ostringstream filename;
+        filename << "./tb_data/" << layer_name << "_output.log"; //TODO if run as a shared lib, path should be ../tb_data
+        std::fstream out;
+        out.open(filename.str(), std::ios::app);
+        assert(out.is_open());
+        for (size_t i = 0; i < layer_size / data_T::size; i++) {
+            data_T ctype = data.read();
+            for (size_t j = 0; j < data_T::size; j++) {
+                out << ctype[j] << " ";
+            }
+            data.write(ctype);
         }
         out << std::endl;
         out.close();
