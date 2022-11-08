@@ -573,7 +573,6 @@ class Pooling1D(Layer):
             dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0])
-        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
 class Pooling2D(Layer):
     _expected_attributes = [
@@ -607,7 +606,6 @@ class Pooling2D(Layer):
             dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0])
-        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
 class GlobalPooling1D(Layer):
     _expected_attributes = [
