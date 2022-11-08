@@ -14,6 +14,7 @@ from hls4ml.model.flow import register_flow
 from hls4ml.backends import FPGABackend
 from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter, VivadoArrayVariableConverter
 from hls4ml.report import parse_vivado_report
+from hls4ml.utils.fixed_point_utils import ceil_log2
 
 class VivadoBackend(FPGABackend):
     def __init__(self):
@@ -129,7 +130,7 @@ class VivadoBackend(FPGABackend):
 
     def _validate_conv_strategy(self, layer):
         if layer.model.config.model_strategy.lower() != 'resource':
-            print('WARNING: Cannot use "Latency" model strategy for {} layer. Switching to "Resource" strategy.')
+            print(f'WARNING: Cannot use "Latency" model strategy for {layer.name} layer. Switching to "Resource" strategy.')
             layer.model.config.model_strategy = 'Resource'
 
     @layer_optimizer(Layer)
@@ -250,6 +251,36 @@ class VivadoBackend(FPGABackend):
         
         layer.set_attr('n_partitions', 1) #TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+    def _set_pooling_accum_t(self, layer, pool_size):
+        extra_bits = ceil_log2(pool_size)
+        accum_t = layer.get_attr('accum_t')
+        accum_t.precision.fractional += extra_bits
+        accum_t.precision.integer += extra_bits
+
+    @layer_optimizer(Pooling1D)
+    def init_pooling1d(self, layer):
+        pool_size = layer.get_attr('pool_width')
+        self._set_pooling_accum_t(layer, pool_size)
+
+        layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+    @layer_optimizer(Pooling2D)
+    def init_pooling2d(self, layer):
+        pool_size = layer.get_attr('pool_height') * layer.get_attr('pool_width')
+        self._set_pooling_accum_t(layer, pool_size)
+
+        layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+    @layer_optimizer(GlobalPooling1D)
+    def init_global_pooling1d(self, layer):
+        pool_size = layer.get_attr('n_in')
+        self._set_pooling_accum_t(layer, pool_size)
+
+    @layer_optimizer(GlobalPooling2D)
+    def init_global_pooling2d(self, layer):
+        pool_size = layer.get_attr('in_height') * layer.get_attr('in_width')
+        self._set_pooling_accum_t(layer, pool_size)
 
     @layer_optimizer(Activation)
     def init_activation(self, layer):
