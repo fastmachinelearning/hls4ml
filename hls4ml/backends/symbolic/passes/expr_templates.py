@@ -24,11 +24,11 @@ class HLSCodePrinter(CXX11CodePrinter):
 
     def _print_Pow(self, expr):
         if isinstance(expr.exp, Integer):
-            symbol = next(iter(expr.free_symbols))
-            symbol = self._symbol_to_array(str(symbol))
+            l_brac, r_brac = ('(', ')') if len(expr.free_symbols) > 1 else ('', '')
             if expr.exp > 1:
-                return '*'.join([str(symbol) for _ in range(expr.exp)]) 
+                return '*'.join([l_brac + self._symbol_to_array(self._print(expr.base)) + r_brac for _ in range(expr.exp)])
             elif expr.exp == -1: # 1/x
+                symbol = l_brac + self._symbol_to_array(self._print(expr.base)) + r_brac
                 return f'hls::recip({symbol})'
             else:
                 return super()._print_Pow(expr)
