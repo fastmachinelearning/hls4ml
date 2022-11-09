@@ -1,6 +1,6 @@
 on:
   pull_request_target:
-    types: [opened, reopened, synchronize]
+    types: [labeled]
     branches: [main]
 
 name: Update branch on PR from fork
@@ -10,11 +10,11 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
-      if: ${{ github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name }}
+      if: ${{ github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name && github.event.label.name == 'please test' }}
       with:
         ref: ${{ github.event.pull_request.head.sha }}
     - name: Push changes
-      if: ${{ github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name }}
+      if: ${{ github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name && github.event.label.name == 'please test' }}
       run: |
         git checkout -b pr/${{ github.event.pull_request.number }}
         git push --force origin pr/${{ github.event.pull_request.number }}
