@@ -44,13 +44,26 @@ class SymbolicExpressionBackend(FPGABackend):
     def get_writer_flow(self):
         return self._writer_flow
 
-    def create_initial_config(self, part='xcvu9p-flga2577-2-e', clock_period=5, io_type='io_parallel', compiler='vivado'):
+    def create_initial_config(self, part='xcvu9p-flga2577-2-e', clock_period=5, io_type='io_parallel', compiler='vivado_hls', hls_include_path=None, hls_libs_path=None):
         config = {}
 
         config['Part'] = part if part is not None else 'xcvu9p-flga2577-2-e'
         config['ClockPeriod'] = clock_period
         config['IOType'] = io_type
-        config['Compiler'] = compiler if compiler is not None else 'vivado'
+        config['Compiler'] = compiler if compiler is not None else 'vivado_hls'
+        if not all([hls_include_path, hls_libs_path]):
+            # Try to infer the include path from Vivado path
+            bin_path = os.popen(f'command -v {compiler}').read().strip()
+            if hls_include_path is None:
+                hls_include_path = bin_path.replace(f'/bin/{compiler}', '/include')
+                if not os.path.exists(hls_include_path + '/hls_math.h'):
+                    raise Exception('Vivado HLS header files not found. Make sure you pass the proper path to the "include" directory (for example "/opt/Xilinx/Vivado/2020.1/include").')
+            if hls_libs_path is None:
+                hls_libs_path = bin_path.replace(f'/bin/{compiler}', '/lnx64')
+                if not os.path.exists(hls_libs_path + '/lib/csim/libhlsmc++-GCC46.so'):
+                    raise Exception('Vivado HLS libraries not found. Make sure you pass the proper path to the "lnx64" directory (for example "/opt/Xilinx/Vivado/2020.1/lnx64").')
+        config['HLSIncludePath'] = hls_include_path
+        config['HLSLibsPath'] = hls_libs_path
         config['HLSConfig'] = {}
 
         return config
