@@ -162,8 +162,8 @@ void softmax_stable(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
 
     // For the diffs, use the same type as the input but force rounding and saturation
     hls_register ac_fixed<data_T::width, data_T::i_width, true, AC_RND, AC_SAT> d_xi_xmax[CONFIG_T::n_in];
+    #pragma unroll
     for(unsigned i = 0; i < CONFIG_T::n_in; i++){
-        #pragma HLS unroll
         d_xi_xmax[i] = data[i] - x_max;
     }
 
