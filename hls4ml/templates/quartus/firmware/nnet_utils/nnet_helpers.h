@@ -29,26 +29,6 @@
 #include <sstream>
 #include <iostream>
 
-#ifndef __INTELFPGA_COMPILER__
-#include "stream.h"
-template<typename T>
-using stream = nnet::stream<T>;
-template<typename T>
-using stream_in = nnet::stream<T>;
-template<typename T>
-using stream_out = nnet::stream<T>;
-#else
-#include "HLS/hls.h"
-#include "HLS/ac_int.h"
-#include "HLS/ac_fixed.h"
-template<typename T>
-using stream = ihc::stream<T>;
-template<typename T>
-using stream_in = ihc::stream_in<T>;
-template<typename T>
-using stream_out = ihc::stream_out<T>;
-#endif
-
 namespace nnet {
 
 template<class srcType, class dstType, size_t SIZE>
