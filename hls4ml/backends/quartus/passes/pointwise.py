@@ -58,7 +58,8 @@ class OptimizePointwiseConv(OptimizerPass):
     def match(self, node):
         return node.class_name in ('Conv1D', 'Conv2D') and \
             node.get_attr('filt_height', 1) == 1 and \
-            node.get_attr('filt_width') == 1
+            node.get_attr('filt_width') == 1 and \
+            node.model.config.get_config_value('IOType') == 'io_parallel'
 
     def transform(self, model, node):
         dim = node.__class__.__name__[-2:] # '1D' or '2D'
@@ -66,8 +67,6 @@ class OptimizePointwiseConv(OptimizerPass):
         if len(node.weights['weight'].data.shape) == 2: # This can happen if we assign weights of Dense layer to 1x1 Conv2D
             pw_node.weights['weight'].data = np.expand_dims(node.weights['weight'].data, axis=(0,1))
         pw_node.weights['bias'].data = node.weights['bias'].data
-        # pw_node.weights['bias'].data = node.weights['bias'].data
-        print("Here")
         model.replace_node(node, pw_node)
         
         return True

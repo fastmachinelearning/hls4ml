@@ -47,6 +47,7 @@ def keras_model(mnist_data):
 
 @pytest.mark.parametrize('backend,io_type,strategy', [
                                       ('Quartus', 'io_parallel', 'resource'),
+                                      ('Quartus', 'io_stream', 'resource'),
   
                                       ('Vivado', 'io_parallel', 'resource'),
                                       ('Vivado', 'io_parallel', 'latency'),

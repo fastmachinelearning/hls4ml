@@ -28,7 +28,7 @@ zeropad2d_config_template = """struct config{index} : nnet::padding2d_config {{
 zeropad1d_function_template = 'nnet::zeropad1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 zeropad2d_function_template = 'nnet::zeropad2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 
-padding_include_list = ['nnet_utils/nnet_padding.h']
+padding_include_list = ['nnet_utils/nnet_padding.h', 'nnet_utils/nnet_padding_stream.h']
 
 class ZeroPaddingConfigTemplate(LayerConfigTemplate):
     def __init__(self):
@@ -72,7 +72,7 @@ resize_config_template = """struct config{index} : nnet::resize_config {{
 }};\n"""
 
 resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
-resize_include_list = ['nnet_utils/nnet_resize.h']
+resize_include_list = ['nnet_utils/nnet_resize.h', 'nnet_utils/nnet_resize_stream.h']
 
 class ResizeConfigTemplate(LayerConfigTemplate):
     def __init__(self):
@@ -108,7 +108,7 @@ transpose_config_template = """struct config{index} : nnet::transpose_config {{
 }};\n"""
 
 transpose_function_template = 'nnet::transpose_{dim}<{input_t}, {output_t}, {config}>({input}, {output});'
-transpose_include_list = ['nnet_utils/nnet_transpose.h']
+transpose_include_list = ['nnet_utils/nnet_transpose.h', 'nnet_utils/nnet_transpose_stream.h']
 
 class TransposeConfigTemplate(LayerConfigTemplate):
     def __init__(self):
