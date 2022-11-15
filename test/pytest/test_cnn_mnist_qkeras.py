@@ -35,17 +35,17 @@ def mnist_model():
 @pytest.fixture      
 @pytest.mark.parametrize('backend,io_type,strategy', [
                                       ('Quartus', 'io_parallel', 'resource'),
+                                      ('Quartus', 'io_stream', 'resource'),
+  
                                       ('Vivado', 'io_parallel', 'resource'),
-
                                       ('Vivado', 'io_parallel', 'latency'),
-                                      
                                       ('Vivado', 'io_stream', 'latency'),
                                       ('Vivado', 'io_stream', 'resource')
                                     ])
 def hls_model(mnist_model, backend, io_type, strategy):
   keras_model = mnist_model
   hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name')     
-  hls_config['Model']['Strategy'] = 'Resource'
+  hls_config['Model']['Strategy'] = strategy
   hls_config['LayerName']['softmax']['Strategy'] = 'Stable'
   output_dir = str(test_root_path / 'hls4mlprj_cnn_mnist_qkeras_{}_{}_{}'.format(backend, io_type, strategy))
 
@@ -61,10 +61,10 @@ def hls_model(mnist_model, backend, io_type, strategy):
 
 @pytest.mark.parametrize('backend,io_type,strategy', [
                                       ('Quartus', 'io_parallel', 'resource'),
+                                      ('Quartus', 'io_stream', 'resource'),
+  
                                       ('Vivado', 'io_parallel', 'resource'),
-
                                       ('Vivado', 'io_parallel', 'latency'),
-                                      
                                       ('Vivado', 'io_stream', 'latency'),
                                       ('Vivado', 'io_stream', 'resource')
                                     ])

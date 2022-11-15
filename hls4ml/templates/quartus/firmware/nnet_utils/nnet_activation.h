@@ -20,7 +20,6 @@
 #ifndef NNET_ACTIVATION_H_
 #define NNET_ACTIVATION_H_
 
-//#include <cmath>
 #include "nnet_common.h"
 
 namespace nnet {
@@ -127,15 +126,17 @@ void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 //       Softmax Activation
 // *************************************************
 
-enum class softmax_implementation {latency=0, legacy=1, stable=2};
+enum class softmax_implementation {latency=0, legacy=1, stable=2, argmax=3};
 
 template<class data_T, typename CONFIG_T>
 inline unsigned softmax_stable_idx_from_real_val(const data_T x){
     // Number of address bits for table
-    static constexpr int N = ceillog2(CONFIG_T::table_size);    
+    static constexpr int N = ceillog2(CONFIG_T::table_size);
 
     // Slice the top N bits of the input
-    hls_register ac_int<N, false> y = x.template slc<N>(x.width-N-1);             
+    hls_register ac_int<N, false> y = x.template slc<N>(x.width-N-1);
+    // If x is the most negative value, the slice will be 0, so we need to set the 0-th bit to ensure correctness
+    if (x != 0 && y == 0) y[0] = 1;
     return y.to_uint();
 }
 
@@ -159,11 +160,18 @@ void softmax_stable(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
     Op_max<data_T> op_max;
     hls_register data_T x_max = reduce<data_T, CONFIG_T::n_in, Op_max<data_T>>(data, op_max);
 
+    // For the diffs, use the same type as the input but force rounding and saturation
+    hls_register ac_fixed<data_T::width, data_T::i_width, true, AC_RND, AC_SAT> d_xi_xmax[CONFIG_T::n_in];
+    #pragma unroll
+    for(unsigned i = 0; i < CONFIG_T::n_in; i++){
+        d_xi_xmax[i] = data[i] - x_max;
+    }
+
     // Calculate all the e^x's
     hls_register typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
     #pragma unroll
     for(unsigned i = 0; i < CONFIG_T::n_in; i++) {
-        exp_res[i] = exp_table[softmax_stable_idx_from_real_val<data_T, CONFIG_T>(data[i] - x_max)];
+        exp_res[i] = exp_table[softmax_stable_idx_from_real_val<data_T, CONFIG_T>(d_xi_xmax[i])];
     }
 
     // Explicitly sum previously calculated exponentials with an adder tree
@@ -243,6 +251,27 @@ void softmax_legacy(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
+void softmax_argmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
+    #pragma unroll
+    for (int i = 0; i < CONFIG_T::n_in; i++) {
+        res[i] = (res_T) 0;
+    }
+
+    hls_register data_T maximum = data[0];
+    hls_register int idx = 0; 
+
+    #pragma ii 1
+    for (int i = 1; i < CONFIG_T::n_in; i++) {
+        if (data[i] > maximum) {
+            maximum = data[i];
+            idx = i;
+        }
+    }
+
+    res[idx] = (res_T) 1;
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
 inline void softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
     switch(CONFIG_T::implementation) {
         case softmax_implementation::stable:
@@ -256,6 +285,9 @@ inline void softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
             break;
         default:
             softmax_stable<data_T, res_T, CONFIG_T>(data, res);
+            break;
+        case softmax_implementation::argmax:
+            softmax_argmax<data_T, res_T, CONFIG_T>(data, res);
             break;
     }
 }

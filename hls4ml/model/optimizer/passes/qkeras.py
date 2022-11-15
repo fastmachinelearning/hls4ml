@@ -195,6 +195,12 @@ class QKerasFactorizeAlpha(OptimizerPass):
 #        Scale and Bias of each layer are combined into scale and bias of a single layer.
 #     '''
 
+# class FuseConsecutiveBatchNormalization(OptimizerPass):
+#     '''OptimizerPass to merge consecutive BatchNormalization layers.
+#        These may exist in a model after QKerasFactorizeAlpha layer.
+#        Scale and Bias of each layer are combined into scale and bias of a single layer.
+#     '''
+
 #     def match(self, node):
 #         return isinstance(node, BatchNormalization) and \
 #                isinstance(node.get_input_node(), BatchNormalization)
@@ -202,6 +208,10 @@ class QKerasFactorizeAlpha(OptimizerPass):
 #     def transform(self, model, node):
 #         bn0 = node.get_input_node()
 #         bn1 = node
+#         bn0_map = bn0.get_output_use_map()
+#         bn1_map = bn1.get_output_use_map()
+#         if len(bn0_map[bn0.name]) > 1 or len(bn1_map[bn1.name]) > 1:
+#             return False
 
 #         s0 = bn0.weights['scale'].data
 #         b0 = bn0.weights['bias'].data

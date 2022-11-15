@@ -63,6 +63,7 @@ class QuartusBackend(FPGABackend):
             'quartus:remove_final_reshape',
             'quartus:inplace_parallel_reshape',
             'quartus:optimize_pointwise_conv',
+            'quartus:skip_softmax'
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 

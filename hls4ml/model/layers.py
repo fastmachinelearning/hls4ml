@@ -134,10 +134,28 @@ class Layer(object):
         else:
             return self.model.get_layer_output_variable(self.inputs[0])
 
+    def get_output_use_map(self):
+        output_map = {}
+        for output in self.outputs:
+            output_map[output] = []
+            for layer in self.model.get_layers():
+                for inp in layer.inputs:
+                    if output == inp:
+                        output_map[output].append(layer)
+        return output_map
+
     def get_output_nodes(self, output_name=None):
-        if output_name is None:
-            output_name = self.outputs[0]
-        return [node for node in self.model.graph.values() if output_name in node.inputs]
+        output_nodes = []
+        if output_name is not None:
+            outputs = [output_name]
+        else:
+            outputs = self.outputs
+        for output in outputs:
+            for layer in self.model.get_layers():
+                for inp in layer.inputs:
+                    if output == inp:
+                        output_nodes.append(layer)
+        return output_nodes
 
     def get_output_variable(self, output_name=None):
         if output_name is not None:
@@ -686,7 +704,6 @@ class Pooling1D(Layer):
             dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0])
-        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
 class Pooling2D(Layer):
     _expected_attributes = [
@@ -720,7 +737,6 @@ class Pooling2D(Layer):
             dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0])
-        self.set_attr('implementation', self.model.config.get_conv_implementation(self).lower())
 
 class GlobalPooling1D(Layer):
     _expected_attributes = [
@@ -828,7 +844,8 @@ class PReLU(Activation):
 
 class Softmax(Activation):
     _expected_attributes = [
-        ChoiceAttribute('implementation', ['latency', 'stable', 'legacy'], default='stable')
+        ChoiceAttribute('implementation', ['latency', 'stable', 'argmax', 'legacy'], default='stable'),
+        Attribute('skip', value_type=bool, default=False),
     ]
 
     def initialize(self):

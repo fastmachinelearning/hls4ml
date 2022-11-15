@@ -30,4 +30,4 @@ def test_softsign(backend, input_shape, io_type):
     acc_hls4ml = accuracy_score(np.argmax(y_keras, axis=-1).ravel(), np.argmax(y_hls4ml, axis=-1).ravel())
 
     print('Accuracy hls4ml relative to keras: {}'.format(acc_hls4ml))
-    assert acc_hls4ml >= 0.97
+    assert acc_hls4ml >= 0.96

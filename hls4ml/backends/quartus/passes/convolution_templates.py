@@ -59,7 +59,7 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
 """
 
 conv1d_function_template = 'nnet::conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
-conv1d_include_list = ['nnet_utils/nnet_conv1d.h']
+conv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_conv1d_stream.h']
 
 class Conv1DConfigTemplate(LayerConfigTemplate):
     def __init__(self):
@@ -134,7 +134,7 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
 }};\n"""
 
 conv2d_function_template = 'nnet::conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
-conv2d_include_list = ['nnet_utils/nnet_conv2d.h']
+conv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_stream.h']
 
 class Conv2DConfigTemplate(LayerConfigTemplate):
     def __init__(self):

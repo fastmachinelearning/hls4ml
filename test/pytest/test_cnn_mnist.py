@@ -45,10 +45,14 @@ def keras_model(mnist_data):
   keras_model.fit(x_train, y_train, batch_size=32, epochs=5,  verbose=0)
   return keras_model
 
-@pytest.mark.parametrize('backend, io_type, strategy', [
+@pytest.mark.parametrize('backend,io_type,strategy', [
                                       ('Quartus', 'io_parallel', 'resource'),
+                                      ('Quartus', 'io_stream', 'resource'),
+  
                                       ('Vivado', 'io_parallel', 'resource'),
-                                      ('Vivado', 'io_parallel', 'latency')
+                                      ('Vivado', 'io_parallel', 'latency'),
+                                      ('Vivado', 'io_stream', 'latency'),
+                                      ('Vivado', 'io_stream', 'resource')
                                     ])
 def test_mnist_cnn(keras_model, mnist_data, backend, io_type, strategy):
   x_train, y_train, x_test, y_test = mnist_data

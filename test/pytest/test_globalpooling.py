@@ -29,14 +29,10 @@ def keras_model_avg_1d():
     model.compile()
     return model
  
-@pytest.mark.parametrize('backend, io_type', [
-                                ('Vivado', 'io_parallel'), 
-                                ('Vivado','io_stream'),
 
-                                # TODO - Quartus Streaming Global Pooling
-                                ('Quartus', 'io_parallel'),
-                        ])
+@pytest.mark.parametrize('backend', ['Quartus', 'Vivado'])
 @pytest.mark.parametrize('model_type', ['max', 'avg'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_global_pool1d(backend, keras_model_max_1d, keras_model_avg_1d, data_1d, model_type, io_type):
     if model_type == 'avg':
         model = keras_model_avg_1d
@@ -74,10 +70,9 @@ def keras_model_avg_2d():
     model.compile()
     return model
 
-# TODO - Add Streaming 2D Pooling in Vivado & Quartus
 @pytest.mark.parametrize('backend', ['Quartus', 'Vivado'])
 @pytest.mark.parametrize('model_type', ['max', 'avg'])
-@pytest.mark.parametrize('io_type', ['io_parallel'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_global_pool2d(backend, keras_model_max_2d, keras_model_avg_2d, data_2d, model_type, io_type):
     
     if model_type == 'avg':
