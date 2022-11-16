@@ -15,7 +15,9 @@ class ApplyWinogradKernelTransformation(OptimizerPass):
         weights_transformed = node.get_attr('_weights_transposed', False) == True
 
         # User opted for Winograd
-        implementation_is_winograd = node.get_attr('implementation', 'combination') == 'combination' or node.get_attr('implementation', 'combination') == 'winograd'          
+        implementation_is_winograd = node.get_attr('implementation', 'combination') == 'combination' or node.get_attr('implementation', 'combination') == 'winograd'
+
+        parallel_io_type = node.model.config.get_config_value('IOType') == 'io_parallel'          
 
         # Winograd algorithm-specific conditions
         if isinstance(node, Conv1D):
@@ -29,7 +31,7 @@ class ApplyWinogradKernelTransformation(OptimizerPass):
             # HLS Compiler fails to pipeline the entire component if Winograd loop only executes once
             loop_itr_gt_one = node.get_attr('out_width') > 2 
             
-            winograd_conditions = filter_size_matches and stride_is_one and loop_itr_gt_one
+            winograd_conditions = filter_size_matches and stride_is_one and loop_itr_gt_one and parallel_io_type
         
         elif isinstance(node, (Conv2D)):
             # Winograd only applies to specific kernel sizes
@@ -44,7 +46,7 @@ class ApplyWinogradKernelTransformation(OptimizerPass):
             
             padding_is_equal = node.get_attr('pad_top', 0) == node.get_attr('pad_bottom', 0) and node.get_attr('pad_left', 0) == node.get_attr('pad_right', 0)    
 
-            winograd_conditions = filter_size_matches and stride_is_one and padding_is_equal and loop_itr_gt_one
+            winograd_conditions = filter_size_matches and stride_is_one and padding_is_equal and loop_itr_gt_one and parallel_io_type
         
         else:
             winograd_conditions = False

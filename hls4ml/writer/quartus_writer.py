@@ -114,9 +114,11 @@ class QuartusWriter(Writer):
         ## myproject.cpp
         ###################
 
+        project_name = model.config.get_project_name()
+
         filedir = os.path.dirname(os.path.abspath(__file__))
         f = open(os.path.join(filedir, '../templates/quartus/firmware/myproject.cpp'), 'r')
-        fout = open('{}/firmware/{}.cpp'.format(model.config.get_output_dir(), model.config.get_project_name()), 'w')
+        fout = open('{}/firmware/{}.cpp'.format(model.config.get_output_dir(), project_name), 'w')
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
@@ -127,7 +129,7 @@ class QuartusWriter(Writer):
         for line in f.readlines():
             # Add headers to weights and biases
             if 'myproject' in line:
-                newline = line.replace('myproject', model.config.get_project_name())
+                newline = line.replace('myproject', project_name)
             
             # Intel HLS 'streams' need to be passed by reference to top-level entity or declared as global variables
             # Streams cannot be declared inside a function
@@ -146,14 +148,14 @@ class QuartusWriter(Writer):
             elif '//hls-fpga-machine-learning instantiate GCC top-level' in line:
                 newline = line
                 if io_type == 'io_stream':
-                    newline += 'void myproject(\n'
+                    newline += f'void {project_name}(\n'
                     for inp in model_inputs:
                         newline += indent+'stream_in<{}> &{}_stream,\n'.format(inp.type.name, inp.name)
                     for out in model_outputs:
                         newline += indent+'stream_out<{}> &{}_stream\n'.format(out.type.name, out.name)
                     newline += ') {\n'
                 if io_type == 'io_parallel':
-                    newline = 'output_data myproject(\n'
+                    newline = f'output_data {project_name}(\n'
                     newline+=indent+'input_data inputs\n'
                     newline+=') {\n'
 
@@ -161,22 +163,23 @@ class QuartusWriter(Writer):
             elif '//hls-fpga-machine-learning instantiate HLS top-level' in line:
                 newline = line
                 if io_type == 'io_stream':
-                    newline += 'component void myproject(\n'
+                    newline += f'component void {project_name}(\n'
                     for inp in model_inputs:
                         newline += indent+'stream_in<{}> &{}_stream,\n'.format(inp.type.name, inp.name)
                     for out in model_outputs:
                         newline += indent+'stream_out<{}> &{}_stream\n'.format(out.type.name, out.name)
                     newline += ') {\n'
                 if io_type == 'io_parallel':
-                    newline += 'component output_data myproject(\n'
+                    newline += f'component output_data {project_name}(\n'
                     newline += indent+'input_data inputs\n'
                     newline += ') {\n'
         
             # Insert HLS pragmas such as maximum frequency, initiation interval etc.
             elif '//hls-fpga-machine-learning insert cpragmas' in line:
                 newline = line
-                newline += 'hls_max_concurrency(0)\n'
-                newline += 'hls_component_ii({})\n'.format(self.get_max_reuse_factor(model))
+                if io_type == 'io_parallel':
+                    newline += 'hls_max_concurrency(0)\n'
+                    newline += 'hls_component_ii({})\n'.format(self.get_max_reuse_factor(model))
                 clock_mhz = 1000 / (model.config.get_config_value('ClockPeriod'))
                 newline += 'hls_scheduler_target_fmax_mhz({})\n'.format(np.ceil(clock_mhz).astype(np.int))
 
@@ -263,9 +266,11 @@ class QuartusWriter(Writer):
         ## myproject.h
         #######################
 
+        project_name = model.config.get_project_name()
+
         filedir = os.path.dirname(os.path.abspath(__file__))
         f = open(os.path.join(filedir, '../templates/quartus/firmware/myproject.h'), 'r')
-        fout = open('{}/firmware/{}.h'.format(model.config.get_output_dir(), model.config.get_project_name()), 'w')
+        fout = open('{}/firmware/{}.h'.format(model.config.get_output_dir(), project_name), 'w')
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
@@ -276,16 +281,17 @@ class QuartusWriter(Writer):
 
         for line in f.readlines():
             if 'MYPROJECT' in line:
-                newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
+                newline = line.replace('MYPROJECT', format(project_name.upper()))
             
             elif 'myproject' in line:
-                newline = line.replace('myproject', model.config.get_project_name())
+                newline = line.replace('myproject', project_name)
             
             elif '//hls-fpga-machine-learning instantiate GCC top-level' in line:
                 newline = line
                 # For io_stream, input and output are passed by reference; see myproject.h & myproject.cpp for more details
+                
                 if io_type == 'io_stream':
-                    newline += 'void myproject(\n'
+                    newline += f'void {project_name}(\n'
                     for inp in model_inputs:
                         newline += indent+'stream_in<{}> &{}_stream,\n'.format(inp.type.name, inp.name)
                     for out in model_outputs:
@@ -293,7 +299,7 @@ class QuartusWriter(Writer):
                     newline += ');\n'
                 # In io_parallel, a struct is returned; see myproject.h & myproject.cpp for more details
                 else:
-                    newline += 'output_data myproject(\n'
+                    newline += f'output_data {project_name}(\n'
                     newline += indent+'input_data inputs\n'
                     newline += ');\n'
 
@@ -301,21 +307,22 @@ class QuartusWriter(Writer):
             elif '//hls-fpga-machine-learning instantiate HLS top-level' in line:
                 newline = line
                 if io_type == 'io_stream':
-                    newline += 'component void myproject(\n'
+                    newline += f'component void {project_name}(\n'
                     for inp in model_inputs:
                         newline += indent+'stream_in<{}> &{}_stream,\n'.format(inp.type.name, inp.name)
                     for out in model_outputs:
                         newline += indent+'stream_out<{}> &{}_stream\n'.format(out.type.name, out.name)
                     newline += ');\n'
                 else:
-                    newline += 'component output_data myproject(\n'
+                    newline += f'component output_data {project_name}(\n'
                     newline += indent+'input_data inputs\n'
                     newline += ');\n'
         
             elif '//hls-fpga-machine-learning insert cpragmas' in line:
                 newline = line
-                newline += 'hls_max_concurrency(0)\n'
-                newline += 'hls_component_ii({})\n'.format(self.get_max_reuse_factor(model))
+                if io_type == 'io_parallel':
+                    newline += 'hls_max_concurrency(0)\n'
+                    newline += 'hls_component_ii({})\n'.format(self.get_max_reuse_factor(model))
                 clock_mhz = 1000 / (model.config.get_config_value('ClockPeriod'))
                 newline += 'hls_scheduler_target_fmax_mhz({})\n'.format(np.ceil(clock_mhz).astype(np.int))
             
@@ -362,9 +369,14 @@ class QuartusWriter(Writer):
                 all_precision = OrderedDict()
                 for layer in model.get_layers():
                     layer_precision = layer.get_layer_precision()
-                    all_precision.update(layer_precision)
+                    for type_name, type_var in layer_precision.items():
+                        # Ensure that layer's types doesn't override existing types
+                        # This can happen in case of InplaceVariable types
+                        if type_name not in all_precision:
+                            all_precision[type_name] = type_var
                 for used_type in all_precision.values():
                     newline += used_type.definition_cpp()
+      
             else:
                 newline = line
             fout.write(newline)
