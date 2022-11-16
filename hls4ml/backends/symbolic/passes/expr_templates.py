@@ -5,6 +5,7 @@ from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
 
 from sympy.printing.cxx import CXX11CodePrinter
 from sympy.core.numbers import Integer
+from sympy.core import S
 
 # Expression templates
 
@@ -15,6 +16,10 @@ expr_include_list = ['hls_math.h']
 class HLSCodePrinter(CXX11CodePrinter):
     _ns = 'hls::'
 
+    def __init__(self, layer, settings=None):
+        super().__init__(settings)
+        self.layer = layer
+
     def _symbol_to_array(self, name):
         return re.sub(r'([a-zA-Z]+)(\d+)', r'\1[\2]', name)
 
@@ -24,16 +29,26 @@ class HLSCodePrinter(CXX11CodePrinter):
 
     def _print_Pow(self, expr):
         if isinstance(expr.exp, Integer):
-            l_brac, r_brac = ('(', ')') if len(expr.free_symbols) > 1 else ('', '')
+            l_brac, r_brac = ('(', ')') if len(expr.base.args) > 1 else ('', '')
             if expr.exp > 1:
-                return '*'.join([l_brac + self._symbol_to_array(self._print(expr.base)) + r_brac for _ in range(expr.exp)])
+                return '(' + '*'.join([l_brac + self._symbol_to_array(self._print(expr.base)) + r_brac for _ in range(expr.exp)]) + ')'
             elif expr.exp == -1: # 1/x
                 symbol = l_brac + self._symbol_to_array(self._print(expr.base)) + r_brac
                 return f'hls::recip({symbol})'
             else:
                 return super()._print_Pow(expr)
         else:
-            return super()._print_Pow(expr)
+            base = self._print(expr.base)
+            if expr.exp == 0.5:
+                return f'{self._ns}sqrt({base})'
+            elif expr.exp == S.One/3:
+                return f'{self._ns}cbrt({base})'
+            else:
+                exp = self._print(expr.exp)
+                #TODO Setting precision of pow function may need some rethinking
+                # Doing hls::pow<x.width, x.iwidth>(x, y) passes C sim, but fails synthesis, need to use hls::pow<16,6>(x,y)
+                precision = self.layer.types['result_t'].precision
+                return f'{self._ns}pow<{precision.width}, {precision.integer}>({base}, {exp})'
 
     def _print_Symbol(self, expr):
         name = super()._print_Symbol(expr)
@@ -47,9 +62,11 @@ class ExpressionFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
 
+        printer = HLSCodePrinter(node)
+
         fn_templates = []
         for i, expr in enumerate(node.attributes['expression']):
-            params['expr_str'] = HLSCodePrinter().doprint(expr)
+            params['expr_str'] = printer.doprint(expr)
             params['y_index'] = str(i)
             fn_templates.append(self.template.format(**params))
 
