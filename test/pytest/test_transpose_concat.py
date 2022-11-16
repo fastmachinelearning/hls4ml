@@ -1,9 +1,8 @@
 import pytest
 import hls4ml
 import numpy as np
-from tensorflow.keras.models import model_from_json, Model
+from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Permute, Concatenate, Activation
-import yaml
 
 @pytest.fixture(scope='module')
 def data():
@@ -21,9 +20,9 @@ def keras_model():
     return model
 
 @pytest.fixture      
-@pytest.mark.parametrize('io_type', ['io_parallel',
-                                     'io_stream'])
-def hls_model(keras_model, io_type):
+@pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def hls_model(keras_model, backend, io_type):
     hls_config = hls4ml.utils.config_from_keras_model(keras_model, 
                                                       default_precision='ap_fixed<16,3,AP_RND_CONV,AP_SAT>',
                                                       granularity='name')
@@ -31,14 +30,14 @@ def hls_model(keras_model, io_type):
     hls_model = hls4ml.converters.convert_from_keras_model(keras_model,
                                                            hls_config=hls_config,
                                                            io_type=io_type,
-                                                           output_dir='hls4mlprj_transpose_{}'.format(io_type))
+                                                           backend=backend,
+                                                           output_dir='hls4mlprj_transpose_{}_{}'.format(backend, io_type))
 
     hls_model.compile()
     return hls_model
 
-# TODO - Add Quartus test after merging PR #634
-@pytest.mark.parametrize('io_type', ['io_parallel', 
-                                     'io_stream'])
+@pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 def test_accuracy(data, keras_model, hls_model):
     X = data
     model = keras_model

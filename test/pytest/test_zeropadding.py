@@ -44,12 +44,8 @@ def keras_model_2d():
     return model
 
 
-@pytest.mark.parametrize('backend, io_type', [
-                            ('Quartus', 'io_parallel'),
-
-                            ('Vivado', 'io_parallel'),
-                            ('Vivado','io_stream')
-                        ])
+@pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 @pytest.mark.parametrize('model_type', ['1d', '2d'])
 def test_zeropadding(keras_model_1d, keras_model_2d, data_1d, data_2d, model_type, io_type, backend):
     if model_type == '1d':
