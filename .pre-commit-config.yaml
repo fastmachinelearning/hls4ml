@@ -1,3 +1,5 @@
+exclude: ^hls4ml\/templates\/(vivado|quartus)\/(ap_types|ac_types)\/
+
 repos:
 - repo: https://github.com/psf/black
   rev: 22.10.0
