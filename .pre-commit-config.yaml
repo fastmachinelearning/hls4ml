@@ -56,5 +56,5 @@ repos:
   rev: "v1.0.3"
   hooks:
     - id: p-clang-format
-      entry: p-clang-format -i -style=file
+      entry: p-clang-format -i --style=file
       types_or: [c++, c, cuda]
