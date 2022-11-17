@@ -4,7 +4,8 @@ repos:
   hooks:
   - id: black
     language_version: python3
-    args: [--line-length=125]
+    args: ['--line-length=125',
+           '--skip-string-normalization']
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v4.3.0

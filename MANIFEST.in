@@ -1,5 +1,4 @@
 include LICENSE README.md CONTRIBUTING.md CITATION.cff pyproject.toml setup.py setup.cfg .clang-format
-graft example-prjs
 graft example-models
 graft test
 recursive-include hls4ml/templates *
