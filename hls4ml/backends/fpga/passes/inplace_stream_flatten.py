@@ -1,10 +1,11 @@
-from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.layers import Reshape
+from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.types import InplaceTensorVariable
 
 
 class InplaceStreamFlatten(OptimizerPass):
-    ''' Remove Flatten layer in io_stream '''
+    '''Remove Flatten layer in io_stream'''
+
     def match(self, node):
         # optimizer pass for a flatten layer (1 output dimension)
         return isinstance(node, Reshape) and len(node.get_output_variable().shape) == 1
