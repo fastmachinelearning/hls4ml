@@ -11,7 +11,7 @@ atol = 5e-3
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
-def test_validpadding(io_type, backend):
+def test_causalpadding(io_type, backend):
     
     model = Sequential()
     model.add(Conv1D(1, 5, padding="causal"))
