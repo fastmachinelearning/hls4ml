@@ -1,0 +1,17 @@
+#
+# An unexpected error has occurred (11)
+#
+Stack:
+/lib/x86_64-linux-gnu/libc.so.6(+0x3ef10) [0x7fe2289e5f10]
+/opt/Xilinx/Vivado/2019.2/lib/lnx64.o/libtcl8.5.so(+0xb9519) [0x7fe22428e519]
+/opt/Xilinx/Vivado/2019.2/lib/lnx64.o/libtcl8.5.so(Tcl_ResetResult+0x10) [0x7fe22428ef20]
+/opt/Xilinx/Vivado/2019.2/lib/lnx64.o/libtcl8.5.so(+0x34429) [0x7fe224209429]
+/opt/Xilinx/Vivado/2019.2/lib/lnx64.o/libtcl8.5.so(Tcl_EvalEx+0x13) [0x7fe22420a0a3]
+/opt/Xilinx/Vivado/2019.2/lib/lnx64.o/libtcl8.5.so(Tcl_Eval+0x15) [0x7fe22420a0c5]
+/opt/Xilinx/Vivado/2019.2/lib/lnx64.o/libhls_support.so(+0x75ac0) [0x7fe21094bac0]
+/opt/Xilinx/Vivado/2019.2/lib/lnx64.o/libtcl8.5.so(Tcl_Finalize+0x49) [0x7fe224249199]
+/opt/Xilinx/Vivado/2019.2/lib/lnx64.o/libtcl8.5.so(Tcl_Exit+0x4a) [0x7fe22424934a]
+/opt/Xilinx/Vivado/2019.2/lib/lnx64.o/libtcl8.5.so(Tcl_Main+0x24e) [0x7fe22427528e]
+/opt/Xilinx/Vivado/2019.2/lib/lnx64.o/librdi_common.so(+0x8b30cb) [0x7fe229dfd0cb]
+/lib/x86_64-linux-gnu/libpthread.so.0(+0x76db) [0x7fe2221936db]
+/lib/x86_64-linux-gnu/libc.so.6(clone+0x3f) [0x7fe228ac861f]

@@ -119,6 +119,10 @@ void multiheadattention(
 #pragma HLS ARRAY_PARTITION variable=dense_in complete dim=2
 #pragma HLS ARRAY_RESHAPE variable=v_proj complete dim=1
 
+    // std::cout << "input to MHA: " << std::endl;
+    // nnet::print_result<result_t, CONFIG_T::seq_len * CONFIG_T::feature_dim>(data_q, std::cout);
+    // std::cout << " " << std::endl;
+
     // linear projection
     dense_for_each_head: for (int i=0; i < CONFIG_T::num_heads; ++i){
 #pragma HLS DATAFLOW
@@ -140,10 +144,13 @@ void multiheadattention(
         nnet::matrixmul_transpose<data_T, res_T, CONFIG_T>(q_proj, k_proj, qk_mul);
         nnet::matrixmul<data_T, res_T, CONFIG_T, int>(qk_mul, v_proj, dense_in, i);
     }
+    // std::cout << "output from MHA: " << std::endl;
 
     output_dense: for (int j=0; j <CONFIG_T::seq_len; ++j){ 
         dense<data_T, res_T, typename CONFIG_T::config_mult2>(dense_in[j], res+(CONFIG_T::feature_dim*j), attention_output_weight, attention_output_bias);
+        // nnet::print_result<result_t, CONFIG_T::feature_dim>( res+(CONFIG_T::feature_dim*j), std::cout);
     }
+    // std::cout << " " << std::endl;
 }
 }
 
