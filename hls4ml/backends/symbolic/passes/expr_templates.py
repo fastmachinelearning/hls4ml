@@ -40,6 +40,10 @@ class HLSCodePrinter(CXX11CodePrinter):
         float_str = super()._print_Float(flt)
         return f'model_default_t({float_str})'
 
+    def _print_Rational(self, expr):
+        p, q = int(expr.p), int(expr.q)
+        return f'model_default_t({p}.0/{q}.0)'
+
     def _print_Pow(self, expr):
         hls_type = self.layer.types['result_t']
         if isinstance(expr.exp, Integer):
