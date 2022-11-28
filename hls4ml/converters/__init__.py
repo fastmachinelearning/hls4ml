@@ -6,6 +6,7 @@ import warnings
 
 from hls4ml.model import ModelGraph
 from hls4ml.utils.config import create_config
+from hls4ml.utils.symbolic_utils import LUTFunction
 from hls4ml.converters.keras_to_hls import keras_to_hls, get_supported_keras_layers, register_keras_layer_handler
 
 #----------Make converters available if the libraries can be imported----------#
@@ -358,7 +359,7 @@ def convert_from_onnx_model(model, output_dir='my-hls-test', project_name='mypro
 
     return onnx_to_hls(config)
 
-def convert_from_symbolic_expression(expr, n_symbols=None, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,
+def convert_from_symbolic_expression(expr, n_symbols=None, lut_functions=None, output_dir='my-hls-test', project_name='myproject', input_data_tb=None,
                              output_data_tb=None, precision='ap_fixed<16,6>', **kwargs):
     import sympy
 
@@ -366,8 +367,7 @@ def convert_from_symbolic_expression(expr, n_symbols=None, output_dir='my-hls-te
         expr = [expr]
     for i, e in enumerate(expr):
         if not isinstance(e, sympy.Expr):
-            sympy_expr = sympy.parsing.sympy_parser.parse_expr(e)
-            expr[i] = sympy_expr
+            expr[i] = sympy.parsing.sympy_parser.parse_expr(e)
 
     if n_symbols is None:
         n_symbols = 0
@@ -375,6 +375,12 @@ def convert_from_symbolic_expression(expr, n_symbols=None, output_dir='my-hls-te
             symbols = max([int(d.name.replace('x', '')) for d in expr.free_symbols]) + 1
             if symbols > n_symbols:
                 n_symbols = symbols
+
+    if lut_functions is None:
+        lut_functions = []
+    else:
+        if isinstance(lut_functions, dict):
+            lut_functions = [LUTFunction(name, params['math_func'], params['range_start'], params['range_end'], params['table_size']) for name, params in lut_functions.items()]
 
     layer_list = []
 
@@ -389,6 +395,7 @@ def convert_from_symbolic_expression(expr, n_symbols=None, output_dir='my-hls-te
     expr_layer['class_name'] = 'SymbolicExpression'
     expr_layer['expression'] = [str(e) for e in expr]
     expr_layer['n_symbols'] = n_symbols
+    expr_layer['lut_functions'] = lut_functions
     layer_list.append(expr_layer)
 
     config = create_config(

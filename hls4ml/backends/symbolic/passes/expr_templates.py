@@ -11,12 +11,20 @@ from sympy.core import S
 
 expr_function_template = 'y[{y_index}] = {expr_str};'
 
-expr_include_list = ['hls_math.h']
+expr_include_list = ['hls_math.h', 'nnet_utils/nnet_math.h']
 
 class HLSCodePrinter(CXX11CodePrinter):
     _ns = 'hls::'
 
-    def __init__(self, layer, settings=None):
+    def __init__(self, layer, lut_functions, settings=None):
+        if lut_functions is not None:
+            if settings is None:
+                settings = { 'user_functions': lut_functions }
+            else:
+                user_functions = settings.get('user_functions', {})
+                user_functions.update(lut_functions)
+                settings['user_functions'] = user_functions
+
         super().__init__(settings)
         self.layer = layer
 
@@ -84,7 +92,7 @@ class ExpressionFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
 
-        printer = HLSCodePrinter(node)
+        printer = HLSCodePrinter(node, lut_functions={ lut_fun.name : lut_fun.name for lut_fun in params['lut_functions'] })
 
         fn_templates = []
         for i, expr in enumerate(node.attributes['expression']):
@@ -93,3 +101,23 @@ class ExpressionFunctionTemplate(FunctionCallTemplate):
             fn_templates.append(self.template.format(**params))
 
         return fn_templates
+
+class ExpressionConfigTemplate(LayerConfigTemplate):
+    def __init__(self):
+        super().__init__(SymbolicExpression)
+    
+    def format(self, node):
+        params = self._default_config_params(node)
+
+        lut_defs = []
+        for lut_fun in params['lut_functions']:
+            type_name = params['result_t'].name
+            if lut_fun.math_func in ['sinpi', 'cospi', 'sin', 'cos', 'asin', 'acos', 'atan', 'atan2']:
+                # We have return type overrides for these functions
+                namespace = 'nnet::'
+            else:
+                namespace = 'hls::'
+            lut_def = f'nnet::lookup_table<{type_name}, {lut_fun.table_size}, {namespace}{lut_fun.math_func}> {lut_fun.name}({lut_fun.range_start}, {lut_fun.range_end});'
+            lut_defs.append(lut_def)
+
+        return '\n'.join(lut_defs)
