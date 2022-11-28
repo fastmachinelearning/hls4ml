@@ -14,10 +14,12 @@ atol = 5e-3
 def test_causalpadding(io_type, backend):
     
     model = Sequential()
-    model.add(Conv1D(1, 5, padding="causal"))
+    model.add(Conv1D(1, 5, padding="causal", input_shape=(100, 1)))
     model.compile()
 
-    data = np.random.normal(0, 1, 100)
+    data = np.random.randint(0, 10, 100).astype(float)
+    data = np.expand_dims(data, axis=0)
+    data = np.expand_dims(data, axis=-1)
 
     config = hls4ml.utils.config_from_keras_model(model,
                                                   default_precision='ap_fixed<32,1>',
