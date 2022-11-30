@@ -91,8 +91,9 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 newline = '#include "{}_axi.h"\n'.format(model.config.get_project_name())
                 for b in model_brams:
                     newline += '#include "weights/{}.h"\n'.format(b.name)
-                newline += '\n'
-                newline += '#include "nnet_utils/nnet_helpers.h"\n'
+                    newline += '\n'
+                if model_brams:
+                    newline += '#include "nnet_utils/nnet_helpers.h"\n'
             elif '//hls-fpga-machine-learning insert local vars' in line:
                 newline = ''
                 if self.vivado_accelerator_config.get_interface() == 'axi_stream':
@@ -132,14 +133,21 @@ class VivadoAcceleratorWriter(VivadoWriter):
                         newline += indent + '#pragma HLS DATAFLOW\n'
             elif '//hls-fpga-machine-learning insert load weights' in line:
                 newline = ''
-                for layer in model.get_layers():
-                    for w in layer.get_weights():
-                        if w.weight_class == 'CompressedWeightVariable':
-                            newline += indent + '    nnet::load_compressed_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.nonzeros, w.name, w.name)
-                        elif w.weight_class == 'ExponentWeightVariable':
-                            newline += indent + '    nnet::load_exponent_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.data_length, w.name, w.name)
-                        else:
-                            newline += indent + '    nnet::load_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.data_length, w.name, w.name)
+                if model_brams:
+                    newline += '#ifndef __SYNTHESIS__\n'
+                    newline += indent + 'static bool loaded_weights = false;\n'
+                    newline += indent + 'if (!loaded_weights) {\n'
+                    newline += indent + '    loaded_weights = true;\n'
+                    for layer in model.get_layers():
+                        for w in layer.get_weights():
+                            if w.weight_class == 'CompressedWeightVariable':
+                                newline += indent + '    nnet::load_compressed_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.nonzeros, w.name, w.name)
+                            elif w.weight_class == 'ExponentWeightVariable':
+                                newline += indent + '    nnet::load_exponent_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.data_length, w.name, w.name)
+                            else:
+                                newline += indent + '    nnet::load_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.data_length, w.name, w.name)
+                    newline += indent + '}\n'
+                    newline += '#endif\n'
             elif '//hls-fpga-machine-learning insert enqueue' in line:
                 io_type = model.config.get_config_value("IOType")
                 if io_type == 'io_parallel':

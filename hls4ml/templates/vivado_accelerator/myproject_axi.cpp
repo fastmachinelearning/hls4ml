@@ -9,13 +9,7 @@ void myproject(
 
     //hls-fpga-machine-learning insert local vars
 
-#ifndef __SYNTHESIS__
-    static bool loaded_weights = false;
-    if (!loaded_weights) {
-        //hls-fpga-machine-learning insert load weights
-        loaded_weights = true;
-    }
-#endif
+    //hls-fpga-machine-learning insert load weights
 
     //hls-fpga-machine-learning insert enqueue
 
