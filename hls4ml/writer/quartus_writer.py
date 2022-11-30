@@ -1,5 +1,6 @@
 from __future__ import print_function
 import tarfile
+from hls4ml.model.layers import Conv1D, Conv2D, Conv2DBatchnorm, Dense
 import yaml
 from shutil import copyfile, copytree, rmtree
 import numpy as np
@@ -17,6 +18,33 @@ class QuartusWriter(Writer):
 
     def next_pow2(self, x):
         return 1 << (x - 1).bit_length()
+    
+
+    def __make_dat_file(self, original_path, project_path):
+        """
+        Convert other input/output data types into a dat file, which is
+        a text file with the falttened matrix printed out. Note that ' ' is
+        assumed to be the delimiter.
+        """
+
+        #Take in data from current supported data files
+        if original_path[-3:] == "npy":
+            data = np.load(original_path)
+        else:
+            raise Exception("Unsupported input/output data files.")
+
+        #Faltten data, just keep first dimension
+        data = data.reshape(data.shape[0], -1)
+
+        def print_data(f):
+            for i in range(data.shape[0]):
+                for j in range(data.shape[1]):
+                    f.write(str(data[i][j]) + " ")
+                f.write("\n")
+
+        #Print out in dat file
+        with open(project_path, "w" ) as f:
+            print_data(f)
 
     def get_max_reuse_factor(self, model):
         max_rf = 0
@@ -45,7 +73,15 @@ class QuartusWriter(Writer):
 
         rf = int(layer.get_attr('reuse_factor'))
         weight_header = '#ifdef __INTELFPGA_COMPILER__\n'
-        if (rf == 1 or var.name[0] == 'b' or layer.get_attr('n_in') * layer.get_attr('n_out') <= 2048
+
+        if isinstance(layer, (Conv2D, Conv2DBatchnorm)):
+            weight_size = layer.get_attr('impl_filt_height') * layer.get_attr('impl_filt_width') * layer.get_attr('n_filt') * layer.get_attr('n_chan')      
+        elif isinstance(layer, (Conv1D)):
+            weight_size = layer.get_attr('impl_filt_width') * layer.get_attr('n_filt') * layer.get_attr('n_chan')      
+        elif isinstance(layer, (Dense)):
+            weight_size = layer.get_attr('n_in') * layer.get_attr('n_out')         
+        
+        if (rf == 1 or var.name[0] == 'b' or weight_size <= 2048
                 or (var.name[0] == 'w' and var.type.precision.width < 3)):
             weight_header += 'hls_init_on_powerup\n'
         else:
@@ -78,9 +114,11 @@ class QuartusWriter(Writer):
         ## myproject.cpp
         ###################
 
+        project_name = model.config.get_project_name()
+
         filedir = os.path.dirname(os.path.abspath(__file__))
         f = open(os.path.join(filedir, '../templates/quartus/firmware/myproject.cpp'), 'r')
-        fout = open('{}/firmware/{}.cpp'.format(model.config.get_output_dir(), model.config.get_project_name()), 'w')
+        fout = open('{}/firmware/{}.cpp'.format(model.config.get_output_dir(), project_name), 'w')
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
@@ -91,7 +129,7 @@ class QuartusWriter(Writer):
         for line in f.readlines():
             # Add headers to weights and biases
             if 'myproject' in line:
-                newline = line.replace('myproject', model.config.get_project_name())
+                newline = line.replace('myproject', project_name)
             
             # Intel HLS 'streams' need to be passed by reference to top-level entity or declared as global variables
             # Streams cannot be declared inside a function
@@ -110,14 +148,14 @@ class QuartusWriter(Writer):
             elif '//hls-fpga-machine-learning instantiate GCC top-level' in line:
                 newline = line
                 if io_type == 'io_stream':
-                    newline += 'void myproject(\n'
+                    newline += f'void {project_name}(\n'
                     for inp in model_inputs:
                         newline += indent+'stream_in<{}> &{}_stream,\n'.format(inp.type.name, inp.name)
                     for out in model_outputs:
                         newline += indent+'stream_out<{}> &{}_stream\n'.format(out.type.name, out.name)
                     newline += ') {\n'
                 if io_type == 'io_parallel':
-                    newline = 'output_data myproject(\n'
+                    newline = f'output_data {project_name}(\n'
                     newline+=indent+'input_data inputs\n'
                     newline+=') {\n'
 
@@ -125,22 +163,23 @@ class QuartusWriter(Writer):
             elif '//hls-fpga-machine-learning instantiate HLS top-level' in line:
                 newline = line
                 if io_type == 'io_stream':
-                    newline += 'component void myproject(\n'
+                    newline += f'component void {project_name}(\n'
                     for inp in model_inputs:
                         newline += indent+'stream_in<{}> &{}_stream,\n'.format(inp.type.name, inp.name)
                     for out in model_outputs:
                         newline += indent+'stream_out<{}> &{}_stream\n'.format(out.type.name, out.name)
                     newline += ') {\n'
                 if io_type == 'io_parallel':
-                    newline += 'component output_data myproject(\n'
+                    newline += f'component output_data {project_name}(\n'
                     newline += indent+'input_data inputs\n'
                     newline += ') {\n'
         
             # Insert HLS pragmas such as maximum frequency, initiation interval etc.
             elif '//hls-fpga-machine-learning insert cpragmas' in line:
                 newline = line
-                newline += 'hls_max_concurrency(0)\n'
-                newline += 'hls_component_ii({})\n'.format(self.get_max_reuse_factor(model))
+                if io_type == 'io_parallel':
+                    newline += 'hls_max_concurrency(0)\n'
+                    newline += 'hls_component_ii({})\n'.format(self.get_max_reuse_factor(model))
                 clock_mhz = 1000 / (model.config.get_config_value('ClockPeriod'))
                 newline += 'hls_scheduler_target_fmax_mhz({})\n'.format(np.ceil(clock_mhz).astype(np.int))
 
@@ -178,6 +217,8 @@ class QuartusWriter(Writer):
             # Neural net instantiation
             elif '//hls-fpga-machine-learning insert layers' in line:
                 newline = line + '\n'
+                model_inputs = model.get_input_variables()
+                model_outputs = model.get_output_variables()
                 for layer in model.get_layers():
                     if io_type != 'io_stream':
                         vars = layer.get_variables()
@@ -225,9 +266,11 @@ class QuartusWriter(Writer):
         ## myproject.h
         #######################
 
+        project_name = model.config.get_project_name()
+
         filedir = os.path.dirname(os.path.abspath(__file__))
         f = open(os.path.join(filedir, '../templates/quartus/firmware/myproject.h'), 'r')
-        fout = open('{}/firmware/{}.h'.format(model.config.get_output_dir(), model.config.get_project_name()), 'w')
+        fout = open('{}/firmware/{}.h'.format(model.config.get_output_dir(), project_name), 'w')
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
@@ -238,16 +281,17 @@ class QuartusWriter(Writer):
 
         for line in f.readlines():
             if 'MYPROJECT' in line:
-                newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
+                newline = line.replace('MYPROJECT', format(project_name.upper()))
             
             elif 'myproject' in line:
-                newline = line.replace('myproject', model.config.get_project_name())
+                newline = line.replace('myproject', project_name)
             
             elif '//hls-fpga-machine-learning instantiate GCC top-level' in line:
                 newline = line
                 # For io_stream, input and output are passed by reference; see myproject.h & myproject.cpp for more details
+                
                 if io_type == 'io_stream':
-                    newline += 'void myproject(\n'
+                    newline += f'void {project_name}(\n'
                     for inp in model_inputs:
                         newline += indent+'stream_in<{}> &{}_stream,\n'.format(inp.type.name, inp.name)
                     for out in model_outputs:
@@ -255,7 +299,7 @@ class QuartusWriter(Writer):
                     newline += ');\n'
                 # In io_parallel, a struct is returned; see myproject.h & myproject.cpp for more details
                 else:
-                    newline += 'output_data myproject(\n'
+                    newline += f'output_data {project_name}(\n'
                     newline += indent+'input_data inputs\n'
                     newline += ');\n'
 
@@ -263,21 +307,22 @@ class QuartusWriter(Writer):
             elif '//hls-fpga-machine-learning instantiate HLS top-level' in line:
                 newline = line
                 if io_type == 'io_stream':
-                    newline += 'component void myproject(\n'
+                    newline += f'component void {project_name}(\n'
                     for inp in model_inputs:
                         newline += indent+'stream_in<{}> &{}_stream,\n'.format(inp.type.name, inp.name)
                     for out in model_outputs:
                         newline += indent+'stream_out<{}> &{}_stream\n'.format(out.type.name, out.name)
                     newline += ');\n'
                 else:
-                    newline += 'component output_data myproject(\n'
+                    newline += f'component output_data {project_name}(\n'
                     newline += indent+'input_data inputs\n'
                     newline += ');\n'
         
             elif '//hls-fpga-machine-learning insert cpragmas' in line:
                 newline = line
-                newline += 'hls_max_concurrency(0)\n'
-                newline += 'hls_component_ii({})\n'.format(self.get_max_reuse_factor(model))
+                if io_type == 'io_parallel':
+                    newline += 'hls_max_concurrency(0)\n'
+                    newline += 'hls_component_ii({})\n'.format(self.get_max_reuse_factor(model))
                 clock_mhz = 1000 / (model.config.get_config_value('ClockPeriod'))
                 newline += 'hls_scheduler_target_fmax_mhz({})\n'.format(np.ceil(clock_mhz).astype(np.int))
             
@@ -324,9 +369,14 @@ class QuartusWriter(Writer):
                 all_precision = OrderedDict()
                 for layer in model.get_layers():
                     layer_precision = layer.get_layer_precision()
-                    all_precision.update(layer_precision)
+                    for type_name, type_var in layer_precision.items():
+                        # Ensure that layer's types doesn't override existing types
+                        # This can happen in case of InplaceVariable types
+                        if type_name not in all_precision:
+                            all_precision[type_name] = type_var
                 for used_type in all_precision.values():
                     newline += used_type.definition_cpp()
+      
             else:
                 newline = line
             fout.write(newline)
@@ -793,8 +843,8 @@ class QuartusWriter(Writer):
 
     def __get_table_size(self, model, activation):
         for layer in model.get_layers():
-            if layer.get_attr('activation') == activation and layer.get_attr('table_size') is not None:
-                return layer.get_attr('table_size')
+            if (layer.get_attr('activation') == activation or layer.get_attr('recurrent_activation') == activation) and layer.get_attr('table_size') is not None:
+                return int(layer.get_attr('table_size'))
         return 1024
 
     def __get_table_header(self, table_name, table_size):
@@ -832,7 +882,7 @@ class QuartusWriter(Writer):
         h_file.write(self.__get_table_header(table_name, table_size))
 
         sep = ''
-        for i in range(table_size):
+        for i in range(int(table_size)):
             in_val = i * (MAX_VALUE - MIN_VALUE) / float(table_size) + (MAX_VALUE - MIN_VALUE) / (
                         float(table_size) * 2) + MIN_VALUE
             real_val = 1.0 / (1 + np.exp(-in_val))
@@ -848,7 +898,7 @@ class QuartusWriter(Writer):
         MIN_VALUE = 0
 
         table_name = 'tanh_table'
-        table_size = self.__get_table_size(model, 'dense_tanh')
+        table_size = self.__get_table_size(model, 'tanh')
 
         h_file = open('{}/{}.tb'.format(path, table_name), 'w')
         h_file.write(self.__get_table_header(table_name, table_size))
@@ -883,6 +933,8 @@ class QuartusWriter(Writer):
         h_file.close()
 
     def __write_softsign_table(self, model, path):
+        MAX_VALUE = 8
+        MIN_VALUE = 0
         table_name = 'softsign_table'
         table_size = self.__get_table_size(model, 'softsign')
 
@@ -891,10 +943,13 @@ class QuartusWriter(Writer):
 
         sep = ''
         for i in range(table_size):
-            in_val = 2 * 8.0 * (i - float(table_size) / 2.0) / float(table_size)
+
+            in_val = i * (MAX_VALUE-MIN_VALUE)/float(table_size) + (MAX_VALUE-MIN_VALUE)/(float(table_size)*2) + MIN_VALUE
+
             real_val = in_val / (np.fabs(in_val) + 1.)
-            h_file.write(sep + str(real_val))
-            sep = ", "
+            if(real_val >= 0):
+                h_file.write(sep + str(real_val))
+                sep = ", "
 
         h_file.write('};\n')
         h_file.close()

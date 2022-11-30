@@ -2,7 +2,6 @@ import numpy as np
 
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.layers import Layer, Merge, Reshape, Concatenate, register_layer
-from hls4ml.backends import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 
 class Repack(Layer):
@@ -82,7 +81,6 @@ def register_repack_stream(backend):
     register_layer('Broadcast', Broadcast)
     
     # Register the optimization passes
-    backend.register_pass('remove_final_reshape', RemoveFinalReshape)
     backend.register_pass('reshape_stream', ReshapeStream)
     backend.register_pass('broadcast_stream', BroadcastStream)
     
@@ -162,19 +160,3 @@ class BroadcastStream(OptimizerPass):
         node.inputs[idx] = brdcst_out
 
         return True
-
-class RemoveFinalReshape(OptimizerPass):
-    ''' Remove reshape if final layer '''
-    def match(self, node):
-        # match if reshape is final node
-        return isinstance(node, Reshape) and not node.get_output_nodes()
-
-    def transform(self, model, node):
-        if model.config.get_config_value('IOType') == 'io_parallel':
-            print('WARNING: Final layer is a Reshape, which does not affect the output for io_parallel; removing it')
-            # remove, but don't rewire because it's the output layer
-            model.remove_node(node, rewire=False) 
-            return True
-        elif model.config.get_config_value('IOType') == 'io_stream':
-            print('WARNING: Final layer is a Reshape, which may incur a large resource cost for io_stream; consider removing it')
-        return False

@@ -1,10 +1,6 @@
 import numpy as np
-import re
-
-from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.types import IntegerPrecisionType, NamedType, XnorPrecisionType
-from hls4ml.model.layers import Layer, Activation, Dense, BatchNormalization, register_layer
-from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
+from hls4ml.model.types import IntegerPrecisionType, XnorPrecisionType
+from hls4ml.model.layers import Layer, Conv1D, Conv2D
 
 class BatchNormalizationQuantizedTanh(Layer):
     ''' Merged Batch Normalization and quantized (binary or ternary) Tanh layer.
@@ -42,3 +38,15 @@ class BatchNormalizationQuantizedTanh(Layer):
             threshold_lo = np.floor(threshold_lo * 2**F) / 2**F
             self.add_weights_variable(name='threshold_hi', var_name='th{index}', data=threshold_hi, type_name='threshold_hi_{index}_t', precision=inp.type.precision)
             self.add_weights_variable(name='threshold_lo', var_name='tl{index}', data=threshold_lo, type_name='threshold_lo_{index}_t', precision=inp.type.precision)
+
+class PointwiseConv1D(Conv1D):
+    ''' Optimized Conv1D implementation for 1x1 kernels. '''
+
+    # Nothing to do, will pick up function and config from class name
+    pass
+
+class PointwiseConv2D(Conv2D):
+    ''' Optimized Conv2D implementation for 1x1 kernels. '''
+
+    # Nothing to do, will pick up function and config from class name
+    pass

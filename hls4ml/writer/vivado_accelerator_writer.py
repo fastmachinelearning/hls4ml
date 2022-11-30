@@ -91,7 +91,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 newline = '#include "{}_axi.h"\n'.format(model.config.get_project_name())
                 for b in model_brams:
                     newline += '#include "weights/{}.h"\n'.format(b.name)
-                    newline += '\n'
+                newline += '\n'
                 if model_brams:
                     newline += '#include "nnet_utils/nnet_helpers.h"\n'
             elif '//hls-fpga-machine-learning insert local vars' in line:
