@@ -1,29 +1,30 @@
 # How to Contribute
 
-We'd love to accept your patches and contributions to this project. 
+We'd love to accept your patches and contributions to this project.
 There are just a few small guidelines you need to follow.
 
 ## Discussion
 
-Share your proposal via [Github Issues](https://github.com/fastmachinelearning/hls4ml/issues). 
-If you are looking for some issues to get started with, we have a list of [good first issues](https://github.com/fastmachinelearning/hls4ml/labels/good%20first%20issue) in the issue tracker. 
+Share your proposal via [GitHub Issues](https://github.com/fastmachinelearning/hls4ml/issues).
+If you are looking for some issues to get started with, we have a list of [good first issues](https://github.com/fastmachinelearning/hls4ml/labels/good%20first%20issue) in the issue tracker.
 We also welcome submissions to improve the documentation.
 
 ## Pull Request
 
-All submissions, including submissions by project members, require review. 
-We use GitHub pull requests for this purpose. 
+All submissions, including submissions by project members, require review.
+We use GitHub pull requests for this purpose.
 Consult [GitHub Help](https://help.github.com/articles/about-pull-requests/) for more information on using pull requests.
 
 1. In the pull request description, clearly document all changes made and the expected behavior.
 1. If you are introducing new functionality, add at least one unit test under the `test` folder and make sure it passes before you submit the pull request.
 1. Similarly, if you are fixing a bug, add at least one unit test under the `test` folder such that the master branch fails the test and your branch passes the test.
+1. Install and run `pre-commit` on the files that you have edited. We are adiabatically turning on linting for the full repository (see [#678](https://github.com/fastmachinelearning/hls4ml/pull/678)).
 1. Submit the pull request to the [main](https://github.com/fastmachinelearning/hls4ml) branch.
 
 ## Code Reviews
 
-We will review your contribution and, if any additional fixes or modifications are necessary, may provide feedback to guide you. 
-When accepted, your pull request will be merged to the repository. 
+We will review your contribution and, if any additional fixes or modifications are necessary, may provide feedback to guide you.
+When accepted, your pull request will be merged to the repository.
 
 ## Code of Conduct
 
