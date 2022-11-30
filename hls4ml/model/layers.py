@@ -34,7 +34,10 @@ class Layer(object):
                 continue
             if hasattr(base_cls, '_expected_attributes'): # Only consider classes with '_expected_attributes' defined
                 all_attributes.extend(base_cls._expected_attributes)
-        all_attributes.extend(cls._expected_attributes)
+        if '_expected_attributes' in cls.__dict__:
+            # Add new attributes defined in the class
+            #TODO Support overriding attributes from parent class
+            all_attributes.extend(cls._expected_attributes)
         return all_attributes
 
     def __init__(self, model, name, attributes, inputs, outputs=None):
