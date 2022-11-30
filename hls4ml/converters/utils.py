@@ -32,6 +32,14 @@ def compute_padding_1d(pad_type, in_size, stride, filt_size):
         n_out = int(math.ceil(float(in_size - filt_size + 1) / float(stride)))
         pad_left = 0
         pad_right = 0
+    elif pad_type.lower() == 'causal':        
+        n_out = int(math.ceil(float(in_size) / float(stride)))
+        if (in_size % stride == 0):
+            pad_along_size = max(filt_size - stride, 0)       
+        else:
+            pad_along_size = max(filt_size - (in_size % stride), 0)
+        pad_left  = pad_along_size
+        pad_right  = 0
     else:
         raise Exception('Unknown padding type: {}'.format(pad_type))
 
