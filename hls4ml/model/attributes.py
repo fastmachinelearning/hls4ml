@@ -15,6 +15,16 @@ class Attribute(object):
         else:
             return True # Meaning we don't care
 
+    @property
+    def config_name(self):
+        # This does e.g., reuse_factor -> ReuseFactor
+        components = self.name.split('_')
+        return ''.join(c.title() for c in components)
+
+class ConfigurableAttribute(Attribute):
+    def __init__(self, name, value_type=int, default=None):
+        super().__init__(name, value_type, default, configurable=True)
+
 class TypeAttribute(Attribute):
     def __init__(self, name, default=None, configurable=True):
         if not name.endswith('_t'):

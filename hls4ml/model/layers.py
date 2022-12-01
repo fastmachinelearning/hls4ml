@@ -6,8 +6,8 @@ from hls4ml.model.types import TensorVariable, WeightVariable, CompressedWeightV
 from hls4ml.model.types import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType
 from hls4ml.model.types import find_minimum_width
 
-from hls4ml.model.attributes import Attribute, CodeMapping, TypeMapping, VariableMapping, WeightAttribute, TypeAttribute, ChoiceAttribute, WeightMapping
-from hls4ml.model.attributes import AttributeDict, AttributeMapping
+from hls4ml.model.attributes import Attribute, CodeMapping, TypeMapping, VariableMapping, WeightAttribute, TypeAttribute, ChoiceAttribute, ConfigurableAttribute, WeightMapping
+from hls4ml.model.attributes import AttributeDict
 
 # TODO move this to some utility module
 class classproperty(object):
@@ -20,8 +20,8 @@ class classproperty(object):
 class Layer(object):
     _expected_attributes = [
         Attribute('index'),
+        ConfigurableAttribute('Trace', default=False),
 
-        TypeAttribute('accum'),
         TypeAttribute('result'),
     ]
 
@@ -62,8 +62,7 @@ class Layer(object):
         self.types = TypeMapping(self.attributes)
         self.code = CodeMapping(self.attributes)
 
-        accum_t = NamedType(*reversed(self.model.config.get_precision(self, 'accum')))
-        self.set_attr('accum_t', accum_t)
+        self._set_accum_t()
 
         layer_config = self.model.config.get_layer_config(self)
         for config_key, config_value in layer_config.items():
@@ -117,6 +116,12 @@ class Layer(object):
                 self.set_attr(attr_name, attr.default)
             else:
                 raise Exception('Attribute "{}" of layer {} ({}) not set and no default value is specified.'.format(attr_name, self.name, self.class_name))
+
+    def _set_accum_t(self):
+        has_accum_t = any(a for a in self.expected_attributes if a.name == 'accum_t' and isinstance(a, TypeAttribute))
+        if has_accum_t:
+            accum_t = NamedType(*reversed(self.model.config.get_precision(self, 'accum')))
+            self.set_attr('accum_t', accum_t)
 
     def get_input_node(self, input_name=None):
         if input_name is not None:
@@ -564,7 +569,7 @@ class Pooling1D(Layer):
         Attribute('pad_left'),
         Attribute('pad_right'),
 
-        ChoiceAttribute('pool_op', ['Max', 'Average'])
+        ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False)
     ]
 
     def initialize(self):
@@ -597,7 +602,7 @@ class Pooling2D(Layer):
         Attribute('pad_left'),
         Attribute('pad_right'),
 
-        ChoiceAttribute('pool_op', ['Max', 'Average'])
+        ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False)
     ]
 
     def initialize(self):
@@ -615,7 +620,7 @@ class GlobalPooling1D(Layer):
         Attribute('n_in'),
         Attribute('n_filt'),
 
-        ChoiceAttribute('pool_op', ['Max', 'Average'])
+        ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False)
     ]
 
     def initialize(self):
@@ -630,7 +635,7 @@ class GlobalPooling2D(Layer):
         Attribute('in_width'),
         Attribute('n_filt'),
 
-        ChoiceAttribute('pool_op', ['Max', 'Average'])
+        ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False)
     ]
 
     def initialize(self):
@@ -687,9 +692,8 @@ class Activation(Layer):
     _expected_attributes = [
         Attribute('n_in'),
         Attribute('activation', value_type=str),
-        #Attribute('table_size', default=1024),
         
-        #TypeAttribute('table')
+        TypeAttribute('result')
     ]
 
     def initialize(self):
