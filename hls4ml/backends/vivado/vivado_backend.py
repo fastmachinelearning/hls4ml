@@ -309,24 +309,11 @@ class VivadoBackend(FPGABackend):
         pool_size = layer.get_attr('in_height') * layer.get_attr('in_width')
         self._set_pooling_accum_t(layer, pool_size)
 
-    @layer_optimizer(Activation)
-    def init_activation(self, layer):
-        if 'table_t' not in layer.attributes:
-            layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
-        if 'table_size' not in layer.attributes:
-            layer.set_attr('table_size', 1024)
-
     @layer_optimizer(Softmax)
     def init_softmax(self, layer):
-        if 'exp_table_t' not in layer.attributes:
-            layer.set_attr('exp_table_t', layer.get_attr('table_t'))
-        if 'inv_table_t' not in layer.attributes:
-            layer.set_attr('inv_table_t', layer.get_attr('table_t'))
         if layer.model.config.is_resource_strategy(layer):
             # 'resource' strategy = 'latency' for Softmax
             layer.set_attr('implementation', 'latency')
-        else:
-            layer.set_attr('implementation', layer.model.config.get_strategy(layer).lower())
 
         if layer.model.config.get_config_value('IOType') == 'io_parallel':
             assert len(layer.get_input_variable().shape) == 1, 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'

@@ -184,22 +184,12 @@ class QuartusBackend(FPGABackend):
             layer.set_attr('activation', 'dense_tanh')
         if layer.get_attr('recurrent_activation') == 'tanh':
             layer.set_attr('recurrent_activation', 'dense_tanh')
-        if 'table_t' not in layer.attributes:
-            layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
-        if 'table_size' not in layer.attributes:
-            layer.set_attr('table_size', 1024)
 
     @layer_optimizer(Softmax)
     def init_softmax(self, layer):
-        if 'exp_table_t' not in layer.attributes:
-            layer.set_attr('exp_table_t', layer.get_attr('table_t'))
-        if 'inv_table_t' not in layer.attributes:
-            layer.set_attr('inv_table_t', layer.get_attr('table_t'))
         if layer.model.config.is_resource_strategy(layer):
             # 'resource' strategy = 'latency' for Softmax
             layer.set_attr('implementation', 'latency')
-        else:
-            layer.set_attr('implementation', layer.model.config.get_strategy(layer).lower())
 
     @layer_optimizer(Embedding)
     def init_embed(self, layer):
