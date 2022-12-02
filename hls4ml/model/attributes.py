@@ -1,6 +1,7 @@
 from collections.abc import MutableMapping
 
 from hls4ml.model.types import InplaceVariable, NamedType, TensorVariable, WeightVariable, Source
+from hls4ml.utils.string_utils import convert_to_pascal_case
 
 class Attribute(object):
     def __init__(self, name, value_type=int, default=None, configurable=False):
@@ -17,9 +18,7 @@ class Attribute(object):
 
     @property
     def config_name(self):
-        # This does e.g., reuse_factor -> ReuseFactor
-        components = self.name.split('_')
-        return ''.join(c.title() for c in components)
+        return convert_to_pascal_case(self.name)
 
 class ConfigurableAttribute(Attribute):
     def __init__(self, name, value_type=int, default=None):

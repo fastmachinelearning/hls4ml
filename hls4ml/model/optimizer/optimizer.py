@@ -3,6 +3,8 @@ import inspect
 import os
 import re
 
+from hls4ml.utils.string_utils import convert_to_snake_case
+
 class OptimizerPass(object):
     """Base optimizer class from which all other optimizer types are derived."""
 
@@ -33,7 +35,7 @@ class OptimizerPass(object):
     @classmethod
     def get_name(cls):
         if cls.name is None:
-            return re.sub(r'(?<!^)(?=[A-Z])', '_', cls.__name__).lower() # OptimizerPass -> optimizer_pass
+            return convert_to_snake_case(cls.__name__) # OptimizerPass -> optimizer_pass
         else:
             return cls.name
 
