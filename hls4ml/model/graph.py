@@ -604,6 +604,11 @@ class ModelGraph(object):
         self._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
 
     def _get_top_function(self, x):
+
+        io_type = self.config.get_config_value('IOType')
+        interface = self.config.get_config_value('AcceleratorConfig')['Interface'] if self.config.get_config_value('AcceleratorConfig') else None
+        config_weights = (io_type == 'io_stream') and (interface == 'axi_master')
+
         if self._top_function_lib is None:
             raise Exception('Model not compiled')
         if len(self.get_input_variables()) == 1:
@@ -611,7 +616,8 @@ class ModelGraph(object):
         else: 
             xlist = x
         n_outputs = len(self.get_output_variables())
-        
+        n_weights = len(self.get_weight_variables())
+
         for xi in xlist:
             if not isinstance(xi, np.ndarray):
                 raise Exception('Expected numpy.ndarray, but got {}'.format(type(x)))
@@ -628,9 +634,9 @@ class ModelGraph(object):
         else:
             raise Exception('Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(x0.dtype))
 
-
         top_function.restype = None
-        top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS") for i in range(len(xlist) + n_outputs)]
+        top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS") \
+                for i in range(len(xlist) + (n_weights if config_weights else 0) + n_outputs)]
 
         return top_function, ctype
 
@@ -654,10 +660,16 @@ class ModelGraph(object):
         return int(n_sample)
 
     def predict(self, x):
+
+        io_type = self.config.get_config_value('IOType')
+        interface = self.config.get_config_value('AcceleratorConfig')['Interface'] if self.config.get_config_value('AcceleratorConfig') else None
+        config_weights = (io_type == 'io_stream') and (interface == 'axi_master')
+
         top_function, ctype = self._get_top_function(x)
         n_samples = self._compute_n_samples(x)
         n_inputs = len(self.get_input_variables())
         n_outputs = len(self.get_output_variables())
+        n_weights = len(self.get_weight_variables())
 
         curr_dir = os.getcwd()
         os.chdir(self.config.get_output_dir() + '/firmware')
@@ -675,10 +687,16 @@ class ModelGraph(object):
                     inp = [np.asarray(xj[i]) for xj in x]
                 argtuple = inp
                 argtuple += predictions
+                if config_weights:
+                    for j in range(n_weights):
+                        weights = [float(w) for w in self.get_weight_variables()[j]]
+                        argtuple += [np.asarray(weights)]
                 argtuple = tuple(argtuple)
                 top_function(*argtuple)
-                output.append(predictions)
-
+                if config_weights and n_samples == 1 and n_inputs:
+                    output.append([predictions])
+                else:
+                    output.append(predictions)
 
             # Convert to list of numpy arrays (one for each output)
             output = [np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)]

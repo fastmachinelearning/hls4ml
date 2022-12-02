@@ -22,8 +22,9 @@
 #include <vector>
 #include <map>
 #include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
+#include <cstdlib>
+#include <cmath>
+#include <cfloat>
 
 #include "firmware/myproject.h"
 #include "firmware/nnet_utils/nnet_helpers.h"
@@ -55,6 +56,10 @@ int main(int argc, char **argv)
   std::string iline;
   std::string pline;
   int e = 0;
+
+  //hls-fpga-machine-learning insert weights
+
+  //hls-fpga-machine-learning insert load weights
 
   if (fin.is_open() && fpr.is_open()) {
     while ( std::getline(fin,iline) && std::getline (fpr,pline) ) {

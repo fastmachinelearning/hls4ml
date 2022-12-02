@@ -1,13 +1,16 @@
 //hls-fpga-machine-learning insert include
 
 void myproject(
-    input_axi_t in[N_IN],
-    output_axi_t out[N_OUT]
-        ){
+    input_axi_t in[N_IN]
+    , output_axi_t out[N_OUT]
+    //hls-fpga-machine-learning insert weights
+    ){
 
     //hls-fpga-machine-learning insert interface
 
     //hls-fpga-machine-learning insert local vars
+
+    //hls-fpga-machine-learning insert enqueue weights
 
     //hls-fpga-machine-learning insert enqueue
 

@@ -109,6 +109,10 @@ class VivadoWriter(Writer):
         model_outputs = model.get_output_variables()
         model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
+        io_type = model.config.get_config_value('IOType')
+        interface = model.config.get_config_value('AcceleratorConfig')['Interface'] if model.config.get_config_value('AcceleratorConfig') else None
+        config_weights = (io_type == 'io_stream') and (interface == 'axi_master')
+
         indent = '    '
 
         for line in f.readlines():
@@ -159,7 +163,11 @@ class VivadoWriter(Writer):
                 if io_type == 'io_stream':
                     newline += indent + '#pragma HLS INTERFACE axis port={},{} \n'.format(','.join(all_inputs), ','.join(all_outputs))
                     if all_brams:
-                        newline += indent + '#pragma HLS INTERFACE bram port={} \n'.format(','.join(all_brams))
+                        if config_weights:
+                            newline += indent + '//#pragma HLS INTERFACE bram port={} // Disabled (it fails on FPGA otherwise)\n'\
+                                    .format(','.join(all_brams))
+                        else:
+                            newline += indent + '#pragma HLS INTERFACE bram port={} \n'.format(','.join(all_brams))
                     newline += indent + '#pragma HLS DATAFLOW \n'
 
             elif '//hls-fpga-machine-learning insert layers' in line:
@@ -337,6 +345,10 @@ class VivadoWriter(Writer):
         ## test bench
         ###################
 
+        io_type = model.config.get_config_value('IOType')
+        interface = model.config.get_config_value('AcceleratorConfig')['Interface'] if model.config.get_config_value('AcceleratorConfig') else None
+        config_weights = (io_type == 'io_stream') and (interface == 'axi_master')
+
         filedir = os.path.dirname(os.path.abspath(__file__))
 
         if not os.path.exists('{}/tb_data/'.format(model.config.get_output_dir())):
@@ -362,7 +374,7 @@ class VivadoWriter(Writer):
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
-        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram' or config_weights]
 
         for line in f.readlines():
             indent = ' ' * (len(line) - len(line.lstrip(' ')))
@@ -370,10 +382,19 @@ class VivadoWriter(Writer):
             #Insert numbers
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
-            elif '//hls-fpga-machine-learning insert bram' in line:
+            elif (not config_weights) and '//hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
                     newline += '#include \"firmware/weights/{}.h\"\n'.format(bram.name)
+            elif config_weights and '//hls-fpga-machine-learning insert weights' in line:
+                newline = line
+                for v in model.get_weight_variables():
+                    newline += indent + 'model_axi_t {name}[{shape}];\n'.format(name=v.name, shape=v.data_length)
+            elif config_weights and '//hls-fpga-machine-learning insert load weights' in line:
+                newline = line
+                for v in model.get_weight_variables():
+                    newline += indent + 'nnet::load_weights_from_txt<model_axi_t, {shape}>({name}, "{name}.txt");\n'\
+                            .format(name=v.name, shape=v.data_length)
             elif '//hls-fpga-machine-learning insert data' in line:
                 newline = line
                 offset = 0
@@ -400,7 +421,12 @@ class VivadoWriter(Writer):
                 # Concatenate the input, output, and bram variables. Filter out empty/null values
                 all_vars = ','.join(filter(None, [input_vars, output_vars, bram_vars]))
 
-                top_level = indent + '{}({});\n'.format(model.config.get_project_name(), all_vars)
+                if config_weights:
+                    top_level = indent + '{}({},/*load_weights*/true);\n'.format(model.config.get_project_name(), all_vars)
+                    newline += top_level
+                    top_level = indent + '{}({},/*load_weights*/false);\n'.format(model.config.get_project_name(), all_vars)
+                else:
+                    top_level = indent + '{}({});\n'.format(model.config.get_project_name(), all_vars)
 
                 newline += top_level
             elif '//hls-fpga-machine-learning insert predictions' in line:
@@ -429,6 +455,10 @@ class VivadoWriter(Writer):
         # c++-python bridge
         ###################
 
+        io_type = model.config.get_config_value('IOType')
+        interface = model.config.get_config_value('AcceleratorConfig')['Interface'] if model.config.get_config_value('AcceleratorConfig') else None
+        config_weights = (io_type == 'io_stream') and (interface == 'axi_master')
+
         filedir = os.path.dirname(os.path.abspath(__file__))
         f = open(os.path.join(filedir,'../templates/vivado/myproject_bridge.cpp'),'r')
         fout = open('{}/{}_bridge.cpp'.format(model.config.get_output_dir(), model.config.get_project_name()),'w')
@@ -455,8 +485,11 @@ class VivadoWriter(Writer):
                 outputs_str = ', '.join(['{type} {name}[{shape}]'.format(type=dtype, name=o.name, shape=o.size_cpp()) for o in model_outputs])
 
                 newline = ''
-                newline += indent + inputs_str + ',\n'
-                newline += indent + outputs_str + '\n'
+                newline += indent + inputs_str + '\n'
+                newline += indent + ', ' + outputs_str + '\n'
+                if config_weights:
+                    for v in model.get_weight_variables():
+                        newline += indent + ', {type} {name} [{shape}]\n'.format(type=dtype, name=v.name, shape=v.data_length)
             elif '//hls-fpga-machine-learning insert wrapper' in line:
                 dtype = line.split('#', 1)[1].strip()
                 newline = ''
@@ -464,6 +497,12 @@ class VivadoWriter(Writer):
                     newline += indent + '{var};\n'.format(var=i.definition_cpp(name_suffix='_ap'))
                     newline += indent + 'nnet::convert_data<{}, {}, {}>({}, {}_ap);\n'.format(dtype, i.type.name, i.size_cpp(), i.name, i.name)
                 newline += '\n'
+
+                if config_weights:
+                    for b in model_brams:
+                        newline += indent + 'model_axi_t {name}_ap[{shape}];\n'.format(name=b.name, shape=b.data_length)
+                        newline += indent + 'nnet::convert_data<{}, {}, {}>({}, {}_ap);\n'.format(dtype, 'model_axi_t', b.data_length, b.name, b.name)
+                    newline += '\n'
 
                 for o in model_outputs:
                     newline += indent + '{var};\n'.format(var=o.definition_cpp(name_suffix='_ap'))
@@ -476,8 +515,11 @@ class VivadoWriter(Writer):
 
                 # Concatenate the input, output, and bram variables. Filter out empty/null values
                 all_vars = ','.join(filter(None, [input_vars, output_vars, bram_vars]))
-
-                top_level = indent + '{}({});\n'.format(model.config.get_project_name(), all_vars)
+                if config_weights:
+                    top_level = indent + '{}({},/*load_weights*/true);\n'.format(model.config.get_project_name(), all_vars)
+                    top_level += indent + '{}({},/*load_weights*/false);\n'.format(model.config.get_project_name(), all_vars)
+                else:
+                    top_level = indent + '{}({});\n'.format(model.config.get_project_name(), all_vars)
                 newline += top_level
 
                 newline += '\n'
