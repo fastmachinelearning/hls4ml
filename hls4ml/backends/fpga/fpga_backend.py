@@ -8,7 +8,7 @@ import re
 from hls4ml.backends.backend import Backend
 from hls4ml.model.layers import Layer, Dense, BatchNormalization, Activation, Softmax, Conv1D, Conv2D, SeparableConv1D, SeparableConv2D, Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D, SimpleRNN, LSTM, GRU, Dot, Embedding, GarNet, GarNetStack
 from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute, TypeAttribute
-from hls4ml.model.types import IntegerPrecisionType, FixedPrecisionType, XnorPrecisionType, ExponentPrecisionType, RoundingMode, SaturationMode
+from hls4ml.model.types import NamedType, IntegerPrecisionType, FixedPrecisionType, XnorPrecisionType, ExponentPrecisionType, RoundingMode, SaturationMode
 from hls4ml.writer import get_writer
 from hls4ml.model.optimizer import model_optimizer
 
@@ -242,12 +242,10 @@ class FPGABackend(Backend):
         if isinstance(precision, IntegerPrecisionType) or isinstance(precision, FixedPrecisionType):
             return precision
 
-        if precision.startswith('ap_'):
-            return cls._convert_ap_type(precision)
-        elif precision.startswith('ac_'):
+        if precision.startswith('ac_'):
             return cls._convert_ac_type(precision)
         else:
-            raise Exception('Cannot convert precision string: {}'.format(precision))
+            return cls._convert_ap_type(precision)
 
     @classmethod
     def _convert_ap_type(cls, precision):

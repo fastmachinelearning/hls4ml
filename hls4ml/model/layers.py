@@ -9,6 +9,8 @@ from hls4ml.model.types import find_minimum_width
 from hls4ml.model.attributes import Attribute, CodeMapping, TypeMapping, VariableMapping, WeightAttribute, TypeAttribute, ChoiceAttribute, ConfigurableAttribute, WeightMapping
 from hls4ml.model.attributes import AttributeDict
 
+from hls4ml.utils.string_utils import convert_to_snake_case
+
 # TODO move this to some utility module
 class classproperty(object):
     def __init__(self, func):
@@ -66,6 +68,7 @@ class Layer(object):
 
         layer_config = self.model.config.get_layer_config(self)
         for config_key, config_value in layer_config.items():
+            config_key = convert_to_snake_case(config_key)
             if config_key in self.attributes:
                 print('WARNING: Config parameter "{}" overwrites an existing attribute in layer "{}" ({})'.format(config_key, self.name, self.class_name))
             if config_key.endswith('_t') and isinstance(config_value, str): #TODO maybe move this to __setitem__ of AttributeDict?
@@ -113,9 +116,17 @@ class Layer(object):
         # If any expected attributes remain, try adding their default values
         for attr_name, attr in all_attributes.items():
             if attr.default is not None:
-                self.set_attr(attr_name, attr.default)
+                if isinstance(attr, TypeAttribute):
+                    self.set_attr(attr_name, self._wrap_precision_to_type(self.name + '_' + attr_name, attr.default))
+                else:
+                    self.set_attr(attr_name, attr.default)
             else:
                 raise Exception('Attribute "{}" of layer {} ({}) not set and no default value is specified.'.format(attr_name, self.name, self.class_name))
+
+    def _wrap_precision_to_type(self, name, precision):
+        if isinstance(precision, str):
+            precision = self.convert_precision_string(precision)
+        return NamedType(name=name, precision=precision)
 
     def _set_accum_t(self):
         has_accum_t = any(a for a in self.expected_attributes if a.name == 'accum_t' and isinstance(a, TypeAttribute))
@@ -291,7 +302,7 @@ class Input(Layer):
         else:
             default_type_name = 'input{}_t'.format(self.index)
         type_name = self.attributes.get('type_name', default_type_name)
-        precision = self.attributes.get('precision', None)
+        precision, _ = self.model.config.get_precision(self, var='result')
         self.add_output_variable(shape, dims, var_name=self.name, type_name=type_name, precision=precision)
 
 class Reshape(Layer):

@@ -55,13 +55,13 @@ def _get_precision_from_quantizer(quantizer):
         raise Exception('ERROR: Unsupported quantizer: {}'.format(quantizer['class_name']))
 
     decimal = bits - integer
-    signed = '' if signed else 'u'
-    if decimal > 0:
-        return 'ap_{}fixed<{},{}>'.format(signed, bits, integer)
-    else:
-        return 'ap_{}int<{}>'.format(signed, bits)
 
-def config_from_keras_model(model, granularity='model', default_precision='ap_fixed<16,6>', default_reuse_factor=1):
+    if decimal > 0:
+        return hls4ml.model.types.FixedPrecisionType(width=bits, integer=integer, signed=signed)
+    else:
+        return hls4ml.model.types.IntegerPrecisionType(width=integer, signed=signed)
+
+def config_from_keras_model(model, granularity='model', backend=None, default_precision='fixed<16,6>', default_reuse_factor=1):
     """Create an HLS conversion config given the Keras model.
 
     This function serves as the initial step in creating the custom conversion configuration.
@@ -79,7 +79,8 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             generate config keys that affect all layers of a given type, while the 'name' granularity
             will generate config keys for every layer separately, allowing for highly specific
             configuration tweaks.
-        default_precision (str, optional): Default precision to use. Defaults to 'ap_fixed<16,6>'.
+        backend(str, optional): Name of the backend to use
+        default_precision (str, optional): Default precision to use. Defaults to 'fixed<16,6>'.
         default_reuse_factor (int, optional): Default reuse factor. Defaults to 1.
 
     Raises:
@@ -91,6 +92,9 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     if granularity.lower() not in ['model', 'type', 'name']:
         raise Exception('Invalid configuration granularity specified, expected "model", "type" or "name" got "{}"'.format(granularity))
 
+    if backend is not None:
+        backend = hls4ml.backends.get_backend(backend)
+
     #This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
 
@@ -99,23 +103,11 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     else:
         model_arch = json.loads(model.to_json())
 
-    #Define supported layers
-    core_layers = ['InputLayer', 'Dropout', 'Flatten', 'Reshape', 'Permute', 'Embedding']
-    dense_layers = ['Dense', 'BinaryDense', 'TernaryDense']
-    conv_layers = ['Conv1D', 'Conv2D', 'BinaryConv2D', 'SeparableConv2D']
-    pooling_layers = ['MaxPooling1D', 'MaxPooling2D', 'GlobalMaxPooling1D', 'GlobalMaxPooling2D', 'AveragePooling1D', 'AveragePooling2D', 'GlobalAveragePooling1D', 'GlobalAveragePooling2D']
-    norm_layers = ['BatchNormalization']
     activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
-    merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate', 'Dot']
     qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D', 'QBatchNormalization', 'QConv2DBatchnorm']
-    upsampling_layers = ['UpSampling1D', 'UpSampling2D']
-    reshaping_layers = ['ZeroPadding1D', 'ZeroPadding2D']
     graph_layers = ['GarNet', 'GarNetStack']
-    rnn_layers = ['SimpleRNN', 'LSTM', 'GRU']
     #Define layers to skip because they're not configurable or not converted to HLS
     skip_layers = ['Dropout', 'Flatten', 'Reshape', 'Permute']
-    #All supported layers
-    supported_layers = core_layers + dense_layers + conv_layers + pooling_layers + norm_layers + activation_layers + merge_layers + qkeras_layers + upsampling_layers + reshaping_layers + graph_layers + rnn_layers + skip_layers
 
     keras_layer_config = None
     if model_arch['class_name'] == 'Sequential':
@@ -135,7 +127,7 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
 
     print('Topology:')
     for keras_layer in keras_layer_config:
-        if keras_layer['class_name'] not in supported_layers:
+        if keras_layer['class_name'] not in hls4ml.model.layers.layer_map:
             raise Exception('ERROR: Unsupported layer type: {}'.format(keras_layer['class_name']))
         if keras_layer['class_name'] in skip_layers:
             continue
@@ -193,45 +185,40 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             layer_list.append(act_layer)
 
     def make_layer_config(layer):
+        cls_name = layer['class_name']
+        if 'config' in layer.keys():
+            if 'activation' in layer['config'].keys():
+                if layer['config']['activation'] == 'softmax':
+                    cls_name = 'Softmax'
+        
+        layer_cls = hls4ml.model.layers.layer_map[cls_name]
+        if backend is not None:
+            layer_cls = backend.create_layer_class(layer_cls)
+        
         layer_config = {}
-        if layer['class_name'] in dense_layers + conv_layers + rnn_layers:
-            layer_config['Precision'] = {}
-            layer_config['Precision']['weight'] = default_precision
-            layer_config['Precision']['bias'] = default_precision
-            layer_config['Precision']['result'] = default_precision
-            layer_config['ReuseFactor'] = default_reuse_factor
-            if layer['class_name'] in rnn_layers:
-                layer_config['Precision']['recurrent_weight'] = default_precision
 
-        elif layer['class_name'] in activation_layers:
-            layer_config['Precision'] = default_precision
-            layer_config['ReuseFactor'] = default_reuse_factor
-            layer_config['table_size'] = 1024
-            is_softmax = layer['class_name'] == 'Softmax'
-            if 'config' in layer.keys():
-                if 'activation' in layer['config'].keys():
-                    is_softmax = is_softmax or (layer['config']['activation'] == 'softmax')
-            if is_softmax:
-               layer_config['exp_table_t'] = 'ap_fixed<18,8,AP_RND,AP_SAT>'
-               layer_config['inv_table_t'] = 'ap_fixed<18,8,AP_RND,AP_SAT>'
+        config_attrs = [a for a in layer_cls.expected_attributes if a.configurable]
+        for attr in config_attrs:
+            if isinstance(attr, hls4ml.model.attributes.TypeAttribute):
+                precision_cfg = layer_config.setdefault('Precision', {})
+                name = attr.name
+                if name.endswith('_t'):
+                    name = name[:-2]
+                if attr.default is None:
+                    precision_cfg[name] = default_precision
+                else:
+                    precision_cfg[name] = str(attr.default)
             else:
-                layer_config['table_t'] = 'ap_fixed<18,8>'
-        
-        elif layer['class_name'] in norm_layers:
-            layer_config['Precision'] = {}
-            layer_config['Precision']['scale'] = default_precision
-            layer_config['Precision']['bias'] = default_precision
-            layer_config['ReuseFactor'] = default_reuse_factor
-        
-        elif layer['class_name'] in qkeras_layers:
+                if attr.default is not None:
+                    layer_config[attr.config_name] = attr.default
+            
+
+        if layer['class_name'] in qkeras_layers:
             if 'precision' in layer:
-                layer_config['Precision'] = {}
                 for name, precision in layer['precision'].items():
-                    layer_config['Precision'][name] = precision
+                    layer_config['Precision'][name] = str(precision)
             else:
                 print('WARNING: Found no precision information in QKeras layer {} ({})'.format(layer['name'], layer['class_name']))
-                layer_config['Precision'] = default_precision
-            layer_config['ReuseFactor'] = default_reuse_factor
 
         elif layer['class_name'] in ['GarNet', 'GarNetStack']:
             ## Following code copy-pasted from hls4ml.model.hls_layers - can we factor out commonalities between the two modules?
@@ -259,20 +246,13 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
             layer_config['ReuseFactor'] = default_reuse_factor
 
         elif layer['class_name'] == 'Input':
-            layer_config['Precision'] = {}
-
             dtype = layer['config']['dtype']
             if dtype.startswith('int') or dtype.startswith('uint'):
                 typename = dtype[:dtype.index('int') + 3]
                 width = int(dtype[dtype.index('int') + 3:])
                 layer_config['Precision']['result'] = 'ap_{}<{}>'.format(typename, width)
             # elif bool, q[u]int, ...
-            else:
-                layer_config['Precision']['result'] = default_precision
 
-        else:
-            layer_config['Precision'] = default_precision
-        
         return layer_config
 
     config = {}
@@ -281,8 +261,9 @@ def config_from_keras_model(model, granularity='model', default_precision='ap_fi
     model_config['Precision'] = default_precision
     model_config['ReuseFactor'] = default_reuse_factor
     model_config['Strategy'] = 'Latency'
+    model_config['BramFactor'] = 1_000_000_000
     #model_config['Compression'] = False
-    #model_config['Trace'] = False
+    model_config['TraceOutput'] = False
 
     config['Model'] = model_config
     
