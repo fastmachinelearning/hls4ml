@@ -692,8 +692,6 @@ class Activation(Layer):
     _expected_attributes = [
         Attribute('n_in'),
         Attribute('activation', value_type=str),
-        
-        TypeAttribute('result')
     ]
 
     def initialize(self):
@@ -719,11 +717,6 @@ class PReLU(Activation):
         self.add_weights_variable(name='alpha', var_name='a{index}')
 
 class Softmax(Activation):
-    _expected_attributes = [
-        ChoiceAttribute('implementation', ['latency', 'stable', 'argmax', 'legacy'], default='stable'),
-        Attribute('skip', value_type=bool, default=False),
-    ]
-
     def initialize(self):
         super(Softmax, self).initialize()
 

@@ -6,8 +6,8 @@ from collections.abc import Iterable
 import re
 
 from hls4ml.backends.backend import Backend
-from hls4ml.model.layers import Layer, Dense, BatchNormalization, Activation, ParametrizedActivation, Softmax, Conv1D, Conv2D, SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Conv2DBatchnorm, Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D, SimpleRNN, LSTM, GRU, Dot, Embedding, GarNet, GarNetStack
-from hls4ml.model.attributes import ConfigurableAttribute, TypeAttribute
+from hls4ml.model.layers import Layer, Dense, BatchNormalization, Activation, Softmax, Conv1D, Conv2D, SeparableConv1D, SeparableConv2D, Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D, SimpleRNN, LSTM, GRU, Dot, Embedding, GarNet, GarNetStack
+from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute, TypeAttribute
 from hls4ml.model.types import IntegerPrecisionType, FixedPrecisionType, XnorPrecisionType, ExponentPrecisionType, RoundingMode, SaturationMode
 from hls4ml.writer import get_writer
 from hls4ml.model.optimizer import model_optimizer
@@ -23,12 +23,12 @@ class FPGABackend(Backend):
 
         accum_layers = [
             Dense,
-            Conv1D, Conv2D, SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Conv2DBatchnorm,
+            Conv1D, Conv2D, SeparableConv1D, SeparableConv2D,
             Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D,
             SimpleRNN, LSTM, GRU,
             Dot,
         ]
-        
+
         for layer in accum_layers:
             attrs = self.attribute_map.get(layer, [])
             attrs.append(TypeAttribute('accum'))
@@ -36,7 +36,7 @@ class FPGABackend(Backend):
 
         rf_layers = accum_layers + [
             BatchNormalization,
-            Activation, ParametrizedActivation, Softmax,
+            Activation,
             Embedding,
             GarNet, GarNetStack
         ]
@@ -45,20 +45,19 @@ class FPGABackend(Backend):
             attrs = self.attribute_map.get(layer, [])
             attrs.append(ConfigurableAttribute('reuse_factor', default=1))
             self.attribute_map[layer] = attrs
-        
-        act_layers = [
-            Activation, ParametrizedActivation, Softmax,
-        ]
 
-        for layer in act_layers:
-            attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('table_size', default=1024))
-            if layer == Softmax:
-                attrs.append(TypeAttribute('exp_table', default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT)))
-                attrs.append(TypeAttribute('inv_table', default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT)))
-            else:
-                attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8)))
-            self.attribute_map[layer] = attrs
+        act_attrs = self.attribute_map.get(Activation, [])
+        act_attrs.append(ConfigurableAttribute('table_size', default=1024))
+        act_attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8)))
+        self.attribute_map[Activation] = act_attrs
+
+        softmax_attrs = self.attribute_map.get(Softmax, [])
+        softmax_attrs.append(ChoiceAttribute('implementation', ['latency', 'stable', 'argmax', 'legacy'], default='stable'))
+        softmax_attrs.append(ConfigurableAttribute('skip', value_type=bool, default=False))
+        softmax_attrs.append(TypeAttribute('exp_table', default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT)))
+        softmax_attrs.append(TypeAttribute('inv_table', default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT)))
+        self.attribute_map[Softmax] = softmax_attrs
+
 
     def create_layer_class(self, layer_class):
         new_attrubutes = []
