@@ -5,7 +5,7 @@ from hls4ml.converters.utils import parse_data_format, compute_padding_1d, compu
 
 pooling_layers = ['MaxPooling1D', 'MaxPooling2D', 'AveragePooling1D', 'AveragePooling2D']
 @keras_handler(*pooling_layers)
-def parse_pooling_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_pooling_layer(keras_layer, input_names, input_shapes, data_reader):
     assert('Pooling' in keras_layer['class_name'])
 
     layer = parse_default_keras_layer(keras_layer, input_names)
@@ -74,7 +74,7 @@ def parse_pooling_layer(keras_layer, input_names, input_shapes, data_reader, con
 
 global_pooling_layers = ['GlobalMaxPooling1D', 'GlobalMaxPooling2D', 'GlobalAveragePooling1D', 'GlobalAveragePooling2D']
 @keras_handler(*global_pooling_layers)
-def parse_global_pooling_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_global_pooling_layer(keras_layer, input_names, input_shapes, data_reader):
     assert('Pooling' in keras_layer['class_name'])
 
     layer = parse_default_keras_layer(keras_layer, input_names)

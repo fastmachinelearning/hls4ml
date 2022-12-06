@@ -3,7 +3,7 @@ from hls4ml.converters.keras_to_hls import keras_handler
 from hls4ml.converters.keras.core import TernaryQuantizer
 
 @keras_handler('GarNet', 'GarNetStack')
-def parse_garnet_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_garnet_layer(keras_layer, input_names, input_shapes, data_reader):
     assert(keras_layer['class_name'] in ['GarNet', 'GarNetStack'])
 
     if not keras_layer['config']['simplified']:

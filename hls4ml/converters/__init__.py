@@ -5,7 +5,7 @@ import importlib
 import warnings
 
 from hls4ml.utils.config import create_config
-from hls4ml.converters.keras_to_hls import keras_to_hls, get_supported_keras_layers, register_keras_layer_handler
+from hls4ml.converters.keras_to_hls import keras_to_hls, get_supported_keras_layers, register_keras_layer_handler, parse_keras_model, KerasFileReader, KerasModelReader
 
 #----------Make converters available if the libraries can be imported----------#
 try:

@@ -5,7 +5,7 @@ from hls4ml.converters.keras_to_hls import keras_handler
 from hls4ml.converters.utils import parse_data_format
 
 @keras_handler('Flatten')
-def parse_flatten_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_flatten_layer(keras_layer, input_names, input_shapes, data_reader):
     assert(keras_layer["class_name"] == 'Flatten')
 
     layer = parse_default_keras_layer(keras_layer, input_names)
@@ -17,7 +17,7 @@ def parse_flatten_layer(keras_layer, input_names, input_shapes, data_reader, con
     return layer, output_shape
 
 @keras_handler('Reshape')
-def parse_reshape_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_reshape_layer(keras_layer, input_names, input_shapes, data_reader):
     assert(keras_layer["class_name"] == 'Reshape')
 
     layer = parse_default_keras_layer(keras_layer, input_names)
@@ -28,7 +28,7 @@ def parse_reshape_layer(keras_layer, input_names, input_shapes, data_reader, con
     return layer, output_shape
 
 @keras_handler('UpSampling1D')
-def parse_upsampling1d_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_upsampling1d_layer(keras_layer, input_names, input_shapes, data_reader):
     assert('UpSampling' in keras_layer['class_name'])
 
     layer = parse_default_keras_layer(keras_layer, input_names)
@@ -54,7 +54,7 @@ def parse_upsampling1d_layer(keras_layer, input_names, input_shapes, data_reader
     return layer, output_shape
 
 @keras_handler('UpSampling2D')
-def parse_upsampling2d_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_upsampling2d_layer(keras_layer, input_names, input_shapes, data_reader):
     assert('UpSampling2D' in keras_layer['class_name'])
 
     layer = parse_default_keras_layer(keras_layer, input_names)
@@ -81,7 +81,7 @@ def parse_upsampling2d_layer(keras_layer, input_names, input_shapes, data_reader
     return layer, output_shape
 
 @keras_handler('Permute')
-def parse_permute_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_permute_layer(keras_layer, input_names, input_shapes, data_reader):
     assert(keras_layer['class_name'] == 'Permute')
 
     layer = parse_default_keras_layer(keras_layer, input_names)

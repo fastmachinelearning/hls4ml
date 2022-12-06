@@ -3,7 +3,7 @@ from hls4ml.converters.keras_to_hls import keras_handler
 
 merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate', 'Dot']
 @keras_handler(*merge_layers)
-def parse_merge_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_merge_layer(keras_layer, input_names, input_shapes, data_reader):
     assert(keras_layer['class_name'] in merge_layers)
 
     layer = parse_default_keras_layer(keras_layer, input_names)

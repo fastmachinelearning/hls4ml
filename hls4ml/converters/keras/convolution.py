@@ -4,7 +4,7 @@ from hls4ml.converters.keras_to_hls import keras_handler
 from hls4ml.converters.utils import parse_data_format, compute_padding_1d, compute_padding_2d
 
 @keras_handler('Conv1D', 'SeparableConv1D')
-def parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader):
     assert('Conv1D' in keras_layer['class_name'])
 
     layer = parse_default_keras_layer(keras_layer, input_names)
@@ -39,7 +39,7 @@ def parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader, conf
 
 
 @keras_handler('Conv2D', 'SeparableConv2D', 'DepthwiseConv2D')
-def parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader):
     assert('Conv2D' in keras_layer['class_name'])
 
     layer = parse_default_keras_layer(keras_layer, input_names)

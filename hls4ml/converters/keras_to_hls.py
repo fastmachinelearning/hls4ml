@@ -202,15 +202,7 @@ def compute_padding_2d(pad_type, in_height, in_width, stride_height, stride_widt
 
     return (out_height, out_width, pad_top, pad_bottom, pad_left, pad_right)
 
-def keras_to_hls(config):
-
-    ######################
-    ##  Do translation
-    ######################
-
-    #This is a list of dictionaries to hold all the layer info we need to generate HLS
-    layer_list = []
-
+def get_model_arch(config):
     if 'KerasModel' in config:
         # Model instance passed in config from API
         keras_model = config['KerasModel']
@@ -239,8 +231,13 @@ def keras_to_hls(config):
         reader = KerasFileReader(config)
     else:
         raise ValueError('No model found in config file.')
+    
+    return model_arch, reader
 
-    #print(model_arch)
+def parse_keras_model(model_arch, reader):
+
+    #This is a list of dictionaries to hold all the layer info we need to generate HLS
+    layer_list = []
 
     #Define layers to skip for conversion to HLS
     skip_layers = ['Dropout']
@@ -325,7 +322,7 @@ def keras_to_hls(config):
         else:
             input_names = None
 
-        layer, output_shape = layer_handlers[keras_class](keras_layer, input_names, input_shapes, reader, config)
+        layer, output_shape = layer_handlers[keras_class](keras_layer, input_names, input_shapes, reader)
 
         print('Layer name: {}, layer type: {}, input shapes: {}, output shape: {}'.format(layer['name'], layer['class_name'], input_shapes, output_shape))
         layer_list.append( layer )
@@ -343,8 +340,7 @@ def keras_to_hls(config):
                     act_layer,
                     None,
                     [output_shape],
-                    reader,
-                    config
+                    reader
                 )
             else:
                 act_layer['name'] = layer['name'] + '_' + layer['activation']
@@ -365,11 +361,12 @@ def keras_to_hls(config):
         assert(output_shape is not None)
         
         output_shapes[layer['name']] = output_shape
+    
+    return layer_list, input_layers, output_layers
 
-    #################
-    ## Generate HLS
-    #################
-
+def keras_to_hls(config):
+    model_arch, reader = get_model_arch(config)
+    layer_list, input_layers, output_layers = parse_keras_model(model_arch, reader)
     print('Creating HLS model')
     hls_model = ModelGraph(config, reader, layer_list, input_layers, output_layers)
     return hls_model

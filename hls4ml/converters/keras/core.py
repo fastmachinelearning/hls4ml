@@ -7,7 +7,7 @@ from hls4ml.model.types import Quantizer
 from hls4ml.model.types import IntegerPrecisionType
 
 @keras_handler('InputLayer')
-def parse_input_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_input_layer(keras_layer, input_names, input_shapes, data_reader):
     assert(keras_layer['class_name'] == 'InputLayer')
 
     layer = parse_default_keras_layer(keras_layer, input_names)
@@ -59,7 +59,7 @@ class TernaryQuantizer(Quantizer):
 
 dense_layers = ['Dense', 'BinaryDense', 'TernaryDense']
 @keras_handler(*dense_layers)
-def parse_dense_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_dense_layer(keras_layer, input_names, input_shapes, data_reader):
     assert('Dense' in keras_layer['class_name'])
 
     layer = parse_default_keras_layer(keras_layer, input_names)
@@ -84,7 +84,7 @@ def parse_dense_layer(keras_layer, input_names, input_shapes, data_reader, confi
 
 activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
 @keras_handler(*activation_layers)
-def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader):
     assert(keras_layer['class_name'] in activation_layers)
 
     layer = parse_default_keras_layer(keras_layer, input_names)
@@ -109,7 +109,7 @@ def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader, 
 
 
 @keras_handler('BatchNormalization')
-def parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader):
     assert('BatchNormalization' in keras_layer['class_name'] or 'QConv2DBatchnorm' in keras_layer['class_name'])
 
     layer = parse_default_keras_layer(keras_layer, input_names)
@@ -130,7 +130,7 @@ def parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader, c
 
 
 @keras_handler('Embedding')
-def parse_embedding_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_embedding_layer(keras_layer, input_names, input_shapes, data_reader):
     assert('Embedding' in keras_layer['class_name'])
 
     layer = parse_default_keras_layer(keras_layer, input_names)

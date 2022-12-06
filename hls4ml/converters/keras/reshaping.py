@@ -5,7 +5,7 @@ from hls4ml.converters.keras_to_hls import keras_handler
 
 
 @keras_handler('ZeroPadding1D')
-def parse_zeropadding1d_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_zeropadding1d_layer(keras_layer, input_names, input_shapes, data_reader):
     assert(keras_layer['class_name'] == 'ZeroPadding1D')
 
     layer = parse_default_keras_layer(keras_layer, input_names)
@@ -42,7 +42,7 @@ def parse_zeropadding1d_layer(keras_layer, input_names, input_shapes, data_reade
     return layer, output_shape
 
 @keras_handler('ZeroPadding2D')
-def parse_zeropadding2d_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_zeropadding2d_layer(keras_layer, input_names, input_shapes, data_reader):
     assert(keras_layer['class_name'] == 'ZeroPadding2D')
 
     layer = parse_default_keras_layer(keras_layer, input_names)
