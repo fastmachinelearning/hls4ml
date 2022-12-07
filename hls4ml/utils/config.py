@@ -103,86 +103,9 @@ def config_from_keras_model(model, granularity='model', backend=None, default_pr
     else:
         model_arch = json.loads(model.to_json())
 
-    activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
-    qkeras_layers = ['QDense', 'QActivation', 'QConv1D', 'QConv2D', 'QBatchNormalization', 'QConv2DBatchnorm']
-    graph_layers = ['GarNet', 'GarNetStack']
-    #Define layers to skip because they're not configurable or not converted to HLS
-    skip_layers = ['Dropout', 'Flatten', 'Reshape', 'Permute']
+    reader = hls4ml.converters.KerasModelReader(model)
 
-    keras_layer_config = None
-    if model_arch['class_name'] == 'Sequential':
-        print('Interpreting Sequential')
-        keras_layer_config = model_arch['config']
-        if 'layers' in keras_layer_config: # Newer Keras versions have 'layers' in 'config' key
-            keras_layer_config = keras_layer_config['layers']
-        # Sequential doesn't have InputLayer in TF < 2.3 (Keras 2.4.0)
-        if keras_layer_config[0]['class_name'] != 'InputLayer':
-            input_layer = {}
-            input_layer['name'] = 'input1'
-            input_layer['class_name'] = 'Input'
-            layer_list.append(input_layer)
-    elif model_arch['class_name'] in ['Model', 'Functional']:
-        print('Interpreting Model')
-        keras_layer_config = model_arch['config']['layers']
-
-    print('Topology:')
-    for keras_layer in keras_layer_config:
-        if keras_layer['class_name'] not in hls4ml.model.layers.layer_map:
-            raise Exception('ERROR: Unsupported layer type: {}'.format(keras_layer['class_name']))
-        if keras_layer['class_name'] in skip_layers:
-            continue
-
-        #Dictionary to fill in and append to layer_list
-        layer = {}
-
-        #Extract name for finding weights and biases
-        layer['name'] = keras_layer['config']['name']
-        layer['class_name'] = keras_layer['class_name']
-        layer['config'] = keras_layer['config']
-
-        if layer['class_name'] == 'InputLayer':
-            layer['class_name'] = 'Input'
-
-        if layer['class_name'] in qkeras_layers:
-            layer['precision'] = {}
-            for qname, qclass in layer['config'].items():
-                if 'quantizer' in qname.lower():
-                    pname = qname.split('_quantizer')[0]
-                    if pname == 'kernel': pname = 'weight'
-                    if qclass is not None:
-                        precision = _get_precision_from_quantizer(qclass)
-                        layer['precision'][pname] = precision
-                elif qname == 'activation' and layer['class_name'] == 'QActivation':
-                    precision = _get_precision_from_quantizer(qclass)
-                    layer['precision']['result'] = precision
-
-        if layer['class_name'] in graph_layers:
-            # Graph layer config needs access to number of input vertices from the shape of the input tensor
-            # but to really compute it we'd have to track the full tensor flow as done in hls4ml.converters.keras_to_hls.
-            # So here we just assume that the first input layer of the model has shape [batch_size, n_vertices, n_features]
-            try:
-                first_input_layer = next(kl for kl in keras_layer_config if kl['class_name'] == 'InputLayer')
-                layer['n_vertices'] = first_input_layer['config']['batch_input_shape'][1]
-            except:
-                print('  Generating config for keras layer {}: could not estimate n_vertices. Defaulting to 128.')
-                layer['n_vertices'] = 128
-
-        print('Layer name: {}, layer type: {}'.format(layer['name'], layer['class_name']))
-        layer_list.append( layer )
-        if 'activation' in layer['config'] and layer['class_name'] not in activation_layers:
-            act_layer = {}
-            act_details = layer['config']['activation']
-            if isinstance(act_details, dict):
-                precision = _get_precision_from_quantizer(act_details)
-                act_details = act_details['class_name']
-                act_layer['precision'] = {}
-                act_layer['precision']['result'] = precision
-                act_layer['class_name'] = 'QActivation'
-            else:
-                act_layer['class_name'] = 'Activation'
-            act_layer['name'] = layer['name'] + '_' + act_details
-            print('  -> Activation ({}), layer name: {}'.format(act_details, layer['name']))
-            layer_list.append(act_layer)
+    layer_list, _, _ = hls4ml.converters.parse_keras_model(model_arch, reader)
 
     def make_layer_config(layer):
         cls_name = layer['class_name']
@@ -213,14 +136,18 @@ def config_from_keras_model(model, granularity='model', backend=None, default_pr
                     layer_config[attr.config_name] = attr.default
             
 
-        if layer['class_name'] in qkeras_layers:
-            if 'precision' in layer:
-                for name, precision in layer['precision'].items():
-                    layer_config['Precision'][name] = str(precision)
+        quantizers = { qname: qclass for qname, qclass in layer.items() if 'quantizer' in qname}
+        for qname, qclass in quantizers.items():
+            pname = qname.lower().split('_quantizer')[0]
+            if pname == 'activation': pname = 'result'
+            if isinstance(qclass, dict):
+                precision = _get_precision_from_quantizer(qclass)
             else:
-                print('WARNING: Found no precision information in QKeras layer {} ({})'.format(layer['name'], layer['class_name']))
+                precision = qclass.hls_type
+            #TODO In the next version of this function, these should not be exposed to user to tweak
+            layer_config['Precision'][pname] = str(precision)
 
-        elif layer['class_name'] in ['GarNet', 'GarNetStack']:
+        if layer['class_name'] in ['GarNet', 'GarNetStack']:
             ## Following code copy-pasted from hls4ml.model.hls_layers - can we factor out commonalities between the two modules?
 
             ## Define default precisions for various internal arrays (can be overridden from the config file)
