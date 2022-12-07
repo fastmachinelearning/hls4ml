@@ -87,6 +87,7 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader)
     if activation_config['class_name'] == 'quantized_bits':
         activation_config['class_name'] = 'linear'
     layer['activation'] = activation_config['class_name'].replace('quantized_', '')
+    layer['activation_quantizer'] = activation_config
     return layer, [shape for shape in input_shapes[0]]
 
 @keras_handler('QBatchNormalization')
