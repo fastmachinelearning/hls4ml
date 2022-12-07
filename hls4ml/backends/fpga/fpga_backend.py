@@ -181,6 +181,27 @@ class FPGABackend(Backend):
 
             layer.set_attr('reuse_factor', float(rf) / kernel_multiplies)
 
+    def get_valid_conv_partition_splits(self, out_height, out_width):
+        """Generate valid partition splits of a Conv1D/2D layer.
+        
+        Essentially a list of divisors of the number of pixels of the output image.
+
+        Args:
+            out_height (int): The height of the output image
+            out_width (int): The width of the output image
+
+        Returns:
+            list: List of valid partition splits
+        """        
+        n_pixels = out_height * out_width
+        valid_n_partitions = []
+        for i in range(1, int(n_pixels / 2) + 1):
+            if n_pixels % i == 0:
+                valid_n_partitions.append(i)
+        valid_n_partitions.append(n_pixels)
+
+        return valid_n_partitions
+
     @classmethod
     def convert_precision_string(cls, precision):
         if isinstance(precision, IntegerPrecisionType) or isinstance(precision, FixedPrecisionType):
@@ -386,6 +407,223 @@ class FPGABackend(Backend):
                 windows_int.append((int(''.join(str(p) for p in reversed(windows_bin[i * min_W + j])), 2)))
 
         return (min_H, min_W, windows_int)
+
+    def _compute_conv1d_im2col(self, input_shape, kernel=3, stride=1, pad=(0,0), dilation=1):
+        W, C = input_shape
+        pad_l, pad_r = pad
+
+        out_w = (W + pad_l + pad_r - (dilation * (kernel - 1) + 1)) // stride + 1
+
+        input_img = np.arange(1, W * C + 1)
+        im_matrix = np.zeros((kernel * C * out_w, ))
+
+        index = 0
+        for i_ow in range(out_w):
+            for i_kw in range(kernel):
+                for i_c in range(C):
+                    input_col = -pad_l + i_kw * dilation + i_ow * stride
+                    if (input_col >= 0 and input_col < W):
+                        im_matrix[index] = input_img[input_col * C + i_c]
+                    else:
+                        im_matrix[index] = 0
+                    index += 1
+        
+        im_matrix = im_matrix.reshape(out_w, -1)
+        return im_matrix
+
+
+    def generate_conv1d_line_buffer_fn(self, layer_idx, n_partitions, in_W, in_C, kernel=3, stride=1, pad=0, dilation=1):
+        """Generate a C++ function that mimics the im2col algorithm. This function works for 1D convolution.
+
+        The HLS compiler produces suboptimal designs for a im2col algorithm implementation, so a trick we use is
+        to generate a resulting a result of im2col transformation explicitly, instead of relying on loops. Since
+        the result depends on the paraleters of the convolution layer (the input size, the kernel size, stride etc),
+        we need to do this for every convolution layer. 
+
+        Args:
+            layer_idx (int): Index of layer ('index' attribute).
+            n_partitions (int): Number of partitions to divide the input into. The pixels in each partition will be processed in parallel.
+            in_W (int): Width of input.
+            in_C (int): Number of channels.
+            kernel (int, optional): Size of the kernel. Defaults to 3.
+            stride (int, optional): Stride length. Defaults to 1.
+            pad (int or Iterable, optional): Padding to apply. Specified as either a number or a list [left_pad, right_pad]. Defaults to 0.
+            dilation (int, optional): Dilation rate. Defaults to 1.
+
+        Returns:
+            str: Generated C++ function
+        """        
+        if isinstance(pad, Iterable):
+            pad_left = pad[0]
+            pad_right = pad[1]
+        else:
+            pad_left = pad
+            pad_right = pad
+
+        im2col_matrix = self._compute_conv1d_im2col(
+            (in_W, in_C),
+            kernel,
+            stride,
+            (pad_left, pad_right),
+            dilation
+        )
+
+        generated_code = (
+            "template<class data_T, typename CONFIG_T>\n"
+            "class fill_buffer_{index} : public FillConv1DBuffer<data_T, CONFIG_T> {{\n"
+            "    public:\n"
+            "    static void fill_buffer(\n"
+            "        data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],\n"
+            "        data_T buffer[CONFIG_T::n_pixels][CONFIG_T::filt_width * CONFIG_T::n_chan],\n"
+            "        const unsigned partition\n"
+            "    ) {{\n"
+        ).format(index=layer_idx)
+        indent = '    '
+
+        for partition_idx, partition in enumerate(np.split(im2col_matrix, n_partitions)):
+            generated_code += indent * 2 + 'if (partition == {:>3}) {{\n'.format(partition_idx)
+            for pixel_idx, arr in enumerate(partition):
+                buffer_stmts = []
+                for j, v in enumerate(arr):
+                    if v == 0:
+                        val = '0'
+                    else:
+                        val = 'data[{}]'.format(int(v-1))
+                    buffer_stmts.append('buffer[{}][{}] = {:>10};'.format(pixel_idx, j, val))
+                generated_code += indent * 3 + ' '.join(buffer_stmts) + '\n'
+            generated_code += '\n' + indent * 2 + '}\n'
+
+        generated_code += indent + '}\n'
+        generated_code += '};\n'
+
+        return generated_code
+
+    def _compute_conv2d_im2col(self, input_shape, kernel=(3, 3), stride=(1, 1), pad=(0, 0, 0, 0), dilation=(1,1)):
+        H, W, C = input_shape
+        kernel_h, kernel_w = kernel
+        stride_h, stride_w = stride
+        pad_t, pad_b, pad_l, pad_r = pad
+        dilation_h, dilation_w = dilation
+
+        out_h = (H + pad_t + pad_b - (dilation_h * (kernel_h - 1) + 1)) // stride_h + 1
+        out_w = (W + pad_l + pad_r - (dilation_w * (kernel_w - 1) + 1)) // stride_w + 1
+
+        input_img = np.arange(1, H * W * C + 1)
+        im_matrix = np.zeros((kernel_h * kernel_w * C * out_h * out_w, ))
+
+        index = 0
+        for i_oh in range(out_h):
+            for i_ow in range(out_w):
+                for i_kh in range(kernel_h):
+                    input_row = -pad_t + i_kh * dilation_h + i_oh * stride_h
+                    for i_kw in range(kernel_w):
+                        for i_c in range(C):
+                            if (input_row < 0 or input_row >= H):
+                                im_matrix[index] = 0
+                            else:
+                                input_col = -pad_l + i_kw * dilation_w + i_ow * stride_w
+                                if (input_col >= 0 and input_col < W):
+                                    im_matrix[index] = input_img[input_row * W * C + input_col * C + i_c]
+                                else:
+                                    im_matrix[index] = 0
+                            index += 1
+        
+        im_matrix = im_matrix.reshape(out_h * out_w, -1)
+        return im_matrix
+
+
+    def generate_conv2d_line_buffer_fn(self, layer_idx, n_partitions, in_H, in_W, in_C, kernel=(3, 3), stride=(1, 1), pad=(0, 0, 0, 0), dilation=(1, 1)):
+        """Generate a C++ function that mimics the im2col algorithm. This function works for 2D convolution.
+
+        The HLS compiler produces suboptimal designs for a im2col algorithm implementation, so a trick we use is
+        to generate a resulting a result of im2col transformation explicitly, instead of relying on loops. Since
+        the result depends on the paraleters of the convolution layer (the input size, the kernel size, stride etc),
+        we need to do this for every convolution layer. 
+
+        Args:
+            layer_idx (int): Index of layer ('index' attribute).
+            n_partitions (int): Number of partitions to divide the input into. The pixels in each partition will be processed in parallel.
+            in_H (int): Height of input.
+            in_W (int): Width of input.
+            in_C (int): Number of channels.
+            kernel (int or Iterable, optional): Size of the kernel. Defaults to (3,3).
+            stride (int or Iterable, optional): Stride length. Defaults to (1,1).
+            pad (int or Iterable, optional): Padding to apply. Specified as either a number or a list [top_pad, bottom_pad, left_pad, right_pad]. Defaults to 0.
+            dilation (int or Iterable, optional): Dilation rate. Defaults to (1,1).
+
+        Returns:
+            str: Generated C++ function
+        """  
+        
+        if isinstance(kernel, Iterable):
+            kernel_height = kernel[0]
+            kernel_width = kernel[1]
+        else:
+            kernel_height = kernel
+            kernel_width = kernel
+
+        if isinstance(stride, Iterable):
+            stride_height = stride[0]
+            stride_width = stride[1]
+        else:
+            stride_height = stride
+            stride_width = stride
+
+        if isinstance(pad, Iterable):
+            pad_top = pad[0]
+            pad_bottom = pad[1]
+            pad_left = pad[2]
+            pad_right = pad[3]
+        else:
+            pad_top = pad
+            pad_bottom = pad
+            pad_left = pad
+            pad_right = pad
+
+        if isinstance(dilation, Iterable):
+            dilation_height = dilation[0]
+            dilation_width = dilation[1]
+        else:
+            dilation_height = dilation
+            dilation_width = dilation
+
+        im2col_matrix = self._compute_conv2d_im2col(
+            (in_H, in_W, in_C),
+            (kernel_height, kernel_width),
+            (stride_height, stride_width),
+            (pad_top, pad_bottom, pad_left, pad_right),
+            (dilation_height, dilation_width)
+        )
+
+        generated_code = (
+            "template<class data_T, typename CONFIG_T>\n"
+            "class fill_buffer_{index} : public FillConv2DBuffer<data_T, CONFIG_T> {{\n"
+            "    public:\n"
+            "    static void fill_buffer(\n"
+            "        data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],\n"
+            "        data_T buffer[CONFIG_T::n_pixels][CONFIG_T::filt_height * CONFIG_T::filt_width * CONFIG_T::n_chan],\n"
+            "        const unsigned partition\n"
+            "    ) {{\n"
+        ).format(index=layer_idx)
+        indent = '    '
+
+        for partition_idx, partition in enumerate(np.split(im2col_matrix, n_partitions)):
+            generated_code += indent * 2 + 'if (partition == {:>3}) {{\n'.format(partition_idx)
+            for pixel_idx, arr in enumerate(partition):
+                buffer_stmts = []
+                for j, v in enumerate(arr):
+                    if v == 0:
+                        val = '0'
+                    else:
+                        val = 'data[{}]'.format(int(v-1))
+                    buffer_stmts.append('buffer[{}][{}] = {:>10};'.format(pixel_idx, j, val))
+                generated_code += indent * 3 + ' '.join(buffer_stmts) + '\n'
+            generated_code += '\n' + indent * 2 + '}\n'
+
+        generated_code += indent + '}\n'
+        generated_code += '};\n'
+
+        return generated_code
 
     @model_optimizer()
     def write_hls(self, model):

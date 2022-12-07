@@ -50,5 +50,6 @@ using stream_out = ihc::stream_out<T>;
 
 #define DIV_ROUNDUP(n,d) ((n + d - 1) / d)
 #define MIN(n,d) (n > d ? d : n)
+#define MAX(n,d) (n < d ? d : n)
 
 #endif
