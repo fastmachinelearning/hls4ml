@@ -561,7 +561,7 @@ void hard_sigmoid(stream<data_T> &data, stream<res_T> &res) {
         HardSigmoidPackLoop:
         #pragma unroll
         for (int j = 0; j < res_T::size; j++) {
-            hls_register typename data_T::value_type datareg = CONFIG_T::slope * in_data[j] + CONFIG_T::shift;
+            hls_register auto datareg = CONFIG_T::slope * in_data[j] + CONFIG_T::shift;
             if (datareg > 1) datareg = 1;
             else if (datareg < 0) datareg = 0;
             out_data[j] = datareg;
