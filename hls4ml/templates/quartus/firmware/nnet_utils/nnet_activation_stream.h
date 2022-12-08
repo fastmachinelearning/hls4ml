@@ -574,6 +574,9 @@ void hard_sigmoid(stream<data_T> &data, stream<res_T> &res) {
 template<class data_T, class res_T, typename CONFIG_T>
 void hard_tanh(stream<data_T> &data, stream<res_T> &res) {
 
+    constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_T::size, CONFIG_T::reuse_factor);
+    constexpr unsigned pipeline = data_T::size / multiplier_limit;
+
     HardSigmoidActLoop:
     #pragma ii pipeline
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
