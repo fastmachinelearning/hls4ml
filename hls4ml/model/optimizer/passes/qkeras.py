@@ -207,7 +207,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
             'scale_quantizer': scale_quantizer,
             'bias_data': bias,
             'bias_quantizer': bias_quantizer,
-            'Trace' : node.get_attr('Trace', False) 
+            'trace' : node.get_attr('trace', False) 
         }
         alpha_layer = model.make_node(ApplyAlpha, node.name + '_alpha', attrs, node.outputs)
         model.insert_node(alpha_layer)
@@ -272,7 +272,7 @@ class ExtractTernaryThreshold(OptimizerPass):
             'reuse_factor' : node.get_attr('reuse_factor'),
             'scale_data': scale,
             'bias_data': bias,
-            'Trace' : node.get_attr('Trace', False)
+            'trace' : node.get_attr('trace', False)
         }
 
         layer = model.make_node(ApplyAlpha, node.name + '_scale', attrs, node.inputs.copy())

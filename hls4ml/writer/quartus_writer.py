@@ -230,7 +230,7 @@ class QuartusWriter(Writer):
                     func = layer.get_attr('function_cpp', None)
                     if func:
                         newline += '    ' + func + '\n'
-                        if model.config.trace_output and layer.get_attr('Trace', False):
+                        if model.config.trace_output and layer.get_attr('trace', False):
                             newline += '#ifndef HLS_SYNTHESIS\n'
                             for var in vars:
                                 newline += '    nnet::save_layer_output<{}>({}, "{}", {});\n'.format(var.type.name, var.name, layer.name, var.size_cpp())
@@ -750,7 +750,7 @@ class QuartusWriter(Writer):
                 newline = ''
                 for layer in model.get_layers():
                     func = layer.get_attr('function_cpp')
-                    if func and model.config.trace_output and layer.get_attr('Trace', False):
+                    if func and model.config.trace_output and layer.get_attr('trace', False):
                         vars = layer.get_variables()
                         for var in vars:
                             newline += indent + 'nnet::trace_outputs->insert(std::pair<std::string, void *>("{}", (void *) malloc({} * element_size)));\n'.format(

@@ -81,7 +81,7 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
             'n_out' : bn_layer.get_attr('n_in'),
             'n_filt' : bn_layer.get_attr('n_filt'),
             'quantize' : quantize,
-            'Trace' : bn_layer.get_attr('Trace')
+            'trace' : bn_layer.get_attr('trace')
         }
         bnbt_layer = model.make_node(BatchNormalizationQuantizedTanh, 'bnbt_' + bn_layer.name, attrs, bn_layer.inputs)
         bnbt_layer.set_thresholds(bn_layer.get_weights('scale').data, bn_layer.get_weights('bias').data, node.get_attr('threshold',0.5))

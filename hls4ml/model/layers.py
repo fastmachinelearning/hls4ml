@@ -22,7 +22,7 @@ class classproperty(object):
 class Layer(object):
     _expected_attributes = [
         Attribute('index'),
-        ConfigurableAttribute('Trace', default=False),
+        ConfigurableAttribute('trace', default=False),
 
         TypeAttribute('result'),
     ]

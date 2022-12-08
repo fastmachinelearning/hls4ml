@@ -712,7 +712,7 @@ class ModelGraph(object):
         layer_sizes = {}
         n_traced = 0
         for layer in self.get_layers():
-            if layer.get_attr('function_cpp', None) and layer.get_attr('Trace', False):
+            if layer.get_attr('function_cpp', None) and layer.get_attr('trace', False):
                 n_traced += len(layer.get_variables())
                 trace_output[layer.name] = []
                 layer_sizes[layer.name] = layer.get_output_variable().shape
