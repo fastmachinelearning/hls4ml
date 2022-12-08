@@ -547,8 +547,6 @@ void sigmoid(stream<data_T> &data, stream<res_T> &res) {
 // Note - Theano and Tensorflow might have different definitions for hard sigmoid; could provide two implementations
 template<class data_T, class res_T, typename CONFIG_T>
 void hard_sigmoid(stream<data_T> &data, stream<res_T> &res) {
-    static const typename data_T::value_type slope = (typename data_T::value_type) 0.2;
-    static const typename data_T::value_type shift = (typename data_T::value_type) 0.5;
 
     constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_T::size, CONFIG_T::reuse_factor);
     constexpr unsigned pipeline = data_T::size / multiplier_limit;
@@ -563,10 +561,33 @@ void hard_sigmoid(stream<data_T> &data, stream<res_T> &res) {
         HardSigmoidPackLoop:
         #pragma unroll
         for (int j = 0; j < res_T::size; j++) {
-            hls_register typename data_T::value_type datareg = slope * in_data[j] + shift;
+            hls_register typename data_T::value_type datareg = CONFIG_T::slope * in_data[j] + CONFIG_T::shift;
             if (datareg > 1) datareg = 1;
             else if (datareg < 0) datareg = 0;
             out_data[j] = datareg;
+        }
+
+        res.write(out_data);
+    }
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
+void hard_tanh(stream<data_T> &data, stream<res_T> &res) {
+
+    HardSigmoidActLoop:
+    #pragma ii pipeline
+    for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+
+        data_T in_data = data.read();
+        res_T out_data;
+
+        HardSigmoidPackLoop:
+        #pragma unroll
+        for (int j = 0; j < res_T::size; j++) {
+            auto sigmoid = CONFIG_T::slope * in_data[j] + CONFIG_T::shift;
+            if (sigmoid > 1) sigmoid = 1;
+            else if (sigmoid < 0) sigmoid = 0;
+            out_data[j] = 2*sigmoid - 1;
         }
 
         res.write(out_data);

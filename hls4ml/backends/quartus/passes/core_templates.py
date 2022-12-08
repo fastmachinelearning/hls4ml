@@ -1,6 +1,7 @@
 
 from hls4ml.backends.backend import get_backend
-from hls4ml.model.layers import Activation, BatchNormalization, Dense, PReLU, ParametrizedActivation, Softmax
+from hls4ml.model.layers import (Activation, BatchNormalization, Dense, PReLU, ParametrizedActivation, Softmax,
+    HardActivation)
 from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
 
 # Dense templates
@@ -117,6 +118,16 @@ activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
     typedef {table_t.name} table_t;
 }};\n"""
 
+hard_activ_config_template = """struct {type}_config{index} {{
+    static const unsigned n_in = {n_in};
+    static const {slope_t.name} slope;
+    static const {shift_t.name} shift;
+    static const unsigned io_type = nnet::{iotype};
+    static const unsigned reuse_factor = {reuse};
+}};
+const {slope_t.name} {type}_config{index}::slope = {slope};
+const {shift_t.name} {type}_config{index}::shift = {shift};\n"""
+
 softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned n_in = {n_in};
     static const unsigned table_size = {table_size};
@@ -143,6 +154,17 @@ class ActivationConfigTemplate(LayerConfigTemplate):
 
         return self.template.format(**params)
 
+class HardActivationConfigTemplate(LayerConfigTemplate):
+    def __init__(self):
+        super().__init__(HardActivation)
+        self.template = hard_activ_config_template
+
+    def format(self, node):
+        params = self._default_config_params(node)
+        params['type'] = node.get_attr('activation')
+
+        return self.template.format(**params)
+
 class SoftmaxConfigTemplate(ActivationConfigTemplate):
     def __init__(self):
         super(ActivationConfigTemplate, self).__init__(Softmax) # Skip ActivationConfigTemplate's __init__
@@ -150,7 +172,7 @@ class SoftmaxConfigTemplate(ActivationConfigTemplate):
 
 class ActivationFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__((Activation, Softmax), include_header=activ_include_list)
+        super().__init__((Activation, HardActivation, Softmax), include_header=activ_include_list)
         self.template = activ_function_template
     
     def format(self, node):

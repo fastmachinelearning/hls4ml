@@ -5,7 +5,6 @@
 #include <string>
 #include <cctype>
 
-#include "firmware/parameters.h"
 #include "firmware/myproject.h"
 
 #include "firmware/nnet_utils/nnet_helpers.h"

@@ -18,6 +18,7 @@
 //
 
 #include "myproject.h"
+#include "parameters.h"
 
 //hls-fpga-machine-learning insert weights
 

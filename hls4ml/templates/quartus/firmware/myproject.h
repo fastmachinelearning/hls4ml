@@ -32,7 +32,7 @@
 
 // Streams are explicitly defined in defines.h, which are included for parameters.h
 // Defining them again in this file will cause compile-time errors
-#include "parameters.h"
+#include "defines.h"
 
 // If using io_parallel, inputs and output need to be initialised before calling the top-level function
 // If using io_stream, no inputs/outputs are initialised, as they are passed by reference to the top-level function

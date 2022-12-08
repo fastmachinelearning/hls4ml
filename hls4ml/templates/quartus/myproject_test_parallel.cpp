@@ -23,7 +23,6 @@
 #include <string>
 #include <cctype>
 
-#include "firmware/parameters.h"
 #include "firmware/myproject.h"
 
 #define CHECKPOINT 5000

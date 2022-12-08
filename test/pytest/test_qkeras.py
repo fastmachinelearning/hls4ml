@@ -233,8 +233,9 @@ def test_quantizer(randX_1000_1, quantizer, backend, io_type):
                                        (quantized_sigmoid(5)),
                                        (quantized_sigmoid(7, use_real_sigmoid=True))
                                        ])
-@pytest.mark.parametrize('backend', ['Vivado'])   # Vivado only for now
-def test_quantizer_special(randX_1000_1, quantizer, backend):
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_quantizer_special(randX_1000_1, quantizer, backend, io_type):
   '''
   Test a single quantizer (tanh or sigmoid) as an Activation function.
   Checks the type inference through the conversion is correct without just
@@ -247,12 +248,13 @@ def test_quantizer_special(randX_1000_1, quantizer, backend):
   model.compile()
 
   config = hls4ml.utils.config_from_keras_model(model, granularity='name')
-  output_dir = str(test_root_path / 'hls4mlprj_qkeras_quantizer_{}_{}_{}'.format(quantizer.__class__.__name__,
-                                                            quantizer.bits, backend))
+  output_dir = str(test_root_path / 'hls4mlprj_qkeras_quantizer_{}_{}_{}_{}'.format(quantizer.__class__.__name__,
+                                                            quantizer.bits, backend, io_type))
   hls_model = hls4ml.converters.convert_from_keras_model(model,
                                                        hls_config=config,
                                                        output_dir=output_dir,
-                                                       backend=backend)
+                                                       backend=backend,
+                                                       io_type=io_type)
   hls_model.compile()
 
   y_qkeras = model.predict(X)
