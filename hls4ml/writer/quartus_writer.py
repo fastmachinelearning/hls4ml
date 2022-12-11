@@ -71,7 +71,7 @@ class QuartusWriter(Writer):
         h_file.write("#define {}_H_\n".format(var.name.upper()))
         h_file.write("\n")
 
-        rf = int(layer.get_attr('reuse_factor'))
+        rf = int(layer.get_attr('reuse_factor', 1))
         weight_header = '#ifdef __INTELFPGA_COMPILER__\n'
 
         if isinstance(layer, (Conv2D, Conv2DBatchnorm)):

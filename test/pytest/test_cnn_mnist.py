@@ -57,9 +57,9 @@ def keras_model(mnist_data):
 def test_mnist_cnn(keras_model, mnist_data, backend, io_type, strategy):
   x_train, y_train, x_test, y_test = mnist_data
   
-  hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name')     
+  hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)     
   hls_config['Model']['Strategy'] = strategy
-  hls_config['LayerName']['softmax']['Strategy'] = 'Stable'
+  hls_config['LayerName']['softmax']['Implementation'] = 'stable'
   output_dir = str(test_root_path / 'hls4mlprj_cnn_mnist_{}_{}_{}'.format(backend, io_type, strategy))
 
   hls_model = hls4ml.converters.convert_from_keras_model(

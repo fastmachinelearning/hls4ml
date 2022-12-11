@@ -86,15 +86,16 @@ def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, static):
     keras_model.compile()
 
     default_precision = 'ap_fixed<32, 16>' if backend == 'Vivado' else 'ac_fixed<32, 16, true>'
-    hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', default_precision=default_precision)
+    hls_config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', default_precision=default_precision, backend=backend)
     hls_config['LayerName'][layer_name]['static'] = static
-    output_dir = 'hls4mlprj_rnn_accuracy_{}_static_{}_ret_seq_{}_{}_{}'.format(
+    prj_name = 'hls4mlprj_rnn_accuracy_{}_static_{}_ret_seq_{}_{}_{}'.format(
         rnn_layer.__class__.__name__.lower(),
         int(static),
         int(return_sequences),
         backend,
         io_type
     )
+    output_dir = str(test_root_path / prj_name)
 
     hls_model = hls4ml.converters.convert_from_keras_model(
                             keras_model, 

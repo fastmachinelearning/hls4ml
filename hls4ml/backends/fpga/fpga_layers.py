@@ -1,5 +1,6 @@
 import numpy as np
 from hls4ml.model.types import IntegerPrecisionType, XnorPrecisionType
+from hls4ml.model.attributes import Attribute, WeightAttribute, TypeAttribute, ConfigurableAttribute
 from hls4ml.model.layers import Layer, Conv1D, Conv2D
 
 class BatchNormalizationQuantizedTanh(Layer):
@@ -7,6 +8,15 @@ class BatchNormalizationQuantizedTanh(Layer):
         The mean, variance, beta, gamma parameters are folded into the threshold(s) at which the
         sign of the input flips after the quantized (binary or ternary) Tanh activation.
     '''
+
+    _expected_attributes = [
+        Attribute('n_in'),
+        Attribute('n_filt', default=0),
+
+        TypeAttribute('accum'),
+
+        ConfigurableAttribute('reuse_factor', default=1),
+    ]
 
     def initialize(self):
         inp = self.get_input_variable()

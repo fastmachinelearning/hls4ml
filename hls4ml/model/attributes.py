@@ -37,6 +37,7 @@ class ChoiceAttribute(Attribute):
         if default is not None:
             assert(default in choices)
         self.choices = choices
+        self.value_type = str(self.choices)
 
     def validate_value(self, value):
         return value in self.choices

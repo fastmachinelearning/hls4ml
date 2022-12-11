@@ -174,7 +174,7 @@ def randX_100_10():
 def test_btnn(make_btnn, randX_100_10, backend, io_type):
   model, is_xnor, test_no = make_btnn
   X = randX_100_10
-  cfg = hls4ml.utils.config_from_keras_model(model, granularity='name')
+  cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
   output_dir = str(test_root_path / 'hls4mlprj_btnn_{}_{}_{}'.format(test_no, backend, io_type))
   hls_model = hls4ml.converters.convert_from_keras_model(model, output_dir=output_dir, hls_config=cfg, backend=backend, io_type=io_type)
   hls_model.compile()

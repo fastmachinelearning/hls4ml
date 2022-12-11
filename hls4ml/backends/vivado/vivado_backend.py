@@ -53,7 +53,7 @@ class VivadoBackend(FPGABackend):
 
         for layer in cnn_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('conv_implementation', default='LineBuffer'))
+            attrs.append(ConfigurableAttribute('conv_implementation', value_type=str, default='LineBuffer'))
             self.attribute_map[layer] = attrs
 
 
@@ -311,10 +311,6 @@ class VivadoBackend(FPGABackend):
 
     @layer_optimizer(Softmax)
     def init_softmax(self, layer):
-        if layer.model.config.is_resource_strategy(layer):
-            # 'resource' strategy = 'latency' for Softmax
-            layer.set_attr('implementation', 'latency')
-
         if layer.model.config.get_config_value('IOType') == 'io_parallel':
             assert len(layer.get_input_variable().shape) == 1, 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
 

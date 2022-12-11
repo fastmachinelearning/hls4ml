@@ -42,7 +42,7 @@ class RemoveDuplicateReverse(hls4ml.model.optimizer.OptimizerPass):
         return True
 
 # Parser for converter
-def parse_reverse_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_reverse_layer(keras_layer, input_names, input_shapes, data_reader):
     layer = {}
     layer['class_name'] = 'HReverse'
     layer['name'] = keras_layer['config']['name']

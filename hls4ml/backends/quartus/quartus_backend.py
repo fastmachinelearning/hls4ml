@@ -5,7 +5,7 @@ from hls4ml.model.layers import Layer, Dense, Activation, Softmax, Conv1D, Conv2
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.flow import register_flow
 from hls4ml.backends import FPGABackend
-from hls4ml.model.attributes import Attribute
+from hls4ml.model.attributes import ConfigurableAttribute
 from hls4ml.model.flow import register_flow
 from hls4ml.model.types import NamedType, IntegerPrecisionType, FixedPrecisionType
 from hls4ml.model.layers import Layer, Dense, Embedding, Activation, Softmax, LSTM, SimpleRNN, GRU
@@ -28,12 +28,15 @@ class QuartusBackend(FPGABackend):
         self._register_flows()
 
     def _register_layer_attributes(self):
-        extended_attrs = {
-            SimpleRNN: [Attribute('recurrent_reuse_factor', default=1)],
-            LSTM: [Attribute('recurrent_reuse_factor', default=1)],
-            GRU: [Attribute('recurrent_reuse_factor', default=1)],
-        }
-        self.attribute_map.update(extended_attrs)
+        # Add RNN-specific recurrent_reuse_factor attribute
+        rnn_layers = [
+            SimpleRNN, LSTM, GRU,
+        ]
+
+        for layer in rnn_layers:
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1))
+            self.attribute_map[layer] = attrs
     
 
     def _register_flows(self):
@@ -187,9 +190,8 @@ class QuartusBackend(FPGABackend):
 
     @layer_optimizer(Softmax)
     def init_softmax(self, layer):
-        if layer.model.config.is_resource_strategy(layer):
-            # 'resource' strategy = 'latency' for Softmax
-            layer.set_attr('implementation', 'latency')
+        if layer.model.config.get_config_value('IOType') == 'io_parallel':
+            assert len(layer.get_input_variable().shape) == 1, 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
 
     @layer_optimizer(Embedding)
     def init_embed(self, layer):

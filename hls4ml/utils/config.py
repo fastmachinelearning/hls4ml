@@ -35,7 +35,7 @@ def _get_precision_from_quantizer(quantizer):
         else: 
             quantizer['class_name'] = quantizer_obj.__name__
 
-    supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh', 'quantized_po2', 'quantized_relu_po2']
+    supported_quantizers = ['quantized_bits', 'quantized_relu', 'quantized_tanh', 'quantized_po2', 'quantized_relu_po2', 'linear']
     signed = True
     if quantizer['class_name'] in supported_quantizers:
         bits = int(quantizer['config']['bits'])
@@ -136,7 +136,7 @@ def config_from_keras_model(model, granularity='model', backend=None, default_pr
                     layer_config[attr.config_name] = attr.default
             
 
-        quantizers = { qname: qclass for qname, qclass in layer.items() if 'quantizer' in qname}
+        quantizers = { qname: qclass for qname, qclass in layer.items() if 'quantizer' in qname and qclass is not None }
         for qname, qclass in quantizers.items():
             pname = qname.lower().split('_quantizer')[0]
             if pname == 'activation': pname = 'result'
