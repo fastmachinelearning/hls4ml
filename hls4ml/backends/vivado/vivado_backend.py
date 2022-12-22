@@ -8,7 +8,7 @@ from collections.abc import Iterable
 
 from hls4ml.model.types import FixedPrecisionType, NamedType, IntegerPrecisionType
 from hls4ml.model.layers import Layer, Dense, BatchNormalization, Embedding, Conv1D, Conv2D, Conv2DBatchnorm, SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Activation, ParametrizedActivation, PReLU, Softmax, Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D, ZeroPadding1D, ZeroPadding2D, Merge, Concatenate, Dot, Resize, Transpose, SimpleRNN, LSTM, GRU, GarNet, GarNetStack
-from hls4ml.model.attributes import ConfigurableAttribute
+from hls4ml.model.attributes import ConfigurableAttribute, ChoiceAttribute
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer, model_optimizer
 from hls4ml.model.flow import register_flow
 from hls4ml.backends import FPGABackend
@@ -53,7 +53,8 @@ class VivadoBackend(FPGABackend):
 
         for layer in cnn_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('conv_implementation', value_type=str, default='LineBuffer'))
+            #attrs.append(ConfigurableAttribute('conv_implementation', value_type=str, default='LineBuffer'))
+            attrs.append(ChoiceAttribute('conv_implementation', choices=['LineBuffer', 'Encoded'], default='LineBuffer'))
             self.attribute_map[layer] = attrs
 
 
