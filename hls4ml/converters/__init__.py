@@ -6,18 +6,18 @@ import yaml
 
 from hls4ml.converters.keras_to_hls import KerasFileReader  # noqa: F401
 from hls4ml.converters.keras_to_hls import KerasModelReader  # noqa: F401
-from hls4ml.converters.keras_to_hls import \
-    get_supported_keras_layers  # noqa: F401
+from hls4ml.converters.keras_to_hls import get_supported_keras_layers  # noqa: F401
 from hls4ml.converters.keras_to_hls import parse_keras_model  # noqa: F401
-from hls4ml.converters.keras_to_hls import (keras_to_hls,
-                                            register_keras_layer_handler)
+from hls4ml.converters.keras_to_hls import keras_to_hls, register_keras_layer_handler
 from hls4ml.utils.config import create_config
 
 # ----------Make converters available if the libraries can be imported----------#
 try:
     from hls4ml.converters.pytorch_to_hls import (  # noqa: F401
-        get_supported_pytorch_layers, pytorch_to_hls,
-        register_pytorch_layer_handler)
+        get_supported_pytorch_layers,
+        pytorch_to_hls,
+        register_pytorch_layer_handler,
+    )
 
     __pytorch_enabled__ = True
 except ImportError:
@@ -25,10 +25,8 @@ except ImportError:
     __pytorch_enabled__ = False
 
 try:
-    from hls4ml.converters.onnx_to_hls import \
-        get_supported_onnx_layers  # noqa: F401
-    from hls4ml.converters.onnx_to_hls import (onnx_to_hls,
-                                               register_onnx_layer_handler)
+    from hls4ml.converters.onnx_to_hls import get_supported_onnx_layers  # noqa: F401
+    from hls4ml.converters.onnx_to_hls import onnx_to_hls, register_onnx_layer_handler
 
     __onnx_enabled__ = True
 except ImportError:

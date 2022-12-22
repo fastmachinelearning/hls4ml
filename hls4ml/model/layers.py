@@ -1,16 +1,29 @@
 import numpy as np
 
-from hls4ml.model.attributes import (Attribute, AttributeDict, ChoiceAttribute,
-                                     CodeMapping, ConfigurableAttribute,
-                                     TypeAttribute, TypeMapping,
-                                     VariableMapping, WeightAttribute,
-                                     WeightMapping)
-from hls4ml.model.types import (CompressedWeightVariable,
-                                ExponentPrecisionType, ExponentWeightVariable,
-                                FixedPrecisionType, InplaceVariable,
-                                IntegerPrecisionType, NamedType,
-                                TensorVariable, WeightVariable,
-                                find_minimum_width)
+from hls4ml.model.attributes import (
+    Attribute,
+    AttributeDict,
+    ChoiceAttribute,
+    CodeMapping,
+    ConfigurableAttribute,
+    TypeAttribute,
+    TypeMapping,
+    VariableMapping,
+    WeightAttribute,
+    WeightMapping,
+)
+from hls4ml.model.types import (
+    CompressedWeightVariable,
+    ExponentPrecisionType,
+    ExponentWeightVariable,
+    FixedPrecisionType,
+    InplaceVariable,
+    IntegerPrecisionType,
+    NamedType,
+    TensorVariable,
+    WeightVariable,
+    find_minimum_width,
+)
 from hls4ml.utils.string_utils import convert_to_snake_case
 
 

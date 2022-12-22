@@ -4,8 +4,7 @@ from hls4ml.backends.fpga.fpga_layers import BatchNormalizationQuantizedTanh
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import BatchNormalization, register_layer
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.types import (IntegerPrecisionType, NamedType,
-                                XnorPrecisionType)
+from hls4ml.model.types import IntegerPrecisionType, NamedType, XnorPrecisionType
 
 batchnorm_quantized_tanh_config_template = """struct config{index} : nnet::batchnorm_quantized_tanh_config {{
     static const unsigned n_in = {n_in};

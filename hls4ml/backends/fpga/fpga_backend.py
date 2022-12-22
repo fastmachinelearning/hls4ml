@@ -7,17 +7,37 @@ from collections.abc import Iterable
 import numpy as np
 
 from hls4ml.backends.backend import Backend
-from hls4ml.model.attributes import (ChoiceAttribute, ConfigurableAttribute,
-                                     TypeAttribute)
-from hls4ml.model.layers import (GRU, LSTM, Activation, BatchNormalization,
-                                 Conv1D, Conv2D, Dense, Dot, Embedding, GarNet,
-                                 GarNetStack, GlobalPooling1D, GlobalPooling2D,
-                                 Pooling1D, Pooling2D, SeparableConv1D,
-                                 SeparableConv2D, SimpleRNN, Softmax)
+from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute, TypeAttribute
+from hls4ml.model.layers import (
+    GRU,
+    LSTM,
+    Activation,
+    BatchNormalization,
+    Conv1D,
+    Conv2D,
+    Dense,
+    Dot,
+    Embedding,
+    GarNet,
+    GarNetStack,
+    GlobalPooling1D,
+    GlobalPooling2D,
+    Pooling1D,
+    Pooling2D,
+    SeparableConv1D,
+    SeparableConv2D,
+    SimpleRNN,
+    Softmax,
+)
 from hls4ml.model.optimizer import model_optimizer
-from hls4ml.model.types import (ExponentPrecisionType, FixedPrecisionType,
-                                IntegerPrecisionType, RoundingMode,
-                                SaturationMode, XnorPrecisionType)
+from hls4ml.model.types import (
+    ExponentPrecisionType,
+    FixedPrecisionType,
+    IntegerPrecisionType,
+    RoundingMode,
+    SaturationMode,
+    XnorPrecisionType,
+)
 from hls4ml.writer import get_writer
 
 

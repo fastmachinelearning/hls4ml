@@ -1,7 +1,6 @@
 import numpy as np
 
-from hls4ml.model.attributes import (Attribute, ConfigurableAttribute,
-                                     TypeAttribute)
+from hls4ml.model.attributes import Attribute, ConfigurableAttribute, TypeAttribute
 from hls4ml.model.layers import Conv1D, Conv2D, Layer
 from hls4ml.model.types import IntegerPrecisionType, XnorPrecisionType
 

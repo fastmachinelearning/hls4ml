@@ -4,8 +4,7 @@ import numpy as np
 import pytest
 from sklearn.metrics import accuracy_score
 from tensorflow.keras.datasets import mnist
-from tensorflow.keras.layers import (Activation, AveragePooling2D, Conv2D,
-                                     Dense, Flatten, MaxPooling2D)
+from tensorflow.keras.layers import Activation, AveragePooling2D, Conv2D, Dense, Flatten, MaxPooling2D
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.utils import to_categorical
 

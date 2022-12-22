@@ -1,6 +1,5 @@
 from hls4ml.converters.keras.core import TernaryQuantizer
-from hls4ml.converters.keras_to_hls import (keras_handler,
-                                            parse_default_keras_layer)
+from hls4ml.converters.keras_to_hls import keras_handler, parse_default_keras_layer
 
 
 @keras_handler('GarNet', 'GarNetStack')

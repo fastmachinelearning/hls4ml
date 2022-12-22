@@ -9,8 +9,7 @@ import yaml
 
 from hls4ml.backends import get_backend
 from hls4ml.model.layers import Conv1D, Conv2D, Conv2DBatchnorm, Dense
-from hls4ml.utils.fixed_point_utils import (FixedPointEmulator, ceil_log2,
-                                            uint_to_binary)
+from hls4ml.utils.fixed_point_utils import FixedPointEmulator, ceil_log2, uint_to_binary
 from hls4ml.writer.writers import Writer
 
 config_filename = 'hls4ml_config.yml'

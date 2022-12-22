@@ -4,18 +4,31 @@ import sys
 import numpy as np
 
 from hls4ml.backends import FPGABackend
-from hls4ml.backends.fpga.fpga_types import (APTypeConverter, HLSTypeConverter,
-                                             VivadoArrayVariableConverter)
+from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter, VivadoArrayVariableConverter
 from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute
 from hls4ml.model.flow import register_flow
-from hls4ml.model.layers import (GRU, LSTM, Conv1D, Conv2D, Dense,
-                                 DepthwiseConv2D, Embedding, GarNet,
-                                 GarNetStack, GlobalPooling1D, GlobalPooling2D,
-                                 Layer, Pooling1D, Pooling2D, SeparableConv1D,
-                                 SeparableConv2D, SimpleRNN, Softmax)
+from hls4ml.model.layers import (
+    GRU,
+    LSTM,
+    Conv1D,
+    Conv2D,
+    Dense,
+    DepthwiseConv2D,
+    Embedding,
+    GarNet,
+    GarNetStack,
+    GlobalPooling1D,
+    GlobalPooling2D,
+    Layer,
+    Pooling1D,
+    Pooling2D,
+    SeparableConv1D,
+    SeparableConv2D,
+    SimpleRNN,
+    Softmax,
+)
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
-from hls4ml.model.types import (FixedPrecisionType, IntegerPrecisionType,
-                                NamedType)
+from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
 from hls4ml.report import parse_vivado_report
 from hls4ml.utils.fixed_point_utils import ceil_log2
 

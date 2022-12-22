@@ -1,7 +1,6 @@
 from collections.abc import MutableMapping
 
-from hls4ml.model.types import (InplaceVariable, NamedType, Source,
-                                TensorVariable, WeightVariable)
+from hls4ml.model.types import InplaceVariable, NamedType, Source, TensorVariable, WeightVariable
 from hls4ml.utils.string_utils import convert_to_pascal_case
 
 

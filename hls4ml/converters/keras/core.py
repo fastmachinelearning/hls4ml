@@ -1,7 +1,6 @@
 import numpy as np
 
-from hls4ml.converters.keras_to_hls import (keras_handler,
-                                            parse_default_keras_layer)
+from hls4ml.converters.keras_to_hls import keras_handler, parse_default_keras_layer
 from hls4ml.model.types import IntegerPrecisionType, Quantizer
 
 
