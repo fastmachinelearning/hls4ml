@@ -47,6 +47,7 @@ class QuartusBackend(FPGABackend):
 
         quartus_types = [
             'quartus:transform_types',
+            'quartus:register_bram_weights',
             'quartus:apply_resource_strategy',
             'quartus:apply_winograd_kernel_transformation'
         ]
