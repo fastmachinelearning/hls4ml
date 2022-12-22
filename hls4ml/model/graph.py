@@ -594,7 +594,13 @@ class ModelGraph(object):
         if self._top_function_lib is not None:
 
             if platform.system() == "Linux":
-                dlclose_func = ctypes.CDLL('libdl.so').dlclose
+                libdl_libs = ['libdl.so', 'libdl.so.2']
+                for libdl in libdl_libs:
+                    try:
+                        dlclose_func = ctypes.CDLL(libdl).dlclose
+                        break
+                    except:
+                        continue
             elif platform.system() == "Darwin":
                 dlclose_func = ctypes.CDLL('libc.dylib').dlclose
 
