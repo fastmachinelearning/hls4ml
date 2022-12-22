@@ -1,51 +1,56 @@
 import numpy as np
-import six
 
-from hls4ml.model.types import NamedType
-from hls4ml.model.types import TensorVariable, WeightVariable, CompressedWeightVariable, ExponentWeightVariable, InplaceVariable
-from hls4ml.model.types import IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType
-from hls4ml.model.types import find_minimum_width
-
-from hls4ml.model.attributes import Attribute, CodeMapping, TypeMapping, VariableMapping, WeightAttribute, TypeAttribute, ChoiceAttribute, ConfigurableAttribute, WeightMapping
-from hls4ml.model.attributes import AttributeDict
-
+from hls4ml.model.attributes import (Attribute, AttributeDict, ChoiceAttribute,
+                                     CodeMapping, ConfigurableAttribute,
+                                     TypeAttribute, TypeMapping,
+                                     VariableMapping, WeightAttribute,
+                                     WeightMapping)
+from hls4ml.model.types import (CompressedWeightVariable,
+                                ExponentPrecisionType, ExponentWeightVariable,
+                                FixedPrecisionType, InplaceVariable,
+                                IntegerPrecisionType, NamedType,
+                                TensorVariable, WeightVariable,
+                                find_minimum_width)
 from hls4ml.utils.string_utils import convert_to_snake_case
 
+
 # TODO move this to some utility module
-class classproperty(object):
+class classproperty:
     def __init__(self, func):
         self.func = func
-    
+
     def __get__(self, obj, owner):
         return self.func(owner)
 
-class Layer(object):
+
+class Layer:
     _expected_attributes = [
         Attribute('index'),
         ConfigurableAttribute('trace', default=False),
-
         TypeAttribute('result'),
     ]
 
     @classproperty
     def expected_attributes(cls):
-        """ Returns the expected attributes of a class. """
+        """Returns the expected attributes of a class."""
         all_attributes = []
-        for base_cls in reversed(cls.mro()): # Iterate over all base classes in the hierarchy
-            if cls == base_cls: # Skip adding attributes from self
+        for base_cls in reversed(cls.mro()):  # Iterate over all base classes in the hierarchy
+            if cls == base_cls:  # Skip adding attributes from self
                 continue
-            if hasattr(base_cls, '_expected_attributes'): # Only consider classes with '_expected_attributes' defined
+            if hasattr(base_cls, '_expected_attributes'):  # Only consider classes with '_expected_attributes' defined
                 all_attributes.extend(base_cls._expected_attributes)
         if '_expected_attributes' in cls.__dict__:
             # Add new attributes defined in the class
-            #TODO Support overriding attributes from parent class
+            # TODO Support overriding attributes from parent class
             all_attributes.extend(cls._expected_attributes)
         return all_attributes
 
     def __init__(self, model, name, attributes, inputs, outputs=None):
         if name == 'input':
-            raise RuntimeError("No model layer should be named 'input' because that is a reserved;" + \
-                               "layer name in ModelGraph; Please rename the layer in your model")
+            raise RuntimeError(
+                "No model layer should be named 'input' because that is a reserved;"
+                + "layer name in ModelGraph; Please rename the layer in your model"
+            )
         self.model = model
         self.name = name
         self.index = model.next_layer()
@@ -70,8 +75,14 @@ class Layer(object):
         for config_key, config_value in layer_config.items():
             config_key = convert_to_snake_case(config_key)
             if config_key in self.attributes:
-                print('WARNING: Config parameter "{}" overwrites an existing attribute in layer "{}" ({})'.format(config_key, self.name, self.class_name))
-            if config_key.endswith('_t') and isinstance(config_value, str): #TODO maybe move this to __setitem__ of AttributeDict?
+                print(
+                    'WARNING: Config parameter "{}" overwrites an existing attribute in layer "{}" ({})'.format(
+                        config_key, self.name, self.class_name
+                    )
+                )
+            if config_key.endswith('_t') and isinstance(
+                config_value, str
+            ):  # TODO maybe move this to __setitem__ of AttributeDict?
                 precision = self.model.config.backend.convert_precision_string(config_value)
                 config_value = NamedType(self.name + config_key, precision)
             self.attributes[config_key] = config_value
@@ -102,17 +113,20 @@ class Layer(object):
         all_attributes = {}
         for attr in self.expected_attributes:
             all_attributes[attr.name] = attr
-        
+
         # Validate existing attributes
         for attr_name, attr_value in self.attributes.items():
             exp_attr = all_attributes.pop(attr_name, None)
             if exp_attr is not None:
                 if not exp_attr.validate_value(attr_value):
-                    raise Exception('Unexpected value of attribute "{}" of layer "{}" ({}). Expected {}, got {} ({})'
-                        .format(attr_name, self.name, self.class_name, exp_attr.value_type, type(attr_value), attr_value))
+                    raise Exception(
+                        'Unexpected value of attribute "{}" of layer "{}" ({}). Expected {}, got {} ({})'.format(
+                            attr_name, self.name, self.class_name, exp_attr.value_type, type(attr_value), attr_value
+                        )
+                    )
             else:
-                pass # TODO layer contains attribute that is not expected. we can log this for debugging
-        
+                pass  # TODO layer contains attribute that is not expected. we can log this for debugging
+
         # If any expected attributes remain, try adding their default values
         for attr_name, attr in all_attributes.items():
             if attr.default is not None:
@@ -121,7 +135,11 @@ class Layer(object):
                 else:
                     self.set_attr(attr_name, attr.default)
             else:
-                raise Exception('Attribute "{}" of layer {} ({}) not set and no default value is specified.'.format(attr_name, self.name, self.class_name))
+                raise Exception(
+                    'Attribute "{}" of layer {} ({}) not set and no default value is specified.'.format(
+                        attr_name, self.name, self.class_name
+                    )
+                )
 
     def _wrap_precision_to_type(self, name, precision):
         if isinstance(precision, str):
@@ -188,7 +206,9 @@ class Layer(object):
     def get_variables(self):
         return self.variables.values()
 
-    def add_output_variable(self, shape, dim_names, out_name=None, var_name='layer{index}_out', type_name='layer{index}_t', precision=None):
+    def add_output_variable(
+        self, shape, dim_names, out_name=None, var_name='layer{index}_out', type_name='layer{index}_t', precision=None
+    ):
         if out_name is None:
             out_name = self.outputs[0]
 
@@ -202,7 +222,9 @@ class Layer(object):
     def add_weights(self, quantizer=None, compression=False):
         data = self.model.get_weights_data(self.name, 'kernel')
 
-        self.add_weights_variable(name='weight', var_name='w{index}', data=data, quantizer=quantizer, compression=compression)
+        self.add_weights_variable(
+            name='weight', var_name='w{index}', data=data, quantizer=quantizer, compression=compression
+        )
 
     def add_bias(self, quantizer=None):
         data = self.model.get_weights_data(self.name, 'bias')
@@ -212,11 +234,15 @@ class Layer(object):
             data = np.zeros(self.get_output_variable().shape[-1])
             precision = IntegerPrecisionType(width=1, signed=False)
             type_name = 'bias{index}_t'
-            quantizer = None # Don't quantize non-existant bias
+            quantizer = None  # Don't quantize non-existant bias
 
-        self.add_weights_variable(name='bias', var_name='b{index}', type_name=type_name, precision=precision, data=data, quantizer=quantizer)
+        self.add_weights_variable(
+            name='bias', var_name='b{index}', type_name=type_name, precision=precision, data=data, quantizer=quantizer
+        )
 
-    def add_weights_variable(self, name, var_name=None, type_name=None, precision=None, data=None, quantizer=None, compression=False):
+    def add_weights_variable(
+        self, name, var_name=None, type_name=None, precision=None, data=None, quantizer=None, compression=False
+    ):
         if var_name is None:
             var_name = name + '{index}'
 
@@ -232,7 +258,7 @@ class Layer(object):
 
         if data is None:
             data = self.model.get_weights_data(self.name, name)
-        elif isinstance(data, six.string_types):
+        elif isinstance(data, str):
             data = self.model.get_weights_data(self.name, data)
 
         data_unquantized = data
@@ -245,12 +271,24 @@ class Layer(object):
                 exponent_type = True
 
         if compression:
-            #TODO reuse factor may not be available here
-            var = CompressedWeightVariable(var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, reuse_factor=self.get_attr('reuse_factor', 1), index=self.index)
+            # TODO reuse factor may not be available here
+            var = CompressedWeightVariable(
+                var_name,
+                type_name=type_name,
+                precision=precision,
+                quantizer=quantizer,
+                data=data,
+                reuse_factor=self.get_attr('reuse_factor', 1),
+                index=self.index,
+            )
         elif exponent_type:
-            var = ExponentWeightVariable(var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, index=self.index)
+            var = ExponentWeightVariable(
+                var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, index=self.index
+            )
         else:
-            var = WeightVariable(var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, index=self.index)
+            var = WeightVariable(
+                var_name, type_name=type_name, precision=precision, quantizer=quantizer, data=data, index=self.index
+            )
 
         var.data_unquantized = data_unquantized
 
@@ -259,7 +297,7 @@ class Layer(object):
     def _default_function_params(self):
         params = {}
         params.update(self.attributes)
-        params['config'] = 'config{}'.format(self.index)
+        params['config'] = f'config{self.index}'
         params['input_t'] = self.get_input_variable().type.name
         params['output_t'] = self.get_output_variable().type.name
         params['input'] = self.get_input_variable().name
@@ -284,33 +322,35 @@ class Layer(object):
     def get_numbers_cpp(self):
         numbers = ''
         for k, v in self.get_output_variable().get_shape():
-            numbers += '#define {} {}\n'.format(k,v)
+            numbers += f'#define {k} {v}\n'
 
         return numbers
 
     def precision_cpp(self):
-        return 'typedef {precision} layer{index}_t;'.format(precision=self.get_output_variable().precision, index=self.index)
+        return f'typedef {self.get_output_variable().precision} layer{self.index}_t;'
+
 
 class Input(Layer):
     def initialize(self):
         shape = self.attributes['input_shape']
         if shape[0] is None:
             shape = shape[1:]
-        dims = ['N_INPUT_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+        dims = [f'N_INPUT_{i}_{self.index}' for i in range(1, len(shape) + 1)]
         if self.index == 1:
             default_type_name = 'input_t'
         else:
-            default_type_name = 'input{}_t'.format(self.index)
+            default_type_name = f'input{self.index}_t'
         type_name = self.attributes.get('type_name', default_type_name)
         precision, _ = self.model.config.get_precision(self, var='result')
         self.add_output_variable(shape, dims, var_name=self.name, type_name=type_name, precision=precision)
+
 
 class Reshape(Layer):
     def initialize(self):
         shape = self.attributes['target_shape']
         if shape[0] is None:
             shape = shape[1:]
-        dims = ['N_SIZE_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+        dims = [f'N_SIZE_{i}_{self.index}' for i in range(1, len(shape) + 1)]
 
         out_name = self.outputs[0]
         proxy = self.get_input_variable()
@@ -318,14 +358,13 @@ class Reshape(Layer):
 
         self.set_attr(out_name, out)
 
+
 class Dense(Layer):
     _expected_attributes = [
         Attribute('n_in'),
         Attribute('n_out'),
-
         WeightAttribute('weight'),
         WeightAttribute('bias'),
-
         TypeAttribute('weight'),
         TypeAttribute('bias'),
     ]
@@ -334,30 +373,26 @@ class Dense(Layer):
         shape = self.get_input_variable().shape[:]
         shape[-1] = self.attributes['n_out']
         if len(shape) > 1:
-            dims = ['N_LAYER_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+            dims = [f'N_LAYER_{i}_{self.index}' for i in range(1, len(shape) + 1)]
         else:
-            dims = ['N_LAYER_{}'.format(self.index)]
+            dims = [f'N_LAYER_{self.index}']
         self.add_output_variable(shape, dims)
         self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=self.model.config.get_compression(self))
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
 
 class Conv1D(Layer):
     _expected_attributes = [
         Attribute('in_width'),
         Attribute('out_width'),
-
         Attribute('n_chan'),
         Attribute('n_filt'),
-
         Attribute('filt_width'),
         Attribute('stride_width'),
-
         Attribute('pad_left'),
         Attribute('pad_right'),
-
         WeightAttribute('weight'),
         WeightAttribute('bias'),
-
         TypeAttribute('weight'),
         TypeAttribute('bias'),
     ]
@@ -365,33 +400,29 @@ class Conv1D(Layer):
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_width'], self.attributes['n_filt']]
-            dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+            dims = [f'N_OUTPUTS_{self.index}', f'N_FILT_{self.index}']
         else:
             shape = [self.attributes['n_filt'], self.attributes['out_width']]
-            dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
+            dims = [f'N_FILT_{self.index}', f'N_OUTPUTS_{self.index}']
 
         self.add_output_variable(shape, dims)
-        self.add_weights(quantizer = self.get_attr('weight_quantizer'))
-        self.add_bias(quantizer = self.get_attr('bias_quantizer'))
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'))
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
 
 class SeparableConv1D(Layer):
     _expected_attributes = [
         Attribute('in_width'),
         Attribute('out_width'),
-
         Attribute('n_chan'),
         Attribute('n_filt'),
-
         Attribute('filt_width'),
         Attribute('stride_width'),
-
         Attribute('pad_left'),
         Attribute('pad_right'),
-        
         WeightAttribute('depthwise'),
         WeightAttribute('pointwise'),
         WeightAttribute('bias'),
-
         TypeAttribute('depthwise'),
         TypeAttribute('pointwise'),
         TypeAttribute('bias'),
@@ -400,48 +431,47 @@ class SeparableConv1D(Layer):
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_width'], self.attributes['n_filt']]
-            dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+            dims = [f'N_OUTPUTS_{self.index}', f'N_FILT_{self.index}']
         else:
             shape = [self.attributes['n_filt'], self.attributes['out_width']]
-            dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
+            dims = [f'N_FILT_{self.index}', f'N_OUTPUTS_{self.index}']
         self.add_output_variable(shape, dims)
-        
+
         depthwise_data = self.model.get_weights_data(self.name, 'depthwise_kernel')
         pointwise_data = self.model.get_weights_data(self.name, 'pointwise_kernel')
 
-        self.add_weights_variable(name='depthwise', var_name='d{index}', data=depthwise_data, quantizer=self.get_attr('depthwise_quantizer'))
-        self.add_weights_variable(name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer'))
-        
+        self.add_weights_variable(
+            name='depthwise', var_name='d{index}', data=depthwise_data, quantizer=self.get_attr('depthwise_quantizer')
+        )
+        self.add_weights_variable(
+            name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer')
+        )
+
         zero_bias_data = np.zeros((self.attributes['n_chan'],))
         precision = IntegerPrecisionType(width=1, signed=False)
         self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data, precision=precision)
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
+
 class Conv2D(Layer):
     _expected_attributes = [
         Attribute('in_height'),
         Attribute('in_width'),
-
         Attribute('out_height'),
         Attribute('out_width'),
-
         Attribute('n_chan'),
         Attribute('n_filt'),
-
         Attribute('filt_height'),
         Attribute('filt_width'),
         Attribute('stride_height'),
         Attribute('stride_width'),
-
         Attribute('pad_top'),
         Attribute('pad_bottom'),
         Attribute('pad_left'),
         Attribute('pad_right'),
-
         WeightAttribute('weight'),
         WeightAttribute('bias'),
-
         TypeAttribute('weight'),
         TypeAttribute('bias'),
     ]
@@ -449,13 +479,14 @@ class Conv2D(Layer):
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
-            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+            dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_FILT_{self.index}']
         else:
             shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
-            dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+            dims = [f'N_FILT_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims)
         self.add_weights(quantizer=self.get_attr('weight_quantizer'))
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
 
 class Conv2DBatchnorm(Conv2D):
     def _get_folded_weights(self):
@@ -488,9 +519,12 @@ class Conv2DBatchnorm(Conv2D):
         return [folded_kernel, folded_bias]
 
     def initialize(self):
-        super(Conv2DBatchnorm, self).initialize()
+        super().initialize()
         folded_weights, folded_bias = self._get_folded_weights()
-        if self.model.config.is_resource_strategy(self) and self.model.config.backend.name in ['Vivado', 'VivadoAccelerator']:
+        if self.model.config.is_resource_strategy(self) and self.model.config.backend.name in [
+            'Vivado',
+            'VivadoAccelerator',
+        ]:
             self.weights['weight'].data_unquantized = np.transpose(folded_weights, axes=[3, 0, 1, 2])
             self.weights['weight'].data = self.get_attr('weight_quantizer')(self.weights['weight'].data_unquantized)
 
@@ -502,31 +536,26 @@ class Conv2DBatchnorm(Conv2D):
         if bias_q is not None:
             self.weights['bias'].data = bias_q(folded_bias)
 
+
 class SeparableConv2D(Layer):
     _expected_attributes = [
         Attribute('in_height'),
         Attribute('in_width'),
-
         Attribute('out_height'),
         Attribute('out_width'),
-
         Attribute('n_chan'),
         Attribute('n_filt'),
-
         Attribute('filt_height'),
         Attribute('filt_width'),
         Attribute('stride_height'),
         Attribute('stride_width'),
-
         Attribute('pad_top'),
         Attribute('pad_bottom'),
         Attribute('pad_left'),
         Attribute('pad_right'),
-        
         WeightAttribute('depthwise'),
         WeightAttribute('pointwise'),
         WeightAttribute('bias'),
-
         TypeAttribute('depthwise'),
         TypeAttribute('pointwise'),
         TypeAttribute('bias'),
@@ -535,132 +564,133 @@ class SeparableConv2D(Layer):
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
-            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+            dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_FILT_{self.index}']
         else:
             shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
-            dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+            dims = [f'N_FILT_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims)
-        
+
         depthwise_data = self.model.get_weights_data(self.name, 'depthwise_kernel')
         pointwise_data = self.model.get_weights_data(self.name, 'pointwise_kernel')
 
-        self.add_weights_variable(name='depthwise', var_name='d{index}', data=depthwise_data, quantizer=self.get_attr('depthwise_quantizer'))
-        self.add_weights_variable(name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer'))
-        
+        self.add_weights_variable(
+            name='depthwise', var_name='d{index}', data=depthwise_data, quantizer=self.get_attr('depthwise_quantizer')
+        )
+        self.add_weights_variable(
+            name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer')
+        )
+
         zero_bias_data = np.zeros((self.attributes['n_chan'],))
         precision = IntegerPrecisionType(width=1, signed=False)
         self.add_weights_variable(name='zero_bias', var_name='z{index}', data=zero_bias_data, precision=precision)
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
+
 class DepthwiseConv2D(Conv2D):
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_chan']]
-            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
+            dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
         else:
             shape = [self.attributes['n_chan'], self.attributes['out_height'], self.attributes['out_width']]
-            dims = ['N_CHAN_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+            dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims)
 
         depthwise_data = self.model.get_weights_data(self.name, 'depthwise_kernel')
-        self.add_weights_variable(name='weight', var_name='w{index}', data=depthwise_data, quantizer=self.get_attr('depthwise_quantizer'))
+        self.add_weights_variable(
+            name='weight', var_name='w{index}', data=depthwise_data, quantizer=self.get_attr('depthwise_quantizer')
+        )
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
 
 class Pooling1D(Layer):
     _expected_attributes = [
         Attribute('n_in'),
         Attribute('n_out'),
         Attribute('n_filt'),
-
         Attribute('pool_width'),
         Attribute('stride_width'),
-
         Attribute('pad_left'),
         Attribute('pad_right'),
-
-        ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False)
+        ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False),
     ]
 
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['n_out'], self.attributes['n_filt']]
-            dims = ['N_OUTPUTS_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+            dims = [f'N_OUTPUTS_{self.index}', f'N_FILT_{self.index}']
         else:
             shape = [self.attributes['n_filt'], self.attributes['n_out']]
-            dims = ['N_FILT_{}'.format(self.index), 'N_OUTPUTS_{}'.format(self.index)]
+            dims = [f'N_FILT_{self.index}', f'N_OUTPUTS_{self.index}']
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0])
+
 
 class Pooling2D(Layer):
     _expected_attributes = [
         Attribute('in_height'),
         Attribute('in_width'),
-
         Attribute('out_height'),
         Attribute('out_width'),
-
         Attribute('n_filt'),
-
         Attribute('pool_height'),
         Attribute('pool_width'),
         Attribute('stride_height'),
         Attribute('stride_width'),
-
         Attribute('pad_top'),
         Attribute('pad_bottom'),
         Attribute('pad_left'),
         Attribute('pad_right'),
-
-        ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False)
+        ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False),
     ]
 
     def initialize(self):
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
-            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_FILT_{}'.format(self.index)]
+            dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_FILT_{self.index}']
         else:
             shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
-            dims = ['N_FILT_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+            dims = [f'N_FILT_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0])
+
 
 class GlobalPooling1D(Layer):
     _expected_attributes = [
         Attribute('n_in'),
         Attribute('n_filt'),
-
-        ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False)
+        ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False),
     ]
 
     def initialize(self):
         shape = [self.attributes['n_filt']]
-        dims = ['N_FILT_{}'.format(self.index)]
+        dims = [f'N_FILT_{self.index}']
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0].replace('Global', ''))
+
 
 class GlobalPooling2D(Layer):
     _expected_attributes = [
         Attribute('in_height'),
         Attribute('in_width'),
         Attribute('n_filt'),
-
-        ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False)
+        ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False),
     ]
 
     def initialize(self):
         shape = [self.attributes['n_filt']]
-        dims = ['N_FILT_{}'.format(self.index)]
+        dims = [f'N_FILT_{self.index}']
         self.add_output_variable(shape, dims)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0].replace('Global', ''))
+
 
 class ZeroPadding1D(Layer):
     _expected_attributes = [
         Attribute('in_width'),
         Attribute('out_width'),
         Attribute('n_chan'),
-
         Attribute('pad_left'),
         Attribute('pad_right'),
     ]
@@ -669,11 +699,12 @@ class ZeroPadding1D(Layer):
         inp = self.get_input_variable()
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_width'], self.attributes['n_chan']]
-            dims = ['OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
+            dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
         else:
             shape = [self.attributes['n_chan'], self.attributes['out_width']]
-            dims = ['N_CHAN_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+            dims = [f'N_CHAN_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims, precision=inp.type.precision)
+
 
 class ZeroPadding2D(Layer):
     _expected_attributes = [
@@ -682,7 +713,6 @@ class ZeroPadding2D(Layer):
         Attribute('out_height'),
         Attribute('out_width'),
         Attribute('n_chan'),
-
         Attribute('pad_top'),
         Attribute('pad_bottom'),
         Attribute('pad_left'),
@@ -693,11 +723,12 @@ class ZeroPadding2D(Layer):
         inp = self.get_input_variable()
         if self.get_attr('data_format') == 'channels_last':
             shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_chan']]
-            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
+            dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
         else:
             shape = [self.attributes['n_chan'], self.attributes['out_height'], self.attributes['out_width']]
-            dims = ['N_CHAN_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+            dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims, precision=inp.type.precision)
+
 
 class Activation(Layer):
     _expected_attributes = [
@@ -712,6 +743,7 @@ class Activation(Layer):
         self.add_output_variable(shape, dims)
         self.set_attr('n_in', self.get_input_variable().size())
 
+
 class ParametrizedActivation(Activation):
     def _get_act_function_name(self):
         act = self.get_attr('activation').lower()
@@ -720,29 +752,31 @@ class ParametrizedActivation(Activation):
         elif act == 'thresholdedrelu':
             return 'thresholded_relu'
         else:
-            return act # ELU activation
+            return act  # ELU activation
+
 
 class PReLU(Activation):
     def initialize(self):
-        super(PReLU, self).initialize()
+        super().initialize()
         self.add_weights_variable(name='alpha', var_name='a{index}')
+
 
 class Softmax(Activation):
     def initialize(self):
-        super(Softmax, self).initialize()
+        super().initialize()
+
 
 class TernaryTanh(Activation):
     def initialize(self):
-        super(TernaryTanh, self).initialize()
+        super().initialize()
+
 
 class BatchNormalization(Layer):
     _expected_attributes = [
         Attribute('n_in'),
         Attribute('n_filt', default=0),
-
         WeightAttribute('scale'),
         WeightAttribute('bias'),
-
         TypeAttribute('scale'),
         TypeAttribute('bias'),
     ]
@@ -764,9 +798,10 @@ class BatchNormalization(Layer):
         self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
         self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
 
+
 class Merge(Layer):
     def initialize(self):
-        assert(len(self.inputs) == 2)
+        assert len(self.inputs) == 2
         inp1 = self.get_input_variable(self.inputs[0])
         inp2 = self.get_input_variable(self.inputs[1])
         if np.prod(inp2.shape) > np.prod(inp1.shape):
@@ -777,34 +812,38 @@ class Merge(Layer):
             dims = inp1.dim_names
         self.add_output_variable(shape, dims)
 
+
 class Dot(Merge):
     def initialize(self):
-        assert(len(self.inputs) == 2)
+        assert len(self.inputs) == 2
         inp1 = self.get_input_variable(self.inputs[0])
         inp2 = self.get_input_variable(self.inputs[1])
-        assert(inp1.shape == inp2.shape)
+        assert inp1.shape == inp2.shape
         if len(inp1.shape) > 1:
             raise Exception('ERROR: Dot of tensors with rank > 1 is not yet supported.')
 
-        self.add_output_variable(shape=[1], dim_names=['OUT_DOT_{}'.format(self.index)])
+        self.add_output_variable(shape=[1], dim_names=[f'OUT_DOT_{self.index}'])
+
 
 class Concatenate(Merge):
     def initialize(self):
-        assert(len(self.inputs) == 2)
+        assert len(self.inputs) == 2
         inp1 = self.get_input_variable(self.inputs[0])
         inp2 = self.get_input_variable(self.inputs[1])
         axis = self.attributes['axis']
-        if axis > 0: axis -= 1
+        if axis > 0:
+            axis -= 1
         shape = inp1.shape[:]
         shape[axis] += inp2.shape[axis]
         rank = len(shape)
         if rank > 1:
-            dims = ['OUT_CONCAT_{}_{}'.format(i, self.index) for i in range(rank)]
+            dims = [f'OUT_CONCAT_{i}_{self.index}' for i in range(rank)]
         else:
-            dims = ['OUT_CONCAT_{}'.format(self.index)]
+            dims = [f'OUT_CONCAT_{self.index}']
         self.add_output_variable(shape, dims)
 
-class BiasAdd(Merge): # TensorFlow's operator that gets merged into Dense/Conv
+
+class BiasAdd(Merge):  # TensorFlow's operator that gets merged into Dense/Conv
     def initialize(self):
         inp = self.get_input_variable(self.inputs[0])
         shape = inp.shape
@@ -812,57 +851,59 @@ class BiasAdd(Merge): # TensorFlow's operator that gets merged into Dense/Conv
         self.add_bias()
         self.add_output_variable(shape, dims)
 
+
 class Resize(Layer):
     def initialize(self):
         inp = self.get_input_variable()
-        if len(inp.shape) == 2: # 1D -> width + chan
+        if len(inp.shape) == 2:  # 1D -> width + chan
             shape = [self.get_attr('out_width'), self.get_attr('n_chan')]
-            dims = ['OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
-        elif len(inp.shape) == 3: # 2D -> height + width + chan
+            dims = [f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
+        elif len(inp.shape) == 3:  # 2D -> height + width + chan
             shape = [self.get_attr('out_height'), self.get_attr('out_width'), self.get_attr('n_chan')]
-            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index), 'N_CHAN_{}'.format(self.index)]
+            dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_CHAN_{self.index}']
         self.add_output_variable(shape, dims, precision=inp.type.precision)
+
 
 class Transpose(Layer):
     def initialize(self):
         inp = self.get_input_variable(self.inputs[0])
         perm = self.get_attr('perm')
-        self.set_attr('dim', '{}d'.format(len(inp.shape)))
+        self.set_attr('dim', f'{len(inp.shape)}d')
 
         if len(perm) > 3:
             raise Exception('ERROR: Transpose of tensors with rank > 3 is not yet supported.')
-        
-        #ONNX double transpose specific, sometimes ONNX injects
-        #useless double transpose layers when converting 
-        #from other frameworks
+
+        # ONNX double transpose specific, sometimes ONNX injects
+        # useless double transpose layers when converting
+        # from other frameworks
         if len(perm) == 1:
-            shape = inp.shape #dummy shape
-            dims = ['DUMMY'] #dummy dims
+            shape = inp.shape  # dummy shape
+            dims = ['DUMMY']  # dummy dims
             self.set_attr('perm', [0])
         else:
             shape = [inp.shape[i] for i in perm]
 
         self.set_attr('perm_str', ','.join([str(i) for i in perm]))
-        
+
         if len(shape) == 2:
-            self.set_attr('perm_str', ','.join(['0'] + [str(i+1) for i in perm]))
-            dims = ['OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+            self.set_attr('perm_str', ','.join(['0'] + [str(i + 1) for i in perm]))
+            dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
             self.set_attr('depth', 1)
             self.set_attr('height', inp.shape[0])
             self.set_attr('width', inp.shape[1])
         elif len(shape) > 2:
-            dims = ['OUT_DEPTH_{}'.format(self.index), 'OUT_HEIGHT_{}'.format(self.index), 'OUT_WIDTH_{}'.format(self.index)]
+            dims = [f'OUT_DEPTH_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
             self.set_attr('depth', inp.shape[0])
             self.set_attr('height', inp.shape[1])
             self.set_attr('width', inp.shape[2])
         self.add_output_variable(shape, dims, precision=inp.type.precision)
+
 
 class Embedding(Layer):
     _expected_attributes = [
         Attribute('n_in'),
         Attribute('n_out'),
         Attribute('vocab_size'),
-
         WeightAttribute('embeddings'),
         TypeAttribute('embeddings'),
     ]
@@ -871,13 +912,14 @@ class Embedding(Layer):
         shape = self.get_input_variable().shape[:]
         shape += [self.attributes['n_out']]
         if len(shape) > 1:
-            dims = ['N_LAYER_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+            dims = [f'N_LAYER_{i}_{self.index}' for i in range(1, len(shape) + 1)]
         else:
-            dims = ['N_LAYER_{}'.format(self.index)]
+            dims = [f'N_LAYER_{self.index}']
         self.add_output_variable(shape, dims)
 
         data = self.model.get_weights_data(self.name, 'embeddings')
         self.add_weights_variable(name='embeddings', var_name='e{index}', data=data)
+
 
 class SimpleRNN(Layer):
     _expected_attributes = [
@@ -886,11 +928,9 @@ class SimpleRNN(Layer):
         Attribute('return_sequences', value_type=bool, default=False),
         Attribute('return_state', value_type=bool, default=False),
         ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
-
         WeightAttribute('weight'),
         WeightAttribute('bias'),
         WeightAttribute('recurrent_weight'),
-
         TypeAttribute('weight'),
         TypeAttribute('bias'),
         TypeAttribute('recurrent_weight'),
@@ -899,29 +939,34 @@ class SimpleRNN(Layer):
     def initialize(self):
         if self.attributes['return_sequences']:
             shape = [self.attributes['n_timesteps'], self.attributes['n_out']]
-            dims = ['N_TIME_STEPS_{}'.format(self.index), 'N_OUT_{}'.format(self.index)]
+            dims = [f'N_TIME_STEPS_{self.index}', f'N_OUT_{self.index}']
         else:
             shape = [self.attributes['n_out']]
-            dims = ['N_OUT_{}'.format(self.index)]
-        
+            dims = [f'N_OUT_{self.index}']
+
         self.add_output_variable(shape, dims)
 
         if self.attributes['return_state']:
             state_shape = [self.attributes['n_out']]
-            state_dims = ['N_OUT_{}'.format(self.index)]
-            self.add_output_variable(state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t')
-            self.add_output_variable(state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t')
+            state_dims = [f'N_OUT_{self.index}']
+            self.add_output_variable(
+                state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t'
+            )
+            self.add_output_variable(
+                state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t'
+            )
 
-        #weights
+        # weights
         self.add_weights()
 
-        #recurrent weights
+        # recurrent weights
         recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
         self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
 
-        #biases
-        biases = self.model.get_weights_data(self.name , 'bias')
+        # biases
+        biases = self.model.get_weights_data(self.name, 'bias')
         self.add_weights_variable(name='bias', var_name='b{index}', data=biases)
+
 
 class LSTM(Layer):
     _expected_attributes = [
@@ -932,12 +977,10 @@ class LSTM(Layer):
         Attribute('return_state', value_type=bool, default=False),
         ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
         Attribute('time_major', value_type=bool, default=False),
-
         WeightAttribute('weight'),
         WeightAttribute('bias'),
         WeightAttribute('recurrent_weight'),
         WeightAttribute('recurrent_bias'),
-
         TypeAttribute('weight'),
         TypeAttribute('bias'),
         TypeAttribute('recurrent_weight'),
@@ -947,32 +990,37 @@ class LSTM(Layer):
     def initialize(self):
         if self.attributes['return_sequences']:
             shape = [self.attributes['n_timesteps'], self.attributes['n_out']]
-            dims = ['N_TIME_STEPS_{}'.format(self.index), 'N_OUT_{}'.format(self.index)]
+            dims = [f'N_TIME_STEPS_{self.index}', f'N_OUT_{self.index}']
         else:
             shape = [self.attributes['n_out']]
-            dims = ['N_OUT_{}'.format(self.index)]
+            dims = [f'N_OUT_{self.index}']
 
         self.add_output_variable(shape, dims)
 
         if self.attributes['return_state']:
             state_shape = [self.attributes['n_out']]
-            state_dims = ['N_OUT_{}'.format(self.index)]
-            self.add_output_variable(state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t')
-            self.add_output_variable(state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t')
+            state_dims = [f'N_OUT_{self.index}']
+            self.add_output_variable(
+                state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t'
+            )
+            self.add_output_variable(
+                state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t'
+            )
 
-        #weights
+        # weights
         self.add_weights()
 
-        #recurrent weights
+        # recurrent weights
         recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
         self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
 
-        #biases
-        biases = self.model.get_weights_data(self.name , 'bias')
+        # biases
+        biases = self.model.get_weights_data(self.name, 'bias')
         self.add_weights_variable(name='bias', var_name='b{index}', data=biases)
 
         recurrent_bias = np.zeros(recurrent_weight.shape[1])
         self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
+
 
 class GRU(Layer):
     _expected_attributes = [
@@ -984,12 +1032,10 @@ class GRU(Layer):
         ChoiceAttribute('direction', ['forward', 'backward'], default='forward'),
         Attribute('time_major', value_type=bool, default=False),
         ChoiceAttribute('apply_reset_gate', ['before', 'after'], default='after'),
-
         WeightAttribute('weight'),
         WeightAttribute('bias'),
         WeightAttribute('recurrent_weight'),
         WeightAttribute('recurrent_bias'),
-
         TypeAttribute('weight'),
         TypeAttribute('bias'),
         TypeAttribute('recurrent_weight'),
@@ -999,31 +1045,36 @@ class GRU(Layer):
     def initialize(self):
         if self.attributes['return_sequences']:
             shape = [self.attributes['n_timesteps'], self.attributes['n_out']]
-            dims = ['N_TIME_STEPS_{}'.format(self.index), 'N_OUT_{}'.format(self.index)]
+            dims = [f'N_TIME_STEPS_{self.index}', f'N_OUT_{self.index}']
         else:
             shape = [self.attributes['n_out']]
-            dims = ['N_OUT_{}'.format(self.index)]
+            dims = [f'N_OUT_{self.index}']
 
         self.add_output_variable(shape, dims)
 
         if self.attributes['return_state']:
             state_shape = [self.attributes['n_out']]
-            state_dims = ['N_OUT_{}'.format(self.index)]
-            self.add_output_variable(state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t')
-            self.add_output_variable(state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t')
+            state_dims = [f'N_OUT_{self.index}']
+            self.add_output_variable(
+                state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t'
+            )
+            self.add_output_variable(
+                state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t'
+            )
 
-        #weights
+        # weights
         self.add_weights()
 
-        #recurrent weights
+        # recurrent weights
         recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
         self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
 
-        #biases array is actually a 2-dim array of arrays (bias + recurrent bias)
-        #both arrays have shape: n_units * 3 (z, r, h_cand)
-        biases = self.model.get_weights_data(self.name , 'bias')
+        # biases array is actually a 2-dim array of arrays (bias + recurrent bias)
+        # both arrays have shape: n_units * 3 (z, r, h_cand)
+        biases = self.model.get_weights_data(self.name, 'bias')
         self.add_weights_variable(name='bias', var_name='b{index}', data=biases[0])
         self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=biases[1])
+
 
 class GarNet(Layer):
     ref_impl = False
@@ -1031,17 +1082,19 @@ class GarNet(Layer):
     def initialize(self):
         reuse_factor = self.model.config.get_reuse_factor(self)
         if self.attributes['n_vertices'] % reuse_factor != 0:
-            raise Exception('GarNet vertex loop has no bound check; number of vertices must be divisible by the reuse factor ({}).'.format(reuse_factor))
+            raise Exception(
+                'GarNet vertex loop has no bound check;'
+                f'number of vertices must be divisible by the reuse factor ({reuse_factor}).'
+            )
 
         self._initialize_transforms()
 
         if self.attributes['collapse']:
             shape = [self._output_features]
-            dims = ['OUT_FEATURES_{}'.format(self.index)]
+            dims = [f'OUT_FEATURES_{self.index}']
         else:
             shape = [self.attributes['n_vertices'], self._output_features]
-            dims = ['VERTICES_{}'.format(self.index),'OUT_FEATURES_{}'.format(self.index)]
-            partition_factor = self._output_features * (self.attributes['n_vertices'] // reuse_factor)
+            dims = [f'VERTICES_{self.index}', f'OUT_FEATURES_{self.index}']
 
         self.add_output_variable(shape, dims)
 
@@ -1057,34 +1110,36 @@ class GarNet(Layer):
                 ('aggregator_distance', 'S', 'kernel'),
                 ('aggregator_distance', 'S', 'bias'),
                 ('output_transform', 'Fout', 'kernel'),
-                ('output_transform', 'Fout', 'bias')
+                ('output_transform', 'Fout', 'bias'),
             ]
 
         else:
-            quantize = (self.get_attr('quantizer') is not None)
+            quantize = self.get_attr('quantizer') is not None
             kernel, bias = self._make_input_transform_weights(n_propagate, n_aggregators, n_out_features, quantize=quantize)
 
-            self._add_variable('input_transform_weights', 'input_transform_w{index}', kernel, frac_width=10, quantize=quantize)
+            self._add_variable(
+                'input_transform_weights', 'input_transform_w{index}', kernel, frac_width=10, quantize=quantize
+            )
             self._add_variable('input_transform_biases', 'input_transform_b{index}', bias, frac_width=10, quantize=quantize)
-            #dummy
+            # dummy
             self.add_weights_variable(name='output_transform_weights', var_name='output_transform_w{index}', data=np.ones(1))
 
             weights_source = [
                 ('aggregator_distance', 'S', 'kernel'),
                 ('aggregator_distance', 'S', 'bias'),
-                ('output_transform', 'Fout', 'bias')
+                ('output_transform', 'Fout', 'bias'),
             ]
 
         for op_name, lname, wtype in weights_source:
-            data = self.model.get_weights_data(self.name, '{name}/{lname}_{wtype}:0'.format(name=self.name, lname=lname, wtype=wtype))
+            data = self.model.get_weights_data(self.name, f'{self.name}/{lname}_{wtype}:0')
             if wtype == 'kernel':
                 data = data.transpose((1, 0))
                 vtype = 'weights'
             else:
                 vtype = 'biases'
 
-            name = '{}_{}'.format(op_name, vtype)
-            var_name = '{}_{}{{index}}'.format(op_name, vtype[0])
+            name = f'{op_name}_{vtype}'
+            var_name = f'{op_name}_{vtype[0]}{{index}}'
 
             self._add_variable(name, var_name, data, frac_width=10, quantize=False)
 
@@ -1093,21 +1148,25 @@ class GarNet(Layer):
     def _make_input_transform_weights(self, n_propagate, n_aggregators, n_out_features, quantize=False, sublayer=''):
         # Due to linearity of the input transform, input weights and biases can be contracted away at conversion time
 
-        output_transform_kernel = self.model.get_weights_data(self.name, '{name}/Fout{sublayer}_kernel:0'.format(name=self.name, sublayer=sublayer)) # [(n_aggregators, n_propagate), n_out_features]
+        output_transform_kernel = self.model.get_weights_data(
+            self.name, f'{self.name}/Fout{sublayer}_kernel:0'
+        )  # [(n_aggregators, n_propagate), n_out_features]
         output_transform_kernel = output_transform_kernel.reshape((n_aggregators, n_propagate, n_out_features))
         if quantize:
             output_transform_kernel = self.get_attr('quantizer')(output_transform_kernel)
 
-        input_transform_kernel = self.model.get_weights_data(self.name, '{name}/FLR{sublayer}_kernel:0'.format(name=self.name, sublayer=sublayer)) # [n_in_features, n_propagate]
+        input_transform_kernel = self.model.get_weights_data(
+            self.name, f'{self.name}/FLR{sublayer}_kernel:0'
+        )  # [n_in_features, n_propagate]
         if quantize:
             input_transform_kernel = self.get_attr('quantizer')(input_transform_kernel)
-        data = np.dot(input_transform_kernel, output_transform_kernel) # [n_in_features, n_aggregators, n_out_features]
+        data = np.dot(input_transform_kernel, output_transform_kernel)  # [n_in_features, n_aggregators, n_out_features]
         kernel = data.transpose((2, 1, 0))
 
-        input_transform_bias = self.model.get_weights_data(self.name, '{name}/FLR{sublayer}_bias:0'.format(name=self.name, sublayer=sublayer)) # [n_propagate]
+        input_transform_bias = self.model.get_weights_data(self.name, f'{self.name}/FLR{sublayer}_bias:0')  # [n_propagate]
         if quantize:
             input_transform_bias = self.get_attr('quantizer')(input_transform_bias)
-        data = np.dot(input_transform_bias, output_transform_kernel) # [n_aggregators, n_out_features]
+        data = np.dot(input_transform_bias, output_transform_kernel)  # [n_aggregators, n_out_features]
         bias = data.transpose((1, 0))
 
         return kernel, bias
@@ -1116,23 +1175,26 @@ class GarNet(Layer):
         # Wrapper for add_weights_variable with precision determination from data
 
         # automatically make the variable unsigned if data are all positive
-        signed = (np.amin(data) < 0.)
-        
+        signed = np.amin(data) < 0.0
+
         int_width = find_minimum_width(data, signed=signed)
 
         if quantize:
             precision = IntegerPrecisionType(width=int_width, signed=signed)
         else:
             width = int_width + frac_width
-            precision = FixedPrecisionType(width=width, integer=int_width, signed=signed, rounding_mode='AP_RND', saturation_mode='AP_SAT')
-            
+            precision = FixedPrecisionType(
+                width=width, integer=int_width, signed=signed, rounding_mode='AP_RND', saturation_mode='AP_SAT'
+            )
+
         self.add_weights_variable(name=name, var_name=var_name, data=data, precision=precision)
-        
+
+
 class GarNetStack(GarNet):
     def _initialize_transforms(self):
         self._sublayer_weights = []
 
-        quantize = (self.get_attr('quantizer') is not None)
+        quantize = self.get_attr('quantizer') is not None
 
         for il in range(self.attributes['n_sublayers']):
             sublayer_weights = {}
@@ -1141,93 +1203,97 @@ class GarNetStack(GarNet):
             n_out_features = self.attributes['n_out_features'][il]
             n_propagate = self.attributes['n_propagate'][il]
 
-            kernel, bias = self._make_input_transform_weights(n_propagate, n_aggregators, n_out_features, quantize=quantize, sublayer=il)
+            kernel, bias = self._make_input_transform_weights(
+                n_propagate, n_aggregators, n_out_features, quantize=quantize, sublayer=il
+            )
 
-            name = 'input_transform_{}_weights'.format(il)
-            self._add_variable(name, 'input_transform_{}_w{{index}}'.format(il), kernel, frac_width=10, quantize=quantize)
+            name = f'input_transform_{il}_weights'
+            self._add_variable(name, f'input_transform_{il}_w{{index}}', kernel, frac_width=10, quantize=quantize)
             sublayer_weights['input_transform_weights'] = self.weights[name]
 
-            name = 'input_transform_{}_biases'.format(il)
-            self._add_variable(name, 'input_transform_{}_b{{index}}'.format(il), bias, frac_width=10, quantize=quantize)
+            name = f'input_transform_{il}_biases'
+            self._add_variable(name, f'input_transform_{il}_b{{index}}', bias, frac_width=10, quantize=quantize)
             sublayer_weights['input_transform_biases'] = self.weights[name]
-        
+
             weights_source = [
-                ('aggregator_distance', 'S{}'.format(il), 'kernel'),
-                ('aggregator_distance', 'S{}'.format(il), 'bias'),
-                ('output_transform', 'Fout{}'.format(il), 'bias')
+                ('aggregator_distance', f'S{il}', 'kernel'),
+                ('aggregator_distance', f'S{il}', 'bias'),
+                ('output_transform', f'Fout{il}', 'bias'),
             ]
-    
+
             for op_name, lname, wtype in weights_source:
-                data = self.model.get_weights_data(self.name, '{name}/{lname}_{wtype}:0'.format(name=self.name, lname=lname, wtype=wtype))
+                data = self.model.get_weights_data(self.name, f'{self.name}/{lname}_{wtype}:0')
                 if wtype == 'kernel':
                     data = data.transpose((1, 0))
                     vtype = 'weights'
                 else:
                     vtype = 'biases'
 
-                name = '{}_{}_{}'.format(op_name, il, vtype)
-                var_name = '{}_{}_{}{{index}}'.format(op_name, il, vtype[0])
+                name = f'{op_name}_{il}_{vtype}'
+                var_name = f'{op_name}_{il}_{vtype[0]}{{index}}'
 
                 self._add_variable(name, var_name, data, frac_width=10, quantize=False)
-                sublayer_weights['{}_{}'.format(op_name, vtype)] = self.weights[name]
+                sublayer_weights[f'{op_name}_{vtype}'] = self.weights[name]
 
             self._sublayer_weights.append(sublayer_weights)
 
         self._output_features = self.attributes['n_out_features'][-1]
 
+
 layer_map = {
-    'Input'                  : Input,
-    'InputLayer'             : Input,
-    'Activation'             : Activation,
-    'QActivation'            : Activation,
-    'LeakyReLU'              : ParametrizedActivation,
-    'ThresholdedReLU'        : ParametrizedActivation,
-    'ELU'                    : ParametrizedActivation,
-    'PReLU'                  : PReLU,
-    'Softmax'                : Softmax,
-    'TernaryTanh'            : TernaryTanh,
-    'Reshape'                : Reshape,
-    'Dense'                  : Dense,
-    'BinaryDense'            : Dense,
-    'TernaryDense'           : Dense,
-    'QDense'                 : Dense,
-    'Conv1D'                 : Conv1D,
-    'QConv1D'                : Conv1D,
-    'Conv2D'                 : Conv2D,
-    'BinaryConv2D'           : Conv2D,
-    'QConv2D'                : Conv2D,
-    'QConv2DBatchnorm'       : Conv2DBatchnorm,
-    'SeparableConv1D'        : SeparableConv1D,
-    'SeparableConv2D'        : SeparableConv2D,
-    'DepthwiseConv2D'        : DepthwiseConv2D,
-    'BatchNormalization'     : BatchNormalization,
-    'QBatchNormalization'    : BatchNormalization,
-    'MaxPooling1D'           : Pooling1D,
-    'AveragePooling1D'       : Pooling1D,
-    'MaxPooling2D'           : Pooling2D,
-    'AveragePooling2D'       : Pooling2D,
-    'GlobalMaxPooling1D'     : GlobalPooling1D,
-    'GlobalAveragePooling1D' : GlobalPooling1D,
-    'GlobalMaxPooling2D'     : GlobalPooling2D,
-    'GlobalAveragePooling2D' : GlobalPooling2D,
-    'ZeroPadding1D'          : ZeroPadding1D,
-    'ZeroPadding2D'          : ZeroPadding2D,
-    'Merge'                  : Merge,
-    'Dot'                    : Dot,
-    'Concatenate'            : Concatenate,
-    'Resize'                 : Resize,
-    'UpSampling1D'           : Resize,
-    'UpSampling2D'           : Resize,
-    'Transpose'              : Transpose,
-    'Embedding'              : Embedding,
-    'SimpleRNN'              : SimpleRNN,
-    'LSTM'                   : LSTM,
-    'GRU'                    : GRU,
-    'GarNet'                 : GarNet,
-    'GarNetStack'            : GarNetStack,
+    'Input': Input,
+    'InputLayer': Input,
+    'Activation': Activation,
+    'QActivation': Activation,
+    'LeakyReLU': ParametrizedActivation,
+    'ThresholdedReLU': ParametrizedActivation,
+    'ELU': ParametrizedActivation,
+    'PReLU': PReLU,
+    'Softmax': Softmax,
+    'TernaryTanh': TernaryTanh,
+    'Reshape': Reshape,
+    'Dense': Dense,
+    'BinaryDense': Dense,
+    'TernaryDense': Dense,
+    'QDense': Dense,
+    'Conv1D': Conv1D,
+    'QConv1D': Conv1D,
+    'Conv2D': Conv2D,
+    'BinaryConv2D': Conv2D,
+    'QConv2D': Conv2D,
+    'QConv2DBatchnorm': Conv2DBatchnorm,
+    'SeparableConv1D': SeparableConv1D,
+    'SeparableConv2D': SeparableConv2D,
+    'DepthwiseConv2D': DepthwiseConv2D,
+    'BatchNormalization': BatchNormalization,
+    'QBatchNormalization': BatchNormalization,
+    'MaxPooling1D': Pooling1D,
+    'AveragePooling1D': Pooling1D,
+    'MaxPooling2D': Pooling2D,
+    'AveragePooling2D': Pooling2D,
+    'GlobalMaxPooling1D': GlobalPooling1D,
+    'GlobalAveragePooling1D': GlobalPooling1D,
+    'GlobalMaxPooling2D': GlobalPooling2D,
+    'GlobalAveragePooling2D': GlobalPooling2D,
+    'ZeroPadding1D': ZeroPadding1D,
+    'ZeroPadding2D': ZeroPadding2D,
+    'Merge': Merge,
+    'Dot': Dot,
+    'Concatenate': Concatenate,
+    'Resize': Resize,
+    'UpSampling1D': Resize,
+    'UpSampling2D': Resize,
+    'Transpose': Transpose,
+    'Embedding': Embedding,
+    'SimpleRNN': SimpleRNN,
+    'LSTM': LSTM,
+    'GRU': GRU,
+    'GarNet': GarNet,
+    'GarNetStack': GarNetStack,
     # TensorFlow-specific layers:
-    'BiasAdd'                : BiasAdd,
+    'BiasAdd': BiasAdd,
 }
+
 
 def register_layer(name, clazz):
     global layer_map
