@@ -4,6 +4,9 @@ from tensorflow.keras.layers import Input
 from tensorflow.keras.models import Model
 import hls4ml
 import pytest
+from pathlib import Path
+
+test_root_path = Path(__file__).parent
 
 vmax = 16
 feat = 3
@@ -24,7 +27,7 @@ def garnet_models():
     config['Model']['Precision'] = 'ap_fixed<32,6>'
     config['LayerName']['gar_1']['Precision'] = {'default': 'ap_fixed<32, 6, AP_RND, AP_SAT>', 'result': 'ap_fixed<32, 6>'}
 
-    cfg = hls4ml.converters.create_config(output_dir='hls4mlprj_garnet', part='xc7z020clg400-1')
+    cfg = hls4ml.converters.create_config(output_dir=str(test_root_path / 'hls4mlprj_garnet'), part='xc7z020clg400-1')
     cfg['HLSConfig'] = config
     cfg['KerasModel'] = model
     

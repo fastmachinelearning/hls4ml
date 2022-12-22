@@ -3,6 +3,9 @@ import hls4ml
 import numpy as np
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Permute, Concatenate, Activation
+from pathlib import Path
+
+test_root_path = Path(__file__).parent
 
 @pytest.fixture(scope='module')
 def data():
@@ -27,11 +30,12 @@ def hls_model(keras_model, backend, io_type):
                                                       default_precision='ap_fixed<16,3,AP_RND_CONV,AP_SAT>',
                                                       granularity='name')
     hls_config['LayerName']['relu']['Precision'] = 'ap_ufixed<17,3>'
+    output_dir = str(test_root_path / f'hls4mlprj_transpose_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(keras_model,
                                                            hls_config=hls_config,
                                                            io_type=io_type,
                                                            backend=backend,
-                                                           output_dir='hls4mlprj_transpose_{}_{}'.format(backend, io_type))
+                                                           output_dir=output_dir)
 
     hls_model.compile()
     return hls_model
