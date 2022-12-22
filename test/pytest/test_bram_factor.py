@@ -10,7 +10,8 @@ import math
 test_root_path = Path(__file__).parent
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
-def test_bram_factor(backend):
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_bram_factor(backend, io_type):
     '''A copy of the test_dense from test_keras_api.py with BramFactor set to 0'''
     model = tf.keras.models.Sequential()
     model.add(Dense(2,
@@ -33,10 +34,13 @@ def test_bram_factor(backend):
 
     config = hls4ml.utils.config_from_keras_model(model)
     config["Model"]["BramFactor"] = 0
-    output_dir = str(test_root_path / f'hls4mlprj_bram_factor_{backend}')
+    output_dir = str(test_root_path / f'hls4mlprj_bram_factor_{backend}_{io_type}')
 
     hls_model = hls4ml.converters.convert_from_keras_model(model, 
-        hls_config=config, output_dir=output_dir, backend=backend)
+                                                           hls_config=config,
+                                                           output_dir=output_dir,
+                                                           io_type=io_type,
+                                                           backend=backend)
 
     hls_model.compile()
 
