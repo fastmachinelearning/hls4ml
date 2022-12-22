@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hls4ml.model package &mdash; hls4ml 0.5.1.dev625+g1d282f77 documentation</title>
+  <title>hls4ml.model package &mdash; hls4ml 0.5.1.dev626+g86f583df documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -159,6 +159,11 @@
 <dt class="sig sig-object py" id="hls4ml.model.attributes.Attribute">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.attributes.</span></span><span class="sig-name descname"><span class="pre">Attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_type=&lt;class</span> <span class="pre">'int'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configurable=False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.attributes.Attribute" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.model.attributes.Attribute.config_name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">config_name</span></span><a class="headerlink" href="#hls4ml.model.attributes.Attribute.config_name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.attributes.Attribute.validate_value">
 <span class="sig-name descname"><span class="pre">validate_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.attributes.Attribute.validate_value" title="Permalink to this definition"></a></dt>
@@ -199,6 +204,12 @@
 <dt class="sig sig-object py" id="hls4ml.model.attributes.CodeMapping">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.attributes.</span></span><span class="sig-name descname"><span class="pre">CodeMapping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.attributes.CodeMapping" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.attributes.AttributeMapping" title="hls4ml.model.attributes.AttributeMapping"><code class="xref py py-class docutils literal notranslate"><span class="pre">AttributeMapping</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.attributes.ConfigurableAttribute">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.attributes.</span></span><span class="sig-name descname"><span class="pre">ConfigurableAttribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_type=&lt;class</span> <span class="pre">'int'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.attributes.ConfigurableAttribute" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.attributes.Attribute" title="hls4ml.model.attributes.Attribute"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attribute</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
@@ -472,7 +483,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.model.layers.Layer.expected_attributes">
-<span class="sig-name descname"><span class="pre">expected_attributes</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[&lt;hls4ml.model.attributes.Attribute</span> <span class="pre">object&gt;,</span> <span class="pre">&lt;hls4ml.model.attributes.TypeAttribute</span> <span class="pre">object&gt;,</span> <span class="pre">&lt;hls4ml.model.attributes.TypeAttribute</span> <span class="pre">object&gt;]</span></em><a class="headerlink" href="#hls4ml.model.layers.Layer.expected_attributes" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">expected_attributes</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[&lt;hls4ml.model.attributes.Attribute</span> <span class="pre">object&gt;,</span> <span class="pre">&lt;hls4ml.model.attributes.ConfigurableAttribute</span> <span class="pre">object&gt;,</span> <span class="pre">&lt;hls4ml.model.attributes.TypeAttribute</span> <span class="pre">object&gt;]</span></em><a class="headerlink" href="#hls4ml.model.layers.Layer.expected_attributes" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">

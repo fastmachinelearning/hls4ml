@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hls4ml.writer package &mdash; hls4ml 0.5.1.dev625+g1d282f77 documentation</title>
+  <title>hls4ml.writer package &mdash; hls4ml 0.5.1.dev626+g86f583df documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -134,27 +134,61 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.quartus_writer.QuartusWriter.print_array_to_cpp">
 <span class="sig-name descname"><span class="pre">print_array_to_cpp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">odir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.quartus_writer.QuartusWriter.print_array_to_cpp" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write a weights array to C++ header files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>var</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.types.WeightVariable" title="hls4ml.model.types.WeightVariable"><em>WeightVariable</em></a>) – Weight to write</p></li>
+<li><p><strong>layer</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Instance of the layer to which the weights belong</p></li>
+<li><p><strong>odir</strong> (<em>str</em>) – Output directory</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.quartus_writer.QuartusWriter.write_activation_tables">
 <span class="sig-name descname"><span class="pre">write_activation_tables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.quartus_writer.QuartusWriter.write_activation_tables" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the lookup tables for activation functions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.quartus_writer.QuartusWriter.write_bridge">
 <span class="sig-name descname"><span class="pre">write_bridge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.quartus_writer.QuartusWriter.write_bridge" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the Python-C++ bridge (myproject_bridge.cpp)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.quartus_writer.QuartusWriter.write_build_script">
 <span class="sig-name descname"><span class="pre">write_build_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.quartus_writer.QuartusWriter.write_build_script" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the build scripts (Makefile, build_lib.sh)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.quartus_writer.QuartusWriter.write_defines">
 <span class="sig-name descname"><span class="pre">write_defines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.quartus_writer.QuartusWriter.write_defines" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the C++ type definitions file (defines.h)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.quartus_writer.QuartusWriter.write_hls">
@@ -164,57 +198,123 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.quartus_writer.QuartusWriter.write_nnet_utils">
 <span class="sig-name descname"><span class="pre">write_nnet_utils</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.quartus_writer.QuartusWriter.write_nnet_utils" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Copy the nnet_utils, AP types headers and any custom source to the project output directory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.quartus_writer.QuartusWriter.write_parameters">
 <span class="sig-name descname"><span class="pre">write_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.quartus_writer.QuartusWriter.write_parameters" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the C++ layer config file (parameters.h)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.quartus_writer.QuartusWriter.write_project_cpp">
 <span class="sig-name descname"><span class="pre">write_project_cpp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.quartus_writer.QuartusWriter.write_project_cpp" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the main architecture source file (myproject.cpp)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.quartus_writer.QuartusWriter.write_project_dir">
 <span class="sig-name descname"><span class="pre">write_project_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.quartus_writer.QuartusWriter.write_project_dir" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the base project directory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.quartus_writer.QuartusWriter.write_project_header">
 <span class="sig-name descname"><span class="pre">write_project_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.quartus_writer.QuartusWriter.write_project_header" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the main architecture header file (myproject.h)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.quartus_writer.QuartusWriter.write_tar">
 <span class="sig-name descname"><span class="pre">write_tar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.quartus_writer.QuartusWriter.write_tar" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the generated project as a .tar.gz archive</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.quartus_writer.QuartusWriter.write_test_bench">
 <span class="sig-name descname"><span class="pre">write_test_bench</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.quartus_writer.QuartusWriter.write_test_bench" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the testbench</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.quartus_writer.QuartusWriter.write_testbench_parallel">
 <span class="sig-name descname"><span class="pre">write_testbench_parallel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.quartus_writer.QuartusWriter.write_testbench_parallel" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the testbench file for io_parallel (myproject_test.cpp and input/output .dat files)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.quartus_writer.QuartusWriter.write_testbench_stream">
 <span class="sig-name descname"><span class="pre">write_testbench_stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.quartus_writer.QuartusWriter.write_testbench_stream" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the testbench file for io_stream (myproject_test.cpp and input/output .dat files)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.quartus_writer.QuartusWriter.write_weights">
 <span class="sig-name descname"><span class="pre">write_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.quartus_writer.QuartusWriter.write_weights" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the weights into header files</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.quartus_writer.QuartusWriter.write_yml">
 <span class="sig-name descname"><span class="pre">write_yml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.quartus_writer.QuartusWriter.write_yml" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the config to the YAML file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -277,27 +377,61 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.vivado_writer.VivadoWriter.print_array_to_cpp">
 <span class="sig-name descname"><span class="pre">print_array_to_cpp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">odir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_txt_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_writer.VivadoWriter.print_array_to_cpp" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write a weights array to C++ header files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>var</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.types.WeightVariable" title="hls4ml.model.types.WeightVariable"><em>WeightVariable</em></a>) – Weight to write</p></li>
+<li><p><strong>odir</strong> (<em>str</em>) – Output directory</p></li>
+<li><p><strong>write_txt_file</strong> (<em>bool</em><em>, </em><em>optional</em>) – Write txt files in addition to .h files. Defaults to True.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.vivado_writer.VivadoWriter.write_bridge">
 <span class="sig-name descname"><span class="pre">write_bridge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_writer.VivadoWriter.write_bridge" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the Python-C++ bridge (myproject_bridge.cpp)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.vivado_writer.VivadoWriter.write_build_script">
 <span class="sig-name descname"><span class="pre">write_build_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_writer.VivadoWriter.write_build_script" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the TCL/Shell build scripts (project.tcl, build_prj.tcl, vivado_synth.tcl, build_lib.sh)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.vivado_writer.VivadoWriter.write_defines">
 <span class="sig-name descname"><span class="pre">write_defines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_writer.VivadoWriter.write_defines" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the C++ type definitions file (defines.h)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.vivado_writer.VivadoWriter.write_generated_code">
 <span class="sig-name descname"><span class="pre">write_generated_code</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_writer.VivadoWriter.write_generated_code" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the generated code (nnet_code_gen.h)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.vivado_writer.VivadoWriter.write_hls">
@@ -307,47 +441,101 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.vivado_writer.VivadoWriter.write_nnet_utils">
 <span class="sig-name descname"><span class="pre">write_nnet_utils</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_writer.VivadoWriter.write_nnet_utils" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Copy the nnet_utils, AP types headers and any custom source to the project output directory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.vivado_writer.VivadoWriter.write_parameters">
 <span class="sig-name descname"><span class="pre">write_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_writer.VivadoWriter.write_parameters" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the C++ layer config file (parameters.h)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.vivado_writer.VivadoWriter.write_project_cpp">
 <span class="sig-name descname"><span class="pre">write_project_cpp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_writer.VivadoWriter.write_project_cpp" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the main architecture source file (myproject.cpp)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.vivado_writer.VivadoWriter.write_project_dir">
 <span class="sig-name descname"><span class="pre">write_project_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_writer.VivadoWriter.write_project_dir" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the base project directory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.vivado_writer.VivadoWriter.write_project_header">
 <span class="sig-name descname"><span class="pre">write_project_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_writer.VivadoWriter.write_project_header" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the main architecture header file (myproject.h)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.vivado_writer.VivadoWriter.write_tar">
 <span class="sig-name descname"><span class="pre">write_tar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_writer.VivadoWriter.write_tar" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the generated project as a .tar.gz archive</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.vivado_writer.VivadoWriter.write_test_bench">
 <span class="sig-name descname"><span class="pre">write_test_bench</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_writer.VivadoWriter.write_test_bench" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the testbench files (myproject_test.cpp and input/output .dat files)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.vivado_writer.VivadoWriter.write_weights">
 <span class="sig-name descname"><span class="pre">write_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_writer.VivadoWriter.write_weights" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the weights into header files</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.writer.vivado_writer.VivadoWriter.write_yml">
 <span class="sig-name descname"><span class="pre">write_yml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_writer.VivadoWriter.write_yml" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the config to the YAML file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 

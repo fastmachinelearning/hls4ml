@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hls4ml.backends.fpga package &mdash; hls4ml 0.5.1.dev625+g1d282f77 documentation</title>
+  <title>hls4ml.backends.fpga package &mdash; hls4ml 0.5.1.dev626+g86f583df documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -201,12 +201,14 @@ we need to do this for every convolution layer.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>layer_idx</strong> (<em>int</em>) – Index of layer (‘index’ attribute).</p></li>
-<li><p><strong>n_partitions</strong> (<em>int</em>) – Number of partitions to divide the input into. The pixels in each partition will be processed in parallel.</p></li>
+<li><p><strong>n_partitions</strong> (<em>int</em>) – Number of partitions to divide the input into.
+The pixels in each partition will be processed in parallel.</p></li>
 <li><p><strong>in_W</strong> (<em>int</em>) – Width of input.</p></li>
 <li><p><strong>in_C</strong> (<em>int</em>) – Number of channels.</p></li>
 <li><p><strong>kernel</strong> (<em>int</em><em>, </em><em>optional</em>) – Size of the kernel. Defaults to 3.</p></li>
 <li><p><strong>stride</strong> (<em>int</em><em>, </em><em>optional</em>) – Stride length. Defaults to 1.</p></li>
-<li><p><strong>pad</strong> (<em>int</em><em> or </em><em>Iterable</em><em>, </em><em>optional</em>) – Padding to apply. Specified as either a number or a list [left_pad, right_pad]. Defaults to 0.</p></li>
+<li><p><strong>pad</strong> (<em>int</em><em> or </em><em>Iterable</em><em>, </em><em>optional</em>) – Padding to apply. Defaults to 0.
+Specified as either a number or a list [left_pad, right_pad].</p></li>
 <li><p><strong>dilation</strong> (<em>int</em><em>, </em><em>optional</em>) – Dilation rate. Defaults to 1.</p></li>
 </ul>
 </dd>
@@ -231,13 +233,15 @@ we need to do this for every convolution layer.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>layer_idx</strong> (<em>int</em>) – Index of layer (‘index’ attribute).</p></li>
-<li><p><strong>n_partitions</strong> (<em>int</em>) – Number of partitions to divide the input into. The pixels in each partition will be processed in parallel.</p></li>
+<li><p><strong>n_partitions</strong> (<em>int</em>) – Number of partitions to divide the input into.
+The pixels in each partition will be processed in parallel.</p></li>
 <li><p><strong>in_H</strong> (<em>int</em>) – Height of input.</p></li>
 <li><p><strong>in_W</strong> (<em>int</em>) – Width of input.</p></li>
 <li><p><strong>in_C</strong> (<em>int</em>) – Number of channels.</p></li>
 <li><p><strong>kernel</strong> (<em>int</em><em> or </em><em>Iterable</em><em>, </em><em>optional</em>) – Size of the kernel. Defaults to (3,3).</p></li>
 <li><p><strong>stride</strong> (<em>int</em><em> or </em><em>Iterable</em><em>, </em><em>optional</em>) – Stride length. Defaults to (1,1).</p></li>
-<li><p><strong>pad</strong> (<em>int</em><em> or </em><em>Iterable</em><em>, </em><em>optional</em>) – Padding to apply. Specified as either a number or a list [top_pad, bottom_pad, left_pad, right_pad]. Defaults to 0.</p></li>
+<li><p><strong>pad</strong> (<em>int</em><em> or </em><em>Iterable</em><em>, </em><em>optional</em>) – Padding to apply. Defaults to 0.
+Specified as either a number or a list [top_pad, bottom_pad, left_pad, right_pad].</p></li>
 <li><p><strong>dilation</strong> (<em>int</em><em> or </em><em>Iterable</em><em>, </em><em>optional</em>) – Dilation rate. Defaults to (1,1).</p></li>
 </ul>
 </dd>
