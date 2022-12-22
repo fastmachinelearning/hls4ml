@@ -26,6 +26,8 @@
 #include "firmware/parameters.h"
 #include "firmware/myproject.h"
 
+//hls-fpga-machine-learning insert bram
+
 #define CHECKPOINT 5000
 
 // This function is written to avoid stringstream, which is
