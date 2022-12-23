@@ -329,7 +329,7 @@ class QuartusWriter(Writer):
                     for inp in model_inputs:
                         newline += indent + f'stream_in<{inp.type.name}> &{inp.name}_stream,\n'
                     for out in model_outputs:
-                        newline += indent + 'stream_out<{out.type.name}> &{out.name}_stream'
+                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream'
                     if model_brams:
                         newline += ',\n' + brams_str
                     newline += '\n);\n'
