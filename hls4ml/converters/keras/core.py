@@ -1,14 +1,12 @@
 import numpy as np
 
-from hls4ml.converters.keras_to_hls import parse_default_keras_layer
-from hls4ml.converters.keras_to_hls import keras_handler
+from hls4ml.converters.keras_to_hls import keras_handler, parse_default_keras_layer
+from hls4ml.model.types import IntegerPrecisionType, Quantizer
 
-from hls4ml.model.types import Quantizer
-from hls4ml.model.types import IntegerPrecisionType
 
 @keras_handler('InputLayer')
-def parse_input_layer(keras_layer, input_names, input_shapes, data_reader, config):
-    assert(keras_layer['class_name'] == 'InputLayer')
+def parse_input_layer(keras_layer, input_names, input_shapes, data_reader):
+    assert keras_layer['class_name'] == 'InputLayer'
 
     layer = parse_default_keras_layer(keras_layer, input_names)
 
@@ -17,13 +15,13 @@ def parse_input_layer(keras_layer, input_names, input_shapes, data_reader, confi
     dtype = keras_layer['config']['dtype']
     if dtype.startswith('int') or dtype.startswith('uint'):
         layer['type_name'] = 'integer_input_t'
-        width = int(dtype[dtype.index('int') + 3:])
-        signed = (not dtype.startswith('u'))
+        width = int(dtype[dtype.index('int') + 3 :])
+        signed = not dtype.startswith('u')
         layer['precision'] = IntegerPrecisionType(width=width, signed=signed)
     # elif bool, q[u]int, ...
 
     output_shape = keras_layer['config']['batch_input_shape']
-    
+
     return layer, output_shape
 
 
@@ -34,9 +32,9 @@ class BinaryQuantizer(Quantizer):
         elif bits == 2:
             hls_type = IntegerPrecisionType(width=2)
         else:
-            raise Exception('BinaryQuantizer suppots 1 or 2 bits, but called with bits={}'.format(bits))
-        super(BinaryQuantizer, self).__init__(bits, hls_type)
-    
+            raise Exception(f'BinaryQuantizer suppots 1 or 2 bits, but called with bits={bits}')
+        super().__init__(bits, hls_type)
+
     def __call__(self, data):
         zeros = np.zeros_like(data)
         ones = np.ones_like(data)
@@ -47,10 +45,11 @@ class BinaryQuantizer(Quantizer):
             quant_data = np.where(data > 0, ones, -ones)
         return quant_data
 
+
 class TernaryQuantizer(Quantizer):
     def __init__(self):
-        super(TernaryQuantizer, self).__init__(2, IntegerPrecisionType(width=2))
-    
+        super().__init__(2, IntegerPrecisionType(width=2))
+
     def __call__(self, data):
         zeros = np.zeros_like(data)
         ones = np.ones_like(data)
@@ -58,12 +57,14 @@ class TernaryQuantizer(Quantizer):
 
 
 dense_layers = ['Dense', 'BinaryDense', 'TernaryDense']
+
+
 @keras_handler(*dense_layers)
-def parse_dense_layer(keras_layer, input_names, input_shapes, data_reader, config):
-    assert('Dense' in keras_layer['class_name'])
+def parse_dense_layer(keras_layer, input_names, input_shapes, data_reader):
+    assert 'Dense' in keras_layer['class_name']
 
     layer = parse_default_keras_layer(keras_layer, input_names)
-    
+
     weights_shape = data_reader.get_weights_shape(layer['name'], 'kernel')
     layer['n_in'] = weights_shape[0]
     layer['n_out'] = weights_shape[1]
@@ -83,9 +84,11 @@ def parse_dense_layer(keras_layer, input_names, input_shapes, data_reader, confi
 
 
 activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
+
+
 @keras_handler(*activation_layers)
-def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader, config):
-    assert(keras_layer['class_name'] in activation_layers)
+def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader):
+    assert keras_layer['class_name'] in activation_layers
 
     layer = parse_default_keras_layer(keras_layer, input_names)
 
@@ -94,9 +97,9 @@ def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader, 
     if layer['class_name'] == 'LeakyReLU':
         layer['activ_param'] = keras_layer['config'].get('alpha', 0.3)
     elif layer['class_name'] == 'ThresholdedReLU':
-        layer['activ_param'] = keras_layer['config'].get('theta', 1.)
+        layer['activ_param'] = keras_layer['config'].get('theta', 1.0)
     elif layer['class_name'] == 'ELU':
-        layer['activ_param'] = keras_layer['config'].get('alpha', 1.)
+        layer['activ_param'] = keras_layer['config'].get('alpha', 1.0)
     elif layer['class_name'] == 'ReLU':
         layer['class_name'] = 'Activation'
 
@@ -104,13 +107,13 @@ def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader, 
         layer['class_name'] = 'Softmax'
     if layer['class_name'] == 'Softmax':
         layer['axis'] = keras_layer['config'].get('axis', -1)
-    
+
     return layer, [shape for shape in input_shapes[0]]
 
 
 @keras_handler('BatchNormalization')
-def parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader, config):
-    assert('BatchNormalization' in keras_layer['class_name'] or 'QConv2DBatchnorm' in keras_layer['class_name'])
+def parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader):
+    assert 'BatchNormalization' in keras_layer['class_name'] or 'QConv2DBatchnorm' in keras_layer['class_name']
 
     layer = parse_default_keras_layer(keras_layer, input_names)
 
@@ -122,16 +125,16 @@ def parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader, c
     if len(input_shapes[0]) == 2:
         layer['n_filt'] = -1
     elif len(input_shapes[0]) == 3:
-        layer['n_filt']=input_shapes[0][2]
+        layer['n_filt'] = input_shapes[0][2]
     elif len(input_shapes[0]) == 4:
-        layer['n_filt']=input_shapes[0][3]
+        layer['n_filt'] = input_shapes[0][3]
 
     return layer, [shape for shape in input_shapes[0]]
 
 
 @keras_handler('Embedding')
-def parse_embedding_layer(keras_layer, input_names, input_shapes, data_reader, config):
-    assert('Embedding' in keras_layer['class_name'])
+def parse_embedding_layer(keras_layer, input_names, input_shapes, data_reader):
+    assert 'Embedding' in keras_layer['class_name']
 
     layer = parse_default_keras_layer(keras_layer, input_names)
 

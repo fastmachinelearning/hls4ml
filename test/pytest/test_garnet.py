@@ -1,22 +1,38 @@
+from pathlib import Path
+
 import numpy as np
-from contrib.garnet import GarNet
+import pytest
 from tensorflow.keras.layers import Input
 from tensorflow.keras.models import Model
+
 import hls4ml
-import pytest
+from contrib.garnet import GarNet
+
+test_root_path = Path(__file__).parent
 
 vmax = 16
 feat = 3
+
+
 @pytest.fixture(scope='module')
 def garnet_models():
     x = Input(shape=(vmax, feat))
     n = Input(shape=(1,), dtype='uint16')
     inputs = [x, n]
-    outputs = GarNet(8, 8, 16, simplified=True, collapse='mean', input_format='xn', 
-                     output_activation=None, name='gar_1', quantize_transforms=False)(inputs)
+    outputs = GarNet(
+        8,
+        8,
+        16,
+        simplified=True,
+        collapse='mean',
+        input_format='xn',
+        output_activation=None,
+        name='gar_1',
+        quantize_transforms=False,
+    )(inputs)
     model = Model(inputs=inputs, outputs=outputs)
     model.summary()
-    
+
     config = hls4ml.utils.config_from_keras_model(model, granularity='name')
     config['Model'] = {}
     config['Model']['ReuseFactor'] = 1
@@ -24,10 +40,10 @@ def garnet_models():
     config['Model']['Precision'] = 'ap_fixed<32,6>'
     config['LayerName']['gar_1']['Precision'] = {'default': 'ap_fixed<32, 6, AP_RND, AP_SAT>', 'result': 'ap_fixed<32, 6>'}
 
-    cfg = hls4ml.converters.create_config(output_dir='hls4mlprj_garnet', part='xc7z020clg400-1')
+    cfg = hls4ml.converters.create_config(output_dir=str(test_root_path / 'hls4mlprj_garnet'), part='xc7z020clg400-1')
     cfg['HLSConfig'] = config
     cfg['KerasModel'] = model
-    
+
     hls_model = hls4ml.converters.keras_to_hls(cfg)
     hls_model.compile()
     return model, hls_model
@@ -40,5 +56,5 @@ def test_accuracy(garnet_models, batch):
     y = model.predict(x)
     x_hls = [x[0], x[1].astype(np.float64)]
     y_hls = hls_model.predict(x_hls).reshape(y.shape)
-                                                                
+
     np.testing.assert_allclose(y_hls, y, rtol=0, atol=0.1)
