@@ -5,6 +5,7 @@
 #include "nnet_common.h"
 #include "nnet_dense_latency.h"
 #include "nnet_dense_resource.h"
+#include "nnet_dense_seq.h"
 #include "nnet_helpers.h"
 #include "nnet_mult.h"
 #include <math.h>
@@ -32,18 +33,25 @@ struct dense_config {
     template <class x_T, class y_T> using product = nnet::product::mult<x_T, y_T>;
 };
 
-template <class data_T, class res_T, typename CONFIG_T>
-void dense(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
-           typename CONFIG_T::weight_t weights[CONFIG_T::n_in * CONFIG_T::n_out],
-           typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
+template<class data_T, class res_T, typename CONFIG_T>
+void dense(
+    data_T    data[CONFIG_T::n_in*CONFIG_T::seq_len],
+    res_T     res[CONFIG_T::n_out*CONFIG_T::seq_len],
+    typename CONFIG_T::weight_t  weights[CONFIG_T::n_in*CONFIG_T::n_out],
+    typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
+{
     #pragma HLS inline
-    if (CONFIG_T::strategy == nnet::latency) {
-        dense_latency<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-    } else {
-        dense_resource<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+    if (CONFIG_T::seq_len > 1) {
+        dense_seq<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+    } else{
+        if (CONFIG_T::strategy == nnet::latency) {
+            dense_latency<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+        } else {
+            dense_resource<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+        }
     }
 }
 
-} // namespace nnet
+}
 
 #endif
