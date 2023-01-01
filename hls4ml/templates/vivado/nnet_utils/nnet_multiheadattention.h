@@ -94,6 +94,52 @@ void matrixmul(
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
+void dense_value(
+    data_T    data_v[CONFIG_T::seq_len * CONFIG_T::feature_dim],
+    data_T    v_proj [CONFIG_T::seq_len][CONFIG_T::head_dim_value],
+    typename CONFIG_T::weight_t  value_weight[CONFIG_T::feature_dim * CONFIG_T::head_dim_value],
+    typename CONFIG_T::bias_t    value_bias[CONFIG_T::head_dim_value])
+{
+    data_T  v_row[CONFIG_T::head_dim_value];
+    #pragma HLS ARRAY_PARTITION variable=v_row complete dim=0
+    #pragma HLS ARRAY_RESHAPE variable=v_proj complete dim=1
+    #pragma HLS function_instantiate variable=value_weight,value_bias
+    v_h: for (int j=0; j <CONFIG_T::seq_len; ++j){
+        dense<data_T, res_T, typename CONFIG_T::config_mult1>(data_v+(CONFIG_T::feature_dim*j), v_row, value_weight, value_bias);
+        for (int k=0; k <CONFIG_T::head_dim_value; ++k){
+            v_proj[j][k]=v_row[k];
+        }
+    }
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
+void dense_query(
+    data_T    data_q[CONFIG_T::seq_len * CONFIG_T::feature_dim],
+    data_T    q_proj[CONFIG_T::seq_len][CONFIG_T::head_dim_key],
+    typename CONFIG_T::weight_t  query_weight[CONFIG_T::feature_dim * CONFIG_T::head_dim_value],
+    typename CONFIG_T::bias_t    query_bias[CONFIG_T::head_dim_value])
+{
+    #pragma HLS function_instantiate variable=query_weight,query_bias
+    q_h: for (int j=0; j <CONFIG_T::seq_len; ++j){
+        dense<data_T, res_T, typename CONFIG_T::config_mult1>(data_q +(CONFIG_T::feature_dim*j), q_proj[j], query_weight, query_bias);
+    }
+}
+
+template<class data_T, class res_T, typename CONFIG_T>
+void dense_key(
+    data_T    data_k[CONFIG_T::seq_len * CONFIG_T::feature_dim],
+    data_T    k_proj[CONFIG_T::seq_len][CONFIG_T::head_dim_key],
+    typename CONFIG_T::weight_t  key_weight[CONFIG_T::feature_dim * CONFIG_T::head_dim_value],
+    typename CONFIG_T::bias_t    key_bias[CONFIG_T::head_dim_value])
+{
+    #pragma HLS function_instantiate variable=key_weight,key_bias
+    k_h: for (int j=0; j <CONFIG_T::seq_len; ++j){
+        dense<data_T, res_T, typename CONFIG_T::config_mult1>(data_k+(CONFIG_T::feature_dim*j), k_proj[j], key_weight, key_bias);
+    }
+}
+
+
+template<class data_T, class res_T, typename CONFIG_T>
 void multiheadattention(
     data_T    data_q[CONFIG_T::seq_len * CONFIG_T::feature_dim],
     data_T    data_vk[CONFIG_T::seq_len * CONFIG_T::feature_dim],
@@ -108,42 +154,62 @@ void multiheadattention(
     typename CONFIG_T::bias_t    value_bias[CONFIG_T::num_heads * CONFIG_T::head_dim_value])
 {
 
-    data_T q_proj[CONFIG_T::seq_len][CONFIG_T::head_dim_key];
-    data_T v_proj[CONFIG_T::seq_len][CONFIG_T::head_dim_value];
-    data_T v_row[CONFIG_T::head_dim_value];
-    data_T k_proj[CONFIG_T::seq_len][CONFIG_T::head_dim_key];
-    data_T qk_mul[CONFIG_T::seq_len][CONFIG_T::seq_len];
+    data_T q_proj[CONFIG_T::num_heads][CONFIG_T::seq_len][CONFIG_T::head_dim_key];
+    data_T v_proj[CONFIG_T::num_heads][CONFIG_T::seq_len][CONFIG_T::head_dim_value];
+    data_T k_proj[CONFIG_T::num_heads][CONFIG_T::seq_len][CONFIG_T::head_dim_key];
+    data_T qk_mul[CONFIG_T::num_heads][CONFIG_T::seq_len][CONFIG_T::seq_len];
+
+    // data_T q_proj0[CONFIG_T::seq_len][CONFIG_T::head_dim_key];
+    // data_T v_proj0[CONFIG_T::seq_len][CONFIG_T::head_dim_value];
+    // data_T k_proj0[CONFIG_T::seq_len][CONFIG_T::head_dim_key];
+    // data_T qk_mul0[CONFIG_T::seq_len][CONFIG_T::seq_len];
+
+    // data_T q_proj1[CONFIG_T::seq_len][CONFIG_T::head_dim_key];
+    // data_T v_proj1[CONFIG_T::seq_len][CONFIG_T::head_dim_value];
+    // data_T k_proj1[CONFIG_T::seq_len][CONFIG_T::head_dim_key];
+    // data_T qk_mul1[CONFIG_T::seq_len][CONFIG_T::seq_len];
+
+    // data_T q_proj2[CONFIG_T::seq_len][CONFIG_T::head_dim_key];
+    // data_T v_proj2[CONFIG_T::seq_len][CONFIG_T::head_dim_value];
+    // data_T k_proj2[CONFIG_T::seq_len][CONFIG_T::head_dim_key];
+    // data_T qk_mul2[CONFIG_T::seq_len][CONFIG_T::seq_len];
 
     data_T dense_in[CONFIG_T::seq_len][CONFIG_T::num_heads * CONFIG_T::head_dim_value];
-#pragma HLS ARRAY_PARTITION variable=v_row complete dim=0
+#pragma HLS DATAFLOW
 #pragma HLS ARRAY_PARTITION variable=dense_in complete dim=2
-#pragma HLS ARRAY_RESHAPE variable=v_proj complete dim=1
-
+#pragma HLS ARRAY_PARTITION variable=v_proj complete dim=1
+#pragma HLS ARRAY_PARTITION variable=q_proj complete dim=1
+#pragma HLS ARRAY_PARTITION variable=k_proj complete dim=1
+#pragma HLS ARRAY_PARTITION variable=qk_mul complete dim=1
     // std::cout << "input to MHA: " << std::endl;
     // nnet::print_result<result_t, CONFIG_T::seq_len * CONFIG_T::feature_dim>(data_q, std::cout);
     // std::cout << " " << std::endl;
 
     // linear projection
+    dense_value<data_T, res_T, CONFIG_T>(data_vk, v_proj[0], value_weight+(CONFIG_T::head_dim_value*CONFIG_T::feature_dim*0), value_bias+(CONFIG_T::head_dim_value*0));
+    dense_value<data_T, res_T, CONFIG_T>(data_vk, v_proj[1], value_weight+(CONFIG_T::head_dim_value*CONFIG_T::feature_dim*1), value_bias+(CONFIG_T::head_dim_value*1));
+    dense_value<data_T, res_T, CONFIG_T>(data_vk, v_proj[2], value_weight+(CONFIG_T::head_dim_value*CONFIG_T::feature_dim*2), value_bias+(CONFIG_T::head_dim_value*2));
+
+    dense_query<data_T, res_T, CONFIG_T>(data_q, q_proj[0], query_weight+(CONFIG_T::head_dim_key*CONFIG_T::feature_dim*0), query_bias+(CONFIG_T::head_dim_key*0));
+    dense_query<data_T, res_T, CONFIG_T>(data_q, q_proj[1], query_weight+(CONFIG_T::head_dim_key*CONFIG_T::feature_dim*1), query_bias+(CONFIG_T::head_dim_key*1));
+    dense_query<data_T, res_T, CONFIG_T>(data_q, q_proj[2], query_weight+(CONFIG_T::head_dim_key*CONFIG_T::feature_dim*2), query_bias+(CONFIG_T::head_dim_key*2));
+
+    dense_key<data_T, res_T, CONFIG_T>(data_vk, k_proj[0], key_weight+(CONFIG_T::head_dim_key*CONFIG_T::feature_dim*0), key_bias+(CONFIG_T::head_dim_key*0));
+    dense_key<data_T, res_T, CONFIG_T>(data_vk, k_proj[1], key_weight+(CONFIG_T::head_dim_key*CONFIG_T::feature_dim*1), key_bias+(CONFIG_T::head_dim_key*1));
+    dense_key<data_T, res_T, CONFIG_T>(data_vk, k_proj[2], key_weight+(CONFIG_T::head_dim_key*CONFIG_T::feature_dim*2), key_bias+(CONFIG_T::head_dim_key*2));
+
+    nnet::matrixmul_transpose<data_T, res_T, CONFIG_T>(q_proj[0], k_proj[0], qk_mul[0]);
+    nnet::matrixmul_transpose<data_T, res_T, CONFIG_T>(q_proj[1], k_proj[1], qk_mul[1]);
+    nnet::matrixmul_transpose<data_T, res_T, CONFIG_T>(q_proj[2], k_proj[2], qk_mul[2]);
+    // nnet::matrixmul<data_T, res_T, CONFIG_T, int>(qk_mul[0], v_proj[0], dense_in, 0);
+    // nnet::matrixmul<data_T, res_T, CONFIG_T, int>(qk_mul[1], v_proj[1], dense_in, 1);
+    // nnet::matrixmul<data_T, res_T, CONFIG_T, int>(qk_mul[2], v_proj[2], dense_in, 2);
+
     dense_for_each_head: for (int i=0; i < CONFIG_T::num_heads; ++i){
-#pragma HLS DATAFLOW
-    	seq3: for (int j=0; j <CONFIG_T::seq_len; ++j){
-			dense<data_T, res_T, typename CONFIG_T::config_mult1>(data_vk+(CONFIG_T::feature_dim*j), v_row, value_weight+(CONFIG_T::head_dim_value*CONFIG_T::feature_dim*i), value_bias+(CONFIG_T::head_dim_value*i));
-			for (int k=0; k <CONFIG_T::head_dim_value; ++k){
-				v_proj[j][k]=v_row[k];
-			}
-		}
-
-        seq1: for (int j=0; j <CONFIG_T::seq_len; ++j){
-            dense<data_T, res_T, typename CONFIG_T::config_mult1>(data_q +(CONFIG_T::feature_dim*j), q_proj[j], query_weight+(CONFIG_T::head_dim_key  *CONFIG_T::feature_dim*i), query_bias+(CONFIG_T::head_dim_key*i));
-        }
-        
-        seq2: for (int j=0; j <CONFIG_T::seq_len; ++j){
-            dense<data_T, res_T, typename CONFIG_T::config_mult1>(data_vk+(CONFIG_T::feature_dim*j), k_proj[j], key_weight  +(CONFIG_T::head_dim_key  *CONFIG_T::feature_dim*i), key_bias  +(CONFIG_T::head_dim_key*i));
-        }
-
-        nnet::matrixmul_transpose<data_T, res_T, CONFIG_T>(q_proj, k_proj, qk_mul);
-        nnet::matrixmul<data_T, res_T, CONFIG_T, int>(qk_mul, v_proj, dense_in, i);
+        // nnet::matrixmul_transpose<data_T, res_T, CONFIG_T>(q_proj[i], k_proj[i], qk_mul[i]);
+        nnet::matrixmul<data_T, res_T, CONFIG_T, int>(qk_mul[i], v_proj[i], dense_in, i);
     }
+
     // std::cout << "output from MHA: " << std::endl;
 
     output_dense: for (int j=0; j <CONFIG_T::seq_len; ++j){ 

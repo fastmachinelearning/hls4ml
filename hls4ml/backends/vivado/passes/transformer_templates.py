@@ -7,6 +7,7 @@ from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
 mult_config_template = """struct config{index}_{mNum} : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
+    static const unsigned seq_len = {seq_len};
     static const unsigned strategy = nnet::{strategy};
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
@@ -82,6 +83,7 @@ class MhaConfigTemplate(LayerConfigTemplate):
         mult_params1['mNum'] = '1'
         mult_params1['n_in'] = node.get_attr('feature_dim')
         mult_params1['n_out'] = node.get_attr('head_dim_key')
+        mult_params1['seq_len'] = 1
         mult_params1['product_type'] = get_backend('vivado').product_type(node.get_input_variable().type.precision, node.get_weights('query_weight').type.precision)
         mult_params1['reuse'] = params['reuse']
         mult_params1['index'] = str(node.index)
@@ -93,6 +95,7 @@ class MhaConfigTemplate(LayerConfigTemplate):
         mult_params2['mNum'] = '2'
         mult_params2['n_in'] = node.get_attr('head_dim_value') * node.get_attr('num_heads')
         mult_params2['n_out'] = node.get_attr('feature_dim')
+        mult_params2['seq_len'] = 1
         mult_params2['product_type'] = get_backend('vivado').product_type(node.get_input_variable().type.precision, node.get_weights('attention_output_weight').type.precision)
         mult_params2['reuse'] = params['reuse']
         mult_params2['index'] = str(node.index)
@@ -103,7 +106,7 @@ class MhaConfigTemplate(LayerConfigTemplate):
         act_params = self._default_config_params(node)
         act_params['n_in'] = node.get_attr('seq_len')
         act_params['type'] = 'softmax'
-        act_params['implementation'] = 'legacy' #latency,stable not work， legacy works
+        act_params['implementation'] = 'legacy' #in MHA: latency,stable not work， legacy works
         act_config = self.activ1_template.format(**act_params)
 
         return mult_config1 + '\n' + mult_config2 + '\n' + act_config + '\n' + mha_config
