@@ -1,9 +1,11 @@
 import importlib
 import inspect
 import os
-import re
 
-class OptimizerPass(object):
+from hls4ml.utils.string_utils import convert_to_snake_case
+
+
+class OptimizerPass:
     """Base optimizer class from which all other optimizer types are derived."""
 
     name = None
@@ -33,20 +35,24 @@ class OptimizerPass(object):
     @classmethod
     def get_name(cls):
         if cls.name is None:
-            return re.sub(r'(?<!^)(?=[A-Z])', '_', cls.__name__).lower() # OptimizerPass -> optimizer_pass
+            return convert_to_snake_case(cls.__name__)  # OptimizerPass -> optimizer_pass
         else:
             return cls.name
 
+
 class GlobalOptimizerPass(OptimizerPass):
     """Global optimizer that matches on every node in the model graph."""
+
     def match(self, node):
-        return True # Match everything
+        return True  # Match everything
+
 
 class WrappedOptimizerPass(OptimizerPass):
     """An optimizer class created by wrapping a function call.
 
     Users should generally not create any wrapped optimizer passes manually.
     """
+
     def __init__(self, name, condition, transform):
         self.name = name
         self.condition = condition
@@ -62,20 +68,24 @@ class WrappedOptimizerPass(OptimizerPass):
     def get_name(self):
         return self.name
 
+
 class LayerOptimizerPass(WrappedOptimizerPass):
     """An wrapper optimizer specific to a layer class.
 
     Commonly used by backends to add extra initialization to a layer instance.
     """
+
     def __init__(self, name, layer_class, transform):
-        super(LayerOptimizerPass, self).__init__(name, lambda node: isinstance(node, layer_class), transform)
+        super().__init__(name, lambda node: isinstance(node, layer_class), transform)
         self.layer_class = layer_class
+
 
 class ModelOptimizerPass(OptimizerPass):
     """A special optimizer that works with the model itself.
 
     Examples include writing the model to C++/HLS.
     """
+
     def __init__(self, name, transform):
         self.name = name
         self.transform_func = transform
@@ -84,12 +94,14 @@ class ModelOptimizerPass(OptimizerPass):
         retval = self.transform_func(model)
         return retval if retval is not None else False
 
+
 class ConfigurableOptimizerPass(OptimizerPass):
     """An optimizer that can be configured.
 
     Existing instances of this class in the registry can be configured with the configure() method. Multiple instances
     with different configuration can co-exist if registered with different names.
     """
+
     def configure(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -98,13 +110,17 @@ class ConfigurableOptimizerPass(OptimizerPass):
         attrs = vars(self)
         return attrs.copy()
 
+
 # Decorator optimizers
+
 
 def optimizer_pass(condition):
     def decorator(function):
         function._condition = condition
         return function
+
     return decorator
+
 
 def layer_optimizer(layer):
     """Decorator to turn a function into the optimization pass.
@@ -117,18 +133,25 @@ def layer_optimizer(layer):
 
     Args:
         layer (_type_): _description_
-    """    
+    """
+
     def decorator(function):
         return optimizer_pass(layer)(function)
+
     return decorator
+
 
 def model_optimizer():
     """Decorator to turn a function into a model optimizer."""
+
     def decorator(function):
         return optimizer_pass(None)(function)
+
     return decorator
 
+
 # Helpers for extracting optimizers from objects
+
 
 def extract_optimizers_from_path(opt_path, module_path, initializer=None):
     optimizers = {}
@@ -163,14 +186,17 @@ def extract_optimizers_from_path(opt_path, module_path, initializer=None):
                             optimizers[func_instance.get_name()] = func_instance
 
         except ImportError as e:
-            print('WARN: Unable to import optimizer(s) from {}: {}'.format(module, e))
+            print(f'WARN: Unable to import optimizer(s) from {module}: {e}')
             continue
 
     return optimizers
 
+
 def extract_optimizers_from_object(clazz):
     optimizers = {}
-    optimizer_list = [func for func in dir(clazz) if callable(getattr(clazz, func)) and hasattr(getattr(clazz, func), '_condition')]
+    optimizer_list = [
+        func for func in dir(clazz) if callable(getattr(clazz, func)) and hasattr(getattr(clazz, func), '_condition')
+    ]
     for opt_name in optimizer_list:
         func = getattr(clazz, opt_name)
         if func._condition is None:
@@ -188,11 +214,13 @@ def extract_optimizers_from_object(clazz):
 
 optimizer_map = {}
 
+
 def _get_backend_name_prefix(name, backend):
     if backend is not None and not name.startswith(backend.lower() + ':'):
         name = backend.lower() + ':' + name
 
     return name
+
 
 def register_pass(name, opt_cls, backend=None):
     """Register a new optimizer pass.
@@ -212,7 +240,7 @@ def register_pass(name, opt_cls, backend=None):
     name = _get_backend_name_prefix(name, backend)
 
     if name in optimizer_map:
-        raise Exception('Optimization pass {} already registered'.format(name))
+        raise Exception(f'Optimization pass {name} already registered')
 
     if inspect.isclass(opt_cls):
         opt = opt_cls()
@@ -222,6 +250,7 @@ def register_pass(name, opt_cls, backend=None):
     optimizer_map[name] = opt
 
     return name
+
 
 def get_optimizer(name):
     """Return the optimizer instance registered with the given name.
@@ -234,11 +263,12 @@ def get_optimizer(name):
 
     Returns:
         OptimizerPass: The optimizer from the registry.
-    """    
+    """
     if name in optimizer_map:
         return optimizer_map[name]
     else:
-        raise Exception('Unknown optimizer: {}'.format(name))
+        raise Exception(f'Unknown optimizer: {name}')
+
 
 def get_backend_passes(backend):
     """Returns the list of optimizer passes belonging to a backend
@@ -248,16 +278,18 @@ def get_backend_passes(backend):
 
     Returns:
         list: List of optimizer names registered with the given backend.
-    """    
+    """
     return [opt for opt in optimizer_map.keys() if opt.startswith(backend.lower() + ':')]
+
 
 def get_available_passes():
     """Return the list of all registered optimizer passes.
 
     Returns:
         list: List of registered passes.
-    """    
+    """
     return list(optimizer_map.keys())
+
 
 def optimize_model(model, passes):
     """Optimize a given model with the given passes.
@@ -270,7 +302,7 @@ def optimize_model(model, passes):
 
     Returns:
         set: The set of applied passes (the pases that matched the predicate).
-    """    
+    """
     optimizers = {opt_pass: get_optimizer(opt_pass) for opt_pass in passes}
     applied_passes = set()
     optimization_done = False

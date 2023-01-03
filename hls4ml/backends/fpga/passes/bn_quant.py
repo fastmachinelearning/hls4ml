@@ -1,10 +1,10 @@
 import numpy as np
 
+from hls4ml.backends.fpga.fpga_layers import BatchNormalizationQuantizedTanh
+from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
+from hls4ml.model.layers import BatchNormalization, register_layer
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.types import IntegerPrecisionType, NamedType, XnorPrecisionType
-from hls4ml.model.layers import BatchNormalization, register_layer
-from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
-from hls4ml.backends.fpga.fpga_layers import BatchNormalizationQuantizedTanh
 
 batchnorm_quantized_tanh_config_template = """struct config{index} : nnet::batchnorm_quantized_tanh_config {{
     static const unsigned n_in = {n_in};
@@ -13,26 +13,30 @@ batchnorm_quantized_tanh_config_template = """struct config{index} : nnet::batch
     static const unsigned reuse_factor = {reuse};
 }};\n"""
 
-batchnorm_quantized_tanh_function_template = 'nnet::normalize_{quantize}_tanh<{input_t}, {config}>({input}, {output}, {threshold});'
+batchnorm_quantized_tanh_function_template = (
+    'nnet::normalize_{quantize}_tanh<{input_t}, {config}>({input}, {output}, {threshold});'
+)
 
 bn_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
+
 
 class BatchNormalizationQuantizedTanhConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(BatchNormalizationQuantizedTanh)
         self.template = batchnorm_quantized_tanh_config_template
-    
+
     def format(self, node):
         params = self._default_config_params(node)
         params['n_in'] = node.get_input_variable().size_cpp()
-        
+
         return self.template.format(**params)
+
 
 class BatchNormalizationQuantizedTanhFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(BatchNormalizationQuantizedTanh, include_header=bn_include_list)
         self.template = batchnorm_quantized_tanh_function_template
-    
+
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('quantize') == 2:
@@ -43,6 +47,7 @@ class BatchNormalizationQuantizedTanhFunctionTemplate(FunctionCallTemplate):
             params['threshold'] = node.get_weights('threshold_hi').name + ', ' + node.get_weights('threshold_lo').name
 
         return self.template.format(**params)
+
 
 def register_bn_quant(backend):
     # Register the layer types to the layer map
@@ -59,9 +64,11 @@ def register_bn_quant(backend):
 
 class MergeBatchNormAndQuantizedTanh(OptimizerPass):
     def match(self, node):
-        is_match = (node.class_name == 'Activation'
+        is_match = (
+            node.class_name == 'Activation'
             and node.get_attr('activation') in ['binary', 'binary_tanh', 'ternary', 'ternary_tanh']
-            or node.class_name == 'TernaryTanh')
+            or node.class_name == 'TernaryTanh'
+        )
         is_match = is_match and isinstance(node.get_input_node(), BatchNormalization)
         return is_match
 
@@ -74,17 +81,19 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
         if 'ternary' in node.get_attr('activation'):
             quantize = 3
         attrs = {
-            'name' : bn_layer.get_attr('name'),
-            'original_name' : bn_layer.get_attr('name'),
-            'class_name' : 'BatchNormalizationQuantizedTanh',
-            'n_in' : bn_layer.get_attr('n_in'),
-            'n_out' : bn_layer.get_attr('n_in'),
-            'n_filt' : bn_layer.get_attr('n_filt'),
-            'quantize' : quantize,
-            'Trace' : bn_layer.get_attr('Trace')
+            'name': bn_layer.get_attr('name'),
+            'original_name': bn_layer.get_attr('name'),
+            'class_name': 'BatchNormalizationQuantizedTanh',
+            'n_in': bn_layer.get_attr('n_in'),
+            'n_out': bn_layer.get_attr('n_in'),
+            'n_filt': bn_layer.get_attr('n_filt'),
+            'quantize': quantize,
+            'trace': bn_layer.get_attr('trace'),
         }
         bnbt_layer = model.make_node(BatchNormalizationQuantizedTanh, 'bnbt_' + bn_layer.name, attrs, bn_layer.inputs)
-        bnbt_layer.set_thresholds(bn_layer.get_weights('scale').data, bn_layer.get_weights('bias').data, node.get_attr('threshold',0.5))
+        bnbt_layer.set_thresholds(
+            bn_layer.get_weights('scale').data, bn_layer.get_weights('bias').data, node.get_attr('threshold', 0.5)
+        )
         # Remove the BatchNormalization layer
         model.remove_node(bn_layer, rewire=True)
         # Replace the old Activation layer with this one
@@ -92,13 +101,16 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
 
         return True
 
+
 class QuantizeDenseOutput(OptimizerPass):
     def match(self, node):
         is_dense = node.class_name == 'Dense'
         input_node = node.get_input_node()
         is_input_bnqt = input_node is not None and input_node.class_name == 'BatchNormalizationQuantizedTanh'
         quantizer = node.get_attr('weight_quantizer')
-        is_binary_ternary = quantizer is not None and (quantizer.__class__.__name__ == 'BinaryQuantizer' or quantizer.__class__.__name__ == 'TernaryQuantizer')
+        is_binary_ternary = quantizer is not None and (
+            quantizer.__class__.__name__ == 'BinaryQuantizer' or quantizer.__class__.__name__ == 'TernaryQuantizer'
+        )
         return is_dense and is_input_bnqt and is_binary_ternary
 
     def transform(self, model, node):
@@ -107,7 +119,7 @@ class QuantizeDenseOutput(OptimizerPass):
         # Since this is the number of uint<1>'s which are summed
         nbits = int(np.ceil(np.log2(node.attributes['n_in'])) + 2)
         out_type = IntegerPrecisionType(width=nbits)
-        accum_t = NamedType('layer{}_accum_t'.format(node.index), out_type)
+        accum_t = NamedType(f'layer{node.index}_accum_t', out_type)
         node.set_attr('accum_t', accum_t)
         out_var = node.get_output_variable()
         out_var.type.precision = out_type
@@ -120,7 +132,7 @@ class QuantizeDenseOutput(OptimizerPass):
         elif quantizer.__class__.__name__ == 'TernaryQuantizer':
             quantized_precision = IntegerPrecisionType(width=2)
         else:
-            print('WARNING: Unknown quantizer - {}. Bailing out'.format(quantizer.__class__.__name__))
+            print(f'WARNING: Unknown quantizer - {quantizer.__class__.__name__}. Bailing out')
             return False
         quantizer.bits = quantized_precision.width
         quantizer.hls_type = quantized_precision
@@ -128,12 +140,12 @@ class QuantizeDenseOutput(OptimizerPass):
 
         weights = node.weights['weight']
         weights.data = quantized_data
-        weights.type.name = 'weight{index}_t'.format(index=node.index)
+        weights.type.name = f'weight{node.index}_t'
         weights.update_precision(quantized_precision)
 
         bias = node.weights['bias']
         bias.data = np.zeros(shape=(node.get_attr('n_out')))
-        bias.type.name = 'bias{index}_t'.format(index=node.index)
+        bias.type.name = f'bias{node.index}_t'
         bias.nzeros = 0
         bias.update_precision(quantized_precision)
 
@@ -154,4 +166,3 @@ class QuantizeDenseOutput(OptimizerPass):
                     threshold_var.data = np.floor(threshold_var.data)
 
         return False
-
