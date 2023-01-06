@@ -95,24 +95,54 @@ def get_onnx_attribute(operation, name, default=None):
             value = value.decode()
     return value
 
-def get_input_shape(graph, operation, input_idx=None):
-    """ Return the input shapes of the model. If input_dx is not specified, then the full array is returned
+
+def get_global_input_shape(graph, inp):
+    """Return the global input shape of the graph with name inp
+
+    Arguments:
+        graph:  the onnx graph
+        inp:  the global input name (str)
+
+    Returns:
+        The shape (tuple)
+
+    Raises:
+        StopIteration:  If the global input name is not found
     """
-    if input_idx is None:
-        rv = []
-        for inp in operation.input:
-            value_info_idx = next((i for i, x in enumerate(graph.value_info) if x.name == inp), 0)
-            dim = [d.dim_value for d in graph.value_info[value_info_idx].type.tensor_type.shape.dim]
-            if dim:
-                rv.append(dim)
-        return rv
-    else:
-        value_info_idx = next((i for i, x in enumerate(graph.value_info) if x.name == operation.input[input_idx]), 0)
-        return [d.dim_value for d in graph.value_info[value_info_idx].type.tensor_type.shape.dim]
+    inp_shape = next((x.type.tensor_type.shape.dim for x in graph.input if x.name == inp))
+    return tuple(x.dim_value for x in inp_shape)
+
+
+def get_input_shape(graph, node):
+    """ Return the input shapes of the node in the model
+
+    Arguments:
+        graph:  the onnx graph
+        node:  the node for which the input is desired
+
+    Returns:
+        The shapes of all the inputs (list of tuples)
+
+    Raises:
+        StopIteration:  If the an input name is not found in the graph
+    """
+    rv = []
+    for inp in node.input:
+        try:
+            value_info_idx = next((i for i, x in enumerate(graph.value_info) if x.name == inp))
+            dim = tuple(d.dim_value for d in graph.value_info[value_info_idx].type.tensor_type.shape.dim)
+        except StopIteration:
+            # The input is not in the graph, likely it's the input
+            dim = get_global_input_shape(graph, inp)
+        if dim:
+            rv.append(dim)
+    return rv
+
 
 def get_constant_value(graph, constant_name):
     tensor = next((x for x in graph.initializer if x.name == constant_name), None)
     return numpy_helper.to_array(tensor)
+
 
 def compute_pads_1d(operation, layer):
     auto_pad = get_onnx_attribute(operation, 'auto_pad', 'NOTSET')
@@ -134,6 +164,7 @@ def compute_pads_1d(operation, layer):
         pads = get_onnx_attribute(operation, 'pads', [0, 0])
 
     return pads
+
 
 def compute_pads_2d(operation, layer):
     auto_pad = get_onnx_attribute(operation, 'auto_pad', 'NOTSET')
@@ -193,24 +224,22 @@ def get_out_layer_name(graph):
 def onnx_to_hls(config):
     """ Convert onnx model to hls model from configuration.
 
-    Parameters
-    ----------
-    config: dict
-        onnx configuration from yaml file or passed through API.
+    Args:
+        config:
+            onnx configuration (dict) from yaml file or passed through API.
 
-    Returns
-    -------
-    hls_model : hls4ml model object
+    Returns:
+        hls_model: hls4ml model object
 
     """
 
-    #This is a list of dictionaries to hold all the layer info we need to generate HLS
+    # This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
 
-    #Extract model architecture
+    # Extract model architecture
     print('Interpreting Model ...')
 
-    model =  onnx.load(config['OnnxModel']) if isinstance(config['OnnxModel'], str) else config['OnnxModel']
+    model = onnx.load(config['OnnxModel']) if isinstance(config['OnnxModel'], str) else config['OnnxModel']
 
     # # We don't infer the shapes because the QONNX preprocessing does it. We may want to add it back,
     # # however, if we want to support non-preprocessed ONNX
@@ -231,14 +260,10 @@ def onnx_to_hls(config):
         input_layer = {}
         input_layer['name'] = replace_char_inconsitency(inp)
         input_layer['class_name'] = 'InputLayer'
-        inp_shape = next((x.type.tensor_type.shape.dim for x in model.graph.input if x.name == inp), None)
-        input_layer['input_shape'] = [x.dim_value for x in inp_shape]
-
-        if len(input_layer['input_shape']) > 1:
-            input_layer['input_shape'][0] = None #First dim is batch
+        input_layer['input_shape'] = get_global_input_shape(model.graph, inp)
 
         print('Input shape:', input_layer['input_shape'])
-        #Clean the layer name for specific models
+        # Clean the layer name for specific models
         sanitize_layer_name(input_layer)
         input_layers[i] = input_layer['name']
 
