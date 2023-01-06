@@ -36,7 +36,14 @@ class FuseBatchNormalization(OptimizerPass):
         parent_node = node.get_input_node()
         parent_map = parent_node.get_output_use_map()
         node_map = node.get_output_use_map()
-        if len(parent_map[parent_node.name]) > 1 or len(node_map[node.name]) > 1:
+
+        if (len(parent_map.keys()) != 1
+            or len(tuple(parent_map.values())[0]) != 1
+            or len(node_map.keys()) != 1
+            or len(tuple(node_map.values())[0]) > 1):
+            # This checks that output of both the parent and the current node
+            # is used at most one time for this optimzation. (For the parent, of course it can't be 0)
+            # JM:  I understand the requirement on the parent, but not on the current node.
             return False
 
         # copying much of the logic from FuseConsecutiveBatchNormalization
