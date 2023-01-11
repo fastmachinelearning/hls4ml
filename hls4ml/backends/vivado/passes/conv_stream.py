@@ -1,8 +1,10 @@
+from hls4ml.model.layers import Conv1D, Conv2D, SeparableConv1D, SeparableConv2D
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.layers import Conv1D, SeparableConv1D, Conv2D, SeparableConv2D
+
 
 class GenerateConvStreamingInstructions(OptimizerPass):
-    ''' Generates the instructions for streaming implementation of CNNs '''
+    '''Generates the instructions for streaming implementation of CNNs'''
+
     def match(self, node):
         return isinstance(node, (Conv1D, SeparableConv1D, Conv2D, SeparableConv2D))
 
@@ -13,42 +15,44 @@ class GenerateConvStreamingInstructions(OptimizerPass):
         elif '2D' in node_class:
             self._generate_2d_instructions(node)
         else:
-            raise Exception('Cannot generate instructions for node {} ({})'.format(node.name, node_class))
-    
+            raise Exception(f'Cannot generate instructions for node {node.name} ({node_class})')
+
     def _generate_1d_instructions(self, node):
         if node.model.config.get_config_value('IOType') == 'io_stream':
-            min_w, instructions, narrow = node.model.config.backend.compute_conv1d_instructions(
+            min_w, instructions = node.model.config.backend.compute_conv1d_instructions(
                 node.get_input_variable().shape[0],
                 node.get_input_variable().shape[1],
                 node.get_attr('filt_width'),
-                node.get_attr('stride_width'))
+                node.get_attr('stride_width'),
+            )
             instructions_str = ','.join(str(i) for i in instructions)
             node.set_attr('min_width', min_w)
             node.set_attr('instructions', instructions_str)
-            node.set_attr('narrow', narrow)
+            node.set_attr('unscaled', node.get_input_variable().shape[0] == min_w)
         else:
             # these are unused; just put dummy values
             node.set_attr('min_width', node.get_attr('in_width'))
             node.set_attr('instructions', '0')
-            node.set_attr('narrow', True)
+            node.set_attr('unscaled', True)
 
     def _generate_2d_instructions(self, node):
         if node.model.config.get_config_value('IOType') == 'io_stream':
-            min_h, min_w, instructions, narrow_h, narrow_w= node.model.config.backend.compute_conv2d_instructions(
+            min_h, min_w, instructions = node.model.config.backend.compute_conv2d_instructions(
                 node.get_input_variable().shape[0],
                 node.get_input_variable().shape[1],
                 node.get_input_variable().shape[2],
                 node.get_attr('filt_height'),
-                node.get_attr('stride_height'))
+                node.get_attr('stride_height'),
+            )
             instructions_str = ','.join(str(i) for i in instructions)
             node.set_attr('min_height', min_h)
             node.set_attr('min_width', min_w)
             node.set_attr('instructions', instructions_str)
-            node.set_attr('narrow_h', narrow_h)
-            node.set_attr('narrow_w', narrow_w)
+            node.set_attr('unscaled_h', node.get_input_variable().shape[0] == min_h)
+            node.set_attr('unscaled_w', node.get_input_variable().shape[1] == min_w)
         else:
             node.set_attr('min_height', node.get_attr('in_height'))
             node.set_attr('min_width', node.get_attr('in_width'))
             node.set_attr('instructions', '0')
-            node.set_attr('narrow_h', True)
-            node.set_attr('narrow_w', True)
+            node.set_attr('unscaled_h', True)
+            node.set_attr('unscaled_w', True)

@@ -394,12 +394,9 @@ class FPGABackend(Backend):
         else:
             min_W = (math.ceil(stride / kernel_size) - 1) * stride + kernel_size
 
-        # if the standard min_W is smaller than the in_W, then have to do alternate
-        # "narrow" encoding.
-        narrow = False
+        # if the standard min_W is smaller than the in_W, then use unscaled
         if min_W > in_W:
             min_W = in_W
-            narrow = True
 
         min_oW = int((min_W - kernel_size) // stride + 1)
 
@@ -421,7 +418,7 @@ class FPGABackend(Backend):
         for i in range(min_W):
             windows_int.append(int(''.join(str(p) for p in reversed(windows_bin[i])), 2))
 
-        return (min_W, windows_int, narrow)
+        return (min_W, windows_int)
 
     def compute_conv2d_instructions(self, in_H, in_W, in_C, kernel_size=3, stride=1, pad=0):
 
@@ -449,20 +446,20 @@ class FPGABackend(Backend):
         else:
             min_H = (math.ceil(stride_height / kernel_height) - 1) * stride_height + kernel_height
 
-        narrow_H = False
+        unscaled_H = False
         if min_H > in_H:
             min_H = in_H
-            narrow_H = True
+            unscaled_H = True
 
         if kernel_width >= stride_width:
             min_W = (math.ceil(kernel_width / stride_width) - 1) * stride_width + kernel_width
         else:
             min_W = (math.ceil(stride_width / kernel_width) - 1) * stride_width + kernel_width
 
-        narrow_W = False
+        unscaled_W = False
         if min_W > in_W:
             min_W = in_W
-            narrow_W = True
+            unscaled_W = True
 
         min_oH = int((min_H - kernel_height) // stride_height + 1)
         min_oW = int((min_W - kernel_width) // stride_width + 1)
@@ -478,9 +475,9 @@ class FPGABackend(Backend):
             min_W += 1
 
         # Let's hardcode a few common cases:
-        if not narrow_W and not narrow_H:
+        if not unscaled_W and not unscaled_H:
             if kernel_height == 1 and kernel_width == 1 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
-                return (1, 1, map(str, [1]), False, False)
+                return (1, 1, map(str, [1]))
             if kernel_height == 3 and kernel_width == 3 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
                 return (
                     5,
@@ -515,8 +512,6 @@ class FPGABackend(Backend):
                             256,
                         ],
                     ),
-                    False,
-                    False,
                 )
             if kernel_height == 5 and kernel_width == 5 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
                 return (
@@ -608,8 +603,6 @@ class FPGABackend(Backend):
                             16777216,
                         ],
                     ),
-                    False,
-                    False,
                 )
 
         windows_bin = [[0 for _ in range(kernel_height * kernel_width)] for _ in range(min_H * min_W)]
@@ -627,7 +620,7 @@ class FPGABackend(Backend):
             for j in range(min_W):
                 windows_int.append(int(''.join(str(p) for p in reversed(windows_bin[i * min_W + j])), 2))
 
-        return (min_H, min_W, windows_int, narrow_H, narrow_W)
+        return (min_H, min_W, windows_int)
 
     def _compute_conv1d_im2col(self, input_shape, kernel=3, stride=1, pad=(0, 0), dilation=1):
         W, C = input_shape
