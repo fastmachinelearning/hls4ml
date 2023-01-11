@@ -1,15 +1,11 @@
-import numpy as np
-
-from hls4ml.converters.keras_to_hls import parse_default_keras_layer
-from hls4ml.converters.keras_to_hls import keras_handler
-
-from hls4ml.model.types import Quantizer
-from hls4ml.model.types import IntegerPrecisionType
+from hls4ml.converters.keras_to_hls import keras_handler, parse_default_keras_layer
 
 rnn_layers = ['SimpleRNN', 'LSTM', 'GRU']
+
+
 @keras_handler(*rnn_layers)
-def parse_rnn_layer(keras_layer, input_names, input_shapes, data_reader, config):
-    assert(keras_layer['class_name'] in rnn_layers)
+def parse_rnn_layer(keras_layer, input_names, input_shapes, data_reader):
+    assert keras_layer['class_name'] in rnn_layers
 
     layer = parse_default_keras_layer(keras_layer, input_names)
 
@@ -23,7 +19,7 @@ def parse_rnn_layer(keras_layer, input_names, input_shapes, data_reader, config)
 
     # TODO Should we handle time_major?
     if layer['time_major']:
-        raise Exception('Time-major format is not supported by hls4ml'.format(layer['class_name']))
+        raise Exception('Time-major format is not supported by hls4ml')
 
     layer['n_timesteps'] = input_shapes[0][1]
     layer['n_in'] = input_shapes[0][2]
@@ -39,6 +35,6 @@ def parse_rnn_layer(keras_layer, input_names, input_shapes, data_reader, config)
         output_shape = [input_shapes[0][0], layer['n_out']]
 
     if layer['return_state']:
-        raise Exception('"return_state" of {} layer is not yet supported.'.format(layer['class_name']))
+        raise Exception('"return_state" of {} layer is not yet supported.')
 
     return layer, output_shape

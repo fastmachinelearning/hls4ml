@@ -1,22 +1,16 @@
-from hls4ml.converters.keras_to_hls import parse_default_keras_layer
-from hls4ml.converters.keras_to_hls import keras_handler
+from qkeras.quantizers import get_quantizer
 
-from hls4ml.converters.keras.core import parse_dense_layer
-from hls4ml.converters.keras.core import parse_batchnorm_layer
-from hls4ml.converters.keras.convolution import parse_conv1d_layer
-from hls4ml.converters.keras.convolution import parse_conv2d_layer
-from hls4ml.converters.keras.qkeras import *
-
-from hls4ml.model.types import NamedType, FixedPrecisionType
-
-import tensorflow as tf
+from hls4ml.converters.keras.convolution import parse_conv1d_layer, parse_conv2d_layer
+from hls4ml.converters.keras.core import parse_batchnorm_layer, parse_dense_layer
+from hls4ml.converters.keras.qkeras import get_quantizer_from_config
+from hls4ml.converters.keras_to_hls import keras_handler, parse_default_keras_layer
+from hls4ml.model.types import FixedPrecisionType
 
 
 @keras_handler('QDense')
-def parse_qdense_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_qdense_layer(keras_layer, input_names, input_shapes, data_reader):
 
-
-    layer, output_shape = parse_dense_layer(keras_layer, input_names, input_shapes, data_reader, config)
+    layer, output_shape = parse_dense_layer(keras_layer, input_names, input_shapes, data_reader)
 
     layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
     if keras_layer['config']['bias_quantizer'] is not None:
@@ -28,13 +22,13 @@ def parse_qdense_layer(keras_layer, input_names, input_shapes, data_reader, conf
 
 
 @keras_handler('QConv1D', 'QConv2D')
-def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader, config):
-    assert('QConv' in keras_layer['class_name'])
+def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader):
+    assert 'QConv' in keras_layer['class_name']
 
     if '1D' in keras_layer['class_name']:
-        layer, output_shape = parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader, config)
+        layer, output_shape = parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader)
     elif '2D' in keras_layer['class_name']:
-        layer, output_shape = parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader, config)
+        layer, output_shape = parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader)
 
     layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
     if keras_layer['config']['bias_quantizer'] is not None:
@@ -46,10 +40,18 @@ def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader, confi
 
 
 @keras_handler('QActivation')
-def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader, config):
-    assert(keras_layer['class_name'] == 'QActivation')
-    supported_activations = ['quantized_relu', 'quantized_tanh', 'binary_tanh', 'ternary_tanh',
-                             'quantized_sigmoid', 'quantized_bits', 'binary', 'ternary']
+def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader):
+    assert keras_layer['class_name'] == 'QActivation'
+    supported_activations = [
+        'quantized_relu',
+        'quantized_tanh',
+        'binary_tanh',
+        'ternary_tanh',
+        'quantized_sigmoid',
+        'quantized_bits',
+        'binary',
+        'ternary',
+    ]
 
     layer = parse_default_keras_layer(keras_layer, input_names)
 
@@ -86,14 +88,16 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader,
         layer['class_name'] = 'TernaryTanh'
         layer['threshold'] = activation_config.get('config', {}).get('threshold', 0.33)
         if layer['threshold'] is None:
-            layer['threshold'] = 0.33 # the default ternary tanh threshold for QKeras
+            layer['threshold'] = 0.33  # the default ternary tanh threshold for QKeras
         layer['activation'] = 'ternary_tanh'
-    elif ((activation_config['class_name'] == 'quantized_sigmoid'
-          and not activation_config['config'].get('use_real_sigmoid', False))
-          or (activation_config['class_name'] == 'quantized_tanh'
-          and not activation_config['config'].get('use_real_tanh', False))):
+    elif (
+        activation_config['class_name'] == 'quantized_sigmoid'
+        and not activation_config['config'].get('use_real_sigmoid', False)
+    ) or (
+        activation_config['class_name'] == 'quantized_tanh' and not activation_config['config'].get('use_real_tanh', False)
+    ):
         layer['class_name'] = 'HardActivation'
-        layer['slope'] = 0.5   # the default values in QKeras
+        layer['slope'] = 0.5  # the default values in QKeras
         layer['shift'] = 0.5
         # Quartus seems to have trouble if the width is 1.
         layer['slope_prec'] = FixedPrecisionType(width=2, integer=0, signed=False)
@@ -105,10 +109,11 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader,
 
     return layer, [shape for shape in input_shapes[0]]
 
-@keras_handler('QBatchNormalization')
-def parse_qbatchnorm_layer(keras_layer, input_names, input_shapes, data_reader, config):
 
-    layer, output_shape = parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader, config)
+@keras_handler('QBatchNormalization')
+def parse_qbatchnorm_layer(keras_layer, input_names, input_shapes, data_reader):
+
+    layer, output_shape = parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader)
 
     layer['mean_quantizer'] = get_quantizer_from_config(keras_layer, 'mean')
     layer['variance_quantizer'] = get_quantizer_from_config(keras_layer, 'variance')
@@ -119,10 +124,10 @@ def parse_qbatchnorm_layer(keras_layer, input_names, input_shapes, data_reader, 
 
 
 @keras_handler('QConv2DBatchnorm')
-def parse_qconv2dbatchnorm_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_qconv2dbatchnorm_layer(keras_layer, input_names, input_shapes, data_reader):
     intermediate_shape = list()
-    conv_layer, shape_qconv = parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader, config)
+    conv_layer, shape_qconv = parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader)
     intermediate_shape.append(shape_qconv)
     temp_shape = intermediate_shape
-    batch_layer, out_shape = parse_batchnorm_layer(keras_layer, input_names, temp_shape, data_reader, config)
+    batch_layer, out_shape = parse_batchnorm_layer(keras_layer, input_names, temp_shape, data_reader)
     return {**conv_layer, **batch_layer}, out_shape

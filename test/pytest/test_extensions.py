@@ -1,23 +1,28 @@
-import pytest
-import hls4ml
-import numpy as np
-import tensorflow as tf
 from pathlib import Path
+
+import numpy as np
+import pytest
+import tensorflow as tf
+
+import hls4ml
 
 test_root_path = Path(__file__).parent
 
+
 # Keras implementation of a custom layer
 class KReverse(tf.keras.layers.Layer):
-    ''' Keras implementation of a hypothetical custom layer '''
+    '''Keras implementation of a hypothetical custom layer'''
+
     def __init__(self):
-        super(KReverse, self).__init__()
+        super().__init__()
 
     def call(self, inputs):
         return tf.reverse(inputs, axis=[-1])
 
+
 # hls4ml layer implementation
 class HReverse(hls4ml.model.layers.Layer):
-    ''' hls4ml implementation of a hypothetical custom layer '''
+    '''hls4ml implementation of a hypothetical custom layer'''
 
     def initialize(self):
         inp = self.get_input_variable()
@@ -25,13 +30,13 @@ class HReverse(hls4ml.model.layers.Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
+
 # hls4ml optimizer to remove duplicate optimizer
 class RemoveDuplicateReverse(hls4ml.model.optimizer.OptimizerPass):
     '''OptimizerPass to remove consecutive HReverse layers.'''
 
     def match(self, node):
-        return isinstance(node, HReverse) and \
-               isinstance(node.get_input_node(), HReverse)
+        return isinstance(node, HReverse) and isinstance(node.get_input_node(), HReverse)
 
     def transform(self, model, node):
         first = node.get_input_node()
@@ -41,17 +46,19 @@ class RemoveDuplicateReverse(hls4ml.model.optimizer.OptimizerPass):
         model.remove_node(second, rewire=True)
         return True
 
+
 # Parser for converter
-def parse_reverse_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_reverse_layer(keras_layer, input_names, input_shapes, data_reader):
     layer = {}
     layer['class_name'] = 'HReverse'
     layer['name'] = keras_layer['config']['name']
     layer['n_in'] = input_shapes[0][1]
-    
+
     if input_names is not None:
         layer['inputs'] = input_names
 
     return layer, [shape for shape in input_shapes[0]]
+
 
 # HLS Templates - No specific pragmas used; generic enough for both Intel and Vivado
 
@@ -62,26 +69,28 @@ rev_config_template = """struct config{index} : nnet::reverse_config {{
 rev_function_template = 'nnet::reverse<{input_t}, {config}>({input}, {output});'
 rev_include_list = ['nnet_utils/nnet_reverse.h']
 
+
 class HReverseConfigTemplate(hls4ml.backends.template.LayerConfigTemplate):
     def __init__(self):
         super().__init__(HReverse)
         self.template = rev_config_template
-    
+
     def format(self, node):
-        params = self._default_config_params(node)        
+        params = self._default_config_params(node)
         return self.template.format(**params)
+
 
 class HReverseFunctionTemplate(hls4ml.backends.template.FunctionCallTemplate):
     def __init__(self):
         super().__init__(HReverse, include_header=rev_include_list)
         self.template = rev_function_template
-    
+
     def format(self, node):
         params = self._default_function_params(node)
         return self.template.format(**params)
 
-rev_hls = \
-"""#ifndef NNET_REVERSE_H_
+
+rev_hls = """#ifndef NNET_REVERSE_H_
 #define NNET_REVERSE_H_
 
 #include "nnet_common.h"
@@ -107,6 +116,7 @@ void reverse(
 #endif
 """
 
+
 @pytest.fixture(scope='session', autouse=True)
 def regsister_custom_layer():
     # Register the converter for custom Keras layer
@@ -114,6 +124,7 @@ def regsister_custom_layer():
 
     # Register the hls4ml's IR layer
     hls4ml.model.layers.register_layer('HReverse', HReverse)
+
 
 @pytest.mark.parametrize('backend_id', ['Vivado', 'Quartus'])
 def test_extensions(tmp_path, backend_id):
@@ -131,14 +142,16 @@ def test_extensions(tmp_path, backend_id):
     backend.register_source(p)
 
     # Test if it works
-    kmodel = tf.keras.models.Sequential([
-        tf.keras.layers.Input(shape=(8,)),
-        KReverse(),
-        tf.keras.layers.ReLU(),
-        # These two should be removed by the optimizer
-        KReverse(),
-        KReverse(),
-    ])
+    kmodel = tf.keras.models.Sequential(
+        [
+            tf.keras.layers.Input(shape=(8,)),
+            KReverse(),
+            tf.keras.layers.ReLU(),
+            # These two should be removed by the optimizer
+            KReverse(),
+            KReverse(),
+        ]
+    )
 
     x = np.random.randint(-5, 5, (8,), dtype='int32')
     kres = kmodel(x)
@@ -148,7 +161,8 @@ def test_extensions(tmp_path, backend_id):
         output_dir=str(test_root_path / f'hls4mlprj_extensions_{backend_id}'),
         backend=backend_id,
         io_type='io_parallel',
-        hls_config={ 'Model': { 'Precision': 'ap_int<6>', 'ReuseFactor': 1} })
+        hls_config={'Model': {'Precision': 'ap_int<6>', 'ReuseFactor': 1}},
+    )
 
     hmodel.compile()
     hres = hmodel.predict(x.astype('float32'))
