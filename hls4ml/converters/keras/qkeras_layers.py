@@ -107,6 +107,7 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader)
         layer['class_name'] = 'Activation'
         layer['activation'] = activation_config['class_name'].replace('quantized_', '')
 
+    layer['activation_quantizer'] = activation_config
     return layer, [shape for shape in input_shapes[0]]
 
 
