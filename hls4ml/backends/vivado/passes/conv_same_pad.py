@@ -6,7 +6,7 @@ class InsertZeroPaddingBeforeConv1D(OptimizerPass):
     
     def match(self, node):
         is_match = isinstance(node, (Conv1D, SeparableConv1D)) and \
-            node.get_attr('padding') == 'same' and \
+            ((node.get_attr('padding') == 'same') or (node.get_attr('padding') == 'causal')) and \
             node.get_attr('filt_width') != 1
         return is_match
 

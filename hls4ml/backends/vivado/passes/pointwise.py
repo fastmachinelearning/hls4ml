@@ -1,22 +1,10 @@
 import numpy as np
-import re
 from copy import copy
 
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.layers import Conv1D, Conv2D, register_layer
+from hls4ml.model.layers import register_layer
+from hls4ml.backends.fpga.fpga_layers import PointwiseConv1D, PointwiseConv2D
 from hls4ml.backends.vivado.passes.convolution_templates import Conv1DConfigTemplate, Conv1DFunctionTemplate, Conv2DConfigTemplate, Conv2DFunctionTemplate, conv1d_config_template, conv2d_config_template, conv_mult_config_template
-
-class PointwiseConv1D(Conv1D):
-    ''' Optimized Conv1D implementation for 1x1 kernels. '''
-
-    # Nothing to do, will pick up function and config from class name
-    pass
-
-class PointwiseConv2D(Conv2D):
-    ''' Optimized Conv2D implementation for 1x1 kernels. '''
-
-    # Nothing to do, will pick up function and config from class name
-    pass
 
 pointwise_conv1d_function_template = 'nnet::pointwise_conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 pointwise_conv2d_function_template = 'nnet::pointwise_conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
