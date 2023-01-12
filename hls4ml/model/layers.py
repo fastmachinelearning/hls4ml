@@ -777,8 +777,8 @@ class HardActivation(Activation):
     '''
 
     _expected_attributes = [
-        Attribute('slope', value_type=float, default=0.2, configurable=True),
-        Attribute('shift', value_type=float, default=0.5, configurable=True),
+        Attribute('slope', value_type=float, default=0.2, configurable=False),
+        Attribute('shift', value_type=float, default=0.5, configurable=False),
         TypeAttribute('slope_t'),
         TypeAttribute('shift_t'),
     ]
