@@ -66,7 +66,7 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         params['nzeros'] = node.get_weights('weight').nzeros
 
         params['config_t'] = f'config{node.index}_mult'
-        if node.get_attr("unscaled"):
+        if node.get_attr('in_width') == node.get_attr('min_width'):
             params['scale_index_type'] = 'scale_index_unscaled'
         else:
             params['scale_index_type'] = 'scale_index_regular'
@@ -165,12 +165,12 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
 
         params['config_t'] = f'config{node.index}_mult'
 
-        if node.get_attr("unscaled_h"):
+        if node.get_attr('in_height') == node.get_attr('min_height'):
             params['scale_index_height_type'] = 'scale_index_unscaled'
         else:
             params['scale_index_height_type'] = 'scale_index_regular'
 
-        if node.get_attr("unscaled_w"):
+        if node.get_attr('in_width') == node.get_attr('min_width'):
             params['scale_index_width_type'] = 'scale_index_unscaled'
         else:
             params['scale_index_width_type'] = 'scale_index_regular'
