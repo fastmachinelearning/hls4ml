@@ -1,18 +1,18 @@
-from __future__ import print_function
+import ctypes
 import os
 import platform
-import ctypes
-import numpy as np
-import numpy.ctypeslib as npc
 from collections import OrderedDict
 
-from hls4ml.model.layers import *
+import numpy as np
+import numpy.ctypeslib as npc
+
 from hls4ml.backends import get_backend
-from hls4ml.model.optimizer import optimize_model, get_available_passes
 from hls4ml.model.flow import get_flow
+from hls4ml.model.layers import layer_map
+from hls4ml.model.optimizer import get_available_passes, optimize_model
 
 
-class HLSConfig(object):
+class HLSConfig:
     def __init__(self, config):
         self.config = config
         self.backend = get_backend(self.config.get('Backend', 'Vivado'))
@@ -108,7 +108,7 @@ class HLSConfig(object):
             type_name = 'model_default_t'
 
         if precision is None:
-            raise Exception('No precision for {}->{} found and no default specified.'.format(layer.name, var))
+            raise Exception(f'No precision for {layer.name}->{var} found and no default specified.')
 
         precision = self.backend.convert_precision_string(precision)
 
@@ -126,7 +126,7 @@ class HLSConfig(object):
             rf = self.model_rf
 
         if rf is None:
-            raise Exception('No reuse factor for {} found and no default specified.'.format(layer.name))
+            raise Exception(f'No reuse factor for {layer.name} found and no default specified.')
 
         return rf
 
@@ -136,7 +136,7 @@ class HLSConfig(object):
             targ_cycles = self.layer_name_targ_cycles.get(layer.__class__.__name__.lower())
         if targ_cycles is None:
             targ_cycles = self.model_targ_cycles
- 
+
         return targ_cycles
 
     def get_strategy(self, layer):
@@ -147,7 +147,7 @@ class HLSConfig(object):
             strategy = self.model_strategy
 
         return strategy
-    
+
     def get_conv_implementation(self, layer):
         conv_implementation = self.layer_name_conv_implementation.get(layer.name.lower())
         if conv_implementation is None:
@@ -171,7 +171,7 @@ class HLSConfig(object):
 
     def _parse_hls_config(self):
         hls_config = self.config['HLSConfig']
-        
+
         self.flows = hls_config.get('Flows')
         if self.flows is None:
             self.flows = [self.backend.get_default_flow()]
@@ -187,9 +187,9 @@ class HLSConfig(object):
                 try:
                     selected_optimizers.remove(opt)
                 except ValueError:
-                    pass                
+                    pass
             self.optimizers = selected_optimizers
-        
+
         model_cfg = hls_config.get('Model')
         if model_cfg is not None:
             precision_cfg = model_cfg.get('Precision')
@@ -198,9 +198,9 @@ class HLSConfig(object):
                     for var, precision in precision_cfg.items():
                         self.model_precision[var] = precision
                 else:
-                    self.model_precision['default'] = precision_cfg # Default precision for everything
+                    self.model_precision['default'] = precision_cfg  # Default precision for everything
 
-            self.model_bf = model_cfg.get('BramFactor', np.inf) # Weight threshold to be external BRAM
+            self.model_bf = model_cfg.get('BramFactor', np.inf)  # Weight threshold to be external BRAM
             self.model_rf = model_cfg.get('ReuseFactor')
             self.model_targ_cycles = model_cfg.get('TargetCycles')
             self.model_conv_implementation = model_cfg.get('ConvImplementation', 'LineBuffer')
@@ -220,7 +220,7 @@ class HLSConfig(object):
                 rf = layer_cfg.get('ReuseFactor')
                 if rf is not None:
                     self.layer_type_rf[layer_type.lower()] = rf
-                
+
                 targ_cycles = layer_cfg.get('TargetCycles')
                 if targ_cycles is not None:
                     self.layer_type_targ_cycles[layer_type.lower()] = targ_cycles
@@ -274,29 +274,42 @@ class HLSConfig(object):
             use_resource = True
         for layer_type, strategy in self.layer_type_strategy.items():
             if strategy.lower() == 'resource' and self.model_strategy.lower() == 'latency':
-                print('WARNING: Strategy for layer type {} set to "Resource", while model strategy set to "Latency".'.format(layer_type))
+                print(
+                    'WARNING: Strategy for layer type {} set to "Resource", while model strategy set to "Latency".'.format(
+                        layer_type
+                    )
+                )
                 use_resource = True
 
         for layer_name, strategy in self.layer_name_strategy.items():
             if strategy.lower() == 'resource' and self.model_strategy.lower() == 'latency':
-                print('WARNING: Strategy for layer {} set to "Resource", while model strategy set to "Latency".'.format(layer_name))
+                print(
+                    'WARNING: Strategy for layer {} set to "Resource", while model strategy set to "Latency".'.format(
+                        layer_name
+                    )
+                )
                 use_resource = True
 
         for layer_type, compression in self.layer_type_compression.items():
             if compression and self.model_strategy.lower() == 'latency':
-                print('WARNING: Compression enabled for layer type {}, while model strategy set to "Latency".'.format(layer_type))
+                print(
+                    'WARNING: Compression enabled for layer type {}, while model strategy set to "Latency".'.format(
+                        layer_type
+                    )
+                )
                 use_resource = True
 
         for layer_name, compression in self.layer_name_compression.items():
             if compression and self.model_strategy.lower() == 'latency':
-                print('WARNING: Compression enabled for layer {}, while model strategy set to "Latency".'.format(layer_name))
+                print(f'WARNING: Compression enabled for layer {layer_name}, while model strategy set to "Latency".')
                 use_resource = True
 
         if use_resource:
             print('WARNING: Changing model strategy to "Resource"')
             self.model_strategy = 'Resource'
 
-class ModelGraph(object):
+
+class ModelGraph:
     def __init__(self, config, data_reader, layer_list, inputs=None, outputs=None):
         self.config = HLSConfig(config)
         self.reader = data_reader
@@ -344,11 +357,12 @@ class ModelGraph(object):
                 - 'none': Skip applying the flow.
                 Defaults to 'single'.
         """
+
         def all_applied_flows():
             applied_flows = {}
 
             for flow_group in self._applied_flows:
-                applied_flows.update({flow: [] for flow in flow_group.keys()})
+                applied_flows.update({flow: set() for flow in flow_group.keys()})
 
             return applied_flows
 
@@ -364,8 +378,8 @@ class ModelGraph(object):
             if flow in applied_flows:
                 return
 
-        self._apply_sub_flow(flow, applied_flows)
         self._applied_flows.append(applied_flows)
+        self._apply_sub_flow(flow, applied_flows)
 
     def _apply_sub_flow(self, flow_name, applied_flows):
         if flow_name in applied_flows:
@@ -379,14 +393,14 @@ class ModelGraph(object):
         if len(flow.optimizers) > 0:
             applied_passes = optimize_model(self, flow.optimizers)
         else:
-            applied_passes = []
+            applied_passes = set()
         applied_flows[flow.name] = applied_passes
 
     def make_node(self, kind, name, attributes, inputs, outputs=None):
-        """ Make a new node not connected to the model graph.
+        """Make a new node not connected to the model graph.
 
         The 'kind' should be a valid layer registered with `register_layer`. If no outputs
-        are specified, a default output named the same as the node will be created. The 
+        are specified, a default output named the same as the node will be created. The
         returned node should be added to the graph with `insert_node` or `replace_node`
         functions.
 
@@ -407,11 +421,11 @@ class ModelGraph(object):
 
         if isinstance(kind, str):
             if kind not in layer_map:
-                raise Exception('Layer {} not found in registry.'.format(kind))
+                raise Exception(f'Layer {kind} not found in registry.')
             layer_cls = layer_map[kind]
         else:
             if kind not in layer_map.values():
-                raise Exception('Layer {} not found in registry.'.format(kind))
+                raise Exception(f'Layer {kind} not found in registry.')
             layer_cls = kind
 
         if self.config.backend is not None:
@@ -425,15 +439,15 @@ class ModelGraph(object):
         return node
 
     def insert_node(self, node, before=None, input_idx=0):
-        """ Insert a new node into the model graph.
+        """Insert a new node into the model graph.
 
-        The node to be inserted should be created with `make_node()` function. The optional 
+        The node to be inserted should be created with `make_node()` function. The optional
         parameter `before` can be used to specify the node that follows in case of ambiguities.
 
         Args:
             node (Layer): Node to insert
             before (Layer, optional): The next node in sequence before which a
-                new node should be inserted. 
+                new node should be inserted.
            input_idx (int, optional): If the next node takes multiple inputs, the input index
         Raises:
             Exception: If an attempt to insert a node with multiple inputs is made or if
@@ -447,14 +461,18 @@ class ModelGraph(object):
         next_nodes = []
         for x in self.graph.values():
             overlap = [value for value in x.inputs if value in prev_node.outputs]
-            if overlap: 
+            if overlap:
                 next_nodes.append(x)
 
         if before is None:
             next_node = next((x for x in self.graph.values() if x.inputs[0] in prev_node.outputs), None)
         else:
             if before not in next_nodes:
-                raise Exception('Cannot insert a node {} before {} (candidates: {}).'.format(node.name, before.name, ','.join([n.name for n in next_nodes])))
+                raise Exception(
+                    'Cannot insert a node {} before {} (candidates: {}).'.format(
+                        node.name, before.name, ','.join([n.name for n in next_nodes])
+                    )
+                )
             next_node = before
 
         if next_node is not None:
@@ -470,7 +488,7 @@ class ModelGraph(object):
         self._update_model_outputs()
 
     def remove_node(self, node, rewire=True):
-        """ Remove a node from a graph.
+        """Remove a node from a graph.
 
         By default, this function can connect the outputs of previous node to the input of next one.
         Note that when removing a leaf node `rewire` should be set to `False`.
@@ -493,7 +511,7 @@ class ModelGraph(object):
             if prev_node is not None:
                 if len(next_nodes) > 0:
                     for next_node in next_nodes:
-                        for i,_ in enumerate(next_node.inputs):
+                        for i, _ in enumerate(next_node.inputs):
                             if node.outputs[0] == next_node.inputs[i]:
                                 next_node.inputs[i] = prev_node.outputs[0]
                                 break
@@ -502,13 +520,13 @@ class ModelGraph(object):
                         raise Exception('Cannot rewire a node without child')
             else:
                 raise Exception('Cannot rewire a node without a parent')
-        
+
         del self.output_vars[node.outputs[0]]
         del self.graph[node.name]
         self._update_model_outputs()
 
     def replace_node(self, old_node, new_node):
-        """ Replace an existing node in the graph with a new one.
+        """Replace an existing node in the graph with a new one.
 
         Args:
             old_node (Layer): The node to replace
@@ -520,14 +538,14 @@ class ModelGraph(object):
         if next_node is not None:
             next_node.inputs[0] = new_node.outputs[0]
         if prev_node is not None:
-            if new_node.inputs is None or len(new_node.inputs) == 0: # Check if already rewired
+            if new_node.inputs is None or len(new_node.inputs) == 0:  # Check if already rewired
                 new_node.inputs = [prev_node.outputs[0]]
 
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
         self._update_model_outputs()
 
     def _update_model_outputs(self):
-        ''' Update the model outputs
+        '''Update the model outputs
 
         All node outputs and inputs are found. The model outputs are set to all node outputs
         that are not also node inputs.
@@ -571,7 +589,7 @@ class ModelGraph(object):
         for layer in self.get_layers():
             weights = layer.get_weights()
             variables.extend(weights)
-        
+
         return variables
 
     def write(self):
@@ -594,7 +612,13 @@ class ModelGraph(object):
         if self._top_function_lib is not None:
 
             if platform.system() == "Linux":
-                dlclose_func = ctypes.CDLL('libdl.so').dlclose
+                libdl_libs = ['libdl.so', 'libdl.so.2']
+                for libdl in libdl_libs:
+                    try:
+                        dlclose_func = ctypes.CDLL(libdl).dlclose
+                        break
+                    except Exception:
+                        continue
             elif platform.system() == "Darwin":
                 dlclose_func = ctypes.CDLL('libc.dylib').dlclose
 
@@ -608,13 +632,13 @@ class ModelGraph(object):
             raise Exception('Model not compiled')
         if len(self.get_input_variables()) == 1:
             xlist = [x]
-        else: 
+        else:
             xlist = x
         n_outputs = len(self.get_output_variables())
-        
+
         for xi in xlist:
             if not isinstance(xi, np.ndarray):
-                raise Exception('Expected numpy.ndarray, but got {}'.format(type(x)))
+                raise Exception(f'Expected numpy.ndarray, but got {type(x)}')
             if not xi.flags['C_CONTIGUOUS']:
                 raise Exception('Array must be c_contiguous, try using numpy.ascontiguousarray(x)')
 
@@ -626,8 +650,11 @@ class ModelGraph(object):
             top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_double')
             ctype = ctypes.c_double
         else:
-            raise Exception('Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(x0.dtype))
-
+            raise Exception(
+                'Invalid type ({}) of numpy array. Supported types are: single, float32, double, float64, float_.'.format(
+                    x0.dtype
+                )
+            )
 
         top_function.restype = None
         top_function.argtypes = [npc.ndpointer(ctype, flags="C_CONTIGUOUS") for i in range(len(xlist) + n_outputs)]
@@ -645,10 +672,10 @@ class ModelGraph(object):
             x_size = np.prod(xi.shape)
             n_sample, rem = divmod(x_size, expected_size)
             if rem != 0:
-                raise Exception('Input size mismatch, got {}, expected {}'.format(x_size.shape, self.get_input_variables()[i].shape))
+                raise Exception(f'Input size mismatch, got {x_size.shape}, expected {self.get_input_variables()[i].shape}')
             n_samples.append(n_sample)
 
-        if not all([n_samples[i] == n_samples[i+1] for i in range(len(xlist)-1)]):
+        if not all([n_samples[i] == n_samples[i + 1] for i in range(len(xlist) - 1)]):
             raise Exception('Input size mismatch, not all inputs match')
 
         return int(n_sample)
@@ -679,12 +706,13 @@ class ModelGraph(object):
                 top_function(*argtuple)
                 output.append(predictions)
 
-
             # Convert to list of numpy arrays (one for each output)
-            output = [np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)]
+            output = [
+                np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)
+            ]
         finally:
             os.chdir(curr_dir)
-            
+
         if n_samples == 1 and n_outputs == 1:
             return output[0][0]
         elif n_outputs == 1:
@@ -695,7 +723,7 @@ class ModelGraph(object):
             return output
 
     def trace(self, x):
-        print('Recompiling {} with tracing'.format(self.config.get_project_name()))
+        print(f'Recompiling {self.config.get_project_name()} with tracing')
         self.config.trace_output = True
         self.compile()
 
@@ -705,14 +733,13 @@ class ModelGraph(object):
         n_outputs = len(self.get_output_variables())
 
         class TraceData(ctypes.Structure):
-            _fields_ = [('name', ctypes.c_char_p),
-                        ('data', ctypes.c_void_p)]
+            _fields_ = [('name', ctypes.c_char_p), ('data', ctypes.c_void_p)]
 
         trace_output = {}
         layer_sizes = {}
         n_traced = 0
         for layer in self.get_layers():
-            if layer.get_attr('function_cpp', None) and layer.get_attr('Trace', False):
+            if layer.get_attr('function_cpp', None) and layer.get_attr('trace', False):
                 n_traced += len(layer.get_variables())
                 trace_output[layer.name] = []
                 layer_sizes[layer.name] = layer.get_output_variable().shape
@@ -762,7 +789,9 @@ class ModelGraph(object):
                 trace_output[key] = np.asarray(trace_output[key])
 
             # Convert to list of numpy arrays (one for each output)
-            output = [np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)]
+            output = [
+                np.asarray([output[i_sample][i_output] for i_sample in range(n_samples)]) for i_output in range(n_outputs)
+            ]
 
             free_func()
         finally:
@@ -778,7 +807,7 @@ class ModelGraph(object):
             return output, trace_output
 
     def build(self, **kwargs):
-        """ Builds the generated project using HLS compiler.
+        """Builds the generated project using HLS compiler.
 
         Please see the `build()` function of backends for a list of possible arguments.
         """

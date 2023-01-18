@@ -329,9 +329,9 @@ void concatenate2d_0(
         ConcatPackInput2: for (int k = 0; k < input2_T::size; k++) {
             #pragma HLS UNROLL
             out_data[k] = in_data2[k];
-	}
+        }
 
-	res.write(out_data);
+        res.write(out_data);
     }
 }
 
@@ -352,14 +352,14 @@ void concatenate2d_1(
         ConcatPackInput1: for (int k = 0; k < input1_T::size; k++) {
             #pragma HLS UNROLL
             out_data[k] = in_data1[k];
-	}
+        }
             
-	ConcatPackInput2: for (int k = 0; k < input2_T::size; k++) {
+        ConcatPackInput2: for (int k = 0; k < input2_T::size; k++) {
             #pragma HLS UNROLL
             out_data[input1_T::size + k] = in_data2[k];
-	}
+        }
 
-	res.write(out_data);
+        res.write(out_data);
     }
 }
 
@@ -385,23 +385,23 @@ void concatenate1d(
     res_T out_data;
     #pragma HLS DATA_PACK variable=out_data
     ConcatLoop1: for (int i = 0; i < CONFIG_T::n_elem1_0 / input1_T::size; i++) {
-        #pragma HLS PIPELINE
+    	#pragma HLS PIPELINE
         input1_T in_data1 = data1.read();
-        ConcatPack1: for (int j = 0; j < res_T::size; j++) {
+        ConcatPack1: for (int j = 0; j < input1_T::size; j++) {
             #pragma HLS UNROLL
-	    out_data[j] = in_data1[j];
+            out_data[j] = in_data1[j];
         }
-        res.write(out_data);
     }
     ConcatLoop2: for (int i = 0; i < CONFIG_T::n_elem2_0 / input2_T::size; i++) {
-        #pragma HLS PIPELINE
+    	#pragma HLS PIPELINE
         input2_T in_data2 = data2.read();
-        ConcatPack2: for (int j = 0; j < res_T::size; j++) {
+        ConcatPack2: for (int j = 0; j < input2_T::size; j++) {
             #pragma HLS UNROLL
-	    out_data[j] = in_data2[j];
+            out_data[input1_T::size + j] = in_data2[j];
         }
-        res.write(out_data);
+
     }
+    res.write(out_data);
 }
 }
 

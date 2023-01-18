@@ -1,20 +1,16 @@
-import numpy as np
-import math
 import os
-import copy
-import webbrowser
-from calmjs.parse import es5
-from calmjs.parse import asttypes
-from tabulate import tabulate
-from ast import literal_eval
 from contextlib import contextmanager
 
-from hls4ml.model.types import NamedType, IntegerPrecisionType, FixedPrecisionType
-from hls4ml.model.layers import Embedding, Layer, Dense, BatchNormalization, Activation, ParametrizedActivation, PReLU, Softmax
-from hls4ml.model.optimizer import get_backend_passes, layer_optimizer, model_optimizer
-from hls4ml.model.flow import register_flow
+import numpy as np
+
 from hls4ml.backends import FPGABackend
+from hls4ml.model.attributes import ConfigurableAttribute
+from hls4ml.model.flow import register_flow
+from hls4ml.model.layers import GRU, LSTM, Activation, Conv1D, Conv2D, Dense, Embedding, Layer, SimpleRNN, Softmax
+from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
+from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
 from hls4ml.report import parse_quartus_report
+
 
 @contextmanager
 def chdir(newdir):
@@ -25,17 +21,37 @@ def chdir(newdir):
     finally:
         os.chdir(prevdir)
 
+
 class QuartusBackend(FPGABackend):
     def __init__(self):
-        super(QuartusBackend, self).__init__('Quartus')
+        super().__init__('Quartus')
+        self._register_layer_attributes()
         self._register_flows()
+
+    def _register_layer_attributes(self):
+        # Add RNN-specific recurrent_reuse_factor attribute
+        rnn_layers = [
+            SimpleRNN,
+            LSTM,
+            GRU,
+        ]
+
+        for layer in rnn_layers:
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1))
+            self.attribute_map[layer] = attrs
 
     def _register_flows(self):
         initializers = self._get_layer_initializers()
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
+        streaming_passes = ['quartus:clone_output']
+        streaming_flow = register_flow('streaming', streaming_passes, requires=[init_flow], backend=self.name)
+
         quartus_types = [
             'quartus:transform_types',
+            'quartus:apply_resource_strategy',
+            'quartus:apply_winograd_kernel_transformation',
         ]
         quartus_types_flow = register_flow('specific_types', quartus_types, requires=[init_flow], backend=self.name)
 
@@ -46,22 +62,30 @@ class QuartusBackend(FPGABackend):
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
+        optimization_passes = ['quartus:remove_final_reshape', 'quartus:optimize_pointwise_conv', 'quartus:skip_softmax']
+        optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
         templates = self._get_layer_templates()
-        template_flow = register_flow('apply_templates', templates, requires=[init_flow], backend=self.name)
+        template_flow = register_flow('apply_templates', self._get_layer_templates, requires=[init_flow], backend=self.name)
 
-        writer_passes = [
-            'make_stamp',
-            'quartus:write_hls'
-        ]
-        writer_flow_requirements = ['optimize', quartus_types_flow, template_flow]
-        self._writer_flow = register_flow('write', writer_passes, requires=writer_flow_requirements, backend=self.name)
+        writer_passes = ['make_stamp', 'quartus:write_hls']
+
+        self._writer_flow = register_flow('write', writer_passes, requires=['quartus:ip'], backend=self.name)
 
         all_passes = get_backend_passes(self.name)
 
         extras = [
             # Ideally this should be empty
-            opt_pass for opt_pass in all_passes if opt_pass not in initializers + quartus_types + templates + writer_passes
+            opt_pass
+            for opt_pass in all_passes
+            if opt_pass
+            not in initializers
+            + streaming_passes
+            + quartus_types
+            + quantization_passes
+            + templates
+            + optimization_passes
+            + writer_passes
         ]
 
         if len(extras) > 0:
@@ -69,7 +93,16 @@ class QuartusBackend(FPGABackend):
         else:
             extras_flow = None
 
-        ip_flow_requirements = ['optimize', init_flow, quantization_flow, quartus_types_flow, extras_flow, template_flow]
+        ip_flow_requirements = [
+            'optimize',
+            init_flow,
+            streaming_flow,
+            quantization_flow,
+            optimization_flow,
+            quartus_types_flow,
+            extras_flow,
+            template_flow,
+        ]
         ip_flow_requirements = list(filter(None, ip_flow_requirements))
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
@@ -90,60 +123,46 @@ class QuartusBackend(FPGABackend):
 
         return config
 
-    def gen_quartus_weight_array(self, layer):
-        rf = layer.get_attr('reuse_factor')
-        block_factor = int((layer.attributes['n_in']*layer.attributes['n_out'])/rf)
-        bf_rounded = int(pow(2, np.ceil(np.log2(block_factor))))
-        rf_rounded = int(pow(2, np.ceil(np.log2(rf))))
+    def build(self, model, synth=True, fpgasynth=False, log_level=1, cont_if_large_area=False):
 
-        layer.weights['weight'].data = np.transpose(layer.weights['weight'].data).flatten()
-
-        if(layer.attributes['n_in']*layer.attributes['n_out'] > 2048 and rf_rounded != rf):
-            layer.set_attr('rfpad', rf_rounded-rf)
-            layer.set_attr('bfpad', bf_rounded-block_factor)
-
-            temp = np.empty([bf_rounded, rf_rounded])
-            for i in range(rf_rounded):
-                for j in range (bf_rounded):
-                    if (i < rf and j < block_factor):
-                        w_index = i + rf * j
-                        temp[j][i] = layer.weights['weight'].data[w_index]
-                    else:
-                        temp[j][i] = 0
-            layer.weights['weight'].data = temp.flatten()
-
-        layer.weights['weight'].data_length = layer.weights['weight'].data.size
-        return
-
-    def build(self, model, synth=True, fpgasynth=False):
         """
         Builds the project using Intel HLS compiler.
 
-        Users should generally not call this function directly but instead use `ModelGraph.build()`.
-        This function assumes the model was written with a call to `ModelGraph.write()`
-
         Args:
             model (ModelGraph): The model to build
-            synth, optional: Whether to run synthesis
-            fpgasynth, optional:  Whether to run fpga synthesis
-
+            synth, optional: Whether to run HLS synthesis
+            fpgasynth, optional:  Whether to run FPGA synthesis (Quartus Compile)
+            log_level, optional: Logging level to be displayed during HLS synthesis (0, 1, 2)
+            cont_if_large_area: Instruct the HLS compiler to continue synthesis if the estimated resource usage exceeds
+                device resources
         Errors raise exceptions
         """
+
+        # Check software needed is present
         found = os.system('command -v i++ > /dev/null')
         if found != 0:
             raise Exception('Intel HLS installation not found. Make sure "i++" is on PATH.')
 
+        if fpgasynth:
+            if fpgasynth and not synth:
+                raise Exception('HLS Synthesis needs to be run before FPGA synthesis')
+            found = os.system('command -v quartus_sh > /dev/null')
+            if found != 0:
+                raise Exception('Quartus installation not found. Make sure "quartus_sh" is on PATH.')
+
         with chdir(model.config.get_output_dir()):
             if synth:
-                os.system('make {}-fpga'.format(model.config.get_project_name()))
-                os.system('./{}-fpga'.format(model.config.get_project_name()))
+                quartus_compile = 'QUARTUS_COMPILE=--quartus-compile' if fpgasynth else ''
+                cont_synth = 'CONT_IF_LARGE_AREA=--dont-error-if-large-area-est' if cont_if_large_area else ''
+                log_1 = 'LOGGING_1=-v ' if log_level >= 1 else ''
+                log_2 = 'LOGGING_2=-v ' if log_level >= 2 else ''
+                os.system(f'make {model.config.get_project_name()}-fpga {log_1} {log_2} {cont_synth} {quartus_compile}')
 
-            if fpgasynth:
-                found = os.system('command -v quartus_sh > /dev/null')
-                if found != 0:
-                    raise Exception('Quartus installation not found. Make sure "quartus_sh" is on PATH.')
-                os.chdir(model.config.get_project_name() + '-fpga.prj/quartus')
-                os.system('quartus_sh --flow compile quartus_compile')
+                # If running i++ through a container, such a singularity, this command will throw an exception, because the
+                # host OS doesn't have access to HLS simulation tools. To avoid the exception, shell into the container
+                # (e.g. singularity shell ....) and then execute the following command manually
+                # This command simply tests the IP using a simulation tool and obtains the latency and initiation interval
+                os.system(f'./{model.config.get_project_name()}-fpga')
 
         return parse_quartus_report(model.config.get_output_dir())
 
@@ -167,35 +186,188 @@ class QuartusBackend(FPGABackend):
         else:
             n_in, n_out = self.get_layer_mult_size(layer)
             self.set_closest_reuse_factor(layer, n_in, n_out)
-            self.gen_quartus_weight_array(layer)
             layer.set_attr('strategy', 'resource')
 
         if layer.model.config.is_resource_strategy(layer):
             if layer.model.config.get_compression(layer):
                 index_t = layer.get_weights('weight').type.index_precision
 
-        layer.set_attr('index_t', NamedType('layer{}_index'.format(layer.index), index_t))
+        layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', index_t))
 
     @layer_optimizer(Activation)
     def init_activation(self, layer):
-        if 'table_t' not in layer.attributes:
-            layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
-        if 'table_size' not in layer.attributes:
-            layer.set_attr('table_size', 1024)
+        if layer.get_attr('activation') == 'tanh':
+            layer.set_attr('activation', 'dense_tanh')
+        if layer.get_attr('recurrent_activation') == 'tanh':
+            layer.set_attr('recurrent_activation', 'dense_tanh')
 
     @layer_optimizer(Softmax)
     def init_softmax(self, layer):
-        if 'exp_table_t' not in layer.attributes:
-            layer.set_attr('exp_table_t', layer.get_attr('table_t'))
-        if 'inv_table_t' not in layer.attributes:
-            layer.set_attr('inv_table_t', layer.get_attr('table_t'))
-        if layer.model.config.is_resource_strategy(layer):
-            # 'resource' strategy = 'latency' for Softmax
-            layer.set_attr('implementation', 'latency')
-        else:
-            layer.set_attr('implementation', layer.model.config.get_strategy(layer).lower())
+        if layer.model.config.get_config_value('IOType') == 'io_parallel':
+            assert (
+                len(layer.get_input_variable().shape) == 1
+            ), 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
 
     @layer_optimizer(Embedding)
     def init_embed(self, layer):
         if layer.attributes['n_in'] is None:
-           raise Exception('Input length of Embedding layer must be specified.')
+            raise Exception('Input length of Embedding layer must be specified.')
+
+    @layer_optimizer(GRU)
+    def init_gru(self, layer):
+        reuse_factor = layer.model.config.get_reuse_factor(layer)
+        layer.set_attr('recurrent_reuse_factor', reuse_factor)
+
+        # Dense multiplication properties
+        layer.set_attr('rfpad', 0)
+        layer.set_attr('bfpad', 0)
+
+        index_t = IntegerPrecisionType(width=1, signed=False)
+        layer.set_attr('index_t', index_t)
+
+        if 'table_t' not in layer.attributes:
+            layer.set_attr(
+                'table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8))
+            )
+        if 'table_size' not in layer.attributes:
+            layer.set_attr('table_size', 1024)
+        if True:  # layer.model.config.is_resource_strategy(layer): ... Quartus only supports Dense resource multiplication
+            n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
+            self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
+            layer.set_attr('strategy', 'resource')
+
+        layer.set_attr('index_t', index_t)
+
+    @layer_optimizer(Conv1D)
+    def init_conv1d(self, layer):
+        # This can happen if we assign weights of Dense layer to 1x1 Conv1D
+        if len(layer.weights['weight'].data.shape) == 2:
+            layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0, 1))
+
+        # Dense matrix multiply properties
+        layer.set_attr('rfpad', 0)
+        layer.set_attr('bfpad', 0)
+
+        # Reuse and parallelization factors
+        layer.set_attr('strategy', 'resource')
+        n_in, n_out = self.get_layer_mult_size(layer)
+        self.set_target_reuse_factor(layer)
+        self.set_closest_reuse_factor(layer, n_in, n_out)
+        layer.set_attr('parallelization', layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1))
+
+        # impl_filt_width determines the filter size post-Winograd transformation
+        layer.set_attr('impl_filt_width', layer.get_attr('filt_width'))
+
+        # Implementation:
+        # - combination - at compile-time, the decision between Winograd and im2col is made
+        # - im2col - specifically use im2col
+        # - Winograd - use Winograd, if possible
+        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'combination'))
+
+        layer.set_attr(
+            'n_partitions', 1
+        )  # TODO Not used yet as there is no codegen implementation of CNNs for Quartus backend
+
+    @layer_optimizer(Conv2D)
+    def init_conv2d(self, layer):
+        # This can happen if we assign weights of Dense layer to 1x1 Conv2D
+        if len(layer.weights['weight'].data.shape) == 2:
+            layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0, 1))
+
+        # Dense matrix multiply properties
+        layer.set_attr('rfpad', 0)
+        layer.set_attr('bfpad', 0)
+
+        # Reuse and parallelization factors
+        layer.set_attr('strategy', 'resource')
+        n_in, n_out = self.get_layer_mult_size(layer)
+        self.set_target_reuse_factor(layer)
+        self.set_closest_reuse_factor(layer, n_in, n_out)
+        layer.set_attr('parallelization', layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', 1))
+
+        # impl_filt_width & impl_filt_height determine the filter size post-Winograd transformation
+        layer.set_attr('impl_filt_height', layer.get_attr('filt_height'))
+        layer.set_attr('impl_filt_width', layer.get_attr('filt_width'))
+
+        # Implementation:
+        # - combination - at compile-time, the decision between Winograd and im2col is made
+        # - im2col - specifically use im2col
+        # - Winograd - use Winograd, if possible
+        layer.set_attr('implementation', layer.model.config.get_layer_config_value(layer, 'Implementation', 'combination'))
+
+        layer.set_attr(
+            'n_partitions', 1
+        )  # TODO Not used yet as there is no codegen implementation of CNNs for Quartus backend
+
+    @layer_optimizer(LSTM)
+    def init_lstm(self, layer):
+        reuse_factor = layer.model.config.get_reuse_factor(layer)
+        layer.set_attr('recurrent_reuse_factor', reuse_factor)
+
+        index_t = IntegerPrecisionType(width=1, signed=False)
+        layer.set_attr('index_t', index_t)
+
+        if 'table_t' not in layer.attributes:
+            layer.set_attr(
+                'table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8))
+            )
+        if 'table_size' not in layer.attributes:
+            layer.set_attr('table_size', 1024)
+
+        # We don't use RF yet
+        if True:  # layer.model.config.is_resource_strategy(layer): ... Quartus only supports Dense resource multiplication
+            n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
+            self.set_closest_reuse_factor(layer, n_in, n_out)
+            self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
+            layer.set_attr('strategy', 'resource')
+
+        # Split weights for easier storage in on-chip memory and implementation in HLS
+        weights_data = layer.weights['weight'].data
+        rec_weights_data = layer.weights['recurrent_weight'].data
+        bias_data = layer.weights['bias'].data
+
+        weight_types = ['i', 'f', 'c', 'o']
+        for i in range(0, 4):
+            layer.add_weights_variable(
+                name=f'weight_{weight_types[i]}',
+                var_name=f'kernel_{weight_types[i]}_{{index}}',
+                data=weights_data[
+                    0 : layer.get_attr('n_in'), i * layer.get_attr('n_out') : (i + 1) * layer.get_attr('n_out')
+                ],
+                quantizer=layer.get_attr('weight_quantizer'),
+                compression=None,
+            )
+            layer.add_weights_variable(
+                name=f'recurrent_weight_{weight_types[i]}',
+                var_name=f'recurrent_kernel_{weight_types[i]}_{{index}}',
+                data=rec_weights_data[
+                    0 : layer.get_attr('n_out'), i * layer.get_attr('n_out') : (i + 1) * layer.get_attr('n_out')
+                ],
+                quantizer=layer.get_attr('weight_quantizer'),
+                compression=None,
+            )
+            layer.add_weights_variable(
+                name=f'bias_{weight_types[i]}',
+                var_name=f'bias_{weight_types[i]}_{{index}}',
+                data=bias_data[i * layer.get_attr('n_out') : (i + 1) * (layer.get_attr('n_out'))],
+                quantizer=layer.get_attr('weight_quantizer'),
+                compression=None,
+            )
+
+    @layer_optimizer(SimpleRNN)
+    def init_simple_rnn(self, layer):
+        reuse_factor = layer.model.config.get_reuse_factor(layer)
+        layer.set_attr('recurrent_reuse_factor', reuse_factor)
+
+        index_t = IntegerPrecisionType(width=1, signed=False)
+        layer.set_attr('index_t', index_t)
+
+        if 'table_t' not in layer.attributes:
+            layer.set_attr(
+                'table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8))
+            )
+        if 'table_size' not in layer.attributes:
+            layer.set_attr('table_size', 1024)
+
+        # TODO - Consider setting and using RF
