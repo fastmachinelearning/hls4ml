@@ -208,7 +208,7 @@ class QuartusWriter(Writer):
                     newline += 'hls_max_concurrency(0)\n'
                     newline += f'hls_component_ii({self.get_max_reuse_factor(model)})\n'
                 clock_mhz = 1000 / (model.config.get_config_value('ClockPeriod'))
-                newline += f'hls_scheduler_target_fmax_mhz({np.ceil(clock_mhz).astype(np.int)})\n'
+                newline += f'hls_scheduler_target_fmax_mhz({np.ceil(clock_mhz).astype(int)})\n'
 
             # In io_parallel, an output (struct) is returned from the top-level function
             # Therefore, it needs to be initialised before returning
@@ -366,7 +366,7 @@ class QuartusWriter(Writer):
                     newline += 'hls_max_concurrency(0)\n'
                     newline += f'hls_component_ii({self.get_max_reuse_factor(model)})\n'
                 clock_mhz = 1000 / (model.config.get_config_value('ClockPeriod'))
-                newline += f'hls_scheduler_target_fmax_mhz({np.ceil(clock_mhz).astype(np.int)})\n'
+                newline += f'hls_scheduler_target_fmax_mhz({np.ceil(clock_mhz).astype(int)})\n'
 
             # For io_stream, no inputs/outputs are instantiated, as they are passed by reference
             # For io_parallel, input/output structs are required
