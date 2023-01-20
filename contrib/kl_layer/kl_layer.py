@@ -6,8 +6,6 @@
 
     The HLS part is in hls4ml/templates/vivado/nnet_utils/nnet_distance.h
 """
-import argparse
-import pickle
 from pathlib import Path
 
 import numpy as np
@@ -142,7 +140,7 @@ def test_extensions(tmp_path):
     backend.register_template(HKLLossFunctionTemplate)
 
     # Register HLS implementation
-    p = Path('../hls4ml/templates/vivado/nnet_utils/nnet_distance.h')
+    p = Path('nnet_distance.h')
     backend.register_source(p)
 
     # Test if it works
@@ -178,6 +176,9 @@ def test_extensions(tmp_path):
 
     hmodel.compile()
     hres = hmodel.predict(x.astype('float32'))
+
+    print('Compare prediction by hls4ml model to Keras one')
+    print(kres-hres)
 
     print('Building model')
     report = hmodel.build(reset=True, csim=False, cosim=True, synth=True, vsynth=True)
