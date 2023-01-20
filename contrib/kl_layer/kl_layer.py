@@ -178,7 +178,7 @@ def test_extensions(tmp_path):
     hres = hmodel.predict(x.astype('float32'))
 
     print('Compare prediction by hls4ml model to Keras one')
-    print(kres-hres)
+    print(kres - hres)
 
     print('Building model')
     report = hmodel.build(reset=True, csim=False, cosim=True, synth=True, vsynth=True)
