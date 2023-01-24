@@ -1,0 +1,12 @@
+sphinx>=3.2.1
+sphinx_rtd_theme
+toposort>=1.5.0
+numpy
+six
+pyyaml
+h5py
+onnx>=1.4.0
+pandas
+seaborn
+matplotlib
+setuptools_scm[toml]>=5

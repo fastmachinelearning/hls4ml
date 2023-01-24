@@ -23,12 +23,12 @@ def keras_model():
     return model
 
 @pytest.fixture   
-@pytest.mark.parametrize('backend, io_type, strategy', [
+@pytest.mark.parametrize('backend,io_type,strategy', [
                                       ('Quartus', 'io_parallel', 'resource'),
+                                      ('Quartus', 'io_stream', 'resource'),
+  
                                       ('Vivado', 'io_parallel', 'resource'),
-
                                       ('Vivado', 'io_parallel', 'latency'),
-                                      
                                       ('Vivado', 'io_stream', 'latency'),
                                       ('Vivado', 'io_stream', 'resource')
                                     ])
@@ -56,12 +56,12 @@ def hls_model(keras_model, backend, io_type, strategy):
     hls_model.compile()
     return hls_model
 
-@pytest.mark.parametrize('backend, io_type, strategy', [
+@pytest.mark.parametrize('backend,io_type,strategy', [
                                       ('Quartus', 'io_parallel', 'resource'),
+                                      ('Quartus', 'io_stream', 'resource'),
+  
                                       ('Vivado', 'io_parallel', 'resource'),
-
                                       ('Vivado', 'io_parallel', 'latency'),
-                                      
                                       ('Vivado', 'io_stream', 'latency'),
                                       ('Vivado', 'io_stream', 'resource')
                                     ])

@@ -95,7 +95,8 @@ def test_activations(activation_function, backend, io_type):
 padds_options = ['same', 'valid']
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
-def test_conv1d(padds, backend):
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_conv1d(padds, backend, io_type):
     model = tf.keras.models.Sequential()
     input_shape = (10, 128, 4)
     model.add(Conv1D(filters=32,
@@ -114,45 +115,48 @@ def test_conv1d(padds, backend):
     keras_prediction = model.predict(X_input)
     
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = str(test_root_path / 'hls4mlprj_keras_api_conv1d_{}_{}'.format(padds, backend))
-    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
+    output_dir = str(test_root_path / 'hls4mlprj_keras_api_conv1d_{}_{}_{}'.format(padds, backend, io_type))
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
 
      # 5e-2 might be too high
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=5e-2)
 
-    assert len(model.layers) + 2 == len(hls_model.get_layers())
-    assert list(hls_model.get_layers())[1].attributes['name'] == model.layers[0]._name
-    assert list(hls_model.get_layers())[1].attributes['class_name'] == 'Conv1D'
-    assert list(hls_model.get_layers())[1].attributes['activation'] == str(model.layers[0].activation).split()[1]
-    assert list(hls_model.get_layers())[1].attributes["in_width"] == model.layers[0]._batch_input_shape[1]
-    assert list(hls_model.get_layers())[1].attributes['filt_width'] == model.layers[0].kernel_size[0]
-    assert list(hls_model.get_layers())[1].attributes['n_chan'] == model.layers[0].input_shape[2]
-    assert list(hls_model.get_layers())[1].attributes['n_filt'] == model.layers[0].filters
-    assert list(hls_model.get_layers())[1].attributes['stride_width'] == model.layers[0].strides[0]
-    assert list(hls_model.get_layers())[1].attributes['padding'] == model.layers[0].padding
-    assert list(hls_model.get_layers())[1].attributes['data_format'] == model.layers[0].data_format
-    assert list(hls_model.get_layers())[1].attributes["out_width"] == list(model.layers[0].output_shape)[1]
+    if not (backend=='Vivado' and io_type=='io_stream' and padds=='same'):
+      # Vivado inserts and additional layer for 'same' padding in io_stream
+      assert len(model.layers) + 2 == len(hls_model.get_layers())
+      assert list(hls_model.get_layers())[1].attributes['name'] == model.layers[0]._name
+      assert list(hls_model.get_layers())[1].attributes['class_name'] == 'Conv1D'
+      assert list(hls_model.get_layers())[1].attributes['activation'] == str(model.layers[0].activation).split()[1]
+      assert list(hls_model.get_layers())[1].attributes["in_width"] == model.layers[0]._batch_input_shape[1]
+      assert list(hls_model.get_layers())[1].attributes['filt_width'] == model.layers[0].kernel_size[0]
+      assert list(hls_model.get_layers())[1].attributes['n_chan'] == model.layers[0].input_shape[2]
+      assert list(hls_model.get_layers())[1].attributes['n_filt'] == model.layers[0].filters
+      assert list(hls_model.get_layers())[1].attributes['stride_width'] == model.layers[0].strides[0]
+      assert list(hls_model.get_layers())[1].attributes['padding'] == model.layers[0].padding
+      assert list(hls_model.get_layers())[1].attributes['data_format'] == model.layers[0].data_format
+      assert list(hls_model.get_layers())[1].attributes["out_width"] == list(model.layers[0].output_shape)[1]
 
-    out_width	= math.ceil(float(model.layers[0]._batch_input_shape[2]) / float(model.layers[0].strides[0]))
-    pad_along_width	= max((out_width - 1) * model.layers[0].strides[0] + model.layers[0].kernel_size[0] - model.layers[0]._batch_input_shape[2], 0)
-    pad_left = pad_along_width // 2
-    pad_right = pad_along_width - pad_left
+      out_width	= math.ceil(float(model.layers[0]._batch_input_shape[2]) / float(model.layers[0].strides[0]))
+      pad_along_width	= max((out_width - 1) * model.layers[0].strides[0] + model.layers[0].kernel_size[0] - model.layers[0]._batch_input_shape[2], 0)
+      pad_left = pad_along_width // 2
+      pad_right = pad_along_width - pad_left
 
-    if model.layers[0].padding == 'same':
-        assert list(hls_model.get_layers())[1].attributes['pad_left'] == pad_left
-        assert list(hls_model.get_layers())[1].attributes['pad_right'] == pad_right
-    elif model.layers[0].padding == 'valid':
-        assert list(hls_model.get_layers())[1].attributes['pad_left'] == 0
-        assert list(hls_model.get_layers())[1].attributes['pad_right'] == 0
+      if model.layers[0].padding == 'same':
+          assert list(hls_model.get_layers())[1].attributes['pad_left'] == pad_left
+          assert list(hls_model.get_layers())[1].attributes['pad_right'] == pad_right
+      elif model.layers[0].padding == 'valid':
+          assert list(hls_model.get_layers())[1].attributes['pad_left'] == 0
+          assert list(hls_model.get_layers())[1].attributes['pad_right'] == 0
 
 chans_options=['channels_last']
 padds_options=['same', 'valid']
 @pytest.mark.parametrize('chans', chans_options)
 @pytest.mark.parametrize('padds',  padds_options)
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
-def test_conv2d(chans, padds, backend):
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_conv2d(chans, padds, backend, io_type):
     model = tf.keras.models.Sequential()
     input_shape = (28,28,3)
     model.add(Conv2D(filters=32,
@@ -169,8 +173,8 @@ def test_conv2d(chans, padds, backend):
     keras_prediction = model.predict(X_input)
     
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = str(test_root_path / 'hls4mlprj_keras_api_conv2d_{}_{}_{}'.format(backend, chans, padds))
-    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
+    output_dir = str(test_root_path / 'hls4mlprj_keras_api_conv2d_{}_{}_{}_{}'.format(backend, chans, padds, io_type))
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
 

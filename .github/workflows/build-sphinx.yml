@@ -11,10 +11,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - uses: ammaraskar/sphinx-action@master
+    - uses: jmduarte/sphinx-action@main
       with:
         docs-folder: "docs/"
-        pre-build-command: "pip install sphinx-rtd-theme numpy six pyyaml h5py 'onnx>=1.4.0' pandas seaborn matplotlib"
     - name: Commit Documentation Changes
       run: |
         git clone https://github.com/fastmachinelearning/hls4ml.git --branch gh-pages --single-branch gh-pages

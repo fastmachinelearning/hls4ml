@@ -7,8 +7,8 @@ set_property  ip_repo_paths  ${project_name}_prj [current_project]
 update_ip_catalog
 
 
-add_files -scan_for_includes {src/krnl_rtl_int.sv src/krnl_rtl_axi_read_master.sv src/krnl_rtl_counter.sv src/${project_name}_kernel.v src/krnl_rtl_axi_write_master.sv src/krnl_rtl_control_s_axi.v}
-import_files {src/krnl_rtl_int.sv src/krnl_rtl_axi_read_master.sv src/krnl_rtl_counter.sv src/${project_name}_kernel.v src/krnl_rtl_axi_write_master.sv src/krnl_rtl_control_s_axi.v}
+add_files -scan_for_includes [list src/krnl_rtl_int.sv src/krnl_rtl_axi_read_master.sv src/krnl_rtl_counter.sv src/${project_name}_kernel.v src/krnl_rtl_axi_write_master.sv src/krnl_rtl_control_s_axi.v]
+import_files [list src/krnl_rtl_int.sv src/krnl_rtl_axi_read_master.sv src/krnl_rtl_counter.sv src/${project_name}_kernel.v src/krnl_rtl_axi_write_master.sv src/krnl_rtl_control_s_axi.v]
 
 
 

@@ -15,7 +15,7 @@ pipeline {
         dir(path: 'test') {
           sh '''#!/bin/bash --login
               conda activate hls4ml-py37
-              pip install tensorflow
+              pip install tensorflow pyparsing
               pip install -U ../ --user
               ./convert-keras-models.sh -x -f keras-models.txt
               pip uninstall hls4ml -y'''
