@@ -4,13 +4,18 @@
     and computes KL "distance" between normal distribution
     and Gaussian with mu=z_mean and sigma=z_log_var
 
-    The HLS part is in hls4ml/templates/vivado/nnet_utils/nnet_distance.h
+    The HLS part is in contrib/kl_layer/kl_layer.h
 """
 from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.keras.layers.merge import _Merge as Merge
+
+try:
+    from keras.layers.merge import _Merge as Merge
+except Exception:
+    from keras.layers.merging.base_merge import _Merge
+    
 from tensorflow.python.keras.utils import tf_utils
 from tensorflow.python.ops import math_ops
 
@@ -18,26 +23,16 @@ import hls4ml
 from hls4ml.converters.keras_to_hls import parse_default_keras_layer
 from hls4ml.model.types import FixedPrecisionType, NamedType
 
-test_root_path = Path(__file__).parent
-
 
 # Keras implementation of a KL layer
-class Distance(Merge):
-    def _check_inputs(self, inputs):
-        if len(inputs) not in [2, 3]:
-            raise ValueError('A `{}` layer should be called ' 'on exactly 2 or 3 inputs'.format(self.__class__.__name__))
+class KLLoss(Merge):
+    '''Keras implementation of a KL loss custom layer'''
 
     @tf_utils.shape_type_conversion
     def build(self, input_shape):
         super().build(input_shape)
-        self._check_inputs(input_shape)
-
-
-class KLLoss(Distance):
-    '''Keras implementation of a KL loss custom layer'''
-
+    
     def _merge_function(self, inputs):
-        self._check_inputs(inputs)
 
         mean = inputs[0]
         log_var = inputs[1]
@@ -80,7 +75,7 @@ distance_config_template = """struct config{index} : nnet::distance_config {{
     static constexpr float exp_range = {exp_range};
 }};\n"""
 distance_function_template = 'nnet::{distance}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
-distance_include_list = ['nnet_utils/nnet_distance.h']
+distance_include_list = ['../../../contrib/kl_layer/kl_layer.h']
 
 
 class HKLLossConfigTemplate(hls4ml.backends.template.LayerConfigTemplate):
@@ -125,7 +120,7 @@ def parse_klloss_layer(keras_layer, input_names, input_shapes, data_reader, conf
     return layer, output_shape
 
 
-def test_extensions(tmp_path):
+def main():
     # Register the converter for custom Keras layer
     hls4ml.converters.register_keras_layer_handler('KLLoss', parse_klloss_layer)
 
@@ -140,7 +135,7 @@ def test_extensions(tmp_path):
     backend.register_template(HKLLossFunctionTemplate)
 
     # Register HLS implementation
-    p = Path('nnet_distance.h')
+    p = Path('kl_layer.h')
     backend.register_source(p)
 
     # Test if it works
@@ -167,7 +162,7 @@ def test_extensions(tmp_path):
     }
     hmodel = hls4ml.converters.convert_from_keras_model(
         kmodel,
-        output_dir=str(tmp_path / 'hls4mlprj_extensions'),
+        output_dir='hls4mlprj_kl_layer',
         backend='Vivado',
         io_type='io_parallel',
         part='xcvu9p-flga2577-2-e',
@@ -186,4 +181,4 @@ def test_extensions(tmp_path):
 
 
 if __name__ == '__main__':
-    test_extensions(test_root_path)
+    main()
