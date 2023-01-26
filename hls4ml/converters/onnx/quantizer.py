@@ -6,17 +6,20 @@ This is based on the sample implementation in finn-base
 """
 
 import numpy as np
-from hls4ml.model.types import Quantizer, SaturationMode, RoundingMode
+
+from hls4ml.model.types import Quantizer, RoundingMode, SaturationMode
+
 
 class QuantNodeQuantizer(Quantizer):
-    """ This implements a quantizer for a FixedPrecisionType with width==integer"""
+    """This implements a quantizer for a FixedPrecisionType with width==integer"""
+
     def __init__(self, precision):
         super().__init__(precision.width, precision)
 
     def __call__(self, data):
-        """ Apply the quantization on the data """
+        """Apply the quantization on the data"""
 
-        scale = 2**(self.hls_type.width - self.hls_type.integer)
+        scale = 2 ** (self.hls_type.width - self.hls_type.integer)
 
         data = data * scale  # (not using *= to avoid modifying data)
         # Clamping
@@ -27,7 +30,6 @@ class QuantNodeQuantizer(Quantizer):
         # Rounding
         rounding_fx = self._resolve_rounding_mode(self.hls_type.rounding_mode)
         return rounding_fx(data) / scale
-
 
     @staticmethod
     def _min_int(signed: bool, saturation_mode: str, bit_width: int) -> int:
@@ -76,7 +78,7 @@ class QuantNodeQuantizer(Quantizer):
             int(255)
         """
         if not signed:
-            value = (2 ** bit_width) - 1
+            value = (2**bit_width) - 1
         else:
             value = (2 ** (bit_width - 1)) - 1
         return value

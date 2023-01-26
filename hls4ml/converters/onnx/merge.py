@@ -1,6 +1,8 @@
-from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute
+from hls4ml.converters.onnx_to_hls import get_onnx_attribute, onnx_handler
 
 merge_layers = ['Add', 'Sub', 'Mul', 'Div', 'Average', 'Max', 'Min', 'Concat', 'Sum']
+
+
 @onnx_handler(*merge_layers)
 def parse_merge_layer(reader, node, inputs_map, input_shapes, graph, config):
 
@@ -17,15 +19,11 @@ def parse_merge_layer(reader, node, inputs_map, input_shapes, graph, config):
             raise Exception('ERROR: Concatenation of tensors with rank > 3 is not yet supported.')
 
         layer['class_name'] = 'Concatenate'
-        layer['op'] = layer['class_name'].lower() + '{}d'.format(rank)
+        layer['op'] = layer['class_name'].lower() + f'{rank}d'
         layer['axis'] = get_onnx_attribute(node, 'axis')
 
-        # #Calculate output shape
-        # new_dim = sum([x.type.tensor_type.shape.dim[layer['axis']].dim_value for x in graph.value_info if x.name in node.input])
-        # output_shape[layer['axis']] = new_dim
-
-    elif layer['class_name'] ==  'Add':
-        #Check if the layer is an AddBias
+    elif layer['class_name'] == 'Add':
+        # Check if the layer is an AddBias
         for input in node.input:
             # I think we don't use BiasAdd in ONNX currently
             if "bias" in input:
@@ -35,7 +33,7 @@ def parse_merge_layer(reader, node, inputs_map, input_shapes, graph, config):
                 # reader.add_input(layer['name'], node.input)
                 reader.add_input(layer['name'], input)
 
-        if layer['class_name'] ==  'Add':
+        if layer['class_name'] == 'Add':
             # If it wasn't changed, just make it a merge node
             layer['class_name'] = 'Merge'
 

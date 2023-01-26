@@ -1,6 +1,7 @@
 import numpy as np
-from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute, compute_pads_1d, compute_pads_2d
-from hls4ml.converters.utils import compute_padding_1d, compute_padding_2d
+
+from hls4ml.converters.onnx_to_hls import get_onnx_attribute, onnx_handler
+
 
 @onnx_handler('Conv')
 def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
@@ -9,10 +10,10 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
     layer['name'] = node.name
     if node.domain != 'qonnx.custom_op.channels_last':
         raise RuntimeError("Please convert the model to channels-last format with qonnx-to-channels-last")
-    layer['data_format'] = 'channels_last' # QONNX needs to be channels-last.
+    layer['data_format'] = 'channels_last'  # QONNX needs to be channels-last.
     layer['inputs'] = node.input
     layer['outputs'] = node.output
-    #reader.add_input(layer['name'], node.input)
+    # reader.add_input(layer['name'], node.input)
 
     strides = get_onnx_attribute(node, 'strides')
     kernel_shape = get_onnx_attribute(node, 'kernel_shape')
@@ -20,7 +21,7 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
     pads = get_onnx_attribute(node, 'pads')
     dilations = get_onnx_attribute(node, 'dilations')
     if dilations is None:
-        dilations = [1]*len(layer['kernel_shape'])
+        dilations = [1] * len(layer['kernel_shape'])
 
     if get_onnx_attribute(node, 'group') != 1:
         raise ValueError("Only 1 group supported corrently")
@@ -34,7 +35,7 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
         raise ValueError("Only 1D and 2D convolutions are supported")
     layer['class_name'] = 'Conv'
 
-    #set some values needed later
+    # set some values needed later
     if layer['n_dim'] == 1:
         # this is 1D convolution
         full_width = layer['in_width'] + pads[0] + pads[1]
@@ -63,11 +64,11 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
         layer['pad_left'] = pads[1]
         layer['pad_bottom'] = pads[2]
         layer['pad_right'] = pads[3]
-        layer['filt_height'] = kernel_shape[0] 
-        layer['filt_width'] = kernel_shape[1] 
-        layer['stride_height'] = strides[0] 
-        layer['stride_width'] = strides[1] 
-        layer['dilation_height'] = dilations[0] 
-        layer['dilation_width'] = dilations[1] 
+        layer['filt_height'] = kernel_shape[0]
+        layer['filt_width'] = kernel_shape[1]
+        layer['stride_height'] = strides[0]
+        layer['stride_width'] = strides[1]
+        layer['dilation_height'] = dilations[0]
+        layer['dilation_width'] = dilations[1]
 
     return layer

@@ -1,5 +1,6 @@
 import numpy as np
-from hls4ml.converters.onnx_to_hls import onnx_handler, get_onnx_attribute
+
+from hls4ml.converters.onnx_to_hls import get_onnx_attribute, onnx_handler
 
 
 @onnx_handler('MatMul')
@@ -14,18 +15,41 @@ def parse_matmul_layer(reader, node, inputs_map, input_shapes, graph, config):
 
     return layer
 
-#------------------Global paras for activations
+
 # TODO: repair HardSigmoid support
 # https://github.com/fastmachinelearning/hls4ml/issues/409
-#activation_layers = ['Relu', 'Tanh', 'Sigmoid', 'LeakyRelu', 'ThresholdedRelu', 'HardSigmoid', 'Elu', 'Selu', 'PRelu', 'Softmax', 'Softsign', 'Softplus', 'Clip']
-activation_layers = ['Relu', 'Tanh', 'Sigmoid', 'LeakyRelu', 'ThresholdedRelu', 'Elu', 'Selu', 'PRelu', 'Softmax', 'Softsign', 'Softplus', 'Clip']
+activation_layers = [
+    'Relu',
+    'Tanh',
+    'Sigmoid',
+    'LeakyRelu',
+    'ThresholdedRelu',
+    'Elu',
+    'Selu',
+    'PRelu',
+    'Softmax',
+    'Softsign',
+    'Softplus',
+    'Clip',
+]
 
-activation_map = {'Relu':'ReLU', 'Tanh':'Activation',
-                'Sigmoid':'Activation', 'LeakyRelu':'LeakyReLU',
-                'ThresholdedRelu':'ThresholdedReLU', 'HardSigmoid':'Activation',
-                'Elu':'ELU', 'Selu':'Activation', 'PRelu':'PReLU', 'Softmax':'Softmax',
-                'Softsign':'Activation', 'Softplus':'Activation', 'Clip':'Clip'}
-#---------
+activation_map = {
+    'Relu': 'ReLU',
+    'Tanh': 'Activation',
+    'Sigmoid': 'Activation',
+    'LeakyRelu': 'LeakyReLU',
+    'ThresholdedRelu': 'ThresholdedReLU',
+    'HardSigmoid': 'Activation',
+    'Elu': 'ELU',
+    'Selu': 'Activation',
+    'PRelu': 'PReLU',
+    'Softmax': 'Softmax',
+    'Softsign': 'Activation',
+    'Softplus': 'Activation',
+    'Clip': 'Clip',
+}
+# ---------
+
 
 @onnx_handler(*activation_layers)
 def parse_activation_layer(reader, node, inputs_map, input_shapes, graph, config):
@@ -51,10 +75,10 @@ def parse_activation_layer(reader, node, inputs_map, input_shapes, graph, config
         elif layer['class_name'] == 'Clip':
 
             clip_min_node = [x for x in graph.initializer if x.name in node.input]
-            clip_min =  clip_min_node[0].float_data[0]
+            clip_min = clip_min_node[0].float_data[0]
 
-            #Check if it's relu or not
-            if clip_min == 0.:
+            # Check if it's relu or not
+            if clip_min == 0.0:
                 layer['class_name'] = 'Activation'
                 layer['activation'] = 'ReLU'
             else:
@@ -66,6 +90,7 @@ def parse_activation_layer(reader, node, inputs_map, input_shapes, graph, config
 
     return layer
 
+
 @onnx_handler('BatchNormalization')
 def parse_batchnorm_layer(reader, node, inputs_map, input_shapes, graph, config):
 
@@ -76,7 +101,7 @@ def parse_batchnorm_layer(reader, node, inputs_map, input_shapes, graph, config)
     layer['inputs'] = node.input
     layer['outputs'] = node.output
 
-    #Other attributes
+    # Other attributes
     layer['epsilon'] = get_onnx_attribute(node, 'epsilon', 1e-05)
     # layer['momentum'] = get_onnx_attribute(node, 'momentum', 0.9)  # not used
 
@@ -87,12 +112,13 @@ def parse_batchnorm_layer(reader, node, inputs_map, input_shapes, graph, config)
     elif len(input_shapes[0]) > 2:
         if node.domain != 'qonnx.custom_op.channels_last':
             raise RuntimeError("Please convert the model to channels-last format with qonnx-to-channels-last")
-        layer['data_format'] = 'channels_last' # QONNX needs to be channels-last.
-        layer['n_filt']= input_shapes[0][-1]
+        layer['data_format'] = 'channels_last'  # QONNX needs to be channels-last.
+        layer['n_filt'] = input_shapes[0][-1]
     else:
         raise RuntimeError(f"Unexpected input shape: {input_shapes[0]}")
 
     return layer
+
 
 @onnx_handler('Quant')
 def parse_quant_layer(reader, node, inputs_map, input_shapes, graph, config):
@@ -104,7 +130,7 @@ def parse_quant_layer(reader, node, inputs_map, input_shapes, graph, config):
     layer['inputs'] = node.input
     layer['outputs'] = node.output
 
-    #Other attributes
+    # Other attributes
     layer['narrow'] = bool(get_onnx_attribute(node, 'narrow'))
     layer['rounding_mode'] = get_onnx_attribute(node, 'rounding_mode')
     layer['signed'] = bool(get_onnx_attribute(node, 'signed'))

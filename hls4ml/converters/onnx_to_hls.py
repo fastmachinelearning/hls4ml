@@ -1,27 +1,28 @@
-import numpy as np
 import onnx
-from onnx import  helper, numpy_helper, shape_inference
+from onnx import helper, numpy_helper
 
 from hls4ml.model import ModelGraph
 
 MAXMULT = 4096
 
+
 class ONNXDataReader:
     """
     ONNX data reader to be used for extracting relevant information during conversion.
     """
+
     def __init__(self, model):
         self.model = model
         self.input_map = {}
         self.index_map = {
             # Dense
-            'kernel' : 1,
-            'bias'   : 2,
+            'kernel': 1,
+            'bias': 2,
             # BatchNormalization
-            'gamma'  : 1,
-            'beta'   : 2,
-            'moving_mean'   : 3,
-            'moving_variance' : 4,
+            'gamma': 1,
+            'beta': 2,
+            'moving_mean': 3,
+            'moving_variance': 4,
         }
 
     def get_weights_data(self, layer_name, var_name):
@@ -40,8 +41,8 @@ class ONNXDataReader:
             extracted weights data
 
         """
-        #Get the node associated with the layer name
-        node = next((node for node in self.model.graph.node if node.name == layer_name))
+        # Get the node associated with the layer name
+        node = next(node for node in self.model.graph.node if node.name == layer_name)
 
         inputs = self.input_map[layer_name]
         inp_idx = self.index_map[var_name]
@@ -69,9 +70,10 @@ class ONNXDataReader:
         return data
 
     def add_input(self, layer_name, inputs, transpose=True, perm=None):
-        self.input_map[layer_name] = { 'inputs': inputs, 'transpose': transpose, 'perm': perm }
+        self.input_map[layer_name] = {'inputs': inputs, 'transpose': transpose, 'perm': perm}
 
-####----------------------Helpers---------------------######
+
+# ----------------------Helpers---------------------
 def sanitize_layer_name(layer):
     new_name = layer['name']
     if new_name[0].isdigit():
@@ -79,11 +81,13 @@ def sanitize_layer_name(layer):
 
     layer['name'] = new_name
 
+
 def replace_char_inconsitency(name):
     """
     Replace some inconsistent characters that cause issues when writing into HLS.
     """
-    return name.replace('.','_')
+    return name.replace('.', '_')
+
 
 def get_onnx_attribute(operation, name, default=None):
     attr = next((x for x in operation.attribute if x.name == name), None)
@@ -109,12 +113,12 @@ def get_global_input_shape(graph, inp):
     Raises:
         StopIteration:  If the global input name is not found
     """
-    inp_shape = next((x.type.tensor_type.shape.dim for x in graph.input if x.name == inp))
+    inp_shape = next(x.type.tensor_type.shape.dim for x in graph.input if x.name == inp)
     return tuple(x.dim_value for x in inp_shape)
 
 
 def get_input_shape(graph, node):
-    """ Return the input shapes of the node in the model
+    """Return the input shapes of the node in the model
 
     Arguments:
         graph:  the onnx graph
@@ -147,7 +151,7 @@ def get_constant_value(graph, constant_name):
 def compute_pads_1d(operation, layer):
     auto_pad = get_onnx_attribute(operation, 'auto_pad', 'NOTSET')
     if auto_pad != 'NOTSET':
-        if (layer['in_width'] % layer['stride_width'] == 0):
+        if layer['in_width'] % layer['stride_width'] == 0:
             pad_along_width = max(layer['filt_width'] - layer['stride_width'], 0)
         else:
             pad_along_width = max(layer['filt_width'] - (layer['in_width'] % layer['stride_width']), 0)
@@ -158,7 +162,7 @@ def compute_pads_1d(operation, layer):
             pads = sorted(pads)
         elif auto_pad == 'SAME_LOWER':
             pads = sorted(pads, reverse=True)
-        else: # 'VALID' padding
+        else:  # 'VALID' padding
             pads = [0, 0]
     else:
         pads = get_onnx_attribute(operation, 'pads', [0, 0])
@@ -169,15 +173,15 @@ def compute_pads_1d(operation, layer):
 def compute_pads_2d(operation, layer):
     auto_pad = get_onnx_attribute(operation, 'auto_pad', 'NOTSET')
     if auto_pad != 'NOTSET':
-        #Height
-        if (layer['in_height'] % layer['stride_height'] == 0):
+        # Height
+        if layer['in_height'] % layer['stride_height'] == 0:
             pad_along_height = max(layer['filt_height'] - layer['stride_height'], 0)
         else:
             pad_along_height = max(layer['filt_height'] - (layer['in_height'] % layer['stride_height']), 0)
         pad_height = [pad_along_height // 2, pad_along_height - pad_along_height // 2]
 
-        #Width
-        if (layer['in_width'] % layer['stride_width'] == 0):
+        # Width
+        if layer['in_width'] % layer['stride_width'] == 0:
             pad_along_width = max(layer['filt_width'] - layer['stride_width'], 0)
         else:
             pad_along_width = max(layer['filt_width'] - (layer['in_width'] % layer['stride_width']), 0)
@@ -187,30 +191,36 @@ def compute_pads_2d(operation, layer):
             pads = [min(pad_height), min(pad_width), max(pad_height), max(pad_width)]
         elif auto_pad == 'SAME_LOWER':
             pads = [max(pad_height), max(pad_width), min(pad_height), min(pad_width)]
-        else: # 'VALID' padding
+        else:  # 'VALID' padding
             pads = [0, 0, 0, 0]
     else:
         pads = get_onnx_attribute(operation, 'pads', [0, 0, 0, 0])
 
     return pads
 
-####----------------------Layer handling---------------------######
+
+# ----------------------Layer handling---------------------
 layer_handlers = {}
+
 
 def register_onnx_layer_handler(layer_name, handler_func):
     if layer_name in layer_handlers:
-        raise Exception('Layer {} already registered'.format(layer_name))
+        raise Exception(f'Layer {layer_name} already registered')
     else:
         layer_handlers[layer_name] = handler_func
 
+
 def get_supported_onnx_layers():
     return list(layer_handlers.keys())
+
 
 def onnx_handler(*args):
     def decorator(function):
         function.handles = [arg for arg in args]
         return function
+
     return decorator
+
 
 def get_out_layer_name(graph):
     """
@@ -222,7 +232,7 @@ def get_out_layer_name(graph):
 
 
 def onnx_to_hls(config):
-    """ Convert onnx model to hls model from configuration.
+    """Convert onnx model to hls model from configuration.
 
     Args:
         config:
@@ -247,7 +257,7 @@ def onnx_to_hls(config):
 
     reader = ONNXDataReader(model)
 
-    #Obtain list of input/ouput layers
+    # Obtain list of input/ouput layers
     all_inputs = [x.name for x in model.graph.input]
     all_initializers = [x.name for x in model.graph.initializer]
     input_layers = [x for x in all_inputs if x not in all_initializers]
@@ -275,7 +285,7 @@ def onnx_to_hls(config):
         constant_layer['class_name'] = 'Constant'
         constant_layer['value'] = get_constant_value(model.graph, constant)
 
-        #Clean the layer name for specific models
+        # Clean the layer name for specific models
         sanitize_layer_name(constant_layer)
         constant_layers[i] = constant_layer['name']
 
@@ -284,7 +294,7 @@ def onnx_to_hls(config):
     # Defined supported layers and check for unsupported layer type
     skip_layers = ['Dropout', 'Identity']
 
-    #Map inputs of skipped layers
+    # Map inputs of skipped layers
     inputs_map = {}
 
     supported_layers = get_supported_onnx_layers() + skip_layers
@@ -293,30 +303,29 @@ def onnx_to_hls(config):
     for node in model.graph.node:
 
         if node.op_type not in supported_layers:
-            raise Exception('ERROR: Unsupported operation type: {}'.format(node.op_type))
+            raise Exception(f'ERROR: Unsupported operation type: {node.op_type}')
 
         current_shape = get_input_shape(model.graph, node)
 
         if node.op_type in skip_layers:
-            #Currently supported skipped layers have only one input and output
-            #Skipped layers can follow each other (e.g., Dropout -> Flatten)
+            # Currently supported skipped layers have only one input and output
+            # Skipped layers can follow each other (e.g., Dropout -> Flatten)
 
-            #Mapping inputs
+            # Mapping inputs
             input_name = inputs_map.get(node.input[0], node.input[0])
             output_name = node.output[0]
             inputs_map[output_name] = input_name
             continue
 
-        #Process the layer
+        # Process the layer
         layer = layer_handlers[node.op_type](reader, node, inputs_map, current_shape, model.graph, config)
 
         sanitize_layer_name(layer)
         print('Layer name: {}, layer type: {}, current shape: {}'.format(layer['name'], layer['class_name'], current_shape))
         layer_list.append(layer)
 
-
     #################
-    ## Generate HLS
+    # Generate HLS
     #################
 
     print('Creating HLS model')
