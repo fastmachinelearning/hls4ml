@@ -452,8 +452,9 @@ class Dense(Layer):
     ]
 
     def initialize(self):
-        shape = self.get_input_variable().shape[:]
+        shape = list(self.get_input_variable().shape[:])
         shape[-1] = self.attributes['n_out']
+        shape = tuple(shape)
         if len(shape) > 1:
             dims = [f'N_LAYER_{i}_{self.index}' for i in range(1, len(shape) + 1)]
         else:

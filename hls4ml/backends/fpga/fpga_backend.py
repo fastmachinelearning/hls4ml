@@ -13,6 +13,8 @@ from hls4ml.model.layers import (
     LSTM,
     Activation,
     BatchNormalization,
+    BatchNormOnnx,
+    Conv,
     Conv1D,
     Conv2D,
     Dense,
@@ -22,6 +24,8 @@ from hls4ml.model.layers import (
     GarNetStack,
     GlobalPooling1D,
     GlobalPooling2D,
+    MatMul,
+    Merge,
     Pooling1D,
     Pooling2D,
     Quant,
@@ -71,7 +75,18 @@ class FPGABackend(Backend):
             attrs.append(TypeAttribute('accum'))
             self.attribute_map[layer] = attrs
 
-        rf_layers = accum_layers + [BatchNormalization, Activation, Embedding, GarNet, GarNetStack, Quant]
+        rf_layers = accum_layers + [
+            BatchNormalization,
+            BatchNormOnnx,
+            Activation,
+            Embedding,
+            GarNet,
+            GarNetStack,
+            Quant,
+            Merge,
+            MatMul,
+            Conv,
+        ]
 
         for layer in rf_layers:
             attrs = self.attribute_map.get(layer, [])

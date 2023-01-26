@@ -1,15 +1,16 @@
-from audioop import bias
 import numpy as np
-from hls4ml.model.optimizer import OptimizerPass
+
 from hls4ml.model.layers import BatchNormalization, BatchNormOnnx, Constant
+from hls4ml.model.optimizer import OptimizerPass
 
 _base_attributes = ('Trace', 'reuse_factor', 'n_in', 'n_filt')
 
+
 class BatchNormOnnxConstantParameters(OptimizerPass):
-    """ Remove Constant from the BatchNormalization node parameters (but not input[0]) """
+    """Remove Constant from the BatchNormalization node parameters (but not input[0])"""
+
     def match(self, node):
-        is_match = (isinstance(node, BatchNormOnnx)
-                    and any(node.inputs[1:]))
+        is_match = isinstance(node, BatchNormOnnx) and any(node.inputs[1:])
 
         return is_match
 
@@ -60,8 +61,7 @@ class BatchNormOnnxConstantParameters(OptimizerPass):
         attributes["scale_data"] = scale
         attributes["bias_data"] = bias
 
-        new_node = model.make_node(BatchNormalization, node.name, attributes,
-            [node.inputs[0]], [x for x in node.outputs])
+        new_node = model.make_node(BatchNormalization, node.name, attributes, [node.inputs[0]], [x for x in node.outputs])
 
         model.replace_node(node, new_node)
 
@@ -72,11 +72,14 @@ class ConstantBatchNormFusion(OptimizerPass):
     """
     Merge BatchNorm into Const (after parameters have already been merged in BatchNormalization)
     """
+
     def match(self, node):
-        is_match = (isinstance(node, BatchNormalization)
-                    and not any(node.inputs[1:])
-                    and isinstance(node.get_input_node(node.inputs[0]), Constant)
-                    and not node.get_input_node(node.inputs[0]).get_attr("quant_precision"))
+        is_match = (
+            isinstance(node, BatchNormalization)
+            and not any(node.inputs[1:])
+            and isinstance(node.get_input_node(node.inputs[0]), Constant)
+            and not node.get_input_node(node.inputs[0]).get_attr("quant_precision")
+        )
         return is_match
 
     def transform(self, model, node):
@@ -88,7 +91,7 @@ class ConstantBatchNormFusion(OptimizerPass):
         new_val = const_node.value * node.weights["scale"].data_unquantized + node.weights["bias"].data_unquantized
         const_node.set_attr("value", new_val)
         const_node.set_attr("quantizer", node.get_attr("quantizer"))  # None if not defined
-        const_node.set_attr("quant_precision",  node.get_attr("quant_precision"))
+        const_node.set_attr("quant_precision", node.get_attr("quant_precision"))
 
         # reinitialize (which also runs quantization if quantizer exists)
         const_node.initialize()
@@ -107,9 +110,11 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
 
     def match(self, node):
         prev_node = node.get_input_node(node.inputs[0])
-        basic_match = (isinstance(node, BatchNormalization)
-                and isinstance(prev_node, BatchNormalization)
-                and not prev_node.get_attr("quant_precision"))
+        basic_match = (
+            isinstance(node, BatchNormalization)
+            and isinstance(prev_node, BatchNormalization)
+            and not prev_node.get_attr("quant_precision")
+        )
 
         # check for compatibility to merge
         if basic_match:
@@ -118,19 +123,18 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
             s1 = node.weights['scale'].data_unquantized
             b1 = node.weights['bias'].data_unquantized
             scale_compatible = (
-                (prev_node.get_attr("scale_quantizer") is None
-                 and node.get_attr("scale_quantizer") is None)
+                (prev_node.get_attr("scale_quantizer") is None and node.get_attr("scale_quantizer") is None)
                 or (s0 == np.ones_like(s0)).all()
-                or (s1 == np.ones_like(s1)).all())
+                or (s1 == np.ones_like(s1)).all()
+            )
             bias_compatible = (
-                (prev_node.get_attr("bias_quantizer") is None
-                 and node.get_attr("bias_quantizer") is None)
+                (prev_node.get_attr("bias_quantizer") is None and node.get_attr("bias_quantizer") is None)
                 or (b0 == np.zeros_like(b0)).all()
-                or (b1 == np.zeros_like(b1)).all())
+                or (b1 == np.zeros_like(b1)).all()
+            )
             return scale_compatible and bias_compatible
         else:
             return False
-
 
     def transform(self, model, node):
         prev_node = node.get_input_node(node.inputs[0])
@@ -140,10 +144,12 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
         s1 = node.weights['scale'].data_unquantized
         b1 = node.weights['bias'].data_unquantized
 
-        s_quantizer = (node.get_attr("scale_quantizer") if (s0 == np.ones_like(s0)).all()
-                       else prev_node.get_attr("scale_quantizer"))
-        b_quantizer = (node.get_attr("bias_quantizer") if (b0 == np.zeros_like(b0)).all()
-                       else prev_node.get_attr("bias_quantizer"))
+        s_quantizer = (
+            node.get_attr("scale_quantizer") if (s0 == np.ones_like(s0)).all() else prev_node.get_attr("scale_quantizer")
+        )
+        b_quantizer = (
+            node.get_attr("bias_quantizer") if (b0 == np.zeros_like(b0)).all() else prev_node.get_attr("bias_quantizer")
+        )
 
         node.set_attr("scale_quantizer", s_quantizer)
         node.set_attr("bias_quantizer", b_quantizer)
