@@ -1,14 +1,17 @@
-import numpy as np
 import math  # prefer to use math.ceil for scalar values (returns int)
-from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.types import NamedType, FixedPrecisionType
+
+import numpy as np
+
 from hls4ml.model.layers import Conv1D, Conv2D
-from numbers import Integral
+from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.model.types import FixedPrecisionType, NamedType
+
 
 class PropagateConvPrecision(OptimizerPass):
-    """ Propagate precision for conv nodes. Restrict it to only cases where
+    """Propagate precision for conv nodes. Restrict it to only cases where
     the precision is set by a quant node, since otherwise the values get huge.
     """
+
     def match(self, node):
         is_match = isinstance(node, (Conv1D, Conv2D))
         return is_match
@@ -26,11 +29,15 @@ class PropagateConvPrecision(OptimizerPass):
         filt_height = node.get_attr('filt_height', 1)
 
         accum_precision = _propagate_type_conv(
-            input_precision, weight_precision, bias_precision,
-            num_feature_maps=num_feature_maps, filt_width=filt_width,
-            filt_height=filt_height)
+            input_precision,
+            weight_precision,
+            bias_precision,
+            num_feature_maps=num_feature_maps,
+            filt_width=filt_width,
+            filt_height=filt_height,
+        )
 
-        accum_t = NamedType('layer{}_accum_t'.format(node.index), accum_precision)
+        accum_t = NamedType(f'layer{node.index}_accum_t', accum_precision)
         node.set_attr('accum_t', accum_t)
 
         if not node.get_attr("quant_precision"):
@@ -39,8 +46,8 @@ class PropagateConvPrecision(OptimizerPass):
 
         return False
 
-def _propagate_type_conv(input_precision, weight_precision, bias_precision,
-                         num_feature_maps, filt_width, filt_height):
+
+def _propagate_type_conv(input_precision, weight_precision, bias_precision, num_feature_maps, filt_width, filt_height):
     '''
     Propagate the precion type across a multiply. Rounding modes are propagated from input_precision
     '''
@@ -58,8 +65,13 @@ def _propagate_type_conv(input_precision, weight_precision, bias_precision,
 
     # correct for bias
     if bias_precision:
-        integer = max(integer + (bias_precision.signed and not signed),
-                        bias_precision.integer + (signed and not bias_precision.signed)) + 1
+        integer = (
+            max(
+                integer + (bias_precision.signed and not signed),
+                bias_precision.integer + (signed and not bias_precision.signed),
+            )
+            + 1
+        )
         bitwidth = integer + max(frac, bias_precision.width - bias_precision.integer)
         signed = signed or bias_precision.signed
 

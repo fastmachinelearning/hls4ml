@@ -1,18 +1,23 @@
 import numpy as np
-from hls4ml.model.layers import Merge, Constant, BatchNormalization
-from hls4ml.model.optimizer import OptimizerPass
+
 from hls4ml.converters.onnx.quantizer import QuantNodeQuantizer
+from hls4ml.model.layers import BatchNormalization, Constant, Merge
+from hls4ml.model.optimizer import OptimizerPass
 
 _base_attributes = ('Trace', 'reuse_factor', 'n_in')
 
-#TODO This doesn't yet support quantization in the constants
+# TODO This doesn't yet support quantization in the constants
+
 
 class MergeTwoConstants(OptimizerPass):
-    """ Merge of two constants makes another constant """
+    """Merge of two constants makes another constant"""
+
     def match(self, node):
-        is_match = (isinstance(node, Merge)
-                    and isinstance(node.get_input_node(node.inputs[0]), Constant)
-                    and isinstance(node.get_input_node(node.inputs[1]), Constant))
+        is_match = (
+            isinstance(node, Merge)
+            and isinstance(node.get_input_node(node.inputs[0]), Constant)
+            and isinstance(node.get_input_node(node.inputs[1]), Constant)
+        )
 
         return is_match
 
@@ -36,7 +41,7 @@ class MergeTwoConstants(OptimizerPass):
         elif op == 'div':
             new_val = val0 / val1
         elif op == 'average':
-            new_val = np.mean( np.array([val0, val1]), axis=0 )
+            new_val = np.mean(np.array([val0, val1]), axis=0)
         elif op == 'max':
             new_val = np.maximum(val0, val1)
         elif op == 'min':
@@ -63,13 +68,19 @@ class MergeTwoConstants(OptimizerPass):
 
         return True
 
+
 class MergeToBatchNormalization(OptimizerPass):
-    """ Convert Add, Sub, Mul, or Div Merges with consant to BatchNormalization """
+    """Convert Add, Sub, Mul, or Div Merges with consant to BatchNormalization"""
+
     def match(self, node):
-        is_match = (isinstance(node, Merge)
-                    and node.attributes["op"] in ("add", "sum", "sub", "mul")  # Div is separate
-                    and (isinstance(node.get_input_node(node.inputs[0]), Constant)
-                         != isinstance(node.get_input_node(node.inputs[1]), Constant)))
+        is_match = (
+            isinstance(node, Merge)
+            and node.attributes["op"] in ("add", "sum", "sub", "mul")  # Div is separate
+            and (
+                isinstance(node.get_input_node(node.inputs[0]), Constant)
+                != isinstance(node.get_input_node(node.inputs[1]), Constant)
+            )
+        )
         # note: != for booleans is xor.
         return is_match
 
@@ -122,26 +133,29 @@ class MergeToBatchNormalization(OptimizerPass):
             scale_quantizer = const_node.get_attr("quantizer")
 
         attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
-        attributes.update({
-            "scale_data": scale,
-            "bias_data": bias,
-            "n_in": n_in,
-            "n_out": n_in,
-            "n_filt": -1,
-            "scale_precision": scale_precision,
-            "scale_quantizer": scale_quantizer,
-            "bias_precision": bias_precision,
-            "bias_quantizer": bias_quantizer
-        })
+        attributes.update(
+            {
+                "scale_data": scale,
+                "bias_data": bias,
+                "n_in": n_in,
+                "n_out": n_in,
+                "n_filt": -1,
+                "scale_precision": scale_precision,
+                "scale_quantizer": scale_quantizer,
+                "bias_precision": bias_precision,
+                "bias_quantizer": bias_quantizer,
+            }
+        )
 
-        bn_layer = model.make_node(BatchNormalization, f"bn_{node.name}",
-                                   attributes,
-                                   [node.inputs[input_node_idx]], [x for x in node.outputs])
+        bn_layer = model.make_node(
+            BatchNormalization, f"bn_{node.name}", attributes, [node.inputs[input_node_idx]], [x for x in node.outputs]
+        )
 
         model.remove_node(const_node, rewire=False)
         model.replace_node(node, bn_layer)
 
         return True
+
 
 class MergeToBatchNormalizationDiv(OptimizerPass):
     """
@@ -149,10 +163,13 @@ class MergeToBatchNormalizationDiv(OptimizerPass):
 
     TODO:  propagate precision
     """
+
     def match(self, node):
-        is_match = (isinstance(node, Merge)
-                    and node.attributes["op"] == 'div'
-                    and isinstance(node.get_input_node(node.inputs[1]), Constant))  # only second can be const
+        is_match = (
+            isinstance(node, Merge)
+            and node.attributes["op"] == 'div'
+            and isinstance(node.get_input_node(node.inputs[1]), Constant)
+        )  # only second can be const
 
         return is_match
 
@@ -160,22 +177,15 @@ class MergeToBatchNormalizationDiv(OptimizerPass):
         input_shape = node.get_input_variable().shape
         n_in = np.prod(input_shape)
         const_node = node.get_input_node(node.inputs[1])
-        scale = 1/const_node.value
+        scale = 1 / const_node.value
         bias = np.array(0)
 
-
         attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
-        attributes.update({
-            "scale_data": scale,
-            "bias_data": bias,
-            "n_in": n_in,
-            "n_out": n_in,
-            "n_filt": -1
-        })
+        attributes.update({"scale_data": scale, "bias_data": bias, "n_in": n_in, "n_out": n_in, "n_filt": -1})
 
-        bn_layer = model.make_node("BatchNormalization", f"bn_{node.name}",
-                                   attributes,
-                                   [node.inputs[0]], [x for x in node.outputs])
+        bn_layer = model.make_node(
+            "BatchNormalization", f"bn_{node.name}", attributes, [node.inputs[0]], [x for x in node.outputs]
+        )
 
         model.remove_node(const_node, rewire=False)
         model.replace_node(node, bn_layer)

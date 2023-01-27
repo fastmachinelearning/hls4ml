@@ -1,8 +1,10 @@
-import numpy as np
 import math  # prefer to use math.ceil for scalar values (returns int)
-from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.types import NamedType, FixedPrecisionType
+
+import numpy as np
+
 from hls4ml.model.layers import Dense
+from hls4ml.model.optimizer import OptimizerPass
+from hls4ml.model.types import FixedPrecisionType, NamedType
 
 
 class PropagateDensePrecision(OptimizerPass):
@@ -10,6 +12,7 @@ class PropagateDensePrecision(OptimizerPass):
     Propagate precision for Dense nodes. Restrict it to only cases where
     the precision is set by a quant node, since otherwise the values get huge.
     """
+
     def match(self, node):
         is_match = isinstance(node, Dense)
         return is_match
@@ -27,7 +30,7 @@ class PropagateDensePrecision(OptimizerPass):
 
         accum_precision = _propagate_type_dense(input_precision, weight_precision, bias_precision, num_acc)
 
-        accum_t = NamedType('layer{}_accum_t'.format(node.index), accum_precision)
+        accum_t = NamedType(f'layer{node.index}_accum_t', accum_precision)
         node.set_attr('accum_t', accum_t)
 
         if not node.get_attr("quant_precision"):
@@ -35,6 +38,7 @@ class PropagateDensePrecision(OptimizerPass):
             node.update_output_precision(accum_precision)
 
         return False
+
 
 def _propagate_type_dense(input_precision, weight_precision, bias_precision, num_acc):
     '''
@@ -54,8 +58,13 @@ def _propagate_type_dense(input_precision, weight_precision, bias_precision, num
 
     # correct for bias
     if bias_precision:
-        integer = max(integer + (bias_precision.signed and not signed),
-                      bias_precision.integer + (signed and not bias_precision.signed)) + 1
+        integer = (
+            max(
+                integer + (bias_precision.signed and not signed),
+                bias_precision.integer + (signed and not bias_precision.signed),
+            )
+            + 1
+        )
         bitwidth = integer + max(frac, bias_precision.width - bias_precision.integer)
         signed = signed or bias_precision.signed
 

@@ -4,20 +4,28 @@ This file includes optimizations related to moving the ApplyAphas across MatMul 
 TODO:  Check that biases are properly handled. (Attempt to do it via Merge)
 
 '''
-from copy import deepcopy
 import numpy as np
-from hls4ml.model.layers import ApplyAlpha, Constant, MatMul, Conv, Merge
-from hls4ml.converters.onnx.quantizer import QuantNodeQuantizer
+
+from hls4ml.model.layers import ApplyAlpha, Constant, Conv, MatMul, Merge
 from hls4ml.model.optimizer import OptimizerPass
+
 
 class ScaleDownMatMul(OptimizerPass):
     '''Shift an ApplyAlpha below a MatMul'''
 
     def match(self, node):
-        '''Check to see if we have a MatMul with at least one input ApplyAlpha. Note, if both are this optimition runs twice'''
-        is_match = (isinstance(node, MatMul) and len(node.inputs) == 2
-                    and (isinstance(node.get_input_node(node.inputs[0]), ApplyAlpha)
-                         or isinstance(node.get_input_node(node.inputs[1]), ApplyAlpha)))
+        '''
+        Check to see if we have a MatMul with at least one input ApplyAlpha.
+        Note, if both are this optimition runs twice.
+        '''
+        is_match = (
+            isinstance(node, MatMul)
+            and len(node.inputs) == 2
+            and (
+                isinstance(node.get_input_node(node.inputs[0]), ApplyAlpha)
+                or isinstance(node.get_input_node(node.inputs[1]), ApplyAlpha)
+            )
+        )
         return is_match
 
     def transform(self, model, node):
@@ -94,18 +102,21 @@ class ScaleDownMatMul(OptimizerPass):
         model.insert_node(new_node)
         return True
 
+
 class ScaleDownAdd(OptimizerPass):
     '''Shift an identical ApplyAlpha below a Merge (Add)'''
 
     def match(self, node):
         '''Check to see if we have an add with two ApplyAlphas with identical scale'''
-        is_match = (isinstance(node, Merge) and len(node.inputs) == 2
-                    and node.attributes["op"] == "add")
+        is_match = isinstance(node, Merge) and len(node.inputs) == 2 and node.attributes["op"] == "add"
         if is_match:
             in0 = node.get_input_node(node.inputs[0])
             in1 = node.get_input_node(node.inputs[1])
-            is_match = (isinstance(in0, ApplyAlpha) and isinstance(in1, ApplyAlpha)
-                    and (in0.weights['scale'].data_unquantized == in1.weights['scale'].data_unquantized).all())
+            is_match = (
+                isinstance(in0, ApplyAlpha)
+                and isinstance(in1, ApplyAlpha)
+                and (in0.weights['scale'].data_unquantized == in1.weights['scale'].data_unquantized).all()
+            )
         return is_match
 
     def transform(self, model, node):
@@ -137,8 +148,7 @@ class ScaleDownConv(OptimizerPass):
 
     def match(self, node):
         '''Shift an ApplyAlpha from the Weight'''
-        is_match = (isinstance(node, Conv)
-                    and isinstance(node.get_input_node(node.inputs[0]), ApplyAlpha))
+        is_match = isinstance(node, Conv) and isinstance(node.get_input_node(node.inputs[0]), ApplyAlpha)
 
         return is_match
 
@@ -185,13 +195,15 @@ class ScaleDownConv(OptimizerPass):
         model.insert_node(new_node)
         return True
 
+
 class ScaleDownWeightConv(OptimizerPass):
     '''Shift an ApplyAlpha weight (from conv side) below a Conv'''
 
     def match(self, node):
         '''Shift an ApplyAlpha from the Weight'''
-        is_match = (isinstance(node, Conv) and len(node.inputs) > 1
-                    and isinstance(node.get_input_node(node.inputs[1]), ApplyAlpha))
+        is_match = (
+            isinstance(node, Conv) and len(node.inputs) > 1 and isinstance(node.get_input_node(node.inputs[1]), ApplyAlpha)
+        )
 
         return is_match
 
@@ -238,13 +250,15 @@ class ScaleDownWeightConv(OptimizerPass):
         model.insert_node(new_node)
         return True
 
+
 class ScaleDownBiasConv(OptimizerPass):
     '''Shift an ApplyAlpha bias (from conv side) below a Conv'''
 
     def match(self, node):
         '''Shift an ApplyAlpha from the Weight'''
-        is_match = (isinstance(node, Conv) and len(node.inputs) > 2
-                    and isinstance(node.get_input_node(node.inputs[2]), ApplyAlpha))
+        is_match = (
+            isinstance(node, Conv) and len(node.inputs) > 2 and isinstance(node.get_input_node(node.inputs[2]), ApplyAlpha)
+        )
 
         return is_match
 
