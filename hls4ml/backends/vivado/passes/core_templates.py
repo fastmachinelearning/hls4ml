@@ -13,11 +13,13 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
     static const unsigned n_nonzeros = {nonzeros};
+    static const bool merged_relu = {merged_relu};
     static const bool store_weights_in_bram = false;
     typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
     typedef {index_t.name} index_t;
+    typedef {out_t} out_t;
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
@@ -36,6 +38,8 @@ class DenseConfigTemplate(LayerConfigTemplate):
         params['nzeros'] = node.get_weights('weight').nzeros
         params['nonzeros'] = node.get_weights('weight').nonzeros
         params['product_type'] = get_backend('vivado').product_type(node.get_input_variable().type.precision, node.get_weights('weight').type.precision)
+        params['merged_relu'] = "true" if node.get_merged_relu() else "false"
+        params['out_t'] = node.get_output_variable().type.name
 
         return self.template.format(**params)
 

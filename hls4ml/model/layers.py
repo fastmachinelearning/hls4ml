@@ -84,6 +84,8 @@ class Layer:
 
         self._set_accum_t()
 
+        self.merged_relu = False
+
         layer_config = self.model.config.get_layer_config(self)
         for config_key, config_value in layer_config.items():
             config_key = convert_to_snake_case(config_key)
@@ -323,6 +325,7 @@ class Layer:
         params.update(self.attributes)
         params['iotype'] = self.model.config.get_config_value('IOType')
         params['reuse'] = self.get_attr('reuse_factor')
+        params['merged_relu'] = "true" if self.get_merged_relu() else "false"
 
         return params
 
@@ -331,6 +334,12 @@ class Layer:
         for data_type in self.types.values():
             precision[data_type.name] = data_type
         return precision
+
+    def get_merged_relu(self):
+        return self.merged_relu
+
+    def set_merged_relu(self, merged_relu):
+        self.merged_relu = merged_relu # Bool flag to set merged_relu
 
     def get_numbers_cpp(self):
         numbers = ''
@@ -390,6 +399,7 @@ class Dense(Layer):
         else:
             dims = [f'N_LAYER_{self.index}']
         self.add_output_variable(shape, dims)
+        self.intermediate_op = self.get_output_variable()
         self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=self.model.config.get_compression(self))
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
@@ -497,6 +507,7 @@ class Conv2D(Layer):
             shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
             dims = [f'N_FILT_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims)
+        self.intermediate_op = self.get_output_variable()
         self.add_weights(quantizer=self.get_attr('weight_quantizer'))
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
