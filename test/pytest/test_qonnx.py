@@ -1,14 +1,18 @@
 #!/usr/bin/env python
-import pytest
-import hls4ml
+import os
+import urllib
+
 import numpy as np
+import pytest
+import qonnx.core.onnx_exec as oxe
 import qonnx.util.cleanup
 import qonnx.util.to_channels_last
-import urllib
-import os
+
 # To conveniently run QONNX inference
 from qonnx.core.modelwrapper import ModelWrapper
-import qonnx.core.onnx_exec as oxe
+
+import hls4ml
+
 
 def test_tfc_2w2a():
     # download test model
@@ -28,7 +32,7 @@ def test_tfc_2w2a():
 
     # Execute QONNX model inference
     # TODO make the test bigger
-    ishape = (1,1,28,28)
+    ishape = (1, 1, 28, 28)
     np.random.seed(0)
     X = np.random.uniform(low=-1, high=+1, size=np.product(ishape)).reshape(ishape).astype(np.float32)
     idict = {model.graph.input[0].name: X}
@@ -39,15 +43,15 @@ def test_tfc_2w2a():
     # Some hand-derived config
     # TODO should be auto-derived by QuantizeDenseOutput pass after some adaptation
     config['LayerName'] = {}
-    config['LayerName']['global_in'] = {'Precision' : 'ap_fixed<16,2>'}
-    hls_model = hls4ml.converters.convert_from_onnx_model(model,
-                                                          output_dir='hls4mlprj_qonnx_tfc-2w2a',
-                                                          part='xcu250-figd2104-2L-e',
-                                                          hls_config=config)
+    config['LayerName']['global_in'] = {'Precision': 'ap_fixed<16,2>'}
+    hls_model = hls4ml.converters.convert_from_onnx_model(
+        model, output_dir='hls4mlprj_qonnx_tfc-2w2a', part='xcu250-figd2104-2L-e', hls_config=config
+    )
     hls_model.compile()
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
+
 
 def test_tfc_2w2a_quartus():
     # download test model
@@ -67,7 +71,7 @@ def test_tfc_2w2a_quartus():
 
     # Execute QONNX model inference
     # TODO make the test bigger
-    ishape = (1,1,28,28)
+    ishape = (1, 1, 28, 28)
     np.random.seed(0)
     X = np.random.uniform(low=-1, high=+1, size=np.product(ishape)).reshape(ishape).astype(np.float32)
     idict = {model.graph.input[0].name: X}
@@ -78,16 +82,15 @@ def test_tfc_2w2a_quartus():
     # Some hand-derived config
     # TODO should be auto-derived by QuantizeDenseOutput pass after some adaptation
     config['LayerName'] = {}
-    config['LayerName']['global_in'] = {'Precision' : 'ac_fixed<16,2>'}
-    hls_model = hls4ml.converters.convert_from_onnx_model(model,
-                                                          output_dir='hls4mlprj_qonnx_tfc-2w2a-quartus',
-                                                          part='Arria10',
-                                                          backend='Quartus',
-                                                          hls_config=config)
+    config['LayerName']['global_in'] = {'Precision': 'ac_fixed<16,2>'}
+    hls_model = hls4ml.converters.convert_from_onnx_model(
+        model, output_dir='hls4mlprj_qonnx_tfc-2w2a-quartus', part='Arria10', backend='Quartus', hls_config=config
+    )
     hls_model.compile()
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
+
 
 def test_cnv_2w2a():
     # download test model
@@ -111,7 +114,7 @@ def test_cnv_2w2a():
 
     # Execute QONNX model inference
     # TODO make the test bigger
-    ishape = (1,32,32,3)
+    ishape = (1, 32, 32, 3)
     np.random.seed(1)
     X = np.random.uniform(low=-1, high=+1, size=np.product(ishape)).reshape(ishape).astype(np.float32)
     idict = {model.graph.input[0].name: X}
@@ -123,15 +126,14 @@ def test_cnv_2w2a():
     # Some hand-derived config
     # TODO should be auto-derived by QuantizeDenseOutput pass after some adaptation
 
-    hls_model = hls4ml.converters.convert_from_onnx_model(model,
-                                                          output_dir='hls4mlprj_qonnx_cnv-2w2a',
-                                                          part='xcu250-figd2104-2L-e',
-                                                          io_type='io_stream',
-                                                          hls_config=config)
+    hls_model = hls4ml.converters.convert_from_onnx_model(
+        model, output_dir='hls4mlprj_qonnx_cnv-2w2a', part='xcu250-figd2104-2L-e', io_type='io_stream', hls_config=config
+    )
     hls_model.compile()
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
+
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 def test_jet_tagging(backend):
@@ -152,7 +154,7 @@ def test_jet_tagging(backend):
 
     # Execute QONNX model inference
     # TODO make the test bigger
-    ishape = (1,16)
+    ishape = (1, 16)
     np.random.seed(0)
     X = np.random.uniform(low=-1, high=+1, size=np.product(ishape)).reshape(ishape).astype(np.float32)
     idict = {model.graph.input[0].name: X}
@@ -163,10 +165,9 @@ def test_jet_tagging(backend):
     # Some hand-derived config
     # TODO should be auto-derived by QuantizeDenseOutput pass after some adaptation
 
-    hls_model = hls4ml.converters.convert_from_onnx_model(model,
-                                                          output_dir=f'hls4mlprj_qonnx_jettag_{backend}',
-                                                          backend=backend,
-                                                          hls_config=config)
+    hls_model = hls4ml.converters.convert_from_onnx_model(
+        model, output_dir=f'hls4mlprj_qonnx_jettag_{backend}', backend=backend, hls_config=config
+    )
     hls_model.compile()
     y_hls4ml = hls_model.predict(X)
 
