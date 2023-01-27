@@ -1,9 +1,23 @@
-from email.mime import base
-from hls4ml.model.flow.flow import register_flow
 import os
 
-from hls4ml.model.optimizer.optimizer import OptimizerPass, GlobalOptimizerPass, LayerOptimizerPass, ModelOptimizerPass, ConfigurableOptimizerPass, register_pass, get_optimizer, optimize_model, get_available_passes, get_backend_passes, optimizer_pass, layer_optimizer, model_optimizer, extract_optimizers_from_path, extract_optimizers_from_object
-
+from hls4ml.model.flow.flow import register_flow
+from hls4ml.model.optimizer.optimizer import (  # noqa: F401
+    ConfigurableOptimizerPass,
+    GlobalOptimizerPass,
+    LayerOptimizerPass,
+    ModelOptimizerPass,
+    OptimizerPass,
+    extract_optimizers_from_object,
+    extract_optimizers_from_path,
+    get_available_passes,
+    get_backend_passes,
+    get_optimizer,
+    layer_optimizer,
+    model_optimizer,
+    optimize_model,
+    optimizer_pass,
+    register_pass,
+)
 
 opt_path = os.path.dirname(__file__) + '/passes'
 module_path = __name__ + '.passes'
@@ -45,18 +59,25 @@ base_optimize = [
     'eliminate_linear_activation',
     'propagate_dense_precision',
     'propagate_conv_precision',
-    'set_precision_concat'
+    'set_precision_concat',
 ]
 
 try:
-    import qkeras
+    import qkeras  # noqa: F401
+
     # TODO Maybe not all QKeras optmizers belong here?
-    register_flow('convert', base_convert
-        + ['output_rounding_saturation_mode', 'qkeras_factorize_alpha',
-           'extract_ternary_threshold', 'fuse_consecutive_batch_normalization'])
-    register_flow('optimize', ['fuse_consecutive_batch_normalization'] + base_optimize,
-                  requires=['convert'])
-except:
+    register_flow(
+        'convert',
+        base_convert
+        + [
+            'output_rounding_saturation_mode',
+            'qkeras_factorize_alpha',
+            'extract_ternary_threshold',
+            'fuse_consecutive_batch_normalization',
+        ],
+    )
+    register_flow('optimize', ['fuse_consecutive_batch_normalization'] + base_optimize, requires=['convert'])
+except ImportError:
     register_flow('convert', base_convert)
     register_flow('optimize', base_optimize, requires=['convert'])
 
