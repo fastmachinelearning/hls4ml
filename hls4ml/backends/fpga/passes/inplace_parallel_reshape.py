@@ -1,11 +1,13 @@
-from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.layers import Reshape
+from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.types import InplaceTensorVariable
+
 
 class InplaceParallelReshape(OptimizerPass):
     """
     Because in io_parallel arrays are stored 1D, reshape produces no code
     """
+
     def match(self, node):
         return isinstance(node, Reshape)
 
