@@ -270,7 +270,10 @@ def onnx_to_hls(config):
         input_layer = {}
         input_layer['name'] = replace_char_inconsitency(inp)
         input_layer['class_name'] = 'InputLayer'
-        input_layer['input_shape'] = get_global_input_shape(model.graph, inp)
+        inp_shape = get_global_input_shape(model.graph, inp)
+        # We only support ONNX where the first dimension is the batch dimension
+        # Mark it with None
+        input_layer['input_shape'] = (None,) + inp_shape[1:]
 
         print('Input shape:', input_layer['input_shape'])
         # Clean the layer name for specific models
