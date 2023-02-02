@@ -96,7 +96,7 @@ class CloneOutput(OptimizerPass):
                         proxy = clone_layer.get_output_variable(output + "_cpy" + str(i))
                         current_out = layer.get_output_variable()
                         shape = current_out.shape
-                        dims = [f"N_SIZE_{i}_{layer.index}" for i in range(1, len(shape) + 1)]
+                        dims = [f"N_SIZE_{j}_{layer.index}" for j in range(1, len(shape) + 1)]
                         new_out = InplaceVariable(shape, dims, proxy)
                         layer.set_attr(layer.outputs[0], new_out)
 
