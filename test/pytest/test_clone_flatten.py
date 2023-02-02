@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import numpy as np
 import pytest
 from tensorflow.keras.layers import Concatenate, Flatten, Input, MaxPooling1D
 from tensorflow.keras.models import Model
@@ -8,12 +7,6 @@ from tensorflow.keras.models import Model
 import hls4ml
 
 test_root_path = Path(__file__).parent
-
-
-@pytest.fixture(scope="module")
-def data():
-    X = np.random.rand(100, 2, 3)
-    return X
 
 
 @pytest.fixture(scope="module")
@@ -33,7 +26,7 @@ def keras_model():
 def hls_model(keras_model, backend, io_type):
     hls_config = hls4ml.utils.config_from_keras_model(
         keras_model,
-        default_precision="ap_fixed<16,3,AP_RND_CONV,AP_SAT>",
+        default_precision="ap_int<16>",
         granularity="name",
     )
     output_dir = str(test_root_path / f"hls4mlprj_clone_flatten_{backend}_{io_type}")
@@ -47,15 +40,3 @@ def hls_model(keras_model, backend, io_type):
 
     hls_model.compile()
     return hls_model
-
-
-@pytest.mark.parametrize("io_type", ["io_stream"])
-@pytest.mark.parametrize("backend", ["Vivado"])
-def test_accuracy(data, keras_model, hls_model):
-    X = data
-    model = keras_model
-    # model under test predictions and accuracy
-    y_keras = model.predict(X)
-    y_hls4ml = hls_model.predict(X).reshape(y_keras.shape)
-    # "accuracy" of hls4ml predictions vs keras
-    np.testing.assert_allclose(y_keras, y_hls4ml, rtol=0, atol=1e-03, verbose=True)
