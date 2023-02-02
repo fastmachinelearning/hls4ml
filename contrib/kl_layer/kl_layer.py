@@ -15,7 +15,7 @@ try:
     from keras.layers.merge import _Merge as Merge
 except Exception:
     from keras.layers.merging.base_merge import _Merge as Merge
-    
+
 from tensorflow.python.keras.utils import tf_utils
 from tensorflow.python.ops import math_ops
 
@@ -31,7 +31,7 @@ class KLLoss(Merge):
     @tf_utils.shape_type_conversion
     def build(self, input_shape):
         super().build(input_shape)
-    
+
     def _merge_function(self, inputs):
 
         mean = inputs[0]
