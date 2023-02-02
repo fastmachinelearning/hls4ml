@@ -1,5 +1,5 @@
-#ifndef NNET_DISTANCE_H_
-#define NNET_DISTANCE_H_
+#ifndef KL_LAYER_H_
+#define KL_LAYER_H_
 
 #include "nnet_activation.h"
 #include "nnet_common.h"
