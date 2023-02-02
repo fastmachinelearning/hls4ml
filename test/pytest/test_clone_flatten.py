@@ -10,15 +10,15 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope='module')
 def data():
     X = np.random.randint(-5, 5, (1, 2, 3), dtype='int32')
     return X
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope='module')
 def keras_model():
-    inp1 = Input(shape=(2, 3), name="input_1")
+    inp1 = Input(shape=(2, 3), name='input_1')
     x = Flatten()(inp1)
     y = Flatten()(inp1)
     out = Concatenate(axis=1)([x, y])
@@ -27,15 +27,15 @@ def keras_model():
 
 
 @pytest.fixture
-@pytest.mark.parametrize("io_type", ["io_stream"])
-@pytest.mark.parametrize("backend", ["Vivado"])
+@pytest.mark.parametrize('io_type', ['io_stream'])
+@pytest.mark.parametrize('backend', ['Vivado'])
 def hls_model(keras_model, backend, io_type):
     hls_config = hls4ml.utils.config_from_keras_model(
         keras_model,
-        default_precision="ap_int<6>",
-        granularity="name",
+        default_precision='ap_int<6>',
+        granularity='name',
     )
-    output_dir = str(test_root_path / f"hls4mlprj_clone_flatten_{backend}_{io_type}")
+    output_dir = str(test_root_path / f'hls4mlprj_clone_flatten_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model,
         hls_config=hls_config,
@@ -48,8 +48,8 @@ def hls_model(keras_model, backend, io_type):
     return hls_model
 
 
-@pytest.mark.parametrize("io_type", ["io_stream"])
-@pytest.mark.parametrize("backend", ["Vivado"])
+@pytest.mark.parametrize('io_type', ['io_stream'])
+@pytest.mark.parametrize('backend', ['Vivado'])
 def test_accuracy(data, keras_model, hls_model):
     X = data
     model = keras_model
