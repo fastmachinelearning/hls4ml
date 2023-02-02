@@ -14,7 +14,7 @@ import tensorflow as tf
 try:
     from keras.layers.merge import _Merge as Merge
 except Exception:
-    from keras.layers.merging.base_merge import _Merge
+    from keras.layers.merging.base_merge import _Merge as Merge
     
 from tensorflow.python.keras.utils import tf_utils
 from tensorflow.python.ops import math_ops
@@ -48,7 +48,6 @@ class HKLLoss(hls4ml.model.layers.Layer):
     '''hls4ml implementation of a KL loss custom layer'''
 
     def initialize(self):
-        assert len(self.inputs) == 2
         self.add_output_variable(shape=[1], dim_names=[f'KL_LOSS_{self.index}'])
 
         print(self.attributes)
@@ -110,7 +109,7 @@ class HKLLossFunctionTemplate(hls4ml.backends.template.FunctionCallTemplate):
 
 
 # Parser for converter
-def parse_klloss_layer(keras_layer, input_names, input_shapes, data_reader, config):
+def parse_klloss_layer(keras_layer, input_names, input_shapes, data_reader):
     assert 'KLLoss' in keras_layer['class_name']
 
     layer = parse_default_keras_layer(keras_layer, input_names)
