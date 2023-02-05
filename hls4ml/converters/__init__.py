@@ -205,7 +205,7 @@ def convert_from_keras_model(
         output_data_tb (str, optional): String representing the path of output data in .npy or .dat format that will be
             used during csim and cosim.
         backend (str, optional): Name of the backend to use, e.g., 'Vivado'
-            or 'Quartus'.
+            or 'Quartus' or 'Catapult'.
         board (str, optional): One of target boards specified in `supported_board.json` file. If set to `None` a default
             device of a backend will be used. See documentation of the backend used.
         part (str, optional): The FPGA part. If set to `None` a default part of a backend will be used.
@@ -270,7 +270,7 @@ def convert_from_pytorch_model(
     output_data_tb (str, optional): String representing the path of output data in .npy or .dat format that will be
         used during csim and cosim.
     backend (str, optional): Name of the backend to use, e.g., 'Vivado'
-        or 'Quartus'.
+        or 'Quartus' or 'Catapult'.
     board (str, optional): One of target boards specified in `supported_board.json` file. If set to `None` a default
         device of a backend will be used. See documentation of the backend used.
     part (str, optional): The FPGA part. If set to `None` a default part of a backend will be used.
@@ -348,7 +348,7 @@ def convert_from_onnx_model(
     output_data_tb (str, optional): String representing the path of output data in .npy or .dat format that will be
         used during csim and cosim.
     backend (str, optional): Name of the backend to use, e.g., 'Vivado'
-        or 'Quartus'.
+        or 'Quartus' or 'Catapult'.
     board (str, optional): One of target boards specified in `supported_board.json` file. If set to `None` a default
         device of a backend will be used. See documentation of the backend used.
     part (str, optional): The FPGA part. If set to `None` a default part of a backend will be used.

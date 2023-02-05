@@ -1,0 +1,813 @@
+import glob
+import os
+import tarfile
+from collections import OrderedDict
+from shutil import copyfile, copytree, rmtree
+
+import numpy as np
+import yaml
+
+from hls4ml.backends import get_backend
+from hls4ml.writer.writers import Writer
+
+config_filename = 'hls4ml_config.yml'
+
+
+class CatapultWriter(Writer):
+    def print_array_to_cpp(self, var, odir, write_txt_file=True):
+        """Write a weights array to C++ header files.
+
+        Args:
+            var (WeightVariable): Weight to write
+            odir (str): Output directory
+            write_txt_file (bool, optional): Write txt files in addition to .h files. Defaults to True.
+        """
+
+        h_file = open(f"{odir}/firmware/weights/{var.name}.h", "w")
+        if write_txt_file:
+            txt_file = open(f"{odir}/firmware/weights/{var.name}.txt", "w")
+
+        # meta data
+        h_file.write(f"//Numpy array shape {var.shape}\n")
+        h_file.write(f"//Min {np.min(var.min):.12f}\n")
+        h_file.write(f"//Max {np.max(var.max):.12f}\n")
+        h_file.write(f"//Number of zeros {var.nzeros}\n")
+        h_file.write("\n")
+
+        h_file.write(f"#ifndef {var.name.upper()}_H_\n")
+        h_file.write(f"#define {var.name.upper()}_H_\n")
+        h_file.write("\n")
+
+        if write_txt_file:
+            h_file.write("#ifndef __SYNTHESIS__\n")
+            h_file.write("// global extern pointer only - actual array allocated in myproject_test.cpp\n")
+            h_file.write("extern " + var.definition_cpp() + ";\n")
+            h_file.write("#else\n")
+
+        h_file.write(var.definition_cpp() + " = {")
+
+        # fill c++ array.
+        # not including internal brackets for multidimensional case
+        sep = ''
+        for x in var:
+            h_file.write(sep + x)
+            if write_txt_file:
+                txt_file.write(sep + x)
+            sep = ", "
+        h_file.write("};\n")
+        if write_txt_file:
+            h_file.write("#endif\n")
+            txt_file.close()
+        h_file.write("\n#endif\n")
+        h_file.close()
+
+    def write_project_dir(self, model):
+        """Write the base project directory
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+        if not os.path.isdir(f"{model.config.get_output_dir()}/firmware/weights"):
+            os.makedirs(f"{model.config.get_output_dir()}/firmware/weights")
+
+    @staticmethod
+    def _make_array_pragma(variable):
+        """
+        Layers in hls_model.py can specify output array partitioning through the `pragma` attribute.
+        If `pragma` is a string: options are 'partition', 'reshape', or 'stream'.
+        If `pragma` is a tuple: (mode, type, factor) where mode is 'partition' or 'reshape', type is
+        'complete', 'cyclic', or 'block', and factor is an integer only used when the type is not 'complete'.
+        """
+
+        config = variable.pragma
+        if type(config) is tuple:
+            mode = config[0]
+            if mode in ['partition', 'reshape']:
+                typ = config[1]
+                if typ != 'complete':
+                    factor = config[2]
+            elif mode == 'stream':
+                depth = config[1]
+        else:
+            mode = config
+            typ = 'complete'
+            factor = 0
+
+        if mode in ['partition', 'reshape']:
+            if typ == 'complete':
+                template = '#pragma HLS ARRAY_{mode} variable={name} {type} dim={dim}'
+            else:
+                template = '#pragma HLS ARRAY_{mode} variable={name} {type} factor={factor} dim={dim}'
+
+            return template.format(mode=mode.upper(), name=variable.name, type=typ, factor=factor, dim=0)
+
+        elif mode == 'stream':
+            # Bug in Catapult - hls_resource inserted by catapult_writer.py not applied to static var. workaround is placed in build_prj.tcl
+            return f'// #pragma hls_resource {variable.name}:cns variables="{variable.name}" map_to_module="ccs_ioport.ccs_pipe FIFO_DEPTH={depth}"'
+
+    def write_project_cpp(self, model):
+        """Write the main architecture source file (myproject.cpp)
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+
+        filedir = os.path.dirname(os.path.abspath(__file__))
+
+        f = open(os.path.join(filedir, '../templates/catapult/firmware/myproject.cpp'))
+        fout = open(f'{model.config.get_output_dir()}/firmware/{model.config.get_project_name()}.cpp', 'w')
+
+        model_inputs = model.get_input_variables()
+        model_outputs = model.get_output_variables()
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
+
+        indent = '    '
+
+        for line in f.readlines():
+            # Add headers to weights and biases
+            if 'myproject' in line:
+                newline = line.replace('myproject', model.config.get_project_name())
+            elif '//hls-fpga-machine-learning insert header' in line:
+                inputs_str = ', '.join([i.definition_cpp(as_reference=True) for i in model_inputs])
+                outputs_str = ', '.join([o.definition_cpp(as_reference=True) for o in model_outputs])
+                brams_str = ', \n'.join([indent + b.definition_cpp(as_reference=False) for b in model_brams])
+
+                newline = ''
+                newline += indent + inputs_str + ',\n'
+                newline += indent + outputs_str
+                if len(model_brams) > 0:
+                    newline += ',\n' + brams_str
+                newline += '\n'
+
+            elif '//hls-fpga-machine-learning insert load weights' in line:
+                newline = line
+                for layer in model.get_layers():
+                    for w in layer.get_weights():
+                        if w.weight_class == 'CompressedWeightVariable':
+                            newline += indent + '    nnet::load_compressed_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
+                                w.type.name, w.nonzeros, w.name, w.name
+                            )
+                        elif w.weight_class == 'ExponentWeightVariable':
+                            newline += indent + '    nnet::load_exponent_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
+                                w.type.name, w.data_length, w.name, w.name
+                            )
+                        else:
+                            newline += indent + '    nnet::load_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
+                                w.type.name, w.data_length, w.name, w.name
+                            )
+
+            #Add Interface Synthesis resource pragmas
+            elif '//hls-fpga-machine-learning insert IFSynPragmas' in line:
+                newline = line
+                all_inputs = [i.name for i in model_inputs]
+                all_outputs = [o.name for o in model_outputs]
+                all_brams = [b.name for b in model_brams]
+                io_type = model.config.get_config_value("IOType")
+
+                if io_type == 'io_serial' or io_type == 'io_stream':
+                    # Eventually this will be amba.ccs_axi4stream_in and amba.ccs_axi4stream_out
+                    for dut_input in all_inputs:
+                        newline += '#pragma hls_resource {name}:rsc variables="{name}" map_to_module="ccs_ioport.ccs_in_wait"\n'.format(name=dut_input)
+                    for dut_output in all_outputs:
+                        newline += '#pragma hls_resource {name}:rsc variables="{name}" map_to_module="ccs_ioport.ccs_out_wait"\n'.format(name=dut_output)
+
+
+            # Add input/output type
+            elif '//hls-fpga-machine-learning insert IO' in line:
+                newline = line
+                all_inputs = [i.name for i in model_inputs]
+                all_outputs = [o.name for o in model_outputs]
+                all_brams = [b.name for b in model_brams]
+                io_type = model.config.get_config_value("IOType")
+
+                if io_type == 'io_parallel':
+                    for i in model_inputs:
+                        newline += indent + self._make_array_pragma(i) + '\n'
+                    for o in model_outputs:
+                        newline += indent + self._make_array_pragma(o) + '\n'
+                    # TODO discussed adding a handle for setting the interface mode for individual input and output arrays
+                    # Probably the handle doesn't need to be exposed to the user but should be just set in hls_model.py
+                    newline += indent + '#pragma HLS INTERFACE ap_vld port={},{} \n'.format(
+                        ','.join(all_inputs), ','.join(all_outputs)
+                    )
+                    if model.config.model_strategy.lower() == 'resource':
+                        newline += indent + '#pragma HLS DATAFLOW \n'
+                    else:
+                        newline += indent + '#pragma HLS PIPELINE \n'
+                if io_type == 'io_stream':
+                    newline += indent + '#pragma HLS INTERFACE axis port={},{} \n'.format(
+                        ','.join(all_inputs), ','.join(all_outputs)
+                    )
+                    if all_brams:
+                        newline += indent + '#pragma HLS INTERFACE bram port={} \n'.format(','.join(all_brams))
+                    newline += indent + '#pragma HLS DATAFLOW \n'
+
+            elif '//hls-fpga-machine-learning insert layers' in line:
+                io_type = model.config.get_config_value("IOType")
+                newline = line + '\n'
+                for layer in model.get_layers():
+                    vars = layer.get_variables()
+                    for var in vars:
+                        if var not in model_inputs and var not in model_outputs:
+                            def_cpp = var.definition_cpp()
+                            if def_cpp is not None:
+                                if io_type == 'io_serial' or io_type == 'io_stream':
+                                    newline += '    static ' + def_cpp + '; \n'
+                                else:
+                                    newline += '    ' + def_cpp + '; \n'
+                                if var.pragma:
+                                    newline += '    ' + self._make_array_pragma(var) + '\n'
+                    func = layer.get_attr('function_cpp', None)
+                    if func:
+                        func = [func]
+                        if len(func) == 1:
+                            newline += '    ' + func[0] + ' // ' + layer.name + '\n'
+                        else:
+                            newline += '// ' + layer.name + '\n'
+                            for line in func:
+                                newline += '    ' + line + '\n'
+                        if model.config.trace_output and layer.get_attr('trace', False):
+                            newline += '#ifndef __SYNTHESIS__\n'
+                            for var in vars:
+                                newline += '    nnet::save_layer_output<{}>({}, "{}", {});\n'.format(
+                                    var.type.name, var.name, layer.name, var.size_cpp()
+                                )
+                            newline += '#endif\n'
+                        newline += '\n'
+
+            # Just copy line
+            else:
+                newline = line
+
+            fout.write(newline)
+
+        f.close()
+        fout.close()
+
+    def write_project_header(self, model):
+        """Write the main architecture header file (myproject.h)
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        f = open(os.path.join(filedir, '../templates/catapult/firmware/myproject.h'))
+        fout = open(f'{model.config.get_output_dir()}/firmware/{model.config.get_project_name()}.h', 'w')
+
+        model_inputs = model.get_input_variables()
+        model_outputs = model.get_output_variables()
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
+
+        indent = '    '
+
+        for line in f.readlines():
+
+            if 'MYPROJECT' in line:
+                newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
+            elif 'void myproject(' in line:
+                newline = f'void {model.config.get_project_name()}(\n'
+            elif '//hls-fpga-machine-learning insert header' in line:
+                inputs_str = ', '.join([i.definition_cpp(as_reference=True) for i in model_inputs])
+                outputs_str = ', '.join([o.definition_cpp(as_reference=True) for o in model_outputs])
+                brams_str = ', \n'.join([indent + b.definition_cpp(as_reference=False) for b in model_brams])
+
+                newline = ''
+                newline += indent + inputs_str + ',\n'
+                newline += indent + outputs_str
+                if len(model_brams) > 0:
+                    newline += ',\n' + brams_str
+                newline += '\n'
+            else:
+                newline = line
+            fout.write(newline)
+
+        f.close()
+        fout.close()
+
+    def write_defines(self, model):
+        """Write the C++ type definitions file (defines.h)
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        f = open(os.path.join(filedir, '../templates/catapult/firmware/defines.h'))
+        fout = open(f'{model.config.get_output_dir()}/firmware/defines.h', 'w')
+
+        for line in f.readlines():
+
+            # Insert numbers
+            if '//hls-fpga-machine-learning insert numbers' in line:
+                newline = line
+                numbers = OrderedDict.fromkeys([layer.get_numbers_cpp() for layer in model.get_layers()])
+                newline += ''.join(numbers)
+
+            elif '//hls-fpga-machine-learning insert layer-precision' in line:
+                newline = line
+                all_precision = OrderedDict()
+                for layer in model.get_layers():
+                    layer_precision = layer.get_layer_precision()
+                    for type_name, type_var in layer_precision.items():
+                        # Ensure that layer's types doesn't override existing types
+                        # This can happen in case of InplaceVariable types
+                        if type_name not in all_precision:
+                            all_precision[type_name] = type_var
+                for used_type in all_precision.values():
+                    newline += used_type.definition_cpp()
+
+            else:
+                newline = line
+            fout.write(newline)
+        f.close()
+        fout.close()
+
+    def write_parameters(self, model):
+        """Write the C++ layer config file (parameters.h)
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        f = open(os.path.join(filedir, '../templates/catapult/firmware/parameters.h'))
+        fout = open(f'{model.config.get_output_dir()}/firmware/parameters.h', 'w')
+
+        for line in f.readlines():
+
+            if '//hls-fpga-machine-learning insert includes' in line:
+                newline = line
+                for include in sorted(set(sum((layer.get_attr('include_header', []) for layer in model.get_layers()), []))):
+                    newline += '#include "%s"\n' % include
+
+            elif '//hls-fpga-machine-learning insert weights' in line:
+                newline = line
+                for layer in model.get_layers():
+                    for w in layer.get_weights():
+                        if w.storage.lower() != 'bram':
+                            newline += f'#include "weights/{w.name}.h"\n'
+
+            elif "//hls-fpga-machine-learning insert layer-config" in line:
+                newline = line
+                for layer in model.get_layers():
+                    config = layer.get_attr('config_cpp', None)
+                    if config:
+                        newline += '// ' + layer.name + '\n'
+                        newline += config + '\n'
+            else:
+                newline = line
+            fout.write(newline)
+        f.close()
+        fout.close()
+
+    def write_weights(self, model):
+        """Write the weights into header files
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+        for layer in model.get_layers():
+            for weights in layer.get_weights():
+                self.print_array_to_cpp(weights, model.config.get_output_dir())
+
+    def __make_dat_file(self, original_path, project_path):
+        """
+        Convert other input/output data types into a dat file, which is
+        a text file with the falttened matrix printed out. Note that ' ' is
+        assumed to be the delimiter.
+        """
+
+        # Take in data from current supported data files
+        if original_path[-3:] == "npy":
+            data = np.load(original_path)
+        else:
+            raise Exception("Unsupported input/output data files.")
+
+        # Faltten data, just keep first dimension
+        data = data.reshape(data.shape[0], -1)
+
+        def print_data(f):
+            for i in range(data.shape[0]):
+                for j in range(data.shape[1]):
+                    f.write(str(data[i][j]) + " ")
+                f.write("\n")
+
+        # Print out in dat file
+        with open(project_path, "w") as f:
+            print_data(f)
+
+    def write_test_bench(self, model):
+        """Write the testbench files (myproject_test.cpp and input/output .dat files)
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+
+        filedir = os.path.dirname(os.path.abspath(__file__))
+
+        if not os.path.exists(f'{model.config.get_output_dir()}/tb_data/'):
+            os.mkdir(f'{model.config.get_output_dir()}/tb_data/')
+
+        input_data = model.config.get_config_value('InputData')
+        output_predictions = model.config.get_config_value('OutputPredictions')
+
+        if input_data:
+            if input_data[-3:] == "dat":
+                copyfile(input_data, f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat')
+            else:
+                self.__make_dat_file(input_data, f'{model.config.get_output_dir()}/tb_data/tb_input_features.dat')
+
+        if output_predictions:
+            if output_predictions[-3:] == "dat":
+                copyfile(output_predictions, f'{model.config.get_output_dir()}/tb_data/tb_output_predictions.dat')
+            else:
+                self.__make_dat_file(
+                    output_predictions, f'{model.config.get_output_dir()}/tb_data/tb_output_predictions.dat'
+                )
+
+        f = open(os.path.join(filedir, '../templates/catapult/myproject_test.cpp'))
+        fout = open(f'{model.config.get_output_dir()}/{model.config.get_project_name()}_test.cpp', 'w')
+
+        model_inputs = model.get_input_variables()
+        model_outputs = model.get_output_variables()
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
+
+        for line in f.readlines():
+            indent = ' ' * (len(line) - len(line.lstrip(' ')))
+
+            # Insert numbers
+            if 'myproject' in line:
+                newline = line.replace('myproject', model.config.get_project_name())
+            elif '//hls-fpga-machine-learning insert bram' in line:
+                newline = line
+                for bram in model_brams:
+                    newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+
+            elif '//hls-fpga-machine-learning insert declare weights' in line:
+                newline = line
+                for layer in model.get_layers():
+                    for w in layer.get_weights():
+                        newline += w.definition_cpp() +";\n"
+
+            elif '//hls-fpga-machine-learning insert load weights' in line:
+                newline = line
+                for layer in model.get_layers():
+                    for w in layer.get_weights():
+                        if w.weight_class == 'CompressedWeightVariable':
+                            newline += indent + '    nnet::load_compressed_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
+                                w.type.name, w.nonzeros, w.name, w.name
+                            )
+                        elif w.weight_class == 'ExponentWeightVariable':
+                            newline += indent + '    nnet::load_exponent_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
+                                w.type.name, w.data_length, w.name, w.name
+                            )
+                        else:
+                            newline += indent + '    nnet::load_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
+                                w.type.name, w.data_length, w.name, w.name
+                            )
+
+            elif '//hls-fpga-machine-learning insert data' in line:
+                newline = line
+                offset = 0
+                for inp in model_inputs:
+                    newline += '      ' + inp.definition_cpp() + ';\n'
+                    newline += '      nnet::copy_data<float, {}, {}, {}>(in, {});\n'.format(
+                        inp.type.name, offset, inp.size_cpp(), inp.name
+                    )
+                    offset += inp.size()
+                for out in model_outputs:
+                    newline += '      ' + out.definition_cpp() + ';\n'
+            elif '//hls-fpga-machine-learning insert zero' in line:
+                newline = line
+                for inp in model_inputs:
+                    newline += '    ' + inp.definition_cpp() + ';\n'
+                    newline += f'    nnet::fill_zero<{inp.type.name}, {inp.size_cpp()}>({inp.name});\n'
+                for out in model_outputs:
+                    newline += '    ' + out.definition_cpp() + ';\n'
+            elif '//hls-fpga-machine-learning insert top-level-function' in line:
+                newline = line
+
+                input_vars = ','.join([i.name for i in model_inputs])
+                output_vars = ','.join([o.name for o in model_outputs])
+                bram_vars = ','.join([b.name for b in model_brams])
+
+                # Concatenate the input, output, and bram variables. Filter out empty/null values
+                all_vars = ','.join(filter(None, [input_vars, output_vars, bram_vars]))
+
+                top_level = indent + f'{model.config.get_project_name()}({all_vars});\n'
+
+                newline += top_level
+            elif '//hls-fpga-machine-learning insert predictions' in line:
+                newline = line
+                for out in model_outputs:
+                    newline += indent + f'for(int i = 0; i < {out.size_cpp()}; i++) {{\n'
+                    newline += indent + '  std::cout << pr[i] << " ";\n'
+                    newline += indent + '}\n'
+                    newline += indent + 'std::cout << std::endl;\n'
+            elif '//hls-fpga-machine-learning insert tb-output' in line:
+                newline = line
+                for out in model_outputs:
+                    newline += indent + 'nnet::print_result<{}, {}>({}, fout);\n'.format(
+                        out.type.name, out.size_cpp(), out.name
+                    )  # TODO enable this
+            elif (
+                '//hls-fpga-machine-learning insert output' in line or '//hls-fpga-machine-learning insert quantized' in line
+            ):
+                newline = line
+                for out in model_outputs:
+                    newline += indent + 'nnet::print_result<{}, {}>({}, std::cout, true);\n'.format(
+                        out.type.name, out.size_cpp(), out.name
+                    )
+            else:
+                newline = line
+            fout.write(newline)
+        f.close()
+        fout.close()
+
+    def write_bridge(self, model):
+        """Write the Python-C++ bridge (myproject_bridge.cpp)
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        f = open(os.path.join(filedir, '../templates/catapult/myproject_bridge.cpp'))
+        fout = open(f'{model.config.get_output_dir()}/{model.config.get_project_name()}_bridge.cpp', 'w')
+
+        model_inputs = model.get_input_variables()
+        model_outputs = model.get_output_variables()
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
+
+        indent = '    '
+
+        for line in f.readlines():
+
+            if 'MYPROJECT' in line:
+                newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
+            elif 'myproject' in line:
+                newline = line.replace('myproject', format(model.config.get_project_name()))
+            elif '//hls-fpga-machine-learning insert bram' in line:
+                newline = line
+                for bram in model_brams:
+                    newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+            elif '//hls-fpga-machine-learning insert declare weights' in line:
+                newline = line
+                for layer in model.get_layers():
+                    for w in layer.get_weights():
+                        newline += w.definition_cpp() +";\n"
+            elif '//hls-fpga-machine-learning insert header' in line:
+                dtype = line.split('#', 1)[1].strip()
+                inputs_str = ', '.join([f'{dtype} {i.name}[{i.size_cpp()}]' for i in model_inputs])
+                outputs_str = ', '.join([f'{dtype} {o.name}[{o.size_cpp()}]' for o in model_outputs])
+
+                newline = ''
+                newline += indent + inputs_str + ',\n'
+                newline += indent + outputs_str + '\n'
+            elif '//hls-fpga-machine-learning insert wrapper' in line:
+                dtype = line.split('#', 1)[1].strip()
+                newline = ''
+                for i in model_inputs:
+                    newline += indent + '{var};\n'.format(var=i.definition_cpp(name_suffix='_ap'))
+                    newline += indent + 'nnet::convert_data<{}, {}, {}>({}, {}_ap);\n'.format(
+                        dtype, i.type.name, i.size_cpp(), i.name, i.name
+                    )
+                newline += '\n'
+
+                for o in model_outputs:
+                    newline += indent + '{var};\n'.format(var=o.definition_cpp(name_suffix='_ap'))
+
+                newline += '\n'
+
+                input_vars = ','.join([i.name + '_ap' for i in model_inputs])
+                bram_vars = ','.join([b.name for b in model_brams])
+                output_vars = ','.join([o.name + '_ap' for o in model_outputs])
+
+                # Concatenate the input, output, and bram variables. Filter out empty/null values
+                all_vars = ','.join(filter(None, [input_vars, output_vars, bram_vars]))
+
+                top_level = indent + f'{model.config.get_project_name()}({all_vars});\n'
+                newline += top_level
+
+                newline += '\n'
+
+                for o in model_outputs:
+                    newline += indent + 'nnet::convert_data<{}, {}, {}>({}_ap, {});\n'.format(
+                        o.type.name, dtype, o.size_cpp(), o.name, o.name
+                    )
+            elif '//hls-fpga-machine-learning insert trace_outputs' in line:
+                newline = ''
+                for layer in model.get_layers():
+                    func = layer.get_attr('function_cpp', None)
+                    if func and model.config.trace_output and layer.get_attr('trace', False):
+                        vars = layer.get_variables()
+                        for var in vars:
+                            newline += (
+                                indent
+                                + 'nnet::trace_outputs->insert(std::pair<std::string, void *>('
+                                + f'"{layer.name}", (void *) malloc({var.size_cpp()} * element_size)));\n'
+                            )
+
+            else:
+                newline = line
+            fout.write(newline)
+
+        f.close()
+        fout.close()
+
+    def write_build_script(self, model):
+        """Write the TCL/Shell build scripts (project.tcl, build_prj.tcl, catapult_synth.tcl, build_lib.sh)
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+
+        filedir = os.path.dirname(os.path.abspath(__file__))
+
+        # project.tcl
+        f = open(f'{model.config.get_output_dir()}/project.tcl', 'w')
+        f.write('variable project_name\n')
+        f.write(f'set project_name "{model.config.get_project_name()}"\n')
+        f.write('variable backend\n')
+        f.write('set backend "catapult"\n')
+        f.write('variable part\n')
+        f.write('set part "{}"\n'.format(model.config.get_config_value('Part')))
+        f.write('variable clock_period\n')
+        f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
+        f.close()
+
+        # build_prj.tcl
+        srcpath = os.path.join(filedir, '../templates/catapult/build_prj.tcl')
+        dstpath = f'{model.config.get_output_dir()}/build_prj.tcl'
+        # copyfile(srcpath, dstpath)
+        f = open(srcpath,'r')
+        fout = open(dstpath,'w')
+        for line in f.readlines():
+            line = line.replace('myproject',model.config.get_project_name())
+            if 'set_part {xcku115-flvb2104-2-i}' in line:
+                line = 'set_part {{{}}}\n'.format(model.config.get_config_value('Part'))
+            elif 'create_clock -period 5 -name default' in line:
+                line = 'create_clock -period {} -name default\n'.format(model.config.get_config_value('ClockPeriod'))
+            fout.write(line)
+        f.close()
+        fout.close()
+
+        # catapult_synth.tcl
+        srcpath = os.path.join(filedir, '../templates/catapult/catapult_synth.tcl')
+        dstpath = f'{model.config.get_output_dir()}/catapult_synth.tcl'
+        # copyfile(srcpath, dstpath)
+        f = open(srcpath,'r')
+        fout = open(dstpath,'w')
+        for line in f.readlines():
+            line = line.replace('myproject', model.config.get_project_name())
+            if '-part' in line:
+                line = 'synth_design -top {} -part {}\n'.format(model.config.get_project_name(), model.config.get_config_value('Part'))
+
+            fout.write(line)
+        f.close()
+        fout.close()
+
+        # build_lib.sh
+        f = open(os.path.join(filedir, '../templates/catapult/build_lib.sh'))
+        fout = open(f'{model.config.get_output_dir()}/build_lib.sh', 'w')
+
+        for line in f.readlines():
+            line = line.replace('myproject', model.config.get_project_name())
+            line = line.replace('mystamp', model.config.get_config_value('Stamp'))
+
+            fout.write(line)
+        f.close()
+        fout.close()
+
+    def write_nnet_utils(self, model):
+        """Copy the nnet_utils, AP types headers and any custom source to the project output directory
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+
+        # nnet_utils
+        filedir = os.path.dirname(os.path.abspath(__file__))
+
+        srcpath = os.path.join(filedir, '../templates/catapult/nnet_utils/')
+        dstpath = f'{model.config.get_output_dir()}/firmware/nnet_utils/'
+
+        if not os.path.exists(dstpath):
+            os.mkdir(dstpath)
+
+        headers = [os.path.basename(h) for h in glob.glob(srcpath + '*.h')]
+
+        for h in headers:
+            copyfile(srcpath + h, dstpath + h)
+
+        # ac_types
+        filedir = os.path.dirname(os.path.abspath(__file__))
+
+        srcpath = os.path.join(filedir,'../../ac_types/')
+        dstpath = '{}/firmware/ac_types/'.format(model.config.get_output_dir())
+
+        if os.path.exists(dstpath):
+            rmtree(dstpath)
+
+        copytree(srcpath, dstpath)
+
+        # ac_math
+        filedir = os.path.dirname(os.path.abspath(__file__))
+
+        srcpath = os.path.join(filedir,'../../ac_math/')
+        dstpath = '{}/firmware/ac_math/'.format(model.config.get_output_dir())
+
+        if os.path.exists(dstpath):
+            rmtree(dstpath)
+
+        copytree(srcpath, dstpath)
+
+        # ac_simutils
+        filedir = os.path.dirname(os.path.abspath(__file__))
+
+        srcpath = os.path.join(filedir,'../../ac_simutils/')
+        dstpath = '{}/firmware/ac_simutils/'.format(model.config.get_output_dir())
+
+        if os.path.exists(dstpath):
+            rmtree(dstpath)
+
+        copytree(srcpath, dstpath)
+
+        # custom source
+        filedir = os.path.dirname(os.path.abspath(__file__))
+
+        custom_source = get_backend('Catapult').get_custom_source()
+        for dst, srcpath in custom_source.items():
+            dstpath = f'{model.config.get_output_dir()}/firmware/{dst}'
+            copyfile(srcpath, dstpath)
+
+    def write_generated_code(self, model):
+        """Write the generated code (nnet_code_gen.h)
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+        path = f'{model.config.get_output_dir()}/firmware/nnet_utils/nnet_code_gen.h'
+        f = open(path)
+        contents = f.readlines()
+        f.close()
+        f = open(path, 'w')
+
+        for line in contents:
+            if '//hls4ml insert code' in line:
+                newline = line
+                for layer in model.get_layers():
+                    for generated_code in layer.code.values():
+                        newline += str(generated_code)
+            else:
+                newline = line
+            f.write(newline)
+        f.close()
+
+    def write_yml(self, model):
+        """Write the config to the YAML file
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+
+        def keras_model_representer(dumper, keras_model):
+            model_path = model.config.get_output_dir() + '/keras_model.h5'
+            keras_model.save(model_path)
+            return dumper.represent_scalar('!keras_model', model_path)
+
+        try:
+            from tensorflow.keras import Model as KerasModel
+
+            yaml.add_multi_representer(KerasModel, keras_model_representer)
+        except Exception:
+            pass
+
+        with open(model.config.get_output_dir() + '/' + config_filename, 'w') as file:
+            yaml.dump(model.config.config, file)
+
+    def write_tar(self, model):
+        """Write the generated project as a .tar.gz archive
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+
+        with tarfile.open(model.config.get_output_dir() + '.tar.gz', mode='w:gz') as archive:
+            archive.add(model.config.get_output_dir(), recursive=True)
+
+    def write_hls(self, model):
+        print('Writing HLS project')
+        self.write_project_dir(model)
+        self.write_project_cpp(model)
+        self.write_project_header(model)
+        self.write_weights(model)
+        self.write_defines(model)
+        self.write_parameters(model)
+        self.write_test_bench(model)
+        self.write_bridge(model)
+        self.write_build_script(model)
+        self.write_nnet_utils(model)
+        self.write_generated_code(model)
+        self.write_yml(model)
+        self.write_tar(model)
+        print('Done')

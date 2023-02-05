@@ -190,6 +190,11 @@ class QuartusArrayVariableDefinition(VariableDefinition):
     def definition_cpp(self, name_suffix='', as_reference=False):
         return '{type} {name}{suffix}[{shape}] {pragma}'.format(type=self.type.name, name=self.name, suffix=name_suffix, shape=self.size_cpp(), pragma=self.pragma)
 
+class CatapultArrayVariableDefinition(VariableDefinition):
+    def definition_cpp(self, name_suffix='', as_reference=False):
+        return '{type} {name}{suffix}[{shape}]'.format(type=self.type.name, name=self.name, suffix=name_suffix, shape=self.size_cpp())
+
+
 class ArrayVariableConverter(object):
     def __init__(self, type_converter, prefix, definition_cls):
         self.type_converter = type_converter
@@ -213,6 +218,11 @@ class VivadoArrayVariableConverter(ArrayVariableConverter):
 class QuartusArrayVariableConverter(ArrayVariableConverter):
     def __init__(self, type_converter):
         super().__init__(type_converter=type_converter, prefix='Quartus', definition_cls=QuartusArrayVariableDefinition)
+
+class CatapultArrayVariableConverter(ArrayVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Catapult', definition_cls=CatapultArrayVariableDefinition)
+
 
 #endregion
 
@@ -258,6 +268,14 @@ class VivadoStreamVariableDefinition(VariableDefinition):
         else: # Declaration
             return 'hls::stream<{type}> {name}{suffix}("{name}")'.format(type=self.type.name, name=self.name, suffix=name_suffix)
 
+
+class CatapultStreamVariableDefinition(VariableDefinition):
+    def definition_cpp(self, name_suffix='', as_reference=False):
+        if as_reference: # Function parameter
+            return 'ac_channel<{type}> &{name}{suffix}'.format(type=self.type.name, name=self.name, suffix=name_suffix)
+        else: # Declaration (string name arg not implemented in ac_channel)
+            return 'ac_channel<{type}> {name}{suffix}/*("{name}")*/'.format(type=self.type.name, name=self.name, suffix=name_suffix)
+
 class QuartusStreamVariableDefinition(VariableDefinition):
     def definition_cpp(self, name_suffix='', as_reference=False):
         if as_reference: # Function parameter
@@ -286,6 +304,11 @@ class StreamVariableConverter(object):
 class VivadoStreamVariableConverter(StreamVariableConverter):
     def __init__(self, type_converter):
         super().__init__(type_converter=type_converter, prefix='Vivado', definition_cls=VivadoStreamVariableDefinition)
+
+
+class CatapultStreamVariableConverter(StreamVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Catapult', definition_cls=CatapultStreamVariableDefinition)
 
 class QuartusStreamVariableConverter(StreamVariableConverter):
     def __init__(self, type_converter):
@@ -319,6 +342,10 @@ class VivadoInplaceVariableConverter(InplaceVariableConverter):
 class QuartusInplaceVariableConverter(InplaceVariableConverter):
     def __init__(self, type_converter):
         super().__init__(type_converter=type_converter, prefix='Quartus')
+
+class CatapultInplaceVariableConverter(InplaceVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Catapult')
 
 #endregion
 
