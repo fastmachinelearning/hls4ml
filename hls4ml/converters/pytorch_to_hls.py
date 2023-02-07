@@ -6,6 +6,7 @@ import sys
 import torch
 import pickle
 import re
+from collections import OrderedDict
 
 from hls4ml.model import ModelGraph
 
@@ -129,13 +130,26 @@ def pytorch_to_hls(config):
     input_shapes = [list(reader.input_shape)]
         
     model = reader.torch_model
+    
+    #dict of layer objects in non-traced form for access lateron 
+    children = { c[0]: c[1] for c in model.named_children() }
+    #use symbolic_trace to get a full graph of the model
+    from torch.fx import symbolic_trace
+    traced_model = symbolic_trace(model)
 
     #Define layers to skip for conversion to HLS
     skip_layers = ['Dropout', 'Flatten', 'Sequential']
     
     #All supported layers
     supported_layers = get_supported_pytorch_layers() + skip_layers
-    
+
+    #All supported functions:
+    supported_functions = ['add', 'subtract', 'multiply', 'average', 'maximum', 'minimum', 'concatenate', 'dot']
+
+    #All supported methods (none implemented yet):
+    supported_methods = []
+ 
+
     #Map inputs of skipped and split (activation) layers
     inputs_map = {}
 
@@ -151,59 +165,109 @@ def pytorch_to_hls(config):
     #Loop through layers
     print('Topology:')
     layer_counter = 0
-    
-    #First add input layer
-    input_layer = {}
-    input_layer['name'] = 'input1'
-    input_layer['class_name'] = 'InputLayer'
-    input_layer['input_shape'] = input_shapes[0][1:]
-    layer_list.insert(0, input_layer)
-    print("Input Shape: ", input_shapes)
-    
-    for layer_name, pytorch_layer in model.named_modules():
-        
-        pytorch_class = pytorch_layer.__class__.__name__
-        
-        #First module is the whole model's class
-        if pytorch_class == model.__class__.__name__:
-            continue
-        
-        if pytorch_class not in supported_layers:
-            raise Exception('Unsupported layer {}'.format(pytorch_class))
-                
-        #If not the first layer then input shape is taken from last layer's output
-        if layer_counter != 0:
-            input_shapes = [output_shape] #In case there are multiple inputs
-        
-        #Handle skipped layers
-        if pytorch_class in skip_layers:
-            if pytorch_class == 'Sequential': #Ignore the mother module's class name
-                continue
 
-            if pytorch_class == 'Flatten':
-                output_shapes[layer_name] = [input_shapes[0][0], np.prod(input_shapes[0][1:])]
+
+    input_layers = OrderedDict()
+    n_inputs = 0
+
+    for node in traced_model.graph.nodes:
+
+        if node.op == 'call_module':
+            pytorch_class = children[node.target].__class__.__name__
+
+            if pytorch_class not in supported_layers:
+                raise Exception('Unsupported layer {}'.format(pytorch_class))
+
+            if layer_counter != 0:
+                input_shapes = [output_shape] #In case there are multiple inputs
+            
+            #Handle skipped layers
+            if pytorch_class in skip_layers:
+                if pytorch_class == 'Sequential': #Ignore the mother module's class name
+                    continue
+
+                if pytorch_class == 'Flatten':
+                    output_shapes[layer_name] = [input_shapes[0][0], np.prod(input_shapes[0][1:])]
+                else:
+                    output_shapes[layer_name] = input_shapes[0]
+                continue #!!
+            
+            #Increment the layer counter after initial screenings
+            if pytorch_class in supported_layers:
+                layer_counter += 1
+            
+            #Process the layer
+            layer, output_shape = layer_handlers[pytorch_class](children[node.target], node.target, input_shapes, reader, config)
+
+            print('Layer name: {}, layer type: {}, input shape: {}'.format(layer['name'], layer['class_name'], input_shapes))
+            layer_list.append(layer)
+            
+            assert(output_shape is not None)
+            output_shapes[layer['name']] = output_shape        
+
+        if node.op == 'placeholder':
+            #'placeholder' indicates the input layer
+            input_layers[node.name] = {}
+            input_layers[node.name]['name'] = node.name
+            input_layers[node.name]['class_name'] = 'InputLayer'
+            input_layers[node.name]['input_shape'] = input_shapes[n_inputs][1:]
+            n_inputs += 1
+
+        if node.op == 'call_function':
+            #Function calls in the graph have to be transformed to layers known to hls4ml
+
+            #only a limited number of functions are supported
+            if node.name not in supported_functions:
+                raise Exception('Unsupported function {}'.format(node.name))
+
+            input_names = tuple([str(i) for i in node.args])
+
+            layer_name = node.name
+            #layer is named after the operation it performs, so there might be multiple. Use janky way to prevent duplicate names for now
+            n = 0
+            for layer in layer_list:
+                if layer_name == layer["name"]:
+                    layer_name = layer_name + "_" + str(n)
+                    n = n+1
+
+            #Process the layer
+            layer, output_shape = layer_handlers[node.name](node.name,layer_name,input_names, input_shapes,reader)
+
+            print('Layer name: {}, layer type: {}, input shape: {}'.format(layer['name'], layer['class_name'], input_shapes))
+            layer_list.append(layer)
+
+            assert(output_shape is not None)
+            output_shapes[layer['name']] = output_shape
+
+        if node.op == 'get_attr':
+            #this doesn't actually work, can't have multiple input layers. Need to find other way to get this tensor into the graph
+            if not "." in node.target:
+                obj =  getattr(model,node.name)
             else:
-                output_shapes[layer_name] = input_shapes[0]
-            continue #!!
-        
-        #Increment the layer counter after initial screenings
-        if pytorch_class in supported_layers:
-            layer_counter += 1
-        
-        #Process the layer
-        layer, output_shape = layer_handlers[pytorch_class](pytorch_layer, layer_name, input_shapes, reader, config)
+                obj = getattr(children[node.target.split('.')[0],node.name])
 
-        print('Layer name: {}, layer type: {}, input shape: {}'.format(layer['name'], layer['class_name'], input_shapes))
-        layer_list.append(layer)
+            input_shapes.append([obj.size(dim=0),obj.size(dim=1)])    
+            input_layers[node.name] = {}
+            input_layers[node.name]['name'] = node.name
+            input_layers[node.name]['class_name'] = 'InputLayer'
+            input_layers[node.name]['input_shape'] = input_shapes[-1]
+
+
+        if node.op == 'call_method':
+            #Pytorch methods, not supported yet
+
+            if node.name not in supported_methods:
+                raise Exception('Unsupported method {}'.format(node.name))
+
+
+    for name in reversed(input_layers):
         
-        assert(output_shape is not None)
-        output_shapes[layer['name']] = output_shape
-           
+        layer_list.insert(0, input_layers[name])
 
     #################
     ## Generate HLS
     #################
     
     print('Creating HLS model')
-    hls_model = ModelGraph(config, reader, layer_list)
+    hls_model = ModelGraph(config, reader, layer_list,  inputs=input_layers)
     return hls_model
