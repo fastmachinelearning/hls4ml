@@ -343,6 +343,7 @@ class ModelGraph:
                 inputs = [next(reversed(self.graph), 'input')]
             if len(outputs) == 0:
                 outputs = [name]
+
             self.graph[name] = self.make_node(kind, name, layer, inputs, outputs)
 
     def apply_flow(self, flow, reapply='single'):
@@ -426,6 +427,7 @@ class ModelGraph:
             if kind not in layer_map.values():
                 raise Exception(f'Layer {kind} not found in registry.')
             layer_cls = kind
+
         if self.config.backend is not None:
             layer_cls = self.config.backend.create_layer_class(layer_cls)
         node = layer_cls(self, name, attributes, inputs, outputs)
@@ -433,7 +435,7 @@ class ModelGraph:
             out_var = node.get_output_variable(output_name=o)
             if o in self.outputs:
                 out_var.type.name = 'result_t'
-            self.output_vars[o] = out_var    
+            self.output_vars[o] = out_var
         return node
 
     def insert_node(self, node, before=None, input_idx=0):
