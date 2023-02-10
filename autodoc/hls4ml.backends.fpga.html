@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hls4ml.backends.fpga package &mdash; hls4ml 0.5.1.dev632+g107589fb documentation</title>
+  <title>hls4ml.backends.fpga package &mdash; hls4ml 0.5.1.dev633+g85b9531a documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,12 +28,16 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #2980B9" >
-            <a href="../index.html">
-            <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -100,7 +104,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="hls4ml.html">hls4ml package</a></li>
           <li class="breadcrumb-item"><a href="hls4ml.backends.html">hls4ml.backends package</a></li>
       <li class="breadcrumb-item active">hls4ml.backends.fpga package</li>
@@ -146,16 +150,16 @@
 <span class="sig-name descname"><span class="pre">compile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_backend.FPGABackend.compile" title="Permalink to this definition"></a></dt>
 <dd><p>Compile the generated project that can be linked into Python runtime.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – Model to compile.</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>Exception</strong> – If the project failed to compile</p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Returns the name of the compiled library.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>string</p>
 </dd>
 </dl>
@@ -183,7 +187,7 @@
 <p>Backends should extend base layer classes with new attributes and variables as needed. These new classes are then
 used within the model.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>layer_class</strong> (<em>class</em>) – Base class to extend</p>
 </dd>
 </dl>
@@ -198,7 +202,7 @@ to generate a resulting a result of im2col transformation explicitly, instead of
 the result depends on the paraleters of the convolution layer (the input size, the kernel size, stride etc),
 we need to do this for every convolution layer.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>layer_idx</strong> (<em>int</em>) – Index of layer (‘index’ attribute).</p></li>
 <li><p><strong>n_partitions</strong> (<em>int</em>) – Number of partitions to divide the input into.
@@ -212,10 +216,10 @@ Specified as either a number or a list [left_pad, right_pad].</p></li>
 <li><p><strong>dilation</strong> (<em>int</em><em>, </em><em>optional</em>) – Dilation rate. Defaults to 1.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Generated C++ function</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -230,7 +234,7 @@ to generate a resulting a result of im2col transformation explicitly, instead of
 the result depends on the paraleters of the convolution layer (the input size, the kernel size, stride etc),
 we need to do this for every convolution layer.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>layer_idx</strong> (<em>int</em>) – Index of layer (‘index’ attribute).</p></li>
 <li><p><strong>n_partitions</strong> (<em>int</em>) – Number of partitions to divide the input into.
@@ -245,10 +249,10 @@ Specified as either a number or a list [top_pad, bottom_pad, left_pad, right_pad
 <li><p><strong>dilation</strong> (<em>int</em><em> or </em><em>Iterable</em><em>, </em><em>optional</em>) – Dilation rate. Defaults to (1,1).</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Generated C++ function</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -272,16 +276,16 @@ If two numbers are equally close, return the smallest number.</p>
 <dd><p>Generate valid partition splits of a Conv1D/2D layer.</p>
 <p>Essentially a list of divisors of the number of pixels of the output image.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>out_height</strong> (<em>int</em>) – The height of the output image</p></li>
 <li><p><strong>out_width</strong> (<em>int</em>) – The width of the output image</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>List of valid partition splits</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>list</p>
 </dd>
 </dl>
@@ -320,7 +324,7 @@ If two numbers are equally close, return the smallest number.</p>
 <p>This function converts the model to C++ and writes the generated files in the output
 directory specified in the <cite>config</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>model</strong> (<em>ModelGraph</em>) – Model to write.</p>
 </dd>
 </dl>

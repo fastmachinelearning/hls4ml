@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hls4ml.utils package &mdash; hls4ml 0.5.1.dev632+g107589fb documentation</title>
+  <title>hls4ml.utils package &mdash; hls4ml 0.5.1.dev633+g85b9531a documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,12 +28,16 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #2980B9" >
-            <a href="../index.html">
-            <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -101,7 +105,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="hls4ml.html">hls4ml package</a></li>
       <li class="breadcrumb-item active">hls4ml.utils package</li>
       <li class="wy-breadcrumbs-aside">
@@ -127,7 +131,7 @@
 Users are advised to inspect the returned object to tweak the conversion configuration.
 The return object can be passed as <cite>hls_config</cite> parameter to <cite>convert_from_keras_model</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> – Keras model</p></li>
 <li><p><strong>granularity</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>Granularity of the created config. Defaults to ‘model’.
@@ -144,13 +148,13 @@ configuration tweaks.</p>
 <li><p><strong>default_reuse_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – Default reuse factor. Defaults to 1.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>Exception</strong> – If Keras model has layers not supported by hls4ml.</p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The created config.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>[dict]</p>
 </dd>
 </dl>
@@ -164,7 +168,7 @@ configuration tweaks.</p>
 Users are advised to inspect the returned object to tweak the conversion configuration.
 The return object can be passed as <cite>hls_config</cite> parameter to <cite>convert_from_onnx_model</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> – ONNX model</p></li>
 <li><p><strong>granularity</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>Granularity of the created config. Defaults to ‘model’.
@@ -181,13 +185,13 @@ configuration tweaks.</p>
 <li><p><strong>default_reuse_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – Default reuse factor. Defaults to 1.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>Exception</strong> – If ONNX model has layers not supported by hls4ml.</p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The created config.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>[dict]</p>
 </dd>
 </dl>
@@ -201,7 +205,7 @@ configuration tweaks.</p>
 Users are advised to inspect the returned object to tweak the conversion configuration.
 The return object can be passed as <cite>hls_config</cite> parameter to <cite>convert_from_pytorch_model</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> – PyTorch model</p></li>
 <li><p><strong>granularity</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>Granularity of the created config. Defaults to ‘model’.
@@ -218,13 +222,13 @@ configuration tweaks.</p>
 <li><p><strong>default_reuse_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – Default reuse factor. Defaults to 1.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>Exception</strong> – If PyTorch model has layers not supported by hls4ml.</p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The created config.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>[dict]</p>
 </dd>
 </dl>
@@ -250,16 +254,16 @@ configuration tweaks.</p>
 <p><a class="reference external" href="https://github.com/hls-fpga-machine-learning/example-models">https://github.com/hls-fpga-machine-learning/example-models</a></p>
 <p>Use fetch_example_list() to see all the available models.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model_name</strong> (<em>str</em>) – Name of the example model in the repo. Example: fetch_example_model(‘KERAS_3layer.json’)</p></li>
 <li><p><strong>backend</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the backend to use for model conversion.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary that stores the configuration to the model</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
@@ -331,7 +335,7 @@ configuration tweaks.</p>
 <span class="sig-prename descclassname"><span class="pre">hls4ml.utils.plot.</span></span><span class="sig-name descname"><span class="pre">model_to_dot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_layer_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rankdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TB'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">96</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subgraph</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.plot.model_to_dot" title="Permalink to this definition"></a></dt>
 <dd><p>Convert a HLS model to dot format.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> – A HLS model instance.</p></li>
 <li><p><strong>show_shapes</strong> – whether to display shape information.</p></li>
@@ -345,12 +349,12 @@ a string specifying the format of the plot:
 <li><p><strong>subgraph</strong> – whether to return a <cite>pydot.Cluster</cite> instance.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A <cite>pydot.Dot</cite> instance representing the HLS model or
 a <cite>pydot.Cluster</cite> instance representing nested model if
 <cite>subgraph=True</cite>.</p>
 </dd>
-<dt class="field-odd">Raises</dt>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ImportError</strong> – if graphviz or pydot are not available.</p>
 </dd>
 </dl>
@@ -361,7 +365,7 @@ a <cite>pydot.Cluster</cite> instance representing nested model if
 <span class="sig-prename descclassname"><span class="pre">hls4ml.utils.plot.</span></span><span class="sig-name descname"><span class="pre">plot_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_layer_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rankdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TB'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">96</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.plot.plot_model" title="Permalink to this definition"></a></dt>
 <dd><p>Converts a HLS model to dot format and save to a file.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> – A HLS model instance</p></li>
 <li><p><strong>to_file</strong> – File name of the plot image.</p></li>
@@ -375,7 +379,7 @@ a string specifying the format of the plot:
 <li><p><strong>dpi</strong> – Dots per inch.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A Jupyter notebook Image object if Jupyter is installed.
 This enables in-line display of the model plots in notebooks.</p>
 </dd>
@@ -390,13 +394,13 @@ This enables in-line display of the model plots in notebooks.</p>
 <span class="sig-prename descclassname"><span class="pre">hls4ml.utils.string_utils.</span></span><span class="sig-name descname"><span class="pre">convert_to_pascal_case</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">snake_case</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.string_utils.convert_to_pascal_case" title="Permalink to this definition"></a></dt>
 <dd><p>Convert string in snake_case to PascalCase</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>snake_case</strong> (<em>str</em>) – string to convert</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>converted string</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -407,13 +411,13 @@ This enables in-line display of the model plots in notebooks.</p>
 <span class="sig-prename descclassname"><span class="pre">hls4ml.utils.string_utils.</span></span><span class="sig-name descname"><span class="pre">convert_to_snake_case</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pascal_case</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.string_utils.convert_to_snake_case" title="Permalink to this definition"></a></dt>
 <dd><p>Convert string in PascalCase to snake_case</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>pascal_case</strong> (<em>str</em>) – string to convert</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>converted string</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>

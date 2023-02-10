@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hls4ml.backends package &mdash; hls4ml 0.5.1.dev632+g107589fb documentation</title>
+  <title>hls4ml.backends package &mdash; hls4ml 0.5.1.dev633+g85b9531a documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,12 +28,16 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #2980B9" >
-            <a href="../index.html">
-            <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -99,7 +103,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="hls4ml.html">hls4ml package</a></li>
       <li class="breadcrumb-item active">hls4ml.backends package</li>
       <li class="wy-breadcrumbs-aside">
@@ -235,7 +239,7 @@
 <p>Backends should extend base layer classes with new attributes and variables as needed. These new classes are then
 used within the model.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>layer_class</strong> (<em>class</em>) – Base class to extend</p>
 </dd>
 </dl>
@@ -246,10 +250,10 @@ used within the model.</p>
 <span class="sig-name descname"><span class="pre">get_available_flows</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.get_available_flows" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the list of flows registered for this backend.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The list of registered flows.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>list</p>
 </dd>
 </dl>
@@ -260,14 +264,14 @@ used within the model.</p>
 <span class="sig-name descname"><span class="pre">get_custom_source</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.get_custom_source" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the registered custom source files.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><dl class="simple">
 <dt>Custom source files. Keys represent destination paths, values are absolute paths to registered source</dt><dd><p>files.</p>
 </dd>
 </dl>
 </p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>dict</p>
 </dd>
 </dl>
@@ -286,7 +290,7 @@ used within the model.</p>
 <dd><p>Register an optimizer path for the backend.</p>
 <p>Note that user-provided optimizers registered without specifying any flow will not be invoked.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> (<em>str</em>) – Name of the optimizer</p></li>
 <li><p><strong>opt_cls</strong> (<em>class</em>) – Optimizer class</p></li>
@@ -301,14 +305,14 @@ used within the model.</p>
 <span class="sig-name descname"><span class="pre">register_source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nnet_utils'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.Backend.register_source" title="Permalink to this definition"></a></dt>
 <dd><p>Register custom source that is not part of the backend’s templates.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>source_file</strong> (<em>str</em><em> or </em><em>Path</em>) – Absolute path to the source file.</p></li>
 <li><p><strong>destination_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – The sub-directory of the output project to write the source file to.
 Defaults to ‘nnet_utils’.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>Exception</strong> – If the source file is not a str or Path, or if the path is not absolute</p>
 </dd>
 </dl>
@@ -320,7 +324,7 @@ Defaults to ‘nnet_utils’.</p></li>
 <dd><p>Register a template “optimizer”.</p>
 <p>E.g., function call template or op configuration template.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>template_cls</strong> (<em>class</em>) – Template to register.</p>
 </dd>
 </dl>
@@ -343,13 +347,13 @@ Defaults to ‘nnet_utils’.</p></li>
 <span class="sig-prename descclassname"><span class="pre">hls4ml.backends.backend.</span></span><span class="sig-name descname"><span class="pre">register_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend_cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.backend.register_backend" title="Permalink to this definition"></a></dt>
 <dd><p>Create the backend instance and add it to the registry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> (<em>str</em>) – Name of the backend.</p></li>
 <li><p><strong>backend_cls</strong> (<em>class</em>) – Backend class to instantiate. Class must implement a constructor without parameters.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>Exception</strong> – If the backend has already been registered.</p>
 </dd>
 </dl>
@@ -368,7 +372,7 @@ Defaults to ‘nnet_utils’.</p></li>
 <dd><p>Transformation to apply if matching was successful.</p>
 <p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
 <li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
@@ -404,7 +408,7 @@ Defaults to ‘nnet_utils’.</p></li>
 <span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.template.Template.match" title="Permalink to this definition"></a></dt>
 <dd><p>Predicate to match on a given node.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
 </dd>
 </dl>
@@ -416,7 +420,7 @@ Defaults to ‘nnet_utils’.</p></li>
 <dd><p>Transformation to apply if matching was successful.</p>
 <p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
 <li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>

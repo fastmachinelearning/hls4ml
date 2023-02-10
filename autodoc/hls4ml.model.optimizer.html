@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hls4ml.model.optimizer package &mdash; hls4ml 0.5.1.dev632+g107589fb documentation</title>
+  <title>hls4ml.model.optimizer package &mdash; hls4ml 0.5.1.dev633+g85b9531a documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,12 +28,16 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #2980B9" >
-            <a href="../index.html">
-            <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -98,7 +102,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="hls4ml.html">hls4ml package</a></li>
           <li class="breadcrumb-item"><a href="hls4ml.model.html">hls4ml.model package</a></li>
       <li class="breadcrumb-item active">hls4ml.model.optimizer package</li>
@@ -166,7 +170,7 @@ with different configuration can co-exist if registered with different names.</p
 <span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.GlobalOptimizerPass.match" title="Permalink to this definition"></a></dt>
 <dd><p>Predicate to match on a given node.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
 </dd>
 </dl>
@@ -194,7 +198,7 @@ with different configuration can co-exist if registered with different names.</p
 <dd><p>Transformation to apply if matching was successful.</p>
 <p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
 <li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
@@ -220,7 +224,7 @@ with different configuration can co-exist if registered with different names.</p
 <span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass.match" title="Permalink to this definition"></a></dt>
 <dd><p>Predicate to match on a given node.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
 </dd>
 </dl>
@@ -237,7 +241,7 @@ with different configuration can co-exist if registered with different names.</p
 <dd><p>Transformation to apply if matching was successful.</p>
 <p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
 <li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
@@ -264,7 +268,7 @@ with different configuration can co-exist if registered with different names.</p
 <span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass.match" title="Permalink to this definition"></a></dt>
 <dd><p>Predicate to match on a given node.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
 </dd>
 </dl>
@@ -276,7 +280,7 @@ with different configuration can co-exist if registered with different names.</p
 <dd><p>Transformation to apply if matching was successful.</p>
 <p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
 <li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
@@ -302,10 +306,10 @@ with different configuration can co-exist if registered with different names.</p
 <span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">get_available_passes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.get_available_passes" title="Permalink to this definition"></a></dt>
 <dd><p>Return the list of all registered optimizer passes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>List of registered passes.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>list</p>
 </dd>
 </dl>
@@ -316,13 +320,13 @@ with different configuration can co-exist if registered with different names.</p
 <span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">get_backend_passes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.get_backend_passes" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the list of optimizer passes belonging to a backend</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>backend</strong> (<em>str</em>) – Name of the backend.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>List of optimizer names registered with the given backend.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>list</p>
 </dd>
 </dl>
@@ -333,16 +337,16 @@ with different configuration can co-exist if registered with different names.</p
 <span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">get_optimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.get_optimizer" title="Permalink to this definition"></a></dt>
 <dd><p>Return the optimizer instance registered with the given name.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the optimizer in the registry.</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>Exception</strong> – If the optimizer with the given name is not found in the registry.</p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The optimizer from the registry.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass">OptimizerPass</a></p>
 </dd>
 </dl>
@@ -359,7 +363,7 @@ def init_mylayer(self, layer):</p>
 <div><p>layer.set_attr(‘new_attribute’, ‘some_value’)</p>
 </div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>layer</strong> (<em>_type_</em>) – _description_</p>
 </dd>
 </dl>
@@ -377,16 +381,16 @@ def init_mylayer(self, layer):</p>
 <dd><p>Optimize a given model with the given passes.</p>
 <p>The passes are attempted until all passes no longer match or no changes to the model graph occur.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<em>ModelGraph</em>) – The model to optimize.</p></li>
 <li><p><strong>passes</strong> (<em>list</em>) – List of passes to apply.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The set of applied passes (the pases that matched the predicate).</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>set</p>
 </dd>
 </dl>
@@ -402,7 +406,7 @@ def init_mylayer(self, layer):</p>
 <span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">register_pass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.register_pass" title="Permalink to this definition"></a></dt>
 <dd><p>Register a new optimizer pass.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> (<em>str</em>) – Name of the optimizer</p></li>
 <li><p><strong>opt_cls</strong> (<em>class</em>) – The class of the optimizer.</p></li>
@@ -410,13 +414,13 @@ def init_mylayer(self, layer):</p>
 will be appended to the name of the registered flow. Defaults to None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>Exception</strong> – If the optimization pass has already been registered with the given name.</p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The name of the registered optimizer.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
 </dd>
 </dl>
