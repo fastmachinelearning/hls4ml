@@ -49,7 +49,7 @@ def parse_conv2d_layer(pytorch_layer, layer_name, input_shapes, data_reader, con
     layer['name'] = layer_name
     layer['class_name'] = 'Conv2D'
     layer['data_format'] = 'channels_first' #Pytorch default (can't change)
-    
+    print (input_shapes[0])
     #Input info
     (
         layer['in_height'],
@@ -82,5 +82,4 @@ def parse_conv2d_layer(pytorch_layer, layer_name, input_shapes, data_reader, con
                                                                            layer['filt_width'])
     
     output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
-    
     return layer, output_shape

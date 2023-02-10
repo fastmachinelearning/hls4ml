@@ -6,7 +6,7 @@ merge_layers = ['add', 'subtract', 'multiply', 'average', 'maximum', 'minimum', 
 
 
 @pytorch_handler(*merge_layers)
-def parse_merge_layer(operation, layer_name, input_names, input_shapes, data_reader):
+def parse_merge_layer(operation, layer_name, input_names, input_shapes, data_reader, config):
     assert operation in merge_layers
 
     layer = {}

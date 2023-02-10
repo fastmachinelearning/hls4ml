@@ -45,6 +45,19 @@ from hls4ml.utils.config import config_from_pytorch_model
 # model = LayerLinearRegression()
 
 
+class MyModuleConvRelu(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(3,3,3)
+        
+    def forward(self, x):
+        y1 = self.conv(x)
+        y = torch.relu(y1)
+        y = y + y1
+        y = torch.relu(y)
+        return y
+
+
 class MyModule(torch.nn.Module):
     def __init__(self):
         super().__init__()
@@ -54,13 +67,19 @@ class MyModule(torch.nn.Module):
     def forward(self, x):
         return self.linear(x + self.param).clamp(min=0.0, max=1.0)
 
-model = MyModule()
+
+
+model = MyModuleConvRelu()
 
 print ("content of model:")
 for layer_name, pytorch_layer in model.named_modules():
     print(layer_name, pytorch_layer.__class__.__name__)
 print ("----------------------------------------------")
 
+from torch.fx import symbolic_trace
+traced_model = symbolic_trace(model)  
+print(traced_model.graph)
+
 config = config_from_pytorch_model(model)
-hls_model = convert_from_pytorch_model(model, (4,5), hls_config = config )
+hls_model = convert_from_pytorch_model(model, (None,5,5,3), hls_config = config )
 
