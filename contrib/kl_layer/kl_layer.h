@@ -20,7 +20,7 @@ struct distance_config {
 
     // Internal info
     static const unsigned table_size = 1024;
-    static constexpr float exp_range = 1024;
+    static constexpr unsigned exp_range = 8;
 };
 
 template <typename CONFIG_T, int N_TABLE> void init_klloss_exp_table(typename CONFIG_T::exp_table_t table_out[N_TABLE]) {

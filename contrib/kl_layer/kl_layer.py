@@ -21,7 +21,8 @@ from tensorflow.python.ops import math_ops
 
 import hls4ml
 from hls4ml.converters.keras_to_hls import parse_default_keras_layer
-from hls4ml.model.types import FixedPrecisionType, NamedType
+from hls4ml.model.attributes import ConfigurableAttribute, TypeAttribute
+from hls4ml.model.types import FixedPrecisionType, RoundingMode, SaturationMode
 
 
 # Keras implementation of a KL layer
@@ -47,20 +48,22 @@ class KLLoss(Merge):
 class HKLLoss(hls4ml.model.layers.Layer):
     '''hls4ml implementation of a KL loss custom layer'''
 
+    _expected_attributes = [
+        ConfigurableAttribute('table_size', default=1024),
+        ConfigurableAttribute('exp_range', default=8),
+        TypeAttribute('accum'),
+        TypeAttribute(
+            'sum',
+            default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+        ),
+        TypeAttribute(
+            'exp_table',
+            default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+        ),
+    ]
+
     def initialize(self):
         self.add_output_variable(shape=[1], dim_names=[f'KL_LOSS_{self.index}'])
-
-        print(self.attributes)
-        if 'sum_t' not in self.attributes:
-            self.set_attr('sum_t', self.get_attr('accum_t'))
-        if 'exp_table_t' not in self.attributes:
-            self.set_attr(
-                'exp_table_t', NamedType(name=self.name + '_exp_table_t', precision=FixedPrecisionType(width=18, integer=8))
-            )
-        if 'table_size' not in self.attributes:
-            self.set_attr('table_size', 1024)
-        if 'exp_range' not in self.attributes:
-            self.set_attr('exp_range', 8)
 
 
 # Templates
@@ -73,8 +76,8 @@ distance_config_template = """struct config{index} : nnet::distance_config {{
     static const unsigned table_size = {table_size};
     static constexpr float exp_range = {exp_range};
 }};\n"""
-distance_function_template = 'nnet::{distance}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
-distance_include_list = ['../../../contrib/kl_layer/kl_layer.h']
+distance_function_template = 'nnet::klloss<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
+distance_include_list = ['nnet_utils/kl_layer.h']
 
 
 class HKLLossConfigTemplate(hls4ml.backends.template.LayerConfigTemplate):
@@ -96,7 +99,6 @@ class HKLLossFunctionTemplate(hls4ml.backends.template.FunctionCallTemplate):
 
     def format(self, node):
         params = {}
-        params['distance'] = 'klloss'
         params['config'] = f'config{node.index}'
         params['input1_t'] = node.get_input_variable(node.inputs[0]).type.name
         params['input2_t'] = node.get_input_variable(node.inputs[1]).type.name
@@ -134,7 +136,7 @@ def main():
     backend.register_template(HKLLossFunctionTemplate)
 
     # Register HLS implementation
-    p = Path('kl_layer.h')
+    p = Path(__file__).parent / 'kl_layer.h'
     backend.register_source(p)
 
     # Test if it works
