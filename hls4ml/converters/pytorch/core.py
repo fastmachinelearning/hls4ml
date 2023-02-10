@@ -44,7 +44,6 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, dat
         layer['class_name'] = 'Activation'
     
     output_shape=input_shapes[0]
- 
     return layer, output_shape
 
 batchnorm_layers = ['BatchNorm2d', 'BatchNorm1d']
