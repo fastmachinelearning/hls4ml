@@ -30,21 +30,21 @@ def parse_linear_layer(pytorch_layer, layer_name, input_shapes, data_reader, con
 # TODO: propagate parametrized activation parameters
 # https://github.com/fastmachinelearning/hls4ml/issues/409 
 # activation_layers = ['LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
-activation_layers = ['Softmax', 'ReLU']
+activation_layers = ['softmax', 'relu']
 @pytorch_handler(*activation_layers)
-def parse_activation_layer(pytorch_layer, layer_name, input_shapes, data_reader, config):
+def parse_activation_layer(operation, layer_name, input_names, input_shapes, data_reader, config):
     
     layer = {}
     
-    layer['class_name'] =  pytorch_layer.__class__.__name__
+    layer['class_name'] =  operation.capitalize()
     layer['activation'] = layer['class_name']
     layer['name'] = layer_name
     
-    if layer['class_name'] == 'ReLU':
+    if layer['class_name'] == 'Relu':
         layer['class_name'] = 'Activation'
     
     output_shape=input_shapes[0]
-    
+ 
     return layer, output_shape
 
 batchnorm_layers = ['BatchNorm2d', 'BatchNorm1d']
