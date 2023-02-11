@@ -16,11 +16,8 @@ If you are using the package please cite:
 
 * J. Duarte *et al.*\ , "Fast inference of deep neural networks in FPGAs for particle physics", `JINST 13 P07027 (2018) <https://dx.doi.org/10.1088/1748-0221/13/07/P07027>`_\ , `arXiv:1804.06913 <https://arxiv.org/abs/1804.06913>`_.
 
-If you are using the boosted decision tree implementation, please cite also:   
+If you are using the binary or ternary neural network implementation, please also cite:
 
-
-* S. Summers *et al.*\ , "Fast inference of boosted decision trees in FPGAs for particle physics", `arXiv:2002.02534 <https://arxiv.org/abs/2002.02534>`_.
-  If you are using the binary or ternary neural network implementation, please also cite:
 * G. Di Guglielmo *et al.*\ , "Compressing deep neural networks on FPGAs to binary and ternary precision with hls4ml", `arXiv:2003.06308 <https://arxiv.org/abs/2003.06308>`_
 
 Additional Talks and Presentations
