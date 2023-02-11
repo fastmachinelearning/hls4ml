@@ -12,15 +12,17 @@
 #
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath('../'))
 
 import datetime
+
 from setuptools_scm import get_version
 
 # -- Project information -----------------------------------------------------
 
 project = 'hls4ml'
-copyright = str(datetime.datetime.now().year)+', Fast Machine Learning Lab'
+copyright = str(datetime.datetime.now().year) + ', Fast Machine Learning Lab'
 author = 'Fast Machine Learning Lab'
 
 # The full version, including alpha/beta/rc tags
@@ -36,7 +38,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.githubpages',
     'sphinx_rtd_theme',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'sphinx_contributors',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -72,12 +75,11 @@ html_theme_options = {
     'display_version': True,
     'prev_next_buttons_location': 'bottom',
     'style_external_links': False,
-
     'style_nav_header_background': '#2980B9',
     # Toc options
     'collapse_navigation': True,
     'sticky_navigation': True,
     'navigation_depth': 2,
     'includehidden': True,
-    'titles_only': False
+    'titles_only': False,
 }

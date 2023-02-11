@@ -88,4 +88,9 @@ binary/ternary networks:
 Contributors
 ============
 
-Check the README for the full list of contributors!
+Thanks to our contributors!
+
+..  contributors:: fastmachinelearning/hls4ml
+   :avatars:
+   :limit: 100
+   :order: DESC
