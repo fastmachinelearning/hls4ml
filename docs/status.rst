@@ -13,7 +13,7 @@ Features
 
 A list of supported ML codes and architectures, including a summary table is below.  Dependencies are given in the :doc:`Setup <setup>` page.
 
-ML code support: 
+ML code support:
 
 * Keras/Tensorflow/QKeras
 * PyTorch (limited)
@@ -65,4 +65,3 @@ Example Models
 ==============
 
 We also provide and documented several example models that have been implemented in ``hls4ml`` in `this Github repository <https://github.com/fastmachinelearning/example-models>`_.
-

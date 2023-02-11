@@ -9,7 +9,7 @@ Citation
 If you are using the package please cite:
 
 
-* 
+*
   .. image:: https://zenodo.org/badge/108329371.svg
      :target: https://zenodo.org/badge/latestdoi/108329371
      :alt: DOI
@@ -31,7 +31,7 @@ Additional Talks and Presentations
 * CHEP 2018: `talk <https://indico.cern.ch/event/587955/contributions/2937529/>`__
 * Connecting the Dots 2018: `talk <https://indico.cern.ch/event/658267/contributions/2813688/>`__
 * Fermilab Research Techniques Seminar: `talk <https://indico.fnal.gov/event/16908/>`__
-* CERN EP/IT Data Science Seminar: `talk <https://indico.cern.ch/event/721567/>`__ 
+* CERN EP/IT Data Science Seminar: `talk <https://indico.cern.ch/event/721567/>`__
 
 Contributors
 ============
@@ -48,4 +48,3 @@ Contributors
 * Giuseppe Di Guglielmo [Columbia University]
 * Duc Hoang [Rhodes College]
 * Noah Paladino [Rutgers University]
-

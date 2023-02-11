@@ -126,14 +126,14 @@ New contributors:
 What's changed:
 
 * ``VivadoAccelerator`` backend: target ``pynq-z2`` and ``zcu102`` boards directly from hls4ml by @nicologhielmetti
-* Updated ``PyTorch`` and ``ONNX`` converters by @Duchstf 
-* ``line_buffer`` Conv2D implementation for ``io_stream``: reduced resource usage and latency by @Keb-L, @violatingcp, @vloncar 
-* Support ``QConv2DBatchnorm`` layer from ``QKeras`` by @nicologhielmetti 
-* Improved profiling plots - easier to compare original vs ``hls4ml`` converted models by @maksgraczyk 
-* Better derivation of data types for ``QKeras`` models by @jmduarte, @thesps 
+* Updated ``PyTorch`` and ``ONNX`` converters by @Duchstf
+* ``line_buffer`` Conv2D implementation for ``io_stream``: reduced resource usage and latency by @Keb-L, @violatingcp, @vloncar
+* Support ``QConv2DBatchnorm`` layer from ``QKeras`` by @nicologhielmetti
+* Improved profiling plots - easier to compare original vs ``hls4ml`` converted models by @maksgraczyk
+* Better derivation of data types for ``QKeras`` models by @jmduarte, @thesps
 * Improved CI by @thesps
-* More support for models with branches, skip connections, ``Merge`` and ``Concatenate`` layers by @jmduarte, @vloncar 
-* Support for ``Dense`` layers over multi-dimensional tensors by @vloncar 
+* More support for models with branches, skip connections, ``Merge`` and ``Concatenate`` layers by @jmduarte, @vloncar
+* Support for ``Dense`` layers over multi-dimensional tensors by @vloncar
 * Overall improvements by @vloncar, @jmduarte, @thesps, @jmitrevs & others
 
 New contributors:
@@ -248,8 +248,6 @@ Bugfixes:
 **v0.0.2**\ : first alpha release
 
 
-* full translation of DNNs from Keras 
+* full translation of DNNs from Keras
 * an example Conv1D exists
 * parallel mode is supported (serial mode, not yet)
-
-
