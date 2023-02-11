@@ -7,6 +7,8 @@
     setup 
     command
     concepts
+    flows
+    extension
     reference
 
 .. toctree::
