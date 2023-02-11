@@ -1,50 +1,91 @@
 ============================
-Reference and Contributors
+Citation and Contributors
 ============================
 
 
 Citation
-========
+=================================
+If you use this software in a publication, please cite the software
 
-If you are using the package please cite:
+..  code-block:: bibtex
 
+    @software{vloncar_2021_5680908,
+    author       = {{FastML Team}},
+    title        = {fastmachinelearning/hls4ml},
+    year         = 2021,
+    publisher    = {Zenodo},
+    doi          = {10.5281/zenodo.1201549},
+    url          = {https://github.com/fastmachinelearning/hls4ml}
+    }
 
-*
-  .. image:: https://zenodo.org/badge/108329371.svg
-     :target: https://zenodo.org/badge/latestdoi/108329371
-     :alt: DOI
+and first publication:
 
-* J. Duarte *et al.*\ , "Fast inference of deep neural networks in FPGAs for particle physics", `JINST 13 P07027 (2018) <https://dx.doi.org/10.1088/1748-0221/13/07/P07027>`_\ , `arXiv:1804.06913 <https://arxiv.org/abs/1804.06913>`_.
+..  code-block:: bibtex
 
-If you are using the binary or ternary neural network implementation, please also cite:
+    @article{Duarte:2018ite,
+        author = "Duarte, Javier and others",
+        title = "{Fast inference of deep neural networks in FPGAs for particle physics}",
+        eprint = "1804.06913",
+        archivePrefix = "arXiv",
+        primaryClass = "physics.ins-det",
+        reportNumber = "FERMILAB-PUB-18-089-E",
+        doi = "10.1088/1748-0221/13/07/P07027",
+        journal = "JINST",
+        volume = "13",
+        number = "07",
+        pages = "P07027",
+        year = "2018"
+    }
 
-* G. Di Guglielmo *et al.*\ , "Compressing deep neural networks on FPGAs to binary and ternary precision with hls4ml", `arXiv:2003.06308 <https://arxiv.org/abs/2003.06308>`_
+Additionally, if you use specific features developed in later papers, please cite those as well. For example, CNNs:
 
-Additional Talks and Presentations
-==================================
+..  code-block:: bibtex
 
+    @article{Aarrestad:2021zos,
+        author = "Aarrestad, Thea and others",
+        title = "{Fast convolutional neural networks on FPGAs with hls4ml}",
+        eprint = "2101.05108",
+        archivePrefix = "arXiv",
+        primaryClass = "cs.LG",
+        reportNumber = "FERMILAB-PUB-21-130-SCD",
+        doi = "10.1088/2632-2153/ac0ea1",
+        journal = "Mach. Learn. Sci. Tech.",
+        volume = "2",
+        number = "4",
+        pages = "045015",
+        year = "2021"
+    }
+    @article{Ghielmetti:2022ndm,
+        author = "Ghielmetti, Nicol\`{o} and others",
+        title = "{Real-time semantic segmentation on FPGAs for autonomous vehicles with hls4ml}",
+        eprint = "2205.07690",
+        archivePrefix = "arXiv",
+        primaryClass = "cs.CV",
+        reportNumber = "FERMILAB-PUB-22-435-PPD",
+        doi = "10.1088/2632-2153/ac9cb5",
+        journal ="Mach. Learn. Sci. Tech.",
+        year = "2022"
+    }
 
-* eScience 2019: `talk <https://escience2019.sched.com/event/Uuiy/machine-learning-on-fpgas-for-low-latency-and-high-throughput-inference?iframe=yes&w=100%&sidebar=yes&bg=no#>`__
-* ACAT 2019: `talk <https://indico.cern.ch/event/708041/contributions/3269690/>`__
-* Zurich Hands-on Course: `course <https://indico.cern.ch/event/769727/>`__
-* TWEPP 2018: `talk <https://indico.cern.ch/event/697988/contributions/3055990/>`__
-* CHEP 2018: `talk <https://indico.cern.ch/event/587955/contributions/2937529/>`__
-* Connecting the Dots 2018: `talk <https://indico.cern.ch/event/658267/contributions/2813688/>`__
-* Fermilab Research Techniques Seminar: `talk <https://indico.fnal.gov/event/16908/>`__
-* CERN EP/IT Data Science Seminar: `talk <https://indico.cern.ch/event/721567/>`__
+binary/ternary networks:
+
+..  code-block:: bibtex
+
+    @article{Loncar:2020hqp,
+        author = "Ngadiuba, Jennifer and others",
+        title = "{Compressing deep neural networks on FPGAs to binary and ternary precision with HLS4ML}",
+        eprint = "2003.06308",
+        archivePrefix = "arXiv",
+        primaryClass = "cs.LG",
+        reportNumber = "FERMILAB-PUB-20-167-PPD-SCD",
+        doi = "10.1088/2632-2153/aba042",
+        journal = "Mach. Learn. Sci. Tech.",
+        volume = "2",
+        pages = "015001",
+        year = "2021"
+    }
 
 Contributors
 ============
 
-
-* Vladimir Loncar, Jennifer Ngadiuba, Maurizio Pierini, Sioni Summers [CERN]
-* Javier Duarte [University of California San Diego]
-* Sergo Jindariani, Benjamin Kreis, Ryan Rivera, Nhan Tran [Fermilab]
-* Edward Kreinar [Hawkeye360]
-* Song Han, Philip Harris, Dylan Rankin [MIT]
-* Zhenbin Wu [University of Illinois at Chicago]
-* Mark Neubauer [University of Illinois Urbana-Champaign]
-* Shih-Chieh Hsu [University of Washington]
-* Giuseppe Di Guglielmo [Columbia University]
-* Duc Hoang [Rhodes College]
-* Noah Paladino [Rutgers University]
+Check the README for the full list of contributors!
