@@ -1,10 +1,10 @@
 .. toctree::
     :hidden:
-    
+
     Home <self>
     release_notes
     status
-    setup 
+    setup
     command
     concepts
     flows
@@ -25,7 +25,7 @@
 
     autodoc/hls4ml
     autodoc/hls4ml.*
-   
+
 
 ==================================
 Welcome to hls4ml's documentation!
@@ -42,7 +42,7 @@ The project is currently in development, so please let us know if you are intere
 
 Project Status
 =================================
-For the latest status including current and planned features, see the :doc:`Status and Features <status>` page. 
+For the latest status including current and planned features, see the :doc:`Status and Features <status>` page.
 
 Tutorials
 =================================
@@ -68,7 +68,7 @@ If you use this software in a publication, please cite the software
 and first publication:
 
 ..  code-block:: bibtex
-    
+
     @article{Duarte:2018ite,
         author = "Duarte, Javier and others",
         title = "{Fast inference of deep neural networks in FPGAs for particle physics}",

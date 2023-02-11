@@ -5,6 +5,7 @@
 [![DOI](https://zenodo.org/badge/108329371.svg)](https://zenodo.org/badge/latestdoi/108329371)
 [![PyPI version](https://badge.fury.io/py/hls4ml.svg)](https://badge.fury.io/py/hls4ml)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/hls4ml.svg)](https://pypi.org/project/hls4ml/)
+[![All Contributors](https://img.shields.io/github/all-contributors/projectOwner/projectName?color=ee8449&style=flat-square)](#contributors)
 
 A package for machine learning inference in FPGAs. We create firmware implementations of machine learning algorithms using high level synthesis language (HLS). We translate traditional open-source machine learning package models into HLS that can be configured for your use-case!
 
@@ -21,7 +22,7 @@ Detailed tutorials on how to use `hls4ml`'s various functionalities can be found
 pip install hls4ml
 ```
 
-To install the extra dependencies for profiling: 
+To install the extra dependencies for profiling:
 
 ```
 pip install hls4ml[profiling]
@@ -130,3 +131,13 @@ binary/ternary networks:
     year = "2021"
 }
 ```
+## Contributors
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
