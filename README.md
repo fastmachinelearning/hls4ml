@@ -5,7 +5,7 @@
 [![DOI](https://zenodo.org/badge/108329371.svg)](https://zenodo.org/badge/latestdoi/108329371)
 [![PyPI version](https://badge.fury.io/py/hls4ml.svg)](https://badge.fury.io/py/hls4ml)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/hls4ml.svg)](https://pypi.org/project/hls4ml/)
-[![All Contributors](https://img.shields.io/github/all-contributors/jmduarte/hls4ml?color=ee8449&style=flat-square)](#contributors)
+[![All Contributors](https://img.shields.io/github/all-contributors/fastmachinelearning/hls4ml?color=ee8449&style=flat-square)](#contributors)
 
 A package for machine learning inference in FPGAs. We create firmware implementations of machine learning algorithms using high level synthesis language (HLS). We translate traditional open-source machine learning package models into HLS that can be configured for your use-case!
 
