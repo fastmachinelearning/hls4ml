@@ -18,7 +18,10 @@ To implement a custom layer in hls4ml with the extension API, the required compo
 * Function config template
 * Registration of layer, source code, and templates
 
-For concreteness, let's say our custom layer, implemented in Keras, reverses the order of the last dimension of the inputs.
+Complete example
+================
+
+For concreteness, let's say our custom layer ``KReverse`` is implemented in Keras and reverses the order of the last dimension of the input.
 
 .. code-block:: Python
 
@@ -32,7 +35,7 @@ For concreteness, let's say our custom layer, implemented in Keras, reverses the
         def call(self, inputs):
             return tf.reverse(inputs, axis=[-1])
 
-Now, we can define the equivalent layer in hls4ml, which inherits from ``hls4ml.model.layers.Layer``.
+We can define the equivalent layer in hls4ml ``HReverse``, which inherits from ``hls4ml.model.layers.Layer``.
 
 .. code-block:: Python
 
@@ -46,10 +49,10 @@ Now, we can define the equivalent layer in hls4ml, which inherits from ``hls4ml.
             dims = inp.dim_names
             self.add_output_variable(shape, dims)
 
-A parser for the converter is also required.
+A parser for the Keras to HLS converter is also required.
 This parser reads the attributes of the Keras layer instance and populates a dictionary of attributes for the hls4ml layer.
-It also returns a list of output shapes (one for each output.
-In this case, there is only a single output with the same shape as the input.
+It also returns a list of output shapes (one sjape for each output).
+In this case, there a single output with the same shape as the input.
 
 .. code-block:: Python
 
@@ -64,7 +67,6 @@ In this case, there is only a single output with the same shape as the input.
             layer['inputs'] = input_names
 
         return layer, [shape for shape in input_shapes[0]]
-
 
 Next, we need the actual HLS implementaton of the function, which can be written in a header file ``nnet_reverse.h``.
 
@@ -95,7 +97,7 @@ Next, we need the actual HLS implementaton of the function, which can be written
 
     #endif
 
-Next, we can define the layer config and function call templates.
+Now, we can define the layer config and function call templates.
 These two templates determine how to populate the config template based on the layer attributes and the function call signature for the layer in HLS, respectively.
 
 .. code-block:: Python
@@ -128,7 +130,7 @@ These two templates determine how to populate the config template based on the l
             return self.template.format(**params)
 
 Now, we need to tell hls4ml about the existence of this new layer by registering it.
-We also need to register the parser (a.k.a. the layer handler), the template passes, and source with the particular backend.
+We also need to register the parser (a.k.a. the layer handler), the template passes, and HLS implementation source code with the particular backend.
 In this case, the HLS code is valid for both the Vivado and Quartus backends.
 
 .. code-block:: Python
