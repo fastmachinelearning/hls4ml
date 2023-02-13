@@ -232,7 +232,8 @@ class QuartusWriter(Writer):
                 newline = line
                 for layer in model.get_layers():
                     for w in layer.get_weights():
-                        newline += f'#include "weights/{w.name}.h"\n'
+                        if w not in model_brams:
+                            newline += f'#include "weights/{w.name}.h"\n'
 
             # Insert test weights
             elif '// hls-fpga-machine-learning insert test weights' in line:
