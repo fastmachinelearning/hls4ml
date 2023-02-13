@@ -207,6 +207,8 @@ def pytorch_to_hls(config):
             assert(output_shape is not None)
             output_shapes[layer['name']] = output_shape   
 
+            print (output_shape)
+
             layer_counter += 1     
 
         if node.op == 'placeholder':
@@ -236,10 +238,11 @@ def pytorch_to_hls(config):
             layer_counter += 1
 
             input_names = tuple([str(i) for i in node.args])
+            arguments = node.kwargs
             layer_name = node.name
             
             #Process the layer
-            layer, output_shape = layer_handlers[operation](operation,layer_name,input_names, input_shapes,reader, config)
+            layer, output_shape = layer_handlers[operation](operation,layer_name,input_names, input_shapes, arguments,reader, config)
 
             print('Layer name: {}, layer type: {}, input shape: {}'.format(layer['name'], layer['class_name'], input_shapes))
             layer_list.append(layer)

@@ -67,9 +67,21 @@ class MyModule(torch.nn.Module):
     def forward(self, x):
         return self.linear(x + self.param).clamp(min=0.0, max=1.0)
 
+class MyModuleSoftMax(nn.Module):
+    def __init__(self):
+        super(MyModuleSoftMax, self).__init__()
+        self.fc1 = nn.Linear(3,4)  
+        self.fc2 = nn.Linear(4,2)
+        self.sm  = nn.Softmax()
+
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        #x = F.softmax(self.fc2(x))
+        x = self.sm(self.fc2(x))
+        return
 
 
-model = MyModuleConvRelu()
+model = MyModuleSoftMax()
 
 print ("content of model:")
 for layer_name, pytorch_layer in model.named_modules():
@@ -81,5 +93,5 @@ traced_model = symbolic_trace(model)
 print(traced_model.graph)
 
 config = config_from_pytorch_model(model)
-hls_model = convert_from_pytorch_model(model, (None,5,5,3), hls_config = config )
+hls_model = convert_from_pytorch_model(model, (None, 3), hls_config = config )
 
