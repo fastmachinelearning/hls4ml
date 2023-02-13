@@ -93,7 +93,13 @@ class VivadoBackend(FPGABackend):
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
-        optimization_passes = ['vivado:remove_final_reshape', 'vivado:optimize_pointwise_conv', 'vivado:skip_softmax']
+        optimization_passes = [
+            'vivado:remove_final_reshape',
+            'vivado:optimize_pointwise_conv',
+            'vivado:inplace_parallel_reshape',
+            'vivado:inplace_stream_flatten',
+            'vivado:skip_softmax',
+        ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
         vivado_types = [

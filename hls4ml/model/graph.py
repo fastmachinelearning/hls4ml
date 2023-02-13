@@ -316,9 +316,18 @@ class ModelGraph:
 
         self._applied_flows = []
 
-        # If not provided, assumes layer_list[0] is input, and layer_list[-1] is output
-        self.inputs = inputs if inputs is not None else [layer_list[0]['name']]
-        self.outputs = outputs if outputs is not None else [layer_list[-1]['name']]
+        # If not provided, assumes layer_list[0] is the input layer, and layer_list[-1] is output layer
+
+        # Note, these are actually the variable names, which may differ from the layer name
+        input_layers = inputs if inputs is not None else [layer_list[0]['name']]
+        output_layers = outputs if outputs is not None else [layer_list[-1]['name']]
+        self.inputs = self._find_variables(layer_list, input_layers)
+        if self.inputs != input_layers:
+            raise RuntimeError(
+                "Currently only support the case when input variables and input layer names match\n"
+                + f"Input layers = {input_layers}, input_vars = {self.inputs}"
+            )
+        self.outputs = self._find_variables(layer_list, output_layers)
 
         self.index = 0
         self.graph = OrderedDict()
@@ -330,6 +339,12 @@ class ModelGraph:
 
         for flow in self.config.flows:
             self.apply_flow(flow)
+
+    @staticmethod
+    def _find_variables(layer_list, layers):
+        fullnodes = [node for node in layer_list if node['name'] in layers]
+        out_list_lists = [node['outputs'] if 'outputs' in node else [node['name']] for node in fullnodes]
+        return [item for sublist in out_list_lists for item in sublist]  # to flatten
 
     def _make_graph(self, layer_list):
         for layer in layer_list:
@@ -504,9 +519,11 @@ class ModelGraph:
 
         """
         if rewire:
-            if len(node.inputs) > 1 or len(node.outputs) > 1:
+            inputs = [inp for inp in node.inputs if inp]
+            outputs = [outp for outp in node.outputs if outp]
+            if len(inputs) > 1 or len(outputs) > 1:
                 raise Exception('Cannot rewire a node with multiple inputs/outputs')
-            prev_node = self.graph.get(node.inputs[0])
+            prev_node = node.get_input_node(node.inputs[0])
             next_nodes = [x for x in self.graph.values() if node.outputs[0] in x.inputs]
             if prev_node is not None:
                 if len(next_nodes) > 0:

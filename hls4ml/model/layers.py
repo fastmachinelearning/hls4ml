@@ -1,3 +1,5 @@
+import typing
+
 import numpy as np
 
 from hls4ml.model.attributes import (
@@ -17,7 +19,6 @@ from hls4ml.model.types import (
     ExponentPrecisionType,
     ExponentWeightVariable,
     FixedPrecisionType,
-    InplaceVariable,
     IntegerPrecisionType,
     NamedType,
     TensorVariable,
@@ -166,14 +167,16 @@ class Layer:
             self.set_attr('accum_t', accum_t)
 
     def get_input_node(self, input_name=None):
-        if input_name is not None:
-            nodes = [node for node in self.model.graph.values() if input_name in node.outputs]
-            if len(nodes) == 0:
-                return None
+        if input_name is None:
+            if len(self.inputs) > 0:
+                input_name = self.inputs[0]
             else:
-                return nodes[0]
+                return None
+        nodes = [node for node in self.model.graph.values() if input_name in node.outputs]
+        if len(nodes) == 0:
+            return None
         else:
-            return self.model.graph.get(self.inputs[0])
+            return nodes[0]
 
     def get_input_variable(self, input_name=None):
         if input_name is not None:
@@ -359,17 +362,42 @@ class Input(Layer):
 
 
 class Reshape(Layer):
+    _expected_attributes = [
+        Attribute('target_shape', value_type=typing.Sequence),
+    ]
+
     def initialize(self):
-        shape = self.attributes['target_shape']
-        if shape[0] is None:
-            shape = shape[1:]
-        dims = [f'N_SIZE_{i}_{self.index}' for i in range(1, len(shape) + 1)]
+        input_shape = self.get_input_variable(self.inputs[0]).shape
+        target_shape = self.get_attr('target_shape')
+        if target_shape is None:
+            # need to get it from the input
+            shape_node = self.get_input_node(self.inputs[1])
+            target_shape = shape_node.value
 
-        out_name = self.outputs[0]
-        proxy = self.get_input_variable()
-        out = InplaceVariable(shape, dims, proxy)
+        # REVISIT:  MAY NEED TO JUST ALWAYS REMOVE THE LEADING DIMENSION SINCE QONNX
+        # DOESN'T REQUIRE THE BATCH DIMENSION TO BE 1.
+        # remove Nones or leading ones
+        if target_shape[0] is None or (len(target_shape) > 1 and target_shape[0] == 1):
+            # the latter case is for QONNX
+            target_shape = target_shape[1:]
+        # take care of -1 shapes
+        shape = self.infer_shape(input_shape, target_shape)
 
-        self.set_attr(out_name, out)
+        # update the target shape with chnges from above
+        self.set_attr('target_shape', shape)
+
+        dims = [f'N_SIZE_{i}_{self.index}' for i in range(len(shape))]
+
+        self.add_output_variable(shape, dims)
+
+    @staticmethod
+    def infer_shape(input_shape, target_shape):
+        """This infers -1 shapes"""
+        if -1 in target_shape:  # Need to infer shape for -1
+            dummy_x = np.ones(input_shape)
+            dummy_y = np.reshape(dummy_x, target_shape)
+            target_shape = list(dummy_y.shape)
+        return target_shape
 
 
 class Dense(Layer):
