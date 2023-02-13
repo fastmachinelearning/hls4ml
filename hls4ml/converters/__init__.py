@@ -260,7 +260,7 @@ def convert_from_pytorch_model(
     ----------
     model : Pytorch model object.
         Model to be converted to hls model object.
-    input_shape : @todo: to be filled
+    input_shape : shape of the input tensor. First element is the batch size, can be None 
     output_dir (str, optional): Output directory of the generated HLS
         project. Defaults to 'my-hls-test'.
     project_name (str, optional): Name of the HLS project.
