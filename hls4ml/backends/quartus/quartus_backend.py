@@ -45,7 +45,7 @@ class QuartusBackend(FPGABackend):
         initializers = self._get_layer_initializers()
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
-        streaming_passes = ['quartus:clone_output']
+        streaming_passes = ['quartus:reshape_stream', 'quartus:clone_output']
         streaming_flow = register_flow('streaming', streaming_passes, requires=[init_flow], backend=self.name)
 
         quartus_types = [
