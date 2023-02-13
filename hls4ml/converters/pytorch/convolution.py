@@ -3,8 +3,8 @@ from hls4ml.converters.pytorch_to_hls import pytorch_handler
 from hls4ml.converters.utils import *
 
 @pytorch_handler('Conv1d')
-def parse_conv1d_layer(pytorch_layer, layer_name, input_shapes, data_reader, config):
-    assert('Conv1d' in pytorch_layer.__class__.__name__)
+def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, arguments, data_reader, config):
+    assert('Conv1d' in operation)
     
     layer = {}
     
@@ -19,13 +19,13 @@ def parse_conv1d_layer(pytorch_layer, layer_name, input_shapes, data_reader, con
     ) = parse_data_format(input_shapes[0], 'channels_first') #Keras's default is channels_last
     
     #Additional parameters
-    layer['n_filt'] = pytorch_layer.out_channels
-    layer['filt_width'] = pytorch_layer.kernel_size[0] 
-    layer['stride_width'] = pytorch_layer.stride[0]
-    layer['pad_left'] = layer['pad_right'] = pytorch_layer.padding[0]
-    layer['dilation'] = pytorch_layer.dilation[0]
+    layer['n_filt'] = arguments['out_channels']
+    layer['filt_width'] = arguments['kernel_size'][0] 
+    layer['stride_width'] = arguments['stride'][0]
+    layer['pad_left'] = layer['pad_right'] = arguments['padding'][0]
+    layer['dilation'] = arguments['dilation'][0]
     
-    if pytorch_layer.padding[0] == 0: # No padding, i.e., 'VALID' padding in Keras/Tensorflow
+    if arguments['padding'][0] == 0: # No padding, i.e., 'VALID' padding in Keras/Tensorflow
         layer['padding'] = 'valid'
     else: #Only 'valid' and 'same' padding are available in Keras
         layer['padding'] = 'same'
@@ -41,8 +41,8 @@ def parse_conv1d_layer(pytorch_layer, layer_name, input_shapes, data_reader, con
     return layer, output_shape
 
 @pytorch_handler('Conv2d')
-def parse_conv2d_layer(pytorch_layer, layer_name, input_shapes, data_reader, config):
-    assert('Conv2d' in pytorch_layer.__class__.__name__)
+def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, arguments, data_reader, config):
+    assert('Conv2d' in operation)
     
     layer = {}
     
@@ -57,16 +57,16 @@ def parse_conv2d_layer(pytorch_layer, layer_name, input_shapes, data_reader, con
     ) = parse_data_format(input_shapes[0], 'channels_first') #Keras's default is channels_last
     
     #Additional parameters
-    layer['n_filt'] = pytorch_layer.out_channels
-    layer['filt_height'] = pytorch_layer.kernel_size[0]
-    layer['filt_width'] = pytorch_layer.kernel_size[1]
-    layer['stride_height'] = pytorch_layer.stride[0]
-    layer['stride_width'] = pytorch_layer.stride[1]
-    layer['dilation'] = pytorch_layer.dilation[0]
-    layer['pad_top'] = layer['pad_bottom'] = pytorch_layer.padding[0]
-    layer['pad_left'] = layer['pad_right'] = pytorch_layer.padding[1]
+    layer['n_filt'] = arguments['out_channels']
+    layer['filt_height'] = arguments['kernel_size'][0]
+    layer['filt_width'] = arguments['kernel_size'][1]
+    layer['stride_height'] = arguments['stride'][0]
+    layer['stride_width'] = arguments['stride'][1]
+    layer['dilation'] = arguments['dilation'][0]
+    layer['pad_top'] = layer['pad_bottom'] = arguments['padding'][0]
+    layer['pad_left'] = layer['pad_right'] = arguments['padding'][1]
     
-    if all(x == 0 for x in pytorch_layer.padding): # No padding, i.e., 'VALID' padding in Keras/Tensorflow
+    if all(x == 0 for x in arguments['padding']): # No padding, i.e., 'VALID' padding in Keras/Tensorflow
         layer['padding'] = 'valid'
     else: #Only 'valid' and 'same' padding are available in Keras
         layer['padding'] = 'same'

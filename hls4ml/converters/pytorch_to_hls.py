@@ -143,9 +143,6 @@ def pytorch_to_hls(config):
     #All supported layers
     supported_layers = get_supported_pytorch_layers() + skip_layers
 
-    #All supported functions:
-    supported_functions = ['add', 'subtract', 'multiply', 'average', 'maximum', 'minimum', 'concatenate', 'dot','softmax', 'relu']
-
     #All supported methods (none implemented yet):
     supported_methods = []
  
@@ -197,17 +194,47 @@ def pytorch_to_hls(config):
             #Increment the layer counter after initial screenings
             if pytorch_class in supported_layers:
                 layer_counter += 1
+
+            #parse info from class object
+
+            input_names = tuple([str(i) for i in node.args])
+            arguments = {}
+
+            #for Softmax (and probably others)
+            if hasattr(children[node.target], 'dim'):
+                arguments['dim'] = children[node.target].dim
+            #for Linear layer
+            if hasattr(children[node.target], 'in_features'):
+                arguments['in_features'] =  children[node.target].in_features
+            if hasattr(children[node.target], 'out_features'):
+                arguments['out_features'] = children[node.target].out_features
+            if hasattr(children[node.target], 'bias'):
+                arguments['bias'] = children[node.target].bias
+            #for Conv layers
+            if hasattr(children[node.target], 'out_channels'):
+                arguments['out_channels'] =  children[node.target].out_channels
+            if hasattr(children[node.target], 'kernel_size'):
+                arguments['kernel_size'] = children[node.target].kernel_size
+            if hasattr(children[node.target], 'stride'):
+                arguments['stride'] = children[node.target].stride
+            if hasattr(children[node.target], 'dilation'):
+                arguments['dilation'] = children[node.target].dilation
+            if hasattr(children[node.target], 'padding'):
+                arguments['padding'] = children[node.target].padding
+
+            layer_name = node.name
             
             #Process the layer
-            layer, output_shape = layer_handlers[pytorch_class](children[node.target], node.target, input_shapes, reader, config)
+            layer, output_shape = layer_handlers[pytorch_class](pytorch_class,layer_name,input_names, input_shapes, arguments,reader, config)          
+
+            #Process the layer
+            #layer, output_shape = layer_handlers[pytorch_class](children[node.target], node.target, input_shapes, reader, config)
 
             print('Layer name: {}, layer type: {}, input shape: {}'.format(layer['name'], layer['class_name'], input_shapes))
             layer_list.append(layer)
             
             assert(output_shape is not None)
             output_shapes[layer['name']] = output_shape   
-
-            print (output_shape)
 
             layer_counter += 1     
 
@@ -229,10 +256,10 @@ def pytorch_to_hls(config):
             #Function calls in the graph have to be transformed to layers known to hls4ml
             
             #operations that appear repeatedly have '_n' appended to their name for the nth repitition
-            operation = node.name.split("_")[0]
+            operation = node.name.split("_")[0].capitalize()
 
             #only a limited number of functions are supported
-            if operation not in supported_functions:
+            if operation not in supported_layers:
                 raise Exception('Unsupported function {}'.format(operation))
 
             layer_counter += 1
