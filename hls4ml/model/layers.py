@@ -372,14 +372,16 @@ class Reshape(Layer):
         if target_shape is None:
             # need to get it from the input
             shape_node = self.get_input_node(self.inputs[1])
-            target_shape = shape_node.value
+            # for QONNX, remove batch dimension
+            if shape_node:
+                target_shape = shape_node.value[1:]
+            else:
+                raise RuntimeError("Reshape for ONNX requires the target shape to be a second input.")
 
-        # REVISIT:  MAY NEED TO JUST ALWAYS REMOVE THE LEADING DIMENSION SINCE QONNX
-        # DOESN'T REQUIRE THE BATCH DIMENSION TO BE 1.
-        # remove Nones or leading ones
-        if target_shape[0] is None or (len(target_shape) > 1 and target_shape[0] == 1):
-            # the latter case is for QONNX
+        # remove Nones -- is this ever triggered?
+        if target_shape[0] is None:
             target_shape = target_shape[1:]
+
         # take care of -1 shapes
         shape = self.infer_shape(input_shape, target_shape)
 
