@@ -27,12 +27,30 @@ def parse_linear_layer(pytorch_layer, layer_name, input_shapes, data_reader, con
     
     return layer, output_shape
 
+@pytorch_handler('Softmax')
+def parse_softmax_layer(pytorch_layer, layer_name, input_shapes, data_reader, config):
+    assert('Softmax' in pytorch_layer.__class__.__name__)
+    
+    layer = {}
+   
+    layer['class_name'] = 'Softmax'
+    layer['name'] = layer_name
+    layer['activation'] = pytorch_layer.__class__.__name__
+    layer['axis'] = pytorch_layer.dim
+        
+    output_shape=input_shapes[0]    
+
+    return layer, output_shape
+
+
+
+
 # TODO: propagate parametrized activation parameters
 # https://github.com/fastmachinelearning/hls4ml/issues/409 
 # activation_layers = ['LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
 activation_layers = ['softmax', 'relu']
 @pytorch_handler(*activation_layers)
-def parse_activation_layer(operation, layer_name, input_names, input_shapes, data_reader, config):
+def parse_activation_layer(operation, layer_name, input_names, input_shapes, arguments, data_reader, config):
     
     layer = {}
     
@@ -43,6 +61,9 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, dat
     if layer['class_name'] == 'Relu':
         layer['class_name'] = 'Activation'
     
+    if 'dim' in arguments:
+        layer['axis'] = arguments['dim']
+
     output_shape=input_shapes[0]
     return layer, output_shape
 
