@@ -81,7 +81,7 @@ class MyModuleSoftMax(nn.Module):
         return
 
 
-model = MyModuleSoftMax()
+model = MyModuleConvRelu()
 
 print ("content of model:")
 for layer_name, pytorch_layer in model.named_modules():
@@ -93,5 +93,5 @@ traced_model = symbolic_trace(model)
 print(traced_model.graph)
 
 config = config_from_pytorch_model(model)
-hls_model = convert_from_pytorch_model(model, (None, 3), hls_config = config )
+hls_model = convert_from_pytorch_model(model, (None, 5,5,3), hls_config = config )
 

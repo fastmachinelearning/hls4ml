@@ -2,15 +2,15 @@ import numpy as np
 
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
 
-merge_layers = ['add', 'subtract', 'multiply', 'average', 'maximum', 'minimum', 'concatenate', 'dot']
+merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate', 'Dot']
 
 
 @pytorch_handler(*merge_layers)
-def parse_merge_layer(operation, layer_name, input_names, input_shapes, data_reader, config):
+def parse_merge_layer(operation, layer_name, input_names, input_shapes, arguments, data_reader, config):
     assert operation in merge_layers
 
     layer = {}
-    layer['class_name'] = operation.capitalize()
+    layer['class_name'] = operation
     layer['name'] = layer_name
 
     layer['op'] = operation
