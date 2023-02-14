@@ -7,32 +7,19 @@ This chapter is dedicated to setting up the tool.  We discuss software dependenc
 Dependencies
 ============
 
-**numpy, h5py**\ : required for the translation of keras model files
-
-http://www.numpy.org
-
-http://www.h5py.org
-
-
-**pyyaml**\ : for configuration file parsing
-
-https://pypi.python.org/pypi/PyYAML
-
-**QKeras**\ : for working with quantized models
-
-https://github.com/google/qkeras
-
-**PyTorch**\ : for reading in Torch models
-
-https://pytorch.org/
-
-
-**onnx**\ : note that you need an install of protobuf and numpy to build onnx. Detailed instructions are included in the link.
-
-https://github.com/onnx/onnx
-
-
-**Xilinx Vivado license**\ : a license is required for the synthesis of generated RTL IP
+* NumPy: required for array-based computations
+   * https://numpy.org
+* H5Py: required for the translation of Keras model files
+   * https://www.h5py.org
+* PyYAML: required for configuration file parsing
+   * https://pypi.python.org/pypi/PyYAML
+* QKeras: required for working with quantized models
+   * https://github.com/google/qkeras
+* PyTorch: required for reading in PyTorch models
+   * https://pytorch.org
+* ONNX: required for reading in ONNX models. Note that you need an install of Protobuf and NumPy to build ONNX. Detailed instructions are included in the link.
+   * https://github.com/onnx/onnx
+* Xilinx Vivado license or Intel Quartus license: a license is required for the synthesis of generated RTL IP
 
 
 Quick Start
