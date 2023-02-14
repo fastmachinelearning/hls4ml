@@ -80,7 +80,7 @@ template <class data_T, class res_T, int N> void repack_stream(stream<data_T> &d
             data_T in_data = data.read();
             res_T out_data;
 
-            #pragma ii i
+            #pragma ii 1
             for (int j = 0; j < pack_diff; j++) {
 
                 res_T out_data;
