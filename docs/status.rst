@@ -13,16 +13,16 @@ Features
 
 A list of supported ML codes and architectures, including a summary table is below.  Dependencies are given in the :doc:`Setup <setup>` page.
 
-ML code support:
+ML framework support:
 
-* Keras/Tensorflow/QKeras
+* (Q)Keras
 * PyTorch (limited)
 * (Q)ONNX (in development)
 
 Neural network architectures:
 
-* Fully connected NNs (multilayer perceptron, MLP)
-* Convolutional NNs (1D and 2D)
+* Fully connected NN (multilayer perceptron, MLP)
+* Convolutional NN
 * Recurrent NN (LSTM)
 * Graph NN (GarNet)
 
@@ -37,31 +37,49 @@ A summary of the on-going status of the ``hls4ml`` tool is in the table below.
 .. list-table::
    :header-rows: 1
 
-   * - Architectures/Toolkits
-     - Keras/TensorFlow/QKeras
+   * - ML framework/HLS backend
+     - (Q)Keras
      - PyTorch
      - (Q)ONNX
+     - Vivado HLS
+     - Intel HLS
    * - MLP
+     - ``supported``
+     - ``limited``
      - ``supported``
      - ``supported``
      - ``supported``
    * - CNN
      - ``supported``
+     - ``limited``
+     - ``supported``
+     - ``supported``
+     - ``supported``
+   * - RNN (LSTM)
+     - ``supported``
+     - ``N/A``
      - ``in development``
-     - ``in development``
-   * - RNN/LSTM
-     - ``in development``
-     - ``in development``
-     - ``in development``
+     - ``supported``
+     - ``supported``
+   * - GNN (GarNet)
+     - ``supported``
+     - ``N/A``
+     - ``N/A``
+     - ``N/A``
+     - ``N/A``
 
 
 Other feature notes:
 
-* ``hls4ml`` is tested on Linux, and supports Vivado HLS versions 2018.2 to 2020.1 and Intel HLS versions XXX. Vitis HLS is experimentally supported in v0.7.0. Windows and macOS are not supported.
-
+* ``hls4ml`` is tested on Linux, and supports
+   * Vivado HLS versions 2018.2 to 2020.1
+   * Intel HLS versions 20.1 to 21.4
+   * Vitis HLS versions 2020.2 to 2022.2 (experimentally)
+* Windows and macOS are not supported
 * BDT support has moved to the `Conifer <https://github.com/thesps/conifer>`__ package
 
 Example Models
 ==============
 
-We also provide and documented several example models that have been implemented in ``hls4ml`` in `this Github repository <https://github.com/fastmachinelearning/example-models>`_.
+We also provide and document several example ``hls4ml`` models in `this GitHub repository <https://github.com/fastmachinelearning/example-models>`_, which is included as a submodule.
+You can check it out by doing ``git submodule update --init --recursive`` from the top level directory of ``hls4ml``.
