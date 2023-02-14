@@ -66,7 +66,8 @@ To get started with ``hls4ml``, we provide some default example models for conve
    # This will download our example model to your working directory and return an example configuration file
    config = hls4ml.utils.fetch_example_model('KERAS_3layer.json')
 
-   print(config) #You can print it to see some default parameters
+   # You can print it to see some default parameters
+   print(config)
 
    # Convert it to a hls project
    hls_model = hls4ml.converters.keras_to_hls(config)
@@ -85,7 +86,7 @@ After that, you can use :code:`Vivado HLS` to synthesize the model:
    # Print out the report if you want
    hls4ml.report.read_vivado_report('my-hls-test')
 
-Done! You've built your first project using ``hls4ml`` ! To learn more about our various API functionalities, check out our tutorials `here <https://github.com/fastmachinelearning/hls4ml-tutorial>`__.
+Done! You've built your first project using ``hls4ml``! To learn more about our various API functionalities, check out our tutorials `here <https://github.com/fastmachinelearning/hls4ml-tutorial>`__.
 
 If you want to configure your model further, check out our :doc:`Configuration <api/configuration>` page.
 
@@ -100,14 +101,14 @@ To follow this tutorial, you must first download our ``example-models`` reposito
 
    git clone https://github.com/fastmachinelearning/example-models
 
-The model files, along with other configuration parameters, are defined in the ``.yml`` files.
-Further information about ``.yml`` files can be found in :doc:`Configuration <api/configuration>` page.
-
 Alternatively, you can clone the ``hls4ml`` repository with submodules
 
 .. code-block:: bash
 
    git clone --recurse-submodules https://github.com/fastmachinelearning/hls4ml
+
+The model files, along with other configuration parameters, are defined in the ``.yml`` files.
+Further information about ``.yml`` files can be found in :doc:`Configuration <api/configuration>` page.
 
 In order to create an example HLS project:
 
@@ -179,4 +180,4 @@ Existing examples
   Examples of model files and weights can be found in `example_models <https://github.com/fastmachinelearning/example-models>`_ directory.
 
 *
-  Training codes and examples of resources needed to train the models can be found `in the tutorial <https://github.com/fastmachinelearning/keras-training>`__.
+  Training codes and examples of resources needed to train the models can be found in the `tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`__.
