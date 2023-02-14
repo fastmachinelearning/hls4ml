@@ -2,7 +2,7 @@
 Concepts
 ========
 
-The goal of ``hls4ml`` is to provide an efficient and fast translation of machine learning models from open-source packages (like Keras and PyTorch) for training machine learning algorithms to high level synthesis (HLS) code that can then be transpiled to run on an FPGA. The resulting HLS project can be then used to produce an IP which can be plugged into more complex designs or be used to create a kernel for CPU co-processing. The user has freedom to define many of the parameters of their algorithm to best suit their needs.  
+The goal of ``hls4ml`` is to provide an efficient and fast translation of machine learning models from open-source packages (like Keras and PyTorch) for training machine learning algorithms to high level synthesis (HLS) code that can then be transpiled to run on an FPGA. The resulting HLS project can be then used to produce an IP which can be plugged into more complex designs or be used to create a kernel for CPU co-processing. The user has freedom to define many of the parameters of their algorithm to best suit their needs.
 
 The ``hls4ml`` package enables fast prototyping of a machine learning algorithm implementation in FPGAs,
 greatly reducing the time to results and giving the user intuition for how to best design a machine learning algorithm for their application while balancing performance, resource utilization and latency requirements.
@@ -10,7 +10,7 @@ greatly reducing the time to results and giving the user intuition for how to be
 The Inspiration
 ===============
 
-The inspiration for the creation of the ``hls4ml`` package stems from the high energy physics community at the Large Hadron Collider (LHC). While machine learning has already been proven to be extremely useful in analysis of data from detectors at the LHC, it is typically performed in an "offline" environment after the data is taken and agglomerated. However, one of the largest problems at detectors on the LHC is that collisions, or "events", generate too much data for everything to be saved. As such, filters called "triggers" are used to determine whether a given event should be kept. Using FPGAs allows for significantly lower latency so machine learning algorithms can essentially be run "live" at the detector level for event selection. As a result, more events with potential signs of new physics can be preserved for analysis.
+The inspiration for the creation of the ``hls4ml`` package stems from the high energy physics community at the CERN Large Hadron Collider (LHC). While machine learning has already been proven to be extremely useful in analysis of data from detectors at the LHC, it is typically performed in an "offline" environment after the data is taken and agglomerated. However, one of the largest problems at detectors on the LHC is that collisions, or "events", generate too much data for everything to be saved. As such, filters called "triggers" are used to determine whether a given event should be kept. Using FPGAs allows for significantly lower latency so machine learning algorithms can essentially be run "live" at the detector level for event selection. As a result, more events with potential signs of new physics can be preserved for analysis.
 
 The Solution: hls4ml
 ====================
@@ -28,14 +28,14 @@ How it Works
    :align: center
 
 
-Consider a multi-layered neural network. At each neuron in a layer :math:`m`  (containing :math:`N_m` neurons), we calculate an output value (part of the output vector :math:`\mathbf{x}_m` of said layer) using the sum of output values of the previous layer multiplied by independent weights for each of these values and a bias value. An activation function is performed on the result to get the final output value for the neuron. Representing the weights as a :math:`N_m` by :math:`N_{m-1}`  matrix  :math:`W_{m,m-1}`, the bias values as :math:`\mathbf{b}_m`, and the activation function as :math:`g_m`, we can express this compactly as:
+Consider a multilayer neural network. At each neuron in a layer :math:`m`  (containing :math:`N_m` neurons), we calculate an output value (part of the output vector :math:`\mathbf{x}_m` of said layer) using the sum of output values of the previous layer multiplied by independent weights for each of these values and a bias value. An activation function is performed on the result to get the final output value for the neuron. Representing the weights as a :math:`N_m` by :math:`N_{m-1}`  matrix  :math:`W_{m,m-1}`, the bias values as :math:`\mathbf{b}_m`, and the activation function as :math:`g_m`, we can express this compactly as:
 
 
 .. math::
 
    \mathbf{x}_m = g_m (W_{m,m-1} \mathbf{x}_{m-1} +\mathbf{b}_m)
 
-With hls4ml, each layer of output values is calculated independently in sequence, using pipelining to speed up the process by accepting new inputs after an initiation interval. The activations, if nontrivial, are precomputed. 
+With hls4ml, each layer of output values is calculated independently in sequence, using pipelining to speed up the process by accepting new inputs after an initiation interval. The activations, if nontrivial, are precomputed.
 
 To ensure optimal performance, the user can control aspects of their model, principally:
 
