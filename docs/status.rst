@@ -11,7 +11,7 @@ The latest stable release is :doc:`v0.7.0 <release_notes>`.
 Features
 ========
 
-A list of supported ML codes and architectures, including a summary table is below.  Dependencies are given in the :doc:`Setup <setup>` page.
+A list of supported ML frameworks, HLS backends, and neural network architectures, including a summary table is below.  Dependencies are given in the :doc:`Setup <setup>` page.
 
 ML framework support:
 
@@ -29,8 +29,8 @@ Neural network architectures:
 HLS backends:
 
 * Vivado HLS
-* Vitis HLS (experimental)
 * Intel HLS
+* Vitis HLS (experimental)
 
 A summary of the on-going status of the ``hls4ml`` tool is in the table below.
 
@@ -43,26 +43,31 @@ A summary of the on-going status of the ``hls4ml`` tool is in the table below.
      - (Q)ONNX
      - Vivado HLS
      - Intel HLS
+     - Vitis HLS
    * - MLP
      - ``supported``
      - ``limited``
      - ``supported``
      - ``supported``
      - ``supported``
+     - ``experimental``
    * - CNN
      - ``supported``
      - ``limited``
      - ``supported``
      - ``supported``
      - ``supported``
+     - ``experimental``
    * - RNN (LSTM)
      - ``supported``
      - ``N/A``
      - ``in development``
      - ``supported``
      - ``supported``
+     - ``N/A``
    * - GNN (GarNet)
      - ``supported``
+     - ``N/A``
      - ``N/A``
      - ``N/A``
      - ``N/A``
