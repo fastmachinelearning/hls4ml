@@ -928,6 +928,34 @@ class BatchNormalization(Layer):
         self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
         self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
 
+class LayerNormalization(Layer):
+    _expected_attributes = [
+        Attribute('n_in'),
+        # Attribute('axis', default=-1),
+        Attribute('seq_len'),
+        WeightAttribute('scale'),
+        WeightAttribute('bias'),
+
+        TypeAttribute('scale'),
+        TypeAttribute('bias'),
+    ]
+
+    def initialize(self):
+        inp = self.get_input_variable()
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_output_variable(shape, dims)
+
+        gamma = self.model.get_weights_data(self.name, 'gamma')
+        beta = self.model.get_weights_data(self.name, 'beta')
+
+        scale = gamma
+        bias = beta
+
+        self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
+        self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
+
+
 
 class Merge(Layer):
     def initialize(self):
@@ -1475,66 +1503,58 @@ class MultiHeadAttention(Layer):
         self.add_output_variable(shape, dims)
 
 layer_map = {
-    'Input': Input,
-    'InputLayer': Input,
-    'Activation': Activation,
-    'QActivation': Activation,
-    'LeakyReLU': ParametrizedActivation,
-    'ThresholdedReLU': ParametrizedActivation,
-    'ELU': ParametrizedActivation,
-    'PReLU': PReLU,
-    'Softmax': Softmax,
-    'TernaryTanh': TernaryTanh,
-    'HardActivation': HardActivation,
-    'Reshape': Reshape,
-    'Dense': Dense,
-    'BinaryDense': Dense,
-    'TernaryDense': Dense,
-    'QDense': Dense,
-    'Conv1D': Conv1D,
-    'QConv1D': Conv1D,
-    'Conv2D': Conv2D,
-    'BinaryConv2D': Conv2D,
-    'QConv2D': Conv2D,
-    'QConv2DBatchnorm': Conv2DBatchnorm,
-    'SeparableConv1D': SeparableConv1D,
-    'QSeparableConv1D': SeparableConv1D,
-    'DepthwiseConv1D': DepthwiseConv1D,
-    'SeparableConv2D': SeparableConv2D,
-    'QSeparableConv2D': SeparableConv2D,
-    'DepthwiseConv2D': DepthwiseConv2D,
-    'QDepthwiseConv2D': DepthwiseConv2D,
-    'BatchNormalization': BatchNormalization,
-    'QBatchNormalization': BatchNormalization,
-    'MaxPooling1D': Pooling1D,
-    'AveragePooling1D': Pooling1D,
-    'MaxPooling2D': Pooling2D,
-    'AveragePooling2D': Pooling2D,
-    'GlobalMaxPooling1D': GlobalPooling1D,
-    'GlobalAveragePooling1D': GlobalPooling1D,
-    'GlobalMaxPooling2D': GlobalPooling2D,
-    'GlobalAveragePooling2D': GlobalPooling2D,
-    'ZeroPadding1D': ZeroPadding1D,
-    'ZeroPadding2D': ZeroPadding2D,
-    'Merge': Merge,
-    'Dot': Dot,
-    'Concatenate': Concatenate,
-    'Resize': Resize,
-    'UpSampling1D': Resize,
-    'UpSampling2D': Resize,
-    'Transpose': Transpose,
-    'Embedding': Embedding,
-    'SimpleRNN': SimpleRNN,
-    'LSTM': LSTM,
-    'GRU': GRU,
-    'QSimpleRNN': SimpleRNN,
-    'QLSTM': LSTM,
-    'QGRU': GRU,
-    'GarNet': GarNet,
-    'GarNetStack': GarNetStack,
-    'LayerGroup': LayerGroup,
-    'SymbolicExpression': SymbolicExpression,
+    'Input'                  : Input,
+    'InputLayer'             : Input,
+    'Activation'             : Activation,
+    'QActivation'            : Activation,
+    'LeakyReLU'              : ParametrizedActivation,
+    'ThresholdedReLU'        : ParametrizedActivation,
+    'ELU'                    : ParametrizedActivation,
+    'PReLU'                  : PReLU,
+    'Softmax'                : Softmax,
+    'TernaryTanh'            : TernaryTanh,
+    'Reshape'                : Reshape,
+    'Dense'                  : Dense,
+    'BinaryDense'            : Dense,
+    'TernaryDense'           : Dense,
+    'QDense'                 : Dense,
+    'Conv1D'                 : Conv1D,
+    'QConv1D'                : Conv1D,
+    'Conv2D'                 : Conv2D,
+    'BinaryConv2D'           : Conv2D,
+    'QConv2D'                : Conv2D,
+    'QConv2DBatchnorm'       : Conv2DBatchnorm,
+    'SeparableConv1D'        : SeparableConv1D,
+    'SeparableConv2D'        : SeparableConv2D,
+    'DepthwiseConv2D'        : DepthwiseConv2D,
+    'BatchNormalization'     : BatchNormalization,
+    'QBatchNormalization'    : BatchNormalization,
+    'MaxPooling1D'           : Pooling1D,
+    'AveragePooling1D'       : Pooling1D,
+    'MaxPooling2D'           : Pooling2D,
+    'AveragePooling2D'       : Pooling2D,
+    'GlobalMaxPooling1D'     : GlobalPooling1D,
+    'GlobalAveragePooling1D' : GlobalPooling1D,
+    'GlobalMaxPooling2D'     : GlobalPooling2D,
+    'GlobalAveragePooling2D' : GlobalPooling2D,
+    'ZeroPadding1D'          : ZeroPadding1D,
+    'ZeroPadding2D'          : ZeroPadding2D,
+    'Merge'                  : Merge,
+    'Dot'                    : Dot,
+    'Concatenate'            : Concatenate,
+    'Resize'                 : Resize,
+    'UpSampling1D'           : Resize,
+    'UpSampling2D'           : Resize,
+    'Transpose'              : Transpose,
+    'Embedding'              : Embedding,
+    'SimpleRNN'              : SimpleRNN,
+    'LSTM'                   : LSTM,
+    'GRU'                    : GRU,
+    'GarNet'                 : GarNet,
+    'GarNetStack'            : GarNetStack,
     'MultiHeadAttention'     : MultiHeadAttention,
+    'LayerNormalization'     : LayerNormalization,
+
 
     # TensorFlow-specific layers:
     'BiasAdd': BiasAdd,

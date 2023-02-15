@@ -511,6 +511,13 @@ class VivadoBackend(FPGABackend):
                 len(layer.get_input_variable().shape) == 1
             ), 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
 
+    @layer_optimizer(LayerNormalization)
+    def init_layernormalization(self, layer):
+        if 'table_t' not in layer.attributes:
+            layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=32, integer=5)))
+        if 'table_size' not in layer.attributes:
+            layer.set_attr('table_size', 2048)
+
     @layer_optimizer(Embedding)
     def init_embed(self, layer):
         if layer.attributes['n_in'] is None:
