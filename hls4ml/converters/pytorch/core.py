@@ -8,13 +8,13 @@ from hls4ml.converters.pytorch_to_hls import pytorch_handler
 def parse_linear_layer(operation, layer_name, input_names, input_shapes, arguments, data_reader, config):
     
     layer = {}
-    print (layer_name)
+
     layer['class_name'] = 'Dense'
     layer['name'] = layer_name
     
     layer['n_in'] = arguments['in_features']
     layer['n_out'] = arguments['out_features']
-    
+
     #Handling whether bias is used or not
     assert not arguments['bias'] is None, "PyTorch Linear with bias=False not yet supported"
     if arguments['bias'] is None:    

@@ -92,7 +92,7 @@ class MyModuleBatchNorm(nn.Module):
                                stride=1)
         self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
         self.conv2_bn = nn.BatchNorm2d(20)
-        self.dense1 = nn.Linear(in_features=1620, out_features=50)
+        self.dense1 = nn.Linear(in_features=320, out_features=50)
         self.dense1_bn = nn.BatchNorm1d(50)
         self.dense2 = nn.Linear(50, 10)
 
@@ -106,7 +106,12 @@ class MyModuleBatchNorm(nn.Module):
         return x
 
 
-model = MyModuleBatchNorm()
+model = MyModuleConvRelu()
+
+
+
+print(model)
+
 
 print ("content of model:")
 for layer_name, pytorch_layer in model.named_modules():
@@ -118,5 +123,7 @@ traced_model = symbolic_trace(model)
 print(traced_model.graph)
 
 config = config_from_pytorch_model(model)
-hls_model = convert_from_pytorch_model(model, (None, 1,50,50), hls_config = config )
+#hls_model = convert_from_pytorch_model(model, (None, 1,30,30), hls_config = config ) #for MyModuleBatchNorm
+#hls_model = convert_from_pytorch_model(model, (None, 3), hls_config = config ) #MyModuleSoftMax
+hls_model = convert_from_pytorch_model(model, (None, 3, 5, 5), hls_config = config ) #MyModuleConvRelu
 

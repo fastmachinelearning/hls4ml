@@ -43,7 +43,6 @@ def parse_pooling_layer(operation, layer_name, input_names, input_shapes, argume
 
     elif int(layer['class_name'][-2]) == 2:
         (layer['in_height'], layer['in_width'], layer['n_filt']) = parse_data_format(input_shapes[0], layer['data_format'])
-        print (arguments['stride'])
         layer['stride_height'] = arguments['stride'][0]
         layer['stride_width'] = arguments['stride'][1]
         layer['pool_height'] = arguments['kernel_size'][0]
