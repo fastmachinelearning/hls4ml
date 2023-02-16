@@ -83,6 +83,31 @@ class MyModuleSoftMax(nn.Module):
 
 model = MyModuleConvRelu()
 
+
+class MyModuleBatchNorm(nn.Module):
+    def __init__(self):
+        super(MyModuleBatchNorm, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=10,
+                               kernel_size=5,
+                               stride=1)
+        self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
+        self.conv2_bn = nn.BatchNorm2d(20)
+        self.dense1 = nn.Linear(in_features=1620, out_features=50)
+        self.dense1_bn = nn.BatchNorm1d(50)
+        self.dense2 = nn.Linear(50, 10)
+
+    def forward(self, x):
+        x = F.relu(F.max_pool2d(self.conv1(x), 2))
+        x = F.relu(F.max_pool2d(self.conv2_bn(self.conv2(x)), 2))
+        x = x.view(-1, 320) #reshape
+        x = F.relu(self.dense1_bn(self.dense1(x)))
+        x = F.relu(self.dense2(x))
+        #return F.softmax(x)
+        return x
+
+
+model = MyModuleBatchNorm()
+
 print ("content of model:")
 for layer_name, pytorch_layer in model.named_modules():
     print(layer_name, pytorch_layer.__class__.__name__)
@@ -93,5 +118,5 @@ traced_model = symbolic_trace(model)
 print(traced_model.graph)
 
 config = config_from_pytorch_model(model)
-hls_model = convert_from_pytorch_model(model, (None, 5,5,3), hls_config = config )
+hls_model = convert_from_pytorch_model(model, (None, 1,50,50), hls_config = config )
 

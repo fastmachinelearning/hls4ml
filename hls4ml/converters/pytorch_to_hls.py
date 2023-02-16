@@ -6,6 +6,7 @@ import sys
 import torch
 import pickle
 import re
+import copy
 from collections import OrderedDict
 
 from hls4ml.model import ModelGraph
@@ -142,11 +143,7 @@ def pytorch_to_hls(config):
     
     #All supported layers
     supported_layers = get_supported_pytorch_layers() + skip_layers
-
-    #All supported methods (none implemented yet):
-    supported_methods = []
  
-
     #Map inputs of skipped and split (activation) layers
     inputs_map = {}
 
@@ -210,7 +207,7 @@ def pytorch_to_hls(config):
                 arguments['out_features'] = children[node.target].out_features
             if hasattr(children[node.target], 'bias'):
                 arguments['bias'] = children[node.target].bias
-            #for Conv layers
+            #for Conv/Pool layers
             if hasattr(children[node.target], 'out_channels'):
                 arguments['out_channels'] =  children[node.target].out_channels
             if hasattr(children[node.target], 'kernel_size'):
@@ -221,6 +218,10 @@ def pytorch_to_hls(config):
                 arguments['dilation'] = children[node.target].dilation
             if hasattr(children[node.target], 'padding'):
                 arguments['padding'] = children[node.target].padding
+            #for BatchNorm layers    
+            if hasattr(children[node.target], 'eps'):
+                arguments['eps'] = children[node.target].eps
+            
 
             layer_name = node.name
             
@@ -255,8 +256,11 @@ def pytorch_to_hls(config):
         if node.op == 'call_function':
             #Function calls in the graph have to be transformed to layers known to hls4ml
             
-            #operations that appear repeatedly have '_n' appended to their name for the nth repitition
-            operation = node.name.split("_")[0].capitalize()
+            #operations that appear repeatedly have '_n' appended to their name for the nth repetition
+            if node.name.split("_")[-1].isdigit():
+                operation = "_".join(node.name.split("_")[:-1]).capitalize()
+            else:    
+                operation = node.name.capitalize()
 
             #only a limited number of functions are supported
             if operation not in supported_layers:
@@ -264,10 +268,25 @@ def pytorch_to_hls(config):
 
             layer_counter += 1
 
-            input_names = tuple([str(i) for i in node.args])
-            arguments = node.kwargs
+            #need a copy because kwargs are immutable
+            arguments = {}
+            for key in node.kwargs:
+                arguments[key] = node.kwargs[key]    
             layer_name = node.name
-            
+
+            #arguments of pooling layers need some massaging
+            if 'pool' in operation:                
+                input_names = str(node.args[0])
+                arguments['kernel_size'] = int(node.args[1])
+                if '2d' in operation and not type(arguments['kernel_size']) is tuple:
+                    arguments['kernel_size'] = [arguments['kernel_size'],arguments['kernel_size']]
+                if '2d' in operation and not type(arguments['padding']) is tuple:
+                    arguments['padding'] = [arguments['padding'],arguments['padding']]
+                if arguments['stride'] == None:
+                    arguments['stride'] = arguments['kernel_size']
+            else:    
+                input_names = tuple([str(i) for i in node.args])
+
             #Process the layer
             layer, output_shape = layer_handlers[operation](operation,layer_name,input_names, input_shapes, arguments,reader, config)
 
@@ -292,13 +311,48 @@ def pytorch_to_hls(config):
             layer_counter += 1
 
         if node.op == 'call_method':
-            #Pytorch methods, not supported yet
+            #Method calls in the graph have to be transformed to layers known to hls4ml
+            
+            #operations that appear repeatedly have '_n' appended to their name for the nth repetition
+            if node.name.split("_")[-1].isdigit():
+                operation = "_".join(node.name.split("_")[:-1]).capitalize()
+            else:    
+                operation = node.name.capitalize()
 
-            if node.name not in supported_methods:
-                raise Exception('Unsupported method {}'.format(node.name))
+            #only a limited number of functions are supported
+            if operation not in supported_layers:
+                raise Exception('Unsupported function {}'.format(operation))
 
             layer_counter += 1
+
+            #need a copy because kwargs are immutable
+            arguments = {}
+            for key in node.kwargs:
+                arguments[key] = node.kwargs[key]    
+            layer_name = node.name
         
+            if 'View' in operation:                
+                input_names = str(node.args[0])
+                arguments['target_shape'] = [int(i) for i in node.args[1:]]
+                #View can have -1 as one as the dimensions, leaving it to us to deduce it from the other dimensions and the overall size
+                if -1 in arguments['target_shape']:
+                    size = np.prod(input_shapes[0][1:])
+                    for i in range(0,len(arguments['target_shape'])):
+                        if arguments['target_shape'][i] == -1:
+                            cl = arguments['target_shape'][:]
+                            cl.remove(-1)
+                            arguments['target_shape'][i] = int(size/np.prod(cl))
+
+            else:    
+                input_names = tuple([str(i) for i in node.args])
+            #Process the layer
+            layer, output_shape = layer_handlers[operation](operation,layer_name,input_names, input_shapes, arguments,reader, config)
+
+            print('Layer name: {}, layer type: {}, input shape: {}'.format(layer['name'], layer['class_name'], input_shapes))
+            layer_list.append(layer)
+
+            assert(output_shape is not None)
+            output_shapes[layer['name']] = output_shape
 
     #################
     ## Generate HLS
