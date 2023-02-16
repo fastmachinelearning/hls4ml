@@ -79,7 +79,7 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, argumen
                                                                            layer['stride_width'],
                                                                            layer['filt_height'],
                                                                            layer['filt_width'])
-    
+    print (layer['out_height'], layer['out_width'])
     output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
   
     return layer, output_shape

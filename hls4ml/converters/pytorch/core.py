@@ -8,7 +8,7 @@ from hls4ml.converters.pytorch_to_hls import pytorch_handler
 def parse_linear_layer(operation, layer_name, input_names, input_shapes, arguments, data_reader, config):
     
     layer = {}
-   
+    print (layer_name)
     layer['class_name'] = 'Dense'
     layer['name'] = layer_name
     
@@ -49,10 +49,10 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, arg
     output_shape=input_shapes[0]
     return layer, output_shape
 
-batchnorm_layers = ['BatchNorm2d', 'BatchNorm1d']
+batchnorm_layers = ['BatchNorm2d', 'BatchNorm1d','Batch_norm']
 @pytorch_handler(*batchnorm_layers)
-def parse_batchnorm_layer(pytorch_layer, layer_name, input_shapes, data_reader, config):
-    assert('BatchNorm' in pytorch_layer.__class__.__name__)
+def parse_batchnorm_layer(operation, layer_name, input_names, input_shapes, arguments, data_reader, config):
+    assert('BatchNorm' in operation)
     
     layer = {}
    
@@ -61,7 +61,7 @@ def parse_batchnorm_layer(pytorch_layer, layer_name, input_shapes, data_reader, 
     layer['name'] = layer_name
     
     #batchnorm para
-    layer['epsilon'] = pytorch_layer.eps
+    layer['epsilon'] = arguments['eps']
     
     in_size = 1
     for dim in input_shapes[0][1:]:

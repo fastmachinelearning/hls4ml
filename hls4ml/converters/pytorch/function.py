@@ -18,8 +18,6 @@ def parse_merge_layer(operation, layer_name, input_names, input_shapes, argument
     if input_names is not None:
         layer['inputs'] = input_names
 
-    print ("layer: ", layer)
-
     output_shape = input_shapes[0][:]
     if layer['class_name'] == 'Concatenate':
         rank = len(input_shapes[0][1:])
