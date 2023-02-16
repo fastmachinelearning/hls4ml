@@ -52,6 +52,8 @@ class lookup_table {
 
     T operator()(T n) const {
         int index = (n - range_start) * base_div;
+        if (index < 0) index = 0;
+        else if (index > N-1) index = N-1;
         return samples[index];
     }
 
