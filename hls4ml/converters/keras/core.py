@@ -129,6 +129,9 @@ def parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader):
     elif len(input_shapes[0]) == 4:
         layer['n_filt'] = input_shapes[0][3]
 
+    layer['use_gamma'] = False if keras_layer['config']['scale'] == False else True
+    layer['use_beta'] = False if keras_layer['config']['center'] == False else True
+
     return layer, [shape for shape in input_shapes[0]]
 
 
