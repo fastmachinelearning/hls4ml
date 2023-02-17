@@ -2,7 +2,7 @@
 
 # This script runs the Catapult flows to generate the HLS.
 
-VENV=$HOME/TEMP
+VENV=$HOME/venv
 
 MGC_HOME=/wv/hlsb/CATAPULT/TOT/CURRENT/aol/Mgc_home
 export MGC_HOME

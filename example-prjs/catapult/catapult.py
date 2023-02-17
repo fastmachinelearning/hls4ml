@@ -33,6 +33,6 @@ print('BramFactor={bf}'.format(bf=config['HLSConfig']['Model']['BramFactor']))
 #Convert it to a hls project
 hls_model = hls4ml.converters.keras_to_hls(config)
 
-hls_model.build(vsynth=False)
+hls_model.build(vsynth=True)
 
 # URL for this info: https://fastmachinelearning.org/hls4ml/setup/QUICKSTART.html

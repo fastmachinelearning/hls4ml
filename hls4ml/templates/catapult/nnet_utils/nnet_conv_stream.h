@@ -84,8 +84,9 @@ void mult_buffer(
     typename res_T::value_type res[CONFIG_T::n_filt];
     //#pragma HLS ARRAY_PARTITION variable=res complete
 
+    #pragma hls_unroll
     InitData: for (int id = 0; id < CONFIG_T::kernel_size * CONFIG_T::n_chan; id++) {
-        #pragma hls_unroll
+        // #pragma HLS UNROLL
         data[id] = data_window[id].read();
     }
 
@@ -96,8 +97,9 @@ void mult_buffer(
         dense_resource<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(data, res, weights, biases);
     }
 
+    #pragma hls_unroll
     CastLoop: for (unsigned jj = 0; jj < CONFIG_T::n_filt; jj++) {
-        #pragma hls_unroll
+        // #pragma HLS UNROLL
         if (res_T::size / CONFIG_T::n_filt == 1) {
             res_pack[jj] = res[jj];
         } else {
@@ -117,7 +119,7 @@ void mult_buffer(
     }
 }
 
-template<class data_T, class res_T, typename CONFIG_T>
+template<class data_T, class res_T, typename CONFIG_T, unsigned reuse_factor>
 void compute_output_encoded(
     const data_T& in_elem,
     ac_channel<typename data_T::value_type> data_window[CONFIG_T::kernel_size * CONFIG_T::n_chan],
@@ -130,12 +132,14 @@ void compute_output_encoded(
 ) {
     //#pragma HLS INLINE
 
+    #pragma hls_pipeline_init_interval reuse_factor
+    #pragma hls_unroll
     MultLoop: for (unsigned p = 0; p < data_T::size / CONFIG_T::n_chan; p++) {
         //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
         CopyDataFilt: for (unsigned f = 0; f < CONFIG_T::kernel_size; f++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
             CopyDataChan: for (unsigned c = 0; c < CONFIG_T::n_chan; c++) {
-                #pragma hls_unroll
+                // #pragma HLS UNROLL
                 if (pixel_idx[p][f]) data_window[f * CONFIG_T::n_chan + c].write(in_elem[p * CONFIG_T::n_chan + c]);
             }
         }
@@ -160,9 +164,12 @@ void kernel_shift_1d(
     
     // Shift kernel_window by one step to the left (manual shift operation)
     static const int filt_width = CONFIG_T::filt_width - 1;
+    #pragma hls_pipeline_init_interval 1
     KernelShiftWidth: for (int i_iw = 0; i_iw < filt_width; i_iw++) {
+        // #pragma HLS PIPELINE II = 1
         #pragma hls_unroll
         KernelShiftChannel: for (unsigned i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
+            // #pragma HLS UNROLL
             // Shift every element in kernel_window to the left
             kernel_window[i_iw * CONFIG_T::n_chan + i_ic] = kernel_window[(i_iw + 1) * CONFIG_T::n_chan + i_ic];
         }
@@ -170,8 +177,9 @@ void kernel_shift_1d(
 
     // Insert shift_buffer column into right-most column of kernel
     static const int lastheight = (CONFIG_T::filt_width - 1) * CONFIG_T::n_chan;
+    #pragma hls_unroll
     KernelPushChannel: for (int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
-        #pragma hls_unroll
+        // #pragma HLS UNROLL
         kernel_window[lastheight + i_ic] = in_elem[i_ic];
     }
 }
@@ -197,8 +205,9 @@ void kernel_shift_2d(
 
     // Insert shift_buffer column into right-most column of kernel
     static const int lastheight = (CONFIG_T::filt_width - 1) * CONFIG_T::n_chan;
+    #pragma hls_unroll
     KernelPushHeight: for (int i_ih = 0; i_ih < CONFIG_T::filt_height; i_ih++) {
-        #pragma hls_unroll
+        // #pragma HLS UNROLL
         KernelPushChannel: for (int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
             kernel_window[lastheight + i_ih * CONFIG_T::filt_width * CONFIG_T::n_chan + i_ic] = shift_buffer[i_ih][i_ic];
         }
@@ -217,8 +226,9 @@ void shift_line_buffer(const data_T& in_elem,
     typename data_T::value_type shift_buffer[CONFIG_T::filt_height][CONFIG_T::n_chan];
     //#pragma HLS ARRAY_PARTITION variable = shift_buffer complete dim = 0
 
+    #pragma hls_unroll
     UpdateBuffer: for (int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
-        #pragma hls_unroll
+        // #pragma HLS UNROLL
 
         // Insert pixel(s) at end of shift buffer
         shift_buffer[CONFIG_T::filt_height - 1][i_ic] = in_elem[i_ic];
@@ -226,8 +236,9 @@ void shift_line_buffer(const data_T& in_elem,
 
     LineBufferDataIn: for (int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
         // Shift the shift buffer into the line buffer
+        #pragma hls_unroll
         LineBufferShift: for (unsigned i_ih = 1; i_ih < CONFIG_T::filt_height; i_ih++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
             typename data_T::value_type pop_elem = line_buffer[i_ih - 1][i_ic].shift(shift_buffer[CONFIG_T::filt_height - i_ih][i_ic]); // Shift the line buffer, return the popped pixel
             shift_buffer[CONFIG_T::filt_height - i_ih - 1][i_ic] = pop_elem; // Popped element placed back into shift_buffer, one row up.
         }
@@ -280,8 +291,9 @@ void compute_output_buffer_2d(
         }
 
         // Pack output
+        #pragma hls_unroll
         CastLoop: for (unsigned i_ic = 0; i_ic < CONFIG_T::n_filt; i_ic++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
             res_pack[i_ic] = res_out[i_ic];
         }
 
@@ -350,8 +362,9 @@ void compute_output_buffer_1d(
         }
 
         // Pack output
+        #pragma hls_unroll
         CastLoop: for (unsigned i_ic = 0; i_ic < CONFIG_T::n_filt; i_ic++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
             res_pack[i_ic] = res_out[i_ic];
         }
 

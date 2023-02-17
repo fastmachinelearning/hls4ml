@@ -52,7 +52,7 @@ void conv_1d_encoded_cl(
             //#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
         }
         compute_scaled_indices_1d<data_T, CONFIG_T>(i_iw, pixel_idx);
-        compute_output_encoded<data_T, res_T, CONFIG_T>(data.read(), data_window, res, res_pack, outputs_ready, weights, biases, pixel_idx);
+        compute_output_encoded<data_T, res_T, CONFIG_T, CONFIG_T::reuse_factor>(data.read(), data_window, res, res_pack, outputs_ready, weights, biases, pixel_idx);
     }
 }
 
