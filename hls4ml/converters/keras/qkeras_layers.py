@@ -122,5 +122,6 @@ def parse_qdensebatchnorm_layer(keras_layer, input_names, input_shapes, data_rea
     intermediate_shape.append(shape_qdense)
     temp_shape = intermediate_shape
     batch_layer, out_shape = parse_batchnorm_layer(keras_layer, input_names, temp_shape, data_reader)
+    # remove n_in from batch_layer to prevent overwrite n_in from dense_layer
     batch_layer.pop('n_in')
     return {**dense_layer, **batch_layer}, out_shape
