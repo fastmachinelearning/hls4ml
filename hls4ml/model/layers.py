@@ -844,8 +844,8 @@ class BatchNormalization(Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
-        gamma = self.model.get_weights_data(self.name, 'gamma')
-        beta = self.model.get_weights_data(self.name, 'beta')
+        gamma = 1 if self.attributes['use_gamma'] is False else self.model.get_weights_data(self.name, 'gamma')
+        beta = 0 if self.attributes['use_beta'] is False else self.model.get_weights_data(self.name, 'beta')
         mean = self.model.get_weights_data(self.name, 'moving_mean')
         var = self.model.get_weights_data(self.name, 'moving_variance')
 
