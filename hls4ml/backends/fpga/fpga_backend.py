@@ -394,6 +394,10 @@ class FPGABackend(Backend):
         else:
             min_W = (math.ceil(stride / kernel_size) - 1) * stride + kernel_size
 
+        # if the standard min_W is smaller than the in_W, then use unscaled
+        if min_W > in_W:
+            min_W = in_W
+
         min_oW = int((min_W - kernel_size) // stride + 1)
 
         out_W = int((in_W - kernel_size) // stride + 1)
@@ -442,10 +446,16 @@ class FPGABackend(Backend):
         else:
             min_H = (math.ceil(stride_height / kernel_height) - 1) * stride_height + kernel_height
 
+        if min_H > in_H:
+            min_H = in_H
+
         if kernel_width >= stride_width:
             min_W = (math.ceil(kernel_width / stride_width) - 1) * stride_width + kernel_width
         else:
             min_W = (math.ceil(stride_width / kernel_width) - 1) * stride_width + kernel_width
+
+        if min_W > in_W:
+            min_W = in_W
 
         min_oH = int((min_H - kernel_height) // stride_height + 1)
         min_oW = int((min_W - kernel_width) // stride_width + 1)
@@ -461,9 +471,25 @@ class FPGABackend(Backend):
             min_W += 1
 
         # Let's hardcode a few common cases:
-        if kernel_height == 1 and kernel_width == 1 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
+        if (
+            min_H == 1
+            and min_W == 1
+            and kernel_height == 1
+            and kernel_width == 1
+            and stride == 1
+            and scaled_H == in_H
+            and scaled_W == in_W
+        ):
             return (1, 1, map(str, [1]))
-        if kernel_height == 3 and kernel_width == 3 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
+        if (
+            min_H == 5
+            and min_W == 5
+            and kernel_height == 3
+            and kernel_width == 3
+            and stride == 1
+            and scaled_H == in_H
+            and scaled_W == in_W
+        ):
             return (
                 5,
                 5,
@@ -498,7 +524,15 @@ class FPGABackend(Backend):
                     ],
                 ),
             )
-        if kernel_height == 5 and kernel_width == 5 and stride == 1 and scaled_H == in_H and scaled_W == in_W:
+        if (
+            min_H == 9
+            and min_W == 9
+            and kernel_height == 5
+            and kernel_width == 5
+            and stride == 1
+            and scaled_H == in_H
+            and scaled_W == in_W
+        ):
             return (
                 9,
                 9,
