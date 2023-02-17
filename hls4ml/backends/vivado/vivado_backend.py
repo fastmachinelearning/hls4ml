@@ -115,7 +115,7 @@ class VivadoBackend(FPGABackend):
             'vivado:fifo_depth_optimization'
         ] + writer_passes  # After optimization, a new project will be written
 
-        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=[self._writer_flow], backend=self.name)
+        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=['vivado:ip'], backend=self.name)
 
         all_passes = get_backend_passes(self.name)
 
@@ -189,13 +189,13 @@ class VivadoBackend(FPGABackend):
         curr_dir = os.getcwd()
         os.chdir(model.config.get_output_dir())
         vivado_cmd = (
-            f'vivado_hls -f build_prj.tcl "reset={reset}'
-            f'csim={csim}'
-            f'synth={synth}'
-            f'cosim={cosim}'
-            f'validation={validation}'
-            f'export={export}'
-            f'vsynth={vsynth}'
+            f'vivado_hls -f build_prj.tcl "reset={reset} '
+            f'csim={csim} '
+            f'synth={synth} '
+            f'cosim={cosim} '
+            f'validation={validation} '
+            f'export={export} '
+            f'vsynth={vsynth} '
             f'fifo_opt={fifo_opt}"'
         )
         os.system(vivado_cmd)
