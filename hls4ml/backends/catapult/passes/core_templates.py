@@ -67,7 +67,7 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
 
-batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
+batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}, {config}::reuse_factor>({input}, {output}, {scale}, {bias});'
 
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
 
