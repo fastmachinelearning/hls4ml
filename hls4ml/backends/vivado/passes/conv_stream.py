@@ -19,9 +19,13 @@ class GenerateConvStreamingInstructions(OptimizerPass):
 
     def _generate_1d_instructions(self, node):
         if node.model.config.get_config_value('IOType') == 'io_stream':
+            if node.get_attr('data_format') == "channels_last":
+                in_W, in_C = node.get_input_variable().shape[0], node.get_input_variable().shape[1]
+            else:    
+                in_W, in_C = node.get_input_variable().shape[1], node.get_input_variable().shape[0]            
             min_w, instructions = node.model.config.backend.compute_conv1d_instructions(
-                node.get_input_variable().shape[0],
-                node.get_input_variable().shape[1],
+                in_W,
+                in_C,
                 node.get_attr('filt_width'),
                 node.get_attr('stride_width'),
             )
@@ -35,10 +39,14 @@ class GenerateConvStreamingInstructions(OptimizerPass):
 
     def _generate_2d_instructions(self, node):
         if node.model.config.get_config_value('IOType') == 'io_stream':
+            if node.get_attr('data_format') == "channels_last":
+                in_H, in_W, in_C = node.get_input_variable().shape[0], node.get_input_variable().shape[1], node.get_input_variable().shape[2]
+            else:    
+                in_H, in_W, in_C = node.get_input_variable().shape[1], node.get_input_variable().shape[2], node.get_input_variable().shape[0]            
             min_h, min_w, instructions = node.model.config.backend.compute_conv2d_instructions(
-                node.get_input_variable().shape[0],
-                node.get_input_variable().shape[1],
-                node.get_input_variable().shape[2],
+                in_H,
+                in_W,
+                in_C,
                 node.get_attr('filt_height'),
                 node.get_attr('stride_height'),
             )

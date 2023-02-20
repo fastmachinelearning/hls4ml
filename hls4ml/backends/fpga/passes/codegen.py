@@ -18,11 +18,15 @@ class GenerateConvIm2col(OptimizerPass):
             raise Exception('Cannot generate instructions for node {} ({})'.format(node.name, node_class))
     
     def _generate_im2col_1d(self, node):
+        if node.get_attr('data_format') == "channels_last":
+            in_W, in_C = node.get_input_variable().shape[0], node.get_input_variable().shape[1]
+        else:    
+            in_W, in_C = node.get_input_variable().shape[1], node.get_input_variable().shape[0]
         code_str = node.model.config.backend.generate_conv1d_line_buffer_fn(
             node.get_attr('index'),
             node.get_attr('n_partitions'),
-            node.get_input_variable().shape[0],
-            node.get_input_variable().shape[1],
+            in_W,
+            in_C,
             kernel=node.get_attr('filt_width'),
             stride=node.get_attr('stride_width'),
             pad=(node.get_attr('pad_left'), node.get_attr('pad_right'))
@@ -31,8 +35,10 @@ class GenerateConvIm2col(OptimizerPass):
         node.set_attr('line_buffer_codegen', Source(code_str))
 
     def _generate_im2col_2d(self, node):
-        #in_H, in_W, in_C = node.get_input_variable().shape[0], node.get_input_variable().shape[1], node.get_input_variable().shape[2]
-        in_H, in_W, in_C = node.get_input_variable().shape[1], node.get_input_variable().shape[2], node.get_input_variable().shape[0] #Temporary hack for Pytorch ordering of inputs. Need to figure out how this can be dynamically chosen
+        if node.get_attr('data_format') == "channels_last":
+            in_H, in_W, in_C = node.get_input_variable().shape[0], node.get_input_variable().shape[1], node.get_input_variable().shape[2]
+        else:    
+            in_H, in_W, in_C = node.get_input_variable().shape[1], node.get_input_variable().shape[2], node.get_input_variable().shape[0]
         print (in_H, in_W, in_C)
         code_str = node.model.config.backend.generate_conv2d_line_buffer_fn(
             node.get_attr('index'),
