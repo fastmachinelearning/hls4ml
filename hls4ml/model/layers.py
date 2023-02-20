@@ -1257,9 +1257,11 @@ class SymbolicExpression(Layer):
     _expected_attributes = [
         Attribute('expression', value_type=list),
         Attribute('n_symbols'),
+        Attribute('lut_functions', value_type=list, default=[])
     ]
 
     def initialize(self):
+        self.set_attr('expr_t', NamedType(*reversed(self.model.config.get_precision(self, 'expr'))))
         self.add_output_variable([len(self.get_attr('expression'))], ['N_OUTPUTS_{}'.format(self.index)], var_name='y')
 
 
