@@ -6,7 +6,8 @@ from hls4ml.converters.pytorch_to_hls import pytorch_handler
 # https://github.com/fastmachinelearning/hls4ml/issues/409 
 @pytorch_handler('Linear')
 def parse_linear_layer(operation, layer_name, input_names, input_shapes, arguments, data_reader, config):
-    
+    assert('Linear' in operation)
+
     layer = {}
 
     layer['class_name'] = 'Dense'

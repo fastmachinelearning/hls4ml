@@ -12,4 +12,4 @@ def parse_reshape_layer(operation, layer_name, input_names, input_shapes, argume
     layer['target_shape'] = arguments['target_shape']
     output_shape = input_shapes[0][:1] + layer['target_shape']
 
-    return layer, output_shape    
+    return layer, output_shape

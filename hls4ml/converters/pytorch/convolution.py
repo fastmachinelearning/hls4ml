@@ -49,6 +49,7 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, argumen
     layer['name'] = layer_name
     layer['class_name'] = 'Conv2D'
     layer['data_format'] = 'channels_first' #Pytorch default (can't change)
+
     #Input info
     (
         layer['in_height'],
