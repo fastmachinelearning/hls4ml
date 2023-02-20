@@ -148,7 +148,7 @@ class QuartusWriter(Writer):
             # Intel HLS 'streams' need to be passed by reference to top-level entity or declared as global variables
             # Streams cannot be declared inside a function
             # Therefore, layer connections (inputs/outputs) are declared here
-            elif '//hls-fpga-machine-learning insert inter-task streams' in line:
+            elif '// hls-fpga-machine-learning insert inter-task streams' in line:
                 newline = line
                 if io_type == 'io_stream':
                     for layer in model.get_layers():
@@ -159,7 +159,7 @@ class QuartusWriter(Writer):
                                 newline += def_cpp + ';\n'
 
             # Instantiate GCC top-level function, to be used during GCC compilation / hls4ml.predict()
-            elif '//hls-fpga-machine-learning instantiate GCC top-level' in line:
+            elif '// hls-fpga-machine-learning instantiate GCC top-level' in line:
                 newline = line
                 if io_type == 'io_stream':
                     newline += f'void {project_name}(\n'
@@ -174,7 +174,7 @@ class QuartusWriter(Writer):
                     newline += ') {\n'
 
             # Instantiate HLS top-level function, to be used during HLS synthesis
-            elif '//hls-fpga-machine-learning instantiate HLS top-level' in line:
+            elif '// hls-fpga-machine-learning instantiate HLS top-level' in line:
                 newline = line
                 if io_type == 'io_stream':
                     newline += f'component void {project_name}(\n'
@@ -189,7 +189,7 @@ class QuartusWriter(Writer):
                     newline += ') {\n'
 
             # Insert HLS pragmas such as maximum frequency, initiation interval etc.
-            elif '//hls-fpga-machine-learning insert cpragmas' in line:
+            elif '// hls-fpga-machine-learning insert cpragmas' in line:
                 newline = line
                 if io_type == 'io_parallel':
                     newline += 'hls_max_concurrency(0)\n'
@@ -202,7 +202,7 @@ class QuartusWriter(Writer):
             # In io_stream, the input is of type 'stream_in' and output is of type 'stream_out'
             # However, individual layers accept the type 'stream'
             # Therefore, data is first read from 'stream_in', written to 'stream' and propagated through network
-            elif '//hls-fpga-machine-learning initialize input/output' in line:
+            elif '// hls-fpga-machine-learning initialize input/output' in line:
                 if io_type == 'io_stream':
                     newline = line
                     for inp in model_inputs:
@@ -215,21 +215,21 @@ class QuartusWriter(Writer):
                     newline += indent + 'hls_register output_data outputs;\n'
 
             # Insert weights
-            elif '//hls-fpga-machine-learning insert weights' in line:
+            elif '// hls-fpga-machine-learning insert weights' in line:
                 newline = line
                 for layer in model.get_layers():
                     for w in layer.get_weights():
                         newline += f'#include "weights/{w.name}.h"\n'
 
             # Insert test weights
-            elif '//hls-fpga-machine-learning insert test weights' in line:
+            elif '// hls-fpga-machine-learning insert test weights' in line:
                 newline = line
                 for layer in model.get_layers():
                     for w in layer.get_weights():
                         newline += f'#include "weights/{w.name}_test.h"\n'
 
             # Neural net instantiation
-            elif '//hls-fpga-machine-learning insert layers' in line:
+            elif '// hls-fpga-machine-learning insert layers' in line:
                 newline = line + '\n'
                 model_inputs = model.get_input_variables()
                 model_outputs = model.get_output_variables()
@@ -254,7 +254,7 @@ class QuartusWriter(Writer):
                         newline += '\n'
 
             # In io_parallel, a return is required; for more details see myproject.cpp & myproject.h
-            elif '//hls-fpga-machine-learning return' in line:
+            elif '// hls-fpga-machine-learning return' in line:
                 if io_type == 'io_stream':
                     newline = line
                     for out in model_outputs:
@@ -304,7 +304,7 @@ class QuartusWriter(Writer):
             elif 'myproject' in line:
                 newline = line.replace('myproject', project_name)
 
-            elif '//hls-fpga-machine-learning instantiate GCC top-level' in line:
+            elif '// hls-fpga-machine-learning instantiate GCC top-level' in line:
                 newline = line
                 # For io_stream, input and output are passed by reference; see myproject.h & myproject.cpp for more details
 
@@ -322,7 +322,7 @@ class QuartusWriter(Writer):
                     newline += ');\n'
 
             # Similar to GCC instantiation, but with the keyword 'component'
-            elif '//hls-fpga-machine-learning instantiate HLS top-level' in line:
+            elif '// hls-fpga-machine-learning instantiate HLS top-level' in line:
                 newline = line
                 if io_type == 'io_stream':
                     newline += f'component void {project_name}(\n'
@@ -336,7 +336,7 @@ class QuartusWriter(Writer):
                     newline += indent + 'input_data inputs\n'
                     newline += ');\n'
 
-            elif '//hls-fpga-machine-learning insert cpragmas' in line:
+            elif '// hls-fpga-machine-learning insert cpragmas' in line:
                 newline = line
                 if io_type == 'io_parallel':
                     newline += 'hls_max_concurrency(0)\n'
@@ -346,14 +346,14 @@ class QuartusWriter(Writer):
 
             # For io_stream, no inputs/outputs are instantiated, as they are passed by reference
             # For io_parallel, input/output structs are required
-            elif '//hls-fpga-machine-learning insert inputs' in line:
+            elif '// hls-fpga-machine-learning insert inputs' in line:
                 newline = line
                 if io_type != 'io_stream':
                     newline += 'struct input_data { \n'
                     for inp in model_inputs:
                         newline += indent + inp.definition_cpp() + ';\n'
                     newline += '};\n'
-            elif '//hls-fpga-machine-learning insert outputs' in line:
+            elif '// hls-fpga-machine-learning insert outputs' in line:
                 newline = line
                 if io_type != 'io_stream':
                     newline += 'struct output_data { \n'
@@ -382,12 +382,12 @@ class QuartusWriter(Writer):
         for line in f.readlines():
 
             # Insert numbers
-            if '//hls-fpga-machine-learning insert numbers' in line:
+            if '// hls-fpga-machine-learning insert numbers' in line:
                 newline = line
                 numbers = OrderedDict.fromkeys([layer.get_numbers_cpp() for layer in model.get_layers()])
                 newline += ''.join(numbers)
 
-            elif '//hls-fpga-machine-learning insert layer-precision' in line:
+            elif '// hls-fpga-machine-learning insert layer-precision' in line:
                 newline = line
                 all_precision = OrderedDict()
                 for layer in model.get_layers():
@@ -418,12 +418,12 @@ class QuartusWriter(Writer):
 
         for line in f.readlines():
 
-            if '//hls-fpga-machine-learning insert includes' in line:
+            if '// hls-fpga-machine-learning insert includes' in line:
                 newline = line
                 for include in sorted(set(sum((layer.get_attr('include_header', []) for layer in model.get_layers()), []))):
                     newline += '#include "%s"\n' % include
 
-            elif "//hls-fpga-machine-learning insert layer-config" in line:
+            elif "// hls-fpga-machine-learning insert layer-config" in line:
                 newline = line
                 for layer in model.get_layers():
                     config = layer.get_attr('config_cpp', None)
@@ -487,7 +487,7 @@ class QuartusWriter(Writer):
 
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
-            elif '//hls-fpga-machine-learning insert data' in line:
+            elif '// hls-fpga-machine-learning insert data' in line:
                 newline = line
                 newline += '      std::vector<float>::const_iterator in_begin = in.cbegin();\n'
                 newline += '      std::vector<float>::const_iterator in_end;\n'
@@ -497,7 +497,7 @@ class QuartusWriter(Writer):
                     newline += f'      std::copy(in_begin, in_end, inputs.back().{inp.member_name});\n'
                     newline += '      in_begin = in_end;\n'
                 newline += '      outputs.emplace_back();\n'
-            elif '//hls-fpga-machine-learning insert zero' in line:
+            elif '// hls-fpga-machine-learning insert zero' in line:
                 newline = line
                 newline += indent + 'for(int i = 0; i < num_iterations; i++) {\n'
                 for inp in model.get_input_variables():
@@ -506,7 +506,7 @@ class QuartusWriter(Writer):
                     newline += indent + f'  std::fill_n(inputs[i].{inp.member_name}, {inp.size_cpp()}, 0.0);\n'
                 newline += indent + '}\n'
 
-            elif '//hls-fpga-machine-learning insert top-level-function' in line:
+            elif '// hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
 
                 newline += indent + 'for(int i = 0; i < num_iterations; i++) {\n'
@@ -515,20 +515,21 @@ class QuartusWriter(Writer):
             elif 'hls-fpga-machine-learning insert run' in line:
                 newline = line
                 newline += '    ' + f'ihc_hls_component_run_all({model.config.get_project_name()});\n'
-            elif '//hls-fpga-machine-learning insert predictions' in line:
+            elif '// hls-fpga-machine-learning insert predictions' in line:
                 newline = line
                 newline += indent + f'for(int i = 0; i < {outvar.size_cpp()}; i++) {{\n'
                 newline += indent + '  std::cout << predictions[j][i] << " ";\n'
                 newline += indent + '}\n'
                 newline += indent + 'std::cout << std::endl;\n'
-            elif '//hls-fpga-machine-learning insert tb-output' in line:
+            elif '// hls-fpga-machine-learning insert tb-output' in line:
                 newline = line
                 newline += indent + f'for(int i = 0; i < {outvar.size_cpp()}; i++) {{\n'
                 newline += indent + f'  fout << outputs[j].{outvar.member_name}[i] << " ";\n'
                 newline += indent + '}\n'
                 newline += indent + 'fout << std::endl;\n'
             elif (
-                '//hls-fpga-machine-learning insert output' in line or '//hls-fpga-machine-learning insert quantized' in line
+                '// hls-fpga-machine-learning insert output' in line
+                or '// hls-fpga-machine-learning insert quantized' in line
             ):
                 newline = line
                 newline += indent + f'for(int i = 0; i < {outvar.size_cpp()}; i++) {{\n'
@@ -589,7 +590,7 @@ class QuartusWriter(Writer):
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
 
-            elif '//hls-fpga-machine learning instantiate inputs and outputs' in line:
+            elif '// hls-fpga-machine learning instantiate inputs and outputs' in line:
                 newline = line
                 for inp in model_inputs:
                     newline += indent + f'stream_in<{inp.type.name}> {inp.name}_input;\n'
@@ -597,7 +598,7 @@ class QuartusWriter(Writer):
                     newline += indent + f'stream_out<{out.type.name}> {out.name}_output;\n'
 
             # TODO - This is one-input specific (are multiple model inputs needed at all?)
-            elif '//hls-fpga-machine-learning insert data' in line:
+            elif '// hls-fpga-machine-learning insert data' in line:
                 newline = line
                 c = 0
                 for inp in model_inputs:
@@ -611,7 +612,7 @@ class QuartusWriter(Writer):
                     )
                     c += 1
 
-            elif '//hls-fpga-machine-learning insert zero' in line:
+            elif '// hls-fpga-machine-learning insert zero' in line:
                 newline = line
                 c = 0
                 for inp in model_inputs:
@@ -625,7 +626,7 @@ class QuartusWriter(Writer):
                     )
                     c += 1
 
-            elif '//hls-fpga-machine-learning insert top-level-function' in line:
+            elif '// hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
                 input_params = ', '.join([f'{i.name}_input' for i in model_inputs])
                 output_params = ', '.join([f'{o.name}_output' for o in model_outputs])
@@ -638,27 +639,27 @@ class QuartusWriter(Writer):
                 newline = line
                 newline += indent + f'ihc_hls_component_run_all({model.config.get_project_name()});\n'
 
-            elif '//hls-fpga-machine-learning convert output' in line:
+            elif '// hls-fpga-machine-learning convert output' in line:
                 newline = line
                 newline += indent + f'float res[{outvar.size_cpp()}];\n'
                 newline += indent + 'nnet::convert_data_back<{}, float, {}>({}_output, res);\n'.format(
                     outvar.type.name, outvar.size_cpp(), outvar.name
                 )
 
-            elif '//hls-fpga-machine-learning insert tb-output' in line:
+            elif '// hls-fpga-machine-learning insert tb-output' in line:
                 newline += indent + f'for(int i = 0; i < {outvar.size_cpp()}; i++) {{\n'
                 newline += indent + '  fout << res[i] << " ";\n'
                 newline += indent + '}\n'
                 newline += indent + 'fout << std::endl;\n'
 
-            elif '//hls-fpga-machine-learning print predictions' in line:
+            elif '// hls-fpga-machine-learning print predictions' in line:
                 newline = line
                 newline += indent + f'for(int i = 0; i < {outvar.size_cpp()}; i++) {{\n'
                 newline += indent + '  std::cout << predictions[iteration][i] << " ";\n'
                 newline += indent + '}\n'
                 newline += indent + 'std::cout << std::endl;\n'
 
-            elif '//hls-fpga-machine-learning print output' in line:
+            elif '// hls-fpga-machine-learning print output' in line:
                 newline = line
                 newline += indent + f'for(int i = 0; i < {outvar.size_cpp()}; i++) {{\n'
                 newline += indent + '  std::cout << res[i] << " "; \n'
@@ -711,7 +712,7 @@ class QuartusWriter(Writer):
             elif 'myproject' in line:
                 newline = line.replace('myproject', format(model.config.get_project_name()))
 
-            elif '//hls-fpga-machine-learning insert header' in line:
+            elif '// hls-fpga-machine-learning insert header' in line:
                 dtype = line.split('#', 1)[1].strip()
                 if io_type == 'io_stream':
                     inputs_str = ', '.join([f'{dtype} {i.name}[{i.size_cpp()}]' for i in model_inputs])
@@ -729,7 +730,7 @@ class QuartusWriter(Writer):
                 newline += indent + insize_str + ',\n'
                 newline += indent + outsize_str + '\n'
 
-            elif '//hls-fpga-machine-learning insert wrapper' in line:
+            elif '// hls-fpga-machine-learning insert wrapper' in line:
                 dtype = line.split('#', 1)[1].strip()
                 if io_type == 'io_stream':
                     newline = ''
@@ -782,7 +783,7 @@ class QuartusWriter(Writer):
                         newline += indent + 'nnet::convert_data_back<{}, {}, {}>(outputs_ap.{}, {});\n'.format(
                             o.type.name, dtype, o.size_cpp(), o.member_name, o.member_name
                         )
-            elif '//hls-fpga-machine-learning insert trace_outputs' in line:
+            elif '// hls-fpga-machine-learning insert trace_outputs' in line:
                 newline = ''
                 for layer in model.get_layers():
                     func = layer.get_attr('function_cpp')
