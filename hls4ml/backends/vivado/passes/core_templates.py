@@ -148,7 +148,6 @@ class ActivationConfigTemplate(LayerConfigTemplate):
     def format(self, node):
         params = self._default_config_params(node)
         params['type'] = node.get_attr('activation')
-        print (params)
         return self.template.format(**params)
 
 

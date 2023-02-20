@@ -6,8 +6,6 @@ import sys
 import torch
 import pickle
 import re
-import copy
-from collections import OrderedDict
 
 from hls4ml.model import ModelGraph
 
