@@ -400,6 +400,7 @@ def convert_from_symbolic_expression(
     expr,
     n_symbols=None,
     lut_functions=None,
+    use_built_in_lut_functions=False,
     output_dir='my-hls-test',
     project_name='myproject',
     input_data_tb=None,
@@ -440,6 +441,7 @@ def convert_from_symbolic_expression(
     expr_layer['expression'] = [str(e) for e in expr]
     expr_layer['n_symbols'] = n_symbols
     expr_layer['lut_functions'] = lut_functions
+    expr_layer['use_built_in_luts'] = use_built_in_lut_functions
     layer_list.append(expr_layer)
 
     config = create_config(

@@ -13,11 +13,19 @@ expr_function_template = 'y[{y_index}] = {expr_str};'
 
 expr_include_list = ['hls_math.h', 'nnet_utils/nnet_math.h']
 
+built_in_luts = ['sin_lut', 'cos_lut']
+
 class HLSCodePrinter(CXX11CodePrinter):
     _ns = 'hls::'
 
-    def __init__(self, layer, lut_functions, settings=None):
+    def __init__(self, layer, lut_functions, use_built_in_luts=False, settings=None):
         if lut_functions is not None:
+            if use_built_in_luts:
+                # Check if user's LUTs override built-in LUTs
+                for lut_name in lut_functions.keys():
+                    if lut_name in built_in_luts:
+                        print(f'WARNING: User-specified LUT function {lut_name} overrides built-in LUT function.')
+
             if settings is None:
                 settings = { 'user_functions': lut_functions }
             else:
@@ -27,6 +35,7 @@ class HLSCodePrinter(CXX11CodePrinter):
 
         super().__init__(settings)
         self.layer = layer
+        self.use_built_in_luts = use_built_in_luts
 
         for k in ('Abs Sqrt exp exp2 expm1 log log10 log2 log1p Cbrt hypot fma'
           ' loggamma sin cos tan asin acos atan atan2 sinh cosh tanh asinh acosh '
@@ -82,7 +91,14 @@ class HLSCodePrinter(CXX11CodePrinter):
         cast = f'({hls_type.name})'
         args = ', '.join(map(lambda arg: self._print(arg), expr.args))
 
-        return f'{self._ns}{name}{template}({cast}({args}))'
+        if self.use_built_in_luts and name + '_lut' in built_in_luts:
+            ns = 'nnet::'
+            name = name + '_lut'
+            template = f'<{hls_type.name}>'
+        else:
+            ns = self._ns
+
+        return f'{ns}{name}{template}({cast}({args}))'
 
     def _print_Symbol(self, expr):
         name = super()._print_Symbol(expr)
@@ -96,7 +112,8 @@ class ExpressionFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
 
-        printer = HLSCodePrinter(node, lut_functions={ lut_fun.name : lut_fun.name for lut_fun in params['lut_functions'] })
+        lut_functions = { lut_fun.name : lut_fun.name for lut_fun in params['lut_functions'] }
+        printer = HLSCodePrinter(node, lut_functions=lut_functions, use_built_in_luts=node.attributes['use_built_in_luts'])
 
         fn_templates = []
         for i, expr in enumerate(node.attributes['expression']):
