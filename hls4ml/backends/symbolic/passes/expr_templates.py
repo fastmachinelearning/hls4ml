@@ -45,13 +45,22 @@ class HLSCodePrinter(CXX11CodePrinter):
     def _symbol_to_array(self, name):
         return re.sub(r'([a-zA-Z]+)(\d+)', r'\1[\2]', name)
 
+    def _wrap_with_type_name(self, expr_str):
+        type_name = self.layer.types['result_t'].name
+        return f'{type_name}({expr_str})'
+
+    def _print_Integer(self, expr):
+        int_str = super()._print_Integer(expr)
+        return self._wrap_with_type_name(int_str)
+
     def _print_Float(self, flt):
         float_str = super()._print_Float(flt)
-        return f'model_default_t({float_str})'
+        return self._wrap_with_type_name(float_str)
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
-        return f'model_default_t({p}.0/{q}.0)'
+        p_q_str = f'{p}.0/{q}.0'
+        return self._wrap_with_type_name(p_q_str)
 
     def _print_Pow(self, expr):
         hls_type = self.layer.types['result_t']
