@@ -19,6 +19,7 @@ class PyTorchModelReader(object):
         self.input_shape = config['InputShape']
     
     def get_weights_data(self, layer_name, var_name):
+        print (layer_name)
         """Get weights data from layers.
         
         The hls layer classes are based on Keras's default parameters.
@@ -28,7 +29,7 @@ class PyTorchModelReader(object):
         Parameters
         ----------
         layer_name : string
-            layer's name in the ONNX model
+            layer's name in the Pytorch model
         var_name : string
             variable to be extracted
 
@@ -56,10 +57,14 @@ class PyTorchModelReader(object):
         
         elif var_name in list(torch_paramap.keys()):
             var_name = torch_paramap[var_name]
-            
-        data = self.state_dict[layer_name + '.' + var_name].numpy().transpose() #Look at transpose when systhesis produce lousy results. Might need to remove it.
+
+        if layer_name + '.' + var_name in self.state_dict:
+            data = self.state_dict[layer_name + '.' + var_name].numpy().transpose() #Look at transpose when systhesis produce lousy results. Might need to remove it.
         
-        return data
+            return data
+        
+        else:
+            return None
     
 class PyTorchFileReader(PyTorchModelReader): #Inherit get_weights_data method
     def __init__(self, config):
@@ -219,10 +224,21 @@ def pytorch_to_hls(config):
             #for BatchNorm layers    
             if hasattr(children[node.target], 'eps'):
                 arguments['eps'] = children[node.target].eps
+            #for LeakyReLU layers    
+            if hasattr(children[node.target], 'negative_slope'):
+                arguments['alpha'] = children[node.target].negative_slope
+            #for Threshold layers    
+            if hasattr(children[node.target], 'threshold'):
+                arguments['threshold'] = children[node.target].threshold
+            if hasattr(children[node.target], 'value'):
+                arguments['value'] = children[node.target].value
+            if pytorch_class == 'Threshold' and int(arguments['value']) is not 0:
+                raise Exception('values other than 0 for x < threshold not supported for Threshold layers')
             
-
             layer_name = node.name
-            
+            if layer_name[0] == '_':
+                layer_name = layer_name[1:]
+
             #Process the layer
             layer, output_shape = layer_handlers[pytorch_class](pytorch_class,layer_name,input_names, input_shapes, arguments,reader, config)          
 

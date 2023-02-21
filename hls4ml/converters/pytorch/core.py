@@ -2,8 +2,6 @@ import numpy as np
 
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
 
-# TODO: propagate use_bias info properly
-# https://github.com/fastmachinelearning/hls4ml/issues/409 
 @pytorch_handler('Linear')
 def parse_linear_layer(operation, layer_name, input_names, input_shapes, arguments, data_reader, config):
     assert('Linear' in operation)
@@ -17,7 +15,6 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, argumen
     layer['n_out'] = arguments['out_features']
 
     #Handling whether bias is used or not
-    assert not arguments['bias'] is None, "PyTorch Linear with bias=False not yet supported"
     if arguments['bias'] is None:    
         layer['use_bias'] = False
     else:
@@ -28,10 +25,7 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, argumen
     return layer, output_shape
 
 
-# TODO: propagate parametrized activation parameters
-# https://github.com/fastmachinelearning/hls4ml/issues/409 
-# activation_layers = ['LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'ReLU']
-activation_layers = ['Softmax', 'Relu']
+activation_layers = ['Softmax', 'Relu', 'LeakyReLU','ThresholdedReLU', 'ELU' , 'PReLU']
 @pytorch_handler(*activation_layers)
 def parse_activation_layer(operation, layer_name, input_names, input_shapes, arguments, data_reader, config):
     
@@ -43,6 +37,14 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, arg
     
     if layer['class_name'] == 'Relu':
         layer['class_name'] = 'Activation'
+    if layer['class_name'] == 'LeakyReLU':
+        layer['activ_param'] = arguments['alpha']
+    if layer['class_name'] == 'ELU':
+        layer['activ_param'] = arguments['alpha']
+    if layer['class_name'] == 'PReLU':
+        layer['activ_param'] = arguments['alpha']
+    if layer['class_name'] == 'ThresholdedReLU':
+        layer['activ_param'] = arguments['threshold']
     
     if 'dim' in arguments:
         layer['axis'] = arguments['dim']
