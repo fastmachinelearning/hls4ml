@@ -2,7 +2,7 @@ from hls4ml.writer.quartus_writer import QuartusWriter
 from hls4ml.writer.symbolic_writer import SymbolicExpressionWriter
 from hls4ml.writer.vivado_accelerator_writer import VivadoAcceleratorWriter
 from hls4ml.writer.vivado_writer import VivadoWriter
-from hls4ml.writer.writers import Writer, get_writer, register_writer
+from hls4ml.writer.writers import Writer, get_writer, register_writer  # noqa: F401
 
 register_writer('Vivado', VivadoWriter)
 register_writer('VivadoAccelerator', VivadoAcceleratorWriter)

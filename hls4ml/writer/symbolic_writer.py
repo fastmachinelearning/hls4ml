@@ -8,10 +8,13 @@ from hls4ml.writer.vivado_writer import VivadoWriter
 
 class SymbolicExpressionWriter(VivadoWriter):
     def write_nnet_utils(self, model):
-        ###################
-        ## nnet_utils
-        ###################
+        """Copy the nnet_utils, AP types headers and any custom source to the project output directory
 
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+
+        # nnet_utils
         filedir = os.path.dirname(os.path.abspath(__file__))
 
         srcpath = os.path.join(filedir, '../templates/vivado/nnet_utils/')
@@ -25,10 +28,7 @@ class SymbolicExpressionWriter(VivadoWriter):
         for h in headers:
             copyfile(srcpath + h, dstpath + h)
 
-        ###################
-        ## HLS includes
-        ###################
-
+        # ap_types
         filedir = os.path.dirname(os.path.abspath(__file__))
 
         srcpath = model.config.get_config_value('HLSIncludePath')
@@ -39,10 +39,7 @@ class SymbolicExpressionWriter(VivadoWriter):
 
         copytree(srcpath, dstpath)
 
-        ###################
-        ## custom source
-        ###################
-
+        # custom source
         filedir = os.path.dirname(os.path.abspath(__file__))
 
         custom_source = get_backend('Vivado').get_custom_source()
@@ -51,12 +48,15 @@ class SymbolicExpressionWriter(VivadoWriter):
             copyfile(srcpath, dstpath)
 
     def write_build_script(self, model):
+        """Write the TCL/Shell build scripts (project.tcl, build_prj.tcl, vivado_synth.tcl, build_lib.sh)
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
 
         filedir = os.path.dirname(os.path.abspath(__file__))
 
-        ###################
-        # project.tcl
-        ###################
+        # build_prj.tcl
         f = open(f'{model.config.get_output_dir()}/project.tcl', 'w')
         f.write('variable project_name\n')
         f.write(f'set project_name "{model.config.get_project_name()}"\n')
@@ -68,26 +68,17 @@ class SymbolicExpressionWriter(VivadoWriter):
         f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
         f.close()
 
-        ###################
         # build_prj.tcl
-        ###################
-
         srcpath = os.path.join(filedir, '../templates/vivado/build_prj.tcl')
         dstpath = f'{model.config.get_output_dir()}/build_prj.tcl'
         copyfile(srcpath, dstpath)
 
-        ###################
         # vivado_synth.tcl
-        ###################
-
         srcpath = os.path.join(filedir, '../templates/vivado/vivado_synth.tcl')
         dstpath = f'{model.config.get_output_dir()}/vivado_synth.tcl'
         copyfile(srcpath, dstpath)
 
-        ###################
         # build_lib.sh
-        ###################
-
         f = open(os.path.join(filedir, '../templates/symbolic/build_lib.sh'))
         fout = open(f'{model.config.get_output_dir()}/build_lib.sh', 'w')
 

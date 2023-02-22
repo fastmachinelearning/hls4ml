@@ -23,7 +23,7 @@ try:
 
     __pytorch_enabled__ = True
 except ImportError:
-    warnings.warn("WARNING: Pytorch converter is not enabled!")
+    warnings.warn("WARNING: Pytorch converter is not enabled!", stacklevel=1)
     __pytorch_enabled__ = False
 
 try:
@@ -32,7 +32,7 @@ try:
 
     __onnx_enabled__ = True
 except ImportError:
-    warnings.warn("WARNING: ONNX converter is not enabled!")
+    warnings.warn("WARNING: ONNX converter is not enabled!", stacklevel=1)
     __onnx_enabled__ = False
 
 try:
@@ -40,7 +40,7 @@ try:
 
     __tensorflow_enabled__ = True
 except ImportError:
-    warnings.warn("WARNING: Tensorflow converter is not enabled!")
+    warnings.warn("WARNING: Tensorflow converter is not enabled!", stacklevel=1)
     __tensorflow_enabled__ = False
 
 # ----------Layer handling register----------#
@@ -419,7 +419,7 @@ def convert_from_symbolic_expression(
     if n_symbols is None:
         n_symbols = 0
         for e in expr:
-            symbols = max([int(d.name.replace('x', '')) for d in expr.free_symbols]) + 1
+            symbols = max([int(d.name.replace('x', '')) for d in e.free_symbols]) + 1
             if symbols > n_symbols:
                 n_symbols = symbols
 

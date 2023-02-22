@@ -66,7 +66,8 @@ class HLSCodePrinter(CXX11CodePrinter):
         return self._wrap_with_type_name(p_q_str)
 
     def _print_Pow(self, expr):
-        hls_type = self.layer.types['result_t']
+        type_name = self.layer.types['result_t'].name
+        type_precision = self.layer.types['result_t'].precision
         if isinstance(expr.exp, Integer):
             l_brac, r_brac = ('(', ')') if len(expr.base.args) > 1 else ('', '')
             if expr.exp > 1:
@@ -77,18 +78,18 @@ class HLSCodePrinter(CXX11CodePrinter):
                 )
             elif expr.exp == -1:  # 1/x
                 base = l_brac + self._symbol_to_array(self._print(expr.base)) + r_brac
-                return f'hls::recip<{hls_type.precision.width}, {hls_type.precision.integer}>(({hls_type.name}){base})'
+                return f'hls::recip<{type_precision.width}, {type_precision.integer}>(({type_name}){base})'
             else:
                 return super()._print_Pow(expr)
         else:
             base = self._print(expr.base)
             if expr.exp == 0.5:
-                return f'{self._ns}sqrt<{hls_type.precision.width}, {hls_type.precision.integer}>(({hls_type.name})({base}))'
+                return f'{self._ns}sqrt<{type_precision.width}, {type_precision.integer}>(({type_name})({base}))'
             elif expr.exp == S.One / 3:
-                return f'{self._ns}cbrt<{hls_type.precision.width}, {hls_type.precision.integer}>(({hls_type.name})({base}))'
+                return f'{self._ns}cbrt<{type_precision.width}, {type_precision.integer}>(({type_name})({base}))'
             else:
                 exp = self._print(expr.exp)
-                return f'{self._ns}pow<{hls_type.precision.width}, {hls_type.precision.integer}>(({hls_type.name})({base}), {exp})'
+                return f'{self._ns}pow<{type_precision.width}, {type_precision.integer}>(({type_name})({base}), {exp})'
 
     def _print_math(self, expr):
         name = self.known_functions[expr.__class__.__name__]
@@ -102,15 +103,16 @@ class HLSCodePrinter(CXX11CodePrinter):
 
         # Setting precision of math functions required some rethinking
         # Doing e.g., hls::pow<x.width, x.iwidth>(x, y) passes C sim, but fails synthesis, need to use hls::pow<16,6>(x,y)
-        hls_type = self.layer.types['result_t']
-        template = f'<{hls_type.precision.width}, {hls_type.precision.integer}>'
-        cast = f'({hls_type.name})'
+        type_name = self.layer.types['result_t'].name
+        type_precision = self.layer.types['result_t'].precision
+        template = f'<{type_precision.width}, {type_precision.integer}>'
+        cast = f'({type_name})'
         args = ', '.join(map(lambda arg: self._print(arg), expr.args))
 
         if self.use_built_in_luts and name + '_lut' in built_in_luts:
             ns = 'nnet::'
             name = name + '_lut'
-            template = f'<{hls_type.name}>'
+            template = f'<{type_name}>'
         else:
             ns = self._ns
 
@@ -156,7 +158,15 @@ class ExpressionConfigTemplate(LayerConfigTemplate):
                 namespace = 'nnet::'
             else:
                 namespace = 'hls::'
-            lut_def = f'nnet::lookup_table<{type_name}, {lut_fun.table_size}, {namespace}{lut_fun.math_func}> {lut_fun.name}({lut_fun.range_start}, {lut_fun.range_end});'
+            lut_def = (
+                f'nnet::lookup_table<{type_name}, '
+                f'{lut_fun.table_size}, '
+                f'{namespace}'
+                f'{lut_fun.math_func}> '
+                f'{lut_fun.name}'
+                f'({lut_fun.range_start}, '
+                f'{lut_fun.range_end});'
+            )
             lut_defs.append(lut_def)
 
         return '\n'.join(lut_defs)
