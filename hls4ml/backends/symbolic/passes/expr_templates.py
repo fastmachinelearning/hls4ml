@@ -1,11 +1,11 @@
 import re
 
-from hls4ml.model.layers import SymbolicExpression
-from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
-
-from sympy.printing.cxx import CXX11CodePrinter
-from sympy.core.numbers import Integer
 from sympy.core import S
+from sympy.core.numbers import Integer
+from sympy.printing.cxx import CXX11CodePrinter
+
+from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
+from hls4ml.model.layers import SymbolicExpression
 
 # Expression templates
 
@@ -14,6 +14,7 @@ expr_function_template = 'y[{y_index}] = {expr_str};'
 expr_include_list = ['hls_math.h', 'nnet_utils/nnet_math.h']
 
 built_in_luts = ['sin_lut', 'cos_lut']
+
 
 class HLSCodePrinter(CXX11CodePrinter):
     _ns = 'hls::'
@@ -27,7 +28,7 @@ class HLSCodePrinter(CXX11CodePrinter):
                         print(f'WARNING: User-specified LUT function {lut_name} overrides built-in LUT function.')
 
             if settings is None:
-                settings = { 'user_functions': lut_functions }
+                settings = {'user_functions': lut_functions}
             else:
                 user_functions = settings.get('user_functions', {})
                 user_functions.update(lut_functions)
@@ -37,9 +38,11 @@ class HLSCodePrinter(CXX11CodePrinter):
         self.layer = layer
         self.use_built_in_luts = use_built_in_luts
 
-        for k in ('Abs Sqrt exp exp2 expm1 log log10 log2 log1p Cbrt hypot fma'
-          ' loggamma sin cos tan asin acos atan atan2 sinh cosh tanh asinh acosh '
-          'atanh erf erfc loggamma gamma ceiling floor').split():
+        for k in (
+            'Abs Sqrt exp exp2 expm1 log log10 log2 log1p Cbrt hypot fma'
+            ' loggamma sin cos tan asin acos atan atan2 sinh cosh tanh asinh acosh '
+            'atanh erf erfc loggamma gamma ceiling floor'
+        ).split():
             setattr(HLSCodePrinter, '_print_%s' % k, HLSCodePrinter._print_math)
 
     def _symbol_to_array(self, name):
@@ -67,8 +70,12 @@ class HLSCodePrinter(CXX11CodePrinter):
         if isinstance(expr.exp, Integer):
             l_brac, r_brac = ('(', ')') if len(expr.base.args) > 1 else ('', '')
             if expr.exp > 1:
-                return '(' + '*'.join([l_brac + self._symbol_to_array(self._print(expr.base)) + r_brac for _ in range(expr.exp)]) + ')'
-            elif expr.exp == -1: # 1/x
+                return (
+                    '('
+                    + '*'.join([l_brac + self._symbol_to_array(self._print(expr.base)) + r_brac for _ in range(expr.exp)])
+                    + ')'
+                )
+            elif expr.exp == -1:  # 1/x
                 base = l_brac + self._symbol_to_array(self._print(expr.base)) + r_brac
                 return f'hls::recip<{hls_type.precision.width}, {hls_type.precision.integer}>(({hls_type.name}){base})'
             else:
@@ -77,7 +84,7 @@ class HLSCodePrinter(CXX11CodePrinter):
             base = self._print(expr.base)
             if expr.exp == 0.5:
                 return f'{self._ns}sqrt<{hls_type.precision.width}, {hls_type.precision.integer}>(({hls_type.name})({base}))'
-            elif expr.exp == S.One/3:
+            elif expr.exp == S.One / 3:
                 return f'{self._ns}cbrt<{hls_type.precision.width}, {hls_type.precision.integer}>(({hls_type.name})({base}))'
             else:
                 exp = self._print(expr.exp)
@@ -113,15 +120,16 @@ class HLSCodePrinter(CXX11CodePrinter):
         name = super()._print_Symbol(expr)
         return self._symbol_to_array(name)
 
+
 class ExpressionFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(SymbolicExpression, include_header=expr_include_list)
         self.template = expr_function_template
-    
+
     def format(self, node):
         params = self._default_function_params(node)
 
-        lut_functions = { lut_fun.name : lut_fun.name for lut_fun in params['lut_functions'] }
+        lut_functions = {lut_fun.name: lut_fun.name for lut_fun in params['lut_functions']}
         printer = HLSCodePrinter(node, lut_functions=lut_functions, use_built_in_luts=node.attributes['use_built_in_luts'])
 
         fn_templates = []
@@ -132,10 +140,11 @@ class ExpressionFunctionTemplate(FunctionCallTemplate):
 
         return fn_templates
 
+
 class ExpressionConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(SymbolicExpression)
-    
+
     def format(self, node):
         params = self._default_config_params(node)
 

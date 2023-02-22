@@ -1,13 +1,12 @@
-from shutil import copyfile, copytree, rmtree
-import os
 import glob
+import os
+from shutil import copyfile, copytree, rmtree
 
-from hls4ml.writer.vivado_writer import VivadoWriter
 from hls4ml.backends import get_backend
+from hls4ml.writer.vivado_writer import VivadoWriter
 
 
 class SymbolicExpressionWriter(VivadoWriter):
-
     def write_nnet_utils(self, model):
         ###################
         ## nnet_utils
@@ -15,8 +14,8 @@ class SymbolicExpressionWriter(VivadoWriter):
 
         filedir = os.path.dirname(os.path.abspath(__file__))
 
-        srcpath = os.path.join(filedir,'../templates/vivado/nnet_utils/')
-        dstpath = '{}/firmware/nnet_utils/'.format(model.config.get_output_dir())
+        srcpath = os.path.join(filedir, '../templates/vivado/nnet_utils/')
+        dstpath = f'{model.config.get_output_dir()}/firmware/nnet_utils/'
 
         if not os.path.exists(dstpath):
             os.mkdir(dstpath)
@@ -33,7 +32,7 @@ class SymbolicExpressionWriter(VivadoWriter):
         filedir = os.path.dirname(os.path.abspath(__file__))
 
         srcpath = model.config.get_config_value('HLSIncludePath')
-        dstpath = '{}/firmware/ap_types/'.format(model.config.get_output_dir())
+        dstpath = f'{model.config.get_output_dir()}/firmware/ap_types/'
 
         if os.path.exists(dstpath):
             rmtree(dstpath)
@@ -48,7 +47,7 @@ class SymbolicExpressionWriter(VivadoWriter):
 
         custom_source = get_backend('Vivado').get_custom_source()
         for dst, srcpath in custom_source.items():
-            dstpath = '{}/firmware/{}'.format(model.config.get_output_dir(), dst)
+            dstpath = f'{model.config.get_output_dir()}/firmware/{dst}'
             copyfile(srcpath, dstpath)
 
     def write_build_script(self, model):
@@ -58,9 +57,9 @@ class SymbolicExpressionWriter(VivadoWriter):
         ###################
         # project.tcl
         ###################
-        f = open('{}/project.tcl'.format(model.config.get_output_dir()), 'w')
+        f = open(f'{model.config.get_output_dir()}/project.tcl', 'w')
         f.write('variable project_name\n')
-        f.write('set project_name "{}"\n'.format(model.config.get_project_name()))
+        f.write(f'set project_name "{model.config.get_project_name()}"\n')
         f.write('variable backend\n')
         f.write('set backend "vivado"\n')
         f.write('variable part\n')
@@ -73,24 +72,24 @@ class SymbolicExpressionWriter(VivadoWriter):
         # build_prj.tcl
         ###################
 
-        srcpath = os.path.join(filedir,'../templates/vivado/build_prj.tcl')
-        dstpath = '{}/build_prj.tcl'.format(model.config.get_output_dir())
+        srcpath = os.path.join(filedir, '../templates/vivado/build_prj.tcl')
+        dstpath = f'{model.config.get_output_dir()}/build_prj.tcl'
         copyfile(srcpath, dstpath)
 
         ###################
         # vivado_synth.tcl
         ###################
 
-        srcpath = os.path.join(filedir,'../templates/vivado/vivado_synth.tcl')
-        dstpath = '{}/vivado_synth.tcl'.format(model.config.get_output_dir())
+        srcpath = os.path.join(filedir, '../templates/vivado/vivado_synth.tcl')
+        dstpath = f'{model.config.get_output_dir()}/vivado_synth.tcl'
         copyfile(srcpath, dstpath)
 
         ###################
         # build_lib.sh
         ###################
 
-        f = open(os.path.join(filedir,'../templates/symbolic/build_lib.sh'),'r')
-        fout = open('{}/build_lib.sh'.format(model.config.get_output_dir()),'w')
+        f = open(os.path.join(filedir, '../templates/symbolic/build_lib.sh'))
+        fout = open(f'{model.config.get_output_dir()}/build_lib.sh', 'w')
 
         for line in f.readlines():
             line = line.replace('myproject', model.config.get_project_name())
@@ -106,7 +105,7 @@ class SymbolicExpressionWriter(VivadoWriter):
         self.write_project_dir(model)
         self.write_project_cpp(model)
         self.write_project_header(model)
-        #self.write_weights(model) # No weights to write
+        # self.write_weights(model) # No weights to write
         self.write_defines(model)
         self.write_parameters(model)
         self.write_test_bench(model)

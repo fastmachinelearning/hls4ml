@@ -404,7 +404,9 @@ def convert_from_symbolic_expression(
     output_dir='my-hls-test',
     project_name='myproject',
     input_data_tb=None,
-    output_data_tb=None, precision='ap_fixed<16,6>', **kwargs
+    output_data_tb=None,
+    precision='ap_fixed<16,6>',
+    **kwargs,
 ):
     import sympy
 
@@ -425,7 +427,10 @@ def convert_from_symbolic_expression(
         lut_functions = []
     else:
         if isinstance(lut_functions, dict):
-            lut_functions = [LUTFunction(name, params['math_func'], params['range_start'], params['range_end'], params['table_size']) for name, params in lut_functions.items()]
+            lut_functions = [
+                LUTFunction(name, params['math_func'], params['range_start'], params['range_end'], params['table_size'])
+                for name, params in lut_functions.items()
+            ]
 
     layer_list = []
 
@@ -444,24 +449,14 @@ def convert_from_symbolic_expression(
     expr_layer['use_built_in_luts'] = use_built_in_lut_functions
     layer_list.append(expr_layer)
 
-    config = create_config(
-        output_dir=output_dir,
-        project_name=project_name,
-        backend='SymbolicExpression',
-        **kwargs
-    )
+    config = create_config(output_dir=output_dir, project_name=project_name, backend='SymbolicExpression', **kwargs)
 
-    #config['Expression'] = str(expr)
+    # config['Expression'] = str(expr)
     config['NSymbols'] = n_symbols
     config['InputData'] = input_data_tb
     config['OutputPredictions'] = output_data_tb
 
-    config['HLSConfig'] = {
-        'Model': {
-            'Precision': precision,
-            'ReuseFactor': 1
-        }
-    }
+    config['HLSConfig'] = {'Model': {'Precision': precision, 'ReuseFactor': 1}}
 
     hls_model = ModelGraph(config, None, layer_list)
 
