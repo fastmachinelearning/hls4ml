@@ -25,7 +25,7 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, argumen
     return layer, output_shape
 
 
-activation_layers = ['Softmax', 'Relu', 'LeakyReLU','ThresholdedReLU', 'ELU' , 'PReLU']
+activation_layers = ['Softmax', 'Relu', 'ReLU', 'LeakyReLU','ThresholdedReLU', 'ELU' , 'PReLU', 'Sigmoid']
 @pytorch_handler(*activation_layers)
 def parse_activation_layer(operation, layer_name, input_names, input_shapes, arguments, data_reader, config):
     
@@ -34,8 +34,11 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, arg
     layer['class_name'] =  operation
     layer['activation'] = layer['class_name']
     layer['name'] = layer_name
-    
-    if layer['class_name'] == 'Relu':
+
+    if layer['class_name'] != 'Activation':
+        layer['activation'] = layer['class_name']
+
+    if layer['class_name'] == 'Relu' or layer['class_name'] == 'ReLU':
         layer['class_name'] = 'Activation'
     if layer['class_name'] == 'LeakyReLU':
         layer['activ_param'] = arguments['alpha']
@@ -45,7 +48,11 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, arg
         layer['activ_param'] = arguments['alpha']
     if layer['class_name'] == 'ThresholdedReLU':
         layer['activ_param'] = arguments['threshold']
-    
+    if layer['class_name'] == 'Sigmoid':
+        layer['class_name'] = 'Activation'
+
+
+
     if 'dim' in arguments:
         layer['axis'] = arguments['dim']
 

@@ -39,7 +39,6 @@ class GenerateConvIm2col(OptimizerPass):
             in_H, in_W, in_C = node.get_input_variable().shape[0], node.get_input_variable().shape[1], node.get_input_variable().shape[2]
         else:    
             in_H, in_W, in_C = node.get_input_variable().shape[1], node.get_input_variable().shape[2], node.get_input_variable().shape[0]
-        print (in_H, in_W, in_C)
         code_str = node.model.config.backend.generate_conv2d_line_buffer_fn(
             node.get_attr('index'),
             node.get_attr('n_partitions'),

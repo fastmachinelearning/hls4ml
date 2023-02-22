@@ -19,7 +19,7 @@ class PyTorchModelReader(object):
         self.input_shape = config['InputShape']
     
     def get_weights_data(self, layer_name, var_name):
-        print (layer_name)
+
         """Get weights data from layers.
         
         The hls layer classes are based on Keras's default parameters.
