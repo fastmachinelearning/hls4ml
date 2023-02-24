@@ -21,7 +21,7 @@ try:
 
     __pytorch_enabled__ = True
 except ImportError:
-    warnings.warn("WARNING: Pytorch converter is not enabled!")
+    warnings.warn("WARNING: Pytorch converter is not enabled!", stacklevel=2)
     __pytorch_enabled__ = False
 
 try:
@@ -30,7 +30,7 @@ try:
 
     __onnx_enabled__ = True
 except ImportError:
-    warnings.warn("WARNING: ONNX converter is not enabled!")
+    warnings.warn("WARNING: ONNX converter is not enabled!", stacklevel=2)
     __onnx_enabled__ = False
 
 try:
@@ -38,7 +38,7 @@ try:
 
     __tensorflow_enabled__ = True
 except ImportError:
-    warnings.warn("WARNING: Tensorflow converter is not enabled!")
+    warnings.warn("WARNING: Tensorflow converter is not enabled!", stacklevel=2)
     __tensorflow_enabled__ = False
 
 # ----------Layer handling register----------#
@@ -260,7 +260,7 @@ def convert_from_pytorch_model(
     ----------
     model : Pytorch model object.
         Model to be converted to hls model object.
-    input_shape : shape of the input tensor. First element is the batch size, can be None 
+    input_shape : shape of the input tensor. First element is the batch size, needs to be None
     output_dir (str, optional): Output directory of the generated HLS
         project. Defaults to 'my-hls-test'.
     project_name (str, optional): Name of the HLS project.

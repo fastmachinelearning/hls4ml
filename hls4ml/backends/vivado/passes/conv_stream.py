@@ -21,14 +21,14 @@ class GenerateConvStreamingInstructions(OptimizerPass):
         if node.model.config.get_config_value('IOType') == 'io_stream':
             if node.get_attr('data_format') == "channels_last":
                 in_W, in_C = node.get_input_variable().shape[0], node.get_input_variable().shape[1]
-            else:    
-                in_W, in_C = node.get_input_variable().shape[1], node.get_input_variable().shape[0]            
+            else:
+                in_W, in_C = node.get_input_variable().shape[1], node.get_input_variable().shape[0]
             min_w, instructions = node.model.config.backend.compute_conv1d_instructions(
                 in_W,
                 in_C,
                 node.get_attr('filt_width'),
                 node.get_attr('stride_width'),
-            )
+                            )
             instructions_str = ','.join(str(i) for i in instructions)
             node.set_attr('min_width', min_w)
             node.set_attr('instructions', instructions_str)
@@ -40,15 +40,27 @@ class GenerateConvStreamingInstructions(OptimizerPass):
     def _generate_2d_instructions(self, node):
         if node.model.config.get_config_value('IOType') == 'io_stream':
             if node.get_attr('data_format') == "channels_last":
-                in_H, in_W, in_C = node.get_input_variable().shape[0], node.get_input_variable().shape[1], node.get_input_variable().shape[2]
-            else:    
-                in_H, in_W, in_C = node.get_input_variable().shape[1], node.get_input_variable().shape[2], node.get_input_variable().shape[0]            
+                in_H, in_W, in_C = (
+                    node.get_input_variable().shape[0],
+                    node.get_input_variable().shape[1],
+                    node.get_input_variable().shape[2],
+                )
+            else:
+                in_H, in_W, in_C = (
+                    node.get_input_variable().shape[1],
+                    node.get_input_variable().shape[2],
+                    node.get_input_variable().shape[0],
+                )
             min_h, min_w, instructions = node.model.config.backend.compute_conv2d_instructions(
+<<<<<<< HEAD
                 in_H,
                 in_W,
                 in_C,
                 node.get_attr('filt_height'),
                 node.get_attr('stride_height'),
+=======
+                in_H, in_W, in_C, node.get_attr('filt_height'), node.get_attr('stride_height')
+>>>>>>> 17d68ccf (apply pre-commit hook to changed files)
             )
             instructions_str = ','.join(str(i) for i in instructions)
             node.set_attr('min_height', min_h)

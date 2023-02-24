@@ -1,6 +1,8 @@
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
 
 reshape_layers = ['View']
+
+
 @pytorch_handler(*reshape_layers)
 def parse_reshape_layer(operation, layer_name, input_names, input_shapes, arguments, data_reader, config):
     assert operation == 'View'
