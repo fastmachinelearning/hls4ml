@@ -157,7 +157,7 @@ def pytorch_to_hls(config):
 
     # All supported layers
     supported_layers = get_supported_pytorch_layers() + skip_layers
-    print(supported_layers)
+
     # Map inputs of skipped and split (activation) layers
     # inputs_map = {}
 

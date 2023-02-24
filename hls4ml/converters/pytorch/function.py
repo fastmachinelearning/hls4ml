@@ -1,5 +1,3 @@
-import numpy as np
-
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
 
 merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate', 'Dot']
