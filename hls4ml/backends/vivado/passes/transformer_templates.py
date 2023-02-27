@@ -80,6 +80,7 @@ class MhaConfigTemplate(LayerConfigTemplate):
         mha_config = self.template.format(**params)
 
         mult_params1 = self._default_config_params(node)
+        mult_params1['strategy'] = 'latency'
         mult_params1['mNum'] = '1'
         mult_params1['n_in'] = node.get_attr('feature_dim')
         mult_params1['n_out'] = node.get_attr('head_dim_key')
@@ -92,6 +93,7 @@ class MhaConfigTemplate(LayerConfigTemplate):
         mult_config1 = self.mult1_template.format(**mult_params1)
 
         mult_params2 = self._default_config_params(node)
+        mult_params2['strategy'] = 'latency'
         mult_params2['mNum'] = '2'
         mult_params2['n_in'] = node.get_attr('head_dim_value') * node.get_attr('num_heads')
         mult_params2['n_out'] = node.get_attr('feature_dim')

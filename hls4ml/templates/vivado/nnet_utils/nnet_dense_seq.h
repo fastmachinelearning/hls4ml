@@ -17,16 +17,29 @@ void dense_seq(
     typename CONFIG_T::bias_t    biases[CONFIG_T::n_out])
 {
     #pragma HLS inline
+
+    data_T in_val[CONFIG_T::n_in];
+    #pragma HLS ARRAY_PARTITION variable=in_val complete
+
     if (CONFIG_T::strategy == nnet::latency) {
         for (int j=0; j <CONFIG_T::seq_len; ++j){
-            dense_latency<data_T, res_T, CONFIG_T>(data+(CONFIG_T::n_in*j), res+(CONFIG_T::n_out*j), weights, biases);
+		#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+            for (int i=0; i < CONFIG_T::n_in; ++i){
+            #pragma HLS UNROLL
+                in_val[i] = data[j*CONFIG_T::n_in+i];
+            }
+            dense_latency<data_T, res_T, CONFIG_T>(in_val, res+(CONFIG_T::n_out*j), weights, biases);
         }
     } else {
         for (int j=0; j <CONFIG_T::seq_len; ++j){
-            dense_resource<data_T, res_T, CONFIG_T>(data+(CONFIG_T::n_in*j), res+(CONFIG_T::n_out*j), weights, biases);
+		#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+            for (int i=0; i < CONFIG_T::n_in; ++i){
+            #pragma HLS UNROLL
+                in_val[i] = data[j*CONFIG_T::n_in+i];
+            }
+            dense_resource<data_T, res_T, CONFIG_T>(in_val, res+(CONFIG_T::n_out*j), weights, biases);
         }
     }
-
 }
 
 }

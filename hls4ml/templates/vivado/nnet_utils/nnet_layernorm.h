@@ -17,8 +17,8 @@
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef NNET_BATCHNORM_H_
-#define NNET_BATCHNORM_H_
+#ifndef NNET_LAYERNORM_H_
+#define NNET_LAYERNORM_H_
 
 #include "nnet_common.h"
 #include "nnet_dense.h"
@@ -51,11 +51,11 @@ struct layernorm_config
 template<typename CONFIG_T, int N_TABLE>
 void init_invert_sqr_table(typename CONFIG_T::table_t table_out[N_TABLE])
 {
-    float inv_range = 0.01;
+    float inv_range = 0.5; /// if not acurrate increase this
     // Inversion function:
     //   result = 1/sqrt(x)
     for (int ii = 0; ii < N_TABLE; ii++) {
-        // First, convert from table index to X-value (signed 8-bit, range 0 to +2)
+        // First, convert from table index to X-value (signed 8-bit, range 0 to +0.01)
         float in_val = inv_range*ii/float(N_TABLE);
         // Next, compute lookup table function
         if (in_val > 0.0) table_out[ii] = 1.0/sqrt(in_val);
@@ -70,9 +70,12 @@ void layernorm_1d(
     typename CONFIG_T::scale_t  scale[CONFIG_T::n_in/CONFIG_T::seq_len],
     typename CONFIG_T::bias_t   bias[CONFIG_T::n_in/CONFIG_T::seq_len]
 )
-{   
+{
+#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+#pragma HLS ARRAY_PARTITION variable=data complete
+#pragma HLS ARRAY_PARTITION variable=res complete
 
-int inv_range_inv = (int) 1/0.01;
+int inv_range_inv = (int) 1/0.5;  /// if not acurrate increase this
 typename CONFIG_T::table_t deno_inver = 0;
 #ifdef __HLS_SYN__
     bool initialized = false;
@@ -92,6 +95,9 @@ typename CONFIG_T::table_t deno_inver = 0;
     data_T var, mean, diff;
     data_T data_diff[dim];
     data_T data_norm[dim];
+
+    #pragma HLS ARRAY_PARTITION variable=data_diff complete
+    #pragma HLS ARRAY_PARTITION variable=data_diff complete
     
     const data_T k_inv = 1.0/dim;
     for (int i = 0; i < dim; ++i){
@@ -129,32 +135,38 @@ typename CONFIG_T::table_t deno_inver = 0;
 
 }
 
-
 template<class data_T, class res_T, typename CONFIG_T>
 void layernormalize(
     data_T    data[CONFIG_T::n_in],
     res_T     res[CONFIG_T::n_in],
-    typename CONFIG_T::scale_t  scale[CONFIG_T::n_scale_bias],
-    typename CONFIG_T::bias_t   bias[CONFIG_T::n_scale_bias]
+    typename CONFIG_T::scale_t  scale[CONFIG_T::n_in/CONFIG_T::seq_len],
+    typename CONFIG_T::bias_t   bias[CONFIG_T::n_in/CONFIG_T::seq_len]
 )
 {
-    data_T cache;
     static const unsigned dim = CONFIG_T::n_in/CONFIG_T::seq_len;
-
+    data_T in_val[dim];
     // Use a function_instantiate in case it helps to explicitly optimize unchanging weights/biases
     #pragma HLS function_instantiate variable=scale,bias
-
-    // For parallel inputs:
-    //   - completely partition arrays -- target fabric
-    //   - if we have an unroll factor, limit number of multipliers
-    #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
-
+    
     // #pragma HLS ARRAY_PARTITION variable=weights complete // remove this line for now, it breaks compression sometimes
     #pragma HLS ARRAY_PARTITION variable=scale complete
     #pragma HLS ARRAY_PARTITION variable=bias complete
+    #pragma HLS ARRAY_PARTITION variable=in_val complete
 
-    for (int j=0; j <CONFIG_T::seq_len; ++j){
-        layernorm_1d<data_T, res_T, CONFIG_T>(data+(dim*j), res+(dim*j), scale, bias);
+    if (dim == 1) {
+        for (int j=0; j <CONFIG_T::n_in; ++j){
+        #pragma HLS UNROLL
+            res[j] = bias[0];
+        }
+    } else {
+        for (int j=0; j <CONFIG_T::seq_len; ++j){
+        #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+            for (int i=0; i < dim; ++i){
+            #pragma HLS UNROLL
+                in_val[i] = data[j*dim+i];
+            }
+            layernorm_1d<data_T, res_T, CONFIG_T>(in_val, res+(dim*j), scale, bias);
+        }
     }
 
 

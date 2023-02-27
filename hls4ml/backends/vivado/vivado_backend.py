@@ -516,7 +516,7 @@ class VivadoBackend(FPGABackend):
         if 'table_t' not in layer.attributes:
             layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=32, integer=5)))
         if 'table_size' not in layer.attributes:
-            layer.set_attr('table_size', 2048)
+            layer.set_attr('table_size', 2048)  #table size
 
     @layer_optimizer(Embedding)
     def init_embed(self, layer):
