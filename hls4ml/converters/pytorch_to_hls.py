@@ -55,9 +55,13 @@ class PyTorchModelReader:
         elif var_name in list(torch_paramap.keys()):
             var_name = torch_paramap[var_name]
 
-        if layer_name + '.' + var_name in self.state_dict:
+        # if a layer is reused in the model, torch.FX will append a "_n" for the n-th use
+        # have to snap that off to find the tensors
+        use_name = layer_name.split("_")[0]
+
+        if use_name + '.' + var_name in self.state_dict:
             data = (
-                self.state_dict[layer_name + '.' + var_name].numpy().transpose()
+                self.state_dict[use_name + '.' + var_name].numpy().transpose()
             )  # Look at transpose when systhesis produce lousy results. Might need to remove it.
 
             return data
@@ -141,7 +145,10 @@ def pytorch_to_hls(config):
     print('Interpreting Model ...')
 
     reader = PyTorchFileReader(config) if isinstance(config['PytorchModel'], str) else PyTorchModelReader(config)
-    input_shapes = [list(reader.input_shape)]
+    if type(reader.input_shape) is tuple:
+        input_shapes = [list(reader.input_shape)]
+    else:
+        input_shapes = list(reader.input_shape)
 
     model = reader.torch_model
 
@@ -178,11 +185,19 @@ def pytorch_to_hls(config):
 
     for node in traced_model.graph.nodes:
 
-        if layer_counter != 0:
-            input_shapes = [output_shape]  # In case there are multiple inputs
+        # if layer_counter != 0:
+        #    input_shapes = [output_shape]  # In case there are multiple inputs
 
         if node.op == 'call_module':
-            pytorch_class = children[node.target].__class__.__name__
+
+            # modules that are part of a torch.nn.Sequential with name 'name' have target names 'name.x',
+            # where x is an integer numbering the elements of the Sequential
+            if "." in node.target:
+                class_object = children[node.target.split(".")[0]][int(node.target.split(".")[1])]
+            else:
+                class_object = children[node.target]
+
+            pytorch_class = class_object.__class__.__name__
 
             if pytorch_class not in supported_layers:
                 raise Exception(f'Unsupported layer {pytorch_class}')
@@ -212,42 +227,52 @@ def pytorch_to_hls(config):
             # parse info from class object
 
             input_names = tuple([str(i) for i in node.args])
+            input_shapes = [output_shapes[str(i)] for i in node.args]
+
             arguments = {}
 
             # for Softmax (and probably others)
-            if hasattr(children[node.target], 'dim'):
-                arguments['dim'] = children[node.target].dim
+            if hasattr(class_object, 'dim'):
+                arguments['dim'] = class_object.dim
             # for Linear layer
-            if hasattr(children[node.target], 'in_features'):
-                arguments['in_features'] = children[node.target].in_features
-            if hasattr(children[node.target], 'out_features'):
-                arguments['out_features'] = children[node.target].out_features
-            if hasattr(children[node.target], 'bias'):
-                arguments['bias'] = children[node.target].bias
+            if hasattr(class_object, 'in_features'):
+                arguments['in_features'] = class_object.in_features
+            if hasattr(class_object, 'out_features'):
+                arguments['out_features'] = class_object.out_features
+            if hasattr(class_object, 'bias'):
+                arguments['bias'] = class_object.bias
             # for Conv/Pool layers
-            if hasattr(children[node.target], 'out_channels'):
-                arguments['out_channels'] = children[node.target].out_channels
-            if hasattr(children[node.target], 'kernel_size'):
-                arguments['kernel_size'] = children[node.target].kernel_size
-            if hasattr(children[node.target], 'stride'):
-                arguments['stride'] = children[node.target].stride
-            if hasattr(children[node.target], 'dilation'):
-                arguments['dilation'] = children[node.target].dilation
-            if hasattr(children[node.target], 'padding'):
-                arguments['padding'] = children[node.target].padding
+            if hasattr(class_object, 'out_channels'):
+                arguments['out_channels'] = class_object.out_channels
+            if hasattr(class_object, 'kernel_size'):
+                arguments['kernel_size'] = class_object.kernel_size
+            if hasattr(class_object, 'stride'):
+                arguments['stride'] = class_object.stride
+            if hasattr(class_object, 'dilation'):
+                arguments['dilation'] = class_object.dilation
+            if hasattr(class_object, 'padding'):
+                arguments['padding'] = class_object.padding
             # for BatchNorm layers
-            if hasattr(children[node.target], 'eps'):
-                arguments['eps'] = children[node.target].eps
+            if hasattr(class_object, 'eps'):
+                arguments['eps'] = class_object.eps
             # for LeakyReLU layers
-            if hasattr(children[node.target], 'negative_slope'):
-                arguments['alpha'] = children[node.target].negative_slope
+            if hasattr(class_object, 'negative_slope'):
+                arguments['alpha'] = class_object.negative_slope
             # for Threshold layers
-            if hasattr(children[node.target], 'threshold'):
-                arguments['threshold'] = children[node.target].threshold
-            if hasattr(children[node.target], 'value'):
-                arguments['value'] = children[node.target].value
+            if hasattr(class_object, 'threshold'):
+                arguments['threshold'] = class_object.threshold
+            if hasattr(class_object, 'value'):
+                arguments['value'] = class_object.value
             if pytorch_class == 'Threshold' and int(arguments['value']) != 0:
                 raise Exception('values other than 0 for x < threshold not supported for Threshold layers')
+            # for Pooling layers
+            if 'Pool' in pytorch_class:
+                if '2d' in pytorch_class and not type(arguments['kernel_size']) is tuple:
+                    arguments['kernel_size'] = [arguments['kernel_size'], arguments['kernel_size']]
+                if '2d' in pytorch_class and not type(arguments['padding']) is tuple:
+                    arguments['padding'] = [arguments['padding'], arguments['padding']]
+                if '2d' in pytorch_class and not type(arguments['stride']) is tuple:
+                    arguments['stride'] = [arguments['stride'], arguments['stride']]
 
             # Process the layer
             layer, output_shape = layer_handlers[pytorch_class](
@@ -263,15 +288,15 @@ def pytorch_to_hls(config):
             layer_counter += 1
 
         if node.op == 'placeholder':
-            # 'placeholder' indicates the input layer. Only one allowed, throw exceptions if there are more
-            if n_inputs > 0:
-                raise Exception("Only one input to forward function allowed")
+            # 'placeholder' indicates an input layer. Multiple inputs are supported
+
             input_layer = {}
             input_layer['name'] = node.name
             input_layer['class_name'] = 'InputLayer'
-            input_layer['input_shape'] = input_shapes[0][1:]
-            layer_list.insert(0, input_layer)
+            input_layer['input_shape'] = input_shapes[n_inputs][1:]
+            layer_list.insert(n_inputs, input_layer)
 
+            output_shapes[input_layer['name']] = input_shapes[n_inputs]
             n_inputs += 1
 
         if node.op == 'call_function':
@@ -297,7 +322,7 @@ def pytorch_to_hls(config):
 
             # arguments of pooling layers need some massaging
             if 'pool' in operation:
-                input_names = str(node.args[0])
+                input_names = tuple([str(i) for i in node.args[0]])
                 arguments['kernel_size'] = int(node.args[1])
                 if '2d' in operation and not type(arguments['kernel_size']) is tuple:
                     arguments['kernel_size'] = [arguments['kernel_size'], arguments['kernel_size']]
@@ -305,8 +330,13 @@ def pytorch_to_hls(config):
                     arguments['padding'] = [arguments['padding'], arguments['padding']]
                 if arguments['stride'] is None:
                     arguments['stride'] = arguments['kernel_size']
+            if 'Cat' in operation:
+                input_names = tuple([str(i) for i in node.args[0]])
+                arguments['axis'] = int(node.args[1])
             else:
                 input_names = tuple([str(i) for i in node.args])
+
+            input_shapes = [list(output_shapes[str(i)]) for i in list(input_names)]
 
             # Process the layer
             layer, output_shape = layer_handlers[operation](
@@ -356,7 +386,7 @@ def pytorch_to_hls(config):
             layer_name = node.name
 
             if 'View' in operation:
-                input_names = str(node.args[0])
+                input_names = tuple([str(node.args[0])])
                 arguments['target_shape'] = [int(i) for i in node.args[1:]]
                 # View can have -1 as one as the dimensions,
                 # leaving it to us to deduce it from the other dimensions and the overall size
@@ -370,7 +400,10 @@ def pytorch_to_hls(config):
 
             else:
                 input_names = tuple([str(i) for i in node.args])
+
             # Process the layer
+            input_shapes = [list(output_shapes[str(i)]) for i in list(input_names)]
+
             layer, output_shape = layer_handlers[operation](
                 operation, layer_name, input_names, input_shapes, arguments, reader, config
             )
