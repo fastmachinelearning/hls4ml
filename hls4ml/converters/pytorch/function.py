@@ -1,6 +1,6 @@
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
 
-merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Concatenate', 'Dot']
+merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 'Cat', 'Dot']
 
 
 @pytorch_handler(*merge_layers)
@@ -8,7 +8,10 @@ def parse_merge_layer(operation, layer_name, input_names, input_shapes, argument
     assert operation in merge_layers
 
     layer = {}
-    layer['class_name'] = operation
+    if operation == "Cat":
+        layer['class_name'] = 'Concatenate'
+    else:
+        layer['class_name'] = operation
     layer['name'] = layer_name
 
     layer['op'] = operation
