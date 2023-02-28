@@ -185,9 +185,6 @@ def pytorch_to_hls(config):
 
     for node in traced_model.graph.nodes:
 
-        # if layer_counter != 0:
-        #    input_shapes = [output_shape]  # In case there are multiple inputs
-
         if node.op == 'call_module':
 
             # modules that are part of a torch.nn.Sequential with name 'name' have target names 'name.x',
@@ -299,6 +296,8 @@ def pytorch_to_hls(config):
             output_shapes[input_layer['name']] = input_shapes[n_inputs]
             n_inputs += 1
 
+            layer_counter += 1
+
         if node.op == 'call_function':
             # Function calls in the graph have to be transformed to layers known to hls4ml
 
@@ -350,18 +349,22 @@ def pytorch_to_hls(config):
             output_shapes[layer['name']] = output_shape
 
         if node.op == 'get_attr':
-            # this doesn't actually work, can't have multiple input layers.
-            # Need to find other way to get this tensor into the graph
+            # Deals with tensors that are member variables of the model class
+            # We insert these tensors are input layer nodes into the hls4ML model graph
             if "." not in node.target:
                 obj = getattr(model, node.name)
             else:
                 obj = getattr(children[node.target.split('.')[0], node.name])
 
-            input_shapes.append([obj.size(dim=0), obj.size(dim=1)])
-            input_layers[node.name] = {}
-            input_layers[node.name]['name'] = node.name
-            input_layers[node.name]['class_name'] = 'InputLayer'
-            input_layers[node.name]['input_shape'] = input_shapes[-1]
+            input_layer = {}
+            input_layer['name'] = node.name
+            input_layer['class_name'] = 'InputLayer'
+            input_layer['input_shape'] = [None] + list(obj.size())
+            layer_list.insert(n_inputs, input_layer)
+
+            output_shapes[input_layer['name']] = [None] + list(obj.size())
+            n_inputs += 1
+
             layer_counter += 1
 
         if node.op == 'call_method':
