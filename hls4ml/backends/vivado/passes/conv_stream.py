@@ -30,6 +30,7 @@ class GenerateConvStreamingInstructions(OptimizerPass):
             node.set_attr('min_width', min_w)
             node.set_attr('instructions', instructions_str)
         else:
+            # these are unused; just put dummy values
             node.set_attr('min_width', node.get_attr('in_width'))
             node.set_attr('instructions', '0')
 
