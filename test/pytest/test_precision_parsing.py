@@ -27,4 +27,3 @@ def test_sign_parsing(prec_pair):
 
     evalprec = hls4ml.backends.fpga.fpga_backend.FPGABackend.convert_precision_string(strprec)
     assert evalprec.signed == signed
-    print(evalprec)
