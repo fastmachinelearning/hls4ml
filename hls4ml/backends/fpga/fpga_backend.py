@@ -342,6 +342,8 @@ class FPGABackend(Backend):
             integer = int(bits[1])
             fields = 2
             if len(bits) > 2:
+                # only if the third argument is false or 0, set signed to False
+                # (default is True)
                 if bits[2].strip().lower() in ['false', '0']:
                     signed = False
                 fields = 3
@@ -350,6 +352,8 @@ class FPGABackend(Backend):
             integer = width
             fields = 1
             if len(bits) > 1:
+                # only if the second argument is false or 0, set signed to False
+                # (default is True)
                 if bits[1].strip().lower() in ['false', '0']:
                     signed = False
                 fields = 2

@@ -21,6 +21,7 @@ import hls4ml
     ],
 )
 def test_sign_parsing(prec_pair):
+    '''Test that convert_precions_string determines the signedness correctly'''
     strprec = prec_pair[0]
     signed = prec_pair[1]
 
