@@ -342,14 +342,24 @@ class FPGABackend(Backend):
             integer = int(bits[1])
             fields = 2
             if len(bits) > 2:
-                signed = bool(bits[2])
+                if bits[2] == "true":
+                    signed = True
+                elif bits[2] == "false":
+                    signed = False
+                else:
+                    signed = bool(bits[2])
                 fields = 3
         elif 'int' in precision:
             width = int(bits[0])
             integer = width
             fields = 1
             if len(bits) > 1:
-                signed = bool(bits[1])
+                if bits[1] == "true":
+                    signed = True
+                elif bits[1] == "false":
+                    signed = False
+                else:
+                    signed = bool(bits[1])
                 fields = 2
         if len(bits) > fields:
             round_mode = bits[fields]
