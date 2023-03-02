@@ -342,9 +342,7 @@ class FPGABackend(Backend):
             integer = int(bits[1])
             fields = 2
             if len(bits) > 2:
-                if bits[2] == "true":
-                    signed = True
-                elif bits[2] == "false":
+                if bits[2].lower() == "false":
                     signed = False
                 else:
                     signed = bool(bits[2])
@@ -354,9 +352,7 @@ class FPGABackend(Backend):
             integer = width
             fields = 1
             if len(bits) > 1:
-                if bits[1] == "true":
-                    signed = True
-                elif bits[1] == "false":
+                if bits[1].lower() == "false":
                     signed = False
                 else:
                     signed = bool(bits[1])
