@@ -3,7 +3,7 @@
 # Modify this script to have the correct path to Python 3.7 ...
 PPATH=/wv/hlstools/python/python37
 # ... and the path to your Catapult install ...
-MGC_HOME=/wv/hlsb/CATAPULT/2022.2_1/UPDATE_1/aol/Mgc_home
+MGC_HOME=/wv/hlsb/CATAPULT/2023.1/PRODUCTION/aol/Mgc_home
 # ... and where you want your python virtual env created
 VENV=$HOME/venv
 

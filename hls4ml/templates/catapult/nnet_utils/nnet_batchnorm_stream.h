@@ -31,7 +31,7 @@ namespace nnet {
 //       Streaming Batch Normalization
 // ****************************************************
 
-template<class data_T, class res_T, typename CONFIG_T>
+template<class data_T, class res_T, typename CONFIG_T, unsigned int reuse_factor>
 void normalize(
     ac_channel<data_T> &data,
     ac_channel<res_T>  &res,

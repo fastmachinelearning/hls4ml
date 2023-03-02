@@ -9,6 +9,7 @@ template<class res_T, typename CONFIG_T>
 void fill_zero(ac_channel<res_T> &res) {
     //#pragma HLS INLINE
     res_T res_part;
+   #pragma hls_unroll
 	for (int c = 0; c < CONFIG_T::n_chan; c++) {
         //#pragma HLS UNROLL
 	    res_part[c] = 0;
@@ -21,6 +22,7 @@ void fill_data(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     //#pragma HLS INLINE
     data_T data_part = data.read();
     res_T res_part;
+    #pragma hls_unroll
     for (int c = 0; c < CONFIG_T::n_chan; c++) {
         //#pragma HLS UNROLL
         res_part[c] = data_part[c];
@@ -46,7 +48,6 @@ void zeropad1d_cl(
     }
 }
 
-#pragma hls_design
 template<class data_T, class res_T, typename CONFIG_T>
 void zeropad2d_cl(
     ac_channel<data_T> &data,
