@@ -44,10 +44,17 @@ class PyTorchModelReader:
             'kernel': 'weight',
             # Batchnorm
             'gamma': 'weight',
+            # Activiation
+            'alpha': 'weight',
             'beta': 'bias',
             'moving_mean': 'running_mean',
             'moving_variance': 'running_var',
         }
+
+        # Workaround for naming schme in nn.Sequential,
+        # have to remove the prefix we previously had to add to make sure the tensors are found
+        if 'layer_' in layer_name:
+            layer_name = layer_name.split('layer_')[-1]
 
         if var_name not in list(torch_paramap.keys()) + ['weight', 'bias']:
             raise Exception('Pytorch parameter not yet supported!')
@@ -185,6 +192,10 @@ def pytorch_to_hls(config):
 
     for node in traced_model.graph.nodes:
 
+        # If part of a nn.Sequntial, the node name will start with an "_" which messes up the parsing
+        if node.name[0] == "_":
+            node.name = 'layer' + node.name
+
         if node.op == 'call_module':
 
             # modules that are part of a torch.nn.Sequential with name 'name' have target names 'name.x',
@@ -203,8 +214,6 @@ def pytorch_to_hls(config):
                 input_shapes = [output_shape]  # In case there are multiple inputs
 
             layer_name = node.name
-            if layer_name[0] == '_':
-                layer_name = layer_name[1:]
 
             # Handle skipped layers
             if pytorch_class in skip_layers:
@@ -222,7 +231,6 @@ def pytorch_to_hls(config):
                 layer_counter += 1
 
             # parse info from class object
-
             input_names = tuple([str(i) for i in node.args])
             input_shapes = [output_shapes[str(i)] for i in node.args]
 
@@ -252,9 +260,14 @@ def pytorch_to_hls(config):
             # for BatchNorm layers
             if hasattr(class_object, 'eps'):
                 arguments['eps'] = class_object.eps
-            # for LeakyReLU layers
+            # for LeakyReLU, ELU, PreLU layers
             if hasattr(class_object, 'negative_slope'):
                 arguments['alpha'] = class_object.negative_slope
+            if hasattr(class_object, 'alpha'):
+                arguments['alpha'] = class_object.alpha
+            if pytorch_class == "PReLU":
+                if hasattr(class_object, 'weight'):
+                    arguments['alpha'] = class_object.weight.detach().numpy()[0]
             # for Threshold layers
             if hasattr(class_object, 'threshold'):
                 arguments['threshold'] = class_object.threshold
