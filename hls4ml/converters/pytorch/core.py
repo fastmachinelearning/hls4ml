@@ -50,6 +50,7 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, arg
     if layer['class_name'] == 'Threshold':
         layer['activ_param'] = arguments['threshold']
         layer['class_name'] = 'ThresholdedReLU'
+        layer['activation'] = 'ThresholdedReLU'
 
     if 'dim' in arguments:
         layer['axis'] = arguments['dim']

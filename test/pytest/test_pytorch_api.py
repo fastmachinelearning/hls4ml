@@ -63,9 +63,15 @@ def test_linear(backend, io_type):
 # TODO: add ThresholdedReLU test when it can be made to pass
 @pytest.mark.parametrize(
     "activation_function",
-    [nn.ReLU(), nn.LeakyReLU(negative_slope=1.0), nn.ELU(alpha=1.0), nn.PReLU(init=0.25), nn.Sigmoid()],
+    [
+        nn.ReLU(),
+        nn.LeakyReLU(negative_slope=1.0),
+        nn.ELU(alpha=1.0),
+        nn.PReLU(init=0.25),
+        nn.Sigmoid(),
+        nn.Threshold(threshold=1.0, value=0.0),
+    ],
 )
-# nn.Threshold(threshold=1.0, value=0.)])
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activations(activation_function, backend, io_type):
@@ -102,6 +108,8 @@ def test_activations(activation_function, backend, io_type):
 
     if activation_function.__class__.__name__ == 'ReLU' or activation_function.__class__.__name__ == 'Sigmoid':
         assert list(hls_model.get_layers())[2].attributes['class_name'] == 'Activation'
+    elif activation_function.__class__.__name__ == 'Threshold':
+        assert list(hls_model.get_layers())[2].attributes['class_name'] == 'ThresholdedReLU'
     else:
         assert list(hls_model.get_layers())[2].attributes['class_name'] == activation_function.__class__.__name__
 
