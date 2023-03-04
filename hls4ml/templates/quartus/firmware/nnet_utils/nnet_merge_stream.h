@@ -146,7 +146,7 @@ void concatenate1d(stream<input1_T> &data1, stream<input2_T> &data2, stream<res_
         ConcatPack1: 
         #pragma unroll
         for (int j = 0; j < input1_T::size; j++) {
-            out_data[j] = static_cast<typename res_T::value_type>(in_data1[j]);
+            out_data[j + (i*input1_T::size)] = static_cast<typename res_T::value_type>(in_data1[j]);
         }
     }
 
@@ -157,7 +157,7 @@ void concatenate1d(stream<input1_T> &data1, stream<input2_T> &data2, stream<res_
         ConcatPack2: 
         #pragma unroll
         for (int j = 0; j < input2_T::size; j++) {
-            out_data[input1_T::size + j] = static_cast<typename res_T::value_type>(in_data2[j]);
+            out_data[j + (i*input2_T::size) + (CONFIG_T::n_elem1_0)] = static_cast<typename res_T::value_type>(in_data2[j]);
         }
 
     }
