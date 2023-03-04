@@ -2,8 +2,7 @@ import numpy as np
 
 from hls4ml.model.optimizer import OptimizerPass
 
-from hls4ml.model.layers import Layer, register_layer, Reshape
-from hls4ml.model.types import InplaceVariable
+from hls4ml.model.layers import Layer, register_layer
 from hls4ml.backends.template import FunctionCallTemplate
 
 class Clone(Layer):
@@ -24,7 +23,7 @@ class CloneFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         for i, output in enumerate(node.outputs):
-            params['output' + str(i + 1)] = node.variables[output].name
+            params['output' + str(i + 1)] = node.variables[node.outputs[i]].name
         
         if self.template is None:
             self.template = 'nnet::clone_stream<{input_t}, {output_t}, {size}>({input}, ' + \
@@ -65,20 +64,13 @@ class CloneOutput(OptimizerPass):
                     print('WARNING: Cloning output {} of {} ({}) more than 3 times not currently supported'.format(output, node.__class__.__name__, node.name))
                     return False
                 out_var = node.get_output_variable(output)
-                attrs = {
-                    'size' : np.prod(out_var.shape)
-                }
-                clone_layer = model.make_node(Clone, 'clone_' + node.name, attrs, [output], [output + '_cpy' + str(i + 1) for i in range(len(output_map[output]))])
                 for i, layer in enumerate(output_map[output], 1):
+                    attrs = {
+                        'size' : np.prod(out_var.shape)
+                    }
                     idx = layer.inputs.index(output)
                     layer.inputs[idx] = output + '_cpy' + str(i)
-                    if isinstance(layer, Reshape):
-                        proxy = clone_layer.get_output_variable(output + '_cpy' + str(i))
-                        current_out = layer.get_output_variable()
-                        shape = current_out.shape
-                        dims = [f'N_SIZE_{j}_{layer.index}' for j in range(1, len(shape) + 1)]
-                        new_out = InplaceVariable(shape, dims, proxy)
-                        layer.set_attr(layer.outputs[0], new_out)
+                clone_layer = model.make_node(Clone, 'clone_' + node.name, attrs, [output], [output + '_cpy' + str(i + 1) for i in range(len(output_map[output]))])
                 model.insert_node(clone_layer)
                 transformed = True
         
