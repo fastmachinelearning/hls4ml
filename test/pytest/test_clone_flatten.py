@@ -28,7 +28,7 @@ def keras_model():
 
 @pytest.fixture
 @pytest.mark.parametrize('io_type', ['io_stream'])
-@pytest.mark.parametrize('backend', ['Vivado'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 def hls_model(keras_model, backend, io_type):
     hls_config = hls4ml.utils.config_from_keras_model(
         keras_model,
