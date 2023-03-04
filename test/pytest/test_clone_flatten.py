@@ -49,7 +49,7 @@ def hls_model(keras_model, backend, io_type):
 
 
 @pytest.mark.parametrize('io_type', ['io_stream'])
-@pytest.mark.parametrize('backend', ['Vivado'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 def test_accuracy(data, keras_model, hls_model):
     X = data
     model = keras_model
