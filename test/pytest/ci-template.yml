@@ -1,6 +1,6 @@
 .pytest:
   stage: test
-  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.2.base
+  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.4.base
   tags: 
     - docker
   before_script:
