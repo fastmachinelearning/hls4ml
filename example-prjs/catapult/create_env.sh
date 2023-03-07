@@ -48,7 +48,8 @@ pip install --upgrade pyDigitalWaveTools
 # pip install -e $VENV/hls4ml
 
 # Install pointing to Siemens hls4ml under github
-git clone --recursive git@github.com:dgburnette/hls4ml.git
+#git clone --recursive git@github.com:dgburnette/hls4ml.git
+git clone --recursive https://github.com/dgburnette/hls4ml.git
 pip install -e $VENV/hls4ml
 
 # Install pointing to Siemens hls4ml under Perforce
