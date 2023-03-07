@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from tensorflow.keras.layers import Concatenate, Flatten, Input, MaxPooling1D
+from tensorflow.keras.layers import Concatenate, Flatten, Input
 from tensorflow.keras.models import Model
 
 import hls4ml
