@@ -122,9 +122,7 @@ padds_options = [0, 1]
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv1d(padds, backend, io_type):
 
-    model = torch.nn.Sequential(nn.Conv1d(16, 33, 3, padding=padds)).to()
-    # model = torch.nn.Sequential(nn.Conv1d(16, 33, 3, padding=padds), nn.ReLU()).to()
-    # model = torch.nn.Sequential(nn.Conv1d(128, 32, 3, padding=padds), nn.ReLU()).to()
+    model = torch.nn.Sequential(nn.Conv1d(16, 33, 3, padding=padds), nn.ReLU()).to()
     model.eval()
 
     X_input = np.random.rand(20, 16, 50)
