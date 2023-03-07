@@ -4,33 +4,59 @@ from hls4ml.backends import VivadoBackend
 from hls4ml.model.flow import register_flow
 from hls4ml.report import parse_vivado_report
 
+
 class VivadoAcceleratorBackend(VivadoBackend):
     def __init__(self):
         super(VivadoBackend, self).__init__(name='VivadoAccelerator')
         self._register_flows()
 
-    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False, fifo_opt=False, bitfile=False):
+    def build(
+        self,
+        model,
+        reset=False,
+        csim=True,
+        synth=True,
+        cosim=False,
+        validation=False,
+        export=False,
+        vsynth=False,
+        fifo_opt=False,
+        bitfile=False,
+    ):
         # run the VivadoBackend build
-        report = super().build(model, reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth, fifo_opt=fifo_opt)
+        super().build(
+            model,
+            reset=reset,
+            csim=csim,
+            synth=synth,
+            cosim=cosim,
+            validation=validation,
+            export=export,
+            vsynth=vsynth,
+            fifo_opt=fifo_opt,
+        )
         # Get Config to view Board and Platform
         from hls4ml.backends import VivadoAcceleratorConfig
-        vivado_accelerator_config=VivadoAcceleratorConfig(model.config, model.get_input_variables(),model.get_output_variables())
+
+        vivado_accelerator_config = VivadoAcceleratorConfig(
+            model.config, model.get_input_variables(), model.get_output_variables()
+        )
         # now make a bitfile
         if bitfile:
-            if(vivado_accelerator_config.get_board().startswith('alveo')):
-                self.make_xclbin(model,vivado_accelerator_config.get_platform())       
+            if vivado_accelerator_config.get_board().startswith('alveo'):
+                self.make_xclbin(model, vivado_accelerator_config.get_platform())
             else:
                 curr_dir = os.getcwd()
                 os.chdir(model.config.get_output_dir())
                 try:
                     os.system('vivado -mode batch -source design.tcl')
-                except:
+                except Exception:
                     print("Something went wrong, check the Vivado logs")
                 os.chdir(curr_dir)
 
         return parse_vivado_report(model.config.get_output_dir())
 
-    def make_xclbin(self,model, platform='xilinx_u250_xdma_201830_2'):
+    def make_xclbin(self, model, platform='xilinx_u250_xdma_201830_2'):
         """
 
         Parameters
@@ -40,27 +66,46 @@ class VivadoAcceleratorBackend(VivadoBackend):
                      deployment target platform, both can be found on the Getting Started section of the Alveo card.
         """
         curr_dir = os.getcwd()
-        abs_path_dir=os.path.abspath(model.config.get_output_dir())
+        abs_path_dir = os.path.abspath(model.config.get_output_dir())
         os.chdir(abs_path_dir)
         os.makedirs('xo_files', exist_ok=True)
         try:
             os.system('vivado -mode batch -source design.tcl')
-        except:
+        except Exception:
             print("Something went wrong, check the Vivado logs")
-        project_name=model.config.get_project_name()
-        ip_repo_path = abs_path_dir + '/'+project_name+'_prj'+'/solution1/impl/ip'
+        project_name = model.config.get_project_name()
+        ip_repo_path = abs_path_dir + '/' + project_name + '_prj' + '/solution1/impl/ip'
         os.makedirs('xclbin_files', exist_ok=True)
         os.chdir(abs_path_dir + '/xclbin_files')
         # TODO Add other platforms
-        vitis_cmd = "v++ -t hw --platform " + platform + " --link ../xo_files/"+project_name+"_kernel.xo -o'"+project_name+"_kernel.xclbin' --user_ip_repo_paths " + ip_repo_path
+        vitis_cmd = (
+            "v++ -t hw --platform "
+            + platform
+            + " --link ../xo_files/"
+            + project_name
+            + "_kernel.xo -o'"
+            + project_name
+            + "_kernel.xclbin' --user_ip_repo_paths "
+            + ip_repo_path
+        )
         try:
             os.system(vitis_cmd)
-        except:
+        except Exception:
             print("Something went wrong, check the Vitis/Vivado logs")
         os.chdir(curr_dir)
 
-    def create_initial_config(self, board='pynq-z2', part=None, clock_period=5, io_type='io_parallel', interface='axi_stream',
-                              driver='python', input_type='float', output_type='float',platform='xilinx_u250_xdma_201830_2'):
+    def create_initial_config(
+        self,
+        board='pynq-z2',
+        part=None,
+        clock_period=5,
+        io_type='io_parallel',
+        interface='axi_stream',
+        driver='python',
+        input_type='float',
+        output_type='float',
+        platform='xilinx_u250_xdma_201830_2',
+    ):
         '''
         Create initial accelerator config with default parameters
         Args:
@@ -77,13 +122,13 @@ class VivadoAcceleratorBackend(VivadoBackend):
                              will round the number of bits used to the next power-of-2 value.
             output_type: the wrapper output precision. Can be `float` or an `ap_type`. Note:
                               VivadoAcceleratorBackend will round the number of bits used to the next power-of-2 value.
-            platform: development target platform 
+            platform: development target platform
 
         Returns:
             populated config
         '''
         board = board if board is not None else 'pynq-z2'
-        config = super(VivadoAcceleratorBackend, self).create_initial_config(part, clock_period, io_type)
+        config = super().create_initial_config(part, clock_period, io_type)
         config['AcceleratorConfig'] = {}
         config['AcceleratorConfig']['Board'] = board
         config['AcceleratorConfig']['Interface'] = interface  # axi_stream, axi_master, axi_lite
@@ -94,7 +139,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
         config['AcceleratorConfig']['Precision']['Input'] = input_type  # float, double or ap_fixed<a,b>
         config['AcceleratorConfig']['Precision']['Output'] = output_type  # float, double or ap_fixed<a,b>
         if board.startswith('alveo'):
-            config['AcceleratorConfig']['Platform'] = platform  
+            config['AcceleratorConfig']['Platform'] = platform
 
         return config
 
@@ -110,8 +155,6 @@ class VivadoAcceleratorBackend(VivadoBackend):
         self._writer_flow = register_flow('write', writer_passes, requires=[vivado_ip], backend=self.name)
         self._default_flow = vivado_ip
 
-        fifo_depth_opt_passes = [
-            'vivadoaccelerator:fifo_depth_optimization'
-        ] + writer_passes
+        fifo_depth_opt_passes = ['vivadoaccelerator:fifo_depth_optimization'] + writer_passes
 
-        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=[self._writer_flow], backend=self.name)
+        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=[vivado_ip], backend=self.name)
