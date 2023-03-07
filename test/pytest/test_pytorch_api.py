@@ -122,18 +122,18 @@ padds_options = [0, 1]
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv1d(padds, backend, io_type):
 
-    model = torch.nn.Sequential(nn.Conv1d(128, 32, 3, padding=padds), nn.ReLU()).to()
+    model = torch.nn.Sequential(nn.Conv1d(16, 33, 3, padding=padds)).to()
+    # model = torch.nn.Sequential(nn.Conv1d(16, 33, 3, padding=padds), nn.ReLU()).to()
+    # model = torch.nn.Sequential(nn.Conv1d(128, 32, 3, padding=padds), nn.ReLU()).to()
     model.eval()
 
-    X_input = np.random.rand(1)
-
-    X_input = np.random.rand(10, 128, 4)
+    X_input = np.random.rand(20, 16, 50)
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
     config = config_from_pytorch_model(model)
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_conv1d_{padds}_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(
-        model, (None, 4, 128), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+        model, (None, 16, 50), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
     hls_model.compile()
 

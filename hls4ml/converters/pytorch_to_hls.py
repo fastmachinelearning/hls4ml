@@ -14,6 +14,8 @@ class PyTorchModelReader:
         self.state_dict = self.torch_model.state_dict()
         self.input_shape = config['InputShape']
 
+    #   def convert_to_channels_last(tensor):
+
     def get_weights_data(self, layer_name, var_name):
 
         """Get weights data from layers.
@@ -67,9 +69,7 @@ class PyTorchModelReader:
         use_name = layer_name.split("_")[0]
 
         if use_name + '.' + var_name in self.state_dict:
-            data = (
-                self.state_dict[use_name + '.' + var_name].numpy().transpose()
-            )  # Look at transpose when systhesis produce lousy results. Might need to remove it.
+            data = self.state_dict[use_name + '.' + var_name].numpy()
 
             return data
 
