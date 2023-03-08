@@ -1,6 +1,6 @@
 // hls-fpga-machine-learning insert include
 
-void myproject(input_axi_t in[N_IN], output_axi_t out[N_OUT]) {
+void myproject_axi(input_axi_t in[N_IN], output_axi_t out[N_OUT]) {
 
     // hls-fpga-machine-learning insert interface
 

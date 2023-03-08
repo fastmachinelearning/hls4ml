@@ -31,8 +31,8 @@ class VivadoAcceleratorWriter(VivadoWriter):
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
             elif '// hls-fpga-machine-learning insert include' in line:
                 newline = f'#include "{model.config.get_project_name()}.h"\n'
-            elif 'void myproject(' in line:
-                newline = f'void {model.config.get_project_name()}_axi(\n'
+            elif 'myproject' in line:
+                newline = line.replace('myproject', model.config.get_project_name())
             elif '// hls-fpga-machine-learning insert definitions' in line:
                 newline = ''
                 newline += f'static const unsigned N_IN = {inp.size()};\n'
@@ -107,8 +107,8 @@ class VivadoAcceleratorWriter(VivadoWriter):
         io_type = model.config.get_config_value("IOType")
 
         for line in f.readlines():
-            if 'void myproject(' in line:
-                newline = f'void {model.config.get_project_name()}_axi(\n'
+            if 'myproject' in line:
+                newline = line.replace('myproject', model.config.get_project_name())
             elif '// hls-fpga-machine-learning insert include' in line:
                 newline = f'#include "{model.config.get_project_name()}_axi.h"\n'
             elif '// hls-fpga-machine-learning insert local vars' in line:
