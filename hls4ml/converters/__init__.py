@@ -21,7 +21,7 @@ try:
 
     __pytorch_enabled__ = True
 except ImportError:
-    warnings.warn("WARNING: Pytorch converter is not enabled!")
+    warnings.warn("WARNING: Pytorch converter is not enabled!", stacklevel=1)
     __pytorch_enabled__ = False
 
 try:
@@ -30,7 +30,7 @@ try:
 
     __onnx_enabled__ = True
 except ImportError:
-    warnings.warn("WARNING: ONNX converter is not enabled!")
+    warnings.warn("WARNING: ONNX converter is not enabled!", stacklevel=1)
     __onnx_enabled__ = False
 
 try:
@@ -38,7 +38,7 @@ try:
 
     __tensorflow_enabled__ = True
 except ImportError:
-    warnings.warn("WARNING: Tensorflow converter is not enabled!")
+    warnings.warn("WARNING: Tensorflow converter is not enabled!", stacklevel=1)
     __tensorflow_enabled__ = False
 
 # ----------Layer handling register----------#
