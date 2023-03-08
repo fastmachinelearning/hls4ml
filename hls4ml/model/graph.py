@@ -348,6 +348,7 @@ class ModelGraph:
 
     def apply_flow(self, flow, reapply='single'):
         """Applies a flow (a collection of optimizers).
+
         Args:
             flow (str): The name of the flow to apply
             reapply (str, optional): Determines the action to take if the flow and its requirements have already been

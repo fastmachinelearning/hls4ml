@@ -108,6 +108,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
     ):
         '''
         Create initial accelerator config with default parameters
+
         Args:
             board: one of the keys defined in supported_boards.json
             clock_period: clock period passed to hls project

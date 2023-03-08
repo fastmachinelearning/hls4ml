@@ -194,6 +194,7 @@ def convert_from_keras_model(
     **kwargs,
 ):
     """Convert to hls4ml model based on the provided configuration.
+
     Args:
         model: Keras model to convert
         output_dir (str, optional): Output directory of the generated HLS
@@ -217,8 +218,10 @@ def convert_from_keras_model(
             'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
         hls_config (dict, optional): The HLS config.
         kwargs** (dict, optional): Additional parameters that will be used to create the config of the specified backend
+
     Raises:
         Exception: If precision and reuse factor are not present in 'hls_config'
+
     Returns:
         ModelGraph: hls4ml model.
     """
