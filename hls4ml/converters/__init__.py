@@ -115,7 +115,7 @@ def convert_from_config(config):
 
     Arguments:
         config: A string containing the path to the YAML configuration file on
-            the filesystem or a dict containig the parsed configuration.
+            the filesystem or a dict containing the parsed configuration.
 
     Returns:
         ModelGraph: hls4ml model.

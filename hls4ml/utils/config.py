@@ -85,7 +85,7 @@ def config_from_keras_model(
             Can be set to 'model', 'type' and 'layer'.
 
             Granularity can be used to generate a more verbose config that can be fine-tuned.
-            The default granulrity ('model') will generate config keys that apply to the whole
+            The default granularity ('model') will generate config keys that apply to the whole
             model, so changes to the keys will affect the entire model. 'type' granularity will
             generate config keys that affect all layers of a given type, while the 'name' granularity
             will generate config keys for every layer separately, allowing for highly specific
@@ -241,7 +241,7 @@ def config_from_pytorch_model(
             Can be set to 'model', 'type' and 'layer'.
 
             Granularity can be used to generate a more verbose config that can be fine-tuned.
-            The default granulrity ('model') will generate config keys that apply to the whole
+            The default granularity ('model') will generate config keys that apply to the whole
             model, so changes to the keys will affect the entire model. 'type' granularity will
             generate config keys that affect all layers of a given type, while the 'name' granularity
             will generate config keys for every layer separately, allowing for highly specific
@@ -284,7 +284,7 @@ def config_from_onnx_model(
             Can be set to 'model', 'type' and 'layer'.
 
             Granularity can be used to generate a more verbose config that can be fine-tuned.
-            The default granulrity ('model') will generate config keys that apply to the whole
+            The default granularity ('model') will generate config keys that apply to the whole
             model, so changes to the keys will affect the entire model. 'type' granularity will
             generate config keys that affect all layers of a given type, while the 'name' granularity
             will generate config keys for every layer separately, allowing for highly specific
