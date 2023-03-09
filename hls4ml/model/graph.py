@@ -501,7 +501,7 @@ class ModelGraph:
 
         Raises:
             Exception: If an attempt is made to rewire a leaf node or a node with multiple
-                inputs/outpus.
+                inputs/outputs.
 
         """
         if rewire:
