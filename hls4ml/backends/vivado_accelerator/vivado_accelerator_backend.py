@@ -8,6 +8,7 @@ from hls4ml.report import parse_vivado_report
 class VivadoAcceleratorBackend(VivadoBackend):
     def __init__(self):
         super(VivadoBackend, self).__init__(name='VivadoAccelerator')
+        self._register_layer_attributes()
         self._register_flows()
 
     def build(

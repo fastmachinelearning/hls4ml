@@ -67,14 +67,27 @@ def parse_global_pooling_layer(keras_layer, input_names, input_shapes, data_read
     assert 'Pooling' in keras_layer['class_name']
 
     layer = parse_default_keras_layer(keras_layer, input_names)
+    layer['keepdims'] = keras_layer['config']['keepdims']
 
     if int(layer['class_name'][-2]) == 1:
         (layer['n_in'], layer['n_filt']) = parse_data_format(input_shapes[0], layer['data_format'])
 
-        output_shape = [input_shapes[0][0], layer['n_filt']]
+        if layer['keepdims']:
+            if layer['data_format'] == 'channels_last':
+                output_shape = [input_shapes[0][0], 1, layer['n_filt']]
+            elif layer['data_format'] == 'channels_first':
+                output_shape = [input_shapes[0][0], layer['n_filt'], 1]
+        else:
+            output_shape = [input_shapes[0][0], layer['n_filt']]
     elif int(layer['class_name'][-2]) == 2:
         (layer['in_height'], layer['in_width'], layer['n_filt']) = parse_data_format(input_shapes[0], layer['data_format'])
 
-        output_shape = [input_shapes[0][0], layer['n_filt']]
+        if layer['keepdims']:
+            if layer['data_format'] == 'channels_last':
+                output_shape = [input_shapes[0][0], 1, 1, layer['n_filt']]
+            elif layer['data_format'] == 'channels_first':
+                output_shape = [input_shapes[0][0], layer['n_filt'], 1, 1]
+        else:
+            output_shape = [input_shapes[0][0], layer['n_filt']]
 
     return layer, output_shape
