@@ -7,6 +7,7 @@
     setup
     command
     concepts
+    details
     flows
     extension
     reference
