@@ -279,10 +279,16 @@ def pytorch_to_hls(config):
             if 'Pool' in pytorch_class:
                 if '2d' in pytorch_class and not type(arguments['kernel_size']) is tuple:
                     arguments['kernel_size'] = [arguments['kernel_size'], arguments['kernel_size']]
+                elif '1d' in pytorch_class and type(arguments['kernel_size']) is tuple:
+                    arguments['kernel_size'] = arguments['kernel_size'][0]
                 if '2d' in pytorch_class and not type(arguments['padding']) is tuple:
                     arguments['padding'] = [arguments['padding'], arguments['padding']]
+                elif '1d' in pytorch_class and type(arguments['padding']) is tuple:
+                    arguments['padding'] = arguments['padding'][0]
                 if '2d' in pytorch_class and not type(arguments['stride']) is tuple:
                     arguments['stride'] = [arguments['stride'], arguments['stride']]
+                elif '1d' in pytorch_class and type(arguments['stride']) is tuple:
+                    arguments['stride'] = arguments['stride'][0]
 
             # Process the layer
             layer, output_shape = layer_handlers[pytorch_class](

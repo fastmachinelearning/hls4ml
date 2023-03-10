@@ -17,10 +17,12 @@ class ChannelsLastConverter(OptimizerPass):
 
     def transform(self, model, node):
 
-        # Transpose weight tensor and adjust output
-        weights_channels_last = node.get_weights('weight').data.transpose()
-        node.get_weights('weight').data = weights_channels_last
+        # Transpose weight tensor for layers that have one
+        if isinstance(node, (Conv1D, Conv2D, SeparableConv1D)):
+            weights_channels_last = node.get_weights('weight').data.transpose()
+            node.get_weights('weight').data = weights_channels_last
 
+        # Adjust output shape
         outshape = node.get_output_variable().shape
 
         if isinstance(node, (Conv1D, Pooling1D, SeparableConv1D)):

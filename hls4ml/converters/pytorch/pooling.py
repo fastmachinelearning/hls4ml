@@ -15,7 +15,7 @@ def parse_pooling_layer(operation, layer_name, input_names, input_shapes, argume
         layer['class_name'] = 'MaxPooling1D'
     if operation == 'MaxPool2d' or operation == 'Max_pool2d':
         layer['class_name'] = 'MaxPooling2D'
-    if operation == 'AvgPool2d' or operation == 'Avg_pool2d':
+    if operation == 'AvgPool1d' or operation == 'Avg_pool1d':
         layer['class_name'] = 'AveragePooling1D'
     if operation == 'AvgPool2d' or operation == 'Avg_pool2d':
         layer['class_name'] = 'AveragePooling2D'
