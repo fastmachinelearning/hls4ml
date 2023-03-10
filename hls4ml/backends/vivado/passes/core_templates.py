@@ -1,6 +1,6 @@
 
 from hls4ml.backends.backend import get_backend
-from hls4ml.model.layers import Activation, BatchNormalization, Dense, Embedding, PReLU, ParametrizedActivation, Softmax
+from hls4ml.model.layers import Activation, BatchNormalization, Dense, DenseBatchnorm, Embedding, PReLU, ParametrizedActivation, Softmax
 from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
 
 # Dense templates
@@ -28,7 +28,7 @@ dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compress
 
 class DenseConfigTemplate(LayerConfigTemplate):
     def __init__(self):
-        super().__init__(Dense)
+        super().__init__((Dense, DenseBatchnorm))
         self.template = dense_config_template
     
     def format(self, node):
@@ -41,7 +41,7 @@ class DenseConfigTemplate(LayerConfigTemplate):
 
 class DenseFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__(Dense, include_header=dense_include_list)
+        super().__init__((Dense, DenseBatchnorm), include_header=dense_include_list)
         self.template = dense_function_template
     
     def format(self, node):
