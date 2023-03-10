@@ -29,6 +29,7 @@ class ChannelsLastConverter(OptimizerPass):
             shape = [outshape[1], outshape[0]]
             dims = [f'N_OUTPUTS_{node.get_attr("index")}', f'N_FILT_{node.get_attr("index")}']
             perm = [1, 0]
+            perm_out = [1, 0]
         elif isinstance(node, (Conv2D, Pooling2D)):
             shape = [outshape[1], outshape[2], outshape[0]]
             dims = [
@@ -37,6 +38,7 @@ class ChannelsLastConverter(OptimizerPass):
                 f'N_FILT_{node.get_attr("index")}',
             ]
             perm = [1, 2, 0]
+            perm_out = [2, 0, 1]
         node.add_output_variable(shape, dims)
         node.set_attr('data_format', 'channels_last')
 
@@ -45,6 +47,33 @@ class ChannelsLastConverter(OptimizerPass):
         attributes = {'perm': perm}
 
         transpose_node = model.make_node('Transpose', f'transpose_input_for_{node.get_attr("name")}', attributes, [input])
+        transpose_node.set_attr('name', f'transpose_input_for_{node.get_attr("name")}')
         model.insert_node(transpose_node)
+
+        # Add transpose for output
+        input = node.name
+        attributes = {'perm': perm_out}
+
+        transpose_output_node = model.make_node(
+            'Transpose', f'transpose_output_for_{node.get_attr("name")}', attributes, [input]
+        )
+        transpose_output_node.set_attr('name', f'transpose_output_for_{node.get_attr("name")}')
+        model.insert_node(transpose_output_node)
+
+        return True
+
+
+class ChannelsLastConversionCleaner(OptimizerPass):
+    '''Detects and removes unnecessary transpose layers introduced in the conversion to channels_last.'''
+
+    def match(self, node):
+        if 'transpose_input_for' in node.name and 'transpose_output_for' in node.get_input_node().name:
+            return True
+
+    def transform(self, model, node):
+
+        input_node = node.get_input_node()
+        model.remove_node(input_node)
+        model.remove_node(node)
 
         return True

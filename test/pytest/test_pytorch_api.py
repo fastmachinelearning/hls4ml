@@ -141,9 +141,9 @@ def test_conv1d(padds, backend, io_type):
     )
     hls_model.compile()
     if padds == 0:
-        hls_prediction = np.transpose(np.reshape(hls_model.predict(X_input), (1, size_in - 2, n_out)), (0, 2, 1))
+        hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_out, size_in - 2))
     else:
-        hls_prediction = np.transpose(np.reshape(hls_model.predict(X_input), (1, size_in, n_out)), (0, 2, 1))
+        hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_out, size_in))
     # results are not very good at the moment
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.20, atol=0)
 
@@ -162,14 +162,14 @@ def test_conv1d(padds, backend, io_type):
                 convNode = _node
             if nNodes == 3:
                 reluNode = _node
-        assert nNodes == len(hls_model.get_layers())
+        assert nNodes + 1 == len(hls_model.get_layers())
 
         children = {c[0]: c[1] for c in model.named_children()}
         class_object_conv = children[convNode.target]
         class_object_relu = children[reluNode.target]
         assert list(hls_model.get_layers())[2].attributes['name'] == 'layer' + convNode.name
         assert list(hls_model.get_layers())[2].attributes['class_name'] == 'Conv1D'
-        assert list(hls_model.get_layers())[3].attributes['activation'] == class_object_relu.__class__.__name__
+        assert list(hls_model.get_layers())[4].attributes['activation'] == class_object_relu.__class__.__name__
         assert list(hls_model.get_layers())[2].attributes["in_width"] == size_in
         assert list(hls_model.get_layers())[2].attributes['filt_width'] == class_object_conv.kernel_size[0]
         assert list(hls_model.get_layers())[2].attributes['n_chan'] == class_object_conv.in_channels
@@ -232,13 +232,10 @@ def test_conv2d(padds, backend, io_type):
     )
     hls_model.compile()
     if padds == 0:
-        hls_prediction = np.transpose(
-            np.reshape(hls_model.predict(X_input), (1, size_in_width - 2, size_in_height - 2, n_out)), (0, 3, 1, 2)
-        )
+        hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_out, size_in_width - 2, size_in_height - 2))
+
     else:
-        hls_prediction = np.transpose(
-            np.reshape(hls_model.predict(X_input), (1, size_in_width, size_in_height, n_out)), (0, 3, 1, 2)
-        )
+        hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_out, size_in_width, size_in_height))
     # results are not very good at the moment
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.20, atol=0)
 
@@ -257,7 +254,7 @@ def test_conv2d(padds, backend, io_type):
                 convNode = _node
             if nNodes == 3:
                 reluNode = _node
-        assert nNodes == len(hls_model.get_layers())
+        assert nNodes + 1 == len(hls_model.get_layers())
 
         children = {c[0]: c[1] for c in model.named_children()}
         class_object_conv = children[convNode.target]
@@ -361,7 +358,7 @@ def test_pooling(pooling, padds, backend):
         nNodes += 1
         if nNodes == 2:
             poolNode = _node
-    assert nNodes == len(hls_model.get_layers())
+    assert nNodes + 1 == len(hls_model.get_layers())
     children = {c[0]: c[1] for c in model.named_children()}
     class_object_pool = children[poolNode.target]
 
@@ -387,16 +384,16 @@ def test_pooling(pooling, padds, backend):
             out_width = int((size_in_width + 2 * padds - class_object_pool.kernel_size[0]) / class_object_pool.stride[0] + 1)
 
     if '2d' in pooling.__name__:
-        hls_prediction = np.transpose(
-            np.reshape(hls_model.predict(X_input), (100, out_height, out_width, n_in)), (0, 3, 1, 2)
-        )
+        hls_prediction = np.reshape(hls_model.predict(X_input), (100, n_in, out_height, out_width))
+
     else:
-        hls_prediction = np.transpose(np.reshape(hls_model.predict(X_input), (100, out_width, n_in)), (0, 2, 1))
+        hls_prediction = np.reshape(hls_model.predict(X_input), (100, n_in, out_width))
+
     # results are not very good at the moment
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.20, atol=0)
 
     # Verify correct parsing of layer
-    hls_pool = list(hls_model.get_layers())[-1]
+    hls_pool = list(hls_model.get_layers())[-2]
     if '2d' in pooling.__name__:
         assert hls_pool.attributes['name'] == 'layer' + poolNode.name
         assert hls_pool.attributes['class_name'][-2] == str(2)
