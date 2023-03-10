@@ -37,11 +37,25 @@ class classproperty:
 
 
 class Layer:
+    """The base class for all layers, which are the nodes in the model graph.
+    Note:  they don't necessarily correspond 1:1 with the network layers.
+
+    The expected attributes are `index`, `trace` (configurable), and `result` (type)
+
+    Args:
+        model (ModelGraph):  The ModelGraph that this Layer is part of
+        name (str): The node name
+        attributes (dict): Initial set of attributes required to construct the node (Layer)
+        inputs (list): List of inputs to the layer
+        outputs (list, optional): The optional list of named outputs of the node
+    """
+
     _expected_attributes = [
         Attribute('index'),
         ConfigurableAttribute('trace', default=False),
         TypeAttribute('result'),
     ]
+    """"""
 
     @classproperty
     def expected_attributes(cls):
