@@ -217,48 +217,63 @@ def test_conv2d(padds, backend, io_type):
     model = torch.nn.Sequential(nn.Conv2d(n_in, n_out, kernel_size, padding=padds), nn.ReLU()).to()
     model.eval()
 
-    X_input = np.random.rand(1, n_in, size_in_width, size_in_height)
+    X_input = np.random.rand(1, n_in, size_in_height, size_in_width)
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
     config = config_from_pytorch_model(model)
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_conv2d_{padds}_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(
         model,
-        (None, n_in, size_in_width, size_in_height),
+        (None, n_in, size_in_height, size_in_width),
         hls_config=config,
         output_dir=output_dir,
         backend=backend,
         io_type=io_type,
     )
     hls_model.compile()
+
+    from torch.fx import symbolic_trace
+
+    traced_model = symbolic_trace(model)
+    nNodes = 0
+    convNode = None
+    reluNode = None
+    for _node in traced_model.graph.nodes:
+        nNodes += 1
+        if nNodes == 2:
+            convNode = _node
+        if nNodes == 3:
+            reluNode = _node
+    assert nNodes + 1 == len(hls_model.get_layers())
+
+    children = {c[0]: c[1] for c in model.named_children()}
+    class_object_conv = children[convNode.target]
+    class_object_relu = children[reluNode.target]
+
+    out_width = int(
+        (size_in_width + 2 * padds - class_object_conv.dilation[1] * (class_object_conv.kernel_size[1] - 1) - 1)
+        / class_object_conv.stride[1]
+        + 1
+    )  # following https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html
+    assert list(hls_model.get_layers())[2].attributes["out_width"] == out_width
+    out_height = int(
+        (size_in_height + 2 * padds - class_object_conv.dilation[0] * (class_object_conv.kernel_size[0] - 1) - 1)
+        / class_object_conv.stride[0]
+        + 1
+    )  # following https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html
+    assert list(hls_model.get_layers())[2].attributes["out_height"] == out_height
+
     if padds == 0:
-        hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_out, size_in_width - 2, size_in_height - 2))
+        hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_out, out_height, out_width))
 
     else:
-        hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_out, size_in_width, size_in_height))
+        hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_out, out_height, out_width))
     # results are not very good at the moment
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.20, atol=0)
 
     if not (backend == 'Vivado' and io_type == 'io_stream' and padds == 1):
         # Vivado inserts and additional layer for 'same' padding in io_stream
 
-        from torch.fx import symbolic_trace
-
-        traced_model = symbolic_trace(model)
-        nNodes = 0
-        convNode = None
-        reluNode = None
-        for _node in traced_model.graph.nodes:
-            nNodes += 1
-            if nNodes == 2:
-                convNode = _node
-            if nNodes == 3:
-                reluNode = _node
-        assert nNodes + 1 == len(hls_model.get_layers())
-
-        children = {c[0]: c[1] for c in model.named_children()}
-        class_object_conv = children[convNode.target]
-        class_object_relu = children[reluNode.target]
         assert list(hls_model.get_layers())[2].attributes['name'] == 'layer' + convNode.name
         assert list(hls_model.get_layers())[2].attributes['class_name'] == 'Conv2D'
         assert list(hls_model.get_layers())[3].attributes['activation'] == class_object_relu.__class__.__name__
@@ -276,19 +291,6 @@ def test_conv2d(padds, backend, io_type):
             padding = 1
         assert padding == class_object_conv.padding[0]
         assert list(hls_model.get_layers())[2].attributes['data_format'] == 'channels_last'
-
-        out_width = int(
-            (size_in_width + 2 * padds - class_object_conv.dilation[1] * (class_object_conv.kernel_size[1] - 1) - 1)
-            / class_object_conv.stride[1]
-            + 1
-        )  # following https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html
-        assert list(hls_model.get_layers())[2].attributes["out_width"] == out_width
-        out_height = int(
-            (size_in_height + 2 * padds - class_object_conv.dilation[0] * (class_object_conv.kernel_size[0] - 1) - 1)
-            / class_object_conv.stride[0]
-            + 1
-        )  # following https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html
-        assert list(hls_model.get_layers())[2].attributes["out_height"] == out_height
 
         pad_along_width = max(
             (out_width - 1) * class_object_conv.stride[1] + class_object_conv.kernel_size[1] - size_in_width, 0

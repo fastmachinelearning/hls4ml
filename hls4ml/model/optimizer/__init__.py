@@ -37,6 +37,11 @@ try:
             'extract_ternary_threshold',
             'fuse_consecutive_batch_normalization',
             'channels_last_converter',
+            'channels_last_conversion_cleaner',
+            'channels_last_upstream_mover',
+            'channels_last_conversion_cleaner',
+            'channels_last_downstream_mover',
+            'channels_last_conversion_cleaner',
         ],
     )  # TODO Maybe not all QKeras optmizers belong here?
     register_flow(
@@ -51,7 +56,19 @@ try:
         requires=['convert'],
     )
 except ImportError:
-    register_flow('convert', ['fuse_bias_add', 'remove_useless_transpose', 'channels_last_converter'])
+    register_flow(
+        'convert',
+        [
+            'fuse_bias_add',
+            'remove_useless_transpose',
+            'channels_last_converter',
+            'channels_last_conversion_cleaner',
+            'channels_last_upstream_mover',
+            'channels_last_conversion_cleaner',
+            'channels_last_downstream_mover',
+            'channels_last_conversion_cleaner',
+        ],
+    )
     register_flow(
         'optimize',
         [
