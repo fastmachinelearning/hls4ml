@@ -66,11 +66,11 @@ class PyTorchModelReader:
 
         # if a layer is reused in the model, torch.FX will append a "_n" for the n-th use
         # have to snap that off to find the tensors
-        use_name = layer_name.split("_")[0]
+        if layer_name.split("_")[-1].isdigit():
+            layer_name = "_".join(layer_name.split("_")[:-1])
 
-        if use_name + '.' + var_name in self.state_dict:
-            data = self.state_dict[use_name + '.' + var_name].numpy()
-
+        if layer_name + '.' + var_name in self.state_dict:
+            data = self.state_dict[layer_name + '.' + var_name].numpy()
             return data
 
         else:
@@ -340,7 +340,7 @@ def pytorch_to_hls(config):
 
             # arguments of pooling layers need some massaging
             if 'pool' in operation:
-                input_names = tuple([str(i) for i in node.args[0]])
+                input_names = tuple([str(node.args[0])])
                 arguments['kernel_size'] = int(node.args[1])
                 if '2d' in operation and not type(arguments['kernel_size']) is tuple:
                     arguments['kernel_size'] = [arguments['kernel_size'], arguments['kernel_size']]
@@ -348,7 +348,7 @@ def pytorch_to_hls(config):
                     arguments['padding'] = [arguments['padding'], arguments['padding']]
                 if arguments['stride'] is None:
                     arguments['stride'] = arguments['kernel_size']
-            if 'Cat' in operation:
+            elif 'Cat' in operation:
                 input_names = tuple([str(i) for i in node.args[0]])
                 arguments['axis'] = int(node.args[1])
             else:
