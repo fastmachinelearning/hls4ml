@@ -30,18 +30,13 @@ try:
     register_flow(
         'convert',
         [
+            'channels_last_converter',
             'fuse_bias_add',
             'remove_useless_transpose',
             'output_rounding_saturation_mode',
             'qkeras_factorize_alpha',
             'extract_ternary_threshold',
             'fuse_consecutive_batch_normalization',
-            'channels_last_converter',
-            'channels_last_conversion_cleaner',
-            'channels_last_upstream_mover',
-            'channels_last_conversion_cleaner',
-            'channels_last_downstream_mover',
-            'channels_last_conversion_cleaner',
         ],
     )  # TODO Maybe not all QKeras optmizers belong here?
     register_flow(
@@ -59,14 +54,9 @@ except ImportError:
     register_flow(
         'convert',
         [
+            'channels_last_converter',
             'fuse_bias_add',
             'remove_useless_transpose',
-            'channels_last_converter',
-            'channels_last_conversion_cleaner',
-            'channels_last_upstream_mover',
-            'channels_last_conversion_cleaner',
-            'channels_last_downstream_mover',
-            'channels_last_conversion_cleaner',
         ],
     )
     register_flow(
