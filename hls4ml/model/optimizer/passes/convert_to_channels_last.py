@@ -19,7 +19,6 @@ class ChannelsLastConverter(OptimizerPass):
         if 'InputsChannelLast' not in model.config.config['HLSConfig']['Model']:
             node.channels_last_converted = True
             return False
-
         outshape = node.get_output_variable().shape
         # if inputs are not yet transposed into channels_last, add transpose layer
         if (
@@ -73,6 +72,27 @@ class ChannelsLastConverter(OptimizerPass):
                 shape = [outshape[1], outshape[2], outshape[0]]
                 dims = [outdims[1], outdims[2], outdims[0]]
                 node.add_output_variable(shape, dims)
+
+            # add transpose for output layer
+            if (
+                node.get_attr("name") in model.outputs
+                and len(outshape) > 1
+                and model.config.config['HLSConfig']['Model']['TransposeOutputs']
+            ):
+                input = node.name
+                outshape = node.get_output_variable().shape
+                print(outshape)
+                if len(outshape) == 2:
+                    attributes = {'perm': [1, 0]}
+                else:
+                    attributes = {'perm': [2, 0, 1]}
+
+                transpose_node = model.make_node(
+                    'Transpose', f'transpose_ouput_for_{node.get_attr("name")}', attributes, [input]
+                )
+                transpose_node.channels_last_converted = True
+
+                model.insert_node(transpose_node)
 
         node.channels_last_converted = True
         return True
