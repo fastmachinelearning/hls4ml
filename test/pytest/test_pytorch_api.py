@@ -141,9 +141,9 @@ def test_conv1d(padds, backend, io_type):
     )
     hls_model.compile()
     if padds == 0:
-        hls_prediction = np.transpose(np.reshape(hls_model.predict(X_input), (1, size_in - 2, n_out)), (0, 2, 1))
+        hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_out, size_in - 2))
     else:
-        hls_prediction = np.transpose(np.reshape(hls_model.predict(X_input), (1, size_in, n_out)), (0, 2, 1))
+        hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_out, size_in))
     # results are not very good at the moment
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.20, atol=0)
 
@@ -222,7 +222,7 @@ def test_conv2d(padds, backend, io_type):
 
     if io_type == 'io_stream':
         X_input = np.ascontiguousarray(X_input.transpose(0, 2, 3, 1))
-        config = config_from_pytorch_model(model, inputs_channel_last=True)
+        config = config_from_pytorch_model(model, inputs_channel_last=True, transpose_outputs=False)
     else:
         config = config_from_pytorch_model(model, inputs_channel_last=False)
 
@@ -294,15 +294,12 @@ def test_conv2d(padds, backend, io_type):
     )  # following https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html
     assert out_dims_hls[1] == out_height
 
-    if padds == 0:
+    if io_type == 'io_stream':
         hls_prediction = np.transpose(
-            np.reshape(hls_model.predict(X_input), (1, out_height, out_width, n_out)), (0, 3, 1, 2)
+            np.reshape(hls_model.predict(X_input), (1, n_out, out_height, out_width)), (0, 3, 1, 2)
         )
-
     else:
-        hls_prediction = np.transpose(
-            np.reshape(hls_model.predict(X_input), (1, out_height, out_width, n_out)), (0, 3, 1, 2)
-        )
+        hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_out, out_height, out_width))
     # results are not very good at the moment
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.20, atol=0)
 
@@ -373,7 +370,7 @@ def test_pooling(pooling, padds, backend):
         size_in_width = 121
         size_in_height = 0
 
-    input_shape = (100, n_in, size_in_height, size_in_width) if '2d' in pooling.__name__ else (100, n_in, size_in_width)
+    input_shape = (1, n_in, size_in_height, size_in_width) if '2d' in pooling.__name__ else (1, n_in, size_in_width)
     input_shape_forHLS = (
         (None, n_in, size_in_height, size_in_width) if '2d' in pooling.__name__ else (None, n_in, size_in_width)
     )
@@ -399,7 +396,7 @@ def test_pooling(pooling, padds, backend):
         nNodes += 1
         if nNodes == 2:
             poolNode = _node
-    assert nNodes == len(hls_model.get_layers())
+    assert nNodes + 1 == len(hls_model.get_layers())
     children = {c[0]: c[1] for c in model.named_children()}
     class_object_pool = children[poolNode.target]
 
@@ -425,16 +422,16 @@ def test_pooling(pooling, padds, backend):
             out_width = int((size_in_width + 2 * padds - class_object_pool.kernel_size[0]) / class_object_pool.stride[0] + 1)
 
     if '2d' in pooling.__name__:
-        hls_prediction = np.reshape(hls_model.predict(X_input), (100, n_in, out_height, out_width))
+        hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_in, out_height, out_width))
 
     else:
-        hls_prediction = np.reshape(hls_model.predict(X_input), (100, n_in, out_width))
+        hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_in, out_width))
 
     # results are not very good at the moment
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.20, atol=0)
 
     # Verify correct parsing of layer
-    hls_pool = list(hls_model.get_layers())[-1]
+    hls_pool = list(hls_model.get_layers())[-2]
     if '2d' in pooling.__name__:
         assert hls_pool.attributes['name'] == 'layer' + poolNode.name
         assert hls_pool.attributes['class_name'][-2] == str(2)
