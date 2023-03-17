@@ -127,7 +127,7 @@ def randX_100_16():
 # https://github.com/fastmachinelearning/hls4ml/issues/381
 # @pytest.mark.parametrize('bits', [4, 6, 8])
 @pytest.mark.parametrize('bits,alpha', [(4, 1), (4, 'auto_po2')])
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_single_dense_activation_exact(randX_100_16, bits, alpha, backend, io_type):
     '''
@@ -197,7 +197,7 @@ def randX_100_10():
         (7, 10, binary(), quantized_bits(5, 2), binary(), False, True),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_btnn(make_btnn, randX_100_10, backend, io_type):
     model, is_xnor, test_no = make_btnn
@@ -240,7 +240,7 @@ def randX_1000_1():
         (quantized_relu(10, 5)),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_quantizer(randX_1000_1, quantizer, backend, io_type):
     '''

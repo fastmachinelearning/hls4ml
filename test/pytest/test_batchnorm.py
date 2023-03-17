@@ -29,7 +29,7 @@ def model():
 
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_batchnorm(model, data, backend, io_type):
 
     default_precision = 'ac_fixed<32, 1, true>' if backend == 'Quartus' else 'ac_fixed<32, 1>'

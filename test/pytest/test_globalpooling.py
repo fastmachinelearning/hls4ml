@@ -30,7 +30,7 @@ def keras_model_avg_1d():
     return model
  
 
-@pytest.mark.parametrize('backend', ['Quartus', 'Vivado'])
+@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado'])
 @pytest.mark.parametrize('model_type', ['max', 'avg'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_global_pool1d(backend, keras_model_max_1d, keras_model_avg_1d, data_1d, model_type, io_type):
@@ -70,7 +70,7 @@ def keras_model_avg_2d():
     model.compile()
     return model
 
-@pytest.mark.parametrize('backend', ['Quartus', 'Vivado'])
+@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado'])
 @pytest.mark.parametrize('model_type', ['max', 'avg'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_global_pool2d(backend, keras_model_max_2d, keras_model_avg_2d, data_2d, model_type, io_type):

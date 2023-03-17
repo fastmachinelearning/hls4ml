@@ -30,7 +30,11 @@ def keras_model():
                                       ('Vivado', 'io_parallel', 'resource'),
                                       ('Vivado', 'io_parallel', 'latency'),
                                       ('Vivado', 'io_stream', 'latency'),
-                                      ('Vivado', 'io_stream', 'resource')
+                                      ('Vivado', 'io_stream', 'resource'),
+                                      ('Vitis', 'io_parallel', 'resource'),
+                                      ('Vitis', 'io_parallel', 'latency'),
+                                      ('Vitis', 'io_stream', 'latency'),
+                                      ('Vitis', 'io_stream', 'resource'),
                                     ])
 def hls_model(keras_model, backend, io_type, strategy):
     default_precision = 'ap_fixed<16,3,AP_RND_CONV,AP_SAT>' if backend=='Vivado' else 'ac_fixed<16,3,true,AC_RND_CONV,AC_SAT>'
@@ -63,7 +67,11 @@ def hls_model(keras_model, backend, io_type, strategy):
                                       ('Vivado', 'io_parallel', 'resource'),
                                       ('Vivado', 'io_parallel', 'latency'),
                                       ('Vivado', 'io_stream', 'latency'),
-                                      ('Vivado', 'io_stream', 'resource')
+                                      ('Vivado', 'io_stream', 'resource'),
+                                      ('Vitis', 'io_parallel', 'resource'),
+                                      ('Vitis', 'io_parallel', 'latency'),
+                                      ('Vitis', 'io_stream', 'latency'),
+                                      ('Vitis', 'io_stream', 'resource'),
                                     ])
 def test_accuracy(data, keras_model, hls_model):
     X = data

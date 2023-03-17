@@ -643,7 +643,7 @@ class VivadoWriter(Writer):
         # custom source
         filedir = os.path.dirname(os.path.abspath(__file__))
 
-        custom_source = get_backend('Vivado').get_custom_source()
+        custom_source = model.config.backend.get_custom_source()
         for dst, srcpath in custom_source.items():
             dstpath = f'{model.config.get_output_dir()}/firmware/{dst}'
             copyfile(srcpath, dstpath)
