@@ -72,7 +72,8 @@ void separable_conv_1d_cl(
     typename CONFIG_T::depthwise_config::bias_t   depthwise_biases[CONFIG_T::depthwise_config::n_chan],
     typename CONFIG_T::pointwise_config::bias_t   pointwise_biases[CONFIG_T::pointwise_config::n_filt]
 ) {
-    assert(CONFIG_T::implementation == conv_implementation::linebuffer && "Only \"linebuffer\" implementation is supported in Vitis HLS.");
+    assert(CONFIG_T::depthwise_config::implementation == conv_implementation::linebuffer && "Only \"linebuffer\" implementation is supported in Vitis HLS.");
+    assert(CONFIG_T::pointwise_config::implementation == conv_implementation::linebuffer && "Only \"linebuffer\" implementation is supported in Vitis HLS.");
 
     #pragma HLS DATAFLOW
 

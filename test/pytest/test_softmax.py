@@ -23,7 +23,7 @@ def high_accuracy_distribution(shape):
 def generate_data(function, input_shape):
     return function((1000, *input_shape))
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('strategy', ['stable', 'argmax'])
 @pytest.mark.parametrize('function,input_shape,io_type', [
                             (flat_distribution, (8,), 'io_parallel'),
@@ -58,7 +58,7 @@ def test_softmax(backend, strategy, generate_data, input_shape, io_type, functio
 
     assert acc_hls4ml >= 0.98
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_softmax_skipped(backend, io_type):
     X = np.random.rand(100, 10)
