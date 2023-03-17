@@ -1,7 +1,7 @@
 .pytest:
   stage: test
-  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.2.base
-  tags: 
+  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.4.base
+  tags:
     - docker
   before_script:
     - source ~/.bashrc
@@ -14,7 +14,7 @@
   artifacts:
     when: always
     reports:
-      junit: 
+      junit:
         - test/pytest/report.xml
       coverage_report:
         coverage_format: cobertura
