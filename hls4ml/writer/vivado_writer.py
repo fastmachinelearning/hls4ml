@@ -591,6 +591,10 @@ class VivadoWriter(Writer):
         f.write(f'set project_name "{model.config.get_project_name()}"\n')
         f.write('variable backend\n')
         f.write('set backend "vivado"\n')
+        f.write('variable part\n')
+        f.write('set part "{}"\n'.format(model.config.get_config_value('Part')))
+        f.write('variable clock_period\n')
+        f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
         f.close()
 
         # build_prj.tcl
