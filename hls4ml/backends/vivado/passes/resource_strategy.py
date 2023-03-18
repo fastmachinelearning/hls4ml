@@ -1,14 +1,13 @@
 import numpy as np
 
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.layers import Conv1D, Conv2D, Conv1DTranspose, Conv2DTranspose, Dense, SeparableConv1D, SeparableConv2D, LSTM, GRU
+from hls4ml.model.layers import Conv1D, Conv2D, Dense, SeparableConv1D, SeparableConv2D, LSTM, GRU
 
 class ApplyResourceStrategy(OptimizerPass):
     ''' Transposes the weights to use the dense_resource matrix multiply routine '''
     def match(self, node):
         
-        node_matches = isinstance(node, (Dense, Conv1D, SeparableConv1D, Conv2D, SeparableConv2D, LSTM, GRU, Conv1DTranspose, Conv2DTranspose))
-
+        node_matches = isinstance(node, (Dense, Conv1D, SeparableConv1D, Conv2D, SeparableConv2D, LSTM, GRU))
         is_resource_strategy = node.get_attr('strategy', '').lower() == 'resource'
         already_transformed = node.get_attr('_weights_transposed', False) == True
 
