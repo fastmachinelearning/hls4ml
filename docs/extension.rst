@@ -2,13 +2,13 @@
 Extension API
 ========================
 
-hls4ml natively supports a large number of neural network layers.
+``hls4ml`` natively supports a large number of neural network layers.
 But what if a desired layer is not supported?
 If it is standard enough and its implementation would benefit the community as a whole, we would welcome a contribution to add it to the standard set of supported layers.
 However, if it is a somewhat niche custom layer, there is another approach we can take to extend hls4ml through the *extension API*.
 
 This documentation will walk through a complete `complete end-to-end example <https://github.com/fastmachinelearning/hls4ml/blob/main/test/pytest/test_extensions.py>`_, which is part of our testing suite.
-To implement a custom layer in hls4ml with the extension API, the required components are:
+To implement a custom layer in ``hls4ml`` with the extension API, the required components are:
 
 * Your custom layer class
 * Equivalent hls4ml custom layer class
