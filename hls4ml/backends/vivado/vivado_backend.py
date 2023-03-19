@@ -1,34 +1,77 @@
-import numpy as np
-import math
 import os
 import sys
-from bisect import bisect_left
-from queue import Queue
-from collections.abc import Iterable
 
-from hls4ml.model.types import FixedPrecisionType, NamedType, IntegerPrecisionType
-from hls4ml.model.layers import Layer, Dense, BatchNormalization, Embedding, Conv1D, Conv2D, Conv2DBatchnorm, SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Activation, ParametrizedActivation, PReLU, Softmax, Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D, ZeroPadding1D, ZeroPadding2D, Merge, Concatenate, Dot, Resize, Transpose, SimpleRNN, LSTM, GRU, GarNet, GarNetStack
-from hls4ml.model.attributes import Attribute
-from hls4ml.model.optimizer import get_backend_passes, layer_optimizer, model_optimizer
-from hls4ml.model.flow import register_flow
+import numpy as np
+
 from hls4ml.backends import FPGABackend
 from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter, VivadoArrayVariableConverter
+from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute
+from hls4ml.model.flow import register_flow
+from hls4ml.model.layers import (
+    GRU,
+    LSTM,
+    Conv1D,
+    Conv2D,
+    Dense,
+    DepthwiseConv2D,
+    Embedding,
+    GarNet,
+    GarNetStack,
+    GlobalPooling1D,
+    GlobalPooling2D,
+    Layer,
+    Pooling1D,
+    Pooling2D,
+    SeparableConv1D,
+    SeparableConv2D,
+    SimpleRNN,
+    Softmax,
+)
+from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
+from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
 from hls4ml.report import parse_vivado_report
 from hls4ml.utils.fixed_point_utils import ceil_log2
 
+
 class VivadoBackend(FPGABackend):
     def __init__(self):
-        super(VivadoBackend, self).__init__('Vivado')
+        super().__init__('Vivado')
         self._register_layer_attributes()
         self._register_flows()
 
     def _register_layer_attributes(self):
-        extended_attrs = {
-            SimpleRNN: [Attribute('recurrent_reuse_factor', default=1), Attribute('static', value_type=bool, default=True)],
-            LSTM: [Attribute('recurrent_reuse_factor', default=1), Attribute('static', value_type=bool, default=True)],
-            GRU: [Attribute('recurrent_reuse_factor', default=1), Attribute('static', value_type=bool, default=True)],
-        }
-        self.attribute_map.update(extended_attrs)
+        # Add RNN-specific attributes, recurrent_reuse_factor and static implementation
+        rnn_layers = [
+            SimpleRNN,
+            LSTM,
+            GRU,
+        ]
+
+        for layer in rnn_layers:
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1))
+            attrs.append(ConfigurableAttribute('static', value_type=bool, default=True))
+            self.attribute_map[layer] = attrs
+
+        # Add ParallelizationFactor to Conv1D/2D
+        pf_layers = [
+            Conv1D,
+            Conv2D,
+        ]
+
+        for layer in pf_layers:
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(ConfigurableAttribute('parallelization_factor', default=1))
+            self.attribute_map[layer] = attrs
+
+        # Add ConvImplementation to Convolution+Pooling layers
+        cnn_layers = [Conv1D, Conv2D, SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Pooling1D, Pooling2D]
+
+        for layer in cnn_layers:
+            attrs = self.attribute_map.get(layer, [])
+            # attrs.append(ConfigurableAttribute('conv_implementation', value_type=str, default='LineBuffer'))
+            attrs.append(ChoiceAttribute('conv_implementation', choices=['LineBuffer', 'Encoded'], default='LineBuffer'))
+            self.attribute_map[layer] = attrs
 
     def _register_flows(self):
         initializers = self._get_layer_initializers()
@@ -50,11 +93,7 @@ class VivadoBackend(FPGABackend):
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
-        optimization_passes = [
-            'vivado:remove_final_reshape',
-            'vivado:optimize_pointwise_conv',
-            'vivado:skip_softmax'
-        ]
+        optimization_passes = ['vivado:remove_final_reshape', 'vivado:optimize_pointwise_conv', 'vivado:skip_softmax']
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
         vivado_types = [
@@ -69,23 +108,30 @@ class VivadoBackend(FPGABackend):
         templates = self._get_layer_templates()
         template_flow = register_flow('apply_templates', self._get_layer_templates, requires=[init_flow], backend=self.name)
 
-        writer_passes = [
-            'make_stamp',
-            'vivado:write_hls'
-        ]
+        writer_passes = ['make_stamp', 'vivado:write_hls']
         self._writer_flow = register_flow('write', writer_passes, requires=['vivado:ip'], backend=self.name)
 
         fifo_depth_opt_passes = [
             'vivado:fifo_depth_optimization'
-        ] + writer_passes # After optimization, a new project will be written
+        ] + writer_passes  # After optimization, a new project will be written
 
-        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=[self._writer_flow], backend=self.name)
+        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=['vivado:ip'], backend=self.name)
 
         all_passes = get_backend_passes(self.name)
 
         extras = [
             # Ideally this should be empty
-            opt_pass for opt_pass in all_passes if opt_pass not in initializers + streaming_passes + quantization_passes + optimization_passes + vivado_types + templates + writer_passes + fifo_depth_opt_passes
+            opt_pass
+            for opt_pass in all_passes
+            if opt_pass
+            not in initializers
+            + streaming_passes
+            + quantization_passes
+            + optimization_passes
+            + vivado_types
+            + templates
+            + writer_passes
+            + fifo_depth_opt_passes
         ]
 
         if len(extras) > 0:
@@ -93,7 +139,16 @@ class VivadoBackend(FPGABackend):
         else:
             extras_flow = None
 
-        ip_flow_requirements = ['optimize', init_flow, streaming_flow, quantization_flow, optimization_flow, vivado_types_flow, extras_flow, template_flow]
+        ip_flow_requirements = [
+            'optimize',
+            init_flow,
+            streaming_flow,
+            quantization_flow,
+            optimization_flow,
+            vivado_types_flow,
+            extras_flow,
+            template_flow,
+        ]
         ip_flow_requirements = list(filter(None, ip_flow_requirements))
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
@@ -114,16 +169,36 @@ class VivadoBackend(FPGABackend):
 
         return config
 
-    def build(self, model, reset=False, csim=True, synth=True, cosim=False, validation=False, export=False, vsynth=False, fifo_opt=False):
+    def build(
+        self,
+        model,
+        reset=False,
+        csim=True,
+        synth=True,
+        cosim=False,
+        validation=False,
+        export=False,
+        vsynth=False,
+        fifo_opt=False,
+    ):
         if 'linux' in sys.platform:
             found = os.system('command -v vivado_hls > /dev/null')
             if found != 0:
                 raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
-        
+
         curr_dir = os.getcwd()
         os.chdir(model.config.get_output_dir())
-        os.system('vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt}"'
-            .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth, fifo_opt=fifo_opt))
+        vivado_cmd = (
+            f'vivado_hls -f build_prj.tcl "reset={reset} '
+            f'csim={csim} '
+            f'synth={synth} '
+            f'cosim={cosim} '
+            f'validation={validation} '
+            f'export={export} '
+            f'vsynth={vsynth} '
+            f'fifo_opt={fifo_opt}"'
+        )
+        os.system(vivado_cmd)
         os.chdir(curr_dir)
 
         return parse_vivado_report(model.config.get_output_dir())
@@ -156,13 +231,13 @@ class VivadoBackend(FPGABackend):
                 layer.set_attr('strategy', 'resource')
         else:
             layer.set_attr('strategy', 'latency')
-        layer.set_attr('index_t', NamedType('layer{}_index'.format(layer.index), index_t))
+        layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', index_t))
 
-    #TODO consolidate these functions into a single `init_conv`
+    # TODO consolidate these functions into a single `init_conv`
     @layer_optimizer(Conv1D)
     def init_conv1d(self, layer):
-        if len(layer.weights['weight'].data.shape) == 2: # This can happen if we assign weights of Dense layer to 1x1 Conv1D
-            layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0,1))
+        if len(layer.weights['weight'].data.shape) == 2:  # This can happen if we assign weights of Dense layer to 1x1 Conv1D
+            layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0, 1))
 
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
@@ -177,8 +252,11 @@ class VivadoBackend(FPGABackend):
         valid_pf = self.get_valid_conv_partition_splits(1, out_width)
         if chosen_pf not in valid_pf:
             closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
-            print('WARNING: Invalid ParallelizationFactor={} in layer "{}". Using ParallelizationFactor={} instead. Valid ParallelizationFactor(s): {}.'
-                  .format(chosen_pf, layer.name, closest_pf, ','.join(map(str, valid_pf))))
+            valid_pf_str = ','.join(map(str, valid_pf))
+            print(
+                f'WARNING: Invalid ParallelizationFactor={chosen_pf} in layer "{layer.name}".'
+                f'Using ParallelizationFactor={closest_pf} instead. Valid ParallelizationFactor(s): {valid_pf_str}.'
+            )
         else:
             closest_pf = chosen_pf
         layer.set_attr('n_partitions', out_width // closest_pf)
@@ -195,14 +273,16 @@ class VivadoBackend(FPGABackend):
             self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
-        
-        layer.set_attr('n_partitions', 1) #TODO Once we have SeparableConv implementation for io_parallel this should be set properly
+
+        layer.set_attr(
+            'n_partitions', 1
+        )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(Conv2D)
     def init_conv2d(self, layer):
-        if len(layer.weights['weight'].data.shape) == 2: # This can happen if we assign weights of Dense layer to 1x1 Conv2D
-            layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0,1))
+        if len(layer.weights['weight'].data.shape) == 2:  # This can happen if we assign weights of Dense layer to 1x1 Conv2D
+            layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0, 1))
 
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
@@ -218,8 +298,11 @@ class VivadoBackend(FPGABackend):
         valid_pf = self.get_valid_conv_partition_splits(out_height, out_width)
         if chosen_pf not in valid_pf:
             closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
-            print('WARNING: Invalid ParallelizationFactor={} in layer "{}". Using ParallelizationFactor={} instead. Valid ParallelizationFactor(s): {}.'
-                .format(chosen_pf, layer.name, closest_pf, ','.join(map(str, valid_pf))))
+            valid_pf_str = ','.join(map(str, valid_pf))
+            print(
+                f'WARNING: Invalid ParallelizationFactor={chosen_pf} in layer "{layer.name}".'
+                f'Using ParallelizationFactor={closest_pf} instead. Valid ParallelizationFactor(s): {valid_pf_str}.'
+            )
         else:
             closest_pf = chosen_pf
         layer.set_attr('n_partitions', out_height * out_width // closest_pf)
@@ -236,8 +319,10 @@ class VivadoBackend(FPGABackend):
             self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
-        
-        layer.set_attr('n_partitions', 1) #TODO Once we have SeparableConv implementation for io_parallel this should be set properly
+
+        layer.set_attr(
+            'n_partitions', 1
+        )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(DepthwiseConv2D)
@@ -248,8 +333,10 @@ class VivadoBackend(FPGABackend):
             self.set_closest_reuse_factor(layer, n_in, n_out)
         else:
             layer.set_attr('strategy', 'latency')
-        
-        layer.set_attr('n_partitions', 1) #TODO Once we have SeparableConv implementation for io_parallel this should be set properly
+
+        layer.set_attr(
+            'n_partitions', 1
+        )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     def _set_pooling_accum_t(self, layer, pool_size):
@@ -282,32 +369,17 @@ class VivadoBackend(FPGABackend):
         pool_size = layer.get_attr('in_height') * layer.get_attr('in_width')
         self._set_pooling_accum_t(layer, pool_size)
 
-    @layer_optimizer(Activation)
-    def init_activation(self, layer):
-        if 'table_t' not in layer.attributes:
-            layer.set_attr('table_t', NamedType(name=layer.name + '_table_t', precision=FixedPrecisionType(width=18, integer=8)))
-        if 'table_size' not in layer.attributes:
-            layer.set_attr('table_size', 1024)
-
     @layer_optimizer(Softmax)
     def init_softmax(self, layer):
-        if 'exp_table_t' not in layer.attributes:
-            layer.set_attr('exp_table_t', layer.get_attr('table_t'))
-        if 'inv_table_t' not in layer.attributes:
-            layer.set_attr('inv_table_t', layer.get_attr('table_t'))
-        if layer.model.config.is_resource_strategy(layer):
-            # 'resource' strategy = 'latency' for Softmax
-            layer.set_attr('implementation', 'latency')
-        else:
-            layer.set_attr('implementation', layer.model.config.get_strategy(layer).lower())
-
         if layer.model.config.get_config_value('IOType') == 'io_parallel':
-            assert len(layer.get_input_variable().shape) == 1, 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
+            assert (
+                len(layer.get_input_variable().shape) == 1
+            ), 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
 
     @layer_optimizer(Embedding)
     def init_embed(self, layer):
         if layer.attributes['n_in'] is None:
-           raise Exception('Input length of Embedding layer must be specified.')
+            raise Exception('Input length of Embedding layer must be specified.')
 
     @layer_optimizer(LSTM)
     def init_lstm(self, layer):
@@ -359,9 +431,9 @@ class VivadoBackend(FPGABackend):
     @layer_optimizer(GarNet)
     def init_garnet(self, layer):
         reuse_factor = layer.attributes['reuse_factor']
-        
+
         var_converter = VivadoArrayVariableConverter(type_converter=HLSTypeConverter(precision_converter=APTypeConverter()))
-        
+
         # A bit controversial but we are going to set the partitioning of the input here
         in_layer = layer.model.graph[layer.inputs[0]]
         in_var = layer.get_input_variable(layer.inputs[0])
@@ -374,7 +446,7 @@ class VivadoBackend(FPGABackend):
             out_pragma = 'partition'
         else:
             partition_factor = layer._output_features * (layer.attributes['n_vertices'] // reuse_factor)
-            out_pragma = ('partition', 'cyclic' , partition_factor)
+            out_pragma = ('partition', 'cyclic', partition_factor)
 
         out_name, out_var = next(iter(layer.variables.items()))
         new_out_var = var_converter.convert(out_var, pragma=out_pragma)
