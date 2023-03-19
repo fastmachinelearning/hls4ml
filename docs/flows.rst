@@ -50,7 +50,7 @@ First, we can define a simple neural network in Keras
 
 .. code-block:: Python
 
-    from tensorflow.python.keras.layers import Dense
+    from tensorflow.keras.layers import Dense
     from tensorflow.keras.models import Sequential
 
     model = Sequential()
