@@ -190,9 +190,10 @@ def parse_vivado_report(hls_dir):
                     section = int(match.group(1))
                 # Sometimes, phrases such as 'CLB Registers' can show up in the non-tabular sections of the report
                 if '|' in line:
-                    if 'CLB LUTs' in line and section == 1:
+                    # CLB (2019.X) vs. Slice (2020.X)
+                    if ('CLB LUTs' in line or 'Slice LUTs' in line) and section == 1:
                         vivado_synth_rpt['LUT'] = line.split('|')[2].strip()
-                    elif 'CLB Registers' in line and section == 1:
+                    elif ('CLB Registers' in line or 'Slice Registers' in line) and section == 1:
                         vivado_synth_rpt['FF'] = line.split('|')[2].strip()
                     elif 'Block RAM Tile' in line and section == 2:
                         vivado_synth_rpt['BRAM_18K'] = line.split('|')[2].strip()
@@ -551,7 +552,7 @@ def _make_report_body(report_dict, make_table_template, make_header_template):
         params['dsp'] = str(dsp) + ' / ' + str(avail_dsp) + ' (' + str(round(dsp / avail_dsp * 100, 1)) + '%)'
         params['ff'] = str(ff) + ' / ' + str(avail_ff) + ' (' + str(round(ff / avail_ff * 100, 1)) + '%)'
         params['lut'] = str(lut) + ' / ' + str(avail_lut) + ' (' + str(round(lut / avail_lut * 100, 1)) + '%)'
-        if 'URAM' in csynth_report:
+        if 'URAM' in csynth_report and avail_uram > 0:
             params['uram'] = str(uram) + ' / ' + str(avail_uram) + ' (' + str(round(uram / avail_uram * 100, 1)) + '%)'
         else:
             params['uram'] = 'N/A'
