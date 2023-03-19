@@ -40,10 +40,10 @@ class VivadoWriter(Writer):
 
         if write_txt_file:
             h_file.write("#ifndef __SYNTHESIS__\n")
-            h_file.write(var.definition_cpp() + ";\n")
+            h_file.write("static " + var.definition_cpp() + ";\n")
             h_file.write("#else\n")
 
-        h_file.write(var.definition_cpp() + " = {")
+        h_file.write("static " + var.definition_cpp() + " = {")
 
         # fill c++ array.
         # not including internal brackets for multidimensional case

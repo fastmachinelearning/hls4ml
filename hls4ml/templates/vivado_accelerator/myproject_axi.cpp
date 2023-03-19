@@ -9,6 +9,8 @@ void myproject(
 
     //hls-fpga-machine-learning insert local vars
 
+    //hls-fpga-machine-learning insert load weights
+
     //hls-fpga-machine-learning insert enqueue
 
     //hls-fpga-machine-learning insert call

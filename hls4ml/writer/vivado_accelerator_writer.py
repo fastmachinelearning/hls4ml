@@ -82,11 +82,18 @@ class VivadoAcceleratorWriter(VivadoWriter):
 
         io_type = model.config.get_config_value("IOType")
 
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
+
         for line in f.readlines():
             if 'void myproject(' in line:
                 newline = 'void {}_axi(\n'.format(model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert include' in line:
                 newline = '#include "{}_axi.h"\n'.format(model.config.get_project_name())
+                for b in model_brams:
+                    newline += '#include "weights/{}.h"\n'.format(b.name)
+                newline += '\n'
+                if model_brams:
+                    newline += '#include "nnet_utils/nnet_helpers.h"\n'
             elif '//hls-fpga-machine-learning insert local vars' in line:
                 newline = ''
                 if self.vivado_accelerator_config.get_interface() == 'axi_stream':
@@ -102,8 +109,8 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     newline += indent + '#pragma HLS STREAM variable=out_local depth={}\n'\
                         .format(model.get_output_variables()[0].pragma[1])
             elif '//hls-fpga-machine-learning insert call' in line:
-                newline = indent + '{}(in_local, out_local);\n'.format(
-                    model.config.get_project_name())
+                brams_str = (''.join([', ' + b.name for b in model_brams])) if len(model_brams) > 0 else "";
+                newline = indent + '{}(in_local, out_local{});\n'.format(model.config.get_project_name(), brams_str)
             elif '//hls-fpga-machine-learning insert interface' in line:
                 if self.vivado_accelerator_config.get_interface() == 'axi_lite':
                     newline = ''
@@ -124,6 +131,23 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     newline += indent + '#pragma HLS INTERFACE ap_ctrl_none port=return\n'
                     if model.config.get_config_value("IOType") == 'io_stream':
                         newline += indent + '#pragma HLS DATAFLOW\n'
+            elif '//hls-fpga-machine-learning insert load weights' in line:
+                newline = ''
+                if model_brams:
+                    newline += '#ifndef __SYNTHESIS__\n'
+                    newline += indent + 'static bool loaded_weights = false;\n'
+                    newline += indent + 'if (!loaded_weights) {\n'
+                    newline += indent + '    loaded_weights = true;\n'
+                    for layer in model.get_layers():
+                        for w in layer.get_weights():
+                            if w.weight_class == 'CompressedWeightVariable':
+                                newline += indent + '    nnet::load_compressed_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.nonzeros, w.name, w.name)
+                            elif w.weight_class == 'ExponentWeightVariable':
+                                newline += indent + '    nnet::load_exponent_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.data_length, w.name, w.name)
+                            else:
+                                newline += indent + '    nnet::load_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(w.type.name, w.data_length, w.name, w.name)
+                    newline += indent + '}\n'
+                    newline += '#endif\n'
             elif '//hls-fpga-machine-learning insert enqueue' in line:
                 io_type = model.config.get_config_value("IOType")
                 if io_type == 'io_parallel':
@@ -139,10 +163,12 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     newline += indent + '}\n'
                 elif io_type == 'io_stream':
                     newline = ''
+                    newline += 'LOAD_INPUT_OUTER_LOOP:\n'
                     newline += indent + 'for(unsigned i = 0; i < N_IN / {input_t}::size; ++i) {{\n'
                     # newline += indent + indent + '#pragma HLS PIPELINE\n'
                     newline += indent + indent + '{input_t} ctype;\n'
                     newline += indent + indent + '#pragma HLS DATA_PACK variable=ctype\n'
+                    newline += 'LOAD_INPUT_INNER_LOOP:\n'
                     newline += indent + indent + 'for(unsigned j = 0; j < {input_t}::size; j++) {{\n'
                     # newline += indent + indent + indent + '#pragma HLS UNROLL\n'
                     if self.vivado_accelerator_config.get_interface() == 'axi_stream':
@@ -169,9 +195,11 @@ class VivadoAcceleratorWriter(VivadoWriter):
                     newline += indent + '}\n'
                 elif io_type == 'io_stream':
                     newline = ''
+                    newline += 'STORE_OUTPUT_OUTER_LOOP:\n'
                     newline += indent + 'for(unsigned i = 0; i < N_OUT / {result_t}::size; ++i) {{\n'
                     # newline += indent + indent + '#pragma HLS PIPELINE\n'
                     newline += indent + indent + '{result_t} ctype = out_local.read();\n'
+                    newline += 'STORE_OUTPUT_INNER_LOOP:\n'
                     newline += indent + indent + 'for(unsigned j = 0; j < {result_t}::size; j++) {{\n'
                     # newline += indent + indent + indent + '#pragma HLS UNROLL\n'
                     if self.vivado_accelerator_config.get_interface() == 'axi_stream':
@@ -187,6 +215,35 @@ class VivadoAcceleratorWriter(VivadoWriter):
             fout.write(newline)
         f.close()
         fout.close()
+
+    def modify_project_cpp(self, model):
+        '''
+        Modify the build_prj.tcl and build_lib.sh scripts to add the extra wrapper files and set the top function
+        '''
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        oldfile = '{}/firmware/{}.cpp'.format(model.config.get_output_dir(), model.config.get_project_name())
+        newfile = '{}/build_prj_axi.tcl'.format(model.config.get_output_dir())
+        f = open(oldfile, 'r')
+        fout = open(newfile, 'w')
+
+        for line in f.readlines():
+            if '#pragma HLS INTERFACE axis port=' in line:
+                newline = ''
+            elif '#pragma HLS INTERFACE bram port=' in line:
+                newline = ''
+            elif 'nnet::load_weights_from_txt' in line:
+                newline = ''
+            elif 'nnet::load_exponent_weights_from_txt' in line:
+                newline = ''
+            elif 'nnet::load_compressed_weights_from_txt' in line:
+                newline = ''
+            else:
+                newline = line
+            fout.write(newline)
+
+        f.close()
+        fout.close()
+        os.rename(newfile, oldfile)
 
     def modify_build_script(self, model):
         '''
@@ -369,6 +426,7 @@ class VivadoAcceleratorWriter(VivadoWriter):
         self.write_driver(model)
         self.write_wrapper_test(model)
         self.write_axi_wrapper(model)
+        self.modify_project_cpp(model)
         self.modify_build_script(model)
         self.write_new_tar(model)
 
