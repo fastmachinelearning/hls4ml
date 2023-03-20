@@ -48,6 +48,18 @@ void zeropad1d_cl(
     }
 }
 
+// Description:
+//   apply zero padding to input feature data "data" based on
+//   padding parameters in CONFIG_T
+//
+//                  CONFIG_T::pad_top
+//    CONFIG_T::pad_left  "data"  CONFIG_T::pad_right
+//                  CONFIG_T::pad_bottom
+//
+// Template Params:
+//    data_T - typically nnet::array< ac_fixed<>, 3*1> (see myproject.cpp -> firmware/defines.h)
+//    res_T  - typically nnet::array< ac_fixed<>, 3*1> 
+
 template<class data_T, class res_T, typename CONFIG_T>
 void zeropad2d_cl(
     ac_channel<data_T> &data,
