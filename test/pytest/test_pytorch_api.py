@@ -217,14 +217,14 @@ def test_conv2d(padds, backend, io_type):
     model = torch.nn.Sequential(nn.Conv2d(n_in, n_out, kernel_size, padding=padds), nn.ReLU()).to()
     model.eval()
 
-    X_input = np.random.rand(1, n_in, size_in_height, size_in_width)
+    X_input = np.random.rand(100, n_in, size_in_height, size_in_width)
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
     if io_type == 'io_stream':
         X_input = np.ascontiguousarray(X_input.transpose(0, 2, 3, 1))
         config = config_from_pytorch_model(model, inputs_channel_last=True, transpose_outputs=False)
     else:
-        config = config_from_pytorch_model(model, inputs_channel_last=False)
+        config = config_from_pytorch_model(model, inputs_channel_last=False, transpose_outputs=True)
 
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_conv2d_{padds}_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(
@@ -296,12 +296,12 @@ def test_conv2d(padds, backend, io_type):
 
     if io_type == 'io_stream':
         hls_prediction = np.transpose(
-            np.reshape(hls_model.predict(X_input), (1, n_out, out_height, out_width)), (0, 3, 1, 2)
+            np.reshape(hls_model.predict(X_input), (100, out_height, out_width, n_out)), (0, 3, 1, 2)
         )
     else:
-        hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_out, out_height, out_width))
+        hls_prediction = np.reshape(hls_model.predict(X_input), (100, n_out, out_height, out_width))
     # results are not very good at the moment
-    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.20, atol=0)
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
 
     if not (backend == 'Vivado' and io_type == 'io_stream' and padds == 1):
         # Vivado inserts and additional layer for 'same' padding in io_stream
