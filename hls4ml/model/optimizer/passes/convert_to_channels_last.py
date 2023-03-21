@@ -50,10 +50,10 @@ class ChannelsLastConverter(OptimizerPass):
                         weights_channels_last = node.get_weights(tensor).data.transpose()
                         node.get_weights(tensor).data = weights_channels_last
                     elif len(node.get_weights(tensor).shape) == 3:
-                        weights_channels_last = node.get_weights(tensor).data.transpose([0, 2, 1])
+                        weights_channels_last = node.get_weights(tensor).data.transpose([2, 1, 0])
                         node.get_weights(tensor).data = weights_channels_last
                     elif len(node.get_weights(tensor).shape) == 4:
-                        weights_channels_last = node.get_weights(tensor).data.transpose([0, 2, 3, 1])
+                        weights_channels_last = node.get_weights(tensor).data.transpose([2, 3, 1, 0])
                         node.get_weights(tensor).data = weights_channels_last
                 except KeyError:
                     pass
@@ -93,6 +93,13 @@ class ChannelsLastConverter(OptimizerPass):
                 transpose_node.channels_last_converted = True
 
                 model.insert_node(transpose_node)
+        else:
+            input_shape = node.get_output_variable().shape
+            input_shape.append(input_shape.pop(0))
+            node.get_output_variable().shape = input_shape
+            dim_names = node.get_output_variable().dim_names
+            dim_names.append(dim_names.pop(0))
+            node.get_output_variable().dim_names = dim_names
 
         node.channels_last_converted = True
         return True
