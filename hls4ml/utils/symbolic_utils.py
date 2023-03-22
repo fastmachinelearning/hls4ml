@@ -1,3 +1,6 @@
+import subprocess
+import tempfile
+
 math_lut_julia = """
 function math_lut(fun::Function, x::Float32 ; N::Integer = 1024, range_start::Real = 0, range_end::Real = 8)
     range = range_end - range_start
@@ -52,3 +55,123 @@ class LUTFunction:
         self.range_start = range_start
         self.range_end = range_end
         self.table_size = table_size
+
+
+_binary_ops = {'/': 'x / y', '*': 'x * y', '+': 'x + y', '-': 'x - y', 'pow': 'x**y', 'pow_abs': 'Abs(x) ** y'}
+
+
+_unary_ops = {
+    'abs': 'Abs',
+    'mod': 'sympy.Mod(x, 2)',
+    'erf': 'sympy.erf',
+    'erfc': 'sympy.erfc',
+    'log': 'sympy.log(x)',
+    'log10': 'sympy.log(x, 10)',
+    'log2': 'sympy.log(x, 2)',
+    'log1p': 'sympy.log(x + 1)',
+    'log_abs': 'sympy.log(Abs(x))',
+    'log10_abs': 'sympy.log(Abs(x), 10)',
+    'log2_abs': 'sympy.log(Abs(x), 2)',
+    'log1p_abs': 'sympy.log(Abs(x) + 1)',
+    'floor': 'sympy.floor',
+    'ceil': 'sympy.ceiling',
+    'sqrt': 'sympy.sqrt(x)',
+    'sqrt_abs': 'sympy.sqrt(Abs(x))',
+    'square': 'x**2',
+    'cube': 'x**3',
+    'neg': '-x',
+    'cos': 'sympy.cos',
+    'sin': 'sympy.sin',
+    'tan': 'sympy.tan',
+    'cosh': 'sympy.cosh',
+    'sinh': 'sympy.sinh',
+    'tanh': 'sympy.tanh',
+    'exp': 'sympy.exp',
+    'acos': 'sympy.acos',
+    'asin': 'sympy.asin',
+    'atan': 'sympy.atan',
+    'acosh': 'sympy.acosh(x)',
+    'acosh_abs': 'sympy.acosh(Abs(x) + 1)',
+    'asinh': 'sympy.asinh',
+    'atanh': 'sympy.atanh(sympy.Mod(x + 1, 2) - 1)',
+    'atanh_clip': 'sympy.atanh(sympy.Mod(x + 1, 2) - 1)',
+    'sign': 'sympy.sign',
+}
+
+
+def generate_operator_complexity(
+    part, precision, unary_operators=None, binary_operators=None, hls_include_path=None, hls_libs_path=None
+):
+    from sympy.parsing.sympy_parser import parse_expr as parse_sympy_expr
+
+    from hls4ml.converters import convert_from_symbolic_expression
+
+    if unary_operators is None:
+        unary_ops = _unary_ops
+    else:
+        unary_ops = {fn_name: sympy_expr for fn_name, sympy_expr in _unary_ops.items() if fn_name in unary_operators}
+    if binary_operators is None:
+        binary_ops = _binary_ops
+    else:
+        binary_ops = {fn_name: sympy_expr for fn_name, sympy_expr in _binary_ops.items() if fn_name in binary_operators}
+
+    complexity_of_operators = {}
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        for fn_name, sympy_expr in binary_ops.items():
+            print(f'Estimating complexity of {fn_name}')
+            equation = sympy_expr.replace('x', 'x0').replace('y', 'x1')
+            expression = parse_sympy_expr(equation)
+            hls_model = convert_from_symbolic_expression(
+                expression,
+                n_symbols=2,
+                output_dir=tmp_dir,
+                precision=precision,
+                part=part,
+                hls_include_path=hls_include_path,
+                hls_libs_path=hls_libs_path,
+            )
+            hls_model.write()
+            subprocess.run(
+                ['vivado_hls', '-f', 'build_prj.tcl', '"reset=1 synth=1 csim=0 cosim=0 validation=0 export=0"'],
+                cwd=tmp_dir,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT,
+            )
+            result = subprocess.check_output(
+                ['awk', 'NR==32', 'myproject_prj/solution1/syn/report/myproject_csynth.rpt'], cwd=tmp_dir
+            )
+            cc = result.decode('utf-8').replace(' ', '').split('|')[1]
+            complexity_of_operators[fn_name] = max(int(cc), 1)
+
+        for fn_name, sympy_expr in unary_ops.items():
+            print(f'Estimating complexity of {fn_name}')
+            equation = sympy_expr.replace('sympy.', '')
+            if 'x' in equation and fn_name != 'exp':
+                equation = equation.replace('x', 'x0')
+            else:
+                equation += '(x0)'
+            expression = parse_sympy_expr(equation)
+            hls_model = convert_from_symbolic_expression(
+                expression,
+                n_symbols=1,
+                output_dir=tmp_dir,
+                precision=precision,
+                part=part,
+                hls_include_path=hls_include_path,
+                hls_libs_path=hls_libs_path,
+            )
+            hls_model.write()
+            subprocess.run(
+                ['vivado_hls', '-f', 'build_prj.tcl', '"reset=1 synth=1 csim=0 cosim=0 validation=0 export=0"'],
+                cwd=tmp_dir,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT,
+            )
+            result = subprocess.check_output(
+                ['awk', 'NR==32', 'myproject_prj/solution1/syn/report/myproject_csynth.rpt'], cwd=tmp_dir
+            )
+            cc = result.decode('utf-8').replace(' ', '').split('|')[1]
+            complexity_of_operators[fn_name] = max(int(cc), 1)
+
+    return complexity_of_operators
