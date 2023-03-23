@@ -266,7 +266,6 @@ def parse_keras_model(model_arch, reader):
         'Softmax',
         'TernaryTanh',
         'HardActivation',
-        'QActivation',
     ]
     # Recurrent layers
     recurrent_layers = ['SimpleRNN', 'LSTM', 'GRU']
