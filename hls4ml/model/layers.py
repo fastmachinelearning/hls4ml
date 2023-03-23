@@ -798,6 +798,32 @@ class ParametrizedActivation(Activation):
             return act  # ELU activation
 
 
+class HardActivation(Activation):
+    '''
+    Implements the hard sigmoid and tan function in keras and qkeras
+    (Default parameters in qkeras are different, so should be configured)
+    The hard sigmoid unction is clip(slope * x + shift, 0, 1), and the
+    hard tanh function is 2 * hard_sigmoid - 1
+    '''
+
+    _expected_attributes = [
+        Attribute('slope', value_type=float, default=0.2, configurable=False),
+        Attribute('shift', value_type=float, default=0.5, configurable=False),
+        TypeAttribute('slope_t'),
+        TypeAttribute('shift_t'),
+    ]
+
+    def initialize(self):
+        super().initialize()
+        slope_prec = self.get_attr('slope_prec', FixedPrecisionType(width=16, integer=0, signed=False))
+        shift_prec = self.get_attr('shift_prec', FixedPrecisionType(width=1, integer=0, signed=False))
+        index = self.get_attr('index')
+        slope_t = NamedType(f'slope{index}_t', precision=slope_prec)
+        shift_t = NamedType(f'shift{index}_t', precision=shift_prec)
+        self.set_attr('slope_t', slope_t)
+        self.set_attr('shift_t', shift_t)
+
+
 class PReLU(Activation):
     def initialize(self):
         super().initialize()
@@ -1294,6 +1320,7 @@ layer_map = {
     'PReLU': PReLU,
     'Softmax': Softmax,
     'TernaryTanh': TernaryTanh,
+    'HardActivation': HardActivation,
     'Reshape': Reshape,
     'Dense': Dense,
     'BinaryDense': Dense,
