@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hls4ml.model package &mdash; hls4ml 0.5.1.dev644+ga4b0e0c3 documentation</title>
+  <title>hls4ml.model package &mdash; hls4ml 0.5.1.dev645+g6d8e4ca9 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -430,6 +430,21 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.layers.GlobalPooling2D.initialize">
 <span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.GlobalPooling2D.initialize" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.layers.HardActivation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.layers.</span></span><span class="sig-name descname"><span class="pre">HardActivation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.HardActivation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.layers.Activation" title="hls4ml.model.layers.Activation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Activation</span></code></a></p>
+<p>Implements the hard sigmoid and tan function in keras and qkeras
+(Default parameters in qkeras are different, so should be configured)
+The hard sigmoid unction is clip(slope * x + shift, 0, 1), and the
+hard tanh function is 2 * hard_sigmoid - 1</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.layers.HardActivation.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.HardActivation.initialize" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
