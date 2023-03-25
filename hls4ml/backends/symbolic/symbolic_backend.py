@@ -17,12 +17,17 @@ class SymbolicExpressionBackend(FPGABackend):
         ]
         vivado_types_flow = register_flow('specific_types', vivado_types, requires=None, backend=self.name)
 
+        validation_passes = [
+            'symbolicexpression:validate_user_lookup_table',
+        ]
+        validation_flow = register_flow('validation', validation_passes, requires=None, backend=self.name)
+
         template_flow = register_flow('apply_templates', self._get_layer_templates, requires=None, backend=self.name)
 
         writer_passes = ['make_stamp', 'symbolicexpression:write_hls']
         self._writer_flow = register_flow('write', writer_passes, requires=['vivado:ip'], backend=self.name)
 
-        ip_flow_requirements = [vivado_types_flow, template_flow]
+        ip_flow_requirements = [vivado_types_flow, validation_flow, template_flow]
         ip_flow_requirements = list(filter(None, ip_flow_requirements))
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
