@@ -625,10 +625,12 @@ class QuartusWriter(Writer):
 
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
+
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
                     newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+
             elif '// hls-fpga-machine learning instantiate inputs and outputs' in line:
                 newline = line
                 for inp in model_inputs:
@@ -755,10 +757,12 @@ class QuartusWriter(Writer):
 
             elif 'myproject' in line:
                 newline = line.replace('myproject', format(model.config.get_project_name()))
+
             elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
                     newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
+
             elif '// hls-fpga-machine-learning insert header' in line:
                 dtype = line.split('#', 1)[1].strip()
                 if io_type == 'io_stream':

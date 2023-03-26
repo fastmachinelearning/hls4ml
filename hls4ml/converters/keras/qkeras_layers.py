@@ -4,6 +4,7 @@ from hls4ml.converters.keras.convolution import parse_conv1d_layer, parse_conv2d
 from hls4ml.converters.keras.core import parse_batchnorm_layer, parse_dense_layer
 from hls4ml.converters.keras.qkeras import get_quantizer_from_config
 from hls4ml.converters.keras_to_hls import keras_handler, parse_default_keras_layer
+from hls4ml.model.types import FixedPrecisionType
 
 
 @keras_handler('QDense')
@@ -46,6 +47,7 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader)
         'quantized_tanh',
         'binary_tanh',
         'ternary_tanh',
+        'quantized_sigmoid',
         'quantized_bits',
         'binary',
         'ternary',
@@ -79,16 +81,32 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader)
     if activation_config['class_name'] not in supported_activations:
         raise Exception('Unsupported QKeras activation: {}'.format(activation_config['class_name']))
 
+    if activation_config['class_name'] == 'quantized_bits':
+        activation_config['class_name'] = 'linear'
+
     if activation_config['class_name'] == 'ternary_tanh':
         layer['class_name'] = 'TernaryTanh'
         layer['threshold'] = activation_config.get('config', {}).get('threshold', 0.33)
         if layer['threshold'] is None:
             layer['threshold'] = 0.33  # the default ternary tanh threshold for QKeras
+        layer['activation'] = 'ternary_tanh'
+    elif (
+        activation_config['class_name'] == 'quantized_sigmoid'
+        and not activation_config['config'].get('use_real_sigmoid', False)
+    ) or (
+        activation_config['class_name'] == 'quantized_tanh' and not activation_config['config'].get('use_real_tanh', False)
+    ):
+        layer['class_name'] = 'HardActivation'
+        layer['slope'] = 0.5  # the default values in QKeras
+        layer['shift'] = 0.5
+        # Quartus seems to have trouble if the width is 1.
+        layer['slope_prec'] = FixedPrecisionType(width=2, integer=0, signed=False)
+        layer['shift_prec'] = FixedPrecisionType(width=2, integer=0, signed=False)
+        layer['activation'] = activation_config['class_name'].replace('quantized_', 'hard_')
     else:
         layer['class_name'] = 'Activation'
-    if activation_config['class_name'] == 'quantized_bits':
-        activation_config['class_name'] = 'linear'
-    layer['activation'] = activation_config['class_name'].replace('quantized_', '')
+        layer['activation'] = activation_config['class_name'].replace('quantized_', '')
+
     layer['activation_quantizer'] = activation_config
     return layer, [shape for shape in input_shapes[0]]
 

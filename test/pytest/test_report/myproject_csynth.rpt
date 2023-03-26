@@ -1,0 +1,196 @@
+
+
+================================================================
+== Vivado HLS Report for 'myproject'
+================================================================
+* Date:           Sat Mar 18 22:59:37 2023
+
+* Version:        2020.1 (Build 2897737 on Wed May 27 20:21:37 MDT 2020)
+* Project:        myproject_prj
+* Solution:       solution1
+* Product family: zynq
+* Target device:  xc7z020-clg400-1
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing: 
+    * Summary: 
+    +--------+---------+----------+------------+
+    |  Clock |  Target | Estimated| Uncertainty|
+    +--------+---------+----------+------------+
+    |ap_clk  | 5.00 ns | 4.049 ns |   0.62 ns  |
+    +--------+---------+----------+------------+
+
++ Latency: 
+    * Summary: 
+    +---------+---------+-----------+-----------+-----+-----+----------+
+    |  Latency (cycles) |   Latency (absolute)  |  Interval | Pipeline |
+    |   min   |   max   |    min    |    max    | min | max |   Type   |
+    +---------+---------+-----------+-----------+-----+-----+----------+
+    |       10|       10| 50.000 ns | 50.000 ns |    8|    8| dataflow |
+    +---------+---------+-----------+-----------+-----+-----+----------+
+
+    + Detail: 
+        * Instance: 
+        +-----------------------------------------------------+----------------------------------------------------+---------+---------+-----------+-----------+-----+-----+----------+
+        |                                                     |                                                    |  Latency (cycles) |   Latency (absolute)  |  Interval | Pipeline |
+        |                       Instance                      |                       Module                       |   min   |   max   |    min    |    max    | min | max |   Type   |
+        +-----------------------------------------------------+----------------------------------------------------+---------+---------+-----------+-----------+-----+-----+----------+
+        |dense_array_array_ap_fixed_16_6_5_3_0_5u_config2_U0  |dense_array_array_ap_fixed_16_6_5_3_0_5u_config2_s  |        7|        7| 35.000 ns | 35.000 ns |    7|    7|   none   |
+        |relu_array_array_ap_fixed_5u_relu_config3_U0         |relu_array_array_ap_fixed_5u_relu_config3_s         |        2|        2| 10.000 ns | 10.000 ns |    1|    1| function |
+        +-----------------------------------------------------+----------------------------------------------------+---------+---------+-----------+-----------+-----+-----+----------+
+
+        * Loop: 
+        N/A
+
+
+
+================================================================
+== Utilization Estimates
+================================================================
+* Summary: 
++-----------------+---------+-------+--------+-------+-----+
+|       Name      | BRAM_18K| DSP48E|   FF   |  LUT  | URAM|
++-----------------+---------+-------+--------+-------+-----+
+|DSP              |        -|      -|       -|      -|    -|
+|Expression       |        -|      -|       0|      2|    -|
+|FIFO             |        0|      -|      25|    140|    -|
+|Instance         |        0|     73|    7944|   2390|    -|
+|Memory           |        -|      -|       -|      -|    -|
+|Multiplexer      |        -|      -|       -|      -|    -|
+|Register         |        -|      -|       -|      -|    -|
++-----------------+---------+-------+--------+-------+-----+
+|Total            |        0|     73|    7969|   2532|    0|
++-----------------+---------+-------+--------+-------+-----+
+|Available        |      280|    220|  106400|  53200|    0|
++-----------------+---------+-------+--------+-------+-----+
+|Utilization (%)  |        0|     33|       7|      4|    0|
++-----------------+---------+-------+--------+-------+-----+
+
++ Detail: 
+    * Instance: 
+    +-----------------------------------------------------+----------------------------------------------------+---------+-------+------+------+-----+
+    |                       Instance                      |                       Module                       | BRAM_18K| DSP48E|  FF  |  LUT | URAM|
+    +-----------------------------------------------------+----------------------------------------------------+---------+-------+------+------+-----+
+    |dense_array_array_ap_fixed_16_6_5_3_0_5u_config2_U0  |dense_array_array_ap_fixed_16_6_5_3_0_5u_config2_s  |        0|     73|  7860|  2134|    0|
+    |relu_array_array_ap_fixed_5u_relu_config3_U0         |relu_array_array_ap_fixed_5u_relu_config3_s         |        0|      0|    84|   256|    0|
+    +-----------------------------------------------------+----------------------------------------------------+---------+-------+------+------+-----+
+    |Total                                                |                                                    |        0|     73|  7944|  2390|    0|
+    +-----------------------------------------------------+----------------------------------------------------+---------+-------+------+------+-----+
+
+    * DSP48E: 
+    N/A
+
+    * Memory: 
+    N/A
+
+    * FIFO: 
+    +-------------------------+---------+---+----+-----+------+-----+---------+
+    |           Name          | BRAM_18K| FF| LUT| URAM| Depth| Bits| Size:D*B|
+    +-------------------------+---------+---+----+-----+------+-----+---------+
+    |layer2_out_V_data_0_V_U  |        0|  5|   0|    -|     1|   16|       16|
+    |layer2_out_V_data_1_V_U  |        0|  5|   0|    -|     1|   16|       16|
+    |layer2_out_V_data_2_V_U  |        0|  5|   0|    -|     1|   16|       16|
+    |layer2_out_V_data_3_V_U  |        0|  5|   0|    -|     1|   16|       16|
+    |layer2_out_V_data_4_V_U  |        0|  5|   0|    -|     1|   16|       16|
+    +-------------------------+---------+---+----+-----+------+-----+---------+
+    |Total                    |        0| 25|   0|    0|     5|   80|       80|
+    +-------------------------+---------+---+----+-----+------+-----+---------+
+
+    * Expression: 
+    +--------------+----------+-------+---+----+------------+------------+
+    | Variable Name| Operation| DSP48E| FF| LUT| Bitwidth P0| Bitwidth P1|
+    +--------------+----------+-------+---+----+------------+------------+
+    |ap_idle       |    and   |      0|  0|   2|           1|           1|
+    +--------------+----------+-------+---+----+------------+------------+
+    |Total         |          |      0|  0|   2|           1|           1|
+    +--------------+----------+-------+---+----+------------+------------+
+
+    * Multiplexer: 
+    N/A
+
+    * Register: 
+    N/A
+
+
+
+================================================================
+== Interface
+================================================================
+* Summary: 
++------------------------------+-----+-----+------------+-----------------------+--------------+
+|           RTL Ports          | Dir | Bits|  Protocol  |     Source Object     |    C Type    |
++------------------------------+-----+-----+------------+-----------------------+--------------+
+|fc1_input_V_data_0_V_TDATA    |  in |   16|    axis    |  fc1_input_V_data_0_V |    pointer   |
+|fc1_input_V_data_0_V_TVALID   |  in |    1|    axis    |  fc1_input_V_data_0_V |    pointer   |
+|fc1_input_V_data_0_V_TREADY   | out |    1|    axis    |  fc1_input_V_data_0_V |    pointer   |
+|fc1_input_V_data_1_V_TDATA    |  in |   16|    axis    |  fc1_input_V_data_1_V |    pointer   |
+|fc1_input_V_data_1_V_TVALID   |  in |    1|    axis    |  fc1_input_V_data_1_V |    pointer   |
+|fc1_input_V_data_1_V_TREADY   | out |    1|    axis    |  fc1_input_V_data_1_V |    pointer   |
+|fc1_input_V_data_2_V_TDATA    |  in |   16|    axis    |  fc1_input_V_data_2_V |    pointer   |
+|fc1_input_V_data_2_V_TVALID   |  in |    1|    axis    |  fc1_input_V_data_2_V |    pointer   |
+|fc1_input_V_data_2_V_TREADY   | out |    1|    axis    |  fc1_input_V_data_2_V |    pointer   |
+|fc1_input_V_data_3_V_TDATA    |  in |   16|    axis    |  fc1_input_V_data_3_V |    pointer   |
+|fc1_input_V_data_3_V_TVALID   |  in |    1|    axis    |  fc1_input_V_data_3_V |    pointer   |
+|fc1_input_V_data_3_V_TREADY   | out |    1|    axis    |  fc1_input_V_data_3_V |    pointer   |
+|fc1_input_V_data_4_V_TDATA    |  in |   16|    axis    |  fc1_input_V_data_4_V |    pointer   |
+|fc1_input_V_data_4_V_TVALID   |  in |    1|    axis    |  fc1_input_V_data_4_V |    pointer   |
+|fc1_input_V_data_4_V_TREADY   | out |    1|    axis    |  fc1_input_V_data_4_V |    pointer   |
+|fc1_input_V_data_5_V_TDATA    |  in |   16|    axis    |  fc1_input_V_data_5_V |    pointer   |
+|fc1_input_V_data_5_V_TVALID   |  in |    1|    axis    |  fc1_input_V_data_5_V |    pointer   |
+|fc1_input_V_data_5_V_TREADY   | out |    1|    axis    |  fc1_input_V_data_5_V |    pointer   |
+|fc1_input_V_data_6_V_TDATA    |  in |   16|    axis    |  fc1_input_V_data_6_V |    pointer   |
+|fc1_input_V_data_6_V_TVALID   |  in |    1|    axis    |  fc1_input_V_data_6_V |    pointer   |
+|fc1_input_V_data_6_V_TREADY   | out |    1|    axis    |  fc1_input_V_data_6_V |    pointer   |
+|fc1_input_V_data_7_V_TDATA    |  in |   16|    axis    |  fc1_input_V_data_7_V |    pointer   |
+|fc1_input_V_data_7_V_TVALID   |  in |    1|    axis    |  fc1_input_V_data_7_V |    pointer   |
+|fc1_input_V_data_7_V_TREADY   | out |    1|    axis    |  fc1_input_V_data_7_V |    pointer   |
+|fc1_input_V_data_8_V_TDATA    |  in |   16|    axis    |  fc1_input_V_data_8_V |    pointer   |
+|fc1_input_V_data_8_V_TVALID   |  in |    1|    axis    |  fc1_input_V_data_8_V |    pointer   |
+|fc1_input_V_data_8_V_TREADY   | out |    1|    axis    |  fc1_input_V_data_8_V |    pointer   |
+|fc1_input_V_data_9_V_TDATA    |  in |   16|    axis    |  fc1_input_V_data_9_V |    pointer   |
+|fc1_input_V_data_9_V_TVALID   |  in |    1|    axis    |  fc1_input_V_data_9_V |    pointer   |
+|fc1_input_V_data_9_V_TREADY   | out |    1|    axis    |  fc1_input_V_data_9_V |    pointer   |
+|fc1_input_V_data_10_V_TDATA   |  in |   16|    axis    | fc1_input_V_data_10_V |    pointer   |
+|fc1_input_V_data_10_V_TVALID  |  in |    1|    axis    | fc1_input_V_data_10_V |    pointer   |
+|fc1_input_V_data_10_V_TREADY  | out |    1|    axis    | fc1_input_V_data_10_V |    pointer   |
+|fc1_input_V_data_11_V_TDATA   |  in |   16|    axis    | fc1_input_V_data_11_V |    pointer   |
+|fc1_input_V_data_11_V_TVALID  |  in |    1|    axis    | fc1_input_V_data_11_V |    pointer   |
+|fc1_input_V_data_11_V_TREADY  | out |    1|    axis    | fc1_input_V_data_11_V |    pointer   |
+|fc1_input_V_data_12_V_TDATA   |  in |   16|    axis    | fc1_input_V_data_12_V |    pointer   |
+|fc1_input_V_data_12_V_TVALID  |  in |    1|    axis    | fc1_input_V_data_12_V |    pointer   |
+|fc1_input_V_data_12_V_TREADY  | out |    1|    axis    | fc1_input_V_data_12_V |    pointer   |
+|fc1_input_V_data_13_V_TDATA   |  in |   16|    axis    | fc1_input_V_data_13_V |    pointer   |
+|fc1_input_V_data_13_V_TVALID  |  in |    1|    axis    | fc1_input_V_data_13_V |    pointer   |
+|fc1_input_V_data_13_V_TREADY  | out |    1|    axis    | fc1_input_V_data_13_V |    pointer   |
+|fc1_input_V_data_14_V_TDATA   |  in |   16|    axis    | fc1_input_V_data_14_V |    pointer   |
+|fc1_input_V_data_14_V_TVALID  |  in |    1|    axis    | fc1_input_V_data_14_V |    pointer   |
+|fc1_input_V_data_14_V_TREADY  | out |    1|    axis    | fc1_input_V_data_14_V |    pointer   |
+|fc1_input_V_data_15_V_TDATA   |  in |   16|    axis    | fc1_input_V_data_15_V |    pointer   |
+|fc1_input_V_data_15_V_TVALID  |  in |    1|    axis    | fc1_input_V_data_15_V |    pointer   |
+|fc1_input_V_data_15_V_TREADY  | out |    1|    axis    | fc1_input_V_data_15_V |    pointer   |
+|layer3_out_V_data_0_V_TDATA   | out |   16|    axis    | layer3_out_V_data_0_V |    pointer   |
+|layer3_out_V_data_0_V_TVALID  | out |    1|    axis    | layer3_out_V_data_0_V |    pointer   |
+|layer3_out_V_data_0_V_TREADY  |  in |    1|    axis    | layer3_out_V_data_0_V |    pointer   |
+|layer3_out_V_data_1_V_TDATA   | out |   16|    axis    | layer3_out_V_data_1_V |    pointer   |
+|layer3_out_V_data_1_V_TVALID  | out |    1|    axis    | layer3_out_V_data_1_V |    pointer   |
+|layer3_out_V_data_1_V_TREADY  |  in |    1|    axis    | layer3_out_V_data_1_V |    pointer   |
+|layer3_out_V_data_2_V_TDATA   | out |   16|    axis    | layer3_out_V_data_2_V |    pointer   |
+|layer3_out_V_data_2_V_TVALID  | out |    1|    axis    | layer3_out_V_data_2_V |    pointer   |
+|layer3_out_V_data_2_V_TREADY  |  in |    1|    axis    | layer3_out_V_data_2_V |    pointer   |
+|layer3_out_V_data_3_V_TDATA   | out |   16|    axis    | layer3_out_V_data_3_V |    pointer   |
+|layer3_out_V_data_3_V_TVALID  | out |    1|    axis    | layer3_out_V_data_3_V |    pointer   |
+|layer3_out_V_data_3_V_TREADY  |  in |    1|    axis    | layer3_out_V_data_3_V |    pointer   |
+|layer3_out_V_data_4_V_TDATA   | out |   16|    axis    | layer3_out_V_data_4_V |    pointer   |
+|layer3_out_V_data_4_V_TVALID  | out |    1|    axis    | layer3_out_V_data_4_V |    pointer   |
+|layer3_out_V_data_4_V_TREADY  |  in |    1|    axis    | layer3_out_V_data_4_V |    pointer   |
+|ap_clk                        |  in |    1| ap_ctrl_hs |       myproject       | return value |
+|ap_rst_n                      |  in |    1| ap_ctrl_hs |       myproject       | return value |
+|ap_start                      |  in |    1| ap_ctrl_hs |       myproject       | return value |
+|ap_done                       | out |    1| ap_ctrl_hs |       myproject       | return value |
+|ap_ready                      | out |    1| ap_ctrl_hs |       myproject       | return value |
+|ap_idle                       | out |    1| ap_ctrl_hs |       myproject       | return value |
++------------------------------+-----+-----+------------+-----------------------+--------------+
+
