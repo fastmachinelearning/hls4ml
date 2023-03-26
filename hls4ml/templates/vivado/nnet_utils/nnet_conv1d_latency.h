@@ -104,6 +104,7 @@ void pointwise_conv_1d_latency_cl(
 
     // Parallel mode
     #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+    #pragma HLS ARRAY_PARTITION variable=weights complete dim=0
     #pragma HLS ARRAY_PARTITION variable=biases complete dim=0
 
     // Limit multipliers to control parallelization
@@ -114,6 +115,7 @@ void pointwise_conv_1d_latency_cl(
     ConvOut: for(int ii = 0; ii < CONFIG_T::out_width/CONFIG_T::reuse_factor; ii++) {
         ConvFilt: for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
             ConvChan: for(int cc = 0; cc < CONFIG_T::n_chan; cc++) {
+	        #pragma HLS UNROLL
                 int index_mult   = ii*CONFIG_T::n_filt*CONFIG_T::n_chan + ff*CONFIG_T::n_chan + cc;
                 int index_weight = cc*CONFIG_T::n_filt + ff;
                 int index_data   = (ii*CONFIG_T::stride_width-CONFIG_T::pad_left) * CONFIG_T::n_chan + cc;
@@ -132,6 +134,7 @@ void pointwise_conv_1d_latency_cl(
     // Initialize accumulator with input biases
     for(int ii = 0; ii < CONFIG_T::out_width/CONFIG_T::reuse_factor; ii++) {
         for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
+            #pragma HLS UNROLL
             acc[ii][ff]=biases[ff];
         }
     }
@@ -152,6 +155,7 @@ void pointwise_conv_1d_latency_cl(
     // Cast to "res_t" type
     for(int ii = 0; ii < CONFIG_T::out_width/CONFIG_T::reuse_factor; ii++) {
         for(int ff = 0; ff < CONFIG_T::n_filt; ff++) {
+            #pragma HLS UNROLL
             res[ii * CONFIG_T::n_filt + ff] = (res_T)(acc[ii][ff]);
         }
     }
@@ -169,7 +173,9 @@ template<class data_T, class res_T, typename CONFIG_T> void pointwise_conv_1d_la
     res_T res_tmp[CONFIG_T::reuse_factor][CONFIG_T::out_width*CONFIG_T::n_filt/CONFIG_T::reuse_factor];
     #pragma HLS ARRAY_PARTITION variable=res_tmp complete dim=0
     
+    RFInputLoop:
     for(int jj = 0; jj < CONFIG_T::reuse_factor; jj++) {
+        InnerInputLoop:
         for(int ii = 0; ii < CONFIG_T::in_width*CONFIG_T::n_chan/CONFIG_T::reuse_factor; ii++) {
             #pragma HLS UNROLL
             data_tmp[jj][ii] = data[jj*CONFIG_T::in_width*CONFIG_T::n_chan/CONFIG_T::reuse_factor+ii];
@@ -297,7 +303,9 @@ template<class data_T, class res_T, typename CONFIG_T> void pointwise_conv_1d_la
     if (CONFIG_T::reuse_factor > 118) pointwise_conv_1d_latency_cl<data_T, res_T, CONFIG_T>(data_tmp[118], res_tmp[118], weights, biases);
     if (CONFIG_T::reuse_factor > 119) pointwise_conv_1d_latency_cl<data_T, res_T, CONFIG_T>(data_tmp[119], res_tmp[119], weights, biases);
  
+    RFOutputLoop:
     for(int jj = 0; jj < CONFIG_T::reuse_factor; jj++) {
+        InnerOutputLoop:
         for(int ii = 0; ii < CONFIG_T::out_width * CONFIG_T::n_filt/CONFIG_T::reuse_factor; ii++) {
             #pragma HLS UNROLL
             res[jj*CONFIG_T::out_width * CONFIG_T::n_filt/CONFIG_T::reuse_factor + ii] = res_tmp[jj][ii];
