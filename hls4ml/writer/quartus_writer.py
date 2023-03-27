@@ -100,7 +100,10 @@ class QuartusWriter(Writer):
                 f'hls_bankwidth({bwidth})\nhls_numbanks({nbanks})\nhls_max_replicates(1)\nhls_memory_impl("BLOCK_RAM")\n'
             )
         weight_header += '#endif\n'
-        weight_header += 'static const '
+        if var.storage.lower() == 'bram':
+            weight_header += 'static '
+        else:
+            weight_header += 'static const '
         h_file.write(weight_header + var.definition_cpp() + " = {")
 
         # fill c++ array.
@@ -136,9 +139,11 @@ class QuartusWriter(Writer):
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
         io_type = model.config.get_config_value('IOType')
         indent = '   '
+        brams_str = ', \n'.join([indent + b.definition_cpp(as_reference=False) for b in model_brams])
 
         for line in f.readlines():
             # Add headers to weights and biases
@@ -166,12 +171,16 @@ class QuartusWriter(Writer):
                     for inp in model_inputs:
                         newline += indent + f'stream_in<{inp.type.name}> &{inp.name}_stream,\n'
                     for out in model_outputs:
-                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream\n'
-                    newline += ') {\n'
+                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream'
+                    if model_brams:
+                        newline += ',\n' + brams_str
+                    newline += '\n) {\n'
                 if io_type == 'io_parallel':
                     newline = f'output_data {project_name}(\n'
-                    newline += indent + 'input_data inputs\n'
-                    newline += ') {\n'
+                    newline += indent + 'input_data inputs'
+                    if model_brams:
+                        newline += ',\n' + brams_str
+                    newline += '\n) {\n'
 
             # Instantiate HLS top-level function, to be used during HLS synthesis
             elif '// hls-fpga-machine-learning instantiate HLS top-level' in line:
@@ -181,12 +190,16 @@ class QuartusWriter(Writer):
                     for inp in model_inputs:
                         newline += indent + f'stream_in<{inp.type.name}> &{inp.name}_stream,\n'
                     for out in model_outputs:
-                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream\n'
-                    newline += ') {\n'
+                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream'
+                    if model_brams:
+                        newline += ',\n' + brams_str
+                    newline += '\n) {\n'
                 if io_type == 'io_parallel':
                     newline += f'component output_data {project_name}(\n'
-                    newline += indent + 'input_data inputs\n'
-                    newline += ') {\n'
+                    newline += indent + 'input_data inputs'
+                    if model_brams:
+                        newline += ',\n' + brams_str
+                    newline += '\n) {\n'
 
             # Insert HLS pragmas such as maximum frequency, initiation interval etc.
             elif '// hls-fpga-machine-learning insert cpragmas' in line:
@@ -219,7 +232,8 @@ class QuartusWriter(Writer):
                 newline = line
                 for layer in model.get_layers():
                     for w in layer.get_weights():
-                        newline += f'#include "weights/{w.name}.h"\n'
+                        if w not in model_brams:
+                            newline += f'#include "weights/{w.name}.h"\n'
 
             # Insert test weights
             elif '// hls-fpga-machine-learning insert test weights' in line:
@@ -292,10 +306,12 @@ class QuartusWriter(Writer):
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
         # io_parallel and io_stream instantiate the top-level function differently
         io_type = model.config.get_config_value('IOType')
         indent = '    '
+        brams_str = ', \n'.join([indent + b.definition_cpp(as_reference=False) for b in model_brams])
 
         for line in f.readlines():
             if 'MYPROJECT' in line:
@@ -313,13 +329,17 @@ class QuartusWriter(Writer):
                     for inp in model_inputs:
                         newline += indent + f'stream_in<{inp.type.name}> &{inp.name}_stream,\n'
                     for out in model_outputs:
-                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream\n'
-                    newline += ');\n'
+                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream'
+                    if model_brams:
+                        newline += ',\n' + brams_str
+                    newline += '\n);\n'
                 # In io_parallel, a struct is returned; see myproject.h & myproject.cpp for more details
                 else:
                     newline += f'output_data {project_name}(\n'
-                    newline += indent + 'input_data inputs\n'
-                    newline += ');\n'
+                    newline += indent + 'input_data inputs'
+                    if model_brams:
+                        newline += ',\n' + brams_str
+                    newline += '\n);\n'
 
             # Similar to GCC instantiation, but with the keyword 'component'
             elif '// hls-fpga-machine-learning instantiate HLS top-level' in line:
@@ -329,12 +349,16 @@ class QuartusWriter(Writer):
                     for inp in model_inputs:
                         newline += indent + f'stream_in<{inp.type.name}> &{inp.name}_stream,\n'
                     for out in model_outputs:
-                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream\n'
-                    newline += ');\n'
+                        newline += indent + f'stream_out<{out.type.name}> &{out.name}_stream'
+                    if model_brams:
+                        newline += ',\n' + brams_str
+                    newline += '\n);\n'
                 else:
                     newline += f'component output_data {project_name}(\n'
-                    newline += indent + 'input_data inputs\n'
-                    newline += ');\n'
+                    newline += indent + 'input_data inputs'
+                    if model_brams:
+                        newline += ',\n' + brams_str
+                    newline += '\n);\n'
 
             elif '// hls-fpga-machine-learning insert cpragmas' in line:
                 newline = line
@@ -482,11 +506,17 @@ class QuartusWriter(Writer):
         f = open(os.path.join(filedir, '../templates/quartus/myproject_test_parallel.cpp'))
         fout = open(f'{model.config.get_output_dir()}/{model.config.get_project_name()}_test.cpp', 'w')
 
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
+
         for line in f.readlines():
             indent = ' ' * (len(line) - len(line.lstrip(' ')))
 
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
+            elif '// hls-fpga-machine-learning insert bram' in line:
+                newline = line
+                for bram in model_brams:
+                    newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
             elif '// hls-fpga-machine-learning insert data' in line:
                 newline = line
                 newline += '      std::vector<float>::const_iterator in_begin = in.cbegin();\n'
@@ -508,9 +538,13 @@ class QuartusWriter(Writer):
 
             elif '// hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
-
                 newline += indent + 'for(int i = 0; i < num_iterations; i++) {\n'
-                newline += indent + f'  ihc_hls_enqueue(&outputs[i], {model.config.get_project_name()}, inputs[i]);\n'
+                newline += indent + f'  ihc_hls_enqueue(&outputs[i], {model.config.get_project_name()}, inputs[i]'
+                if model_brams:
+                    bram_vars = ','.join([b.name for b in model_brams])
+                    newline += f', {bram_vars});\n'
+                else:
+                    newline += ');\n'
                 newline += indent + '}\n'
             elif 'hls-fpga-machine-learning insert run' in line:
                 newline = line
@@ -584,11 +618,18 @@ class QuartusWriter(Writer):
         f = open(os.path.join(filedir, '../templates/quartus/myproject_test_stream.cpp'))
         fout = open(f'{model.config.get_output_dir()}/{model.config.get_project_name()}_test.cpp', 'w')
 
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
+
         for line in f.readlines():
             indent = ' ' * (len(line) - len(line.lstrip(' ')))
 
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
+
+            elif '// hls-fpga-machine-learning insert bram' in line:
+                newline = line
+                for bram in model_brams:
+                    newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
 
             elif '// hls-fpga-machine learning instantiate inputs and outputs' in line:
                 newline = line
@@ -631,9 +672,13 @@ class QuartusWriter(Writer):
                 input_params = ', '.join([f'{i.name}_input' for i in model_inputs])
                 output_params = ', '.join([f'{o.name}_output' for o in model_outputs])
                 newline += (
-                    indent
-                    + f'ihc_hls_enqueue_noret(&{model.config.get_project_name()}, {input_params}, {output_params}); \n'
+                    indent + f'ihc_hls_enqueue_noret(&{model.config.get_project_name()}, {input_params}, {output_params}'
                 )
+                if model_brams:
+                    bram_vars = ','.join([b.name for b in model_brams])
+                    newline += f', {bram_vars});\n'
+                else:
+                    newline += ');\n'
 
             elif 'hls-fpga-machine-learning insert run' in line:
                 newline = line
@@ -700,6 +745,7 @@ class QuartusWriter(Writer):
 
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
         io_type = model.config.get_config_value('IOType')
         indent = '    '
@@ -711,6 +757,11 @@ class QuartusWriter(Writer):
 
             elif 'myproject' in line:
                 newline = line.replace('myproject', format(model.config.get_project_name()))
+
+            elif '// hls-fpga-machine-learning insert bram' in line:
+                newline = line
+                for bram in model_brams:
+                    newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
 
             elif '// hls-fpga-machine-learning insert header' in line:
                 dtype = line.split('#', 1)[1].strip()
@@ -731,6 +782,10 @@ class QuartusWriter(Writer):
                 newline += indent + outsize_str + '\n'
 
             elif '// hls-fpga-machine-learning insert wrapper' in line:
+                bram_params = ''
+                if model_brams:
+                    bram_params = ', ' + ','.join([b.name for b in model_brams])
+
                 dtype = line.split('#', 1)[1].strip()
                 if io_type == 'io_stream':
                     newline = ''
@@ -750,7 +805,9 @@ class QuartusWriter(Writer):
                     input_params = ', '.join([f'{i.name}_input' for i in model_inputs])
                     output_params = ', '.join([f'{o.name}_output' for o in model_outputs])
 
-                    top_level = indent + f'{model.config.get_project_name()}({input_params}, {output_params});\n'
+                    top_level = (
+                        indent + f'{model.config.get_project_name()}({input_params}, {output_params}{bram_params});\n'
+                    )
                     newline += top_level
                     newline += '\n'
 
@@ -774,7 +831,7 @@ class QuartusWriter(Writer):
                     newline += indent + 'output_data outputs_ap;\n'
 
                     # Execute top-level function
-                    top_level = indent + f'outputs_ap = {model.config.get_project_name()}(inputs_ap);\n'
+                    top_level = indent + f'outputs_ap = {model.config.get_project_name()}(inputs_ap{bram_params});\n'
                     newline += top_level
                     newline += '\n'
 
