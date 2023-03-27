@@ -175,6 +175,7 @@ template<class data_T, class res_T, typename CONFIG_T> void pointwise_conv_1d_la
     
     RFInputLoop:
     for(int jj = 0; jj < CONFIG_T::reuse_factor; jj++) {
+        #pragma HLS UNROLL
         InnerInputLoop:
         for(int ii = 0; ii < CONFIG_T::in_width*CONFIG_T::n_chan/CONFIG_T::reuse_factor; ii++) {
             #pragma HLS UNROLL
@@ -305,6 +306,7 @@ template<class data_T, class res_T, typename CONFIG_T> void pointwise_conv_1d_la
  
     RFOutputLoop:
     for(int jj = 0; jj < CONFIG_T::reuse_factor; jj++) {
+        #pragma HLS UNROLL
         InnerOutputLoop:
         for(int ii = 0; ii < CONFIG_T::out_width * CONFIG_T::n_filt/CONFIG_T::reuse_factor; ii++) {
             #pragma HLS UNROLL
