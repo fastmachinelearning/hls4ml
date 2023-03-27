@@ -4,14 +4,6 @@ hls4ml.backends.vivado.passes package
 Submodules
 ----------
 
-hls4ml.backends.vivado.passes.bram\_weights module
---------------------------------------------------
-
-.. automodule:: hls4ml.backends.vivado.passes.bram_weights
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 hls4ml.backends.vivado.passes.conv\_same\_pad module
 ----------------------------------------------------
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; hls4ml 0.5.1.dev646+g668fa69f documentation</title>
+  <title>Index &mdash; hls4ml 0.5.1.dev647+g48bcbbf9 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -719,6 +719,13 @@
 </li>
       </ul></li>
       <li>
+    hls4ml.backends.fpga.passes.bram_weights
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.bram_weights">module</a>
+</li>
+      </ul></li>
+      <li>
     hls4ml.backends.fpga.passes.clone
 
       <ul>
@@ -772,13 +779,6 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes">module</a>
-</li>
-      </ul></li>
-      <li>
-    hls4ml.backends.vivado.passes.bram_weights
-
-      <ul>
-        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.bram_weights">module</a>
 </li>
       </ul></li>
       <li>
@@ -1187,6 +1187,8 @@
       <ul>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.bn_quant.QuantizeDenseOutput.match">(hls4ml.backends.fpga.passes.bn_quant.QuantizeDenseOutput method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.bram_weights.RegisterBramWeights.match">(hls4ml.backends.fpga.passes.bram_weights.RegisterBramWeights method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.clone.CloneOutput.match">(hls4ml.backends.fpga.passes.clone.CloneOutput method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.codegen.GenerateConvIm2col.match">(hls4ml.backends.fpga.passes.codegen.GenerateConvIm2col method)</a>
@@ -1196,8 +1198,6 @@
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.remove_softmax.SkipSoftmax.match">(hls4ml.backends.fpga.passes.remove_softmax.SkipSoftmax method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.template.Template.match">(hls4ml.backends.template.Template method)</a>
-</li>
-        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.bram_weights.RegisterBramWeights.match">(hls4ml.backends.vivado.passes.bram_weights.RegisterBramWeights method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.match">(hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D method)</a>
 </li>
@@ -1266,6 +1266,8 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.bn_quant">hls4ml.backends.fpga.passes.bn_quant</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.bram_weights">hls4ml.backends.fpga.passes.bram_weights</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.clone">hls4ml.backends.fpga.passes.clone</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.codegen">hls4ml.backends.fpga.passes.codegen</a>
@@ -1281,8 +1283,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado.html#module-hls4ml.backends.vivado">hls4ml.backends.vivado</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes">hls4ml.backends.vivado.passes</a>
-</li>
-        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.bram_weights">hls4ml.backends.vivado.passes.bram_weights</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.conv_same_pad">hls4ml.backends.vivado.passes.conv_same_pad</a>
 </li>
@@ -1539,7 +1539,7 @@
 </li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.writers.register_writer">register_writer() (in module hls4ml.writer.writers)</a>
 </li>
-      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.bram_weights.RegisterBramWeights">RegisterBramWeights (class in hls4ml.backends.vivado.passes.bram_weights)</a>
+      <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.bram_weights.RegisterBramWeights">RegisterBramWeights (class in hls4ml.backends.fpga.passes.bram_weights)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -1664,6 +1664,8 @@
       <ul>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.bn_quant.QuantizeDenseOutput.transform">(hls4ml.backends.fpga.passes.bn_quant.QuantizeDenseOutput method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.bram_weights.RegisterBramWeights.transform">(hls4ml.backends.fpga.passes.bram_weights.RegisterBramWeights method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.clone.CloneOutput.transform">(hls4ml.backends.fpga.passes.clone.CloneOutput method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.codegen.GenerateConvIm2col.transform">(hls4ml.backends.fpga.passes.codegen.GenerateConvIm2col method)</a>
@@ -1675,8 +1677,6 @@
         <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate.transform">(hls4ml.backends.template.FunctionCallTemplate method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.template.Template.transform">(hls4ml.backends.template.Template method)</a>
-</li>
-        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.bram_weights.RegisterBramWeights.transform">(hls4ml.backends.vivado.passes.bram_weights.RegisterBramWeights method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.transform">(hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D method)</a>
 </li>
