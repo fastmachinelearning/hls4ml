@@ -134,70 +134,96 @@ def test_conv1d(padds, backend, io_type):
     X_input = np.random.rand(1, n_in, size_in)
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
-    config = config_from_pytorch_model(model)
+    if io_type == 'io_stream':
+        X_input = np.ascontiguousarray(X_input.transpose(0, 2, 1))
+        config = config_from_pytorch_model(model, inputs_channel_last=True, transpose_outputs=False)
+    else:
+        config = config_from_pytorch_model(model, inputs_channel_last=False, transpose_outputs=True)
+
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_conv1d_{padds}_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(
         model, (None, n_in, size_in), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
     )
     hls_model.compile()
-    if padds == 0:
-        hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_out, size_in - 2))
-    else:
-        hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_out, size_in))
-    # results are not very good at the moment
-    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.20, atol=0)
 
-    if not (backend == 'Vivado' and io_type == 'io_stream' and padds == 1):
+    from torch.fx import symbolic_trace
+
+    traced_model = symbolic_trace(model)
+    nNodes = 0
+    convNode = None
+    reluNode = None
+    for _node in traced_model.graph.nodes:
+        nNodes += 1
+        if nNodes == 2:
+            convNode = _node
+        if nNodes == 3:
+            reluNode = _node
+
+    if io_type == 'io_stream':
         # Vivado inserts and additional layer for 'same' padding in io_stream
-
-        from torch.fx import symbolic_trace
-
-        traced_model = symbolic_trace(model)
-        nNodes = 0
-        convNode = None
-        reluNode = None
-        for _node in traced_model.graph.nodes:
-            nNodes += 1
-            if nNodes == 2:
-                convNode = _node
-            if nNodes == 3:
-                reluNode = _node
-        assert nNodes == len(hls_model.get_layers())
-
-        children = {c[0]: c[1] for c in model.named_children()}
-        class_object_conv = children[convNode.target]
-        class_object_relu = children[reluNode.target]
-        assert list(hls_model.get_layers())[2].attributes['name'] == 'layer' + convNode.name
-        assert list(hls_model.get_layers())[2].attributes['class_name'] == 'Conv1D'
-        assert list(hls_model.get_layers())[3].attributes['activation'] == class_object_relu.__class__.__name__
-        assert list(hls_model.get_layers())[2].attributes["in_width"] == size_in
-        assert list(hls_model.get_layers())[2].attributes['filt_width'] == class_object_conv.kernel_size[0]
-        assert list(hls_model.get_layers())[2].attributes['n_chan'] == class_object_conv.in_channels
-        assert list(hls_model.get_layers())[2].attributes['n_filt'] == class_object_conv.out_channels
-        assert list(hls_model.get_layers())[2].attributes['stride_width'] == class_object_conv.stride[0]
-        if list(hls_model.get_layers())[2].attributes['padding'] == 'valid':
-            padding = 0
+        if backend == "Vivado" and padds == 1:
+            assert nNodes == len(hls_model.get_layers())
         else:
-            padding = 1
-        assert padding == class_object_conv.padding[0]
-        assert list(hls_model.get_layers())[2].attributes['data_format'] == 'channels_last'
-        out_width = int(
-            (size_in + 2 * padds - class_object_conv.dilation[0] * (class_object_conv.kernel_size[0] - 1) - 1)
-            / class_object_conv.stride[0]
-            + 1
-        )  # following https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
-        assert list(hls_model.get_layers())[2].attributes["out_width"] == out_width
+            assert nNodes - 1 == len(hls_model.get_layers())
+    else:
+        assert nNodes + 1 == len(hls_model.get_layers())
 
-        pad_along_width = max((out_width - 1) * class_object_conv.stride[0] + class_object_conv.kernel_size[0] - size_in, 0)
-        pad_left = pad_along_width // 2
-        pad_right = pad_along_width - pad_left
+    children = {c[0]: c[1] for c in model.named_children()}
+    class_object_conv = children[convNode.target]
+    class_object_relu = children[reluNode.target]
 
-        if padds == 1:
-            assert list(hls_model.get_layers())[2].attributes['pad_left'] == pad_left
-            assert list(hls_model.get_layers())[2].attributes['pad_right'] == pad_right
-        elif padds == 0:
-            assert list(hls_model.get_layers())[2].attributes['pad_left'] == 0
-            assert list(hls_model.get_layers())[2].attributes['pad_right'] == 0
+    out_width = int(
+        (size_in + 2 * padds - class_object_conv.dilation[0] * (class_object_conv.kernel_size[0] - 1) - 1)
+        / class_object_conv.stride[0]
+        + 1
+    )  # following https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
+
+    if io_type == 'io_stream':
+        hls_prediction = np.transpose(np.reshape(hls_model.predict(X_input), (1, out_width, n_out)), (0, 2, 1))
+    else:
+        hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_out, out_width))
+    # results are not very good at the moment
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
+
+    # if not (backend == 'Vivado' and io_type == 'io_stream' and padds == 1):
+    conv_index = 2
+    act_index = 3
+    if io_type == "io_stream" and not (backend == "Vivado" and padds == 1):
+        conv_index = 1
+        act_index = 2
+    assert list(hls_model.get_layers())[conv_index].attributes['name'] == 'layer' + convNode.name
+    assert list(hls_model.get_layers())[conv_index].attributes['class_name'] == 'Conv1D'
+    assert list(hls_model.get_layers())[act_index].attributes['activation'] == class_object_relu.__class__.__name__
+    if io_type == "io_stream" and backend == "Vivado" and padds == 1:
+        assert list(hls_model.get_layers())[conv_index].attributes["in_width"] == size_in + 2
+    else:
+        assert list(hls_model.get_layers())[conv_index].attributes["in_width"] == size_in
+    assert list(hls_model.get_layers())[conv_index].attributes['filt_width'] == class_object_conv.kernel_size[0]
+    assert list(hls_model.get_layers())[conv_index].attributes['n_chan'] == class_object_conv.in_channels
+    assert list(hls_model.get_layers())[conv_index].attributes['n_filt'] == class_object_conv.out_channels
+    assert list(hls_model.get_layers())[conv_index].attributes['stride_width'] == class_object_conv.stride[0]
+    if list(hls_model.get_layers())[conv_index].attributes['padding'] == 'valid':
+        padding = 0
+    else:
+        padding = 1
+    if io_type == "io_stream" and backend == "Vivado" and padds == 1:
+        padding = 1
+        padds = 0
+
+    assert padding == class_object_conv.padding[0]
+    assert list(hls_model.get_layers())[conv_index].attributes['data_format'] == 'channels_last'
+    assert list(hls_model.get_layers())[conv_index].attributes["out_width"] == out_width
+
+    pad_along_width = max((out_width - 1) * class_object_conv.stride[0] + class_object_conv.kernel_size[0] - size_in, 0)
+    pad_left = pad_along_width // 2
+    pad_right = pad_along_width - pad_left
+
+    if padds == 1:
+        assert list(hls_model.get_layers())[conv_index].attributes['pad_left'] == pad_left
+        assert list(hls_model.get_layers())[conv_index].attributes['pad_right'] == pad_right
+    elif padds == 0:
+        assert list(hls_model.get_layers())[conv_index].attributes['pad_left'] == 0
+        assert list(hls_model.get_layers())[conv_index].attributes['pad_right'] == 0
 
 
 padds_options = [0, 1]
