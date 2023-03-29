@@ -1,0 +1,31 @@
+Pyconfig:
+  layername: test
+  outputshape: 2
+  attrlist:
+    Attribute:
+    - n_filt
+    - epsilon
+    - ops
+    WeightAttribute:
+    - gamma
+    - beta
+    TypeAttribute:
+    - gamma
+    - beta
+  genattrtypes:
+  - static const unsigned
+  - float
+  - ap_fixed<32,10>
+  otherargs:
+  - gamma
+  - beta
+  - epsilon
+  attrdef:  | 
+    if len(input_shapes[0]) == 2:
+        layer['n_filt'] = -1
+    elif len(input_shapes[0]) == 3:
+        layer['n_filt'] = input_shapes[0][2]
+    elif len(input_shapes[0]) == 4:
+        layer['n_filt'] = input_shapes[0][3]
+Cconfig:
+  - asd
