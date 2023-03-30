@@ -1,3 +1,5 @@
+import typing
+
 import numpy as np
 
 from hls4ml.model.attributes import (
@@ -17,7 +19,6 @@ from hls4ml.model.types import (
     ExponentPrecisionType,
     ExponentWeightVariable,
     FixedPrecisionType,
-    InplaceVariable,
     IntegerPrecisionType,
     NamedType,
     TensorVariable,
@@ -180,14 +181,16 @@ class Layer:
             self.set_attr('accum_t', accum_t)
 
     def get_input_node(self, input_name=None):
-        if input_name is not None:
-            nodes = [node for node in self.model.graph.values() if input_name in node.outputs]
-            if len(nodes) == 0:
-                return None
+        if input_name is None:
+            if len(self.inputs) > 0:
+                input_name = self.inputs[0]
             else:
-                return nodes[0]
+                return None
+        nodes = [node for node in self.model.graph.values() if input_name in node.outputs]
+        if len(nodes) == 0:
+            return None
         else:
-            return self.model.graph.get(self.inputs[0])
+            return nodes[0]
 
     def get_input_variable(self, input_name=None):
         if input_name is not None:
@@ -373,17 +376,43 @@ class Input(Layer):
 
 
 class Reshape(Layer):
+    _expected_attributes = [
+        Attribute('target_shape', value_type=typing.Sequence),
+    ]
+
     def initialize(self):
-        shape = self.attributes['target_shape']
-        if shape[0] is None:
-            shape = shape[1:]
-        dims = [f'N_SIZE_{i}_{self.index}' for i in range(1, len(shape) + 1)]
+        input_shape = self.get_input_variable(self.inputs[0]).shape
+        target_shape = self.get_attr('target_shape')
+        if target_shape is None:
+            # need to get it from the input
+            shape_node = self.get_input_node(self.inputs[1])
+            # for QONNX, remove batch dimension
+            if shape_node:
+                target_shape = shape_node.value[1:]
+            else:
+                raise RuntimeError("Reshape for ONNX requires the target shape to be a second input.")
 
-        out_name = self.outputs[0]
-        proxy = self.get_input_variable()
-        out = InplaceVariable(shape, dims, proxy)
+        # remove Nones -- is this ever triggered?
+        if target_shape[0] is None:
+            target_shape = target_shape[1:]
 
-        self.set_attr(out_name, out)
+        # take care of -1 shapes
+        shape = self._infer_output_shape(input_shape, target_shape)
+
+        # update the target shape with chnges from above
+        self.set_attr('target_shape', shape)
+
+        dims = [f'N_SIZE_{i}_{self.index}' for i in range(len(shape))]
+
+        self.add_output_variable(shape, dims)
+
+    def _infer_output_shape(self, input_shape, target_shape):
+        """Expand the shape that potentially includes -1 as one of the dimensions."""
+        if -1 in target_shape:  # Need to infer shape for -1
+            dummy_x = np.ones(input_shape)
+            dummy_y = np.reshape(dummy_x, target_shape)
+            return list(dummy_y.shape)
+        return target_shape
 
 
 class Dense(Layer):

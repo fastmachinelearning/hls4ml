@@ -1,15 +1,24 @@
-from enum import Enum
 import re
+from enum import Enum
+
 import numpy as np
 
+# region Quantizer definition
 
-class Quantizer(object):
+
+class Quantizer:
     def __init__(self, bits, hls_type):
         self.bits = bits
         self.hls_type = hls_type
 
     def __call__(self, data):
         raise NotImplementedError
+
+
+# endregion
+
+# region Precision types
+
 
 class RoundingMode(Enum):
     TRN = 1
@@ -30,6 +39,7 @@ class RoundingMode(Enum):
 
         return cls[mode]
 
+
 class SaturationMode(Enum):
     WRAP = 1
     SAT = 2
@@ -46,10 +56,12 @@ class SaturationMode(Enum):
 
         return cls[mode]
 
-class PrecisionType(object):
+
+class PrecisionType:
     def __init__(self, width, signed):
         self.width = width
         self.signed = signed
+
 
 class IntegerPrecisionType(PrecisionType):
     def __init__(self, width=16, signed=True):
@@ -69,11 +81,12 @@ class IntegerPrecisionType(PrecisionType):
         eq = eq and self.fractional == other.fractional
         return eq
 
+
 class FixedPrecisionType(PrecisionType):
     def __init__(self, width=16, integer=6, signed=True, rounding_mode=None, saturation_mode=None, saturation_bits=None):
         super().__init__(width=width, signed=signed)
         self.integer = integer
-        self.fractional = width-integer
+        self.fractional = width - integer
         self.rounding_mode = rounding_mode
         self.saturation_mode = saturation_mode
         self.saturation_bits = saturation_bits
@@ -116,19 +129,25 @@ class FixedPrecisionType(PrecisionType):
         eq = eq and self.saturation_bits == other.saturation_bits
         return eq
 
+
 class XnorPrecisionType(IntegerPrecisionType):
     '''
     Convenience class to differentiate 'regular' integers from BNN Xnor ones
     '''
+
     def __init__(self):
         super().__init__(width=1, signed=False)
 
+
 class ExponentPrecisionType(IntegerPrecisionType):
     '''
-    Convenience class to differentiate 'regular' integers from those which represent exponents, for QKeras po2 quantizers, for example.
+    Convenience class to differentiate 'regular' integers from those which represent exponents,
+    for QKeras po2 quantizers, for example.
     '''
+
     def __init__(self, width=16, signed=True):
         super().__init__(width=width, signed=signed)
+
 
 def find_minimum_width(data, signed=True):
     """
@@ -136,14 +155,14 @@ def find_minimum_width(data, signed=True):
     without saturation / overflow
     """
     maxdata = np.amax(np.abs(data))
-    if maxdata == 0.:
+    if maxdata == 0.0:
         # fringe case (amax(abs(data)) == 0 -> data is uniformly zero)
         return 1
 
     log2max = np.log2(maxdata)
 
     iwidth = max(0, int(np.ceil(log2max)))
-    if iwidth == int(np.floor(log2max)): # is a power-of-two integer -> need one extra bit
+    if iwidth == int(np.floor(log2max)):  # is a power-of-two integer -> need one extra bit
         iwidth += 1
 
     if signed:
@@ -152,28 +171,37 @@ def find_minimum_width(data, signed=True):
 
     return iwidth
 
-class NamedType(object):
+
+# endregion
+
+# region Data type definitions
+
+
+class NamedType:
     def __init__(self, name, precision, **kwargs):
         self.name = name.format(**kwargs)
         self.precision = precision
+
 
 class CompressedType(NamedType):
     def __init__(self, name, precision, index_precision, **kwargs):
         if not name.startswith('compressed_'):
             name = 'compressed_' + name
-        super(CompressedType, self).__init__(name, precision, **kwargs)
+        super().__init__(name, precision, **kwargs)
         self.index_precision = index_precision
+
 
 class ExponentType(NamedType):
     def __init__(self, name, precision, **kwargs):
         if not name.startswith('exponent_'):
             name = 'exponent_' + name
-        super(ExponentType, self).__init__(name, precision, **kwargs)
+        super().__init__(name, precision, **kwargs)
         self.sign = XnorPrecisionType()
+
 
 class PackedType(NamedType):
     def __init__(self, name, precision, n_elem, n_pack, **kwargs):
-        super(PackedType, self).__init__(name, precision, **kwargs)
+        super().__init__(name, precision, **kwargs)
         self.n_elem = n_elem
         if n_pack < 0:
             self.n_pack = -n_pack
@@ -182,14 +210,21 @@ class PackedType(NamedType):
             self.n_pack = n_pack
             self.unpack = False
 
-class Variable(object):
+
+# endregion
+
+# region Variables
+
+
+class Variable:
     def __init__(self, var_name, atype, **kwargs):
         self.name = var_name.format(**kwargs)
         self.type = atype
 
+
 class TensorVariable(Variable):
     def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, **kwargs):
-        super(TensorVariable, self).__init__(var_name, NamedType(type_name, precision, **kwargs), **kwargs)
+        super().__init__(var_name, NamedType(type_name, precision, **kwargs), **kwargs)
         self.shape = shape
         self.dim_names = dim_names
 
@@ -203,29 +238,26 @@ class TensorVariable(Variable):
         return nelem
 
     def size_cpp(self):
-        #TODO get rid of size_cpp() (and dim_names)
+        # TODO get rid of size_cpp() (and dim_names)
         return '*'.join([str(k) for k in self.dim_names])
 
-class InplaceVariable(Variable):
-    def __init__(self, shape, dim_names, proxy):
-        self.shape = shape
-        self.dim_names = dim_names
-        self.type = proxy.type
-        self.name = proxy.name
-        self.size = proxy.size
 
-    def get_shape(self):
-        return zip(self.dim_names, self.shape)
+class InplaceTensorVariable(TensorVariable):
+    '''A TensorVariable that is just a link to another'''
 
-    def size_cpp(self):
-        return '*'.join([str(k) for k in self.dim_names])
+    def __init__(self, tv, input_var):
+        '''
+        Always created with a passed in TensorVariable tv
+        and the input_var variable it should link to.
+        '''
+        self.__dict__.update(tv.__dict__)
+        self.type = input_var.type
+        self.input_var = input_var
 
-    def definition_cpp(self, name_suffix='', as_reference=False):
-        return None
 
 class WeightVariable(Variable):
     def __init__(self, var_name, type_name, precision, data, quantizer=None, **kwargs):
-        super(WeightVariable, self).__init__(var_name, NamedType(type_name, precision, **kwargs), **kwargs)
+        super().__init__(var_name, NamedType(type_name, precision, **kwargs), **kwargs)
         self.data = data
         self.nzeros = -1
         self.shape = list(self.data.shape)
@@ -264,20 +296,21 @@ class WeightVariable(Variable):
                 width_bits = int(precision_bits[0])
                 integer_bits = int(precision_bits[1])
                 fractional_bits = integer_bits - width_bits
-                lsb = 2 ** fractional_bits
+                lsb = 2**fractional_bits
                 if lsb < 1:
                     # Use str to represent the float with digits, get the length
                     # to right of decimal point
                     decimal_spaces = len(str(lsb).split('.')[1])
                 else:
                     decimal_spaces = len(str(2**integer_bits))
-                self.precision_fmt = '%.{}f'.format(decimal_spaces)
+                self.precision_fmt = f'%.{decimal_spaces}f'
             else:
                 self.precision_fmt = '%f'
 
+
 class CompressedWeightVariable(WeightVariable):
     def __init__(self, var_name, type_name, precision, data, reuse_factor, quantizer=None, **kwargs):
-        super(CompressedWeightVariable, self).__init__(var_name, type_name, precision, data, quantizer=quantizer, **kwargs)
+        super().__init__(var_name, type_name, precision, data, quantizer=quantizer, **kwargs)
         self.extra_zeros = 0
         self.data_length = np.prod(data.shape) - self.nzeros
         while self.data_length % reuse_factor != 0:
@@ -321,9 +354,10 @@ class CompressedWeightVariable(WeightVariable):
 
     next = __next__
 
+
 class ExponentWeightVariable(WeightVariable):
     def __init__(self, var_name, type_name, precision, data, quantizer=None, **kwargs):
-        super(ExponentWeightVariable, self).__init__(var_name, type_name, precision, data, quantizer, **kwargs)
+        super().__init__(var_name, type_name, precision, data, quantizer, **kwargs)
         '''
         WeightVariable for Exponent aka po2 data. The data should already by quantized by the quantizer.
         '''
@@ -336,7 +370,7 @@ class ExponentWeightVariable(WeightVariable):
         sign = np.where(y < 0, np.zeros_like(y), np.ones_like(y))
         # Take the logarithm, since this is what we will write to the header
         # for the optimized product using shifts
-        y = (np.log2(np.abs(y)) / np.log2(2.)).astype('int')
+        y = (np.log2(np.abs(y)) / np.log2(2.0)).astype('int')
         return np.stack((sign, y), axis=-1)
 
     def __iter__(self):
@@ -351,9 +385,18 @@ class ExponentWeightVariable(WeightVariable):
 
     next = __next__
 
-class Source(object):
+
+# endregion
+
+# region Custom source
+
+
+class Source:
     def __init__(self, code):
         self.code = code
-    
+
     def __str__(self):
         return str(self.code)
+
+
+# endregion
