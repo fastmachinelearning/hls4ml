@@ -1,11 +1,15 @@
 """ Test that reshape is properly handled by optimizers.
 """
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 import tensorflow as tf
 
 import hls4ml
+
+test_root_path = Path(__file__).parent
 
 
 def randX(batch_size, N):
@@ -30,7 +34,8 @@ def test_reshape_parallel(randX_20_10, backend, io_type):
     )
     model.compile(optimizer='adam', loss='mse')
     config = hls4ml.utils.config_from_keras_model(model)
-    output_dir = f'hls4mlprj_reshape_{backend}_{io_type}'
+    prj_name = f'hls4mlprj_reshape_{backend}_{io_type}'
+    output_dir = str(test_root_path / prj_name)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
     )

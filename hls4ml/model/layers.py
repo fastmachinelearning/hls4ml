@@ -383,7 +383,7 @@ class Reshape(Layer):
             target_shape = target_shape[1:]
 
         # take care of -1 shapes
-        shape = self.infer_shape(input_shape, target_shape)
+        shape = self._infer_output_shape(input_shape, target_shape)
 
         # update the target shape with chnges from above
         self.set_attr('target_shape', shape)
@@ -392,13 +392,12 @@ class Reshape(Layer):
 
         self.add_output_variable(shape, dims)
 
-    @staticmethod
-    def infer_shape(input_shape, target_shape):
-        """This infers -1 shapes"""
+    def _infer_output_shape(self, input_shape, target_shape):
+        """Expand the shape that potentially includes -1 as one of the dimensions."""
         if -1 in target_shape:  # Need to infer shape for -1
             dummy_x = np.ones(input_shape)
             dummy_y = np.reshape(dummy_x, target_shape)
-            target_shape = list(dummy_y.shape)
+            return list(dummy_y.shape)
         return target_shape
 
 

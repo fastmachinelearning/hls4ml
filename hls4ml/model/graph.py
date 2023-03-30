@@ -321,13 +321,13 @@ class ModelGraph:
         # Note, these are actually the variable names, which may differ from the layer name
         input_layers = inputs if inputs is not None else [layer_list[0]['name']]
         output_layers = outputs if outputs is not None else [layer_list[-1]['name']]
-        self.inputs = self._find_variables(layer_list, input_layers)
+        self.inputs = self._find_output_variable_names(layer_list, input_layers)
         if self.inputs != input_layers:
             raise RuntimeError(
                 "Currently only support the case when input variables and input layer names match\n"
                 + f"Input layers = {input_layers}, input_vars = {self.inputs}"
             )
-        self.outputs = self._find_variables(layer_list, output_layers)
+        self.outputs = self._find_output_variable_names(layer_list, output_layers)
 
         self.index = 0
         self.graph = OrderedDict()
@@ -340,11 +340,12 @@ class ModelGraph:
         for flow in self.config.flows:
             self.apply_flow(flow)
 
-    @staticmethod
-    def _find_variables(layer_list, layers):
-        fullnodes = [node for node in layer_list if node['name'] in layers]
-        out_list_lists = [node['outputs'] if 'outputs' in node else [node['name']] for node in fullnodes]
-        return [item for sublist in out_list_lists for item in sublist]  # to flatten
+    def _find_output_variable_names(self, layer_list, layer_names):
+        """Given a list of all layers, and a list input/output names, find the names of the their outputs that will be used
+        as the name of the output variables."""
+        inout_nodes = [node for node in layer_list if node['name'] in layer_names]
+        all_node_output_names = [node['outputs'] if 'outputs' in node else [node['name']] for node in inout_nodes]
+        return [output for node_output_names in all_node_output_names for output in node_output_names]  # to flatten
 
     def _make_graph(self, layer_list):
         for layer in layer_list:

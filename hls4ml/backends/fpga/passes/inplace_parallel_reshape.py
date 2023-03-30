@@ -5,7 +5,9 @@ from hls4ml.model.types import InplaceTensorVariable
 
 class InplaceParallelReshape(OptimizerPass):
     """
-    Because in io_parallel arrays are stored 1D, reshape produces no code
+    Replaces the output variable of Reshape layer with an inplace variable when using io_parallel.
+
+    This is done because in io_parallel tensors are stored as flat arrays, requiring no reshaping.
     """
 
     def match(self, node):
@@ -16,7 +18,7 @@ class InplaceParallelReshape(OptimizerPass):
             return False
 
         outvar = node.get_output_variable()
-        invar = node.get_input_variable(node.inputs[0])
+        invar = node.get_input_variable()
         newoutvar = InplaceTensorVariable(outvar, invar)
         node.set_attr(node.outputs[0], newoutvar)
         return False

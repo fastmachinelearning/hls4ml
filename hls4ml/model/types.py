@@ -3,6 +3,8 @@ from enum import Enum
 
 import numpy as np
 
+# region Quantizer definition
+
 
 class Quantizer:
     def __init__(self, bits, hls_type):
@@ -11,6 +13,11 @@ class Quantizer:
 
     def __call__(self, data):
         raise NotImplementedError
+
+
+# endregion
+
+# region Precision types
 
 
 class RoundingMode(Enum):
@@ -165,6 +172,11 @@ def find_minimum_width(data, signed=True):
     return iwidth
 
 
+# endregion
+
+# region Data type definitions
+
+
 class NamedType:
     def __init__(self, name, precision, **kwargs):
         self.name = name.format(**kwargs)
@@ -197,6 +209,11 @@ class PackedType(NamedType):
         else:
             self.n_pack = n_pack
             self.unpack = False
+
+
+# endregion
+
+# region Variables
 
 
 class Variable:
@@ -369,9 +386,17 @@ class ExponentWeightVariable(WeightVariable):
     next = __next__
 
 
+# endregion
+
+# region Custom source
+
+
 class Source:
     def __init__(self, code):
         self.code = code
 
     def __str__(self):
         return str(self.code)
+
+
+# endregion
