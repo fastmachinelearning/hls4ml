@@ -1,4 +1,4 @@
-exclude: ^hls4ml\/templates\/(vivado|quartus)\/(ap_types|ac_types)\/
+exclude: (^hls4ml\/templates\/(vivado|quartus)\/(ap_types|ac_types)\/|^test/pytest/test_report/)
 
 repos:
 - repo: https://github.com/psf/black

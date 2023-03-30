@@ -1,4 +1,3 @@
-
 from hls4ml.model.optimizer.optimizer import OptimizerPass
 
 
@@ -9,7 +8,7 @@ class Template(OptimizerPass):
         if not isinstance(self.layer_class, (list, tuple, set)):
             self.layer_class = [self.layer_class]
         self.attribute_name = attribute_name
-    
+
     def match(self, node):
         for layer_cls in self.layer_class:
             if node.class_name == layer_cls.__name__:
@@ -20,13 +19,14 @@ class Template(OptimizerPass):
         formatted_template = self.format(node)
         node.set_attr(self.attribute_name, formatted_template)
         return False
-    
+
     def format(self, node):
         raise NotImplementedError
 
     def get_name(self):
         return self.name
-    
+
+
 class LayerConfigTemplate(Template):
     def __init__(self, layer_class):
         if isinstance(layer_class, (list, tuple, set)):
@@ -35,7 +35,7 @@ class LayerConfigTemplate(Template):
             name = layer_class.__name__.lower()
         name += '_config_template'
         super().__init__(name, layer_class, 'config_cpp')
-    
+
     def _default_config_params(self, layer):
         params = {}
         params.update(layer.attributes)
@@ -43,6 +43,7 @@ class LayerConfigTemplate(Template):
         params['reuse'] = layer.get_attr('reuse_factor')
 
         return params
+
 
 class FunctionCallTemplate(Template):
     def __init__(self, layer_class, include_header=None):
@@ -52,12 +53,15 @@ class FunctionCallTemplate(Template):
             name = layer_class.__name__.lower()
         name += '_function_template'
         super().__init__(name, layer_class, 'function_cpp')
-        self.include_header = include_header
-    
+        if include_header is None:
+            self.include_header = ()
+        else:
+            self.include_header = include_header
+
     def _default_function_params(self, layer):
         params = {}
         params.update(layer.attributes)
-        params['config'] = 'config{}'.format(layer.index)
+        params['config'] = f'config{layer.index}'
         params['input_t'] = layer.get_input_variable().type.name
         params['output_t'] = layer.get_output_variable().type.name
         params['input'] = layer.get_input_variable().name
