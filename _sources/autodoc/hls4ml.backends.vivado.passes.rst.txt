@@ -4,6 +4,14 @@ hls4ml.backends.vivado.passes package
 Submodules
 ----------
 
+hls4ml.backends.vivado.passes.broadcast\_stream module
+------------------------------------------------------
+
+.. automodule:: hls4ml.backends.vivado.passes.broadcast_stream
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.backends.vivado.passes.conv\_same\_pad module
 ----------------------------------------------------
 
@@ -88,14 +96,6 @@ hls4ml.backends.vivado.passes.recurrent\_templates module
 ---------------------------------------------------------
 
 .. automodule:: hls4ml.backends.vivado.passes.recurrent_templates
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-hls4ml.backends.vivado.passes.repack\_stream module
----------------------------------------------------
-
-.. automodule:: hls4ml.backends.vivado.passes.repack_stream
    :members:
    :undoc-members:
    :show-inheritance:

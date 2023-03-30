@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hls4ml.backends.fpga.passes package &mdash; hls4ml 0.5.1.dev647+g48bcbbf9 documentation</title>
+  <title>hls4ml.backends.fpga.passes package &mdash; hls4ml 0.5.1.dev648+g7063e871 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -71,7 +71,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.fpga.passes.codegen">hls4ml.backends.fpga.passes.codegen module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.fpga.passes.embedding">hls4ml.backends.fpga.passes.embedding module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.fpga.passes.final_reshape">hls4ml.backends.fpga.passes.final_reshape module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.fpga.passes.inplace_parallel_reshape">hls4ml.backends.fpga.passes.inplace_parallel_reshape module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.fpga.passes.inplace_stream_flatten">hls4ml.backends.fpga.passes.inplace_stream_flatten module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.fpga.passes.remove_softmax">hls4ml.backends.fpga.passes.remove_softmax module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.fpga.passes.repack_stream">hls4ml.backends.fpga.passes.repack_stream module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.fpga.passes">Module contents</a></li>
 </ul>
 </li>
@@ -415,6 +418,80 @@
 </dd></dl>
 
 </section>
+<section id="module-hls4ml.backends.fpga.passes.inplace_parallel_reshape">
+<span id="hls4ml-backends-fpga-passes-inplace-parallel-reshape-module"></span><h2>hls4ml.backends.fpga.passes.inplace_parallel_reshape module<a class="headerlink" href="#module-hls4ml.backends.fpga.passes.inplace_parallel_reshape" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.inplace_parallel_reshape.</span></span><span class="sig-name descname"><span class="pre">InplaceParallelReshape</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Replaces the output variable of Reshape layer with an inplace variable when using io_parallel.</p>
+<p>This is done because in io_parallel tensors are stored as flat arrays, requiring no reshaping.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape.match" title="Permalink to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape.transform" title="Permalink to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.fpga.passes.inplace_stream_flatten">
+<span id="hls4ml-backends-fpga-passes-inplace-stream-flatten-module"></span><h2>hls4ml.backends.fpga.passes.inplace_stream_flatten module<a class="headerlink" href="#module-hls4ml.backends.fpga.passes.inplace_stream_flatten" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.inplace_stream_flatten.InplaceStreamFlatten">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.inplace_stream_flatten.</span></span><span class="sig-name descname"><span class="pre">InplaceStreamFlatten</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.inplace_stream_flatten.InplaceStreamFlatten" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Replaces the output variable of Reshape (flatten) layer with an inplace variable when using io_stream.</p>
+<p>This optimizer avoids the expensive repacking of the stream when Reshape layer flattens the tensor to 1d.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.inplace_stream_flatten.InplaceStreamFlatten.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.inplace_stream_flatten.InplaceStreamFlatten.match" title="Permalink to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.inplace_stream_flatten.InplaceStreamFlatten.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.inplace_stream_flatten.InplaceStreamFlatten.transform" title="Permalink to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="module-hls4ml.backends.fpga.passes.remove_softmax">
 <span id="hls4ml-backends-fpga-passes-remove-softmax-module"></span><h2>hls4ml.backends.fpga.passes.remove_softmax module<a class="headerlink" href="#module-hls4ml.backends.fpga.passes.remove_softmax" title="Permalink to this heading"></a></h2>
 <dl class="py class">
@@ -448,6 +525,70 @@
 </dd></dl>
 
 </dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.fpga.passes.repack_stream">
+<span id="hls4ml-backends-fpga-passes-repack-stream-module"></span><h2>hls4ml.backends.fpga.passes.repack_stream module<a class="headerlink" href="#module-hls4ml.backends.fpga.passes.repack_stream" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.repack_stream.Repack">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.repack_stream.</span></span><span class="sig-name descname"><span class="pre">Repack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.repack_stream.Repack" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>Inserted between layers with different packing factors.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.repack_stream.Repack.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.repack_stream.Repack.initialize" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.repack_stream.RepackFunctionTemplate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.repack_stream.</span></span><span class="sig-name descname"><span class="pre">RepackFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.repack_stream.RepackFunctionTemplate" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.repack_stream.RepackFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.repack_stream.RepackFunctionTemplate.format" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.repack_stream.ReshapeStream">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.repack_stream.</span></span><span class="sig-name descname"><span class="pre">ReshapeStream</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.repack_stream.ReshapeStream" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Repacks stream for Reshape layer</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.repack_stream.ReshapeStream.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.repack_stream.ReshapeStream.match" title="Permalink to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.repack_stream.ReshapeStream.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.repack_stream.ReshapeStream.transform" title="Permalink to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.repack_stream.register_repack_stream">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.repack_stream.</span></span><span class="sig-name descname"><span class="pre">register_repack_stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.repack_stream.register_repack_stream" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 </section>
 <section id="module-hls4ml.backends.fpga.passes">

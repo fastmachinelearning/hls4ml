@@ -52,10 +52,34 @@ hls4ml.backends.fpga.passes.final\_reshape module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.fpga.passes.inplace\_parallel\_reshape module
+-------------------------------------------------------------
+
+.. automodule:: hls4ml.backends.fpga.passes.inplace_parallel_reshape
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.fpga.passes.inplace\_stream\_flatten module
+-----------------------------------------------------------
+
+.. automodule:: hls4ml.backends.fpga.passes.inplace_stream_flatten
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.backends.fpga.passes.remove\_softmax module
 --------------------------------------------------
 
 .. automodule:: hls4ml.backends.fpga.passes.remove_softmax
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.fpga.passes.repack\_stream module
+-------------------------------------------------
+
+.. automodule:: hls4ml.backends.fpga.passes.repack_stream
    :members:
    :undoc-members:
    :show-inheritance:

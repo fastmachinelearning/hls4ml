@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hls4ml.backends.vivado.passes package &mdash; hls4ml 0.5.1.dev647+g48bcbbf9 documentation</title>
+  <title>hls4ml.backends.vivado.passes package &mdash; hls4ml 0.5.1.dev648+g7063e871 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -69,6 +69,7 @@
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vivado.html">hls4ml.backends.vivado package</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">hls4ml.backends.vivado.passes package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.vivado.passes.broadcast_stream">hls4ml.backends.vivado.passes.broadcast_stream module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.vivado.passes.conv_same_pad">hls4ml.backends.vivado.passes.conv_same_pad module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.vivado.passes.conv_stream">hls4ml.backends.vivado.passes.conv_stream module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.vivado.passes.convolution_templates">hls4ml.backends.vivado.passes.convolution_templates module</a></li>
@@ -80,7 +81,6 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.vivado.passes.pooling_templates">hls4ml.backends.vivado.passes.pooling_templates module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hls4ml-backends-vivado-passes-quantization-templates-module">hls4ml.backends.vivado.passes.quantization_templates module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.vivado.passes.recurrent_templates">hls4ml.backends.vivado.passes.recurrent_templates module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.vivado.passes.repack_stream">hls4ml.backends.vivado.passes.repack_stream module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.vivado.passes.reshaping_templates">hls4ml.backends.vivado.passes.reshaping_templates module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.vivado.passes.resource_strategy">hls4ml.backends.vivado.passes.resource_strategy module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.vivado.passes.transform_types">hls4ml.backends.vivado.passes.transform_types module</a></li>
@@ -132,6 +132,80 @@
 <h1>hls4ml.backends.vivado.passes package<a class="headerlink" href="#hls4ml-backends-vivado-passes-package" title="Permalink to this heading"></a></h1>
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-hls4ml.backends.vivado.passes.broadcast_stream">
+<span id="hls4ml-backends-vivado-passes-broadcast-stream-module"></span><h2>hls4ml.backends.vivado.passes.broadcast_stream module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.broadcast_stream" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.broadcast_stream.Broadcast">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.broadcast_stream.</span></span><span class="sig-name descname"><span class="pre">Broadcast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.broadcast_stream.Broadcast" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>Inserted between layers for broadcasting.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.broadcast_stream.Broadcast.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.broadcast_stream.Broadcast.initialize" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.broadcast_stream.BroadcastConfigTemplate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.broadcast_stream.</span></span><span class="sig-name descname"><span class="pre">BroadcastConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastConfigTemplate" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.broadcast_stream.BroadcastConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastConfigTemplate.format" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.broadcast_stream.BroadcastFunctionTemplate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.broadcast_stream.</span></span><span class="sig-name descname"><span class="pre">BroadcastFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastFunctionTemplate" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.broadcast_stream.BroadcastFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastFunctionTemplate.format" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.broadcast_stream.</span></span><span class="sig-name descname"><span class="pre">BroadcastStream</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream.match" title="Permalink to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream.transform" title="Permalink to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.broadcast_stream.register_broadcast_stream">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.broadcast_stream.</span></span><span class="sig-name descname"><span class="pre">register_broadcast_stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.broadcast_stream.register_broadcast_stream" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
 <section id="module-hls4ml.backends.vivado.passes.conv_same_pad">
 <span id="hls4ml-backends-vivado-passes-conv-same-pad-module"></span><h2>hls4ml.backends.vivado.passes.conv_same_pad module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.conv_same_pad" title="Permalink to this heading"></a></h2>
@@ -663,136 +737,6 @@
 <dd></dd></dl>
 
 </dd></dl>
-
-</section>
-<section id="module-hls4ml.backends.vivado.passes.repack_stream">
-<span id="hls4ml-backends-vivado-passes-repack-stream-module"></span><h2>hls4ml.backends.vivado.passes.repack_stream module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.repack_stream" title="Permalink to this heading"></a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.repack_stream.Broadcast">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.repack_stream.</span></span><span class="sig-name descname"><span class="pre">Broadcast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.repack_stream.Broadcast" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
-<p>Inserted between layers for broadcasting.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.repack_stream.Broadcast.initialize">
-<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.repack_stream.Broadcast.initialize" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.repack_stream.BroadcastConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.repack_stream.</span></span><span class="sig-name descname"><span class="pre">BroadcastConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.repack_stream.BroadcastConfigTemplate" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.repack_stream.BroadcastConfigTemplate.format">
-<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.repack_stream.BroadcastConfigTemplate.format" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.repack_stream.BroadcastFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.repack_stream.</span></span><span class="sig-name descname"><span class="pre">BroadcastFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.repack_stream.BroadcastFunctionTemplate" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.repack_stream.BroadcastFunctionTemplate.format">
-<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.repack_stream.BroadcastFunctionTemplate.format" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.repack_stream.BroadcastStream">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.repack_stream.</span></span><span class="sig-name descname"><span class="pre">BroadcastStream</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.repack_stream.BroadcastStream" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.repack_stream.BroadcastStream.match">
-<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.repack_stream.BroadcastStream.match" title="Permalink to this definition"></a></dt>
-<dd><p>Predicate to match on a given node.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.repack_stream.BroadcastStream.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.repack_stream.BroadcastStream.transform" title="Permalink to this definition"></a></dt>
-<dd><p>Transformation to apply if matching was successful.</p>
-<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
-<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.repack_stream.Repack">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.repack_stream.</span></span><span class="sig-name descname"><span class="pre">Repack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.repack_stream.Repack" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
-<p>Inserted between layers with different packing factors.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.repack_stream.Repack.initialize">
-<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.repack_stream.Repack.initialize" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.repack_stream.RepackFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.repack_stream.</span></span><span class="sig-name descname"><span class="pre">RepackFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.repack_stream.RepackFunctionTemplate" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.repack_stream.RepackFunctionTemplate.format">
-<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.repack_stream.RepackFunctionTemplate.format" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.repack_stream.ReshapeStream">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.repack_stream.</span></span><span class="sig-name descname"><span class="pre">ReshapeStream</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.repack_stream.ReshapeStream" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
-<p>Repacks stream for Reshape layer</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.repack_stream.ReshapeStream.match">
-<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.repack_stream.ReshapeStream.match" title="Permalink to this definition"></a></dt>
-<dd><p>Predicate to match on a given node.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.repack_stream.ReshapeStream.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.repack_stream.ReshapeStream.transform" title="Permalink to this definition"></a></dt>
-<dd><p>Transformation to apply if matching was successful.</p>
-<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>ModelGraph</em>) – Model to optimize</p></li>
-<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.repack_stream.register_repack_stream">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.repack_stream.</span></span><span class="sig-name descname"><span class="pre">register_repack_stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.repack_stream.register_repack_stream" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
 
 </section>
 <section id="module-hls4ml.backends.vivado.passes.reshaping_templates">

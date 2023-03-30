@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hls4ml.backends.fpga package &mdash; hls4ml 0.5.1.dev647+g48bcbbf9 documentation</title>
+  <title>hls4ml.backends.fpga package &mdash; hls4ml 0.5.1.dev648+g7063e871 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -130,7 +130,10 @@
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.codegen">hls4ml.backends.fpga.passes.codegen module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.embedding">hls4ml.backends.fpga.passes.embedding module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.final_reshape">hls4ml.backends.fpga.passes.final_reshape module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.inplace_parallel_reshape">hls4ml.backends.fpga.passes.inplace_parallel_reshape module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.inplace_stream_flatten">hls4ml.backends.fpga.passes.inplace_stream_flatten module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.remove_softmax">hls4ml.backends.fpga.passes.remove_softmax module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.repack_stream">hls4ml.backends.fpga.passes.repack_stream module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes">Module contents</a></li>
 </ul>
 </li>
@@ -510,12 +513,12 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.InplaceVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">InplaceVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.InplaceVariableConverter" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">InplaceStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">definition_cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.StreamVariableConverter" title="hls4ml.backends.fpga.fpga_types.StreamVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamVariableConverter</span></code></a></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.InplaceVariableConverter.convert">
-<span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor_var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.InplaceVariableConverter.convert" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter.convert">
+<span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor_var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_pack</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter.convert" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -582,9 +585,37 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.QuartusInplaceVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">QuartusInplaceVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.QuartusInplaceVariableConverter" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.InplaceVariableConverter" title="hls4ml.backends.fpga.fpga_types.InplaceVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">InplaceVariableConverter</span></code></a></p>
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.QuartusInplaceArrayVariableConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">QuartusInplaceArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.QuartusInplaceArrayVariableConverter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.ArrayVariableConverter" title="hls4ml.backends.fpga.fpga_types.ArrayVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayVariableConverter</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.QuartusInplaceArrayVariableDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">QuartusInplaceArrayVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.QuartusInplaceArrayVariableDefinition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.QuartusInplaceArrayVariableDefinition.definition_cpp">
+<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.QuartusInplaceArrayVariableDefinition.definition_cpp" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.QuartusInplaceStreamVariableConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">QuartusInplaceStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.QuartusInplaceStreamVariableConverter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter" title="hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">InplaceStreamVariableConverter</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.QuartusInplaceStreamVariableDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">QuartusInplaceStreamVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.QuartusInplaceStreamVariableDefinition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.QuartusInplaceStreamVariableDefinition.definition_cpp">
+<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.QuartusInplaceStreamVariableDefinition.definition_cpp" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -716,9 +747,37 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.VivadoInplaceVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">VivadoInplaceVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.VivadoInplaceVariableConverter" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.InplaceVariableConverter" title="hls4ml.backends.fpga.fpga_types.InplaceVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">InplaceVariableConverter</span></code></a></p>
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.VivadoInplaceArrayVariableConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">VivadoInplaceArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.VivadoInplaceArrayVariableConverter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.ArrayVariableConverter" title="hls4ml.backends.fpga.fpga_types.ArrayVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayVariableConverter</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.VivadoInplaceArrayVariableDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">VivadoInplaceArrayVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.VivadoInplaceArrayVariableDefinition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.VivadoInplaceArrayVariableDefinition.definition_cpp">
+<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.VivadoInplaceArrayVariableDefinition.definition_cpp" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.VivadoInplaceStreamVariableConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">VivadoInplaceStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.VivadoInplaceStreamVariableConverter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter" title="hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">InplaceStreamVariableConverter</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.VivadoInplaceStreamVariableDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">VivadoInplaceStreamVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.VivadoInplaceStreamVariableDefinition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.VivadoInplaceStreamVariableDefinition.definition_cpp">
+<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.VivadoInplaceStreamVariableDefinition.definition_cpp" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">

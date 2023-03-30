@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; hls4ml 0.5.1.dev647+g48bcbbf9 documentation</title>
+  <title>Index &mdash; hls4ml 0.5.1.dev648+g7063e871 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -201,13 +201,13 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.BramWeightVariableConverter">BramWeightVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
-      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.repack_stream.Broadcast">Broadcast (class in hls4ml.backends.vivado.passes.repack_stream)</a>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.broadcast_stream.Broadcast">Broadcast (class in hls4ml.backends.vivado.passes.broadcast_stream)</a>
 </li>
-      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.repack_stream.BroadcastConfigTemplate">BroadcastConfigTemplate (class in hls4ml.backends.vivado.passes.repack_stream)</a>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastConfigTemplate">BroadcastConfigTemplate (class in hls4ml.backends.vivado.passes.broadcast_stream)</a>
 </li>
-      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.repack_stream.BroadcastFunctionTemplate">BroadcastFunctionTemplate (class in hls4ml.backends.vivado.passes.repack_stream)</a>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastFunctionTemplate">BroadcastFunctionTemplate (class in hls4ml.backends.vivado.passes.broadcast_stream)</a>
 </li>
-      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.repack_stream.BroadcastStream">BroadcastStream (class in hls4ml.backends.vivado.passes.repack_stream)</a>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream">BroadcastStream (class in hls4ml.backends.vivado.passes.broadcast_stream)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -290,7 +290,7 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.HLSTypeConverter.convert">(hls4ml.backends.fpga.fpga_types.HLSTypeConverter method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.InplaceVariableConverter.convert">(hls4ml.backends.fpga.fpga_types.InplaceVariableConverter method)</a>
+        <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter.convert">(hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.PrecisionConverter.convert">(hls4ml.backends.fpga.fpga_types.PrecisionConverter method)</a>
 </li>
@@ -352,6 +352,10 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusArrayVariableDefinition.definition_cpp">(hls4ml.backends.fpga.fpga_types.QuartusArrayVariableDefinition method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusInplaceArrayVariableDefinition.definition_cpp">(hls4ml.backends.fpga.fpga_types.QuartusInplaceArrayVariableDefinition method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusInplaceStreamVariableDefinition.definition_cpp">(hls4ml.backends.fpga.fpga_types.QuartusInplaceStreamVariableDefinition method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusStreamVariableDefinition.definition_cpp">(hls4ml.backends.fpga.fpga_types.QuartusStreamVariableDefinition method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusStructMemberVariableDefinition.definition_cpp">(hls4ml.backends.fpga.fpga_types.QuartusStructMemberVariableDefinition method)</a>
@@ -364,9 +368,11 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VivadoArrayVariableDefinition.definition_cpp">(hls4ml.backends.fpga.fpga_types.VivadoArrayVariableDefinition method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VivadoStreamVariableDefinition.definition_cpp">(hls4ml.backends.fpga.fpga_types.VivadoStreamVariableDefinition method)</a>
+        <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VivadoInplaceArrayVariableDefinition.definition_cpp">(hls4ml.backends.fpga.fpga_types.VivadoInplaceArrayVariableDefinition method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.InplaceVariable.definition_cpp">(hls4ml.model.types.InplaceVariable method)</a>
+        <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VivadoInplaceStreamVariableDefinition.definition_cpp">(hls4ml.backends.fpga.fpga_types.VivadoInplaceStreamVariableDefinition method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VivadoStreamVariableDefinition.definition_cpp">(hls4ml.backends.fpga.fpga_types.VivadoStreamVariableDefinition method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -450,7 +456,13 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.embedding.EmbeddingFunctionTemplate.format">(hls4ml.backends.fpga.passes.embedding.EmbeddingFunctionTemplate method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.repack_stream.RepackFunctionTemplate.format">(hls4ml.backends.fpga.passes.repack_stream.RepackFunctionTemplate method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.template.Template.format">(hls4ml.backends.template.Template method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastConfigTemplate.format">(hls4ml.backends.vivado.passes.broadcast_stream.BroadcastConfigTemplate method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastFunctionTemplate.format">(hls4ml.backends.vivado.passes.broadcast_stream.BroadcastFunctionTemplate method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.convolution_templates.Conv1DConfigTemplate.format">(hls4ml.backends.vivado.passes.convolution_templates.Conv1DConfigTemplate method)</a>
 </li>
@@ -505,12 +517,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.RecurrentConfigTemplate.format">(hls4ml.backends.vivado.passes.recurrent_templates.RecurrentConfigTemplate method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.RecurrentFunctionTemplate.format">(hls4ml.backends.vivado.passes.recurrent_templates.RecurrentFunctionTemplate method)</a>
-</li>
-        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.repack_stream.BroadcastConfigTemplate.format">(hls4ml.backends.vivado.passes.repack_stream.BroadcastConfigTemplate method)</a>
-</li>
-        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.repack_stream.BroadcastFunctionTemplate.format">(hls4ml.backends.vivado.passes.repack_stream.BroadcastFunctionTemplate method)</a>
-</li>
-        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.repack_stream.RepackFunctionTemplate.format">(hls4ml.backends.vivado.passes.repack_stream.RepackFunctionTemplate method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.reshaping_templates.ResizeConfigTemplate.format">(hls4ml.backends.vivado.passes.reshaping_templates.ResizeConfigTemplate method)</a>
 </li>
@@ -627,12 +633,8 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.get_output_variable">get_output_variable() (hls4ml.model.layers.Layer method)</a>
 </li>
-      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.InplaceVariable.get_shape">get_shape() (hls4ml.model.types.InplaceVariable method)</a>
-
-      <ul>
-        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.TensorVariable.get_shape">(hls4ml.model.types.TensorVariable method)</a>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.TensorVariable.get_shape">get_shape() (hls4ml.model.types.TensorVariable method)</a>
 </li>
-      </ul></li>
       <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.garnet_templates.GarNetConfigTemplate.get_transforms_config">get_transforms_config() (hls4ml.backends.vivado.passes.garnet_templates.GarNetConfigTemplate method)</a>
 
       <ul>
@@ -754,10 +756,31 @@
 </li>
       </ul></li>
       <li>
+    hls4ml.backends.fpga.passes.inplace_parallel_reshape
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.inplace_parallel_reshape">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.backends.fpga.passes.inplace_stream_flatten
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.inplace_stream_flatten">module</a>
+</li>
+      </ul></li>
+      <li>
     hls4ml.backends.fpga.passes.remove_softmax
 
       <ul>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.remove_softmax">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.backends.fpga.passes.repack_stream
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.repack_stream">module</a>
 </li>
       </ul></li>
       <li>
@@ -779,6 +802,13 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.backends.vivado.passes.broadcast_stream
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.broadcast_stream">module</a>
 </li>
       </ul></li>
       <li>
@@ -844,13 +874,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.recurrent_templates">module</a>
 </li>
       </ul></li>
-      <li>
-    hls4ml.backends.vivado.passes.repack_stream
-
-      <ul>
-        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.repack_stream">module</a>
-</li>
-      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado.passes.reshaping_templates
 
@@ -858,8 +883,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.reshaping_templates">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado.passes.resource_strategy
 
@@ -1069,9 +1092,9 @@
       <ul>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.clone.Clone.initialize">(hls4ml.backends.fpga.passes.clone.Clone method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.repack_stream.Broadcast.initialize">(hls4ml.backends.vivado.passes.repack_stream.Broadcast method)</a>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.repack_stream.Repack.initialize">(hls4ml.backends.fpga.passes.repack_stream.Repack method)</a>
 </li>
-        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.repack_stream.Repack.initialize">(hls4ml.backends.vivado.passes.repack_stream.Repack method)</a>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.broadcast_stream.Broadcast.initialize">(hls4ml.backends.vivado.passes.broadcast_stream.Broadcast method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Activation.initialize">(hls4ml.model.layers.Activation method)</a>
 </li>
@@ -1142,9 +1165,13 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.InplaceVariable">InplaceVariable (class in hls4ml.model.types)</a>
+      <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape">InplaceParallelReshape (class in hls4ml.backends.fpga.passes.inplace_parallel_reshape)</a>
 </li>
-      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.InplaceVariableConverter">InplaceVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
+      <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.inplace_stream_flatten.InplaceStreamFlatten">InplaceStreamFlatten (class in hls4ml.backends.fpga.passes.inplace_stream_flatten)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter">InplaceStreamVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.InplaceTensorVariable">InplaceTensorVariable (class in hls4ml.model.types)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Input">Input (class in hls4ml.model.layers)</a>
 </li>
@@ -1195,9 +1222,17 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.final_reshape.RemoveFinalReshape.match">(hls4ml.backends.fpga.passes.final_reshape.RemoveFinalReshape method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape.match">(hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.inplace_stream_flatten.InplaceStreamFlatten.match">(hls4ml.backends.fpga.passes.inplace_stream_flatten.InplaceStreamFlatten method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.remove_softmax.SkipSoftmax.match">(hls4ml.backends.fpga.passes.remove_softmax.SkipSoftmax method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.repack_stream.ReshapeStream.match">(hls4ml.backends.fpga.passes.repack_stream.ReshapeStream method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.template.Template.match">(hls4ml.backends.template.Template method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream.match">(hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.match">(hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D method)</a>
 </li>
@@ -1206,10 +1241,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.conv_stream.GenerateConvStreamingInstructions.match">(hls4ml.backends.vivado.passes.conv_stream.GenerateConvStreamingInstructions method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.pointwise.OptimizePointwiseConv.match">(hls4ml.backends.vivado.passes.pointwise.OptimizePointwiseConv method)</a>
-</li>
-        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.repack_stream.BroadcastStream.match">(hls4ml.backends.vivado.passes.repack_stream.BroadcastStream method)</a>
-</li>
-        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.repack_stream.ReshapeStream.match">(hls4ml.backends.vivado.passes.repack_stream.ReshapeStream method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy.match">(hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy method)</a>
 </li>
@@ -1276,13 +1307,21 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.final_reshape">hls4ml.backends.fpga.passes.final_reshape</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.inplace_parallel_reshape">hls4ml.backends.fpga.passes.inplace_parallel_reshape</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.inplace_stream_flatten">hls4ml.backends.fpga.passes.inplace_stream_flatten</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.remove_softmax">hls4ml.backends.fpga.passes.remove_softmax</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes.repack_stream">hls4ml.backends.fpga.passes.repack_stream</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.html#module-hls4ml.backends.template">hls4ml.backends.template</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.html#module-hls4ml.backends.vivado">hls4ml.backends.vivado</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes">hls4ml.backends.vivado.passes</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.broadcast_stream">hls4ml.backends.vivado.passes.broadcast_stream</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.conv_same_pad">hls4ml.backends.vivado.passes.conv_same_pad</a>
 </li>
@@ -1301,8 +1340,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pooling_templates">hls4ml.backends.vivado.passes.pooling_templates</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.recurrent_templates">hls4ml.backends.vivado.passes.recurrent_templates</a>
-</li>
-        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.repack_stream">hls4ml.backends.vivado.passes.repack_stream</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.reshaping_templates">hls4ml.backends.vivado.passes.reshaping_templates</a>
 </li>
@@ -1487,10 +1524,16 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusArrayVariableDefinition">QuartusArrayVariableDefinition (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
-      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusInplaceVariableConverter">QuartusInplaceVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
+      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusInplaceArrayVariableConverter">QuartusInplaceArrayVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusInplaceArrayVariableDefinition">QuartusInplaceArrayVariableDefinition (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusInplaceStreamVariableConverter">QuartusInplaceStreamVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusInplaceStreamVariableDefinition">QuartusInplaceStreamVariableDefinition (class in hls4ml.backends.fpga.fpga_types)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusStreamVariableConverter">QuartusStreamVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.QuartusStreamVariableDefinition">QuartusStreamVariableDefinition (class in hls4ml.backends.fpga.fpga_types)</a>
@@ -1517,6 +1560,8 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.bn_quant.register_bn_quant">register_bn_quant() (in module hls4ml.backends.fpga.passes.bn_quant)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.broadcast_stream.register_broadcast_stream">register_broadcast_stream() (in module hls4ml.backends.vivado.passes.broadcast_stream)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.clone.register_clone">register_clone() (in module hls4ml.backends.fpga.passes.clone)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.flow.html#hls4ml.model.flow.flow.register_flow">register_flow() (in module hls4ml.model.flow.flow)</a>
@@ -1531,7 +1576,7 @@
       </ul></li>
       <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.pointwise.register_pointwise">register_pointwise() (in module hls4ml.backends.vivado.passes.pointwise)</a>
 </li>
-      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.repack_stream.register_repack_stream">register_repack_stream() (in module hls4ml.backends.vivado.passes.repack_stream)</a>
+      <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.repack_stream.register_repack_stream">register_repack_stream() (in module hls4ml.backends.fpga.passes.repack_stream)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.backend.Backend.register_source">register_source() (hls4ml.backends.backend.Backend method)</a>
 </li>
@@ -1547,15 +1592,15 @@
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.transpose_opt.RemoveUselessTranspose">RemoveUselessTranspose (class in hls4ml.model.optimizer.passes.transpose_opt)</a>
 </li>
-      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.repack_stream.Repack">Repack (class in hls4ml.backends.vivado.passes.repack_stream)</a>
+      <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.repack_stream.Repack">Repack (class in hls4ml.backends.fpga.passes.repack_stream)</a>
 </li>
-      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.repack_stream.RepackFunctionTemplate">RepackFunctionTemplate (class in hls4ml.backends.vivado.passes.repack_stream)</a>
+      <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.repack_stream.RepackFunctionTemplate">RepackFunctionTemplate (class in hls4ml.backends.fpga.passes.repack_stream)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv">ReplaceMultidimensionalDenseWithConv (class in hls4ml.model.optimizer.passes.multi_dense)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Reshape">Reshape (class in hls4ml.model.layers)</a>
 </li>
-      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.repack_stream.ReshapeStream">ReshapeStream (class in hls4ml.backends.vivado.passes.repack_stream)</a>
+      <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.repack_stream.ReshapeStream">ReshapeStream (class in hls4ml.backends.fpga.passes.repack_stream)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Resize">Resize (class in hls4ml.model.layers)</a>
 </li>
@@ -1623,12 +1668,8 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.TensorVariable.size">size() (hls4ml.model.types.TensorVariable method)</a>
 </li>
-      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.InplaceVariable.size_cpp">size_cpp() (hls4ml.model.types.InplaceVariable method)</a>
-
-      <ul>
-        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.TensorVariable.size_cpp">(hls4ml.model.types.TensorVariable method)</a>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.TensorVariable.size_cpp">size_cpp() (hls4ml.model.types.TensorVariable method)</a>
 </li>
-      </ul></li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.remove_softmax.SkipSoftmax">SkipSoftmax (class in hls4ml.backends.fpga.passes.remove_softmax)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Softmax">Softmax (class in hls4ml.model.layers)</a>
@@ -1672,11 +1713,19 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.final_reshape.RemoveFinalReshape.transform">(hls4ml.backends.fpga.passes.final_reshape.RemoveFinalReshape method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape.transform">(hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.inplace_stream_flatten.InplaceStreamFlatten.transform">(hls4ml.backends.fpga.passes.inplace_stream_flatten.InplaceStreamFlatten method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.remove_softmax.SkipSoftmax.transform">(hls4ml.backends.fpga.passes.remove_softmax.SkipSoftmax method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.repack_stream.ReshapeStream.transform">(hls4ml.backends.fpga.passes.repack_stream.ReshapeStream method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate.transform">(hls4ml.backends.template.FunctionCallTemplate method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.template.Template.transform">(hls4ml.backends.template.Template method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream.transform">(hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.transform">(hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D method)</a>
 </li>
@@ -1685,10 +1734,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.conv_stream.GenerateConvStreamingInstructions.transform">(hls4ml.backends.vivado.passes.conv_stream.GenerateConvStreamingInstructions method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.pointwise.OptimizePointwiseConv.transform">(hls4ml.backends.vivado.passes.pointwise.OptimizePointwiseConv method)</a>
-</li>
-        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.repack_stream.BroadcastStream.transform">(hls4ml.backends.vivado.passes.repack_stream.BroadcastStream method)</a>
-</li>
-        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.repack_stream.ReshapeStream.transform">(hls4ml.backends.vivado.passes.repack_stream.ReshapeStream method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy.transform">(hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy method)</a>
 </li>
@@ -1771,15 +1816,21 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.attributes.VariableMapping">VariableMapping (class in hls4ml.model.attributes)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter">VivadoAcceleratorWriter (class in hls4ml.writer.vivado_accelerator_writer)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VivadoArrayVariableConverter">VivadoArrayVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VivadoArrayVariableDefinition">VivadoArrayVariableDefinition (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
-      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VivadoInplaceVariableConverter">VivadoInplaceVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
+      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VivadoInplaceArrayVariableConverter">VivadoInplaceArrayVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VivadoInplaceArrayVariableDefinition">VivadoInplaceArrayVariableDefinition (class in hls4ml.backends.fpga.fpga_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VivadoInplaceStreamVariableConverter">VivadoInplaceStreamVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VivadoInplaceStreamVariableDefinition">VivadoInplaceStreamVariableDefinition (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VivadoStreamVariableConverter">VivadoStreamVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>

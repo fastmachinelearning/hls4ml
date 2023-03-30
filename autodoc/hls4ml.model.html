@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hls4ml.model package &mdash; hls4ml 0.5.1.dev647+g48bcbbf9 documentation</title>
+  <title>hls4ml.model package &mdash; hls4ml 0.5.1.dev648+g7063e871 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -161,7 +161,7 @@
 <span id="hls4ml-model-attributes-module"></span><h2>hls4ml.model.attributes module<a class="headerlink" href="#module-hls4ml.model.attributes" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.attributes.Attribute">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.attributes.</span></span><span class="sig-name descname"><span class="pre">Attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_type=&lt;class</span> <span class="pre">'int'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configurable=False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.attributes.Attribute" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.attributes.</span></span><span class="sig-name descname"><span class="pre">Attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_type=&lt;class</span> <span class="pre">'numbers.Integral'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configurable=False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.attributes.Attribute" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py property">
 <dt class="sig sig-object py" id="hls4ml.model.attributes.Attribute.config_name">
@@ -770,7 +770,8 @@ hard tanh function is 2 * hard_sigmoid - 1</p>
 <dt class="sig sig-object py" id="hls4ml.model.types.ExponentPrecisionType">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.types.</span></span><span class="sig-name descname"><span class="pre">ExponentPrecisionType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.ExponentPrecisionType" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.IntegerPrecisionType" title="hls4ml.model.types.IntegerPrecisionType"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegerPrecisionType</span></code></a></p>
-<p>Convenience class to differentiate ‘regular’ integers from those which represent exponents, for QKeras po2 quantizers, for example.</p>
+<p>Convenience class to differentiate ‘regular’ integers from those which represent exponents,
+for QKeras po2 quantizers, for example.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -807,24 +808,10 @@ hard tanh function is 2 * hard_sigmoid - 1</p>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.model.types.InplaceVariable">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.types.</span></span><span class="sig-name descname"><span class="pre">InplaceVariable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.InplaceVariable" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.Variable" title="hls4ml.model.types.Variable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Variable</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.model.types.InplaceVariable.definition_cpp">
-<span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.InplaceVariable.definition_cpp" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.model.types.InplaceVariable.get_shape">
-<span class="sig-name descname"><span class="pre">get_shape</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.InplaceVariable.get_shape" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.model.types.InplaceVariable.size_cpp">
-<span class="sig-name descname"><span class="pre">size_cpp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.InplaceVariable.size_cpp" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
+<dt class="sig sig-object py" id="hls4ml.model.types.InplaceTensorVariable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.types.</span></span><span class="sig-name descname"><span class="pre">InplaceTensorVariable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_var</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.InplaceTensorVariable" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.TensorVariable" title="hls4ml.model.types.TensorVariable"><code class="xref py py-class docutils literal notranslate"><span class="pre">TensorVariable</span></code></a></p>
+<p>A TensorVariable that is just a link to another</p>
 </dd></dl>
 
 <dl class="py class">
