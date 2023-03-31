@@ -272,7 +272,7 @@ DataPropagation:
                 reset_state, data_in, h_newstate, s_newstate, param, param_r, param_b, param_br);
         if (CONFIG_T::n_sequence_out > 1) {
             res_T res_pack;
-        #pragma HLS DATA_PACK variable=res_pack
+            PRAGMA_DATA_PACK(res_pack)
         ResPack_sequences:
             for (int i_pack = 0; i_pack < res_T::size; i_pack++) {
                 #pragma HLS UNROLL
@@ -285,7 +285,7 @@ DataPropagation:
 
     if (CONFIG_T::n_sequence_out == 1) {
         res_T res_pack;
-    #pragma HLS DATA_PACK variable=res_pack
+        PRAGMA_DATA_PACK(res_pack)
     ResPack:
         for (int i_pack = 0; i_pack < res_T::size; i_pack++) {
             #pragma HLS UNROLL
@@ -543,7 +543,7 @@ DataPropagation:
                                                                                          param, param_zr, param_b, param_br);
         if (CONFIG_T::n_sequence_out > 1) {
             res_T res_pack;
-        #pragma HLS DATA_PACK variable=res_pack
+            PRAGMA_DATA_PACK(res_pack)
         ResPack_sequences:
             for (int i_pack = 0; i_pack < res_T::size; i_pack++) {
                 #pragma HLS UNROLL
@@ -556,7 +556,7 @@ DataPropagation:
 
     if (CONFIG_T::n_sequence_out == 1) {
         res_T res_pack;
-    #pragma HLS DATA_PACK variable=res_pack
+        PRAGMA_DATA_PACK(res_pack)
     ResPack:
         for (int i_pack = 0; i_pack < res_T::size; i_pack++) {
             #pragma HLS UNROLL

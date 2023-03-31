@@ -12,6 +12,7 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
     static const unsigned n_nonzeros = {nonzeros};
+    static const unsigned multiplier_limit = DIV_ROUNDUP(n_in * n_out, reuse_factor) - n_zeros / reuse_factor;
     static const bool store_weights_in_bram = false;
     typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
@@ -63,6 +64,7 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     static const unsigned n_scale_bias = (n_filt == -1) ? n_in : n_filt;
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
+    static const unsigned multiplier_limit = DIV_ROUNDUP(n_in, reuse_factor);
     static const bool store_weights_in_bram = false;
     typedef {bias_t.name} bias_t;
     typedef {scale_t.name} scale_t;

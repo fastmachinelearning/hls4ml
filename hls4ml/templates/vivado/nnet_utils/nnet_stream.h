@@ -3,6 +3,7 @@
 #define NNET_STREAM_H
 
 #include "hls_stream.h"
+#include "nnet_common.h"
 
 namespace nnet {
 
@@ -24,8 +25,8 @@ CloneLoop:
         data_T in_data = data.read();
         res_T out_data1;
         res_T out_data2;
-        #pragma HLS DATA_PACK variable=out_data1
-        #pragma HLS DATA_PACK variable=out_data2
+        PRAGMA_DATA_PACK(out_data1)
+        PRAGMA_DATA_PACK(out_data2)
 
     ClonePack:
         for (int j = 0; j < data_T::size; j++) {
@@ -49,9 +50,9 @@ CloneLoop:
         res_T out_data1;
         res_T out_data2;
         res_T out_data3;
-        #pragma HLS DATA_PACK variable=out_data1
-        #pragma HLS DATA_PACK variable=out_data2
-        #pragma HLS DATA_PACK variable=out_data3
+        PRAGMA_DATA_PACK(out_data1)
+        PRAGMA_DATA_PACK(out_data2)
+        PRAGMA_DATA_PACK(out_data3)
 
     ClonePack:
         for (int j = 0; j < data_T::size; j++) {
@@ -74,7 +75,7 @@ template <class data_T, class res_T, int N> void repack_stream(hls::stream<data_
 
             data_T in_data = data.read();
             res_T out_data;
-            #pragma HLS DATA_PACK variable=out_data
+            PRAGMA_DATA_PACK(out_data)
 
             for (int j = 0; j < data_T::size; j++) {
                 #pragma HLS UNROLL
@@ -92,7 +93,7 @@ template <class data_T, class res_T, int N> void repack_stream(hls::stream<data_
 
             data_T in_data = data.read();
             res_T out_data;
-            #pragma HLS DATA_PACK variable=out_data
+            PRAGMA_DATA_PACK(out_data)
 
             for (int j = 0; j < pack_diff; j++) {
                 #pragma HLS PIPELINE
@@ -140,7 +141,7 @@ BroadcastLoop:
         for (int j = 0; j < n_dupl; j++) {
             #pragma HLS PIPELINE
             res_T out_data;
-            #pragma HLS DATA_PACK variable=out_data
+            PRAGMA_DATA_PACK(out_data)
             for (int k = 0; k < res_T::size; k++) {
                 #pragma HLS UNROLL
                 out_data[k] = in_data[k];
@@ -159,7 +160,7 @@ BroadcastLoop:
         #pragma HLS PIPELINE
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
         for (int k = 0; k < res_T::size; k++) {
             #pragma HLS UNROLL
             out_data[k] = in_data[0];
@@ -194,7 +195,7 @@ void transpose_2d(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     for (int i = 0; i < CONFIG_T::height * CONFIG_T::width / res_T::size; i++) {
         #pragma HLS PIPELINE
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
         for (int j = 0; j < res_T::size; j++) {
             out_data[j] = typename res_T::value_type(data_array[j * data_T::size + i]);
         }

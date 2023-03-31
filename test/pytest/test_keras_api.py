@@ -15,7 +15,7 @@ from tensorflow.keras import backend as K
 
 test_root_path = Path(__file__).parent
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_dense(backend, io_type):
     model = tf.keras.models.Sequential()
@@ -66,7 +66,7 @@ def test_dense(backend, io_type):
                                                  PReLU(alpha_initializer="zeros",),
                                                  Activation(activation='sigmoid', name='Activation')])
                                                  #ThresholdedReLU(theta=1.0)])
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activations(activation_function, backend, io_type):
     model = tf.keras.models.Sequential()
@@ -94,7 +94,7 @@ def test_activations(activation_function, backend, io_type):
 
 padds_options = ['same', 'valid']
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv1d(padds, backend, io_type):
     model = tf.keras.models.Sequential()
@@ -123,8 +123,8 @@ def test_conv1d(padds, backend, io_type):
      # 5e-2 might be too high
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=5e-2)
 
-    if not (backend=='Vivado' and io_type=='io_stream' and padds=='same'):
-      # Vivado inserts and additional layer for 'same' padding in io_stream
+    if not (backend in ['Vivado', 'Vitis'] and io_type=='io_stream' and padds=='same'):
+      # Vivado/Vitis inserts and additional layer for 'same' padding in io_stream
       assert len(model.layers) + 2 == len(hls_model.get_layers())
       assert list(hls_model.get_layers())[1].attributes['name'] == model.layers[0]._name
       assert list(hls_model.get_layers())[1].attributes['class_name'] == 'Conv1D'
@@ -154,7 +154,7 @@ chans_options=['channels_last']
 padds_options=['same', 'valid']
 @pytest.mark.parametrize('chans', chans_options)
 @pytest.mark.parametrize('padds',  padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv2d(chans, padds, backend, io_type):
     model = tf.keras.models.Sequential()
@@ -235,7 +235,7 @@ pooling_layers = [MaxPooling1D, MaxPooling2D, AveragePooling1D, AveragePooling2D
 @pytest.mark.parametrize('pooling', pooling_layers)
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('chans', chans_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_pooling(pooling, padds, chans, backend):
     assert '1D' in pooling.__name__ or '2D' in pooling.__name__
     

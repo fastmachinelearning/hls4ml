@@ -90,8 +90,7 @@ template <class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void dot1d(input1_T data1[CONFIG_T::n_in], input2_T data2[CONFIG_T::n_in], res_T res[CONFIG_T::n_out]) {
     #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
-    constexpr unsigned multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in, CONFIG_T::reuse_factor);
-    CONFIG_T::template product<input1_T, input2_T>::limit(multiplier_limit);
+    #pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::multiplier_limit
 
     typename CONFIG_T::accum_t mult[CONFIG_T::n_in];
     #pragma HLS ARRAY_PARTITION variable=mult complete

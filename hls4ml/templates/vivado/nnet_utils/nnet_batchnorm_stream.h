@@ -18,9 +18,8 @@ void normalize(hls::stream<data_T> &data, hls::stream<res_T> &res, typename CONF
     #pragma HLS ARRAY_PARTITION variable=scale complete
     #pragma HLS ARRAY_PARTITION variable=bias complete
 
-    constexpr unsigned multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in, CONFIG_T::reuse_factor);
-    constexpr unsigned ii = CONFIG_T::n_in / multiplier_limit;
-    CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::scale_t>::limit(multiplier_limit);
+    constexpr unsigned ii = CONFIG_T::n_in / CONFIG_T::multiplier_limit;
+    #pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::multiplier_limit
 
 BatchNormLoop:
     for (int i = 0; i < CONFIG_T::n_in / data_T::size; i++) {
@@ -28,7 +27,7 @@ BatchNormLoop:
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     BatchNormpack:
         for (int j = 0; j < data_T::size; j++) {
@@ -62,7 +61,7 @@ BinaryNormLoop:
 
         data_T in_data = data.read();
         nnet::array<ap_uint<1>, CONFIG_T::n_in> out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     BatchNormPack:
         for (int j = 0; j < data_T::size; j++) {
@@ -87,7 +86,7 @@ TernaryNormLoop:
 
         data_T in_data = data.read();
         nnet::array<ap_int<2>, CONFIG_T::n_in> out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     BatchNormPack:
         for (int j = 0; j < data_T::size; j++) {

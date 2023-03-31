@@ -27,10 +27,8 @@ void conv_1d_latency_cl(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],
     #pragma HLS ARRAY_PARTITION variable=weights complete
     #pragma HLS ARRAY_PARTITION variable=biases complete
 
-    int multiplier_limit =
-        CONFIG_T::n_pixels * (ceil(float(mult_n_in * mult_n_out) / float(CONFIG_T::reuse_factor)) -
-                              floor(float(CONFIG_T::mult_config::n_zeros) / float(CONFIG_T::reuse_factor)));
-    CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::limit(multiplier_limit);
+    // Limit multipliers to control parallelization
+    #pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::mult_config::multiplier_limit
 
 PartitionLoop:
     for (int i_part = 0; i_part < CONFIG_T::n_partitions; i_part++) {

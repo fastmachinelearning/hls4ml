@@ -56,15 +56,21 @@ def _find_solutions(sln_dir):
     solutions = []
 
     if os.path.isfile(sln_dir + '/vivado_hls.app'):
-        with open(sln_dir + '/vivado_hls.app') as f:
-            # Get rid of namespaces (workaround to support two types of vivado_hls.app files)
-            xmlstring = re.sub(' xmlns="[^"]+"', '', f.read(), count=1)
+        sln_file = 'vivado_hls.app'
+    elif os.path.isfile(sln_dir + '/hls.app'):
+        sln_file = 'hls.app'
+    else:
+        return solutions
 
-        root = ET.fromstring(xmlstring)
-        for sln_tag in root.findall('solutions/solution'):
-            sln_name = sln_tag.get('name')
-            if sln_name is not None and os.path.isdir(sln_dir + '/' + sln_name):
-                solutions.append(sln_name)
+    with open(sln_dir + '/' + sln_file) as f:
+        # Get rid of namespaces (workaround to support two types of vivado_hls.app files)
+        xmlstring = re.sub(' xmlns="[^"]+"', '', f.read(), count=1)
+
+    root = ET.fromstring(xmlstring)
+    for sln_tag in root.findall('solutions/solution'):
+        sln_name = sln_tag.get('name')
+        if sln_name is not None and os.path.isdir(sln_dir + '/' + sln_name):
+            solutions.append(sln_name)
 
     return solutions
 
@@ -172,8 +178,13 @@ def parse_vivado_report(hls_dir):
         # Area
         area_node = root.find('./AreaEstimates')
         for child in area_node.find('./Resources'):
+            # DSPs are called 'DSP48E' in Vivado and just 'DSP' in Vitis. Overriding here to have consistent keys
+            if child.tag == 'DSP48E':
+                child.tag = 'DSP'
             c_synth_report[child.tag] = child.text
         for child in area_node.find('./AvailableResources'):
+            if child.tag == 'DSP48E':
+                child.tag = 'DSP'
             c_synth_report['Available' + child.tag] = child.text
         report['CSynthesisReport'] = c_synth_report
     else:

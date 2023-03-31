@@ -23,7 +23,7 @@ void depthwise_conv_1d_encoded_cl(hls::stream<data_T> &data, hls::stream<res_T> 
     #pragma HLS ARRAY_PARTITION variable=CONFIG_T::pixels complete
 
     res_T res_pack;
-    #pragma HLS DATA_PACK variable=res_pack
+    PRAGMA_DATA_PACK(res_pack)
     unsigned outputs_ready = 0;
 
     ap_uint<CONFIG_T::filt_width> pixel_idx[data_T::size / CONFIG_T::n_chan];

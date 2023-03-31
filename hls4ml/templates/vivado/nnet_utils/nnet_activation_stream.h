@@ -21,7 +21,7 @@ LinearActLoop:
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     LinearPackLoop:
         for (int j = 0; j < res_T::size; j++) {
@@ -43,7 +43,7 @@ ReLUActLoop:
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     ReLUPackLoop:
         for (int j = 0; j < res_T::size; j++) {
@@ -82,7 +82,7 @@ SigmoidActLoop:
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     SigmoidPackLoop:
         for (int j = 0; j < res_T::size; j++) {
@@ -154,11 +154,12 @@ SoftmaxExpLoop:
             invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t, CONFIG_T>(exp_sum)];
 
         res_T out_pack;
-    #pragma HLS DATA_PACK variable=out_pack
+        PRAGMA_DATA_PACK(out_pack)
+
     SoftmaxInvPackLoop:
         for (unsigned j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
-            #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+            #pragma HLS ALLOCATION operation instances=mul limit=multiplier_limit
             out_pack[j] = exp_res[j] * inv_exp_sum;
         }
         res.write(out_pack);
@@ -234,11 +235,12 @@ SoftmaxArrayLoop:
             invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t, CONFIG_T>(exp_sum)];
 
         res_T out_pack;
-    #pragma HLS DATA_PACK variable=out_pack
+        PRAGMA_DATA_PACK(out_pack)
+
     SoftmaxInvPackLoop:
         for (unsigned j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
-            #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+            #pragma HLS ALLOCATION operation instances=mul limit=multiplier_limit
             out_pack[j] = exp_res[j] * inv_exp_sum;
         }
         res.write(out_pack);
@@ -303,7 +305,8 @@ SoftmaxInitLoop:
         }
 
         res_T out_pack;
-    #pragma HLS DATA_PACK variable=out_pack
+        PRAGMA_DATA_PACK(out_pack)
+
     SoftmaxInvPackLoop:
         for (unsigned j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
@@ -391,7 +394,7 @@ TanHActLoop:
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     TanHPackLoop:
         for (int j = 0; j < res_T::size; j++) {
@@ -422,7 +425,7 @@ HardSigmoidActLoop:
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     HardSigmoidPackLoop:
         for (int j = 0; j < res_T::size; j++) {
@@ -476,7 +479,7 @@ LeakyReLUActLoop:
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     LeakyReLUPackLoop:
         for (int j = 0; j < res_T::size; j++) {
@@ -502,7 +505,7 @@ ThresholdedReLUActLoop:
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     ThresholdedReLUPackLoop:
         for (int j = 0; j < res_T::size; j++) {
@@ -541,7 +544,7 @@ SoftplusActLoop:
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     SoftplusPackLoop:
         for (int j = 0; j < res_T::size; j++) {
@@ -582,7 +585,7 @@ SoftsignActLoop:
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     SoftsignPackLoop:
         for (int j = 0; j < res_T::size; j++) {
@@ -623,7 +626,7 @@ EluActLoop:
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     EluPackLoop:
         for (int j = 0; j < res_T::size; j++) {
@@ -671,7 +674,7 @@ SeluActLoop:
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     SeluPackLoop:
         for (int j = 0; j < res_T::size; j++) {
@@ -703,7 +706,7 @@ PReLUActLoop:
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     PReLUPackLoop:
         for (int j = 0; j < res_T::size; j++) {
@@ -728,7 +731,7 @@ PReLUActLoop:
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     PReLUPackLoop:
         for (int j = 0; j < res_T::size; j++) {
@@ -753,7 +756,7 @@ PReLUActLoop:
 
         data_T in_data = data.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     PReLUPackLoop:
         for (int j = 0; j < res_T::size; j++) {

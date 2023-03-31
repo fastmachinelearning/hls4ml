@@ -134,7 +134,7 @@ void pooling2d_encoded_cl(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     assert(CONFIG_T::pool_height == CONFIG_T::stride_height && CONFIG_T::pool_width == CONFIG_T::stride_width);
 
     res_T res_pack;
-    #pragma HLS DATA_PACK variable=res_pack
+    PRAGMA_DATA_PACK(res_pack)
     unsigned outputs_ready = 0;
 
     hls::stream<typename data_T::value_type> data_window[CONFIG_T::pool_height * CONFIG_T::pool_width * CONFIG_T::n_filt];
@@ -182,7 +182,7 @@ void compute_pool_buffer_2d(const data_T &in_elem,
     #pragma HLS ARRAY_PARTITION variable = kernel_data complete dim = 0
 
     res_T res_pack;
-    #pragma HLS DATA_PACK variable=res_pack
+    PRAGMA_DATA_PACK(res_pack)
 
     // Add pixel into line buffer, return pooling kernels
     nnet::shift_line_buffer<data_T, CONFIG_T>(in_elem, line_buffer, kernel_data);
@@ -251,7 +251,7 @@ ReadInputHeight:
 
 template <class data_T, class res_T, typename CONFIG_T>
 void pooling2d_cl(hls::stream<data_T> &data, hls::stream<res_T> &res) {
-    #pragma HLS inline region
+    #pragma HLS inline recursive
     switch (CONFIG_T::implementation) {
     case conv_implementation::linebuffer:
         pooling2d_buffer_cl<data_T, res_T, CONFIG_T>(data, res);
@@ -351,7 +351,7 @@ void pooling1d_encoded_cl(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     assert(CONFIG_T::pool_width == CONFIG_T::stride_width);
 
     res_T res_pack;
-    #pragma HLS DATA_PACK variable=res_pack
+    PRAGMA_DATA_PACK(res_pack)
     unsigned outputs_ready = 0;
 
     hls::stream<typename data_T::value_type> data_window[CONFIG_T::pool_width * CONFIG_T::n_filt];
@@ -390,7 +390,7 @@ void compute_pool_buffer_1d(const data_T &in_elem, hls::stream<res_T> &res) {
     #pragma HLS ARRAY_PARTITION variable = kernel_data complete dim = 0
 
     res_T res_pack;
-    #pragma HLS DATA_PACK variable=res_pack
+    PRAGMA_DATA_PACK(res_pack)
 
     // Add pixel into line buffer, return pooling kernels
     // 1D case line buffer not necessary. Put directly into the kernel_data buffer
@@ -442,7 +442,7 @@ ReadInputWidth:
 
 template <class data_T, class res_T, typename CONFIG_T>
 void pooling1d_cl(hls::stream<data_T> &data, hls::stream<res_T> &res) {
-    #pragma HLS inline region
+    #pragma HLS inline recursive
     switch (CONFIG_T::implementation) {
     case conv_implementation::linebuffer:
         pooling1d_buffer_cl<data_T, res_T, CONFIG_T>(data, res);
@@ -523,7 +523,7 @@ ReadInputHeight:
             #pragma HLS PIPELINE
 
             res_T res_pack;
-        #pragma HLS DATA_PACK variable=res_pack
+            PRAGMA_DATA_PACK(res_pack)
         MaxPoolPack:
             for (unsigned i_pack = 0; i_pack < res_T::size; i_pack++) {
                 #pragma HLS UNROLL
@@ -537,7 +537,7 @@ ReadInputHeight:
             #pragma HLS PIPELINE
 
             res_T res_pack;
-        #pragma HLS DATA_PACK variable=res_pack
+            PRAGMA_DATA_PACK(res_pack)
         AvgPoolPack:
             for (unsigned i_pack = 0; i_pack < res_T::size; i_pack++) {
                 #pragma HLS UNROLL
@@ -579,7 +579,7 @@ ReadInput:
             #pragma HLS PIPELINE
 
             res_T res_pack;
-        #pragma HLS DATA_PACK variable=res_pack
+            PRAGMA_DATA_PACK(res_pack)
         MaxPoolPack:
             for (unsigned i_pack = 0; i_pack < res_T::size; i_pack++) {
                 #pragma HLS UNROLL
@@ -593,7 +593,7 @@ ReadInput:
             #pragma HLS PIPELINE
 
             res_T res_pack;
-        #pragma HLS DATA_PACK variable=res_pack
+            PRAGMA_DATA_PACK(res_pack)
         AvgPoolPack:
             for (unsigned i_pack = 0; i_pack < res_T::size; i_pack++) {
                 #pragma HLS UNROLL

@@ -30,9 +30,7 @@ void dense_latency(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
     #pragma HLS ARRAY_PARTITION variable=mult complete
     #pragma HLS ARRAY_PARTITION variable=acc complete
 
-    int multiplier_limit = ceil(float(CONFIG_T::n_in * CONFIG_T::n_out) / float(CONFIG_T::reuse_factor)) -
-                           floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
-    CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::limit(multiplier_limit);
+    #pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::multiplier_limit
 
 // Do the matrix-multiply
 Product1:

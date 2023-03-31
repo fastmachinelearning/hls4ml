@@ -23,9 +23,7 @@ void depthwise_product(data_T data[CONFIG_T::kernel_size * CONFIG_T::n_chan], re
 
     #pragma HLS ARRAY_PARTITION variable=mult complete
 
-    int multiplier_limit = ceil(float(CONFIG_T::kernel_size * CONFIG_T::n_chan) / float(CONFIG_T::reuse_factor)) -
-                           floor(float(CONFIG_T::n_zeros) / float(CONFIG_T::reuse_factor));
-    CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::limit(multiplier_limit);
+    #pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::multiplier_limit
 
 // Do the matrix-multiply
 Product:
@@ -78,7 +76,7 @@ InitData:
         data[id] = data_window[id].read();
     }
 
-    #pragma HLS INLINE region
+    #pragma HLS INLINE recursive
     if (CONFIG_T::strategy == nnet::latency) {
         depthwise_product<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(data, res, weights, biases);
     } else {
@@ -155,7 +153,7 @@ InitData:
         data[id] = data_pack[id];
     }
 
-    #pragma HLS INLINE region
+    #pragma HLS INLINE recursive
     if (CONFIG_T::strategy == nnet::latency) {
         dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
             data, res, weights, biases);
@@ -202,7 +200,7 @@ void compute_depthwise_output_buffer_1d(const data_T &in_elem, hls::stream<res_T
     // Check to see if we have a full kernel
     if ((sX - lShiftX) == 0 && pX > lShiftX - 1) {
         // Dense multiply
-        #pragma HLS INLINE region
+        #pragma HLS INLINE recursive
         if (CONFIG_T::strategy == nnet::latency) {
             depthwise_product<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(kernel_data, res_out,
                                                                                                  weights, biases);
@@ -267,7 +265,7 @@ void compute_depthwise_output_buffer_2d(const data_T &in_elem,
     // Check to see if we have a full kernel
     if ((sX - lShiftX) == 0 && (sY - lShiftY) == 0 && pY > lShiftY - 1 && pX > lShiftX - 1) {
         // Dense multiply
-        #pragma HLS INLINE region
+        #pragma HLS INLINE recursive
         if (CONFIG_T::strategy == nnet::latency) {
             depthwise_product<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(kernel_data, res_out,
                                                                                                  weights, biases);
