@@ -19,7 +19,8 @@ import datetime
 import json
 
 import requests
-from setuptools_scm import get_version
+
+from hls4ml import __version__
 
 try:
     from packaging.version import parse
@@ -51,7 +52,7 @@ copyright = str(datetime.datetime.now().year) + ', Fast Machine Learning Lab'
 author = 'Fast Machine Learning Lab'
 
 # The full version, including alpha/beta/rc tags
-version = get_version(root='..', relative_to=__file__)
+version = __version__
 
 release = get_pypi_version(project)
 
