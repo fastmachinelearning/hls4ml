@@ -16,7 +16,7 @@ namespace product {
  * types of each.
  * --- */
 
-class Product{};
+class Product {};
 
 template <class x_T, class w_T> class both_binary : public Product {
   public:

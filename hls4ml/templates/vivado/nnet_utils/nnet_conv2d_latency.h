@@ -7,7 +7,7 @@
 
 namespace nnet {
 
-template<class data_T, class res_T, typename CONFIG_T>
+template <class data_T, class res_T, typename CONFIG_T>
 void conv_2d_latency_cl(
     data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],
     res_T res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt],
