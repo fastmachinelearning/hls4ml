@@ -38,7 +38,7 @@ module krnl_rtl_axi_write_master #(
   input wire  [C_DATA_WIDTH-1:0]      s_tdata,
   output wire                         s_tready,
 
-  // AXI Interface 
+  // AXI Interface
   input wire                          aclk,
   input wire                          areset,
 
@@ -59,8 +59,8 @@ module krnl_rtl_axi_write_master #(
   output wire                         bready
 );
 
-timeunit 1ps; 
-timeprecision 1ps; 
+timeunit 1ps;
+timeprecision 1ps;
 
 /////////////////////////////////////////////////////////////////////////////
 // Local Parameters
@@ -88,9 +88,9 @@ logic                                 w_final_transaction;
 logic                                 w_almost_final_transaction = 1'b0;
 
 logic                                 awxfer;
-logic                                 awvalid_r    = 1'b0; 
+logic                                 awvalid_r    = 1'b0;
 logic [C_ADDR_WIDTH-1:0]              addr;
-logic                                 wfirst_d1    = 1'b0; 
+logic                                 wfirst_d1    = 1'b0;
 logic                                 wfirst_pulse = 1'b0;
 logic [LP_LOG_MAX_W_TO_AW-1:0]        dbg_w_to_aw_outstanding;
 logic                                 idle_aw;
@@ -106,9 +106,9 @@ logic                                 b_final_transaction;
 /////////////////////////////////////////////////////////////////////////////
 // Count the number of transfers and assert done when the last bvalid is received.
 assign num_full_bursts = ctrl_length[C_LOG_BURST_LEN+:C_MAX_LENGTH_WIDTH-C_LOG_BURST_LEN];
-assign num_partial_bursts = ctrl_length[0+:C_LOG_BURST_LEN] ? 1'b1 : 1'b0; 
+assign num_partial_bursts = ctrl_length[0+:C_LOG_BURST_LEN] ? 1'b1 : 1'b0;
 
-always @(posedge aclk) begin 
+always @(posedge aclk) begin
   start <= ctrl_start;
   num_transactions <= (num_partial_bursts == 1'b0) ? num_full_bursts - 1'b1 : num_full_bursts;
   has_partial_burst <= num_partial_bursts;
@@ -126,10 +126,10 @@ assign wdata         = s_tdata;
 assign wstrb         = {(C_DATA_WIDTH/8){1'b1}};
 assign s_tready = wready;
 
-assign wxfer = wvalid & wready; 
+assign wxfer = wvalid & wready;
 
-always @(posedge aclk) begin 
-  if (areset) begin 
+always @(posedge aclk) begin
+  if (areset) begin
     wfirst <= 1'b1;
   end
   else begin
@@ -142,9 +142,9 @@ assign load_burst_cntr = (wxfer & wlast & w_almost_final_transaction) || (start 
 
 krnl_rtl_counter #(
   .C_WIDTH ( C_LOG_BURST_LEN         ) ,
-  .C_INIT  ( {C_LOG_BURST_LEN{1'b1}} ) 
+  .C_INIT  ( {C_LOG_BURST_LEN{1'b1}} )
 )
-inst_burst_cntr ( 
+inst_burst_cntr (
   .clk        ( aclk            ) ,
   .clken      ( 1'b1            ) ,
   .rst        ( areset          ) ,
@@ -153,14 +153,14 @@ inst_burst_cntr (
   .decr       ( wxfer           ) ,
   .load_value ( final_burst_len ) ,
   .count      ( wxfers_to_go    ) ,
-  .is_zero    ( wlast           ) 
+  .is_zero    ( wlast           )
 );
 
 krnl_rtl_counter #(
   .C_WIDTH ( LP_TRANSACTION_CNTR_WIDTH         ) ,
-  .C_INIT  ( {LP_TRANSACTION_CNTR_WIDTH{1'b0}} ) 
+  .C_INIT  ( {LP_TRANSACTION_CNTR_WIDTH{1'b0}} )
 )
-inst_w_transaction_cntr ( 
+inst_w_transaction_cntr (
   .clk        ( aclk                 ) ,
   .clken      ( 1'b1                 ) ,
   .rst        ( areset               ) ,
@@ -169,7 +169,7 @@ inst_w_transaction_cntr (
   .decr       ( wxfer & wlast        ) ,
   .load_value ( num_transactions     ) ,
   .count      ( w_transactions_to_go ) ,
-  .is_zero    ( w_final_transaction  ) 
+  .is_zero    ( w_final_transaction  )
 );
 
 always @(posedge aclk) begin
@@ -179,29 +179,29 @@ end
 /////////////////////////////////////////////////////////////////////////////
 // AXI Write Address Channel
 /////////////////////////////////////////////////////////////////////////////
-// The address channel samples the data channel and send out transactions when 
-// first beat of wdata is asserted. This ensures that address requests are not 
+// The address channel samples the data channel and send out transactions when
+// first beat of wdata is asserted. This ensures that address requests are not
 // sent without data on the way.
 
 assign awvalid = awvalid_r;
 assign awxfer = awvalid & awready;
 
-always @(posedge aclk) begin 
-  if (areset) begin 
+always @(posedge aclk) begin
+  if (areset) begin
     awvalid_r <= 1'b0;
   end
   else begin
-    awvalid_r <= ~idle_aw & ~awvalid_r ? 1'b1 : 
-                 awready               ? 1'b0 : 
+    awvalid_r <= ~idle_aw & ~awvalid_r ? 1'b1 :
+                 awready               ? 1'b0 :
                                          awvalid_r;
   end
 end
 
 assign awaddr = addr;
 
-always @(posedge aclk) begin 
+always @(posedge aclk) begin
   addr <= ctrl_start ? ctrl_offset :
-          awxfer     ? addr + C_BURST_LEN*C_DATA_WIDTH/8 : 
+          awxfer     ? addr + C_BURST_LEN*C_DATA_WIDTH/8 :
                        addr;
 end
 
@@ -212,7 +212,7 @@ krnl_rtl_counter #(
   .C_WIDTH (LP_LOG_MAX_W_TO_AW),
   .C_INIT ({LP_LOG_MAX_W_TO_AW{1'b0}})
 )
-inst_w_to_aw_cntr ( 
+inst_w_to_aw_cntr (
   .clk        ( aclk                    ) ,
   .clken      ( 1'b1                    ) ,
   .rst        ( areset                  ) ,
@@ -221,22 +221,22 @@ inst_w_to_aw_cntr (
   .decr       ( awxfer                  ) ,
   .load_value (                         ) ,
   .count      ( dbg_w_to_aw_outstanding ) ,
-  .is_zero    ( idle_aw                 ) 
+  .is_zero    ( idle_aw                 )
 );
 
-always @(posedge aclk) begin 
-  wfirst_d1 <= wvalid & wfirst; 
+always @(posedge aclk) begin
+  wfirst_d1 <= wvalid & wfirst;
 end
 
-always @(posedge aclk) begin 
+always @(posedge aclk) begin
   wfirst_pulse <= wvalid & wfirst & ~wfirst_d1;
 end
 
 krnl_rtl_counter #(
   .C_WIDTH ( LP_TRANSACTION_CNTR_WIDTH         ) ,
-  .C_INIT  ( {LP_TRANSACTION_CNTR_WIDTH{1'b0}} ) 
+  .C_INIT  ( {LP_TRANSACTION_CNTR_WIDTH{1'b0}} )
 )
-inst_aw_transaction_cntr ( 
+inst_aw_transaction_cntr (
   .clk        ( aclk                   ) ,
   .clken      ( 1'b1                   ) ,
   .rst        ( areset                 ) ,
@@ -245,7 +245,7 @@ inst_aw_transaction_cntr (
   .decr       ( awxfer                 ) ,
   .load_value ( num_transactions       ) ,
   .count      ( aw_transactions_to_go  ) ,
-  .is_zero    ( aw_final_transaction   ) 
+  .is_zero    ( aw_final_transaction   )
 );
 
 /////////////////////////////////////////////////////////////////////////////
@@ -257,9 +257,9 @@ assign bxfer = bready & bvalid;
 
 krnl_rtl_counter #(
   .C_WIDTH ( LP_TRANSACTION_CNTR_WIDTH         ) ,
-  .C_INIT  ( {LP_TRANSACTION_CNTR_WIDTH{1'b0}} ) 
+  .C_INIT  ( {LP_TRANSACTION_CNTR_WIDTH{1'b0}} )
 )
-inst_b_transaction_cntr ( 
+inst_b_transaction_cntr (
   .clk        ( aclk                 ) ,
   .clken      ( 1'b1                 ) ,
   .rst        ( areset               ) ,
@@ -268,7 +268,7 @@ inst_b_transaction_cntr (
   .decr       ( bxfer                ) ,
   .load_value ( num_transactions     ) ,
   .count      ( b_transactions_to_go ) ,
-  .is_zero    ( b_final_transaction  ) 
+  .is_zero    ( b_final_transaction  )
 );
 
 endmodule : krnl_rtl_axi_write_master

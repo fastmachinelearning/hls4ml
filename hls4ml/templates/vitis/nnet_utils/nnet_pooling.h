@@ -199,7 +199,7 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
     // TODO partition the arrays according to the reuse factor
     const int limit = pool_op_limit<CONFIG_T>();
     #pragma HLS ALLOCATION function instances=pool_op<data_T, CONFIG_T::pool_height*CONFIG_T::pool_width,
-    //CONFIG_T::pool_op> limit=limit
+    // CONFIG_T::pool_op> limit=limit
     // Add any necessary padding
     unsigned padded_height = CONFIG_T::in_height + CONFIG_T::pad_top + CONFIG_T::pad_bottom;
     unsigned padded_width = CONFIG_T::in_width + CONFIG_T::pad_left + CONFIG_T::pad_right;
@@ -256,7 +256,7 @@ void pooling2d_cf(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
     // TODO partition the arrays according to the reuse factor
     const int limit = pool_op_limit<CONFIG_T>();
     #pragma HLS ALLOCATION function instances=pool_op<data_T, CONFIG_T::pool_height*CONFIG_T::pool_width,
-    //CONFIG_T::pool_op> limit=limit
+    // CONFIG_T::pool_op> limit=limit
     // Add any necessary padding
     unsigned padded_height = CONFIG_T::in_height + CONFIG_T::pad_top + CONFIG_T::pad_bottom;
     unsigned padded_width = CONFIG_T::in_width + CONFIG_T::pad_left + CONFIG_T::pad_right;
@@ -318,7 +318,7 @@ void global_pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * 
 
     const int limit = pool_op_limit<CONFIG_T>();
     #pragma HLS ALLOCATION function instances=pool_op<data_T, CONFIG_T::pool_width * CONFIG_T::pool_height,
-    //CONFIG_T::pool_op> limit=limit
+    // CONFIG_T::pool_op> limit=limit
 
 FiltLoop:
     for (int filt = 0; filt < CONFIG_T::n_filt; filt++) {
