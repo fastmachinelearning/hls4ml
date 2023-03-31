@@ -37,10 +37,16 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.autodoc',
     'sphinx.ext.githubpages',
+    'sphinx.ext.autosectionlabel',
     'sphinx_rtd_theme',
     'sphinx.ext.napoleon',
     'sphinx_contributors',
+    'sphinx_github_changelog',
 ]
+
+# Note: to build locally, you will need to set the GITHUB_TOKEN 
+# environment variable to a personal access token with repo scope
+sphinx_github_changelog_token = os.environ["GITHUB_TOKEN"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

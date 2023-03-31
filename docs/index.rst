@@ -1,7 +1,7 @@
 .. toctree::
     :hidden:
+    :caption: Introduction
 
-    Home <self>
     release_notes
     status
     setup
@@ -9,7 +9,6 @@
     concepts
     details
     flows
-    extension
     reference
 
 .. toctree::
@@ -18,6 +17,13 @@
     :caption: Quick API Reference
 
     api/*
+
+.. toctree::
+    :hidden:
+    :caption: Advanced Features
+
+    advanced/fifo_depth
+    advanced/extension
 
 .. toctree::
     :hidden:
@@ -43,7 +49,7 @@ The project is currently in development, so please let us know if you are intere
 
 Project Status
 =================================
-For the latest status including current and planned features, see the :doc:`Status and Features <status>` page.
+For the latest status including current and planned features, see the :ref:`Status and Features` page.
 
 Tutorials
 =================================
