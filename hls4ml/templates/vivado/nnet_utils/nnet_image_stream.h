@@ -44,7 +44,7 @@ void resize_nearest(
 					#pragma HLS UNROLL
 				
 					data_T out_data;
-					#pragma HLS DATA_PACK variable=out_data
+					PRAGMA_DATA_PACK(out_data)
 				
 					ResizeChan: for (unsigned k = 0; k < CONFIG_T::n_chan; k++) {
 						#pragma HLS UNROLL

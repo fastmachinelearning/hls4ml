@@ -140,8 +140,7 @@ void dot1d(
 {
     #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
-    constexpr unsigned multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in, CONFIG_T::reuse_factor);
-    CONFIG_T::template product<input1_T, input2_T>::limit(multiplier_limit);
+    #pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::multiplier_limit
 
     typename CONFIG_T::accum_t mult[CONFIG_T::n_in];
     #pragma HLS ARRAY_PARTITION variable=mult complete

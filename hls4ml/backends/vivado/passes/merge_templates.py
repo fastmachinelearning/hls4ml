@@ -49,6 +49,7 @@ dot_config_template = """struct config{index} : nnet::dot_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned reuse_factor = {reuse};
+    static const unsigned multiplier_limit = DIV_ROUNDUP(n_in, reuse_factor);
     typedef {accum_t.name} accum_t;
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
