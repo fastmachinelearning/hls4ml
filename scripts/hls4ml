@@ -218,7 +218,7 @@ def _build_vivado(args, extra_args):
 
     os.system(
         (
-            'cd {dir} && vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim}'
+            'cd {dir} && vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} '
             'validation={validation} export={export} vsynth={vsynth}"'
         ).format(
             dir=args.project,
