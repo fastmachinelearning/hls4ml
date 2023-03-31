@@ -16,8 +16,33 @@ import sys
 sys.path.insert(0, os.path.abspath('../'))
 
 import datetime
+import json
 
+import requests
 from setuptools_scm import get_version
+
+try:
+    from packaging.version import parse
+except ImportError:
+    from pip._vendor.packaging.version import parse
+
+
+URL_PATTERN = 'https://pypi.python.org/pypi/{package}/json'
+
+
+def get_pypi_version(package, url_pattern=URL_PATTERN):
+    """Return version of package on pypi.python.org using json."""
+    req = requests.get(url_pattern.format(package=package))
+    version = parse('0')
+    if req.status_code == requests.codes.ok:
+        j = json.loads(req.text.encode(req.encoding))
+        releases = j.get('releases', [])
+        for release in releases:
+            ver = parse(release)
+            if not ver.is_prerelease:
+                version = max(version, ver)
+    return str(version)
+
 
 # -- Project information -----------------------------------------------------
 
@@ -26,7 +51,9 @@ copyright = str(datetime.datetime.now().year) + ', Fast Machine Learning Lab'
 author = 'Fast Machine Learning Lab'
 
 # The full version, including alpha/beta/rc tags
-release = get_version(root='..', relative_to=__file__)
+version = get_version(root='..', relative_to=__file__)
+
+release = get_pypi_version(project)
 
 # -- General configuration ---------------------------------------------------
 
