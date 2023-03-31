@@ -1,9 +1,11 @@
-import pytest
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import ZeroPadding1D, ZeroPadding2D
-import numpy as np
-import hls4ml
 from pathlib import Path
+
+import numpy as np
+import pytest
+from tensorflow.keras.layers import ZeroPadding1D, ZeroPadding2D
+from tensorflow.keras.models import Sequential
+
+import hls4ml
 
 test_root_path = Path(__file__).parent
 
@@ -18,10 +20,12 @@ pad_r = 4
 
 atol = 5e-3
 
+
 @pytest.fixture(scope='module')
 def data_1d():
     X = np.random.rand(100, in_width, in_feat)
     return X
+
 
 @pytest.fixture(scope='module')
 def data_2d():
@@ -35,6 +39,7 @@ def keras_model_1d():
     model.add(ZeroPadding1D(input_shape=(in_width, in_feat), padding=(pad_l, pad_r)))
     model.compile()
     return model
+
 
 @pytest.fixture(scope='module')
 def keras_model_2d():
@@ -55,15 +60,11 @@ def test_zeropadding(keras_model_1d, keras_model_2d, data_1d, data_2d, model_typ
         model = keras_model_2d
         data = data_2d
 
-    config = hls4ml.utils.config_from_keras_model(model,
-                                                  default_precision='ap_fixed<32,1>',
-                                                  granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<32,1>', granularity='name')
     odir = str(test_root_path / f'hls4mlprj_zeropadding_{model_type}_{backend}_{io_type}')
-    hls_model = hls4ml.converters.convert_from_keras_model(model,
-                                                           hls_config=config,
-                                                           io_type=io_type,
-                                                           output_dir=odir,
-                                                           backend=backend)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, io_type=io_type, output_dir=odir, backend=backend
+    )
     hls_model.compile()
 
     # Predict
