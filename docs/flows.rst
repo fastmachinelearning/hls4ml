@@ -29,7 +29,5 @@ Flows
 A :py:class:`~hls4ml.model.flow.flow.Flow` is an ordered set of optimizers that may depend on other flows.
 There are common model-level flows that can run regardless of the backend, and there are backend-specific flows.
 Each backend provides provides a default flow for processing.
-For example, the Vivado backend defaults to an IP flow that applies all other flows and produces an IP.
+For example, the Vivado backend defaults to an `IP flow <https://github.com/fastmachinelearning/hls4ml/blob/7c0a065935904f50bd7e4c547f85354b36276092/hls4ml/backends/vivado/vivado_backend.py#L148-L160>`_ that requires additional flows and produces an IP.
 Another example is FIFO buffer depth optimization explained in the :ref:`FIFO Buffer Depth Optimization` section.
-
-Explain more flows
