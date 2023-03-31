@@ -44,9 +44,9 @@ extensions = [
     'sphinx_github_changelog',
 ]
 
-# Note: to build locally, you will need to set the GITHUB_TOKEN
+# Note: to build locally, you will need to set the ACTIONS_RUNTIME_TOKEN
 # environment variable to a personal access token with repo scope
-sphinx_github_changelog_token = os.environ["GITHUB_TOKEN"]
+sphinx_github_changelog_token = os.environ["ACTIONS_RUNTIME_TOKEN"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
