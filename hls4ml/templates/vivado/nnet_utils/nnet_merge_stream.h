@@ -37,7 +37,7 @@ AddLoop:
         input1_T in_data1 = data1.read();
         input2_T in_data2 = data2.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     AddPack:
         for (int j = 0; j < res_T::size; j++) {
@@ -60,7 +60,7 @@ SubtractLoop:
         input1_T in_data1 = data1.read();
         input2_T in_data2 = data2.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     SubtractPack:
         for (int j = 0; j < res_T::size; j++) {
@@ -83,7 +83,7 @@ MultiplyLoop:
         input1_T in_data1 = data1.read();
         input2_T in_data2 = data2.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     MultiplyPack:
         for (int j = 0; j < res_T::size; j++) {
@@ -106,7 +106,7 @@ AverageLoop:
         input1_T in_data1 = data1.read();
         input2_T in_data2 = data2.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     AveragePack:
         for (int j = 0; j < res_T::size; j++) {
@@ -129,7 +129,7 @@ MaximumLoop:
         input1_T in_data1 = data1.read();
         input2_T in_data2 = data2.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     MaximumPack:
         for (int j = 0; j < res_T::size; j++) {
@@ -152,7 +152,7 @@ MinimumLoop:
         input1_T in_data1 = data1.read();
         input2_T in_data2 = data2.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     MinimumPack:
         for (int j = 0; j < res_T::size; j++) {
@@ -174,7 +174,7 @@ ConcatLoopHeight1:
 
             input1_T in_data1 = data1.read();
             res_T out_data;
-            #pragma HLS DATA_PACK variable=out_data
+            PRAGMA_DATA_PACK(out_data)
 
         ConcatPackInput1:
             for (int k = 0; k < input1_T::size; k++) {
@@ -193,7 +193,7 @@ ConcatLoopHeight2:
 
             input2_T in_data2 = data2.read();
             res_T out_data;
-            #pragma HLS DATA_PACK variable=out_data
+            PRAGMA_DATA_PACK(out_data)
 
         ConcatPackInput2:
             for (int k = 0; k < input2_T::size; k++) {
@@ -216,7 +216,7 @@ ConcatLoopHeight:
 
             input1_T in_data1 = data1.read();
             res_T out_data;
-            #pragma HLS DATA_PACK variable=out_data
+            PRAGMA_DATA_PACK(out_data)
 
         ConcatPackInput1:
             for (int k = 0; k < input1_T::size; k++) {
@@ -232,7 +232,7 @@ ConcatLoopHeight:
 
             input2_T in_data2 = data2.read();
             res_T out_data;
-            #pragma HLS DATA_PACK variable=out_data
+            PRAGMA_DATA_PACK(out_data)
 
         ConcatPackInput2:
             for (int k = 0; k < input2_T::size; k++) {
@@ -256,7 +256,7 @@ ConcatLoopHeight:
             input1_T in_data1 = data1.read();
             input2_T in_data2 = data2.read();
             res_T out_data;
-            #pragma HLS DATA_PACK variable=out_data
+            PRAGMA_DATA_PACK(out_data)
 
         ConcatPackInput1:
             for (int k = 0; k < input1_T::size; k++) {
@@ -294,7 +294,7 @@ ConcatLoopHeight1:
 
         input1_T in_data1 = data1.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     ConcatPackInput1:
         for (int k = 0; k < input1_T::size; k++) {
@@ -310,7 +310,7 @@ ConcatLoopHeight2:
 
         input2_T in_data2 = data2.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     ConcatPackInput2:
         for (int k = 0; k < input2_T::size; k++) {
@@ -331,7 +331,7 @@ ConcatLoopHeight:
         input1_T in_data1 = data1.read();
         input2_T in_data2 = data2.read();
         res_T out_data;
-        #pragma HLS DATA_PACK variable=out_data
+        PRAGMA_DATA_PACK(out_data)
 
     ConcatPackInput1:
         for (int k = 0; k < input1_T::size; k++) {
@@ -361,7 +361,7 @@ void concatenate2d(hls::stream<input1_T> &data1, hls::stream<input2_T> &data2, h
 template <class input1_T, class input2_T, class res_T, typename CONFIG_T>
 void concatenate1d(hls::stream<input1_T> &data1, hls::stream<input2_T> &data2, hls::stream<res_T> &res) {
     res_T out_data;
-#pragma HLS DATA_PACK variable=out_data
+    PRAGMA_DATA_PACK(out_data)
 ConcatLoop1:
     for (int i = 0; i < CONFIG_T::n_elem1_0 / input1_T::size; i++) {
         #pragma HLS PIPELINE

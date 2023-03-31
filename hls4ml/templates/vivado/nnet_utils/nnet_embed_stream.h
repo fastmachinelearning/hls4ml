@@ -19,7 +19,7 @@ void embedding(
         #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
         res_T res_pack;
-        #pragma HLS DATA_PACK variable=res_pack
+        PRAGMA_DATA_PACK(res_pack)
 
         DenseEmbedding: for (int i = 0; i < CONFIG_T::n_out; i++) {
             #pragma HLS UNROLL

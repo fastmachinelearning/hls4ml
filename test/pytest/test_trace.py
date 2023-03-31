@@ -8,7 +8,7 @@ from tensorflow.keras.layers import Dense, Activation
 
 test_root_path = Path(__file__).parent
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_trace(backend):
     '''Test the tracing feature with a simple Keras model.'''
     model = tf.keras.models.Sequential()

@@ -20,11 +20,13 @@ strategy_options = ['Latency', 'Resource']
 @pytest.mark.parametrize('backend, io_type, strategy', [
                                       ('Quartus', 'io_parallel', 'resource'),
                                       ('Vivado', 'io_parallel', 'resource'),
-
+                                      ('Vitis', 'io_parallel', 'resource'),
                                       ('Vivado', 'io_parallel', 'latency'),
-                                      
+                                      ('Vitis', 'io_parallel', 'latency'),
                                       ('Vivado', 'io_stream', 'latency'),
-                                      ('Vivado', 'io_stream', 'resource')
+                                      ('Vivado', 'io_stream', 'resource'),
+                                      ('Vitis', 'io_stream', 'latency'),
+                                      ('Vitis', 'io_stream', 'resource'),
                                     ])
 def test_pointwiseconv1d(chans, padds, strides, backend, io_type, strategy):
     model = tf.keras.models.Sequential()

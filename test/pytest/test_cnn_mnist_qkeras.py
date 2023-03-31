@@ -40,7 +40,12 @@ def mnist_model():
                                       ('Vivado', 'io_parallel', 'resource'),
                                       ('Vivado', 'io_parallel', 'latency'),
                                       ('Vivado', 'io_stream', 'latency'),
-                                      ('Vivado', 'io_stream', 'resource')
+                                      ('Vivado', 'io_stream', 'resource'),
+
+                                      ('Vitis', 'io_parallel', 'resource'),
+                                      ('Vitis', 'io_parallel', 'latency'),
+                                      ('Vitis', 'io_stream', 'latency'),
+                                      ('Vitis', 'io_stream', 'resource')
                                     ])
 def hls_model(mnist_model, backend, io_type, strategy):
   keras_model = mnist_model
@@ -66,7 +71,12 @@ def hls_model(mnist_model, backend, io_type, strategy):
                                       ('Vivado', 'io_parallel', 'resource'),
                                       ('Vivado', 'io_parallel', 'latency'),
                                       ('Vivado', 'io_stream', 'latency'),
-                                      ('Vivado', 'io_stream', 'resource')
+                                      ('Vivado', 'io_stream', 'resource'),
+
+                                      ('Vitis', 'io_parallel', 'resource'),
+                                      ('Vitis', 'io_parallel', 'latency'),
+                                      ('Vitis', 'io_stream', 'latency'),
+                                      ('Vitis', 'io_stream', 'resource')
                                     ])
 def test_accuracy(mnist_data, mnist_model, hls_model):
   x_train, y_train, x_test, y_test = mnist_data

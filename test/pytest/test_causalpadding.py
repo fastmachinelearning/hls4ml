@@ -10,7 +10,7 @@ test_root_path = Path(__file__).parent
 atol = 5e-3
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_causalpadding(io_type, backend):
     
     model = Sequential()

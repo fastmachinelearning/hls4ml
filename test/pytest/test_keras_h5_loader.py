@@ -8,7 +8,7 @@ from pathlib import Path
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_keras_h5_loader(backend):
     input_shape = (10,)
     model = tf.keras.models.Sequential([

@@ -27,6 +27,17 @@
 #define MIN(n,d) (n > d ? d : n)
 #define MAX(n,d) (n > d ? n : d)
 
+#define STRINGIFY(x) #x
+#define EXPAND_STRING(x) STRINGIFY(x)
+
+#ifndef __VITIS_HLS__
+#define DATA_PACK_TXT HLS DATA_PACK variable=
+#define DATA_PACK_PRAGMA(variable) DATA_PACK_TXT variable
+#define PRAGMA_DATA_PACK(variable) _Pragma(EXPAND_STRING(DATA_PACK_PRAGMA(variable)))
+#else
+#define PRAGMA_DATA_PACK(variable)
+#endif
+
 namespace nnet {
 
 // Common type definitions
