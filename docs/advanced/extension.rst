@@ -153,7 +153,7 @@ In this case, the HLS code is valid for both the Vivado and Quartus backends.
         # Register HLS implementation
         backend.register_source('nnet_reverse.h')
 
-Finally, we can actually test the hls4ml custom layer compared to the Keras one.
+Finally, we can actually test the ``hls4ml`` custom layer compared to the Keras one.
 
 .. code-block:: Python
 

@@ -28,4 +28,4 @@ Because the neural networks can have complex architectures generally, it is hard
 By default ``hls4ml`` choses the most conservative possible depth for each FIFO buffer, which can result in a an unnecessary overutilization of resources.
 
 In order to reduce the impact on the resources used for FIFO buffer implementation, we have a FIFO depth optimization flow. This is described
-in the :ref:`fifo_depth` section.
+in the :ref:`FIFO Buffer Depth Optimization` section.
