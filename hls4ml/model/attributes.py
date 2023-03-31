@@ -6,7 +6,7 @@ that ensures layers are correctly initialized, have the valid information stored
 
 This module contains the definitions of classes for handling attributes. The ``Attribute`` class and its subclasses provide
 information about an expected attribute, but the actual value will be stored within the instance's ``attribute`` dict. This
-provides an unified view (mapping) of all attributes, but for convinience there are mappings that expose only certain types
+provides an unified view (mapping) of all attributes, but for convenience there are mappings that expose only certain types
 of attributes, such as types, variables, weights etc, via the ``AttributeMapping`` class.
 """
 
@@ -31,7 +31,7 @@ class Attribute:
         name (str): Name of the attribute
         value_type (optional): Type of the value expected to be stored in the attribute.
             If not specified, no validation of the stored value will be performed. Defaults to ``int``.
-        default (optional): Default value if no value is spaecified during layer creation. Defaults to ``None``.
+        default (optional): Default value if no value is specified during layer creation. Defaults to ``None``.
         configurable (bool, optional): Specifies if the attribute can be modified after creation. Defaults to ``False``.
 
     """
@@ -64,7 +64,7 @@ class ConfigurableAttribute(Attribute):
     """
     Represents a configurable attribute, i.e., the attribute whose value can be modified by the user.
 
-    This is a convineince class. It is advised to use ``ConfigurableAttribute`` over ``Attribute(..., configurable=True)``
+    This is a convenience class. It is advised to use ``ConfigurableAttribute`` over ``Attribute(..., configurable=True)``
     when defining the expected attributes of layer classes.
     """
 
@@ -74,7 +74,7 @@ class ConfigurableAttribute(Attribute):
 
 class TypeAttribute(Attribute):
     """
-    Represents an attribute that will store a type, i.e., an instance of ``NamedType`` or its sublasses.
+    Represents an attribute that will store a type, i.e., an instance of ``NamedType`` or its subclasses.
 
     As a convention, the name of the attribute storing a type will end in ``_t``.
     """
