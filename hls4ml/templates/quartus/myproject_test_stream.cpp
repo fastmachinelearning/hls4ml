@@ -6,8 +6,11 @@
 #include <vector>
 
 #include "firmware/myproject.h"
+#include "firmware/parameters.h"
 
 #include "firmware/nnet_utils/nnet_helpers.h"
+
+// hls-fpga-machine-learning insert bram
 
 #define CHECKPOINT 5000
 

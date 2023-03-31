@@ -173,7 +173,8 @@ SoftmaxExpLoop:
             invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t, CONFIG_T>(exp_sum)];
 
         res_T out_pack;
-    PRAGMA_DATA_PACK(out_pack)
+        PRAGMA_DATA_PACK(out_pack)
+
     SoftmaxInvPackLoop:
         for (unsigned j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
@@ -253,7 +254,8 @@ SoftmaxArrayLoop:
             invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t, CONFIG_T>(exp_sum)];
 
         res_T out_pack;
-    PRAGMA_DATA_PACK(out_pack)
+        PRAGMA_DATA_PACK(out_pack)
+
     SoftmaxInvPackLoop:
         for (unsigned j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
@@ -322,7 +324,8 @@ SoftmaxInitLoop:
         }
 
         res_T out_pack;
-    PRAGMA_DATA_PACK(out_pack)
+        PRAGMA_DATA_PACK(out_pack)
+
     SoftmaxInvPackLoop:
         for (unsigned j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
