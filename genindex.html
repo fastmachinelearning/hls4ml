@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; hls4ml 0.5.1.dev649+g7c0a0659 documentation</title>
+  <title>Index &mdash; hls4ml 0.5.1.dev676+g3dbf7771 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -63,6 +63,8 @@
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.backends.fpga.passes.html">hls4ml.backends.fpga.passes package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.backends.quartus.html">hls4ml.backends.quartus package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.backends.quartus.passes.html">hls4ml.backends.quartus.passes package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.backends.vitis.html">hls4ml.backends.vitis package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.backends.vitis.passes.html">hls4ml.backends.vitis.passes package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.backends.vivado.html">hls4ml.backends.vivado package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.backends.vivado.passes.html">hls4ml.backends.vivado.passes package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="autodoc/hls4ml.backends.vivado_accelerator.html">hls4ml.backends.vivado_accelerator package</a></li>
@@ -1059,6 +1061,13 @@
 </li>
       </ul></li>
       <li>
+    hls4ml.writer.vitis_writer
+
+      <ul>
+        <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.vitis_writer">module</a>
+</li>
+      </ul></li>
+      <li>
     hls4ml.writer.vivado_accelerator_writer
 
       <ul>
@@ -1392,6 +1401,8 @@
         <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer">hls4ml.writer</a>
 </li>
         <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.quartus_writer">hls4ml.writer.quartus_writer</a>
+</li>
+        <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.vitis_writer">hls4ml.writer.vitis_writer</a>
 </li>
         <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.vivado_accelerator_writer">hls4ml.writer.vivado_accelerator_writer</a>
 </li>
@@ -1816,12 +1827,14 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.attributes.VariableMapping">VariableMapping (class in hls4ml.model.attributes)</a>
 </li>
-      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter">VivadoAcceleratorWriter (class in hls4ml.writer.vivado_accelerator_writer)</a>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_writer.VitisWriter">VitisWriter (class in hls4ml.writer.vitis_writer)</a>
 </li>
-      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VivadoArrayVariableConverter">VivadoArrayVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter">VivadoAcceleratorWriter (class in hls4ml.writer.vivado_accelerator_writer)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VivadoArrayVariableConverter">VivadoArrayVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VivadoArrayVariableDefinition">VivadoArrayVariableDefinition (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VivadoInplaceArrayVariableConverter">VivadoInplaceArrayVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
@@ -1889,6 +1902,8 @@
       <ul>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.quartus_writer.QuartusWriter.write_hls">(hls4ml.writer.quartus_writer.QuartusWriter method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_writer.VitisWriter.write_hls">(hls4ml.writer.vitis_writer.VitisWriter method)</a>
+</li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_hls">(hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter method)</a>
 </li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_hls">(hls4ml.writer.vivado_writer.VivadoWriter method)</a>
@@ -1906,6 +1921,8 @@
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_nnet_utils">(hls4ml.writer.vivado_writer.VivadoWriter method)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_writer.VitisWriter.write_nnet_utils_overrides">write_nnet_utils_overrides() (hls4ml.writer.vitis_writer.VitisWriter method)</a>
+</li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.quartus_writer.QuartusWriter.write_parameters">write_parameters() (hls4ml.writer.quartus_writer.QuartusWriter method)</a>
 
       <ul>

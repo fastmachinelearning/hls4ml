@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hls4ml.writer package &mdash; hls4ml 0.5.1.dev649+g7c0a0659 documentation</title>
+  <title>hls4ml.writer package &mdash; hls4ml 0.5.1.dev676+g3dbf7771 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -65,6 +65,8 @@
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.fpga.passes.html">hls4ml.backends.fpga.passes package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.quartus.html">hls4ml.backends.quartus package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.quartus.passes.html">hls4ml.backends.quartus.passes package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vitis.html">hls4ml.backends.vitis package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vitis.passes.html">hls4ml.backends.vitis.passes package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vivado.html">hls4ml.backends.vivado package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vivado.passes.html">hls4ml.backends.vivado.passes package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html">hls4ml.backends.vivado_accelerator package</a></li>
@@ -82,6 +84,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">hls4ml.writer package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.quartus_writer">hls4ml.writer.quartus_writer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.vitis_writer">hls4ml.writer.vitis_writer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.vivado_accelerator_writer">hls4ml.writer.vivado_accelerator_writer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.vivado_writer">hls4ml.writer.vivado_writer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.writers">hls4ml.writer.writers module</a></li>
@@ -319,6 +322,26 @@
 </dd>
 </dl>
 </dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.writer.vitis_writer">
+<span id="hls4ml-writer-vitis-writer-module"></span><h2>hls4ml.writer.vitis_writer module<a class="headerlink" href="#module-hls4ml.writer.vitis_writer" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_writer.VitisWriter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.writer.vitis_writer.</span></span><span class="sig-name descname"><span class="pre">VitisWriter</span></span><a class="headerlink" href="#hls4ml.writer.vitis_writer.VitisWriter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.writer.vivado_writer.VivadoWriter" title="hls4ml.writer.vivado_writer.VivadoWriter"><code class="xref py py-class docutils literal notranslate"><span class="pre">VivadoWriter</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_writer.VitisWriter.write_hls">
+<span class="sig-name descname"><span class="pre">write_hls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vitis_writer.VitisWriter.write_hls" title="Permalink to this definition"></a></dt>
+<dd><p>Write the HLS project. Calls the steps from VivadoWriter, adapted for Vitis</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_writer.VitisWriter.write_nnet_utils_overrides">
+<span class="sig-name descname"><span class="pre">write_nnet_utils_overrides</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vitis_writer.VitisWriter.write_nnet_utils_overrides" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 

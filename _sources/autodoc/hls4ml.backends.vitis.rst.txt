@@ -1,0 +1,29 @@
+hls4ml.backends.vitis package
+=============================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hls4ml.backends.vitis.passes
+
+Submodules
+----------
+
+hls4ml.backends.vitis.vitis\_backend module
+-------------------------------------------
+
+.. automodule:: hls4ml.backends.vitis.vitis_backend
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.backends.vitis
+   :members:
+   :undoc-members:
+   :show-inheritance:

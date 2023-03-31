@@ -1,0 +1,21 @@
+hls4ml.backends.vitis.passes package
+====================================
+
+Submodules
+----------
+
+hls4ml.backends.vitis.passes.feature\_check module
+--------------------------------------------------
+
+.. automodule:: hls4ml.backends.vitis.passes.feature_check
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.backends.vitis.passes
+   :members:
+   :undoc-members:
+   :show-inheritance:

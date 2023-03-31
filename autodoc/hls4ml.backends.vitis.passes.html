@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hls4ml.backends.vivado package &mdash; hls4ml 0.5.1.dev676+g3dbf7771 documentation</title>
+  <title>hls4ml.backends.vitis.passes package &mdash; hls4ml 0.5.1.dev676+g3dbf7771 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -19,8 +19,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="hls4ml.backends.vivado.passes package" href="hls4ml.backends.vivado.passes.html" />
-    <link rel="prev" title="hls4ml.backends.vitis.passes package" href="hls4ml.backends.vitis.passes.html" /> 
+    <link rel="next" title="hls4ml.backends.vivado package" href="hls4ml.backends.vivado.html" />
+    <link rel="prev" title="hls4ml.backends.vitis package" href="hls4ml.backends.vitis.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -67,14 +67,13 @@
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.quartus.html">hls4ml.backends.quartus package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.quartus.passes.html">hls4ml.backends.quartus.passes package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vitis.html">hls4ml.backends.vitis package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vitis.passes.html">hls4ml.backends.vitis.passes package</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">hls4ml.backends.vivado package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">hls4ml.backends.vitis.passes package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hls4ml-backends-vivado-vivado-backend-module">hls4ml.backends.vivado.vivado_backend module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.backends.vivado">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hls4ml-backends-vitis-passes-feature-check-module">hls4ml.backends.vitis.passes.feature_check module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module contents</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vivado.html">hls4ml.backends.vivado package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vivado.passes.html">hls4ml.backends.vivado.passes package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html">hls4ml.backends.vivado_accelerator package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.passes.html">hls4ml.backends.vivado_accelerator.passes package</a></li>
@@ -107,7 +106,8 @@
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="hls4ml.html">hls4ml package</a></li>
           <li class="breadcrumb-item"><a href="hls4ml.backends.html">hls4ml.backends package</a></li>
-      <li class="breadcrumb-item active">hls4ml.backends.vivado package</li>
+          <li class="breadcrumb-item"><a href="hls4ml.backends.vitis.html">hls4ml.backends.vitis package</a></li>
+      <li class="breadcrumb-item active">hls4ml.backends.vitis.passes package</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -116,43 +116,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="hls4ml-backends-vivado-package">
-<h1>hls4ml.backends.vivado package<a class="headerlink" href="#hls4ml-backends-vivado-package" title="Permalink to this heading"></a></h1>
-<section id="subpackages">
-<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading"></a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.vivado.passes.html">hls4ml.backends.vivado.passes package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.broadcast_stream">hls4ml.backends.vivado.passes.broadcast_stream module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.conv_same_pad">hls4ml.backends.vivado.passes.conv_same_pad module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.conv_stream">hls4ml.backends.vivado.passes.conv_stream module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.convolution_templates">hls4ml.backends.vivado.passes.convolution_templates module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.core_templates">hls4ml.backends.vivado.passes.core_templates module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#hls4ml-backends-vivado-passes-fifo-depth-optimization-module">hls4ml.backends.vivado.passes.fifo_depth_optimization module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.garnet_templates">hls4ml.backends.vivado.passes.garnet_templates module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.merge_templates">hls4ml.backends.vivado.passes.merge_templates module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pointwise">hls4ml.backends.vivado.passes.pointwise module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pooling_templates">hls4ml.backends.vivado.passes.pooling_templates module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#hls4ml-backends-vivado-passes-quantization-templates-module">hls4ml.backends.vivado.passes.quantization_templates module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.recurrent_templates">hls4ml.backends.vivado.passes.recurrent_templates module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.reshaping_templates">hls4ml.backends.vivado.passes.reshaping_templates module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.resource_strategy">hls4ml.backends.vivado.passes.resource_strategy module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.transform_types">hls4ml.backends.vivado.passes.transform_types module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes">Module contents</a></li>
-</ul>
-</li>
-</ul>
-</div>
-</section>
+  <section id="hls4ml-backends-vitis-passes-package">
+<h1>hls4ml.backends.vitis.passes package<a class="headerlink" href="#hls4ml-backends-vitis-passes-package" title="Permalink to this heading"></a></h1>
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
 </section>
-<section id="hls4ml-backends-vivado-vivado-backend-module">
-<h2>hls4ml.backends.vivado.vivado_backend module<a class="headerlink" href="#hls4ml-backends-vivado-vivado-backend-module" title="Permalink to this heading"></a></h2>
+<section id="hls4ml-backends-vitis-passes-feature-check-module">
+<h2>hls4ml.backends.vitis.passes.feature_check module<a class="headerlink" href="#hls4ml-backends-vitis-passes-feature-check-module" title="Permalink to this heading"></a></h2>
 </section>
-<section id="module-hls4ml.backends.vivado">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.backends.vivado" title="Permalink to this heading"></a></h2>
+<section id="module-contents">
+<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this heading"></a></h2>
 </section>
 </section>
 
@@ -160,8 +133,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="hls4ml.backends.vitis.passes.html" class="btn btn-neutral float-left" title="hls4ml.backends.vitis.passes package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="hls4ml.backends.vivado.passes.html" class="btn btn-neutral float-right" title="hls4ml.backends.vivado.passes package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="hls4ml.backends.vitis.html" class="btn btn-neutral float-left" title="hls4ml.backends.vitis package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hls4ml.backends.vivado.html" class="btn btn-neutral float-right" title="hls4ml.backends.vivado package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

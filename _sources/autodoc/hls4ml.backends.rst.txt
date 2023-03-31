@@ -9,6 +9,7 @@ Subpackages
 
    hls4ml.backends.fpga
    hls4ml.backends.quartus
+   hls4ml.backends.vitis
    hls4ml.backends.vivado
    hls4ml.backends.vivado_accelerator
 
