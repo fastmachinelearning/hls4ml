@@ -17,7 +17,7 @@ An :py:class:`~hls4ml.model.optimizer.optimizer.OptimizerPass` transforms a mode
 All model/layer transformations should happen in these optimizer passes.
 There are a number of types of optimizer passes:
 
- * layer-specific: These are special optimizations for a given layer. 
+ * layer-specific: These are special optimizations for a given layer.
    An example is the :py:class:`~hls4ml.model.optimizer.passes.fuse_biasadd` class that adds a bias to a :py:class:`~hls4ml.model.layers.Dense`, :py:class:`~hls4ml.model.layers.Conv1D`, or :py:class:`~hls4ml.model.layers.Conv2D` layer.
  * backend-specific: These are only used for particular backends. An example is :py:class:`~hls4ml.backends.vivado.passes.repack_stream.ReshapeStream`.
  * model-level: These model-level optimizer passes are run on every type of layer.
