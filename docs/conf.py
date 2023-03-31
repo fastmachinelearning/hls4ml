@@ -44,7 +44,7 @@ extensions = [
     'sphinx_github_changelog',
 ]
 
-# Note: to build locally, you will need to set the GITHUB_TOKEN 
+# Note: to build locally, you will need to set the GITHUB_TOKEN
 # environment variable to a personal access token with repo scope
 sphinx_github_changelog_token = os.environ["GITHUB_TOKEN"]
 
