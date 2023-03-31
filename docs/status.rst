@@ -5,7 +5,9 @@ Status and Features
 Status
 ========
 
-The latest stable release is :doc:`v0.7.0 <release_notes>`.
+The latest version (built from ``main``) is |version|.
+The stable version (released on PyPI) is |release|.
+See the :ref:`Release Notes` section for a changelog.
 
 
 Features
