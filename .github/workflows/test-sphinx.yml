@@ -19,3 +19,6 @@ jobs:
         SPHINX_GITHUB_CHANGELOG_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         docs-folder: "docs/"
+    - uses: actions/upload-artifact@v3
+      with:
+        path: docs/_build/html
