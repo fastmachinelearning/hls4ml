@@ -116,3 +116,11 @@ html_theme_options = {
     'includehidden': True,
     'titles_only': False,
 }
+
+html_context = {
+    'display_github': True,  # Integrate GitHub
+    'github_user': 'fastmachinelearning',  # Username
+    'github_repo': "hls4ml",  # Repo name
+    'github_version': 'main',  # Version
+    'conf_py_path': '/docs/',  # Path in the checkout to the docs root
+}
