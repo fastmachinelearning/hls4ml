@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to hls4ml’s documentation! &mdash; hls4ml 0.6.0 documentation</title>
+  <title>Backends and I/O Types &mdash; hls4ml 0.6.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/sphinx_contributors.css" type="text/css" />
@@ -20,7 +20,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Release Notes" href="release_notes.html" /> 
+    <link rel="next" title="Optimizer Passes and Flows" href="flows.html" />
+    <link rel="prev" title="Concepts" href="concepts.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -31,7 +32,7 @@
 
           
           
-          <a href="#">
+          <a href="index.html">
             
               <img src="_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
@@ -47,13 +48,17 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="status.html">Status and Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="command.html">Command Line Interface (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
-<li class="toctree-l1"><a class="reference internal" href="details.html">Backends and I/O Types</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Backends and I/O Types</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#backends">Backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#i-o-types">I/O Types</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="flows.html">Optimizer Passes and Flows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Citation and Contributors</a></li>
 </ul>
@@ -84,15 +89,15 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">hls4ml</a>
+          <a href="index.html">hls4ml</a>
       </nav>
 
       <div class="wy-nav-content">
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Welcome to hls4ml’s documentation!</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Backends and I/O Types</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -101,27 +106,31 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="toctree-wrapper compound">
-</div>
-<div class="toctree-wrapper compound">
-</div>
-<div class="toctree-wrapper compound">
-</div>
-<div class="toctree-wrapper compound">
-</div>
-<section id="welcome-to-hls4ml-s-documentation">
-<h1>Welcome to hls4ml’s documentation!<a class="headerlink" href="#welcome-to-hls4ml-s-documentation" title="Permalink to this heading"></a></h1>
-<a class="reference internal image-reference" href="_images/hls4ml_logo.png"><img alt="_images/hls4ml_logo.png" class="align-center" src="_images/hls4ml_logo.png" style="width: 60%;" /></a>
-<p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> is a Python package for machine learning inference in FPGAs. We create firmware implementations of machine learning algorithms using high level synthesis language (HLS). We translate traditional open-source machine learning package models into HLS that can be configured for your use-case!</p>
-<p>The project is currently in development, so please let us know if you are interested, your experiences with the package, and if you would like new features to be added. You can reach us through our GitHub page.</p>
-<section id="project-status">
-<h2>Project Status<a class="headerlink" href="#project-status" title="Permalink to this heading"></a></h2>
-<p>For the latest status including current and planned features, see the <a class="reference internal" href="status.html#status-and-features"><span class="std std-ref">Status and Features</span></a> page.</p>
+  <section id="backends-and-i-o-types">
+<h1>Backends and I/O Types<a class="headerlink" href="#backends-and-i-o-types" title="Permalink to this heading"></a></h1>
+<section id="backends">
+<h2>Backends<a class="headerlink" href="#backends" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> supports the concept of a <em>backend</em> that determines the target HLS language.
+Currently, Vivado HLS, Intel HLS, and Vitis HLS (experimental) are supported.</p>
 </section>
-<section id="tutorials">
-<h2>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this heading"></a></h2>
-<p>Detailed tutorials on how to use <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>’s various functionalities can be found at:</p>
-<p><a class="reference external" href="https://github.com/fastmachinelearning/hls4ml-tutorial">https://github.com/fastmachinelearning/hls4ml-tutorial</a></p>
+<section id="i-o-types">
+<h2>I/O Types<a class="headerlink" href="#i-o-types" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> supports multiple styles for handling data between layers, known as the <code class="docutils literal notranslate"><span class="pre">io_type</span></code>.</p>
+<section id="io-parallel">
+<h3>io_parallel<a class="headerlink" href="#io-parallel" title="Permalink to this heading"></a></h3>
+<p>Data is passed in parallel between the layers. This is good for MLP networks and small CNNs. Synthesis may fail for larger networks.</p>
+</section>
+<section id="io-stream">
+<h3>io_stream<a class="headerlink" href="#io-stream" title="Permalink to this heading"></a></h3>
+<p>Data is passed one “pixel” at a time. Each pixel is an array of channels, which are always sent in parallel. This method for sending
+data between layers is recommended for larger CNNs. For <code class="docutils literal notranslate"><span class="pre">Dense</span></code> layers, all the inputs are streamed in parallel as a single array.</p>
+<p>With the <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> IO type, each layer is connected with the subsequent layer through first-in first-out (FIFO) buffers.
+The implementation of the FIFO buffers contribute to the overall resource utilization of the design, impacting in particular the BRAM or LUT utilization.
+Because the neural networks can have complex architectures generally, it is hard to know a priori the correct depth of each FIFO buffer.
+By default <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> choses the most conservative possible depth for each FIFO buffer, which can result in a an unnecessary overutilization of resources.</p>
+<p>In order to reduce the impact on the resources used for FIFO buffer implementation, we have a FIFO depth optimization flow. This is described
+in the <a class="reference internal" href="advanced/fifo_depth.html#fifo-buffer-depth-optimization"><span class="std std-ref">FIFO Buffer Depth Optimization</span></a> section.</p>
+</section>
 </section>
 </section>
 
@@ -129,7 +138,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="release_notes.html" class="btn btn-neutral float-right" title="Release Notes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="concepts.html" class="btn btn-neutral float-left" title="Concepts" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="flows.html" class="btn btn-neutral float-right" title="Optimizer Passes and Flows" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
