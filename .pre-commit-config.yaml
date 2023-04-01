@@ -60,3 +60,11 @@ repos:
   hooks:
     - id: p-clang-format
       types_or: [c++, c, cuda]
+ci:
+    autofix_commit_msg: '[pre-commit.ci] auto fixes from pre-commit hooks'
+    autofix_prs: false  # default is true
+    autoupdate_branch: 'main'
+    autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+    autoupdate_schedule: weekly
+    skip: []
+    submodules: true
