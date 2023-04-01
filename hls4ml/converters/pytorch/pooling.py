@@ -1,6 +1,6 @@
-import math
-from hls4ml.converters.pytorch_to_hls import parse_default_pytorch_layer
-from hls4ml.converters.pytorch_to_hls import pytorch_handler
+import math  # noqa: F401
 
-#pooling_layers = ['MaxPooling1D']
-#@pytorch_handler(*pooling_layers)
+from hls4ml.converters.pytorch_to_hls import pytorch_handler  # noqa: F401
+
+# pooling_layers = ['MaxPooling1D']
+# @pytorch_handler(*pooling_layers)

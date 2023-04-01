@@ -13,6 +13,12 @@ from hls4ml.model.optimizer import get_available_passes, optimize_model
 
 
 class HLSConfig:
+    """The configuration class as stored in the ModelGraph.
+
+    Args:
+        config (dict):  The configuration dictionary
+    """
+
     def __init__(self, config):
         self.config = config
         self.backend = get_backend(self.config.get('Backend', 'Vivado'))
@@ -310,10 +316,21 @@ class HLSConfig:
 
 
 class ModelGraph:
+    """The ModelGraph represents the network that is being processed by hls4ml.
+
+    Args:
+        config (dict):  The configuration dictionary
+        data_reader:  The data reader from where weights can be extracted
+        layer_list (list(dict)):  The list contains a dictionary for each input layer
+        inputs (list, optional):  The inputs to the model. If None, determined from layer_list
+        outputs (list, optional):  The outputs to the model. If None, determined from layer_list
+    """
+
     def __init__(self, config, data_reader, layer_list, inputs=None, outputs=None):
         self.config = HLSConfig(config)
         self.reader = data_reader
 
+        # keep track of the applied flows
         self._applied_flows = []
 
         # If not provided, assumes layer_list[0] is the input layer, and layer_list[-1] is output layer
@@ -330,7 +347,7 @@ class ModelGraph:
         self.outputs = self._find_output_variable_names(layer_list, output_layers)
 
         self.index = 0
-        self.graph = OrderedDict()
+        self.graph = OrderedDict()  # where the nodes are stored
         self.output_vars = {}
 
         self._top_function_lib = None
@@ -364,6 +381,7 @@ class ModelGraph:
 
     def apply_flow(self, flow, reapply='single'):
         """Applies a flow (a collection of optimizers).
+
         Args:
             flow (str): The name of the flow to apply
             reapply (str, optional): Determines the action to take if the flow and its requirements have already been
@@ -464,7 +482,7 @@ class ModelGraph:
             node (Layer): Node to insert
             before (Layer, optional): The next node in sequence before which a
                 new node should be inserted.
-           input_idx (int, optional): If the next node takes multiple inputs, the input index
+            input_idx (int, optional): If the next node takes multiple inputs, the input index
         Raises:
             Exception: If an attempt to insert a node with multiple inputs is made or if
                 `before` does not specify a correct node in sequence.
@@ -516,7 +534,7 @@ class ModelGraph:
 
         Raises:
             Exception: If an attempt is made to rewire a leaf node or a node with multiple
-                inputs/outpus.
+                inputs/outputs.
 
         """
         if rewire:

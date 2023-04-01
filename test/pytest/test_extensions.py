@@ -118,7 +118,7 @@ void reverse(
 
 
 @pytest.fixture(scope='session', autouse=True)
-def regsister_custom_layer():
+def register_custom_layer():
     # Register the converter for custom Keras layer
     hls4ml.converters.register_keras_layer_handler('KReverse', parse_reverse_layer)
 

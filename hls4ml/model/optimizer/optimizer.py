@@ -125,7 +125,7 @@ def optimizer_pass(condition):
 def layer_optimizer(layer):
     """Decorator to turn a function into the optimization pass.
 
-    Example:
+    Example::
 
         @layer_optimizer(MyLayer)
         def init_mylayer(self, layer):
