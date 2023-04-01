@@ -16,10 +16,13 @@ jobs:
         ref: ${{ github.event.pull_request.head.sha }}
     - name: Allow for file ownership conflicts with Docker and GitHub Actions
       run: git config --global --add safe.directory '*'
+    - name: Take ownership of the checkout directory (Git CVE-2022-24765)
+      run: chown --recursive --reference=/ .
     - uses: jmduarte/sphinx-action@main
       env:
         SPHINX_GITHUB_CHANGELOG_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
+        pre-build-command: "git config --system --add safe.directory '*'"
         docs-folder: "docs/"
     - name: Commit Documentation Changes
       run: |
