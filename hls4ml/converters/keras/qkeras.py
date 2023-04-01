@@ -1,8 +1,8 @@
 import tensorflow as tf
+from qkeras.quantizers import get_quantizer
 
 from hls4ml.converters.keras.core import BinaryQuantizer
 from hls4ml.model.types import ExponentPrecisionType, FixedPrecisionType, IntegerPrecisionType, Quantizer, XnorPrecisionType
-from qkeras.quantizers import get_quantizer
 
 
 class QKerasQuantizer(Quantizer):

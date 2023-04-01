@@ -3,11 +3,11 @@ from pathlib import Path
 import numpy as np
 import pytest
 import tensorflow as tf
+from qkeras.utils import _add_supported_quantized_objects
 from sklearn.metrics import accuracy_score
 from tensorflow.keras.models import model_from_json
 
 import hls4ml
-from qkeras.utils import _add_supported_quantized_objects
 
 co = {}
 _add_supported_quantized_objects(co)
