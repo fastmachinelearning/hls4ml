@@ -1,11 +1,41 @@
+"""
+All information about a layer is stored in the attributes of a layer instance. This information can be properties of
+a layer, like a number of hidden units in Dense layer or number of filters in a convolutional layer, but also includes
+information about weight variables, output variables and all data types defined. The attribute system provides a mechanism
+that ensures layers are correctly initialized, have the valid information stored and have configurable endpoints exposed.
+
+This module contains the definitions of classes for handling attributes. The ``Attribute`` class and its subclasses provide
+information about an expected attribute, but the actual value will be stored within the instance's ``attribute`` dict. This
+provides an unified view (mapping) of all attributes, but for convenience there are mappings that expose only certain types
+of attributes, such as types, variables, weights etc, via the ``AttributeMapping`` class.
+"""
+
 from collections.abc import MutableMapping
 from numbers import Integral
 
 from hls4ml.model.types import NamedType, Source, TensorVariable, WeightVariable
 from hls4ml.utils.string_utils import convert_to_pascal_case
 
+# region Attribute class definitions
+
 
 class Attribute:
+    """
+    Base attribute class.
+
+    Attribute consists of a name, the type of value it will store, the optional default if no value is specified during
+    layer creation, and a flag indicating if the value can be modified by the user. This class is generally expected to
+    exist only as part of the ``expected_attributes`` property of the layer class.
+
+    Args:
+        name (str): Name of the attribute
+        value_type (optional): Type of the value expected to be stored in the attribute.
+            If not specified, no validation of the stored value will be performed. Defaults to ``int``.
+        default (optional): Default value if no value is specified during layer creation. Defaults to ``None``.
+        configurable (bool, optional): Specifies if the attribute can be modified after creation. Defaults to ``False``.
+
+    """
+
     def __init__(self, name, value_type=Integral, default=None, configurable=False):
         self.name = name
         self.value_type = value_type
@@ -20,15 +50,35 @@ class Attribute:
 
     @property
     def config_name(self):
+        """Returns the name of the attribute as it will appear in the ``attribute`` dict of the layer instance.
+
+        The format will be in pascal case, e.g., ``AttributeName`` -> ``attribute_name``.
+
+        Returns:
+            str: The pascal_case of the name of the attribute.
+        """
         return convert_to_pascal_case(self.name)
 
 
 class ConfigurableAttribute(Attribute):
+    """
+    Represents a configurable attribute, i.e., the attribute whose value can be modified by the user.
+
+    This is a convenience class. It is advised to use ``ConfigurableAttribute`` over ``Attribute(..., configurable=True)``
+    when defining the expected attributes of layer classes.
+    """
+
     def __init__(self, name, value_type=int, default=None):
         super().__init__(name, value_type, default, configurable=True)
 
 
 class TypeAttribute(Attribute):
+    """
+    Represents an attribute that will store a type, i.e., an instance of ``NamedType`` or its subclasses.
+
+    As a convention, the name of the attribute storing a type will end in ``_t``.
+    """
+
     def __init__(self, name, default=None, configurable=True):
         if not name.endswith('_t'):
             name += '_t'
@@ -36,6 +86,10 @@ class TypeAttribute(Attribute):
 
 
 class ChoiceAttribute(Attribute):
+    """
+    Represents an attribute whose value can be one of several predefined values.
+    """
+
     def __init__(self, name, choices, default=None, configurable=True):
         super().__init__(name, value_type=list, default=default, configurable=configurable)
         assert len(choices) > 0
@@ -48,22 +102,39 @@ class ChoiceAttribute(Attribute):
         return value in self.choices
 
 
-class VariableAttribute(Attribute):
-    def __init__(self, name):
-        super().__init__(name, value_type=WeightVariable, default=None, configurable=False)
-
-
 class WeightAttribute(Attribute):
+    """
+    Represents an attribute that will store a weight variable.
+    """
+
     def __init__(self, name):
         super().__init__(name, value_type=WeightVariable, default=None, configurable=False)
 
 
 class CodeAttrubute(Attribute):
+    """
+    Represents an attribute that will store generated source code block.
+    """
+
     def __init__(self, name):
         super(WeightAttribute, self).__init__(name, value_type=Source, default=None, configurable=False)
 
 
+# endregion
+
+# region Attribute mapping definitions
+
+
 class AttributeDict(MutableMapping):
+    """
+    Class containing all attributes of a given layer.
+
+    Instances of this class behave like a dictionary. Upon insertion, the key/value may trigger additional actions,
+    such as registering variables or modifying the key name to ensure it follows the convention.
+
+    Specific "views" (mappings) of this class can be used to filter desired attributes via the ``AttributeMapping`` class.
+    """
+
     def __init__(self, layer):
         self.layer = layer
         self.attributes = {}
@@ -94,6 +165,10 @@ class AttributeDict(MutableMapping):
 
 
 class AttributeMapping(MutableMapping):
+    """
+    Base class used to filter attributes based on their expected class.
+    """
+
     def __init__(self, attributes, clazz):
         self.attributes = attributes
         self.clazz = clazz
@@ -116,11 +191,19 @@ class AttributeMapping(MutableMapping):
 
 
 class WeightMapping(AttributeMapping):
+    """
+    Mapping that only sees ``WeightVariable`` instances (i.e., weights).
+    """
+
     def __init__(self, attributes):
         super().__init__(attributes, WeightVariable)
 
 
 class VariableMapping(AttributeMapping):
+    """
+    Mapping that only sees ``TensorVariable`` instances (i.e., activation tensors).
+    """
+
     def __init__(self, attributes):
         super().__init__(attributes, TensorVariable)
 
@@ -141,10 +224,21 @@ class VariableMapping(AttributeMapping):
 
 
 class TypeMapping(AttributeMapping):
+    """
+    Mapping that only sees ``NamedType`` instances (i.e., defined types).
+    """
+
     def __init__(self, attributes):
         super().__init__(attributes, NamedType)
 
 
 class CodeMapping(AttributeMapping):
+    """
+    Mapping that only sees ``Source`` instances (i.e., generated source code blocks).
+    """
+
     def __init__(self, attributes):
         super().__init__(attributes, Source)
+
+
+# endregion

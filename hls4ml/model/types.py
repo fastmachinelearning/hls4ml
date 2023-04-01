@@ -1,3 +1,10 @@
+"""
+This module contains the definitions of classes hls4ml uses to represent data types. The data types are equivalents of
+C++/HLS data types. The basic type(``PrecisionType``) is defined as having a specified width in bits (it's 'precision').
+The Precision types are given names for convenience (``NamedType``). Named types are the building blocks of
+higher-dimensional tensors, which are defined as arrays or FIFO streams in the generated code.
+"""
+
 import re
 from enum import Enum
 
@@ -7,6 +14,16 @@ import numpy as np
 
 
 class Quantizer:
+    """
+    Base class for representing quantizers in hls4ml.
+
+    Subclasses of ``Quantizer`` are expected to wrap the quantizers of upstream tools (e.g., QKeras).
+
+    Args:
+        bits (int): Total number of bits used by the quantizer.
+        hls_type (NamedType): The hls4ml type used by the quantizer.
+    """
+
     def __init__(self, bits, hls_type):
         self.bits = bits
         self.hls_type = hls_type
@@ -58,12 +75,31 @@ class SaturationMode(Enum):
 
 
 class PrecisionType:
+    """
+    Base class representing a precision type of specified width.
+
+    Subclasses of this provide concrete implementations of arbitrary precision integer and fixed-point types.
+
+    Args:
+        width (int): Number of bits used by the precision type.
+        signed (bool): Signed or unsigned type.
+    """
+
     def __init__(self, width, signed):
         self.width = width
         self.signed = signed
 
 
 class IntegerPrecisionType(PrecisionType):
+    """Arbitrary precision integer  data type.
+
+    This type is equivalent to ap_(u)int and ac_int HLS types.
+
+    Args:
+        width (int, optional): Number of bits used. Defaults to 16.
+        signed (bool, optional): Signed or unsigned type. Defaults to ``True``.
+    """
+
     def __init__(self, width=16, signed=True):
         super().__init__(width=width, signed=signed)
         self.integer = width
@@ -83,6 +119,19 @@ class IntegerPrecisionType(PrecisionType):
 
 
 class FixedPrecisionType(PrecisionType):
+    """Arbitrary precision fixed-point data type.
+
+    This type is equivalent to ap_(u)fixed and ac_fixed HLS types.
+
+    Args:
+        width (int, optional): Total number of bits used. Defaults to 16.
+        integer (int, optional): Number of integer bits left of the decimal point. Defaults to 6.
+        signed (bool, optional): Signed or unsigned type. Defaults to ``True``.
+        rounding_mode (RoundingMode, optional): Quantization mode. Defaults to ``None`` (TRN).
+        saturation_mode (SaturationMode, optional): Overflow mode. Defaults to ``None`` (WRAP).
+        saturation_bits (int, optional): The number of saturation bits. Defaults to ``None``.
+    """
+
     def __init__(self, width=16, integer=6, signed=True, rounding_mode=None, saturation_mode=None, saturation_bits=None):
         super().__init__(width=width, signed=signed)
         self.integer = integer
@@ -131,19 +180,19 @@ class FixedPrecisionType(PrecisionType):
 
 
 class XnorPrecisionType(IntegerPrecisionType):
-    '''
+    """
     Convenience class to differentiate 'regular' integers from BNN Xnor ones
-    '''
+    """
 
     def __init__(self):
         super().__init__(width=1, signed=False)
 
 
 class ExponentPrecisionType(IntegerPrecisionType):
-    '''
+    """
     Convenience class to differentiate 'regular' integers from those which represent exponents,
     for QKeras po2 quantizers, for example.
-    '''
+    """
 
     def __init__(self, width=16, signed=True):
         super().__init__(width=width, signed=signed)
@@ -152,7 +201,14 @@ class ExponentPrecisionType(IntegerPrecisionType):
 def find_minimum_width(data, signed=True):
     """
     Helper function to find the minimum integer width to express all entries in the data array
-    without saturation / overflow
+    without saturation / overflow.
+
+    Args:
+        data (ndarray): Data array.
+        signed (bool, optional): Signed or unsigned type. Defaults to ``True.``
+
+    Returns:
+        int: Minimum integer width required.
     """
     maxdata = np.amax(np.abs(data))
     if maxdata == 0.0:
@@ -178,12 +234,31 @@ def find_minimum_width(data, signed=True):
 
 
 class NamedType:
+    """Class representing a named type.
+
+    For convenience, hls4ml gives names to data types used in the generated HLS. This is equivalent to defining types
+    in C/C++ like::
+        typedef precision name;
+
+    Args:
+        name (str): Name given to the type (used in generated C++/HLS).
+        precision (PrecisionType): Precision data type.
+    """
+
     def __init__(self, name, precision, **kwargs):
         self.name = name.format(**kwargs)
         self.precision = precision
 
 
 class CompressedType(NamedType):
+    """Class representing a compressed type in COO format.
+
+    Args:
+        name (str): Name given to the type (used in generated C++/HLS).
+        precision (PrecisionType): Precision data type.
+        index_precision (PrecisionType): Precision of the index of COO format.
+    """
+
     def __init__(self, name, precision, index_precision, **kwargs):
         if not name.startswith('compressed_'):
             name = 'compressed_' + name
@@ -192,7 +267,15 @@ class CompressedType(NamedType):
 
 
 class ExponentType(NamedType):
+    """Special type used to mark an exponent type, used by the power-of-2 quantizers.
+
+    Args:
+        name (str): Name given to the type (used in generated C++/HLS).
+        precision (PrecisionType): Precision data type.
+    """
+
     def __init__(self, name, precision, **kwargs):
+
         if not name.startswith('exponent_'):
             name = 'exponent_' + name
         super().__init__(name, precision, **kwargs)
@@ -200,6 +283,19 @@ class ExponentType(NamedType):
 
 
 class PackedType(NamedType):
+    """A type where multiple elements of the tensor are concatenated and stored as a single element, used by the streaming
+    implementations to store elements of the last dimension of a tensor as a single element.
+
+    The tensor of shape ``(H, W, C)`` will be represented as a FIFO stream having ``H * W / n_pack`` elements where each
+    element will be a concatenation of ``n_elem * n_pack`` elements of the original tensor.
+
+    Args:
+        name (str): Name given to the type (used in generated C++/HLS).
+        precision (PrecisionType): Precision data type.
+        n_elem (int): Number of packed elements.
+        n_pack (int): _description_
+    """
+
     def __init__(self, name, precision, n_elem, n_pack, **kwargs):
         super().__init__(name, precision, **kwargs)
         self.n_elem = n_elem
@@ -217,12 +313,29 @@ class PackedType(NamedType):
 
 
 class Variable:
+    """Base class representing a named multidimensional tensor.
+
+    Args:
+        var_name (str): Name of the variable in the generated C++/HLS.
+        atype (NamedType): Data type used by the tensor.
+    """
+
     def __init__(self, var_name, atype, **kwargs):
         self.name = var_name.format(**kwargs)
         self.type = atype
 
 
 class TensorVariable(Variable):
+    """Class representing the output of a layer (like an activation tensor).
+
+    Args:
+        shape (list, tuple): Shape of the tensor.
+        dim_names (list, tuple): Names given to the dimensions of the tensor.
+        var_name (str, optional): Name of the variable in the generated C++/HLS. Defaults to ``layer{index}``.
+        type_name (str, optional): Name of the data type used (in NamedType). Defaults to ``layer{index}_t``.
+        precision (PrecisionType, optional): Precision data type. Defaults to ``None``.
+    """
+
     def __init__(self, shape, dim_names, var_name='layer{index}', type_name='layer{index}_t', precision=None, **kwargs):
         super().__init__(var_name, NamedType(type_name, precision, **kwargs), **kwargs)
         self.shape = shape
@@ -243,19 +356,32 @@ class TensorVariable(Variable):
 
 
 class InplaceTensorVariable(TensorVariable):
-    '''A TensorVariable that is just a link to another'''
+    """A ``TensorVariable`` that is just a link to another ``TensorVariable``.
+
+    Args:
+        tv (TensorVariable): The tensor variable to link.
+        input_var (_type_): The input variable that should be should link to.
+    """
 
     def __init__(self, tv, input_var):
-        '''
-        Always created with a passed in TensorVariable tv
-        and the input_var variable it should link to.
-        '''
         self.__dict__.update(tv.__dict__)
         self.type = input_var.type
         self.input_var = input_var
 
 
 class WeightVariable(Variable):
+    """Class representing a tensor containing the weights of a layer.
+
+    Precision type of the instance can be modified with the ``update_precision`` method.
+
+    Args:
+        var_name (str, optional): Name of the variable in the generated C++/HLS.
+        type_name (str, optional): Name of the data type used (in NamedType).
+        precision (PrecisionType, optional): Precision data type.
+        data (ndarray): The data array.
+        quantizer (_type_, optional): Quantizer to apply to the data array. Defaults to ``None``.
+    """
+
     def __init__(self, var_name, type_name, precision, data, quantizer=None, **kwargs):
         super().__init__(var_name, NamedType(type_name, precision, **kwargs), **kwargs)
         self.data = data
@@ -309,6 +435,17 @@ class WeightVariable(Variable):
 
 
 class CompressedWeightVariable(WeightVariable):
+    """Class representing a tensor containing the weights of a layer represented in the COO format.
+
+    Args:
+        var_name (str, optional): Name of the variable in the generated C++/HLS.
+        type_name (str, optional): Name of the data type used (in NamedType).
+        precision (PrecisionType, optional): Precision data type.
+        data (ndarray): The data array.
+        reuse_factor (_type_): The reuse factor used to pad the data array.
+        quantizer (_type_, optional): Quantizer to apply to the data array. Defaults to ``None``.
+    """
+
     def __init__(self, var_name, type_name, precision, data, reuse_factor, quantizer=None, **kwargs):
         super().__init__(var_name, type_name, precision, data, quantizer=quantizer, **kwargs)
         self.extra_zeros = 0
@@ -356,11 +493,18 @@ class CompressedWeightVariable(WeightVariable):
 
 
 class ExponentWeightVariable(WeightVariable):
+    """WeightVariable for Exponent aka power-of-2 data. The data should already by quantized by the quantizer.
+
+    Args:
+        var_name (str, optional): Name of the variable in the generated C++/HLS.
+        type_name (str, optional): Name of the data type used (in NamedType).
+        precision (PrecisionType, optional): Precision data type.
+        data (ndarray): The data array.
+        quantizer (_type_, optional): Quantizer to apply to the data array. Defaults to ``None``.
+    """
+
     def __init__(self, var_name, type_name, precision, data, quantizer=None, **kwargs):
         super().__init__(var_name, type_name, precision, data, quantizer, **kwargs)
-        '''
-        WeightVariable for Exponent aka po2 data. The data should already by quantized by the quantizer.
-        '''
         self.type = ExponentType(type_name, precision, **kwargs)
         self.shape = list(self.data.shape[:-1])
 
@@ -392,6 +536,12 @@ class ExponentWeightVariable(WeightVariable):
 
 
 class Source:
+    """Class representing generated source code blocks.
+
+    Args:
+        code (str): Generated source code.
+    """
+
     def __init__(self, code):
         self.code = code
 
