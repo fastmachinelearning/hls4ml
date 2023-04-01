@@ -3,9 +3,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from qkeras.qlayers import QActivation, QDense
-from qkeras.quantizers import binary, quantized_bits, quantized_relu, quantized_sigmoid, quantized_tanh, ternary
-from qkeras.utils import _add_supported_quantized_objects
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
@@ -14,6 +11,9 @@ from tensorflow.keras.models import Model, Sequential, model_from_json
 from tensorflow.keras.utils import to_categorical
 
 import hls4ml
+from qkeras.qlayers import QActivation, QDense
+from qkeras.quantizers import binary, quantized_bits, quantized_relu, quantized_sigmoid, quantized_tanh, ternary
+from qkeras.utils import _add_supported_quantized_objects
 
 co = {}
 _add_supported_quantized_objects(co)

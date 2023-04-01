@@ -1,10 +1,10 @@
 import numpy as np
 import tensorflow as tf
-from qkeras import get_quantizer
 
 from hls4ml.model.layers import BatchNormalization, register_layer
 from hls4ml.model.optimizer import ConfigurableOptimizerPass, OptimizerPass, register_pass
 from hls4ml.model.types import ExponentPrecisionType, FixedPrecisionType, IntegerPrecisionType, NamedType
+from qkeras import get_quantizer
 
 
 class QKerasPO2Quantizer:

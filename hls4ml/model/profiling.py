@@ -12,8 +12,9 @@ import seaborn as sb
 from hls4ml.model.graph import ModelGraph
 
 try:
-    import qkeras
     from tensorflow import keras
+
+    import qkeras
 
     __tf_profiling_enabled__ = True
 except ImportError:
