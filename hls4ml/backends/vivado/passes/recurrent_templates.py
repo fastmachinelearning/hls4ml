@@ -1,7 +1,6 @@
-
 from hls4ml.backends.backend import get_backend
-from hls4ml.model.layers import LSTM, GRU
-from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
+from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
+from hls4ml.model.layers import GRU, LSTM
 
 # recurrent multiplication template
 
@@ -22,7 +21,7 @@ recr_mult_config_template = """struct config{index} : nnet::dense_config {{
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
 
-#activation templates
+# activation templates
 
 activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned n_in = {n_in};
@@ -69,6 +68,7 @@ recr_function_template = 'nnet::{recr_type}_stack<{input_t}, {output_t}, {config
 
 recr_include_list = ['nnet_utils/nnet_recurrent.h']
 
+
 class RecurrentConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__((LSTM, GRU))
@@ -77,7 +77,7 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         self.recr_act_template = recr_activ_config_template
         self.mult1_template = recr_mult_config_template
         self.mult2_template = recr_mult_config_template
-    
+
     def format(self, node):
 
         params = self._default_config_params(node)
@@ -92,8 +92,8 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
             params['n_sequence_out'] = 1
             params['n_state'] = node.get_output_variable().dim_names[0]
             params['n_out'] = node.get_output_variable().dim_names[0]
-        params['config_mult_t1'] = 'config{}_1'.format(node.index)
-        params['config_mult_t2'] = 'config{}_2'.format(node.index)
+        params['config_mult_t1'] = f'config{node.index}_1'
+        params['config_mult_t2'] = f'config{node.index}_2'
         params['recr_act_t'] = '{}_config{}_recr'.format(node.get_attr('recurrent_activation'), node.index)
         params['act_t'] = '{}_config{}'.format(node.get_attr('activation'), node.index)
         params['strategy'] = node.get_attr('strategy')
@@ -101,9 +101,9 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         params['recr_type'] = node.class_name.lower()
         params['RECR_TYPE'] = node.class_name
 
-        if node.class_name=='LSTM':
+        if node.class_name == 'LSTM':
             n_recr_mult = 4
-        else: #GRU
+        else:  # GRU
             n_recr_mult = 3
 
         recr_config = self.template.format(**params)
@@ -115,10 +115,10 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         recr_act_params['type'] = node.get_attr('recurrent_activation')
         if node.get_attr('return_sequences'):
             act_params['n_in'] = node.get_output_variable().dim_names[1]
-            recr_act_params['n_in'] = node.get_output_variable().dim_names[1] + ' * %i'%(n_recr_mult-1)
+            recr_act_params['n_in'] = node.get_output_variable().dim_names[1] + ' * %i' % (n_recr_mult - 1)
         else:
             act_params['n_in'] = node.get_output_variable().dim_names[0]
-            recr_act_params['n_in'] = node.get_output_variable().dim_names[0] + ' * %i'%(n_recr_mult-1)
+            recr_act_params['n_in'] = node.get_output_variable().dim_names[0] + ' * %i' % (n_recr_mult - 1)
 
         act_config = self.act_template.format(**act_params)
         recr_act_config = self.recr_act_template.format(**recr_act_params)
@@ -128,21 +128,25 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
 
         mult_params1['n_in'] = node.get_input_variable().dim_names[1]
         if node.get_attr('return_sequences'):
-            mult_params1['n_out'] = node.get_output_variable().dim_names[1] + ' * %i'%n_recr_mult
+            mult_params1['n_out'] = node.get_output_variable().dim_names[1] + ' * %i' % n_recr_mult
         else:
-            mult_params1['n_out'] = node.get_output_variable().dim_names[0] + ' * %i'%n_recr_mult
-        mult_params1['product_type'] = get_backend('vivado').product_type(node.get_input_variable().type.precision, node.get_weights('weight').type.precision)
+            mult_params1['n_out'] = node.get_output_variable().dim_names[0] + ' * %i' % n_recr_mult
+        mult_params1['product_type'] = get_backend('vivado').product_type(
+            node.get_input_variable().type.precision, node.get_weights('weight').type.precision
+        )
         mult_params1['reuse'] = params['reuse']
         mult_params1['index'] = str(node.index) + '_1'
         mult_params1['nzeros'] = node.get_weights('weight').nzeros
         mult_params1['nonzeros'] = node.get_weights('weight').nonzeros
         if node.get_attr('return_sequences'):
             mult_params2['n_in'] = node.get_output_variable().dim_names[1]
-            mult_params2['n_out'] = node.get_output_variable().dim_names[1] + ' * %i'%n_recr_mult
+            mult_params2['n_out'] = node.get_output_variable().dim_names[1] + ' * %i' % n_recr_mult
         else:
             mult_params2['n_in'] = node.get_output_variable().dim_names[0]
-            mult_params2['n_out'] = node.get_output_variable().dim_names[0] + ' * %i'%n_recr_mult
-        mult_params2['product_type'] = get_backend('vivado').product_type(node.get_input_variable().type.precision, node.get_weights('recurrent_weight').type.precision)
+            mult_params2['n_out'] = node.get_output_variable().dim_names[0] + ' * %i' % n_recr_mult
+        mult_params2['product_type'] = get_backend('vivado').product_type(
+            node.get_input_variable().type.precision, node.get_weights('recurrent_weight').type.precision
+        )
         mult_params2['reuse'] = node.attributes['recurrent_reuse_factor']
         mult_params2['index'] = str(node.index) + '_2'
         mult_params2['nzeros'] = node.get_weights('recurrent_weight').nzeros
@@ -152,6 +156,7 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         mult_config2 = self.mult2_template.format(**mult_params2)
 
         return mult_config1 + '\n' + mult_config2 + '\n' + recr_act_config + '\n' + act_config + '\n' + recr_config
+
 
 class RecurrentFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
@@ -169,4 +174,3 @@ class RecurrentFunctionTemplate(FunctionCallTemplate):
         params['recr_type'] = node.class_name.lower()
 
         return self.template.format(**params)
-

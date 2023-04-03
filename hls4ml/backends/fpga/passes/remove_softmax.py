@@ -1,6 +1,7 @@
 from hls4ml.model.layers import Softmax
 from hls4ml.model.optimizer.optimizer import OptimizerPass
 
+
 class SkipSoftmax(OptimizerPass):
     def match(self, node):
         is_softmax = isinstance(node, Softmax)

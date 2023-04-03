@@ -7,7 +7,6 @@ from shutil import copyfile, copytree, rmtree
 import numpy as np
 import yaml
 
-from hls4ml.backends import get_backend
 from hls4ml.writer.writers import Writer
 
 config_filename = 'hls4ml_config.yml'

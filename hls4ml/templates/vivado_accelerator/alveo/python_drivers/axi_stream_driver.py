@@ -1,16 +1,15 @@
 from datetime import datetime
 
 import numpy as np
-from pynq import Overlay
-from pynq import allocate
+from pynq import Overlay, allocate
 
 
 class NeuralNetworkOverlay(Overlay):
     def __init__(self, xclbin_name, dtbo=None, download=True, ignore_version=False, device=None):
 
         super().__init__(xclbin_name, dtbo=dtbo, download=download, ignore_version=ignore_version, device=device)
-        self.input_buffer=None
-        self.output_buffer=None
+        self.input_buffer = None
+        self.output_buffer = None
 
     def allocate_mem(self, X_shape, y_shape, dtype=np.float32, trg_in=None, trg_out=None):
         """
@@ -37,7 +36,7 @@ class NeuralNetworkOverlay(Overlay):
                     decode_v = np.vectorize(decode)
                   ```
         trg_in  : input buffer target memory. By default the v++ command
-                  set it to HBM[0] for alveo-u50. 
+                  set it to HBM[0] for alveo-u50.
         trg_out : output buffer target memory.By default the v++ command
                   set it to HBM[0] for alveo-u50.
 
@@ -48,11 +47,10 @@ class NeuralNetworkOverlay(Overlay):
         input_buffer, output_buffer : input and output PYNQ buffers
 
         """
-        self.input_buffer  = allocate(shape=X_shape, dtype=dtype, target=trg_in )
+        self.input_buffer = allocate(shape=X_shape, dtype=dtype, target=trg_in)
         self.output_buffer = allocate(shape=y_shape, dtype=dtype, target=trg_out)
 
-    def predict(self, X, y_shape, dtype=np.float32, debug=None, profile=False, encode=None,
-                decode=None):
+    def predict(self, X, y_shape, dtype=np.float32, debug=None, profile=False, encode=None, decode=None):
         """
         Obtain the predictions of the NN implemented in the FPGA.
         Parameters:
@@ -71,7 +69,7 @@ class NeuralNetworkOverlay(Overlay):
             timea = datetime.now()
         if encode is not None:
             X = encode(X)
-        in_size  = np.prod(X.shape)
+        in_size = np.prod(X.shape)
         out_size = np.prod(y_shape)
         self.input_buffer[:] = X
         self.input_buffer.sync_to_device()
@@ -99,10 +97,9 @@ class NeuralNetworkOverlay(Overlay):
         self.free()
 
     def _print_dt(self, timea, timeb, N):
-        dt = (timeb - timea)
-        dts = dt.seconds + dt.microseconds * 10 ** -6
+        dt = timeb - timea
+        dts = dt.seconds + dt.microseconds * 10**-6
         rate = N / dts
-        print("Classified {} samples in {} seconds ({} inferences / s)".format(N, dts, rate))
-        print("Or {} us / inferences".format(1 / rate * 1e6))
+        print(f"Classified {N} samples in {dts} seconds ({rate} inferences / s)")
+        print(f"Or {1 / rate * 1e6} us / inferences")
         return dts, rate
-
