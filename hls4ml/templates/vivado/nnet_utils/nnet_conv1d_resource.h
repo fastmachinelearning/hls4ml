@@ -6,20 +6,20 @@
 
 namespace nnet {
 
-template<class data_T, class res_T, typename CONFIG_T>
-void conv_1d_resource_cl(
-    data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],
-    res_T  res[CONFIG_T::out_width * CONFIG_T::n_filt],
-    typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
-    typename CONFIG_T::bias_t   biases[CONFIG_T::n_filt])
-{
+template <class data_T, class res_T, typename CONFIG_T>
+void conv_1d_resource_cl(data_T data[CONFIG_T::in_width * CONFIG_T::n_chan],
+                         res_T res[CONFIG_T::out_width * CONFIG_T::n_filt],
+                         typename CONFIG_T::weight_t weights[CONFIG_T::filt_width * CONFIG_T::n_chan * CONFIG_T::n_filt],
+                         typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
     constexpr unsigned mult_n_in = CONFIG_T::filt_width * CONFIG_T::n_chan;
     constexpr unsigned mult_n_out = CONFIG_T::n_filt;
     constexpr unsigned block_factor = DIV_ROUNDUP(mult_n_in * mult_n_out, CONFIG_T::reuse_factor);
     constexpr unsigned multscale = block_factor / mult_n_out;
 
-    assert((block_factor % mult_n_out == 0 || CONFIG_T::reuse_factor >= mult_n_in) && "The current Reuse Factor is not allowed");
-    assert((CONFIG_T::reuse_factor <= CONFIG_T::filt_width * CONFIG_T::n_chan) && "This function is correct only for RF <= FILT_WIDTH * N_CHAN");
+    assert((block_factor % mult_n_out == 0 || CONFIG_T::reuse_factor >= mult_n_in) &&
+           "The current Reuse Factor is not allowed");
+    assert((CONFIG_T::reuse_factor <= CONFIG_T::filt_width * CONFIG_T::n_chan) &&
+           "This function is correct only for RF <= FILT_WIDTH * N_CHAN");
 
     data_T data_buf[CONFIG_T::n_pixels][mult_n_in];
     #pragma HLS ARRAY_PARTITION variable=data_buf complete dim=0
@@ -30,24 +30,24 @@ void conv_1d_resource_cl(
     typename CONFIG_T::accum_t acc[CONFIG_T::n_pixels][mult_n_out];
     #pragma HLS ARRAY_PARTITION variable=acc complete dim=0
 
-    PartitionLoop:
+PartitionLoop:
     for (unsigned i_part = 0; i_part < CONFIG_T::n_partitions; i_part++) {
         //#pragma HLS UNROLL // We don't want this loop unrolled
 
         CONFIG_T::template fill_buffer<data_T, CONFIG_T>::fill_buffer(data, data_buf, i_part);
 
-        PixelInitAccumLoop:
+    PixelInitAccumLoop:
         for (unsigned i_pxl = 0; i_pxl < CONFIG_T::n_pixels; i_pxl++) {
             #pragma HLS UNROLL
 
-            InitAccumLoop:
+        InitAccumLoop:
             for (unsigned i_acc = 0; i_acc < mult_n_out; i_acc++) {
                 #pragma HLS UNROLL
-                acc[i_pxl][i_acc] = (typename CONFIG_T::accum_t) biases[i_acc];
+                acc[i_pxl][i_acc] = (typename CONFIG_T::accum_t)biases[i_acc];
             }
         }
 
-        ReuseLoop:
+    ReuseLoop:
         for (unsigned i_rf = 0; i_rf < CONFIG_T::reuse_factor; i_rf++) {
             #pragma HLS PIPELINE II=1 rewind
 
@@ -56,16 +56,17 @@ void conv_1d_resource_cl(
             unsigned i_out = 0;
             unsigned i_acc = 0;
 
-            MultLoop:
+        MultLoop:
             for (unsigned i_blk = 0; i_blk < block_factor; i_blk++) {
                 #pragma HLS UNROLL
 
-                PixelMultLoop:
+            PixelMultLoop:
                 for (unsigned i_pxl = 0; i_pxl < CONFIG_T::n_pixels; i_pxl++) {
                     #pragma HLS UNROLL
 
                     acc[i_pxl][i_out] += static_cast<typename CONFIG_T::accum_t>(
-                            CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(data_buf[i_pxl][i_in], weights[i_w]));
+                        CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(
+                            data_buf[i_pxl][i_in], weights[i_w]));
                 }
 
                 // Increment i_w
@@ -85,11 +86,11 @@ void conv_1d_resource_cl(
             }
         }
 
-        PixelResultLoop:
+    PixelResultLoop:
         for (unsigned i_pxl = 0; i_pxl < CONFIG_T::n_pixels; i_pxl++) {
-            #pragma HLS UNROLL
-            // Cast to "res_t" type
-            ResultLoop:
+        #pragma HLS UNROLL
+        // Cast to "res_t" type
+        ResultLoop:
             for (unsigned i_res = 0; i_res < mult_n_out; i_res++) {
                 #pragma HLS UNROLL
                 *(res++) = cast<data_T, res_T, typename CONFIG_T::mult_config>(acc[i_pxl][i_res]);
@@ -98,5 +99,5 @@ void conv_1d_resource_cl(
     }
 }
 
-}
+} // namespace nnet
 #endif

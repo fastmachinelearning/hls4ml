@@ -1,6 +1,5 @@
-from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
+from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import Embedding
-
 
 embed_config_template = """struct config{index} : nnet::embed_config {{
     static const unsigned n_in = {n_in};
@@ -15,6 +14,7 @@ embed_function_template = 'nnet::embedding<{input_t}, {output_t}, {config}>({inp
 
 embed_include_list = ['nnet_utils/nnet_embed.h', 'nnet_utils/nnet_embed_stream.h']
 
+
 class EmbeddingConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(Embedding)
@@ -23,6 +23,7 @@ class EmbeddingConfigTemplate(LayerConfigTemplate):
     def format(self, node):
         params = self._default_config_params(node)
         return self.template.format(**params)
+
 
 class EmbeddingFunctionTemplate(FunctionCallTemplate):
     def __init__(self):

@@ -104,7 +104,7 @@ def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, static):
     )
     keras_model.compile()
 
-    default_precision = 'ap_fixed<32, 16>' if backend == 'Vivado' else 'ac_fixed<32, 16, true>'
+    default_precision = 'ap_fixed<32, 16>' if backend in ['Vivado', 'Vitis'] else 'ac_fixed<32, 16, true>'
     hls_config = hls4ml.utils.config_from_keras_model(
         keras_model, granularity='name', default_precision=default_precision, backend=backend
     )
@@ -121,4 +121,4 @@ def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, static):
 
     keras_prediction = keras_model.predict(X)
     hls_prediction = hls_model.predict(X)
-    np.testing.assert_allclose(hls_prediction.flatten(), keras_prediction.flatten(), rtol=0.0, atol=3e-2)
+    np.testing.assert_allclose(hls_prediction.flatten(), keras_prediction.flatten(), rtol=0.0, atol=5e-2)

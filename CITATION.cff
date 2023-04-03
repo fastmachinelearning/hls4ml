@@ -18,6 +18,6 @@ keywords:
   - qonnx
 license: "Apache-2.0"
 abstract: |
-  hls4ml is an open-source software-hardware codesign workflow 
-  to interpret and translate machine learning algorithms for 
+  hls4ml is an open-source software-hardware codesign workflow
+  to interpret and translate machine learning algorithms for
   implementations in hardware, including FPGAs and ASICs.

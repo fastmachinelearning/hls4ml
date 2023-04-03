@@ -527,7 +527,7 @@ def _make_report_body(report_dict, make_table_template, make_header_template):
         }
         area_rows = {
             'BRAM_18K': 'bram',
-            'DSP48E': 'dsp',
+            'DSP': 'dsp',
             'FF': 'ff',
             'LUT': 'lut',
             'URAM': 'uram',
@@ -541,8 +541,8 @@ def _make_report_body(report_dict, make_table_template, make_header_template):
         worst_latency = int(csynth_report['BestLatency'])
         bram = int(csynth_report['BRAM_18K'])
         avail_bram = int(csynth_report['AvailableBRAM_18K'])
-        dsp = int(csynth_report['DSP48E'])
-        avail_dsp = int(csynth_report['AvailableDSP48E'])
+        dsp = int(csynth_report['DSP'])
+        avail_dsp = int(csynth_report['AvailableDSP'])
         ff = int(csynth_report['FF'])
         avail_ff = int(csynth_report['AvailableFF'])
         lut = int(csynth_report['LUT'])

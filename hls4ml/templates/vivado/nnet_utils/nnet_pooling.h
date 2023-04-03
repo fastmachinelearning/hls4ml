@@ -89,7 +89,7 @@ struct pooling1d_config {
     static const unsigned n_out = (n_in - pool_width) / stride_width + 1;
     static const unsigned pad_left = 0;
     static const unsigned pad_right = 0;
-    static const unsigned count_pad = 0;
+    static const bool count_pad = false;
     // Pooling functionpad_right
     static const Pool_Op pool_op = Max;
 };
@@ -137,8 +137,8 @@ void pooling1d_cl(data_T data[CONFIG_T::n_in * CONFIG_T::n_filt], res_T res[CONF
                 pool_op<data_T, CONFIG_T::pool_width, CONFIG_T::pool_op>(pool);
             // If the pool op is Average, the zero-padding needs to be removed from the results
             if (CONFIG_T::pool_op == Average) {
-                data_T rescale = CONFIG_T::pool_width / img_overlap;
-                // res[(ii/CONFIG_T::stride_width)* CONFIG_T::n_filt + ff] *= rescale;
+                data_T rescale = static_cast<data_T>(CONFIG_T::pool_width) / img_overlap;
+                res[(ii / CONFIG_T::stride_width) * CONFIG_T::n_filt + ff] *= rescale;
             }
         }
     }
@@ -182,7 +182,7 @@ struct pooling2d_config {
     static const unsigned pad_bottom = 0;
     static const unsigned pad_left = 0;
     static const unsigned pad_right = 0;
-    static const unsigned count_pad = 0;
+    static const bool count_pad = false;
     // Pooling function
     static const Pool_Op pool_op = Max;
     // Reuse factor
@@ -247,7 +247,8 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
                     pool_op<data_T, CONFIG_T::pool_height * CONFIG_T::pool_width, CONFIG_T::pool_op>(pool);
                 // If the pool op is Average, the zero-padding needs to be removed from the results
                 if (CONFIG_T::pool_op == Average) {
-                    data_T rescale = CONFIG_T::pool_height * CONFIG_T::pool_width / img_overlap;
+                    data_T rescale =
+                        static_cast<data_T>(CONFIG_T::pool_height) * static_cast<data_T>(CONFIG_T::pool_width) / img_overlap;
                     res[(ii / CONFIG_T::stride_height) * CONFIG_T::out_width * CONFIG_T::n_filt +
                         (jj / CONFIG_T::stride_width) * CONFIG_T::n_filt + ff] *= rescale;
                 }
@@ -307,7 +308,8 @@ void pooling2d_cf(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
                     pool_op<data_T, CONFIG_T::pool_height * CONFIG_T::pool_width, CONFIG_T::pool_op>(pool);
                 // If the pool op is Average, the zero-padding needs to be removed from the results
                 if (CONFIG_T::pool_op == Average) {
-                    data_T rescale = CONFIG_T::pool_height * CONFIG_T::pool_width / img_overlap;
+                    data_T rescale =
+                        static_cast<data_T>(CONFIG_T::pool_height) * static_cast<data_T>(CONFIG_T::pool_width) / img_overlap;
                     res[(ii / CONFIG_T::stride_height) * CONFIG_T::out_width + (jj / CONFIG_T::stride_width) +
                         ff * CONFIG_T::out_height * CONFIG_T::out_width] *= rescale;
                 }

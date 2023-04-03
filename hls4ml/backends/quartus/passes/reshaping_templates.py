@@ -1,5 +1,5 @@
-from hls4ml.model.layers import ZeroPadding1D, ZeroPadding2D, Resize, Transpose
-from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
+from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
+from hls4ml.model.layers import Resize, Transpose, ZeroPadding1D, ZeroPadding2D
 
 # ZeroPadding templates
 
@@ -30,6 +30,7 @@ zeropad2d_function_template = 'nnet::zeropad2d_{data_format}<{input_t}, {output_
 
 padding_include_list = ['nnet_utils/nnet_padding.h', 'nnet_utils/nnet_padding_stream.h']
 
+
 class ZeroPaddingConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__((ZeroPadding1D, ZeroPadding2D))
@@ -41,6 +42,7 @@ class ZeroPaddingConfigTemplate(LayerConfigTemplate):
     def format(self, node):
         params = self._default_config_params(node)
         return self.templates[node.class_name].format(**params)
+
 
 class ZeroPaddingFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
@@ -67,12 +69,13 @@ resize_config_template = """struct config{index} : nnet::resize_config {{
 
     static const unsigned new_height = {out_height};
     static const unsigned new_width = {out_width};
-    
+
     static const unsigned n_chan = {n_chan};
 }};\n"""
 
 resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input}, {output});'
 resize_include_list = ['nnet_utils/nnet_resize.h', 'nnet_utils/nnet_resize_stream.h']
+
 
 class ResizeConfigTemplate(LayerConfigTemplate):
     def __init__(self):
@@ -83,6 +86,7 @@ class ResizeConfigTemplate(LayerConfigTemplate):
         params = self._default_config_params(node)
 
         return self.template.format(**params)
+
 
 class ResizeFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
@@ -110,6 +114,7 @@ transpose_config_template = """struct config{index} : nnet::transpose_config {{
 transpose_function_template = 'nnet::transpose_{dim}<{input_t}, {output_t}, {config}>({input}, {output});'
 transpose_include_list = ['nnet_utils/nnet_transpose.h', 'nnet_utils/nnet_transpose_stream.h']
 
+
 class TransposeConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(Transpose)
@@ -119,6 +124,7 @@ class TransposeConfigTemplate(LayerConfigTemplate):
         params = self._default_config_params(node)
 
         return self.template.format(**params)
+
 
 class TransposeFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
