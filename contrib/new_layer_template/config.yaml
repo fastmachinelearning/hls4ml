@@ -1,6 +1,7 @@
 Pyconfig:
   layername: test
-  outputshape: 2
+  layerlongname: Addons>InstanceNormalization
+  outputshape: 0
   attrlist:
     Attribute:
     - n_filt
@@ -13,9 +14,13 @@ Pyconfig:
     - gamma
     - beta
   genattrtypes:
-  - static const unsigned
+  - int
   - float
-  - ap_fixed<32,10>
+  - str
+  genattrdef:
+  - -1
+  - 0.001
+  - "\"ap_fixed<32,10>\""
   otherargs:
   - gamma
   - beta

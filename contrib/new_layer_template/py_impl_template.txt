@@ -89,7 +89,7 @@ class LayernameFunctionTemplate(FunctionCallTemplate):
 
 # Parser for converter
 def parse_layername_layer(keras_layer, input_names, input_shapes, data_reader):
-    assert 'Layername' in keras_layer['class_name']
+    assert 'Layernamelong' in keras_layer['class_name']
 
     layer = parse_default_keras_layer(keras_layer, input_names)
     print(layer)

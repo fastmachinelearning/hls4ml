@@ -34,10 +34,15 @@ def pythonWriter(filedir,config):
 	indent = '    '
 	dindent = indent + indent
 	for line in f.readlines():
-		if 'Layername' in line:
+		if 'Layernamelong' in line:
+			newline = line.replace('Layernamelong',config["layerlongname"])
+		elif 'Layername' in line:
 			newline = line.replace('Layername',config["layername"].capitalize())
+			if 'layername' in line:
+				newline = newline.replace('layername',config["layername"])
 		elif 'layername' in line:
 			newline = line.replace('layername',config["layername"])
+		
 
 	# HLS4ML Layer implementation 
 		elif 'Attrs' in line:
@@ -45,8 +50,12 @@ def pythonWriter(filedir,config):
 			newline += dindent + f'Attribute(\'n_in\'),\n'
 			for attrtype in config["attrlist"].keys():
 					if len(config["attrlist"][attrtype]) == 0: break
-					for att in config["attrlist"][attrtype]:
-						newline += dindent + f'{attrtype}(\'{att}\'),\n'
+					if attrtype == 'Attribute':
+						for i,att in enumerate(config["attrlist"][attrtype]):
+							newline += dindent + f'{attrtype}(\'{att}\', value_type={config["genattrtypes"][i]}, default={config["genattrdef"][i]}),\n'
+					else:
+						for att in config["attrlist"][attrtype]:
+							newline += dindent + f'{attrtype}(\'{att}\'),\n'
 			newline = newline[:-2] + '\n'
 	# Input output shape missing
 		elif 'getweights' in line:
@@ -146,8 +155,16 @@ def initWriter(filedir,pyconfig):
 			newline = line.replace('Layernamefolder',pyconfig["layername"].capitalize() + "_layer")
 			newline = newline.replace('Layername',config["layername"].capitalize())
 			newline = newline.replace('layername',pyconfig["layername"])
+		elif 'Layernamelong' in line:
+			newline = line.replace('Layernamelong',config["layerlongname"])
+			if 'layername' in line:
+				newline = newline.replace('layername',pyconfig["layername"])
+			if 'Layername' in line:
+				newline = newline.replace('Layername',config["layername"].capitalize())
 		elif 'Layername' in line:
 			newline = line.replace('Layername',config["layername"].capitalize())
+			if 'layername' in line:
+				newline = newline.replace('layername',pyconfig["layername"])
 		elif 'layername' in line:
 			newline = line.replace('layername',pyconfig["layername"])
 		else:
@@ -169,7 +186,8 @@ if __name__ == '__main__':
 	hlsfile = hlsWriter(filedir, hlsconfig, config)
 	initWriter(filedir,config)
 	layerdir = config["layername"].capitalize() + "_layer"
-	os.mkdir(layerdir)
+	if not os.path.exists(layerdir):
+		os.mkdir(layerdir)
 	os.rename(pyfile, layerdir+'/' +pyfile)
 	os.rename(hlsfile, layerdir+'/' +hlsfile)
 	os.rename('__init__.py', layerdir+'/' + "__init__.py")
