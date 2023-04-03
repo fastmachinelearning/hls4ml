@@ -9,7 +9,7 @@ test_root_path = Path(__file__).parent
 
 @pytest.mark.parametrize('merge_layer', [Add, Average, Maximum, Minimum, Multiply, Subtract])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('backend', ['Quartus', 'Vivado'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_merge(merge_layer, io_type, backend):
     input_shape = (10, 10, 3)
 
@@ -35,7 +35,7 @@ def test_merge(merge_layer, io_type, backend):
 
 @pytest.mark.parametrize('axes', [1])
 @pytest.mark.parametrize('io_type', ['io_parallel']) # No io_stream implementation yet
-@pytest.mark.parametrize('backend', ['Quartus', 'Vivado'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_dot(axes, io_type, backend):
      # Only 1D implemented
     input_shape = (10, )
@@ -61,7 +61,7 @@ def test_dot(axes, io_type, backend):
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.001)
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('backend', ['Quartus', 'Vivado'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_concatenate1d(io_type, backend):
     input_shape = (10,)
 
@@ -87,7 +87,7 @@ def test_concatenate1d(io_type, backend):
 
 @pytest.mark.parametrize('axis', [1, 2])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('backend', ['Quartus', 'Vivado'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_concatenate2d(axis, io_type, backend):
     input_shape = (10, 3)
 
@@ -114,7 +114,7 @@ def test_concatenate2d(axis, io_type, backend):
 
 @pytest.mark.parametrize('axis', [1, 2, 3])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('backend', ['Quartus', 'Vivado'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_concatenate3d(axis, io_type, backend):
     input_shape = (10, 10, 3)
 

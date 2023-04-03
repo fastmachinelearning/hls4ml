@@ -583,6 +583,8 @@ class VivadoWriter(Writer):
         f.write('set part "{}"\n'.format(model.config.get_config_value('Part')))
         f.write('variable clock_period\n')
         f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
+        f.write('variable clock_uncertainty\n')
+        f.write('set clock_uncertainty {}\n'.format(model.config.get_config_value('ClockUncertainty', '12.5%')))
         f.close()
 
         # build_prj.tcl
@@ -642,7 +644,7 @@ class VivadoWriter(Writer):
         # custom source
         filedir = os.path.dirname(os.path.abspath(__file__))
 
-        custom_source = get_backend('Vivado').get_custom_source()
+        custom_source = model.config.backend.get_custom_source()
         for dst, srcpath in custom_source.items():
             dstpath = f'{model.config.get_output_dir()}/firmware/{dst}'
             copyfile(srcpath, dstpath)
