@@ -39,7 +39,7 @@ void compute_pool_buffer_2d(const data_T &in_elem,
     static int sX = 0; // stride X
     static int sY = 0; // stride Y
 
-    typename data_T::value_type pool_window[CONFIG_T::pool_height * CONFIG_T::pool_width];
+    typename CONFIG_T::accum_t pool_window[CONFIG_T::pool_height * CONFIG_T::pool_width];
     #pragma HLS ARRAY_PARTITION variable=pool_window complete
 
     static typename data_T::value_type kernel_data[CONFIG_T::pool_height * CONFIG_T::pool_width * CONFIG_T::n_filt];
@@ -65,8 +65,7 @@ void compute_pool_buffer_2d(const data_T &in_elem,
 
             // Compute Pooling
             res_pack[i_ic] =
-                reduce_pool<typename data_T::value_type, CONFIG_T::pool_height * CONFIG_T::pool_width, CONFIG_T>(
-                    pool_window);
+                reduce_pool<typename CONFIG_T::accum_t, CONFIG_T::pool_height * CONFIG_T::pool_width, CONFIG_T>(pool_window);
         }
 
         // Write to output
@@ -129,7 +128,7 @@ void compute_pool_buffer_1d(const data_T &in_elem, hls::stream<res_T> &res) {
     static int pX = 0;
     static int sX = 0;
 
-    typename data_T::value_type pool_window[CONFIG_T::pool_width];
+    typename CONFIG_T::accum_t pool_window[CONFIG_T::pool_width];
     #pragma HLS ARRAY_PARTITION variable=pool_window complete
 
     static typename data_T::value_type kernel_data[CONFIG_T::pool_width * CONFIG_T::n_filt];
@@ -155,7 +154,7 @@ void compute_pool_buffer_1d(const data_T &in_elem, hls::stream<res_T> &res) {
             }
 
             // Compute Pooling
-            res_pack[i_ic] = reduce_pool<typename data_T::value_type, CONFIG_T::pool_width, CONFIG_T>(pool_window);
+            res_pack[i_ic] = reduce_pool<typename CONFIG_T::accum_t, CONFIG_T::pool_width, CONFIG_T>(pool_window);
         }
 
         // Write to output
