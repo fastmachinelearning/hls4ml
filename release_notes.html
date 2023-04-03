@@ -37,7 +37,7 @@
               <img src="_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.1.0.dev1555+g870cf48
+                0.6.0.dev225+g4ade8739
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -49,7 +49,19 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Release Notes</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#release-v0-6-0">v0.6.0: coris</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#release-v0-5-0">v0.5.0: bartsia</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#release-v0-5-0-beta">v0.5.0-beta: </a></li>
+<li class="toctree-l2"><a class="reference internal" href="#release-v0-4-0">v0.4.0: aster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#release-v0-3-0">v0.3.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#release-v0-2-0">v0.2.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#release-v0-1-6">v0.1.6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#release-v0-1-5">v0.1.5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#release-v0-1-2">v0.1.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#release-v0-1-1">v0.1.1</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="status.html">Status and Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="command.html">Command Line Interface (deprecated)</a></li>
@@ -95,6 +107,7 @@
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Release Notes</li>
       <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/release_notes.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -104,6 +117,137 @@
              
   <section id="release-notes">
 <h1>Release Notes<a class="headerlink" href="#release-notes" title="Permalink to this heading"></a></h1>
+<section id="release-v0-6-0">
+<h2>v0.6.0: coris<a class="headerlink" href="#release-v0-6-0" title="Permalink to this heading"></a></h2>
+<p><em>Released on 2021-11-12 - <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/releases/tag/v0.6.0">GitHub</a> - <a class="reference external" href="https://pypi.org/project/hls4ml/v0.6.0/">PyPI</a></em></p>
+<h2>What's Changed</h2>
+<ul>
+<li><code>VivadoAccelerator</code> backend: target <code>pynq-z2</code> and <code>zcu102</code> boards directly from hls4ml by <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/nicologhielmetti/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/nicologhielmetti">@nicologhielmetti</a></li>
+<li>Updated <code>PyTorch</code> and <code>ONNX</code> converters by <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/Duchstf/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/Duchstf">@Duchstf</a></li>
+<li><code>line_buffer</code> Conv2D implementation for <code>io_stream</code>: reduced resource usage and latency by <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/Keb-L/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/Keb-L">@Keb-L</a>, <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/violatingcp/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/violatingcp">@violatingcp</a>, <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/vloncar/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/vloncar">@vloncar</a></li>
+<li>Support <code>QConv2DBatchnorm</code> layer from <code>QKeras</code> by <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/nicologhielmetti/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/nicologhielmetti">@nicologhielmetti</a></li>
+<li>Improved profiling plots - easier to compare original vs <code>hls4ml</code> converted models by <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/maksgraczyk/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/maksgraczyk">@maksgraczyk</a></li>
+<li>Better derivation of data types for <code>QKeras</code> models by <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/jmduarte/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/jmduarte">@jmduarte</a>, <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/thesps/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/thesps">@thesps</a></li>
+<li>Improved CI by <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/thesps/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/thesps">@thesps</a></li>
+<li>More support for models with branches, skip connections, <code>Merge</code> and <code>Concatenate</code> layers by <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/jmduarte/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/jmduarte">@jmduarte</a>, <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/vloncar/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/vloncar">@vloncar</a></li>
+<li>Support for <code>Dense</code> layers over multi-dimensional tensors by <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/vloncar/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/vloncar">@vloncar</a></li>
+<li>Overall improvements by <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/vloncar/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/vloncar">@vloncar</a>, <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/jmduarte/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/jmduarte">@jmduarte</a>, <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/thesps/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/thesps">@thesps</a>, <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/jmitrevs/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/jmitrevs">@jmitrevs</a> &amp; others</li>
+</ul>
+<h2>New Contributors</h2>
+<ul>
+<li><a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/siorpaes/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/siorpaes">@siorpaes</a> made their first contribution in <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="1036038400" data-permission-text="Title is private" data-url="https://github.com/fastmachinelearning/hls4ml/issues/424" data-hovercard-type="pull_request" data-hovercard-url="/fastmachinelearning/hls4ml/pull/424/hovercard" href="https://github.com/fastmachinelearning/hls4ml/pull/424">#424</a></li>
+<li><a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/jmitrevs/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/jmitrevs">@jmitrevs</a> made their first contribution in <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="1009366248" data-permission-text="Title is private" data-url="https://github.com/fastmachinelearning/hls4ml/issues/403" data-hovercard-type="pull_request" data-hovercard-url="/fastmachinelearning/hls4ml/pull/403/hovercard" href="https://github.com/fastmachinelearning/hls4ml/pull/403">#403</a></li>
+<li><a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/anders-wind/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/anders-wind">@anders-wind</a> made their first contribution in <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="827863478" data-permission-text="Title is private" data-url="https://github.com/fastmachinelearning/hls4ml/issues/302" data-hovercard-type="pull_request" data-hovercard-url="/fastmachinelearning/hls4ml/pull/302/hovercard" href="https://github.com/fastmachinelearning/hls4ml/pull/302">#302</a></li>
+<li><a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/KOVI89alipes/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/KOVI89alipes">@KOVI89alipes</a> made their first contribution in <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="853475616" data-permission-text="Title is private" data-url="https://github.com/fastmachinelearning/hls4ml/issues/318" data-hovercard-type="pull_request" data-hovercard-url="/fastmachinelearning/hls4ml/pull/318/hovercard" href="https://github.com/fastmachinelearning/hls4ml/pull/318">#318</a></li>
+<li><a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/maksgraczyk/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/maksgraczyk">@maksgraczyk</a> made their first contribution in <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="859939699" data-permission-text="Title is private" data-url="https://github.com/fastmachinelearning/hls4ml/issues/323" data-hovercard-type="pull_request" data-hovercard-url="/fastmachinelearning/hls4ml/pull/323/hovercard" href="https://github.com/fastmachinelearning/hls4ml/pull/323">#323</a></li>
+<li><a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/Keb-L/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/Keb-L">@Keb-L</a> made their first contribution in <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="879394084" data-permission-text="Title is private" data-url="https://github.com/fastmachinelearning/hls4ml/issues/332" data-hovercard-type="pull_request" data-hovercard-url="/fastmachinelearning/hls4ml/pull/332/hovercard" href="https://github.com/fastmachinelearning/hls4ml/pull/332">#332</a></li>
+<li><a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/ConsVin/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/ConsVin">@ConsVin</a> made their first contribution in <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="838852154" data-permission-text="Title is private" data-url="https://github.com/fastmachinelearning/hls4ml/issues/307" data-hovercard-type="pull_request" data-hovercard-url="/fastmachinelearning/hls4ml/pull/307/hovercard" href="https://github.com/fastmachinelearning/hls4ml/pull/307">#307</a></li>
+<li><a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/nicologhielmetti/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/nicologhielmetti">@nicologhielmetti</a> made their first contribution in <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="824555621" data-permission-text="Title is private" data-url="https://github.com/fastmachinelearning/hls4ml/issues/298" data-hovercard-type="pull_request" data-hovercard-url="/fastmachinelearning/hls4ml/pull/298/hovercard" href="https://github.com/fastmachinelearning/hls4ml/pull/298">#298</a></li>
+</ul>
+<p><strong>Full Changelog</strong>: <a class="commit-link" href="https://github.com/fastmachinelearning/hls4ml/compare/v0.5.0...v0.6.0"><tt>v0.5.0...v0.6.0</tt></a></p></section>
+<section id="release-v0-5-0">
+<h2>v0.5.0: bartsia<a class="headerlink" href="#release-v0-5-0" title="Permalink to this heading"></a></h2>
+<p><em>Released on 2021-03-05 - <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/releases/tag/v0.5.0">GitHub</a> - <a class="reference external" href="https://pypi.org/project/hls4ml/v0.5.0/">PyPI</a></em></p>
+<p>What's new:</p>
+<ul>
+<li>Streaming IO layer implementations, especially of Convolutional layers, accessed through the config with <code>IOType: io_stream</code>. Scales CNN support to much larger models than previously possible (see <a href="https://arxiv.org/abs/2101.05108" rel="nofollow">arXiv:2101.05108</a>)</li>
+<li>New <a href="https://fastmachinelearning.org/hls4ml/" rel="nofollow">documentation and API reference</a></li>
+<li>Further optimizations for QKeras / quantization aware training. A 'shift' operation is now used for <code>po2</code> quantizers</li>
+<li>Allow redefinition of weights directory for standalone project compilation</li>
+<li><code>profiling</code> for PyTorch models</li>
+</ul>
+<p>Deprecated:</p>
+<ul>
+<li><code>IOType : io_serial</code> is deprecated, and superceded by new <code>IOType: io_stream</code></li>
+</ul>
+<p>Bugfixes:</p>
+<ul>
+<li>Fix to Initiation Interval and different min/max latency for <code>Strategy: Resource</code></li>
+<li>Fix warnings in <code>hls4ml</code> command line script flow</li>
+<li>Write yml config from Python API - for mixed API / command line flow</li>
+</ul></section>
+<section id="release-v0-5-0-beta">
+<h2>v0.5.0-beta: <a class="headerlink" href="#release-v0-5-0-beta" title="Permalink to this heading"></a></h2>
+<p><em>Released on 2021-01-18 - <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/releases/tag/v0.5.0-beta">GitHub</a> - <a class="reference external" href="https://pypi.org/project/hls4ml/v0.5.0-beta/">PyPI</a></em></p>
+<p>Pre-release of hls4ml version <code>v0.5.0</code>.</p>
+<p>What's new:</p>
+<ul>
+<li>Streaming IO layer implementations, especially of Convolutional layers, accessed through the config with <code>io_type: io_stream</code>. Scales CNN support to much larger models than previously possible (see <a href="https://arxiv.org/abs/2101.05108" rel="nofollow">paper</a>)</li>
+<li>New <a href="https://fastmachinelearning.org/hls4ml/" rel="nofollow">documentation and API reference</a></li>
+<li>Further optimizations for QKeras / quantization aware training. A 'shift' operation is now used for <code>po2</code> quantizers</li>
+<li>Allow redefinition of weights directory for standalone project compilation</li>
+</ul></section>
+<section id="release-v0-4-0">
+<h2>v0.4.0: aster<a class="headerlink" href="#release-v0-4-0" title="Permalink to this heading"></a></h2>
+<p><em>Released on 2020-10-30 - <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/releases/tag/v0.4.0">GitHub</a> - <a class="reference external" href="https://pypi.org/project/hls4ml/v0.4.0/">PyPI</a></em></p>
+<p>What's new:</p>
+<ul>
+<li>Support for GarNet layer (see <a href="https://arxiv.org/abs/2008.03601%5D" rel="nofollow">paper</a>)</li>
+<li>Input layer precision added to config generator utility</li>
+<li>New 'SkipOptimizers' config option. Now you can run all Optimizers by default (as in v0.3.0) but subtract any specified by 'SkipOptimizers' e.g. <code>hls_config['SkipOptimizers'] = ['fuse_consecutive_batch_normalization']</code></li>
+<li>Print out the latency report from Cosimulation</li>
+</ul>
+<p>Bugfixes:</p>
+<ul>
+<li>Fixes related to tensorflow 2.3: new Functional API, changes to handling of Input layer</li>
+<li>Fix error with config generator utility and activation layers gor <code>granularity='name'</code></li>
+<li>Fix issue with reloading of emulation library after configuration change</li>
+<li>Fix to handling of layers with <code>use_bias=False</code> and merged Dense and BatchNormalization</li>
+</ul></section>
+<section id="release-v0-3-0">
+<h2>v0.3.0<a class="headerlink" href="#release-v0-3-0" title="Permalink to this heading"></a></h2>
+<p><em>Released on 2020-07-31 - <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/releases/tag/v0.3.0">GitHub</a> - <a class="reference external" href="https://pypi.org/project/hls4ml/v0.3.0/">PyPI</a></em></p>
+<p>What's new:</p>
+<ul>
+<li>API expansion:
+<ul>
+<li>Create configuration dictionary from model object</li>
+<li>Run 'C Simulation' from Python with <code>hls_model.predict(X)</code></li>
+<li>Trace model layer output with <code>hls_model.trace(X)</code></li>
+<li>Write HLS project, run synthesis flow from Python</li>
+</ul>
+</li>
+<li>QKeras support: convert models trained using layers and quantizers from QKeras</li>
+<li>Example models moved to separate repo, added as a submodule with an API to retrieve them</li>
+<li>New Softmax implementations</li>
+<li>Minor fixes: weights exported at higher precision, concatenate layer shape corrected</li>
+</ul></section>
+<section id="release-v0-2-0">
+<h2>v0.2.0<a class="headerlink" href="#release-v0-2-0" title="Permalink to this heading"></a></h2>
+<p><em>Released on 2020-03-31 - <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/releases/tag/v0.2.0">GitHub</a> - <a class="reference external" href="https://pypi.org/project/hls4ml/v0.2.0/">PyPI</a></em></p>
+<p>What's new:</p>
+<ul>
+<li><code>tf_to_hls</code>: convert tensorflow protobuf (<code>.pb</code>) models to HLS projects</li>
+<li>Support for Keras model <code>.h5</code> files (extending existing support for <code>.json</code> architecture + <code>.h5</code> weights format)</li>
+<li>Support larger Conv1D / 2D layers</li>
+<li>Support for binary and ternary layers from QKeras</li>
+<li>API enhancements for addition of custom layer and new backends</li>
+<li>Keras and HLS model profiling tool</li>
+<li><code>hls4ml report</code> command to gather HLS build reports</li>
+<li><code>hls4ml build -l</code> command to run logic synthesis</li>
+<li>Fused Batch Normalization and Dense layer optimization pass</li>
+</ul></section>
+<section id="release-v0-1-6">
+<h2>v0.1.6<a class="headerlink" href="#release-v0-1-6" title="Permalink to this heading"></a></h2>
+<p><em>Released on 2020-02-10 - <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/releases/tag/v0.1.6">GitHub</a> - <a class="reference external" href="https://pypi.org/project/hls4ml/v0.1.6/">PyPI</a></em></p>
+<ul>
+<li>Support for larger Dense layers (enabled with <code>Strategy: Resource</code> in the configuration file)</li>
+<li>Binary/Ternary NN refinements</li>
+<li>Built-in optimization framework</li>
+<li>Optional C/RTL validation</li>
+</ul></section>
+<section id="release-v0-1-5">
+<h2>v0.1.5<a class="headerlink" href="#release-v0-1-5" title="Permalink to this heading"></a></h2>
+<p><em>Released on 2019-08-02 - <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/releases/tag/v0.1.5">GitHub</a> - <a class="reference external" href="https://pypi.org/project/hls4ml/v0.1.5/">PyPI</a></em></p>
+</section>
+<section id="release-v0-1-2">
+<h2>v0.1.2<a class="headerlink" href="#release-v0-1-2" title="Permalink to this heading"></a></h2>
+<p><em>Released on 2018-03-20 - <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/releases/tag/v0.1.2">GitHub</a> - <a class="reference external" href="https://pypi.org/project/hls4ml/v0.1.2/">PyPI</a></em></p>
+<p>Update license</p></section>
+<section id="release-v0-1-1">
+<h2>v0.1.1<a class="headerlink" href="#release-v0-1-1" title="Permalink to this heading"></a></h2>
+<p><em>Released on 2018-03-16 - <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/releases/tag/v0.1.1">GitHub</a> - <a class="reference external" href="https://pypi.org/project/hls4ml/v0.1.1/">PyPI</a></em></p>
+<p>second beta version: fixed README</p></section>
 </section>
 
 
