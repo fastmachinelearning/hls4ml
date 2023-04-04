@@ -60,6 +60,8 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     static const unsigned n_scale_bias = (n_filt == -1) ? n_in : n_filt;
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
+    static const unsigned multiplier_limit = (unsigned)({n_in} / {reuse});
+    static const unsigned ii = {n_in} / multiplier_limit;
     static const bool store_weights_in_bram = false;
     typedef {bias_t.name} bias_t;
     typedef {scale_t.name} scale_t;
@@ -67,7 +69,7 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
 
-batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}, {config}::reuse_factor>({input}, {output}, {scale}, {bias});'
+batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}, {config}::reuse_factor, {config}::ii>({input}, {output}, {scale}, {bias});'
 
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
 

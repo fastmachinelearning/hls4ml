@@ -31,7 +31,7 @@ namespace nnet {
 //       Streaming Batch Normalization
 // ****************************************************
 
-template<class data_T, class res_T, typename CONFIG_T, unsigned int reuse_factor>
+template<class data_T, class res_T, typename CONFIG_T, unsigned int reuse_factor, unsigned int ii>
 void normalize(
     ac_channel<data_T> &data,
     ac_channel<res_T>  &res,
@@ -42,9 +42,10 @@ void normalize(
     //#pragma HLS ARRAY_PARTITION variable=bias complete
 
     constexpr unsigned multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in, CONFIG_T::reuse_factor);
-    constexpr unsigned ii = CONFIG_T::n_in / multiplier_limit;
+//    constexpr unsigned ii = CONFIG_T::n_in / multiplier_limit;
     CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::scale_t>::limit(multiplier_limit);
 
+    #pragma hls_pipeline_init_interval ii
     BatchNormLoop: for (int i = 0; i < CONFIG_T::n_in / data_T::size; i++) {
         //#pragma HLS PIPELINE II=ii
 
@@ -52,8 +53,9 @@ void normalize(
         res_T out_data;
         //#pragma HLS DATA_PACK variable=out_data
 
+        #pragma hls_unroll
         BatchNormpack: for (int j = 0; j < data_T::size; j++) {
-            #pragma hls_unroll
+            // #pragma HLS UNROLL
             int norm_index;
             if (CONFIG_T::n_filt==-1) {
                 norm_index = i * data_T::size + j;
