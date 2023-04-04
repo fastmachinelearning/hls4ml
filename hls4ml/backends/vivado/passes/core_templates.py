@@ -113,6 +113,7 @@ layernorm_config_template = """struct config{index} : nnet::layernorm_config {{
     static const unsigned n_in = {n_in};
     static const unsigned seq_len = {seq_len};
     static const unsigned table_size = {table_size};
+    static constexpr double table_range = {table_range};
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
     static const bool store_weights_in_bram = false;

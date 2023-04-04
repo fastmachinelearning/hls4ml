@@ -35,45 +35,75 @@ struct multiheadattention_config
     using product = nnet::product::mult<x_T, y_T>;
 };
 
+template<int PackSize, class data_T>
+struct datapack {
+    data_T data[PackSize];
+};
+
+
+template <class data_T,int size>
+void read_stream_array(
+	hls::stream<data_T>    data_in[size],
+	data_T out[size]
+)
+{
+	for (int k=0; k<size; ++k){
+	#pragma HLS UNROLL
+		out[k] = data_in[k].read();
+	}
+}
+
+
 template<class data_T, class res_T, typename CONFIG_T>
 void matrixmul_transpose(
-	hls::stream<data_T>  Q[CONFIG_T::head_dim_key],
-	hls::stream<data_T>  K[CONFIG_T::head_dim_key],
+	hls::stream<datapack<CONFIG_T::head_dim_key, data_T>> &Q,
+	hls::stream<datapack<CONFIG_T::head_dim_key, data_T>> &K,
     res_T  QK[CONFIG_T::seq_len][CONFIG_T::seq_len]) // seq_Q, seq_K
 {
     const data_T dk = 1.0/sqrt(CONFIG_T::head_dim_key);
     data_T QKij, QK_1;
     data_T Qi[CONFIG_T::head_dim_key];
-    data_T Product[CONFIG_T::seq_len];
+    data_T Product[CONFIG_T::seq_len];// seq_Q, seq_K
     data_T qk_smout[CONFIG_T::seq_len];
     data_T krow[CONFIG_T::seq_len * CONFIG_T::head_dim_key];
-	#pragma HLS ARRAY_PARTITION variable=K complete dim=1   /////
 	#pragma HLS ARRAY_PARTITION variable=Qi complete
 	#pragma HLS ARRAY_PARTITION variable=Product complete
 	#pragma HLS ARRAY_PARTITION variable=qk_smout complete
 	#pragma HLS ARRAY_PARTITION variable=QK complete dim=2
 	#pragma HLS ARRAY_PARTITION variable=krow complete
 
+	datapack<CONFIG_T::head_dim_key, data_T> datak_pack, dataq_pack;
+	#pragma HLS DATA_PACK variable=Q
+	#pragma HLS DATA_PACK variable=K
+	#pragma HLS DATA_PACK variable=datak_pack
+	#pragma HLS DATA_PACK variable=dataq_pack
+
+    int multiplier_limit  = ceil(float(CONFIG_T::seq_len * CONFIG_T::head_dim_key) / float(CONFIG_T::reuse_factor));
+    CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::limit(multiplier_limit);
+
     prep_k: for(int i = 0; i < CONFIG_T::seq_len; ++i) {
 	#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+    	datak_pack = K.read();
     	for(int j = 0; j < CONFIG_T::head_dim_key; ++j) {
 		#pragma HLS UNROLL
-    		krow[i*CONFIG_T::head_dim_key + j] = K[j].read();
+    		krow[i*CONFIG_T::head_dim_key + j] = datak_pack.data[j];
     	}
     }
 
     // for each row and column of AB
     row: for(int i = 0; i < CONFIG_T::seq_len; ++i) {
 	#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+    	dataq_pack = Q.read();
+
     	q: for(int q_i = 0; q_i < CONFIG_T::head_dim_key; ++q_i){
 		#pragma HLS UNROLL
-    		Qi[q_i]=Q[q_i].read();
+    		Qi[q_i]=dataq_pack.data[q_i];
     	}
         col: for(int j = 0; j < CONFIG_T::seq_len; ++j) {
             // compute (QK)i,j
             QKij = 0;
             product: for(int k = 0; k < CONFIG_T::head_dim_key; ++k) {
-            	QK_1 = Qi[k] * krow[j*CONFIG_T::head_dim_key + k];
+            	QK_1 = CONFIG_T::template product<data_T, data_T>::product(Qi[k],krow[j*CONFIG_T::head_dim_key + k]);
                 QKij += QK_1;
             }
             Product[j] = QKij * dk;
@@ -90,20 +120,28 @@ void matrixmul_transpose(
 template<class data_T, class res_T, typename CONFIG_T>
 void matrixmul(
     data_T QK[CONFIG_T::seq_len][CONFIG_T::seq_len],
-	hls::stream<data_T>  V[CONFIG_T::head_dim_value],
+	hls::stream<datapack<CONFIG_T::head_dim_key, data_T>>  &V,
 	hls::stream<data_T>  S[CONFIG_T::head_dim_value]) // S: attention score
 {
-	#pragma HLS ARRAY_Partition variable=QK complete dim=2
-	#pragma HLS ARRAY_Partition variable=S complete dim=1
-    #pragma HLS ARRAY_Partition variable=V complete dim=1
+	#pragma HLS DATA_PACK variable=V
+	#pragma HLS ARRAY_PARTITION variable=QK complete dim=2
+	#pragma HLS ARRAY_PARTITION variable=S complete dim=1
+
+	datapack<CONFIG_T::head_dim_key, data_T> datav_pack;
+	#pragma HLS DATA_PACK variable=datav_pack
+
+	int multiplier_limit  = ceil(float(CONFIG_T::seq_len*CONFIG_T::head_dim_value) / float(CONFIG_T::reuse_factor));
+	CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::limit(multiplier_limit);
 
 	data_T dataV[CONFIG_T::seq_len*CONFIG_T::head_dim_value];
 	# pragma HLS ARRAY_PARTITION variable=dataV complete dim=1
+
 	for (int j=0; j <CONFIG_T::seq_len; ++j){
 	#pragma HLS PIPELINE II=CONFIG_T::reuse_factor
+		datav_pack = V.read();
 		for (int i=0; i <CONFIG_T::head_dim_value; ++i){
 		#pragma HLS UNROLL
-			dataV[CONFIG_T::seq_len*i+j]=V[i].read();
+			dataV[CONFIG_T::seq_len*i+j]=datav_pack.data[i];
 		}
 	}
 
@@ -121,7 +159,7 @@ void matrixmul(
             // compute (S)i,j
             Sij = 0;
             product: for(int k = 0; k < CONFIG_T::seq_len; ++k) {
-            	S_1 = QKi[k] * dataV[j*CONFIG_T::seq_len + k];
+            	S_1 = CONFIG_T::template product<data_T, data_T>::product(QKi[k], dataV[j*CONFIG_T::seq_len + k]);
             	Sij += S_1;
             }
             S[j].write(Sij);
@@ -129,115 +167,62 @@ void matrixmul(
     }
 }
 
-template<class data_T, class res_T, typename CONFIG_T>
-void dense_value(
-	hls::stream<data_T>    data_v[CONFIG_T::feature_dim],
-	hls::stream<data_T>    v_proj[CONFIG_T::head_dim_value],
-    typename CONFIG_T::weight_t  value_weight[CONFIG_T::feature_dim * CONFIG_T::head_dim_value],
-    typename CONFIG_T::bias_t    value_bias[CONFIG_T::head_dim_value])
-{
-	#pragma HLS ARRAY_PARTITION variable=data_v complete dim=1
-	#pragma HLS ARRAY_PARTITION variable=v_proj complete dim=1
-
-    v_h: for (int j=0; j <CONFIG_T::seq_len; ++j){
-	#pragma HLS DATAFLOW
-    	data_T v_row[CONFIG_T::head_dim_value];
-    	data_T dense_in[CONFIG_T::feature_dim];
-		#pragma HLS ARRAY_PARTITION variable=v_row complete dim=1
-		#pragma HLS ARRAY_PARTITION variable=dense_in complete dim=1
-        for (int k=0; k<CONFIG_T::feature_dim; ++k){
-		#pragma HLS UNROLL
-    		dense_in[k] = data_v[k].read();
-    	}
-        dense<data_T, res_T, typename CONFIG_T::config_mult1>(dense_in, v_row, value_weight, value_bias);
-        for (int k=0; k <CONFIG_T::head_dim_value; ++k){
-		#pragma HLS UNROLL
-            v_proj[k].write(v_row[k]);
-        }
-    }
-}
-
-
-
-//template<class data_T, class res_T, typename CONFIG_T>
-//void value_prep(
-//	hls::stream<data_T>    v_proj[CONFIG_T::head_dim_value],
-//	data_T  V[CONFIG_T::head_dim_value * CONFIG_T::seq_len])
-//{
-//	data_T data[CONFIG_T::seq_len*CONFIG_T::head_dim_value];
-//	# pragma HLS ARRAY_PARTITION variable=V complete dim=1
-//	# pragma HLS ARRAY_PARTITION variable=data complete dim=1
-//	for (int j=0; j <CONFIG_T::seq_len; ++j){
-//		for (int i=0; i <CONFIG_T::head_dim_value; ++i){
-//		#pragma HLS UNROLL
-//			data[CONFIG_T::seq_len*i+j]=v_proj[i].read();
-//		}
-//	}
-//	for (int i=0; i <CONFIG_T::head_dim_value; ++i){
-//		for (int j=0; j <CONFIG_T::seq_len; ++j){
-//		#pragma HLS UNROLL
-//			V[CONFIG_T::seq_len*i +j]=data[CONFIG_T::seq_len*i+j];
-//		}
-//	}
-//}
-
-
 
 template<class data_T, class res_T, typename CONFIG_T>
-void dense_query(
+void lin_projection(
 	hls::stream<data_T>    data_q[CONFIG_T::feature_dim],
-	hls::stream<data_T>    q_proj[CONFIG_T::head_dim_key],
-    typename CONFIG_T::weight_t  query_weight[CONFIG_T::feature_dim * CONFIG_T::head_dim_key],
-    typename CONFIG_T::bias_t    query_bias[CONFIG_T::head_dim_key])
-{
-	#pragma HLS ARRAY_PARTITION variable=data_q complete dim=1
-	#pragma HLS ARRAY_PARTITION variable=q_proj complete dim=1
-
-    q_h: for (int j=0; j <CONFIG_T::seq_len; ++j){
-	#pragma HLS DATAFLOW
-    	data_T proj[CONFIG_T::head_dim_key];
-		data_T dense_in [CONFIG_T::feature_dim];
-		#pragma HLS ARRAY_PARTITION variable=proj complete dim=1
-		#pragma HLS ARRAY_PARTITION variable=dense_in complete dim=1
-
-		for (int k=0; k<CONFIG_T::feature_dim; ++k){
-		#pragma HLS UNROLL
-			dense_in[k] = data_q[k].read();
-		}
-        dense<data_T, res_T, typename CONFIG_T::config_mult1>(dense_in, proj, query_weight, query_bias);
-        update_proj: for (int i=0; i<CONFIG_T::head_dim_key; ++i){
-		#pragma HLS UNROLL
-        	q_proj[i].write(proj[i]);
-        }
-    }
-}
-
-template<class data_T, class res_T, typename CONFIG_T>
-void dense_key(
-	hls::stream<data_T>    data_k[CONFIG_T::feature_dim],
-	hls::stream<data_T>    k_proj[CONFIG_T::head_dim_key],
+	hls::stream<data_T>    data_vk[CONFIG_T::feature_dim],
+	hls::stream<datapack<CONFIG_T::head_dim_key, data_T>>    &k_proj,
+	hls::stream<datapack<CONFIG_T::head_dim_key, data_T>>    &q_proj,
+	hls::stream<datapack<CONFIG_T::head_dim_value, data_T>>  &v_proj,
     typename CONFIG_T::weight_t  key_weight[CONFIG_T::feature_dim * CONFIG_T::head_dim_key],
-    typename CONFIG_T::bias_t    key_bias[CONFIG_T::head_dim_key])
+    typename CONFIG_T::bias_t    key_bias[CONFIG_T::head_dim_key],
+	typename CONFIG_T::weight_t  query_weight[CONFIG_T::feature_dim * CONFIG_T::head_dim_key],
+	typename CONFIG_T::bias_t    query_bias[CONFIG_T::head_dim_key],
+	typename CONFIG_T::weight_t  value_weight[CONFIG_T::feature_dim * CONFIG_T::head_dim_value],
+	typename CONFIG_T::bias_t    value_bias[CONFIG_T::head_dim_value]
+	)
+
 {
-	#pragma HLS ARRAY_PARTITION variable=data_k complete dim=1
-	#pragma HLS ARRAY_PARTITION variable=k_proj complete dim=1
+	#pragma HLS DATA_PACK variable=k_proj
+	#pragma HLS DATA_PACK variable=q_proj
+	#pragma HLS DATA_PACK variable=v_proj
+
+	#pragma HLS ARRAY_PARTITION variable=data_q complete dim=1
+	#pragma HLS ARRAY_PARTITION variable=data_vk complete dim=1
 
     k_h: for (int j=0; j <CONFIG_T::seq_len; ++j){
-	#pragma HLS DATAFLOW
-    	data_T proj[CONFIG_T::head_dim_key];
-    	data_T dense_in[CONFIG_T::feature_dim];
-		#pragma HLS ARRAY_PARTITION variable=proj complete dim=1
-		#pragma HLS ARRAY_PARTITION variable=dense_in complete dim=1
+	#pragma HLS PIPELINE
 
-		for (int k=0; k<CONFIG_T::feature_dim; ++k){
-		#pragma HLS UNROLL
-			dense_in[k] = data_k[k].read();
-		}
-        dense<data_T, res_T, typename CONFIG_T::config_mult1>(dense_in, proj, key_weight, key_bias);
-        update_proj: for (int i=0; i <CONFIG_T::head_dim_key; ++i){
-		#pragma HLS UNROLL
-        	k_proj[i].write(proj[i]);
-		}
+    	data_T proj_k[CONFIG_T::head_dim_key];
+    	data_T proj_q[CONFIG_T::head_dim_key];
+    	data_T proj_v[CONFIG_T::head_dim_value];
+    	data_T in_q[CONFIG_T::feature_dim];
+		data_T in_v[CONFIG_T::feature_dim];
+		#pragma HLS ARRAY_PARTITION variable=proj_k complete dim=1
+		#pragma HLS ARRAY_PARTITION variable=proj_q complete dim=1
+		#pragma HLS ARRAY_PARTITION variable=proj_v complete dim=1
+		#pragma HLS ARRAY_PARTITION variable=in_q complete dim=1
+		#pragma HLS ARRAY_PARTITION variable=in_v complete dim=1
+
+
+		datapack<CONFIG_T::head_dim_key, data_T> proj_k_pack;
+		datapack<CONFIG_T::head_dim_key, data_T> proj_q_pack;
+		datapack<CONFIG_T::head_dim_value, data_T> proj_v_pack;
+		#pragma HLS DATA_PACK variable=proj_k_pack
+		#pragma HLS DATA_PACK variable=proj_q_pack
+		#pragma HLS DATA_PACK variable=proj_v_pack
+
+		read_stream_array<data_T, CONFIG_T::feature_dim>(data_q, in_q);
+		read_stream_array<data_T, CONFIG_T::feature_dim>(data_vk, in_v);
+
+        dense<data_T, res_T, typename CONFIG_T::config_mult1>(in_v, proj_k_pack.data, key_weight, key_bias);
+        dense<data_T, res_T, typename CONFIG_T::config_mult1>(in_q, proj_q_pack.data, query_weight, query_bias);
+        dense<data_T, res_T, typename CONFIG_T::config_mult1>(in_v, proj_v_pack.data, value_weight, value_bias);
+
+        k_proj.write(proj_k_pack);
+		q_proj.write(proj_q_pack);
+		v_proj.write(proj_v_pack);
     }
 }
 
@@ -250,10 +235,12 @@ void dense_out(
     typename CONFIG_T::bias_t    attention_output_bias[CONFIG_T::feature_dim])
 {
 	data_T mat_res_con[CONFIG_T::num_heads*CONFIG_T::head_dim_value];
+	res_T dense_out[CONFIG_T::feature_dim];
 	#pragma HLS ARRAY_PARTITION variable=mat_res_con complete dim=1
+	#pragma HLS ARRAY_PARTITION variable=dense_out complete dim=1
 	output_dense: for (int k=0; k <CONFIG_T::seq_len; ++k){
-	#pragma HLS DATAFLOW
-//	#pragma HLS PIPELINE
+
+	#pragma HLS PIPELINE
 		for (int i=0;i<CONFIG_T::num_heads; ++i){
 		#pragma HLS UNROLL
 			for (int j=0;j<CONFIG_T::head_dim_value; ++j){
@@ -261,30 +248,24 @@ void dense_out(
 				mat_res_con[CONFIG_T::head_dim_value*i+j]=data_in[i][j].read();
 			}
 		}
-		dense<data_T, res_T, typename CONFIG_T::config_mult2>(mat_res_con, res+(CONFIG_T::feature_dim*k), attention_output_weight, attention_output_bias);
-		// nnet::print_result<result_t, CONFIG_T::feature_dim>( res+(CONFIG_T::feature_dim*j), std::cout);
+		dense<data_T, res_T, typename CONFIG_T::config_mult2>(mat_res_con, dense_out, attention_output_weight, attention_output_bias);
+		for (int i=0;i<CONFIG_T::feature_dim; ++i){
+		#pragma HLS UNROLL
+			res[CONFIG_T::feature_dim*k+i] = dense_out[i];
+		}
 	}
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
 void data_prep(
-	data_T    data_q[CONFIG_T::seq_len * CONFIG_T::feature_dim],
-	data_T    data_vk[CONFIG_T::seq_len * CONFIG_T::feature_dim],
-	hls::stream<data_T> d_value[CONFIG_T::feature_dim],
-	hls::stream<data_T> d_query[CONFIG_T::feature_dim],
-	hls::stream<data_T> d_key[CONFIG_T::feature_dim])
+	data_T    data[CONFIG_T::seq_len * CONFIG_T::feature_dim],
+	hls::stream<data_T> d[CONFIG_T::feature_dim])
 {
-	#pragma HLS ARRAY_PARTITION variable=d_value complete dim=1
-	#pragma HLS ARRAY_PARTITION variable=d_query complete dim=1
-	#pragma HLS ARRAY_PARTITION variable=d_key complete dim=1
-
+	#pragma HLS ARRAY_PARTITION variable=d complete dim=1
 	for (int j=0; j<CONFIG_T::seq_len; ++j){
-		#pragma HLS PIPELINE
 		for (int k=0; k<CONFIG_T::feature_dim; ++k){
-		#pragma HLS DATAFLOW
-		d_value[k].write(data_vk[j*k]);
-		d_key[k].write(data_vk[j*k]);
-		d_query[k].write(data_q[j*k]);
+		#pragma HLS UNROLL
+		d[k].write(data[j*CONFIG_T::feature_dim + k]);
 		}
 	}
 }
@@ -306,49 +287,42 @@ void multiheadattention(
 {
 	hls::stream<data_T> d_value[CONFIG_T::num_heads][CONFIG_T::feature_dim];
 	hls::stream<data_T> d_query[CONFIG_T::num_heads][CONFIG_T::feature_dim];
-	hls::stream<data_T> d_key[CONFIG_T::num_heads][CONFIG_T::feature_dim];
-	hls::stream<data_T> q_proj[CONFIG_T::num_heads][CONFIG_T::head_dim_key];
-	hls::stream<data_T> k_proj[CONFIG_T::num_heads][CONFIG_T::head_dim_key];
-	hls::stream<data_T> v_proj[CONFIG_T::num_heads][CONFIG_T::head_dim_value];
-//    data_T v_reshape[CONFIG_T::num_heads][CONFIG_T::head_dim_value][CONFIG_T::seq_len];
+	hls::stream<datapack<CONFIG_T::head_dim_key, data_T>> q_proj[CONFIG_T::num_heads];
+	hls::stream<datapack<CONFIG_T::head_dim_key, data_T>> k_proj[CONFIG_T::num_heads];
+	hls::stream<datapack<CONFIG_T::head_dim_value, data_T>> v_proj[CONFIG_T::num_heads];
     data_T qk_mul[CONFIG_T::num_heads][CONFIG_T::seq_len][CONFIG_T::seq_len];
     hls::stream<data_T> matr_out[CONFIG_T::num_heads][CONFIG_T::head_dim_value];
 
 	#pragma HLS DATAFLOW
+	#pragma HLS ARRAY_PARTITION variable=d_query complete dim=1
 	#pragma HLS ARRAY_PARTITION variable=v_proj complete dim=1
 	#pragma HLS ARRAY_PARTITION variable=q_proj complete dim=1
 	#pragma HLS ARRAY_PARTITION variable=k_proj complete dim=1
-//	#pragma HLS ARRAY_PARTITION variable=v_reshape complete dim=1
 	#pragma HLS ARRAY_PARTITION variable=qk_mul complete dim=1
 	#pragma HLS ARRAY_PARTITION variable=matr_out complete dim=1
     // std::cout << "input to MHA: " << std::endl;
     // nnet::print_result<result_t, CONFIG_T::seq_len * CONFIG_T::feature_dim>(data_q, std::cout);
     // std::cout << " " << std::endl;
 
-    dataprep: for (int i=0;i<CONFIG_T::num_heads; ++i){
-	#pragma HLS UNROLL
-    	data_prep<data_T, res_T, CONFIG_T>(data_q, data_vk, d_value[i], d_query[i], d_key[i]);
-	}
-
+    prepq: for (int i=0;i<CONFIG_T::num_heads; ++i){
+		#pragma HLS UNROLL
+    	nnet::data_prep<data_T, res_T, CONFIG_T>(data_q, d_query[i]);
+    }
+	prepvk: for (int i=0;i<CONFIG_T::num_heads; ++i){
+		#pragma HLS UNROLL
+    	nnet::data_prep<data_T, res_T, CONFIG_T>(data_vk, d_value[i]);
+    }
 
     // linear projection
-    d_value: for (int i=0;i<CONFIG_T::num_heads; ++i){
-	#pragma HLS UNROLL
-    	dense_value<data_T, res_T, CONFIG_T>(d_value[i], v_proj[i], value_weight+(CONFIG_T::head_dim_value*CONFIG_T::feature_dim*i), value_bias+(CONFIG_T::head_dim_value*i));
+    lin_proj: for (int i=0;i<CONFIG_T::num_heads; ++i){
+    	#pragma HLS UNROLL
+    	nnet::lin_projection<data_T, res_T, CONFIG_T>(
+    			d_query[i], d_value[i],
+    			k_proj[i], q_proj[i], v_proj[i],
+				key_weight+(CONFIG_T::head_dim_key*CONFIG_T::feature_dim*i), key_bias+(CONFIG_T::head_dim_key*i),
+				query_weight+(CONFIG_T::head_dim_key*CONFIG_T::feature_dim*i), query_bias+(CONFIG_T::head_dim_key*i),
+				value_weight+(CONFIG_T::head_dim_value*CONFIG_T::feature_dim*i), value_bias+(CONFIG_T::head_dim_value*i));
     }
-    d_query: for (int i=0;i<CONFIG_T::num_heads; ++i){
-	#pragma HLS UNROLL
-    	dense_query<data_T, res_T, CONFIG_T>(d_query[i], q_proj[i], query_weight+(CONFIG_T::head_dim_key*CONFIG_T::feature_dim*i), query_bias+(CONFIG_T::head_dim_key*i));
-    }
-    d_key: for (int i=0;i<CONFIG_T::num_heads; ++i){
-	#pragma HLS UNROLL
-    dense_key<data_T, res_T, CONFIG_T>(d_key[i], k_proj[i], key_weight+(CONFIG_T::head_dim_key*CONFIG_T::feature_dim*i), key_bias+(CONFIG_T::head_dim_key*i));
-    }
-    
-//    value_reshape: for (int i=0; i < CONFIG_T::num_heads; ++i){
-//	#pragma HLS UNROLL
-//    	nnet::value_prep<data_T, res_T, CONFIG_T>(v_proj[i], v_reshape[i]);
-//    }
 
     maxtrixmul1: for (int i=0; i < CONFIG_T::num_heads; ++i){
 	#pragma HLS UNROLL
@@ -360,11 +334,10 @@ void multiheadattention(
     	nnet::matrixmul<data_T, res_T, CONFIG_T>(qk_mul[i], v_proj[i], matr_out[i]);//stream
     }
 
-    dense_out<data_T, res_T, CONFIG_T>(matr_out, res, attention_output_weight, attention_output_bias);
+    nnet::dense_out<data_T, res_T, CONFIG_T>(matr_out, res, attention_output_weight, attention_output_bias);
     // std::cout << "output from MHA: " << std::endl;
     // std::cout << " " << std::endl;
 }
 }
 
 #endif
-
