@@ -24,9 +24,9 @@
 
 // default_nettype of none prevents implicit wire declaration.
 `default_nettype none
-`timescale 1 ns / 1 ps 
+`timescale 1 ns / 1 ps
 
-module krnl_rtl_int #( 
+module krnl_rtl_int #(
   parameter integer  C_S_AXI_CONTROL_DATA_WIDTH = 32,
   parameter integer  C_S_AXI_CONTROL_ADDR_WIDTH = 6,
   parameter integer  C_M_AXI_GMEM_ID_WIDTH = 1,
@@ -37,7 +37,7 @@ module krnl_rtl_int #(
   // System signals
   input  wire  ap_clk,
   input  wire  ap_rst_n,
-  // AXI4 master interface 
+  // AXI4 master interface
   output wire                                 m_axi_gmem_AWVALID,
   input  wire                                 m_axi_gmem_AWREADY,
   output wire [C_M_AXI_GMEM_ADDR_WIDTH-1:0]   m_axi_gmem_AWADDR,
@@ -97,7 +97,7 @@ module krnl_rtl_int #(
   output wire                                    s_axi_control_BVALID,
   input  wire                                    s_axi_control_BREADY,
   output wire [1:0]                              s_axi_control_BRESP,
-  output wire                                    interrupt 
+  output wire                                    interrupt
 );
 ///////////////////////////////////////////////////////////////////////////////
 // Local Parameters (constants)
@@ -115,7 +115,7 @@ localparam integer LP_WR_FIFO_DEPTH      = LP_AXI_BURST_LEN;
 ///////////////////////////////////////////////////////////////////////////////
 // Variables
 ///////////////////////////////////////////////////////////////////////////////
-logic areset = 1'b0;  
+logic areset = 1'b0;
 logic ap_start;
 logic ap_start_pulse;
 logic ap_start_r;
@@ -129,24 +129,24 @@ logic [LP_LENGTH_WIDTH-1:0]         length_r_out;
 
 logic read_done;
 logic [LP_NUM_READ_CHANNELS-1:0] rd_tvalid;
-logic [LP_NUM_READ_CHANNELS-1:0] rd_tready_n; 
+logic [LP_NUM_READ_CHANNELS-1:0] rd_tready_n;
 logic [LP_NUM_READ_CHANNELS-1:0] [C_M_AXI_GMEM_DATA_WIDTH-1:0] rd_tdata;
 logic [LP_NUM_READ_CHANNELS-1:0] rd_tlast;
 logic [LP_NUM_READ_CHANNELS-1:0] ctrl_rd_fifo_prog_full;
 logic [LP_NUM_READ_CHANNELS-1:0] rd_fifo_tvalid_n;
-logic [LP_NUM_READ_CHANNELS-1:0] rd_fifo_tready; 
+logic [LP_NUM_READ_CHANNELS-1:0] rd_fifo_tready;
 logic [LP_NUM_READ_CHANNELS-1:0] [C_M_AXI_GMEM_DATA_WIDTH-1:0] rd_fifo_tdata;
-logic [LP_NUM_READ_CHANNELS-1:0] rd_fifo_tlast; 
+logic [LP_NUM_READ_CHANNELS-1:0] rd_fifo_tlast;
 
 logic                               NN_inf_tvalid;
-logic                               NN_inf_tready_n; 
+logic                               NN_inf_tready_n;
 logic [C_M_AXI_GMEM_DATA_WIDTH-1:0] NN_inf_tdata;
 logic                               wr_fifo_tvalid_n;
-logic                               wr_fifo_tready; 
+logic                               wr_fifo_tready;
 logic [C_M_AXI_GMEM_DATA_WIDTH-1:0] wr_fifo_tdata;
 
 ///////////////////////////////////////////////////////////////////////////////
-// RTL Logic 
+// RTL Logic
 ///////////////////////////////////////////////////////////////////////////////
 // Tie-off unused AXI protocol features
 assign m_axi_gmem_AWID     = {C_M_AXI_GMEM_ID_WIDTH{1'b0}};
@@ -164,28 +164,28 @@ assign m_axi_gmem_ARQOS    = 4'b0000;
 assign m_axi_gmem_ARREGION = 4'b0000;
 
 // Register and invert reset signal for better timing.
-always @(posedge ap_clk) begin 
-  areset <= ~ap_rst_n; 
+always @(posedge ap_clk) begin
+  areset <= ~ap_rst_n;
 end
 
 // create pulse when ap_start transitions to 1
-always @(posedge ap_clk) begin 
-  begin 
+always @(posedge ap_clk) begin
+  begin
     ap_start_r <= ap_start;
   end
 end
 
 assign ap_start_pulse = ap_start & ~ap_start_r;
 
-// ap_idle is asserted when done is asserted, it is de-asserted when ap_start_pulse 
+// ap_idle is asserted when done is asserted, it is de-asserted when ap_start_pulse
 // is asserted
-always @(posedge ap_clk) begin 
-  if (areset) begin 
+always @(posedge ap_clk) begin
+  if (areset) begin
     ap_idle <= 1'b1;
   end
-  else begin 
-    ap_idle <= ap_done        ? 1'b1 : 
-               ap_start_pulse ? 1'b0 : 
+  else begin
+    ap_idle <= ap_done        ? 1'b1 :
+               ap_start_pulse ? 1'b0 :
                                 ap_idle;
   end
 end
@@ -196,7 +196,7 @@ assign ap_ready = ap_done;
 krnl_rtl_control_s_axi #(
   .C_S_AXI_ADDR_WIDTH( C_S_AXI_CONTROL_ADDR_WIDTH ),
   .C_S_AXI_DATA_WIDTH( C_S_AXI_CONTROL_DATA_WIDTH )
-) 
+)
 inst_krnl_control_s_axi (
   .AWVALID   ( s_axi_control_AWVALID         ) ,
   .AWREADY   ( s_axi_control_AWREADY         ) ,
@@ -226,11 +226,11 @@ inst_krnl_control_s_axi (
   .fifo_in      ( fifo_in[0+:C_M_AXI_GMEM_ADDR_WIDTH]  ) ,
   .fifo_out     ( fifo_out[0+:C_M_AXI_GMEM_ADDR_WIDTH] ) ,
   .length_r_in  ( length_r_in[0+:LP_LENGTH_WIDTH]      ) ,
-  .length_r_out ( length_r_out[0+:LP_LENGTH_WIDTH]     ) 
+  .length_r_out ( length_r_out[0+:LP_LENGTH_WIDTH]     )
 );
 
 // AXI4 Read Master
-krnl_rtl_axi_read_master #( 
+krnl_rtl_axi_read_master #(
   .C_ADDR_WIDTH       ( C_M_AXI_GMEM_ADDR_WIDTH ) ,
   .C_DATA_WIDTH       ( C_M_AXI_GMEM_DATA_WIDTH ) ,
   .C_ID_WIDTH         ( C_M_AXI_GMEM_ID_WIDTH   ) ,
@@ -240,7 +240,7 @@ krnl_rtl_axi_read_master #(
   .C_LOG_BURST_LEN    ( LP_LOG_BURST_LEN        ) ,
   .C_MAX_OUTSTANDING  ( LP_RD_MAX_OUTSTANDING   )
 )
-inst_axi_read_master ( 
+inst_axi_read_master (
   .aclk           ( ap_clk                 ) ,
   .areset         ( areset                 ) ,
 
@@ -266,7 +266,7 @@ inst_axi_read_master (
   .m_tvalid       ( rd_tvalid              ) ,
   .m_tready       ( ~rd_tready_n           ) ,
   .m_tdata        ( rd_tdata               ) ,
-  .m_tlast        ( rd_tlast               ) 
+  .m_tlast        ( rd_tlast               )
 );
 
 // xpm_fifo_sync: Synchronous FIFO
@@ -283,7 +283,7 @@ xpm_fifo_sync # (
   .FIFO_READ_LATENCY         (1),                //positive integer;
   .READ_DATA_WIDTH           (C_M_AXI_GMEM_DATA_WIDTH+1),               //positive integer
   .RD_DATA_COUNT_WIDTH       ($clog2(LP_RD_FIFO_DEPTH)+1),               //positive integer, not used
-  .PROG_EMPTY_THRESH         (10),               //positive integer, not used 
+  .PROG_EMPTY_THRESH         (10),               //positive integer, not used
   .DOUT_RESET_VALUE          ("0"),              //string, don't care
   .WAKEUP_TIME               (0)                 //positive integer; 0 or 2;
 
@@ -308,7 +308,7 @@ xpm_fifo_sync # (
   .injectsbiterr ( 1'b0                ) ,
   .injectdbiterr ( 1'b0                ) ,
   .sbiterr       (                     ) ,
-  .dbiterr       (                     ) 
+  .dbiterr       (                     )
 
 );
 
@@ -325,7 +325,7 @@ hls4ml_IP (
 
   .out_r_TVALID ( NN_inf_tvalid      ) ,
   .out_r_TREADY ( ~NN_inf_tready_n   ) ,
-  .out_r_TDATA  ( NN_inf_tdata       ) 
+  .out_r_TDATA  ( NN_inf_tdata       )
 );
 
 // xpm_fifo_sync: Synchronous FIFO
@@ -336,13 +336,13 @@ xpm_fifo_sync # (
   .FIFO_WRITE_DEPTH          (LP_WR_FIFO_DEPTH),   //positive integer
   .WRITE_DATA_WIDTH          (C_M_AXI_GMEM_DATA_WIDTH),               //positive integer
   .WR_DATA_COUNT_WIDTH       ($clog2(LP_WR_FIFO_DEPTH)),               //positive integer, Not used
-  .PROG_FULL_THRESH          (10),               //positive integer, Not used 
+  .PROG_FULL_THRESH          (10),               //positive integer, Not used
   .FULL_RESET_VALUE          (1),                //positive integer; 0 or 1
   .READ_MODE                 ("fwft"),            //string; "std" or "fwft";
   .FIFO_READ_LATENCY         (1),                //positive integer;
   .READ_DATA_WIDTH           (C_M_AXI_GMEM_DATA_WIDTH),               //positive integer
   .RD_DATA_COUNT_WIDTH       ($clog2(LP_WR_FIFO_DEPTH)),               //positive integer, not used
-  .PROG_EMPTY_THRESH         (10),               //positive integer, not used 
+  .PROG_EMPTY_THRESH         (10),               //positive integer, not used
   .DOUT_RESET_VALUE          ("0"),              //string, don't care
   .WAKEUP_TIME               (0)                 //positive integer; 0 or 2;
 
@@ -367,20 +367,20 @@ xpm_fifo_sync # (
   .injectsbiterr ( 1'b0             ) ,
   .injectdbiterr ( 1'b0             ) ,
   .sbiterr       (                  ) ,
-  .dbiterr       (                  ) 
+  .dbiterr       (                  )
 
 );
 
 
 // AXI4 Write Master
-krnl_rtl_axi_write_master #( 
+krnl_rtl_axi_write_master #(
   .C_ADDR_WIDTH       ( C_M_AXI_GMEM_ADDR_WIDTH ) ,
   .C_DATA_WIDTH       ( C_M_AXI_GMEM_DATA_WIDTH ) ,
   .C_MAX_LENGTH_WIDTH ( LP_LENGTH_WIDTH     ) ,
   .C_BURST_LEN        ( LP_AXI_BURST_LEN        ) ,
-  .C_LOG_BURST_LEN    ( LP_LOG_BURST_LEN        ) 
+  .C_LOG_BURST_LEN    ( LP_LOG_BURST_LEN        )
 )
-inst_axi_write_master ( 
+inst_axi_write_master (
   .aclk        ( ap_clk             ) ,
   .areset      ( areset             ) ,
 
@@ -407,7 +407,7 @@ inst_axi_write_master (
 
   .bvalid      ( m_axi_gmem_BVALID  ) ,
   .bready      ( m_axi_gmem_BREADY  ) ,
-  .bresp       ( m_axi_gmem_BRESP   ) 
+  .bresp       ( m_axi_gmem_BRESP   )
 );
 
 endmodule : krnl_rtl_int

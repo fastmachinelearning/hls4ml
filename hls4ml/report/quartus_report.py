@@ -1,9 +1,10 @@
 import os
 import webbrowser
-from calmjs.parse import es5
-from calmjs.parse import asttypes
-from tabulate import tabulate
 from ast import literal_eval
+
+from calmjs.parse import asttypes, es5
+from tabulate import tabulate
+
 
 def parse_quartus_report(hls_dir, write_to_file=True):
     '''
@@ -11,21 +12,21 @@ def parse_quartus_report(hls_dir, write_to_file=True):
 
     Args:
         hls_dir (string): The directory where the project is found
-        write_to_file (bool): A flag indicating whether to write the results to a separate file 
+        write_to_file (bool): A flag indicating whether to write the results to a separate file
 
     Returns:
         results (dict): The report dictionary, containing latency, resource usage etc.
 
     '''
     if not os.path.exists(hls_dir):
-        print('Path {} does not exist. Exiting.'.format(hls_dir))
+        print(f'Path {hls_dir} does not exist. Exiting.')
         return
 
     prj_dir = _find_project_dir(hls_dir)
 
     rpt_dir = hls_dir + '/' + prj_dir + '/reports'
     if not os.path.exists(rpt_dir):
-        print('Project {} does not exist. Rerun "hls4ml build -p {}".'.format(prj_dir, hls_dir))
+        print(f'Project {prj_dir} does not exist. Rerun "hls4ml build -p {hls_dir}".')
         return
 
     results = _find_reports(rpt_dir)
@@ -40,6 +41,7 @@ def parse_quartus_report(hls_dir, write_to_file=True):
         print(f'Saved latency & resource usage summary to {hls_dir}/synthesis-report.txt')
     return results
 
+
 def read_quartus_report(hls_dir, open_browser=False):
     '''
     Parse and print the Quartus report to print the report. Optionally open a browser.
@@ -47,7 +49,7 @@ def read_quartus_report(hls_dir, open_browser=False):
     Args:
         hls_dir (string):  The directory where the project is found
         open_browser, optional:  whether to open a browser
-    
+
     Returns:
         None
     '''
@@ -67,35 +69,38 @@ def read_quartus_report(hls_dir, open_browser=False):
         url = 'file:' + os.getcwd() + '/' + _find_project_dir(hls_dir) + '/report.html'
         webbrowser.open(url)
 
+
 def _find_project_dir(hls_dir):
     '''
     Finds the synthesis folder from the HLS project directory
-    
-    Args: 
+
+    Args:
         hls_dir (string): HLS project location
-    
+
     Returns:
         project_dir (string): Synthesis folder within HLS project directory
     '''
     top_func_name = None
 
-    with open(hls_dir + '/build_lib.sh', 'r') as f:
+    with open(hls_dir + '/build_lib.sh') as f:
         for line in f.readlines():
             if 'PROJECT=' in line:
                 top_func_name = line.split(sep='=')[-1].rstrip()
 
     return top_func_name + '-fpga.prj'
 
+
 def read_js_object(js_script):
     '''
     Reads the JavaScript file and return a dictionary of variables definded in the script.
-    
-    Args: 
+
+    Args:
         js_script (string) - path to JavaScript File
-    
+
     Returns:
         Dictionary of variables defines in script
     '''
+
     def visit(node):
         if isinstance(node, asttypes.Program):
             d = {}
@@ -143,7 +148,9 @@ def read_js_object(js_script):
             return node.value
         else:
             raise Exception("Unhandled node: %r" % node)
+
     return visit(es5(js_script))
+
 
 def _read_quartus_file(filename):
     '''
@@ -151,7 +158,7 @@ def _read_quartus_file(filename):
 
     Args:
         filename (string): Location of Quartus report
-    
+
     Returns:
         results (dict): Resource usage obtained through Quartus Compile
     '''
@@ -161,7 +168,7 @@ def _read_quartus_file(filename):
         quartus_data = read_js_object(quartus_data)
 
     results = {}
-    if(quartus_data['quartusJSON']['quartusFitClockSummary']['nodes'][0]['clock'] != "TBD"):
+    if quartus_data['quartusJSON']['quartusFitClockSummary']['nodes'][0]['clock'] != "TBD":
         results['Clock'] = quartus_data['quartusJSON']['quartusFitClockSummary']['nodes'][0]['clock']
         results['Quartus ALM'] = quartus_data['quartusJSON']['quartusFitResourceUsageSummary']['nodes'][-1]['alm']
         results['Quartus REG'] = quartus_data['quartusJSON']['quartusFitResourceUsageSummary']['nodes'][-1]['reg']
@@ -169,8 +176,12 @@ def _read_quartus_file(filename):
         results['Quartus RAM'] = quartus_data['quartusJSON']['quartusFitResourceUsageSummary']['nodes'][-1]['ram']
         results['Quartus MLAB'] = quartus_data['quartusJSON']['quartusFitResourceUsageSummary']['nodes'][-1]['mlab']
     else:
-        print('Quartus report not found. Run Quartus Compilation using Quartus Shell or Full Compilation from Intel Quartus Prime')
+        print(
+            'Quartus report not found. '
+            'Run Quartus Compilation using Quartus Shell or Full Compilation from Intel Quartus Prime'
+        )
     return results
+
 
 def _read_hls_file(filename):
     '''
@@ -187,9 +198,22 @@ def _read_hls_file(filename):
         report_data = report_data[: report_data.rfind('var fileJSON')]
         report_data = read_js_object(report_data)
         results = {}
-        results['HLS Estimate ALUT'], results['HLS Estimate FF'], results['HLS Estimate RAM'], results['HLS Estimate DSP'], results['HLS Estimate MLAB'] = report_data['areaJSON']['total']
-        results['HLS Estimate ALUT (%)'], results['HLS Estimate FF(%)'], results['HLS Estimate RAM (%)'], results['HLS Estimate DSP (%)'], results['HLS Estimate MLAB (%)'] = report_data['areaJSON']['total_percent']
+        (
+            results['HLS Estimate ALUT'],
+            results['HLS Estimate FF'],
+            results['HLS Estimate RAM'],
+            results['HLS Estimate DSP'],
+            results['HLS Estimate MLAB'],
+        ) = report_data['areaJSON']['total']
+        (
+            results['HLS Estimate ALUT (%)'],
+            results['HLS Estimate FF(%)'],
+            results['HLS Estimate RAM (%)'],
+            results['HLS Estimate DSP (%)'],
+            results['HLS Estimate MLAB (%)'],
+        ) = report_data['areaJSON']['total_percent']
         return results
+
 
 def _read_verification_file(filename):
     '''
@@ -197,7 +221,7 @@ def _read_verification_file(filename):
 
     Args:
         filename (string):  Location of verification file
-    
+
     Returns:
         results (dict): Verification data obtained from simulation
     '''
@@ -206,24 +230,25 @@ def _read_verification_file(filename):
         with open(filename) as dataFile:
             verification_data = dataFile.read()
             verification_data = read_js_object(verification_data)
-        
+
         try:
             results['Number of Invoations'] = verification_data['verifJSON']['functions'][0]['data'][0]
-            
-            latency = verification_data['verifJSON']['functions'][0]['data'][1].split(",") 
+
+            latency = verification_data['verifJSON']['functions'][0]['data'][1].split(",")
             results['Latency (MIN)'] = latency[0]
             results['Latency (MAX)'] = latency[1]
             results['Latency (AVG)'] = latency[2]
-            
+
             ii = verification_data['verifJSON']['functions'][0]['data'][2].split(",")
             results['ii (MIN)'] = ii[0]
             results['ii (MAX)'] = ii[1]
             results['ii (AVG)'] = ii[2]
-        except:
+        except Exception:
             print('Verification data not found. Run ./[projectname]-fpga to generate.')
     else:
         print('Verification file not found. Run ./[projectname]-fpga to generate.')
     return results
+
 
 def _find_reports(rpt_dir):
     results = {}

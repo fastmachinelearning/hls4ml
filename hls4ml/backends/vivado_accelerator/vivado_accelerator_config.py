@@ -1,11 +1,12 @@
-import os
 import json
+import os
+
 import numpy as np
 
 from hls4ml.model.layers import FixedPrecisionType, IntegerPrecisionType
 
 
-class VivadoAcceleratorConfig(object):
+class VivadoAcceleratorConfig:
     def __init__(self, config, model_inputs, model_outputs):
         self.config = config.config
         self.board = self.config.get('AcceleratorConfig', {}).get('Board', 'pynq-z2')
@@ -15,11 +16,13 @@ class VivadoAcceleratorConfig(object):
             self.part = board_info['part']
         else:
             raise Exception('The board does not appear in supported_boards.json file')
-        
+
         if self.config.get('Part') is not None:
             if self.config.get('Part') != self.part:
-                print('WARNING: You set a Part that does not correspond to the Board you specified. The correct '
-                      'Part is now set.')
+                print(
+                    'WARNING: You set a Part that does not correspond to the Board you specified. The correct '
+                    'Part is now set.'
+                )
                 self.config['Part'] = self.part
         accel_config = self.config.get('AcceleratorConfig', None)
         if accel_config is not None:
@@ -30,29 +33,31 @@ class VivadoAcceleratorConfig(object):
                 if prec.get('Input') is None or prec.get('Output') is None:
                     raise Exception('Input and Output fields must be provided in the AcceleratorConfig->Precision')
         else:
-            accel_config = {'Precision': 
-                                {
-                                    'Input': 'float',
-                                    'Output': 'float'
-                                },
-                            'Driver': 'python',
-                            'Interface': 'axi_stream'
-                            }
+            accel_config = {
+                'Precision': {'Input': 'float', 'Output': 'float'},
+                'Driver': 'python',
+                'Interface': 'axi_stream',
+            }
             config.config['AcceleratorConfig'] = accel_config
 
-        self.interface = self.config['AcceleratorConfig'].get('Interface',
-                                                              'axi_stream')  # axi_stream, axi_master, axi_lite
+        self.interface = self.config['AcceleratorConfig'].get('Interface', 'axi_stream')  # axi_stream, axi_master, axi_lite
         self.driver = self.config['AcceleratorConfig'].get('Driver', 'python')  # python or c
-        self.input_type = self.config['AcceleratorConfig']['Precision'].get('Input',
-                                                                            'float')  # float, double or ap_fixed<a,b>
-        self.output_type = self.config['AcceleratorConfig']['Precision'].get('Output',
-                                                                             'float')  # float, double or ap_fixed<a,b>
-        self.platform= self.config['AcceleratorConfig'].get('Platform', 'xilinx_u250_xdma_201830_2') # Get platform folder name
+        self.input_type = self.config['AcceleratorConfig']['Precision'].get(
+            'Input', 'float'
+        )  # float, double or ap_fixed<a,b>
+        self.output_type = self.config['AcceleratorConfig']['Precision'].get(
+            'Output', 'float'
+        )  # float, double or ap_fixed<a,b>
+        self.platform = self.config['AcceleratorConfig'].get(
+            'Platform', 'xilinx_u250_xdma_201830_2'
+        )  # Get platform folder name
 
-        assert len(
-            model_inputs) == 1, "Only models with one input tensor are currently supported by VivadoAcceleratorBackend"
-        assert len(
-            model_outputs) == 1, "Only models with one output tensor are currently supported by VivadoAcceleratorBackend"
+        assert (
+            len(model_inputs) == 1
+        ), "Only models with one input tensor are currently supported by VivadoAcceleratorBackend"
+        assert (
+            len(model_outputs) == 1
+        ), "Only models with one output tensor are currently supported by VivadoAcceleratorBackend"
         self.inp = model_inputs[0]
         self.out = model_outputs[0]
         inp_axi_t = self.input_type
@@ -78,18 +83,17 @@ class VivadoAcceleratorConfig(object):
             self.output_bitwidth = config.backend.convert_precision_string(out_axi_t).width
 
     def _next_factor8_type(self, p):
-        ''' Return a new type with the width rounded to the next factor of 8 up to p's width
-            Args:
-                p : IntegerPrecisionType or FixedPrecisionType
-            Returns:
-                An IntegerPrecisionType or FixedPrecisionType with the width rounder up to the next factor of 8
-                of p's width. Other parameters (fractional bits, extra modes) stay the same.
+        '''Return a new type with the width rounded to the next factor of 8 up to p's width
+        Args:
+            p : IntegerPrecisionType or FixedPrecisionType
+        Returns:
+            An IntegerPrecisionType or FixedPrecisionType with the width rounder up to the next factor of 8
+            of p's width. Other parameters (fractional bits, extra modes) stay the same.
         '''
         W = p.width
         newW = int(np.ceil(W / 8) * 8)
         if isinstance(p, FixedPrecisionType):
-            return FixedPrecisionType(newW, p.integer, p.signed, p.rounding_mode, p.saturation_mode,
-                                      p.saturation_bits)
+            return FixedPrecisionType(newW, p.integer, p.signed, p.rounding_mode, p.saturation_mode, p.saturation_bits)
         elif isinstance(p, IntegerPrecisionType):
             return IntegerPrecisionType(newW, p.signed)
 
@@ -126,12 +130,10 @@ class VivadoAcceleratorConfig(object):
         return self.clock_period
 
     def get_driver_path(self):
-        if  self.board.startswith('alveo'):
-            return '../templates/vivado_accelerator/' + 'alveo/' + self.driver + '_drivers/' + \
-               self.get_driver_file()
+        if self.board.startswith('alveo'):
+            return '../templates/vivado_accelerator/' + 'alveo/' + self.driver + '_drivers/' + self.get_driver_file()
         else:
-            return '../templates/vivado_accelerator/' + self.board + '/' + self.driver + '_drivers/' + \
-               self.get_driver_file()
+            return '../templates/vivado_accelerator/' + self.board + '/' + self.driver + '_drivers/' + self.get_driver_file()
 
     def get_driver_file(self):
         driver_ext = '.py' if self.driver == 'python' else '.h'
@@ -139,7 +141,6 @@ class VivadoAcceleratorConfig(object):
 
     def get_krnl_rtl_src_dir(self):
         return '../templates/vivado_accelerator/' + 'alveo/' + '/krnl_rtl_src'
- 
 
     def get_input_type(self):
         return self.input_type
@@ -155,8 +156,7 @@ class VivadoAcceleratorConfig(object):
         tcl_script = tcl_scripts.get(self.interface, None)
         if tcl_script is None:
             raise Exception('No tcl script definition available for the desired interface in supported_board.json')
-        if  self.board.startswith('alveo'):
-            return '../templates/vivado_accelerator/' + 'alveo/'  + '/tcl_scripts/' + tcl_script
-        else: 
+        if self.board.startswith('alveo'):
+            return '../templates/vivado_accelerator/' + 'alveo/' + '/tcl_scripts/' + tcl_script
+        else:
             return '../templates/vivado_accelerator/' + self.board + '/tcl_scripts/' + tcl_script
-

@@ -94,7 +94,7 @@ InitData:
         data[id] = data_window[id].read();
     }
 
-    #pragma HLS INLINE region
+    #pragma HLS INLINE recursive
     if (CONFIG_T::strategy == nnet::latency) {
         dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
             data, res, weights, biases);
@@ -280,7 +280,7 @@ void compute_output_buffer_2d(
     #pragma HLS ARRAY_PARTITION variable = res_out complete dim = 0
 
     res_T res_pack;
-    #pragma HLS DATA_PACK variable = res_pack
+    PRAGMA_DATA_PACK(res_pack)
 
     // Add pixel to buffer
     nnet::shift_line_buffer<data_T, CONFIG_T>(in_elem, line_buffer, kernel_data);
@@ -289,7 +289,7 @@ void compute_output_buffer_2d(
     if ((sX - lShiftX) == 0 && (sY - lShiftY) == 0 && pY > lShiftY - 1 && pX > lShiftX - 1) {
 
         // Dense multiply
-        #pragma HLS INLINE region
+        #pragma HLS INLINE recursive
         if (CONFIG_T::strategy == nnet::latency) {
             dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
                 kernel_data, res_out, weights, biases);
@@ -351,7 +351,7 @@ void compute_output_buffer_1d(
     #pragma HLS ARRAY_PARTITION variable = res_out complete dim = 0
 
     res_T res_pack;
-    #pragma HLS DATA_PACK variable = res_pack
+    PRAGMA_DATA_PACK(res_pack)
 
     // Add pixel to buffer
     nnet::kernel_shift_1d<data_T, CONFIG_T>(in_elem, kernel_data);
@@ -360,7 +360,7 @@ void compute_output_buffer_1d(
     if ((sX - lShiftX) == 0 && pX > lShiftX - 1) {
 
         // Dense multiply
-        #pragma HLS INLINE region
+        #pragma HLS INLINE recursive
         if (CONFIG_T::strategy == nnet::latency) {
             dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
                 kernel_data, res_out, weights, biases);

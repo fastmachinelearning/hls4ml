@@ -79,10 +79,10 @@ for idx_orig in "${!rptname_orig[@]}"; do
          idx_new="${j}"
       fi
    done
-   
+
    report_orig="${reports_orig[$idx_orig]}"
    report_new="${reports_new[$idx_new]}"
-   
+
    if [ "${latency}" -eq 1 ]; then
       latency_orig=$(grep -A7 "+ Latency" <<< "${report_orig}")
       latency_new=$(grep -A7 "+ Latency" <<< "${report_new}")
@@ -100,7 +100,7 @@ for idx_orig in "${!rptname_orig[@]}"; do
          echo ""
       fi
    fi
-   
+
    if [ "${utilization}" -eq 1 ]; then
       utilization_orig=$(grep -B3 -A13 "|DSP" <<< "${report_orig}")
       utilization_new=$(grep -B3 -A13 "|DSP" <<< "${report_new}")
@@ -121,4 +121,3 @@ for idx_orig in "${!rptname_orig[@]}"; do
 done
 
 exit ${failed}
-

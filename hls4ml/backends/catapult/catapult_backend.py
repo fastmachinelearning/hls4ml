@@ -4,7 +4,7 @@ import sys
 import numpy as np
 
 from hls4ml.backends import FPGABackend
-from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter, CatapultArrayVariableConverter
+from hls4ml.backends.fpga.fpga_types import ACTypeConverter, HLSTypeConverter, CatapultArrayVariableConverter
 from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute
 from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import (
@@ -93,7 +93,13 @@ class CatapultBackend(FPGABackend):
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
-        optimization_passes = ['catapult:remove_final_reshape', 'catapult:optimize_pointwise_conv', 'catapult:skip_softmax']
+        optimization_passes = [
+             'catapult:remove_final_reshape', 
+             'catapult:optimize_pointwise_conv', 
+             'catapult:inplace_parallel_reshape', 
+             'catapult:inplace_stream_flatten', 
+             'catapult:skip_softmax',
+        ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
         catapult_types = [
@@ -425,7 +431,7 @@ class CatapultBackend(FPGABackend):
     def init_garnet(self, layer):
         reuse_factor = layer.attributes['reuse_factor']
 
-        var_converter = CatapultArrayVariableConverter(type_converter=HLSTypeConverter(precision_converter=APTypeConverter()))
+        var_converter = CatapultArrayVariableConverter(type_converter=HLSTypeConverter(precision_converter=ACTypeConverter()))
 
         # A bit controversial but we are going to set the partitioning of the input here
         in_layer = layer.model.graph[layer.inputs[0]]

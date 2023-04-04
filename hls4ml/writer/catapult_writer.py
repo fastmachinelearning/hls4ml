@@ -265,8 +265,8 @@ class CatapultWriter(Writer):
 
             if 'MYPROJECT' in line:
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
-            elif 'void myproject(' in line:
-                newline = f'void {model.config.get_project_name()}(\n'
+            elif 'myproject' in line:
+                newline = line.replace('myproject', model.config.get_project_name())
             elif '//hls-fpga-machine-learning insert header' in line:
                 inputs_str = ', '.join([i.definition_cpp(as_reference=True) for i in model_inputs])
                 outputs_str = ', '.join([o.definition_cpp(as_reference=True) for o in model_outputs])
@@ -510,7 +510,8 @@ class CatapultWriter(Writer):
                         out.type.name, out.size_cpp(), out.name
                     )  # TODO enable this
             elif (
-                '//hls-fpga-machine-learning insert output' in line or '//hls-fpga-machine-learning insert quantized' in line
+                '// hls-fpga-machine-learning insert output' in line
+                or '// hls-fpga-machine-learning insert quantized' in line
             ):
                 newline = line
                 for out in model_outputs:

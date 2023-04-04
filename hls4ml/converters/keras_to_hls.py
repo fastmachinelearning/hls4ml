@@ -257,7 +257,16 @@ def parse_keras_model(model_arch, reader):
     # Define layers to skip for conversion to HLS
     skip_layers = ['Dropout']
     # Activation layers
-    activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'TernaryTanh']
+    activation_layers = [
+        'Activation',
+        'LeakyReLU',
+        'ThresholdedReLU',
+        'ELU',
+        'PReLU',
+        'Softmax',
+        'TernaryTanh',
+        'HardActivation',
+    ]
     # Recurrent layers
     recurrent_layers = ['SimpleRNN', 'LSTM', 'GRU']
     # All supported layers
