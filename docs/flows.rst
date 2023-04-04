@@ -14,20 +14,37 @@ Optimizer passes
 ----------------
 
 An :py:class:`~hls4ml.model.optimizer.optimizer.OptimizerPass` transforms a model graph.
-All model/layer transformations should happen in these optimizer passes.
-There are a number of types of optimizer passes:
+All model/layer transformations should happen in these optimizer passes. There are two general types of optimizers.
+Optimizers that inherit from :py:class:`~hls4ml.model.optimizer.optimizer.ModelOptimizerPass` run on the full model,
+such as :py:class:`~hls4ml.model.optimizer.passes.stamp.MakeStamp`, while others
+are only run on each node that passes the ``match`` criteria for the particular optimizer. Examples of the latter include
+:py:class:`~hls4ml.model.optimizer.passes.fuse_biasadd` class that adds a bias to a :py:class:`~hls4ml.model.layers.Dense`,
+:py:class:`~hls4ml.model.layers.Conv1D`, or :py:class:`~hls4ml.model.layers.Conv2D` layer. Optimizers can be general,
+independent of the backend, in which case they are located in :py:mod:`hls4ml.model.optimizer.passes`, or they may be backend-specific,
+in which case they are located in a folder dependent on the backend, e.g., :py:mod:`hls4ml.backends.vivado.passes` or
+:py:mod:`hls4ml.backends.quartus.passes`. Passes for FPGAs in general are located in :py:mod:`hls4ml.backends.fpga.passes`.
 
- * layer-specific: These are special optimizations for a given layer.
-   An example is the :py:class:`~hls4ml.model.optimizer.passes.fuse_biasadd` class that adds a bias to a :py:class:`~hls4ml.model.layers.Dense`, :py:class:`~hls4ml.model.layers.Conv1D`, or :py:class:`~hls4ml.model.layers.Conv2D` layer.
- * backend-specific: These are only used for particular backends. An example is :py:class:`~hls4ml.backends.vivado.passes.repack_stream.ReshapeStream`.
- * model-level: These model-level optimizer passes are run on every type of layer.
- * templates: These add the HLS code for a particular backend, e.g., :py:class:`~hls4ml.backends.vivado.passes.core_templates.DenseFunctionTemplate`.
- * decorators
+Certain optimizers are used frequently enough that it makes sense to define special classes, which inherit from :py:class:`~hls4ml.model.optimizer.optimizer.OptimizerPass`
+
+ * :py:class:`~hls4ml.model.optimizer.optimizer.GlobalOptimizerPass`: An optimizer pass that matches each node. This is useful, for example,
+   to transform the types for a particular backend.
+ * :py:class:`~hls4ml.model.optimizer.optimizer.LayerOptimizerPass`: An optimizer pass that matches each node of a particular layer type. This is
+   useful, for example, to write out the HLS code for a particular node that remains in the final graph.
+ * :py:class:`~hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass`:  An optimizer pass that has some configurable parameters.
+
+Note that :py:class:`~hls4ml.model.optimizer.optimizer.LayerOptimizerPass` and :py:class:`~hls4ml.model.optimizer.optimizer.ModelOptimizerPass`
+also exist as decorators that wrap a function.
 
 Flows
 -----
-A :py:class:`~hls4ml.model.flow.flow.Flow` is an ordered set of optimizers that may depend on other flows.
-There are common model-level flows that can run regardless of the backend, and there are backend-specific flows.
-Each backend provides provides a default flow for processing.
-For example, the Vivado backend defaults to an `IP flow <https://github.com/fastmachinelearning/hls4ml/blob/7c0a065935904f50bd7e4c547f85354b36276092/hls4ml/backends/vivado/vivado_backend.py#L148-L160>`_ that requires additional flows and produces an IP.
+A :py:class:`~hls4ml.model.flow.flow.Flow` is an ordered set of optimizers that may depend on other flows. The function,
+:py:func:`~hls4ml.model.flow.flow.register_flow` is used to register a new flow. There are common model-level flows that can run regardless
+of the backend, and there are backend-specific flows. The `convert and optimize <https://github.com/fastmachinelearning/hls4ml/blob/7c0a065935904f50bd7e4c547f85354b36276092/hls4ml/model/optimizer/__init__.py#L14-L20>`_
+flows do not depend on a backend.
+
+Each backend provides provides a default flow that defines the default processing for that backend. For example, the Vivado backend defaults to an
+`IP flow <https://github.com/fastmachinelearning/hls4ml/blob/7c0a065935904f50bd7e4c547f85354b36276092/hls4ml/backends/vivado/vivado_backend.py#L148-L160>`_
+that requires additional flows and produces an IP. It runs no optimizers itself, but it requires that many other flows (subflows) to have run.
+The convert and optimize flows defined above are some of these required subflows.
+
 Another example is FIFO buffer depth optimization explained in the :ref:`FIFO Buffer Depth Optimization` section.
