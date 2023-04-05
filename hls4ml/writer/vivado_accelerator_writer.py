@@ -391,6 +391,8 @@ class VivadoAcceleratorWriter(VivadoWriter):
         f.write(f'set part "{self.vivado_accelerator_config.get_part()}"\n')
         f.write('variable clock_period\n')
         f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
+        f.write('variable clock_uncertainty\n')
+        f.write('set clock_uncertainty {}\n'.format(model.config.get_config_value('ClockUncertainty', '12.5%')))
         if self.vivado_accelerator_config.get_interface() == 'axi_stream':
             in_bit, out_bit = self.vivado_accelerator_config.get_io_bitwidth()
             f.write(f'set bit_width_hls_output {in_bit}\n')

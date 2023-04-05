@@ -1,6 +1,5 @@
-
-from hls4ml.model.layers import Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D
-from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
+from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
+from hls4ml.model.layers import GlobalPooling1D, GlobalPooling2D, Pooling1D, Pooling2D
 
 # Pooling templates
 
@@ -66,10 +65,15 @@ global_pooling2d_config_template = """struct config{index} : nnet::pooling2d_con
 
 pooling1d_function_template = 'nnet::pooling1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
-global_pooling1d_function_template = 'nnet::global_pooling1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
-global_pooling2d_function_template = 'nnet::global_pooling2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
+global_pooling1d_function_template = (
+    'nnet::global_pooling1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
+)
+global_pooling2d_function_template = (
+    'nnet::global_pooling2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
+)
 
 pooling_include_list = ['nnet_utils/nnet_pooling.h', 'nnet_utils/nnet_pooling_stream.h']
+
 
 class PoolingConfigTemplate(LayerConfigTemplate):
     def __init__(self):
@@ -84,6 +88,7 @@ class PoolingConfigTemplate(LayerConfigTemplate):
     def format(self, node):
         params = self._default_config_params(node)
         return self.templates[node.class_name].format(**params)
+
 
 class PoolingFunctionTemplate(FunctionCallTemplate):
     def __init__(self):

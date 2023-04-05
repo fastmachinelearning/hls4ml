@@ -7,9 +7,9 @@ RM           		:= rm -rf
 DEBUG_FLAGS  		:= --time quartus-hlssynt.log
 SOURCE_FILES 		:= myproject_test.cpp firmware/myproject.cpp
 HEADER_FILES 		:= firmware/myproject.h
-LOGGING_1			:= 
-LOGGING_2			:= 
-QUARTUS_COMPILE 	:= 
+LOGGING_1			:=
+LOGGING_2			:=
+QUARTUS_COMPILE 	:=
 CONT_IF_LARGE_AREA 	:=
 
 .PHONY: test

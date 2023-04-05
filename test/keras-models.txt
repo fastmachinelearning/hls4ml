@@ -31,7 +31,7 @@ KERAS_3layer_ternary_small
 
 # Pynq backend
 KERAS_3layer b:pynq-z2 B:VivadoAccelerator x:xc7z020clg400-1 s:Resource
-garnet_1layer x:xcku115-flvb2104-2-i y:garnet_1layer_config 
+garnet_1layer x:xcku115-flvb2104-2-i y:garnet_1layer_config
 
 
 # Resource strategy

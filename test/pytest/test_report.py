@@ -19,6 +19,7 @@ def test_report(backend, capsys):
     config = hls4ml.utils.config_from_keras_model(model, granularity='model')
 
     output_dir = str(test_root_path / f'hls4mlprj_report_{backend}')
+    test_report_dir = test_root_path / 'test_report'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, io_type='io_stream', hls_config=config, output_dir=output_dir, part='xc7z020clg400-1', backend=backend
@@ -29,11 +30,15 @@ def test_report(backend, capsys):
     # hls_model.build(synth=True, vsynth=True)
 
     # copy pregenerated reports
-    os.makedirs(f'hls4mlprj_report_{backend}/myproject_prj/solution1/syn/report', exist_ok=True)
-    shutil.copy('test_report/vivado_hls.app', f'{output_dir}/myproject_prj/vivado_hls.app')
-    shutil.copy('test_report/myproject_csynth.rpt', f'{output_dir}/myproject_prj/solution1/syn/report/myproject_csynth.rpt')
-    shutil.copy('test_report/myproject_csynth.xml', f'{output_dir}/myproject_prj/solution1/syn/report/myproject_csynth.xml')
-    shutil.copy('test_report/vivado_synth.rpt', f'{output_dir}/vivado_synth.rpt')
+    os.makedirs(f'{output_dir}/myproject_prj/solution1/syn/report', exist_ok=True)
+    shutil.copy(test_report_dir / 'vivado_hls.app', f'{output_dir}/myproject_prj/vivado_hls.app')
+    shutil.copy(
+        test_report_dir / 'myproject_csynth.rpt', f'{output_dir}/myproject_prj/solution1/syn/report/myproject_csynth.rpt'
+    )
+    shutil.copy(
+        test_report_dir / 'myproject_csynth.xml', f'{output_dir}/myproject_prj/solution1/syn/report/myproject_csynth.xml'
+    )
+    shutil.copy(test_report_dir / 'vivado_synth.rpt', f'{output_dir}/vivado_synth.rpt')
 
     report = hls4ml.report.parse_vivado_report(output_dir)  # or report = hls_model.build(...)
 
@@ -55,7 +60,7 @@ def test_report(backend, capsys):
         + '    Estimated Clock Period: 4.049\n\n'
         + ' - Resource estimates:\n'
         + '    BRAM_18K: 0 / 280 (0.0%)\n'
-        + '    DSP48E:   73 / 220 (33.2%)\n'
+        + '    DSP:      73 / 220 (33.2%)\n'
         + '    FF:       7969 / 106400 (7.5%)\n'
         + '    LUT:      2532 / 53200 (4.8%)\n'
         + '    URAM:     N/A\n\n'

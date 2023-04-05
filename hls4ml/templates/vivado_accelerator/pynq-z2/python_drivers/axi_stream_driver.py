@@ -1,13 +1,13 @@
-from pynq import DefaultHierarchy, DefaultIP, allocate
-from pynq import Overlay
 from datetime import datetime
-import pynq.lib.dma
+
 import numpy as np
+from pynq import Overlay, allocate
 
 
 class NeuralNetworkOverlay(Overlay):
-    def __init__(self, bitfile_name, x_shape, y_shape, dtype=np.float32, dtbo=None, download=True, ignore_version=False,
-                 device=None):
+    def __init__(
+        self, bitfile_name, x_shape, y_shape, dtype=np.float32, dtbo=None, download=True, ignore_version=False, device=None
+    ):
         super().__init__(bitfile_name, dtbo=None, download=True, ignore_version=False, device=None)
         self.sendchannel = self.hier_0.axi_dma_0.sendchannel
         self.recvchannel = self.hier_0.axi_dma_0.recvchannel
@@ -15,10 +15,10 @@ class NeuralNetworkOverlay(Overlay):
         self.output_buffer = allocate(shape=y_shape, dtype=dtype)
 
     def _print_dt(self, timea, timeb, N):
-        dt = (timeb - timea)
-        dts = dt.seconds + dt.microseconds * 10 ** -6
+        dt = timeb - timea
+        dts = dt.seconds + dt.microseconds * 10**-6
         rate = N / dts
-        print("Classified {} samples in {} seconds ({} inferences / s)".format(N, dts, rate))
+        print(f"Classified {N} samples in {dts} seconds ({rate} inferences / s)")
         return dts, rate
 
     def predict(self, X, debug=False, profile=False, encode=None, decode=None):

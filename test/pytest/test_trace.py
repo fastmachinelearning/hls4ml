@@ -1,32 +1,39 @@
+from pathlib import Path
+
+import numpy as np
 import pytest
+import tensorflow as tf
+from tensorflow.keras.layers import Activation, Dense
+
 import hls4ml
 import hls4ml.model.profiling
-import tensorflow as tf
-import numpy as np
-from pathlib import Path
-from tensorflow.keras.layers import Dense, Activation
 
 test_root_path = Path(__file__).parent
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_trace(backend):
     '''Test the tracing feature with a simple Keras model.'''
     model = tf.keras.models.Sequential()
-    model.add(Dense(2,
-              input_shape=(1,),
-              name='Dense',
-              use_bias=True,
-              kernel_initializer= tf.keras.initializers.RandomUniform(minval=1, maxval=10),
-              bias_initializer='zeros',
-              kernel_regularizer=None,
-              bias_regularizer=None,
-              activity_regularizer=None,
-              kernel_constraint=None,
-              bias_constraint=None))
+    model.add(
+        Dense(
+            2,
+            input_shape=(1,),
+            name='Dense',
+            use_bias=True,
+            kernel_initializer=tf.keras.initializers.RandomUniform(minval=1, maxval=10),
+            bias_initializer='zeros',
+            kernel_regularizer=None,
+            bias_regularizer=None,
+            activity_regularizer=None,
+            kernel_constraint=None,
+            bias_constraint=None,
+        )
+    )
     model.add(Activation(activation='elu', name='Activation'))
     model.compile(optimizer='adam', loss='mse')
 
-    X_input = np.random.rand(100,1)
+    X_input = np.random.rand(100, 1)
 
     keras_prediction = model.predict(X_input)
 

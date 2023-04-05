@@ -1,5 +1,10 @@
-from hls4ml.backends.vivado.passes.fifo_depth_optimization import set_big_fifos, get_vcd_data, populate_values, \
-    generate_max_depth_file, set_fifo_depth
+from hls4ml.backends.vivado.passes.fifo_depth_optimization import (
+    generate_max_depth_file,
+    get_vcd_data,
+    populate_values,
+    set_big_fifos,
+    set_fifo_depth,
+)
 from hls4ml.model.optimizer.optimizer import ConfigurableOptimizerPass, ModelOptimizerPass
 
 
@@ -12,11 +17,15 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
         profiling_fifo_depth = getattr(self, 'profiling_fifo_depth', 100_000)
 
         # check axi-stream or io-stream, if not one the 2 exit
-        if not(model.config.get_config_value('IOType') == 'io_stream' or
-               model.config.get_config_value('AcceleratorConfig')['Interface'] == 'axi_stream' or
-               model.config.get_config_value('AcceleratorConfig')['Interface'] == 'axi_master'):
-            raise Exception('To use this optimization you have to set `IOType` field to `io_stream` in the HLS config '
-                            'or `axi_stream` or `axi_master` in `AcceleratorConfig` interface field')
+        if not (
+            model.config.get_config_value('IOType') == 'io_stream'
+            or model.config.get_config_value('AcceleratorConfig')['Interface'] == 'axi_stream'
+            or model.config.get_config_value('AcceleratorConfig')['Interface'] == 'axi_master'
+        ):
+            raise Exception(
+                'To use this optimization you have to set `IOType` field to `io_stream` in the HLS config '
+                'or `axi_stream` or `axi_master` in `AcceleratorConfig` interface field'
+            )
 
         # initialize all the fifos to 10000 so that they will be automatically implemented in BRAMs and so they will be
         # profiled
@@ -28,16 +37,18 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
 
         for i in range(1, len(data['children'][0]['children'][0]['children'])):
             # wrapper fifos
-            populate_values(self.values,
-                            data['children'][0]['children'][0]['children'][i]['name'],
-                            data['children'][0]['children'][0]['children'][i]['children'][0]['data'],
-                            data['children'][0]['children'][0]['children'][i]['children'][1]['data'])
+            populate_values(
+                self.values,
+                data['children'][0]['children'][0]['children'][i]['name'],
+                data['children'][0]['children'][0]['children'][i]['children'][0]['data'],
+                data['children'][0]['children'][0]['children'][i]['children'][1]['data'],
+            )
 
         n_elem = len(data['children'][0]['children'][0]['children'][0]['children'])
         for i in range(n_elem):
-            name   = data['children'][0]['children'][0]['children'][0]['children'][i]['name']
+            name = data['children'][0]['children'][0]['children'][0]['children'][i]['name']
             data_p = data['children'][0]['children'][0]['children'][0]['children'][i]['children'][0]['data']
-            depth  = data['children'][0]['children'][0]['children'][0]['children'][i]['children'][1]['data']
+            depth = data['children'][0]['children'][0]['children'][0]['children'][i]['children'][1]['data']
             populate_values(self.values, name, data_p, depth)
 
         maxs = [{'name': i['name'], 'max': i['max'], 'depth': i['depth']} for i in self.values]

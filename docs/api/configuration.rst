@@ -4,19 +4,19 @@ Configuration
 
 
 
-We currently support two ways of setting hls4ml's model configuration. This page documents both methods' usage. 
+We currently support two ways of setting hls4ml's model configuration. This page documents both methods' usage.
 
 
-.. contents:: \ 
+.. contents:: \
 
 
-**NOTE:** 
+**NOTE:**
 
 
-* 
+*
   One important part of ``hls4ml`` to remember is that the user is responsible for the format of the inputs.  There is no automatic formatting or normalization so this must be done in the training.
 
-* 
+*
   For developers, you might also want to checkout this section: `Detailed configuration in converted hls codes <#detailed-configuration-in-converted-hls-codes>`_.
 
 ----
@@ -73,26 +73,26 @@ It looks like this:
    Part: xcku115-flvb2104-2-i
    ClockPeriod: 5
    IOType: io_parallel # options: io_parallel/io_stream
-   
+
    HLSConfig:
      Model:
        Precision: ap_fixed<16,6>
        ReuseFactor: 1
-       Strategy: Latency 
+       Strategy: Latency
      LayerType:
        Dense:
          ReuseFactor: 2
          Strategy: Resource
          Compression: True
 
-There are a number of configuration options that you have.  Let's go through them.  You have basic setup parameters: 
+There are a number of configuration options that you have.  Let's go through them.  You have basic setup parameters:
 
 
 * **OutputDir**\ : the output directory where you want your HLS project to appear
 * **ProjectName**\ : the name of the HLS project IP that is produced
-* **KerasJson/KerasH5**\ : for Keras, the model architecture and weights are stored in a ``json`` and ``h5`` file.  The path to those files are required here. 
+* **KerasJson/KerasH5**\ : for Keras, the model architecture and weights are stored in a ``json`` and ``h5`` file.  The path to those files are required here.
   We also support keras model's file obtained just from ``model.save()``. In this case you can just supply the ``h5`` file in ``KerasH5:`` field.
-* **InputData/OutputPredictions**\ : path to your input/predictions of the model. If none is supplied, then hls4ml will create aritificial data for simulation. The data used above in the example can be found `here <https://cernbox.cern.ch/index.php/s/2LTJVVwCYFfkg59>`__. We also support ``npy`` data files. We welcome suggestions on more input data types to support. 
+* **InputData/OutputPredictions**\ : path to your input/predictions of the model. If none is supplied, then hls4ml will create aritificial data for simulation. The data used above in the example can be found `here <https://cernbox.cern.ch/index.php/s/2LTJVVwCYFfkg59>`__. We also support ``npy`` data files. We welcome suggestions on more input data types to support.
 
 The backend-specific section of the configuration depends on the backend. You can get a starting point for the necessary settings using, for example `hls4ml.templates.get_backend('Vivado').create_initial_config()`.
 For Vivado backend the options are:
@@ -147,7 +147,7 @@ A specific layer can be targeted like this:
          ReuseFactor: 16
        LayerName:
          dense1:
-           Precision: 
+           Precision:
              weight: ap_fixed<14,2>
              bias: ap_fixed<14,4>
              result: ap_fixed<16,6>

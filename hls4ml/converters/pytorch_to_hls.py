@@ -14,8 +14,6 @@ class PyTorchModelReader:
         self.state_dict = self.torch_model.state_dict()
         self.input_shape = config['InputShape']
 
-    #   def convert_to_channels_last(tensor):
-
     def get_weights_data(self, layer_name, var_name):
 
         """Get weights data from layers.
