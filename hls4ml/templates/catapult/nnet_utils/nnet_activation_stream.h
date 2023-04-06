@@ -43,6 +43,8 @@ namespace nnet {
 // *************************************************
 //       LINEAR Activation
 // *************************************************
+// Adding this to work around problem with Catapult and SR model where the output channel appears to be inout
+#pragma hls_design block
 template<class data_T, class res_T, typename CONFIG_T>
 void linear(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     #pragma hls_pipeline_init_interval 1
@@ -397,11 +399,22 @@ void softmax(ac_channel<data_T> &data, ac_channel<res_T> &res){
 
 #else
 
+// This is a workaround to help the template deduction to work correctly and fix the inconsistency that HLS4ML expects softmax output to
+// be signed but AC Math softmax knows it is always unsigned
+template <unsigned K, int  W1, int I1, bool S1, ac_q_mode Q1, ac_o_mode O1, int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2>
+void ac_softmax_pwl_wrapper(const ac_fixed<W1,I1,S1,Q1,O1> (&input)[K], ac_fixed<W2,I2,S2,Q2,O2> (&output)[K])
+{
+  ac_fixed<W2,I2,false,Q2,O2> tmp[K];
+  ac_math::ac_softmax_pwl<AC_TRN,false,0,0,AC_TRN,AC_WRAP,false,0,0,AC_TRN,AC_WRAP,K,W1,I1,S1,Q1,O1,W2,I2,Q2,O2>(input,tmp);
+  for (int x=0;x<K;x++) output[x]=tmp[x];
+}
+
+
 template<class data_T, class res_T, typename CONFIG_T>
 void softmax(ac_channel<data_T> &data, ac_channel<res_T> &res)
 {
     typename data_T::value_type data_cache[data_T::size];
-    typename res_T::value_type res_cache[data_T::size];
+    typename res_T::value_type  res_cache[res_T::size];
     #pragma hls_pipeline_init_interval 1
     SoftmaxInitLoop: for(unsigned s = 0; s < CONFIG_T::n_in / data_T::size; s++) {
         data_T in_pack = data.read();
@@ -410,10 +423,11 @@ void softmax(ac_channel<data_T> &data, ac_channel<res_T> &res)
         SoftmaxInitPackLoop: for(unsigned j = 0; j < data_T::size; j++) { data_cache[j] = in_pack[j]; }
 
         res_T out_pack;
-		  ac_math::ac_softmax_pwl(data_cache,res_cache);
+        //ac_math::ac_softmax_pwl(data_cache,res_cache);
+        ac_softmax_pwl_wrapper(data_cache,res_cache);
 
         #pragma hls_unroll
-        SoftmaxResPackLoop: for(unsigned j = 0; j < data_T::size; j++) { out_pack[j] = res_cache[j]; }
+        SoftmaxResPackLoop: for(unsigned j = 0; j < res_T::size; j++) { out_pack[j] = res_cache[j]; }
 
         res.write(out_pack);
     }
