@@ -39,7 +39,7 @@ void dense(
     typename res_T::value_type res[CONFIG_T::n_out];
     //#pragma HLS ARRAY_PARTITION variable=res complete
 
-    if constexpr(CONFIG_T::n_in / data_T::size > 1) {
+    if ((CONFIG_T::n_in / data_T::size) > 1) {
     #pragma hls_pipeline_init_interval 1
     }
     DataPrepare: for(int i_in = 0; i_in < CONFIG_T::n_in / data_T::size; i_in++) {
@@ -56,7 +56,7 @@ void dense(
 
     dense_wrapper<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(data, res, weights, biases);
 
-    if constexpr(CONFIG_T::n_out / res_T::size > 1) {
+    if ((CONFIG_T::n_out / res_T::size) > 1) {
     #pragma hls_pipeline_init_interval 1
     }
     ResWrite: for(unsigned i_out = 0; i_out < CONFIG_T::n_out / res_T::size; i_out++) {
