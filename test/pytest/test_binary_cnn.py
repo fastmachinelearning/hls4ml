@@ -90,11 +90,4 @@ def test_model2(backend, io_type):
     y = model2.predict(np.zeros((1, 28, 28, 1)))
     y_hls = hls_model.predict(np.zeros((1, 28, 28, 1)))
 
-    print(f"{y_hls=}")
-    print(f"{y=}")
-
     np.testing.assert_allclose(np.squeeze(y_hls), np.squeeze(y), rtol=1e-2, atol=0.01)
-
-
-if __name__ == "__main__":
-    test_model2("Vivado", "io_stream")
