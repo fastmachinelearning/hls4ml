@@ -9,6 +9,7 @@ array set opt {
   validation 0
   export     0
   vsynth     0
+  bitfile    0
 }
 
 if { [info exists ::argv] } {
@@ -197,5 +198,8 @@ if {$opt(vsynth)} {
   flow run /Vivado/synthesize -shell vivado_concat_v/concat_rtl.v.xv
   set time_end [clock clicks -milliseconds]
   report_time "VIVADO SYNTHESIS" $time_start $time_end
+}
+if {$opt(bitfile)} {
+  puts "***** Option bitfile not supported yet *****"
 }
 

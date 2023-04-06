@@ -186,6 +186,7 @@ class CatapultBackend(FPGABackend):
         export=False,
         vsynth=False,
         fifo_opt=False,
+        bitfile=False,
     ):
         if 'linux' in sys.platform:
             found = os.system('command -v catapult > /dev/null')
@@ -194,7 +195,7 @@ class CatapultBackend(FPGABackend):
 
         curr_dir = os.getcwd()
         os.chdir(model.config.get_output_dir())
-        ccs_args = '"reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt}"'.format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth, fifo_opt=fifo_opt)
+        ccs_args = '"reset={reset} csim={csim} synth={synth} cosim={cosim} validation={validation} export={export} vsynth={vsynth} fifo_opt={fifo_opt} bitfile={bitfile}"'.format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth, fifo_opt=fifo_opt, bitfile=bitfile)
         ccs_invoke = 'catapult -shell -f build_prj.tcl -eval \'set ::argv ' + ccs_args + '\''
         print(ccs_invoke)
         os.system(ccs_invoke)
