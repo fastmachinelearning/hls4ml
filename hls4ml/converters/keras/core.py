@@ -1,7 +1,5 @@
-import numpy as np
-
 from hls4ml.converters.keras_to_hls import keras_handler, parse_default_keras_layer
-from hls4ml.model.types import IntegerPrecisionType, Quantizer
+from hls4ml.model.types import BinaryQuantizer, IntegerPrecisionType, TernaryQuantizer
 
 
 @keras_handler('InputLayer')
@@ -23,37 +21,6 @@ def parse_input_layer(keras_layer, input_names, input_shapes, data_reader):
     output_shape = keras_layer['config']['batch_input_shape']
 
     return layer, output_shape
-
-
-class BinaryQuantizer(Quantizer):
-    def __init__(self, bits=2):
-        if bits == 1:
-            hls_type = IntegerPrecisionType(width=1, signed=False)
-        elif bits == 2:
-            hls_type = IntegerPrecisionType(width=2)
-        else:
-            raise Exception(f'BinaryQuantizer suppots 1 or 2 bits, but called with bits={bits}')
-        super().__init__(bits, hls_type)
-
-    def __call__(self, data):
-        zeros = np.zeros_like(data)
-        ones = np.ones_like(data)
-        quant_data = data
-        if self.bits == 1:
-            quant_data = np.where(data > 0, ones, zeros).astype('int')
-        if self.bits == 2:
-            quant_data = np.where(data > 0, ones, -ones)
-        return quant_data
-
-
-class TernaryQuantizer(Quantizer):
-    def __init__(self):
-        super().__init__(2, IntegerPrecisionType(width=2))
-
-    def __call__(self, data):
-        zeros = np.zeros_like(data)
-        ones = np.ones_like(data)
-        return np.where(data > 0.5, ones, np.where(data <= -0.5, -ones, zeros))
 
 
 dense_layers = ['Dense', 'BinaryDense', 'TernaryDense']
