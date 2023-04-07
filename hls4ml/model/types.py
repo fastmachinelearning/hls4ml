@@ -35,6 +35,15 @@ class Quantizer:
 
 
 class BinaryQuantizer(Quantizer):
+    """Quantizer that quantizes to 0 and 1 (``bits=1``) or -1 and 1 (``bits==2``).
+
+    Args:
+        bits (int, optional): Number of bits used by the quantizer. Defaults to 2.
+
+    Raises:
+        Exception: Raised if ``bits>2``
+    """
+
     def __init__(self, bits=2):
         if bits == 1:
             hls_type = IntegerPrecisionType(width=1, signed=False)
@@ -56,6 +65,8 @@ class BinaryQuantizer(Quantizer):
 
 
 class TernaryQuantizer(Quantizer):
+    """Quantizer that quantizes to -1, 0 and 1."""
+
     def __init__(self):
         super().__init__(2, IntegerPrecisionType(width=2))
 
@@ -66,6 +77,12 @@ class TernaryQuantizer(Quantizer):
 
 
 class QKerasQuantizer(Quantizer):
+    """Wrapper around QKeras quantizers.
+
+    Args:
+        config (dict): Config of the QKeras quantizer to wrap.
+    """
+
     def __init__(self, config):
         self.quantizer_fn = get_quantizer(config)
         self.alpha = config['config'].get('alpha', None)
@@ -105,6 +122,12 @@ class QKerasQuantizer(Quantizer):
 
 
 class QKerasBinaryQuantizer(Quantizer):
+    """Wrapper around QKeras binary quantizer.
+
+    Args:
+        config (dict): Config of the QKeras quantizer to wrap.
+    """
+
     def __init__(self, config, xnor=False):
         self.bits = 1 if xnor else 2
         self.hls_type = XnorPrecisionType() if xnor else IntegerPrecisionType(width=2, signed=True)
@@ -121,15 +144,19 @@ class QKerasBinaryQuantizer(Quantizer):
 
 
 class QKerasPO2Quantizer(Quantizer):
+    """Wrapper around QKeras power-of-2 quantizers.
+
+    Args:
+        config (dict): Config of the QKeras quantizer to wrap.
+    """
+
     def __init__(self, config):
         self.bits = config['config']['bits']
         self.quantizer_fn = get_quantizer(config)
         self.hls_type = ExponentPrecisionType(width=self.bits, signed=True)
 
     def __call__(self, data):
-        '''
-        Weights are quantized to nearest power of two
-        '''
+        # Weights are quantized to nearest power of two
         x = tf.convert_to_tensor(data)
         y = self.quantizer_fn(x)
         if hasattr(y, 'numpy'):
