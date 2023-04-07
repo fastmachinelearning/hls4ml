@@ -330,15 +330,6 @@ class Layer:
             precision[data_type.name] = data_type
         return precision
 
-    def get_numbers_cpp(self):
-        numbers = ''
-        for k, v in self.get_output_variable().get_shape():
-            numbers += f'#define {k} {v}\n'
-
-        return numbers
-
-    def precision_cpp(self):
-        return f'typedef {self.get_output_variable().precision} layer{self.index}_t;'
 
 class Input(Layer):
     def initialize(self):
