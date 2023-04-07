@@ -324,25 +324,6 @@ class Layer:
 
         self.set_attr(name, var)
 
-    def _default_function_params(self):
-        params = {}
-        params.update(self.attributes)
-        params['config'] = f'config{self.index}'
-        params['input_t'] = self.get_input_variable().type.name
-        params['output_t'] = self.get_output_variable().type.name
-        params['input'] = self.get_input_variable().name
-        params['output'] = self.get_output_variable().name
-
-        return params
-
-    def _default_config_params(self):
-        params = {}
-        params.update(self.attributes)
-        params['iotype'] = self.model.config.get_config_value('IOType')
-        params['reuse'] = self.get_attr('reuse_factor')
-
-        return params
-
     def get_layer_precision(self):
         precision = {}
         for data_type in self.types.values():
@@ -358,7 +339,6 @@ class Layer:
 
     def precision_cpp(self):
         return f'typedef {self.get_output_variable().precision} layer{self.index}_t;'
-
 
 class Input(Layer):
     def initialize(self):
