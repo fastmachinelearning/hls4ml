@@ -1,27 +1,9 @@
 import numpy as np
 import tensorflow as tf
-from qkeras import get_quantizer
 
 from hls4ml.model.layers import BatchNormalization, register_layer
 from hls4ml.model.optimizer import ConfigurableOptimizerPass, OptimizerPass, register_pass
-from hls4ml.model.types import ExponentPrecisionType, FixedPrecisionType, IntegerPrecisionType, NamedType
-
-
-class QKerasPO2Quantizer:
-    def __init__(self, config):
-        self.bits = config['config']['bits']
-        self.quantizer_fn = get_quantizer(config)
-        self.hls_type = ExponentPrecisionType(width=self.bits, signed=True)
-
-    def __call__(self, data):
-        '''
-        Weights are rounded to nearest power of 2
-        '''
-        x = tf.convert_to_tensor(data)
-        y = self.quantizer_fn(x)
-        if hasattr(y, 'numpy'):
-            y = y.numpy()
-        return y
+from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType, QKerasPO2Quantizer
 
 
 class OutputRoundingSaturationMode(ConfigurableOptimizerPass):
