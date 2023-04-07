@@ -64,7 +64,8 @@ for model_type in model_types:
                         elif model_type == 'onnx':
                             register_onnx_layer_handler(layer, func)
 
-        except ImportError:
+        except ImportError as err:
+            print(f'WARNING: Failed to import handlers from {module}: {err.msg}.')
             continue
 
 

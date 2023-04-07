@@ -2,9 +2,20 @@ from qkeras.quantizers import get_quantizer
 
 from hls4ml.converters.keras.convolution import parse_conv1d_layer, parse_conv2d_layer
 from hls4ml.converters.keras.core import parse_batchnorm_layer, parse_dense_layer
-from hls4ml.converters.keras.qkeras import get_quantizer_from_config
 from hls4ml.converters.keras_to_hls import keras_handler, parse_default_keras_layer
-from hls4ml.model.types import FixedPrecisionType
+from hls4ml.model.types import FixedPrecisionType, QKerasBinaryQuantizer, QKerasPO2Quantizer, QKerasQuantizer
+
+
+def get_quantizer_from_config(keras_layer, quantizer_var):
+    quantizer_config = keras_layer['config'][f'{quantizer_var}_quantizer']
+    if keras_layer['class_name'] == 'QBatchNormalization':
+        return QKerasQuantizer(quantizer_config)
+    elif 'binary' in quantizer_config['class_name']:
+        return QKerasBinaryQuantizer(quantizer_config, xnor=(quantizer_var == 'kernel'))
+    elif quantizer_config['class_name'] == 'quantized_po2':
+        return QKerasPO2Quantizer(quantizer_config)
+    else:
+        return QKerasQuantizer(quantizer_config)
 
 
 @keras_handler('QDense')
