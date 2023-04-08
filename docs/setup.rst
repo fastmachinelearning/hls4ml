@@ -2,30 +2,36 @@
 Setup
 =====
 
-This chapter is dedicated to setting up the tool.  We discuss software dependencies of ``hls4ml``.  There is a quick start guide for beginners to get familiar quickly.  Then we discuss in more detail the features of the tool and user configuration.
+This chapter is dedicated to setting up the tool.
+We discuss software dependencies of ``hls4ml``.
+There is a quick start guide for beginners to get familiar quickly.
+Then we discuss in more detail the features of the tool and user configuration.
 
 Dependencies
 ============
 
-* NumPy: required for array-based computations
-   * https://numpy.org
-* H5Py: required for the translation of Keras model files
-   * https://www.h5py.org
-* PyYAML: required for configuration file parsing
-   * https://pypi.python.org/pypi/PyYAML
-* QKeras: required for working with quantized models
-   * https://github.com/google/qkeras
-* PyTorch: required for reading in PyTorch models
-   * https://pytorch.org
-* ONNX: required for reading in ONNX models. Note that you need an install of Protobuf and NumPy to build ONNX. Detailed instructions are included in the link.
-   * https://github.com/onnx/onnx
-* Xilinx Vivado license or Intel Quartus license: a license is required for the synthesis of generated RTL IP
+* Python dependencies are automtically managed by ``pip``
+
+  * `calmjs.parse <https://pypi.org/project/calmjs.parse/>`_
+  * `six <https://pypi.org/project/six/>`_
+  * `numpy <https://pypi.org/project/numpy/>`_
+  * `h5py <https://pypi.org/project/h5py/>`_
+  * `pydigitalwavetools==1.1 <https://pypi.org/project/pyDigitalWaveTools/1.1/>`_
+  * `pyyaml <https://pypi.org/project/pyyaml/>`_
+  * `tabulate <https://pypi.org/project/tabulate/>`_
+  * `onnx>=1.4.0 <https://pypi.org/project/onnx/>`_
+  * `qkeras <https://pypi.org/project/qkeras/>`_
+
+* PyTorch is optional for reading in PyTorch models
+* Xilinx Vivado 2018.2 to 2020.1 installation is required for synthesis for Xilinx FPGAs
+* Intel Quartus 20.1 to 21.4 installation is required for the synthesis for Intel FPGAs
 
 
 Quick Start
 =============
 
-For basic concepts to understand the tool, please visit the :doc:`Concepts <concepts>` chapter. Here we give line-by-line instructions for simply running the tool out-of-the-box and getting a feel for the workflow.
+For basic concepts to understand the tool, please visit the :doc:`Concepts <concepts>` chapter.
+Here we give line-by-line instructions for simply running the tool out-of-the-box and getting a feel for the workflow.
 
 Installation
 ------------
