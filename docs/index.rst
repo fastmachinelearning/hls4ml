@@ -24,6 +24,7 @@
 
     advanced/fifo_depth
     advanced/extension
+    advanced/accelerator
 
 .. toctree::
     :hidden:
