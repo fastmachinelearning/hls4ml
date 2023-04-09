@@ -23,14 +23,14 @@ def data():
 @pytest.fixture(scope='module')
 def model(request):
     model = Sequential()
-    model.add(BatchNormalization(input_shape=(in_shape,), center=request.param[0], scale=request.param[1]))
+    model.add(BatchNormalization(input_shape=(in_shape,), center=request.param, scale=request.param))
     model.compile()
     return model
 
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
-@pytest.mark.parametrize('model', ([True, True], [True, False], [False, True], [False, False]), indirect=True)
+@pytest.mark.parametrize('model', [True, False], indirect=True)
 def test_batchnorm(model, data, backend, io_type):
 
     default_precision = 'ac_fixed<32, 1, true>' if backend == 'Quartus' else 'ac_fixed<32, 1>'

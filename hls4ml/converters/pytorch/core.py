@@ -65,6 +65,7 @@ def parse_batchnorm_layer(pytorch_layer, layer_name, input_shapes, data_reader, 
 
     # batchnorm para
     layer['epsilon'] = pytorch_layer.eps
+    layer['use_gamma'] = layer['use_beta'] = not pytorch_layer.affine
 
     in_size = 1
     for dim in input_shapes[0][1:]:

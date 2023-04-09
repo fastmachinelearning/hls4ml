@@ -863,6 +863,8 @@ class BatchNormalization(Layer):
         WeightAttribute('bias'),
         TypeAttribute('scale'),
         TypeAttribute('bias'),
+        Attribute('use_gamma', value_type=bool, default=True),
+        Attribute('use_beta', value_type=bool, default=True),
     ]
 
     def initialize(self):
@@ -871,15 +873,10 @@ class BatchNormalization(Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
-        gamma = self.model.get_weights_data(self.name, 'gamma')
-        beta = self.model.get_weights_data(self.name, 'beta')
+        gamma = self.model.get_weights_data(self.name, 'gamma') if self.get_attr('use_gamma') else 1
+        beta = self.model.get_weights_data(self.name, 'beta') if self.get_attr('use_beta') else 0
         mean = self.model.get_weights_data(self.name, 'moving_mean')
         var = self.model.get_weights_data(self.name, 'moving_variance')
-
-        if gamma is None:
-            gamma = np.ones(mean.shape)
-        if beta is None:
-            beta = np.zeros(mean.shape)
 
         scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
         bias = beta - scale * mean
