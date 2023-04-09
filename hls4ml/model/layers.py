@@ -570,7 +570,9 @@ class Conv2DBatchnorm(Conv2D):
 
         # wrap conv kernel and bias with bn parameters
         folded_kernel = inv * kernel
-        folded_bias = inv * (bias - moving_mean) + beta
+        folded_bias = inv * (bias - moving_mean)
+        if beta is not None:
+            folded_bias += beta
 
         return [folded_kernel, folded_bias]
 
@@ -874,8 +876,13 @@ class BatchNormalization(Layer):
         mean = self.model.get_weights_data(self.name, 'moving_mean')
         var = self.model.get_weights_data(self.name, 'moving_variance')
 
+        if gamma is None:
+            gamma = np.ones(mean.shape)
+        if beta is None:
+            beta = np.zeros(mean.shape)
+
         scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
-        bias = beta - gamma * mean / np.sqrt(var + self.get_attr('epsilon'))
+        bias = beta - scale * mean
 
         self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
         self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
