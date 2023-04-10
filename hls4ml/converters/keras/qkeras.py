@@ -1,9 +1,9 @@
-from hls4ml.model.types import Quantizer, IntegerPrecisionType, FixedPrecisionType, ExponentPrecisionType, XnorPrecisionType
-from hls4ml.converters.keras.core import BinaryQuantizer
-
-from qkeras.quantizers import get_quantizer
 import tensorflow as tf
-import numpy as np
+from qkeras.quantizers import get_quantizer
+
+from hls4ml.converters.keras.core import BinaryQuantizer
+from hls4ml.model.types import ExponentPrecisionType, FixedPrecisionType, IntegerPrecisionType, Quantizer, XnorPrecisionType
+
 
 class QKerasQuantizer(Quantizer):
     def __init__(self, config):
@@ -24,13 +24,14 @@ class QKerasQuantizer(Quantizer):
             print("Unsupported quantizer: " + config['class_name'])
             self.bits = 16
             self.hls_type = FixedPrecisionType(width=16, integer=6, signed=True)
-    
+
     def __call__(self, data):
         tf_data = tf.convert_to_tensor(data)
         return self.quantizer_fn(tf_data).numpy()
-        #return self.quantizer_fn(data)
+        # return self.quantizer_fn(data)
 
-class QKerasBinaryQuantizer(object):
+
+class QKerasBinaryQuantizer:
     def __init__(self, config, xnor=False):
         self.bits = 1 if xnor else 2
         self.hls_type = XnorPrecisionType() if xnor else IntegerPrecisionType(width=2, signed=True)
@@ -45,7 +46,8 @@ class QKerasBinaryQuantizer(object):
         y = self.quantizer_fn(x).numpy()
         return self.binary_quantizer(y)
 
-class QKerasPO2Quantizer(object):
+
+class QKerasPO2Quantizer:
     def __init__(self, config):
         self.bits = config['config']['bits']
         self.quantizer_fn = get_quantizer(config)
@@ -61,6 +63,7 @@ class QKerasPO2Quantizer(object):
             y = y.numpy()
         return y
 
+
 def get_type(quantizer_config):
     width = quantizer_config['config']['bits']
     integer = quantizer_config['config'].get('integer', 0)
@@ -72,10 +75,11 @@ def get_type(quantizer_config):
         else:
             return IntegerPrecisionType(width=width, signed=True)
     else:
-        return FixedPrecisionType(width=width, integer=integer+1, signed=True)
+        return FixedPrecisionType(width=width, integer=integer + 1, signed=True)
+
 
 def get_quantizer_from_config(keras_layer, quantizer_var):
-    quantizer_config = keras_layer['config']['{}_quantizer'.format(quantizer_var)]
+    quantizer_config = keras_layer['config'][f'{quantizer_var}_quantizer']
     if keras_layer['class_name'] == 'QBatchNormalization':
         return QKerasQuantizer(quantizer_config)
     elif 'binary' in quantizer_config['class_name']:
@@ -84,4 +88,3 @@ def get_quantizer_from_config(keras_layer, quantizer_var):
         return QKerasPO2Quantizer(quantizer_config)
     else:
         return QKerasQuantizer(quantizer_config)
-

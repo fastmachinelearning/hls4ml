@@ -1,0 +1,70 @@
+exclude: (^hls4ml\/templates\/(vivado|quartus)\/(ap_types|ac_types)\/|^test/pytest/test_report/)
+
+repos:
+- repo: https://github.com/psf/black
+  rev: 22.12.0
+  hooks:
+  - id: black
+    language_version: python3
+    args: ['--line-length=125',
+           '--skip-string-normalization']
+
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.4.0
+  hooks:
+  - id: check-added-large-files
+  - id: check-case-conflict
+  - id: check-merge-conflict
+  - id: check-symlinks
+  - id: check-yaml
+  - id: debug-statements
+  - id: end-of-file-fixer
+  - id: mixed-line-ending
+  - id: requirements-txt-fixer
+  - id: trailing-whitespace
+
+- repo: https://github.com/PyCQA/isort
+  rev: 5.12.0
+  hooks:
+  - id: isort
+    args: ["--profile", "black", --line-length=125]
+
+- repo: https://github.com/asottile/pyupgrade
+  rev: v3.3.1
+  hooks:
+  - id: pyupgrade
+    args: ["--py36-plus"]
+
+- repo: https://github.com/asottile/setup-cfg-fmt
+  rev: v2.2.0
+  hooks:
+  - id: setup-cfg-fmt
+
+- repo: https://github.com/pycqa/flake8
+  rev: 5.0.4
+  hooks:
+  - id: flake8
+    exclude: docs/conf.py
+    additional_dependencies: [flake8-bugbear, flake8-print]
+    args: ['--max-line-length=125',  # github viewer width
+           '--extend-ignore=E203,T201']  # E203 is not PEP8 compliant
+
+- repo: https://github.com/mgedmin/check-manifest
+  rev: "0.49"
+  hooks:
+  - id: check-manifest
+    stages: [manual]
+
+- repo: https://github.com/jmduarte/p-clang-format
+  rev: "v1.0.4"
+  hooks:
+    - id: p-clang-format
+      types_or: [c++, c, cuda]
+ci:
+    autofix_commit_msg: '[pre-commit.ci] auto fixes from pre-commit hooks'
+    autofix_prs: false  # default is true
+    autoupdate_branch: 'main'
+    autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+    autoupdate_schedule: weekly
+    skip: []
+    submodules: true

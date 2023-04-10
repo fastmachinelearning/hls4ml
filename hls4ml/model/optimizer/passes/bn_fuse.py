@@ -1,17 +1,24 @@
+from hls4ml.model.layers import BatchNormalization, Conv1D, Conv2D, Dense
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.layers import BatchNormalization, Dense, Conv1D, Conv2D
+
 
 class FuseBatchNormalization(OptimizerPass):
     def match(self, node):
-        is_match = isinstance(node, BatchNormalization) and \
-            isinstance(node.get_input_node(), (Dense, Conv1D, Conv2D)) and \
-            node.get_input_node().get_attr('weight_quantizer') is None and \
-            node.get_input_node().get_attr('bias_quantizer') is None
+        is_match = (
+            isinstance(node, BatchNormalization)
+            and isinstance(node.get_input_node(), (Dense, Conv1D, Conv2D))
+            and node.get_input_node().get_attr('weight_quantizer') is None
+            and node.get_input_node().get_attr('bias_quantizer') is None
+        )
         return is_match
 
     def transform(self, model, node):
         # Fuse weight and bias of Dense/Conv1D/Conv2D layer with BN values
         parent_node = node.get_input_node()
+        parent_map = parent_node.get_output_use_map()
+        node_map = node.get_output_use_map()
+        if len(parent_map[parent_node.name]) > 1 or len(node_map[node.name]) > 1:
+            return False
 
         parent_weight = parent_node.weights['weight']
         parent_bias = parent_node.weights['bias']

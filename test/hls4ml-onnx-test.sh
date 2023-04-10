@@ -6,7 +6,7 @@ VIVADO_VERSION=2017.2
 # If running in docker image we would first need to activate the proper conda environment
 #. activate hls4ml-py36
 
-# Convert models in onnx-models.txt 
+# Convert models in onnx-models.txt
 ./convert-onnx-models.sh -x -p 3 -f onnx-models.txt
 
 # Same for Python 2

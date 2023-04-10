@@ -1,0 +1,26 @@
+name: Run pre-commit
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  pre-commit:
+    name: Format
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Pre-commit
+        uses: pre-commit/action@v3.0.0
+        with:
+          extra_args: --hook-stage manual --all-files

@@ -16,35 +16,35 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 // Description: This is a multi-threaded AXI4 read master.  Each channel will
-// issue commands on a different IDs.  As a result data may arrive out of 
+// issue commands on a different IDs.  As a result data may arrive out of
 // order.  The amount of data requested is equal to the ctrl_length variable.
-// Prog full is set and sampled such that the FIFO will never overflow.  Thus 
+// Prog full is set and sampled such that the FIFO will never overflow.  Thus
 // rready can be always asserted for better timing.
 ///////////////////////////////////////////////////////////////////////////////
 
 `default_nettype none
 
-module krnl_rtl_axi_read_master #( 
+module krnl_rtl_axi_read_master #(
   parameter integer C_ID_WIDTH         = 0,   // Must be >= $clog2(C_NUM_CHANNELS)
   parameter integer C_ADDR_WIDTH       = 64,
   parameter integer C_DATA_WIDTH       = 32,
   parameter integer C_NUM_CHANNELS     = 1,   // Only 2 tested.
-  parameter integer C_LENGTH_WIDTH     = 32,  
+  parameter integer C_LENGTH_WIDTH     = 32,
   parameter integer C_BURST_LEN        = 256, // Max AXI burst length for read commands
   parameter integer C_LOG_BURST_LEN    = 8,
-  parameter integer C_MAX_OUTSTANDING  = 3 
+  parameter integer C_MAX_OUTSTANDING  = 3
 )
 (
   // System signals
   input  wire                                          aclk,
   input  wire                                          areset,
-  // Control signals 
-  input  wire                                          ctrl_start, 
-  output wire                                          ctrl_done, 
+  // Control signals
+  input  wire                                          ctrl_start,
+  output wire                                          ctrl_done,
   input  wire [C_NUM_CHANNELS-1:0][C_ADDR_WIDTH-1:0]   ctrl_offset,
   input  wire                     [C_LENGTH_WIDTH-1:0] ctrl_length,
   input  wire [C_NUM_CHANNELS-1:0]                     ctrl_prog_full,
-  // AXI4 master interface                             
+  // AXI4 master interface
   output wire                                          arvalid,
   input  wire                                          arready,
   output wire [C_ADDR_WIDTH-1:0]                       araddr,
@@ -64,13 +64,13 @@ module krnl_rtl_axi_read_master #(
   output wire [C_NUM_CHANNELS-1:0]                     m_tlast
 );
 
-timeunit 1ps; 
-timeprecision 1ps; 
+timeunit 1ps;
+timeprecision 1ps;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Local Parameters
 ///////////////////////////////////////////////////////////////////////////////
-localparam integer LP_MAX_OUTSTANDING_CNTR_WIDTH = $clog2(C_MAX_OUTSTANDING+1); 
+localparam integer LP_MAX_OUTSTANDING_CNTR_WIDTH = $clog2(C_MAX_OUTSTANDING+1);
 localparam integer LP_TRANSACTION_CNTR_WIDTH = C_LENGTH_WIDTH-C_LOG_BURST_LEN;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -90,7 +90,7 @@ logic                                 ar_done;
 // AXI Read Address Channel
 logic                                                         fifo_stall;
 logic                                                         arxfer;
-logic                                                         arvalid_r = 1'b0; 
+logic                                                         arvalid_r = 1'b0;
 logic [C_NUM_CHANNELS-1:0][C_ADDR_WIDTH-1:0]                  addr;
 logic [C_ID_WIDTH-1:0]                                        id = {C_ID_WIDTH{1'b1}};
 logic [LP_TRANSACTION_CNTR_WIDTH-1:0]                         ar_transactions_to_go;
@@ -108,29 +108,29 @@ logic [C_NUM_CHANNELS-1:0]                                decr_r_transaction_cnt
 logic [C_NUM_CHANNELS-1:0][LP_TRANSACTION_CNTR_WIDTH-1:0] r_transactions_to_go;
 logic [C_NUM_CHANNELS-1:0]                                r_final_transaction;
 ///////////////////////////////////////////////////////////////////////////////
-// Control Logic 
+// Control Logic
 ///////////////////////////////////////////////////////////////////////////////
 
 always @(posedge aclk) begin
-  for (int i = 0; i < C_NUM_CHANNELS; i++) begin 
-    done[i] <= rxfer & rlast & (rid == i) & r_final_transaction[i] ? 1'b1 : 
-          ctrl_done ? 1'b0 : done[i]; 
+  for (int i = 0; i < C_NUM_CHANNELS; i++) begin
+    done[i] <= rxfer & rlast & (rid == i) & r_final_transaction[i] ? 1'b1 :
+          ctrl_done ? 1'b0 : done[i];
   end
 end
 assign ctrl_done = &done;
 
 // Determine how many full burst to issue and if there are any partial bursts.
 assign num_full_bursts = ctrl_length[C_LOG_BURST_LEN+:C_LENGTH_WIDTH-C_LOG_BURST_LEN];
-assign num_partial_bursts = ctrl_length[0+:C_LOG_BURST_LEN] ? 1'b1 : 1'b0; 
+assign num_partial_bursts = ctrl_length[0+:C_LOG_BURST_LEN] ? 1'b1 : 1'b0;
 
-always @(posedge aclk) begin 
+always @(posedge aclk) begin
   start <= ctrl_start;
   num_transactions <= (num_partial_bursts == 1'b0) ? num_full_bursts - 1'b1 : num_full_bursts;
   has_partial_burst <= num_partial_bursts;
   final_burst_len <=  ctrl_length[0+:C_LOG_BURST_LEN] - 1'b1;
 end
 
-// Special case if there is only 1 AXI transaction. 
+// Special case if there is only 1 AXI transaction.
 assign single_transaction = (num_transactions == {LP_TRANSACTION_CNTR_WIDTH{1'b0}}) ? 1'b1 : 1'b0;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -145,44 +145,44 @@ assign arid   = id;
 assign arxfer = arvalid & arready;
 assign fifo_stall = ctrl_prog_full[id];
 
-always @(posedge aclk) begin 
-  if (areset) begin 
+always @(posedge aclk) begin
+  if (areset) begin
     arvalid_r <= 1'b0;
   end
   else begin
-    arvalid_r <= ~ar_idle & ~stall_ar[id] & ~arvalid_r & ~fifo_stall ? 1'b1 : 
+    arvalid_r <= ~ar_idle & ~stall_ar[id] & ~arvalid_r & ~fifo_stall ? 1'b1 :
                  arready ? 1'b0 : arvalid_r;
   end
 end
 
 // When ar_idle, there are no transactions to issue.
-always @(posedge aclk) begin 
-  if (areset) begin 
-    ar_idle <= 1'b1; 
+always @(posedge aclk) begin
+  if (areset) begin
+    ar_idle <= 1'b1;
   end
-  else begin 
+  else begin
     ar_idle <= start   ? 1'b0 :
-               ar_done ? 1'b1 : 
+               ar_done ? 1'b1 :
                          ar_idle;
   end
 end
 
 // each channel is assigned a different id. The transactions are interleaved.
-always @(posedge aclk) begin 
-  if (start) begin 
+always @(posedge aclk) begin
+  if (start) begin
     id <= {C_ID_WIDTH{1'b1}};
   end
   else begin
-    id <= arxfer ? id - 1'b1 : id; 
+    id <= arxfer ? id - 1'b1 : id;
   end
 end
 
 
 // Increment to next address after each transaction is issued.
-always @(posedge aclk) begin 
+always @(posedge aclk) begin
   for (int i = 0; i < C_NUM_CHANNELS; i++) begin
     addr[i] <= ctrl_start          ? ctrl_offset[i] :
-               arxfer && (id == i) ? addr[i] + C_BURST_LEN*C_DATA_WIDTH/8 : 
+               arxfer && (id == i) ? addr[i] + C_BURST_LEN*C_DATA_WIDTH/8 :
                                      addr[i];
   end
 end
@@ -190,9 +190,9 @@ end
 // Counts down the number of transactions to send.
 krnl_rtl_counter #(
   .C_WIDTH ( LP_TRANSACTION_CNTR_WIDTH         ) ,
-  .C_INIT  ( {LP_TRANSACTION_CNTR_WIDTH{1'b0}} ) 
+  .C_INIT  ( {LP_TRANSACTION_CNTR_WIDTH{1'b0}} )
 )
-inst_ar_transaction_cntr ( 
+inst_ar_transaction_cntr (
   .clk        ( aclk                   ) ,
   .clken      ( 1'b1                   ) ,
   .rst        ( areset                 ) ,
@@ -201,25 +201,25 @@ inst_ar_transaction_cntr (
   .decr       ( arxfer && id == '0     ) ,
   .load_value ( num_transactions       ) ,
   .count      ( ar_transactions_to_go  ) ,
-  .is_zero    ( ar_final_transaction   ) 
+  .is_zero    ( ar_final_transaction   )
 );
 
 assign ar_done = ar_final_transaction && arxfer && id == 1'b0;
 
-always_comb begin 
-  for (int i = 0; i < C_NUM_CHANNELS; i++) begin 
+always_comb begin
+  for (int i = 0; i < C_NUM_CHANNELS; i++) begin
     incr_ar_to_r_cnt[i] = rxfer & rlast & (rid == i);
     decr_ar_to_r_cnt[i] = arxfer & (arid == i);
   end
 end
 
-// Keeps track of the number of outstanding transactions. Stalls 
+// Keeps track of the number of outstanding transactions. Stalls
 // when the value is reached so that the FIFO won't overflow.
 krnl_rtl_counter #(
   .C_WIDTH ( LP_MAX_OUTSTANDING_CNTR_WIDTH                       ) ,
-  .C_INIT  ( C_MAX_OUTSTANDING[0+:LP_MAX_OUTSTANDING_CNTR_WIDTH] ) 
+  .C_INIT  ( C_MAX_OUTSTANDING[0+:LP_MAX_OUTSTANDING_CNTR_WIDTH] )
 )
-inst_ar_to_r_transaction_cntr[C_NUM_CHANNELS-1:0] ( 
+inst_ar_to_r_transaction_cntr[C_NUM_CHANNELS-1:0] (
   .clk        ( aclk                           ) ,
   .clken      ( 1'b1                           ) ,
   .rst        ( areset                         ) ,
@@ -228,7 +228,7 @@ inst_ar_to_r_transaction_cntr[C_NUM_CHANNELS-1:0] (
   .decr       ( decr_ar_to_r_cnt               ) ,
   .load_value ( {LP_MAX_OUTSTANDING_CNTR_WIDTH{1'b0}} ) ,
   .count      ( outstanding_vacancy_count      ) ,
-  .is_zero    ( stall_ar                       ) 
+  .is_zero    ( stall_ar                       )
 );
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -238,9 +238,9 @@ assign m_tvalid = tvalid;
 assign m_tdata = tdata;
 assign m_tlast = tlast;
 
-always_comb begin 
+always_comb begin
   for (int i = 0; i < C_NUM_CHANNELS; i++) begin
-    tvalid[i] = rvalid && (rid == i); 
+    tvalid[i] = rvalid && (rid == i);
     tdata[i] = rdata;
     tlast[i] = rlast;
   end
@@ -251,16 +251,16 @@ end
 assign rready = 1'b1;
 assign rxfer = rready & rvalid;
 
-always_comb begin 
-  for (int i = 0; i < C_NUM_CHANNELS; i++) begin 
+always_comb begin
+  for (int i = 0; i < C_NUM_CHANNELS; i++) begin
     decr_r_transaction_cntr[i] = rxfer & rlast & (rid == i);
   end
 end
 krnl_rtl_counter #(
   .C_WIDTH ( LP_TRANSACTION_CNTR_WIDTH         ) ,
-  .C_INIT  ( {LP_TRANSACTION_CNTR_WIDTH{1'b0}} ) 
+  .C_INIT  ( {LP_TRANSACTION_CNTR_WIDTH{1'b0}} )
 )
-inst_r_transaction_cntr[C_NUM_CHANNELS-1:0] ( 
+inst_r_transaction_cntr[C_NUM_CHANNELS-1:0] (
   .clk        ( aclk                          ) ,
   .clken      ( 1'b1                          ) ,
   .rst        ( areset                        ) ,
@@ -269,12 +269,10 @@ inst_r_transaction_cntr[C_NUM_CHANNELS-1:0] (
   .decr       ( decr_r_transaction_cntr       ) ,
   .load_value ( num_transactions              ) ,
   .count      ( r_transactions_to_go          ) ,
-  .is_zero    ( r_final_transaction           ) 
+  .is_zero    ( r_final_transaction           )
 );
 
 
 endmodule : krnl_rtl_axi_read_master
 
 `default_nettype wire
-
-

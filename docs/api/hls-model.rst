@@ -23,7 +23,7 @@ After that, you can use several methods in that object. Here is a list of all th
 * :ref:`build <build-method>`
 * :ref:`trace <trace-method>`
 
-Similar functionalities are also supported through command line interface. If you prefer using them, please refer to Command Help section. 
+Similar functionalities are also supported through command line interface. If you prefer using them, please refer to Command Help section.
 
 ----
 
@@ -67,7 +67,7 @@ Similar to ``keras``\ 's predict API, you can get the predictions of ``hls_model
 
    y = hls_model.predict(X)
 
-This is similar to doing ``csim`` simulation, but you can get your prediction results much faster. It's very helpful when you want to quickly prototype different configurations for your model. 
+This is similar to doing ``csim`` simulation, but you can get your prediction results much faster. It's very helpful when you want to quickly prototype different configurations for your model.
 
 ----
 
@@ -80,7 +80,7 @@ This is similar to doing ``csim`` simulation, but you can get your prediction re
 
    hls_model.build()
 
-   #You can also read the report of the build 
+   #You can also read the report of the build
    hls4ml.report.read_vivado_report('hls4ml_prj')
 
 ----
@@ -92,7 +92,7 @@ This is similar to doing ``csim`` simulation, but you can get your prediction re
 
 The trace method is an advanced version of the ``predict`` method. It's used to trace individual outputs from each layer of the hls_model. This is useful for debugging and setting the appropriate configuration.
 
-**Return:** A dictionary where the keys are the names of the layers, and its values are the layers's outputs. 
+**Return:** A dictionary where the keys are the names of the layers, and its values are the layers's outputs.
 
 .. code-block:: python
 

@@ -4,10 +4,17 @@ from pathlib import Path
 
 from hls4ml.backends.template import Template
 from hls4ml.model.flow import get_backend_flows, update_flow
-from hls4ml.model.optimizer import LayerOptimizerPass, register_pass, extract_optimizers_from_path, extract_optimizers_from_object, get_backend_passes, get_optimizer
+from hls4ml.model.optimizer import (
+    LayerOptimizerPass,
+    extract_optimizers_from_object,
+    extract_optimizers_from_path,
+    get_backend_passes,
+    get_optimizer,
+    register_pass,
+)
 
 
-class Backend(object):
+class Backend:
     def __init__(self, name):
         self.name = name
         self.custom_source = {}
@@ -28,13 +35,17 @@ class Backend(object):
         file_optimizers = {}
         for cls in [*self.__class__.__bases__, self.__class__]:
             opt_path = os.path.dirname(inspect.getfile(cls)) + '/passes'
-            module_path = cls.__module__[:cls.__module__.rfind('.')] + '.passes'
+            module_path = cls.__module__[: cls.__module__.rfind('.')] + '.passes'
             cls_optimizers = extract_optimizers_from_path(opt_path, module_path, self)
             file_optimizers.update(cls_optimizers)
         return file_optimizers
 
     def _get_layer_initializers(self):
-        all_initializers = { name:get_optimizer(name) for name in get_backend_passes(self.name) if isinstance(get_optimizer(name), LayerOptimizerPass) }
+        all_initializers = {
+            name: get_optimizer(name)
+            for name in get_backend_passes(self.name)
+            if isinstance(get_optimizer(name), LayerOptimizerPass)
+        }
 
         # Sort through the initializers based on the base class (e.g., to apply 'Layer' optimizers before 'Dense')
         sorted_initializers = sorted(all_initializers.items(), key=lambda x: len(x[1].layer_class.mro()))
@@ -141,6 +152,7 @@ class Backend(object):
 
 backend_map = {}
 
+
 def register_backend(name, backend_cls):
     """Create the backend instance and add it to the registry.
 
@@ -152,12 +164,14 @@ def register_backend(name, backend_cls):
         Exception: If the backend has already been registered.
     """
     if name.lower() in backend_map:
-        raise Exception('Backend {} already registered'.format(name))
+        raise Exception(f'Backend {name} already registered')
 
     backend_map[name.lower()] = backend_cls()
 
+
 def get_backend(name):
     return backend_map[name.lower()]
+
 
 def get_available_backends():
     return list(backend_map.keys())

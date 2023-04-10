@@ -1,4 +1,5 @@
 *.pyc
+_version.py
 __pycache__
 build/
 dist/
