@@ -149,7 +149,7 @@ FiltLoop:
                     pool[pool_col] = pad_val<data_T, CONFIG_T::pool_op>();
                 } else {
                     // Current element is from input image
-                    pool[pool_col] = data[(inp_col + pool_col) * CONFIG_T::n_filt + filt];
+                    pool[pool_col] = data[(inp_col + pool_col - CONFIG_T::pad_left) * CONFIG_T::n_filt + filt];
                     img_overlap++;
                 }
             }
@@ -258,8 +258,8 @@ FiltLoop:
                         } else {
                             // Current element is from input image
                             pool[pool_col * CONFIG_T::stride_width + pool_row] =
-                                data[(inp_col + pool_col) * CONFIG_T::in_width * CONFIG_T::n_filt +
-                                     (inp_width + pool_row) * CONFIG_T::n_filt + filt];
+                                data[(inp_col + pool_col - CONFIG_T::pad_top) * CONFIG_T::in_width * CONFIG_T::n_filt +
+                                     (inp_width + pool_row - CONFIG_T::pad_left) * CONFIG_T::n_filt + filt];
                             img_overlap++;
                         }
                     }
