@@ -2,7 +2,7 @@
 set tcldir [file dirname [info script]]
 source [file join $tcldir project.tcl]
 
-create_project project_1 ${myproject}_vivado_accelerator -part xczu9eg-ffvb1156-2-e -force
+create_project project_1 ${myproject}_vivado_accelerator -part xczu5eg-sfvc784-1-e -force
 
 set_property board_part tul.com.tw:pynqzu:part0:1.1 [current_project]
 set_property  ip_repo_paths  ${myproject}_prj [current_project]
