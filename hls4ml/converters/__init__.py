@@ -21,7 +21,7 @@ try:
 
     __pytorch_enabled__ = True
 except ImportError:
-    warnings.warn("WARNING: Pytorch converter is not enabled!", stacklevel=2)
+    warnings.warn("WARNING: Pytorch converter is not enabled!", stacklevel=1)
     __pytorch_enabled__ = False
 
 try:
@@ -30,7 +30,7 @@ try:
 
     __onnx_enabled__ = True
 except ImportError:
-    warnings.warn("WARNING: ONNX converter is not enabled!", stacklevel=2)
+    warnings.warn("WARNING: ONNX converter is not enabled!", stacklevel=1)
     __onnx_enabled__ = False
 
 try:
@@ -38,7 +38,7 @@ try:
 
     __tensorflow_enabled__ = True
 except ImportError:
-    warnings.warn("WARNING: Tensorflow converter is not enabled!", stacklevel=2)
+    warnings.warn("WARNING: Tensorflow converter is not enabled!", stacklevel=1)
     __tensorflow_enabled__ = False
 
 # ----------Layer handling register----------#
@@ -115,7 +115,7 @@ def convert_from_config(config):
 
     Arguments:
         config: A string containing the path to the YAML configuration file on
-            the filesystem or a dict containig the parsed configuration.
+            the filesystem or a dict containing the parsed configuration.
 
     Returns:
         ModelGraph: hls4ml model.
@@ -194,6 +194,7 @@ def convert_from_keras_model(
     **kwargs,
 ):
     """Convert to hls4ml model based on the provided configuration.
+
     Args:
         model: Keras model to convert
         output_dir (str, optional): Output directory of the generated HLS
@@ -217,8 +218,10 @@ def convert_from_keras_model(
             'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
         hls_config (dict, optional): The HLS config.
         kwargs** (dict, optional): Additional parameters that will be used to create the config of the specified backend
+
     Raises:
         Exception: If precision and reuse factor are not present in 'hls_config'
+
     Returns:
         ModelGraph: hls4ml model.
     """

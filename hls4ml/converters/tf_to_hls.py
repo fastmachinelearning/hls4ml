@@ -1,15 +1,14 @@
-from __future__ import print_function
-import numpy as np
-import h5py
-import json
 import math
 import os
+
+import numpy as np
 import tensorflow as tf
 from tensorflow.python.framework import tensor_util
 
 from hls4ml.model import ModelGraph
 
 MAXMULT = 4096
+
 
 class TFDataReader:
     def __init__(self, graph):
@@ -20,7 +19,7 @@ class TFDataReader:
         tf_op = self.graph.get_operation_by_name(layer_name)
         data = None
         if tf_op is not None:
-            if tf_op.type == 'MatMul' and var_name == 'kernel': # MatMul is mapped to Dense, but there is no bias
+            if tf_op.type == 'MatMul' and var_name == 'kernel':  # MatMul is mapped to Dense, but there is no bias
                 w_tensor = tf_op.inputs[1]
                 data = self.read_variable_data(w_tensor)
 
@@ -31,9 +30,9 @@ class TFDataReader:
             if tf_op.type == 'BiasAdd':
                 b_tensor = tf_op.inputs[1]
                 data = self.read_variable_data(b_tensor)
-            
+
             if tf_op.type == 'FusedBatchNorm':
-                bn_weighs_map = { 'gamma': 1, 'beta': 2, 'moving_mean': 3, 'moving_variance': 4 }
+                bn_weighs_map = {'gamma': 1, 'beta': 2, 'moving_mean': 3, 'moving_variance': 4}
                 w_idx = bn_weighs_map[var_name]
                 w_tensor = tf_op.inputs[w_idx]
                 data = self.read_variable_data(w_tensor)
@@ -50,6 +49,7 @@ class TFDataReader:
 
         return data
 
+
 def _parse_data_format(data_format):
     if data_format == 'NCHW':
         format_str = 'channels_first'
@@ -61,28 +61,29 @@ def _parse_data_format(data_format):
         h_idx = 1
         w_idx = 2
         c_idx = 3
-    
+
     return format_str, c_idx, h_idx, w_idx
+
 
 def _compute_pads_2d(layer, in_height, in_width):
     if layer['padding'] == 'same':
-        #Height
+        # Height
         layer['out_height'] = int(math.ceil(float(in_height) / float(layer['stride_height'])))
-        if (in_height % layer['stride_height'] == 0):
+        if in_height % layer['stride_height'] == 0:
             pad_along_height = max(layer['filt_height'] - layer['stride_height'], 0)
         else:
             pad_along_height = max(layer['filt_height'] - (in_height % layer['stride_height']), 0)
-        layer['pad_top']  = pad_along_height // 2
-        layer['pad_bottom']  = pad_along_height - layer['pad_top']
-        #Width
+        layer['pad_top'] = pad_along_height // 2
+        layer['pad_bottom'] = pad_along_height - layer['pad_top']
+        # Width
         layer['out_width'] = int(math.ceil(float(in_width) / float(layer['stride_width'])))
-        if (in_width % layer['stride_width'] == 0):
+        if in_width % layer['stride_width'] == 0:
             pad_along_width = max(layer['filt_width'] - layer['stride_width'], 0)
         else:
             pad_along_width = max(layer['filt_width'] - (in_width % layer['stride_width']), 0)
-        layer['pad_left']  = pad_along_width // 2
-        layer['pad_right']  = pad_along_width - layer['pad_left']
-    elif layer['padding']=='valid':
+        layer['pad_left'] = pad_along_width // 2
+        layer['pad_right'] = pad_along_width - layer['pad_left']
+    elif layer['padding'] == 'valid':
         layer['out_width'] = int(math.ceil(float(in_width - layer['filt_width'] + 1) / float(layer['stride_width'])))
         layer['out_height'] = int(math.ceil(float(in_height - layer['filt_height'] + 1) / float(layer['stride_height'])))
         layer['pad_top'] = 0
@@ -90,8 +91,9 @@ def _compute_pads_2d(layer, in_height, in_width):
         layer['pad_left'] = 0
         layer['pad_right'] = 0
     elif layer['padding'] == 'explicit':
-        #paddings = tf_op.get_attr('explicit_paddings')
+        # paddings = tf_op.get_attr('explicit_paddings')
         raise NotImplementedError('Explicit padding is not supported yet.')
+
 
 def _find_graph_outputs(graph):
     input_list = []
@@ -104,6 +106,7 @@ def _find_graph_outputs(graph):
 
     return [o.name.rsplit(':', 1)[0] for o in list(set(output_list) - set(input_list))]
 
+
 def _parse_tensor_names(tensors):
     if not isinstance(tensors, list):
         tensors = [tensors]
@@ -114,13 +117,14 @@ def _parse_tensor_names(tensors):
 
     return tensor_names
 
+
 def tf_to_hls(yamlConfig):
 
     ######################
-    ##  Do translation
+    #  Do translation
     ######################
 
-    #This is a list of dictionaries to hold all the layer info we need to generate HLS
+    # This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
 
     if not os.path.exists(yamlConfig['TensorFlowModel']):
@@ -129,28 +133,22 @@ def tf_to_hls(yamlConfig):
     graph_def = None
     graph = None
 
-    #Extract model architecture from pb
+    # Extract model architecture from pb
     try:
         with tf.io.gfile.GFile(yamlConfig['TensorFlowModel'], "rb") as f:
             graph_def = tf.compat.v1.GraphDef()
             graph_def.ParseFromString(f.read())
     except BaseException as e:
-        raise Exception('Error loading the graph definition: {}'.format(str(e)))
+        raise Exception(f'Error loading the graph definition: {str(e)}')
 
     try:
         assert graph_def is not None
         with tf.Graph().as_default() as graph:
-            tf.import_graph_def(
-                graph_def,
-                input_map=None,
-                return_elements=None,
-                name='',
-                producer_op_list=None
-            )
+            tf.import_graph_def(graph_def, input_map=None, return_elements=None, name='', producer_op_list=None)
     except BaseException as e:
-        raise Exception('Error importing the graph: {}'.format(str(e)))
+        raise Exception(f'Error importing the graph: {str(e)}')
 
-    #Define supported operations
+    # Define supported operations
     array_ops = ['ConcatV2', 'StridedSlice', 'Transpose']
     core_ops = ['Const', 'Identity', 'Placeholder']
     image_ops = ['ResizeNearestNeighbor']
@@ -165,7 +163,7 @@ def tf_to_hls(yamlConfig):
     output_shape = None
     for tf_op in graph.get_operations():
         if tf_op.type not in supported_ops:
-            raise Exception('ERROR: Unsupported layer type: {}'.format(tf_op.type))
+            raise Exception(f'ERROR: Unsupported layer type: {tf_op.type}')
 
     print('Topology:')
     for tf_op in graph.get_operations():
@@ -175,11 +173,11 @@ def tf_to_hls(yamlConfig):
         layer['name'] = tf_op.name
 
         if tf_op.type == 'Placeholder':
-            if len(tf_op.inputs) == 0: # Input
+            if len(tf_op.inputs) == 0:  # Input
                 output_shape = tf_op.outputs[0].shape.as_list()
                 layer['class_name'] = 'InputLayer'
                 layer['input_shape'] = output_shape[1:]
-                #layer['outputs'] = [tf_op.outputs[0].name for o in tf_op.outputs]
+                # layer['outputs'] = [tf_op.outputs[0].name for o in tf_op.outputs]
                 layer['outputs'] = _parse_tensor_names(tf_op.outputs)
                 input_layers.append(layer['name'])
                 handled = True
@@ -285,7 +283,7 @@ def tf_to_hls(yamlConfig):
         elif tf_op.type == 'FusedBatchNorm':
             input_shape = tf_op.inputs[0].shape.as_list()
             output_shape = tf_op.outputs[0].shape.as_list()
-            
+
             layer['class_name'] = 'BatchNormalization'
             layer['inputs'] = _parse_tensor_names(tf_op.inputs[0])
             layer['outputs'] = _parse_tensor_names(tf_op.outputs[0])
@@ -310,8 +308,8 @@ def tf_to_hls(yamlConfig):
             if rank != 2:
                 raise Exception('Unsupported number of inputs in Concat operation')
 
-            layer['op'] = layer['class_name'].lower() + '{}d'.format(rank)
-            layer['axis'] = tf_op.inputs[2].op.node_def.attr['value'].tensor.int_val[0] # Urgh!
+            layer['op'] = layer['class_name'].lower() + f'{rank}d'
+            layer['axis'] = tf_op.inputs[2].op.node_def.attr['value'].tensor.int_val[0]  # Urgh!
 
             handled = True
 
@@ -320,11 +318,11 @@ def tf_to_hls(yamlConfig):
             layer['inputs'] = _parse_tensor_names(list(tf_op.inputs))
             layer['outputs'] = _parse_tensor_names(tf_op.outputs[0])
             output_shape = tf_op.outputs[0].shape.as_list()
-            
+
             layer['op'] = tf_op.type.lower()
             if layer['op'] == 'mul':
                 layer['op'] = 'multiply'
-            
+
             handled = True
 
         elif tf_op.type == 'Transpose':
@@ -342,7 +340,7 @@ def tf_to_hls(yamlConfig):
             layer['inputs'] = _parse_tensor_names(tf_op.inputs[0])
             layer['outputs'] = _parse_tensor_names(tf_op.outputs[0])
 
-            input_shape = tf_op.inputs[0].shape.as_list() # (B, H, W, C)
+            input_shape = tf_op.inputs[0].shape.as_list()  # (B, H, W, C)
             output_shape = tf_op.outputs[0].shape.as_list()
             layer['in_height'] = input_shape[1]
             layer['in_width'] = input_shape[2]
@@ -361,13 +359,13 @@ def tf_to_hls(yamlConfig):
             handled = True
 
         if not handled:
-            raise Exception('Unable to parse operation: {} - {}'.format(tf_op.type, tf_op.name))
+            raise Exception(f'Unable to parse operation: {tf_op.type} - {tf_op.name}')
 
         print('Layer name: {}, layer type: {}, current shape: {}'.format(layer['name'], layer['class_name'], output_shape))
         layer_list.append(layer)
 
     #################
-    ## Generate HLS
+    # Generate HLS
     #################
 
     reader = TFDataReader(graph)

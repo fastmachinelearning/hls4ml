@@ -6,7 +6,7 @@ VIVADO_VERSION=2017.2
 # If running in docker image we would first need to activate the proper conda environment
 #. activate hls4ml-py36
 
-# Convert models in pytorch-models.txt 
+# Convert models in pytorch-models.txt
 ./convert-pytorch-models.sh -x -p 3 -f pytorch-models.txt
 
 # Same for Python 2

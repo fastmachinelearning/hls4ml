@@ -1,20 +1,23 @@
-import pytest
-import hls4ml
-import tensorflow as tf
-import numpy as np
 from pathlib import Path
 
+import numpy as np
+import pytest
+import tensorflow as tf
+
+import hls4ml
 
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_keras_h5_loader(backend):
     input_shape = (10,)
-    model = tf.keras.models.Sequential([
-        tf.keras.layers.InputLayer(input_shape=input_shape),
-        tf.keras.layers.Activation(activation='relu'),
-    ])
+    model = tf.keras.models.Sequential(
+        [
+            tf.keras.layers.InputLayer(input_shape=input_shape),
+            tf.keras.layers.Activation(activation='relu'),
+        ]
+    )
 
     hls_config = hls4ml.utils.config_from_keras_model(model, granularity='name')
 

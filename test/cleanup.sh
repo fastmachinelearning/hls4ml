@@ -47,7 +47,7 @@ cd "${basedir}"
 
 rm -f *.tar.gz
 
-# Delete 
+# Delete
 for dir in */ ; do
    if [ ! -f "${dir}BUILD_FAILED" ]; then
       rm -rf "${dir}"

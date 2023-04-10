@@ -118,7 +118,7 @@ void reverse(
 
 
 @pytest.fixture(scope='session', autouse=True)
-def regsister_custom_layer():
+def register_custom_layer():
     # Register the converter for custom Keras layer
     hls4ml.converters.register_keras_layer_handler('KReverse', parse_reverse_layer)
 
@@ -126,11 +126,15 @@ def regsister_custom_layer():
     hls4ml.model.layers.register_layer('HReverse', HReverse)
 
 
-@pytest.mark.parametrize('backend_id', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend_id', ['Vivado', 'Vitis', 'Quartus'])
 def test_extensions(tmp_path, backend_id):
     # Register the optimization passes (if any)
     backend = hls4ml.backends.get_backend(backend_id)
-    backend.register_pass('remove_duplicate_reverse', RemoveDuplicateReverse, flow=f'{backend_id.lower()}:optimize')
+    ip_flow = hls4ml.model.flow.get_flow(backend.get_default_flow())
+    # Add the pass into the main optimization flow
+    optimize_flow = [flow for flow in ip_flow.requires if ':optimize' in flow][0]
+    optmizer_name = f'{backend_id.lower()}:remove_duplicate_reverse'
+    backend.register_pass(optmizer_name, RemoveDuplicateReverse, flow=optimize_flow)
 
     # Register template passes for the given backend
     backend.register_template(HReverseConfigTemplate)
@@ -168,6 +172,9 @@ def test_extensions(tmp_path, backend_id):
     hres = hmodel.predict(x.astype('float32'))
 
     # Check if the optimizer pass was applied
-    assert f'{backend_id.lower()}:remove_duplicate_reverse' in hmodel._applied_flows[0][f'{backend_id.lower()}:optimize']
+    assert optmizer_name in hmodel._applied_flows[0][optimize_flow]
+
+    # Remove flow from
+    hls4ml.model.flow.update_flow(optimize_flow, remove_optimizers=[optmizer_name])
 
     np.testing.assert_array_equal(kres, hres)

@@ -6,11 +6,11 @@ stages:
 generator:
   stage: generate
   image: python:3.7-alpine
-  tags: 
+  tags:
     - docker
   before_script:
     - pip install pyyaml
-  script: 
+  script:
     - cd test/pytest
     - python generate_ci_yaml.py
   artifacts:

@@ -40,18 +40,32 @@ def _get_precision_from_quantizer(quantizer):
         'quantized_bits',
         'quantized_relu',
         'quantized_tanh',
+        'quantized_sigmoid',
         'quantized_po2',
         'quantized_relu_po2',
         'linear',
     ]
     signed = True
+    rnd = "AP_TRN"
+    overflow = "AP_WRAP"
+
     if quantizer['class_name'] in supported_quantizers:
         bits = int(quantizer['config']['bits'])
         # if integer isn't specified, it should be the same as bits
         integer = int(quantizer['config'].get('integer', bits - 1)) + 1
-        if quantizer['class_name'] == 'quantized_relu':
+        # for quantizers use the following default rounding and overflow
+        rnd = "AP_RND_CONV"
+        overflow = "AP_SAT"
+        if quantizer['class_name'] in ('quantized_relu', 'quantized_relu_po2'):
             signed = False
             integer -= 1
+        elif quantizer['class_name'] == 'quantized_tanh':
+            overflow = "AP_SAT_SYM" if quantizer['config']['symmetric'] else "AP_SAT"
+            integer = 1
+        elif quantizer['class_name'] == 'quantized_sigmoid':
+            integer = 0
+            signed = False
+
     elif quantizer['class_name'] in ['binary', 'stochastic_binary', 'binary_tanh']:
         bits = 2
         integer = 2
@@ -65,7 +79,9 @@ def _get_precision_from_quantizer(quantizer):
     decimal = bits - integer
 
     if decimal > 0:
-        return hls4ml.model.types.FixedPrecisionType(width=bits, integer=integer, signed=signed)
+        return hls4ml.model.types.FixedPrecisionType(
+            width=bits, integer=integer, signed=signed, rounding_mode=rnd, saturation_mode=overflow
+        )
     else:
         return hls4ml.model.types.IntegerPrecisionType(width=integer, signed=signed)
 
@@ -85,7 +101,7 @@ def config_from_keras_model(
             Can be set to 'model', 'type' and 'layer'.
 
             Granularity can be used to generate a more verbose config that can be fine-tuned.
-            The default granulrity ('model') will generate config keys that apply to the whole
+            The default granularity ('model') will generate config keys that apply to the whole
             model, so changes to the keys will affect the entire model. 'type' granularity will
             generate config keys that affect all layers of a given type, while the 'name' granularity
             will generate config keys for every layer separately, allowing for highly specific
@@ -247,7 +263,7 @@ def config_from_pytorch_model(
             Can be set to 'model', 'type' and 'layer'.
 
             Granularity can be used to generate a more verbose config that can be fine-tuned.
-            The default granulrity ('model') will generate config keys that apply to the whole
+            The default granularity ('model') will generate config keys that apply to the whole
             model, so changes to the keys will affect the entire model. 'type' granularity will
             generate config keys that affect all layers of a given type, while the 'name' granularity
             will generate config keys for every layer separately, allowing for highly specific
@@ -297,7 +313,7 @@ def config_from_onnx_model(
             Can be set to 'model', 'type' and 'layer'.
 
             Granularity can be used to generate a more verbose config that can be fine-tuned.
-            The default granulrity ('model') will generate config keys that apply to the whole
+            The default granularity ('model') will generate config keys that apply to the whole
             model, so changes to the keys will affect the entire model. 'type' granularity will
             generate config keys that affect all layers of a given type, while the 'name' granularity
             will generate config keys for every layer separately, allowing for highly specific

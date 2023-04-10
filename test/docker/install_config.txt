@@ -25,4 +25,3 @@ CreateDesktopShortcuts=0
 
 # Choose whether file associations will be created or not.
 CreateFileAssociation=0
-
