@@ -1,5 +1,5 @@
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
-from hls4ml.converters.utils import compute_padding_1d, compute_padding_2d, parse_data_format
+from hls4ml.converters.utils import compute_padding_1d_pytorch, compute_padding_2d_pytorch, parse_data_format
 
 pooling_layers = ['MaxPool1d', 'Max_pool1d', 'MaxPool2d', 'Max_pool2d', 'AvgPool1d', 'Avg_pool1d', 'AvgPool2d', 'Avg_pool2d']
 
@@ -22,6 +22,7 @@ def parse_pooling_layer(operation, layer_name, input_names, input_shapes, argume
 
     layer['name'] = layer_name
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
+    layer['count_pad'] = 1
 
     if int(layer['class_name'][-2]) == 1:
         (layer['n_in'], layer['n_filt']) = parse_data_format(input_shapes[0], layer['data_format'])
@@ -34,8 +35,8 @@ def parse_pooling_layer(operation, layer_name, input_names, input_shapes, argume
         else:  # Only 'valid' and 'same' padding are available in Keras
             layer['padding'] = 'same'
 
-        (layer['n_out'], layer['pad_left'], layer['pad_right']) = compute_padding_1d(
-            layer['padding'], layer['n_in'], layer['stride_width'], layer['pool_width']
+        (layer['n_out'], layer['pad_left'], layer['pad_right']) = compute_padding_1d_pytorch(
+            arguments['padding'], layer['n_in'], layer['stride_width'], layer['pool_width'], 1
         )
 
         if layer['data_format'] == 'channels_last':
@@ -62,14 +63,16 @@ def parse_pooling_layer(operation, layer_name, input_names, input_shapes, argume
             layer['pad_bottom'],
             layer['pad_left'],
             layer['pad_right'],
-        ) = compute_padding_2d(
-            layer['padding'],
+        ) = compute_padding_2d_pytorch(
+            arguments['padding'],
             layer['in_height'],
             layer['in_width'],
             layer['stride_height'],
             layer['stride_width'],
             layer['pool_height'],
             layer['pool_width'],
+            1,
+            1,
         )
 
         if layer['data_format'] == 'channels_last':

@@ -257,6 +257,8 @@ def pytorch_to_hls(config):
                 arguments['dilation'] = class_object.dilation
             if hasattr(class_object, 'padding'):
                 arguments['padding'] = class_object.padding
+                if '1d' in pytorch_class and type(arguments['padding']) is tuple:
+                    arguments['padding'] = arguments['padding'][0]
             # for BatchNorm layers
             if hasattr(class_object, 'eps'):
                 arguments['eps'] = class_object.eps
@@ -291,6 +293,7 @@ def pytorch_to_hls(config):
                     arguments['stride'] = arguments['stride'][0]
 
             # Process the layer
+            print(input_shapes)
             layer, output_shape = layer_handlers[pytorch_class](
                 pytorch_class, layer_name, input_names, input_shapes, arguments, reader, config
             )
