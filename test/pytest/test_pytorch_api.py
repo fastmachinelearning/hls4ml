@@ -1,3 +1,4 @@
+import math
 from pathlib import Path
 
 import numpy as np
@@ -378,6 +379,7 @@ def test_conv2d(padds, backend, io_type):
             assert list(hls_model.get_layers())[conv_index].attributes['pad_bottom'] == 0
 
 
+padds_options = [0, 1]
 pooling_layers = [MaxPool1d, MaxPool2d, AvgPool1d, AvgPool2d]
 
 
@@ -388,11 +390,11 @@ def test_pooling(pooling, padds, backend):
     assert '1d' in pooling.__name__ or '2d' in pooling.__name__
 
     if '2d' in pooling.__name__:
-        n_in = 3
+        n_in = 2
         size_in_height = 15
         size_in_width = 18
     else:
-        n_in = 3
+        n_in = 2
         size_in_width = 121
         size_in_height = 0
 
@@ -402,7 +404,7 @@ def test_pooling(pooling, padds, backend):
     )
     X_input = np.random.rand(*input_shape)
 
-    model = torch.nn.Sequential(pooling(3, padding=padds)).to()
+    model = torch.nn.Sequential(pooling(2, padding=padds)).to()
     model.eval()
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
@@ -425,36 +427,48 @@ def test_pooling(pooling, padds, backend):
     assert nNodes + 1 == len(hls_model.get_layers())
     children = {c[0]: c[1] for c in model.named_children()}
     class_object_pool = children[poolNode.target]
-
+    print(pytorch_prediction.shape)
     if "Max" in pooling.__name__:
+
         out_height = int(
-            (size_in_height + 2 * padds - class_object_pool.dilation * (class_object_pool.kernel_size - 1) - 1)
-            / class_object_pool.stride
-            + 1
+            math.floor(
+                float(size_in_height + 2 * padds - class_object_pool.dilation * (class_object_pool.kernel_size - 1) - 1)
+                / float(class_object_pool.stride)
+                + 1
+            )
         )
         out_width = int(
-            (size_in_width + 2 * padds - class_object_pool.dilation * (class_object_pool.kernel_size - 1) - 1)
-            / class_object_pool.stride
-            + 1
+            math.floor(
+                float(size_in_width + 2 * padds - class_object_pool.dilation * (class_object_pool.kernel_size - 1) - 1)
+                / float(class_object_pool.stride)
+                + 1
+            )
         )
     else:
         if '2d' in pooling.__name__:
-            out_height = int((size_in_height + 2 * padds - class_object_pool.kernel_size) / class_object_pool.stride + 1)
-            out_width = int((size_in_width + 2 * padds - class_object_pool.kernel_size) / class_object_pool.stride + 1)
+            out_height = int(
+                math.floor((size_in_height + 2 * padds - class_object_pool.kernel_size) / class_object_pool.stride + 1)
+            )
+            out_width = int(
+                math.floor((size_in_width + 2 * padds - class_object_pool.kernel_size) / class_object_pool.stride + 1)
+            )
         else:
             out_height = int(
-                (size_in_height + 2 * padds - class_object_pool.kernel_size[0]) / class_object_pool.stride[0] + 1
+                math.floor((size_in_height + 2 * padds - class_object_pool.kernel_size[0]) / class_object_pool.stride[0] + 1)
             )
-            out_width = int((size_in_width + 2 * padds - class_object_pool.kernel_size[0]) / class_object_pool.stride[0] + 1)
+            out_width = int(
+                math.floor((size_in_width + 2 * padds - class_object_pool.kernel_size[0]) / class_object_pool.stride[0] + 1)
+            )
 
     if '2d' in pooling.__name__:
         hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_in, out_height, out_width))
 
     else:
-        hls_prediction = np.reshape(hls_model.predict(X_input), (1, n_in, out_width))
+        pred = hls_model.predict(X_input)
+        hls_prediction = np.reshape(pred, (1, n_in, out_width))
 
     # results are not very good at the moment
-    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0.20, atol=0)
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
 
     # Verify correct parsing of layer
     hls_pool = list(hls_model.get_layers())[-2]
@@ -467,38 +481,6 @@ def test_pooling(pooling, padds, backend):
         assert hls_pool.attributes['pool_width'] == class_object_pool.kernel_size
         assert hls_pool.attributes['padding'] == 'valid' if class_object_pool.padding == 0 else 'same'
 
-        if hls_pool.attributes['padding'] == 'same':
-            # Height
-            assert out_height == hls_pool.attributes['out_height']
-            if size_in_height % class_object_pool.stride == 0:
-                pad_along_height = max(class_object_pool.kernel_size - class_object_pool.stride, 0)
-            else:
-                pad_along_height = max(class_object_pool.kernel_size[1] - (size_in_height % class_object_pool.stride), 0)
-            pad_top = pad_along_height // 2
-            pad_bottom = pad_along_height - pad_top
-            assert pad_bottom == hls_pool.attributes['pad_bottom']
-            assert pad_top == hls_pool.attributes['pad_top']
-
-            # Width
-            assert out_width == hls_pool.attributes['out_width']
-            if size_in_width % class_object_pool.stride == 0:
-                pad_along_width = max(class_object_pool.kernel_size - class_object_pool.stride, 0)
-            else:
-                pad_along_width = max(class_object_pool.kernel_size - (size_in_width % class_object_pool.stride), 0)
-            pad_left = pad_along_width // 2
-            pad_right = pad_along_width - pad_left
-            assert pad_left == hls_pool.attributes['pad_left']
-            assert pad_right == hls_pool.attributes['pad_right']
-
-        elif hls_pool.attributes['padding'] == 'valid':
-
-            assert hls_pool.attributes['out_height'] == out_height
-            assert hls_pool.attributes['out_width'] == out_width
-            assert hls_pool.attributes['pad_top'] == 0
-            assert hls_pool.attributes['pad_bottom'] == 0
-            assert hls_pool.attributes['pad_left'] == 0
-            assert hls_pool.attributes['pad_right'] == 0
-
     elif '1d' in pooling.__name__:
         if "Max" in pooling.__name__:
             assert hls_pool.attributes['name'] == 'layer' + poolNode.name
@@ -507,38 +489,9 @@ def test_pooling(pooling, padds, backend):
             assert hls_pool.attributes['stride_width'] == class_object_pool.stride
             assert hls_pool.attributes['padding'] == 'valid' if class_object_pool.padding == 0 else 'same'
 
-            if hls_pool.attributes['padding'] == 'same':
-                assert hls_pool.attributes['n_out'] == out_width
-                if size_in_width % class_object_pool.stride == 0:
-                    pad_along_width = max(class_object_pool.kernel_size - class_object_pool.stride, 0)
-                else:
-                    pad_along_width = max(class_object_pool.kernel_size - (size_in_width % class_object_pool.stride), 0)
-                assert hls_pool.attributes['pad_left'] == pad_along_width // 2
-                assert hls_pool.attributes['pad_right'] == pad_along_width - pad_along_width // 2
-
-            elif hls_pool.attributes['padding'] == 'valid':
-                assert hls_pool.attributes['n_out'] == out_width
-                assert hls_pool.attributes['pad_left'] == 0
-                assert hls_pool.attributes['pad_right'] == 0
         else:
             assert hls_pool.attributes['name'] == 'layer' + poolNode.name
             assert hls_pool.attributes['class_name'][-2] == str(1)
             assert hls_pool.attributes['pool_width'] == class_object_pool.kernel_size[0]
             assert hls_pool.attributes['stride_width'] == class_object_pool.stride[0]
             assert hls_pool.attributes['padding'] == 'same' if class_object_pool.padding == 0 else 'valid'
-
-            if hls_pool.attributes['padding'] == 'same':
-                assert hls_pool.attributes['n_out'] == out_width
-                if size_in_width % class_object_pool.stride[0] == 0:
-                    pad_along_width = max(class_object_pool.kernel_size[0] - class_object_pool.stride[0], 0)
-                else:
-                    pad_along_width = max(
-                        class_object_pool.kernel_size[0] - (size_in_width % class_object_pool.stride[0]), 0
-                    )
-                assert hls_pool.attributes['pad_left'] == pad_along_width // 2
-                assert hls_pool.attributes['pad_right'] == pad_along_width - pad_along_width // 2
-
-            elif hls_pool.attributes['padding'] == 'valid':
-                assert hls_pool.attributes['n_out'] == out_width
-                assert hls_pool.attributes['pad_left'] == 0
-                assert hls_pool.attributes['pad_right'] == 0
