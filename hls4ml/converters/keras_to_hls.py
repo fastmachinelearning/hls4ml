@@ -1,5 +1,4 @@
 import json
-import math
 
 import h5py
 
@@ -72,24 +71,6 @@ class KerasModelReader:
         return None
 
 
-def get_qkeras_quantization(layer, keras_layer):
-    if not layer['class_name'].startswith('Q'):  # Not a QKeras layer, nothing to do
-        return
-    kernel_quantizer = keras_layer['config']['kernel_quantizer']['class_name']
-    bias_quantizer = keras_layer['config']['bias_quantizer']['class_name']
-
-    if kernel_quantizer != bias_quantizer:
-        raise Exception('Mixing quantizers within QKeras layers is not supported')
-    if kernel_quantizer == 'binary':
-        layer['quantize'] = 2
-    elif kernel_quantizer == 'ternary':
-        layer['quantize'] = 3
-    else:
-        raise Exception(
-            'Unsupported quantizer {} in {} layer {}'.format(kernel_quantizer, layer['class_name'], layer['name'])
-        )
-
-
 layer_handlers = {}
 
 
@@ -113,6 +94,14 @@ def register_keras_layer_handler(layer_cname, handler_func):
 
 
 def get_supported_keras_layers():
+    """Returns the list of Keras layers that the converter can parse.
+
+    The returned list contains all Keras layers that can be parsed into the hls4ml internal representation. Support for
+    computation of these layers may vary across hls4ml backends and conversion configuration.
+
+    Returns:
+        list: The names of supported Keras layers.
+    """
     return list(layer_handlers.keys())
 
 
@@ -143,76 +132,6 @@ def parse_default_keras_layer(keras_layer, input_names):
         layer['use_bias'] = keras_layer['config']['use_bias']
 
     return layer
-
-
-def parse_data_format(input_shape, data_format='channels_last'):
-    # Ignore batch size
-    input_shape = input_shape[1:]
-
-    if data_format.lower() == 'channels_last':
-        if len(input_shape) == 2:  # 1D, (n_in, n_filt)
-            return (input_shape[0], input_shape[1])
-        elif len(input_shape) == 3:  # 2D, (in_height, in_width, n_filt)
-            return (input_shape[0], input_shape[1], input_shape[2])
-
-    elif data_format.lower() == 'channels_first':
-        if len(input_shape) == 2:  # 1D, (n_filt, n_in)
-            return (input_shape[1], input_shape[0])
-        elif len(input_shape) == 3:  # 2D, (n_filt, in_height, in_width)
-            return (input_shape[1], input_shape[2], input_shape[0])
-    else:
-        raise Exception(f'Unknown data format: {data_format}')
-
-
-def compute_padding_1d(pad_type, in_size, stride, filt_size):
-    if pad_type.lower() == 'same':
-        n_out = int(math.ceil(float(in_size) / float(stride)))
-        if in_size % stride == 0:
-            pad_along_size = max(filt_size - stride, 0)
-        else:
-            pad_along_size = max(filt_size - (in_size % stride), 0)
-        pad_left = pad_along_size // 2
-        pad_right = pad_along_size - pad_left
-    elif pad_type.lower() == 'valid':
-        n_out = int(math.ceil(float(in_size - filt_size + 1) / float(stride)))
-        pad_left = 0
-        pad_right = 0
-    else:
-        raise Exception(f'Unknown padding type: {pad_type}')
-
-    return (n_out, pad_left, pad_right)
-
-
-def compute_padding_2d(pad_type, in_height, in_width, stride_height, stride_width, filt_height, filt_width):
-    if pad_type.lower() == 'same':
-        # Height
-        out_height = int(math.ceil(float(in_height) / float(stride_height)))
-        if in_height % stride_height == 0:
-            pad_along_height = max(filt_height - stride_height, 0)
-        else:
-            pad_along_height = max(filt_height - (in_height % stride_height), 0)
-        pad_top = pad_along_height // 2
-        pad_bottom = pad_along_height - pad_top
-        # Width
-        out_width = int(math.ceil(float(in_width) / float(stride_width)))
-        if in_width % stride_width == 0:
-            pad_along_width = max(filt_width - stride_width, 0)
-        else:
-            pad_along_width = max(filt_width - (in_width % stride_width), 0)
-        pad_left = pad_along_width // 2
-        pad_right = pad_along_width - pad_left
-    elif pad_type.lower() == 'valid':
-        out_height = int(math.ceil(float(in_height - filt_height + 1) / float(stride_height)))
-        out_width = int(math.ceil(float(in_width - filt_width + 1) / float(stride_width)))
-
-        pad_top = 0
-        pad_bottom = 0
-        pad_left = 0
-        pad_right = 0
-    else:
-        raise Exception(f'Unknown padding type: {pad_type}')
-
-    return (out_height, out_width, pad_top, pad_bottom, pad_left, pad_right)
 
 
 def get_model_arch(config):
