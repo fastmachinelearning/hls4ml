@@ -52,14 +52,6 @@ hls4ml.converters.keras.qkeras module
    :undoc-members:
    :show-inheritance:
 
-hls4ml.converters.keras.qkeras\_layers module
----------------------------------------------
-
-.. automodule:: hls4ml.converters.keras.qkeras_layers
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 hls4ml.converters.keras.recurrent module
 ----------------------------------------
 

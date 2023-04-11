@@ -37,7 +37,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.6.0.dev229+g483eecaf
+                0.6.0.dev230+ga031b6a8
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -134,18 +134,6 @@
 </section>
 <section id="module-hls4ml.converters.keras.core">
 <span id="hls4ml-converters-keras-core-module"></span><h2>hls4ml.converters.keras.core module<a class="headerlink" href="#module-hls4ml.converters.keras.core" title="Permalink to this heading"></a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.converters.keras.core.BinaryQuantizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.core.</span></span><span class="sig-name descname"><span class="pre">BinaryQuantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.core.BinaryQuantizer" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.types.Quantizer" title="hls4ml.model.types.Quantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quantizer</span></code></a></p>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.converters.keras.core.TernaryQuantizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.core.</span></span><span class="sig-name descname"><span class="pre">TernaryQuantizer</span></span><a class="headerlink" href="#hls4ml.converters.keras.core.TernaryQuantizer" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.types.Quantizer" title="hls4ml.model.types.Quantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quantizer</span></code></a></p>
-</dd></dl>
-
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.keras.core.parse_activation_layer">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.core.</span></span><span class="sig-name descname"><span class="pre">parse_activation_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.core.parse_activation_layer" title="Permalink to this definition"></a></dt>
@@ -203,60 +191,34 @@
 </section>
 <section id="module-hls4ml.converters.keras.qkeras">
 <span id="hls4ml-converters-keras-qkeras-module"></span><h2>hls4ml.converters.keras.qkeras module<a class="headerlink" href="#module-hls4ml.converters.keras.qkeras" title="Permalink to this heading"></a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.converters.keras.qkeras.QKerasBinaryQuantizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.qkeras.</span></span><span class="sig-name descname"><span class="pre">QKerasBinaryQuantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xnor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.qkeras.QKerasBinaryQuantizer" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.converters.keras.qkeras.QKerasPO2Quantizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.qkeras.</span></span><span class="sig-name descname"><span class="pre">QKerasPO2Quantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.qkeras.QKerasPO2Quantizer" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="hls4ml.converters.keras.qkeras.QKerasQuantizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.qkeras.</span></span><span class="sig-name descname"><span class="pre">QKerasQuantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.qkeras.QKerasQuantizer" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.types.Quantizer" title="hls4ml.model.types.Quantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quantizer</span></code></a></p>
-</dd></dl>
-
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.keras.qkeras.get_quantizer_from_config">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.qkeras.</span></span><span class="sig-name descname"><span class="pre">get_quantizer_from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantizer_var</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.qkeras.get_quantizer_from_config" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.converters.keras.qkeras.get_type">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.qkeras.</span></span><span class="sig-name descname"><span class="pre">get_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantizer_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.qkeras.get_type" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</section>
-<section id="module-hls4ml.converters.keras.qkeras_layers">
-<span id="hls4ml-converters-keras-qkeras-layers-module"></span><h2>hls4ml.converters.keras.qkeras_layers module<a class="headerlink" href="#module-hls4ml.converters.keras.qkeras_layers" title="Permalink to this heading"></a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.converters.keras.qkeras_layers.parse_qactivation_layer">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.qkeras_layers.</span></span><span class="sig-name descname"><span class="pre">parse_qactivation_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.qkeras_layers.parse_qactivation_layer" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hls4ml.converters.keras.qkeras.parse_qactivation_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.qkeras.</span></span><span class="sig-name descname"><span class="pre">parse_qactivation_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.qkeras.parse_qactivation_layer" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.converters.keras.qkeras_layers.parse_qbatchnorm_layer">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.qkeras_layers.</span></span><span class="sig-name descname"><span class="pre">parse_qbatchnorm_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.qkeras_layers.parse_qbatchnorm_layer" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hls4ml.converters.keras.qkeras.parse_qbatchnorm_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.qkeras.</span></span><span class="sig-name descname"><span class="pre">parse_qbatchnorm_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.qkeras.parse_qbatchnorm_layer" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.converters.keras.qkeras_layers.parse_qconv2dbatchnorm_layer">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.qkeras_layers.</span></span><span class="sig-name descname"><span class="pre">parse_qconv2dbatchnorm_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.qkeras_layers.parse_qconv2dbatchnorm_layer" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hls4ml.converters.keras.qkeras.parse_qconv2dbatchnorm_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.qkeras.</span></span><span class="sig-name descname"><span class="pre">parse_qconv2dbatchnorm_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.qkeras.parse_qconv2dbatchnorm_layer" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.converters.keras.qkeras_layers.parse_qconv_layer">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.qkeras_layers.</span></span><span class="sig-name descname"><span class="pre">parse_qconv_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.qkeras_layers.parse_qconv_layer" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hls4ml.converters.keras.qkeras.parse_qconv_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.qkeras.</span></span><span class="sig-name descname"><span class="pre">parse_qconv_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.qkeras.parse_qconv_layer" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.converters.keras.qkeras_layers.parse_qdense_layer">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.qkeras_layers.</span></span><span class="sig-name descname"><span class="pre">parse_qdense_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.qkeras_layers.parse_qdense_layer" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hls4ml.converters.keras.qkeras.parse_qdense_layer">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras.qkeras.</span></span><span class="sig-name descname"><span class="pre">parse_qdense_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras.qkeras.parse_qdense_layer" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </section>

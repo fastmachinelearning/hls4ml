@@ -37,7 +37,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.6.0.dev229+g483eecaf
+                0.6.0.dev230+ga031b6a8
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -854,11 +854,6 @@ Note:  they don’t necessarily correspond 1:1 with the network layers.</p>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.model.layers.Layer.get_numbers_cpp">
-<span class="sig-name descname"><span class="pre">get_numbers_cpp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.Layer.get_numbers_cpp" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.layers.Layer.get_output_nodes">
 <span class="sig-name descname"><span class="pre">get_output_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.Layer.get_output_nodes" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
@@ -886,11 +881,6 @@ Note:  they don’t necessarily correspond 1:1 with the network layers.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.layers.Layer.initialize">
 <span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.Layer.initialize" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.model.layers.Layer.precision_cpp">
-<span class="sig-name descname"><span class="pre">precision_cpp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.Layer.precision_cpp" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1237,6 +1227,21 @@ C++/HLS data types. The basic type(<code class="docutils literal notranslate"><s
 The Precision types are given names for convenience (<code class="docutils literal notranslate"><span class="pre">NamedType</span></code>). Named types are the building blocks of
 higher-dimensional tensors, which are defined as arrays or FIFO streams in the generated code.</p>
 <dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.types.BinaryQuantizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.types.</span></span><span class="sig-name descname"><span class="pre">BinaryQuantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.BinaryQuantizer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.Quantizer" title="hls4ml.model.types.Quantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quantizer</span></code></a></p>
+<p>Quantizer that quantizes to 0 and 1 (<code class="docutils literal notranslate"><span class="pre">bits=1</span></code>) or -1 and 1 (<code class="docutils literal notranslate"><span class="pre">bits==2</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>bits</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of bits used by the quantizer. Defaults to 2.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – Raised if <code class="docutils literal notranslate"><span class="pre">bits&gt;2</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.types.CompressedType">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.types.</span></span><span class="sig-name descname"><span class="pre">CompressedType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_precision</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.CompressedType" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.NamedType" title="hls4ml.model.types.NamedType"><code class="xref py py-class docutils literal notranslate"><span class="pre">NamedType</span></code></a></p>
@@ -1440,6 +1445,42 @@ element will be a concatenation of <code class="docutils literal notranslate"><s
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.types.QKerasBinaryQuantizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.types.</span></span><span class="sig-name descname"><span class="pre">QKerasBinaryQuantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xnor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.QKerasBinaryQuantizer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.Quantizer" title="hls4ml.model.types.Quantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quantizer</span></code></a></p>
+<p>Wrapper around QKeras binary quantizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – Config of the QKeras quantizer to wrap.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.types.QKerasPO2Quantizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.types.</span></span><span class="sig-name descname"><span class="pre">QKerasPO2Quantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.QKerasPO2Quantizer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.Quantizer" title="hls4ml.model.types.Quantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quantizer</span></code></a></p>
+<p>Wrapper around QKeras power-of-2 quantizers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – Config of the QKeras quantizer to wrap.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.types.QKerasQuantizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.types.</span></span><span class="sig-name descname"><span class="pre">QKerasQuantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.QKerasQuantizer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.Quantizer" title="hls4ml.model.types.Quantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quantizer</span></code></a></p>
+<p>Wrapper around QKeras quantizers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – Config of the QKeras quantizer to wrap.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.types.Quantizer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.types.</span></span><span class="sig-name descname"><span class="pre">Quantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.Quantizer" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
@@ -1577,6 +1618,13 @@ element will be a concatenation of <code class="docutils literal notranslate"><s
 <span class="sig-name descname"><span class="pre">size_cpp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.TensorVariable.size_cpp" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.types.TernaryQuantizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.types.</span></span><span class="sig-name descname"><span class="pre">TernaryQuantizer</span></span><a class="headerlink" href="#hls4ml.model.types.TernaryQuantizer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.Quantizer" title="hls4ml.model.types.Quantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quantizer</span></code></a></p>
+<p>Quantizer that quantizes to -1, 0 and 1.</p>
 </dd></dl>
 
 <dl class="py class">

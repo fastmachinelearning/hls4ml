@@ -37,7 +37,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.6.0.dev229+g483eecaf
+                0.6.0.dev230+ga031b6a8
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -127,7 +127,6 @@
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.merge">hls4ml.converters.keras.merge module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.pooling">hls4ml.converters.keras.pooling module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.qkeras">hls4ml.converters.keras.qkeras module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.qkeras_layers">hls4ml.converters.keras.qkeras_layers module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.recurrent">hls4ml.converters.keras.recurrent module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.reshape">hls4ml.converters.keras.reshape module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.reshaping">hls4ml.converters.keras.reshaping module</a></li>
@@ -192,29 +191,25 @@
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.compute_padding_1d">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">compute_padding_1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pad_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.compute_padding_1d" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.compute_padding_2d">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">compute_padding_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pad_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_width</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.compute_padding_2d" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.get_model_arch">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_model_arch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.get_model_arch" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.get_qkeras_quantization">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_qkeras_quantization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keras_layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.get_qkeras_quantization" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.get_supported_keras_layers">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_supported_keras_layers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.get_supported_keras_layers" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Returns the list of Keras layers that the converter can parse.</p>
+<p>The returned list contains all Keras layers that can be parsed into the hls4ml internal representation. Support for
+computation of these layers may vary across hls4ml backends and conversion configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The names of supported Keras layers.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.keras_handler">
@@ -224,11 +219,6 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.keras_to_hls">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">keras_to_hls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.keras_to_hls" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.parse_data_format">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">parse_data_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'channels_last'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.parse_data_format" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
@@ -407,17 +397,86 @@ graph.output only returns the output’s node index</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.utils.compute_padding_1d">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">compute_padding_1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pad_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.compute_padding_1d" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Computes the amount of padding required on each side of the 1D input tensor.</p>
+<p>In case of <code class="docutils literal notranslate"><span class="pre">same</span></code> padding, this routine tries to pad evenly left and right, but if the amount of columns to be added
+is odd, it will add the extra column to the right.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pad_type</strong> (<em>str</em>) – Padding type, one of <code class="docutils literal notranslate"><span class="pre">same</span></code>, <cite>valid`</cite> or <code class="docutils literal notranslate"><span class="pre">causal</span></code> (case insensitive).</p></li>
+<li><p><strong>in_size</strong> (<em>int</em>) – Input size.</p></li>
+<li><p><strong>stride</strong> (<em>int</em>) – Stride length.</p></li>
+<li><p><strong>filt_size</strong> (<em>int</em>) – Length of the kernel window.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – Raised if the padding type is unknown.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple containing the padded input size, left and right padding values.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.utils.compute_padding_2d">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">compute_padding_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pad_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_width</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.compute_padding_2d" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Computes the amount of padding required on each side of the 2D input tensor.</p>
+<p>In case of <code class="docutils literal notranslate"><span class="pre">same</span></code> padding, this routine tries to pad evenly left and right (top and bottom), but if the amount of
+columns to be added is odd, it will add the extra column to the right/bottom.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pad_type</strong> (<em>str</em>) – Padding type, one of <code class="docutils literal notranslate"><span class="pre">same</span></code> or <code class="docutils literal notranslate"><span class="pre">valid</span></code> (case insensitive).</p></li>
+<li><p><strong>in_height</strong> (<em>int</em>) – The height of the input tensor.</p></li>
+<li><p><strong>in_width</strong> (<em>int</em>) – The width of the input tensor.</p></li>
+<li><p><strong>stride_height</strong> (<em>int</em>) – Stride height.</p></li>
+<li><p><strong>stride_width</strong> (<em>int</em>) – Stride width.</p></li>
+<li><p><strong>filt_height</strong> (<em>int</em>) – Height of the kernel window.</p></li>
+<li><p><strong>filt_width</strong> (<em>int</em>) – Width of the kernel window.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – Raised if the padding type is unknown.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple containing the padded input height, width, and top, bottom, left and right padding values.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.utils.parse_data_format">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">parse_data_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'channels_last'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.parse_data_format" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Parses the given input shape according to the specified data format.</p>
+<p>This function can be used to ensure the shapes of convolutional and pooling layers is correctly parsed. If the first
+element of the given <code class="docutils literal notranslate"><span class="pre">input_shape</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> it is interpreted as a batch dimension and discarded.The returned tuple
+will have the channels dimension last.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> (<em>list</em><em> or </em><em>tuple</em>) – Input shape of 2D or 3D tensor with optional batch dimension of <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>data_format</strong> (<em>str</em><em>, </em><em>optional</em>) – Data format type, one of <code class="docutils literal notranslate"><span class="pre">channels_first</span></code> or <code class="docutils literal notranslate"><span class="pre">channels_last</span></code>. (case insensitive).
+Defaults to ‘channels_last’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – Raised if the data format type is unknown.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The input shape (without the batch dimension) in <code class="docutils literal notranslate"><span class="pre">channels_last</span></code> format.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
 
 </section>
 <section id="module-hls4ml.converters">
