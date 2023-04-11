@@ -275,8 +275,27 @@ def pytorch_to_hls(config):
                 arguments['value'] = class_object.value
             if pytorch_class == 'Threshold' and int(arguments['value']) != 0:
                 raise Exception('values other than 0 for x < threshold not supported for Threshold layers')
+
+            # for Conv layers
+            if 'Conv' in pytorch_class:
+                if not class_object.padding_mode == 'zeros':
+                    raise Exception('padding modes other than "zeros" not implemented yet')
+                if not class_object.groups == 1:
+                    raise Exception('non-default options for groups not implemented yet')
+
             # for Pooling layers
             if 'Pool' in pytorch_class:
+                arguments['count_include_pad'] = False
+                if class_object.ceil_mode:
+                    raise Exception('ceil_mode not implemented yet')
+                if "Max" in pytorch_class:
+                    if class_object.return_indices:
+                        raise Exception('return_indices not implemented yet')
+                if "Avg" in pytorch_class:
+                    if '2d' in pytorch_class:
+                        if class_object.divisor_override is not None:
+                            raise Exception('divisor_override not implemented yet')
+                    arguments['count_include_pad'] = class_object.count_include_pad
                 if '2d' in pytorch_class and not type(arguments['kernel_size']) is tuple:
                     arguments['kernel_size'] = [arguments['kernel_size'], arguments['kernel_size']]
                 elif '1d' in pytorch_class and type(arguments['kernel_size']) is tuple:
