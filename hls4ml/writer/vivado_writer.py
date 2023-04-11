@@ -277,8 +277,16 @@ class VivadoWriter(Writer):
             # Insert numbers
             if '// hls-fpga-machine-learning insert numbers' in line:
                 newline = line
-                numbers = OrderedDict.fromkeys([layer.get_numbers_cpp() for layer in model.get_layers()])
-                newline += ''.join(numbers)
+
+                defines_list = []
+                for layer in model.get_layers():
+                    defines = ''
+                    for k, v in layer.get_output_variable().get_shape():
+                        defines += f'#define {k} {v}\n'
+
+                    defines_list.append(defines)
+
+                newline += ''.join(defines_list)
 
             elif '// hls-fpga-machine-learning insert layer-precision' in line:
                 newline = line
