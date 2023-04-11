@@ -260,6 +260,8 @@ def pytorch_to_hls(config):
             # for BatchNorm layers
             if hasattr(class_object, 'eps'):
                 arguments['eps'] = class_object.eps
+            if hasattr(class_object, 'affine'):
+                arguments['affine'] = class_object.affine
             # for LeakyReLU, ELU, PreLU layers
             if hasattr(class_object, 'negative_slope'):
                 arguments['alpha'] = class_object.negative_slope

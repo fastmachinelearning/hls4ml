@@ -74,6 +74,7 @@ def parse_batchnorm_layer(operation, layer_name, input_names, input_shapes, argu
 
     # batchnorm para
     layer['epsilon'] = arguments['eps']
+    layer['use_gamma'] = layer['use_beta'] = arguments["affine"]
 
     in_size = 1
     for dim in input_shapes[0][1:]:
