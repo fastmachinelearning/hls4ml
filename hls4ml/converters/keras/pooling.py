@@ -16,6 +16,7 @@ def parse_pooling_layer(keras_layer, input_names, input_shapes, data_reader):
         layer['pool_width'] = keras_layer['config']['pool_size'][0]
         layer['stride_width'] = keras_layer['config']['strides'][0]
         layer['padding'] = keras_layer['config']['padding']
+        layer['count_pad'] = 1
 
         (layer['n_out'], layer['pad_left'], layer['pad_right']) = compute_padding_1d(
             layer['padding'], layer['n_in'], layer['stride_width'], layer['pool_width']
@@ -33,6 +34,7 @@ def parse_pooling_layer(keras_layer, input_names, input_shapes, data_reader):
         layer['pool_height'] = keras_layer['config']['pool_size'][0]
         layer['pool_width'] = keras_layer['config']['pool_size'][1]
         layer['padding'] = keras_layer['config']['padding']
+        layer['count_pad'] = 0
 
         (
             layer['out_height'],

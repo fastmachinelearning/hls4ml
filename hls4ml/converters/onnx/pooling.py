@@ -36,6 +36,7 @@ def parse_pool_layer(reader, node, inputs_map, input_shapes, graph, config):
         pads = compute_pads_1d(node, layer)
         layer['pad_left'] = pads[0]
         layer['pad_right'] = pads[1]
+        layer['count_pad'] = 0
 
         if all(x == 0 for x in pads):  # No padding, i.e., 'VALID' padding
             layer['padding'] = 'valid'
@@ -65,6 +66,7 @@ def parse_pool_layer(reader, node, inputs_map, input_shapes, graph, config):
         layer['pad_bottom'] = pads[2]
         layer['pad_left'] = pads[1]
         layer['pad_right'] = pads[3]
+        layer['count_pad'] = 0
 
         if all(x == 0 for x in pads):  # No padding, i.e., 'VALID' padding in Keras/Tensorflow
             layer['padding'] = 'valid'
