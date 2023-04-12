@@ -227,7 +227,8 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
                             pool[kk * CONFIG_T::stride_width + ll] = pad_val<data_T, CONFIG_T::pool_op>();
                         } else {
                             pool[kk * CONFIG_T::stride_width + ll] =
-                                data[(ii + kk - CONFIG_T::pad_top) * CONFIG_T::in_width * CONFIG_T::n_filt + (jj + ll - CONFIG_T::pad_left) * CONFIG_T::n_filt + ff];
+                                data[(ii + kk - CONFIG_T::pad_top) * CONFIG_T::in_width * CONFIG_T::n_filt +
+                                     (jj + ll - CONFIG_T::pad_left) * CONFIG_T::n_filt + ff];
                             img_overlap++;
                         }
                     }
