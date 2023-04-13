@@ -362,6 +362,7 @@ def pytorch_to_hls(config):
 
             # arguments of pooling layers need some massaging
             if 'pool' in operation:
+                arguments['count_include_pad'] = 1
                 input_names = tuple([str(node.args[0])])
                 arguments['kernel_size'] = int(node.args[1])
                 if '2d' in operation and not type(arguments['kernel_size']) is tuple:
