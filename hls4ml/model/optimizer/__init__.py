@@ -42,6 +42,7 @@ register_flow(
         'fuse_consecutive_batch_normalization',
     ],
 )  # TODO Maybe not all QKeras optmizers belong here?
+
 register_flow(
     'optimize',
     [

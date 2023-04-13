@@ -3,21 +3,18 @@ Excerpt from https://github.com/jkiesele/caloGraphNN/blob/6d1127d807bc0dbaefcf1e
 """
 
 import tensorflow.keras as keras
+from qkeras import QActivation, QDense, ternary
 
 K = keras.backend
 
-try:
-    from qkeras import QActivation, QDense, ternary
 
-    class NamedQDense(QDense):
-        def add_weight(self, name=None, **kwargs):
-            return super().add_weight(name=f'{self.name}_{name}', **kwargs)
+class NamedQDense(QDense):
+    def add_weight(self, name=None, **kwargs):
+        return super().add_weight(name=f'{self.name}_{name}', **kwargs)
 
-    def ternary_1_05():
-        return ternary(alpha=1.0, threshold=0.5)
 
-except ImportError:
-    pass
+def ternary_1_05():
+    return ternary(alpha=1.0, threshold=0.5)
 
 
 # Hack keras Dense to propagate the layer name into saved weights
