@@ -206,6 +206,9 @@ void conv_2d_latency_cl(
 
             // Do the matrix-multiply
             Product1: for(int i_in = 0; i_in < mult_n_in; i_in++) {
+                if (CONFIG_T::n_partitions==1) {
+                    #pragma HLS UNROLL
+                }
                 cache = data_buf[i_pxl][i_in];
                 Product2: for(int i_out = 0; i_out < mult_n_out; i_out++) {
                     mult[i_in * mult_n_out + i_out] = CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(cache, weights[i_in * mult_n_out + i_out]);
@@ -219,6 +222,9 @@ void conv_2d_latency_cl(
 
             // Accumulate multiplication result
             Accum1: for(int i_in = 0; i_in < mult_n_in; i_in++) {
+                if (CONFIG_T::n_partitions==1) {
+                    #pragma HLS UNROLL
+                }
                 Accum2: for(int i_out = 0; i_out < mult_n_out; i_out++) {
                     acc[i_out] += mult[i_in * mult_n_out + i_out];
                 }
