@@ -302,7 +302,13 @@ def convert_from_pytorch_model(
 
     Notes
     -----
-    Only sequential Pytorch models are supported for now.
+    Pytorch uses the "channels_first" data format for its tensors, while hls4ml expects the "channels_last" format used
+    by keras. By default, hls4ml will automatically add layers to the model which transpose the inputs to the "channels_last"
+    format. Not that this is not supported for the "io_stream" io_type, for which the user will have to transpose the input
+    by hand before passing it to hls4ml. In that case the "inputs_channel_last" argument of the "config_from_pytorch_model"
+    function needs to be set to True. By default, the output of the model remains in the "channels_last" data format.
+    The "transpose_outputs" argument of the "config_from_pytorch_model" can be used to add a layer to the model that
+    transposes back to "channels_first". As before, this will not work for io_stream.
     """
 
     config = create_config(output_dir=output_dir, project_name=project_name, backend=backend, **kwargs)
