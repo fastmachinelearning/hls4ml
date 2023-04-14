@@ -44,6 +44,7 @@ def test_model2(backend, io_type):
     hls_config = hls4ml.utils.config_from_keras_model(model2, granularity="name")
     hls_config["Model"]["Strategy"] = "Resource"
 
+    print(f"{hls_config['LayerName'].keys()=}")
     for layer in hls_config['LayerName'].keys():
         hls_config['LayerName'][layer]['Strategy'] = "Latency"
 
@@ -52,9 +53,6 @@ def test_model2(backend, io_type):
     hls_config["LayerName"]["conv2d_3"]["ReuseFactor"] = 576
     hls_config["LayerName"]["q_dense_6"]["ReuseFactor"] = 2000
     hls_config["LayerName"]["q_dense_7"]["ReuseFactor"] = 100
-
-    hls_config["LayerName"]["max_pooling2d"]["Precision"]["result"] = "uint<1>"
-    hls_config["LayerName"]["max_pooling2d_1"]["Precision"]["result"] = "uint<1>"
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model2,
