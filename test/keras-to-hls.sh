@@ -49,7 +49,7 @@ function print_usage {
 
 while getopts ":x:b:B:c:sr:g:t:d:y:p:h" opt; do
    case "$opt" in
-   x) part=$OPTARG 
+   x) part=$OPTARG
       ;;
    b) board=$OPTARG
       ;;
@@ -132,15 +132,15 @@ do
       echo "${hlscfg}" >> ${file}
    fi
    # Adding VivadoAccelerator config to file
-   if [ "${backend}" = "VivadoAccelerator" ]; 
-   then 
+   if [ "${backend}" = "VivadoAccelerator" ];
+   then
      echo "AcceleratorConfig:" >> ${file}
      echo "  Board: ${board}" >> ${file}
      echo "  Precision:" >> ${file}
      echo "    Input: ${precision}" >> ${file}
      echo "    Output: ${precision}" >> ${file}
    fi
-   
+
    ${pycmd} ../scripts/hls4ml convert -c ${file} || exit 1
    rm ${file}
    rm -rf "${prjdir}"

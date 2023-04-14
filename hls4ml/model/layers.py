@@ -1,3 +1,5 @@
+import typing
+
 import numpy as np
 
 from hls4ml.model.attributes import (
@@ -17,7 +19,6 @@ from hls4ml.model.types import (
     ExponentPrecisionType,
     ExponentWeightVariable,
     FixedPrecisionType,
-    InplaceVariable,
     IntegerPrecisionType,
     NamedType,
     TensorVariable,
@@ -37,11 +38,25 @@ class classproperty:
 
 
 class Layer:
+    """The base class for all layers, which are the nodes in the model graph.
+    Note:  they don't necessarily correspond 1:1 with the network layers.
+
+    The expected attributes are `index`, `trace` (configurable), and `result` (type)
+
+    Args:
+        model (ModelGraph):  The ModelGraph that this Layer is part of
+        name (str): The node name
+        attributes (dict): Initial set of attributes required to construct the node (Layer)
+        inputs (list): List of inputs to the layer
+        outputs (list, optional): The optional list of named outputs of the node
+    """
+
     _expected_attributes = [
         Attribute('index'),
         ConfigurableAttribute('trace', default=False),
         TypeAttribute('result'),
     ]
+    """"""
 
     @classproperty
     def expected_attributes(cls):
@@ -166,14 +181,16 @@ class Layer:
             self.set_attr('accum_t', accum_t)
 
     def get_input_node(self, input_name=None):
-        if input_name is not None:
-            nodes = [node for node in self.model.graph.values() if input_name in node.outputs]
-            if len(nodes) == 0:
-                return None
+        if input_name is None:
+            if len(self.inputs) > 0:
+                input_name = self.inputs[0]
             else:
-                return nodes[0]
+                return None
+        nodes = [node for node in self.model.graph.values() if input_name in node.outputs]
+        if len(nodes) == 0:
+            return None
         else:
-            return self.model.graph.get(self.inputs[0])
+            return nodes[0]
 
     def get_input_variable(self, input_name=None):
         if input_name is not None:
@@ -307,40 +324,11 @@ class Layer:
 
         self.set_attr(name, var)
 
-    def _default_function_params(self):
-        params = {}
-        params.update(self.attributes)
-        params['config'] = f'config{self.index}'
-        params['input_t'] = self.get_input_variable().type.name
-        params['output_t'] = self.get_output_variable().type.name
-        params['input'] = self.get_input_variable().name
-        params['output'] = self.get_output_variable().name
-
-        return params
-
-    def _default_config_params(self):
-        params = {}
-        params.update(self.attributes)
-        params['iotype'] = self.model.config.get_config_value('IOType')
-        params['reuse'] = self.get_attr('reuse_factor')
-
-        return params
-
     def get_layer_precision(self):
         precision = {}
         for data_type in self.types.values():
             precision[data_type.name] = data_type
         return precision
-
-    def get_numbers_cpp(self):
-        numbers = ''
-        for k, v in self.get_output_variable().get_shape():
-            numbers += f'#define {k} {v}\n'
-
-        return numbers
-
-    def precision_cpp(self):
-        return f'typedef {self.get_output_variable().precision} layer{self.index}_t;'
 
 
 class Input(Layer):
@@ -359,17 +347,43 @@ class Input(Layer):
 
 
 class Reshape(Layer):
+    _expected_attributes = [
+        Attribute('target_shape', value_type=typing.Sequence),
+    ]
+
     def initialize(self):
-        shape = self.attributes['target_shape']
-        if shape[0] is None:
-            shape = shape[1:]
-        dims = [f'N_SIZE_{i}_{self.index}' for i in range(1, len(shape) + 1)]
+        input_shape = self.get_input_variable(self.inputs[0]).shape
+        target_shape = self.get_attr('target_shape')
+        if target_shape is None:
+            # need to get it from the input
+            shape_node = self.get_input_node(self.inputs[1])
+            # for QONNX, remove batch dimension
+            if shape_node:
+                target_shape = shape_node.value[1:]
+            else:
+                raise RuntimeError("Reshape for ONNX requires the target shape to be a second input.")
 
-        out_name = self.outputs[0]
-        proxy = self.get_input_variable()
-        out = InplaceVariable(shape, dims, proxy)
+        # remove Nones -- is this ever triggered?
+        if target_shape[0] is None:
+            target_shape = target_shape[1:]
 
-        self.set_attr(out_name, out)
+        # take care of -1 shapes
+        shape = self._infer_output_shape(input_shape, target_shape)
+
+        # update the target shape with chnges from above
+        self.set_attr('target_shape', shape)
+
+        dims = [f'N_SIZE_{i}_{self.index}' for i in range(len(shape))]
+
+        self.add_output_variable(shape, dims)
+
+    def _infer_output_shape(self, input_shape, target_shape):
+        """Expand the shape that potentially includes -1 as one of the dimensions."""
+        if -1 in target_shape:  # Need to infer shape for -1
+            dummy_x = np.ones(input_shape)
+            dummy_y = np.reshape(dummy_x, target_shape)
+            return list(dummy_y.shape)
+        return target_shape
 
 
 class Dense(Layer):
@@ -527,7 +541,9 @@ class Conv2DBatchnorm(Conv2D):
 
         # wrap conv kernel and bias with bn parameters
         folded_kernel = inv * kernel
-        folded_bias = inv * (bias - moving_mean) + beta
+        folded_bias = inv * (bias - moving_mean)
+        if beta is not None:
+            folded_bias += beta
 
         return [folded_kernel, folded_bias]
 
@@ -768,6 +784,32 @@ class ParametrizedActivation(Activation):
             return act  # ELU activation
 
 
+class HardActivation(Activation):
+    '''
+    Implements the hard sigmoid and tan function in keras and qkeras
+    (Default parameters in qkeras are different, so should be configured)
+    The hard sigmoid unction is clip(slope * x + shift, 0, 1), and the
+    hard tanh function is 2 * hard_sigmoid - 1
+    '''
+
+    _expected_attributes = [
+        Attribute('slope', value_type=float, default=0.2, configurable=False),
+        Attribute('shift', value_type=float, default=0.5, configurable=False),
+        TypeAttribute('slope_t'),
+        TypeAttribute('shift_t'),
+    ]
+
+    def initialize(self):
+        super().initialize()
+        slope_prec = self.get_attr('slope_prec', FixedPrecisionType(width=16, integer=0, signed=False))
+        shift_prec = self.get_attr('shift_prec', FixedPrecisionType(width=1, integer=0, signed=False))
+        index = self.get_attr('index')
+        slope_t = NamedType(f'slope{index}_t', precision=slope_prec)
+        shift_t = NamedType(f'shift{index}_t', precision=shift_prec)
+        self.set_attr('slope_t', slope_t)
+        self.set_attr('shift_t', shift_t)
+
+
 class PReLU(Activation):
     def initialize(self):
         super().initialize()
@@ -792,6 +834,8 @@ class BatchNormalization(Layer):
         WeightAttribute('bias'),
         TypeAttribute('scale'),
         TypeAttribute('bias'),
+        Attribute('use_gamma', value_type=bool, default=True),
+        Attribute('use_beta', value_type=bool, default=True),
     ]
 
     def initialize(self):
@@ -800,13 +844,13 @@ class BatchNormalization(Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
-        gamma = self.model.get_weights_data(self.name, 'gamma')
-        beta = self.model.get_weights_data(self.name, 'beta')
+        gamma = self.model.get_weights_data(self.name, 'gamma') if self.get_attr('use_gamma') else 1
+        beta = self.model.get_weights_data(self.name, 'beta') if self.get_attr('use_beta') else 0
         mean = self.model.get_weights_data(self.name, 'moving_mean')
         var = self.model.get_weights_data(self.name, 'moving_variance')
 
         scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
-        bias = beta - gamma * mean / np.sqrt(var + self.get_attr('epsilon'))
+        bias = beta - scale * mean
 
         self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
         self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
@@ -1264,6 +1308,7 @@ layer_map = {
     'PReLU': PReLU,
     'Softmax': Softmax,
     'TernaryTanh': TernaryTanh,
+    'HardActivation': HardActivation,
     'Reshape': Reshape,
     'Dense': Dense,
     'BinaryDense': Dense,

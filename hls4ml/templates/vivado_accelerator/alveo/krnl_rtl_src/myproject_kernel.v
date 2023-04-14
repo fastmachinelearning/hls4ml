@@ -20,9 +20,9 @@
 
 // default_nettype of none prevents implicit wire declaration.
 `default_nettype none
-`timescale 1 ns / 1 ps 
+`timescale 1 ns / 1 ps
 
-module krnl_rtl #( 
+module krnl_rtl #(
   parameter integer  C_S_AXI_CONTROL_DATA_WIDTH = 32,
   parameter integer  C_S_AXI_CONTROL_ADDR_WIDTH = 6,
   parameter integer  C_M_AXI_GMEM_ID_WIDTH = 1,
@@ -33,7 +33,7 @@ module krnl_rtl #(
   // System signals
   input  wire  ap_clk,
   input  wire  ap_rst_n,
-  // AXI4 master interface 
+  // AXI4 master interface
   output wire                                 m_axi_gmem_AWVALID,
   input  wire                                 m_axi_gmem_AWREADY,
   output wire [C_M_AXI_GMEM_ADDR_WIDTH-1:0]   m_axi_gmem_AWADDR,
@@ -93,7 +93,7 @@ module krnl_rtl #(
   output wire                                    s_axi_control_BVALID,
   input  wire                                    s_axi_control_BREADY,
   output wire [1:0]                              s_axi_control_BRESP,
-  output wire                                    interrupt 
+  output wire                                    interrupt
 );
 
 krnl_rtl_int #(
@@ -167,4 +167,3 @@ inst_krnl_rtl_int (
 endmodule : krnl_rtl
 
 `default_nettype wire
-

@@ -1,15 +1,16 @@
-========================
-Command Line Interface
-========================
+===================================
+Command Line Interface (deprecated)
+===================================
 
-This page documents all the commands that ``hls4ml`` supports.
+The command line interface to ``hls4ml`` has been deprecated. Users are advised to use the python API. This page
+documents all the commands that ``hls4ml`` supports as a reference for those that have not migrated.
 
 ----
 
 Overview
 =========
 
-To start you can just type in ``hls4ml -h`` or ``hls4ml  --help`` in your command line, a message will show up like below: 
+To start you can just type in ``hls4ml -h`` or ``hls4ml  --help`` in your command line, a message will show up like below:
 
 .. code-block::
 

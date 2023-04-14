@@ -7,7 +7,6 @@ from shutil import copyfile, copytree, rmtree
 import numpy as np
 import yaml
 
-from hls4ml.backends import get_backend
 from hls4ml.writer.writers import Writer
 
 config_filename = 'hls4ml_config.yml'
@@ -125,7 +124,7 @@ class VivadoWriter(Writer):
             # Add headers to weights and biases
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
-            elif '//hls-fpga-machine-learning insert header' in line:
+            elif '// hls-fpga-machine-learning insert header' in line:
                 inputs_str = ', '.join([i.definition_cpp(as_reference=True) for i in model_inputs])
                 outputs_str = ', '.join([o.definition_cpp(as_reference=True) for o in model_outputs])
                 brams_str = ', \n'.join([indent + b.definition_cpp(as_reference=False) for b in model_brams])
@@ -137,7 +136,7 @@ class VivadoWriter(Writer):
                     newline += ',\n' + brams_str
                 newline += '\n'
 
-            elif '//hls-fpga-machine-learning insert load weights' in line:
+            elif '// hls-fpga-machine-learning insert load weights' in line:
                 newline = line
                 for layer in model.get_layers():
                     for w in layer.get_weights():
@@ -155,7 +154,7 @@ class VivadoWriter(Writer):
                             )
 
             # Add input/output type
-            elif '//hls-fpga-machine-learning insert IO' in line:
+            elif '// hls-fpga-machine-learning insert IO' in line:
                 newline = line
                 all_inputs = [i.name for i in model_inputs]
                 all_outputs = [o.name for o in model_outputs]
@@ -184,7 +183,7 @@ class VivadoWriter(Writer):
                         newline += indent + '#pragma HLS INTERFACE bram port={} \n'.format(','.join(all_brams))
                     newline += indent + '#pragma HLS DATAFLOW \n'
 
-            elif '//hls-fpga-machine-learning insert layers' in line:
+            elif '// hls-fpga-machine-learning insert layers' in line:
                 newline = line + '\n'
                 for layer in model.get_layers():
                     vars = layer.get_variables()
@@ -243,9 +242,9 @@ class VivadoWriter(Writer):
 
             if 'MYPROJECT' in line:
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
-            elif 'void myproject(' in line:
-                newline = f'void {model.config.get_project_name()}(\n'
-            elif '//hls-fpga-machine-learning insert header' in line:
+            elif 'myproject' in line:
+                newline = line.replace('myproject', model.config.get_project_name())
+            elif '// hls-fpga-machine-learning insert header' in line:
                 inputs_str = ', '.join([i.definition_cpp(as_reference=True) for i in model_inputs])
                 outputs_str = ', '.join([o.definition_cpp(as_reference=True) for o in model_outputs])
                 brams_str = ', \n'.join([indent + b.definition_cpp(as_reference=False) for b in model_brams])
@@ -276,12 +275,20 @@ class VivadoWriter(Writer):
         for line in f.readlines():
 
             # Insert numbers
-            if '//hls-fpga-machine-learning insert numbers' in line:
+            if '// hls-fpga-machine-learning insert numbers' in line:
                 newline = line
-                numbers = OrderedDict.fromkeys([layer.get_numbers_cpp() for layer in model.get_layers()])
-                newline += ''.join(numbers)
 
-            elif '//hls-fpga-machine-learning insert layer-precision' in line:
+                defines_list = []
+                for layer in model.get_layers():
+                    defines = ''
+                    for k, v in layer.get_output_variable().get_shape():
+                        defines += f'#define {k} {v}\n'
+
+                    defines_list.append(defines)
+
+                newline += ''.join(defines_list)
+
+            elif '// hls-fpga-machine-learning insert layer-precision' in line:
                 newline = line
                 all_precision = OrderedDict()
                 for layer in model.get_layers():
@@ -312,19 +319,19 @@ class VivadoWriter(Writer):
 
         for line in f.readlines():
 
-            if '//hls-fpga-machine-learning insert includes' in line:
+            if '// hls-fpga-machine-learning insert includes' in line:
                 newline = line
                 for include in sorted(set(sum((layer.get_attr('include_header', []) for layer in model.get_layers()), []))):
                     newline += '#include "%s"\n' % include
 
-            elif '//hls-fpga-machine-learning insert weights' in line:
+            elif '// hls-fpga-machine-learning insert weights' in line:
                 newline = line
                 for layer in model.get_layers():
                     for w in layer.get_weights():
                         if w.storage.lower() != 'bram':
                             newline += f'#include "weights/{w.name}.h"\n'
 
-            elif "//hls-fpga-machine-learning insert layer-config" in line:
+            elif "// hls-fpga-machine-learning insert layer-config" in line:
                 newline = line
                 for layer in model.get_layers():
                     config = layer.get_attr('config_cpp', None)
@@ -415,11 +422,11 @@ class VivadoWriter(Writer):
             # Insert numbers
             if 'myproject' in line:
                 newline = line.replace('myproject', model.config.get_project_name())
-            elif '//hls-fpga-machine-learning insert bram' in line:
+            elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
                     newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
-            elif '//hls-fpga-machine-learning insert data' in line:
+            elif '// hls-fpga-machine-learning insert data' in line:
                 newline = line
                 offset = 0
                 for inp in model_inputs:
@@ -430,14 +437,14 @@ class VivadoWriter(Writer):
                     offset += inp.size()
                 for out in model_outputs:
                     newline += '      ' + out.definition_cpp() + ';\n'
-            elif '//hls-fpga-machine-learning insert zero' in line:
+            elif '// hls-fpga-machine-learning insert zero' in line:
                 newline = line
                 for inp in model_inputs:
                     newline += '    ' + inp.definition_cpp() + ';\n'
                     newline += f'    nnet::fill_zero<{inp.type.name}, {inp.size_cpp()}>({inp.name});\n'
                 for out in model_outputs:
                     newline += '    ' + out.definition_cpp() + ';\n'
-            elif '//hls-fpga-machine-learning insert top-level-function' in line:
+            elif '// hls-fpga-machine-learning insert top-level-function' in line:
                 newline = line
 
                 input_vars = ','.join([i.name for i in model_inputs])
@@ -450,21 +457,22 @@ class VivadoWriter(Writer):
                 top_level = indent + f'{model.config.get_project_name()}({all_vars});\n'
 
                 newline += top_level
-            elif '//hls-fpga-machine-learning insert predictions' in line:
+            elif '// hls-fpga-machine-learning insert predictions' in line:
                 newline = line
                 for out in model_outputs:
                     newline += indent + f'for(int i = 0; i < {out.size_cpp()}; i++) {{\n'
                     newline += indent + '  std::cout << pr[i] << " ";\n'
                     newline += indent + '}\n'
                     newline += indent + 'std::cout << std::endl;\n'
-            elif '//hls-fpga-machine-learning insert tb-output' in line:
+            elif '// hls-fpga-machine-learning insert tb-output' in line:
                 newline = line
                 for out in model_outputs:
                     newline += indent + 'nnet::print_result<{}, {}>({}, fout);\n'.format(
                         out.type.name, out.size_cpp(), out.name
                     )  # TODO enable this
             elif (
-                '//hls-fpga-machine-learning insert output' in line or '//hls-fpga-machine-learning insert quantized' in line
+                '// hls-fpga-machine-learning insert output' in line
+                or '// hls-fpga-machine-learning insert quantized' in line
             ):
                 newline = line
                 for out in model_outputs:
@@ -500,11 +508,11 @@ class VivadoWriter(Writer):
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
             elif 'myproject' in line:
                 newline = line.replace('myproject', format(model.config.get_project_name()))
-            elif '//hls-fpga-machine-learning insert bram' in line:
+            elif '// hls-fpga-machine-learning insert bram' in line:
                 newline = line
                 for bram in model_brams:
                     newline += f'#include \"firmware/weights/{bram.name}.h\"\n'
-            elif '//hls-fpga-machine-learning insert header' in line:
+            elif '// hls-fpga-machine-learning insert header' in line:
                 dtype = line.split('#', 1)[1].strip()
                 inputs_str = ', '.join([f'{dtype} {i.name}[{i.size_cpp()}]' for i in model_inputs])
                 outputs_str = ', '.join([f'{dtype} {o.name}[{o.size_cpp()}]' for o in model_outputs])
@@ -512,7 +520,7 @@ class VivadoWriter(Writer):
                 newline = ''
                 newline += indent + inputs_str + ',\n'
                 newline += indent + outputs_str + '\n'
-            elif '//hls-fpga-machine-learning insert wrapper' in line:
+            elif '// hls-fpga-machine-learning insert wrapper' in line:
                 dtype = line.split('#', 1)[1].strip()
                 newline = ''
                 for i in model_inputs:
@@ -543,7 +551,7 @@ class VivadoWriter(Writer):
                     newline += indent + 'nnet::convert_data<{}, {}, {}>({}_ap, {});\n'.format(
                         o.type.name, dtype, o.size_cpp(), o.name, o.name
                     )
-            elif '//hls-fpga-machine-learning insert trace_outputs' in line:
+            elif '// hls-fpga-machine-learning insert trace_outputs' in line:
                 newline = ''
                 for layer in model.get_layers():
                     func = layer.get_attr('function_cpp', None)
@@ -582,6 +590,8 @@ class VivadoWriter(Writer):
         f.write('set part "{}"\n'.format(model.config.get_config_value('Part')))
         f.write('variable clock_period\n')
         f.write('set clock_period {}\n'.format(model.config.get_config_value('ClockPeriod')))
+        f.write('variable clock_uncertainty\n')
+        f.write('set clock_uncertainty {}\n'.format(model.config.get_config_value('ClockUncertainty', '12.5%')))
         f.close()
 
         # build_prj.tcl
@@ -641,7 +651,7 @@ class VivadoWriter(Writer):
         # custom source
         filedir = os.path.dirname(os.path.abspath(__file__))
 
-        custom_source = get_backend('Vivado').get_custom_source()
+        custom_source = model.config.backend.get_custom_source()
         for dst, srcpath in custom_source.items():
             dstpath = f'{model.config.get_output_dir()}/firmware/{dst}'
             copyfile(srcpath, dstpath)
@@ -659,7 +669,7 @@ class VivadoWriter(Writer):
         f = open(path, 'w')
 
         for line in contents:
-            if '//hls4ml insert code' in line:
+            if '// hls4ml insert code' in line:
                 newline = line
                 for layer in model.get_layers():
                     for generated_code in layer.code.values():
