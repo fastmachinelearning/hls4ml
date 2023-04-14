@@ -53,7 +53,7 @@ First, we generate the bitfile from a Keras model ``model`` and a config.
     hls4ml.build(bitfile=True)
 
 
-After the this is complete, we will need to package up the bitfile, hardware handoff, and Python driver to copy to the PS of the board.
+After this command completes, we will need to package up the bitfile, hardware handoff, and Python driver to copy to the PS of the board.
 
 .. code-block:: bash
 
