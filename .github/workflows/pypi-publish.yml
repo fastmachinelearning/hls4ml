@@ -19,7 +19,7 @@ jobs:
 
     - name: Build SDist and Wheel
       run: pipx run build --sdist --wheel
-      
+
     - uses: actions/upload-artifact@v3
       with:
         path: dist/*.tar.gz
