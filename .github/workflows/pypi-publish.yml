@@ -1,7 +1,8 @@
 name: 📦 Packaging release to PyPI
 on:
+  workflow_dispatch:
   release:
-    types: [released]
+    types: [published]
 
 jobs:
   release:
