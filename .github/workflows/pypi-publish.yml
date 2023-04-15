@@ -22,13 +22,7 @@ jobs:
 
     - uses: actions/upload-artifact@v3
       with:
-        path: dist/*.tar.gz
-
-    - name: Publish 📦 to PyPI Test
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.TEST_PYPI_PASSWORD }}
-        repository-url: https://test.pypi.org/legacy/
+        path: dist/*.*
 
     - name: Publish 📦 to PyPI
       if: startsWith(github.ref, 'refs/tags')
