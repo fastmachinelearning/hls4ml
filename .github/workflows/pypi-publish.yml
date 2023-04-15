@@ -21,3 +21,8 @@ jobs:
       run: python3 -m pip install --user --upgrade setuptools wheel
     - name: Build package
       run: python3 setup.py sdist bdist_wheel
+    - name: Publish 📦 to PyPI Test
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        password: ${{ secrets.PYPI_PASSWORD }}
+        repository-url: https://test.pypi.org/legacy/
