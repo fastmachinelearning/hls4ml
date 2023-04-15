@@ -1,6 +1,8 @@
 name: 📦 Packaging release to PyPI
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
   release:
     types: [published]
 
@@ -14,21 +16,22 @@ jobs:
       with:
         submodules: recursive
         fetch-depth: 0
-    - name: Allow for file ownership conflicts with Docker and GitHub Actions
-      run: sudo git config --system --add safe.directory '*'
-    - uses: actions/setup-python@v4
+
+    - name: Build SDist and Wheel
+      run: pipx run build --sdist --wheel
+      
+    - uses: actions/upload-artifact@v3
       with:
-        python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-    - name: Install dependencies
-      run: |
-        sudo git config --system --add safe.directory '*'
-        python3 -m pip install --user --upgrade setuptools wheel
-    - name: Build package
-      run: |
-        sudo git config --system --add safe.directory '*'
-        python3 setup.py sdist bdist_wheel
+        path: dist/*.tar.gz
+
     - name: Publish 📦 to PyPI Test
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        password: ${{ secrets.PYPI_PASSWORD }}
+        password: ${{ secrets.TEST_PYPI_PASSWORD }}
         repository-url: https://test.pypi.org/legacy/
+
+    - name: Publish 📦 to PyPI
+      if: startsWith(github.ref, 'refs/tags')
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_PASSWORD }}
