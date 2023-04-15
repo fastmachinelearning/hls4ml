@@ -14,15 +14,21 @@ jobs:
       with:
         submodules: recursive
         fetch-depth: 0
+    - name: Allow for file ownership conflicts with Docker and GitHub Actions
+      run: git config --global --add safe.directory '*'
     - uses: actions/setup-python@v4
       with:
         python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
     - name: Install dependencies
-      run: python3 -m pip install --user --upgrade setuptools wheel
+      run: |
+        git config --system --add safe.directory '*'
+        python3 -m pip install --user --upgrade setuptools wheel
     - name: Build package
-      run: python3 setup.py sdist bdist_wheel
+      run: |
+        git config --system --add safe.directory '*'
+        python3 setup.py sdist bdist_wheel
     - name: Publish 📦 to PyPI Test
-      uses: pypa/gh-action-pypi-publish@master
+      uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.PYPI_PASSWORD }}
         repository-url: https://test.pypi.org/legacy/
