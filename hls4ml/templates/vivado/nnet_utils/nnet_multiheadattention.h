@@ -61,7 +61,8 @@ void matrixmul_transpose(
     res_T  QK[CONFIG_T::seq_len][CONFIG_T::seq_len]) // seq_Q, seq_K
 {
     const data_T dk = 1.0/sqrt(CONFIG_T::head_dim_key);
-    data_T QKij, QK_1;
+    data_T QK_1;
+	typename CONFIG_T::accum_t QKij;
     data_T Qi[CONFIG_T::head_dim_key];
     data_T Product[CONFIG_T::seq_len];// seq_Q, seq_K
     data_T qk_smout[CONFIG_T::seq_len];
@@ -335,8 +336,10 @@ void multiheadattention(
     }
 
     nnet::dense_out<data_T, res_T, CONFIG_T>(matr_out, res, attention_output_weight, attention_output_bias);
-    // std::cout << "output from MHA: " << std::endl;
+	// std::cout << "out MHA: " << std::endl;
+    // nnet::print_result<result_t, CONFIG_T::seq_len * CONFIG_T::feature_dim>(res, std::cout);
     // std::cout << " " << std::endl;
+
 }
 }
 

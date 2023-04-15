@@ -183,6 +183,9 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const nnet::softmax_implementation implementation = nnet::softmax_implementation::{implementation};
     typedef {exp_table_t.name} exp_table_t;
     typedef {inv_table_t.name} inv_table_t;
+    typedef {accum_t.name} accum_t;
+    static const unsigned inv_range = {inv_range};
+    static const unsigned exp_range = {exp_range};
 }};\n"""
 
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
