@@ -28,8 +28,8 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
     static const nnet::softmax_implementation implementation = nnet::softmax_implementation::{implementation};
-    typedef ap_{table_t} exp_table_t;
-    typedef ap_{table_t} inv_table_t;
+    typedef {table_t.name} exp_table_t;
+    typedef {table_t.name} inv_table_t;
     typedef {accum_t.name} accum_t;
     static const unsigned inv_range = {inv_range};
     static const unsigned exp_range = {exp_range};
