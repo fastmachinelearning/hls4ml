@@ -1164,7 +1164,7 @@ class GarNet(Layer):
             ]
 
         for op_name, lname, wtype in weights_source:
-            data = self.model.get_weights_data(self.name, f'{self.name}/{lname}_{wtype}:0')
+            data = self.get_attr(f'{lname}_{wtype}_data')
             if wtype == 'kernel':
                 data = data.transpose((1, 0))
                 vtype = 'weights'
@@ -1181,22 +1181,20 @@ class GarNet(Layer):
     def _make_input_transform_weights(self, n_propagate, n_aggregators, n_out_features, quantize=False, sublayer=''):
         # Due to linearity of the input transform, input weights and biases can be contracted away at conversion time
 
-        output_transform_kernel = self.model.get_weights_data(
-            self.name, f'{self.name}/Fout{sublayer}_kernel:0'
+        output_transform_kernel = self.get_attr(
+            f'Fout{sublayer}_kernel_data'
         )  # [(n_aggregators, n_propagate), n_out_features]
         output_transform_kernel = output_transform_kernel.reshape((n_aggregators, n_propagate, n_out_features))
         if quantize:
             output_transform_kernel = self.get_attr('quantizer')(output_transform_kernel)
 
-        input_transform_kernel = self.model.get_weights_data(
-            self.name, f'{self.name}/FLR{sublayer}_kernel:0'
-        )  # [n_in_features, n_propagate]
+        input_transform_kernel = self.get_attr(f'FLR{sublayer}_kernel_data')  # [n_in_features, n_propagate]
         if quantize:
             input_transform_kernel = self.get_attr('quantizer')(input_transform_kernel)
         data = np.dot(input_transform_kernel, output_transform_kernel)  # [n_in_features, n_aggregators, n_out_features]
         kernel = data.transpose((2, 1, 0))
 
-        input_transform_bias = self.model.get_weights_data(self.name, f'{self.name}/FLR{sublayer}_bias:0')  # [n_propagate]
+        input_transform_bias = self.get_attr(f'FLR{sublayer}_bias_data')  # [n_propagate]
         if quantize:
             input_transform_bias = self.get_attr('quantizer')(input_transform_bias)
         data = np.dot(input_transform_bias, output_transform_kernel)  # [n_aggregators, n_out_features]
@@ -1255,7 +1253,7 @@ class GarNetStack(GarNet):
             ]
 
             for op_name, lname, wtype in weights_source:
-                data = self.model.get_weights_data(self.name, f'{self.name}/{lname}_{wtype}:0')
+                data = self.get_attr(f'{lname}_{wtype}_data')
                 if wtype == 'kernel':
                     data = data.transpose((1, 0))
                     vtype = 'weights'
