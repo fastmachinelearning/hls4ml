@@ -58,7 +58,6 @@ def parse_garnet_layer(keras_layer, input_names, input_shapes, data_reader):
                 layer[weight + '_data'] = get_weights_data(data_reader, layer['name'], weight)
 
         n_out_features = layer['n_out_features'][-1]
-            
 
     if layer['collapse'] in ['mean', 'sum', 'max']:
         output_shape = [input_shapes[0][0], n_out_features]
