@@ -2,11 +2,11 @@
     :hidden:
     :caption: Introduction
 
-    release_notes
+    concepts
     status
     setup
+    release_notes
     command
-    concepts
     details
     flows
     reference
@@ -24,6 +24,7 @@
 
     advanced/fifo_depth
     advanced/extension
+    advanced/accelerator
 
 .. toctree::
     :hidden:
