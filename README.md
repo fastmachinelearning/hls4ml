@@ -64,11 +64,12 @@ hls4ml.report.read_vivado_report('my-hls-test')
 # Citation
 If you use this software in a publication, please cite the software
 ```bibtex
-@software{vloncar_2021_5680908,
+@software{fastml_hls4ml,
   author       = {{FastML Team}},
   title        = {fastmachinelearning/hls4ml},
-  year         = 2021,
+  year         = 2023,
   publisher    = {Zenodo},
+  version      = {v0.7.0rc1},
   doi          = {10.5281/zenodo.1201549},
   url          = {https://github.com/fastmachinelearning/hls4ml}
 }

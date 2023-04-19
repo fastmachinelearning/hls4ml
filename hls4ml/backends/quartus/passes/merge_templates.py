@@ -68,7 +68,7 @@ class DotConfigTemplate(LayerConfigTemplate):
     def format(self, node):
         inp1 = node.get_input_variable(node.inputs[0])
         inp2 = node.get_input_variable(node.inputs[1])
-        params = node._default_config_params()
+        params = self._default_config_params(node)
         params['n_out'] = 1
         params['n_in'] = inp1.shape[0]
         params['product_type'] = get_backend('quartus').product_type(inp1.type.precision, inp2.type.precision)

@@ -324,40 +324,11 @@ class Layer:
 
         self.set_attr(name, var)
 
-    def _default_function_params(self):
-        params = {}
-        params.update(self.attributes)
-        params['config'] = f'config{self.index}'
-        params['input_t'] = self.get_input_variable().type.name
-        params['output_t'] = self.get_output_variable().type.name
-        params['input'] = self.get_input_variable().name
-        params['output'] = self.get_output_variable().name
-
-        return params
-
-    def _default_config_params(self):
-        params = {}
-        params.update(self.attributes)
-        params['iotype'] = self.model.config.get_config_value('IOType')
-        params['reuse'] = self.get_attr('reuse_factor')
-
-        return params
-
     def get_layer_precision(self):
         precision = {}
         for data_type in self.types.values():
             precision[data_type.name] = data_type
         return precision
-
-    def get_numbers_cpp(self):
-        numbers = ''
-        for k, v in self.get_output_variable().get_shape():
-            numbers += f'#define {k} {v}\n'
-
-        return numbers
-
-    def precision_cpp(self):
-        return f'typedef {self.get_output_variable().precision} layer{self.index}_t;'
 
 
 class Input(Layer):
@@ -570,7 +541,9 @@ class Conv2DBatchnorm(Conv2D):
 
         # wrap conv kernel and bias with bn parameters
         folded_kernel = inv * kernel
-        folded_bias = inv * (bias - moving_mean) + beta
+        folded_bias = inv * (bias - moving_mean)
+        if beta is not None:
+            folded_bias += beta
 
         return [folded_kernel, folded_bias]
 
@@ -862,6 +835,8 @@ class BatchNormalization(Layer):
         WeightAttribute('bias'),
         TypeAttribute('scale'),
         TypeAttribute('bias'),
+        Attribute('use_gamma', value_type=bool, default=True),
+        Attribute('use_beta', value_type=bool, default=True),
     ]
 
     def initialize(self):
@@ -870,13 +845,13 @@ class BatchNormalization(Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
-        gamma = self.model.get_weights_data(self.name, 'gamma')
-        beta = self.model.get_weights_data(self.name, 'beta')
+        gamma = self.model.get_weights_data(self.name, 'gamma') if self.get_attr('use_gamma') else 1
+        beta = self.model.get_weights_data(self.name, 'beta') if self.get_attr('use_beta') else 0
         mean = self.model.get_weights_data(self.name, 'moving_mean')
         var = self.model.get_weights_data(self.name, 'moving_variance')
 
         scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
-        bias = beta - gamma * mean / np.sqrt(var + self.get_attr('epsilon'))
+        bias = beta - scale * mean
 
         self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
         self.add_weights_variable(name='bias', var_name='b{index}', data=bias)

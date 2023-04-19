@@ -123,7 +123,7 @@ void pooling1d_cl(data_T data[CONFIG_T::n_in * CONFIG_T::n_filt], res_T res[CONF
                     // Add padding
                     pool[jj] = pad_val<data_T, CONFIG_T::pool_op>();
                 } else {
-                    pool[jj] = data[(ii + jj) * CONFIG_T::n_filt + ff];
+                    pool[jj] = data[(ii + jj - CONFIG_T::pad_left) * CONFIG_T::n_filt + ff];
                     img_overlap++;
                 }
             }
@@ -134,7 +134,7 @@ void pooling1d_cl(data_T data[CONFIG_T::n_in * CONFIG_T::n_filt], res_T res[CONF
                 pool_op<data_T, CONFIG_T::pool_width, CONFIG_T::pool_op>(pool);
             // If the pool op is Average, the zero-padding needs to be removed from the results
             if (CONFIG_T::pool_op == Average) {
-                data_T rescale = CONFIG_T::pool_width / img_overlap;
+                data_T rescale = static_cast<data_T>(CONFIG_T::pool_width) / img_overlap;
                 res[(ii / CONFIG_T::stride_width) * CONFIG_T::n_filt + ff] *= rescale;
             }
         }
@@ -198,8 +198,8 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
 
     // TODO partition the arrays according to the reuse factor
     const int limit = pool_op_limit<CONFIG_T>();
-    #pragma HLS ALLOCATION function instances=pool_op<data_T, CONFIG_T::pool_height*CONFIG_T::pool_width,
-    // CONFIG_T::pool_op> limit=limit
+    #pragma HLS ALLOCATION function instances=pool_op<data_T, CONFIG_T::pool_height*CONFIG_T::pool_width, \
+        CONFIG_T::pool_op> limit=limit
     // Add any necessary padding
     unsigned padded_height = CONFIG_T::in_height + CONFIG_T::pad_top + CONFIG_T::pad_bottom;
     unsigned padded_width = CONFIG_T::in_width + CONFIG_T::pad_left + CONFIG_T::pad_right;
@@ -226,7 +226,8 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
                             pool[kk * CONFIG_T::stride_width + ll] = pad_val<data_T, CONFIG_T::pool_op>();
                         } else {
                             pool[kk * CONFIG_T::stride_width + ll] =
-                                data[(ii + kk) * CONFIG_T::in_width * CONFIG_T::n_filt + (jj + ll) * CONFIG_T::n_filt + ff];
+                                data[(ii + kk - CONFIG_T::pad_top) * CONFIG_T::in_width * CONFIG_T::n_filt +
+                                     (jj + ll - CONFIG_T::pad_left) * CONFIG_T::n_filt + ff];
                             img_overlap++;
                         }
                     }
@@ -239,7 +240,8 @@ void pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
                     pool_op<data_T, CONFIG_T::pool_height * CONFIG_T::pool_width, CONFIG_T::pool_op>(pool);
                 // If the pool op is Average, the zero-padding needs to be removed from the results
                 if (CONFIG_T::pool_op == Average) {
-                    data_T rescale = CONFIG_T::pool_height * CONFIG_T::pool_width / img_overlap;
+                    data_T rescale =
+                        static_cast<data_T>(CONFIG_T::pool_height) * static_cast<data_T>(CONFIG_T::pool_width) / img_overlap;
                     res[(ii / CONFIG_T::stride_height) * CONFIG_T::out_width * CONFIG_T::n_filt +
                         (jj / CONFIG_T::stride_width) * CONFIG_T::n_filt + ff] *= rescale;
                 }
@@ -255,8 +257,8 @@ void pooling2d_cf(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
 
     // TODO partition the arrays according to the reuse factor
     const int limit = pool_op_limit<CONFIG_T>();
-    #pragma HLS ALLOCATION function instances=pool_op<data_T, CONFIG_T::pool_height*CONFIG_T::pool_width,
-    // CONFIG_T::pool_op> limit=limit
+    #pragma HLS ALLOCATION function instances=pool_op<data_T, CONFIG_T::pool_height*CONFIG_T::pool_width, \
+        CONFIG_T::pool_op> limit=limit
     // Add any necessary padding
     unsigned padded_height = CONFIG_T::in_height + CONFIG_T::pad_top + CONFIG_T::pad_bottom;
     unsigned padded_width = CONFIG_T::in_width + CONFIG_T::pad_left + CONFIG_T::pad_right;
@@ -297,7 +299,8 @@ void pooling2d_cf(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_
                     pool_op<data_T, CONFIG_T::pool_height * CONFIG_T::pool_width, CONFIG_T::pool_op>(pool);
                 // If the pool op is Average, the zero-padding needs to be removed from the results
                 if (CONFIG_T::pool_op == Average) {
-                    data_T rescale = CONFIG_T::pool_height * CONFIG_T::pool_width / img_overlap;
+                    data_T rescale =
+                        static_cast<data_T>(CONFIG_T::pool_height) * static_cast<data_T>(CONFIG_T::pool_width) / img_overlap;
                     res[(ii / CONFIG_T::stride_height) * CONFIG_T::out_width + (jj / CONFIG_T::stride_width) +
                         ff * CONFIG_T::out_height * CONFIG_T::out_width] *= rescale;
                 }
@@ -317,8 +320,8 @@ void global_pooling2d_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * 
     #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
 
     const int limit = pool_op_limit<CONFIG_T>();
-    #pragma HLS ALLOCATION function instances=pool_op<data_T, CONFIG_T::pool_width * CONFIG_T::pool_height,
-    // CONFIG_T::pool_op> limit=limit
+    #pragma HLS ALLOCATION function instances=pool_op<data_T, CONFIG_T::pool_width * CONFIG_T::pool_height, \
+        CONFIG_T::pool_op> limit=limit
 
 FiltLoop:
     for (int filt = 0; filt < CONFIG_T::n_filt; filt++) {
