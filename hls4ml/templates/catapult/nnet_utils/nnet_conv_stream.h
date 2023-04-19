@@ -196,12 +196,14 @@ void kernel_shift_2d(
         
     // Shift kernel_window by one step to the left (manual shift operation)
     static const int filt_width = CONFIG_T::filt_width - 1;
-#pragma hls_pipeline_init_interval 1
+#pragma hls_unroll
 KernelShiftWidth: 
     for (int i_iw = 0; i_iw < filt_width; i_iw++) {
         //#pragma HLS PIPELINE II = 1
+    #pragma hls_unroll
     KernelShiftHeight: 
         for (unsigned i_ih = 0; i_ih < CONFIG_T::filt_height; i_ih++) {
+        #pragma hls_unroll
         KernelShiftChannel: 
             for (unsigned i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
             // Shift every element in kernel_window to the left
@@ -246,6 +248,7 @@ UpdateBuffer:
         shift_buffer[CONFIG_T::filt_height - 1][i_ic] = in_elem[i_ic];
     }
 
+#pragma hls_unroll
 LineBufferDataIn: 
     for (int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
         // Shift the shift buffer into the line buffer

@@ -84,7 +84,13 @@ class ap_shift_reg
 {
   public:
     /// Constructors
-    ap_shift_reg() { }
+    ap_shift_reg() {
+      #pragma unroll yes
+      for (int i=0; i < __SHIFT_DEPTH__; i++) {
+        __SHIFT_T__ dummy;
+        Array[i] = dummy; // uninitialize so Catapult does not add a reset
+      }
+    }
     ap_shift_reg(const char* name) { }
     /// Destructor
     virtual ~ap_shift_reg() { }
@@ -116,6 +122,7 @@ class ap_shift_reg
 #endif
         __SHIFT_T__ ret = Array[Addr];
         if (Enable) {
+            #pragma hls_unroll yes
             for (unsigned int i = __SHIFT_DEPTH__ - 1; i > 0; --i)
                 Array[i] = Array[i-1];
             Array[0] = DataIn;

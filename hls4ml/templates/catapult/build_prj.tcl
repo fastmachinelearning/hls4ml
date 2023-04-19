@@ -82,6 +82,7 @@ if { ![file exists firmware/parameters.h] } {
 if { $IOType == "io_stream" } {
 solution options set Architectural/DefaultRegisterThreshold 2050
 }
+directive set -RESET_CLEARS_ALL_REGS no
 
 flow package require /SCVerify
 # Ideally, the path to the weights/testbench data should be runtime configurable
@@ -103,6 +104,7 @@ if {$opt(csim)} {
 if {$opt(synth)} {
   puts "***** C/RTL SYNTHESIS *****"
   set time_start [clock clicks -milliseconds]
+
 
   solution library add mgc_Xilinx-KINTEX-u-2_beh -- -rtlsyntool Vivado -manufacturer Xilinx -family KINTEX-u -speed -2 -part xcku115-flvb2104-2-i
   solution library add Xilinx_RAMS
