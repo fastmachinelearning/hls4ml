@@ -9,27 +9,22 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 
-class Reader:
-    def get_weights_data(self, name, var):
-        w = 2 if var == 'kernel' else 1
-        return np.array([w])
-
-
-reader = Reader()
+w = np.array([2])
+b = np.array([1])
 
 
 def base_model(output_dir='hls4mlprj_graph_base_model', iotype='io_parallel'):
     layers = [
         {'class_name': 'Input', 'name': 'layer0_input', 'input_shape': [1]},
-        {'class_name': 'Dense', 'name': 'layer0', 'n_in': 1, 'n_out': 1},
-        {'class_name': 'Dense', 'name': 'layer1', 'n_in': 1, 'n_out': 1},
+        {'class_name': 'Dense', 'name': 'layer0', 'n_in': 1, 'n_out': 1, 'weight_data': w, 'bias_data': b},
+        {'class_name': 'Dense', 'name': 'layer1', 'n_in': 1, 'n_out': 1, 'weight_data': w, 'bias_data': b},
     ]
     config = {'HLSConfig': {'Model': {'Precision': 'ap_fixed<32,16>', 'ReuseFactor': 1}, 'Flows': []}}
     config['OutputDir'] = output_dir
     config['ProjectName'] = 'myprj'
     config['IOType'] = iotype
     config['Backend'] = 'Vivado'
-    model = hls4ml.model.ModelGraph(config, reader, layers)
+    model = hls4ml.model.ModelGraph(config, layers)
     return model
 
 
@@ -45,7 +40,7 @@ def branch_model(output_dir='hls4mlprj_graph_branch_model', iotype='io_parallel'
     config['OutputDir'] = output_dir
     config['ProjectName'] = 'myprj'
     config['IOType'] = iotype
-    model = hls4ml.model.ModelGraph(config, reader, layers, inputs=['layer0_input0', 'layer0_input1'])
+    model = hls4ml.model.ModelGraph(config, layers, inputs=['layer0_input0', 'layer0_input1'])
     return model
 
 
@@ -55,7 +50,7 @@ def do_nop(model, node, layers):
 
 def do_insert(model, node, layers):
     after, before = node[0], node[1]
-    new_node = model.make_node('Dense', 'layer2', {'n_in': 1, 'n_out': 1}, [after])
+    new_node = model.make_node('Dense', 'layer2', {'n_in': 1, 'n_out': 1, 'weight_data': w, 'bias_data': b}, [after])
     if before is not None:
         before = [x for x in model.graph.values() if x.name == before][0]
     model.insert_node(new_node, before=before)
@@ -74,7 +69,7 @@ def do_remove(model, node, layers):
 
 def do_replace(model, node, layers):
     old_node = model.graph.get(node)
-    new_node = model.make_node('Dense', 'layer2', {'n_in': 1, 'n_out': 1}, old_node.inputs)
+    new_node = model.make_node('Dense', 'layer2', {'n_in': 1, 'n_out': 1, 'weight_data': w, 'bias_data': b}, old_node.inputs)
     model.replace_node(old_node, new_node)
     iInsert = np.argwhere(layers == node)[0][0]
     layers = np.delete(layers, iInsert)
@@ -204,7 +199,7 @@ def test_broadcast_stream(shapes, layer):
 
 @pytest.mark.parametrize('batch', [1, 32])
 def test_multiple_outputs(batch):
-    '''Test case for multple outputs'''
+    '''Test case for multiple outputs'''
     input1 = tf.keras.layers.Input(shape=(10,))
     inputs = [input1]
     output1 = tf.keras.layers.Dense(5, kernel_initializer='ones', use_bias=False)(input1)
