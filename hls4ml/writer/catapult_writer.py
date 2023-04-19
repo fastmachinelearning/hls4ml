@@ -654,8 +654,8 @@ class CatapultWriter(Writer):
             line = line.replace('myproject',model.config.get_project_name())
             if 'set_part {xcku115-flvb2104-2-i}' in line:
                 line = 'set_part {{{}}}\n'.format(model.config.get_config_value('Part'))
-            elif 'create_clock -period 5 -name default' in line:
-                line = 'create_clock -period {} -name default\n'.format(model.config.get_config_value('ClockPeriod'))
+            elif 'set hls_clock_period 5' in line:
+                line = 'set hls_clock_period {}\n'.format(model.config.get_config_value('ClockPeriod'))
             fout.write(line)
         f.close()
         fout.close()
