@@ -326,31 +326,43 @@ void  softmax_legacy(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     int data_round;
     int index;
 
+    // std::cout << "input to SM: " << std::endl;              /////
+    // nnet::print_result<data_T, CONFIG_T::n_in>(data, std::cout);  /////
+    // std::cout << " " << std::endl;   /////
+
 #pragma HLS array_partition variable=data_cache complete
 
 
     typename CONFIG_T::accum_t denominator;
     typename CONFIG_T::inv_table_t deno_inver;
-    // std::cout << "denominator: " << std::endl;    /////
+
     denominator = 0;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-		data_round = data[ii]*CONFIG_T::table_size/(exp_range*2);
-		index = data_round + exp_range*CONFIG_T::table_size/(exp_range*2);
+		data_round = data[ii]*(CONFIG_T::table_size/(exp_range*2));
+        // std::cout << " data, round: " << data[ii] << " " << data_round << std::endl;  /////
+		index = data_round + exp_range*(CONFIG_T::table_size/(exp_range*2));
+        // std::cout << " index: " << index;   /////
 		if (index < 0)   index = 0;
 		if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
 		denominator += exp_table[index];
-        // std::cout << " index: " << index << " " <<exp_table[index] ;   /////
+        // std::cout << "   denominator " << index << std::endl;   /////
+        // std::cout << "   denominator " << denominator << std::endl;   /////
 		data_cache[ii] = exp_table[index];
     }
     // std::cout << "end  " << std::endl;    /////
 
 
     //using lookup table for inverse
-	int exp_res_index = denominator*CONFIG_T::table_size/inv_range;
+	int exp_res_index = denominator*(CONFIG_T::table_size/inv_range);
+    
+    // std::cout << " denominator: " << denominator << std::endl;  /////
+    // std::cout << " table_size: " << CONFIG_T::table_size << std::endl;  /////
+    // std::cout << " inv_range: " << inv_range << std::endl;  /////
+    // std::cout << " exp_res_index: " << exp_res_index << std::endl;  /////
 	if (exp_res_index < 0)   exp_res_index = 0;
 	if (exp_res_index > CONFIG_T::table_size-1) exp_res_index = CONFIG_T::table_size-1;
 	deno_inver = invert_table[exp_res_index];
-
+    // std::cout << " deno_inver: " << deno_inver << std::endl;  /////
 
 	for (int ii=0; ii<CONFIG_T::n_in; ii++) {
 		res[ii] = (res_T) (data_cache[ii]*deno_inver);

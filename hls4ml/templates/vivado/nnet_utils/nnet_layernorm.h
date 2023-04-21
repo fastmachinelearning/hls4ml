@@ -318,6 +318,11 @@ void layernormalize(
             res[j*dim+i] = outval[i];
         }
     }
+
+    // std::cout << "out Norm: " << std::endl;
+    // nnet::print_result<result_t, CONFIG_T::n_in>(res, std::cout);
+    // std::cout << " " << std::endl;
+
 }
 
 }
