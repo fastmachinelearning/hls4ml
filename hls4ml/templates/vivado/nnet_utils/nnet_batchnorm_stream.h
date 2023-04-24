@@ -51,8 +51,8 @@ BatchNormLoop:
 //       Merged Batch Normalization and Quantized Tanh
 // ****************************************************
 template <class data_T, typename CONFIG_T>
-void normalize_binary_tanh(hls::stream<data_T> &data, hls::stream<nnet::array<ap_uint<1>, CONFIG_T::n_in>> &res,
-                           typename data_T::value_type threshold[CONFIG_T::n_in]) {
+void normalize_binary_tanh(hls::stream<data_T> &data, hls::stream<nnet::array<ap_uint<1>, CONFIG_T::n_scale_bias>> &res,
+                           typename data_T::value_type threshold[CONFIG_T::n_scale_bias]) {
     #pragma HLS ARRAY_PARTITION variable=threshold complete
 
 BinaryNormLoop:
@@ -60,7 +60,7 @@ BinaryNormLoop:
         #pragma HLS PIPELINE
 
         data_T in_data = data.read();
-        nnet::array<ap_uint<1>, CONFIG_T::n_in> out_data;
+        nnet::array<ap_uint<1>, CONFIG_T::n_scale_bias> out_data;
         PRAGMA_DATA_PACK(out_data)
 
     BatchNormPack:
@@ -74,9 +74,9 @@ BinaryNormLoop:
 }
 
 template <class data_T, typename CONFIG_T>
-void normalize_ternary_tanh(hls::stream<data_T> &data, hls::stream<nnet::array<ap_int<2>, CONFIG_T::n_in>> &res,
-                            typename data_T::value_type threshold_hi[CONFIG_T::n_in],
-                            typename data_T::value_type threshold_lo[CONFIG_T::n_in]) {
+void normalize_ternary_tanh(hls::stream<data_T> &data, hls::stream<nnet::array<ap_int<2>, CONFIG_T::n_scale_bias>> &res,
+                            typename data_T::value_type threshold_hi[CONFIG_T::n_scale_bias],
+                            typename data_T::value_type threshold_lo[CONFIG_T::n_scale_bias]) {
     #pragma HLS ARRAY_PARTITION variable=threshold_hi complete
     #pragma HLS ARRAY_PARTITION variable=threshold_lo complete
 
@@ -85,7 +85,7 @@ TernaryNormLoop:
         #pragma HLS PIPELINE
 
         data_T in_data = data.read();
-        nnet::array<ap_int<2>, CONFIG_T::n_in> out_data;
+        nnet::array<ap_int<2>, CONFIG_T::n_scale_bias> out_data;
         PRAGMA_DATA_PACK(out_data)
 
     BatchNormPack:
