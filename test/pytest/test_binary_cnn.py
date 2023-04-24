@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import pytest
 from qkeras import QActivation, QBatchNormalization, QConv2D, QDense
@@ -6,6 +8,8 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l2
 
 import hls4ml
+
+test_root_path = Path(__file__).parent
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
@@ -54,10 +58,11 @@ def test_model2(backend, io_type):
     hls_config["LayerName"]["q_dense_6"]["ReuseFactor"] = 2000
     hls_config["LayerName"]["q_dense_7"]["ReuseFactor"] = 100
 
+    output_dir = str(test_root_path / f"hls4mlprj_binary_cnn_{backend}_{io_type}")
     hls_model = hls4ml.converters.convert_from_keras_model(
         model2,
         hls_config=hls_config,
-        output_dir=f"hls4mlprj_binary_cnn_{backend}_{io_type}",
+        output_dir=output_dir,
         backend=backend,
         io_type=io_type,
     )
@@ -68,4 +73,5 @@ def test_model2(backend, io_type):
     y = model2.predict(X)  # noqa: F841
     y_hls = hls_model.predict(X)  # noqa: F841
 
+    # # TODO:  enable the comparions after fixing the remaing issues
     # np.testing.assert_allclose(np.squeeze(y_hls), np.squeeze(y), rtol=1e-2, atol=0.01)
