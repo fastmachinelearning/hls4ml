@@ -1,12 +1,14 @@
-======================
-Backends and I/O Types
-======================
+================
+Software Details
+================
 
-Backends
---------
+Frontends and Backends
+----------------------
 
-``hls4ml`` supports the concept of a *backend* that determines the target HLS language.
-Currently, Vivado HLS, Intel HLS, and Vitis HLS (experimental) are supported.
+In ``hls4ml`` there is a a concept of a *frontend* to parse the input NN into an internal model graph, and a *backend* that controls
+what type of output is produced from the graph. Frontends and backends can be independently chosen. Examples of frontends are the
+parsers for Keras or ONNX, and examples of backends are Vivado HLS, Intel HLS, and Vitis HLS. See :ref:`Status and Features` for the
+currently supported frontends and backends.
 
 I/O Types
 ---------

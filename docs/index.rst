@@ -6,9 +6,9 @@
     status
     setup
     release_notes
-    command
     details
     flows
+    command
     reference
 
 .. toctree::
