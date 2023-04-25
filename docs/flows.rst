@@ -49,7 +49,7 @@ New optimizers can be registered with the :py:func:`~hls4ml.model.optimizer.opti
 
 Flows
 -----
-A :py:class:`~hls4ml.model.flow.flow.Flow` is an ordered set of optimizers that represent a single stage in the conversion process. The optimizers
+A :py:class:`~hls4ml.model.flow.flow.Flow` is an ordered set of optimizers that represents a single stage in the conversion process. The optimizers
 from a flow are applied in sequence until they no longer make changes to the model graph (controlled by the ``transform`` return value), after which
 the next flow (stage) can start. Flows may require that other flows are applied before them, ensuring the model graph is in a desired state before a
 flow starts. The function :py:func:`~hls4ml.model.flow.flow.register_flow` is used to register a new flow. Flows are applied on a model graph with
