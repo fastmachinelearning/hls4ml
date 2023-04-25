@@ -194,7 +194,7 @@ def convert_from_keras_model(
     hls_config=None,
     **kwargs,
 ):
-    """Convert to hls4ml model based on the provided configuration.
+    """Convert Keras model to hls4ml model based on the provided configuration.
 
     Args:
         model: Keras model to convert
@@ -221,7 +221,7 @@ def convert_from_keras_model(
         kwargs** (dict, optional): Additional parameters that will be used to create the config of the specified backend
 
     Raises:
-        Exception: If precision and reuse factor are not present in 'hls_config'
+        Exception: If precision and reuse factor are not present in 'hls_config'.
 
     Returns:
         ModelGraph: hls4ml model.
@@ -256,60 +256,45 @@ def convert_from_pytorch_model(
     hls_config=None,
     **kwargs,
 ):
-    """
+    """Convert PyTorch model to hls4ml model based on the provided configuration.
 
-    Convert a Pytorch model to a hls model.
+    Args:
+        model: PyTorch model to conert.
+        input_shape (list): The shape of the input tensor. First element is the batch size, needs to be None
+        output_dir (str, optional): Output directory of the generated HLS project. Defaults to 'my-hls-test'.
+        project_name (str, optional): Name of the HLS project. Defaults to 'myproject'.
+        input_data_tb (str, optional): String representing the path of input data in .npy or .dat format that will be
+            used during csim and cosim. Defaults to None.
+        output_data_tb (str, optional): String representing the path of output data in .npy or .dat format that will be
+            used during csim and cosim. Defaults to None.
+        backend (str, optional): Name of the backend to use, e.g., 'Vivado' or 'Quartus'. Defaults to 'Vivado'.
+        board (str, optional): One of target boards specified in `supported_board.json` file. If set to `None` a default
+            device of a backend will be used. See documentation of the backend used.
+        part (str, optional): The FPGA part. If set to `None` a default part of a backend will be used.
+            See documentation of the backend used. Note that if `board` is specified, the part associated to that board
+            will overwrite any part passed as a parameter.
+        clock_period (int, optional): Clock period of the design.
+            Defaults to 5.
+        io_type (str, optional): Type of implementation used. One of
+            'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
+        hls_config (dict, optional): The HLS config.
+        kwargs** (dict, optional): Additional parameters that will be used to create the config of the specified backend.
 
-    Parameters
-    ----------
-    model : Pytorch model object.
-        Model to be converted to hls model object.
-    input_shape : shape of the input tensor. First element is the batch size, needs to be None
-    output_dir (str, optional): Output directory of the generated HLS
-        project. Defaults to 'my-hls-test'.
-    project_name (str, optional): Name of the HLS project.
-        Defaults to 'myproject'.
-    input_data_tb (str, optional): String representing the path of input data in .npy or .dat format that will be
-        used during csim and cosim.
-    output_data_tb (str, optional): String representing the path of output data in .npy or .dat format that will be
-        used during csim and cosim.
-    backend (str, optional): Name of the backend to use, e.g., 'Vivado'
-        or 'Quartus'.
-    board (str, optional): One of target boards specified in `supported_board.json` file. If set to `None` a default
-        device of a backend will be used. See documentation of the backend used.
-    part (str, optional): The FPGA part. If set to `None` a default part of a backend will be used.
-        See documentation of the backend used. Note that if `board` is specified, the part associated to that board
-        will overwrite any part passed as a parameter.
-    clock_period (int, optional): Clock period of the design.
-        Defaults to 5.
-    io_type (str, optional): Type of implementation used. One of
-        'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
-    hls_config (dict, optional): The HLS config.
-    kwargs** (dict, optional): Additional parameters that will be used to create the config of the specified backend
+    Raises:
+        Exception: If precision and reuse factor are not present in 'hls_config'.
 
-    Returns
-    -------
-    ModelGraph : hls4ml model object.
+    Notes:
+        Pytorch uses the "channels_first" data format for its tensors, while hls4ml expects the "channels_last" format
+        used by keras. By default, hls4ml will automatically add layers to the model which transpose the inputs to the
+        "channels_last"format. Not that this is not supported for the "io_stream" io_type, for which the user will have
+        to transpose the input by hand before passing it to hls4ml. In that case the "inputs_channel_last" argument of
+        the "config_from_pytorch_model" function needs to be set to True. By default, the output of the model remains
+        in the "channels_last" data format. The "transpose_outputs" argument of the "config_from_pytorch_model" can be
+        used to add a layer to the model that transposes back to "channels_first". As before, this will not work for
+        io_stream.
 
-    See Also
-    --------
-    hls4ml.convert_from_keras_model, hls4ml.convert_from_onnx_model
-
-    Examples
-    --------
-    >>> import hls4ml
-    >>> config = hls4ml.utils.config_from_pytorch_model(model, granularity='model')
-    >>> hls_model = hls4ml.converters.convert_from_pytorch_model(model, hls_config=config)
-
-    Notes
-    -----
-    Pytorch uses the "channels_first" data format for its tensors, while hls4ml expects the "channels_last" format used
-    by keras. By default, hls4ml will automatically add layers to the model which transpose the inputs to the "channels_last"
-    format. Not that this is not supported for the "io_stream" io_type, for which the user will have to transpose the input
-    by hand before passing it to hls4ml. In that case the "inputs_channel_last" argument of the "config_from_pytorch_model"
-    function needs to be set to True. By default, the output of the model remains in the "channels_last" data format.
-    The "transpose_outputs" argument of the "config_from_pytorch_model" can be used to add a layer to the model that
-    transposes back to "channels_first". As before, this will not work for io_stream.
+    Returns:
+        ModelGraph: hls4ml model.
     """
 
     config = create_config(output_dir=output_dir, project_name=project_name, backend=backend, **kwargs)
@@ -341,49 +326,37 @@ def convert_from_onnx_model(
     hls_config=None,
     **kwargs,
 ):
-    """
+    """Convert Keras model to hls4ml model based on the provided configuration.
 
-    Convert an ONNX model to a hls model.
+    Args:
+        model: ONNX model to convert.
+        output_dir (str, optional): Output directory of the generated HLS
+            project. Defaults to 'my-hls-test'.
+        project_name (str, optional): Name of the HLS project.
+            Defaults to 'myproject'.
+        input_data_tb (str, optional): String representing the path of input data in .npy or .dat format that will be
+            used during csim and cosim.
+        output_data_tb (str, optional): String representing the path of output data in .npy or .dat format that will be
+            used during csim and cosim.
+        backend (str, optional): Name of the backend to use, e.g., 'Vivado'
+            or 'Quartus'.
+        board (str, optional): One of target boards specified in `supported_board.json` file. If set to `None` a default
+            device of a backend will be used. See documentation of the backend used.
+        part (str, optional): The FPGA part. If set to `None` a default part of a backend will be used.
+            See documentation of the backend used. Note that if `board` is specified, the part associated to that board
+            will overwrite any part passed as a parameter.
+        clock_period (int, optional): Clock period of the design.
+            Defaults to 5.
+        io_type (str, optional): Type of implementation used. One of
+            'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
+        hls_config (dict, optional): The HLS config.
+        kwargs** (dict, optional): Additional parameters that will be used to create the config of the specified backend
 
-    Parameters
-    ----------
-    model : ONNX model object.
-        Model to be converted to hls model object.
-    output_dir (str, optional): Output directory of the generated HLS
-        project. Defaults to 'my-hls-test'.
-    project_name (str, optional): Name of the HLS project.
-        Defaults to 'myproject'.
-    input_data_tb (str, optional): String representing the path of input data in .npy or .dat format that will be
-        used during csim and cosim.
-    output_data_tb (str, optional): String representing the path of output data in .npy or .dat format that will be
-        used during csim and cosim.
-    backend (str, optional): Name of the backend to use, e.g., 'Vivado'
-        or 'Quartus'.
-    board (str, optional): One of target boards specified in `supported_board.json` file. If set to `None` a default
-        device of a backend will be used. See documentation of the backend used.
-    part (str, optional): The FPGA part. If set to `None` a default part of a backend will be used.
-        See documentation of the backend used. Note that if `board` is specified, the part associated to that board
-        will overwrite any part passed as a parameter.
-    clock_period (int, optional): Clock period of the design.
-        Defaults to 5.
-    io_type (str, optional): Type of implementation used. One of
-        'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
-    hls_config (dict, optional): The HLS config.
-    kwargs** (dict, optional): Additional parameters that will be used to create the config of the specified backend
+    Raises:
+        Exception: If precision and reuse factor are not present in 'hls_config'.
 
-    Returns
-    -------
-    ModelGraph : hls4ml model object.
-
-    See Also
-    --------
-    hls4ml.convert_from_keras_model, hls4ml.convert_from_pytorch_model
-
-    Examples
-    --------
-    >>> import hls4ml
-    >>> config = hls4ml.utils.config_from_onnx_model(model, granularity='model')
-    >>> hls_model = hls4ml.converters.convert_from_onnx_model(model, hls_config=config)
+    Returns:
+        ModelGraph: hls4ml model.
     """
 
     config = create_config(output_dir=output_dir, project_name=project_name, backend=backend, **kwargs)
