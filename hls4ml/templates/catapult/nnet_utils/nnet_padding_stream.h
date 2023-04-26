@@ -76,6 +76,7 @@ void zeropad2d_cl(
         PadLeft: for (int j = 0; j < CONFIG_T::pad_left; j++) {
             fill_zero<res_T, CONFIG_T>(res);
         }
+	    #pragma hls_pipeline_init_interval 1
         CopyMain: for (int j = 0; j < CONFIG_T::in_width; j++) {
             fill_data<data_T, res_T, CONFIG_T>(data, res);
         }
