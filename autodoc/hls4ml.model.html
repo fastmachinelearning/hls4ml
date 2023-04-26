@@ -38,7 +38,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev2+g856e778a
+                0.8.0.dev4+ga00f9c60
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -54,9 +54,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../status.html">Status and Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../setup.html">Setup and Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../command.html">Command Line Interface (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../details.html">Backends and I/O Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../details.html">Software Details</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../command.html">Command Line Interface (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reference.html">Citation and Contributors</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Quick API Reference</span></p>
@@ -1108,22 +1108,18 @@ Note:  they don’t necessarily correspond 1:1 with the network layers.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>keras_model</strong> – original keras model</p></li>
-<li><p><strong>hls_model</strong> – converted ModelGraph, with “Trace:True” in the configuration file.</p></li>
-<li><p><strong>X</strong> (<em>array-like</em>) – Input for the model.</p></li>
-<li><p><strong>plot_type</strong> (<em>string</em>) – <p>different methods to visualize the y_model and y_sim differences.
-Possible options include:</p>
-<ul>
-<li><p>’norm_diff’ : square root of the sum of the squares of the differences
-between each output vectors</p></li>
-<li><p>’dist_diff’ : The normalized distribution of the differences of the elements
-between two output vectors</p></li>
-</ul>
-</p></li>
+<li><p><strong>keras_model</strong> – Original keras model.</p></li>
+<li><p><strong>hls_model</strong> (<a class="reference internal" href="#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Converted ModelGraph, with “Trace:True” in the configuration file.</p></li>
+<li><p><strong>X</strong> (<em>ndarray</em>) – Input tensor for the model.</p></li>
+<li><p><strong>plot_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Different methods to visualize the y_model and y_sim differences.
+Possible options include:
+- ‘norm_diff’:: square root of the sum of the squares of the differences between each output vectors.
+- ‘dist_diff’:: The normalized distribution of the differences of the elements between two output vectors.
+Defaults to “dist_diff”.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>plot object of the histogram depicting the difference in each layer’s output</p>
+<dd class="field-even"><p>Plot object of the histogram depicting the difference in each layer’s output.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>matplotlib figure</p>
@@ -1139,20 +1135,20 @@ between two output vectors</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.model.profiling.get_ymodel_keras">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.model.profiling.</span></span><span class="sig-name descname"><span class="pre">get_ymodel_keras</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.profiling.get_ymodel_keras" title="Permalink to this definition"></a></dt>
-<dd><p>Calculate each layer’s ouput and put them into a dictionary</p>
+<dd><p>Calculate each layer’s ouput and put them into a dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>keras_model</strong> – a keras model</p></li>
-<li><p><strong>X</strong> (<em>array-like</em>) – Test data on which to evaluate the model to profile activations.
-Must be formatted suitably for the <code class="docutils literal notranslate"><span class="pre">model.predict(X)</span></code> method.</p></li>
+<li><p><strong>keras_model</strong> (<em>_type_</em>) – A keras Model</p></li>
+<li><p><strong>X</strong> (<em>ndarray</em>) – Test data on which to evaluate the model to profile activations.
+Must be formatted suitably for the <code class="docutils literal notranslate"><span class="pre">model.predict(X)</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A dictionary in the form {“layer_name”: ouput array of layer}</p>
+<dd class="field-even"><p>A dictionary in the form {“layer_name”: ouput array of layer}.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dictionary</p>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1165,25 +1161,27 @@ Must be formatted suitably for the <code class="docutils literal notranslate"><s
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.model.profiling.numerical">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.model.profiling.</span></span><span class="sig-name descname"><span class="pre">numerical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'boxplot'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.profiling.numerical" title="Permalink to this definition"></a></dt>
-<dd><p>Perform numerical profiling of a model</p>
+<dd><p>Perform numerical profiling of a model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>keras</em><em> or </em><em>pytorch model</em>) – The model to profile</p></li>
-<li><p><strong>hls_model</strong> (<a class="reference internal" href="#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – The ModelGraph to profile</p></li>
-<li><p><strong>X</strong> (<em>array-like</em><em>, </em><em>optional</em>) – Test data on which to evaluate the model to profile activations
-Must be formatted suitably for the <code class="docutils literal notranslate"><span class="pre">model.predict(X)</span></code> method</p></li>
-<li><p><strong>plot</strong> (<em>str</em><em>, </em><em>optional</em>) – The type of plot to produce.
-Options are: ‘boxplot’ (default), ‘violinplot’, ‘histogram’,
-‘FacetGrid’</p></li>
+<li><p><strong>model</strong> (<em>optional</em>) – Keras of PyTorch model. Defaults to None.</p></li>
+<li><p><strong>hls_model</strong> (<a class="reference internal" href="#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a><em>, </em><em>optional</em>) – The ModelGraph to profile. Defaults to None.</p></li>
+<li><p><strong>X</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Test data on which to evaluate the model to profile activations.
+Must be formatted suitably for the <code class="docutils literal notranslate"><span class="pre">model.predict(X)</span></code>. Defaults to None.</p></li>
+<li><p><strong>plot</strong> (<em>str</em><em>, </em><em>optional</em>) – The type of plot to produce. Options are: ‘boxplot’ (default), ‘violinplot’, ‘histogram’,
+‘FacetGrid’. Defaults to ‘boxplot’.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The quadruple of produced figures. First weights and biases
-for the pre- and post-optimization models respectively,
+<dd class="field-even"><p><dl class="simple">
+<dt>The quadruple of produced figures. First weights and biases</dt><dd><p>for the pre- and post-optimization models respectively,
 then activations for the pre- and post-optimization models
 respectively. (Optimizations are applied to an ModelGraph by hls4ml,
-a post-optimization ModelGraph is a final model)</p>
+a post-optimization ModelGraph is a final model).</p>
+</dd>
+</dl>
+</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>tuple</p>

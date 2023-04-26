@@ -38,7 +38,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev2+g856e778a
+                0.8.0.dev4+ga00f9c60
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -54,9 +54,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../status.html">Status and Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../setup.html">Setup and Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../command.html">Command Line Interface (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../details.html">Backends and I/O Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../details.html">Software Details</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../command.html">Command Line Interface (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reference.html">Citation and Contributors</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Quick API Reference</span></p>
@@ -274,15 +274,15 @@ computation of these layers may vary across hls4ml backends and conversion confi
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>layer_name</strong> (<em>string</em>) – layer’s name in the ONNX model</p></li>
-<li><p><strong>var_name</strong> (<em>string</em>) – variable to be extracted</p></li>
+<li><p><strong>layer_name</strong> (<em>str</em>) – Layer’s name in the ONNX model.</p></li>
+<li><p><strong>var_name</strong> (<em>str</em>) – Variable to be extracted.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>data</strong> – extracted weights data</p>
+<dd class="field-even"><p>Extracted weights data.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>numpy array</p>
+<dd class="field-odd"><p>ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -339,13 +339,16 @@ graph.output only returns the output’s node index</p>
 <dd><p>Convert onnx model to hls model from configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – onnx configuration from yaml file or passed through API.</p>
+<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – ONNX configuration from yaml file or passed through API.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ModelGraph</strong></p>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – Raised if an unsupported operation is found in the ONNX model.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>hls4ml model object</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph">ModelGraph</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -504,7 +507,7 @@ the filesystem or a dict containing the parsed configuration.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.convert_from_keras_model">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.converters.</span></span><span class="sig-name descname"><span class="pre">convert_from_keras_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'my-hls-test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'myproject'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Vivado'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.convert_from_keras_model" title="Permalink to this definition"></a></dt>
-<dd><p>Convert to hls4ml model based on the provided configuration.</p>
+<dd><p>Convert Keras model to hls4ml model based on the provided configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -533,7 +536,7 @@ Defaults to 5.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>Exception</strong> – If precision and reuse factor are not present in ‘hls_config’</p>
+<dd class="field-even"><p><strong>Exception</strong> – If precision and reuse factor are not present in ‘hls_config’.</p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>hls4ml model.</p>
@@ -547,110 +550,85 @@ Defaults to 5.</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.convert_from_onnx_model">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.converters.</span></span><span class="sig-name descname"><span class="pre">convert_from_onnx_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'my-hls-test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'myproject'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Vivado'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.convert_from_onnx_model" title="Permalink to this definition"></a></dt>
-<dd><p>Convert an ONNX model to a hls model.</p>
+<dd><p>Convert Keras model to hls4ml model based on the provided configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>ONNX model object.</em>) – Model to be converted to hls model object.</p></li>
-<li><p><strong>(</strong><strong>str</strong> (<em>io_type</em>) – project. Defaults to ‘my-hls-test’.</p></li>
-<li><p><strong>optional</strong><strong>)</strong> (<em>Additional parameters that will be used to create the config of the specified backend</em>) – project. Defaults to ‘my-hls-test’.</p></li>
-<li><p><strong>(</strong><strong>str</strong> – Defaults to ‘myproject’.</p></li>
-<li><p><strong>optional</strong><strong>)</strong> – Defaults to ‘myproject’.</p></li>
-<li><p><strong>(</strong><strong>str</strong> – used during csim and cosim.</p></li>
-<li><p><strong>optional</strong><strong>)</strong> – used during csim and cosim.</p></li>
-<li><p><strong>(</strong><strong>str</strong> – used during csim and cosim.</p></li>
-<li><p><strong>optional</strong><strong>)</strong> – used during csim and cosim.</p></li>
-<li><p><strong>(</strong><strong>str</strong> – or ‘Quartus’.</p></li>
-<li><p><strong>optional</strong><strong>)</strong> – or ‘Quartus’.</p></li>
-<li><p><strong>(</strong><strong>str</strong> – device of a backend will be used. See documentation of the backend used.</p></li>
-<li><p><strong>optional</strong><strong>)</strong> – device of a backend will be used. See documentation of the backend used.</p></li>
-<li><p><strong>(</strong><strong>str</strong> – See documentation of the backend used. Note that if <cite>board</cite> is specified, the part associated to that board
+<li><p><strong>model</strong> – ONNX model to convert.</p></li>
+<li><p><strong>output_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – Output directory of the generated HLS
+project. Defaults to ‘my-hls-test’.</p></li>
+<li><p><strong>project_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the HLS project.
+Defaults to ‘myproject’.</p></li>
+<li><p><strong>input_data_tb</strong> (<em>str</em><em>, </em><em>optional</em>) – String representing the path of input data in .npy or .dat format that will be
+used during csim and cosim.</p></li>
+<li><p><strong>output_data_tb</strong> (<em>str</em><em>, </em><em>optional</em>) – String representing the path of output data in .npy or .dat format that will be
+used during csim and cosim.</p></li>
+<li><p><strong>backend</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the backend to use, e.g., ‘Vivado’
+or ‘Quartus’.</p></li>
+<li><p><strong>board</strong> (<em>str</em><em>, </em><em>optional</em>) – One of target boards specified in <cite>supported_board.json</cite> file. If set to <cite>None</cite> a default
+device of a backend will be used. See documentation of the backend used.</p></li>
+<li><p><strong>part</strong> (<em>str</em><em>, </em><em>optional</em>) – The FPGA part. If set to <cite>None</cite> a default part of a backend will be used.
+See documentation of the backend used. Note that if <cite>board</cite> is specified, the part associated to that board
 will overwrite any part passed as a parameter.</p></li>
-<li><p><strong>optional</strong><strong>)</strong> – See documentation of the backend used. Note that if <cite>board</cite> is specified, the part associated to that board
-will overwrite any part passed as a parameter.</p></li>
-<li><p><strong>(</strong><strong>int</strong> (<em>clock_period</em>) – Defaults to 5.</p></li>
-<li><p><strong>optional</strong><strong>)</strong> – Defaults to 5.</p></li>
-<li><p><strong>(</strong><strong>str</strong> – ‘io_parallel’ or ‘io_stream’. Defaults to ‘io_parallel’.</p></li>
-<li><p><strong>optional</strong><strong>)</strong> – ‘io_parallel’ or ‘io_stream’. Defaults to ‘io_parallel’.</p></li>
-<li><p><strong>(</strong><strong>dict</strong> (<em>kwargs**</em>) – </p></li>
-<li><p><strong>optional</strong><strong>)</strong> – </p></li>
-<li><p><strong>(</strong><strong>dict</strong> – </p></li>
-<li><p><strong>optional</strong><strong>)</strong> – </p></li>
+<li><p><strong>clock_period</strong> (<em>int</em><em>, </em><em>optional</em>) – Clock period of the design.
+Defaults to 5.</p></li>
+<li><p><strong>io_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Type of implementation used. One of
+‘io_parallel’ or ‘io_stream’. Defaults to ‘io_parallel’.</p></li>
+<li><p><strong>hls_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – The HLS config.</p></li>
+<li><p><strong>kwargs**</strong> (<em>dict</em><em>, </em><em>optional</em>) – Additional parameters that will be used to create the config of the specified backend</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ModelGraph</strong></p>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – If precision and reuse factor are not present in ‘hls_config’.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>hls4ml model object.</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>hls4ml model.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph">ModelGraph</a></p>
 </dd>
 </dl>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">hls4ml.convert_from_keras_model</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">hls4ml.convert_from_pytorch_model</span></code></p>
-</div>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">hls4ml</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">config_from_onnx_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_onnx_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">hls_config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.convert_from_pytorch_model">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.converters.</span></span><span class="sig-name descname"><span class="pre">convert_from_pytorch_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'my-hls-test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'myproject'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_data_tb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Vivado'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.convert_from_pytorch_model" title="Permalink to this definition"></a></dt>
-<dd><p>Convert a Pytorch model to a hls model.</p>
+<dd><p>Convert PyTorch model to hls4ml model based on the provided configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>Pytorch model object.</em>) – Model to be converted to hls model object.</p></li>
-<li><p><strong>input_shape</strong> (<em>&#64;todo: to be filled</em>) – </p></li>
-<li><p><strong>(</strong><strong>str</strong> (<em>io_type</em>) – project. Defaults to ‘my-hls-test’.</p></li>
-<li><p><strong>optional</strong><strong>)</strong> (<em>Additional parameters that will be used to create the config of the specified backend</em>) – project. Defaults to ‘my-hls-test’.</p></li>
-<li><p><strong>(</strong><strong>str</strong> – Defaults to ‘myproject’.</p></li>
-<li><p><strong>optional</strong><strong>)</strong> – Defaults to ‘myproject’.</p></li>
-<li><p><strong>(</strong><strong>str</strong> – used during csim and cosim.</p></li>
-<li><p><strong>optional</strong><strong>)</strong> – used during csim and cosim.</p></li>
-<li><p><strong>(</strong><strong>str</strong> – used during csim and cosim.</p></li>
-<li><p><strong>optional</strong><strong>)</strong> – used during csim and cosim.</p></li>
-<li><p><strong>(</strong><strong>str</strong> – or ‘Quartus’.</p></li>
-<li><p><strong>optional</strong><strong>)</strong> – or ‘Quartus’.</p></li>
-<li><p><strong>(</strong><strong>str</strong> – device of a backend will be used. See documentation of the backend used.</p></li>
-<li><p><strong>optional</strong><strong>)</strong> – device of a backend will be used. See documentation of the backend used.</p></li>
-<li><p><strong>(</strong><strong>str</strong> – See documentation of the backend used. Note that if <cite>board</cite> is specified, the part associated to that board
+<li><p><strong>model</strong> – PyTorch model to conert.</p></li>
+<li><p><strong>input_shape</strong> (<em>list</em>) – The shape of the input tensor.</p></li>
+<li><p><strong>output_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – Output directory of the generated HLS project. Defaults to ‘my-hls-test’.</p></li>
+<li><p><strong>project_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the HLS project. Defaults to ‘myproject’.</p></li>
+<li><p><strong>input_data_tb</strong> (<em>str</em><em>, </em><em>optional</em>) – String representing the path of input data in .npy or .dat format that will be
+used during csim and cosim. Defaults to None.</p></li>
+<li><p><strong>output_data_tb</strong> (<em>str</em><em>, </em><em>optional</em>) – String representing the path of output data in .npy or .dat format that will be
+used during csim and cosim. Defaults to None.</p></li>
+<li><p><strong>backend</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the backend to use, e.g., ‘Vivado’ or ‘Quartus’. Defaults to ‘Vivado’.</p></li>
+<li><p><strong>board</strong> (<em>str</em><em>, </em><em>optional</em>) – One of target boards specified in <cite>supported_board.json</cite> file. If set to <cite>None</cite> a default
+device of a backend will be used. See documentation of the backend used.</p></li>
+<li><p><strong>part</strong> (<em>str</em><em>, </em><em>optional</em>) – The FPGA part. If set to <cite>None</cite> a default part of a backend will be used.
+See documentation of the backend used. Note that if <cite>board</cite> is specified, the part associated to that board
 will overwrite any part passed as a parameter.</p></li>
-<li><p><strong>optional</strong><strong>)</strong> – See documentation of the backend used. Note that if <cite>board</cite> is specified, the part associated to that board
-will overwrite any part passed as a parameter.</p></li>
-<li><p><strong>(</strong><strong>int</strong> (<em>clock_period</em>) – Defaults to 5.</p></li>
-<li><p><strong>optional</strong><strong>)</strong> – Defaults to 5.</p></li>
-<li><p><strong>(</strong><strong>str</strong> – ‘io_parallel’ or ‘io_stream’. Defaults to ‘io_parallel’.</p></li>
-<li><p><strong>optional</strong><strong>)</strong> – ‘io_parallel’ or ‘io_stream’. Defaults to ‘io_parallel’.</p></li>
-<li><p><strong>(</strong><strong>dict</strong> (<em>kwargs**</em>) – </p></li>
-<li><p><strong>optional</strong><strong>)</strong> – </p></li>
-<li><p><strong>(</strong><strong>dict</strong> – </p></li>
-<li><p><strong>optional</strong><strong>)</strong> – </p></li>
+<li><p><strong>clock_period</strong> (<em>int</em><em>, </em><em>optional</em>) – Clock period of the design.
+Defaults to 5.</p></li>
+<li><p><strong>io_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Type of implementation used. One of
+‘io_parallel’ or ‘io_stream’. Defaults to ‘io_parallel’.</p></li>
+<li><p><strong>hls_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – The HLS config.</p></li>
+<li><p><strong>kwargs**</strong> (<em>dict</em><em>, </em><em>optional</em>) – Additional parameters that will be used to create the config of the specified backend.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ModelGraph</strong></p>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – If precision and reuse factor are not present in ‘hls_config’.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>hls4ml model object.</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>hls4ml model.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph">ModelGraph</a></p>
 </dd>
 </dl>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">hls4ml.convert_from_keras_model</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">hls4ml.convert_from_onnx_model</span></code></p>
-</div>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">hls4ml</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">config_from_pytorch_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_pytorch_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">hls_config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</pre></div>
-</div>
-<p class="rubric">Notes</p>
-<p>Only sequential Pytorch models are supported for now.</p>
 </dd></dl>
 
 <dl class="py function">

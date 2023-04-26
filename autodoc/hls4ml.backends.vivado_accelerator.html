@@ -38,7 +38,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev2+g856e778a
+                0.8.0.dev4+ga00f9c60
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -54,9 +54,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../status.html">Status and Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../setup.html">Setup and Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../command.html">Command Line Interface (deprecated)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../details.html">Backends and I/O Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../details.html">Software Details</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../command.html">Command Line Interface (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reference.html">Citation and Contributors</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Quick API Reference</span></p>
@@ -186,11 +186,14 @@ VivadoAcceleratorBackend will round the number of bits used to the next power-of
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend.make_xclbin">
 <span class="sig-name descname"><span class="pre">make_xclbin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">platform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'xilinx_u250_xdma_201830_2'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend.make_xclbin" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Create the xclbin for the given model and target platform.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>-</em>) – </p></li>
-<li><p><strong>platform</strong> (<em>-</em>) – deployment target platform, both can be found on the Getting Started section of the Alveo card.</p></li>
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Compiled and build model.</p></li>
+<li><p><strong>platform</strong> (<em>str</em><em>, </em><em>optional</em>) – Development/Deployment target platform, must be installed first.
+The host machine only requires the deployment target platform. Refer to the Getting Started section of
+the Alveo guide. Defaults to ‘xilinx_u250_xdma_201830_2’.</p></li>
 </ul>
 </dd>
 </dl>

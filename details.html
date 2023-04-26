@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Backends and I/O Types &mdash; hls4ml 0.6.0 documentation</title>
+  <title>Software Details &mdash; hls4ml 0.6.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/sphinx_contributors.css" type="text/css" />
@@ -22,7 +22,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Optimizer Passes and Flows" href="flows.html" />
-    <link rel="prev" title="Command Line Interface (deprecated)" href="command.html" /> 
+    <link rel="prev" title="Release Notes" href="release_notes.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -38,7 +38,7 @@
               <img src="_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev2+g856e778a
+                0.8.0.dev4+ga00f9c60
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -54,13 +54,13 @@
 <li class="toctree-l1"><a class="reference internal" href="status.html">Status and Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup and Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="command.html">Command Line Interface (deprecated)</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Backends and I/O Types</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#backends">Backends</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Software Details</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#frontends-and-backends">Frontends and Backends</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#i-o-types">I/O Types</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command.html">Command Line Interface (deprecated)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Citation and Contributors</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Quick API Reference</span></p>
@@ -99,7 +99,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Backends and I/O Types</li>
+      <li class="breadcrumb-item active">Software Details</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/details.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -109,12 +109,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="backends-and-i-o-types">
-<h1>Backends and I/O Types<a class="headerlink" href="#backends-and-i-o-types" title="Permalink to this heading"></a></h1>
-<section id="backends">
-<h2>Backends<a class="headerlink" href="#backends" title="Permalink to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> supports the concept of a <em>backend</em> that determines the target HLS language.
-Currently, Vivado HLS, Intel HLS, and Vitis HLS (experimental) are supported.</p>
+  <section id="software-details">
+<h1>Software Details<a class="headerlink" href="#software-details" title="Permalink to this heading"></a></h1>
+<section id="frontends-and-backends">
+<h2>Frontends and Backends<a class="headerlink" href="#frontends-and-backends" title="Permalink to this heading"></a></h2>
+<p>In <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> there is a a concept of a <em>frontend</em> to parse the input NN into an internal model graph, and a <em>backend</em> that controls
+what type of output is produced from the graph. Frontends and backends can be independently chosen. Examples of frontends are the
+parsers for Keras or ONNX, and examples of backends are Vivado HLS, Intel HLS, and Vitis HLS. See <a class="reference internal" href="status.html#status-and-features"><span class="std std-ref">Status and Features</span></a> for the
+currently supported frontends and backends.</p>
 </section>
 <section id="i-o-types">
 <h2>I/O Types<a class="headerlink" href="#i-o-types" title="Permalink to this heading"></a></h2>
@@ -141,7 +143,7 @@ in the <a class="reference internal" href="advanced/fifo_depth.html#fifo-buffer-
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="command.html" class="btn btn-neutral float-left" title="Command Line Interface (deprecated)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="release_notes.html" class="btn btn-neutral float-left" title="Release Notes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="flows.html" class="btn btn-neutral float-right" title="Optimizer Passes and Flows" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
