@@ -218,7 +218,7 @@ KernelShiftWidth:
 #pragma hls_unroll
 KernelPushHeight: 
     for (int i_ih = 0; i_ih < CONFIG_T::filt_height; i_ih++) {
-        // #pragma HLS UNROLL
+#pragma hls_unroll
     KernelPushChannel: 
         for (int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
             kernel_window[lastheight + i_ih * CONFIG_T::filt_width * CONFIG_T::n_chan + i_ic] = shift_buffer[i_ih][i_ic];

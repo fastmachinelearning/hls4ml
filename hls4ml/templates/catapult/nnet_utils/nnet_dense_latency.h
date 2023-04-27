@@ -38,6 +38,8 @@ void dense_latency(
   // For Catapult, add an extra scope so that we can apply the pipeline pragma as if it applied to the function
   #pragma hls_pipeline_init_interval II_reuse_factor
   #pragma hls_preserve_loop yes
+  #pragma hls_unroll //yet to finalize on this 
+
   do {
     data_T cache;
     typename CONFIG_T::accum_t mult[CONFIG_T::n_in*CONFIG_T::n_out];
