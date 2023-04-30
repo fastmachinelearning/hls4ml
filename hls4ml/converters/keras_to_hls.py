@@ -320,18 +320,19 @@ def parse_keras_model(model_arch, reader):
             inputs_map[layer['name']] = act_layer['name']
             if output_layers is not None and layer['name'] in output_layers:
                 output_layers = [act_layer['name'] if name == layer['name'] else name for name in output_layers]
+            output_shapes[act_layer['name']] = output_shape
             layer_list.append(act_layer)
 
         assert output_shape is not None
 
         output_shapes[layer['name']] = output_shape
 
-    return layer_list, input_layers, output_layers
+    return layer_list, input_layers, output_layers, output_shapes
 
 
 def keras_to_hls(config):
     model_arch, reader = get_model_arch(config)
-    layer_list, input_layers, output_layers = parse_keras_model(model_arch, reader)
+    layer_list, input_layers, output_layers, _ = parse_keras_model(model_arch, reader)
     print('Creating HLS model')
     hls_model = ModelGraph(config, layer_list, input_layers, output_layers)
     return hls_model

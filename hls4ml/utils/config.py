@@ -135,7 +135,7 @@ def config_from_keras_model(
 
     reader = hls4ml.converters.KerasModelReader(model)
 
-    layer_list, _, _ = hls4ml.converters.parse_keras_model(model_arch, reader)
+    layer_list, _, _, _ = hls4ml.converters.parse_keras_model(model_arch, reader)
 
     def make_layer_config(layer):
         cls_name = layer['class_name']
