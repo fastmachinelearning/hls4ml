@@ -79,7 +79,7 @@ PartitionLoop:
         Result:
             for (int i_res = 0; i_res < mult_n_out; i_res++) {
                 #pragma HLS UNROLL
-                *(res++) = cast<data_T, res_T, CONFIG_T>(acc[i_res]);
+                *(res++) = cast<data_T, res_T, typename CONFIG_T::mult_config>(acc[i_res]);
             }
         }
     }
