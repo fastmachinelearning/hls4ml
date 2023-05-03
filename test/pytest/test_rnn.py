@@ -111,8 +111,8 @@ def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, strategy, s
     )
     hls_config['LayerName'][layer_name]['static'] = static
     hls_config['LayerName'][layer_name]['Strategy'] = strategy
-    prj_name = 'hls4mlprj_rnn_accuracy_{}_static_{}_ret_seq_{}_{}_{}'.format(
-        rnn_layer.__class__.__name__.lower(), int(static), int(return_sequences), backend, io_type
+    prj_name = 'hls4mlprj_rnn_accuracy_{}_static_{}_ret_seq_{}_{}_{}_{}'.format(
+        rnn_layer.__class__.__name__.lower(), int(static), int(return_sequences), backend, io_type, strategy
     )
     output_dir = str(test_root_path / prj_name)
 
