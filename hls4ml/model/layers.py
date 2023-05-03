@@ -112,7 +112,7 @@ class Layer:
                 config_value, str
             ):  # TODO maybe move this to __setitem__ of AttributeDict?
                 precision = self.model.config.backend.convert_precision_string(config_value)
-                config_value = NamedType(self.name + config_key, precision)
+                config_value = NamedType(self.name + '_' + config_key, precision)
             self.attributes[config_key] = config_value
 
         self.initialize()
