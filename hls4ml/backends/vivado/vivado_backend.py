@@ -210,9 +210,9 @@ class VivadoBackend(FPGABackend):
         return parse_vivado_report(model.config.get_output_dir())
 
     def _validate_conv_strategy(self, layer):
-        if layer.model.config.model_strategy.lower() != 'resource':
-            print(f'WARNING: Cannot use "Latency" model strategy for {layer.name} layer. Switching to "Resource" strategy.')
-            layer.model.config.model_strategy = 'Resource'
+        if layer.model.config.pipeline_style.lower() != 'dataflow':
+            print(f'WARNING: Layer {layer.name} requires "dataflow" pipeline style. Switching to "dataflow" pipeline style.')
+            layer.model.config.pipeline_style = 'dataflow'
 
     @layer_optimizer(Layer)
     def init_base_layer(self, layer):
