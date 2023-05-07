@@ -279,7 +279,7 @@ class HLSConfig:
     def _validate_hls_config(self):
         use_dataflow = False
         if self.pipeline_style.lower() == 'pipeline' and self.model_compression:
-            print('WARNING: Compression enabled while model strategy set to "Latency".')
+            print('WARNING: Compression enabled while pipeline style set to "pipeline".')
             use_dataflow = True
         for layer_type, strategy in self.layer_type_strategy.items():
             if strategy.lower() == 'resource' and self.pipeline_style.lower() == 'pipeline':
