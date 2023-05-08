@@ -84,7 +84,8 @@ def test_rnn_parsing(rnn_layer, return_sequences):
 )
 @pytest.mark.parametrize('return_sequences', [True, False])
 @pytest.mark.parametrize('static', [True, False])
-def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, static):
+@pytest.mark.parametrize('strategy', ['latency', 'resource'])
+def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, strategy, static):
     # Subtract 0.5 to include negative values
     input_shape = (12, 8)
     X = np.random.rand(50, *input_shape) - 0.5
@@ -109,8 +110,9 @@ def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, static):
         keras_model, granularity='name', default_precision=default_precision, backend=backend
     )
     hls_config['LayerName'][layer_name]['static'] = static
-    prj_name = 'hls4mlprj_rnn_accuracy_{}_static_{}_ret_seq_{}_{}_{}'.format(
-        rnn_layer.__class__.__name__.lower(), int(static), int(return_sequences), backend, io_type
+    hls_config['LayerName'][layer_name]['Strategy'] = strategy
+    prj_name = 'hls4mlprj_rnn_accuracy_{}_static_{}_ret_seq_{}_{}_{}_{}'.format(
+        rnn_layer.__class__.__name__.lower(), int(static), int(return_sequences), backend, io_type, strategy
     )
     output_dir = str(test_root_path / prj_name)
 
