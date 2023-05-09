@@ -1,34 +1,14 @@
-=====
-Setup
-=====
+=====================
+Setup and Quick Start
+=====================
 
-This chapter is dedicated to setting up the tool.  We discuss software dependencies of ``hls4ml``.  There is a quick start guide for beginners to get familiar quickly.  Then we discuss in more detail the features of the tool and user configuration.
-
-Dependencies
-============
-
-* NumPy: required for array-based computations
-   * https://numpy.org
-* H5Py: required for the translation of Keras model files
-   * https://www.h5py.org
-* PyYAML: required for configuration file parsing
-   * https://pypi.python.org/pypi/PyYAML
-* QKeras: required for working with quantized models
-   * https://github.com/google/qkeras
-* PyTorch: required for reading in PyTorch models
-   * https://pytorch.org
-* ONNX: required for reading in ONNX models. Note that you need an install of Protobuf and NumPy to build ONNX. Detailed instructions are included in the link.
-   * https://github.com/onnx/onnx
-* Xilinx Vivado license or Intel Quartus license: a license is required for the synthesis of generated RTL IP
-
-
-Quick Start
-=============
-
-For basic concepts to understand the tool, please visit the :doc:`Concepts <concepts>` chapter. Here we give line-by-line instructions for simply running the tool out-of-the-box and getting a feel for the workflow.
+Getting started with ``hls4ml`` is very easy. There are several installation options available and once installed,
+it takes only a few lines of code to run your first synthesis.
 
 Installation
-------------
+============
+
+The latest release of ``hls4ml`` can be installed with ``pip``:
 
 .. code-block::
 
@@ -40,10 +20,50 @@ If you want to use our :doc:`profiling <api/profiling>` toolbox, you might need 
 
    pip install hls4ml[profiling]
 
-Getting started
----------------
+``hls4ml`` is also available as a ``conda`` package in the ``conda-forge`` repository. To install, run:
 
-To get started with ``hls4ml``, we provide some default example models for conversion:
+.. code-block::
+
+   conda install -c conda-forge hls4ml
+
+Development version
+-------------------
+
+``hls4ml`` is rapidly evolving and many experimental features and bugfixes are available on the development branch. Development
+version can be installed directly from ``git``:
+
+.. code-block::
+
+   pip install git+https://github.com/fastmachinelearning/hls4ml@main
+
+
+Dependencies
+============
+
+The ``hls4ml`` library depends on a number of Python packages and external tools for synthesis and simulation. Python dependencies are automatically managed
+by ``pip`` or ``conda``.
+
+* `TensorFlow <https://pypi.org/project/tensorflow/>`_ (version 2.4 and newer) and `QKeras <https://pypi.org/project/qkeras/>`_ are required by the Keras converter.
+* `ONNX <https://pypi.org/project/onnx/>`_ (version 1.4.0 and newer) is required by the ONNX converter.
+* `PyTorch <https://pytorch.org/get-started>`_ package is optional. If not installed, the PyTorch converter will not be available.
+
+Running C simulation from Python requires a C++11-compatible compiler. On Linux, a GCC C++ compiler ``g++`` is required. Any version from a recent
+Linux should work. On MacOS, the *clang*-based ``g++`` is enough.
+
+To run FPGA synthesis, installation of following tools is required:
+
+* Xilinx Vivado HLS 2018.2 to 2020.1 for synthesis for Xilinx FPGAs
+
+  * Vitis HLS 2022.1 or newer is required for synthesis for Xilinx FPGAs using the experimental ``Vitis`` backend.
+
+* Intel Quartus 20.1 to 21.4 for the synthesis for Intel FPGAs
+
+
+Quick Start
+=============
+
+For basic concepts to understand the tool, please visit the :doc:`Concepts <concepts>` chapter.
+Here we give line-by-line instructions to demonstrate the general workflow.
 
 .. code-block:: python
 
@@ -79,8 +99,10 @@ If you want to configure your model further, check out our :doc:`Configuration <
 
 Apart from our main API, we also support model conversion using a command line interface, check out our next section to find out more:
 
-Getting started with hls4ml commands (optional)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Getting started with hls4ml CLI (deprecated)
+--------------------------------------------
+
+As an alternative to the recommended Python PI, the command-line interface is provided via the ``hls4ml`` command.
 
 To follow this tutorial, you must first download our ``example-models`` repository:
 
@@ -97,15 +119,11 @@ Alternatively, you can clone the ``hls4ml`` repository with submodules
 The model files, along with other configuration parameters, are defined in the ``.yml`` files.
 Further information about ``.yml`` files can be found in :doc:`Configuration <api/configuration>` page.
 
-In order to create an example HLS project:
-
-
-Go to ``example-models/`` from the main directory:
+In order to create an example HLS project, first go to ``example-models/`` from the main directory:
 
 .. code-block:: bash
 
    cd example-models/
-
 
 And use this command to translate a Keras model:
 
@@ -133,25 +151,25 @@ This will create a Vivado HLS project with your model implementation!
 
 .. code-block:: bash
 
-   vivado_hls -f build_prj.tcl "csim=1 synth=1 cosim=1 export=1"
+   vivado_hls -f build_prj.tcl "csim=1 synth=1 cosim=1 export=1 vsynth=1"
 
 Setting the additional parameters from ``1`` to ``0`` disables that step, but disabling ``synth`` also disables ``cosim`` and ``export``.
 
 Further help
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
 
+* For further information about how to use ``hls4ml``\ , do: ``hls4ml --help`` or ``hls4ml -h``
+* If you need help for a particular ``command``\ , ``hls4ml command -h`` will show help for the requested ``command``
+* We provide a detailed documentation for each of the command in the :doc:`Command Help <../command>` section
 
-*
-  For further information about how to use ``hls4ml``\ , do: ``hls4ml --help`` or ``hls4ml -h``
+Existing examples
+-----------------
 
-*
-  If you need help for a particular ``command``\ , ``hls4ml command -h`` will show help for the requested ``command``
-
-*
-  We provide a detailed documentation for each of the command in the :doc:`Command Help <../command>` section
+* Examples of model files and weights can be found in `example_models <https://github.com/fastmachinelearning/example-models>`_ directory.
+* Training codes and examples of resources needed to train the models can be found in the `tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`__.
 
 Uninstalling
-^^^^^^^^^^^^^^
+------------
 
 To uninstall ``hls4ml``:
 
@@ -159,12 +177,8 @@ To uninstall ``hls4ml``:
 
    pip uninstall hls4ml
 
-Existing examples
------------------
+If installed with ``conda``, remove the package with:
 
+.. code-block:: bash
 
-*
-  Examples of model files and weights can be found in `example_models <https://github.com/fastmachinelearning/example-models>`_ directory.
-
-*
-  Training codes and examples of resources needed to train the models can be found in the `tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`__.
+   conda remove hls4ml

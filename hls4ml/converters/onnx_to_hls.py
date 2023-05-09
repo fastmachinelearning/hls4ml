@@ -29,18 +29,12 @@ class ONNXDataReader:
     def get_weights_data(self, layer_name, var_name):
         """Extract weights data from ONNX model.
 
-        Parameters
-        ----------
-        layer_name : string
-            layer's name in the ONNX model
-        var_name : string
-            variable to be extracted
+        Args:
+            layer_name (str): Layer's name in the ONNX model.
+            var_name (str): Variable to be extracted.
 
-        Returns
-        -------
-        data : numpy array
-            extracted weights data
-
+        Returns:
+            ndarray: Extracted weights data.
         """
         # Get the node associated with the layer name
         node = next(node for node in self.model.graph.node if node.name == layer_name)
@@ -218,17 +212,15 @@ def get_out_layer_name(graph):
 def onnx_to_hls(config):
     """Convert onnx model to hls model from configuration.
 
-    Parameters
-    ----------
-    config: dict
-        onnx configuration from yaml file or passed through API.
+    Args:
+        config (dict): ONNX configuration from yaml file or passed through API.
 
-    Returns
-    -------
-    ModelGraph : hls4ml model object
+    Raises:
+        Exception: Raised if an unsupported operation is found in the ONNX model.
 
+    Returns:
+        ModelGraph: hls4ml model object
     """
-
     # This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
 

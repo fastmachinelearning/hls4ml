@@ -54,7 +54,7 @@ Accum1:
 Result:
     for (int ires = 0; ires < CONFIG_T::n_chan; ires++) {
         #pragma HLS UNROLL
-        res[ires] = cast<data_T, res_T, CONFIG_T>(acc[ires]);
+        res[ires] = cast<data_T, res_T, typename CONFIG_T::mult_config>(acc[ires]);
     }
 }
 
