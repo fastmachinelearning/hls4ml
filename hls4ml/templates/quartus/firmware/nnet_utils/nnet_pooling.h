@@ -163,7 +163,8 @@ FiltLoop:
 
             // If the pool op is Average, the zero-padding needs to be removed from the results
             if (CONFIG_T::pool_op == Average)
-                res[(inp_col / CONFIG_T::stride_width) * CONFIG_T::n_filt + filt] *= (CONFIG_T::pool_width / img_overlap);
+                res[(inp_col / CONFIG_T::stride_width) * CONFIG_T::n_filt + filt] *=
+                    (static_cast<data_T>(CONFIG_T::pool_width) / img_overlap);
         }
     }
 }
@@ -281,7 +282,8 @@ FiltLoop:
                 if (CONFIG_T::pool_op == Average)
                     res[(inp_col / CONFIG_T::stride_height) * CONFIG_T::out_width * CONFIG_T::n_filt +
                         (inp_width / CONFIG_T::stride_width) * CONFIG_T::n_filt + filt] *=
-                        (CONFIG_T::pool_height * CONFIG_T::pool_width / img_overlap);
+                        (static_cast<data_T>(CONFIG_T::pool_height) * static_cast<data_T>(CONFIG_T::pool_width) /
+                         img_overlap);
             }
         }
     }
