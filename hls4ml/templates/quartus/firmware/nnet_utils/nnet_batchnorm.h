@@ -15,6 +15,7 @@ struct batchnorm_config {
     // Layer Sizes
     static const unsigned n_in = 10;
     static const unsigned n_filt = -1;
+    static const unsigned n_scale_bias = 10;
 
     // Resource reuse info
     static const unsigned io_type = io_parallel;
@@ -29,8 +30,8 @@ struct batchnorm_config {
 
 template <class data_T, class res_T, typename CONFIG_T>
 void normalize(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in],
-               const typename CONFIG_T::scale_t scale[CONFIG_T::n_in],
-               const typename CONFIG_T::bias_t bias[CONFIG_T::n_in]) {
+               const typename CONFIG_T::scale_t scale[CONFIG_T::n_scale_bias],
+               const typename CONFIG_T::bias_t bias[CONFIG_T::n_scale_bias]) {
 // Calcuate result
 Result:
     #pragma unroll
@@ -54,6 +55,7 @@ struct batchnorm_quantized_tanh_config {
     // Layer Sizes
     static const unsigned n_in = 10;
     static const unsigned n_filt = -1;
+    static const unsigned n_scale_bias = 10;
 
     // Resource reuse info
     static const unsigned io_type = io_parallel;
@@ -63,34 +65,37 @@ struct batchnorm_quantized_tanh_config {
 
 template <class data_T, typename CONFIG_T>
 void normalize_binary_tanh(data_T data[CONFIG_T::n_in], ac_int<1, false> res[CONFIG_T::n_in],
-                           const data_T threshold[CONFIG_T::n_in]) {
+                           const data_T threshold[CONFIG_T::n_scale_bias]) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         ac_int<1, false> cache;
         data_T datareg = data[ii];
-        if (datareg > threshold[ii])
+        int norm_index = CONFIG_T::n_filt == -1 ? ii : ii % CONFIG_T::n_filt;
+        if (datareg > threshold[norm_index])
             cache = 1;
         else
             cache = 0;
 
-        res[ii] = (ac_int<1, false>)cache;
+        res[ii] = cache;
     }
 }
 
 template <class data_T, typename CONFIG_T>
 void normalize_ternary_tanh(data_T data[CONFIG_T::n_in], ac_int<2, true> res[CONFIG_T::n_in],
-                            const data_T threshold_hi[CONFIG_T::n_in], const data_T threshold_lo[CONFIG_T::n_in]) {
+                            const data_T threshold_hi[CONFIG_T::n_scale_bias],
+                            const data_T threshold_lo[CONFIG_T::n_scale_bias]) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         ac_int<2, true> cache;
         data_T datareg = data[ii];
-        if (datareg > threshold_hi[ii])
+        int norm_index = CONFIG_T::n_filt == -1 ? ii : ii % CONFIG_T::n_filt;
+        if (datareg > threshold_hi[norm_index])
             cache = 1;
-        else if (datareg <= threshold_lo[ii])
+        else if (datareg <= threshold_lo[norm_index])
             cache = -1;
         else
             cache = 0;
-        res[ii] = (ac_int<2, true>)cache;
+        res[ii] = cache;
     }
 }
 
