@@ -16,6 +16,7 @@ pipeline {
           sh '''#!/bin/bash --login
               conda activate hls4ml-py37
               pip install tensorflow pyparsing
+              pip install onnx==1.12
               pip install -U ../ --user
               ./convert-keras-models.sh -x -f keras-models.txt
               pip uninstall hls4ml -y'''
