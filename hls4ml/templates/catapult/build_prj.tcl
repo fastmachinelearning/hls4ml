@@ -90,6 +90,10 @@ flow package require /SCVerify
 # are ever enhanced to take a path option then this setting can be used:
 #   flow package option set /SCVerify/INVOKE_ARGS {firmware/weights tb_data}
 
+flow package require /VSCode
+# To launch VSCode on the C++ HLS design:
+#   cd my-Catapult-test
+#   /wv/hlstools/vscode/LATEST/code Catapult.code-workspace
 
 go compile
 
