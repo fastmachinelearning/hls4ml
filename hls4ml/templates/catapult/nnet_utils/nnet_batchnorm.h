@@ -93,6 +93,7 @@ struct batchnorm_quantized_tanh_config
     // Layer Sizes
     static const unsigned n_in = 10;
     static const unsigned n_filt = -1;
+    static const unsigned n_scale_bias = 10;
     
     // Resource reuse info
     static const unsigned io_type = io_parallel;
@@ -101,7 +102,8 @@ struct batchnorm_quantized_tanh_config
 };
 
 template<class data_T, typename CONFIG_T>
-void  normalize_binary_tanh(data_T data[CONFIG_T::n_in], ac_int<1,false> res[CONFIG_T::n_in], data_T threshold[CONFIG_T::n_in])
+void  normalize_binary_tanh(data_T data[CONFIG_T::n_in], ac_int<1,false> res[CONFIG_T::n_in],
+                            data_T threshold[CONFIG_T::n_in])
 {
     //#pragma HLS PIPELINE
     //#pragma HLS ARRAY_PARTITION variable=res complete
@@ -114,13 +116,13 @@ void  normalize_binary_tanh(data_T data[CONFIG_T::n_in], ac_int<1,false> res[CON
         if( datareg > threshold[norm_index] ) cache = 1;
         else cache = 0;
 
-        res[ii] = (ac_int<1,false>) cache;
- 
+        res[ii] = cache;
     }   
 }
 
 template<class data_T, typename CONFIG_T>
-void  normalize_ternary_tanh(data_T data[CONFIG_T::n_in], ac_int<2,true> res[CONFIG_T::n_in], data_T threshold_hi[CONFIG_T::n_in], data_T threshold_lo[CONFIG_T::n_in])
+void  normalize_ternary_tanh(data_T data[CONFIG_T::n_in], ac_int<2,true> res[CONFIG_T::n_in],
+                             data_T threshold_hi[CONFIG_T::n_in], data_T threshold_lo[CONFIG_T::n_in])
 {
     //#pragma HLS PIPELINE
     //#pragma HLS ARRAY_PARTITION variable=res complete
@@ -134,8 +136,7 @@ void  normalize_ternary_tanh(data_T data[CONFIG_T::n_in], ac_int<2,true> res[CON
         else if( datareg <= threshold_lo[norm_index]) cache = -1;
         else cache = 0;
 
-        res[ii] = (ac_int<2,true>) cache;
-
+        res[ii] = cache;
     }
 }
 

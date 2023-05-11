@@ -16,7 +16,7 @@ recr_mult_config_template = """struct config{index} : nnet::dense_config {{
     typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
-    typedef ap_{index_t} index_t;
+    typedef {index_t.name} index_t;
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
@@ -28,7 +28,7 @@ activ_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned table_size = {table_size};
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
-    typedef ap_{table_t} table_t;
+    typedef {table_t.name} table_t;
 }};\n"""
 
 recr_activ_config_template = """struct {type}_config{index}_recr : nnet::activ_config {{
@@ -36,7 +36,7 @@ recr_activ_config_template = """struct {type}_config{index}_recr : nnet::activ_c
     static const unsigned table_size = {table_size};
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
-    typedef ap_{table_t} table_t;
+    typedef {table_t.name} table_t;
 }};\n"""
 
 # LSTM + GRU templates

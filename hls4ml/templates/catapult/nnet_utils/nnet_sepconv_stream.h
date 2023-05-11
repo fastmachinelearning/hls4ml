@@ -50,9 +50,9 @@ void depthwise_product(
     }
 
     // Cast to "res_t" type
-    Result: for(int ires = 0; ires < CONFIG_T::n_chan; ires++){
+    Result: for (int ires = 0; ires < CONFIG_T::n_chan; ires++){
         #pragma hls_unroll
-        res[ires] = cast<data_T, res_T, CONFIG_T>(acc[ires]);
+        res[ires] = cast<data_T, res_T, CONFIG_T::mult_config>(acc[ires]);
     }
 }
 

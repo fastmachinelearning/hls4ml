@@ -422,31 +422,22 @@ def activations_torch(model, X, fmt='longform', plot='boxplot'):
 
 
 def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
-    """
-    Perform numerical profiling of a model
+    """Perform numerical profiling of a model.
 
-    Parameters
-    ----------
-    model : keras or pytorch model
-        The model to profile
-    hls_model : ModelGraph
-        The ModelGraph to profile
-    X : array-like, optional
-        Test data on which to evaluate the model to profile activations
-        Must be formatted suitably for the ``model.predict(X)`` method
-    plot : str, optional
-        The type of plot to produce.
-        Options are: 'boxplot' (default), 'violinplot', 'histogram',
-        'FacetGrid'
+    Args:
+        model (optional): Keras of PyTorch model. Defaults to None.
+        hls_model (ModelGraph, optional): The ModelGraph to profile. Defaults to None.
+        X (ndarray, optional): Test data on which to evaluate the model to profile activations.
+            Must be formatted suitably for the ``model.predict(X)``. Defaults to None.
+        plot (str, optional): The type of plot to produce. Options are: 'boxplot' (default), 'violinplot', 'histogram',
+            'FacetGrid'. Defaults to 'boxplot'.
 
-    Returns
-    -------
-    tuple
-        The quadruple of produced figures. First weights and biases
-        for the pre- and post-optimization models respectively,
-        then activations for the pre- and post-optimization models
-        respectively. (Optimizations are applied to an ModelGraph by hls4ml,
-        a post-optimization ModelGraph is a final model)
+    Returns:
+        tuple: The quadruple of produced figures. First weights and biases
+            for the pre- and post-optimization models respectively,
+            then activations for the pre- and post-optimization models
+            respectively. (Optimizations are applied to an ModelGraph by hls4ml,
+            a post-optimization ModelGraph is a final model).
     """
     wp, wph, ap, aph = None, None, None, None
 
@@ -554,21 +545,15 @@ def _get_output(layer, X, model_input):
 
 
 def get_ymodel_keras(keras_model, X):
-    """
-    Calculate each layer's ouput and put them into a dictionary
+    """Calculate each layer's ouput and put them into a dictionary.
 
-    Parameters
-    ----------
-    keras_model :
-        a keras model
-    X : array-like
-        Test data on which to evaluate the model to profile activations.
-        Must be formatted suitably for the ``model.predict(X)`` method.
+    Args:
+        keras_model (_type_): A keras Model
+        X (ndarray): Test data on which to evaluate the model to profile activations.
+            Must be formatted suitably for the ``model.predict(X)``.
 
-    Returns
-    -------
-    dictionary
-        A dictionary in the form {"layer_name": ouput array of layer}
+    Returns:
+        dict: A dictionary in the form {"layer_name": ouput array of layer}.
     """
 
     ymodel = {}
@@ -668,30 +653,20 @@ def _dist_diff(ymodel, ysim):
 
 
 def compare(keras_model, hls_model, X, plot_type="dist_diff"):
-    """
-    Compare each layer's output in keras and hls model. Note that the hls_model should not be compiled before using this.
+    """Compare each layer's output in keras and hls model. Note that the hls_model should not be compiled before using this.
 
-    Parameters
-    ----------
-    keras_model :
-        original keras model
-    hls_model :
-        converted ModelGraph, with "Trace:True" in the configuration file.
-    X : array-like
-        Input for the model.
-    plot_type : string
-        different methods to visualize the y_model and y_sim differences.
-        Possible options include:
+    Args:
+        keras_model: Original keras model.
+        hls_model (ModelGraph): Converted ModelGraph, with "Trace:True" in the configuration file.
+        X (ndarray): Input tensor for the model.
+        plot_type (str, optional): Different methods to visualize the y_model and y_sim differences.
+            Possible options include:
+            - 'norm_diff':: square root of the sum of the squares of the differences between each output vectors.
+            - 'dist_diff':: The normalized distribution of the differences of the elements between two output vectors.
+            Defaults to "dist_diff".
 
-        - 'norm_diff' : square root of the sum of the squares of the differences
-          between each output vectors
-        - 'dist_diff' : The normalized distribution of the differences of the elements
-          between two output vectors
-
-    Returns
-    -------
-    matplotlib figure
-        plot object of the histogram depicting the difference in each layer's output
+    Returns:
+        matplotlib figure: Plot object of the histogram depicting the difference in each layer's output.
     """
 
     # Take in output from both models

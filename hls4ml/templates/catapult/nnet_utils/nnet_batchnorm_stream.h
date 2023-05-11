@@ -84,7 +84,7 @@ void normalize_binary_tanh(
         //#pragma HLS PIPELINE
 
         data_T in_data = data.read();
-        nnet::array<ac_int<1,false>, CONFIG_T::n_in> out_data;
+        nnet::array<ac_int<1,false>, CONFIG_T::n_scale_bias> out_data;
         //#pragma HLS DATA_PACK variable=out_data
 
         BatchNormPack: for (int j = 0; j < data_T::size; j++) {
@@ -110,7 +110,7 @@ void normalize_ternary_tanh(
         //#pragma HLS PIPELINE
 
         data_T in_data = data.read();
-        nnet::array<ac_int<2,true>, CONFIG_T::n_in> out_data;
+        nnet::array<ac_int<2,true>, CONFIG_T::n_scale_bias> out_data;
         //#pragma HLS DATA_PACK variable=out_data
 
         BatchNormPack: for (int j = 0; j < data_T::size; j++) {

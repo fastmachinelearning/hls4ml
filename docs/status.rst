@@ -3,7 +3,7 @@ Status and Features
 ===================
 
 Status
-========
+======
 
 The latest version (built from ``main``) is |version|.
 The stable version (released on PyPI) is |release|.
@@ -49,14 +49,14 @@ A summary of the on-going status of the ``hls4ml`` tool is in the table below.
    * - MLP
      - ``supported``
      - ``limited``
-     - ``supported``
+     - ``in development``
      - ``supported``
      - ``supported``
      - ``experimental``
    * - CNN
      - ``supported``
      - ``limited``
-     - ``supported``
+     - ``in development``
      - ``supported``
      - ``supported``
      - ``experimental``
