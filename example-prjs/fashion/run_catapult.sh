@@ -20,6 +20,8 @@ source $VENV/bin/activate
 
 rm -rf ./my-Catapult-test*
 
+mkdir -p tb_data
+
 # to run catapult+vivado_rtl
 sed -e 's/Vivado/Catapult/g' vivado.py >catapult.py
 # to only run catapult
@@ -33,5 +35,5 @@ echo ""
 echo "====================================================="
 echo "====================================================="
 echo "C++ EXECUTION"
-pushd my-Catapult-test; rm -f a.out; $MGC_HOME/bin/g++ -std=c++17 -I. -DWEIGHTS_DIR=\"firmware/weights\" -Ifirmware -I$MGC_HOME/shared/include firmware/myproject.cpp myproject_test.cpp; a.out; popd
+pushd my-Catapult-test; rm -f a.out; $MGC_HOME/bin/g++ -g -std=c++17 -I. -DWEIGHTS_DIR=\"firmware/weights\" -Ifirmware -I$MGC_HOME/shared/include firmware/myproject.cpp myproject_test.cpp; a.out; popd
 
