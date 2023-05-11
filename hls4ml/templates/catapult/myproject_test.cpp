@@ -28,7 +28,7 @@
 
 #include "firmware/myproject.h"
 #include "firmware/nnet_utils/nnet_helpers.h"
-#include "firmware/parameters.h"
+// #include "firmware/parameters.h"
 
 #include <mc_scverify.h>
 
@@ -92,13 +92,14 @@ CCS_MAIN(int argc, char *argv[])
       //hls-fpga-machine-learning insert data
 
       //hls-fpga-machine-learning insert top-level-function
-
+#if 0
       if (e % CHECKPOINT == 0) {
         std::cout << "Predictions" << std::endl;
         //hls-fpga-machine-learning insert predictions
         std::cout << "Quantized predictions" << std::endl;
         //hls-fpga-machine-learning insert quantized
       }
+#endif
       e++;
 
       //hls-fpga-machine-learning insert tb-output
