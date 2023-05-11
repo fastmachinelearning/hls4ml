@@ -64,10 +64,10 @@ void dense_latency(
 
     // Do the matrix-multiply
     #pragma hls_unroll
-    Product1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
+    Product1: for (unsigned int ii = 0; ii < CONFIG_T::n_in; ii++) {
         cache = data[ii];
         #pragma hls_unroll
-        Product2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
+        Product2: for (unsigned int jj = 0; jj < CONFIG_T::n_out; jj++) {
         int index = ii*CONFIG_T::n_out+jj;
         mult[index] = CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(cache, weights[index]);
         }
@@ -75,15 +75,15 @@ void dense_latency(
 
     // Initialize accumulator with input biases
     #pragma hls_unroll
-    ResetAccum: for(int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
+    ResetAccum: for (unsigned int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
         acc[iacc] = (typename CONFIG_T::accum_t) biases[iacc];
     }
 
     // Accumulate multiplication result
     #pragma hls_unroll
-    Accum1: for(int ii = 0; ii < CONFIG_T::n_in; ii++) {
+    Accum1: for (unsigned int ii = 0; ii < CONFIG_T::n_in; ii++) {
         #pragma hls_unroll
-        Accum2: for(int jj = 0; jj < CONFIG_T::n_out; jj++) {
+        Accum2: for (unsigned int jj = 0; jj < CONFIG_T::n_out; jj++) {
         int index = ii*CONFIG_T::n_out+jj;
         acc[jj] += mult[index];
         }
@@ -91,7 +91,7 @@ void dense_latency(
 
     // Cast to "res_t" type
     #pragma hls_unroll
-    Result: for(int ires = 0; ires < CONFIG_T::n_out; ires++){
+    Result: for (unsigned int ires = 0; ires < CONFIG_T::n_out; ires++){
         //res[ires] = (res_T) (acc[ires]);
         res[ires] = cast<data_T, res_T, CONFIG_T>(acc[ires]);
     }

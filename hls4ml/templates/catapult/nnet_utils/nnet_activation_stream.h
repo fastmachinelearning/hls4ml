@@ -73,7 +73,7 @@ void linear(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 template<class data_T, class res_T, typename CONFIG_T>
 void relu(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     #pragma hls_pipeline_init_interval 1
-    ReLUActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+    ReLUActLoop: for (unsigned int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         //#pragma HLS PIPELINE
 
         data_T in_data = data.read();
@@ -81,7 +81,7 @@ void relu(ac_channel<data_T> &data, ac_channel<res_T> &res) {
         //#pragma HLS DATA_PACK variable=out_data
 
         #pragma hls_unroll
-        ReLUPackLoop: for (int j = 0; j < res_T::size; j++) {
+        ReLUPackLoop: for (unsigned int j = 0; j < res_T::size; j++) {
             //#pragma HLS UNROLL
             if (in_data[j] > 0) out_data[j] = in_data[j];
             else out_data[j] = 0;

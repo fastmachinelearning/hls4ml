@@ -24,7 +24,7 @@ struct array {
     }
 
     array& operator=(const array &other) {
-        if(&other == this)
+        if (&other == this)
             return *this;
 
         assert(N == other.size && "Array sizes must match.");

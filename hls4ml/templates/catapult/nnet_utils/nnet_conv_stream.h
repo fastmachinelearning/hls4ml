@@ -90,7 +90,7 @@ void mult_buffer(ac_channel<typename data_T::value_type> data_window[CONFIG_T::k
 
 #pragma hls_unroll
 InitData: 
-    for (int id = 0; id < CONFIG_T::kernel_size * CONFIG_T::n_chan; id++) {
+    for (unsigned int id = 0; id < CONFIG_T::kernel_size * CONFIG_T::n_chan; id++) {
         // #pragma HLS UNROLL
         data[id] = data_window[id].read();
     }
@@ -182,7 +182,7 @@ KernelShiftWidth:
     static const int lastheight = (CONFIG_T::filt_width - 1) * CONFIG_T::n_chan;
 #pragma hls_unroll
 KernelPushChannel: 
-    for (int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
+    for (unsigned int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
         // #pragma HLS UNROLL
         kernel_window[lastheight + i_ic] = in_elem[i_ic];
     }
@@ -217,10 +217,10 @@ KernelShiftWidth:
     static const int lastheight = (CONFIG_T::filt_width - 1) * CONFIG_T::n_chan;
 #pragma hls_unroll
 KernelPushHeight: 
-    for (int i_ih = 0; i_ih < CONFIG_T::filt_height; i_ih++) {
+    for (unsigned int i_ih = 0; i_ih < CONFIG_T::filt_height; i_ih++) {
 #pragma hls_unroll
     KernelPushChannel: 
-        for (int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
+        for (unsigned int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
             kernel_window[lastheight + i_ih * CONFIG_T::filt_width * CONFIG_T::n_chan + i_ic] = shift_buffer[i_ih][i_ic];
         }
     }
@@ -241,7 +241,7 @@ void shift_line_buffer(
 
 #pragma hls_unroll
 UpdateBuffer: 
-    for (int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
+    for (unsigned int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
         // #pragma HLS UNROLL
 
         // Insert pixel(s) at end of shift buffer
@@ -250,7 +250,7 @@ UpdateBuffer:
 
 #pragma hls_unroll
 LineBufferDataIn: 
-    for (int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
+    for (unsigned int i_ic = 0; i_ic < CONFIG_T::n_chan; i_ic++) {
         // Shift the shift buffer into the line buffer
     #pragma hls_unroll
     LineBufferShift: 

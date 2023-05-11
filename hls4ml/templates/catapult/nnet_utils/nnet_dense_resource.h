@@ -99,7 +99,7 @@ void dense_resource_rf_leq_nin(
     // Cast to "res_t" type
     #pragma hls_unroll
     Result:
-    for (int ires = 0; ires < CONFIG_T::n_out; ires++) {
+    for (unsigned int ires = 0; ires < CONFIG_T::n_out; ires++) {
         //#pragma HLS UNROLL
         res[ires] = cast<data_T, res_T, CONFIG_T>(acc[ires]);
     }
@@ -183,7 +183,7 @@ void dense_resource_rf_gt_nin_rem0(
     // Cast to "res_t" type
     #pragma hls_unroll
     Result:
-    for (int ires = 0; ires < CONFIG_T::n_out; ires++) {
+    for (unsigned int ires = 0; ires < CONFIG_T::n_out; ires++) {
         //#pragma HLS UNROLL
         res[ires] = cast<data_T, res_T, CONFIG_T>(acc[ires]);
     }

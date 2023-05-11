@@ -347,9 +347,9 @@ void print_result(res_T result[SIZE], std::ostream &out, bool keep = false) {
 template<class res_T, size_t SIZE>
 void print_result(ac_channel<res_T> &result, std::ostream &out, bool keep = false) {
     if (result.debug_size() >= SIZE / res_T::size) {
-    for(int i = 0; i < SIZE / res_T::size; i++) {
+    for (unsigned int i = 0; i < SIZE / res_T::size; i++) {
         res_T res_pack = result[i]; // peek
-        for(int j = 0; j < res_T::size; j++) {
+        for (unsigned int j = 0; j < res_T::size; j++) {
             out << res_pack[j] << " ";
         }
         if (!keep) (void)result.read(); // pop
@@ -365,9 +365,9 @@ void fill_zero(data_T data[SIZE]) {
 
 template<class data_T, size_t SIZE>
 void fill_zero(ac_channel<data_T> &data) {
-    for(int i = 0; i < SIZE / data_T::size; i++) {
+    for (unsigned int i = 0; i < SIZE / data_T::size; i++) {
         data_T data_pack;
-        for(int j = 0; j < data_T::size; j++) {
+        for (unsigned int j = 0; j < data_T::size; j++) {
             data_pack[j] = 0.;
         }
         data.write(data_pack);

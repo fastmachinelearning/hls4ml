@@ -10,7 +10,7 @@ void fill_zero(ac_channel<res_T> &res) {
     //#pragma HLS INLINE
     res_T res_part;
    #pragma hls_unroll
-	for (int c = 0; c < CONFIG_T::n_chan; c++) {
+	for (unsigned int c = 0; c < CONFIG_T::n_chan; c++) {
         //#pragma HLS UNROLL
 	    res_part[c] = 0;
     }
@@ -23,7 +23,7 @@ void fill_data(ac_channel<data_T> &data, ac_channel<res_T> &res) {
     data_T data_part = data.read();
     res_T res_part;
     #pragma hls_unroll
-    for (int c = 0; c < CONFIG_T::n_chan; c++) {
+    for (unsigned int c = 0; c < CONFIG_T::n_chan; c++) {
         //#pragma HLS UNROLL
         res_part[c] = data_part[c];
     }
@@ -66,27 +66,27 @@ void zeropad2d_cl(
     ac_channel<res_T>  &res
 ) {
 
-    PadTop: for (int i = 0; i < CONFIG_T::pad_top; i++) {
-        PadTopWidth: for (int j = 0; j < CONFIG_T::out_width; j++) {
+    PadTop: for (unsigned int i = 0; i < CONFIG_T::pad_top; i++) {
+        PadTopWidth: for (unsigned int j = 0; j < CONFIG_T::out_width; j++) {
             fill_zero<res_T, CONFIG_T>(res);
         }
     }
 
-    PadMain: for (int i = 0; i < CONFIG_T::in_height; i++) {
-        PadLeft: for (int j = 0; j < CONFIG_T::pad_left; j++) {
+    PadMain: for (unsigned int i = 0; i < CONFIG_T::in_height; i++) {
+        PadLeft: for (unsigned int j = 0; j < CONFIG_T::pad_left; j++) {
             fill_zero<res_T, CONFIG_T>(res);
         }
 	    #pragma hls_pipeline_init_interval 1
-        CopyMain: for (int j = 0; j < CONFIG_T::in_width; j++) {
+        CopyMain: for (unsigned int j = 0; j < CONFIG_T::in_width; j++) {
             fill_data<data_T, res_T, CONFIG_T>(data, res);
         }
-        PadRight: for (int j = 0; j < CONFIG_T::pad_right; j++) {
+        PadRight: for (unsigned int j = 0; j < CONFIG_T::pad_right; j++) {
             fill_zero<res_T, CONFIG_T>(res);
         }
     }
 
-    PadBottom: for (int i = 0; i < CONFIG_T::pad_bottom; i++) {
-        PadBottomWidth: for (int j = 0; j < CONFIG_T::out_width; j++) {
+    PadBottom: for (unsigned int i = 0; i < CONFIG_T::pad_bottom; i++) {
+        PadBottomWidth: for (unsigned int j = 0; j < CONFIG_T::out_width; j++) {
             fill_zero<res_T, CONFIG_T>(res);
         }
     }

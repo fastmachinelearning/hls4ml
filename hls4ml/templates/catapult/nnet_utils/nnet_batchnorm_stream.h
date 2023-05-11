@@ -46,7 +46,7 @@ void normalize(
     CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::scale_t>::limit(multiplier_limit);
 
     #pragma hls_pipeline_init_interval ii
-    BatchNormLoop: for (int i = 0; i < CONFIG_T::n_in / data_T::size; i++) {
+    BatchNormLoop: for (unsigned int i = 0; i < CONFIG_T::n_in / data_T::size; i++) {
         //#pragma HLS PIPELINE II=ii
 
         data_T in_data = data.read();
@@ -54,7 +54,7 @@ void normalize(
         //#pragma HLS DATA_PACK variable=out_data
 
         #pragma hls_unroll
-        BatchNormpack: for (int j = 0; j < data_T::size; j++) {
+        BatchNormpack: for (unsigned int j = 0; j < data_T::size; j++) {
             // #pragma HLS UNROLL
             int norm_index;
             if (CONFIG_T::n_filt==-1) {
