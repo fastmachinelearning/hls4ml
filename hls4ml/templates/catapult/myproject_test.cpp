@@ -36,7 +36,8 @@
 
 //hls-fpga-machine-learning insert declare weights
 
-#define CHECKPOINT 5000
+#define CHECKPOINT 5
+#define E_LIMIT 20
 
 namespace nnet {
     bool trace_enabled = true;
@@ -66,6 +67,8 @@ CCS_MAIN(int argc, char *argv[])
     }
 #endif
 
+  std::cout << "Processing CHECKPOINT set to " << CHECKPOINT << std::endl;
+  std::cout << "Processing E_LIMIT set to " << E_LIMIT << std::endl;
   std::string iline;
   std::string pline;
   int e = 0;
@@ -104,8 +107,8 @@ CCS_MAIN(int argc, char *argv[])
 
       //hls-fpga-machine-learning insert tb-output
 
-      if (e > 10 ) {
-        std::cout << "Simulation stopping after 10 iterations" << std::endl;
+      if ((E_LIMIT > 0) && (e > E_LIMIT)) {
+        std::cout << "Simulation stopping after " << E_LIMIT << " iterations" << std::endl;
         break;
       }
     }
