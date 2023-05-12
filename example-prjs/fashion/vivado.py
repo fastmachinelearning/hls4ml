@@ -19,5 +19,5 @@ config['OutputPredictions'] = 'tb_data/tb_output_predictions.dat'
 config['Backend'] = 'Vivado'
 config['IOType'] = 'io_stream'
 hls_model = hls4ml.converters.keras_to_hls(config)
-hls_model.build(csim=True)
+hls_model.build()
 
