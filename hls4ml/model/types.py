@@ -370,6 +370,7 @@ class NamedType:
 
     For convenience, hls4ml gives names to data types used in the generated HLS. This is equivalent to defining types
     in C/C++ like::
+
         typedef precision name;
 
     Args:
