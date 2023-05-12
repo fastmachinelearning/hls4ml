@@ -514,9 +514,11 @@ class CatapultWriter(Writer):
             elif '//hls-fpga-machine-learning insert tb-output' in line:
                 newline = line
                 for out in model_outputs:
-                    newline += indent + 'nnet::print_result<{}, {}>({}, fout);\n'.format(
-                        out.type.name, out.size_cpp(), out.name
-                    )  # TODO enable this
+#                    newline += indent + 'std::cout << "Iteration " << e " Output {} size = " << {}.debug_size() << std::endl;\n'.format(out.name,out.name)
+                    newline += indent + 'while ({}.available(1)) (void){}.read();\n'.format(out.name, out.name)
+#                    newline += indent + 'nnet::print_result<{}, {}>({}, fout);\n'.format(
+#                        out.type.name, out.size_cpp(), out.name
+#                    )  # TODO enable this
             elif (
                 '// hls-fpga-machine-learning insert output' in line
                 or '// hls-fpga-machine-learning insert quantized' in line

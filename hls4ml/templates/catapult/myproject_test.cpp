@@ -104,6 +104,10 @@ CCS_MAIN(int argc, char *argv[])
 
       //hls-fpga-machine-learning insert tb-output
 
+      if (e > 10 ) {
+        std::cout << "Simulation stopping after 10 iterations" << std::endl;
+        break;
+      }
     }
     fin.close();
     fpr.close();
