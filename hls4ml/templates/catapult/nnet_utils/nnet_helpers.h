@@ -346,16 +346,25 @@ void print_result(res_T result[SIZE], std::ostream &out, bool keep = false) {
 
 template<class res_T, size_t SIZE>
 void print_result(ac_channel<res_T> &result, std::ostream &out, bool keep = false) {
-    if (result.debug_size() >= SIZE / res_T::size) {
-    for (unsigned int i = 0; i < SIZE / res_T::size; i++) {
-        res_T res_pack = result[i]; // peek
-        for (unsigned int j = 0; j < res_T::size; j++) {
-            out << res_pack[j] << " ";
-        }
-        if (!keep) (void)result.read(); // pop
+  if (!keep) {
+    while (result.available(1)) {
+      res_T res_pack = result.read();
+      for (unsigned int j = 0; j < res_T::size; j++) {
+        out << res_pack[j] << " ";
+      }
     }
     out << std::endl;
+  } else {
+    if (result.debug_size() >= SIZE / res_T::size) {
+      for (unsigned int i = 0; i < SIZE / res_T::size; i++) {
+        res_T res_pack = result[i]; // peek
+        for (unsigned int j = 0; j < res_T::size; j++) {
+          out << res_pack[j] << " ";
+        }
+      }
+      out << std::endl;
     }
+  }
 }
 
 template<class data_T, size_t SIZE>
