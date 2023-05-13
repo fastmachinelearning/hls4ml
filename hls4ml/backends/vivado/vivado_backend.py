@@ -5,7 +5,7 @@ import numpy as np
 
 from hls4ml.backends import FPGABackend
 from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter, VivadoArrayVariableConverter
-from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute
+from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute, TypeAttribute
 from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import (
     GRU,
@@ -51,6 +51,8 @@ class VivadoBackend(FPGABackend):
             attrs = self.attribute_map.get(layer, [])
             attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1))
             attrs.append(ConfigurableAttribute('static', value_type=bool, default=True))
+            attrs.append(ConfigurableAttribute('table_size', default=1024))
+            attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8)))
             self.attribute_map[layer] = attrs
 
         # Add ParallelizationFactor to Conv1D/2D
@@ -393,46 +395,30 @@ class VivadoBackend(FPGABackend):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
-        index_t = IntegerPrecisionType(width=1, signed=False)
-
-        if 'table_t' not in layer.attributes:
-            layer.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
-        if 'table_size' not in layer.attributes:
-            layer.set_attr('table_size', 1024)
         if layer.model.config.is_resource_strategy(layer):
             n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
             self.set_closest_reuse_factor(layer, n_in, n_out)
             self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
-            layer.weights['weight'].data = np.transpose(layer.weights['weight'].data)
-            layer.weights['recurrent_weight'].data = np.transpose(layer.weights['recurrent_weight'].data)
             layer.set_attr('strategy', 'resource')
         else:
             layer.set_attr('strategy', 'latency')
 
-        layer.set_attr('index_t', index_t)
+        layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))
 
     @layer_optimizer(GRU)
     def init_gru(self, layer):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
-        index_t = IntegerPrecisionType(width=1, signed=False)
-
-        if 'table_t' not in layer.attributes:
-            layer.set_attr('table_t', FixedPrecisionType(width=18, integer=8))
-        if 'table_size' not in layer.attributes:
-            layer.set_attr('table_size', 1024)
         if layer.model.config.is_resource_strategy(layer):
             n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
             self.set_closest_reuse_factor(layer, n_in, n_out)
             self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
-            layer.weights['weight'].data = np.transpose(layer.weights['weight'].data)
-            layer.weights['recurrent_weight'].data = np.transpose(layer.weights['recurrent_weight'].data)
             layer.set_attr('strategy', 'resource')
         else:
             layer.set_attr('strategy', 'latency')
 
-        layer.set_attr('index_t', index_t)
+        layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))
 
     @layer_optimizer(GarNet)
     def init_garnet(self, layer):
