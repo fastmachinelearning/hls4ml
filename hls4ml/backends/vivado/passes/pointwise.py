@@ -82,6 +82,11 @@ class OptimizePointwiseConv(OptimizerPass):
             expand_axis = tuple(range(int(dim[0])))
             pw_node.weights['weight'].data = np.expand_dims(node.weights['weight'].data, axis=expand_axis)
         pw_node.weights['bias'].data = node.weights['bias'].data
+        # Set strategy to ensure lowercase string is passed to the template
+        if model.config.is_resource_strategy(pw_node):
+            pw_node.set_attr('strategy', 'resource')
+        else:
+            pw_node.set_attr('strategy', 'latency')
         model.replace_node(node, pw_node)
 
         return True
