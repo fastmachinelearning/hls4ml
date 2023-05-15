@@ -34,14 +34,6 @@ except ImportError:
     warnings.warn("WARNING: ONNX converter is not enabled!", stacklevel=1)
     __onnx_enabled__ = False
 
-try:
-    from hls4ml.converters.tf_to_hls import tf_to_hls
-
-    __tensorflow_enabled__ = True
-except ImportError:
-    warnings.warn("WARNING: Tensorflow converter is not enabled!", stacklevel=1)
-    __tensorflow_enabled__ = False
-
 # ----------Layer handling register----------#
 model_types = ['keras', 'pytorch', 'onnx']
 
@@ -139,11 +131,6 @@ def convert_from_config(config):
             model = pytorch_to_hls(yamlConfig)
         else:
             raise Exception("PyTorch not found. Please install PyTorch.")
-    elif 'TensorFlowModel' in yamlConfig:
-        if __tensorflow_enabled__:
-            model = tf_to_hls(yamlConfig)
-        else:
-            raise Exception("TensorFlow not found. Please install TensorFlow.")
     else:
         model = keras_to_hls(yamlConfig)
 
