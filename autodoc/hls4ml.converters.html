@@ -38,7 +38,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev1+g4f0cea5d
+                0.8.0.dev2+g1108c65b
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -163,15 +163,10 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasFileReader">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">KerasFileReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasFileReader" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.converters.keras_to_hls.KerasReader" title="hls4ml.converters.keras_to_hls.KerasReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">KerasReader</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasFileReader.get_weights_data">
 <span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasFileReader.get_weights_data" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasFileReader.get_weights_shape">
-<span class="sig-name descname"><span class="pre">get_weights_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasFileReader.get_weights_shape" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -179,15 +174,27 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasModelReader">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">KerasModelReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasModelReader" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.converters.keras_to_hls.KerasReader" title="hls4ml.converters.keras_to_hls.KerasReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">KerasReader</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasModelReader.get_weights_data">
 <span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasModelReader.get_weights_data" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasNestedFileReader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">KerasNestedFileReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nested_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasNestedFileReader" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.converters.keras_to_hls.KerasFileReader" title="hls4ml.converters.keras_to_hls.KerasFileReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">KerasFileReader</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasReader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">KerasReader</span></span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasReader" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasModelReader.get_weights_shape">
-<span class="sig-name descname"><span class="pre">get_weights_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasModelReader.get_weights_shape" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.KerasReader.get_weights_data">
+<span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.KerasReader.get_weights_data" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -212,6 +219,11 @@ computation of these layers may vary across hls4ml backends and conversion confi
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.get_weights_data">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_to_hls.</span></span><span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.keras_to_hls.get_weights_data" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_to_hls.keras_handler">

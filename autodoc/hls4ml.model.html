@@ -38,7 +38,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev1+g4f0cea5d
+                0.8.0.dev2+g1108c65b
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -376,14 +376,13 @@ when defining the expected attributes of layer classes.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.graph.ModelGraph">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.graph.</span></span><span class="sig-name descname"><span class="pre">ModelGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_reader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.ModelGraph" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.graph.</span></span><span class="sig-name descname"><span class="pre">ModelGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.ModelGraph" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>The ModelGraph represents the network that is being processed by hls4ml.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config</strong> (<em>dict</em>) – The configuration dictionary</p></li>
-<li><p><strong>data_reader</strong> – The data reader from where weights can be extracted</p></li>
 <li><p><strong>layer_list</strong> (<em>list</em><em>(</em><em>dict</em><em>)</em>) – The list contains a dictionary for each input layer</p></li>
 <li><p><strong>inputs</strong> (<em>list</em><em>, </em><em>optional</em>) – The inputs to the model. If None, determined from layer_list</p></li>
 <li><p><strong>outputs</strong> (<em>list</em><em>, </em><em>optional</em>) – The outputs to the model. If None, determined from layer_list</p></li>
@@ -446,11 +445,6 @@ Defaults to ‘single’.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.graph.ModelGraph.get_weight_variables">
 <span class="sig-name descname"><span class="pre">get_weight_variables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.ModelGraph.get_weight_variables" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hls4ml.model.graph.ModelGraph.get_weights_data">
-<span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.graph.ModelGraph.get_weights_data" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
