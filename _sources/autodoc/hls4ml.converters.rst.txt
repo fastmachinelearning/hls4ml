@@ -38,14 +38,6 @@ hls4ml.converters.pytorch\_to\_hls module
    :undoc-members:
    :show-inheritance:
 
-hls4ml.converters.tf\_to\_hls module
-------------------------------------
-
-.. automodule:: hls4ml.converters.tf_to_hls
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 hls4ml.converters.utils module
 ------------------------------
 
