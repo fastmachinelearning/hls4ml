@@ -9,6 +9,7 @@ from hls4ml.model.types import IntegerPrecisionType, NamedType, XnorPrecisionTyp
 batchnorm_quantized_tanh_config_template = """struct config{index} : nnet::batchnorm_quantized_tanh_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_filt = {n_filt};
+    static const unsigned n_scale_bias = (n_filt == -1) ? n_in : n_filt;
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
 }};\n"""

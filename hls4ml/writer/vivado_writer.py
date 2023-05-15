@@ -171,7 +171,7 @@ class VivadoWriter(Writer):
                     newline += indent + '#pragma HLS INTERFACE ap_vld port={},{} \n'.format(
                         ','.join(all_inputs), ','.join(all_outputs)
                     )
-                    if model.config.model_strategy.lower() == 'resource':
+                    if model.config.pipeline_style.lower() == 'dataflow':
                         newline += indent + '#pragma HLS DATAFLOW \n'
                     else:
                         newline += indent + '#pragma HLS PIPELINE \n'

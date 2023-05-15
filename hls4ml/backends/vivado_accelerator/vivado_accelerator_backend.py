@@ -58,13 +58,13 @@ class VivadoAcceleratorBackend(VivadoBackend):
         return parse_vivado_report(model.config.get_output_dir())
 
     def make_xclbin(self, model, platform='xilinx_u250_xdma_201830_2'):
-        """
+        """Create the xclbin for the given model and target platform.
 
-        Parameters
-        ----------
-        - model : compiled and built hls_model.
-        - platform : development Target Platform, must be installed first. On the host machine is required only the
-                     deployment target platform, both can be found on the Getting Started section of the Alveo card.
+        Args:
+            model (ModelGraph): Compiled and build model.
+            platform (str, optional): Development/Deployment target platform, must be installed first.
+                The host machine only requires the deployment target platform. Refer to the Getting Started section of
+                the Alveo guide. Defaults to 'xilinx_u250_xdma_201830_2'.
         """
         curr_dir = os.getcwd()
         abs_path_dir = os.path.abspath(model.config.get_output_dir())

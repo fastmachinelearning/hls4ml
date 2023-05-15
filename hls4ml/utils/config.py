@@ -99,7 +99,7 @@ def config_from_keras_model(
     Args:
         model: Keras model
         granularity (str, optional): Granularity of the created config. Defaults to 'model'.
-            Can be set to 'model', 'type' and 'layer'.
+            Can be set to 'model', 'type' and 'name'.
 
             Granularity can be used to generate a more verbose config that can be fine-tuned.
             The default granularity ('model') will generate config keys that apply to the whole
