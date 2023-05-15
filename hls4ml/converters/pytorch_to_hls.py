@@ -159,7 +159,6 @@ def pytorch_to_hls(config):
     print("Input Shape: ", input_shapes)
 
     for layer_name, pytorch_layer in model.named_modules():
-
         pytorch_class = pytorch_layer.__class__.__name__
 
         # First module is the whole model's class

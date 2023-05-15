@@ -79,7 +79,6 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         self.mult2_template = recr_mult_config_template
 
     def format(self, node):
-
         params = self._default_config_params(node)
 
         params['n_in'] = node.get_input_variable().dim_names[1]

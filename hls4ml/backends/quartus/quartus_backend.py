@@ -133,7 +133,6 @@ class QuartusBackend(FPGABackend):
         return config
 
     def build(self, model, synth=True, fpgasynth=False, log_level=1, cont_if_large_area=False):
-
         """
         Builds the project using Intel HLS compiler.
 

@@ -27,21 +27,18 @@ def _load_data_config_avai(model_name):
 
 
 def _data_is_available(model_name):
-
     data = _load_data_config_avai(model_name)
 
     return data['example_data']
 
 
 def _config_is_available(model_name):
-
     data = _load_data_config_avai(model_name)
 
     return data['example_config']
 
 
 def _create_default_config(model_name, model_config, backend):
-
     # Initiate the configuration file
     config = create_config(backend=backend)
 
@@ -69,7 +66,6 @@ def _filter_name(model_name):
 
 
 def _load_example_data(model_name):
-
     print("Downloading input & output example files ...")
 
     filtered_name = _filter_name(model_name)
@@ -89,7 +85,6 @@ def _load_example_data(model_name):
 
 
 def _load_example_config(model_name):
-
     print("Downloading configuration files ...")
 
     filtered_name = _filter_name(model_name)
@@ -179,7 +174,6 @@ def fetch_example_model(model_name, backend='Vivado'):
 
 
 def fetch_example_list():
-
     link_to_list = 'https://raw.githubusercontent.com/hls-fpga-machine-learning/example-models/master/available_models.json'
 
     temp_file, _ = urlretrieve(link_to_list)

@@ -239,7 +239,6 @@ class VivadoWriter(Writer):
         indent = '    '
 
         for line in f.readlines():
-
             if 'MYPROJECT' in line:
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
             elif 'myproject' in line:
@@ -273,7 +272,6 @@ class VivadoWriter(Writer):
         fout = open(f'{model.config.get_output_dir()}/firmware/defines.h', 'w')
 
         for line in f.readlines():
-
             # Insert numbers
             if '// hls-fpga-machine-learning insert numbers' in line:
                 newline = line
@@ -318,7 +316,6 @@ class VivadoWriter(Writer):
         fout = open(f'{model.config.get_output_dir()}/firmware/parameters.h', 'w')
 
         for line in f.readlines():
-
             if '// hls-fpga-machine-learning insert includes' in line:
                 newline = line
                 for include in sorted(set(sum((layer.get_attr('include_header', []) for layer in model.get_layers()), []))):
@@ -503,7 +500,6 @@ class VivadoWriter(Writer):
         indent = '    '
 
         for line in f.readlines():
-
             if 'MYPROJECT' in line:
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
             elif 'myproject' in line:

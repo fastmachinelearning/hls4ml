@@ -49,7 +49,6 @@ for model_type in model_types:
                 # and is defined in this module (i.e., not imported)
                 if callable(func) and hasattr(func, 'handles') and func.__module__ == lib.__name__:
                     for layer in func.handles:
-
                         if model_type == 'keras':
                             register_keras_layer_handler(layer, func)
                         elif model_type == 'pytorch':

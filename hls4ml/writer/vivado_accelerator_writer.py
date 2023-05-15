@@ -279,7 +279,6 @@ class VivadoAcceleratorWriter(VivadoWriter):
         fout.close()
 
     def write_wrapper_test(self, model):
-
         ###################
         # write myproject_test_wrapper.cpp
         ###################

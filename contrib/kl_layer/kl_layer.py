@@ -34,7 +34,6 @@ class KLLoss(Merge):
         super().build(input_shape)
 
     def _merge_function(self, inputs):
-
         mean = inputs[0]
         log_var = inputs[1]
 

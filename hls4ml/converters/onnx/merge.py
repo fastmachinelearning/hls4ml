@@ -5,7 +5,6 @@ merge_layers = ['Add', 'Sub', 'Mul', 'Average', 'Max', 'Min', 'Concat', 'Sum']
 
 @onnx_handler(*merge_layers)
 def parse_merge_layer(reader, node, inputs_map, input_shapes, graph, config):
-
     layer = {}
     layer['class_name'] = node.op_type
     layer['name'] = node.name
