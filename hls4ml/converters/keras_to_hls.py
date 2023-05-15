@@ -47,8 +47,7 @@ class KerasFileReader(KerasReader):
 
 class KerasNestedFileReader(KerasFileReader):
     def __init__(self, data_reader, nested_path):
-        self.config = data_reader.config
-        self.h5file = h5py.File(self.config['KerasH5'], mode='r')
+        super().__init__(data_reader.config)
         self.nested_path = nested_path
 
     def _find_data(self, layer_name, var_name):
