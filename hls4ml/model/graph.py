@@ -326,15 +326,13 @@ class ModelGraph:
 
     Args:
         config (dict):  The configuration dictionary
-        data_reader:  The data reader from where weights can be extracted
         layer_list (list(dict)):  The list contains a dictionary for each input layer
         inputs (list, optional):  The inputs to the model. If None, determined from layer_list
         outputs (list, optional):  The outputs to the model. If None, determined from layer_list
     """
 
-    def __init__(self, config, data_reader, layer_list, inputs=None, outputs=None):
+    def __init__(self, config, layer_list, inputs=None, outputs=None):
         self.config = HLSConfig(config)
-        self.reader = data_reader
 
         # keep track of the applied flows
         self._applied_flows = []
@@ -595,9 +593,6 @@ class ModelGraph:
         node_outputs = [out for node in self.graph.values() for out in node.outputs]
         node_inputs = [inp for node in self.graph.values() for inp in node.inputs]
         self.outputs = [out for out in node_outputs if out not in node_inputs]
-
-    def get_weights_data(self, layer_name, var_name):
-        return self.reader.get_weights_data(layer_name, var_name)
 
     def next_layer(self):
         self.index += 1

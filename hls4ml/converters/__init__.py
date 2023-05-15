@@ -6,6 +6,7 @@ import yaml
 
 from hls4ml.converters.keras_to_hls import KerasFileReader  # noqa: F401
 from hls4ml.converters.keras_to_hls import KerasModelReader  # noqa: F401
+from hls4ml.converters.keras_to_hls import KerasReader  # noqa: F401
 from hls4ml.converters.keras_to_hls import get_supported_keras_layers  # noqa: F401
 from hls4ml.converters.keras_to_hls import parse_keras_model  # noqa: F401
 from hls4ml.converters.keras_to_hls import keras_to_hls, register_keras_layer_handler
