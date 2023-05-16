@@ -408,7 +408,6 @@ class ExponentType(NamedType):
     """
 
     def __init__(self, name, precision, **kwargs):
-
         if not name.startswith('exponent_'):
             name = 'exponent_' + name
         super().__init__(name, precision, **kwargs)

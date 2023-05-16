@@ -20,7 +20,6 @@ def get_quantizer_from_config(keras_layer, quantizer_var):
 
 @keras_handler('QDense')
 def parse_qdense_layer(keras_layer, input_names, input_shapes, data_reader):
-
     layer, output_shape = parse_dense_layer(keras_layer, input_names, input_shapes, data_reader)
 
     layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
@@ -124,7 +123,6 @@ def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader)
 
 @keras_handler('QBatchNormalization')
 def parse_qbatchnorm_layer(keras_layer, input_names, input_shapes, data_reader):
-
     layer, output_shape = parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader)
 
     layer['mean_quantizer'] = get_quantizer_from_config(keras_layer, 'mean')
