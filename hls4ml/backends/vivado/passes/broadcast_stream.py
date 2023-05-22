@@ -35,20 +35,12 @@ class BroadcastConfigTemplate(LayerConfigTemplate):
 
     def format(self, node):
         params = self._default_config_params(node)
-        if node.get_attr('data_format') == "channels_last":
-            params['in_height'] = node.get_input_variable().shape[0]
-            params['in_width'] = node.get_input_variable().shape[1]
-            params['in_chan'] = node.get_input_variable().shape[2]
-            params['out_height'] = node.get_output_variable().shape[0]
-            params['out_width'] = node.get_output_variable().shape[1]
-            params['out_chan'] = node.get_output_variable().shape[2]
-        else:
-            params['in_height'] = node.get_input_variable().shape[1]
-            params['in_width'] = node.get_input_variable().shape[2]
-            params['in_chan'] = node.get_input_variable().shape[0]
-            params['out_height'] = node.get_output_variable().shape[1]
-            params['out_width'] = node.get_output_variable().shape[2]
-            params['out_chan'] = node.get_output_variable().shape[0]
+        params['in_height'] = node.get_input_variable().shape[0]
+        params['in_width'] = node.get_input_variable().shape[1]
+        params['in_chan'] = node.get_input_variable().shape[2]
+        params['out_height'] = node.get_output_variable().shape[0]
+        params['out_width'] = node.get_output_variable().shape[1]
+        params['out_chan'] = node.get_output_variable().shape[2]
 
         return self.template.format(**params)
 
