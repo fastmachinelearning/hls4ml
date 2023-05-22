@@ -473,7 +473,7 @@ def test_pooling(pooling, padds, backend):
     # Verify correct parsing of layer
     hls_pool = list(hls_model.get_layers())[-2]
     if '2d' in pooling.__name__:
-        assert hls_pool.attributes['name'] == 'layer' + poolNode.name
+        assert hls_pool.attributes['name'] == poolNode.name
         assert hls_pool.attributes['class_name'][-2] == str(2)
         assert hls_pool.attributes['stride_height'] == class_object_pool.stride
         assert hls_pool.attributes['stride_width'] == class_object_pool.stride
@@ -483,14 +483,14 @@ def test_pooling(pooling, padds, backend):
 
     elif '1d' in pooling.__name__:
         if "Max" in pooling.__name__:
-            assert hls_pool.attributes['name'] == 'layer' + poolNode.name
+            assert hls_pool.attributes['name'] == poolNode.name
             assert hls_pool.attributes['class_name'][-2] == str(1)
             assert hls_pool.attributes['pool_width'] == class_object_pool.kernel_size
             assert hls_pool.attributes['stride_width'] == class_object_pool.stride
             assert hls_pool.attributes['padding'] == 'valid' if class_object_pool.padding == 0 else 'same'
 
         else:
-            assert hls_pool.attributes['name'] == 'layer' + poolNode.name
+            assert hls_pool.attributes['name'] == poolNode.name
             assert hls_pool.attributes['class_name'][-2] == str(1)
             assert hls_pool.attributes['pool_width'] == class_object_pool.kernel_size[0]
             assert hls_pool.attributes['stride_width'] == class_object_pool.stride[0]

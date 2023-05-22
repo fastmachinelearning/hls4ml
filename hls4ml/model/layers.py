@@ -146,6 +146,7 @@ class Layer:
         for attr_name, attr_value in self.attributes.items():
             exp_attr = all_attributes.pop(attr_name, None)
             if exp_attr is not None:
+                print(exp_attr)
                 if not exp_attr.validate_value(attr_value):
                     raise Exception(
                         'Unexpected value of attribute "{}" of layer "{}" ({}). Expected {}, got {} ({})'.format(
@@ -643,7 +644,7 @@ class Pooling1D(Layer):
         Attribute('stride_width'),
         Attribute('pad_left'),
         Attribute('pad_right'),
-        Attribute('count_pad', default=False),
+        Attribute('count_pad', value_type=str, default='false'),
         ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False),
     ]
 
@@ -673,7 +674,7 @@ class Pooling2D(Layer):
         Attribute('pad_bottom'),
         Attribute('pad_left'),
         Attribute('pad_right'),
-        Attribute('count_pad', default=False),
+        Attribute('count_pad', value_type=str, default='false'),
         ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False),
     ]
 
