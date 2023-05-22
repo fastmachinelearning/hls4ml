@@ -30,6 +30,7 @@ namespace nnet {
 // ****************************************************
 //       Streaming Batch Normalization
 // ****************************************************
+#pragma hls_design block
 
 template<class data_T, class res_T, typename CONFIG_T, unsigned int reuse_factor, unsigned int ii>
 void normalize(
