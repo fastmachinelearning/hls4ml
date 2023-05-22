@@ -22,7 +22,10 @@ def parse_pooling_layer(operation, layer_name, input_names, input_shapes, argume
 
     layer['name'] = layer_name
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
-    layer['count_pad'] = arguments["count_include_pad"]
+    if arguments["count_include_pad"]:
+        layer['count_pad'] = 'true'
+    else:
+        layer['count_pad'] = 'false'
 
     if int(layer['class_name'][-2]) == 1:
         (layer['n_in'], layer['n_filt']) = parse_data_format(input_shapes[0], layer['data_format'])
