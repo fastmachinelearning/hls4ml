@@ -114,7 +114,7 @@ struct pooling1d_config {
     // Padding
     static const unsigned pad_left = 0;
     static const unsigned pad_right = 0;
-    static const unsigned count_pad = 0;
+    static const bool count_pad = false;
 
     // Pooling function
     static const Pool_Op pool_op = Max;
@@ -211,7 +211,7 @@ struct pooling2d_config {
     static const unsigned pad_bottom = 0;
     static const unsigned pad_left = 0;
     static const unsigned pad_right = 0;
-    static const unsigned count_pad = 0;
+    static const bool count_pad = false;
 
     // Pooling function
     static const Pool_Op pool_op = Max;
