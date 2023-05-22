@@ -9,7 +9,7 @@ conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     static const unsigned n_out = {n_out};
     static const unsigned reuse_factor = {reuse};
     static const unsigned strategy = nnet::{strategy};
-    static const unsigned n_zeros = 0;
+    static const unsigned n_zeros = {nzeros};
     static const unsigned multiplier_limit = DIV_ROUNDUP(n_in * n_out, reuse_factor) - n_zeros / reuse_factor;
     typedef {accum_t.name} accum_t;
     typedef {bias_t.name} bias_t;
@@ -83,6 +83,7 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         mult_params = self._default_config_params(node)
         mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_width')
         mult_params['n_out'] = node.get_attr('n_filt')
+        mult_params['nzeros'] = node.get_weights('weight').nzeros
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
@@ -189,6 +190,7 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
         mult_params = self._default_config_params(node)
         mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_height') * node.get_attr('filt_width')
         mult_params['n_out'] = node.get_attr('n_filt')
+        mult_params['nzeros'] = node.get_weights('weight').nzeros
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
@@ -274,6 +276,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         mult_params['index'] = str(node.index) + '_depthwise'
         mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_width')
         mult_params['n_out'] = node.get_attr('n_chan')
+        mult_params['nzeros'] = node.get_weights('depthwise').nzeros
         mult_params['weight_t'] = node.get_weights('depthwise').type
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('depthwise').type.precision
@@ -313,6 +316,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         mult_params['index'] = str(node.index) + '_pointwise'
         mult_params['n_in'] = node.get_attr('n_chan')
         mult_params['n_out'] = node.get_attr('n_filt')
+        mult_params['nzeros'] = node.get_weights('pointwise').nzeros
         mult_params['weight_t'] = node.get_weights('pointwise').type
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('pointwise').type.precision
@@ -395,6 +399,7 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         mult_params['index'] = str(node.index) + '_depthwise'
         mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_height') * node.get_attr('filt_width')
         mult_params['n_out'] = node.get_attr('n_chan')
+        mult_params['nzeros'] = node.get_weights('depthwise').nzeros
         mult_params['weight_t'] = node.get_weights('depthwise').type
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('depthwise').type.precision
@@ -438,6 +443,7 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         mult_params['index'] = str(node.index) + '_pointwise'
         mult_params['n_in'] = node.get_attr('n_chan')
         mult_params['n_out'] = node.get_attr('n_filt')
+        mult_params['nzeros'] = node.get_weights('pointwise').nzeros
         mult_params['weight_t'] = node.get_weights('pointwise').type
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('pointwise').type.precision
