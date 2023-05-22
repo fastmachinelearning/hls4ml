@@ -35,7 +35,6 @@ activation_layers = ['Softmax', 'ReLU']
 
 @pytorch_handler(*activation_layers)
 def parse_activation_layer(pytorch_layer, layer_name, input_shapes, data_reader, config):
-
     layer = {}
 
     layer['class_name'] = pytorch_layer.__class__.__name__

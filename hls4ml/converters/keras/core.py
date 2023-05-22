@@ -1,4 +1,4 @@
-from hls4ml.converters.keras_to_hls import keras_handler, parse_default_keras_layer
+from hls4ml.converters.keras_to_hls import get_weights_data, keras_handler, parse_default_keras_layer
 from hls4ml.model.types import BinaryQuantizer, IntegerPrecisionType, TernaryQuantizer
 
 
@@ -32,9 +32,9 @@ def parse_dense_layer(keras_layer, input_names, input_shapes, data_reader):
 
     layer = parse_default_keras_layer(keras_layer, input_names)
 
-    weights_shape = data_reader.get_weights_shape(layer['name'], 'kernel')
-    layer['n_in'] = weights_shape[0]
-    layer['n_out'] = weights_shape[1]
+    layer['weight_data'], layer['bias_data'] = get_weights_data(data_reader, layer['name'], ['kernel', 'bias'])
+    layer['n_in'] = layer['weight_data'].shape[0]
+    layer['n_out'] = layer['weight_data'].shape[1]
     if 'Binary' in layer['class_name']:
         layer['weight_quantizer'] = BinaryQuantizer(bits=2)
         layer['bias_quantizer'] = BinaryQuantizer(bits=2)
@@ -69,6 +69,8 @@ def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader):
         layer['activ_param'] = keras_layer['config'].get('alpha', 1.0)
     elif layer['class_name'] == 'ReLU':
         layer['class_name'] = 'Activation'
+    elif layer['class_name'] == 'PReLU':
+        layer['alpha_data'] = get_weights_data(data_reader, layer['name'], 'alpha')
 
     if layer['class_name'] == 'Activation' and layer['activation'] == 'softmax':
         layer['class_name'] = 'Softmax'
@@ -99,7 +101,20 @@ def parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader):
         layer['n_filt'] = input_shapes[0][3]
 
     layer['use_gamma'] = keras_layer['config']['scale']
+    if layer['use_gamma']:
+        layer['gamma_data'] = get_weights_data(data_reader, layer['name'], 'gamma')
+    else:
+        layer['gamma_data'] = 1
+
     layer['use_beta'] = keras_layer['config']['center']
+    if layer['use_beta']:
+        layer['beta_data'] = get_weights_data(data_reader, layer['name'], 'beta')
+    else:
+        layer['beta_data'] = 0
+
+    layer['mean_data'], layer['variance_data'] = get_weights_data(
+        data_reader, layer['name'], ['moving_mean', 'moving_variance']
+    )
 
     return layer, [shape for shape in input_shapes[0]]
 
@@ -113,6 +128,8 @@ def parse_embedding_layer(keras_layer, input_names, input_shapes, data_reader):
     layer['n_in'] = input_shapes[0][1]
     layer['vocab_size'] = keras_layer['config']['input_dim']
     layer['n_out'] = keras_layer['config']['output_dim']
+
+    layer['embeddings_data'] = get_weights_data(data_reader, layer['name'], 'embeddings')
 
     output_shape = input_shapes[0] + [layer['n_out']]
 

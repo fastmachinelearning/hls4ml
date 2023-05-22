@@ -250,14 +250,12 @@ class Layer:
         self.set_attr(out_name, out)
 
     def add_weights(self, quantizer=None, compression=False):
-        data = self.model.get_weights_data(self.name, 'kernel')
-
         self.add_weights_variable(
-            name='weight', var_name='w{index}', data=data, quantizer=quantizer, compression=compression
+            name='weight', var_name='w{index}', data='weight', quantizer=quantizer, compression=compression
         )
 
     def add_bias(self, quantizer=None):
-        data = self.model.get_weights_data(self.name, 'bias')
+        data = self.get_attr('bias_data', None)
         precision = None
         type_name = None
         if data is None:
@@ -287,9 +285,9 @@ class Layer:
             _, type_name = self.model.config.get_precision(self, var=name)
 
         if data is None:
-            data = self.model.get_weights_data(self.name, name)
+            data = self.get_attr(name + '_data')
         elif isinstance(data, str):
-            data = self.model.get_weights_data(self.name, data)
+            data = self.get_attr(data + '_data')
 
         data_unquantized = data
         exponent_type = False
@@ -464,15 +462,8 @@ class SeparableConv1D(Layer):
             dims = [f'N_FILT_{self.index}', f'N_OUTPUTS_{self.index}']
         self.add_output_variable(shape, dims)
 
-        depthwise_data = self.model.get_weights_data(self.name, 'depthwise_kernel')
-        pointwise_data = self.model.get_weights_data(self.name, 'pointwise_kernel')
-
-        self.add_weights_variable(
-            name='depthwise', var_name='d{index}', data=depthwise_data, quantizer=self.get_attr('depthwise_quantizer')
-        )
-        self.add_weights_variable(
-            name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer')
-        )
+        self.add_weights_variable(name='depthwise', var_name='d{index}', quantizer=self.get_attr('depthwise_quantizer'))
+        self.add_weights_variable(name='pointwise', var_name='p{index}', quantizer=self.get_attr('pointwise_quantizer'))
 
         zero_bias_data = np.zeros((self.attributes['n_chan'],))
         precision = IntegerPrecisionType(width=1, signed=False)
@@ -524,16 +515,16 @@ class Conv2DBatchnorm(Conv2D):
         W_fold = gamma * W / sqrt(variance + epsilon)
         bias_fold = gamma * (bias - moving_mean) / sqrt(variance + epsilon) + beta
         """
-        kernel = self.model.get_weights_data(self.name, 'kernel')
-        bias = self.model.get_weights_data(self.name, 'bias')
+        kernel = self.get_attr('weight_data')
+        bias = self.get_attr('bias_data')
         if bias is None:
             bias = 0
 
         # get batchnorm weights and moving stats
-        gamma = self.model.get_weights_data(self.name, 'gamma')
-        beta = self.model.get_weights_data(self.name, 'beta')
-        moving_mean = self.model.get_weights_data(self.name, 'moving_mean')
-        moving_variance = self.model.get_weights_data(self.name, 'moving_variance')
+        gamma = self.get_attr('gamma_data')
+        beta = self.get_attr('beta_data')
+        moving_mean = self.get_attr('mean_data')
+        moving_variance = self.get_attr('variance_data')
         # get the inversion factor so that we replace division by multiplication
         inv = np.reciprocal(np.sqrt(moving_variance + self.get_attr('epsilon')))
         if gamma is not None:
@@ -600,15 +591,8 @@ class SeparableConv2D(Layer):
             dims = [f'N_FILT_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims)
 
-        depthwise_data = self.model.get_weights_data(self.name, 'depthwise_kernel')
-        pointwise_data = self.model.get_weights_data(self.name, 'pointwise_kernel')
-
-        self.add_weights_variable(
-            name='depthwise', var_name='d{index}', data=depthwise_data, quantizer=self.get_attr('depthwise_quantizer')
-        )
-        self.add_weights_variable(
-            name='pointwise', var_name='p{index}', data=pointwise_data, quantizer=self.get_attr('pointwise_quantizer')
-        )
+        self.add_weights_variable(name='depthwise', var_name='d{index}', quantizer=self.get_attr('depthwise_quantizer'))
+        self.add_weights_variable(name='pointwise', var_name='p{index}', quantizer=self.get_attr('pointwise_quantizer'))
 
         zero_bias_data = np.zeros((self.attributes['n_chan'],))
         precision = IntegerPrecisionType(width=1, signed=False)
@@ -627,9 +611,8 @@ class DepthwiseConv2D(Conv2D):
             dims = [f'N_CHAN_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
         self.add_output_variable(shape, dims)
 
-        depthwise_data = self.model.get_weights_data(self.name, 'depthwise_kernel')
         self.add_weights_variable(
-            name='weight', var_name='w{index}', data=depthwise_data, quantizer=self.get_attr('depthwise_quantizer')
+            name='weight', var_name='w{index}', data='depthwise', quantizer=self.get_attr('depthwise_quantizer')
         )
 
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
@@ -845,10 +828,10 @@ class BatchNormalization(Layer):
         dims = inp.dim_names
         self.add_output_variable(shape, dims)
 
-        gamma = self.model.get_weights_data(self.name, 'gamma') if self.get_attr('use_gamma') else 1
-        beta = self.model.get_weights_data(self.name, 'beta') if self.get_attr('use_beta') else 0
-        mean = self.model.get_weights_data(self.name, 'moving_mean')
-        var = self.model.get_weights_data(self.name, 'moving_variance')
+        gamma = self.get_attr('gamma_data')
+        beta = self.get_attr('beta_data')
+        mean = self.get_attr('mean_data')
+        var = self.get_attr('variance_data')
 
         scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
         bias = beta - scale * mean
@@ -975,8 +958,7 @@ class Embedding(Layer):
             dims = [f'N_LAYER_{self.index}']
         self.add_output_variable(shape, dims)
 
-        data = self.model.get_weights_data(self.name, 'embeddings')
-        self.add_weights_variable(name='embeddings', var_name='e{index}', data=data)
+        self.add_weights_variable(name='embeddings', var_name='e{index}')
 
 
 class SimpleRNN(Layer):
@@ -1018,12 +1000,10 @@ class SimpleRNN(Layer):
         self.add_weights()
 
         # recurrent weights
-        recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
-        self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
+        self.add_weights_variable(name='recurrent_weight', var_name='wr{index}')
 
         # biases
-        biases = self.model.get_weights_data(self.name, 'bias')
-        self.add_weights_variable(name='bias', var_name='b{index}', data=biases)
+        self.add_weights_variable(name='bias', var_name='b{index}')
 
 
 class LSTM(Layer):
@@ -1069,12 +1049,11 @@ class LSTM(Layer):
         self.add_weights()
 
         # recurrent weights
-        recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
+        recurrent_weight = self.get_attr('recurrent_weight_data')
         self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
 
         # biases
-        biases = self.model.get_weights_data(self.name, 'bias')
-        self.add_weights_variable(name='bias', var_name='b{index}', data=biases)
+        self.add_weights_variable(name='bias', var_name='b{index}')
 
         recurrent_bias = np.zeros(recurrent_weight.shape[1])
         self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
@@ -1124,14 +1103,11 @@ class GRU(Layer):
         self.add_weights()
 
         # recurrent weights
-        recurrent_weight = self.model.get_weights_data(self.name, 'recurrent_kernel')
-        self.add_weights_variable(name='recurrent_weight', var_name='wr{index}', data=recurrent_weight)
+        self.add_weights_variable(name='recurrent_weight', var_name='wr{index}')
 
-        # biases array is actually a 2-dim array of arrays (bias + recurrent bias)
-        # both arrays have shape: n_units * 3 (z, r, h_cand)
-        biases = self.model.get_weights_data(self.name, 'bias')
-        self.add_weights_variable(name='bias', var_name='b{index}', data=biases[0])
-        self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=biases[1])
+        # biases
+        self.add_weights_variable(name='bias', var_name='b{index}')
+        self.add_weights_variable(name='recurrent_bias', var_name='br{index}')
 
 
 class GarNet(Layer):
@@ -1189,7 +1165,7 @@ class GarNet(Layer):
             ]
 
         for op_name, lname, wtype in weights_source:
-            data = self.model.get_weights_data(self.name, f'{self.name}/{lname}_{wtype}:0')
+            data = self.get_attr(f'{lname}_{wtype}_data')
             if wtype == 'kernel':
                 data = data.transpose((1, 0))
                 vtype = 'weights'
@@ -1206,22 +1182,20 @@ class GarNet(Layer):
     def _make_input_transform_weights(self, n_propagate, n_aggregators, n_out_features, quantize=False, sublayer=''):
         # Due to linearity of the input transform, input weights and biases can be contracted away at conversion time
 
-        output_transform_kernel = self.model.get_weights_data(
-            self.name, f'{self.name}/Fout{sublayer}_kernel:0'
+        output_transform_kernel = self.get_attr(
+            f'Fout{sublayer}_kernel_data'
         )  # [(n_aggregators, n_propagate), n_out_features]
         output_transform_kernel = output_transform_kernel.reshape((n_aggregators, n_propagate, n_out_features))
         if quantize:
             output_transform_kernel = self.get_attr('quantizer')(output_transform_kernel)
 
-        input_transform_kernel = self.model.get_weights_data(
-            self.name, f'{self.name}/FLR{sublayer}_kernel:0'
-        )  # [n_in_features, n_propagate]
+        input_transform_kernel = self.get_attr(f'FLR{sublayer}_kernel_data')  # [n_in_features, n_propagate]
         if quantize:
             input_transform_kernel = self.get_attr('quantizer')(input_transform_kernel)
         data = np.dot(input_transform_kernel, output_transform_kernel)  # [n_in_features, n_aggregators, n_out_features]
         kernel = data.transpose((2, 1, 0))
 
-        input_transform_bias = self.model.get_weights_data(self.name, f'{self.name}/FLR{sublayer}_bias:0')  # [n_propagate]
+        input_transform_bias = self.get_attr(f'FLR{sublayer}_bias_data')  # [n_propagate]
         if quantize:
             input_transform_bias = self.get_attr('quantizer')(input_transform_bias)
         data = np.dot(input_transform_bias, output_transform_kernel)  # [n_aggregators, n_out_features]
@@ -1280,7 +1254,7 @@ class GarNetStack(GarNet):
             ]
 
             for op_name, lname, wtype in weights_source:
-                data = self.model.get_weights_data(self.name, f'{self.name}/{lname}_{wtype}:0')
+                data = self.get_attr(f'{lname}_{wtype}_data')
                 if wtype == 'kernel':
                     data = data.transpose((1, 0))
                     vtype = 'weights'

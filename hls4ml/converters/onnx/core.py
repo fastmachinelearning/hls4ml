@@ -3,7 +3,6 @@ from hls4ml.converters.onnx_to_hls import get_onnx_attribute, get_onnx_input_nam
 
 @onnx_handler(*['Gemm', 'MatMul'])
 def parse_gemm_layer(reader, node, inputs_map, input_shapes, graph, config):
-
     layer = {}
 
     layer['class_name'] = 'Dense'
@@ -61,7 +60,6 @@ activation_map = {
 
 @onnx_handler(*activation_layers)
 def parse_activation_layer(reader, node, inputs_map, input_shapes, graph, config):
-
     layer = {}
 
     layer['name'] = node.name
@@ -70,7 +68,6 @@ def parse_activation_layer(reader, node, inputs_map, input_shapes, graph, config
     layer['inputs'] = get_onnx_input_name(node, graph)
 
     if layer['class_name'] != 'Activation':
-
         if layer['class_name'] == 'Softmax':
             layer['activation'] = 'softmax'
 
@@ -79,7 +76,6 @@ def parse_activation_layer(reader, node, inputs_map, input_shapes, graph, config
             layer['activ_param'] = get_onnx_attribute(node, 'alpha', 0.01)
 
         elif layer['class_name'] == 'Clip':
-
             clip_min_node = [x for x in graph.initializer if x.name in node.input]
             clip_min = clip_min_node[0].float_data[0]
 
@@ -99,7 +95,6 @@ def parse_activation_layer(reader, node, inputs_map, input_shapes, graph, config
 
 @onnx_handler('BatchNormalization')
 def parse_batchnorm_layer(reader, node, inputs_map, input_shapes, graph, config):
-
     layer = {}
 
     layer['class_name'] = 'BatchNormalization'

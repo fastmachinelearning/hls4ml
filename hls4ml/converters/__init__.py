@@ -6,6 +6,7 @@ import yaml
 
 from hls4ml.converters.keras_to_hls import KerasFileReader  # noqa: F401
 from hls4ml.converters.keras_to_hls import KerasModelReader  # noqa: F401
+from hls4ml.converters.keras_to_hls import KerasReader  # noqa: F401
 from hls4ml.converters.keras_to_hls import get_supported_keras_layers  # noqa: F401
 from hls4ml.converters.keras_to_hls import parse_keras_model  # noqa: F401
 from hls4ml.converters.keras_to_hls import keras_to_hls, register_keras_layer_handler
@@ -33,14 +34,6 @@ except ImportError:
     warnings.warn("WARNING: ONNX converter is not enabled!", stacklevel=1)
     __onnx_enabled__ = False
 
-try:
-    from hls4ml.converters.tf_to_hls import tf_to_hls
-
-    __tensorflow_enabled__ = True
-except ImportError:
-    warnings.warn("WARNING: Tensorflow converter is not enabled!", stacklevel=1)
-    __tensorflow_enabled__ = False
-
 # ----------Layer handling register----------#
 model_types = ['keras', 'pytorch', 'onnx']
 
@@ -56,7 +49,6 @@ for model_type in model_types:
                 # and is defined in this module (i.e., not imported)
                 if callable(func) and hasattr(func, 'handles') and func.__module__ == lib.__name__:
                     for layer in func.handles:
-
                         if model_type == 'keras':
                             register_keras_layer_handler(layer, func)
                         elif model_type == 'pytorch':
@@ -138,11 +130,6 @@ def convert_from_config(config):
             model = pytorch_to_hls(yamlConfig)
         else:
             raise Exception("PyTorch not found. Please install PyTorch.")
-    elif 'TensorFlowModel' in yamlConfig:
-        if __tensorflow_enabled__:
-            model = tf_to_hls(yamlConfig)
-        else:
-            raise Exception("TensorFlow not found. Please install TensorFlow.")
     else:
         model = keras_to_hls(yamlConfig)
 
