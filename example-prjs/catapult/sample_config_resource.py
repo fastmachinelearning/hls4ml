@@ -18,8 +18,8 @@ config['OutputDir'] = 'my-Vivado-test'
 config['Backend'] = 'Vivado'
 config['IOType'] = 'io_stream'
 
-config['HLSConfig']['Model']['Strategy'] = 'Latency'
-#config['HLSConfig']['Model']['Strategy'] = 'Resource'
+#config['HLSConfig']['Model']['Strategy'] = 'Latency'
+config['HLSConfig']['Model']['Strategy'] = 'Resource'
 
 # default threshold is infinity
 config['HLSConfig']['Model']['BramFactor'] = np.inf
