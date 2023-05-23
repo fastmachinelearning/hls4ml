@@ -146,7 +146,6 @@ class Layer:
         for attr_name, attr_value in self.attributes.items():
             exp_attr = all_attributes.pop(attr_name, None)
             if exp_attr is not None:
-                print(exp_attr)
                 if not exp_attr.validate_value(attr_value):
                     raise Exception(
                         'Unexpected value of attribute "{}" of layer "{}" ({}). Expected {}, got {} ({})'.format(

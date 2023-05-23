@@ -90,7 +90,7 @@ struct pooling1d_config {
     static const unsigned pad_left = 0;
     static const unsigned pad_right = 0;
     static const bool count_pad = false;
-    // Pooling functionpad_right
+    // Pooling function
     static const Pool_Op pool_op = Max;
 };
 
