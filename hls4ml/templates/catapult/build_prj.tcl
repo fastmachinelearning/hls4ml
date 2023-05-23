@@ -127,7 +127,7 @@ if {$opt(synth)} {
   # Specifically for io_stream
   if { $IOType == "io_stream" } {
     # Bug in Catapult - hls_resource inserted by catapult_writer.py not applied to static var. workaround is placed in build_prj.tcl
-    directive set /myproject/layer*_out:cns -match glob -MAP_TO_MODULE ccs_ioport.ccs_pipe
+    catch {directive set /myproject/layer*_out:cns -match glob -MAP_TO_MODULE ccs_ioport.ccs_pipe}
     #directive set /myproject/layer*_out:cns -match glob -MAP_TO_MODULE Xilinx_FIFO.FIFO_SYNC
 
 #    # Pipeline init interval for dense_wrapper (should be a pragma in nnet_dense_stream.h)
