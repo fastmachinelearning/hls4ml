@@ -23,7 +23,7 @@ class GenerateConvIm2col(OptimizerPass):
             node.get_attr('index'),
             node.get_attr('n_partitions'),
             node.get_input_variable().shape[0],
-            node.get_input_variable().shape[0],
+            node.get_input_variable().shape[1],
             kernel=node.get_attr('filt_width'),
             stride=node.get_attr('stride_width'),
             pad=(node.get_attr('pad_left'), node.get_attr('pad_right')),
