@@ -16,13 +16,27 @@ test_root_path = Path(__file__).parent
 
 # Variable 'name' is simply used as an identifier for the activation
 
+# These tests fail: elu, selu, softplus, softsign,sigmoid, tanh, hard_sigmoid
 
 @pytest.mark.parametrize('backend', ['Catapult'])
-@pytest.mark.parametrize('shape, io_type', [((8,), 'io_parallel')])
+@pytest.mark.parametrize('shape, io_type', [((8,), 'io_parallel'), ((8,), 'io_stream'), ((8, 8, 3), 'io_stream')])
 @pytest.mark.parametrize(
     'activation, name',
     [
+        (ReLU(), 'relu'),
         (LeakyReLU(alpha=1.5), 'leaky_relu'),
+        (ThresholdedReLU(theta=0.75), 'threshold_relu'),
+#        (ELU(alpha=1.25), 'elu'),
+#        (Activation('selu'), 'selu'),
+        # Tensorflow exception of multi-dimensional PReLU (8, 8, 3)
+        # (PReLU(alpha_initializer='zeros'), 'prelu'),
+#        (Activation('softplus'), 'softplus'),
+#        (Activation('softsign'), 'softsign'),
+#        (Activation(activation='tanh'), 'tanh'),
+#        (Activation('sigmoid'), 'sigmoid'),
+        # Theano and Tensorflow might have different definitions for hard sigmoid
+        # Result is likely to be different when |x| > 1 (see TF/Theano docs)
+#        (Activation('hard_sigmoid'), 'hard_sigmoid'),
     ],
 )
 def test_ccs_activations(backend, activation, name, shape, io_type):
@@ -34,7 +48,7 @@ def test_ccs_activations(backend, activation, name, shape, io_type):
     keras_model = Model(inputs=input, outputs=activation)
 
     hls_config = hls4ml.utils.config_from_keras_model(keras_model)
-    output_dir = str(test_root_path / 'hls4mlprj_activations_{}_{}_{}_{}').format(backend, io_type, re.sub('[)(, ]', '_',str(shape)), name)
+    output_dir = str(test_root_path / 'hls4mlprj_ccs_activations_{}_{}_{}_{}').format(backend, io_type, re.sub('[)(, ]', '_',str(shape)), name)
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=hls_config, io_type=io_type, output_dir=output_dir, backend=backend
