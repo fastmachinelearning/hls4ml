@@ -42,13 +42,13 @@ void dense(
     if ((CONFIG_T::n_in / data_T::size) > 1) {
     #pragma hls_pipeline_init_interval 1
     }
-    DataPrepare: for(int i_in = 0; i_in < CONFIG_T::n_in / data_T::size; i_in++) {
+    DataPrepare: for(unsigned int i_in = 0; i_in < CONFIG_T::n_in / data_T::size; i_in++) {
         if (CONFIG_T::n_in / data_T::size > 1) {
             //#pragma HLS PIPELINE
         }
         data_T data_pack = data_stream.read();
         #pragma hls_unroll
-        DataPack: for (int i_pack = 0; i_pack < data_T::size; i_pack++) {
+        DataPack: for (unsigned int i_pack = 0; i_pack < data_T::size; i_pack++) {
             //#pragma HLS UNROLL
             data[i_in * data_T::size + i_pack] = data_pack[i_pack];
         }
@@ -66,7 +66,7 @@ void dense(
         res_T res_pack;
         //#pragma HLS DATA_PACK variable=res_pack
         #pragma hls_unroll
-        ResPack: for (int i_pack = 0; i_pack < res_T::size; i_pack++) {
+        ResPack: for (unsigned int i_pack = 0; i_pack < res_T::size; i_pack++) {
             //#pragma HLS UNROLL
             res_pack[i_pack] = res[i_out * res_T::size + i_pack];
         }

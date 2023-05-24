@@ -116,7 +116,6 @@ void dense_resource_rf_gt_nin_rem0(
     const int multfactor = MIN(CONFIG_T::n_in,CONFIG_T::reuse_factor);
     const int multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in*CONFIG_T::n_out, multfactor);
     const int block_factor = DIV_ROUNDUP(CONFIG_T::n_in*CONFIG_T::n_out, CONFIG_T::reuse_factor);
-    const int multscale = multiplier_limit/CONFIG_T::n_out;
     const int nin = CONFIG_T::n_in;
     const int nout = CONFIG_T::n_out;
 
@@ -138,7 +137,7 @@ void dense_resource_rf_gt_nin_rem0(
         acc[iacc] = (typename CONFIG_T::accum_t) biases[iacc];
     }
 
-    int w_index;
+    unsigned int w_index;
     int in_index = 0;
     int out_index;
     int outstep = 0;
@@ -155,7 +154,7 @@ void dense_resource_rf_gt_nin_rem0(
 
     #pragma hls_pipeline_init_interval 1
     ReuseLoop:
-    for (int ir = 0; ir < rufactor; ir++) {
+    for (unsigned int ir = 0; ir < rufactor; ir++) {
         //#pragma HLS PIPELINE II=1 rewind
 
         w_index = ir;
@@ -163,7 +162,7 @@ void dense_resource_rf_gt_nin_rem0(
 
         #pragma hls_unroll
         MultLoop:
-        for (int im = 0; im < block_factor; im++) {
+        for (unsigned int im = 0; im < block_factor; im++) {
             //#pragma HLS UNROLL
             acc[out_index] += static_cast<typename CONFIG_T::accum_t>(
               CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data[in_index], weights[w_index]));
@@ -200,7 +199,6 @@ void dense_resource_rf_gt_nin(
     const int multfactor = MIN(CONFIG_T::n_in,CONFIG_T::reuse_factor);
     const int multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in*CONFIG_T::n_out, multfactor);
     const int block_factor = DIV_ROUNDUP(CONFIG_T::n_in*CONFIG_T::n_out, CONFIG_T::reuse_factor);
-    const int multscale = multiplier_limit/CONFIG_T::n_out;
     const int nin = CONFIG_T::n_in;
     const int nout = CONFIG_T::n_out;
 
@@ -233,7 +231,7 @@ void dense_resource_rf_gt_nin(
         MultLoop:
         for (int im = 0; im < block_factor; im++) {
             //#pragma HLS UNROLL
-            int w_index = ir + rufactor * im;
+            unsigned int w_index = ir + rufactor * im;
             int in_index = w_index % nin;
             if (w_index >= CONFIG_T::n_in*CONFIG_T::n_out) continue; // check out of bounds
             tmpmult[im] = CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data[in_index], weights[w_index]);
@@ -272,7 +270,7 @@ void dense_resource_rf_gt_nin(
     // Cast to "res_t" type
     #pragma hls_unroll
     Result:
-    for (int ires = 0; ires < CONFIG_T::n_out; ires++) {
+    for (unsigned int ires = 0; ires < CONFIG_T::n_out; ires++) {
         //#pragma HLS UNROLL
         res[ires] = cast<data_T, res_T, CONFIG_T>(acc[ires]);
     }
