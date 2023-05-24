@@ -25,7 +25,6 @@ class LinearModel(nn.Module):
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_linear(backend, io_type):
-
     model = LinearModel()
     model.eval()
 
@@ -77,7 +76,6 @@ def test_linear(backend, io_type):
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activations(activation_function, backend, io_type):
-
     model = torch.nn.Sequential(nn.Linear(1, 1), activation_function).to()
     model.eval()
 
@@ -116,6 +114,88 @@ def test_activations(activation_function, backend, io_type):
         assert list(hls_model.get_layers())[2].attributes['class_name'] == activation_function.__class__.__name__
 
 
+class ReLuModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return nn.functional.relu(x)
+
+
+class LeakyReLuModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return nn.functional.leaky_relu(x, negative_slope=1.0)
+
+
+class EluModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return nn.functional.elu(x, alpha=1.0)
+
+
+class ThresholdModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return nn.functional.threshold(x, threshold=1.0, value=0.0)
+
+
+class SigmoidModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return nn.functional.sigmoid(x)
+
+
+@pytest.mark.parametrize(
+    "activation_function",
+    [
+        ReLuModel(),
+        LeakyReLuModel(),
+        EluModel(),
+        SigmoidModel(),
+        ThresholdModel(),
+    ],
+)
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_activation_functionals(activation_function, backend, io_type):
+    model = activation_function
+    model.eval()
+
+    X_input = np.random.rand(1)
+
+    pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
+
+    config = config_from_pytorch_model(model)
+    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_activations_functional_relu_{backend}_{io_type}')
+    hls_model = convert_from_pytorch_model(
+        model, (None, 1), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    hls_prediction = hls_model.predict(X_input)
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)
+
+    from torch.fx import symbolic_trace
+
+    traced_model = symbolic_trace(model)
+
+    nNodes = 0
+    for _node in traced_model.graph.nodes:
+        nNodes += 1
+
+    assert nNodes - 1 == len(hls_model.get_layers())
+
+
 padds_options = [0, 1]
 
 
@@ -123,7 +203,6 @@ padds_options = [0, 1]
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv1d(padds, backend, io_type):
-
     n_in = 2
     n_out = 2
     kernel_size = 3
@@ -234,7 +313,6 @@ padds_options = [0, 1]
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv2d(padds, backend, io_type):
-
     n_in = 2
     n_out = 2
     kernel_size = 3
@@ -429,7 +507,6 @@ def test_pooling(pooling, padds, backend):
     class_object_pool = children[poolNode.target]
 
     if "Max" in pooling.__name__:
-
         out_height = int(
             math.floor(
                 float(size_in_height + 2 * padds - class_object_pool.dilation * (class_object_pool.kernel_size - 1) - 1)

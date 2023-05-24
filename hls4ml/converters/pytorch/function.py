@@ -4,7 +4,7 @@ merge_layers = ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum', 
 
 
 @pytorch_handler(*merge_layers)
-def parse_merge_layer(operation, layer_name, input_names, input_shapes, arguments, data_reader, config):
+def parse_merge_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
     assert operation in merge_layers
 
     layer = {}
@@ -25,7 +25,7 @@ def parse_merge_layer(operation, layer_name, input_names, input_shapes, argument
         if rank > 3:
             raise Exception('ERROR: Concatenation of tensors with rank > 3 is not yet supported.')
         layer['op'] = layer['class_name'].lower() + f'{rank}d'
-        layer['axis'] = arguments['axis']
+        layer['axis'] = int(node.args[1])
         output_shape[layer['axis']] += input_shapes[1][layer['axis']]
     elif layer['class_name'] == 'Dot':
         rank = len(input_shapes[0][1:])

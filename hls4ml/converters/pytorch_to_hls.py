@@ -15,7 +15,6 @@ class PyTorchModelReader:
         self.input_shape = config['InputShape']
 
     def get_weights_data(self, layer_name, var_name):
-
         """Get weights data from layers.
 
         The hls layer classes are based on Keras's default parameters.
@@ -136,6 +135,22 @@ def pytorch_handler(*args):
     return decorator
 
 
+# map names of operations between toch.nn and torch.nn.functionals
+layer_name_map = {
+    'relu': 'ReLU',
+    'leaky_relu': 'LeakyReLU',
+    'elu': 'ELU',
+    'prelu': 'PReLU',
+    'sigmoid': 'Sigmoid',
+    'layer_threshold': 'Threshold',
+    'softmax': 'Softmax',
+    'max_pool1d': 'MaxPool1d',
+    'max_pool2d': 'MaxPool2d',
+    'avg_pool1d': 'AvgPool1d',
+    'avg_pool2d': 'AvgPool2d',
+}
+
+
 # ----------------------------------------------------------------
 
 
@@ -200,13 +215,11 @@ def pytorch_to_hls(config):
     n_inputs = 0
 
     for node in traced_model.graph.nodes:
-
         # If part of a nn.Sequntial, the node name will start with an "_" which messes up the parsing
         if node.name[0] == "_":
             node.name = 'layer' + node.name
 
         if node.op == 'call_module':
-
             # modules that are part of a torch.nn.Sequential with name 'name' have target names 'name.x',
             # where x is an integer numbering the elements of the Sequential
             if "." in node.target:
@@ -243,52 +256,6 @@ def pytorch_to_hls(config):
             input_names = tuple([str(i) for i in node.args])
             input_shapes = [output_shapes[str(i)] for i in node.args]
 
-            arguments = {}
-
-            # for Softmax (and probably others)
-            if hasattr(class_object, 'dim'):
-                arguments['dim'] = class_object.dim
-            # for Linear layer
-            if hasattr(class_object, 'in_features'):
-                arguments['in_features'] = class_object.in_features
-            if hasattr(class_object, 'out_features'):
-                arguments['out_features'] = class_object.out_features
-            if hasattr(class_object, 'bias'):
-                arguments['bias'] = class_object.bias
-            # for Conv/Pool layers
-            if hasattr(class_object, 'out_channels'):
-                arguments['out_channels'] = class_object.out_channels
-            if hasattr(class_object, 'kernel_size'):
-                arguments['kernel_size'] = class_object.kernel_size
-            if hasattr(class_object, 'stride'):
-                arguments['stride'] = class_object.stride
-            if hasattr(class_object, 'dilation'):
-                arguments['dilation'] = class_object.dilation
-            if hasattr(class_object, 'padding'):
-                arguments['padding'] = class_object.padding
-                if '1d' in pytorch_class and type(arguments['padding']) is tuple:
-                    arguments['padding'] = arguments['padding'][0]
-            # for BatchNorm layers
-            if hasattr(class_object, 'eps'):
-                arguments['eps'] = class_object.eps
-            if hasattr(class_object, 'affine'):
-                arguments['affine'] = class_object.affine
-            # for LeakyReLU, ELU, PreLU layers
-            if hasattr(class_object, 'negative_slope'):
-                arguments['alpha'] = class_object.negative_slope
-            if hasattr(class_object, 'alpha'):
-                arguments['alpha'] = class_object.alpha
-            if pytorch_class == "PReLU":
-                if hasattr(class_object, 'weight'):
-                    arguments['alpha'] = class_object.weight.detach().numpy()[0]
-            # for Threshold layers
-            if hasattr(class_object, 'threshold'):
-                arguments['threshold'] = class_object.threshold
-            if hasattr(class_object, 'value'):
-                arguments['value'] = class_object.value
-            if pytorch_class == 'Threshold' and int(arguments['value']) != 0:
-                raise Exception('values other than 0 for x < threshold not supported for Threshold layers')
-
             # for Conv layers
             if 'Conv' in pytorch_class:
                 if not class_object.padding_mode == 'zeros':
@@ -296,35 +263,9 @@ def pytorch_to_hls(config):
                 if not class_object.groups == 1:
                     raise Exception('non-default options for groups not implemented yet')
 
-            # for Pooling layers
-            if 'Pool' in pytorch_class:
-                arguments['count_include_pad'] = False
-                if class_object.ceil_mode:
-                    raise Exception('ceil_mode not implemented yet')
-                if "Max" in pytorch_class:
-                    if class_object.return_indices:
-                        raise Exception('return_indices not implemented yet')
-                if "Avg" in pytorch_class:
-                    if '2d' in pytorch_class:
-                        if class_object.divisor_override is not None:
-                            raise Exception('divisor_override not implemented yet')
-                    arguments['count_include_pad'] = class_object.count_include_pad
-                if '2d' in pytorch_class and not type(arguments['kernel_size']) is tuple:
-                    arguments['kernel_size'] = [arguments['kernel_size'], arguments['kernel_size']]
-                elif '1d' in pytorch_class and type(arguments['kernel_size']) is tuple:
-                    arguments['kernel_size'] = arguments['kernel_size'][0]
-                if '2d' in pytorch_class and not type(arguments['padding']) is tuple:
-                    arguments['padding'] = [arguments['padding'], arguments['padding']]
-                elif '1d' in pytorch_class and type(arguments['padding']) is tuple:
-                    arguments['padding'] = arguments['padding'][0]
-                if '2d' in pytorch_class and not type(arguments['stride']) is tuple:
-                    arguments['stride'] = [arguments['stride'], arguments['stride']]
-                elif '1d' in pytorch_class and type(arguments['stride']) is tuple:
-                    arguments['stride'] = arguments['stride'][0]
-
             # Process the layer
             layer, output_shape = layer_handlers[pytorch_class](
-                pytorch_class, layer_name, input_names, input_shapes, arguments, reader, config
+                pytorch_class, layer_name, input_names, input_shapes, node, class_object, reader, config
             )
 
             print(
@@ -359,45 +300,34 @@ def pytorch_to_hls(config):
             # Function calls in the graph have to be transformed to layers known to hls4ml
 
             # operations that appear repeatedly have '_n' appended to their name for the nth repetition
+            operation = node.name
             if node.name.split("_")[-1].isdigit():
-                operation = "_".join(node.name.split("_")[:-1]).capitalize()
-            else:
-                operation = node.name.capitalize()
+                operation = "_".join(node.name.split("_")[:-1])
+
+            if operation in layer_name_map:
+                operation = layer_name_map[operation]
 
             # only a limited number of functions are supported
             if operation not in supported_layers:
                 raise Exception(f'Unsupported function {operation}')
+            if operation == "PReLU" or operation == "batch_norm" or operation == "conv1d" or operation == "conv2d":
+                raise Exception(
+                    f'Function {operation} cannot be parsed as torch.nn.functional. Use the torch.nn implementation instead'
+                )
+
+            layer_name = node.name
 
             layer_counter += 1
 
-            # need a copy because kwargs are immutable
-            arguments = {}
-            for key in node.kwargs:
-                arguments[key] = node.kwargs[key]
-            layer_name = node.name
-
-            # arguments of pooling layers need some massaging
-            if 'pool' in operation:
-                arguments['count_include_pad'] = True
-                input_names = tuple([str(node.args[0])])
-                arguments['kernel_size'] = int(node.args[1])
-                if '2d' in operation and not type(arguments['kernel_size']) is tuple:
-                    arguments['kernel_size'] = [arguments['kernel_size'], arguments['kernel_size']]
-                if '2d' in operation and not type(arguments['padding']) is tuple:
-                    arguments['padding'] = [arguments['padding'], arguments['padding']]
-                if arguments['stride'] is None:
-                    arguments['stride'] = arguments['kernel_size']
-            elif 'Cat' in operation:
+            input_names = tuple([str(node.args[0])])
+            if 'Cat' in operation:
                 input_names = tuple([str(i) for i in node.args[0]])
-                arguments['axis'] = int(node.args[1])
-            else:
-                input_names = tuple([str(i) for i in node.args])
 
             input_shapes = [list(output_shapes[str(i)]) for i in list(input_names)]
 
             # Process the layer
             layer, output_shape = layer_handlers[operation](
-                operation, layer_name, input_names, input_shapes, arguments, reader, config
+                operation, layer_name, input_names, input_shapes, node, None, reader, config
             )
 
             print('Layer name: {}, layer type: {}, input shape: {}'.format(layer['name'], layer['class_name'], input_shapes))
@@ -429,36 +359,23 @@ def pytorch_to_hls(config):
             # Method calls in the graph have to be transformed to layers known to hls4ml
 
             # operations that appear repeatedly have '_n' appended to their name for the nth repetition
+            operation = node.name
             if node.name.split("_")[-1].isdigit():
-                operation = "_".join(node.name.split("_")[:-1]).capitalize()
-            else:
-                operation = node.name.capitalize()
+                operation = "_".join(node.name.split("_")[:-1])
+
+            if operation in layer_name_map:
+                operation = layer_name_map[operation]
 
             # only a limited number of functions are supported
             if operation not in supported_layers:
                 raise Exception(f'Unsupported function {operation}')
 
-            layer_counter += 1
-
-            # need a copy because kwargs are immutable
-            arguments = {}
-            for key in node.kwargs:
-                arguments[key] = node.kwargs[key]
             layer_name = node.name
+
+            layer_counter += 1
 
             if 'View' in operation:
                 input_names = tuple([str(node.args[0])])
-                arguments['target_shape'] = [int(i) for i in node.args[1:]]
-                # View can have -1 as one as the dimensions,
-                # leaving it to us to deduce it from the other dimensions and the overall size
-                if -1 in arguments['target_shape']:
-                    size = np.prod(input_shapes[0][1:])
-                    for i in range(0, len(arguments['target_shape'])):
-                        if arguments['target_shape'][i] == -1:
-                            cl = arguments['target_shape'][:]
-                            cl.remove(-1)
-                            arguments['target_shape'][i] = int(size / np.prod(cl))
-
             else:
                 input_names = tuple([str(i) for i in node.args])
 
@@ -466,7 +383,7 @@ def pytorch_to_hls(config):
             input_shapes = [list(output_shapes[str(i)]) for i in list(input_names)]
 
             layer, output_shape = layer_handlers[operation](
-                operation, layer_name, input_names, input_shapes, arguments, reader, config
+                operation, layer_name, input_names, input_shapes, node, None, reader, config
             )
 
             print('Layer name: {}, layer type: {}, input shape: {}'.format(layer['name'], layer['class_name'], input_shapes))
