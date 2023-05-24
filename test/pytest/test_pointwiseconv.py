@@ -127,3 +127,30 @@ def test_pointwiseconv2d(chans, padds, strides, backend, io_type, strategy):
 
     assert 'Pointwise' in list(hls_model.graph.values())[1].class_name
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.001)
+
+
+@pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
+def test_pointwise_config(strategy):
+    model = tf.keras.models.Sequential()
+    input_shape = (8, 8, 3)
+    model.add(
+        Conv2D(
+            filters=8,
+            kernel_size=(1, 1),
+            input_shape=input_shape,
+            kernel_initializer='normal',
+            use_bias=False,
+            name='conv2d_1x1',
+        )
+    )
+
+    model.compile(optimizer='adam', loss='mse')
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config['Model']['Strategy'] = strategy
+    config['LayerName']['conv2d_1x1']['Strategy'] = strategy  # Will fail if the strategy is not lowercase
+    output_dir = str(test_root_path / f'hls4mlprj_pointwise2d_config_{strategy}')
+
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
+    # Model will fail to compile if strategy was set incorrectly
+    hls_model.compile()

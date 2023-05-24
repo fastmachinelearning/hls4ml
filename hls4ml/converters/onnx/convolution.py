@@ -10,7 +10,6 @@ from hls4ml.converters.utils import compute_padding_1d, compute_padding_2d
 
 @onnx_handler('Conv')
 def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
-
     layer = {}
     layer['name'] = node.name
     layer['data_format'] = 'channels_first'  # ONNX's default is channel first
@@ -45,7 +44,6 @@ def parse_conv_layer(reader, node, inputs_map, input_shapes, graph, config):
         output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_width']]
 
     elif len(input_shapes[0]) == 4:  # Conv2D
-
         layer['class_name'] = 'Conv2D'
 
         layer['in_height'] = input_shapes[0][2]

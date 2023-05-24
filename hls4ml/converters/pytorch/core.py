@@ -30,7 +30,6 @@ activation_layers = ['Softmax', 'Relu', 'ReLU', 'LeakyReLU', 'Threshold', 'ELU',
 
 @pytorch_handler(*activation_layers)
 def parse_activation_layer(operation, layer_name, input_names, input_shapes, arguments, data_reader, config):
-
     layer = {}
 
     layer['class_name'] = operation

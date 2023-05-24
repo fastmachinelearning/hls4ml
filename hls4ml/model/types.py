@@ -370,6 +370,7 @@ class NamedType:
 
     For convenience, hls4ml gives names to data types used in the generated HLS. This is equivalent to defining types
     in C/C++ like::
+
         typedef precision name;
 
     Args:
@@ -407,7 +408,6 @@ class ExponentType(NamedType):
     """
 
     def __init__(self, name, precision, **kwargs):
-
         if not name.startswith('exponent_'):
             name = 'exponent_' + name
         super().__init__(name, precision, **kwargs)
