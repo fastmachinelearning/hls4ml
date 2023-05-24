@@ -33,6 +33,7 @@ del optimizers
 register_flow(
     'convert',
     [
+        'channels_last_converter',
         'fuse_bias_add',
         'remove_useless_transpose',
         'output_rounding_saturation_mode',
