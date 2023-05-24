@@ -1,4 +1,4 @@
-from hls4ml.converters.pytorch_to_hls import pytorch_handler
+from hls4ml.converters.pytorch_to_hls import get_weights_data, pytorch_handler
 from hls4ml.converters.utils import compute_padding_1d_pytorch, compute_padding_2d_pytorch, parse_data_format
 
 
@@ -12,6 +12,8 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, argumen
     layer['class_name'] = 'Conv1D'
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
 
+    layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'weight')
+    layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
     # Input info
     (layer['in_width'], layer['n_chan']) = parse_data_format(
         input_shapes[0], 'channels_first'
@@ -51,6 +53,8 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, argumen
     layer['class_name'] = 'Conv2D'
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
 
+    layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'weight')
+    layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
     # Input info
     (layer['in_height'], layer['in_width'], layer['n_chan']) = parse_data_format(
         input_shapes[0], 'channels_first'

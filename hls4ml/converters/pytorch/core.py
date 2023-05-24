@@ -1,4 +1,4 @@
-from hls4ml.converters.pytorch_to_hls import pytorch_handler
+from hls4ml.converters.pytorch_to_hls import get_weights_data, pytorch_handler
 
 
 @pytorch_handler('Linear')
@@ -10,6 +10,7 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, argumen
     layer['class_name'] = 'Dense'
     layer['name'] = layer_name
 
+    layer['weight_data'], layer['bias_data'] = get_weights_data(data_reader, layer['name'], ['weight', 'bias'])
     layer['n_in'] = arguments['in_features']
     layer['n_out'] = arguments['out_features']
 
@@ -47,6 +48,7 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, arg
         layer['activ_param'] = arguments['alpha']
     if layer['class_name'] == 'PReLU':
         layer['activ_param'] = arguments['alpha']
+        layer['alpha_data'] = get_weights_data(data_reader, layer['name'], 'weight')
     if layer['class_name'] == 'Threshold':
         layer['activ_param'] = arguments['threshold']
         layer['class_name'] = 'ThresholdedReLU'
@@ -75,6 +77,20 @@ def parse_batchnorm_layer(operation, layer_name, input_names, input_shapes, argu
     # batchnorm para
     layer['epsilon'] = arguments['eps']
     layer['use_gamma'] = layer['use_beta'] = arguments["affine"]
+
+    if layer['use_gamma']:
+        layer['gamma_data'] = get_weights_data(data_reader, layer['name'], 'weight')
+    else:
+        layer['gamma_data'] = 1
+
+    if layer['use_beta']:
+        layer['beta_data'] = get_weights_data(data_reader, layer['name'], 'bias')
+    else:
+        layer['beta_data'] = 0
+
+    layer['mean_data'], layer['variance_data'] = get_weights_data(
+        data_reader, layer['name'], ['running_mean', 'running_variance']
+    )
 
     in_size = 1
     for dim in input_shapes[0][1:]:

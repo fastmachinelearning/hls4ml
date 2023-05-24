@@ -101,6 +101,18 @@ class PyTorchFileReader(PyTorchModelReader):  # Inherit get_weights_data method
         return data
 
 
+def get_weights_data(data_reader, layer_name, var_name):
+    if not isinstance(var_name, (list, tuple)):
+        var_name = [var_name]
+
+    data = [data_reader.get_weights_data(layer_name, var) for var in var_name]
+
+    if len(data) == 1:
+        return data[0]
+    else:
+        return (*data,)
+
+
 # ----------------------Layer handling--------------------- #
 layer_handlers = {}
 
@@ -163,7 +175,6 @@ def pytorch_to_hls(config):
     from torch.fx import symbolic_trace
 
     traced_model = symbolic_trace(model)
-
     # Define layers to skip for conversion to HLS
     skip_layers = ['Dropout', 'Flatten', 'Sequential']
 
@@ -312,12 +323,17 @@ def pytorch_to_hls(config):
                     arguments['stride'] = arguments['stride'][0]
 
             # Process the layer
-            print(input_shapes)
             layer, output_shape = layer_handlers[pytorch_class](
                 pytorch_class, layer_name, input_names, input_shapes, arguments, reader, config
             )
 
-            print('Layer name: {}, layer type: {}, input shape: {}'.format(layer['name'], layer['class_name'], input_shapes))
+            print(
+                'Layer name: {}, layer type: {}, input shape: {}'.format(
+                    layer['name'],
+                    layer['class_name'],
+                    input_shapes,
+                )
+            )
             layer_list.append(layer)
 
             assert output_shape is not None
@@ -464,5 +480,5 @@ def pytorch_to_hls(config):
     #################
 
     print('Creating HLS model')
-    hls_model = ModelGraph(config, reader, layer_list, inputs=input_layers)
+    hls_model = ModelGraph(config, layer_list, inputs=input_layers)
     return hls_model
