@@ -135,7 +135,6 @@ def compute_padding_2d(pad_type, in_height, in_width, stride_height, stride_widt
 
 
 def compute_padding_1d_pytorch(pad_type, in_size, stride, filt_size, dilation):
-
     if isinstance(pad_type, str):
         if pad_type.lower() == 'same':
             n_out = int(
@@ -177,9 +176,7 @@ def compute_padding_1d_pytorch(pad_type, in_size, stride, filt_size, dilation):
 def compute_padding_2d_pytorch(
     pad_type, in_height, in_width, stride_height, stride_width, filt_height, filt_width, dilation_height, dilation_width
 ):
-
     if isinstance(pad_type, str):
-
         if pad_type.lower() == 'same':
             # Height
             out_height = int(
