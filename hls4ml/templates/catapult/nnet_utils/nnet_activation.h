@@ -48,6 +48,7 @@
 #include "ac_math/ac_softmax_pwl.h"
 #include "ac_math/ac_tanh_pwl.h"
 #include "ac_math/ac_sigmoid_pwl.h"
+#include "ac_math/ac_pow_pwl.h"
 #include "nnet_common.h"
 
 namespace nnet {
@@ -897,19 +898,13 @@ void init_elu_table(typename CONFIG_T::table_t table_out[N_TABLE])
 #endif
 }
 
-#ifndef USE_AC_MATH
-
 template<class data_T, class res_T, typename CONFIG_T>
 void  elu(data_T data[CONFIG_T::n_in], const res_T alpha, res_T res[CONFIG_T::n_in])
 {
     // Initialize the lookup table
-#ifdef __HLS_SYN__
-    bool initialized = false;
-    typename CONFIG_T::table_t elu_table[CONFIG_T::table_size];
-#else
     static bool initialized = false;
     static typename CONFIG_T::table_t elu_table[CONFIG_T::table_size];
-#endif
+
     if (!initialized) {
         init_elu_table<CONFIG_T, CONFIG_T::table_size>(elu_table);
         initialized = true;
@@ -936,18 +931,18 @@ void  elu(data_T data[CONFIG_T::n_in], const res_T alpha, res_T res[CONFIG_T::n_
 template<class data_T, class res_T, typename CONFIG_T>
 void  elu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
-    elu<data_T, res_T, CONFIG_T>(data, 1.0, res);
+    typedef ac_fixed<res_T::width, res_T::i_width, false, res_T::q_mode, res_T::o_mode> res_unsigned_T;
+    res_unsigned_T x;
+    for (int i=0; i<CONFIG_T::n_in; i++) {
+        if (data[i] > 0) {
+            res[i] = data[i];
+        }
+        else {
+        x = ac_math::ac_exp_pwl<res_unsigned_T>(data[i]); 
+        res[i] = x - ac_fixed<1, 1, false>(1.0);
+        }
+    }
 }
-
-#else
-
-template<class data_T, class res_T, typename CONFIG_T>
-void  elu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
-{
-assert("elu not implemented in AC Math");
-}
-
-#endif
 
 // *************************************************
 //       SELU Activation

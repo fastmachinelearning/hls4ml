@@ -32,6 +32,7 @@
 #include <ac_math/ac_softmax_pwl.h>
 #include <ac_math/ac_tanh_pwl.h>
 #include <ac_math/ac_sigmoid_pwl.h>
+#include <ac_math/ac_pow_pwl.h>
 #include "nnet_common.h"
 #include "nnet_types.h"
 #include "nnet_stream.h"
@@ -693,18 +694,12 @@ assert("softsign stream not implemented for AC Math");
 //       ELU Activation
 // *************************************************
 
-#ifndef USE_AC_MATH
-
 template<class data_T, class res_T, typename CONFIG_T>
 void elu(ac_channel<data_T> &data, typename data_T::value_type alpha, ac_channel<res_T> &res) {
     // Initialize the lookup table
-#ifdef __HLS_SYN__
-    bool initialized = false;
-    typename CONFIG_T::table_t elu_table[CONFIG_T::table_size];
-#else
     static bool initialized = false;
     static typename CONFIG_T::table_t elu_table[CONFIG_T::table_size];
-#endif
+
     if (!initialized) {
         init_elu_table<CONFIG_T, CONFIG_T::table_size>(elu_table);
         initialized = true;
@@ -725,7 +720,8 @@ void elu(ac_channel<data_T> &data, typename data_T::value_type alpha, ac_channel
             typename data_T::value_type datareg = in_data[j];
             if (datareg >= 0) {
                 out_data[j] = datareg;
-            } else {
+            } 
+            else {
                 int index = datareg*CONFIG_T::table_size/-8;
                 if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
                 out_data[j] = alpha * elu_table[index];
@@ -736,19 +732,31 @@ void elu(ac_channel<data_T> &data, typename data_T::value_type alpha, ac_channel
 }
 
 template<class data_T, class res_T, typename CONFIG_T>
-void elu(ac_channel<data_T> &data, ac_channel<res_T> &res) {
-    elu<data_T, res_T, CONFIG_T>(data, 1.0, res);
-}
-
-#else
-
-template<class data_T, class res_T, typename CONFIG_T>
 void elu(ac_channel<data_T> &data, ac_channel<res_T> &res)
 {
-assert("elu stream not implemented for AC Math");
-}
+//assert("elu stream not implemented for AC Math");
+    #pragma hls_pipeline_init_interval 1
+    EluActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
 
-#endif
+        data_T in_data = data.read();
+        res_T out_data;
+        typedef class res_T::value_type out_T;
+        typedef ac_fixed<out_T::width, out_T::i_width, false, out_T::q_mode, out_T::o_mode> out_unsigned_T;
+        out_unsigned_T x;
+        #pragma hls_unroll
+        EluPackLoop: for (int j = 0; j < res_T::size; j++) {
+            //int data_round = in_data[j]*CONFIG_T::table_size/8;
+            if (in_data[j] > 0) {
+                out_data[j] = in_data[j];
+            }
+            else {
+                x = ac_math::ac_exp_pwl<out_unsigned_T>(in_data[j]);
+                out_data[j] = x - ac_fixed<1, 1, false>(1.0);
+            }
+        }
+        res.write(out_data);
+    }
+}
 
 // *************************************************
 //       SELU Activation
