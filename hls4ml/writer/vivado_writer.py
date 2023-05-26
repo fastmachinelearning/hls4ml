@@ -13,6 +13,14 @@ config_filename = 'hls4ml_config.yml'
 
 
 class VivadoWriter(Writer):
+    def __get_max_reuse_factor(self, model):
+        max_rf = 0
+        for layer in model.get_layers():
+            rf = int(layer.get_attr('reuse_factor'))
+            if rf > max_rf:
+                max_rf = rf
+        return max_rf
+    
     def print_array_to_cpp(self, var, odir, write_txt_file=True):
         """Write a weights array to C++ header files.
 
@@ -171,10 +179,15 @@ class VivadoWriter(Writer):
                     newline += indent + '#pragma HLS INTERFACE ap_vld port={},{} \n'.format(
                         ','.join(all_inputs), ','.join(all_outputs)
                     )
-                    if model.config.pipeline_style.lower() == 'dataflow':
-                        newline += indent + '#pragma HLS DATAFLOW \n'
+
+                    model_cfg = model.config.get_config_value('HLSConfig')['Model']
+                    if 'DenseResourceImplementation' in model_cfg and model_cfg['DenseResourceImplementation'].lower() == 'unrolled':
+                        newline += indent + f'#pragma HLS PIPELINE ii={self.__get_max_reuse_factor(model)} \n'
                     else:
-                        newline += indent + '#pragma HLS PIPELINE \n'
+                        if model.config.pipeline_style.lower() == 'dataflow':
+                            newline += indent + '#pragma HLS DATAFLOW \n'
+                        else:
+                            newline += indent + '#pragma HLS PIPELINE \n'
                 if io_type == 'io_stream':
                     newline += indent + '#pragma HLS INTERFACE axis port={},{} \n'.format(
                         ','.join(all_inputs), ','.join(all_outputs)

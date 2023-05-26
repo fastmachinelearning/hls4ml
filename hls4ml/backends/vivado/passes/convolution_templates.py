@@ -193,10 +193,9 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
             params['fill_fn'] = 'FillConv2DBuffer'
         
         if node.get_attr('dense_resource_implementation', 'standard') == 'unrolled' and node.get_attr('strategy').lower() == 'resource' and node.get_attr('reuse_factor') > 1:
-            # Implemented in subsequent commits
-            params['unrolled_function'] = 'DenseResourceUnrolled'
+            params['unrolled_function'] = f'dense_unrolled_{node.index}'
         else:
-            params['unrolled_function'] = 'DenseResourceUnrolled'
+            params['unrolled_function'] =  'DenseResourceUnrolled'
 
         conv_config = self.template.format(**params)
 
@@ -207,8 +206,7 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
         if node.get_attr('dense_resource_implementation', 'standard') == 'unrolled' and node.get_attr('strategy').lower() == 'resource' and node.get_attr('reuse_factor') > 1:
-            # Implemented in subsequent commits
-            mult_params['unrolled_function'] = 'DenseResourceUnrolled'
+            mult_params['unrolled_function'] = f'dense_unrolled_{node.index}'
         else:
             mult_params['unrolled_function'] = 'DenseResourceUnrolled'
         mult_config = self.mult_template.format(**mult_params)
@@ -299,7 +297,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         )
         # TODO - Extend unrolled Dense Resource to depthwise Conv1D
         mult_params['unrolled_function'] = 'DenseResourceUnrolled'
-   
+
         depthwise_mult_config = self.depthwise_mult_template.format(**mult_params)
 
         # Pointwise config

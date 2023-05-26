@@ -2,6 +2,9 @@
 #define NNET_INSTR_GEN_H_
 
 #include "nnet_helpers.h"
+#include "hls_stream.h"
+#include "nnet_common.h"
+#include "nnet_mult.h"
 
 namespace nnet {
 

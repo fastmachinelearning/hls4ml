@@ -44,8 +44,7 @@ class DenseConfigTemplate(LayerConfigTemplate):
         )
 
         if node.get_attr('dense_resource_implementation', 'standard') == 'unrolled' and node.get_attr('strategy').lower() == 'resource' and node.get_attr('reuse_factor') > 1:
-            # Implemented in subsequent commits
-            params['unrolled_function'] = 'DenseResourceUnrolled'
+            params['unrolled_function'] = f'dense_unrolled_{node.index}'
         else:
             params['unrolled_function'] = 'DenseResourceUnrolled'
 

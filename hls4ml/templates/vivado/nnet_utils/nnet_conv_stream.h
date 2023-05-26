@@ -358,7 +358,7 @@ void compute_output_buffer_1d(
 
     // Check to see if we have a full kernel
     if ((sX - lShiftX) == 0 && pX > lShiftX - 1) {
-
+   
         // Dense multiply
         // #pragma HLS INLINE recursive
         if (CONFIG_T::strategy == nnet::latency) {
