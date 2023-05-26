@@ -9,6 +9,9 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     static const unsigned n_out = {n_out};
     static const unsigned io_type = nnet::{iotype};
     static const unsigned strategy = nnet::{strategy};
+    static const unsigned resource_implementation = nnet::{dense_resource_implementation};
+    template<class data_T, class res_T, class CONFIG_T>
+    using dense_unrolled = nnet::{unrolled_function}<data_T, res_T, CONFIG_T>;
     static const unsigned reuse_factor = {reuse};
     static const unsigned n_zeros = {nzeros};
     static const unsigned n_nonzeros = {nonzeros};
@@ -39,6 +42,12 @@ class DenseConfigTemplate(LayerConfigTemplate):
         params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
+
+        if node.get_attr('dense_resource_implementation', 'standard') == 'unrolled' and node.get_attr('strategy').lower() == 'resource' and node.get_attr('reuse_factor') > 1:
+            # Implemented in subsequent commits
+            params['unrolled_function'] = 'DenseResourceUnrolled'
+        else:
+            params['unrolled_function'] = 'DenseResourceUnrolled'
 
         return self.template.format(**params)
 

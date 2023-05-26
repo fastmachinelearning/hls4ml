@@ -291,11 +291,11 @@ void compute_output_buffer_2d(
         // Dense multiply
         // #pragma HLS INLINE recursive
         if (CONFIG_T::strategy == nnet::latency) {
-            dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
-                kernel_data, res_out, weights, biases);
+            dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(kernel_data, res_out, weights, biases);
+        } else if (CONFIG_T::strategy == nnet::resource && CONFIG_T::resource_implementation == nnet::unrolled && CONFIG_T::reuse_factor > 1) {
+            CONFIG_T::template dense_unrolled<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>::dense_unrolled(kernel_data, res_out, weights, biases);
         } else {
-            dense_resource<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
-                kernel_data, res_out, weights, biases);
+            dense_resource<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(kernel_data, res_out, weights, biases);
         }
 
     // Pack output
@@ -335,7 +335,7 @@ void compute_output_buffer_1d(
     const data_T &in_elem, hls::stream<res_T> &res_stream,
     typename CONFIG_T::weight_t weights[CONFIG_T::kernel_size * CONFIG_T::n_chan * CONFIG_T::n_filt],
     typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
-    #pragma HLS INLINE
+    #pragma HLS INLINE OFF
 
     // Thresholds
     const static int lShiftX = CONFIG_T::filt_width - 1;
@@ -360,13 +360,13 @@ void compute_output_buffer_1d(
     if ((sX - lShiftX) == 0 && pX > lShiftX - 1) {
 
         // Dense multiply
-        #pragma HLS INLINE recursive
+        // #pragma HLS INLINE recursive
         if (CONFIG_T::strategy == nnet::latency) {
-            dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
-                kernel_data, res_out, weights, biases);
+            dense_latency<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(kernel_data, res_out, weights, biases);
+        } else if (CONFIG_T::strategy == nnet::resource && CONFIG_T::resource_implementation == nnet::unrolled && CONFIG_T::reuse_factor > 1) {
+            CONFIG_T::template dense_unrolled<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>::dense_unrolled(kernel_data, res_out, weights, biases);
         } else {
-            dense_resource<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(
-                kernel_data, res_out, weights, biases);
+            dense_resource<typename data_T::value_type, typename res_T::value_type, typename CONFIG_T::mult_config>(kernel_data, res_out, weights, biases);
         }
 
     // Pack output

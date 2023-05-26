@@ -9,6 +9,9 @@ conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     static const unsigned n_out = {n_out};
     static const unsigned reuse_factor = {reuse};
     static const unsigned strategy = nnet::{strategy};
+    static const unsigned resource_implementation = nnet::{dense_resource_implementation};
+    template<class data_T, class res_T, class CONFIG_T>
+    using dense_unrolled = nnet::{unrolled_function}<data_T, res_T, CONFIG_T>;
     static const unsigned n_zeros = 0;
     static const unsigned multiplier_limit = DIV_ROUNDUP(n_in * n_out, reuse_factor) - n_zeros / reuse_factor;
     typedef {accum_t.name} accum_t;
@@ -86,6 +89,8 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
+        # TODO - Extend unrolled Dense Resource to Conv1D
+        mult_params['unrolled_function'] = 'DenseResourceUnrolled'
         mult_config = self.mult_template.format(**mult_params)
 
         return mult_config + '\n' + conv_config
@@ -130,6 +135,9 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     static const bool store_weights_in_bram = false;
     static const unsigned strategy = nnet::{strategy};
     static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
+    static const unsigned resource_implementation = nnet::{dense_resource_implementation};
+    template<class data_T, class res_T, class CONFIG_T>
+    using dense_unrolled = nnet::{unrolled_function}<data_T, res_T, CONFIG_T>;
     static const unsigned min_height = {min_height};
     static const unsigned min_width = {min_width};
     static const ap_uint<filt_height * filt_width> pixels[min_height * min_width];
@@ -183,6 +191,12 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
             params['fill_fn'] = f'fill_buffer_{node.index}'
         else:
             params['fill_fn'] = 'FillConv2DBuffer'
+        
+        if node.get_attr('dense_resource_implementation', 'standard') == 'unrolled' and node.get_attr('strategy').lower() == 'resource' and node.get_attr('reuse_factor') > 1:
+            # Implemented in subsequent commits
+            params['unrolled_function'] = 'DenseResourceUnrolled'
+        else:
+            params['unrolled_function'] = 'DenseResourceUnrolled'
 
         conv_config = self.template.format(**params)
 
@@ -192,6 +206,11 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
+        if node.get_attr('dense_resource_implementation', 'standard') == 'unrolled' and node.get_attr('strategy').lower() == 'resource' and node.get_attr('reuse_factor') > 1:
+            # Implemented in subsequent commits
+            mult_params['unrolled_function'] = 'DenseResourceUnrolled'
+        else:
+            mult_params['unrolled_function'] = 'DenseResourceUnrolled'
         mult_config = self.mult_template.format(**mult_params)
 
         return mult_config + '\n' + conv_config
@@ -278,6 +297,9 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('depthwise').type.precision
         )
+        # TODO - Extend unrolled Dense Resource to depthwise Conv1D
+        mult_params['unrolled_function'] = 'DenseResourceUnrolled'
+   
         depthwise_mult_config = self.depthwise_mult_template.format(**mult_params)
 
         # Pointwise config
@@ -317,6 +339,9 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('pointwise').type.precision
         )
+        # TODO - Extend unrolled Dense Resource to separable Conv1D
+        mult_params['unrolled_function'] = 'DenseResourceUnrolled'
+
         pointwise_mult_config = self.pointwise_mult_template.format(**mult_params)
 
         return (
@@ -399,6 +424,8 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('depthwise').type.precision
         )
+        # TODO - Extend unrolled Dense Resource to depthwise Conv2D
+        mult_params['unrolled_function'] = 'DenseResourceUnrolled'
         depthwise_mult_config = self.depthwise_mult_template.format(**mult_params)
 
         # Pointwise config
@@ -442,6 +469,8 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('pointwise').type.precision
         )
+        # TODO - Extend unrolled Dense Resource to separable Conv2D
+        mult_params['unrolled_function'] = 'DenseResourceUnrolled'
         pointwise_mult_config = self.pointwise_mult_template.format(**mult_params)
 
         return (

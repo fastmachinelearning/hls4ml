@@ -11,6 +11,11 @@
 
 namespace nnet {
 
+// Different implementations of Resource strategy; this attribute only makes a difference if strategy == Resource
+// Default -> nnet_dense_resource.h
+// Unrolled -> Code generation, ignoring zero DSPs and optimizing BRAM
+enum resource_implementation { standard, unrolled };
+
 struct dense_config {
     // Internal data type definitions
     typedef float bias_t;
@@ -27,7 +32,13 @@ struct dense_config {
     static const unsigned reuse_factor = 1;
     static const bool store_weights_in_bram = false;
     static const unsigned n_zeros = 0;
-    // partitioning arrays cyclically to go with roll factors?
+
+    static const unsigned resource_implementation = standard;
+    template<class data_T, class res_T, class CONFIG_T>
+    using dense_unrolled = nnet::DenseResourceUnrolled<data_T, res_T, CONFIG_T>;
+    
+    // Partitioning arrays cyclically to go with roll factors?
+    
     // Product function to use
     template <class x_T, class y_T> using product = nnet::product::mult<x_T, y_T>;
 };
@@ -39,6 +50,8 @@ void dense(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
     #pragma HLS inline
     if (CONFIG_T::strategy == nnet::latency) {
         dense_latency<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+    } else if (CONFIG_T::strategy == nnet::resource && CONFIG_T::resource_implementation == nnet::unrolled && CONFIG_T::reuse_factor > 1) {
+        CONFIG_T::template dense_unrolled<data_T, res_T, CONFIG_T>::dense_unrolled(data, res, weights, biases);
     } else {
         dense_resource<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     }
