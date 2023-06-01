@@ -1,0 +1,12 @@
+{
+    "alveo-u55c": {
+      "part": "xcu55c-fsvh2892-2L-e",
+      "platform": "xilinx_u55c_gen3x16_xdma_3_202210_1",
+      "memory": {"type": "hbm", "channels": 32}
+    },
+    "alveo-u250": {
+      "part": "xcu250-figd2104-2L-e",
+      "platform": "xilinx_u250_xdma_201830_2",
+      "memory": {"type": "ddr", "channels": 4}
+    }
+  }
