@@ -66,7 +66,7 @@ BinaryNormLoop:
     BatchNormPack:
         for (int j = 0; j < data_T::size; j++) {
             #pragma HLS UNROLL
-            out_data[j] = (in_data[j] > threshold[i * data_T::size + j]) ? 1 : 0;
+            out_data[j] = (in_data[j] >= threshold[i * data_T::size + j]) ? 1 : 0;
         }
 
         res.write(out_data);
