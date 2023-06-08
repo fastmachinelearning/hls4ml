@@ -44,7 +44,7 @@ def parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader):
 
     (layer['in_height'], layer['in_width'], layer['n_chan']) = parse_data_format(input_shapes[0], layer['data_format'])
 
-    if layer['class_name'] in ['Conv2D', 'QConv2D']:
+    if layer['class_name'] in ['Conv2D', 'QConv2D', 'QConv2DBatchnorm']:
         layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'kernel')
     elif layer['class_name'] in ['SeparableConv2D', 'QSeparableConv2D']:
         layer['depthwise_data'], layer['pointwise_data'] = get_weights_data(
