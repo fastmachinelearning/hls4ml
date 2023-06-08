@@ -108,8 +108,8 @@ void pointwise_conv_1d_latency_cl(
     #pragma HLS ARRAY_PARTITION variable=biases complete dim=0
 
     // Limit multipliers to control parallelization
-    //const int multiplier_limit = compute_multiplier_limit<CONFIG_T>(weights);
-    //#pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
+    int multiplier_limit = ceil ( (float(CONFIG_T::out_width) / float(CONFIG_T::reuse_factor )* CONFIG_T::n_filt * CONFIG_T::n_chan ) / float(CONFIG_T::reuse_factor) );
+    #pragma HLS ALLOCATION operation instances=mul limit=multiplier_limit
 
     // Convolve, saving all multiplication results to accumulate later
     ConvOut: for(int ii = 0; ii < CONFIG_T::out_width/CONFIG_T::reuse_factor; ii++) {
