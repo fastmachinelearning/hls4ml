@@ -47,7 +47,10 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     template<unsigned K, unsigned S, unsigned W>
     using scale_index = nnet::{scale_index_type}<K, S, W>;
 }};
-const ac_int<config{index}::filt_width,false> config{index}::pixels[] = {{{instructions}}};\n"""
+// really this allocation of pixels array ought to be in a .cpp file
+#ifndef INCLUDED_MC_TESTBENCH_H
+const ac_int<config{index}::filt_width,false> config{index}::pixels[] = {{{instructions}}};
+#endif\n"""
 
 conv1d_function_template = 'nnet::conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 
@@ -142,7 +145,10 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     template<unsigned K, unsigned S, unsigned W>
     using scale_index_width = nnet::{scale_index_width_type}<K, S, W>;
 }};
-const ac_int<config{index}::filt_height * config{index}::filt_width,false> config{index}::pixels[] = {{{instructions}}};\n"""
+// really this allocation of pixels array ought to be in a .cpp file
+#ifndef INCLUDED_MC_TESTBENCH_H
+const ac_int<config{index}::filt_height * config{index}::filt_width,false> config{index}::pixels[] = {{{instructions}}};
+#endif\n"""
 
 conv2d_function_template = 'nnet::conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 depthconv2d_function_template = (
