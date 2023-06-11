@@ -97,8 +97,7 @@ class ChannelsLastConverter(OptimizerPass):
             input_shape = node.get_output_variable().shape
             input_shape.append(input_shape.pop(0))
             node.get_output_variable().shape = input_shape
-            dim_names = node.get_output_variable().dim_names
-            dim_names.append(dim_names.pop(0))
+            dim_names = [f'N_INPUT_{i}_{node.index}' for i in range(1, len(input_shape) + 1)]
             node.get_output_variable().dim_names = dim_names
 
         node.channels_last_converted = True
