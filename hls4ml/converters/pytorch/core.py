@@ -28,7 +28,7 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, c
     return layer, output_shape
 
 
-activation_layers = ['Softmax', 'ReLU', 'LeakyReLU', 'Threshold', 'ELU', 'PReLU', 'Sigmoid']
+activation_layers = ['Softmax', 'ReLU', 'LeakyReLU', 'Threshold', 'ELU', 'PReLU', 'Sigmoid', 'Tanh']
 
 
 @pytorch_handler(*activation_layers)
