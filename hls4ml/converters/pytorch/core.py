@@ -23,7 +23,8 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, c
     else:
         layer['use_bias'] = True
 
-    output_shape = [input_shapes[0][0], layer['n_out']]
+    output_shape = input_shapes[0][:]
+    output_shape[-1] = layer['n_out']
 
     return layer, output_shape
 
