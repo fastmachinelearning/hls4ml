@@ -21,7 +21,7 @@ def parse_pooling_layer(operation, layer_name, input_names, input_shapes, node, 
 
     layer['name'] = layer_name
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
-    if node.op == "call_module" and "Avg" in operation:
+    if node.op == 'call_module' and 'Avg' in operation:
         if class_object.count_include_pad:
             layer['count_pad'] = 'true'
         else:
@@ -31,7 +31,7 @@ def parse_pooling_layer(operation, layer_name, input_names, input_shapes, node, 
 
     if int(layer['class_name'][-2]) == 1:
         (layer['n_in'], layer['n_filt']) = parse_data_format(input_shapes[0], layer['data_format'])
-        if node.op == "call_module":
+        if node.op == 'call_module':
             layer['pool_width'] = (
                 class_object.kernel_size if not type(class_object.kernel_size) is tuple else class_object.kernel_size[0]
             )
@@ -64,7 +64,7 @@ def parse_pooling_layer(operation, layer_name, input_names, input_shapes, node, 
     elif int(layer['class_name'][-2]) == 2:
         (layer['in_height'], layer['in_width'], layer['n_filt']) = parse_data_format(input_shapes[0], layer['data_format'])
 
-        if node.op == "call_module":
+        if node.op == 'call_module':
             if type(class_object.stride) is tuple:
                 layer['stride_height'] = class_object.stride[0]
                 layer['stride_width'] = class_object.stride[1]

@@ -41,7 +41,7 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, nod
 
     # if layer['class_name'] != 'Activation':
     #    layer['activation'] = layer['class_name']
-    if node.op == "call_module":
+    if node.op == 'call_module':
         if layer['class_name'] == 'ReLU' or layer['class_name'] == 'Sigmoid':
             layer['class_name'] = 'Activation'
         if layer['class_name'] == 'LeakyReLU':
@@ -57,23 +57,23 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, nod
             if layer['activ_param'] < 0:
                 raise Exception('negative threshold values not supported')
 
-        if hasattr(node, "dim"):
+        if hasattr(node, 'dim'):
             layer['axis'] = class_object.dim
     else:
         if layer['class_name'] == 'ReLU' or layer['class_name'] == 'Sigmoid':
             layer['class_name'] = 'Activation'
         if layer['class_name'] == 'LeakyReLU':
-            layer['activ_param'] = node.kwargs["negative_slope"]
+            layer['activ_param'] = node.kwargs['negative_slope']
         if layer['class_name'] == 'ELU':
-            layer['activ_param'] = node.kwargs["alpha"]
+            layer['activ_param'] = node.kwargs['alpha']
         if layer['class_name'] == 'Threshold':
             layer['activ_param'] = node.args[1]
             if layer['activ_param'] < 0:
                 raise Exception('negative threshold values not supported')
             layer['class_name'] = 'ThresholdedReLU'
             layer['activation'] = 'ThresholdedReLU'
-        if "dim" in node.kwargs:
-            layer['axis'] = node.kwargs["dim"]
+        if 'dim' in node.kwargs:
+            layer['axis'] = node.kwargs['dim']
 
     output_shape = input_shapes[0]
     return layer, output_shape
@@ -93,7 +93,7 @@ def parse_batchnorm_layer(operation, layer_name, input_names, input_shapes, node
     layer['name'] = layer_name
 
     # batchnorm para
-    if node.op == "call_module":
+    if node.op == 'call_module':
         layer['epsilon'] = class_object.eps
         layer['use_gamma'] = layer['use_beta'] = class_object.affine
 
