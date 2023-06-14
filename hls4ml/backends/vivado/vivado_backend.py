@@ -72,7 +72,9 @@ class VivadoBackend(FPGABackend):
         for layer in cnn_layers:
             attrs = self.attribute_map.get(layer, [])
             # attrs.append(ConfigurableAttribute('conv_implementation', value_type=str, default='LineBuffer'))
-            attrs.append(ChoiceAttribute('conv_implementation', choices=['LineBuffer', 'Encoded', 'Pointwise'], default='LineBuffer'))
+            attrs.append(
+                ChoiceAttribute('conv_implementation', choices=['LineBuffer', 'Encoded', 'Pointwise'], default='LineBuffer')
+            )
             self.attribute_map[layer] = attrs
 
     def _register_flows(self):

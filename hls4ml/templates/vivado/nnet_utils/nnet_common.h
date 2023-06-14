@@ -24,7 +24,7 @@ namespace nnet {
 // Common type definitions
 enum io_type { io_parallel = 0, io_stream };
 enum strategy { latency, resource };
-enum class conv_implementation { linebuffer=0, encoded=1, pointwise=2};
+enum class conv_implementation { linebuffer = 0, encoded = 1, pointwise = 2 };
 
 /* ---
  * Balanced tree reduce implementation.
