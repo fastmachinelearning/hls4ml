@@ -8,8 +8,6 @@
 
 namespace nnet {
 
-enum class conv_implementation { linebuffer = 0, encoded = 1 };
-
 // *************************************************
 //       Encoded Implementation (Vlad's)
 // *************************************************
