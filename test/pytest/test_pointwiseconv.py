@@ -21,7 +21,7 @@ strategy_options = ['Latency', 'Resource']
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('strides', strides1d_options)
 @pytest.mark.parametrize(
-    'backend, io_type, strategy, conv_implementation',
+    'backend, io_type, strategy, conv_impl',
     [
         ('Quartus', 'io_parallel', 'resource', 'LineBuffer'),
         ('Vivado', 'io_parallel', 'resource', 'LineBuffer'),
@@ -36,7 +36,7 @@ strategy_options = ['Latency', 'Resource']
         ('Vitis', 'io_stream', 'resource', 'LineBuffer'),
     ],
 )
-def test_pointwiseconv1d(chans, padds, strides, backend, io_type, strategy, conv_implementation):
+def test_pointwiseconv1d(chans, padds, strides, backend, io_type, strategy, conv_impl):
     model = tf.keras.models.Sequential()
     input_shape = (28, 3)
     model.add(
@@ -60,11 +60,11 @@ def test_pointwiseconv1d(chans, padds, strides, backend, io_type, strategy, conv
     default_precision = 'ac_fixed<32,16,true>' if backend == 'Quartus' else 'ap_fixed<32,16>'
     config = hls4ml.utils.config_from_keras_model(model, default_precision=default_precision, granularity='name')
     config['Model']['Strategy'] = strategy
-    config['LayerName']['pointwise1d']['ConvImplementation'] = conv_implementation
+    config['LayerName']['pointwise1d']['ConvImplementation'] = conv_impl
 
     output_dir = str(
         test_root_path
-        / f'hls4mlprj_pointwise1d_{chans}_strides_{strides[0]}_{padds}_padding_{backend}_{io_type}_{strategy}_{conv_implementation}'
+        / f'hls4mlprj_pointwise1d_{chans}_strides_{strides[0]}_{padds}_padding_{backend}_{io_type}_{strategy}_{conv_impl}'
     )
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
