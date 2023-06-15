@@ -626,6 +626,7 @@ class Pooling1D(Layer):
         Attribute('stride_width'),
         Attribute('pad_left'),
         Attribute('pad_right'),
+        Attribute('count_pad', value_type=bool, default=False),
         ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False),
     ]
 
@@ -655,6 +656,7 @@ class Pooling2D(Layer):
         Attribute('pad_bottom'),
         Attribute('pad_left'),
         Attribute('pad_right'),
+        Attribute('count_pad', value_type=bool, default=False),
         ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False),
     ]
 
