@@ -20,29 +20,32 @@ class ChannelsLastConverter(OptimizerPass):
             node.channels_last_converted = True
             return False
         outshape = node.get_output_variable().shape
-        # if inputs are not yet transposed into channels_last, add transpose layer
-        if (
-            not model.config.config['HLSConfig']['Model']['InputsChannelLast']
-            and isinstance(node, Input)
-            and len(outshape) > 1
-        ):
-            # Add transpose for input layer
-            input = node.name
-            if len(outshape) == 2:
-                attributes = {'perm': [1, 0]}
+
+        if isinstance(node, Input):
+            # if inputs are not yet transposed into channels_last, add transpose layer
+            if not model.config.config['HLSConfig']['Model']['InputsChannelLast'] and len(outshape) > 1:
+                # Add transpose for input layer
+                input = node.name
+                if len(outshape) == 2:
+                    attributes = {'perm': [1, 0]}
+                else:
+                    attributes = {'perm': [1, 2, 0]}
+
+                transpose_node = model.make_node(
+                    'Transpose', f'transpose_input_for_{node.get_attr("name")}', attributes, [input]
+                )
+                transpose_node.set_attr('name', f'transpose_input_for_{node.get_attr("name")}')
+                transpose_node.channels_last_converted = True
+
+                model.insert_node(transpose_node)
             else:
-                attributes = {'perm': [1, 2, 0]}
-
-            transpose_node = model.make_node(
-                'Transpose', f'transpose_input_for_{node.get_attr("name")}', attributes, [input]
-            )
-            transpose_node.set_attr('name', f'transpose_input_for_{node.get_attr("name")}')
-            transpose_node.channels_last_converted = True
-
-            model.insert_node(transpose_node)
-
-        if not isinstance(node, Input):
-            # Transpose tensors tensors
+                input_shape = node.get_output_variable().shape
+                input_shape.append(input_shape.pop(0))
+                node.get_output_variable().shape = input_shape
+                dim_names = [f'N_INPUT_{i}_{node.index}' for i in range(1, len(input_shape) + 1)]
+                node.get_output_variable().dim_names = dim_names
+        else:
+            # Transpose weight tensors
             tensors = ['weight', 'depthwise', 'pointwise', 'zero_bias', 'scale', 'recurrent_weight']
             for tensor in tensors:
                 try:
@@ -89,7 +92,7 @@ class ChannelsLastConverter(OptimizerPass):
                 dims = [outdims[1], outdims[2], outdims[0]]
                 node.add_output_variable(shape, dims)
 
-            # add transpose for output layer
+            # Add transpose for output layer
             if (
                 node.get_attr("name") in model.outputs
                 and len(outshape) > 1
@@ -109,12 +112,6 @@ class ChannelsLastConverter(OptimizerPass):
                 transpose_node.channels_last_converted = True
 
                 model.insert_node(transpose_node)
-        else:
-            input_shape = node.get_output_variable().shape
-            input_shape.append(input_shape.pop(0))
-            node.get_output_variable().shape = input_shape
-            dim_names = [f'N_INPUT_{i}_{node.index}' for i in range(1, len(input_shape) + 1)]
-            node.get_output_variable().dim_names = dim_names
 
         node.channels_last_converted = True
         return True
