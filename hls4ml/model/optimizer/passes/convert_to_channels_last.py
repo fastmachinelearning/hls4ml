@@ -2,7 +2,7 @@
 # Based on https://github.com/fastmachinelearning/qonnx/blob/
 # 12c96a3ded06beacab08e0f554e4ed014476c0aa/src/qonnx/transformation/channels_last.py
 
-from hls4ml.model.layers import Input
+from hls4ml.model.layers import Concatenate, Input
 from hls4ml.model.optimizer import OptimizerPass
 
 
@@ -61,6 +61,22 @@ class ChannelsLastConverter(OptimizerPass):
                 node.set_attr('data_format', 'channels_last')
             except AttributeError:
                 pass
+
+            # Adjust axis of operation
+            if isinstance(node, Concatenate):
+                old_axis = node.get_attr('axis')
+                if len(outshape) == 2:
+                    if old_axis == -1 or old_axis == 2:
+                        node.set_attr('axis', 1)
+                    else:
+                        node.set_attr('axis', 2)
+                elif len(outshape) == 3:
+                    if old_axis == 3 or old_axis == -1:
+                        node.set_attr('axis', 1)
+                    elif old_axis == 2 or old_axis == -2:
+                        node.set_attr('axis', 2)  # Not required, but left for clarity
+                    else:
+                        node.set_attr('axis', 3)
 
             # Adjust output shape
             outdims = node.get_output_variable().dim_names

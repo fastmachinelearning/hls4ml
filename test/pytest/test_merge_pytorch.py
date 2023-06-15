@@ -24,8 +24,9 @@ class ConcatModule(nn.Module):
         super().__init__()
 
     def forward(self, x, y):
-        # The default, dim=0, is the batch dimension, we set it to -1 to be equivalent to Keras's default
-        return torch.cat([x, y], dim=-1)
+        # In this test the shape will be (batch, 3, 10, 10), but since we test with channels_last data format, this
+        # will be equivalent to the Keras default of concatenation along the last axis (axis=-1)
+        return torch.cat([x, y], dim=1)
 
 
 @pytest.mark.parametrize('merge_op', ['cat', 'add', 'mul', 'sub', 'minimum', 'maximum'])
@@ -33,7 +34,6 @@ class ConcatModule(nn.Module):
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
 def test_merge(merge_op, io_type, backend):
     input_shape = (3, 10, 10)
-    input_shape_cl = input_shape[1:] + input_shape[:1]
 
     if merge_op == 'cat':  # Meow!
         model = ConcatModule()
@@ -56,10 +56,17 @@ def test_merge(merge_op, io_type, backend):
     )
     hls_model.compile()
 
-    X_input1 = np.random.rand(100, *input_shape_cl)
-    X_input2 = np.random.rand(100, *input_shape_cl)
+    X_input1 = np.random.rand(100, *input_shape)
+    X_input2 = np.random.rand(100, *input_shape)
+
+    X_input1_cl = np.ascontiguousarray(np.transpose(X_input1, axes=[0, 2, 3, 1]))
+    X_input2_cl = np.ascontiguousarray(np.transpose(X_input2, axes=[0, 2, 3, 1]))
 
     pytorch_prediction = model(torch.Tensor(X_input1), torch.Tensor(X_input2)).detach().numpy()
-    hls_prediction = hls_model.predict([X_input1, X_input2]).reshape(pytorch_prediction.shape)
+    hls_prediction = hls_model.predict([X_input1_cl, X_input2_cl])
+
+    output_shape = pytorch_prediction.shape
+    output_shape_cl = [output_shape[0], output_shape[2], output_shape[3], output_shape[1]]
+    hls_prediction = np.transpose(hls_prediction.reshape(output_shape_cl), axes=[0, 3, 1, 2])
 
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=0.001)
