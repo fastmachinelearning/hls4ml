@@ -23,11 +23,11 @@ def parse_pooling_layer(operation, layer_name, input_names, input_shapes, node, 
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
     if node.op == 'call_module' and 'Avg' in operation:
         if class_object.count_include_pad:
-            layer['count_pad'] = 'true'
+            layer['count_pad'] = True
         else:
-            layer['count_pad'] = 'false'
+            layer['count_pad'] = False
     else:
-        layer['count_pad'] = 'true'
+        layer['count_pad'] = True
 
     if int(layer['class_name'][-2]) == 1:
         (layer['n_in'], layer['n_filt']) = parse_data_format(input_shapes[0], layer['data_format'])
