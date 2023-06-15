@@ -49,7 +49,7 @@ def test_pointwiseconv1d(chans, padds, strides, backend, io_type, strategy, conv
             kernel_initializer='normal',
             use_bias=False,
             data_format=chans,
-            name='pointwise1d'
+            name='pointwise1d',
         )
     )
     model.compile(optimizer='adam', loss='mse')
@@ -102,7 +102,7 @@ def test_pointwiseconv2d(chans, padds, strides, backend, io_type, strategy):
             kernel_initializer='normal',
             use_bias=False,
             data_format=chans,
-            name='pointwise2d'
+            name='pointwise2d',
         )
     )
 
@@ -116,8 +116,7 @@ def test_pointwiseconv2d(chans, padds, strides, backend, io_type, strategy):
     config['Model']['Strategy'] = strategy
     stride_cfg = str(strides).replace(', ', '_').replace('(', '').replace(')', '')
     output_dir = str(
-        test_root_path
-        / f'hls4mlprj_pointwise2d_{chans}_strides_{stride_cfg}_{padds}_padding_{backend}_{io_type}_{strategy}'
+        test_root_path / f'hls4mlprj_pointwise2d_{chans}_strides_{stride_cfg}_{padds}_padding_{backend}_{io_type}_{strategy}'
     )
 
     hls_model = hls4ml.converters.convert_from_keras_model(
