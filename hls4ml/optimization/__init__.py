@@ -1,13 +1,35 @@
 import numpy as np
-from hls4ml.optimization.keras import optimize_model
+
 from hls4ml.optimization.attributes import get_attributes_from_keras_model_and_hls4ml_config
+from hls4ml.optimization.keras import optimize_model
+
 
 def optimize_keras_for_hls4ml(
-    keras_model, hls_config, objective, scheduler, X_train, y_train, X_val, y_val, 
-    batch_size, epochs, optimizer, loss_fn, validation_metric, increasing, rtol, 
-    callbacks=[], ranking_metric='l1', local=False, verbose=False, rewinding_epochs=1, cutoff_bad_trials=3,
-    directory='hls4ml-optimization', tuner='Bayesian', knapsack_solver='CBC_MIP',
-    regularization_range=np.logspace(-6, -2, num=16).tolist()
+    keras_model,
+    hls_config,
+    objective,
+    scheduler,
+    X_train,
+    y_train,
+    X_val,
+    y_val,
+    batch_size,
+    epochs,
+    optimizer,
+    loss_fn,
+    validation_metric,
+    increasing,
+    rtol,
+    callbacks=[],
+    ranking_metric='l1',
+    local=False,
+    verbose=False,
+    rewinding_epochs=1,
+    cutoff_bad_trials=3,
+    directory='hls4ml-optimization',
+    tuner='Bayesian',
+    knapsack_solver='CBC_MIP',
+    regularization_range=np.logspace(-6, -2, num=16).tolist(),
 ):
     '''
     Top-level function for optimizing a Keras model, given hls4ml config and a hardware objective(s)
@@ -28,7 +50,7 @@ def optimize_keras_for_hls4ml(
     - validation_metric (keras.metrics.Metric or equivalent loss description): Validation metric, used as a baseline
     - increasing (boolean): If the metric improves with increased values; e.g. accuracy -> increasing = True, MSE -> increasing = False
     - rtol (float): Relative tolerance; pruning stops when pruned_validation_metric < (or >) rtol * baseline_validation_metric
-    
+
     Kwargs:
     - callbacks (list of keras.callbacks.Callback) Currently not supported, developed in future versions
     - ranking_metric (string): Metric used for rannking weights and structures; currently supported l1, l2, saliency and Oracle
@@ -47,11 +69,29 @@ def optimize_keras_for_hls4ml(
 
     # Optimize model
     return optimize_model(
-        keras_model, model_attributes, objective, scheduler,
-        X_train, y_train, X_val, y_val, batch_size, epochs, 
-        optimizer, loss_fn, validation_metric, increasing, rtol, 
-        callbacks=callbacks, ranking_metric=ranking_metric, local=local, verbose=verbose, 
-        rewinding_epochs=rewinding_epochs, cutoff_bad_trials=cutoff_bad_trials,
-        directory=directory, tuner=tuner, knapsack_solver=knapsack_solver,
-        regularization_range=regularization_range
+        keras_model,
+        model_attributes,
+        objective,
+        scheduler,
+        X_train,
+        y_train,
+        X_val,
+        y_val,
+        batch_size,
+        epochs,
+        optimizer,
+        loss_fn,
+        validation_metric,
+        increasing,
+        rtol,
+        callbacks=callbacks,
+        ranking_metric=ranking_metric,
+        local=local,
+        verbose=verbose,
+        rewinding_epochs=rewinding_epochs,
+        cutoff_bad_trials=cutoff_bad_trials,
+        directory=directory,
+        tuner=tuner,
+        knapsack_solver=knapsack_solver,
+        regularization_range=regularization_range,
     )

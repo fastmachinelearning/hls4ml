@@ -1,12 +1,13 @@
-import pytest
 import numpy as np
+import pytest
 from qkeras import QDense
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Sequential
+
+from hls4ml.optimization.attributes import get_attributes_from_keras_model
 from hls4ml.optimization.config import SUPPORTED_STRUCTURES
 from hls4ml.optimization.keras.masking import get_model_masks
 from hls4ml.optimization.objectives import ObjectiveEstimator
-from hls4ml.optimization.attributes import get_attributes_from_keras_model
 
 # Similar tests in test_masking.py, weight sharing instead of pruning
 sparsity = 0.33
@@ -19,6 +20,7 @@ When a group of weights is quantized to the mean value, resource savings are equ
 This is similar to ParameterEstimator, but instead of pruning, weight sharing is performed and
 No savings are incurred with unstructured type (unstructured weight sharing doesn't make sense)
 '''
+
 
 class MockWeightSharingEstimator(ObjectiveEstimator):
     @classmethod
@@ -42,12 +44,14 @@ class MockWeightSharingEstimator(ObjectiveEstimator):
                 if 'Dense' in layer_attributes.layer_type.__name__:
                     return [layer_attributes.weight_shape[1]]
             elif structure_type == SUPPORTED_STRUCTURES.PATTERN:
-                number_of_patterns = np.prod(
-                    layer_attributes.weight_shape) // layer_attributes.optimization_attributes.pattern_offset
+                number_of_patterns = (
+                    np.prod(layer_attributes.weight_shape) // layer_attributes.optimization_attributes.pattern_offset
+                )
                 return [number_of_patterns * layer_attributes.optimization_attributes.consecutive_patterns]
             elif structure_type == SUPPORTED_STRUCTURES.BLOCK:
                 return [np.prod(layer_attributes.optimization_attributes.block_shape)]
         return [0]
+
 
 @pytest.mark.parametrize('local_masking', local_masking)
 @pytest.mark.parametrize('dense', dense_layers)
@@ -70,15 +74,13 @@ def test_weight_sharing_structured(local_masking, dense):
     model_attributes['dense'].optimization_attributes.weight_sharing = True
     model_attributes['dense'].optimization_attributes.structure_type = SUPPORTED_STRUCTURES.STRUCTURED
 
-    masks, offsets = get_model_masks(model, model_attributes, sparsity, MockWeightSharingEstimator, metric='l1',
-                                     local=local_masking)
-    frozen = np.array([
-        [0, 1], [1, 1], [2, 1]
-    ],
-        dtype=np.int32)
+    masks, offsets = get_model_masks(
+        model, model_attributes, sparsity, MockWeightSharingEstimator, metric='l1', local=local_masking
+    )
+    frozen = np.array([[0, 1], [1, 1], [2, 1]], dtype=np.int32)
 
-    assert (not np.any(masks['dense'][frozen[:, 0], frozen[:, 1]]))
-    assert (np.all(offsets['dense'][frozen[:, 0], frozen[:, 1]] == 0.5))
+    assert not np.any(masks['dense'][frozen[:, 0], frozen[:, 1]])
+    assert np.all(offsets['dense'][frozen[:, 0], frozen[:, 1]] == 0.5)
 
 
 @pytest.mark.parametrize('local_masking', local_masking)
@@ -107,16 +109,13 @@ def test_weight_sharing_pattern(local_masking, dense):
     model_attributes['dense'].optimization_attributes.pattern_offset = 4
     model_attributes['dense'].optimization_attributes.consecutive_patterns = 1
 
-    masks, offsets = get_model_masks(model, model_attributes, sparsity, MockWeightSharingEstimator, metric='l1',
-                                     local=local_masking)
-    frozen = np.array([
-        [0, 0], [1, 0], [2, 0],
-        [0, 2], [1, 2], [2, 2]
-    ],
-        dtype=np.int32)
+    masks, offsets = get_model_masks(
+        model, model_attributes, sparsity, MockWeightSharingEstimator, metric='l1', local=local_masking
+    )
+    frozen = np.array([[0, 0], [1, 0], [2, 0], [0, 2], [1, 2], [2, 2]], dtype=np.int32)
 
-    assert (not np.any(masks['dense'][frozen[:, 0], frozen[:, 1]]))
-    assert (np.all(offsets['dense'][frozen[:, 0], frozen[:, 1]] == 0.5))
+    assert not np.any(masks['dense'][frozen[:, 0], frozen[:, 1]])
+    assert np.all(offsets['dense'][frozen[:, 0], frozen[:, 1]] == 0.5)
 
 
 @pytest.mark.parametrize('local_masking', local_masking)
@@ -147,13 +146,10 @@ def test_weight_sharing_block(local_masking, dense):
     model_attributes['dense'].optimization_attributes.structure_type = SUPPORTED_STRUCTURES.BLOCK
     model_attributes['dense'].optimization_attributes.block_shape = (2, 2)
 
-    masks, offsets = get_model_masks(model, model_attributes, sparsity, MockWeightSharingEstimator, metric='l1',
-                                     local=local_masking)
-    frozen = np.array([
-        [0, 0], [0, 1], [1, 0], [1, 1],
-        [2, 2], [2, 3], [3, 2], [3, 3]
-    ],
-        dtype=np.int32)
+    masks, offsets = get_model_masks(
+        model, model_attributes, sparsity, MockWeightSharingEstimator, metric='l1', local=local_masking
+    )
+    frozen = np.array([[0, 0], [0, 1], [1, 0], [1, 1], [2, 2], [2, 3], [3, 2], [3, 3]], dtype=np.int32)
 
-    assert (not np.any(masks['dense'][frozen[:, 0], frozen[:, 1]]))
-    assert (np.all(offsets['dense'][frozen[:, 0], frozen[:, 1]] == 0.5))
+    assert not np.any(masks['dense'][frozen[:, 0], frozen[:, 1]])
+    assert np.all(offsets['dense'][frozen[:, 0], frozen[:, 1]] == 0.5)

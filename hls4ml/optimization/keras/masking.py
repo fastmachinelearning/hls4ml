@@ -1,16 +1,27 @@
-import sys
 import logging
+import sys
+
 import numpy as np
 import tensorflow as tf
-from qkeras import QDense, QConv2D
-from tensorflow.keras.layers import Dense, Conv2D
-from hls4ml.optimization.knapsack import solve_knapsack
+from qkeras import QConv2D, QDense
+from tensorflow.keras.layers import Conv2D, Dense
+
 from hls4ml.optimization.config import SUPPORTED_STRUCTURES
 from hls4ml.optimization.keras.config import SUPPORTED_LAYERS, SUPPORTED_METRICS
+from hls4ml.optimization.knapsack import solve_knapsack
 
 
-def get_model_masks(keras_model, model_attributes, sparsity, objective, metric='l1', local=False, gradients=None,
-                    hessians=None, knapsack_solver='CBC_MIP'):
+def get_model_masks(
+    keras_model,
+    model_attributes,
+    sparsity,
+    objective,
+    metric='l1',
+    local=False,
+    gradients=None,
+    hessians=None,
+    knapsack_solver='CBC_MIP',
+):
     '''
     Function calculating a binary mask for all optimizable layers
     Entries equal to one correspond to the weight being updated during the training
@@ -55,11 +66,13 @@ def get_model_masks(keras_model, model_attributes, sparsity, objective, metric='
         raise Exception('Saliency ranking requires second order derivatives')
 
     if local:
-        return __get_masks_local(keras_model, model_attributes, sparsity, objective, metric, gradients, hessians,
-                                 knapsack_solver)
+        return __get_masks_local(
+            keras_model, model_attributes, sparsity, objective, metric, gradients, hessians, knapsack_solver
+        )
     else:
-        return __get_masks_global(keras_model, model_attributes, sparsity, objective, metric, gradients, hessians,
-                                  knapsack_solver)
+        return __get_masks_global(
+            keras_model, model_attributes, sparsity, objective, metric, gradients, hessians, knapsack_solver
+        )
 
 
 def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric, gradients, hessians, knapsack_solver):
@@ -117,7 +130,7 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
                         np.array([g.value for g in groups]),
                         np.array([g.resources for g in groups]).T,
                         target_resources,
-                        implementation=knapsack_solver
+                        implementation=knapsack_solver,
                     )
 
                     # Selected weights are not masked
@@ -157,7 +170,7 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
                         np.array([g.value for g in groups]),
                         np.array([g.resources for g in groups]).T,
                         target_resources,
-                        implementation=knapsack_solver
+                        implementation=knapsack_solver,
                     )
 
                     # Selected neurons are not masked
@@ -198,7 +211,7 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
                         np.array([g.value for g in groups]),
                         np.array([g.resources for g in groups]).T,
                         target_resources,
-                        implementation=knapsack_solver
+                        implementation=knapsack_solver,
                     )
 
                     mask = np.zeros(value.shape, value.dtype)
@@ -247,8 +260,10 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
                         np.expand_dims(np.expand_dims(reshaped, 2), 0),
                         [1, consecutive_patterns, number_of_patterns, 1],
                         [1, consecutive_patterns, number_of_patterns, 1],
-                        [1, 1, 1, 1], 'SAME'
-                    ).numpy(), (total_blocks, -1)
+                        [1, 1, 1, 1],
+                        'SAME',
+                    ).numpy(),
+                    (total_blocks, -1),
                 )
 
                 # If pruning enabled, find cost associated with pruning each neuron
@@ -276,7 +291,7 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
                     np.array([g.value for g in groups]),
                     np.array([g.resources for g in groups]).T,
                     target_resources,
-                    implementation=knapsack_solver
+                    implementation=knapsack_solver,
                 )
 
                 # Decode masked groups into transposed shape and set selected groups to one
@@ -323,9 +338,10 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
                         np.expand_dims(np.expand_dims(value, 2), 0),
                         [1, block_shape[0], block_shape[1], 1],
                         [1, block_shape[0], block_shape[1], 1],
-                        [1, 1, 1, 1], 'SAME'
+                        [1, 1, 1, 1],
+                        'SAME',
                     ).numpy(),
-                    (total_blocks, block_shape[0] * block_shape[1])
+                    (total_blocks, block_shape[0] * block_shape[1]),
                 )
 
                 # If pruning enabled, find cost associated with pruning each neuron
@@ -353,7 +369,7 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
                     np.array([g.value for g in groups]),
                     np.array([g.resources for g in groups]).T,
                     target_resources,
-                    implementation=knapsack_solver
+                    implementation=knapsack_solver,
                 )
 
                 # Decode position of masked weights and set selected weights to one
@@ -385,8 +401,7 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
     return masks, offsets
 
 
-def __get_masks_global(keras_model, model_attributes, sparsity, objective, metric, gradients, hessians,
-                       knapsack_solver):
+def __get_masks_global(keras_model, model_attributes, sparsity, objective, metric, gradients, hessians, knapsack_solver):
     '''
     Function calculating a layer-wise binary mask for all optimizable layers
     Global masking, with layers of different sparsity; masks are calculated by solving a Knapsack problem
@@ -404,8 +419,9 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
         # Optimizable should be always enabled if either pruning or weight sharing are enabled
         # However, if the objectives are implemented incorrectly, it is possible to have optimizatons enabled without any types of optimization (pruning, weight sharing etc.) enabled
         layer_optimizable = model_attributes[layer.name].optimizable and (
-                    model_attributes[layer.name].optimization_attributes.weight_sharing or model_attributes[
-                layer.name].optimization_attributes.pruning)
+            model_attributes[layer.name].optimization_attributes.weight_sharing
+            or model_attributes[layer.name].optimization_attributes.pruning
+        )
         if isinstance(layer, SUPPORTED_LAYERS) and layer_optimizable:
             value = layer.get_weights()[0]
             structure_type = model_attributes[layer.name].optimization_attributes.structure_type
@@ -432,8 +448,9 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
                     value = value / np.max(value)
                     indices = np.indices(value.shape).reshape(value.ndim, -1).T
                     for i in indices:
-                        group = __WeightGroups__(value[tuple(i)], layer_savings, tuple(i), structure_type, layer.name,
-                                                 'pruning')
+                        group = __WeightGroups__(
+                            value[tuple(i)], layer_savings, tuple(i), structure_type, layer.name, 'pruning'
+                        )
                         groups.append(group)
 
             if structure_type == SUPPORTED_STRUCTURES.STRUCTURED:
@@ -451,11 +468,17 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
 
                     for i in range(vals_norm.shape[0]):
                         if vals_norm[i] <= vals_var[i]:
-                            groups.append(__WeightGroups__(vals_norm[i], layer_savings, i, structure_type, layer.name,
-                                                           optimization_type='pruning'))
+                            groups.append(
+                                __WeightGroups__(
+                                    vals_norm[i], layer_savings, i, structure_type, layer.name, optimization_type='pruning'
+                                )
+                            )
                         else:
-                            groups.append(__WeightGroups__(vals_var[i], layer_savings, i, structure_type, layer.name,
-                                                           optimization_type='sharing'))
+                            groups.append(
+                                __WeightGroups__(
+                                    vals_var[i], layer_savings, i, structure_type, layer.name, optimization_type='sharing'
+                                )
+                            )
 
                 elif isinstance(layer, (Conv2D, QConv2D)):
                     if model_attributes[layer.name].optimization_attributes.pruning:
@@ -471,11 +494,17 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
 
                     for i in range(vals_norm.shape[0]):
                         if vals_norm[i] <= vals_var[i]:
-                            groups.append(__WeightGroups__(vals_norm[i], layer_savings, i, structure_type, layer.name,
-                                                           optimization_type='pruning'))
+                            groups.append(
+                                __WeightGroups__(
+                                    vals_norm[i], layer_savings, i, structure_type, layer.name, optimization_type='pruning'
+                                )
+                            )
                         else:
-                            groups.append(__WeightGroups__(vals_var[i], layer_savings, i, structure_type, layer.name,
-                                                           optimization_type='sharing'))
+                            groups.append(
+                                __WeightGroups__(
+                                    vals_var[i], layer_savings, i, structure_type, layer.name, optimization_type='sharing'
+                                )
+                            )
 
             if structure_type == SUPPORTED_STRUCTURES.PATTERN:
                 pattern_offset = model_attributes[layer.name].optimization_attributes.pattern_offset
@@ -509,8 +538,10 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
                         np.expand_dims(np.expand_dims(reshaped, 2), 0),
                         [1, consecutive_patterns, number_of_patterns, 1],
                         [1, consecutive_patterns, number_of_patterns, 1],
-                        [1, 1, 1, 1], 'SAME'
-                    ).numpy(), (total_blocks, -1)
+                        [1, 1, 1, 1],
+                        'SAME',
+                    ).numpy(),
+                    (total_blocks, -1),
                 )
 
                 # If pruning enabled, find cost associated with pruning each neuron
@@ -528,11 +559,17 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
                 # Choose min(pruning, weight sharing)
                 for i in range(vals_norm.shape[0]):
                     if vals_norm[i] <= vals_var[i]:
-                        groups.append(__WeightGroups__(vals_norm[i], layer_savings, i, structure_type, layer.name,
-                                                       optimization_type='pruning'))
+                        groups.append(
+                            __WeightGroups__(
+                                vals_norm[i], layer_savings, i, structure_type, layer.name, optimization_type='pruning'
+                            )
+                        )
                     else:
-                        groups.append(__WeightGroups__(vals_var[i], layer_savings, i, structure_type, layer.name,
-                                                       optimization_type='sharing'))
+                        groups.append(
+                            __WeightGroups__(
+                                vals_var[i], layer_savings, i, structure_type, layer.name, optimization_type='sharing'
+                            )
+                        )
 
             if structure_type == SUPPORTED_STRUCTURES.BLOCK:
                 if len(value.shape) != 2:
@@ -548,9 +585,10 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
                         np.expand_dims(np.expand_dims(value, 2), 0),
                         [1, block_shape[0], block_shape[1], 1],
                         [1, block_shape[0], block_shape[1], 1],
-                        [1, 1, 1, 1], 'SAME'
+                        [1, 1, 1, 1],
+                        'SAME',
                     ).numpy(),
-                    (total_blocks, block_shape[0] * block_shape[1])
+                    (total_blocks, block_shape[0] * block_shape[1]),
                 )
 
                 if model_attributes[layer.name].optimization_attributes.pruning:
@@ -566,11 +604,17 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
 
                 for i in range(vals_norm.shape[0]):
                     if vals_norm[i] <= vals_var[i]:
-                        groups.append(__WeightGroups__(vals_norm[i], layer_savings, i, structure_type, layer.name,
-                                                       optimization_type='pruning'))
+                        groups.append(
+                            __WeightGroups__(
+                                vals_norm[i], layer_savings, i, structure_type, layer.name, optimization_type='pruning'
+                            )
+                        )
                     else:
-                        groups.append(__WeightGroups__(vals_var[i], layer_savings, i, structure_type, layer.name,
-                                                       optimization_type='sharing'))
+                        groups.append(
+                            __WeightGroups__(
+                                vals_var[i], layer_savings, i, structure_type, layer.name, optimization_type='sharing'
+                            )
+                        )
 
     # The goal is to maximize network accuracy (values) subject to resorces (objective) staying under some threshold
     # This is a Knapsack problem; several implementations are provided in the helper functions
@@ -581,7 +625,7 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
         np.array([s.value for s in groups]),
         np.array([s.resources for s in groups]).T,
         target_resources,
-        implementation=knapsack_solver
+        implementation=knapsack_solver,
     )
     # Update masks and offsets
     masks = {}
@@ -591,8 +635,9 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
         if isinstance(layer, SUPPORTED_LAYERS) and model_attributes[layer.name].optimizable:
             structure_type = model_attributes[layer.name].optimization_attributes.structure_type
             selected_layer = [i for i in selected if groups[i].layer_name == layer.name]
-            not_selected_layer = [i for i in range(len(groups)) if
-                                  groups[i].layer_name == layer.name and i not in selected_layer]
+            not_selected_layer = [
+                i for i in range(len(groups)) if groups[i].layer_name == layer.name and i not in selected_layer
+            ]
 
             if structure_type == SUPPORTED_STRUCTURES.UNSTRUCTURED:
                 mask = np.zeros(model_attributes[layer.name].weight_shape, layer.get_weights()[0].dtype)
@@ -615,7 +660,12 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
                         mask[:, :, :, groups[i].layer_position] = 1
                     for i in not_selected_layer:
                         if groups[i].optimization_type == 'sharing':
-                            offset[:, :, :, groups[i].layer_position, ] = np.mean(layer.get_weights()[0][:, :, :, i])
+                            offset[
+                                :,
+                                :,
+                                :,
+                                groups[i].layer_position,
+                            ] = np.mean(layer.get_weights()[0][:, :, :, i])
                 masks[layer.name] = mask
                 offsets[layer.name] = offset
 
@@ -654,8 +704,10 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
                         np.expand_dims(np.expand_dims(reshaped, 2), 0),
                         [1, consecutive_patterns, number_of_patterns, 1],
                         [1, consecutive_patterns, number_of_patterns, 1],
-                        [1, 1, 1, 1], 'SAME'
-                    ).numpy(), (total_blocks, -1)
+                        [1, 1, 1, 1],
+                        'SAME',
+                    ).numpy(),
+                    (total_blocks, -1),
                 )
 
                 for i in not_selected_layer:
@@ -684,9 +736,10 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
                         np.expand_dims(np.expand_dims(layer.get_weights()[0], 2), 0),
                         [1, block_shape[0], block_shape[1], 1],
                         [1, block_shape[0], block_shape[1], 1],
-                        [1, 1, 1, 1], 'SAME'
+                        [1, 1, 1, 1],
+                        'SAME',
                     ).numpy(),
-                    (total_blocks, block_shape[0] * block_shape[1])
+                    (total_blocks, block_shape[0] * block_shape[1]),
                 )
 
                 mask = np.zeros(model_attributes[layer.name].weight_shape, layer.get_weights()[0].dtype)

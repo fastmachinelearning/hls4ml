@@ -1,12 +1,13 @@
-import pytest
 import numpy as np
-from qkeras import QDense, QConv2D
+import pytest
+from qkeras import QConv2D, QDense
+from tensorflow.keras.layers import Conv2D, Dense, Flatten
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Conv2D, Flatten
+
+from hls4ml.optimization.attributes import get_attributes_from_keras_model
 from hls4ml.optimization.config import SUPPORTED_STRUCTURES
 from hls4ml.optimization.keras.masking import get_model_masks
 from hls4ml.optimization.objectives import ParameterEstimator
-from hls4ml.optimization.attributes import get_attributes_from_keras_model
 
 '''
 In all the tests, an artifical network with one Dense/Conv2D layer and pre-determined weights is created
@@ -44,18 +45,13 @@ def test_dense_masking_unstructured(local_masking, dense):
     model_attributes['dense'].optimization_attributes.structure_type = SUPPORTED_STRUCTURES.UNSTRUCTURED
 
     # 33% sparsity - zero 2 out of 6 blocks with lowest norm [0.33 * 6 = 1.98 -> next largest int is 2]
-    masks, offsets = get_model_masks(model, model_attributes, sparsity, ParameterEstimator, metric='l1',
-                                     local=local_masking)
-    zeros = np.array([
-        [0, 0],
-        [1, 2]
-    ],
-        dtype=np.int32)
+    masks, offsets = get_model_masks(model, model_attributes, sparsity, ParameterEstimator, metric='l1', local=local_masking)
+    zeros = np.array([[0, 0], [1, 2]], dtype=np.int32)
     nonzeros = np.stack(np.where(masks['dense'] != 0), axis=1)
 
-    assert (not np.any(offsets['dense']))
-    assert (not np.any(masks['dense'][zeros[:, 0], zeros[:, 1]]))
-    assert ((weight_shape[0] * weight_shape[1]) == (zeros.shape[0] + nonzeros.shape[0]))
+    assert not np.any(offsets['dense'])
+    assert not np.any(masks['dense'][zeros[:, 0], zeros[:, 1]])
+    assert (weight_shape[0] * weight_shape[1]) == (zeros.shape[0] + nonzeros.shape[0])
 
 
 # Create a Dense layer with artificial weights, so that the 1st and 3rd column (neuron) are pruned
@@ -78,18 +74,23 @@ def test_dense_masking_structured(local_masking, dense):
     model_attributes['dense'].optimization_attributes.structure_type = SUPPORTED_STRUCTURES.STRUCTURED
 
     # 33% sparsity - zero 2 out of 6 blocks with lowest norm [0.33 * 6 = 1.98 -> next largest int is 2]
-    masks, offsets = get_model_masks(model, model_attributes, sparsity, ParameterEstimator, metric='l1',
-                                     local=local_masking)
-    zeros = np.array([
-        [0, 0], [1, 0], [2, 0],  # First neuron
-        [0, 2], [1, 2], [2, 2],  # Third neuron
-    ],
-        dtype=np.int32)
+    masks, offsets = get_model_masks(model, model_attributes, sparsity, ParameterEstimator, metric='l1', local=local_masking)
+    zeros = np.array(
+        [
+            [0, 0],
+            [1, 0],
+            [2, 0],  # First neuron
+            [0, 2],
+            [1, 2],
+            [2, 2],  # Third neuron
+        ],
+        dtype=np.int32,
+    )
     nonzeros = np.stack(np.where(masks['dense'] != 0), axis=1)
 
-    assert (not np.any(offsets['dense']))
-    assert (not np.any(masks['dense'][zeros[:, 0], zeros[:, 1]]))
-    assert ((weight_shape[0] * weight_shape[1]) == (zeros.shape[0] + nonzeros.shape[0]))
+    assert not np.any(offsets['dense'])
+    assert not np.any(masks['dense'][zeros[:, 0], zeros[:, 1]])
+    assert (weight_shape[0] * weight_shape[1]) == (zeros.shape[0] + nonzeros.shape[0])
 
 
 # Create a Dense layer with artificial weights, so that some patterns are pruned
@@ -125,18 +126,13 @@ def test_dense_masking_pattern(local_masking, dense):
     model_attributes['dense'].optimization_attributes.consecutive_patterns = 1
 
     # 33% sparsity - zero 4 out of 12 weights, group by pattern [0.33 * 12 = 3.96] - so will select 2 patterns, 6 weights (>=)
-    masks, offsets = get_model_masks(model, model_attributes, sparsity, ParameterEstimator, metric='l1',
-                                     local=local_masking)
-    zeros = np.array([
-        [0, 0], [1, 0], [2, 0],
-        [0, 2], [1, 2], [2, 2]
-    ],
-        dtype=np.int32)
+    masks, offsets = get_model_masks(model, model_attributes, sparsity, ParameterEstimator, metric='l1', local=local_masking)
+    zeros = np.array([[0, 0], [1, 0], [2, 0], [0, 2], [1, 2], [2, 2]], dtype=np.int32)
     nonzeros = np.stack(np.where(masks['dense'] != 0), axis=1)
 
-    assert (not np.any(offsets['dense']))
-    assert (not np.any(masks['dense'][zeros[:, 0], zeros[:, 1]]))
-    assert ((weight_shape[0] * weight_shape[1]) == (zeros.shape[0] + nonzeros.shape[0]))
+    assert not np.any(offsets['dense'])
+    assert not np.any(masks['dense'][zeros[:, 0], zeros[:, 1]])
+    assert (weight_shape[0] * weight_shape[1]) == (zeros.shape[0] + nonzeros.shape[0])
 
 
 # Create a Dense layer with artificial weights, so that the 1st and 4th block are pruned
@@ -172,18 +168,13 @@ def test_dense_masking_block(local_masking, dense):
 
     # 33% sparsity - zero 2 out of 6 blocks with lowest norm
     # The first block is the smallest, the fourth block is set to zero
-    masks, offsets = get_model_masks(model, model_attributes, sparsity, ParameterEstimator, metric='l1',
-                                     local=local_masking)
-    zeros = np.array([
-        [0, 0], [0, 1], [1, 0], [1, 1],
-        [2, 2], [2, 3], [3, 2], [3, 3]
-    ],
-        dtype=np.int32)
+    masks, offsets = get_model_masks(model, model_attributes, sparsity, ParameterEstimator, metric='l1', local=local_masking)
+    zeros = np.array([[0, 0], [0, 1], [1, 0], [1, 1], [2, 2], [2, 3], [3, 2], [3, 3]], dtype=np.int32)
     nonzeros = np.stack(np.where(masks['dense'] != 0), axis=1)
 
-    assert (not np.any(offsets['dense']))
-    assert (not np.any(masks['dense'][zeros[:, 0], zeros[:, 1]]))
-    assert ((weight_shape[0] * weight_shape[1]) == (zeros.shape[0] + nonzeros.shape[0]))
+    assert not np.any(offsets['dense'])
+    assert not np.any(masks['dense'][zeros[:, 0], zeros[:, 1]])
+    assert (weight_shape[0] * weight_shape[1]) == (zeros.shape[0] + nonzeros.shape[0])
 
 
 # Create a Conv2D layer with artificial weights and mask some small weights
@@ -215,15 +206,13 @@ def test_conv2d_masking_unstructured(local_masking, conv2d):
     model_attributes['conv2d'].optimization_attributes.pruning = True
     model_attributes['conv2d'].optimization_attributes.structure_type = SUPPORTED_STRUCTURES.UNSTRUCTURED
 
-    masks, offsets = get_model_masks(model, model_attributes, sparsity, ParameterEstimator, metric='l1',
-                                     local=local_masking)
-    zeros = np.array([[0, 0, 0, 0], [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1], [1, 1, 1, 1]],
-                     dtype=np.int32)
+    masks, offsets = get_model_masks(model, model_attributes, sparsity, ParameterEstimator, metric='l1', local=local_masking)
+    zeros = np.array([[0, 0, 0, 0], [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1], [1, 1, 1, 1]], dtype=np.int32)
     nonzeros = np.stack(np.where(masks['conv2d'] != 0), axis=1)
 
-    assert (not np.any(offsets['conv2d']))
-    assert (not np.any(masks['conv2d'][zeros[:, 0], zeros[:, 1], zeros[:, 2], zeros[:, 3]]))
-    assert ((filt_width * filt_height * n_channels * n_filters) == (zeros.shape[0] + nonzeros.shape[0]))
+    assert not np.any(offsets['conv2d'])
+    assert not np.any(masks['conv2d'][zeros[:, 0], zeros[:, 1], zeros[:, 2], zeros[:, 3]])
+    assert (filt_width * filt_height * n_channels * n_filters) == (zeros.shape[0] + nonzeros.shape[0])
 
 
 # Create a Conv2D layer with artificial weights, so that second and last filter are pruned
@@ -253,20 +242,21 @@ def test_conv2d_masking_structured(local_masking, conv2d):
     # 33% sparsity - zero 2 out of 6 filters with lowest norm
     # Generate all possible combinations of width and height pixels with channel using np.meshgrid()
     # This represents all the positions for a single filter; then append filter position to the last columns
-    masks, offsets = get_model_masks(model, model_attributes, sparsity, ParameterEstimator, metric='l1',
-                                     local=local_masking)
+    masks, offsets = get_model_masks(model, model_attributes, sparsity, ParameterEstimator, metric='l1', local=local_masking)
     width_pixels = np.array(range(0, filt_width))
     height_pixels = np.array(range(0, filt_height))
     channels = np.array(range(0, n_channels))
     combinations = np.array(np.meshgrid(width_pixels, height_pixels, channels)).T.reshape(-1, 3)
-    zeros = np.array(np.append(combinations, np.full((filt_width * filt_height * n_channels, 1), 1), axis=1).tolist() +
-                     np.append(combinations, np.full((filt_width * filt_height * n_channels, 1), 5), axis=1).tolist(),
-                     dtype=np.int32)
+    zeros = np.array(
+        np.append(combinations, np.full((filt_width * filt_height * n_channels, 1), 1), axis=1).tolist()
+        + np.append(combinations, np.full((filt_width * filt_height * n_channels, 1), 5), axis=1).tolist(),
+        dtype=np.int32,
+    )
     nonzeros = np.stack(np.where(masks['conv2d'] != 0), axis=1)
 
-    assert (not np.any(offsets['conv2d']))
-    assert (not np.any(masks['conv2d'][zeros[:, 0], zeros[:, 1], zeros[:, 2], zeros[:, 3]]))
-    assert ((filt_width * filt_height * n_channels * n_filters) == (zeros.shape[0] + nonzeros.shape[0]))
+    assert not np.any(offsets['conv2d'])
+    assert not np.any(masks['conv2d'][zeros[:, 0], zeros[:, 1], zeros[:, 2], zeros[:, 3]])
+    assert (filt_width * filt_height * n_channels * n_filters) == (zeros.shape[0] + nonzeros.shape[0])
 
 
 # Create a Conv2D layer with artificial weights, so that the first and second pattern are pruned
@@ -303,16 +293,15 @@ def test_conv2d_masking_pattern(local_masking, conv2d):
     model_attributes['conv2d'].optimization_attributes.pattern_offset = 4
 
     # 33% sparsity - zero out the two of the lowest groups
-    masks, offsets = get_model_masks(model, model_attributes, sparsity, ParameterEstimator, metric='l1',
-                                     local=local_masking)
+    masks, offsets = get_model_masks(model, model_attributes, sparsity, ParameterEstimator, metric='l1', local=local_masking)
     print(masks['conv2d'].shape)
     print(weights[0].shape)
     zeros = np.array([[0, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1], [0, 0, 1, 1]], dtype=np.int32)
     nonzeros = np.stack(np.where(masks['conv2d'] != 0), axis=1)
 
-    assert (not np.any(offsets['conv2d']))
-    assert (not np.any(masks['conv2d'][zeros[:, 0], zeros[:, 1], zeros[:, 2], zeros[:, 3]]))
-    assert ((filt_width * filt_height * n_channels * n_filters) == (zeros.shape[0] + nonzeros.shape[0]))
+    assert not np.any(offsets['conv2d'])
+    assert not np.any(masks['conv2d'][zeros[:, 0], zeros[:, 1], zeros[:, 2], zeros[:, 3]])
+    assert (filt_width * filt_height * n_channels * n_filters) == (zeros.shape[0] + nonzeros.shape[0])
 
 
 # Block pruning is only allowed for 2-dimensional matrices, so assert a correct exception is raised when pruning with Conv2D
@@ -332,17 +321,24 @@ def test_conv2d_block_masking_raises_exception(local_masking, conv2d):
     try:
         get_model_masks(model, model_attributes, sparsity, ParameterEstimator, metric='l1', local=local_masking)
     except Exception:
-        assert (True)
+        assert True
         return
-    assert (False)
+    assert False
 
 
 # Test edge cases: 0% and 100% sparsity
 # Test 50% sparsity with two layers
 @pytest.mark.parametrize('s', [0, 0.5, 1])
 @pytest.mark.parametrize('local_masking', local_masking)
-@pytest.mark.parametrize('type', [SUPPORTED_STRUCTURES.UNSTRUCTURED, SUPPORTED_STRUCTURES.STRUCTURED,
-                                  SUPPORTED_STRUCTURES.PATTERN, SUPPORTED_STRUCTURES.BLOCK])
+@pytest.mark.parametrize(
+    'type',
+    [
+        SUPPORTED_STRUCTURES.UNSTRUCTURED,
+        SUPPORTED_STRUCTURES.STRUCTURED,
+        SUPPORTED_STRUCTURES.PATTERN,
+        SUPPORTED_STRUCTURES.BLOCK,
+    ],
+)
 def test_multi_layer_masking(s, local_masking, type):
     dense_units = 16
     conv_filters = 6
@@ -352,8 +348,16 @@ def test_multi_layer_masking(s, local_masking, type):
 
     # Simple model, Conv2D weight shape (2, 2, 4, 6) and Dense weight shape (384, 16)
     model = Sequential()
-    model.add(Conv2D(conv_filters, input_shape=(*input_shape, conv_channels), kernel_size=conv_shape, name='conv2d',
-                     padding='same', kernel_initializer='ones'))
+    model.add(
+        Conv2D(
+            conv_filters,
+            input_shape=(*input_shape, conv_channels),
+            kernel_size=conv_shape,
+            name='conv2d',
+            padding='same',
+            kernel_initializer='ones',
+        )
+    )
     model.add(Flatten())
     model.add(Dense(dense_units, name='dense', kernel_initializer='ones'))
 
@@ -366,31 +370,33 @@ def test_multi_layer_masking(s, local_masking, type):
 
     model_attributes['conv2d'].optimizable = True
     model_attributes['conv2d'].optimization_attributes.pruning = True
-    model_attributes[
-        'conv2d'].optimization_attributes.structure_type = type if type != SUPPORTED_STRUCTURES.BLOCK else SUPPORTED_STRUCTURES.UNSTRUCTURED
+    model_attributes['conv2d'].optimization_attributes.structure_type = (
+        type if type != SUPPORTED_STRUCTURES.BLOCK else SUPPORTED_STRUCTURES.UNSTRUCTURED
+    )
     model_attributes['conv2d'].optimization_attributes.pattern_offset = 4  # Equivalent to RF = 4 (2 * 2 * 4 * 6 / 4)
 
     masks, offsets = get_model_masks(model, model_attributes, s, ParameterEstimator, metric='l1', local=local_masking)
     if s == 1:  # 100% sparsity - all masks are zero
         print(np.count_nonzero(masks['dense'].flatten()))
-        assert (not np.any(masks['dense']))
-        assert (not np.any(masks['conv2d']))
+        assert not np.any(masks['dense'])
+        assert not np.any(masks['conv2d'])
     elif s == 0.5:
         conv2d_weights = conv_channels * conv_filters * np.prod(conv_shape)
         dense_weights = dense_units * np.prod(input_shape) * conv_filters
         if local_masking:
-            assert (np.count_nonzero(masks['conv2d']) == int((1 - s) * conv2d_weights))
-            assert (np.count_nonzero(masks['dense']) == int((1 - s) * dense_weights))
+            assert np.count_nonzero(masks['conv2d']) == int((1 - s) * conv2d_weights)
+            assert np.count_nonzero(masks['dense']) == int((1 - s) * dense_weights)
         else:
             # Less than or equal to, since Knapsack problem imposes a hard constrain on the active resources (ones)
-            assert (np.count_nonzero(masks['conv2d']) + np.count_nonzero(masks['dense']) <= int(
-                (1 - s) * (conv2d_weights + dense_weights)))
+            assert np.count_nonzero(masks['conv2d']) + np.count_nonzero(masks['dense']) <= int(
+                (1 - s) * (conv2d_weights + dense_weights)
+            )
     elif s == 0:  # 0% sparsity - all masks are one
-        assert (np.all(masks['dense']))
-        assert (np.all(masks['conv2d']))
+        assert np.all(masks['dense'])
+        assert np.all(masks['conv2d'])
 
-    assert (not np.any(offsets['dense']))
-    assert (not np.any(offsets['conv2d']))
+    assert not np.any(offsets['dense'])
+    assert not np.any(offsets['conv2d'])
 
 
 # Create a Dense layer with artificial weights, so that some consecutive patterns are pruned
@@ -433,15 +439,10 @@ def test_consecutive_pattern_masking(local_masking, dense):
     model_attributes['dense'].optimization_attributes.consecutive_patterns = 2
 
     # 33% sparsity - zero 4 out of 12 weight, group by pattern [0.33 * 12 = 3.96]
-    masks, offsets = get_model_masks(model, model_attributes, sparsity, ParameterEstimator, metric='l1',
-                                     local=local_masking)
-    zeros = np.array([
-        [0, 0], [1, 0], [2, 0],
-        [0, 1], [1, 1], [2, 1]
-    ],
-        dtype=np.int32)
+    masks, offsets = get_model_masks(model, model_attributes, sparsity, ParameterEstimator, metric='l1', local=local_masking)
+    zeros = np.array([[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1]], dtype=np.int32)
     nonzeros = np.stack(np.where(masks['dense'] != 0), axis=1)
 
-    assert (not np.any(offsets['dense']))
-    assert (not np.any(masks['dense'][zeros[:, 0], zeros[:, 1]]))
-    assert ((weight_shape[0] * weight_shape[1]) == (zeros.shape[0] + nonzeros.shape[0]))
+    assert not np.any(offsets['dense'])
+    assert not np.any(masks['dense'][zeros[:, 0], zeros[:, 1]])
+    assert (weight_shape[0] * weight_shape[1]) == (zeros.shape[0] + nonzeros.shape[0])

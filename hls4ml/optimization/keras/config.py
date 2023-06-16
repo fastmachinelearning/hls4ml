@@ -1,5 +1,5 @@
-from qkeras import QDense, QConv2D
-from tensorflow.keras.layers import Dense, Conv2D
+from qkeras import QConv2D, QDense
+from tensorflow.keras.layers import Conv2D, Dense
 
 '''
 Optimizable layers in Keras / QKeras

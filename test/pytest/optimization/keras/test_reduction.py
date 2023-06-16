@@ -1,7 +1,7 @@
-from qkeras import quantized_bits
-from qkeras import QDense, QActivation, QConv2D
+from qkeras import QActivation, QConv2D, QDense, quantized_bits
+from tensorflow.keras.layers import AveragePooling2D, BatchNormalization, Conv2D, Dense, Flatten, MaxPooling2D, ReLU, Softmax
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D, Softmax, BatchNormalization, ReLU, Flatten, AveragePooling2D
+
 from hls4ml.optimization.keras.reduction import reduce_model
 from hls4ml.optimization.keras.utils import get_model_sparsity
 
@@ -10,6 +10,7 @@ Set some neurons / filters to zero and verify that these are removed
 Even is some neurons (columns) in the output layer are zero, these should not be removed (to match data set labels)
 Test verify the above property, by setting some zeros in the last layer and verifying these remain in place
 '''
+
 
 def test_keras_model_reduction():
     model = Sequential()
@@ -22,11 +23,11 @@ def test_keras_model_reduction():
     model.add(BatchNormalization())
     model.add(ReLU())
     model.add(Flatten())
-    model.add(Dense(32, input_shape=(16, ), name = 'dense_1', activation='relu'))
+    model.add(Dense(32, input_shape=(16,), name='dense_1', activation='relu'))
     model.add(BatchNormalization())
-    model.add(Dense(14, name = 'dense_2', activation='relu'))
+    model.add(Dense(14, name='dense_2', activation='relu'))
     model.add(BatchNormalization())
-    model.add(Dense(5, name = 'dense_3'))
+    model.add(Dense(5, name='dense_3'))
     model.add(Softmax())
 
     indices = {
@@ -45,29 +46,30 @@ def test_keras_model_reduction():
             weights = layer.get_weights()
             weights[0][:, :, :, indices[layer.name]] = 0
             layer.set_weights(weights)
-   
+
     sparsity, _ = get_model_sparsity(model)
-    assert(sparsity > 0)
+    assert sparsity > 0
 
     reduced = reduce_model(model)
-    assert(reduced.get_layer('conv2d_1').get_weights()[0].shape == (3, 3, 1, 5))
-    assert(reduced.get_layer('conv2d_2').get_weights()[0].shape == (5, 5, 5, 26))
-    assert(reduced.get_layer('dense_1').get_weights()[0].shape == (6656, 28))
-    assert(reduced.get_layer('dense_2').get_weights()[0].shape == (28, 11))
-    assert(reduced.get_layer('dense_3').get_weights()[0].shape == (11, 5))
+    assert reduced.get_layer('conv2d_1').get_weights()[0].shape == (3, 3, 1, 5)
+    assert reduced.get_layer('conv2d_2').get_weights()[0].shape == (5, 5, 5, 26)
+    assert reduced.get_layer('dense_1').get_weights()[0].shape == (6656, 28)
+    assert reduced.get_layer('dense_2').get_weights()[0].shape == (28, 11)
+    assert reduced.get_layer('dense_3').get_weights()[0].shape == (11, 5)
 
     _, layer_sparsity = get_model_sparsity(reduced)
-    assert(layer_sparsity['conv2d_1'] == 0)
-    assert(layer_sparsity['conv2d_2'] == 0)
-    assert(layer_sparsity['dense_1'] == 0)
-    assert(layer_sparsity['dense_2'] == 0)
-    assert(layer_sparsity['dense_3'] > 0)
+    assert layer_sparsity['conv2d_1'] == 0
+    assert layer_sparsity['conv2d_2'] == 0
+    assert layer_sparsity['dense_1'] == 0
+    assert layer_sparsity['dense_2'] == 0
+    assert layer_sparsity['dense_3'] > 0
+
 
 def test_qkeras_model_reduction():
     bits = 8
     activation = 'quantized_relu(4)'
     quantizer = quantized_bits(bits, 0)
-    
+
     model = Sequential()
     model.add(QConv2D(8, (3, 3), input_shape=(64, 64, 1), name='qconv2d_1', padding='same', kernel_quantizer=quantizer))
     model.add(MaxPooling2D())
@@ -78,13 +80,13 @@ def test_qkeras_model_reduction():
     model.add(BatchNormalization())
     model.add(QActivation(activation, name='qrelu_2'))
     model.add(Flatten())
-    model.add(QDense(32, input_shape=(16, ), name = 'qdense_1', kernel_quantizer=quantizer))
+    model.add(QDense(32, input_shape=(16,), name='qdense_1', kernel_quantizer=quantizer))
     model.add(QActivation(activation, name='qrelu_3'))
     model.add(BatchNormalization())
-    model.add(QDense(14, name = 'qdense_2', kernel_quantizer=quantizer))
+    model.add(QDense(14, name='qdense_2', kernel_quantizer=quantizer))
     model.add(QActivation(activation, name='qrelu_4'))
     model.add(BatchNormalization())
-    model.add(QDense(5, name = 'qdense_3', kernel_quantizer=quantizer))
+    model.add(QDense(5, name='qdense_3', kernel_quantizer=quantizer))
     model.add(Softmax())
 
     indices = {
@@ -103,32 +105,31 @@ def test_qkeras_model_reduction():
             weights = layer.get_weights()
             weights[0][:, :, :, indices[layer.name]] = 0
             layer.set_weights(weights)
-   
+
     sparsity, _ = get_model_sparsity(model)
-    assert(sparsity > 0)
+    assert sparsity > 0
 
     reduced = reduce_model(model)
-    assert(reduced.get_layer('qconv2d_1').get_weights()[0].shape == (3, 3, 1, 5))
-    assert(reduced.get_layer('qconv2d_2').get_weights()[0].shape == (5, 5, 5, 26))
-    assert(reduced.get_layer('qdense_1').get_weights()[0].shape == (6656, 28))
-    assert(reduced.get_layer('qdense_2').get_weights()[0].shape == (28, 11))
-    assert(reduced.get_layer('qdense_3').get_weights()[0].shape == (11, 5))
+    assert reduced.get_layer('qconv2d_1').get_weights()[0].shape == (3, 3, 1, 5)
+    assert reduced.get_layer('qconv2d_2').get_weights()[0].shape == (5, 5, 5, 26)
+    assert reduced.get_layer('qdense_1').get_weights()[0].shape == (6656, 28)
+    assert reduced.get_layer('qdense_2').get_weights()[0].shape == (28, 11)
+    assert reduced.get_layer('qdense_3').get_weights()[0].shape == (11, 5)
 
     _, layer_sparsity = get_model_sparsity(reduced)
-    assert(layer_sparsity['qconv2d_1'] == 0)
-    assert(layer_sparsity['qconv2d_2'] == 0)
-    assert(layer_sparsity['qdense_1'] == 0)
-    assert(layer_sparsity['qdense_2'] == 0)
-    assert(layer_sparsity['qdense_3'] > 0)
+    assert layer_sparsity['qconv2d_1'] == 0
+    assert layer_sparsity['qconv2d_2'] == 0
+    assert layer_sparsity['qdense_1'] == 0
+    assert layer_sparsity['qdense_2'] == 0
+    assert layer_sparsity['qdense_3'] > 0
 
     # Verify network surgery has no impact on quantization
-    assert(isinstance(reduced.get_layer('qrelu_1'), QActivation))
-    assert(isinstance(reduced.get_layer('qrelu_2'), QActivation))
-    assert(isinstance(reduced.get_layer('qrelu_3'), QActivation))
-    assert(isinstance(reduced.get_layer('qrelu_4'), QActivation))
-    assert(reduced.get_layer('qconv2d_1').kernel_quantizer['config']['bits'] == bits)
-    assert(reduced.get_layer('qconv2d_2').kernel_quantizer['config']['bits'] == bits)
-    assert(reduced.get_layer('qdense_1').kernel_quantizer['config']['bits'] == bits)
-    assert(reduced.get_layer('qdense_2').kernel_quantizer['config']['bits'] == bits)
-    assert(reduced.get_layer('qdense_3').kernel_quantizer['config']['bits'] == bits)
-    
+    assert isinstance(reduced.get_layer('qrelu_1'), QActivation)
+    assert isinstance(reduced.get_layer('qrelu_2'), QActivation)
+    assert isinstance(reduced.get_layer('qrelu_3'), QActivation)
+    assert isinstance(reduced.get_layer('qrelu_4'), QActivation)
+    assert reduced.get_layer('qconv2d_1').kernel_quantizer['config']['bits'] == bits
+    assert reduced.get_layer('qconv2d_2').kernel_quantizer['config']['bits'] == bits
+    assert reduced.get_layer('qdense_1').kernel_quantizer['config']['bits'] == bits
+    assert reduced.get_layer('qdense_2').kernel_quantizer['config']['bits'] == bits
+    assert reduced.get_layer('qdense_3').kernel_quantizer['config']['bits'] == bits
