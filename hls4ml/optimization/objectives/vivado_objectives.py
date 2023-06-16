@@ -97,13 +97,26 @@ class VivadoMultiObjectiveEstimator(ObjectiveEstimator):
     def layer_resources(self, layer_attributes):
         if not layer_attributes.weight_shape:
             return [0]
-        else:
-            # TOOD - Extend for parallelisation factor
-            # For RF > 1, BRAM utilised by weights can be estimated by (bit_width * n_in * n_out) / (RF * 36)
+
+        # TOOD - Extend for parallelisation factor
+        if layer_attributes.args['hls4ml_attributes'].strategy.lower() == 'latency':
             return [
                 int(np.prod(layer_attributes.weight_shape) // layer_attributes.args['hls4ml_attributes'].reuse_factor),
-                int(math.ceil(np.prod(layer_attributes.weight_shape) * layer_attributes.args['hls4ml_attributes'].weight_precision.width / (layer_attributes.args['hls4ml_attributes'].reuse_factor * 36))),
+                0,
             ]
+        else:
+            # Resource strategy, RF == 1 is similar to Latency strategy (but slower)
+            if layer_attributes.args['hls4ml_attributes'].reuse_factor == 1:
+                return [
+                    int(np.prod(layer_attributes.weight_shape) // layer_attributes.args['hls4ml_attributes'].reuse_factor),
+                    0,
+                ]
+            else:
+                # For RF > 1, BRAM utilised by weights can be estimated by (bit_width * n_in * n_out) / (RF * 36)
+                return [
+                    int(np.prod(layer_attributes.weight_shape) // layer_attributes.args['hls4ml_attributes'].reuse_factor),
+                    int(math.ceil(np.prod(layer_attributes.weight_shape) * layer_attributes.args['hls4ml_attributes'].weight_precision.width / (layer_attributes.args['hls4ml_attributes'].reuse_factor * 36))),
+                ]
     
     @classmethod
     def layer_savings(self, layer_attributes):
@@ -122,9 +135,9 @@ class VivadoMultiObjectiveEstimator(ObjectiveEstimator):
         structure_type = layer_attributes.optimization_attributes.structure_type 
         if layer_attributes.args['hls4ml_attributes'].strategy.lower() == 'latency':
             if layer_attributes.args['hls4ml_attributes'].reuse_factor == 1:
-                    return [1]
+                    return [1, 0]
             else:
-                    return [0]
+                    return [0, 0]
         else:
             if layer_attributes.args['hls4ml_attributes'].strategy.lower() == 'resource' and layer_attributes.args['hls4ml_attributes'].reuse_factor == 1:
                 return [1, 0]
@@ -244,7 +257,6 @@ class VivadoFFEstimator(ObjectiveEstimator):
             if structure_type == SUPPORTED_STRUCTURES.UNSTRUCTURED:
                 return [layer_attributes.args['hls4ml_attributes'].weight_precision.width]
             elif structure_type == SUPPORTED_STRUCTURES.STRUCTURED:
-                print('here')
                 return [
                     layer_attributes.args['hls4ml_attributes'].n_in * layer_attributes.args['hls4ml_attributes'].weight_precision.width +
                     layer_attributes.args['hls4ml_attributes'].output_precision.width
