@@ -67,7 +67,7 @@ class GenerateUnrolledDenseResource(OptimizerPass):
         weights_transposed = node.get_attr('_weights_transposed', False)
 
         # RF = 1 will optimize DSPs anyway, so no need to unroll code
-        rf_gt_one = node.get_attr('reuse_factor') > 1
+        rf_gt_one = node.get_attr('reuse_factor', 1) > 1
 
         # User requested unrolled implementation of Dense
         is_unrolled = node.get_attr('dense_resource_implementation', 'standard') == 'unrolled'

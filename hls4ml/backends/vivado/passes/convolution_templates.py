@@ -39,6 +39,9 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     static const bool store_weights_in_bram = false;
     static const unsigned strategy = nnet::{strategy};
     static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
+    static const unsigned resource_implementation = nnet::{dense_resource_implementation};
+    template<class data_T, class res_T, class CONFIG_T>
+    using dense_unrolled = nnet::{unrolled_function}<data_T, res_T, CONFIG_T>;
     static const unsigned min_width = {min_width};
     static const ap_uint<filt_width> pixels[min_width];
     static const unsigned n_partitions = {n_partitions};
@@ -80,6 +83,8 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
             params['fill_fn'] = f'fill_buffer_{node.index}'
         else:
             params['fill_fn'] = 'FillConv1DBuffer'
+        # TODO - Extend unrolled Dense Resource to Conv1D
+        params['unrolled_function'] = 'DenseResourceUnrolled'
 
         conv_config = self.template.format(**params)
 
@@ -292,6 +297,8 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
             params['scale_index_type'] = 'scale_index_regular'
 
         params['config_t'] = f'config{node.index}_depthwise_mult'
+        # TODO - Extend unrolled Dense Resource
+        params['unrolled_function'] = 'DenseResourceUnrolled'
         depthwise_config = self.depthwise_template.format(**params)
 
         # Depthwise mult config
@@ -334,6 +341,8 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
             params['scale_index_type'] = 'scale_index_regular'
 
         params['config_t'] = f'config{node.index}_pointwise_mult'
+        # TODO - Extend unrolled Dense Resource
+        params['unrolled_function'] = 'DenseResourceUnrolled'
         pointwise_config = self.pointwise_template.format(**params)
 
         # Pointwise mult config
@@ -419,6 +428,8 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
             params['scale_index_width_type'] = 'scale_index_regular'
 
         params['config_t'] = f'config{node.index}_depthwise_mult'
+        # TODO - Extend unrolled Dense Resource
+        params['unrolled_function'] = 'DenseResourceUnrolled'
         depthwise_config = self.depthwise_template.format(**params)
 
         # Depthwise mult config
@@ -464,6 +475,8 @@ class SeparableConv2DConfigTemplate(LayerConfigTemplate):
         else:
             params['scale_index_width_type'] = 'scale_index_regular'
         params['config_t'] = f'config{node.index}_pointwise_mult'
+        # TODO - Extend unrolled Dense Resource
+        params['unrolled_function'] = 'DenseResourceUnrolled'
         pointwise_config = self.pointwise_template.format(**params)
 
         # Pointwise mult config
