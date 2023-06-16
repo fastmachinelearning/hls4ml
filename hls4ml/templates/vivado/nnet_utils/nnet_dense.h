@@ -34,11 +34,11 @@ struct dense_config {
     static const unsigned n_zeros = 0;
 
     static const unsigned resource_implementation = standard;
-    template<class data_T, class res_T, class CONFIG_T>
+    template <class data_T, class res_T, class CONFIG_T>
     using dense_unrolled = nnet::DenseResourceUnrolled<data_T, res_T, CONFIG_T>;
-    
+
     // Partitioning arrays cyclically to go with roll factors?
-    
+
     // Product function to use
     template <class x_T, class y_T> using product = nnet::product::mult<x_T, y_T>;
 };
@@ -50,7 +50,8 @@ void dense(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
     #pragma HLS inline
     if (CONFIG_T::strategy == nnet::latency) {
         dense_latency<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-    } else if (CONFIG_T::strategy == nnet::resource && CONFIG_T::resource_implementation == nnet::unrolled && CONFIG_T::reuse_factor > 1) {
+    } else if (CONFIG_T::strategy == nnet::resource && CONFIG_T::resource_implementation == nnet::unrolled &&
+               CONFIG_T::reuse_factor > 1) {
         CONFIG_T::template dense_unrolled<data_T, res_T, CONFIG_T>::dense_unrolled(data, res, weights, biases);
     } else {
         dense_resource<data_T, res_T, CONFIG_T>(data, res, weights, biases);

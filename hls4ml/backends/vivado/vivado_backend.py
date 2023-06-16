@@ -73,14 +73,16 @@ class VivadoBackend(FPGABackend):
             # attrs.append(ConfigurableAttribute('conv_implementation', value_type=str, default='LineBuffer'))
             attrs.append(ChoiceAttribute('conv_implementation', choices=['LineBuffer', 'Encoded'], default='LineBuffer'))
             self.attribute_map[layer] = attrs
-        
+
         # Add implementation of Dense Resource for all layers that use Dense for matrix mult
-        # Handle different implementations of Resource strategy; this attribute only makes a difference if strategy == Resource
+        # Handle different implementations of Resource strategy; only makes a difference if strategy == Resource
         # Standard -> nnet_dense_resource.h
         # Unrolled -> Code generation, ignoring zero DSPs and optimizing zero-filled BRAM blocks
         for layer in [Dense] + cnn_layers + rnn_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ChoiceAttribute('dense_resource_implementation', choices=['standard', 'unrolled'], default='standard'))
+            attrs.append(
+                ChoiceAttribute('dense_resource_implementation', choices=['standard', 'unrolled'], default='standard')
+            )
             self.attribute_map[layer] = attrs
 
     def _register_flows(self):
@@ -118,7 +120,7 @@ class VivadoBackend(FPGABackend):
             'vivado:generate_conv_streaming_instructions',
             'vivado:apply_resource_strategy',
             'vivado:generate_conv_im2col',
-            'vivado:generate_unrolled_dense_resource'
+            'vivado:generate_unrolled_dense_resource',
         ]
         vivado_types_flow = register_flow('specific_types', vivado_types, requires=[init_flow], backend=self.name)
 
@@ -280,7 +282,7 @@ class VivadoBackend(FPGABackend):
         layer.set_attr('n_partitions', out_width // closest_pf)
 
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
-        
+
         # TODO - Extend unrolled Dense Resource to Conv1D kernels
         layer.set_attr('dense_resource_implementation', 'standard')
 
@@ -299,10 +301,10 @@ class VivadoBackend(FPGABackend):
             'n_partitions', 1
         )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
-        
+
         # TODO - Extend unrolled Dense Resource to separable Conv1D
         layer.set_attr('dense_resource_implementation', 'standard')
-    
+
     @layer_optimizer(Conv2D)
     def init_conv2d(self, layer):
         if len(layer.weights['weight'].data.shape) == 2:  # This can happen if we assign weights of Dense layer to 1x1 Conv2D
@@ -329,7 +331,7 @@ class VivadoBackend(FPGABackend):
             )
         else:
             closest_pf = chosen_pf
-        
+
         layer.set_attr('n_partitions', out_height * out_width // closest_pf)
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
         layer.set_attr('dense_resource_implementation', layer.model.config.get_dense_resource_implementation(layer).lower())
@@ -366,7 +368,7 @@ class VivadoBackend(FPGABackend):
             'n_partitions', 1
         )  # TODO Once we have SeparableConv implementation for io_parallel this should be set properly
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
-        
+
         # TODO - Extend unrolled Dense Resource to depthwise Conv2D
         layer.set_attr('dense_resource_implementation', 'standard')
 
@@ -427,7 +429,7 @@ class VivadoBackend(FPGABackend):
             layer.set_attr('strategy', 'latency')
 
         layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))
-        
+
         # TODO - Extend unrolled Dense Resource to recurrent kernels
         layer.set_attr('dense_resource_implementation', 'standard')
 
@@ -445,7 +447,7 @@ class VivadoBackend(FPGABackend):
             layer.set_attr('strategy', 'latency')
 
         layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))
-        
+
         # TODO - Extend unrolled Dense Resource to recurrent kernels
         layer.set_attr('dense_resource_implementation', 'standard')
 

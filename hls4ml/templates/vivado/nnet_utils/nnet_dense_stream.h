@@ -17,7 +17,8 @@ void dense_wrapper(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
     if (CONFIG_T::strategy == nnet::latency) {
         #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
         dense_latency<data_T, res_T, CONFIG_T>(data, res, weights, biases);
-    } else if (CONFIG_T::strategy == nnet::resource && CONFIG_T::resource_implementation == nnet::unrolled and CONFIG_T::reuse_factor > 1) {
+    } else if (CONFIG_T::strategy == nnet::resource && CONFIG_T::resource_implementation == nnet::unrolled &&
+               CONFIG_T::reuse_factor > 1) {
         CONFIG_T::template dense_unrolled<data_T, res_T, CONFIG_T>::dense_unrolled(data, res, weights, biases);
     } else {
         dense_resource<data_T, res_T, CONFIG_T>(data, res, weights, biases);

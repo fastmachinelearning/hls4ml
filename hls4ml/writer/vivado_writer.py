@@ -20,7 +20,7 @@ class VivadoWriter(Writer):
             if rf > max_rf:
                 max_rf = rf
         return max_rf
-    
+
     def print_array_to_cpp(self, var, odir, write_txt_file=True):
         """Write a weights array to C++ header files.
 
@@ -181,7 +181,10 @@ class VivadoWriter(Writer):
                     )
 
                     model_cfg = model.config.get_config_value('HLSConfig')['Model']
-                    if 'DenseResourceImplementation' in model_cfg and model_cfg['DenseResourceImplementation'].lower() == 'unrolled':
+                    if (
+                        'DenseResourceImplementation' in model_cfg
+                        and model_cfg['DenseResourceImplementation'].lower() == 'unrolled'
+                    ):
                         newline += indent + f'#pragma HLS PIPELINE ii={self.__get_max_reuse_factor(model)} \n'
                     else:
                         if model.config.pipeline_style.lower() == 'dataflow':

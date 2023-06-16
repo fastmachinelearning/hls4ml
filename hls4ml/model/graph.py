@@ -172,7 +172,9 @@ class HLSConfig:
     def get_dense_resource_implementation(self, layer):
         dense_resource_implementation = self.layer_name_dense_resource_implementation.get(layer.name.lower())
         if dense_resource_implementation is None:
-            dense_resource_implementation = self.layer_type_dense_resource_implementation.get(layer.__class__.__name__.lower())
+            dense_resource_implementation = self.layer_type_dense_resource_implementation.get(
+                layer.__class__.__name__.lower()
+            )
         if dense_resource_implementation is None:
             dense_resource_implementation = self.model_dense_resource_implementation
 
@@ -255,7 +257,7 @@ class HLSConfig:
                 conv_implementation = layer_cfg.get('ConvImplementation')
                 if conv_implementation is not None:
                     self.layer_type_conv_implementation[layer_type.lower()] = conv_implementation
-                
+
                 dense_resource_implementation = layer_cfg.get('DenseResourceImplementation')
                 if conv_implementation is not None:
                     self.layer_type_dense_resource_implementation[layer_type.lower()] = dense_resource_implementation
@@ -289,7 +291,7 @@ class HLSConfig:
                 conv_implementation = layer_cfg.get('ConvImplementation')
                 if conv_implementation is not None:
                     self.layer_name_conv_implementation[layer_name.lower()] = conv_implementation
-                
+
                 dense_resource_implementation = layer_cfg.get('DenseResourceImplementation')
                 if conv_implementation is not None:
                     self.layer_name_dense_resource_implementation[layer_name.lower()] = dense_resource_implementation

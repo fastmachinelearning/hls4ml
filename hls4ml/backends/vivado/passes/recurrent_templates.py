@@ -140,10 +140,10 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         mult_params1['index'] = str(node.index) + '_1'
         mult_params1['nzeros'] = node.get_weights('weight').nzeros
         mult_params1['nonzeros'] = node.get_weights('weight').nonzeros
-        
+
         # TODO - Extend unrolled Dense Resource to recurrent kernels
-        mult_params1['unrolled_function'] = 'DenseResourceUnrolled' 
-        
+        mult_params1['unrolled_function'] = 'DenseResourceUnrolled'
+
         if node.get_attr('return_sequences'):
             mult_params2['n_in'] = node.get_output_variable().dim_names[1]
             mult_params2['n_out'] = node.get_output_variable().dim_names[1] + ' * %i' % n_recr_mult
@@ -157,14 +157,15 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         mult_params2['index'] = str(node.index) + '_2'
         mult_params2['nzeros'] = node.get_weights('recurrent_weight').nzeros
         mult_params2['nonzeros'] = node.get_weights('recurrent_weight').nonzeros
-        
+
         # TODO - Extend unrolled Dense Resource to recurrent kernels
-        mult_params2['unrolled_function'] = 'DenseResourceUnrolled' 
-        
+        mult_params2['unrolled_function'] = 'DenseResourceUnrolled'
+
         mult_config1 = self.mult1_template.format(**mult_params1)
         mult_config2 = self.mult2_template.format(**mult_params2)
 
         return mult_config1 + '\n' + mult_config2 + '\n' + recr_act_config + '\n' + act_config + '\n' + recr_config
+
 
 class RecurrentFunctionTemplate(FunctionCallTemplate):
     def __init__(self):

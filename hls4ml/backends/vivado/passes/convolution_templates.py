@@ -191,11 +191,15 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
             params['fill_fn'] = f'fill_buffer_{node.index}'
         else:
             params['fill_fn'] = 'FillConv2DBuffer'
-        
-        if node.get_attr('dense_resource_implementation', 'standard') == 'unrolled' and node.get_attr('strategy').lower() == 'resource' and node.get_attr('reuse_factor') > 1:
+
+        if (
+            node.get_attr('dense_resource_implementation', 'standard') == 'unrolled'
+            and node.get_attr('strategy').lower() == 'resource'
+            and node.get_attr('reuse_factor') > 1
+        ):
             params['unrolled_function'] = f'dense_unrolled_{node.index}'
         else:
-            params['unrolled_function'] =  'DenseResourceUnrolled'
+            params['unrolled_function'] = 'DenseResourceUnrolled'
 
         conv_config = self.template.format(**params)
 
@@ -205,7 +209,11 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
-        if node.get_attr('dense_resource_implementation', 'standard') == 'unrolled' and node.get_attr('strategy').lower() == 'resource' and node.get_attr('reuse_factor') > 1:
+        if (
+            node.get_attr('dense_resource_implementation', 'standard') == 'unrolled'
+            and node.get_attr('strategy').lower() == 'resource'
+            and node.get_attr('reuse_factor') > 1
+        ):
             mult_params['unrolled_function'] = f'dense_unrolled_{node.index}'
         else:
             mult_params['unrolled_function'] = 'DenseResourceUnrolled'
