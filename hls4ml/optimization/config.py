@@ -16,7 +16,7 @@ For more information, see attributes.py
     - Description: Zeroes out or quantizes all the weights in a structure:
         - Dense: Neurons, determined by their outgoing connections (columns in Keras weight tensors)
         - Conv2D: Filters (structures of size filt_width x filt_height x n_chan)
-        - Notes: 
+        - Notes:
             - For Dense, it was also possible optimize by incoming connections (rows); however, removing zero neurons becomes harder
             - For Conv2D, significant literature explored pruning channels; currently not supported
     - Supports: All layers in SUPPORTED_LAYERS (hls4ml.optimization.keras)
@@ -36,8 +36,10 @@ For more information, see attributes.py
     - Supports: All rank-2 (e.g. Dense, but not Conv2D) layers in SUPPORTED_LAYERS (hls4ml.optimization.keras)
 
 '''
+
+
 class SUPPORTED_STRUCTURES(Enum):
     UNSTRUCTURED = 'unstructured'
-    STRUCTURED   = 'structured'
-    PATTERN      = 'pattern'
-    BLOCK        = 'block' 
+    STRUCTURED = 'structured'
+    PATTERN = 'pattern'
+    BLOCK = 'block'

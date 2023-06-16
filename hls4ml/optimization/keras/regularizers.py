@@ -1,6 +1,8 @@
 import numpy as np
 import tensorflow as tf
+
 from hls4ml.optimization.config import SUPPORTED_STRUCTURES
+
 
 @tf.keras.utils.register_keras_serializable(name='DenseRegularizer')
 class DenseRegularizer(tf.keras.regularizers.Regularizer):
@@ -31,8 +33,16 @@ class DenseRegularizer(tf.keras.regularizers.Regularizer):
           In that case, we need to group several patterns together, so the entire block of patterns can be removed, thus saving DSP and BRAM
     '''
 
-    def __init__(self, alpha, beta=0, norm=1, structure_type=SUPPORTED_STRUCTURES.UNSTRUCTURED, block_shape=(1, 1),
-                 pattern_offset=1, consecutive_patterns=1):
+    def __init__(
+        self,
+        alpha,
+        beta=0,
+        norm=1,
+        structure_type=SUPPORTED_STRUCTURES.UNSTRUCTURED,
+        block_shape=(1, 1),
+        pattern_offset=1,
+        consecutive_patterns=1,
+    ):
         if norm != 1 and norm != 2:
             raise Exception(f'{self.__class__.__name__} currently supports l1- and l2-based regularization')
 
@@ -71,8 +81,7 @@ class DenseRegularizer(tf.keras.regularizers.Regularizer):
                 raise Exception(f'{self.__class__.__name__}: pattern offset needs to be a factor of matrix size')
 
             if self.pattern_offset % self.consecutive_patterns != 0:
-                raise Exception(
-                    f'{self.__class__.__name__}: consecutive patterns need to be a factor of pattern offset')
+                raise Exception(f'{self.__class__.__name__}: consecutive patterns need to be a factor of pattern offset')
 
             # Reshape weight matrix into [number_of_patterns, pattern_offset]
             number_of_patterns = np.prod(weights.shape) // self.pattern_offset
@@ -86,9 +95,10 @@ class DenseRegularizer(tf.keras.regularizers.Regularizer):
                     tf.expand_dims(tf.expand_dims(reshaped, 2), 0),
                     [1, self.consecutive_patterns, number_of_patterns, 1],
                     [1, self.consecutive_patterns, number_of_patterns, 1],
-                    [1, 1, 1, 1], 'SAME'
+                    [1, 1, 1, 1],
+                    'SAME',
                 ),
-                (total_blocks, -1)
+                (total_blocks, -1),
             )
 
             # Calculate penalty
@@ -108,9 +118,10 @@ class DenseRegularizer(tf.keras.regularizers.Regularizer):
                     tf.expand_dims(tf.expand_dims(weights, 2), 0),
                     [1, self.block_shape[0], self.block_shape[1], 1],
                     [1, self.block_shape[0], self.block_shape[1], 1],
-                    [1, 1, 1, 1], 'SAME'
+                    [1, 1, 1, 1],
+                    'SAME',
                 ),
-                (total_blocks, self.block_shape[0] * self.block_shape[1])
+                (total_blocks, self.block_shape[0] * self.block_shape[1]),
             )
 
             sparse_penalty = self.alpha * tf.norm(tf.norm(blocks, axis=1, ord=2), ord=self.norm)
@@ -125,7 +136,7 @@ class DenseRegularizer(tf.keras.regularizers.Regularizer):
             'structure_type': self.structure_type,
             'block_shape': self.block_shape,
             'pattern_offset': self.pattern_offset,
-            'consecutive_patterns': self.consecutive_patterns
+            'consecutive_patterns': self.consecutive_patterns,
         }
 
 
@@ -151,8 +162,15 @@ class Conv2DRegularizer(tf.keras.regularizers.Regularizer):
         - structure_type = pattern: regularization on groups of every n-th weight in flattened array (e.g. grouping by reuse factor in hls4ml)
     '''
 
-    def __init__(self, alpha, beta=0, norm=1, structure_type=SUPPORTED_STRUCTURES.UNSTRUCTURED, pattern_offset=1,
-                 consecutive_patterns=1):
+    def __init__(
+        self,
+        alpha,
+        beta=0,
+        norm=1,
+        structure_type=SUPPORTED_STRUCTURES.UNSTRUCTURED,
+        pattern_offset=1,
+        consecutive_patterns=1,
+    ):
         if norm != 1 and norm != 2:
             raise Exception(f'{self.__class__.__name__} currently supports l1- and l2-based regularization')
 
@@ -184,8 +202,9 @@ class Conv2DRegularizer(tf.keras.regularizers.Regularizer):
             return sparse_penalty + variance_penalty
 
         if self.structure_type == SUPPORTED_STRUCTURES.STRUCTURED:
-            sparse_penalty = self.alpha * tf.norm(tf.reduce_sum(tf.norm(weights, axis=(0, 1), ord='fro'), axis=0),
-                                                  ord=self.norm)
+            sparse_penalty = self.alpha * tf.norm(
+                tf.reduce_sum(tf.norm(weights, axis=(0, 1), ord='fro'), axis=0), ord=self.norm
+            )
             variance_penalty = self.beta * tf.norm(tf.math.reduce_variance(weights, axis=(0, 1, 2)), ord=self.norm)
             return sparse_penalty + variance_penalty
 
@@ -194,8 +213,7 @@ class Conv2DRegularizer(tf.keras.regularizers.Regularizer):
                 raise Exception(f'{self.__class__.__name__}: pattern offset needs to be a factor of matrix size')
 
             if self.pattern_offset % self.consecutive_patterns != 0:
-                raise Exception(
-                    f'{self.__class__.__name__}: consecutive patterns need to be a factor of pattern offset')
+                raise Exception(f'{self.__class__.__name__}: consecutive patterns need to be a factor of pattern offset')
 
             number_of_patterns = np.prod(weights.shape) // self.pattern_offset
             target_shape = (self.pattern_offset, number_of_patterns)
@@ -207,9 +225,10 @@ class Conv2DRegularizer(tf.keras.regularizers.Regularizer):
                     tf.expand_dims(tf.expand_dims(reshaped, 2), 0),
                     [1, self.consecutive_patterns, number_of_patterns, 1],
                     [1, self.consecutive_patterns, number_of_patterns, 1],
-                    [1, 1, 1, 1], 'SAME'
+                    [1, 1, 1, 1],
+                    'SAME',
                 ),
-                (total_blocks, -1)
+                (total_blocks, -1),
             )
 
             sparse_penalty = self.alpha * tf.norm(tf.norm(blocks, axis=1, ord=2), ord=self.norm)
@@ -223,5 +242,5 @@ class Conv2DRegularizer(tf.keras.regularizers.Regularizer):
             'norm': self.norm,
             'structure_type': self.structure_type,
             'pattern_offset': self.pattern_offset,
-            'consecutive_patterns': self.consecutive_patterns
+            'consecutive_patterns': self.consecutive_patterns,
         }

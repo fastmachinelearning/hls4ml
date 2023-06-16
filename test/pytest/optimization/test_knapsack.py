@@ -1,6 +1,8 @@
-import pytest
 import numpy as np
+import pytest
+
 from hls4ml.optimization.knapsack import solve_knapsack
+
 
 # In the simple case below, both implementations give the optimal answer
 # In general, the greedy algorithm will not give the optimal solution
@@ -11,10 +13,11 @@ def test_knapsack_1d(implementation):
     capacity = np.array([8])
 
     optimal, selected = solve_knapsack(values, weights, capacity, implementation=implementation)
-    assert(optimal == 18)
-    assert(0 in selected)
-    assert(2 in selected)
-    assert(3 in selected)
+    assert optimal == 18
+    assert 0 in selected
+    assert 2 in selected
+    assert 3 in selected
+
 
 @pytest.mark.parametrize('implementation', ['greedy', 'branch_bound', 'CBC_MIP'])
 def test_multidimensional_knapsack(implementation):
@@ -23,9 +26,10 @@ def test_multidimensional_knapsack(implementation):
     capacity = np.array([8, 7])
 
     optimal, selected = solve_knapsack(values, weights, capacity, implementation=implementation)
-    assert(optimal == 22)
-    assert(0 in selected)
-    assert(3 in selected)
+    assert optimal == 22
+    assert 0 in selected
+    assert 3 in selected
+
 
 def test_knapsack_equal_weights():
     values = np.array([10, 2, 6, 8, 3])
@@ -33,9 +37,10 @@ def test_knapsack_equal_weights():
     capacity = np.array([7, 7])
 
     optimal, selected = solve_knapsack(values, weights, capacity)
-    assert(optimal == 18)
-    assert(0 in selected)
-    assert(3 in selected)
+    assert optimal == 18
+    assert 0 in selected
+    assert 3 in selected
+
 
 def test_knapsack_all_elements_fit():
     values = np.array([10, 2, 6, 12, 3])
@@ -43,5 +48,5 @@ def test_knapsack_all_elements_fit():
     capacity = np.array([19, 12])
 
     optimal, selected = solve_knapsack(values, weights, capacity)
-    assert(optimal == 33)
-    assert(selected == list(range(0, values.shape[0])))
+    assert optimal == 33
+    assert selected == list(range(0, values.shape[0]))

@@ -1,5 +1,6 @@
 import sys
 import time
+
 import numpy as np
 
 
@@ -53,12 +54,16 @@ def solve_knapsack(values, weights, capacity, implementation='CBC_MIP', **kwargs
         raise Exception('Unknown algorithm for solving Knapsack')
 
     if len(values.shape) != 1:
-        raise Exception('Current implementations of Knapsack optimization support single-objective problems. \
-                        Values must be one-dimensional')
+        raise Exception(
+            'Current implementations of Knapsack optimization support single-objective problems. \
+                        Values must be one-dimensional'
+        )
 
     if len(weights.shape) != 2:
-        raise Exception('Current implementation of Knapsack assumes weight vector is 2-dimensional, to allow for multi-dimensional Knapsack problem. \
-                        If solve a one-dimensional Knapsack problem, extend dimensions of weights to a one-row matrix')
+        raise Exception(
+            'Current implementation of Knapsack assumes weight vector is 2-dimensional, to allow for multi-dimensional Knapsack problem. \
+                        If solve a one-dimensional Knapsack problem, extend dimensions of weights to a one-row matrix'
+        )
 
     if values.shape[0] != weights.shape[1]:
         raise Exception('Uneven number of items and weights')
@@ -108,7 +113,7 @@ def __solve_1d_knapsack_dp(values, weights, capacity):
     Furthermore, it has a high computational complexity and it is not suitable for highly-dimensional arrays
     NOTE: The weights and corresponding weight constraint need to be integers; if not, the they should be scaled and rounded beforehand
     '''
-    assert (len(weights.shape) == 1)
+    assert len(weights.shape) == 1
 
     # Build look-up table in bottom-up approach
     N = values.shape[0]
@@ -188,10 +193,10 @@ def __solve_knapsack_branch_and_bound(values, weights, capacity, time_limit=sys.
         raise Exception('OR-Tools not found. Please insteal Google OR-Tools from pip.')
 
     solver = pywrapknapsack_solver.KnapsackSolver(
-        pywrapknapsack_solver.KnapsackSolver.KNAPSACK_MULTIDIMENSION_BRANCH_AND_BOUND_SOLVER, 'BB')
+        pywrapknapsack_solver.KnapsackSolver.KNAPSACK_MULTIDIMENSION_BRANCH_AND_BOUND_SOLVER, 'BB'
+    )
     solver.set_time_limit(time_limit)
-    solver.Init((values * scaling_factor).astype(int).tolist(), weights.astype(int).tolist(),
-                capacity.astype(int).tolist())
+    solver.Init((values * scaling_factor).astype(int).tolist(), weights.astype(int).tolist(), capacity.astype(int).tolist())
     optimal = solver.Solve()
     selected = [i for i in range(values.shape[0]) if solver.BestSolutionContains(i)]
     return optimal / scaling_factor, selected
@@ -211,10 +216,10 @@ def __solve_knapsack_cbc_mip(values, weights, capacity, time_limit=sys.float_inf
         raise Exception('OR-Tools not found. Please insteal Google OR-Tools from pip.')
 
     solver = pywrapknapsack_solver.KnapsackSolver(
-        pywrapknapsack_solver.KnapsackSolver.KNAPSACK_MULTIDIMENSION_CBC_MIP_SOLVER, 'CBC')
+        pywrapknapsack_solver.KnapsackSolver.KNAPSACK_MULTIDIMENSION_CBC_MIP_SOLVER, 'CBC'
+    )
     solver.set_time_limit(time_limit)
-    solver.Init((values * scaling_factor).astype(int).tolist(), weights.astype(int).tolist(),
-                capacity.astype(int).tolist())
+    solver.Init((values * scaling_factor).astype(int).tolist(), weights.astype(int).tolist(), capacity.astype(int).tolist())
     optimal = solver.Solve()
     selected = [i for i in range(values.shape[0]) if solver.BestSolutionContains(i)]
     return optimal / scaling_factor, selected
@@ -227,7 +232,7 @@ def __solve_knapsack_equal_weights(values, weights, capacity):
     It occurs often in pruning - e.g. in pattern pruning, each DSP block saves one DSP; however, as a counter-example
     In structured pruning, each structure can save a different amount of FLOPs (Conv2D filter vs Dense neuron)
     '''
-    assert (np.all([weights[i, :] == weights[i, 0] for i in range(weights.shape[0])]))
+    assert np.all([weights[i, :] == weights[i, 0] for i in range(weights.shape[0])])
 
     # Find items with the highest value
     indices = np.argsort(values)
