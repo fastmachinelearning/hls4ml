@@ -2,9 +2,9 @@
 
 # This script runs the Catapult flows to generate the HLS.
 
-VENV=$HOME/venv
+VENV=../../../../venv
 
-MGC_HOME=/wv/hlsb/CATAPULT/TOT/CURRENT/aol/Mgc_home
+MGC_HOME=/wv/hlsb/CATAPULT/2023.1/PRODUCTION/aol/Mgc_home
 export MGC_HOME
 
 export PATH=/wv/hlstools/python/python37/bin:$PATH:$XILINX_VIVADO/bin:$MGC_HOME/bin
@@ -16,7 +16,8 @@ export OSTYPE=linux-gnu
 
 echo "Activating Virtual Environment..."
 #    bash
-source $VENV/bin/activate
+source ../../../../venv/bin/activate
+# source $VENV/bin/activate
 
 rm -rf ./my-Catapult-test*
 
