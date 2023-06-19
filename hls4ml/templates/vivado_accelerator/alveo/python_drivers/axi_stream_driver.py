@@ -6,7 +6,6 @@ from pynq import Overlay, allocate
 
 class NeuralNetworkOverlay(Overlay):
     def __init__(self, xclbin_name, dtbo=None, download=True, ignore_version=False, device=None):
-
         super().__init__(xclbin_name, dtbo=dtbo, download=download, ignore_version=ignore_version, device=device)
         self.input_buffer = None
         self.output_buffer = None

@@ -53,7 +53,6 @@ class ONNXDataReader:
         tensor = next((x for x in self.model.graph.initializer if x.name == inputs['inputs'][inp_idx]), None)
 
         if tensor is not None:
-
             data = numpy_helper.to_array(tensor)
 
             if inputs['transpose']:
@@ -278,7 +277,6 @@ def onnx_to_hls(config):
 
     print('Topology:')
     for node in graph.node:
-
         if node.op_type not in supported_layers:
             raise Exception(f'ERROR: Unsupported operation type: {node.op_type}')
 

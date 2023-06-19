@@ -391,7 +391,6 @@ class FPGABackend(Backend):
         return product
 
     def compute_conv1d_instructions(self, in_W, in_C, kernel_size=3, stride=1, pad=0):
-
         # Current limitations
         assert pad == 0
 
@@ -427,7 +426,6 @@ class FPGABackend(Backend):
         return (min_W, windows_int)
 
     def compute_conv2d_instructions(self, in_H, in_W, in_C, kernel_size=3, stride=1, pad=0):
-
         if isinstance(kernel_size, Iterable):
             kernel_height = kernel_size[0]
             kernel_width = kernel_size[1]

@@ -3,8 +3,17 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from qkeras.qconv2d_batchnorm import QConv2DBatchnorm
 from qkeras.qlayers import QActivation, QDense
-from qkeras.quantizers import binary, quantized_bits, quantized_relu, quantized_sigmoid, quantized_tanh, ternary
+from qkeras.quantizers import (
+    binary,
+    quantized_bits,
+    quantized_po2,
+    quantized_relu,
+    quantized_sigmoid,
+    quantized_tanh,
+    ternary,
+)
 from qkeras.utils import _add_supported_quantized_objects
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
@@ -348,3 +357,82 @@ def test_qactivation_kwarg(randX_100_10, activation_quantizer, weight_quantizer)
             y_hls4ml = np.where(y_hls4ml == 0, -1, 1)
         wrong = (y_hls4ml != y_qkeras).ravel()
         assert sum(wrong) / len(wrong) <= 0.005
+
+
+@pytest.fixture(scope='module')
+def randX_100_8_8_1():
+    return np.random.rand(100, 8, 8, 1)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_qconv2dbn(randX_100_8_8_1, backend, io_type):
+    '''
+    Test proper handling of QConv2DBatchnorm.
+    '''
+    X = randX_100_8_8_1
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+    model = Sequential()
+    model.add(
+        QConv2DBatchnorm(
+            4,
+            kernel_size=(3, 3),
+            input_shape=(8, 8, 1),
+            kernel_quantizer='quantized_bits(8, 0, alpha=1)',
+            kernel_initializer='ones',
+            bias_quantizer='quantized_bits(8, 0, alpha=1)',
+            bias_initializer='zeros',
+            activation='quantized_relu(8, 0)',
+        )
+    )
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    output_dir = str(test_root_path / f'hls4mlprj_qkeras_qconv2dbn_{backend}_{io_type}')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
+def test_quantised_po2_bit_width(backend, io_type, strategy):
+    input_shape = 26
+    output_shape = 6
+    X = np.random.rand(100, input_shape)
+
+    # Set a high bit-width, so that we ensure HLS doesn't allocate 2**bits for the multiplication
+    # The biggest allowed bit-width in Vivado HLS is 65,536 (2**16)
+    keras_model = Sequential()
+    keras_model.add(
+        QDense(output_shape, input_shape=(input_shape,), name='dense', kernel_quantizer=quantized_po2(18, max_value=2**20))
+    )
+
+    # Set weights to same high random number
+    weights = keras_model.layers[0].get_weights()
+    weights[0] = (2**18) * np.random.rand(input_shape, output_shape)
+    keras_model.layers[0].set_weights(weights)
+
+    # Assert output is the same and bit-width is not over-allocated [it would throw a run-time error]
+    keras_model.compile()
+    y_keras = keras_model.predict(X)
+
+    hls_config = hls4ml.utils.config_from_keras_model(
+        keras_model, granularity='name', default_precision='ap_fixed<64, 32>', default_reuse_factor=1
+    )
+    hls_config['Model']['Strategy'] = strategy
+    output_dir = str(test_root_path / f'hls4mlprj_qkeras_quantised_po2_{backend}_{io_type}_{strategy}')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        keras_model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+    y_hls = hls_model.predict(np.ascontiguousarray(X))
+
+    np.testing.assert_allclose(y_hls.flatten(), y_keras.flatten(), rtol=2e-2)

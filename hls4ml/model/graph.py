@@ -647,7 +647,6 @@ class ModelGraph:
 
         lib_name = self.config.backend.compile(self)
         if self._top_function_lib is not None:
-
             if platform.system() == "Linux":
                 libdl_libs = ['libdl.so', 'libdl.so.2']
                 for libdl in libdl_libs:

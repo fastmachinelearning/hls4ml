@@ -190,7 +190,6 @@ def get_model_arch(config):
 
 
 def parse_keras_model(model_arch, reader):
-
     # This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
 

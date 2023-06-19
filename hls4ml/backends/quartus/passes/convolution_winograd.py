@@ -82,7 +82,6 @@ class ApplyWinogradKernelTransformation(OptimizerPass):
     def transform(self, model, node):
         if isinstance(node, Conv1D):
             if node.get_attr('filt_width', 3) == 3:
-
                 # First, transpose to a format suitable for the Winograd algorithm (F, C, W)
                 # Note, this assumes a format post-resource strategy optimizer, that is (F, W, C)
                 # Therefore, (F, W, C) => (F, C, W)
@@ -127,7 +126,6 @@ class ApplyWinogradKernelTransformation(OptimizerPass):
 
         elif isinstance(node, Conv2D):
             if node.get_attr('filt_height', 3) == 3 and node.get_attr('filt_width', 3) == 3:
-
                 # First, transpose to a format suitable for the Winograd algorithm (F, C, H, W)
                 # Note, this assumes a format post-resource strategy optimizer, that is (F, H, W, C)
                 # Therefore, (F, H, W, C) => (F, C, H, W)
