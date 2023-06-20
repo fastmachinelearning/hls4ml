@@ -12,9 +12,22 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
-@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_model2(backend, io_type):
+@pytest.mark.parametrize(
+    'backend,io_type,strategy',
+    [
+        ('Quartus', 'io_parallel', 'resource'),
+        ('Quartus', 'io_stream', 'resource'),
+        ('Vivado', 'io_parallel', 'resource'),
+        ('Vivado', 'io_parallel', 'latency'),
+        ('Vivado', 'io_stream', 'latency'),
+        ('Vivado', 'io_stream', 'resource'),
+        ('Vitis', 'io_parallel', 'resource'),
+        ('Vitis', 'io_parallel', 'latency'),
+        ('Vitis', 'io_stream', 'latency'),
+        ('Vitis', 'io_stream', 'resource'),
+    ],
+)
+def test_model2(backend, io_type, strategy):
     x_in = Input(shape=(28, 28, 1))
 
     x = QConv2D(4, (3, 3), kernel_quantizer="binary", name="conv2d_1", kernel_regularizer=l2(0.0001), use_bias=False)(x_in)
@@ -46,17 +59,17 @@ def test_model2(backend, io_type):
     model2.summary()
 
     hls_config = hls4ml.utils.config_from_keras_model(model2, granularity="name")
-    hls_config["Model"]["Strategy"] = "Latency"
+    hls_config["Model"]["Strategy"] = strategy
 
     # hls_config["LayerName"]["q_dense_7_softmax"]["Implementation"] = "legacy"
 
-    hls_config["LayerName"]["conv2d_1"]["ReuseFactor"] = 36
-    hls_config["LayerName"]["conv2d_2"]["ReuseFactor"] = 288
-    hls_config["LayerName"]["conv2d_3"]["ReuseFactor"] = 576
+    hls_config["LayerName"]["conv2d_1"]["ReuseFactor"] = 9
+    hls_config["LayerName"]["conv2d_2"]["ReuseFactor"] = 36
+    hls_config["LayerName"]["conv2d_3"]["ReuseFactor"] = 72
     hls_config["LayerName"]["q_dense_6"]["ReuseFactor"] = 2000
     hls_config["LayerName"]["q_dense_7"]["ReuseFactor"] = 100
 
-    output_dir = str(test_root_path / f"hls4mlprj_binary_cnn_{backend}_{io_type}")
+    output_dir = str(test_root_path / f"hls4mlprj_binary_cnn_{backend}_{io_type}_{strategy}")
     hls_model = hls4ml.converters.convert_from_keras_model(
         model2,
         hls_config=hls_config,
