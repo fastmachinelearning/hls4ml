@@ -104,7 +104,7 @@ CCS_MAIN(int argc, char *argv[])
       softmax(input_1,layer2_out);
 //#if 0
       //if (e % CHECKPOINT == 0) {
-        std::cout << "Predictions" << std::endl;
+        //std::cout << "Predictions" << std::endl;
         //hls-fpga-machine-learning insert predictions
 	result_t tmp = layer2_out[0];
         for(int i = 0; i < N_INPUT_1_1; i++) {
@@ -115,8 +115,8 @@ CCS_MAIN(int argc, char *argv[])
           }
 
         }
-        std::cout << std::endl;
-        std::cout << "Quantized predictions" << std::endl;
+        //std::cout << std::endl;
+        //std::cout << "Quantized predictions" << std::endl;
         //hls-fpga-machine-learning insert quantized
       //}
 //#endif

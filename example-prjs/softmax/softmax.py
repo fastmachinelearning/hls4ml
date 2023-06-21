@@ -5,11 +5,11 @@ import numpy as np
 # https://www.tensorflow.org/api_docs/python/tf/keras/layers/Softmax
 # https://developers.google.com/machine-learning/crash-course/multi-class-neural-networks/softmax
 
-# Create a softmax 1layer that takes in a 3 element array
+# Create a softmax 1layer that takes in a 25 element array
 def create_model():
 	# Create a model
 	model = tf.keras.Sequential()
-	model.add(tf.keras.layers.InputLayer(input_shape=(3,)))
+	model.add(tf.keras.layers.InputLayer(input_shape=(25,)))
 	model.add(tf.keras.layers.Softmax())
 				
 	return model
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     # Image Matrix
     image_mat = np.array([
-	[ 1, 2, 3 ]
+	[ 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2 ]
     ])
 
     # Get prediction
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     print(prediction)
 
     image_mat2 = np.array([
-	[ 7, 14, 21 ]
+	[ 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5 ]
     ])
 
     # Get prediction
