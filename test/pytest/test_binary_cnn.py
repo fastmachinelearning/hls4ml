@@ -69,6 +69,12 @@ def test_model2(backend, io_type, strategy):
     hls_config["LayerName"]["q_dense_6"]["ReuseFactor"] = 2000
     hls_config["LayerName"]["q_dense_7"]["ReuseFactor"] = 100
 
+    if backend == 'Quartus' and io_type == 'io_parallel':
+        # Winegrad imp[lementation does not support binary
+        hls_config["LayerName"]["conv2d_1"]["Implementation"] = "im2col"
+        hls_config["LayerName"]["conv2d_2"]["Implementation"] = "im2col"
+        hls_config["LayerName"]["conv2d_3"]["Implementation"] = "im2col"
+
     output_dir = str(test_root_path / f"hls4mlprj_binary_cnn_{backend}_{io_type}_{strategy}")
     hls_model = hls4ml.converters.convert_from_keras_model(
         model2,
