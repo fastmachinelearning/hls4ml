@@ -36,6 +36,14 @@ hls4ml.converters.keras.merge module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.converters.keras.model module
+------------------------------------
+
+.. automodule:: hls4ml.converters.keras.model
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.converters.keras.pooling module
 --------------------------------------
 

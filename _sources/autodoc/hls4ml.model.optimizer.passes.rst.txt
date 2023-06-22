@@ -20,6 +20,14 @@ hls4ml.model.optimizer.passes.convert\_to\_channels\_last module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.model.optimizer.passes.expand\_layer\_group module
+---------------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.expand_layer_group
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.model.optimizer.passes.fuse\_biasadd module
 --------------------------------------------------
 

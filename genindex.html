@@ -35,7 +35,7 @@
               <img src="_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev13+g5780a90b
+                0.8.0.dev14+g6ea168db
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -556,6 +556,8 @@
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.embedding.EmbeddingFunctionTemplate">EmbeddingFunctionTemplate (class in hls4ml.backends.fpga.passes.embedding)</a>
 </li>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.fixed_point_utils.FixedPointEmulator.exp_float">exp_float() (hls4ml.utils.fixed_point_utils.FixedPointEmulator method)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.expand_layer_group.ExpandLayerGroup">ExpandLayerGroup (class in hls4ml.model.optimizer.passes.expand_layer_group)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.expected_attributes">expected_attributes (hls4ml.model.layers.Layer attribute)</a>
 </li>
@@ -1429,8 +1431,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado_accelerator.passes.html#module-hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado_accelerator.vivado_accelerator_backend
 
@@ -1438,6 +1438,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#module-hls4ml.backends.vivado_accelerator.vivado_accelerator_backend">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado_accelerator.vivado_accelerator_config
 
@@ -1485,6 +1487,13 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.converters.keras.html#module-hls4ml.converters.keras.merge">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.converters.keras.model
+
+      <ul>
+        <li><a href="autodoc/hls4ml.converters.keras.html#module-hls4ml.converters.keras.model">module</a>
 </li>
       </ul></li>
       <li>
@@ -1667,6 +1676,13 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.convert_to_channels_last">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.model.optimizer.passes.expand_layer_group
+
+      <ul>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.expand_layer_group">module</a>
 </li>
       </ul></li>
       <li>
@@ -1962,6 +1978,8 @@
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.initialize">(hls4ml.model.layers.Layer method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.LayerGroup.initialize">(hls4ml.model.layers.LayerGroup method)</a>
+</li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.LSTM.initialize">(hls4ml.model.layers.LSTM method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Merge.initialize">(hls4ml.model.layers.Merge method)</a>
@@ -2051,6 +2069,8 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate">LayerConfigTemplate (class in hls4ml.backends.template)</a>
 </li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.LayerGroup">LayerGroup (class in hls4ml.model.layers)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.LayerOptimizerPass">LayerOptimizerPass (class in hls4ml.model.optimizer.optimizer)</a>
@@ -2127,6 +2147,8 @@
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.match">(hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.convert_to_channels_last.ChannelsLastConverter.match">(hls4ml.model.optimizer.passes.convert_to_channels_last.ChannelsLastConverter method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.expand_layer_group.ExpandLayerGroup.match">(hls4ml.model.optimizer.passes.expand_layer_group.ExpandLayerGroup method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd.match">(hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd method)</a>
 </li>
@@ -2309,6 +2331,8 @@
 </li>
         <li><a href="autodoc/hls4ml.converters.keras.html#module-hls4ml.converters.keras.merge">hls4ml.converters.keras.merge</a>
 </li>
+        <li><a href="autodoc/hls4ml.converters.keras.html#module-hls4ml.converters.keras.model">hls4ml.converters.keras.model</a>
+</li>
         <li><a href="autodoc/hls4ml.converters.keras.html#module-hls4ml.converters.keras.pooling">hls4ml.converters.keras.pooling</a>
 </li>
         <li><a href="autodoc/hls4ml.converters.keras.html#module-hls4ml.converters.keras.qkeras">hls4ml.converters.keras.qkeras</a>
@@ -2360,6 +2384,8 @@
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.bn_fuse">hls4ml.model.optimizer.passes.bn_fuse</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.convert_to_channels_last">hls4ml.model.optimizer.passes.convert_to_channels_last</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.expand_layer_group">hls4ml.model.optimizer.passes.expand_layer_group</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.fuse_biasadd">hls4ml.model.optimizer.passes.fuse_biasadd</a>
 </li>
@@ -2544,6 +2570,8 @@
         <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.merge.parse_merge_layer">(in module hls4ml.converters.onnx.merge)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.model.parse_model_layer">parse_model_layer() (in module hls4ml.converters.keras.model)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.reshape.parse_permute_layer">parse_permute_layer() (in module hls4ml.converters.keras.reshape)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.pooling.parse_pool_layer">parse_pool_layer() (in module hls4ml.converters.onnx.pooling)</a>
@@ -2568,10 +2596,10 @@
         <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.reshape.parse_reshape_layer">(in module hls4ml.converters.onnx.reshape)</a>
 </li>
       </ul></li>
-      <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.recurrent.parse_rnn_layer">parse_rnn_layer() (in module hls4ml.converters.keras.recurrent)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.recurrent.parse_rnn_layer">parse_rnn_layer() (in module hls4ml.converters.keras.recurrent)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.reshape.parse_transpose_layer">parse_transpose_layer() (in module hls4ml.converters.onnx.reshape)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.reshape.parse_upsampling1d_layer">parse_upsampling1d_layer() (in module hls4ml.converters.keras.reshape)</a>
@@ -2978,6 +3006,8 @@
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.transform">(hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.convert_to_channels_last.ChannelsLastConverter.transform">(hls4ml.model.optimizer.passes.convert_to_channels_last.ChannelsLastConverter method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.expand_layer_group.ExpandLayerGroup.transform">(hls4ml.model.optimizer.passes.expand_layer_group.ExpandLayerGroup method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd.transform">(hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd method)</a>
 </li>
