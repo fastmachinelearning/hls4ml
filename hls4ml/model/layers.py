@@ -1273,6 +1273,24 @@ class GarNetStack(GarNet):
         self._output_features = self.attributes['n_out_features'][-1]
 
 
+class LayerGroup(Layer):
+    _expected_attributes = [
+        Attribute('layer_list', value_type=list),
+        Attribute('input_layers', value_type=list),
+        Attribute('output_layers', value_type=list),
+        Attribute('data_reader', value_type=object),
+        Attribute('output_shape', value_type=list),
+    ]
+
+    def initialize(self):
+        shape = self.get_attr('output_shape')
+        if shape[0] is None:
+            shape.pop(0)
+        dims = [f'N_INPUT_{self.index}_{i+1}' for i in range(len(shape))]
+
+        self.add_output_variable(shape, dims)
+
+
 layer_map = {
     'Input': Input,
     'InputLayer': Input,
@@ -1324,6 +1342,7 @@ layer_map = {
     'GRU': GRU,
     'GarNet': GarNet,
     'GarNetStack': GarNetStack,
+    'LayerGroup': LayerGroup,
     # TensorFlow-specific layers:
     'BiasAdd': BiasAdd,
 }
