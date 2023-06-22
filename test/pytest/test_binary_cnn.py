@@ -90,5 +90,4 @@ def test_model2(backend, io_type, strategy):
     y = model2.predict(X)  # noqa: F841
     y_hls = hls_model.predict(X)  # noqa: F841
 
-    # TODO:  enable the comparions after fixing the remaing issues
     np.testing.assert_allclose(np.squeeze(y_hls), np.squeeze(y), rtol=1e-2, atol=0.01)
