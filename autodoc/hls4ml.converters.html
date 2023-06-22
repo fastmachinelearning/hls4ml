@@ -38,7 +38,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev11+gabaea98a
+                0.8.0.dev12+gfdbdb99f
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -148,6 +148,9 @@
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml-converters-pytorch-convolution-module">hls4ml.converters.pytorch.convolution module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml-converters-pytorch-core-module">hls4ml.converters.pytorch.core module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml-converters-pytorch-merge-module">hls4ml.converters.pytorch.merge module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml-converters-pytorch-pooling-module">hls4ml.converters.pytorch.pooling module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml-converters-pytorch-reshape-module">hls4ml.converters.pytorch.reshape module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch">Module contents</a></li>
 </ul>
 </li>
@@ -414,6 +417,11 @@ is odd, it will add the extra column to the right.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.utils.compute_padding_1d_pytorch">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">compute_padding_1d_pytorch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pad_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.compute_padding_1d_pytorch" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.utils.compute_padding_2d">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">compute_padding_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pad_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_width</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.compute_padding_2d" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the amount of padding required on each side of the 2D input tensor.</p>
@@ -442,6 +450,11 @@ columns to be added is odd, it will add the extra column to the right/bottom.</p
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.utils.compute_padding_2d_pytorch">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">compute_padding_2d_pytorch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pad_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation_width</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.compute_padding_2d_pytorch" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.converters.utils.parse_data_format">
@@ -584,8 +597,8 @@ Defaults to 5.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> – PyTorch model to conert.</p></li>
-<li><p><strong>input_shape</strong> (<em>list</em>) – The shape of the input tensor.</p></li>
+<li><p><strong>model</strong> – PyTorch model to convert.</p></li>
+<li><p><strong>input_shape</strong> (<em>list</em>) – The shape of the input tensor. First element is the batch size, needs to be None</p></li>
 <li><p><strong>output_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – Output directory of the generated HLS project. Defaults to ‘my-hls-test’.</p></li>
 <li><p><strong>project_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the HLS project. Defaults to ‘myproject’.</p></li>
 <li><p><strong>input_data_tb</strong> (<em>str</em><em>, </em><em>optional</em>) – String representing the path of input data in .npy or .dat format that will be
@@ -609,6 +622,17 @@ Defaults to 5.</p></li>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>Exception</strong> – If precision and reuse factor are not present in ‘hls_config’.</p>
 </dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Pytorch uses the “channels_first” data format for its tensors, while hls4ml expects the “channels_last” format
+used by keras. By default, hls4ml will automatically add layers to the model which transpose the inputs to the
+“channels_last”format. Not that this is not supported for the “io_stream” io_type, for which the user will have
+to transpose the input by hand before passing it to hls4ml. In that case the “inputs_channel_last” argument of
+the “config_from_pytorch_model” function needs to be set to True. By default, the output of the model remains
+in the “channels_last” data format. The “transpose_outputs” argument of the “config_from_pytorch_model” can be
+used to add a layer to the model that transposes back to “channels_first”. As before, this will not work for
+io_stream.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>hls4ml model.</p>
 </dd>

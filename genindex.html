@@ -35,7 +35,7 @@
               <img src="_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev11+gabaea98a
+                0.8.0.dev12+gfdbdb99f
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -293,6 +293,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.fixed_point_utils.ceil_log2">ceil_log2() (in module hls4ml.utils.fixed_point_utils)</a>
 </li>
+      <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.convert_to_channels_last.ChannelsLastConverter">ChannelsLastConverter (class in hls4ml.model.optimizer.passes.convert_to_channels_last)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.quartus.html#hls4ml.backends.quartus.quartus_backend.chdir">chdir() (in module hls4ml.backends.quartus.quartus_backend)</a>
 </li>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.plot.check_pydot">check_pydot() (in module hls4ml.utils.plot)</a>
@@ -333,7 +335,11 @@
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.utils.compute_padding_1d">compute_padding_1d() (in module hls4ml.converters.utils)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.utils.compute_padding_1d_pytorch">compute_padding_1d_pytorch() (in module hls4ml.converters.utils)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.utils.compute_padding_2d">compute_padding_2d() (in module hls4ml.converters.utils)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.utils.compute_padding_2d_pytorch">compute_padding_2d_pytorch() (in module hls4ml.converters.utils)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.compute_pads_1d">compute_pads_1d() (in module hls4ml.converters.onnx_to_hls)</a>
 </li>
@@ -363,14 +369,14 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Conv1D">Conv1D (class in hls4ml.model.layers)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.convolution_templates.Conv1DConfigTemplate">Conv1DConfigTemplate (class in hls4ml.backends.quartus.passes.convolution_templates)</a>
 
       <ul>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.convolution_templates.Conv1DConfigTemplate">(class in hls4ml.backends.vivado.passes.convolution_templates)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.quartus.passes.html#hls4ml.backends.quartus.passes.convolution_templates.Conv1DFunctionTemplate">Conv1DFunctionTemplate (class in hls4ml.backends.quartus.passes.convolution_templates)</a>
 
       <ul>
@@ -1416,8 +1422,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado_accelerator.passes.html#module-hls4ml.backends.vivado_accelerator.passes">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization
 
@@ -1425,6 +1429,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado_accelerator.passes.html#module-hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado_accelerator.vivado_accelerator_backend
 
@@ -1654,6 +1660,13 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.bn_fuse">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.model.optimizer.passes.convert_to_channels_last
+
+      <ul>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.convert_to_channels_last">module</a>
 </li>
       </ul></li>
       <li>
@@ -2113,6 +2126,8 @@
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.match">(hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.convert_to_channels_last.ChannelsLastConverter.match">(hls4ml.model.optimizer.passes.convert_to_channels_last.ChannelsLastConverter method)</a>
+</li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd.match">(hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv.match">(hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv method)</a>
@@ -2343,6 +2358,8 @@
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes">hls4ml.model.optimizer.passes</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.bn_fuse">hls4ml.model.optimizer.passes.bn_fuse</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.convert_to_channels_last">hls4ml.model.optimizer.passes.convert_to_channels_last</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes.fuse_biasadd">hls4ml.model.optimizer.passes.fuse_biasadd</a>
 </li>
@@ -2959,6 +2976,8 @@
         <li><a href="autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass.transform">(hls4ml.model.optimizer.optimizer.WrappedOptimizerPass method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.transform">(hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.convert_to_channels_last.ChannelsLastConverter.transform">(hls4ml.model.optimizer.passes.convert_to_channels_last.ChannelsLastConverter method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd.transform">(hls4ml.model.optimizer.passes.fuse_biasadd.FuseBiasAdd method)</a>
 </li>

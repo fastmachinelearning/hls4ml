@@ -12,6 +12,14 @@ hls4ml.model.optimizer.passes.bn\_fuse module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.model.optimizer.passes.convert\_to\_channels\_last module
+----------------------------------------------------------------
+
+.. automodule:: hls4ml.model.optimizer.passes.convert_to_channels_last
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.model.optimizer.passes.fuse\_biasadd module
 --------------------------------------------------
 

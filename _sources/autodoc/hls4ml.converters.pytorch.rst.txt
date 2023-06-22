@@ -20,6 +20,30 @@ hls4ml.converters.pytorch.core module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.converters.pytorch.merge module
+--------------------------------------
+
+.. automodule:: hls4ml.converters.pytorch.merge
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.converters.pytorch.pooling module
+----------------------------------------
+
+.. automodule:: hls4ml.converters.pytorch.pooling
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.converters.pytorch.reshape module
+----------------------------------------
+
+.. automodule:: hls4ml.converters.pytorch.reshape
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

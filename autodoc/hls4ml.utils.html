@@ -38,7 +38,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev11+gabaea98a
+                0.8.0.dev12+gfdbdb99f
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -197,7 +197,7 @@ configuration tweaks.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.config.config_from_pytorch_model">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.config.</span></span><span class="sig-name descname"><span class="pre">config_from_pytorch_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">granularity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ap_fixed&lt;16,6&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_reuse_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.config_from_pytorch_model" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.config.</span></span><span class="sig-name descname"><span class="pre">config_from_pytorch_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">granularity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ap_fixed&lt;16,6&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_reuse_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs_channel_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transpose_outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.config_from_pytorch_model" title="Permalink to this definition"></a></dt>
 <dd><p>Create an HLS conversion config given the PyTorch model.</p>
 <p>This function serves as the initial step in creating the custom conversion configuration.
 Users are advised to inspect the returned object to tweak the conversion configuration.
@@ -218,6 +218,11 @@ configuration tweaks.</p>
 <li><p><strong>backend</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the backend to use</p></li>
 <li><p><strong>default_precision</strong> (<em>str</em><em>, </em><em>optional</em>) – Default precision to use. Defaults to ‘fixed&lt;16,6&gt;’.</p></li>
 <li><p><strong>default_reuse_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – Default reuse factor. Defaults to 1.</p></li>
+<li><p><strong>inputs_channel_last</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to ‘True’ if input to the model comes in format
+‘channels_last’. Defaults to ‘False’. If False, inputs will be transposed internally.</p></li>
+<li><p><strong>transpose_outputs</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to ‘False’ if the output should not be transposed from
+channels_last into channels_first data format. Defaults to ‘False’. If False, outputs needs
+to be transposed manually.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
