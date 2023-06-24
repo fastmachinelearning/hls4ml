@@ -91,6 +91,7 @@ CCS_MAIN(int argc, char *argv[])
         pr.push_back(atof(current));
         current=strtok(NULL," ");
       }
+//    std::cout << "    Input feature map size = " << in.size() << " Output predictions size = " << pr.size() << std::endl;
 
       //hls-fpga-machine-learning insert data
 
