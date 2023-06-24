@@ -1182,10 +1182,7 @@ class GarNet(Layer):
 
     def _make_input_transform_weights(self, n_propagate, n_aggregators, n_out_features, quantize=False, sublayer=''):
         # Due to linearity of the input transform, input weights and biases can be contracted away at conversion time
-
-        output_transform_kernel = self.get_attr(
-            f'Fout{sublayer}_kernel_data'
-        )  # [(n_aggregators, n_propagate), n_out_features]
+        output_transform_kernel = self.get_attr(f'Fout{sublayer}_kernel_data')  # [(n_aggregators, n_propagate), n_out_features]
         output_transform_kernel = output_transform_kernel.reshape((n_aggregators, n_propagate, n_out_features))
         if quantize:
             output_transform_kernel = self.get_attr('quantizer')(output_transform_kernel)
