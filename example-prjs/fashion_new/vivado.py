@@ -23,21 +23,47 @@ assert test_images.shape == (10000, 28, 28)
 assert train_labels.shape == (60000,)
 assert test_labels.shape == (10000,)
 
+# # Creating a smaller dataset
+# train_labels = np.tile(train_labels, 3)
+# train_labels = np.clip(train_labels, a_min=0, a_max=7)
+# train_labels = train_labels[:125440].reshape([10, 112, 112])
+# test_labels = np.tile(test_labels, 13)
+# test_labels = np.clip(test_labels, a_min=0, a_max=7)
+# test_labels = test_labels[:125440].reshape([10, 112, 112])
+
+# # Normalizing the dataset (data appears to be 8bit ints anyway so no normalization needed?)
+# train_images = train_images[:1920].astype('float32') / 1
+# test_images = test_images[:1920].astype('float32') / 1
+
+# # Reshaping the data for inputing into the model
+# train_images = train_images.reshape((10,  224, 224,3))
+# test_images = test_images.reshape((10,  224, 224,3))
+
+#Below are the changes to test for 28x28x1
+#############################################
+
 # Creating a smaller dataset
-train_labels = np.tile(train_labels, 3)
+# train_labels = np.tile(train_labels, 3)
 train_labels = np.clip(train_labels, a_min=0, a_max=7)
-train_labels = train_labels[:125440].reshape([10, 112, 112])
-test_labels = np.tile(test_labels, 13)
+train_labels = train_labels[:1960].reshape([10, 14, 14])
+# train_labels = train_labels[:10]
+
+# test_labels = np.tile(test_labels, 13)
 test_labels = np.clip(test_labels, a_min=0, a_max=7)
-test_labels = test_labels[:125440].reshape([10, 112, 112])
+test_labels = test_labels[:1960].reshape([10, 14, 14])
+# test_labels = test_labels[:10]
 
 # Normalizing the dataset (data appears to be 8bit ints anyway so no normalization needed?)
-train_images = train_images[:1920].astype('float32') / 1
-test_images = test_images[:1920].astype('float32') / 1
+train_images = train_images[:10].astype('float32') / 1
+test_images = test_images[:10].astype('float32') / 1
 
-# Reshaping the data for inputing into the model
-train_images = train_images.reshape((10,  224, 224,3))
-test_images = test_images.reshape((10,  224, 224,3))
+# # Reshaping the data for inputing into the model
+# train_images = train_images.reshape((10,  224, 224,3))
+# test_images = test_images.reshape((10,  224, 224,3))
+train_images = train_images.reshape((10, 28, 28, 1))
+test_images = test_images.reshape((10, 28, 28, 1))
+
+#####################
 
 # Write testbench data (as integers)
 print("\n============================================================================================")
@@ -48,7 +74,7 @@ np.savetxt('tb_output_predictions.dat', np.array(test_labels.reshape(test_labels
 # Defining and compiling the keras model
 def create_model():
     model = tf.keras.Sequential()
-    model.add(QConv2DBatchnorm(filters=8, kernel_size=3, padding='same', strides=2, activation='relu', input_shape=(224,224,3), 
+    model.add(QConv2DBatchnorm(filters=8, kernel_size=3, padding='same', strides=2, activation='relu', input_shape=(28,28,1), 
         kernel_quantizer=quantizers.quantized_bits(bits=8, integer=0), bias_quantizer=quantizers.quantized_bits(bits=8, integer=0)))
     #Compiling the model
     model.compile(loss='sparse_categorical_crossentropy',
