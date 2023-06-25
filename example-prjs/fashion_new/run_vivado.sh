@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# This script runs the Catapult flows to generate the HLS.
+# This script runs the Vivado flows to generate the HLS.
 
 VENV=../../../../venv
 
@@ -18,20 +18,22 @@ echo "Activating Virtual Environment..."
 #    bash
 source $VENV/bin/activate
 
-rm -rf ./my-Catapult-test*
+rm -rf ./my-Vivado-test*
+
+mkdir -p tb_data
 
 # to run catapult+vivado_rtl
-sed -e 's/Vivado/Catapult/g' sample_config.py >catapult.py
+sed -e 's/Vivado/Catapult/g' vivado.py >catapult.py
 # to only run catapult
-# sed -e 's/Vivado/Catapult/g' sample_config.py | sed -e 's/vsynth=True/vsynth=False/g' >catapult.py
+# sed -e 's/Vivado/Catapult/g' vivado.py | sed -e 's/vsynth=True/vsynth=False/g' >catapult.py
 
-# actually run HLS4ML + Catapult (+ optional vivado RTL)
-python3 catapult.py
+# actually run HLS4ML + Vivado HLS
+python3 vivado.py
 
 # run just the C++ execution
 echo ""
 echo "====================================================="
 echo "====================================================="
 echo "C++ EXECUTION"
-pushd my-Catapult-test; rm -f a.out; $MGC_HOME/bin/g++ -std=c++17 -I. -DWEIGHTS_DIR=\"firmware/weights\" -Ifirmware -I$MGC_HOME/shared/include firmware/myproject.cpp myproject_test.cpp; a.out; popd
+pushd my-Vivado-test; rm -f a.out; $MGC_HOME/bin/g++ -g -std=c++11 -I. -DWEIGHTS_DIR=\"firmware/weights\" -Ifirmware -Ifirmware/ap_types -I$MGC_HOME/shared/include firmware/myproject.cpp myproject_test.cpp; a.out; popd
 
