@@ -94,7 +94,7 @@ print("Configuring HLS4ML")
 config = {}
 config['Backend'] = 'Vivado'
 config['ClockPeriod'] = 100
-config['HLSConfig'] = {'Model': {'Precision': 'ac_fixed<16,8>', 'ReuseFactor': 1}}
+config['HLSConfig'] = {'Model': {'Precision': 'ap_fixed<16,8>', 'ReuseFactor': 1}}
 config['IOType'] = 'io_stream'
 config['KerasH5'] = 'FashionMNIST_weights.h5'
 config['KerasJson'] = 'fashionmnist_model2.json'
