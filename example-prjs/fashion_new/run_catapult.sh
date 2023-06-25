@@ -24,7 +24,7 @@ rm -rf ./my-Catapult-test*
 mkdir -p tb_data
 
 # to run catapult+vivado_rtl
-sed -e 's/Vivado/Catapult/g' vivado.py >catapult.py
+sed -e 's/Vivado/Catapult/g' vivado.py | sed -e 's/ap_fixed/ac_fixed/' >catapult.py
 # to only run catapult
 # sed -e 's/Vivado/Catapult/g' vivado.py | sed -e 's/vsynth=True/vsynth=False/g' >catapult.py
 
