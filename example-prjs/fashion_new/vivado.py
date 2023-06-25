@@ -6,11 +6,22 @@ from tensorflow import keras
 from tensorflow.keras.models import model_from_json
 import numpy as np
 from qkeras import *
+import json
 
-print(hls4ml.__version__)
+print("\n============================================================================================")
+print("HLS4ML Version: ",hls4ml.__version__)
 
 # Load test data
+print("\n============================================================================================")
+print("Loading test datasets for FASHION MNIST")
 (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.fashion_mnist.load_data()
+
+print("\n============================================================================================")
+print("Loading test datasets for FASHION MNIST")
+assert train_images.shape == (60000, 28, 28)
+assert test_images.shape == (10000, 28, 28)
+assert train_labels.shape == (60000,)
+assert test_labels.shape == (10000,)
 
 # Creating a smaller dataset
 train_labels = np.tile(train_labels, 3)
@@ -29,6 +40,8 @@ train_images = train_images.reshape((10,  224, 224,3))
 test_images = test_images.reshape((10,  224, 224,3))
 
 # Write testbench data (as integers)
+print("\n============================================================================================")
+print("Writing datasets as integers to plaintext files for C++ testbench")
 np.savetxt('tb_input_features.dat', np.array(test_images.reshape(test_images.shape[0], -1), dtype='int32'), fmt='%d')
 np.savetxt('tb_output_predictions.dat', np.array(test_labels.reshape(test_labels.shape[0], -1), dtype='int32'), fmt='%d')
 
@@ -44,6 +57,8 @@ def create_model():
     return model
 
 # Create a basic model instance
+print("\n============================================================================================")
+print("Creating keras model")
 model = create_model()
 model.summary()
 
@@ -57,20 +72,25 @@ with open('fashionmnist_model.json', 'w') as json_file:
     json_file.write(json_model)
 
 # Saving the weights of the model
+print("\n============================================================================================")
+print("Writing weights file")
 model.save_weights('FashionMNIST_weights.h5')
 
 # Model loss and accuracy
 loss,acc = model.evaluate(test_images,  test_labels, verbose=2)
 model.save('FashionMNIST.h5')
 
-import json
 # Write Json
+print("\n============================================================================================")
+print("Writing json file")
 with open('fashionmnist_model.json', 'r') as f:
   x = json.loads(f.read())
 # Rewrite pretty-printed
 with open('fashionmnist_model2.json', 'w') as f:
   f.write(json.dumps(x, indent=2))
 
+print("\n============================================================================================")
+print("Configuring HLS4ML")
 config = {}
 config['Backend'] = 'Vivado'
 config['ClockPeriod'] = 100
@@ -85,6 +105,11 @@ config['OutputDir'] = 'my-Vivado-test'
 config['InputData'] = 'tb_input_features.dat'
 config['OutputPredictions'] = 'tb_output_predictions.dat'
 
+print("\n============================================================================================")
+print("HLS4ML converting keras model to HLS C++")
 hls_model = hls4ml.converters.keras_to_hls(config)
+
+print("\n============================================================================================")
+print("Building HLS C++ model")
 hls_model.build()
 
