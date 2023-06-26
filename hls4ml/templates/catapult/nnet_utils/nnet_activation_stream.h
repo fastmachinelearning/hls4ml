@@ -722,7 +722,7 @@ void elu(ac_channel<data_T> &data, typename data_T::value_type alpha, ac_channel
                 out_data[j] = datareg;
             } 
             else {
-                int index = datareg*CONFIG_T::table_size/-8;
+                int index = (int)datareg.to_double()*(int)CONFIG_T::table_size/-8;
                 if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
                 out_data[j] = alpha * elu_table[index];
             }
