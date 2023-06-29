@@ -7,7 +7,7 @@ VENV=$HOME/venv
 MGC_HOME=/wv/hlsb/CATAPULT/TOT/CURRENT/aol/Mgc_home
 export MGC_HOME
 
-export PATH=/wv/hlstools/python/python37/bin:$PATH:$XILINX_VIVADO/bin:$MGC_HOME/bin
+export PATH=/wv/hlstools/python/python37/bin:$PATH:$XILINX_VIVADO/bin:$MGC_HOME/bin:/wv/hlstools/vivado/ixl/Vivado_HLS/2017.1/bin
 export LD_LIBRARY_PATH=/wv/hlstools/python/python37/lib:$XILINX_VIVADO/lib/lnx64.o:$MGC_HOME/lib
 export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 
@@ -28,7 +28,7 @@ sed -e 's/Vivado/Catapult/g' vivado.py >catapult.py
 # sed -e 's/Vivado/Catapult/g' vivado.py | sed -e 's/vsynth=True/vsynth=False/g' >catapult.py
 
 # actually run HLS4ML + Vivado HLS
-python3 vivado.py
+python vivado.py
 
 # run just the C++ execution
 echo ""
