@@ -51,12 +51,12 @@ def parse_garnet_layer(keras_layer, input_names, input_shapes, data_reader):
                 layer['n_in_features'].append(layer['n_out_features'][il - 1])
 
             weights_source = [
-            f'FLR{il}_kernel',
-            f'FLR{il}_bias',
-            f'S{il}_kernel',
-            f'S{il}_bias',
-            f'Fout{il}_kernel',
-            f'Fout{il}_bias',
+                f'FLR{il}_kernel',
+                f'FLR{il}_bias',
+                f'S{il}_kernel',
+                f'S{il}_bias',
+                f'Fout{il}_kernel',
+                f'Fout{il}_bias',
             ]
             for weight in weights_source:
                 layer[weight + '_data'] = get_weights_data(data_reader, layer['name'], weight)

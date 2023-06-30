@@ -314,8 +314,7 @@ class GarNetStack(GarNet):
                 )
 
                 if self._output_activation is None or self._output_activation == "linear":
-                    output_activation_transform = (QActivation("quantized_bits(%i, %i)"
-                                                   % (self._total_bits, self._int_bits)))
+                    output_activation_transform = QActivation("quantized_bits(%i, %i)" % (self._total_bits, self._int_bits))
                 else:
                     output_activation_transform = QActivation(
                         "quantized_%s(%i, %i)" % (self._output_activation, self._total_bits, self._int_bits)
@@ -327,7 +326,9 @@ class GarNetStack(GarNet):
 
             aggregator_distance = NamedDense(a, name=('S%d' % it))
 
-            self._transform_layers.append((input_feature_transform, aggregator_distance, output_feature_transform, output_activation_transform))
+            self._transform_layers.append(
+                (input_feature_transform, aggregator_distance, output_feature_transform, output_activation_transform)
+            )
 
         self._sublayers = sum((list(layers) for layers in self._transform_layers), [])
 
@@ -338,9 +339,11 @@ class GarNetStack(GarNet):
             if self._simplified:
                 act_transform.build(out_transform.build(data_shape[:2] + (d_compute.units * in_transform.units,)))
             else:
-                act_transform.build(out_transform.build(
-                    data_shape[:2] + (data_shape[2] + d_compute.units * in_transform.units + d_compute.units,)
-                ))
+                act_transform.build(
+                    out_transform.build(
+                        data_shape[:2] + (data_shape[2] + d_compute.units * in_transform.units + d_compute.units,)
+                    )
+                )
 
             data_shape = data_shape[:2] + (out_transform.units,)
 

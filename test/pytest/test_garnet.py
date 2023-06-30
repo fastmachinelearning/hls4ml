@@ -1,7 +1,3 @@
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = "1"
-os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
-
 from pathlib import Path
 
 import numpy as np
@@ -52,6 +48,7 @@ def garnet_models():
     hls_model.compile()
     return model, hls_model
 
+
 @pytest.fixture(scope='module')
 def garnet_stack_models():
     x = Input(shape=(vmax, feat))
@@ -64,9 +61,9 @@ def garnet_stack_models():
         simplified=True,
         collapse='mean',
         input_format='xn',
-        output_activation=None, # added output_activation_transform back in contrib.garnet.py
+        output_activation=None,  # added output_activation_transform back in contrib.garnet.py
         name='gar_1',
-        quantize_transforms=None, # this should be false, not None...fix in contrib.garnet.py
+        quantize_transforms=None,  # this should be false, not None...fix in contrib.garnet.py
     )(inputs)
     model = Model(inputs=inputs, outputs=outputs)
     model.summary()
@@ -76,7 +73,7 @@ def garnet_stack_models():
     config['Model']['ReuseFactor'] = 1
     config['Model']['Strategy'] = 'Latency'
     config['Model']['Precision'] = 'ap_fixed<32,6>'
-
+    # config should now have precisions specified for ['LayerName']['gar_1']['Precision']['norm', 'aggr', etc.]
     cfg = hls4ml.converters.create_config(output_dir=str(test_root_path / 'hls4mlprj_garnet'), part='xc7z020clg400-1')
     cfg['HLSConfig'] = config
     cfg['KerasModel'] = model
@@ -95,7 +92,8 @@ def test_accuracy(garnet_models, batch):
     y_hls = hls_model.predict(x_hls).reshape(y.shape)
 
     np.testing.assert_allclose(y_hls, y, rtol=0, atol=0.1)
-    
+
+
 @pytest.mark.parametrize('batch', [1, 3])
 def test_accuracy_stack(garnet_stack_models, batch):
     model, hls_model = garnet_stack_models
