@@ -795,8 +795,8 @@ void selu(ac_channel<data_T> &data, ac_channel<res_T> &res) {
             if (datareg >= 0) {
                 out_data[j] = (typename data_T::value_type) 1.0507009873554804934193349852946 * datareg;
             } else {
-                int index = datareg*CONFIG_T::table_size/-8;
-                if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+                int index = (int)datareg.to_double()*(int)CONFIG_T::table_size/-8;
+                if (index > CONFIG_T::table_size-1) index = (int)CONFIG_T::table_size-1;
                 out_data[j] = selu_table[index];
             }
         }
