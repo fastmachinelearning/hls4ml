@@ -133,7 +133,7 @@ def config_from_keras_model(
 
     reader = hls4ml.converters.KerasModelReader(model)
 
-    layer_list, _, _ = hls4ml.converters.parse_keras_model(model_arch, reader)
+    layer_list, _, _, _ = hls4ml.converters.parse_keras_model(model_arch, reader)
 
     def make_layer_config(layer):
         cls_name = layer['class_name']
@@ -242,7 +242,13 @@ def config_from_keras_model(
 
 
 def config_from_pytorch_model(
-    model, granularity='model', backend=None, default_precision='ap_fixed<16,6>', default_reuse_factor=1
+    model,
+    granularity='model',
+    backend=None,
+    default_precision='ap_fixed<16,6>',
+    default_reuse_factor=1,
+    inputs_channel_last=False,
+    transpose_outputs=True,
 ):
     """Create an HLS conversion config given the PyTorch model.
 
@@ -264,6 +270,11 @@ def config_from_pytorch_model(
         backend(str, optional): Name of the backend to use
         default_precision (str, optional): Default precision to use. Defaults to 'fixed<16,6>'.
         default_reuse_factor (int, optional): Default reuse factor. Defaults to 1.
+        inputs_channel_last (bool, optional): Set to 'True' if input to the model comes in format
+            'channels_last'. Defaults to 'False'. If False, inputs will be transposed internally.
+        transpose_outputs (bool, optional): Set to 'False' if the output should not be transposed from
+            channels_last into channels_first data format. Defaults to 'False'. If False, outputs needs
+            to be transposed manually.
 
     Raises:
         Exception: If PyTorch model has layers not supported by hls4ml.
@@ -277,6 +288,8 @@ def config_from_pytorch_model(
     model_config = {}
     model_config['Precision'] = default_precision
     model_config['ReuseFactor'] = default_reuse_factor
+    model_config['InputsChannelLast'] = inputs_channel_last
+    model_config['TransposeOutputs'] = transpose_outputs
     model_config['Strategy'] = 'Latency'
 
     config['Model'] = model_config

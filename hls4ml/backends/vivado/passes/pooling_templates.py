@@ -14,6 +14,7 @@ pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
 
     static const unsigned pad_left = {pad_left};
     static const unsigned pad_right = {pad_right};
+    static const bool count_pad = {count_pad};
     static const unsigned stride_width = {stride_width};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
@@ -40,6 +41,7 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
     static const unsigned pad_bottom = {pad_bottom};
     static const unsigned pad_left = {pad_left};
     static const unsigned pad_right = {pad_right};
+    static const bool count_pad = {count_pad};
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     static const nnet::conv_implementation implementation = nnet::conv_implementation::{implementation};
     static const unsigned reuse_factor = {reuse};

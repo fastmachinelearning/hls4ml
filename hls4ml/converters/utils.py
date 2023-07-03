@@ -132,3 +132,114 @@ def compute_padding_2d(pad_type, in_height, in_width, stride_height, stride_widt
         raise Exception(f'Unknown padding type: {pad_type}')
 
     return (out_height, out_width, pad_top, pad_bottom, pad_left, pad_right)
+
+
+def compute_padding_1d_pytorch(pad_type, in_size, stride, filt_size, dilation):
+    if isinstance(pad_type, str):
+        if pad_type.lower() == 'same':
+            n_out = int(
+                math.floor((float(in_size) + 2 - float(dilation) * (float(filt_size) - 1) - 1) / float(stride) + 1)
+            )  # from https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
+            if in_size % stride == 0:
+                pad_along_size = max(filt_size - stride, 0)
+            else:
+                pad_along_size = max(filt_size - (in_size % stride), 0)
+            pad_right = pad_along_size // 2
+            pad_left = pad_along_size - pad_right
+        elif pad_type.lower() == 'valid':
+            n_out = int(
+                math.floor((float(in_size) - float(dilation) * (float(filt_size) - 1) - 1) / float(stride) + 1)
+            )  # from https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
+            pad_left = 0
+            pad_right = 0
+        else:
+            raise Exception(f'Unknown padding type: {pad_type}')
+    else:
+        if pad_type > 0:
+            n_out = int(
+                math.floor(
+                    (float(in_size) + 2 * pad_type - float(dilation) * (float(filt_size) - 1) - 1) / float(stride) + 1
+                )
+            )  # from https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
+            pad_right = pad_type
+            pad_left = pad_type
+        else:
+            n_out = int(
+                math.floor((float(in_size) - float(dilation) * (float(filt_size) - 1) - 1) / float(stride) + 1)
+            )  # from https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
+            pad_left = 0
+            pad_right = 0
+
+    return (n_out, pad_left, pad_right)
+
+
+def compute_padding_2d_pytorch(
+    pad_type, in_height, in_width, stride_height, stride_width, filt_height, filt_width, dilation_height, dilation_width
+):
+    if isinstance(pad_type, str):
+        if pad_type.lower() == 'same':
+            # Height
+            out_height = int(
+                math.floor(float(in_height + 2 - dilation_height * (filt_height - 1) - 1) / float(stride_height) + 1)
+            )
+            if in_height % stride_height == 0:
+                pad_along_height = max(filt_height - stride_height, 0)
+            else:
+                pad_along_height = max(filt_height - (in_height % stride_height), 0)
+            pad_bottom = pad_along_height // 2
+            pad_top = pad_along_height - pad_bottom
+            pad_top = 1
+            # Width
+            out_width = int(
+                math.floor(float(in_width + 2 - dilation_width * (filt_width - 1) - 1) / float(stride_width) + 1)
+            )
+            if in_width % stride_width == 0:
+                pad_along_width = max(filt_width - stride_width, 0)
+            else:
+                pad_along_width = max(filt_width - (in_width % stride_width), 0)
+            pad_right = pad_along_width // 2
+            pad_left = pad_along_width - pad_right
+        elif pad_type.lower() == 'valid':
+            out_height = int(
+                math.floor(float(in_height - dilation_height * (filt_height - 1) - 1) / float(stride_height) + 1)
+            )
+            out_width = int(math.floor(float(in_width - dilation_width * (filt_width - 1) - 1) / float(stride_width) + 1))
+
+            pad_top = 0
+            pad_bottom = 0
+            pad_left = 0
+            pad_right = 0
+        else:
+            raise Exception(f'Unknown padding type: {pad_type}')
+
+    else:
+        if pad_type[0] == 0 and pad_type[1] == 0:
+            out_height = int(
+                math.floor(float(in_height - dilation_height * (filt_height - 1) - 1) / float(stride_height) + 1)
+            )
+            out_width = int(math.floor(float(in_width - dilation_width * (filt_width - 1) - 1) / float(stride_width) + 1))
+
+            pad_top = 0
+            pad_bottom = 0
+            pad_left = 0
+            pad_right = 0
+
+        else:
+            # Height
+            pad_height = pad_type[0]
+            pad_width = pad_type[1]
+            out_height = int(
+                math.floor(
+                    float(in_height + 2 * pad_height - dilation_height * (filt_height - 1) - 1) / float(stride_height) + 1
+                )
+            )
+            pad_bottom = pad_height
+            pad_top = pad_height
+            # Width
+            out_width = int(
+                math.floor(float(in_width + 2 * pad_width - dilation_width * (filt_width - 1) - 1) / float(stride_width) + 1)
+            )
+            pad_right = pad_width
+            pad_left = pad_width
+
+    return (out_height, out_width, pad_top, pad_bottom, pad_left, pad_right)

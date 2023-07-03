@@ -76,17 +76,15 @@ template <class x_T, class w_T> class mult : public Product {
 
 template <class x_T, class w_T> class weight_exponential : public Product {
   public:
-    // Construct the return type from the multiplication equivalent to the largest shifts
-    // ap_int<pow2(decltype(w_T::weight)::width-1)-1> is the type if the multiplicand equivalent to the largest lshift <<
-    // ap_fixed<pow2(decltype(w_T::weight)::width-1)-1,0> is the type of the multiplicand equivalent to the largest rshift >>
-    using r_T = decltype(x_T(0) * (ap_int<pow2(decltype(w_T::weight)::width - 1) - 1>(1) +
-                                   ap_fixed<pow2(decltype(w_T::weight)::width - 1) - 1, 0>(1)));
+    using r_T = ap_fixed<2 * (decltype(w_T::weight)::width + x_T::width), (decltype(w_T::weight)::width + x_T::width)>;
     static r_T product(x_T a, w_T w) {
         // Shift product for exponential weights
         #pragma HLS INLINE
-        // shift by the exponent. Negative weights shift right
+
+        // Shift by the exponent. Negative weights shift right
         r_T y = static_cast<r_T>(a) << w.weight;
-        // negate or not depending on weight sign
+
+        // Negate or not depending on weight sign
         return w.sign == 1 ? y : static_cast<r_T>(-y);
     }
 };
