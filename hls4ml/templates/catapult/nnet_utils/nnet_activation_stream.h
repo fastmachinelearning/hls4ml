@@ -33,6 +33,10 @@
 #include <ac_math/ac_tanh_pwl.h>
 #include <ac_math/ac_sigmoid_pwl.h>
 #include <ac_math/ac_pow_pwl.h>
+#include <ac_math/ac_elu_pwl.h>
+#include <ac_math/ac_selu_pwl.h>
+#include <ac_math/ac_softplus_pwl.h>
+#include <ac_math/ac_softsign_pwl.h>
 #include "nnet_common.h"
 #include "nnet_types.h"
 #include "nnet_stream.h"
@@ -631,7 +635,15 @@ void softplus(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 template<class data_T, class res_T, typename CONFIG_T>
 void softplus(ac_channel<data_T> &data, ac_channel<res_T> &res) 
 {
-assert("softplus stream not implemented for AC Math");
+    SoftplusActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        data_T in_data = data.read();
+        res_T out_data;
+        #pragma hls_unroll
+        SoftplusPackLoop: for (int j = 0; j < res_T::size; j++) {
+            ac_math::ac_softplus_pwl(in_data[j],out_data[j]);
+        }
+        res.write(out_data);
+    }
 }
 
 #endif
@@ -684,7 +696,15 @@ void softsign(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 template<class data_T, class res_T, typename CONFIG_T>
 void softsign(ac_channel<data_T> &data, ac_channel<res_T> &res) 
 {
-assert("softsign stream not implemented for AC Math");
+    SoftsignActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        data_T in_data = data.read();
+        res_T out_data;
+        #pragma hls_unroll
+        SoftsignPackLoop: for (int j = 0; j < res_T::size; j++) {
+            ac_math::ac_softsign_pwl(in_data[j],out_data[j]);
+        }
+        res.write(out_data);
+    }
 }
 
 #endif
@@ -694,11 +714,18 @@ assert("softsign stream not implemented for AC Math");
 //       ELU Activation
 // *************************************************
 
+#ifndef USE_AC_MATH
+
 template<class data_T, class res_T, typename CONFIG_T>
 void elu(ac_channel<data_T> &data, typename data_T::value_type alpha, ac_channel<res_T> &res) {
     // Initialize the lookup table
+#ifdef __HLS_SYN__
+    bool initialized = false;
+    typename CONFIG_T::table_t elu_table[CONFIG_T::table_size];
+#else
     static bool initialized = false;
     static typename CONFIG_T::table_t elu_table[CONFIG_T::table_size];
+#endif
 
     if (!initialized) {
         init_elu_table<CONFIG_T, CONFIG_T::table_size>(elu_table);
@@ -731,32 +758,23 @@ void elu(ac_channel<data_T> &data, typename data_T::value_type alpha, ac_channel
     }
 }
 
-template<class data_T, class res_T, typename CONFIG_T>
-void elu(ac_channel<data_T> &data, ac_channel<res_T> &res)
-{
-//assert("elu stream not implemented for AC Math");
-    #pragma hls_pipeline_init_interval 1
-    EluActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+#else 
 
+template<class data_T, class res_T, typename CONFIG_T>
+void elu(ac_channel<data_T> &data, typename data_T::value_type alpha, ac_channel<res_T> &res)
+{
+    EluActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         data_T in_data = data.read();
         res_T out_data;
-        typedef class res_T::value_type out_T;
-        typedef ac_fixed<out_T::width, out_T::i_width, false, out_T::q_mode, out_T::o_mode> out_unsigned_T;
-        out_unsigned_T x;
         #pragma hls_unroll
         EluPackLoop: for (int j = 0; j < res_T::size; j++) {
-            //int data_round = in_data[j]*CONFIG_T::table_size/8;
-            if (in_data[j] > 0) {
-                out_data[j] = in_data[j];
-            }
-            else {
-                x = ac_math::ac_exp_pwl<out_unsigned_T>(in_data[j]);
-                out_data[j] = x - ac_fixed<1, 1, false>(1.0);
-            }
+            ac_math::ac_elu_pwl(in_data[j],out_data[j],alpha);
         }
         res.write(out_data);
     }
 }
+
+#endif
 
 // *************************************************
 //       SELU Activation
@@ -809,7 +827,15 @@ void selu(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 template<class data_T, class res_T, typename CONFIG_T>
 void selu(ac_channel<data_T> &data, ac_channel<res_T> &res) 
 {
-assert("selu stream not implemented for AC Math");
+    SeluActLoop: for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
+        data_T in_data = data.read();
+        res_T out_data;
+        #pragma hls_unroll
+        SeluPackLoop: for (int j = 0; j < res_T::size; j++) {
+            ac_math::ac_selu_pwl(in_data[j],out_data[j]);
+        }
+        res.write(out_data);
+    }
 }
 
 #endif
