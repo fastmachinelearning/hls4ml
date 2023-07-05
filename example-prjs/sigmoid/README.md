@@ -1,4 +1,4 @@
-This is small conv2d 1 layer applying a selu activation function example. To run it:
+This is small conv2d 1 layer applying a sigmoid activation function example. To run it:
 1. Run the run_catapult.sh script.
 2. Remove "#define USE_AC_MATH" in nnet_activation.h.
 3. Replace the sigmoid_test.cpp in the my-Catapult-test with the sigmoid_test.cpp a level up (if you would like the testbench to be self-checking).
