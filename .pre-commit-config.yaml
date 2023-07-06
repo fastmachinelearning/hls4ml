@@ -30,13 +30,13 @@ repos:
     args: ["--profile", "black", --line-length=125]
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.6.0
+  rev: v3.8.0
   hooks:
   - id: pyupgrade
     args: ["--py36-plus"]
 
 - repo: https://github.com/asottile/setup-cfg-fmt
-  rev: v2.3.0
+  rev: v2.4.0
   hooks:
   - id: setup-cfg-fmt
 

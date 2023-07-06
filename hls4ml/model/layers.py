@@ -626,6 +626,7 @@ class Pooling1D(Layer):
         Attribute('stride_width'),
         Attribute('pad_left'),
         Attribute('pad_right'),
+        Attribute('count_pad', value_type=bool, default=False),
         ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False),
     ]
 
@@ -655,6 +656,7 @@ class Pooling2D(Layer):
         Attribute('pad_bottom'),
         Attribute('pad_left'),
         Attribute('pad_right'),
+        Attribute('count_pad', value_type=bool, default=False),
         ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False),
     ]
 
@@ -845,11 +847,11 @@ class Merge(Layer):
         inp1 = self.get_input_variable(self.inputs[0])
         inp2 = self.get_input_variable(self.inputs[1])
         if np.prod(inp2.shape) > np.prod(inp1.shape):
-            shape = inp2.shape
-            dims = inp2.dim_names
+            shape = inp2.shape.copy()
+            dims = inp2.dim_names.copy()
         else:
-            shape = inp1.shape
-            dims = inp1.dim_names
+            shape = inp1.shape.copy()
+            dims = inp1.dim_names.copy()
         self.add_output_variable(shape, dims)
 
 
@@ -1271,6 +1273,24 @@ class GarNetStack(GarNet):
         self._output_features = self.attributes['n_out_features'][-1]
 
 
+class LayerGroup(Layer):
+    _expected_attributes = [
+        Attribute('layer_list', value_type=list),
+        Attribute('input_layers', value_type=list),
+        Attribute('output_layers', value_type=list),
+        Attribute('data_reader', value_type=object),
+        Attribute('output_shape', value_type=list),
+    ]
+
+    def initialize(self):
+        shape = self.get_attr('output_shape')
+        if shape[0] is None:
+            shape.pop(0)
+        dims = [f'N_INPUT_{self.index}_{i+1}' for i in range(len(shape))]
+
+        self.add_output_variable(shape, dims)
+
+
 layer_map = {
     'Input': Input,
     'InputLayer': Input,
@@ -1322,6 +1342,7 @@ layer_map = {
     'GRU': GRU,
     'GarNet': GarNet,
     'GarNetStack': GarNetStack,
+    'LayerGroup': LayerGroup,
     # TensorFlow-specific layers:
     'BiasAdd': BiasAdd,
 }
