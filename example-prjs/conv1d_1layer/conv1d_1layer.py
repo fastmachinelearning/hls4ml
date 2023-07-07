@@ -20,7 +20,7 @@ def random_kernel(shape=(3,3,1), dtype=None):
 
 # Create model with one conv2d layer for small example
 def create_model():
-	input_layer = tf.keras.Input(shape=(5,5), batch_size=1)
+	input_layer = tf.keras.Input(shape=(5,5))
 	conv1 = tf.keras.layers.Conv1D(filters=1,
                kernel_size=3,
                strides=1,
