@@ -24,6 +24,8 @@ def create_model():
 	conv1 = tf.keras.layers.Conv1D(filters=1,
                kernel_size=3,
                strides=1,
+               kernel_initializer="ones",
+               bias_initializer="zeros",
                padding='valid')(input_layer)
 	model = tf.keras.models.Model(inputs=input_layer, outputs=conv1)
 			
@@ -46,11 +48,11 @@ if __name__ == '__main__':
 
     # Image Matrix
     image_mat = np.array([
-	[ [1], [2], [3], [4], [5] ],
-	[ [6], [7], [8], [9], [10] ],
-	[ [11], [12], [13], [14], [15] ],
-        [ [16], [17], [18], [19], [20] ],
-        [ [21], [22], [23], [24], [25] ]
+	[ [1], [2], [1], [2], [1] ],
+	[ [2], [1], [2], [1], [2] ],
+	[ [1], [2], [1], [2], [1] ],
+        [ [2], [1], [2], [1], [2] ],
+        [ [1], [2], [1], [2], [1] ]
     ])
 
     image_mat = image_mat.reshape((1, 5, 5, 1))
@@ -63,11 +65,11 @@ if __name__ == '__main__':
     print(prediction)
 
     image_mat2 = np.array([
-	[ [1], [2], [3], [4], [5] ],
-	[ [5], [1], [2], [3], [4] ],
-	[ [4], [5], [1], [2], [3] ],
-        [ [3], [4], [5], [1], [2] ],
-        [ [2], [3], [4], [5], [1] ]
+	[ [0], [1], [2], [0], [1] ],
+	[ [2], [0], [1], [2], [0] ],
+	[ [1], [2], [0], [1], [2] ],
+        [ [0], [1], [2], [0], [1] ],
+        [ [2], [0], [1], [2], [0] ]
     ])
 
     image_mat2 = image_mat2.reshape((1, 5, 5, 1))
