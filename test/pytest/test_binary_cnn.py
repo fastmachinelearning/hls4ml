@@ -58,7 +58,7 @@ def test_model2(backend, io_type, strategy):
 
     model2.summary()
 
-    hls_config = hls4ml.utils.config_from_keras_model(model2, granularity="name")
+    hls_config = hls4ml.utils.config_from_keras_model(model2, granularity="name", default_precision='fixed<32,16>')
     hls_config["Model"]["Strategy"] = strategy
 
     # hls_config["LayerName"]["q_dense_7_softmax"]["Implementation"] = "legacy"
