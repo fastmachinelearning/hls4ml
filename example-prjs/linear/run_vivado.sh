@@ -2,7 +2,7 @@
 
 # This script runs the Vivado flows to generate the HLS.
 
-VENV=$HOME/venv
+VENV=/wv/scratch-baimar9c/venv
 
 MGC_HOME=/wv/hlsb/CATAPULT/TOT/CURRENT/aol/Mgc_home
 export MGC_HOME
@@ -35,5 +35,5 @@ echo ""
 echo "====================================================="
 echo "====================================================="
 echo "C++ EXECUTION"
-pushd my-Vivado-test; rm -f a.out; $MGC_HOME/bin/g++ -g -std=c++11 -I. -DWEIGHTS_DIR=\"firmware/weights\" -Ifirmware -Ifirmware/ap_types -I$MGC_HOME/shared/include firmware/myproject.cpp myproject_test.cpp; a.out; popd
+pushd my-Vivado-test; rm -f a.out; $MGC_HOME/bin/g++ -g -std=c++11 -I. -DWEIGHTS_DIR=\"firmware/weights\" -Ifirmware -Ifirmware/ap_types -I$MGC_HOME/shared/include firmware/linear.cpp linear_test.cpp; a.out; popd
 
