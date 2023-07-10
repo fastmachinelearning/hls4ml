@@ -1,0 +1,15 @@
+Backend: Catapult 
+KerasJson: conv1d_1layer.json
+KerasH5: conv1d_1layer_weights.h5
+OutputDir: my-Catapult-test
+ProjectName: conv1d_1layer
+XilinxPart: xcku115-flvb2104-2-i
+Part: xcku115-flvb2104-2-i
+ClockPeriod: 5
+
+IOType : io_parallel
+HLSConfig:
+  Model:
+    Precision: ap_fixed<16, 6>
+    ReuseFactor: 1
+    Strategy: Latency
