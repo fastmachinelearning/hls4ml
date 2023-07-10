@@ -496,7 +496,7 @@ void tanh(ac_channel<data_T> &data, ac_channel<res_T> &res)
         res_T out_data;
         #pragma hls_unroll
         TanHPackLoop: for (int j = 0; j < res_T::size; j++) {
-            int data_round = in_data[j]*CONFIG_T::table_size/8;
+            //int data_round = in_data[j]*CONFIG_T::table_size/8;
             ac_math::ac_tanh_pwl(in_data[j],out_data[j]);
         }
         res.write(out_data);
