@@ -333,7 +333,7 @@ class Input(Layer):
     def initialize(self):
         shape = self.attributes['input_shape']
         if shape[0] is None:
-            shape = shape[1:]
+            raise RuntimeError(f"Unexpectedly have a None in {shape=} of Input layer")
         dims = [f'N_INPUT_{i}_{self.index}' for i in range(1, len(shape) + 1)]
         if self.index == 1:
             default_type_name = 'input_t'
@@ -344,6 +344,41 @@ class Input(Layer):
         self.add_output_variable(shape, dims, var_name=self.name, type_name=type_name, precision=precision)
 
 
+class Constant(Layer):
+    _expected_attributes = [
+        Attribute('value', value_type=np.ndarray),
+    ]
+
+    def initialize(self):
+        value = self.attributes['value']
+        self.value = value  # note, this is unquantized; Only here for easier access
+        shape = value.shape
+        if not shape:
+            shape = (1,)
+            self.value = np.array([self.value])
+        dims = [f'{self.name}_{i}' for i in range(len(shape))]
+        self.add_output_variable(shape, dims, var_name=self.name, precision=self.get_attr("precision"))
+
+
+class Quant(Layer):  # The QONNX quantization layer
+    """
+    This is a QONNX quantization layer. Optimizations should convert it
+    before HLS is produced.
+    """
+
+    _expected_attributes = [
+        Attribute('narrow', value_type=bool),
+        Attribute('rounding_mode', value_type=str),
+        Attribute('signed', value_type=bool),
+    ]
+
+    def initialize(self):
+        inp = self.get_input_variable(self.inputs[0])
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_output_variable(shape, dims)
+
+
 class Reshape(Layer):
     _expected_attributes = [
         Attribute('target_shape', value_type=typing.Sequence),
@@ -351,19 +386,20 @@ class Reshape(Layer):
 
     def initialize(self):
         input_shape = self.get_input_variable(self.inputs[0]).shape
-        target_shape = self.get_attr('target_shape')
+        target_shape = self.get_attr('target_shape')  # this should not have a batch dimension
         if target_shape is None:
             # need to get it from the input
             shape_node = self.get_input_node(self.inputs[1])
             # for QONNX, remove batch dimension
+            # (onnx cleaning should have removed reshape dimension)
             if shape_node:
                 target_shape = shape_node.value[1:]
             else:
                 raise RuntimeError("Reshape for ONNX requires the target shape to be a second input.")
 
-        # remove Nones -- is this ever triggered?
+        # nones should not exist here
         if target_shape[0] is None:
-            target_shape = target_shape[1:]
+            raise RuntimeError(f"Unexpectedly have a None in {target_shape=}")
 
         # take care of -1 shapes
         shape = self._infer_output_shape(input_shape, target_shape)
@@ -395,7 +431,7 @@ class Dense(Layer):
     ]
 
     def initialize(self):
-        shape = self.get_input_variable().shape[:]
+        shape = list(self.get_input_variable().shape)
         shape[-1] = self.attributes['n_out']
         if len(shape) > 1:
             dims = [f'N_LAYER_{i}_{self.index}' for i in range(1, len(shape) + 1)]
@@ -404,6 +440,27 @@ class Dense(Layer):
         self.add_output_variable(shape, dims)
         self.add_weights(quantizer=self.get_attr('weight_quantizer'), compression=self.model.config.get_compression(self))
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
+
+class Conv(Layer):
+    """
+    This is for the ONNX Conv node. Currently, it is only supported as an intermediate
+    form that gets converted to an explicit ConvXD.
+
+    Note:  these are always channels-last.
+    """
+
+    def initialize(self):
+        # use negative indexing because it is not clear if batch dimension is always stripped
+        if self.attributes['n_dim'] == 1:
+            # this is 1D convolution
+            shape = [self.attributes['out_width'], self.attributes['n_filt']]
+            dims = [f'N_OUTPUTS_{self.index}', f'N_FILT_{self.index}']
+        else:
+            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
+            dims = [f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}', f'N_FILT_{self.index}']
+
+        self.add_output_variable(shape, dims)
 
 
 class Conv1D(Layer):
@@ -811,6 +868,19 @@ class TernaryTanh(Activation):
         super().initialize()
 
 
+class BatchNormOnnx(Layer):
+    '''
+    A transient layer formed from ONNX BatchNormalization that gets converted to
+    BatchNormalization after the scale and bias are determined
+    '''
+
+    def initialize(self):
+        inp = self.get_input_variable()
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_output_variable(shape, dims)
+
+
 class BatchNormalization(Layer):
     _expected_attributes = [
         Attribute('n_in'),
@@ -841,6 +911,31 @@ class BatchNormalization(Layer):
         self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
 
 
+class ApplyAlpha(BatchNormalization):
+    '''A custom layer to scale the output of a QDense layer which used 'alpha != 1'
+    Inference computation uses BatchNormalization methods'''
+
+    def initialize(self):
+        inp = self.get_input_variable()
+        shape = inp.shape
+        dims = inp.dim_names
+        self.add_output_variable(shape, dims)
+
+        scale = self.get_attr('scale_data')
+        scale_quantizer = self.get_attr('scale_quantizer')
+        bias = self.get_attr('bias_data')
+        bias_quantizer = self.get_attr('bias_quantizer')
+
+        self.add_weights(scale, quantizer=scale_quantizer)
+        self.add_bias(bias, quantizer=bias_quantizer)
+
+    def add_weights(self, scale, quantizer=None):
+        self.add_weights_variable(name='scale', var_name='s{index}', data=scale, quantizer=quantizer)
+
+    def add_bias(self, bias, quantizer=None):
+        self.add_weights_variable(name='bias', var_name='b{index}', data=bias, quantizer=quantizer)
+
+
 class Merge(Layer):
     def initialize(self):
         assert len(self.inputs) == 2
@@ -852,6 +947,31 @@ class Merge(Layer):
         else:
             shape = inp1.shape.copy()
             dims = inp1.dim_names.copy()
+        self.add_output_variable(shape, dims)
+
+
+class MatMul(Layer):
+    """
+    This is a matrix multiply. Currently, it is only supported as an intermediate
+    form that gets converted to a Dense layer.
+    """
+
+    def initialize(self):
+        assert len(self.inputs) == 2
+        inp1 = self.get_input_variable(self.inputs[0])
+        inp2 = self.get_input_variable(self.inputs[1])
+        if len(inp2.shape) == 1:
+            # mat vec multiply
+            assert inp1.shape[-1] == inp2.shape[0]
+            shape = tuple(inp1.shape[:-1]) + (inp2.shape[0],)
+        else:
+            assert inp1.shape[-1] == inp2.shape[-2]
+            shape = tuple(inp1.shape[:-1]) + (inp2.shape[-1],)
+        if len(shape) > 1:
+            dims = [f'N_LAYER_{i}_{self.index}' for i in range(1, len(shape) + 1)]
+        else:
+            dims = [f'N_LAYER_{self.index}']
+
         self.add_output_variable(shape, dims)
 
 
@@ -1293,6 +1413,7 @@ class LayerGroup(Layer):
 layer_map = {
     'Input': Input,
     'InputLayer': Input,
+    'Constant': Constant,
     'Activation': Activation,
     'QActivation': Activation,
     'LeakyReLU': ParametrizedActivation,
@@ -1307,6 +1428,7 @@ layer_map = {
     'BinaryDense': Dense,
     'TernaryDense': Dense,
     'QDense': Dense,
+    'Conv': Conv,
     'Conv1D': Conv1D,
     'QConv1D': Conv1D,
     'Conv2D': Conv2D,
@@ -1329,6 +1451,7 @@ layer_map = {
     'ZeroPadding1D': ZeroPadding1D,
     'ZeroPadding2D': ZeroPadding2D,
     'Merge': Merge,
+    'MatMul': MatMul,
     'Dot': Dot,
     'Concatenate': Concatenate,
     'Resize': Resize,
@@ -1341,6 +1464,9 @@ layer_map = {
     'GRU': GRU,
     'GarNet': GarNet,
     'GarNetStack': GarNetStack,
+    'Quant': Quant,
+    'ApplyAlpha': ApplyAlpha,
+    'BatchNormOnnx': BatchNormOnnx,
     'LayerGroup': LayerGroup,
     # TensorFlow-specific layers:
     'BiasAdd': BiasAdd,

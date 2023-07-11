@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-from hls4ml.model.layers import BatchNormalization, register_layer
+from hls4ml.model.layers import ApplyAlpha, BatchNormalization
 from hls4ml.model.optimizer import ConfigurableOptimizerPass, OptimizerPass, register_pass
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType, QKerasPO2Quantizer
 
@@ -76,35 +76,7 @@ class OutputRoundingSaturationMode(ConfigurableOptimizerPass):
         return pstr
 
 
-class ApplyAlpha(BatchNormalization):
-    '''A custom layer to scale the output of a QDense layer which used 'alpha != 1'
-    Inference computation uses BatchNormalization methods'''
-
-    def initialize(self):
-        inp = self.get_input_variable()
-        shape = inp.shape
-        dims = inp.dim_names
-        self.add_output_variable(shape, dims)
-
-        scale = self.get_attr('scale_data')
-        scale_quantizer = self.get_attr('scale_quantizer')
-        bias = self.get_attr('bias_data')
-        bias_quantizer = self.get_attr('bias_quantizer')
-
-        self.add_weights(scale, quantizer=scale_quantizer)
-        self.add_bias(bias, quantizer=bias_quantizer)
-
-    def add_weights(self, scale, quantizer=None):
-        self.add_weights_variable(name='scale', var_name='s{index}', data=scale, quantizer=quantizer)
-
-    def add_bias(self, bias, quantizer=None):
-        self.add_weights_variable(name='bias', var_name='b{index}', data=bias, quantizer=quantizer)
-
-
 def register_qkeras():
-    # Register the layer types to the layer map
-    register_layer('ApplyAlpha', ApplyAlpha)
-
     # Register the optimization passes
     register_pass('output_rounding_saturation_mode', OutputRoundingSaturationMode)
     register_pass('qkeras_factorize_alpha', QKerasFactorizeAlpha)
