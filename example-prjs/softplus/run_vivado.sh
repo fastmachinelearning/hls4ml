@@ -35,5 +35,5 @@ echo ""
 echo "====================================================="
 echo "====================================================="
 echo "C++ EXECUTION"
-pushd my-Vivado-test; rm -f a.out; $MGC_HOME/bin/g++ -g -std=c++11 -I. -DWEIGHTS_DIR=\"firmware/weights\" -Ifirmware -Ifirmware/ap_types -I$MGC_HOME/shared/include firmware/sigmoid.cpp sigmoid_test.cpp; a.out; popd
+pushd my-Vivado-test; rm -f a.out; $MGC_HOME/bin/g++ -g -std=c++11 -I. -DWEIGHTS_DIR=\"firmware/weights\" -Ifirmware -Ifirmware/ap_types -I$MGC_HOME/shared/include firmware/softplus.cpp softplus_test.cpp; a.out; popd
 
