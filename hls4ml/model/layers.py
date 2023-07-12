@@ -352,7 +352,7 @@ class Constant(Layer):
     def initialize(self):
         value = self.attributes['value']
         self.value = value  # note, this is unquantized; Only here for easier access
-        shape = value.shape
+        shape = list(value.shape)
         if not shape:
             shape = (1,)
             self.value = np.array([self.value])
@@ -963,10 +963,10 @@ class MatMul(Layer):
         if len(inp2.shape) == 1:
             # mat vec multiply
             assert inp1.shape[-1] == inp2.shape[0]
-            shape = tuple(inp1.shape[:-1]) + (inp2.shape[0],)
+            shape = list(inp1.shape[:-1]) + [inp2.shape[0]]
         else:
             assert inp1.shape[-1] == inp2.shape[-2]
-            shape = tuple(inp1.shape[:-1]) + (inp2.shape[-1],)
+            shape = list(inp1.shape[:-1]) + [inp2.shape[-1]]
         if len(shape) > 1:
             dims = [f'N_LAYER_{i}_{self.index}' for i in range(1, len(shape) + 1)]
         else:
