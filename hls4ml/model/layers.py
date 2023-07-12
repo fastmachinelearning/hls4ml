@@ -391,8 +391,8 @@ class Reshape(Layer):
             # need to get it from the input
             shape_node = self.get_input_node(self.inputs[1])
             # for QONNX, remove batch dimension
-            # (onnx cleaning should have removed reshape dimension)
-            if shape_node:
+            # (onnx cleaning should have removed reshapes not on data path)
+            if isinstance(shape_node, Constant):
                 target_shape = shape_node.value[1:]
             else:
                 raise RuntimeError("Reshape for ONNX requires the target shape to be a second input.")

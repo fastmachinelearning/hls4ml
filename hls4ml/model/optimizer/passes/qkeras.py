@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-from hls4ml.model.layers import ApplyAlpha, BatchNormalization
+from hls4ml.model.layers import ApplyAlpha
 from hls4ml.model.optimizer import ConfigurableOptimizerPass, OptimizerPass, register_pass
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType, QKerasPO2Quantizer
 
@@ -81,7 +81,6 @@ def register_qkeras():
     register_pass('output_rounding_saturation_mode', OutputRoundingSaturationMode)
     register_pass('qkeras_factorize_alpha', QKerasFactorizeAlpha)
     register_pass('extract_ternary_threshold', ExtractTernaryThreshold)
-    register_pass('fuse_consecutive_batch_normalization', FuseConsecutiveBatchNormalization)
 
 
 class QKerasFactorizeAlpha(OptimizerPass):
@@ -178,38 +177,6 @@ class QKerasFactorizeAlpha(OptimizerPass):
         }
         alpha_layer = model.make_node(ApplyAlpha, node.name + '_alpha', attrs, node.outputs)
         model.insert_node(alpha_layer)
-        return True
-
-
-class FuseConsecutiveBatchNormalization(OptimizerPass):
-    '''OptimizerPass to merge consecutive BatchNormalization layers.
-    These may exist in a model after QKerasFactorizeAlpha layer.
-    Scale and Bias of each layer are combined into scale and bias of a single layer.
-    '''
-
-    def match(self, node):
-        return isinstance(node, BatchNormalization) and isinstance(node.get_input_node(), BatchNormalization)
-
-    def transform(self, model, node):
-        bn0 = node.get_input_node()
-        bn1 = node
-        bn0_map = bn0.get_output_use_map()
-        bn1_map = bn1.get_output_use_map()
-        if len(bn0_map[bn0.name]) > 1 or len(bn1_map[bn1.name]) > 1:
-            return False
-
-        s0 = bn0.weights['scale'].data
-        b0 = bn0.weights['bias'].data
-        s1 = bn1.weights['scale'].data
-        b1 = bn1.weights['bias'].data
-
-        s2 = s0 * s1
-        b2 = s1 * b0 + b1
-
-        bn0.weights['scale'].data = s2
-        bn0.weights['bias'].data = b2
-
-        model.remove_node(node, rewire=True)
         return True
 
 
