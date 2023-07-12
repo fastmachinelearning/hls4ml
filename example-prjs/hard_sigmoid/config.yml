@@ -1,4 +1,4 @@
-Backend: Vivado
+Backend: Catapult 
 KerasJson: hard_sigmoid.json
 KerasH5: hard_sigmoid.h5
 OutputDir: my-Catapult-test
