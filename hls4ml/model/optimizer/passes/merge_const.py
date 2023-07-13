@@ -1,7 +1,7 @@
 import numpy as np
 
 from hls4ml.converters.onnx.quantizer import QuantNodeQuantizer
-from hls4ml.model.layers import BatchNormalization, Constant, Merge
+from hls4ml.model.layers import ApplyAlpha, Constant, Merge
 from hls4ml.model.optimizer import OptimizerPass
 
 _base_attributes = ('Trace', 'reuse_factor', 'n_in')
@@ -69,8 +69,8 @@ class MergeTwoConstants(OptimizerPass):
         return True
 
 
-class MergeToBatchNormalization(OptimizerPass):
-    """Convert Add, Sub, Mul, or Div Merges with consant to BatchNormalization"""
+class MergeToApplyAlpha(OptimizerPass):
+    """Convert Add, Sub, Mul, or Div Merges with consant to ApplyAlpha"""
 
     def match(self, node):
         is_match = (
@@ -147,7 +147,7 @@ class MergeToBatchNormalization(OptimizerPass):
         )
 
         bn_layer = model.make_node(
-            BatchNormalization, f"bn_{node.name}", attributes, [node.inputs[input_node_idx]], [x for x in node.outputs]
+            ApplyAlpha, f"bn_{node.name}", attributes, [node.inputs[input_node_idx]], [x for x in node.outputs]
         )
 
         model.remove_node(const_node, rewire=False)
@@ -156,9 +156,9 @@ class MergeToBatchNormalization(OptimizerPass):
         return True
 
 
-class MergeToBatchNormalizationDiv(OptimizerPass):
+class MergeToApplyAlphaDiv(OptimizerPass):
     """
-    Convert Div Merges with consant to BatchNormalization
+    Convert Div Merges with consant to ApplyAlpha
 
     TODO:  propagate precision
     """
@@ -182,9 +182,7 @@ class MergeToBatchNormalizationDiv(OptimizerPass):
         attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
         attributes.update({"scale_data": scale, "bias_data": bias, "n_in": n_in, "n_out": n_in, "n_filt": -1})
 
-        bn_layer = model.make_node(
-            "BatchNormalization", f"bn_{node.name}", attributes, [node.inputs[0]], [x for x in node.outputs]
-        )
+        bn_layer = model.make_node(ApplyAlpha, f"bn_{node.name}", attributes, [node.inputs[0]], [x for x in node.outputs])
 
         model.remove_node(const_node, rewire=False)
         model.replace_node(node, bn_layer)

@@ -249,6 +249,11 @@ class Layer:
 
         self.set_attr(out_name, out)
 
+    def update_output_precision(self, precision, output_name=None):
+        if output_name is None:
+            output_name = self.outputs[0]
+        self.variables[output_name].type.precision = precision
+
     def add_weights(self, quantizer=None, compression=False):
         self.add_weights_variable(
             name='weight', var_name='w{index}', data='weight', quantizer=quantizer, compression=compression

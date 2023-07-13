@@ -3,7 +3,7 @@ import numpy as np
 from hls4ml.model.layers import BatchNormalization, BatchNormOnnx, Constant
 from hls4ml.model.optimizer import OptimizerPass
 
-_base_attributes = ('Trace', 'reuse_factor', 'n_in', 'n_filt')
+_base_attributes = ('Trace', 'reuse_factor', 'epsilon', 'n_in', 'n_filt')
 
 
 class BatchNormOnnxConstantParameters(OptimizerPass):
