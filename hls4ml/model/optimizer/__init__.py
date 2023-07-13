@@ -69,6 +69,8 @@ register_flow(
         'fuse_consecutive_batch_normalization',
         'fuse_batch_normalization',
         'replace_multidimensional_dense_with_conv',
+        'propagate_dense_precision',
+        'propagate_conv_precision',
         'set_precision_concat',
         'merge_linear_activation',
     ],

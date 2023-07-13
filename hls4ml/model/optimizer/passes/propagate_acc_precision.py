@@ -6,6 +6,8 @@ from hls4ml.model.layers import Conv1D, Conv2D, Dense
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.types import FixedPrecisionType, NamedType
 
+# TODO: Update these to use the new auto precision, not depdening only on QONNX values
+
 
 class PropagateDensePrecision(OptimizerPass):
     """
