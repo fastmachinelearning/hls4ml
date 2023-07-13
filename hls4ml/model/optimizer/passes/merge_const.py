@@ -131,6 +131,12 @@ class MergeToApplyAlpha(OptimizerPass):
             scale_precision = const_node.get_attr("quant_precision")
             scale_quantizer = const_node.get_attr("quantizer")
 
+        # because C++ doesn't do broadcasting, we may have to change the shapes of the scale and bias
+        if scale.shape != tuple(input_shape) and np.squeeze(scale).shape != tuple(input_shape):
+            scale = np.broadcast_to(scale, input_shape)
+        if bias.shape != tuple(input_shape) and np.squeeze(bias).shape != tuple(input_shape):
+            bias = np.broadcast_to(bias, input_shape)
+
         attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
         attributes.update(
             {
@@ -178,6 +184,12 @@ class MergeToApplyAlphaDiv(OptimizerPass):
         const_node = node.get_input_node(node.inputs[1])
         scale = 1 / const_node.value
         bias = np.array(0)
+
+        # because C++ doesn't do broadcasting, we may have to change the shapes of the scale and bias
+        if scale.shape != tuple(input_shape) and np.squeeze(scale).shape != tuple(input_shape):
+            scale = np.broadcast_to(scale, input_shape)
+        if bias.shape != tuple(input_shape) and np.squeeze(bias).shape != tuple(input_shape):
+            bias = np.broadcast_to(bias, input_shape)
 
         attributes = {k: node.attributes.get(k, None) for k in _base_attributes}
         attributes.update({"scale_data": scale, "bias_data": bias, "n_in": n_in, "n_out": n_in, "n_filt": -1})
