@@ -681,10 +681,10 @@ void softsign(ac_channel<data_T> &data, ac_channel<res_T> &res) {
         #pragma hls_unroll
         SoftsignPackLoop: for (int j = 0; j < res_T::size; j++) {
             //#pragma HLS UNROLL
-            int data_round = in_data[j]*CONFIG_T::table_size/16;
-            int index = data_round + 8*CONFIG_T::table_size/16;
+            int data_round = in_data[j].to_double()*(int)CONFIG_T::table_size/16;
+            int index = data_round + 8*(int)CONFIG_T::table_size/16;
             if (index < 0)   index = 0;
-            else if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+            else if (index > CONFIG_T::table_size-1) index = (int)CONFIG_T::table_size-1;
             out_data[j] = softsign_table[index];
         }
         res.write(out_data);
