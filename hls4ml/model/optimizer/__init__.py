@@ -70,6 +70,7 @@ register_flow(
         'fuse_batch_normalization',
         'replace_multidimensional_dense_with_conv',
         'set_precision_concat',
+        'merge_linear_activation',
     ],
     requires=['convert'],
 )
