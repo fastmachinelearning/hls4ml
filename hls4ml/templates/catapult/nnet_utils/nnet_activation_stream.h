@@ -358,10 +358,10 @@ void softmax_legacy(ac_channel<data_T> &data, ac_channel<res_T> &res) {
                 if (i == j) {
                     exp_diff_res = 1;
                 } else {
-                    int data_round = (data_cache[j] - data_cache[i]) * CONFIG_T::table_size / 16;
-                    int index = data_round + 8 * CONFIG_T::table_size / 16;
+                    int data_round = (data_cache[j].to_double() - data_cache[i].to_double()) * (int)CONFIG_T::table_size / 16;
+                    int index = data_round + 8 * (int)CONFIG_T::table_size / 16;
                     if (index < 0) index = 0;
-                    if (index > CONFIG_T::table_size - 1) index = CONFIG_T::table_size - 1;
+                    if (index > CONFIG_T::table_size - 1) index = (int)CONFIG_T::table_size - 1;
                     exp_diff_res = exp_table[index];
                 }
 
@@ -375,9 +375,9 @@ void softmax_legacy(ac_channel<data_T> &data, ac_channel<res_T> &res) {
         SoftmaxInvPackLoop: for(unsigned j = 0; j < res_T::size; j++) {
             //#pragma HLS UNROLL
 
-            int exp_res_index = exp_res[j] * CONFIG_T::table_size / 64;
+            int exp_res_index = exp_res[j].to_double() * (int)CONFIG_T::table_size / 64;
             if (exp_res_index < 0) exp_res_index = 0;
-            if (exp_res_index > CONFIG_T::table_size - 1) exp_res_index = CONFIG_T::table_size - 1;
+            if (exp_res_index > CONFIG_T::table_size - 1) exp_res_index = (int)CONFIG_T::table_size - 1;
 
             out_pack[j] = (typename res_T::value_type) invert_table[exp_res_index];
         }
