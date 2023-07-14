@@ -114,7 +114,8 @@ class GarNetConfigTemplate(LayerConfigTemplate):
             params[f'{vname}_t'], type_name = node.model.config.get_precision(node, var=vname)
             if type_name.endswith('default_t'):
                 params[f'{vname}_t'] = precision_converter.convert(default_precision).definition_cpp()
-
+            else:
+                params[f'{vname}_t'] = precision_converter.convert(params[f'{vname}_t']).definition_cpp()
         params['output_t'] = node.get_output_variable().type.name
 
         if node.attributes['collapse'] in ['mean', 'max']:
