@@ -95,10 +95,10 @@ CCS_MAIN(int argc, char *argv[])
 
       for(int i = 0; i < N_INPUT_1_1; i++)
       {
-	if(fabs(pr[i] - layer2_out[i][0].to_double()) > 0.002)
+	if(fabs(pr[i] - layer2_out[0][i].to_double()) > 0.002)
 	{
 		std::cout << "FAILURE" << std::endl;
-        	std::cout << "Expected: " << pr[i] << " Actual: " << layer2_out[i][0] << std::endl;
+        	std::cout << "Expected: " << pr[i] << " Actual: " << layer2_out[0][i] << std::endl;
 		return 1;
 	}
       }

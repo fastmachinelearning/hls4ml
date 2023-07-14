@@ -277,7 +277,7 @@ void softmax_stable(ac_channel<data_T> &data, ac_channel<res_T> &res){
         typename data_T::value_type x_max = reduce<typename data_T::value_type, data_T::size, Op_max<typename data_T::value_type>>(data_array, op_max);
 
         // For the diffs, use the same type as the input but force rounding and saturation
-        ac_fixed<data_T::value_type::width, data_T::value_type::iwidth,true,AC_RND,AC_SAT> d_xi_xmax[data_T::size];
+        ac_fixed<data_T::value_type::width, data_T::value_type::i_width,true,AC_RND,AC_SAT> d_xi_xmax[data_T::size];
         #pragma hls_unroll
         for(unsigned j = 0; j < data_T::size; j++){
             //#pragma HLS UNROLL
