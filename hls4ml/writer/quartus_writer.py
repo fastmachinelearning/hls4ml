@@ -405,7 +405,6 @@ class QuartusWriter(Writer):
         fout = open(f'{model.config.get_output_dir()}/firmware/defines.h', 'w')
 
         for line in f.readlines():
-
             # Insert numbers
             if '// hls-fpga-machine-learning insert numbers' in line:
                 newline = line
@@ -450,7 +449,6 @@ class QuartusWriter(Writer):
         fout = open(f'{model.config.get_output_dir()}/firmware/parameters.h', 'w')
 
         for line in f.readlines():
-
             if '// hls-fpga-machine-learning insert includes' in line:
                 newline = line
                 for include in sorted(set(sum((layer.get_attr('include_header', []) for layer in model.get_layers()), []))):
@@ -760,7 +758,6 @@ class QuartusWriter(Writer):
         indent = '    '
 
         for line in f.readlines():
-
             if 'MYPROJECT' in line:
                 newline = line.replace('MYPROJECT', format(model.config.get_project_name().upper()))
 
@@ -882,7 +879,6 @@ class QuartusWriter(Writer):
         fout = open(f'{model.config.get_output_dir()}/Makefile', 'w')
 
         for line in f.readlines():
-
             line = line.replace('myproject', model.config.get_project_name())
 
             if 'DEVICE   :=' in line:
@@ -1054,7 +1050,6 @@ class QuartusWriter(Writer):
 
         sep = ''
         for i in range(table_size):
-
             in_val = (
                 i * (MAX_VALUE - MIN_VALUE) / float(table_size)
                 + (MAX_VALUE - MIN_VALUE) / (float(table_size) * 2)

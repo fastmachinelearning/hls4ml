@@ -7,7 +7,12 @@ from hls4ml.model import ModelGraph
 MAXMULT = 4096
 
 
-class KerasFileReader:
+class KerasReader:
+    def get_weights_data(self, layer_name, var_name):
+        raise NotImplementedError
+
+
+class KerasFileReader(KerasReader):
     def __init__(self, config):
         self.config = config
         self.h5file = h5py.File(config['KerasH5'], mode='r')
@@ -39,15 +44,27 @@ class KerasFileReader:
         else:
             return None
 
-    def get_weights_shape(self, layer_name, var_name):
-        data = self._find_data(layer_name, var_name)
-        if data is not None:
-            return data.shape
+
+class KerasNestedFileReader(KerasFileReader):
+    def __init__(self, data_reader, nested_path):
+        super().__init__(data_reader.config)
+        self.nested_path = nested_path
+
+    def _find_data(self, layer_name, var_name):
+        def h5_visitor_func(name):
+            if var_name in name:
+                return name
+
+        layer_path = f'model_weights/{self.nested_path}/{layer_name}'
+
+        data_path = self.h5file[layer_path].visit(h5_visitor_func)
+        if data_path:
+            return self.h5file[f'/{layer_path}/{data_path}']
         else:
             return None
 
 
-class KerasModelReader:
+class KerasModelReader(KerasReader):
     def __init__(self, keras_model):
         self.model = keras_model
 
@@ -62,13 +79,17 @@ class KerasModelReader:
 
         return None
 
-    def get_weights_shape(self, layer_name, var_name):
-        layer = self.model.get_layer(layer_name)
-        for w in layer.weights:
-            if var_name in w.name:
-                return w.shape.as_list()
 
-        return None
+def get_weights_data(data_reader, layer_name, var_name):
+    if not isinstance(var_name, (list, tuple)):
+        var_name = [var_name]
+
+    data = [data_reader.get_weights_data(layer_name, var) for var in var_name]
+
+    if len(data) == 1:
+        return data[0]
+    else:
+        return (*data,)
 
 
 layer_handlers = {}
@@ -169,7 +190,6 @@ def get_model_arch(config):
 
 
 def parse_keras_model(model_arch, reader):
-
     # This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
 
@@ -214,7 +234,7 @@ def parse_keras_model(model_arch, reader):
             input_layer['input_shape'] = layer_config[0]['config']['batch_input_shape'][1:]
             layer_list.append(input_layer)
             print('Input shape:', input_layer['input_shape'])
-    elif model_arch['class_name'] in ['Model', 'Functional']:  # TF >= 2.3 calls it 'Funcational' API
+    elif model_arch['class_name'] in ['Model', 'Functional']:  # TF >= 2.3 calls it 'Functional' API
         print('Interpreting Model')
         layer_config = model_arch['config']['layers']
         input_layers = [inp[0] for inp in model_arch['config']['input_layers']]
@@ -298,18 +318,19 @@ def parse_keras_model(model_arch, reader):
             inputs_map[layer['name']] = act_layer['name']
             if output_layers is not None and layer['name'] in output_layers:
                 output_layers = [act_layer['name'] if name == layer['name'] else name for name in output_layers]
+            output_shapes[act_layer['name']] = output_shape
             layer_list.append(act_layer)
 
         assert output_shape is not None
 
         output_shapes[layer['name']] = output_shape
 
-    return layer_list, input_layers, output_layers
+    return layer_list, input_layers, output_layers, output_shapes
 
 
 def keras_to_hls(config):
     model_arch, reader = get_model_arch(config)
-    layer_list, input_layers, output_layers = parse_keras_model(model_arch, reader)
+    layer_list, input_layers, output_layers, _ = parse_keras_model(model_arch, reader)
     print('Creating HLS model')
-    hls_model = ModelGraph(config, reader, layer_list, input_layers, output_layers)
+    hls_model = ModelGraph(config, layer_list, input_layers, output_layers)
     return hls_model

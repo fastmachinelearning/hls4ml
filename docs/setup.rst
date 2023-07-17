@@ -22,6 +22,9 @@ If you want to use our :doc:`profiling <api/profiling>` toolbox, you might need 
 
 ``hls4ml`` is also available as a ``conda`` package in the ``conda-forge`` repository. To install, run:
 
+.. warning::
+   Version of hls4ml available on ``conda-forge`` is outdated, we recommend installing with ``pip`` to get the latest version.
+
 .. code-block::
 
    conda install -c conda-forge hls4ml

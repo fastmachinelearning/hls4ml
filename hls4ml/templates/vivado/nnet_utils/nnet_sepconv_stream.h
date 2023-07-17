@@ -145,7 +145,7 @@ void pointwise_mult_buffer(const data_T &data_pack, hls::stream<res_T> &res_stre
     #pragma HLS ARRAY_PARTITION variable=res complete
 
     res_T res_pack;
-    #pragma HLS DATA_PACK variable=res_pack
+    PRAGMA_DATA_PACK(res_pack)
 
 InitData:
     for (int id = 0; id < CONFIG_T::n_chan; id++) {
@@ -192,7 +192,7 @@ void compute_depthwise_output_buffer_1d(const data_T &in_elem, hls::stream<res_T
     #pragma HLS ARRAY_PARTITION variable=res_out complete dim = 0
 
     res_T res_pack;
-    #pragma HLS DATA_PACK variable=res_pack
+    PRAGMA_DATA_PACK(res_pack)
 
     // Add pixel to buffer
     nnet::kernel_shift_1d<data_T, CONFIG_T>(in_elem, kernel_data);
@@ -257,7 +257,7 @@ void compute_depthwise_output_buffer_2d(const data_T &in_elem,
     #pragma HLS ARRAY_PARTITION variable=res_out complete dim = 0
 
     res_T res_pack;
-    #pragma HLS DATA_PACK variable=res_pack
+    PRAGMA_DATA_PACK(res_pack)
 
     // Add pixel to buffer
     nnet::shift_line_buffer<data_T, CONFIG_T>(in_elem, line_buffer, kernel_data);

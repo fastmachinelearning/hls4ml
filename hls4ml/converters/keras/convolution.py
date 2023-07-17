@@ -1,4 +1,4 @@
-from hls4ml.converters.keras_to_hls import keras_handler, parse_default_keras_layer
+from hls4ml.converters.keras_to_hls import get_weights_data, keras_handler, parse_default_keras_layer
 from hls4ml.converters.utils import compute_padding_1d, compute_padding_2d, parse_data_format
 
 
@@ -9,6 +9,15 @@ def parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader):
     layer = parse_default_keras_layer(keras_layer, input_names)
 
     (layer['in_width'], layer['n_chan']) = parse_data_format(input_shapes[0], layer['data_format'])
+
+    if layer['class_name'] in ['Conv1D', 'QConv1D']:
+        layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'kernel')
+    else:  # SeparableConv1D
+        layer['depthwise_data'], layer['pointwise_data'], layer['bias_data'] = get_weights_data(
+            data_reader, layer['name'], ['depthwise_kernel', 'pointwise_kernel', 'bias']
+        )
+
+    layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
 
     layer['n_filt'] = keras_layer['config']['filters']
     layer['filt_width'] = keras_layer['config']['kernel_size'][0]
@@ -34,6 +43,17 @@ def parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader):
     layer = parse_default_keras_layer(keras_layer, input_names)
 
     (layer['in_height'], layer['in_width'], layer['n_chan']) = parse_data_format(input_shapes[0], layer['data_format'])
+
+    if layer['class_name'] in ['Conv2D', 'QConv2D', 'QConv2DBatchnorm']:
+        layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'kernel')
+    elif layer['class_name'] in ['SeparableConv2D', 'QSeparableConv2D']:
+        layer['depthwise_data'], layer['pointwise_data'] = get_weights_data(
+            data_reader, layer['name'], ['depthwise_kernel', 'pointwise_kernel']
+        )
+    else:  # DepthwiseConv2D
+        layer['depthwise_data'] = get_weights_data(data_reader, layer['name'], 'depthwise_kernel')
+
+    layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
 
     if 'filters' in keras_layer['config']:
         layer['n_filt'] = keras_layer['config']['filters']
