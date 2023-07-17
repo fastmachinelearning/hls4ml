@@ -128,7 +128,7 @@ void sigmoid(ac_channel<data_T> &data, ac_channel<res_T> &res) {
         #pragma hls_unroll
         SigmoidPackLoop: for (int j = 0; j < res_T::size; j++) {
             //#pragma HLS UNROLL
-            int data_round = (int)in_data[j].to_double()*(int)CONFIG_T::table_size/16;
+            int data_round = in_data[j].to_double()*(int)CONFIG_T::table_size/16;
             int index = data_round + 8*(int)CONFIG_T::table_size/16;
             if (index < 0)   index = 0;
             else if (index > CONFIG_T::table_size-1) index = (int)CONFIG_T::table_size-1;
@@ -277,7 +277,7 @@ void softmax_stable(ac_channel<data_T> &data, ac_channel<res_T> &res){
         typename data_T::value_type x_max = reduce<typename data_T::value_type, data_T::size, Op_max<typename data_T::value_type>>(data_array, op_max);
 
         // For the diffs, use the same type as the input but force rounding and saturation
-        ac_fixed<data_T::value_type::width, data_T::value_type::iwidth,true,AC_RND,AC_SAT> d_xi_xmax[data_T::size];
+        ac_fixed<data_T::value_type::width, data_T::value_type::i_width,true,AC_RND,AC_SAT> d_xi_xmax[data_T::size];
         #pragma hls_unroll
         for(unsigned j = 0; j < data_T::size; j++){
             //#pragma HLS UNROLL
@@ -358,10 +358,10 @@ void softmax_legacy(ac_channel<data_T> &data, ac_channel<res_T> &res) {
                 if (i == j) {
                     exp_diff_res = 1;
                 } else {
-                    int data_round = (data_cache[j] - data_cache[i]) * CONFIG_T::table_size / 16;
-                    int index = data_round + 8 * CONFIG_T::table_size / 16;
+                    int data_round = (data_cache[j].to_double() - data_cache[i].to_double()) * (int)CONFIG_T::table_size / 16;
+                    int index = data_round + 8 * (int)CONFIG_T::table_size / 16;
                     if (index < 0) index = 0;
-                    if (index > CONFIG_T::table_size - 1) index = CONFIG_T::table_size - 1;
+                    if (index > CONFIG_T::table_size - 1) index = (int)CONFIG_T::table_size - 1;
                     exp_diff_res = exp_table[index];
                 }
 
@@ -375,9 +375,9 @@ void softmax_legacy(ac_channel<data_T> &data, ac_channel<res_T> &res) {
         SoftmaxInvPackLoop: for(unsigned j = 0; j < res_T::size; j++) {
             //#pragma HLS UNROLL
 
-            int exp_res_index = exp_res[j] * CONFIG_T::table_size / 64;
+            int exp_res_index = exp_res[j].to_double() * (int)CONFIG_T::table_size / 64;
             if (exp_res_index < 0) exp_res_index = 0;
-            if (exp_res_index > CONFIG_T::table_size - 1) exp_res_index = CONFIG_T::table_size - 1;
+            if (exp_res_index > CONFIG_T::table_size - 1) exp_res_index = (int)CONFIG_T::table_size - 1;
 
             out_pack[j] = (typename res_T::value_type) invert_table[exp_res_index];
         }
@@ -473,7 +473,7 @@ void tanh(ac_channel<data_T> &data, ac_channel<res_T> &res) {
         #pragma hls_unroll
         TanHPackLoop: for (int j = 0; j < res_T::size; j++) {
             //#pragma HLS UNROLL
-            int data_round = (int)in_data[j].to_double()*(int)CONFIG_T::table_size/8;
+            int data_round = in_data[j].to_double()*(int)CONFIG_T::table_size/8;
             int index = data_round + 4*(int)CONFIG_T::table_size/8;
             if (index < 0)   index = 0;
             else if (index > CONFIG_T::table_size-1) index = (int)CONFIG_T::table_size-1;
