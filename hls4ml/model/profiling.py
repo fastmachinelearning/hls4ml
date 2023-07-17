@@ -10,6 +10,7 @@ import pandas
 import seaborn as sb
 
 from hls4ml.model.graph import ModelGraph
+from hls4ml.model.layers import GRU, LSTM
 
 try:
     import qkeras
@@ -172,7 +173,6 @@ def ap_fixed_WIFS(dtype):
 
 
 def types_hlsmodel(model):
-    suffix = ['w', 'b']
     data = {'layer': [], 'low': [], 'high': []}
     # Plot the default precision
     default_precision = model.config.model_precision['default']
@@ -182,6 +182,10 @@ def types_hlsmodel(model):
     data['high'].append(I - 1 if S else I)
 
     for layer in model.get_layers():
+        if isinstance(layer, GRU) or isinstance(layer, LSTM):
+            suffix = ['w', 'rw', 'b', 'rb']
+        else:
+            suffix = ['w', 'b']
         for iw, weight in enumerate(layer.get_weights()):
             wname = f'{layer.name}/{suffix[iw]}'
             T = weight.type
@@ -213,13 +217,16 @@ def activation_types_hlsmodel(model):
 
 
 def weights_hlsmodel(model, fmt='longform', plot='boxplot'):
-    suffix = ['w', 'b']
     if fmt == 'longform':
         data = {'x': [], 'layer': [], 'weight': []}
     elif fmt == 'summary':
         data = []
 
     for layer in model.get_layers():
+        if isinstance(layer, GRU) or isinstance(layer, LSTM):
+            suffix = ['w', 'rw', 'b', 'rb']
+        else:
+            suffix = ['w', 'b']
         name = layer.name
         for iw, weight in enumerate(layer.get_weights()):
             label = f'{name}/{suffix[iw]}'
