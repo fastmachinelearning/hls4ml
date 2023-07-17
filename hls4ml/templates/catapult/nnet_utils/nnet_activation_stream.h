@@ -620,16 +620,11 @@ void softplus(ac_channel<data_T> &data, ac_channel<res_T> &res) {
         #pragma hls_unroll
         SoftplusPackLoop: for (int j = 0; j < res_T::size; j++) {
             //#pragma HLS UNROLL
-	    std::cout << "in_data[j]: " << in_data[j];
             int data_round = in_data[j].to_double()*(int)CONFIG_T::table_size/16;
-	    std::cout << " data_round: " << data_round;
             int index = data_round + 8*(int)CONFIG_T::table_size/16;
-	    std::cout << " index: " << index;
             if (index < 0)   index = 0;
             else if (index > CONFIG_T::table_size-1) index = (int)CONFIG_T::table_size-1;
-	    std::cout << " index: " << index;
             out_data[j] = softplus_table[index];
-	    std::cout << " softplus_table[index]: " << softplus_table[index] << std::endl;
         }
         res.write(out_data);
     }
