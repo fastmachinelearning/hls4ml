@@ -1334,6 +1334,7 @@ layer_map = {
     'DepthwiseConv1D': DepthwiseConv1D,
     'SeparableConv2D': SeparableConv2D,
     'DepthwiseConv2D': DepthwiseConv2D,
+    'QDepthwiseConv2D': DepthwiseConv2D,
     'BatchNormalization': BatchNormalization,
     'QBatchNormalization': BatchNormalization,
     'MaxPooling1D': Pooling1D,

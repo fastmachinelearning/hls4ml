@@ -49,6 +49,19 @@ def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader):
     return layer, output_shape
 
 
+@keras_handler('QDepthwiseConv2D')
+def parse_qdepthwiseqconv_layer(keras_layer, input_names, input_shapes, data_reader):
+    layer, output_shape = parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader)
+
+    layer['depthwise_quantizer'] = get_quantizer_from_config(keras_layer, 'depthwise')
+    if keras_layer['config']['bias_quantizer'] is not None:
+        layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
+    else:
+        layer['bias_quantizer'] = None
+
+    return layer, output_shape
+
+
 @keras_handler('QActivation')
 def parse_qactivation_layer(keras_layer, input_names, input_shapes, data_reader):
     assert keras_layer['class_name'] == 'QActivation'
