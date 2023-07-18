@@ -6,6 +6,8 @@ VENV=../../../../venv
 
 MGC_HOME=/wv/hlsb/CATAPULT/TOT/CURRENT/aol/Mgc_home
 export MGC_HOME
+XILINX_VIVADO=/wv/hlstools/vivado/ixl/Xilinx/Vivado/2019.2
+export XILINX_VIVADO
 
 export PATH=/wv/hlstools/python/python37/bin:$PATH:$XILINX_VIVADO/bin:$MGC_HOME/bin
 export LD_LIBRARY_PATH=/wv/hlstools/python/python37/lib:$XILINX_VIVADO/lib/lnx64.o:$MGC_HOME/lib
