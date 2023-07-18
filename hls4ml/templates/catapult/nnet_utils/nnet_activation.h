@@ -936,8 +936,8 @@ void  elu(data_T data[CONFIG_T::n_in], const res_T alpha, res_T res[CONFIG_T::n_
         if (datareg >= 0) {
             res[ii] = datareg;
         } else {
-            index = datareg*CONFIG_T::table_size/-8;
-            if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+            index = datareg.to_double()*(int)CONFIG_T::table_size/-8;
+            if (index > CONFIG_T::table_size-1) index = (int)CONFIG_T::table_size-1;
             res[ii] = alpha * elu_table[index];
         }
     }
