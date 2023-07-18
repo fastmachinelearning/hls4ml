@@ -11,8 +11,8 @@ def parse_flatten_layer(keras_layer, input_names, input_shapes, data_reader):
     layer = parse_default_keras_layer(keras_layer, input_names)
 
     layer['class_name'] = 'Reshape'
-    layer['target_shape'] = [input_shapes[0][0], np.prod(input_shapes[0][1:])]
-    output_shape = layer['target_shape']
+    layer['target_shape'] = [np.prod(input_shapes[0][1:])]  # target shape has no batch dimension
+    output_shape = input_shapes[0][:1] + layer['target_shape']
 
     return layer, output_shape
 
