@@ -9,8 +9,8 @@ export MGC_HOME
 XILINX_VIVADO=/wv/hlstools/vivado/ixl/Xilinx/Vivado/2019.2
 export XILINX_VIVADO
 
-export PATH=/wv/hlstools/python/python37/bin:$PATH:$XILINX_VIVADO/bin:$MGC_HOME/bin
-export LD_LIBRARY_PATH=/wv/hlstools/python/python37/lib:$XILINX_VIVADO/lib/lnx64.o:$MGC_HOME/lib
+export PATH=/wv/hlstools/python/python38/bin:$PATH:$XILINX_VIVADO/bin:$MGC_HOME/bin
+export LD_LIBRARY_PATH=/wv/hlstools/python/python38/lib:$XILINX_VIVADO/lib/lnx64.o:$MGC_HOME/lib
 export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 
 # needed for pytest
