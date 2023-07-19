@@ -86,22 +86,21 @@ CCS_MAIN(int argc, char *argv[])
 //    std::cout << "    Input feature map size = " << in.size() << " Output predictions size = " << pr.size() << std::endl;
 
       //hls-fpga-machine-learning insert data
-      ac_channel<input_t> input_1/*("input_1")*/;
+      input_t input_1[N_INPUT_1_1];
       nnet::copy_data<float, input_t, 0, N_INPUT_1_1>(in, input_1);
-      ac_channel<result_t> layer2_out/*("layer2_out")*/;
+      result_t layer2_out[N_INPUT_1_1];
 
       //hls-fpga-machine-learning insert top-level-function
       leaky_relu(input_1,layer2_out);
 
-      result_t tmp = layer2_out[0];
       for(int i = 0; i < N_INPUT_1_1; i++)
       {
-	if(fabs(pr[i]-tmp[i].to_double() >= 0.001))
-	  {
-		std::cout << "FAILURE" << std::endl;
-		std::cout << "Expected: " <<  pr[i] << " Actual: " << tmp[i].to_double() << std::endl;
-		return 1;
-	  }
+	if(fabs(pr[i]-layer2_out[i].to_double()) > 0.01)
+	{
+	 std::cout << "FAILURE" << std::endl;
+	 std::cout << "Expected: " << pr[i] << " Actual: " << layer2_out[i].to_double() << std::endl;
+	 return 1;
+	}
       }
 
       //hls-fpga-machine-learning insert tb-output
@@ -113,9 +112,9 @@ CCS_MAIN(int argc, char *argv[])
     std::cout << "INFO: Unable to open input/predictions file, using default input." << std::endl;
 
     //hls-fpga-machine-learning insert zero
-    ac_channel<input_t> input_1/*("input_1")*/;
+    input_t input_1[N_INPUT_1_1];
     nnet::fill_zero<input_t, N_INPUT_1_1>(input_1);
-    ac_channel<result_t> layer2_out/*("layer2_out")*/;
+    result_t layer2_out[N_INPUT_1_1];
 
     //hls-fpga-machine-learning insert top-level-function
     leaky_relu(input_1,layer2_out);
