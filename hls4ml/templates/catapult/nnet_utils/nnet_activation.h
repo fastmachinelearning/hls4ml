@@ -767,10 +767,10 @@ void  softplus(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     int data_round;
     int index;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        data_round = data[ii]*CONFIG_T::table_size/16;
-        index = data_round + 8*CONFIG_T::table_size/16;
+        data_round = data[ii].to_double()*(int)CONFIG_T::table_size/16;
+        index = data_round + 8*(int)CONFIG_T::table_size/16;
         if (index < 0)   index = 0;
-        if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+        if (index > CONFIG_T::table_size-1) index = (int)CONFIG_T::table_size-1;
         res[ii] = (res_T) softplus_table[index];
     }
 }
