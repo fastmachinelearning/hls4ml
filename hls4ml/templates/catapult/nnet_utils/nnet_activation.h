@@ -630,11 +630,11 @@ void  tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     int data_round;
     int index;
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        data_round = data[ii]*CONFIG_T::table_size/8;
-        index = data_round + 4*CONFIG_T::table_size/8;
+        data_round = data[ii].to_double()*(int)CONFIG_T::table_size/8;
+        index = data_round + 4*(int)CONFIG_T::table_size/8;
         //std::cout << "Input: "  << data[ii] << " Round: " << data_round << " Index: " << index << std::endl;
         if (index < 0)   index = 0;
-        if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+        if (index > CONFIG_T::table_size-1) index = (int)CONFIG_T::table_size-1;
         res[ii] = (res_T) tanh_table[index];
     }
 }
