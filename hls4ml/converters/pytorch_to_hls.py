@@ -30,15 +30,12 @@ class PyTorchModelReader:
             'moving_variance': 'running_var',
         }
 
-        # Workaround for naming schme in nn.Sequential,
+        # Workaround for naming scheme in nn.Sequential,
         # have to remove the prefix we previously had to add to make sure the tensors are found
         if 'layer_' in layer_name:
             layer_name = layer_name.split('layer_')[-1]
 
-        if var_name not in list(torch_paramap.keys()) + ['weight', 'bias']:
-            raise Exception('Pytorch parameter not yet supported!')
-
-        elif var_name in list(torch_paramap.keys()):
+        if var_name in list(torch_paramap.keys()):
             var_name = torch_paramap[var_name]
 
         # if a layer is reused in the model, torch.FX will append a "_n" for the n-th use
@@ -46,10 +43,11 @@ class PyTorchModelReader:
         if layer_name.split('_')[-1].isdigit() and len(layer_name.split('_')) > 1:
             layer_name = '_'.join(layer_name.split('_')[:-1])
 
-        if layer_name + '.' + var_name in self.state_dict:
-            data = self.state_dict[layer_name + '.' + var_name].numpy()
-            return data
+        key = layer_name + '.' + var_name
 
+        if key in self.state_dict:
+            data = self.state_dict[key].numpy()
+            return data
         else:
             return None
 

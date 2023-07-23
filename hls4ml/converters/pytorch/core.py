@@ -9,13 +9,19 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, c
 
     layer['class_name'] = 'Dense'
     layer['name'] = layer_name
+    layer['inputs'] = input_names
 
-    layer['weight_data'], layer['bias_data'] = get_weights_data(data_reader, layer['name'], ['weight', 'bias'])
     if class_object is not None:
         layer['n_in'] = class_object.in_features
         layer['n_out'] = class_object.out_features
     else:
         raise Exception('parsing of torch.nn.functional.linear not supported yet, please use torch.nn.Linear class')
+
+    layer['weight_data'] = class_object.weight.data.numpy()
+    if class_object.bias is not None:
+        layer['bias_data'] = class_object.bias.data.numpy()
+    else:
+        layer['bias_data'] = None
 
     # Handling whether bias is used or not
     if class_object.bias is None:
@@ -39,11 +45,12 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, nod
     layer['class_name'] = operation
     layer['activation'] = layer['class_name']
     layer['name'] = layer_name
+    layer['inputs'] = input_names
 
     # if layer['class_name'] != 'Activation':
     #    layer['activation'] = layer['class_name']
     if node.op == 'call_module':
-        if layer['class_name'] == 'ReLU' or layer['class_name'] == 'Sigmoid':
+        if layer['class_name'] in ['ReLU', 'Sigmoid', 'Tanh']:
             layer['class_name'] = 'Activation'
         if layer['class_name'] == 'LeakyReLU':
             layer['activ_param'] = class_object.negative_slope
@@ -61,7 +68,7 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, nod
         if hasattr(node, 'dim'):
             layer['axis'] = class_object.dim
     else:
-        if layer['class_name'] == 'ReLU' or layer['class_name'] == 'Sigmoid':
+        if layer['class_name'] in ['ReLU', 'Sigmoid', 'Tanh']:
             layer['class_name'] = 'Activation'
         if layer['class_name'] == 'LeakyReLU':
             layer['activ_param'] = node.kwargs['negative_slope']
@@ -92,6 +99,7 @@ def parse_batchnorm_layer(operation, layer_name, input_names, input_shapes, node
     layer['class_name'] = 'BatchNormalization'
     layer['data_format'] = 'channels_first'
     layer['name'] = layer_name
+    layer['inputs'] = input_names
 
     # batchnorm para
     if node.op == 'call_module':
@@ -109,7 +117,7 @@ def parse_batchnorm_layer(operation, layer_name, input_names, input_shapes, node
             layer['beta_data'] = 0
 
         layer['mean_data'], layer['variance_data'] = get_weights_data(
-            data_reader, layer['name'], ['running_mean', 'running_variance']
+            data_reader, layer['name'], ['running_mean', 'running_var']
         )
 
     in_size = 1
