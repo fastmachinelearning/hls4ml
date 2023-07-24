@@ -95,7 +95,12 @@ CCS_MAIN(int argc, char *argv[])
 
       for(int i = 0; i < N_INPUT_1_1; i++)
       {
-	std::cout << "Expected: " << pr[i] << " Actual: " << layer2_out[i].to_double() << std::endl;
+	if(fabs(pr[i]-layer2_out[i].to_double()) > 0.001)
+	{
+	 std::cout << "FAILURE" << std::endl;
+	 std::cout << "Expected: " << pr[i] << " Actual: " << layer2_out[i].to_double() << std::endl;
+	 return 1;
+	}
       }
 
       //hls-fpga-machine-learning insert tb-output
