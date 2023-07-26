@@ -1,4 +1,3 @@
-
 import hls4ml
 # import pprint
 import yaml
