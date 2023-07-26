@@ -36,9 +36,6 @@
 
 //hls-fpga-machine-learning insert declare weights
 
-#define CHECKPOINT 5
-#define E_LIMIT 20
-
 namespace nnet {
     bool trace_enabled = true;
     std::map<std::string, void *> *trace_outputs = NULL;
@@ -66,16 +63,11 @@ CCS_MAIN(int argc, char *argv[])
         loaded_weights = true;
     }
 #endif
-
-  std::cout << "Processing CHECKPOINT set to " << CHECKPOINT << std::endl;
-  std::cout << "Processing E_LIMIT set to " << E_LIMIT << std::endl;
   std::string iline;
   std::string pline;
-  int e = 0;
 
   if (fin.is_open() && fpr.is_open()) {
     while ( std::getline(fin,iline) && std::getline (fpr,pline) ) {
-      if (e % CHECKPOINT == 0) std::cout << "Processing input " << e << std::endl;
       char* cstr=const_cast<char*>(iline.c_str());
       char* current;
       std::vector<float> in;
@@ -91,6 +83,7 @@ CCS_MAIN(int argc, char *argv[])
         pr.push_back(atof(current));
         current=strtok(NULL," ");
       }
+//    std::cout << "    Input feature map size = " << in.size() << " Output predictions size = " << pr.size() << std::endl;
 
       //hls-fpga-machine-learning insert data
       ac_channel<input_t> input_1/*("input_1")*/;
@@ -99,33 +92,19 @@ CCS_MAIN(int argc, char *argv[])
 
       //hls-fpga-machine-learning insert top-level-function
       relu(input_1,layer2_out);
-//#if 0
-      //if (e % CHECKPOINT == 0) {
-        //std::cout << "Predictions" << std::endl;
-        //hls-fpga-machine-learning insert predictions
-	result_t tmp = layer2_out[0];
-        for(int i = 0; i < N_INPUT_1_1; i++) {
-          if(tmp[i].to_double() != pr[i])
-          {
-           std::cout << "Expected: " << pr[i] << " Actual: " << tmp[i].to_double() << std::endl;
-           return 1;
-          }
 
-        }
-        //std::cout << std::endl;
-        //std::cout << "Quantized predictions" << std::endl;
-        //hls-fpga-machine-learning insert quantized
-     // }
-//#endif
-      e++;
+      for(int i = 0; i < N_INPUT_1_1; i++)
+      {
+	if(pr[i] != layer2_out[0][i].to_double())
+	{
+	 std::cout << "FAILURE" << std::endl;
+	 std::cout << "Expected: " << pr[i] << " Actual: " << layer2_out[0][i].to_double() << std::endl;
+	 return 1;
+	}
+      }
 
       //hls-fpga-machine-learning insert tb-output
       nnet::print_result<result_t, N_INPUT_1_1>(layer2_out, fout);
-
-      if ((E_LIMIT > 0) && (e > E_LIMIT)) {
-        std::cout << "Simulation stopping after " << E_LIMIT << " iterations" << std::endl;
-        break;
-      }
     }
     fin.close();
     fpr.close();
