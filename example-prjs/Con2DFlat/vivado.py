@@ -3,14 +3,9 @@ import hls4ml
 import yaml
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from tensorflow import keras
 from tensorflow.keras.models import model_from_json
-from keras.utils import np_utils
-import numpy as np
 from qkeras import *
 import json
-import numpy as np
-import tensorflow as tf
 from tensorflow.keras import layers
 
 # Load and preprocess the Fashion MNIST dataset
