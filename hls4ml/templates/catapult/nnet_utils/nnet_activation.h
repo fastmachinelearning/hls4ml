@@ -1021,8 +1021,8 @@ void  selu(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
         if (datareg >= 0) {
             res[ii] = res_T(1.0507009873554804934193349852946) * datareg;
         } else {
-            index = datareg*CONFIG_T::table_size/-8;
-            if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
+            index = datareg.to_double()*(int)CONFIG_T::table_size/-8;
+            if (index > CONFIG_T::table_size-1) index = (int)CONFIG_T::table_size-1;
             res[ii] = selu_table[index];
         }
     }
