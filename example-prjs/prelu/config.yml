@@ -7,7 +7,7 @@ XilinxPart: xcku115-flvb2104-2-i
 Part: xcku115-flvb2104-2-i
 ClockPeriod: 5
 
-IOType : io_parallel
+IOType : io_stream
 HLSConfig:
   Model:
     Precision: ap_fixed<16, 6>
