@@ -41,7 +41,7 @@ def create_model():
 
 	# NOTE: Input size indicates a 5x5 pixel image (matrix) with one channel (i.e. just the red channel from RGB).
 	# Image (matrix) size is equal to kernel size since this is a very small example.
-	model.add(tf.keras.layers.Conv2D(1, 3, 1, padding="valid", activation=binary_tanh, kernel_initializer=random_kernel, input_shape=(5, 5, 1)))
+	model.add(tf.keras.layers.Conv2D(1, 3, 1, padding="valid", activation="tanh", kernel_initializer=random_kernel, input_shape=(5, 5, 1)))
 				
 	return model
 
@@ -58,7 +58,7 @@ def save_model(model, name=None):
 
 if __name__ == '__main__':
     model = create_model()
-    save_model(model, name='tanh')
+    save_model(model, name='binary_tanh')
 
     image_mat = np.array([
 	[ [1], [2], [1], [2], [1] ],

@@ -2,12 +2,12 @@
 
 # This script runs the Vivado flows to generate the HLS.
 
-VENV=/wv/scratch-baimar9c/venv
+VENV=/home/baimar9c/venv
 
 MGC_HOME=/wv/hlsb/CATAPULT/TOT/CURRENT/aol/Mgc_home
 export MGC_HOME
 
-export PATH=/wv/hlstools/python/python38/bin:$PATH:$XILINX_VIVADO/bin:$MGC_HOME/bin
+export PATH=/wv/hlstools/python/python38/bin:$PATH:$XILINX_VIVADO/bin:$MGC_HOME/bin:/wv/hlstools/vivado/ixl/Vivado_HLS/2017.1/bin
 export LD_LIBRARY_PATH=/wv/hlstools/python/python38/lib:$XILINX_VIVADO/lib/lnx64.o:$MGC_HOME/lib
 export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 
@@ -35,5 +35,5 @@ echo ""
 echo "====================================================="
 echo "====================================================="
 echo "C++ EXECUTION"
-pushd my-Vivado-test; rm -f a.out; $MGC_HOME/bin/g++ -g -std=c++11 -I. -DWEIGHTS_DIR=\"firmware/weights\" -Ifirmware -Ifirmware/ap_types -I$MGC_HOME/shared/include firmware/tanh.cpp tanh_test.cpp; a.out; popd
+pushd my-Vivado-test; rm -f a.out; $MGC_HOME/bin/g++ -g -std=c++11 -I. -DWEIGHTS_DIR=\"firmware/weights\" -Ifirmware -Ifirmware/ap_types -I$MGC_HOME/shared/include firmware/binary_tanh.cpp binary_tanh_test.cpp; a.out; popd
 
