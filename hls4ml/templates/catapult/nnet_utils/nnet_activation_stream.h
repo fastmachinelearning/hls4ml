@@ -99,7 +99,6 @@ void relu(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 // *************************************************
 //       Sigmoid Activation
 // *************************************************
-
 #ifndef USE_AC_MATH
 
 template<class data_T, class res_T, typename CONFIG_T>
@@ -148,7 +147,8 @@ void sigmoid(ac_channel<data_T> &data, ac_channel<res_T> &res) {
         res_T out_data;
         #pragma hls_unroll
         SigmoidPackLoop: for (int j = 0; j < res_T::size; j++) {
-            ac_math::ac_sigmoid_pwl(in_data[j],out_data[j]);
+            // ac_math::ac_sigmoid_pwl(in_data[j], out_data[j]);
+	    ac_sigmoid_pwl_wrapper(in_data[j], out_data[j]);
         }
         res.write(out_data);
     }

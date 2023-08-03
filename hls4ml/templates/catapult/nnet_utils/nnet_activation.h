@@ -136,6 +136,15 @@ void  relu1(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 // *************************************************
 //       Sigmoid Activation
 // *************************************************
+
+template </*unsigned K,*/ int  W1, int I1, bool S1, ac_q_mode Q1, ac_o_mode O1, int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2>
+void ac_sigmoid_pwl_wrapper(const ac_fixed<W1,I1,S1,Q1,O1> (&input)/*[K]*/, ac_fixed<W2,I2,S2,Q2,O2> (&output)/*[K]*/)
+{
+  ac_fixed<W2,I2,false,Q2,O2> tmp;//[K];
+  ac_math::ac_sigmoid_pwl<AC_TRN, W1, I1, true, Q1, O1, W2, I2, Q2, O2>(input,tmp);
+  output = tmp;
+}
+
 inline float sigmoid_fcn_float(float input) {
     return 1.0 / (1 + std::exp(-input));
 }
@@ -209,7 +218,8 @@ template<class data_T, class res_T, typename CONFIG_T>
 void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        res[ii] = ac_math::ac_sigmoid_pwl(data[ii]);
+        // res[ii] = ac_math::ac_sigmoid_pwl(data[ii]);
+	ac_sigmoid_pwl_wrapper(data[ii], res[ii]);
     }
 }
 
