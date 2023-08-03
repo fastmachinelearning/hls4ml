@@ -162,8 +162,8 @@ class FuseConsecutiveBatchNormalization(OptimizerPass):
         bias_new = s1 * b0 + b1
 
         # call function so that quantizer would be called if needed
-        node.add_weights(scale_new, quantizer=s_quantizer)
-        node.add_bias(bias_new, quantizer=b_quantizer)
+        node.add_weights_variable(name='scale', var_name='s{index}', data=scale_new)
+        node.add_weights_variable(name='bias', var_name='b{index}', data=bias_new)
 
         model.remove_node(prev_node, rewire=True)
         return True
