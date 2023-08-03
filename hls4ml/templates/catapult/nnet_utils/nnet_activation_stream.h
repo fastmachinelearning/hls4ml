@@ -100,6 +100,18 @@ void relu(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 //       Sigmoid Activation
 // *************************************************
 
+// This is a workaround to help the template deduction to work correctly and fix the inconsistency that HLS4ML expects sigmoid output to
+// be signed but AC Math sigmoid knows it is always unsigned
+template </*unsigned K,*/ int  W1, int I1, bool S1, ac_q_mode Q1, ac_o_mode O1, int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2>
+void ac_sigmoid_pwl_wrapper(const ac_fixed<W1,I1,S1,Q1,O1> (&input)/*[K]*/, ac_fixed<W2,I2,S2,Q2,O2> (&output)/*[K]*/)
+{
+  ac_fixed<W2,I2,false,Q2,O2> tmp;//[K];
+  // ac_math::ac_sigmoid_pwl<AC_TRN,false,0,0,AC_TRN,AC_WRAP,false,0,0,AC_TRN,AC_WRAP/*,K*/,W1,I1,S1,Q1,O1,W2,I2,Q2,O2>(input,tmp);
+  ac_math::ac_sigmoid_pwl<AC_TRN, W1, I1, true, Q1, O1, W2, I2, Q2, O2>(input,tmp);
+  output = tmp;
+  //for (int x=0;x<K;x++) output[x]=tmp[x];
+}
+
 #ifndef USE_AC_MATH
 
 template<class data_T, class res_T, typename CONFIG_T>
@@ -148,7 +160,8 @@ void sigmoid(ac_channel<data_T> &data, ac_channel<res_T> &res) {
         res_T out_data;
         #pragma hls_unroll
         SigmoidPackLoop: for (int j = 0; j < res_T::size; j++) {
-            ac_math::ac_sigmoid_pwl(in_data[j],out_data[j]);
+            // ac_math::ac_sigmoid_pwl(in_data[j], out_data[j]);
+	    ac_sigmoid_pwl_wrapper(in_data[j], out_data[j]);
         }
         res.write(out_data);
     }
