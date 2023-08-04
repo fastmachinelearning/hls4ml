@@ -221,6 +221,10 @@ class PrecisionType:
         self.width = width
         self.signed = signed
 
+    def __eq__(self, other):
+        eq = self.width == other.width
+        eq = eq and self.signed == other.signed
+
 
 class IntegerPrecisionType(PrecisionType):
     """Arbitrary precision integer  data type.
@@ -311,7 +315,7 @@ class FixedPrecisionType(PrecisionType):
         return eq
 
 
-class XnorPrecisionType(IntegerPrecisionType):
+class XnorPrecisionType(PrecisionType):
     """
     Convenience class to differentiate 'regular' integers from BNN Xnor ones
     """
@@ -319,8 +323,12 @@ class XnorPrecisionType(IntegerPrecisionType):
     def __init__(self):
         super().__init__(width=1, signed=False)
 
+    def __str__(self):
+        typestring = 'xnor'
+        return typestring
 
-class ExponentPrecisionType(IntegerPrecisionType):
+
+class ExponentPrecisionType(PrecisionType):
     """
     Convenience class to differentiate 'regular' integers from those which represent exponents,
     for QKeras po2 quantizers, for example.
@@ -328,6 +336,10 @@ class ExponentPrecisionType(IntegerPrecisionType):
 
     def __init__(self, width=16, signed=True):
         super().__init__(width=width, signed=signed)
+
+    def __str__(self):
+        typestring = '{signed}exp<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
+        return typestring
 
 
 def find_minimum_width(data, signed=True):
