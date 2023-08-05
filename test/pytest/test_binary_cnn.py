@@ -27,7 +27,7 @@ test_root_path = Path(__file__).parent
         ('Vitis', 'io_stream', 'resource'),
     ],
 )
-def test_model2(backend, io_type, strategy):
+def test_binary_cnn(backend, io_type, strategy):
     x_in = Input(shape=(28, 28, 1))
 
     x = QConv2D(4, (3, 3), kernel_quantizer="binary", name="conv2d_1", kernel_regularizer=l2(0.0001), use_bias=False)(x_in)
@@ -84,10 +84,10 @@ def test_model2(backend, io_type, strategy):
         io_type=io_type,
     )
 
-    X = np.random.rand(1, 28, 28, 1)
+    X = np.random.rand(100, 28, 28, 1)
 
     hls_model.compile()
     y = model2.predict(X)  # noqa: F841
     y_hls = hls_model.predict(X)  # noqa: F841
 
-    np.testing.assert_allclose(np.squeeze(y_hls), np.squeeze(y), rtol=1e-2, atol=0.01)
+    np.testing.assert_allclose(y_hls, y, rtol=1e-2, atol=0.01)
