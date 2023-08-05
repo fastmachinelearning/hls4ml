@@ -45,7 +45,7 @@ class BinaryQuantizer(Quantizer):
 
     def __init__(self, bits=2):
         if bits == 1:
-            hls_type = IntegerPrecisionType(width=1, signed=False)
+            hls_type = XnorPrecisionType()
         elif bits == 2:
             hls_type = IntegerPrecisionType(width=2)
         else:
@@ -321,6 +321,7 @@ class XnorPrecisionType(PrecisionType):
 
     def __init__(self):
         super().__init__(width=1, signed=False)
+        self.integer = 1
 
     def __str__(self):
         typestring = 'uint<1>'
