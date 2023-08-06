@@ -30,7 +30,15 @@ test_root_path = Path(__file__).parent
 def test_binary_cnn(backend, io_type, strategy):
     x_in = Input(shape=(28, 28, 1))
 
-    x = QConv2D(4, (3, 3), kernel_quantizer="binary", name="conv2d_1", kernel_regularizer=l2(0.0001), use_bias=False)(x_in)
+    x = QConv2D(
+        4,
+        (3, 3),
+        kernel_quantizer="binary",
+        name="conv2d_1",
+        kernel_regularizer=l2(0.0001),
+        use_bias=True,
+        bias_quantizer='quantized_bits(5,2)',
+    )(x_in)
     x = QBatchNormalization()(x)
     x = QActivation("binary", name="act1")(x)
 
