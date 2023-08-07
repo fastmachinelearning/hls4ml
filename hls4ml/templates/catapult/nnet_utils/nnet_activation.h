@@ -970,7 +970,7 @@ template<class data_T, class res_T, typename CONFIG_T>
 void  elu(data_T data[CONFIG_T::n_in], const res_T alpha, res_T res[CONFIG_T::n_in])
 {
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        res[ii] = ac_math::ac_elu_pwl(data[ii], alpha);
+        ac_math::ac_elu_pwl(data[ii], res[ii], alpha);
     }
 }
 
