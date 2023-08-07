@@ -567,6 +567,15 @@ void softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
 }
 
 #else
+// This is a workaround to help the template deduction to work correctly and fix the inconsistency that HLS4ML expects softmax output to
+// be signed but AC Math softmax knows it is always unsigned
+template <unsigned K, int  W1, int I1, bool S1, ac_q_mode Q1, ac_o_mode O1, int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2>
+void ac_softmax_pwl_wrapper(const ac_fixed<W1,I1,S1,Q1,O1> (&input)[K], ac_fixed<W2,I2,S2,Q2,O2> (&output)[K])
+{
+  ac_fixed<W2,I2,false,Q2,O2> tmp[K];
+  ac_math::ac_softmax_pwl<AC_TRN,false,0,0,AC_TRN,AC_WRAP,false,0,0,AC_TRN,AC_WRAP,K,W1,I1,S1,Q1,O1,W2,I2,Q2,O2>(input,tmp);
+  for (int x=0;x<K;x++) output[x]=tmp[x];
+}
 
 #pragma hls_design block
 template<class data_T, class res_T, typename CONFIG_T>
@@ -576,7 +585,7 @@ void softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
   // workaround for the array passing - alternative is to change the signature of all of the functions to reference-of-array
   #pragma hls_unroll
   COPY_IN_ARRAY: for(unsigned i=0; i<CONFIG_T::n_in; i++) data_copy[i] = data[i];
-  ac_math::ac_softmax_pwl(data_copy,res_copy);
+  ac_softmax_pwl_wrapper(data_copy,res_copy);
   #pragma hls_unroll
   COPY_OUT_ARRAY: for(unsigned i=0; i<CONFIG_T::n_in; i++) res[i] = res_copy[i];
 }
