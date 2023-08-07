@@ -664,7 +664,8 @@ template<class data_T, class res_T, typename CONFIG_T>
 void  tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        res[ii] = ac_math::ac_tanh_pwl(data[ii]);
+        // res[ii] = ac_math::ac_tanh_pwl(data[ii]);
+	ac_math::ac_tanh_pwl(data[ii], res[ii]);
     }
 }
 
