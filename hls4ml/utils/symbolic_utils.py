@@ -20,6 +20,24 @@ end
 
 
 def init_pysr_lut_functions(init_defaults=False, function_definitions=None):
+    """Register LUT-based approximations with PySR.
+
+    Functions should be in the form of::
+
+        <func_name>(x) = math_lut(<func>, x, N=<table_size>, range_start=<start>, range_end=<end>)
+
+    where ``<func_name>`` is a given name that can be used with PySR, ``<func>`` is the math function to approximate
+    (`sin`, `cos`, `log`,...), ``<table_size>`` is the size of the lookup table, and ``<start>`` and ``<end>`` are the
+    ranges in which the function will be approximated. It is **strongly** recommended to use a power-of-two as a range.
+
+    Registered functions can be passed by name to ``PySRRegressor`` (as ``unary_operators``).
+
+    Args:
+        init_defaults (bool, optional): Register the most frequently used functions (sin, cos, tan, log, exp).
+            Defaults to False.
+        function_definitions (list, optional): List of strings with function definitions to register with PySR.
+            Defaults to None.
+    """
     from pysr.julia_helpers import init_julia
 
     Main = init_julia()
@@ -31,7 +49,7 @@ def init_pysr_lut_functions(init_defaults=False, function_definitions=None):
         Main.eval('tan_lut(x) = math_lut(tan, x, N=1024, range_start=-4, range_end=4)')
 
         Main.eval('log_lut(x) = math_lut(log, x, N=1024, range_start=0, range_end=8)')
-        Main.eval('exp_lut(x) = math_lut(exp, x, N=1024, range_start=-8, range_end=8)')
+        Main.eval('exp_lut(x) = math_lut(exp, x, N=1024, range_start=0, range_end=16)')
 
     for func in function_definitions or []:
         register_pysr_lut_function(func, Main)
@@ -102,6 +120,22 @@ _unary_ops = {
 def generate_operator_complexity(
     part, precision, unary_operators=None, binary_operators=None, hls_include_path=None, hls_libs_path=None
 ):
+    """Generates HLS projects and synthesizes them to obtain operator complexity (clock cycles per given math operation).
+
+    This function can be used to obtain a list of operator complexity for a given FPGA part at a given precision.
+
+    Args:
+        part (str): FPGA part number to use.
+        precision (str): Precision to use.
+        unary_operators (list, optional): List of unary operators to evaluate. Defaults to None.
+        binary_operators (list, optional): List of binary operators to evaluate. Defaults to None.
+        hls_include_path (str, optional): Path to the HLS include files. Defaults to None.
+        hls_libs_path (str, optional): Path to the HLS libs. Defaults to None.
+
+    Returns:
+        dict: Dictionary of obtained operator complexities.
+    """
+
     from sympy.parsing.sympy_parser import parse_expr as parse_sympy_expr
 
     from hls4ml.converters import convert_from_symbolic_expression

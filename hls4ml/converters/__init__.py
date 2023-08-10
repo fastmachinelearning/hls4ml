@@ -408,6 +408,54 @@ def convert_from_symbolic_expression(
     precision='ap_fixed<16,6>',
     **kwargs,
 ):
+    """Converts a given (SymPy or string) expression to hls4ml model.
+
+    Args:
+        expr (str or sympy.Expr): Expression to convert. The variables in the expression should be in the form of
+            ``x0, x1, x2, ...``.
+        n_symbols (int, optional): Number of symbols in the expression. If not provided, the largest index of the variable
+            will be used as the number of symbols. Useful if number of inputs differs from the number of variables used
+            in the expression. Defaults to None.
+        lut_functions (dict, optional): LUT function definitions. Defaults to None.
+            The dictionary should have the form of::
+
+                {
+                    '<func_name>': {
+                        'math_func': '<func>',
+                        'table_size': <table_size>,
+                        'range_start': <start>,
+                        'range_end': <end>,
+                    }
+                }
+
+            where ``<func_name>`` is a given name that can be used with PySR, ``<func>`` is the math function to
+            approximate (`sin`, `cos`, `log`,...), ``<table_size>`` is the size of the lookup table, and ``<start>`` and
+            ``<end>`` are the ranges in which the function will be approximated. It is **strongly** recommended to use a
+            power-of-two as a range.
+        use_built_in_lut_functions (bool, optional): Use built-in sin/cos LUT functions. Defaults to False.
+        output_dir (str, optional): Output directory of the generated HLS
+            project. Defaults to 'my-hls-test'.
+        project_name (str, optional): Name of the HLS project.
+            Defaults to 'myproject'.
+        input_data_tb (str, optional): String representing the path of input data in .npy or .dat format that will be
+            used during csim and cosim.
+        output_data_tb (str, optional): String representing the path of output data in .npy or .dat format that will be
+            used during csim and cosim.
+        precision (str, optional): Precision to use. Defaults to 'ap_fixed<16,6>'.
+        part (str, optional): The FPGA part. If set to `None` a default part of a backend will be used.
+        clock_period (int, optional): Clock period of the design.
+            Defaults to 5.
+        compiler (str, optional): Compiler to use, ``vivado_hls`` or ``vitis_hls``. Defaults to ``vivado_hls``.
+        hls_include_path (str, optional): Path to HLS inlcude files. If `None` the location will be inferred from the
+            location of the `compiler` used. If an empty string is passed the HLS math libraries won't be used during
+            compilation, meaning Python integration won't work unless all functions are LUT-based. Doesn't affect synthesis.
+            Defaults to None.
+        hls_libs_path (str, optional): Path to HLS libs files. If `None` the location will be inferred from the
+            location of the `compiler` used. Defaults to None.
+
+    Returns:
+        ModelGraph: hls4ml model.
+    """
     import sympy
 
     if not isinstance(expr, (list, set)):
