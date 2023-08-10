@@ -125,7 +125,7 @@ def optimizer_pass(condition):
 def layer_optimizer(layer):
     """Decorator to turn a function into the optimization pass.
 
-    Example:
+    Example::
 
         @layer_optimizer(MyLayer)
         def init_mylayer(self, layer):
@@ -301,7 +301,7 @@ def optimize_model(model, passes):
         passes (list): List of passes to apply.
 
     Returns:
-        set: The set of applied passes (the pases that matched the predicate).
+        set: The set of applied passes (the passes that matched the predicate).
     """
     optimizers = {opt_pass: get_optimizer(opt_pass) for opt_pass in passes}
     applied_passes = set()

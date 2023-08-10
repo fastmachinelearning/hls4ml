@@ -70,17 +70,22 @@ def test_rnn_parsing(rnn_layer, return_sequences):
     [
         (SimpleRNN, 'Quartus', 'io_parallel'),
         (LSTM, 'Vivado', 'io_parallel'),
+        (LSTM, 'Vitis', 'io_parallel'),
         (LSTM, 'Quartus', 'io_parallel'),
         (LSTM, 'Vivado', 'io_stream'),
+        (LSTM, 'Vitis', 'io_stream'),
         (GRU, 'Vivado', 'io_parallel'),
         (GRU, 'Vivado', 'io_stream'),
+        (GRU, 'Vitis', 'io_parallel'),
+        (GRU, 'Vitis', 'io_stream'),
         (GRU, 'Quartus', 'io_parallel'),
         (GRU, 'Quartus', 'io_stream'),
     ],
 )
 @pytest.mark.parametrize('return_sequences', [True, False])
 @pytest.mark.parametrize('static', [True, False])
-def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, static):
+@pytest.mark.parametrize('strategy', ['latency', 'resource'])
+def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, strategy, static):
     # Subtract 0.5 to include negative values
     input_shape = (12, 8)
     X = np.random.rand(50, *input_shape) - 0.5
@@ -100,13 +105,14 @@ def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, static):
     )
     keras_model.compile()
 
-    default_precision = 'ap_fixed<32, 16>' if backend == 'Vivado' else 'ac_fixed<32, 16, true>'
+    default_precision = 'ap_fixed<32, 16>' if backend in ['Vivado', 'Vitis'] else 'ac_fixed<32, 16, true>'
     hls_config = hls4ml.utils.config_from_keras_model(
         keras_model, granularity='name', default_precision=default_precision, backend=backend
     )
     hls_config['LayerName'][layer_name]['static'] = static
-    prj_name = 'hls4mlprj_rnn_accuracy_{}_static_{}_ret_seq_{}_{}_{}'.format(
-        rnn_layer.__class__.__name__.lower(), int(static), int(return_sequences), backend, io_type
+    hls_config['LayerName'][layer_name]['Strategy'] = strategy
+    prj_name = 'hls4mlprj_rnn_accuracy_{}_static_{}_ret_seq_{}_{}_{}_{}'.format(
+        rnn_layer.__class__.__name__.lower(), int(static), int(return_sequences), backend, io_type, strategy
     )
     output_dir = str(test_root_path / prj_name)
 
@@ -117,4 +123,4 @@ def test_rnn_accuracy(rnn_layer, return_sequences, backend, io_type, static):
 
     keras_prediction = keras_model.predict(X)
     hls_prediction = hls_model.predict(X)
-    np.testing.assert_allclose(hls_prediction.flatten(), keras_prediction.flatten(), rtol=0.0, atol=3e-2)
+    np.testing.assert_allclose(hls_prediction.flatten(), keras_prediction.flatten(), rtol=0.0, atol=5e-2)

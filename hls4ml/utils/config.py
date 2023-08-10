@@ -1,10 +1,11 @@
 import json
 
+import qkeras
+
 import hls4ml
 
 
 def create_config(output_dir='my-hls-test', project_name='myproject', backend='Vivado', **kwargs):
-
     backend_list = hls4ml.backends.get_available_backends()
     if backend.lower() not in backend_list:
         raise Exception(f'Unknown backend: {backend}')
@@ -23,8 +24,6 @@ def create_config(output_dir='my-hls-test', project_name='myproject', backend='V
 
 
 def _get_precision_from_quantizer(quantizer):
-    import qkeras
-
     if isinstance(quantizer, str):
         quantizer_obj = qkeras.get_quantizer(quantizer)
         quantizer = {}
@@ -40,18 +39,32 @@ def _get_precision_from_quantizer(quantizer):
         'quantized_bits',
         'quantized_relu',
         'quantized_tanh',
+        'quantized_sigmoid',
         'quantized_po2',
         'quantized_relu_po2',
         'linear',
     ]
     signed = True
+    rnd = "AP_TRN"
+    overflow = "AP_WRAP"
+
     if quantizer['class_name'] in supported_quantizers:
         bits = int(quantizer['config']['bits'])
         # if integer isn't specified, it should be the same as bits
         integer = int(quantizer['config'].get('integer', bits - 1)) + 1
-        if quantizer['class_name'] == 'quantized_relu':
+        # for quantizers use the following default rounding and overflow
+        rnd = "AP_RND_CONV"
+        overflow = "AP_SAT"
+        if quantizer['class_name'] in ('quantized_relu', 'quantized_relu_po2'):
             signed = False
             integer -= 1
+        elif quantizer['class_name'] == 'quantized_tanh':
+            overflow = "AP_SAT_SYM" if quantizer['config']['symmetric'] else "AP_SAT"
+            integer = 1
+        elif quantizer['class_name'] == 'quantized_sigmoid':
+            integer = 0
+            signed = False
+
     elif quantizer['class_name'] in ['binary', 'stochastic_binary', 'binary_tanh']:
         bits = 2
         integer = 2
@@ -65,7 +78,9 @@ def _get_precision_from_quantizer(quantizer):
     decimal = bits - integer
 
     if decimal > 0:
-        return hls4ml.model.types.FixedPrecisionType(width=bits, integer=integer, signed=signed)
+        return hls4ml.model.types.FixedPrecisionType(
+            width=bits, integer=integer, signed=signed, rounding_mode=rnd, saturation_mode=overflow
+        )
     else:
         return hls4ml.model.types.IntegerPrecisionType(width=integer, signed=signed)
 
@@ -82,10 +97,10 @@ def config_from_keras_model(
     Args:
         model: Keras model
         granularity (str, optional): Granularity of the created config. Defaults to 'model'.
-            Can be set to 'model', 'type' and 'layer'.
+            Can be set to 'model', 'type' and 'name'.
 
             Granularity can be used to generate a more verbose config that can be fine-tuned.
-            The default granulrity ('model') will generate config keys that apply to the whole
+            The default granularity ('model') will generate config keys that apply to the whole
             model, so changes to the keys will affect the entire model. 'type' granularity will
             generate config keys that affect all layers of a given type, while the 'name' granularity
             will generate config keys for every layer separately, allowing for highly specific
@@ -118,7 +133,7 @@ def config_from_keras_model(
 
     reader = hls4ml.converters.KerasModelReader(model)
 
-    layer_list, _, _ = hls4ml.converters.parse_keras_model(model_arch, reader)
+    layer_list, _, _, _ = hls4ml.converters.parse_keras_model(model_arch, reader)
 
     def make_layer_config(layer):
         cls_name = layer['class_name']
@@ -227,7 +242,13 @@ def config_from_keras_model(
 
 
 def config_from_pytorch_model(
-    model, granularity='model', backend=None, default_precision='ap_fixed<16,6>', default_reuse_factor=1
+    model,
+    granularity='model',
+    backend=None,
+    default_precision='ap_fixed<16,6>',
+    default_reuse_factor=1,
+    inputs_channel_last=False,
+    transpose_outputs=True,
 ):
     """Create an HLS conversion config given the PyTorch model.
 
@@ -241,7 +262,7 @@ def config_from_pytorch_model(
             Can be set to 'model', 'type' and 'layer'.
 
             Granularity can be used to generate a more verbose config that can be fine-tuned.
-            The default granulrity ('model') will generate config keys that apply to the whole
+            The default granularity ('model') will generate config keys that apply to the whole
             model, so changes to the keys will affect the entire model. 'type' granularity will
             generate config keys that affect all layers of a given type, while the 'name' granularity
             will generate config keys for every layer separately, allowing for highly specific
@@ -249,6 +270,11 @@ def config_from_pytorch_model(
         backend(str, optional): Name of the backend to use
         default_precision (str, optional): Default precision to use. Defaults to 'fixed<16,6>'.
         default_reuse_factor (int, optional): Default reuse factor. Defaults to 1.
+        inputs_channel_last (bool, optional): Set to 'True' if input to the model comes in format
+            'channels_last'. Defaults to 'False'. If False, inputs will be transposed internally.
+        transpose_outputs (bool, optional): Set to 'False' if the output should not be transposed from
+            channels_last into channels_first data format. Defaults to 'False'. If False, outputs needs
+            to be transposed manually.
 
     Raises:
         Exception: If PyTorch model has layers not supported by hls4ml.
@@ -262,6 +288,8 @@ def config_from_pytorch_model(
     model_config = {}
     model_config['Precision'] = default_precision
     model_config['ReuseFactor'] = default_reuse_factor
+    model_config['InputsChannelLast'] = inputs_channel_last
+    model_config['TransposeOutputs'] = transpose_outputs
     model_config['Strategy'] = 'Latency'
 
     config['Model'] = model_config
@@ -284,7 +312,7 @@ def config_from_onnx_model(
             Can be set to 'model', 'type' and 'layer'.
 
             Granularity can be used to generate a more verbose config that can be fine-tuned.
-            The default granulrity ('model') will generate config keys that apply to the whole
+            The default granularity ('model') will generate config keys that apply to the whole
             model, so changes to the keys will affect the entire model. 'type' granularity will
             generate config keys that affect all layers of a given type, while the 'name' granularity
             will generate config keys for every layer separately, allowing for highly specific

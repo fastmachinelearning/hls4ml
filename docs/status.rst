@@ -3,57 +3,90 @@ Status and Features
 ===================
 
 Status
-========
+======
 
-The latest stable release is :doc:`v0.6.0 <release_notes>`. This release brings the new VivadoAccelerator backend to easily target boards like pynq-z2 and zcu102, with support for more boards like Alveo planned.
+The latest version (built from ``main``) is |version|.
+The stable version (released on PyPI) is |release|.
+See the :ref:`Release Notes` section for a changelog.
 
 
 Features
 ========
 
-A list of supported ML codes and architectures, including a summary table is below.  Dependencies are given in the :doc:`Setup <setup>` page.
+A list of supported ML frameworks, HLS backends, and neural network architectures, including a summary table is below.  Dependencies are given in the :doc:`Setup <setup>` page.
 
-ML code support: 
+ML framework support:
 
-* Keras/Tensorflow/QKeras, PyTorch, Onnx
+* (Q)Keras
+* PyTorch (limited)
+* (Q)ONNX (in development)
 
 Neural network architectures:
 
-* Fully Connected NNs (multi-layer perceptron)
-* Convolutional NNs (1D/2D)
-* Recurrent NN/LSTM, in prototyping
+* Fully connected NN (multilayer perceptron, MLP)
+* Convolutional NN
+* Recurrent NN (LSTM)
+* Graph NN (GarNet)
+
+HLS backends:
+
+* Vivado HLS
+* Intel HLS
+* Vitis HLS (experimental)
 
 A summary of the on-going status of the ``hls4ml`` tool is in the table below.
 
 .. list-table::
    :header-rows: 1
 
-   * - Architectures/Toolkits
-     - Keras/TensorFlow/QKeras
+   * - ML framework/HLS backend
+     - (Q)Keras
      - PyTorch
-     - ONNX
+     - (Q)ONNX
+     - Vivado HLS
+     - Intel HLS
+     - Vitis HLS
    * - MLP
      - ``supported``
+     - ``limited``
+     - ``in development``
      - ``supported``
      - ``supported``
-   * - Conv1D/Conv2D
+     - ``experimental``
+   * - CNN
      - ``supported``
+     - ``limited``
      - ``in development``
-     - ``in development`` 
-   * - RNN/LSTM
+     - ``supported``
+     - ``supported``
+     - ``experimental``
+   * - RNN (LSTM)
+     - ``supported``
+     - ``N/A``
      - ``in development``
-     - ``in development``
-     - ``in development``
+     - ``supported``
+     - ``supported``
+     - ``N/A``
+   * - GNN (GarNet)
+     - ``supported``
+     - ``N/A``
+     - ``N/A``
+     - ``N/A``
+     - ``N/A``
+     - ``N/A``
 
 
 Other feature notes:
 
-* ``hls4ml`` is tested on Linux, and supports Vivado HLS versions 2018.2 to 2020.1. Vitis HLS is not yet supported. Windows and macOS are not supported.
-
+* ``hls4ml`` is tested on Linux, and supports
+   * Vivado HLS versions 2018.2 to 2020.1
+   * Intel HLS versions 20.1 to 21.4
+   * Vitis HLS versions 2020.2 to 2022.2 (experimentally)
+* Windows and macOS are not supported
 * BDT support has moved to the `Conifer <https://github.com/thesps/conifer>`__ package
 
 Example Models
 ==============
 
-We also provide and documented several example models that have been implemented in ``hls4ml`` in `this Github repository <https://github.com/fastmachinelearning/example-models>`_.
-
+We also provide and document several example ``hls4ml`` models in `this GitHub repository <https://github.com/fastmachinelearning/example-models>`_, which is included as a submodule.
+You can check it out by doing ``git submodule update --init --recursive`` from the top level directory of ``hls4ml``.

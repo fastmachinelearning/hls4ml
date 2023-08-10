@@ -342,14 +342,20 @@ class FPGABackend(Backend):
             integer = int(bits[1])
             fields = 2
             if len(bits) > 2:
-                signed = bool(bits[2])
+                # only if the third argument is false or 0, set signed to False
+                # (default is True)
+                if bits[2].strip().lower() in ['false', '0']:
+                    signed = False
                 fields = 3
         elif 'int' in precision:
             width = int(bits[0])
             integer = width
             fields = 1
             if len(bits) > 1:
-                signed = bool(bits[1])
+                # only if the second argument is false or 0, set signed to False
+                # (default is True)
+                if bits[1].strip().lower() in ['false', '0']:
+                    signed = False
                 fields = 2
         if len(bits) > fields:
             round_mode = bits[fields]
@@ -385,7 +391,6 @@ class FPGABackend(Backend):
         return product
 
     def compute_conv1d_instructions(self, in_W, in_C, kernel_size=3, stride=1, pad=0):
-
         # Current limitations
         assert pad == 0
 
@@ -421,7 +426,6 @@ class FPGABackend(Backend):
         return (min_W, windows_int)
 
     def compute_conv2d_instructions(self, in_H, in_W, in_C, kernel_size=3, stride=1, pad=0):
-
         if isinstance(kernel_size, Iterable):
             kernel_height = kernel_size[0]
             kernel_width = kernel_size[1]

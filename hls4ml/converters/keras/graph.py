@@ -1,5 +1,5 @@
 from hls4ml.converters.keras.core import TernaryQuantizer
-from hls4ml.converters.keras_to_hls import keras_handler, parse_default_keras_layer
+from hls4ml.converters.keras_to_hls import get_weights_data, keras_handler, parse_default_keras_layer
 
 
 @keras_handler('GarNet', 'GarNetStack')
@@ -31,12 +31,35 @@ def parse_garnet_layer(keras_layer, input_names, input_shapes, data_reader):
         layer['n_in_features'] = input_shapes[0][2]
         n_out_features = layer['n_out_features']
 
+        weights_source = [
+            'FLR_kernel',
+            'FLR_bias',
+            'S_kernel',
+            'S_bias',
+            'Fout_kernel',
+            'Fout_bias',
+        ]
+        for weight in weights_source:
+            layer[weight + '_data'] = get_weights_data(data_reader, layer['name'], weight)
+
     elif layer['class_name'] == 'GarNetStack':
         layer['n_sublayers'] = keras_layer['config']['n_sublayers']
         layer['n_in_features'] = [input_shapes[0][2]]
 
-        for il in range(1, layer['n_sublayers']):
-            layer['n_in_features'].append(layer['n_out_features'][il - 1])
+        for il in range(layer['n_sublayers']):
+            if il > 0:
+                layer['n_in_features'].append(layer['n_out_features'][il - 1])
+
+            weights_source = [
+                f'FLR{il}_kernel',
+                f'FLR{il}_bias',
+                f'S{il}_kernel',
+                f'S{il}_bias',
+                f'Fout{il}_kernel',
+                f'Fout{il}_bias',
+            ]
+            for weight in weights_source:
+                layer[weight + '_data'] = get_weights_data(data_reader, layer['name'], weight)
 
         n_out_features = layer['n_out_features'][-1]
 

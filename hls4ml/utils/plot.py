@@ -1,8 +1,5 @@
 # Heavily inspired by Keras's plot_model
 """Utilities related to model visualization."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import os
 import sys
@@ -31,13 +28,9 @@ def add_edge(dot, src, dst):
         dot.add_edge(pydot.Edge(src, dst))
 
 
-def model_to_dot(model,
-                 show_shapes=False,
-                 show_layer_names=True,
-                 show_precision=False,
-                 rankdir='TB',
-                 dpi=96,
-                 subgraph=False):
+def model_to_dot(
+    model, show_shapes=False, show_layer_names=True, show_precision=False, rankdir='TB', dpi=96, subgraph=False
+):
     """Convert a HLS model to dot format.
 
     Arguments:
@@ -65,12 +58,10 @@ def model_to_dot(model,
         if 'IPython.core.magics.namespace' in sys.modules:
             # We don't raise an exception here in order to avoid crashing notebook
             # tests where graphviz is not available.
-            print('Failed to import pydot. You must install pydot'
-                  ' and graphviz for `pydotprint` to work.')
+            print('Failed to import pydot. You must install pydot' ' and graphviz for `pydotprint` to work.')
             return
         else:
-            raise ImportError('Failed to import pydot. You must install pydot'
-                            ' and graphviz for `pydotprint` to work.')
+            raise ImportError('Failed to import pydot. You must install pydot' ' and graphviz for `pydotprint` to work.')
 
     if subgraph:
         dot = pydot.Cluster(style='dashed', graph_name=model.name)
@@ -87,7 +78,7 @@ def model_to_dot(model,
 
     # Create graph nodes.
     for i, layer in enumerate(layers):
-        #layer_id = str(id(layer))
+        # layer_id = str(id(layer))
         layer_id = str(layer.index)
 
         # Append a wrapped layer's label to node's label, if it exists.
@@ -96,18 +87,19 @@ def model_to_dot(model,
 
         # Create node's label.
         if show_layer_names:
-            #label = '{}: {}'.format(class_name, layer_name)
-            #label = '{}\\l{}\\l'.format(class_name, layer_name)
-            label = '<b>{}</b><br align="left" />{}'.format(class_name, layer_name)
+            # label = '{}: {}'.format(class_name, layer_name)
+            # label = '{}\\l{}\\l'.format(class_name, layer_name)
+            label = f'<b>{class_name}</b><br align="left" />{layer_name}'
         else:
             label = class_name
 
         # Rebuild the label as a table including input/output shapes.
         if show_shapes:
+
             def format_shape(shape):
                 return str(tuple(shape)).replace(str(None), '?')
-            
-            input_labels = '?' 
+
+            input_labels = '?'
             try:
                 output_labels = format_shape(layer.get_output_variable().shape)
             except AttributeError:
@@ -127,12 +119,11 @@ def model_to_dot(model,
                     input_layer = layer.get_input_variable()
                     if input_layer is not None:
                         input_labels = format_shape(input_layer.shape)
-            label = '%s\n|{input: %s|output: %s}' % (label,
-                                                     input_labels,
-                                                     output_labels)
+            label = f'{label}\n|{{input: {input_labels}|output: {output_labels}}}'
 
         # Rebuild the label as a table including tensor precision.
         if show_precision:
+
             def format_precision(precision):
                 return str(precision).replace('<', '&lt;').replace('>', '&gt;')
 
@@ -146,21 +137,20 @@ def model_to_dot(model,
                 tensors.update(layer.variables)
             for tensor_name, var in tensors.items():
                 if show_shapes:
-                    #tensor_label = '{} {}: {}'.format(tensor_name,
+                    # tensor_label = '{} {}: {}'.format(tensor_name,
                     tensor_label = '<tr><td align="left">{} {}:</td><td align="left">{}</td></tr>'.format(
-                        tensor_name,
-                        format_shape(var.shape),
-                        format_precision(var.type.precision))
+                        tensor_name, format_shape(var.shape), format_precision(var.type.precision)
+                    )
                 else:
-                    #tensor_label = '{}: {}'.format(tensor_name,
+                    # tensor_label = '{}: {}'.format(tensor_name,
                     tensor_label = '<tr><td align="left">{}:</td><td align="left">{}</td></tr>'.format(
-                        tensor_name,
-                        format_precision(var.type.precision))
+                        tensor_name, format_precision(var.type.precision)
+                    )
                 precision_labels.append(tensor_label)
-            #precision_label = '<br align="left" />'.join(precision_labels)
+            # precision_label = '<br align="left" />'.join(precision_labels)
             precision_label = ''.join(precision_labels)
             precision_label = '<table border="0" cellspacing="0">' + precision_label + '</table>'
-            label = '%s|{%s}' % (label, precision_label)
+            label = f'{label}|{{{precision_label}}}'
 
         label = '<' + label + '>'
         node = pydot.Node(layer_id, label=label)
@@ -169,7 +159,7 @@ def model_to_dot(model,
     # Connect nodes with edges.
     for layer in layers:
         layer_id = str(layer.index)
-        for i, input_name in enumerate(layer.inputs):
+        for input_name in layer.inputs:
             input_layer = layer.get_input_node(input_name)
             if input_layer is not None:
                 input_layer_id = str(input_layer.index)
@@ -178,15 +168,11 @@ def model_to_dot(model,
     return dot
 
 
-def plot_model(model,
-               to_file='model.png',
-               show_shapes=False,
-               show_layer_names=True,
-               show_precision=False,
-               rankdir='TB',
-               dpi=96):
+def plot_model(
+    model, to_file='model.png', show_shapes=False, show_layer_names=True, show_precision=False, rankdir='TB', dpi=96
+):
     """Converts a HLS model to dot format and save to a file.
-  
+
     Arguments:
         model: A HLS model instance
         to_file: File name of the plot image.
@@ -198,20 +184,22 @@ def plot_model(model,
             'TB' creates a vertical plot;
             'LR' creates a horizontal plot.
         dpi: Dots per inch.
-  
+
     Returns:
         A Jupyter notebook Image object if Jupyter is installed.
         This enables in-line display of the model plots in notebooks.
     """
-    dot = model_to_dot(model,
-                       show_shapes=show_shapes,
-                       show_layer_names=show_layer_names,
-                       show_precision=show_precision,
-                       rankdir=rankdir,
-                       dpi=dpi)
+    dot = model_to_dot(
+        model,
+        show_shapes=show_shapes,
+        show_layer_names=show_layer_names,
+        show_precision=show_precision,
+        rankdir=rankdir,
+        dpi=dpi,
+    )
     if dot is None:
         return
-    
+
     if to_file is not None:
         _, extension = os.path.splitext(to_file)
         if not extension:
@@ -225,8 +213,9 @@ def plot_model(model,
         # Note that we cannot easily detect whether the code is running in a
         # notebook, and thus we always return the Image if Jupyter is available.
         try:
-            from IPython import display
             import tempfile
+
+            from IPython import display
 
             temp = tempfile.NamedTemporaryFile(suffix='.png')
             dot.write(temp.name, format='png')

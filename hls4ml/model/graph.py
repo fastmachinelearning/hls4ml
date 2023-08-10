@@ -13,6 +13,12 @@ from hls4ml.model.optimizer import get_available_passes, optimize_model
 
 
 class HLSConfig:
+    """The configuration class as stored in the ModelGraph.
+
+    Args:
+        config (dict):  The configuration dictionary
+    """
+
     def __init__(self, config):
         self.config = config
         self.backend = get_backend(self.config.get('Backend', 'Vivado'))
@@ -42,6 +48,8 @@ class HLSConfig:
         self.layer_name_compression = {}
 
         self.trace_output = self.get_config_value('TraceOutput', False)
+
+        self.pipeline_style = 'pipeline'
 
         self._parse_hls_config()
         self._validate_hls_config()
@@ -206,6 +214,7 @@ class HLSConfig:
             self.model_conv_implementation = model_cfg.get('ConvImplementation', 'LineBuffer')
             self.model_strategy = model_cfg.get('Strategy', 'Latency')
             self.model_compression = bool(model_cfg.get('Compression', 0))
+            self.pipeline_style = model_cfg.get('PipelineStyle', 'pipeline')
 
         layer_type_cfg = hls_config.get('LayerType')
         if layer_type_cfg is not None:
@@ -268,60 +277,81 @@ class HLSConfig:
                     self.layer_name_compression[layer_name.lower()] = bool(compression)
 
     def _validate_hls_config(self):
-        use_resource = False
-        if self.model_strategy.lower() == 'latency' and self.model_compression:
-            print('WARNING: Compression enabled while model strategy set to "Latency".')
-            use_resource = True
+        use_dataflow = False
+        if self.pipeline_style.lower() == 'pipeline' and self.model_compression:
+            print('WARNING: Compression enabled while pipeline style set to "pipeline".')
+            use_dataflow = True
         for layer_type, strategy in self.layer_type_strategy.items():
-            if strategy.lower() == 'resource' and self.model_strategy.lower() == 'latency':
+            if strategy.lower() == 'resource' and self.pipeline_style.lower() == 'pipeline':
                 print(
-                    'WARNING: Strategy for layer type {} set to "Resource", while model strategy set to "Latency".'.format(
+                    'WARNING: Strategy for layer type {} set to "Resource", while pipeline style set to "pipeline".'.format(
                         layer_type
                     )
                 )
-                use_resource = True
+                use_dataflow = True
 
         for layer_name, strategy in self.layer_name_strategy.items():
-            if strategy.lower() == 'resource' and self.model_strategy.lower() == 'latency':
+            if strategy.lower() == 'resource' and self.pipeline_style.lower() == 'pipeline':
                 print(
-                    'WARNING: Strategy for layer {} set to "Resource", while model strategy set to "Latency".'.format(
+                    'WARNING: Strategy for layer {} set to "Resource", while pipeline style set to "pipeline".'.format(
                         layer_name
                     )
                 )
-                use_resource = True
+                use_dataflow = True
 
         for layer_type, compression in self.layer_type_compression.items():
-            if compression and self.model_strategy.lower() == 'latency':
+            if compression and self.pipeline_style.lower() == 'pipeline':
                 print(
-                    'WARNING: Compression enabled for layer type {}, while model strategy set to "Latency".'.format(
+                    'WARNING: Compression enabled for layer type {}, while pipeline style set to "pipeline".'.format(
                         layer_type
                     )
                 )
-                use_resource = True
+                use_dataflow = True
 
         for layer_name, compression in self.layer_name_compression.items():
-            if compression and self.model_strategy.lower() == 'latency':
-                print(f'WARNING: Compression enabled for layer {layer_name}, while model strategy set to "Latency".')
-                use_resource = True
+            if compression and self.pipeline_style.lower() == 'pipeline':
+                print(f'WARNING: Compression enabled for layer {layer_name}, while pipeline style set to "pipeline".')
+                use_dataflow = True
 
-        if use_resource:
-            print('WARNING: Changing model strategy to "Resource"')
-            self.model_strategy = 'Resource'
+        if self.model_strategy.lower() == 'resource':
+            use_dataflow = True
+
+        if use_dataflow:
+            print('WARNING: Changing pipeline style to "dataflow".')
+            self.pipeline_style = 'dataflow'
 
 
 class ModelGraph:
-    def __init__(self, config, data_reader, layer_list, inputs=None, outputs=None):
-        self.config = HLSConfig(config)
-        self.reader = data_reader
+    """The ModelGraph represents the network that is being processed by hls4ml.
 
+    Args:
+        config (dict):  The configuration dictionary
+        layer_list (list(dict)):  The list contains a dictionary for each input layer
+        inputs (list, optional):  The inputs to the model. If None, determined from layer_list
+        outputs (list, optional):  The outputs to the model. If None, determined from layer_list
+    """
+
+    def __init__(self, config, layer_list, inputs=None, outputs=None):
+        self.config = HLSConfig(config)
+
+        # keep track of the applied flows
         self._applied_flows = []
 
-        # If not provided, assumes layer_list[0] is input, and layer_list[-1] is output
-        self.inputs = inputs if inputs is not None else [layer_list[0]['name']]
-        self.outputs = outputs if outputs is not None else [layer_list[-1]['name']]
+        # If not provided, assumes layer_list[0] is the input layer, and layer_list[-1] is output layer
+
+        # Note, these are actually the variable names, which may differ from the layer name
+        input_layers = inputs if inputs is not None else [layer_list[0]['name']]
+        output_layers = outputs if outputs is not None else [layer_list[-1]['name']]
+        self.inputs = self._find_output_variable_names(layer_list, input_layers)
+        if self.inputs != input_layers:
+            raise RuntimeError(
+                "Currently only support the case when input variables and input layer names match\n"
+                + f"Input layers = {input_layers}, input_vars = {self.inputs}"
+            )
+        self.outputs = self._find_output_variable_names(layer_list, output_layers)
 
         self.index = 0
-        self.graph = OrderedDict()
+        self.graph = OrderedDict()  # where the nodes are stored
         self.output_vars = {}
 
         self._top_function_lib = None
@@ -330,6 +360,13 @@ class ModelGraph:
 
         for flow in self.config.flows:
             self.apply_flow(flow)
+
+    def _find_output_variable_names(self, layer_list, layer_names):
+        """Given a list of all layers, and a list input/output names, find the names of the their outputs that will be used
+        as the name of the output variables."""
+        inout_nodes = [node for node in layer_list if node['name'] in layer_names]
+        all_node_output_names = [node['outputs'] if 'outputs' in node else [node['name']] for node in inout_nodes]
+        return [output for node_output_names in all_node_output_names for output in node_output_names]  # to flatten
 
     def _make_graph(self, layer_list):
         for layer in layer_list:
@@ -348,6 +385,7 @@ class ModelGraph:
 
     def apply_flow(self, flow, reapply='single'):
         """Applies a flow (a collection of optimizers).
+
         Args:
             flow (str): The name of the flow to apply
             reapply (str, optional): Determines the action to take if the flow and its requirements have already been
@@ -448,7 +486,7 @@ class ModelGraph:
             node (Layer): Node to insert
             before (Layer, optional): The next node in sequence before which a
                 new node should be inserted.
-           input_idx (int, optional): If the next node takes multiple inputs, the input index
+            input_idx (int, optional): If the next node takes multiple inputs, the input index
         Raises:
             Exception: If an attempt to insert a node with multiple inputs is made or if
                 `before` does not specify a correct node in sequence.
@@ -500,13 +538,15 @@ class ModelGraph:
 
         Raises:
             Exception: If an attempt is made to rewire a leaf node or a node with multiple
-                inputs/outpus.
+                inputs/outputs.
 
         """
         if rewire:
-            if len(node.inputs) > 1 or len(node.outputs) > 1:
+            inputs = [inp for inp in node.inputs if inp]
+            outputs = [outp for outp in node.outputs if outp]
+            if len(inputs) > 1 or len(outputs) > 1:
                 raise Exception('Cannot rewire a node with multiple inputs/outputs')
-            prev_node = self.graph.get(node.inputs[0])
+            prev_node = node.get_input_node(node.inputs[0])
             next_nodes = [x for x in self.graph.values() if node.outputs[0] in x.inputs]
             if prev_node is not None:
                 if len(next_nodes) > 0:
@@ -553,9 +593,6 @@ class ModelGraph:
         node_outputs = [out for node in self.graph.values() for out in node.outputs]
         node_inputs = [inp for node in self.graph.values() for inp in node.inputs]
         self.outputs = [out for out in node_outputs if out not in node_inputs]
-
-    def get_weights_data(self, layer_name, var_name):
-        return self.reader.get_weights_data(layer_name, var_name)
 
     def next_layer(self):
         self.index += 1
@@ -610,7 +647,6 @@ class ModelGraph:
 
         lib_name = self.config.backend.compile(self)
         if self._top_function_lib is not None:
-
             if platform.system() == "Linux":
                 libdl_libs = ['libdl.so', 'libdl.so.2']
                 for libdl in libdl_libs:

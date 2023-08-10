@@ -1,5 +1,5 @@
-from hls4ml.model.layers import Pooling1D, Pooling2D, GlobalPooling1D, GlobalPooling2D
-from hls4ml.backends.template import LayerConfigTemplate, FunctionCallTemplate
+from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
+from hls4ml.model.layers import GlobalPooling1D, GlobalPooling2D, Pooling1D, Pooling2D
 
 # TODO - Move to ../fpga/passes, once streaming is supported on Quartus (should be identical to Vivado)
 
@@ -18,6 +18,7 @@ pooling1d_config_template = """struct config{index} : nnet::pooling1d_config {{
 
     static const unsigned pad_left = {pad_left};
     static const unsigned pad_right = {pad_right};
+    static const bool count_pad = {count_pad};
 
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     typedef {accum_t.name} accum_t;
@@ -36,7 +37,7 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
     static const unsigned in_width = {in_width};
     static const unsigned out_height = {out_height};
     static const unsigned out_width = {out_width};
-    
+
     static const unsigned n_filt = {n_filt};
     static const unsigned n_chan = {n_filt};
 
@@ -44,7 +45,8 @@ pooling2d_config_template = """struct config{index} : nnet::pooling2d_config {{
     static const unsigned pad_bottom = {pad_bottom};
     static const unsigned pad_left = {pad_left};
     static const unsigned pad_right = {pad_right};
-    
+    static const bool count_pad = {count_pad};
+
     static const nnet::Pool_Op pool_op = nnet::{pool_op};
     typedef {accum_t.name} accum_t;
 }};\n"""
@@ -66,10 +68,15 @@ global_pooling2d_config_template = """struct config{index} : nnet::pooling2d_con
 
 pooling1d_function_template = 'nnet::pooling1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
 pooling2d_function_template = 'nnet::pooling2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
-global_pooling1d_function_template = 'nnet::global_pooling1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
-global_pooling2d_function_template = 'nnet::global_pooling2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
+global_pooling1d_function_template = (
+    'nnet::global_pooling1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
+)
+global_pooling2d_function_template = (
+    'nnet::global_pooling2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
+)
 
 pooling_include_list = ['nnet_utils/nnet_pooling.h', 'nnet_utils/nnet_pooling_stream.h']
+
 
 class PoolingConfigTemplate(LayerConfigTemplate):
     def __init__(self):
@@ -84,6 +91,7 @@ class PoolingConfigTemplate(LayerConfigTemplate):
     def format(self, node):
         params = self._default_config_params(node)
         return self.templates[node.class_name].format(**params)
+
 
 class PoolingFunctionTemplate(FunctionCallTemplate):
     def __init__(self):

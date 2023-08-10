@@ -4,6 +4,7 @@ type: software
 authors:
 - given-names: "FastML Team"
 title: "hls4ml"
+version: "v0.7.1"
 doi: 10.5281/zenodo.1201549
 repository-code: "https://github.com/fastmachinelearning/hls4ml"
 url: "https://fastmachinelearning.org/hls4ml"
@@ -18,6 +19,38 @@ keywords:
   - qonnx
 license: "Apache-2.0"
 abstract: |
-  hls4ml is an open-source software-hardware codesign workflow 
-  to interpret and translate machine learning algorithms for 
+  hls4ml is an open-source software-hardware codesign workflow
+  to interpret and translate machine learning algorithms for
   implementations in hardware, including FPGAs and ASICs.
+references:
+  - type: article
+    title: "Fast inference of deep neural networks on FPGAs with hls4ml"
+    authors:
+    - family-names: "Duarte"
+      given-names: "Javier"
+    - family-names: "Han"
+      given-names: "Song"
+    - family-names: "Harris"
+      given-names: "Philip"
+    - family-names: "Jindariani"
+      given-names: "Sergo"
+    - family-names: "Kreinar"
+      given-names: "Edward"
+    - family-names: "Kreis"
+      given-names: "Benjamin"
+    - family-names: "Ngadiuba"
+      given-names: "Jennifer"
+    - family-names: "Pierini"
+      given-names: "Maurizio"
+    - family-names: "Rivera"
+      given-names: "Ryan"
+    - family-names: "Tran"
+      given-names: "Nhan"
+    - family-names: "Wu"
+      given-names: "Zhenbin"
+    journal: "JINST"
+    volume: "13"
+    start: "P07027"
+    doi: "10.1088/1748-0221/13/07/P07027"
+    year: "2018"
+    number: "07"

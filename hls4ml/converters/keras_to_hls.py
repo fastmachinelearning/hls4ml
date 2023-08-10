@@ -1,5 +1,4 @@
 import json
-import math
 
 import h5py
 
@@ -8,7 +7,12 @@ from hls4ml.model import ModelGraph
 MAXMULT = 4096
 
 
-class KerasFileReader:
+class KerasReader:
+    def get_weights_data(self, layer_name, var_name):
+        raise NotImplementedError
+
+
+class KerasFileReader(KerasReader):
     def __init__(self, config):
         self.config = config
         self.h5file = h5py.File(config['KerasH5'], mode='r')
@@ -40,15 +44,27 @@ class KerasFileReader:
         else:
             return None
 
-    def get_weights_shape(self, layer_name, var_name):
-        data = self._find_data(layer_name, var_name)
-        if data is not None:
-            return data.shape
+
+class KerasNestedFileReader(KerasFileReader):
+    def __init__(self, data_reader, nested_path):
+        super().__init__(data_reader.config)
+        self.nested_path = nested_path
+
+    def _find_data(self, layer_name, var_name):
+        def h5_visitor_func(name):
+            if var_name in name:
+                return name
+
+        layer_path = f'model_weights/{self.nested_path}/{layer_name}'
+
+        data_path = self.h5file[layer_path].visit(h5_visitor_func)
+        if data_path:
+            return self.h5file[f'/{layer_path}/{data_path}']
         else:
             return None
 
 
-class KerasModelReader:
+class KerasModelReader(KerasReader):
     def __init__(self, keras_model):
         self.model = keras_model
 
@@ -63,31 +79,17 @@ class KerasModelReader:
 
         return None
 
-    def get_weights_shape(self, layer_name, var_name):
-        layer = self.model.get_layer(layer_name)
-        for w in layer.weights:
-            if var_name in w.name:
-                return w.shape.as_list()
 
-        return None
+def get_weights_data(data_reader, layer_name, var_name):
+    if not isinstance(var_name, (list, tuple)):
+        var_name = [var_name]
 
+    data = [data_reader.get_weights_data(layer_name, var) for var in var_name]
 
-def get_qkeras_quantization(layer, keras_layer):
-    if not layer['class_name'].startswith('Q'):  # Not a QKeras layer, nothing to do
-        return
-    kernel_quantizer = keras_layer['config']['kernel_quantizer']['class_name']
-    bias_quantizer = keras_layer['config']['bias_quantizer']['class_name']
-
-    if kernel_quantizer != bias_quantizer:
-        raise Exception('Mixing quantizers within QKeras layers is not supported')
-    if kernel_quantizer == 'binary':
-        layer['quantize'] = 2
-    elif kernel_quantizer == 'ternary':
-        layer['quantize'] = 3
+    if len(data) == 1:
+        return data[0]
     else:
-        raise Exception(
-            'Unsupported quantizer {} in {} layer {}'.format(kernel_quantizer, layer['class_name'], layer['name'])
-        )
+        return (*data,)
 
 
 layer_handlers = {}
@@ -113,6 +115,14 @@ def register_keras_layer_handler(layer_cname, handler_func):
 
 
 def get_supported_keras_layers():
+    """Returns the list of Keras layers that the converter can parse.
+
+    The returned list contains all Keras layers that can be parsed into the hls4ml internal representation. Support for
+    computation of these layers may vary across hls4ml backends and conversion configuration.
+
+    Returns:
+        list: The names of supported Keras layers.
+    """
     return list(layer_handlers.keys())
 
 
@@ -143,76 +153,6 @@ def parse_default_keras_layer(keras_layer, input_names):
         layer['use_bias'] = keras_layer['config']['use_bias']
 
     return layer
-
-
-def parse_data_format(input_shape, data_format='channels_last'):
-    # Ignore batch size
-    input_shape = input_shape[1:]
-
-    if data_format.lower() == 'channels_last':
-        if len(input_shape) == 2:  # 1D, (n_in, n_filt)
-            return (input_shape[0], input_shape[1])
-        elif len(input_shape) == 3:  # 2D, (in_height, in_width, n_filt)
-            return (input_shape[0], input_shape[1], input_shape[2])
-
-    elif data_format.lower() == 'channels_first':
-        if len(input_shape) == 2:  # 1D, (n_filt, n_in)
-            return (input_shape[1], input_shape[0])
-        elif len(input_shape) == 3:  # 2D, (n_filt, in_height, in_width)
-            return (input_shape[1], input_shape[2], input_shape[0])
-    else:
-        raise Exception(f'Unknown data format: {data_format}')
-
-
-def compute_padding_1d(pad_type, in_size, stride, filt_size):
-    if pad_type.lower() == 'same':
-        n_out = int(math.ceil(float(in_size) / float(stride)))
-        if in_size % stride == 0:
-            pad_along_size = max(filt_size - stride, 0)
-        else:
-            pad_along_size = max(filt_size - (in_size % stride), 0)
-        pad_left = pad_along_size // 2
-        pad_right = pad_along_size - pad_left
-    elif pad_type.lower() == 'valid':
-        n_out = int(math.ceil(float(in_size - filt_size + 1) / float(stride)))
-        pad_left = 0
-        pad_right = 0
-    else:
-        raise Exception(f'Unknown padding type: {pad_type}')
-
-    return (n_out, pad_left, pad_right)
-
-
-def compute_padding_2d(pad_type, in_height, in_width, stride_height, stride_width, filt_height, filt_width):
-    if pad_type.lower() == 'same':
-        # Height
-        out_height = int(math.ceil(float(in_height) / float(stride_height)))
-        if in_height % stride_height == 0:
-            pad_along_height = max(filt_height - stride_height, 0)
-        else:
-            pad_along_height = max(filt_height - (in_height % stride_height), 0)
-        pad_top = pad_along_height // 2
-        pad_bottom = pad_along_height - pad_top
-        # Width
-        out_width = int(math.ceil(float(in_width) / float(stride_width)))
-        if in_width % stride_width == 0:
-            pad_along_width = max(filt_width - stride_width, 0)
-        else:
-            pad_along_width = max(filt_width - (in_width % stride_width), 0)
-        pad_left = pad_along_width // 2
-        pad_right = pad_along_width - pad_left
-    elif pad_type.lower() == 'valid':
-        out_height = int(math.ceil(float(in_height - filt_height + 1) / float(stride_height)))
-        out_width = int(math.ceil(float(in_width - filt_width + 1) / float(stride_width)))
-
-        pad_top = 0
-        pad_bottom = 0
-        pad_left = 0
-        pad_right = 0
-    else:
-        raise Exception(f'Unknown padding type: {pad_type}')
-
-    return (out_height, out_width, pad_top, pad_bottom, pad_left, pad_right)
 
 
 def get_model_arch(config):
@@ -250,14 +190,22 @@ def get_model_arch(config):
 
 
 def parse_keras_model(model_arch, reader):
-
     # This is a list of dictionaries to hold all the layer info we need to generate HLS
     layer_list = []
 
     # Define layers to skip for conversion to HLS
     skip_layers = ['Dropout']
     # Activation layers
-    activation_layers = ['Activation', 'LeakyReLU', 'ThresholdedReLU', 'ELU', 'PReLU', 'Softmax', 'TernaryTanh']
+    activation_layers = [
+        'Activation',
+        'LeakyReLU',
+        'ThresholdedReLU',
+        'ELU',
+        'PReLU',
+        'Softmax',
+        'TernaryTanh',
+        'HardActivation',
+    ]
     # Recurrent layers
     recurrent_layers = ['SimpleRNN', 'LSTM', 'GRU']
     # All supported layers
@@ -286,7 +234,7 @@ def parse_keras_model(model_arch, reader):
             input_layer['input_shape'] = layer_config[0]['config']['batch_input_shape'][1:]
             layer_list.append(input_layer)
             print('Input shape:', input_layer['input_shape'])
-    elif model_arch['class_name'] in ['Model', 'Functional']:  # TF >= 2.3 calls it 'Funcational' API
+    elif model_arch['class_name'] in ['Model', 'Functional']:  # TF >= 2.3 calls it 'Functional' API
         print('Interpreting Model')
         layer_config = model_arch['config']['layers']
         input_layers = [inp[0] for inp in model_arch['config']['input_layers']]
@@ -370,18 +318,19 @@ def parse_keras_model(model_arch, reader):
             inputs_map[layer['name']] = act_layer['name']
             if output_layers is not None and layer['name'] in output_layers:
                 output_layers = [act_layer['name'] if name == layer['name'] else name for name in output_layers]
+            output_shapes[act_layer['name']] = output_shape
             layer_list.append(act_layer)
 
         assert output_shape is not None
 
         output_shapes[layer['name']] = output_shape
 
-    return layer_list, input_layers, output_layers
+    return layer_list, input_layers, output_layers, output_shapes
 
 
 def keras_to_hls(config):
     model_arch, reader = get_model_arch(config)
-    layer_list, input_layers, output_layers = parse_keras_model(model_arch, reader)
+    layer_list, input_layers, output_layers, _ = parse_keras_model(model_arch, reader)
     print('Creating HLS model')
-    hls_model = ModelGraph(config, reader, layer_list, input_layers, output_layers)
+    hls_model = ModelGraph(config, layer_list, input_layers, output_layers)
     return hls_model

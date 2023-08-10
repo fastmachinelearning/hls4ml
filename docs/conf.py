@@ -12,19 +12,49 @@
 #
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath('../'))
 
 import datetime
-from setuptools_scm import get_version
+import json
+
+import requests
+
+from hls4ml import __version__
+
+try:
+    from packaging.version import parse
+except ImportError:
+    from pip._vendor.packaging.version import parse
+
+
+URL_PATTERN = 'https://pypi.python.org/pypi/{package}/json'
+
+
+def get_pypi_version(package, url_pattern=URL_PATTERN):
+    """Return version of package on pypi.python.org using json."""
+    req = requests.get(url_pattern.format(package=package))
+    version = parse('0')
+    if req.status_code == requests.codes.ok:
+        j = json.loads(req.text.encode(req.encoding))
+        releases = j.get('releases', [])
+        for release in releases:
+            ver = parse(release)
+            if not ver.is_prerelease:
+                version = max(version, ver)
+    return str(version)
+
 
 # -- Project information -----------------------------------------------------
 
 project = 'hls4ml'
-copyright = str(datetime.datetime.now().year)+', Fast Machine Learning Lab'
+copyright = str(datetime.datetime.now().year) + ', Fast Machine Learning Lab'
 author = 'Fast Machine Learning Lab'
 
 # The full version, including alpha/beta/rc tags
-release = get_version(root='..', relative_to=__file__)
+version = __version__
+
+release = get_pypi_version(project)
 
 # -- General configuration ---------------------------------------------------
 
@@ -35,9 +65,15 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.autodoc',
     'sphinx.ext.githubpages',
+    'sphinx.ext.autosectionlabel',
     'sphinx_rtd_theme',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'sphinx_contributors',
+    'sphinx_github_changelog',
 ]
+
+# Note: to build locally, you will need to set the SPHINX_GITHUB_CHANGELOG_TOKEN
+# environment variable to a personal access token with repo scope
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -58,7 +94,7 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = []
 
 
 # -- Extension configuration -------------------------------------------------
@@ -72,12 +108,20 @@ html_theme_options = {
     'display_version': True,
     'prev_next_buttons_location': 'bottom',
     'style_external_links': False,
-
     'style_nav_header_background': '#2980B9',
     # Toc options
     'collapse_navigation': True,
     'sticky_navigation': True,
     'navigation_depth': 2,
     'includehidden': True,
-    'titles_only': False
+    'titles_only': False,
 }
+
+html_context = {
+    'display_github': True,  # Integrate GitHub
+    'github_user': 'fastmachinelearning',  # Username
+    'github_repo': "hls4ml",  # Repo name
+    'github_version': 'main',  # Version
+    'conf_py_path': '/docs/',  # Path in the checkout to the docs root
+}
+html_favicon = 'img/hls4ml_logo.svg'

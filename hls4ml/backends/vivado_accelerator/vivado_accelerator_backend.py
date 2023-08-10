@@ -8,6 +8,7 @@ from hls4ml.report import parse_vivado_report
 class VivadoAcceleratorBackend(VivadoBackend):
     def __init__(self):
         super(VivadoBackend, self).__init__(name='VivadoAccelerator')
+        self._register_layer_attributes()
         self._register_flows()
 
     def build(
@@ -57,13 +58,13 @@ class VivadoAcceleratorBackend(VivadoBackend):
         return parse_vivado_report(model.config.get_output_dir())
 
     def make_xclbin(self, model, platform='xilinx_u250_xdma_201830_2'):
-        """
+        """Create the xclbin for the given model and target platform.
 
-        Parameters
-        ----------
-        - model : compiled and built hls_model.
-        - platform : development Target Platform, must be installed first. On the host machine is required only the
-                     deployment target platform, both can be found on the Getting Started section of the Alveo card.
+        Args:
+            model (ModelGraph): Compiled and build model.
+            platform (str, optional): Development/Deployment target platform, must be installed first.
+                The host machine only requires the deployment target platform. Refer to the Getting Started section of
+                the Alveo guide. Defaults to 'xilinx_u250_xdma_201830_2'.
         """
         curr_dir = os.getcwd()
         abs_path_dir = os.path.abspath(model.config.get_output_dir())
@@ -108,6 +109,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
     ):
         '''
         Create initial accelerator config with default parameters
+
         Args:
             board: one of the keys defined in supported_boards.json
             clock_period: clock period passed to hls project
