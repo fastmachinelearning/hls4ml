@@ -32,6 +32,8 @@ class SymbolicExpressionWriter(VivadoWriter):
         filedir = os.path.dirname(os.path.abspath(__file__))
 
         srcpath = model.config.get_config_value('HLSIncludePath')
+        if not os.path.exists(srcpath):
+            srcpath = os.path.join(filedir, '../templates/vivado/ap_types/')
         dstpath = f'{model.config.get_output_dir()}/firmware/ap_types/'
 
         if os.path.exists(dstpath):
@@ -86,6 +88,9 @@ class SymbolicExpressionWriter(VivadoWriter):
             line = line.replace('myproject', model.config.get_project_name())
             line = line.replace('mystamp', model.config.get_config_value('Stamp'))
             line = line.replace('mylibspath', model.config.get_config_value('HLSLibsPath'))
+
+            if 'LDFLAGS=' in line and not os.path.exists(model.config.get_config_value('HLSLibsPath')):
+                line = 'LDFLAGS=\n'
 
             fout.write(line)
         f.close()

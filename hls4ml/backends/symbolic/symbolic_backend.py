@@ -63,6 +63,11 @@ class SymbolicExpressionBackend(FPGABackend):
                         'Vivado HLS header files not found. Make sure you pass the proper path '
                         'to the "include" directory (for example "/opt/Xilinx/Vivado/2020.1/include").'
                     )
+            elif hls_include_path == '':
+                print(
+                    'No HLS include path provided, using HLS math functions from Python (i.e., predict()) will not work. '
+                    'Consider using only LUT approximations.'
+                )
             if hls_libs_path is None:
                 hls_libs_path = bin_path.replace(f'/bin/{compiler}', '/lnx64')
                 if not os.path.exists(hls_libs_path + '/lib/csim/libhlsmc++-GCC46.so'):
