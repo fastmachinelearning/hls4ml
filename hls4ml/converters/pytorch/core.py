@@ -111,7 +111,6 @@ def parse_batchnorm_layer(operation, layer_name, input_names, input_shapes, node
         layer['mean_data'], layer['variance_data'] = get_weights_data(
             data_reader, layer['name'], ['running_mean', 'running_var']
         )
-    print(layer['epsilon'])
     in_size = 1
     for dim in input_shapes[0][1:]:
         in_size *= dim
