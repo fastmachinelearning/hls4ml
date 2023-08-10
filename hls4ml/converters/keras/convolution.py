@@ -55,6 +55,9 @@ def parse_conv1dtranspose_layer(keras_layer, input_names, input_shapes, data_rea
     layer['padding'] = keras_layer['config']['padding']
     layer['trfilt_width'] = (layer['filt_width'] + layer['stride_width'] - 1) // layer['stride_width']
 
+    layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'kernel')
+    layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
+
     (
         layer['out_width'],
         layer['pad_left'],
@@ -142,6 +145,9 @@ def parse_conv2dtranspose_layer(keras_layer, input_names, input_shapes, data_rea
     layer['padding'] = keras_layer['config']['padding']
     layer['trfilt_height'] = (layer['filt_height'] + layer['stride_height'] - 1) // layer['stride_height']
     layer['trfilt_width'] = (layer['filt_width'] + layer['stride_width'] - 1) // layer['stride_width']
+
+    layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'kernel')
+    layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
 
     (
         layer['out_height'],

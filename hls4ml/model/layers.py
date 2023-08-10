@@ -470,7 +470,7 @@ class Conv1DTranspose(Layer):
             shape = [self.attributes['n_filt'], self.attributes['out_width']]
             dims = [f'N_FILT_{self.index}', f'N_OUTPUTS_{self.index}']
 
-        data = self.model.get_weights_data(self.name, 'kernel')
+        data = self.get_attr("weight_data")
         # now we transform the entire kernel
 
         # (W,F,C) => (F,W,C)
@@ -596,7 +596,7 @@ class Conv2DTranspose(Layer):
             shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
             dims = [f'N_FILT_{self.index}', f'OUT_HEIGHT_{self.index}', f'OUT_WIDTH_{self.index}']
 
-        data = self.model.get_weights_data(self.name, 'kernel')
+        data = self.get_attr("weight_data")
         # now we transform the entire kernel
 
         # (H,W,F,C) => (F,H,W,C)
