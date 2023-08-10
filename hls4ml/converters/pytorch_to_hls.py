@@ -26,8 +26,10 @@ class PyTorchModelReader:
         # have to snap that off to find the tensors
         if layer_name.split('_')[-1].isdigit() and len(layer_name.split('_')) > 1:
             layer_name = '_'.join(layer_name.split('_')[:-1])
-
+        print(layer_name, var_name)
+        print(self.state_dict)
         if layer_name + '.' + var_name in self.state_dict:
+            print("found")
             data = self.state_dict[layer_name + '.' + var_name].numpy()
             return data
 
