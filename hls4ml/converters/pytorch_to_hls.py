@@ -28,6 +28,11 @@ class PyTorchModelReader:
             'beta': 'bias',
             'moving_mean': 'running_mean',
             'moving_variance': 'running_var',
+            # Recurrent layers
+            'weight_ih_l0': 'weight_ih_l0',
+            'weight_hh_l0': 'weight_hh_l0',
+            'bias_ih_l0': 'bias_ih_l0',
+            'bias_hh_l0': 'bias_hh_l0',
         }
 
         # Workaround for naming schme in nn.Sequential,
@@ -46,6 +51,8 @@ class PyTorchModelReader:
         if layer_name.split('_')[-1].isdigit() and len(layer_name.split('_')) > 1:
             layer_name = '_'.join(layer_name.split('_')[:-1])
 
+        # print (self.state_dict)
+        print(layer_name + '.' + var_name)
         if layer_name + '.' + var_name in self.state_dict:
             data = self.state_dict[layer_name + '.' + var_name].numpy()
             return data
@@ -167,7 +174,7 @@ def pytorch_to_hls(config):
 
     # All supported layers
     supported_layers = get_supported_pytorch_layers() + skip_layers
-
+    print(supported_layers)
     input_layers = []
 
     # Output shape tracking
@@ -179,6 +186,8 @@ def pytorch_to_hls(config):
     layer_counter = 0
 
     n_inputs = 0
+
+    print(traced_model.graph)
 
     for node in traced_model.graph.nodes:
         # If part of a nn.Sequntial, the node name will start with an "_" which messes up the parsing
@@ -220,7 +229,19 @@ def pytorch_to_hls(config):
 
             # parse info from class object
             input_names = [str(i) for i in node.args]
-            input_shapes = [output_shapes[str(i)] for i in node.args]
+            if pytorch_class in ["RNN", "GRU", "LSTM"]:
+                # we currently don't support the passing of the initial value of the hidden state to RNN models
+                input_names = [str(node.args[0])]
+                input_shapes = [output_shapes[str(node.args[0])]]
+            # if a 'getitem' is the input to a node, step back in the graph to find the real source of the input
+            elif "getitem" in node.args[0].name:
+                for tmp_node in traced_model.graph.nodes:
+                    if tmp_node.name == node.args[0]:
+                        input_names = [str(tmp_node.args[0])]
+                        input_shapes = [output_shapes[str(tmp_node.args[0])]]
+                        node.args = tmp_node.args[0]
+            else:
+                input_shapes = [output_shapes[str(i)] for i in node.args]
 
             # for Conv layers
             if 'Conv' in pytorch_class:
@@ -275,6 +296,8 @@ def pytorch_to_hls(config):
                 operation = layer_name_map[operation]
 
             # only a limited number of functions are supported
+            if operation == "getitem":
+                continue
             if operation not in supported_layers:
                 raise Exception(f'Unsupported function {operation}')
             if operation == 'PReLU' or operation == 'batch_norm' or operation == 'conv1d' or operation == 'conv2d':
