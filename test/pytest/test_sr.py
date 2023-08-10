@@ -47,7 +47,7 @@ def test_pysr_luts(data):
     try:
         from pysr import PySRRegressor
     except ImportError:
-        warnings.warn(UserWarning('Failed to import PySR, test will be skipped.'))
+        warnings.warn(UserWarning('Failed to import PySR, test will be skipped.'), stacklevel=1)
         return True
 
     function_definitions = ['cos_lut(x) = math_lut(cos, x, N=1024, range_start=-4, range_end=4)']
