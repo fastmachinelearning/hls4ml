@@ -92,22 +92,22 @@ CCS_MAIN(int argc, char *argv[])
 //    std::cout << "    Input feature map size = " << in.size() << " Output predictions size = " << pr.size() << std::endl;
 
       //hls-fpga-machine-learning insert data
-      ac_channel<input_t> conv2d_input/*("conv2d_input")*/;
+      input_t conv2d_input[N_INPUT_1_1*N_INPUT_2_1*N_INPUT_3_1];
       nnet::copy_data<float, input_t, 0, N_INPUT_1_1*N_INPUT_2_1*N_INPUT_3_1>(in, conv2d_input);
-      ac_channel<result_t> layer3_out/*("layer3_out")*/;
+      result_t layer3_out[OUT_HEIGHT_2*OUT_WIDTH_2*N_FILT_2];
 
       //hls-fpga-machine-learning insert top-level-function
       selu(conv2d_input,layer3_out,w2,b2);
 
-      for(int i = 0; i < OUT_HEIGHT_2*OUT_WIDTH_2; i++)
-      {
-	if(fabs(pr[i] - (float)layer3_out[i][0].to_double()) > 0.1)
+	for(int i = 0; i < OUT_HEIGHT_2*OUT_WIDTH_2*N_FILT_2; i++)
 	{
-		std::cout << "FAILURE" << std::endl;
-        	std::cout << "Expected: " << pr[i] << " Actual: " << layer3_out[i][0] << std::endl;
+	 if(fabs(pr[i]-layer3_out[i].to_double()) > 0.01)
+	 {
+	  std::cout << "FAILURE" << std::endl;
+	  std::cout << "Expected: " << pr[i]  << " Actual: " << layer3_out[i].to_double() << std::endl;
+	  return 1;
+	 }
 	}
-
-      }
 
       //hls-fpga-machine-learning insert tb-output
       nnet::print_result<result_t, OUT_HEIGHT_2*OUT_WIDTH_2*N_FILT_2>(layer3_out, fout);
@@ -118,9 +118,9 @@ CCS_MAIN(int argc, char *argv[])
     std::cout << "INFO: Unable to open input/predictions file, using default input." << std::endl;
 
     //hls-fpga-machine-learning insert zero
-    ac_channel<input_t> conv2d_input/*("conv2d_input")*/;
+    input_t conv2d_input[N_INPUT_1_1*N_INPUT_2_1*N_INPUT_3_1];
     nnet::fill_zero<input_t, N_INPUT_1_1*N_INPUT_2_1*N_INPUT_3_1>(conv2d_input);
-    ac_channel<result_t> layer3_out/*("layer3_out")*/;
+    result_t layer3_out[OUT_HEIGHT_2*OUT_WIDTH_2*N_FILT_2];
 
     //hls-fpga-machine-learning insert top-level-function
     selu(conv2d_input,layer3_out,w2,b2);
