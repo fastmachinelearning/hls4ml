@@ -476,6 +476,6 @@ def convert_from_symbolic_expression(
 
     config['HLSConfig'] = {'Model': {'Precision': precision, 'ReuseFactor': 1}}
 
-    hls_model = ModelGraph(config, None, layer_list)
+    hls_model = ModelGraph(config, layer_list)
 
     return hls_model
