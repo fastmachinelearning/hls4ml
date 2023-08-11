@@ -180,6 +180,7 @@ class Conv1DTransposeConfigTemplate(LayerConfigTemplate):
             // node.get_attr('stride_width')
         )
         mult_params['n_out'] = node.get_attr('n_filt')
+        mult_params['nzeros'] = node.get_weights('weight').nzeros
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
@@ -389,6 +390,7 @@ class Conv2DTransposeConfigTemplate(LayerConfigTemplate):
         mult_params = self._default_config_params(node)
         mult_params['n_in'] = node.get_attr('n_chan') * params['trfilt_width'] * params['trfilt_height']
         mult_params['n_out'] = node.get_attr('n_filt')
+        mult_params['nzeros'] = node.get_weights('weight').nzeros
         mult_params['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
