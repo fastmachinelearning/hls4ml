@@ -30,7 +30,7 @@ class Template(OptimizerPass):
         params = {}
         params.update(node.attributes)
         # Convert all bool attributes to lowercase strings
-        params = {key: str(val).lower() if type(val) == bool else val for key, val in params.items()}
+        params = {key: str(val).lower() if isinstance(val, bool) else val for key, val in params.items()}
 
         return params
 
