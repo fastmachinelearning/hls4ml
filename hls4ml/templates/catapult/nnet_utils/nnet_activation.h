@@ -796,12 +796,19 @@ void  softplus(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 }
 
 #else
+template <ac_q_mode pwl_Q = AC_TRN, int W, int I, bool S, ac_q_mode Q, ac_o_mode O, int outW, int outI, bool outS, ac_q_mode outQ, ac_o_mode outO >
+void ac_softplus_pwl_wrapper(const ac_fixed<W, I, S, Q, O> (&input), ac_fixed<outW, outI, outS, outQ, outO > (&output))
+{
+  ac_fixed<outW,outI,false,outQ,outO> tmp;
+  ac_math::ac_softplus_pwl<AC_TRN, W, I, S, Q, O, outW, outI, outQ, outO>(input,tmp);
+  output = tmp;
+}
 
 template<class data_T, class res_T, typename CONFIG_T>
 void  softplus(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
 {
     for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-        res[ii] = ac_math::ac_softplus_pwl(data[ii]);
+         ac_softplus_pwl_wrapper(data[ii],res[ii]);
     }
 }
 
