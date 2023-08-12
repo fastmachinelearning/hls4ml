@@ -17,29 +17,10 @@ class PyTorchModelReader:
     def get_weights_data(self, layer_name, var_name):
         data = None
 
-        # Parameter mapping from pytorch to keras
-        torch_paramap = {
-            # Conv
-            'kernel': 'weight',
-            # Batchnorm
-            'gamma': 'weight',
-            # Activiation
-            'alpha': 'weight',
-            'beta': 'bias',
-            'moving_mean': 'running_mean',
-            'moving_variance': 'running_var',
-        }
-
         # Workaround for naming schme in nn.Sequential,
         # have to remove the prefix we previously had to add to make sure the tensors are found
         if 'layer_' in layer_name:
             layer_name = layer_name.split('layer_')[-1]
-
-        if var_name not in list(torch_paramap.keys()) + ['weight', 'bias']:
-            raise Exception('Pytorch parameter not yet supported!')
-
-        elif var_name in list(torch_paramap.keys()):
-            var_name = torch_paramap[var_name]
 
         # if a layer is reused in the model, torch.FX will append a "_n" for the n-th use
         # have to snap that off to find the tensors
