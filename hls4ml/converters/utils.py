@@ -89,7 +89,8 @@ def compute_padding_1d_transpose(pad_type, in_size, stride, filt_size):
         pad_left = pad_along_size // 2
         pad_right = pad_along_size - pad_left
     elif pad_type.lower() == 'valid':
-        n_out = stride * (in_size - 1) + filt_size
+        # n_out = stride * (in_size - 1) + filt_size
+        n_out = in_size * stride + max(filt_size - stride, 0)  # from Keras source code
         pad_left = 0
         pad_right = 0
     else:
@@ -164,15 +165,15 @@ def compute_padding_2d_transpose(pad_type, in_height, in_width, stride_height, s
         pad_right = pad_along_width - pad_left
     elif pad_type.lower() == 'valid':
         # something
-        out_height = stride_height * in_height
-        out_width = stride_width * in_width
+        out_height = in_height * stride_height + max(filt_height - stride_height, 0)
+        out_width = in_width * stride_width + max(filt_width - stride_width, 0)
 
         pad_top = 0
         pad_bottom = 0
         pad_left = 0
         pad_right = 0
     else:
-        raise Exception(f'Unknown padding type: {pad_type}')
+        raise ValueError(f'Unknown padding type: {pad_type}')
 
     return (out_height, out_width, pad_top, pad_bottom, pad_left, pad_right)
 

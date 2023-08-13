@@ -625,12 +625,10 @@ class Conv2DTranspose(Layer):
                                     new_weights[i_sh][i_sw][i_nf][i_fh][i_fw][i_nc] = data[i_nf][filt_h_ind][filt_w_ind][
                                         i_nc
                                     ]
-        data = new_weights
+        self.set_attr("weight_data", new_weights)
 
         self.add_output_variable(shape, dims)
-        self.add_weights_variable(
-            name='weight', var_name='w{index}', data=data, quantizer=self.get_attr('weight_quantizer'), keep_dims=2
-        )
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'), keep_dims=2)
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
 
