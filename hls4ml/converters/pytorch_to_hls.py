@@ -33,7 +33,7 @@ class PyTorchModelReader:
         tensorName = layer_name + '.' + var_name
         if "layer." in tensorName and not layerInKeyName:
             tensorName = tensorName.lstrip("layer.")
-        print(tensorName)
+
         if tensorName in self.state_dict:
             data = self.state_dict[tensorName].numpy()
             return data
