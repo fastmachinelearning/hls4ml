@@ -18,19 +18,24 @@ class PyTorchModelReader:
         data = None
 
         # Workaround for naming schme in nn.Sequential,
-        # have to remove the prefix we previously had to add to make sure the tensors are found
-        if 'layer_' in layer_name:
-            layer_name = layer_name.split('layer_')[-1]
-        # naming convention for tensors in named nn.Sequentials
-        elif '_' in layer_name:
-            layer_name = '.'.join(layer_name.split('_'))
-        # if a layer is reused in the model, torch.FX will append a "_n" for the n-th use
-        # have to snap that off to find the tensors
-        if layer_name.split('_')[-1].isdigit() and len(layer_name.split('_')) > 1:
-            layer_name = '_'.join(layer_name.split('_')[:-1])
+        # We have to remove the prefix we added earlier to not have layer
+        # names start with an underscore. However, this clashes with cases
+        # were an named nn.Sequential with "layer" in it's name is used.
+        # We make sure that we pick the correct name for the tensor
+        layerInKeyName = False
+        for key in self.state_dict.keys():
+            if "layer." in key:
+                layerInKeyName = True
 
-        if layer_name + '.' + var_name in self.state_dict:
-            data = self.state_dict[layer_name + '.' + var_name].numpy()
+        if '_' in layer_name:
+            layer_name = '.'.join(layer_name.split('_'))
+
+        tensorName = layer_name + '.' + var_name
+        if "layer." in tensorName and not layerInKeyName:
+            tensorName = tensorName.lstrip("layer.")
+        print(tensorName)
+        if tensorName in self.state_dict:
+            data = self.state_dict[tensorName].numpy()
             return data
 
         else:
