@@ -32,14 +32,11 @@ class PyTorchModelReader:
         if layer_name.split('_')[-1].isdigit() and len(layer_name.split('_')) > 1:
             layer_name = '_'.join(layer_name.split('_')[:-1])
 
-        # print (self.state_dict)
-        # print (self.state_dict)
         if layer_name + '.' + var_name in self.state_dict:
             data = self.state_dict[layer_name + '.' + var_name].numpy()
             return data
 
         else:
-            print("not found")
             return None
 
 
@@ -156,7 +153,7 @@ def pytorch_to_hls(config):
 
     # All supported layers
     supported_layers = get_supported_pytorch_layers() + skip_layers
-    print("supported layers:")
+
     input_layers = []
 
     # Output shape tracking
@@ -168,8 +165,6 @@ def pytorch_to_hls(config):
     layer_counter = 0
 
     n_inputs = 0
-
-    print(traced_model.graph)
 
     for node in traced_model.graph.nodes:
         # If part of an unnamend nn.Sequntial, the node name will start with an "_" which messes up the parsing
@@ -224,7 +219,6 @@ def pytorch_to_hls(config):
                         node.args = tmp_node.args[0]
             else:
                 input_shapes = [output_shapes[str(i)] for i in node.args]
-            print(input_names)
             # for Conv layers
             if 'Conv' in pytorch_class:
                 if not class_object.padding_mode == 'zeros':
