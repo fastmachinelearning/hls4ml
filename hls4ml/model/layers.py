@@ -1315,6 +1315,7 @@ layer_map = {
     'QConv2DBatchnorm': Conv2DBatchnorm,
     'SeparableConv1D': SeparableConv1D,
     'SeparableConv2D': SeparableConv2D,
+    'QSeparableConv2D': SeparableConv2D,
     'DepthwiseConv2D': DepthwiseConv2D,
     'BatchNormalization': BatchNormalization,
     'QBatchNormalization': BatchNormalization,

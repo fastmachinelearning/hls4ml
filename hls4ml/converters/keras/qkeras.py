@@ -31,16 +31,20 @@ def parse_qdense_layer(keras_layer, input_names, input_shapes, data_reader):
     return layer, output_shape
 
 
-@keras_handler('QConv1D', 'QConv2D')
+@keras_handler('QConv1D', 'QConv2D', 'QSeparableConv2D')
 def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader):
-    assert 'QConv' in keras_layer['class_name']
+    assert 'QConv' in keras_layer['class_name'] or 'QSeparableConv' in keras_layer['class_name']
 
     if '1D' in keras_layer['class_name']:
         layer, output_shape = parse_conv1d_layer(keras_layer, input_names, input_shapes, data_reader)
     elif '2D' in keras_layer['class_name']:
         layer, output_shape = parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader)
 
-    layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
+    if 'QConv' in keras_layer['class_name']:
+        layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
+    elif 'QSeparableConv' in keras_layer['class_name']:
+        layer['depthwise_quantizer'] = get_quantizer_from_config(keras_layer, 'depthwise')
+        layer['pointwise_quantizer'] = get_quantizer_from_config(keras_layer, 'pointwise')
     if keras_layer['config']['bias_quantizer'] is not None:
         layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
     else:
