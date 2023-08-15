@@ -2,12 +2,12 @@ import warnings
 
 from hls4ml.converters.pytorch_to_hls import get_weights_data, pytorch_handler
 
-rnn_layers = ['SimpleRNN', 'LSTM', 'GRU']
+rnn_layers = ['RNN', 'LSTM', 'GRU']
 
 
 @pytorch_handler(*rnn_layers)
 def parse_rnn_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
-    assert operation in rnn_layers or operation == "RNN"
+    assert operation in rnn_layers
 
     layer = {}
 
@@ -27,13 +27,12 @@ def parse_rnn_layer(operation, layer_name, input_names, input_shapes, node, clas
     layer['return_state'] = False  # parameter does not exist in pytorch
 
     if layer['class_name'] == 'SimpleRNN':
-        layer['activation'] = class_object.nonlinearity  # GRU and LSTM are hard-coded to use tanh in pytorch
+        layer['activation'] = class_object.nonlinearity  # Default is tanh, can also be ReLU in pytorch
     else:
         layer['activation'] = "tanh"  # GRU and LSTM are hard-coded to use tanh in pytorch
 
-    layer['recurrent_activation'] = layer['activation']  # pytorch does not seem to differentiate between the two
-    if layer['class_name'] == 'GRU':
-        layer['recurrent_activation'] = 'sigmoid'  # seems to be hard-coded in pytorch?
+    if layer['class_name'] == 'GRU' or layer['class_name'] == 'LSTM':
+        layer['recurrent_activation'] = 'sigmoid'  # GRU and LSTM are hard-coded to use tanh in pytorch
 
     layer['time_major'] = not class_object.batch_first
     # TODO Should we handle time_major?
@@ -42,7 +41,7 @@ def parse_rnn_layer(operation, layer_name, input_names, input_shapes, node, clas
 
     layer['n_timesteps'] = input_shapes[0][1]
     layer['n_in'] = input_shapes[0][2]
-
+    print(layer['n_in'])
     layer['n_out'] = class_object.hidden_size
 
     if class_object.num_layers > 1:

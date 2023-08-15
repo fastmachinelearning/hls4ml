@@ -16,14 +16,14 @@ class ChannelsLastConverter(OptimizerPass):
 
     def transform(self, model, node):
         # If this parameter has not been set, this model does not need to be converted
-        if 'InputsChannelLast' not in model.config.config['HLSConfig']['Model']:
+        if 'ChannelsLastConversion' not in model.config.config['HLSConfig']['Model']:
             node.channels_last_converted = True
             return False
         outshape = node.get_output_variable().shape
 
         if isinstance(node, Input):
             # if inputs are not yet transposed into channels_last, add transpose layer
-            if not model.config.config['HLSConfig']['Model']['InputsChannelLast'] and len(outshape) > 1:
+            if model.config.config['HLSConfig']['Model']['ChannelsLastConversion'] == "full" and len(outshape) > 1:
                 # Add transpose for input layer
                 input = node.name
                 if len(outshape) == 2:
@@ -38,7 +38,7 @@ class ChannelsLastConverter(OptimizerPass):
                 transpose_node.channels_last_converted = True
 
                 model.insert_node(transpose_node)
-            else:
+            elif model.config.config['HLSConfig']['Model']['ChannelsLastConversion'] == "internal" and len(outshape) > 1:
                 input_shape = node.get_output_variable().shape
                 input_shape.append(input_shape.pop(0))
                 node.get_output_variable().shape = input_shape
@@ -46,51 +46,53 @@ class ChannelsLastConverter(OptimizerPass):
                 node.get_output_variable().dim_names = dim_names
         else:
             # Transpose weight tensors
-            tensors = ['weight', 'depthwise', 'pointwise', 'zero_bias', 'scale', 'recurrent_weight']
-            for tensor in tensors:
+            if True:
+                # if not model.config.config['HLSConfig']['Model']['ChannelsLastConversion'] == "off":
+                tensors = ['weight', 'depthwise', 'pointwise', 'zero_bias', 'scale', 'recurrent_weight']
+                for tensor in tensors:
+                    try:
+                        if len(node.get_weights(tensor).shape) == 2:
+                            weights_channels_last = node.get_weights(tensor).data.transpose()
+                            node.get_weights(tensor).data = weights_channels_last
+                        elif len(node.get_weights(tensor).shape) == 3:
+                            weights_channels_last = node.get_weights(tensor).data.transpose([2, 1, 0])
+                            node.get_weights(tensor).data = weights_channels_last
+                        elif len(node.get_weights(tensor).shape) == 4:
+                            weights_channels_last = node.get_weights(tensor).data.transpose([2, 3, 1, 0])
+                            node.get_weights(tensor).data = weights_channels_last
+                    except KeyError:
+                        pass
                 try:
-                    if len(node.get_weights(tensor).shape) == 2:
-                        weights_channels_last = node.get_weights(tensor).data.transpose()
-                        node.get_weights(tensor).data = weights_channels_last
-                    elif len(node.get_weights(tensor).shape) == 3:
-                        weights_channels_last = node.get_weights(tensor).data.transpose([2, 1, 0])
-                        node.get_weights(tensor).data = weights_channels_last
-                    elif len(node.get_weights(tensor).shape) == 4:
-                        weights_channels_last = node.get_weights(tensor).data.transpose([2, 3, 1, 0])
-                        node.get_weights(tensor).data = weights_channels_last
-                except KeyError:
+                    node.set_attr('data_format', 'channels_last')
+                except AttributeError:
                     pass
-            try:
-                node.set_attr('data_format', 'channels_last')
-            except AttributeError:
-                pass
 
-            # Adjust axis of operation
-            if isinstance(node, Concatenate):
-                old_axis = node.get_attr('axis')
+                # Adjust axis of operation
+                if isinstance(node, Concatenate):
+                    old_axis = node.get_attr('axis')
+                    if len(outshape) == 2:
+                        if old_axis == -1 or old_axis == 2:
+                            node.set_attr('axis', 1)
+                        else:
+                            node.set_attr('axis', 2)
+                    elif len(outshape) == 3:
+                        if old_axis == 3 or old_axis == -1:
+                            node.set_attr('axis', 1)
+                        elif old_axis == 2 or old_axis == -2:
+                            node.set_attr('axis', 2)  # Not required, but left for clarity
+                        else:
+                            node.set_attr('axis', 3)
+
+                # Adjust output shape
+                outdims = node.get_output_variable().dim_names
                 if len(outshape) == 2:
-                    if old_axis == -1 or old_axis == 2:
-                        node.set_attr('axis', 1)
-                    else:
-                        node.set_attr('axis', 2)
+                    shape = [outshape[1], outshape[0]]
+                    dims = [outdims[1], outdims[0]]
+                    node.add_output_variable(shape, dims)
                 elif len(outshape) == 3:
-                    if old_axis == 3 or old_axis == -1:
-                        node.set_attr('axis', 1)
-                    elif old_axis == 2 or old_axis == -2:
-                        node.set_attr('axis', 2)  # Not required, but left for clarity
-                    else:
-                        node.set_attr('axis', 3)
-
-            # Adjust output shape
-            outdims = node.get_output_variable().dim_names
-            if len(outshape) == 2:
-                shape = [outshape[1], outshape[0]]
-                dims = [outdims[1], outdims[0]]
-                node.add_output_variable(shape, dims)
-            elif len(outshape) == 3:
-                shape = [outshape[1], outshape[2], outshape[0]]
-                dims = [outdims[1], outdims[2], outdims[0]]
-                node.add_output_variable(shape, dims)
+                    shape = [outshape[1], outshape[2], outshape[0]]
+                    dims = [outdims[1], outdims[2], outdims[0]]
+                    node.add_output_variable(shape, dims)
 
             # Add transpose for output layer
             if (

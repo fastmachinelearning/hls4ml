@@ -216,9 +216,9 @@ def test_conv1d(padds, backend, io_type):
 
     if io_type == 'io_stream':
         X_input = np.ascontiguousarray(X_input.transpose(0, 2, 1))
-        config = config_from_pytorch_model(model, inputs_channel_last=True, transpose_outputs=False)
+        config = config_from_pytorch_model(model, channels_last_conversion="internal", transpose_outputs=False)
     else:
-        config = config_from_pytorch_model(model, inputs_channel_last=False, transpose_outputs=True)
+        config = config_from_pytorch_model(model, channels_last_conversion="full", transpose_outputs=True)
 
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_conv1d_{padds}_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(
@@ -327,9 +327,9 @@ def test_conv2d(padds, backend, io_type):
 
     if io_type == 'io_stream':
         X_input = np.ascontiguousarray(X_input.transpose(0, 2, 3, 1))
-        config = config_from_pytorch_model(model, inputs_channel_last=True, transpose_outputs=False)
+        config = config_from_pytorch_model(model, channels_last_conversion="internal", transpose_outputs=False)
     else:
-        config = config_from_pytorch_model(model, inputs_channel_last=False, transpose_outputs=True)
+        config = config_from_pytorch_model(model, channels_last_conversion="full", transpose_outputs=True)
 
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_conv2d_{padds}_{backend}_{io_type}')
     hls_model = convert_from_pytorch_model(

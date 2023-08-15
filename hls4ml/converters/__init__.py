@@ -38,7 +38,9 @@ except ImportError:
 model_types = ['keras', 'pytorch', 'onnx']
 
 for model_type in model_types:
+    print(model_type)
     for module in os.listdir(os.path.dirname(__file__) + f'/{model_type}'):
+        print(module)
         if module == '__init__.py' or module[-3:] != '.py':
             continue
         try:
@@ -49,6 +51,7 @@ for model_type in model_types:
                 # and is defined in this module (i.e., not imported)
                 if callable(func) and hasattr(func, 'handles') and func.__module__ == lib.__name__:
                     for layer in func.handles:
+                        print(layer)
                         if model_type == 'keras':
                             register_keras_layer_handler(layer, func)
                         elif model_type == 'pytorch':
