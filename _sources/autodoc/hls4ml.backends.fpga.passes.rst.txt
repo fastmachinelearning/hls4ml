@@ -84,6 +84,14 @@ hls4ml.backends.fpga.passes.repack\_stream module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.backends.fpga.passes.xnor\_pooling module
+------------------------------------------------
+
+.. automodule:: hls4ml.backends.fpga.passes.xnor_pooling
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
