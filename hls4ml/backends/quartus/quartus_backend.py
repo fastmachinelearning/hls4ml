@@ -62,6 +62,7 @@ class QuartusBackend(FPGABackend):
             'quartus:merge_batch_norm_quantized_tanh',
             'quartus:quantize_dense_output',
             'fuse_consecutive_batch_normalization',
+            'quartus:xnor_pooling',
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 

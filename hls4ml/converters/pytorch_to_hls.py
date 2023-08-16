@@ -17,15 +17,12 @@ class PyTorchModelReader:
     def get_weights_data(self, layer_name, var_name):
         data = None
 
-        # Parameter mapping from pytorch to keras
 
         # Workaround for naming schme in nn.Sequential,
         # have to remove the prefix we previously had to add to make sure the tensors are found
         if 'layer_' in layer_name:
             layer_name = layer_name.split('layer_')[-1]
 
-        elif '_' in layer_name:
-            layer_name = '.'.join(layer_name.split('_'))
 
         # if a layer is reused in the model, torch.FX will append a "_n" for the n-th use
         # have to snap that off to find the tensors
