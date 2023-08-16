@@ -258,6 +258,9 @@ simple_rnn_config_template = """struct config{index} : nnet::simpleRNN_config {{
 }};\n"""
 
 simple_rnn_function_template = 'nnet::simple_rnn<{input_t}, {output_t}, {config}>({input}, {output}, {weights});'
+simple_rnn_pytorch_function_template = (
+    'nnet::simple_rnn_pytorch<{input_t}, {output_t}, {config}>({input}, {output}, {weights});'
+)
 
 
 class SimpleRNNConfigTemplate(LayerConfigTemplate):
@@ -303,5 +306,9 @@ class SimpleRNNFunctionTemplate(FunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['weights'] = 'w{0}, wr{0}, b{0}'.format(str(node.index))
+        if "pytorch" in node.attributes.keys():
+            self.template = simple_rnn_pytorch_function_template
+            params['weights'] = 'w{0}, wr{0}, b{0}, br{0}'.format(str(node.index))
+        else:
+            params['weights'] = 'w{0}, wr{0}, b{0}'.format(str(node.index))
         return self.template.format(**params)
