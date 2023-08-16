@@ -1005,6 +1005,8 @@ class SimpleRNN(Layer):
 
         # biases
         self.add_weights_variable(name='bias', var_name='b{index}')
+        if "pytorch" in self.attributes.keys():
+            self.add_weights_variable(name='recurrent_bias', var_name='br{index}')
 
 
 class LSTM(Layer):
@@ -1056,8 +1058,11 @@ class LSTM(Layer):
         # biases
         self.add_weights_variable(name='bias', var_name='b{index}')
 
-        recurrent_bias = np.zeros(recurrent_weight.shape[1])
-        self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
+        if "pytorch" in self.attributes.keys():
+            self.add_weights_variable(name='recurrent_bias', var_name='br{index}')
+        else:
+            recurrent_bias = np.zeros(recurrent_weight.shape[1])
+            self.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=recurrent_bias)
 
 
 class GRU(Layer):

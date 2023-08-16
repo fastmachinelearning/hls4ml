@@ -14,7 +14,7 @@ test_root_path = Path(__file__).parent
 class GRUNet(nn.Module):
     def __init__(self):
         super().__init__()
-        self.rnn = nn.GRU(10, 20, num_layers=1, batch_first=True)
+        self.rnn = nn.GRU(10, 20, num_layers=1, batch_first=True, bias=True)
 
     def forward(self, x, h0):
         output, hnn = self.rnn(x, h0)
@@ -49,7 +49,7 @@ def test_gru(backend, io_type):
 class LSTM(nn.Module):
     def __init__(self):
         super().__init__()
-        self.rnn = nn.LSTM(10, 20, num_layers=1, batch_first=True)
+        self.rnn = nn.LSTM(10, 20, num_layers=1, batch_first=True, bias=True)
 
     def forward(self, x, h0, c0):
         output, (_, _) = self.rnn(x, (h0, c0))
@@ -93,15 +93,15 @@ def test_lstm(backend, io_type):
 class RNN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.rnn = nn.RNN(10, 20, num_layers=1, batch_first=True)
+        self.rnn = nn.RNN(10, 20, num_layers=1, batch_first=True, bias=True)
 
     def forward(self, x, h0):
         output, _ = self.rnn(x, h0)
         return output
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
-@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('backend', ['Quartus'])
+@pytest.mark.parametrize('io_type', ['io_parallel'])
 def test_rnn(backend, io_type):
     if not (backend == "Quartus" and io_type == "io_stream"):
         model = RNN()

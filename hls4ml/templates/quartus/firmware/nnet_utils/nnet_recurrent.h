@@ -87,6 +87,7 @@ struct gru_config {
     // Resource reuse info
     static const unsigned io_type = io_parallel;
     static const unsigned reuse_factor = 1;
+    static const bool pytorch_order = false;
     static const bool store_weights_in_bram = false;
 
     // Activation
@@ -133,7 +134,10 @@ void gru_cell(data_T x[CONFIG_T::n_in], res_T h[CONFIG_T::n_units],
     hls_register typename CONFIG_T::accum_t hadamard_r_h[CONFIG_T::n_units];
     #pragma unroll recurrent_unroll_factor
     for (int i = 0; i < (CONFIG_T::n_units); i++) {
-        hadamard_r_h[i] = z_r_act[i + CONFIG_T::n_units] * mat_mul_h_wr[i + 2 * CONFIG_T::n_units];
+        if (CONFIG_T::pytorch_order)
+            hadamard_r_h[i] = z_r_act[i] * mat_mul_h_wr[i + 2 * CONFIG_T::n_units];
+        else
+            hadamard_r_h[i] = z_r_act[i + CONFIG_T::n_units] * mat_mul_h_wr[i + 2 * CONFIG_T::n_units];
     }
 
     // The candidate state; X * W_{hx} + hadmard(r(t), h_(t-1)) * W_{hh} + b_{h}
@@ -152,7 +156,11 @@ void gru_cell(data_T x[CONFIG_T::n_in], res_T h[CONFIG_T::n_units],
     // Update state
     #pragma unroll recurrent_unroll_factor
     for (int i = 0; i < (CONFIG_T::n_units); i++) {
-        h[i] = static_cast<res_T>(h_cand_act[i] * (1 - z_r_act[i]) + h[i] * z_r_act[i]);
+        if (CONFIG_T::pytorch_order)
+            h[i] = static_cast<res_T>(h_cand_act[i] * (1 - z_r_act[i + CONFIG_T::n_units]) +
+                                      h[i] * z_r_act[i + CONFIG_T::n_units]);
+        else
+            h[i] = static_cast<res_T>(h_cand_act[i] * (1 - z_r_act[i]) + h[i] * z_r_act[i]);
     }
 }
 

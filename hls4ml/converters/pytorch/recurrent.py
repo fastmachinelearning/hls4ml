@@ -1,5 +1,7 @@
 import warnings
 
+import numpy as np
+
 from hls4ml.converters.pytorch_to_hls import get_weights_data, pytorch_handler
 
 rnn_layers = ['RNN', 'LSTM', 'GRU']
@@ -32,7 +34,7 @@ def parse_rnn_layer(operation, layer_name, input_names, input_shapes, node, clas
         layer['activation'] = "tanh"  # GRU and LSTM are hard-coded to use tanh in pytorch
 
     if layer['class_name'] == 'GRU' or layer['class_name'] == 'LSTM':
-        layer['recurrent_activation'] = 'sigmoid'  # GRU and LSTM are hard-coded to use tanh in pytorch
+        layer['recurrent_activation'] = 'sigmoid'  # GRU and LSTM are hard-coded to use sigmoid in pytorch
 
     layer['time_major'] = not class_object.batch_first
     # TODO Should we handle time_major?
@@ -41,7 +43,7 @@ def parse_rnn_layer(operation, layer_name, input_names, input_shapes, node, clas
 
     layer['n_timesteps'] = input_shapes[0][1]
     layer['n_in'] = input_shapes[0][2]
-    print(layer['n_in'])
+
     layer['n_out'] = class_object.hidden_size
 
     if class_object.num_layers > 1:
@@ -60,9 +62,15 @@ def parse_rnn_layer(operation, layer_name, input_names, input_shapes, node, clas
         layer['recurrent_bias_data'],
     ) = get_weights_data(data_reader, layer['name'], ['weight_ih_l0', 'weight_hh_l0', 'bias_ih_l0', 'bias_hh_l0'])
 
+    if class_object.bias is False:
+        layer['bias_data'] = np.zeros(layer['weight_data'].shape[0])
+        layer['recurrent_bias_data'] = np.zeros(layer['recurrent_weight_data'].shape[0])
+
     if layer['class_name'] == 'GRU':
         layer['apply_reset_gate'] = 'after'  # Might be true for pytorch? It's not a free parameter
 
-    output_shape = [[input_shapes[0][0], layer['n_timesteps'], layer['n_out']], [1, layer['n_out']]]
+    output_shape = [input_shapes[0][0], layer['n_out']]
+
+    layer['pytorch'] = True  # need to switch some behaviors to match pytorch implementations
 
     return layer, output_shape

@@ -66,6 +66,7 @@ gru_config_template = '''struct config{index} : nnet::gru_config {{
     using activation_recr = nnet::activation::{recurrent_activation}<x_T, y_T, config_T>;
 
     static const unsigned reuse_factor = {reuse};
+    static const unsigned pytorch_order = {pytorch};
     static const bool store_weights_in_bram = false;
 }};\n'''
 
@@ -92,6 +93,7 @@ class GRUConfigTemplate(LayerConfigTemplate):
         params['config_mult_h'] = f'config{node.index}_h_mult'
         params['act_t'] = '{}_config{}'.format(node.get_attr('activation'), str(node.index) + '_act')
         params['act_recurrent_t'] = '{}_config{}'.format(node.get_attr('recurrent_activation'), str(node.index) + '_rec_act')
+        params['pytorch'] = 'true' if "pytorch" in node.attributes.keys() else 'false'
         gru_config = self.gru_template.format(**params)
 
         # Activation is on candidate hidden state, dimensionality (1, n_units)
