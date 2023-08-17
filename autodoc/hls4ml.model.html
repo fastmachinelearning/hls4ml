@@ -38,7 +38,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev24+gcecf3e71
+                0.8.0.dev25+ga9fee5d8
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -1291,7 +1291,7 @@ higher-dimensional tensors, which are defined as arrays or FIFO streams in the g
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.types.ExponentPrecisionType">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.types.</span></span><span class="sig-name descname"><span class="pre">ExponentPrecisionType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.ExponentPrecisionType" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.IntegerPrecisionType" title="hls4ml.model.types.IntegerPrecisionType"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegerPrecisionType</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.PrecisionType" title="hls4ml.model.types.PrecisionType"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrecisionType</span></code></a></p>
 <p>Convenience class to differentiate ‘regular’ integers from those which represent exponents,
 for QKeras po2 quantizers, for example.</p>
 </dd></dl>
@@ -1681,7 +1681,7 @@ element will be a concatenation of <code class="docutils literal notranslate"><s
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.types.XnorPrecisionType">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.types.</span></span><span class="sig-name descname"><span class="pre">XnorPrecisionType</span></span><a class="headerlink" href="#hls4ml.model.types.XnorPrecisionType" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.IntegerPrecisionType" title="hls4ml.model.types.IntegerPrecisionType"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegerPrecisionType</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.PrecisionType" title="hls4ml.model.types.PrecisionType"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrecisionType</span></code></a></p>
 <p>Convenience class to differentiate ‘regular’ integers from BNN Xnor ones</p>
 </dd></dl>
 
