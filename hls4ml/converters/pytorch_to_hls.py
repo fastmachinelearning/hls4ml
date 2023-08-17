@@ -23,6 +23,7 @@ class PyTorchModelReader:
         # were an named nn.Sequential with "layer" in it's name is used.
         # We make sure that we pick the correct name for the tensor
         layerInKeyName = False
+
         for key in self.state_dict.keys():
             if "layer." in key:
                 layerInKeyName = True
@@ -37,7 +38,11 @@ class PyTorchModelReader:
         if tensorName in self.state_dict:
             data = self.state_dict[tensorName].numpy()
             return data
-
+        # if a layer is reused in the model, torch.FX will append a "_n" for the n-th use
+        # have to remove that integer to find the tensors
+        elif '.'.join(layer_name.split('.')[:-1]) + '.' + var_name in self.state_dict:
+            data = self.state_dict['.'.join(layer_name.split('.')[:-1]) + '.' + var_name].numpy()
+            return data
         else:
             return None
 
