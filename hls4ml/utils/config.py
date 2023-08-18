@@ -5,7 +5,7 @@ import qkeras
 import hls4ml
 
 
-def create_config(output_dir='my-hls-test', project_name='myproject', backend='Vivado', **kwargs):
+def create_config(output_dir='my-hls-test', project_name='myproject', backend='Vivado', version='1.0.0', **kwargs):
     backend_list = hls4ml.backends.get_available_backends()
     if backend.lower() not in backend_list:
         raise Exception(f'Unknown backend: {backend}')
@@ -18,6 +18,7 @@ def create_config(output_dir='my-hls-test', project_name='myproject', backend='V
     config['OutputDir'] = output_dir
     config['ProjectName'] = project_name
     config['Backend'] = backend.name
+    config['Version'] = version
     config.update(backend_config)
 
     return config
