@@ -92,9 +92,8 @@ class ChannelsLastConverter(OptimizerPass):
                 dims = [outdims[1], outdims[2], outdims[0]]
                 node.add_output_variable(shape, dims)
 
-            #Have to transpose back before flattening to get correct order of elements in the flattened tensor
+            # Have to transpose back before flattening to get correct order of elements in the flattened tensor
             if isinstance(node, Reshape) and len(node.attributes["target_shape"]) == 1:
-
                 previous_node = node.get_input_node(node.inputs[0])
                 input = previous_node.name
                 outshape = previous_node.get_output_variable().shape
