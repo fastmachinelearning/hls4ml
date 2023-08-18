@@ -576,22 +576,14 @@ def test_pooling(pooling, padds, backend):
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 def test_flatten(backend):
-
     input = torch.randn(1, 1, 5, 5)
-    model = nn.Sequential(
-    nn.Conv2d(1, 32, 5, 1, 1),
-    nn.Flatten(),
-    nn.ReLU()   
-    )
+    model = nn.Sequential(nn.Conv2d(1, 32, 5, 1, 1), nn.Flatten(), nn.ReLU())
     pytorch_prediction = model(input).detach().numpy()
     input_shape = (None, 1, 5, 5)
 
- 
     config = config_from_pytorch_model(model)
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_flatten_backend_{backend}')
-    hls_model = convert_from_pytorch_model(
-        model, input_shape, hls_config=config, output_dir=output_dir, backend=backend
-    )
+    hls_model = convert_from_pytorch_model(model, input_shape, hls_config=config, output_dir=output_dir, backend=backend)
     hls_model.compile()
 
     pred = hls_model.predict(input.detach().numpy())
