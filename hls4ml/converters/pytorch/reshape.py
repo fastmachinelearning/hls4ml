@@ -27,3 +27,17 @@ def parse_reshape_layer(operation, layer_name, input_names, input_shapes, node, 
     output_shape = input_shapes[0][:1] + layer['target_shape']
 
     return layer, output_shape
+
+@pytorch_handler('Flatten')
+def parse_flatten_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+    assert operation == 'Flatten'
+
+    layer = {}
+    layer['class_name'] = 'Reshape'
+    layer['name'] = layer_name
+    layer['inputs'] = input_names
+
+    layer['target_shape'] = [input_shapes[0][0], np.prod(input_shapes[0][1:])]
+    output_shape = layer['target_shape']
+
+    return layer, output_shape

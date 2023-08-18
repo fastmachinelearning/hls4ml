@@ -2,7 +2,7 @@
 # Based on https://github.com/fastmachinelearning/qonnx/blob/
 # 12c96a3ded06beacab08e0f554e4ed014476c0aa/src/qonnx/transformation/channels_last.py
 
-from hls4ml.model.layers import Concatenate, Input
+from hls4ml.model.layers import Concatenate, Input, Reshape
 from hls4ml.model.optimizer import OptimizerPass
 
 
@@ -92,15 +92,34 @@ class ChannelsLastConverter(OptimizerPass):
                 dims = [outdims[1], outdims[2], outdims[0]]
                 node.add_output_variable(shape, dims)
 
+            #Have to transpose back before flattening to get correct order of elements in the flattened tensor
+            if isinstance(node, Reshape) and len(node.attributes["target_shape"]) == 1:
+
+                previous_node = node.get_input_node(node.inputs[0])
+                input = previous_node.name
+                outshape = previous_node.get_output_variable().shape
+
+                if len(outshape) == 2:
+                    attributes = {'perm': [1, 0]}
+                else:
+                    attributes = {'perm': [2, 0, 1]}
+
+                transpose_node = model.make_node(
+                    'Transpose', f'transpose_input_for_{node.get_attr("name")}', attributes, [input]
+                )
+                transpose_node.channels_last_converted = True
+
+                model.insert_node(transpose_node)
+
             # Add transpose for output layer
-            if (
+            elif (
                 node.get_attr("name") in model.outputs
                 and len(outshape) > 1
                 and model.config.config['HLSConfig']['Model']['TransposeOutputs']
             ):
                 input = node.name
                 outshape = node.get_output_variable().shape
-                print(outshape)
+
                 if len(outshape) == 2:
                     attributes = {'perm': [1, 0]}
                 else:

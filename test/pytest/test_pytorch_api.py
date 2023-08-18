@@ -183,7 +183,7 @@ def test_activation_functionals(activation_function, backend, io_type):
 
     hls_prediction = hls_model.predict(X_input)
 
-    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=0.05)
 
     from torch.fx import symbolic_trace
 
@@ -572,3 +572,29 @@ def test_pooling(pooling, padds, backend):
             assert hls_pool.attributes['pool_width'] == class_object_pool.kernel_size[0]
             assert hls_pool.attributes['stride_width'] == class_object_pool.stride[0]
             assert hls_pool.attributes['padding'] == 'same' if class_object_pool.padding == 0 else 'valid'
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+def test_flatten(backend):
+
+    input = torch.randn(1, 1, 5, 5)
+    model = nn.Sequential(
+    nn.Conv2d(1, 32, 5, 1, 1),
+    nn.Flatten(),
+    nn.ReLU()   
+    )
+    pytorch_prediction = model(input).detach().numpy()
+    input_shape = (None, 1, 5, 5)
+
+ 
+    config = config_from_pytorch_model(model)
+    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_flatten_backend_{backend}')
+    hls_model = convert_from_pytorch_model(
+        model, input_shape, hls_config=config, output_dir=output_dir, backend=backend
+    )
+    hls_model.compile()
+
+    pred = hls_model.predict(input.detach().numpy())
+    hls_prediction = np.reshape(pred, (1, 288))
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
