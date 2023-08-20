@@ -342,6 +342,17 @@ class ExponentPrecisionType(PrecisionType):
         return typestring
 
 
+class UnspecifiedPrecisionType(PrecisionType):
+    """
+    Class representing an unspecified precision type.
+
+    Instances of this class are expected to be replaced with concrete precision types during conversion.
+    """
+
+    def __init__(self):
+        super().__init__(width=0, signed=False)
+
+
 def find_minimum_width(data, signed=True):
     """
     Helper function to find the minimum integer width to express all entries in the data array
@@ -556,7 +567,9 @@ class WeightVariable(Variable):
 
     def update_precision(self, new_precision):
         self.type.precision = new_precision
-        if isinstance(new_precision, (IntegerPrecisionType, XnorPrecisionType, ExponentPrecisionType)):
+        if isinstance(new_precision, UnspecifiedPrecisionType):
+            self.precision_fmt = ''  # Temporarily set precision to undefined value
+        elif isinstance(new_precision, (IntegerPrecisionType, XnorPrecisionType, ExponentPrecisionType)):
             self.precision_fmt = '{:.0f}'
         elif isinstance(new_precision, FixedPrecisionType):
             if new_precision.fractional > 0:
