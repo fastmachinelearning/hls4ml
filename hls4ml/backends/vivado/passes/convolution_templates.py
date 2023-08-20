@@ -286,10 +286,7 @@ class SeparableConv1DConfigTemplate(LayerConfigTemplate):
         params['index'] = str(node.index) + '_depthwise'
         params['weight_t'] = node.get_weights('depthwise').type
         params['bias_t'] = node.get_weights('zero_bias').type
-        if node.model.config.get_config_value('IOType') == 'io_parallel':
-            params['fill_fn'] = f'fill_buffer_{node.index}_dw'
-        else:
-            params['fill_fn'] = 'FillConv1DBuffer'
+        params['fill_fn'] = 'FillConv1DBuffer'
 
         if node.get_attr('unscaled'):
             params['scale_index_type'] = 'scale_index_unscaled'
