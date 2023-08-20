@@ -102,6 +102,7 @@ class VivadoBackend(FPGABackend):
             'vivado:inplace_parallel_reshape',
             'vivado:inplace_stream_flatten',
             'vivado:skip_softmax',
+            'infer_precision_types',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
