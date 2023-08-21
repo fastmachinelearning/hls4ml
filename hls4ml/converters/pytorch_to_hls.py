@@ -104,7 +104,7 @@ layer_name_map = {
     'max_pool2d': 'MaxPool2d',
     'avg_pool1d': 'AvgPool1d',
     'avg_pool2d': 'AvgPool2d',
-    'flatten': "Flatten",
+    'flatten': 'Flatten',
 }
 
 

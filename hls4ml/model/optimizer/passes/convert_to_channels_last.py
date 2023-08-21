@@ -93,7 +93,7 @@ class ChannelsLastConverter(OptimizerPass):
                 node.add_output_variable(shape, dims)
 
             # Have to transpose back before flattening to get correct order of elements in the flattened tensor
-            if isinstance(node, Reshape) and len(node.attributes["target_shape"]) == 1:
+            if isinstance(node, Reshape) and len(node.attributes['target_shape']) == 1:
                 previous_node = node.get_input_node(node.inputs[0])
                 input = previous_node.name
                 outshape = previous_node.get_output_variable().shape
@@ -112,7 +112,7 @@ class ChannelsLastConverter(OptimizerPass):
 
             # Add transpose for output layer
             elif (
-                node.get_attr("name") in model.outputs
+                node.get_attr('name') in model.outputs
                 and len(outshape) > 1
                 and model.config.config['HLSConfig']['Model']['TransposeOutputs']
             ):
