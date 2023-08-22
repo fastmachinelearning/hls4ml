@@ -5,14 +5,14 @@ rnn_layers = ['SimpleRNN', 'LSTM', 'GRU']
 
 @keras_handler(*rnn_layers)
 def parse_rnn_layer(keras_layer, input_names, input_shapes, data_reader):
-    assert keras_layer['class_name'] in rnn_layers
+    assert keras_layer['class_name'] in rnn_layers or keras_layer['class_name'][1:] in rnn_layers
 
     layer = parse_default_keras_layer(keras_layer, input_names)
 
     layer['return_sequences'] = keras_layer['config']['return_sequences']
     layer['return_state'] = keras_layer['config']['return_state']
 
-    if layer['class_name'] != 'SimpleRNN':
+    if 'SimpleRNN' not in layer['class_name']:
         layer['recurrent_activation'] = keras_layer['config']['recurrent_activation']
 
     layer['time_major'] = keras_layer['config']['time_major'] if 'time_major' in keras_layer['config'] else False
@@ -30,7 +30,7 @@ def parse_rnn_layer(keras_layer, input_names, input_shapes, data_reader):
         data_reader, layer['name'], ['kernel', 'recurrent_kernel', 'bias']
     )
 
-    if layer['class_name'] == 'GRU':
+    if 'GRU' in layer['class_name']:
         layer['apply_reset_gate'] = 'after' if keras_layer['config']['reset_after'] else 'before'
 
         # biases array is actually a 2-dim array of arrays (bias + recurrent bias)
