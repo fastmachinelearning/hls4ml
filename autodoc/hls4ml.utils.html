@@ -38,7 +38,7 @@
               <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.8.0.dev26+g8c327d4e
+                0.8.0.dev29+g3d227e5d
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -239,8 +239,35 @@ to be transposed manually.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.config.create_config">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.config.</span></span><span class="sig-name descname"><span class="pre">create_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'my-hls-test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'myproject'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Vivado'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.create_config" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<span class="sig-prename descclassname"><span class="pre">hls4ml.utils.config.</span></span><span class="sig-name descname"><span class="pre">create_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'my-hls-test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'myproject'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Vivado'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1.0.0'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.config.create_config" title="Permalink to this definition"></a></dt>
+<dd><p>Create an initial configuration to guide the conversion process.</p>
+<p>The resulting configuration will contain general information about the project (like project name and output directory)
+as well as the backend-specific configuration (part numbers, clocks etc). Extra arguments of this function will be
+passed to the backend’s <code class="docutils literal notranslate"><span class="pre">create_initial_config</span></code>. For the possible list of arguments, check the documentation of each
+backend.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – The output directory to which the generated project will be written.
+Defaults to ‘my-hls-test’.</p></li>
+<li><p><strong>project_name</strong> (<em>str</em><em>, </em><em>optional</em>) – The name of the project, that will be used as a top-level function in HLS designs.
+Defaults to ‘myproject’.</p></li>
+<li><p><strong>backend</strong> (<em>str</em><em>, </em><em>optional</em>) – The backend to use. Defaults to ‘Vivado’.</p></li>
+<li><p><strong>version</strong> (<em>str</em><em>, </em><em>optional</em>) – Optional string to version the generated project for backends that support it.
+Defaults to ‘1.0.0’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – Raised if unknown backend is specified.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The conversion configuration.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
 
 </section>
 <section id="module-hls4ml.utils.example_models">
