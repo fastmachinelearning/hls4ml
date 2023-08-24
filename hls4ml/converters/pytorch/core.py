@@ -1,4 +1,4 @@
-from hls4ml.converters.pytorch_to_hls import get_weights_data, pytorch_handler
+from hls4ml.converters.pytorch_to_hls import pytorch_handler
 
 
 @pytorch_handler('Linear')
@@ -10,7 +10,12 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['class_name'] = 'Dense'
     layer['name'] = layer_name
 
-    layer['weight_data'], layer['bias_data'] = get_weights_data(data_reader, layer['name'], ['weight', 'bias'])
+    layer['weight_data'] = class_object.weight.data.numpy()
+    if class_object.bias is not None:
+        layer['bias_data'] = class_object.bias.data.numpy()
+    else:
+        layer['bias_data'] = None
+
     if class_object is not None:
         layer['n_in'] = class_object.in_features
         layer['n_out'] = class_object.out_features
@@ -50,7 +55,7 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, nod
         if layer['class_name'] == 'ELU':
             layer['activ_param'] = class_object.alpha
         if layer['class_name'] == 'PReLU':
-            layer['alpha_data'] = get_weights_data(data_reader, layer['name'], 'weight')
+            layer['alpha_data'] = class_object.weight.data.numpy()
         if layer['class_name'] == 'Threshold':
             layer['activ_param'] = class_object.threshold
             layer['class_name'] = 'ThresholdedReLU'
@@ -99,18 +104,18 @@ def parse_batchnorm_layer(operation, layer_name, input_names, input_shapes, node
         layer['use_gamma'] = layer['use_beta'] = class_object.affine
 
         if layer['use_gamma']:
-            layer['gamma_data'] = get_weights_data(data_reader, layer['name'], 'weight')
+            layer['gamma_data'] = class_object.weight.data.numpy()
         else:
             layer['gamma_data'] = 1
 
         if layer['use_beta']:
-            layer['beta_data'] = get_weights_data(data_reader, layer['name'], 'bias')
+            layer['beta_data'] = class_object.bias.data.numpy()
         else:
             layer['beta_data'] = 0
 
-        layer['mean_data'], layer['variance_data'] = get_weights_data(
-            data_reader, layer['name'], ['running_mean', 'running_var']
-        )
+        layer['mean_data'] = class_object.running_mean.data.numpy()
+        layer['variance_data'] = class_object.running_var.data.numpy()
+
     in_size = 1
     for dim in input_shapes[0][1:]:
         in_size *= dim

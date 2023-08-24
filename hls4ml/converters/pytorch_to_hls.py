@@ -17,34 +17,12 @@ class PyTorchModelReader:
     def get_weights_data(self, layer_name, var_name):
         data = None
 
-        # Workaround for naming schme in nn.Sequential,
-        # We have to remove the prefix we added earlier to not have layer
-        # names start with an underscore. However, this clashes with cases
-        # were an named nn.Sequential with "layer" in it's name is used.
-        # We make sure that we pick the correct name for the tensor
-        layerInKeyName = False
-
-        for key in self.state_dict.keys():
-            if "layer." in key:
-                layerInKeyName = True
-
-        if '_' in layer_name:
-            layer_name = '.'.join(layer_name.split('_'))
-
         tensorName = layer_name + '.' + var_name
-        if "layer." in tensorName and not layerInKeyName:
-            tensorName = tensorName.lstrip("layer.")
 
         if tensorName in self.state_dict:
             data = self.state_dict[tensorName].numpy()
-            return data
-        # if a layer is reused in the model, torch.FX will append a "_n" for the n-th use
-        # have to remove that integer to find the tensors
-        elif '.'.join(layer_name.split('.')[:-1]) + '.' + var_name in self.state_dict:
-            data = self.state_dict['.'.join(layer_name.split('.')[:-1]) + '.' + var_name].numpy()
-            return data
-        else:
-            return None
+
+        return data
 
 
 class PyTorchFileReader(PyTorchModelReader):  # Inherit get_weights_data method
@@ -111,7 +89,7 @@ layer_name_map = {
     'elu': 'ELU',
     'prelu': 'PReLU',
     'sigmoid': 'Sigmoid',
-    'layer_threshold': 'Threshold',
+    '_threshold': 'Threshold',
     'softmax': 'Softmax',
     'max_pool1d': 'MaxPool1d',
     'max_pool2d': 'MaxPool2d',
@@ -146,6 +124,7 @@ def pytorch_to_hls(config):
         input_shapes = [list(reader.input_shape)]
     else:
         input_shapes = list(reader.input_shape)
+    input_shapes = [list(shape) for shape in input_shapes]
 
     model = reader.torch_model
 
@@ -174,15 +153,16 @@ def pytorch_to_hls(config):
     n_inputs = 0
 
     for node in traced_model.graph.nodes:
-        # If part of a nn.Sequntial, the node name will start with an "_" which messes up the parsing
-        if node.name[0] == '_':
-            node.name = 'layer' + node.name
-
         if node.op == 'call_module':
             # modules that are part of a torch.nn.Sequential with name 'name' have target names 'name.x',
             # where x is an integer numbering the elements of the Sequential
             if '.' in node.target:
-                class_object = children[node.target.split('.')[0]][int(node.target.split('.')[1])]
+                fqn_path = node.target.split('.')
+                sub_children = dict(children[fqn_path[0]].named_children())
+                for name in fqn_path[1:-1]:
+                    sub_children = dict(sub_children[name].named_children())
+                sub_children[fqn_path[-1]]
+                class_object = sub_children[fqn_path[-1]]
             else:
                 class_object = children[node.target]
 

@@ -271,7 +271,7 @@ def test_conv1d(padds, backend, io_type):
     if io_type == "io_stream" and not (backend == "Vivado" and padds == 1):
         conv_index = 1
         act_index = 2
-    assert list(hls_model.get_layers())[conv_index].attributes['name'] == 'layer' + convNode.name
+    assert list(hls_model.get_layers())[conv_index].attributes['name'] == convNode.name
     assert list(hls_model.get_layers())[conv_index].attributes['class_name'] == 'Conv1D'
     assert list(hls_model.get_layers())[act_index].attributes['activation'] == class_object_relu.__class__.__name__
     if io_type == "io_stream" and backend == "Vivado" and padds == 1:
@@ -415,7 +415,7 @@ def test_conv2d(padds, backend, io_type):
         if io_type == "io_stream":
             conv_index = 1
             act_index = 2
-        assert list(hls_model.get_layers())[conv_index].attributes['name'] == 'layer' + convNode.name
+        assert list(hls_model.get_layers())[conv_index].attributes['name'] == convNode.name
         assert list(hls_model.get_layers())[conv_index].attributes['class_name'] == 'Conv2D'
         assert list(hls_model.get_layers())[act_index].attributes['activation'] == class_object_relu.__class__.__name__
         assert list(hls_model.get_layers())[conv_index].attributes["in_width"] == size_in_width
@@ -550,7 +550,7 @@ def test_pooling(pooling, padds, backend):
     # Verify correct parsing of layer
     hls_pool = list(hls_model.get_layers())[-2]
     if '2d' in pooling.__name__:
-        assert hls_pool.attributes['name'] == "layer" + poolNode.name
+        assert hls_pool.attributes['name'] == poolNode.name
         assert hls_pool.attributes['class_name'][-2] == str(2)
         assert hls_pool.attributes['stride_height'] == class_object_pool.stride
         assert hls_pool.attributes['stride_width'] == class_object_pool.stride
@@ -560,15 +560,56 @@ def test_pooling(pooling, padds, backend):
 
     elif '1d' in pooling.__name__:
         if "Max" in pooling.__name__:
-            assert hls_pool.attributes['name'] == "layer" + poolNode.name
+            assert hls_pool.attributes['name'] == poolNode.name
             assert hls_pool.attributes['class_name'][-2] == str(1)
             assert hls_pool.attributes['pool_width'] == class_object_pool.kernel_size
             assert hls_pool.attributes['stride_width'] == class_object_pool.stride
             assert hls_pool.attributes['padding'] == 'valid' if class_object_pool.padding == 0 else 'same'
 
         else:
-            assert hls_pool.attributes['name'] == "layer" + poolNode.name
+            assert hls_pool.attributes['name'] == poolNode.name
             assert hls_pool.attributes['class_name'][-2] == str(1)
             assert hls_pool.attributes['pool_width'] == class_object_pool.kernel_size[0]
             assert hls_pool.attributes['stride_width'] == class_object_pool.stride[0]
             assert hls_pool.attributes['padding'] == 'same' if class_object_pool.padding == 0 else 'valid'
+
+
+class BatchNormModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear = nn.Linear(5, 8)
+        self.relu = nn.ReLU()
+        self.bn = nn.BatchNorm1d(8)
+
+    def forward(self, x):
+        x = self.linear(x)
+        x = self.relu(x) # This is to prevent merging of BN into Linear
+        return self.bn(x)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_bn(backend, io_type):
+    model = BatchNormModel()
+    model.eval()
+
+    X_input = np.random.rand(1, 5)
+
+    pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy().flatten()
+
+    config = config_from_pytorch_model(model)
+    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_bn_{backend}_{io_type}')
+
+    hls_model = convert_from_pytorch_model(
+        model, (None, 5), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+
+    hls_model.compile()
+
+    hls_prediction = hls_model.predict(X_input).flatten()
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)
+
+    assert list(hls_model.get_layers())[3].attributes['class_name'] == 'BatchNormalization'
+    assert list(hls_model.get_layers())[3].attributes['n_in'] == 8
+    assert list(hls_model.get_layers())[3].attributes['n_out'] == 8
