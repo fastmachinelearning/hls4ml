@@ -18,7 +18,7 @@ def data2D():
 
 @pytest.fixture(scope='module')
 def data1D():
-    X = np.random.rand(10, 5, 5, 3)
+    X = np.random.rand(10, 5, 3)
     return X
 
 
