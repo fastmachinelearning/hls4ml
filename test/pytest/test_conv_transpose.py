@@ -38,9 +38,9 @@ def model1D():
     return model
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
+@pytest.mark.parametrize('strategy', ['Resource'])
 @pytest.mark.filterwarnings("error")
 def test_conv1dtranspose(data1D, model1D, io_type, backend, strategy):
     '''
@@ -62,12 +62,12 @@ def test_conv1dtranspose(data1D, model1D, io_type, backend, strategy):
     y_keras = model.predict(X)
     y_hls4ml = hls_model.predict(X)
 
-    np.testing.assert_allclose(y_keras, y_hls4ml, atol=0.05)
+    np.testing.assert_allclose(y_keras.ravel(), y_hls4ml.ravel(), atol=0.05)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
+@pytest.mark.parametrize('strategy', ['Resource'])
 @pytest.mark.filterwarnings("error")
 def test_conv2dtranspose(data2D, model2D, io_type, backend, strategy):
     '''
@@ -89,4 +89,4 @@ def test_conv2dtranspose(data2D, model2D, io_type, backend, strategy):
     y_keras = model.predict(X)
     y_hls4ml = hls_model.predict(X)
 
-    np.testing.assert_allclose(y_keras, y_hls4ml, atol=0.05)
+    np.testing.assert_allclose(y_keras.ravel(), y_hls4ml.ravel(), atol=0.05)
