@@ -52,6 +52,8 @@ class ApplyResourceStrategy(OptimizerPass):
         elif isinstance(node, (LSTM, GRU)):
             node.weights['weight'].data = np.transpose(node.weights['weight'].data)
             node.weights['recurrent_weight'].data = np.transpose(node.weights['recurrent_weight'].data)
+        elif isinstance(node, (Conv2DTranspose, Conv1DTranspose)):
+            pass
         else:
             raise Exception(f'Unexpected layer {node.class_name} with resource strategy')
 
