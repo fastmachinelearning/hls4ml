@@ -682,3 +682,61 @@ def test_flatten(backend):
     hls_prediction = np.reshape(pred, (1, 288))
 
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
+
+
+class ModelSkippedLayers(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv1d(in_channels=3, out_channels=6, kernel_size=3, bias=False)
+        self.relu1 = nn.ReLU()
+        self.conv2 = nn.Conv1d(in_channels=6, out_channels=5, kernel_size=3, bias=False)
+        self.relu2 = nn.ReLU()
+        self.dropout1 = nn.Dropout()  # Should be skipped
+        self.flatten = nn.Flatten()
+        self.fc1 = nn.Linear(in_features=5 * 4, out_features=6, bias=False)
+        self.dropout2 = nn.Dropout()  # Should be skipped
+        self.fc2 = nn.Linear(in_features=6, out_features=5, bias=False)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.relu1(x)
+        x = self.conv2(x)
+        x = self.relu2(x)
+        x = self.dropout1(x)
+        x = self.flatten(x)
+        x = self.fc1(x)
+        x = self.dropout2(x)
+        x = self.fc2(x)
+        return x
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_skipped_layers(backend, io_type):
+    model = ModelSkippedLayers()
+    model.eval()
+
+    input_shape = (3, 8)
+    batch_input_shape = (None,) + input_shape
+    config = config_from_pytorch_model(
+        model, default_precision='ap_fixed<32,16>', inputs_channel_last=True, transpose_outputs=False
+    )
+    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_skipped_{backend}_{io_type}')
+    hls_model = convert_from_pytorch_model(
+        model,
+        batch_input_shape,
+        hls_config=config,
+        output_dir=output_dir,
+        io_type=io_type,
+        backend=backend,
+    )
+
+    hls_model.compile()
+
+    input = torch.randn(10, 3, 8)
+    hls_input = np.ascontiguousarray(torch.permute(input, (0, 2, 1)).detach().numpy())  # Transpose to channels_last
+
+    pytorch_prediction = model(input).detach().numpy().flatten()
+    hls_prediction = hls_model.predict(hls_input).flatten()
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)

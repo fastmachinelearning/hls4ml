@@ -140,6 +140,9 @@ def pytorch_to_hls(config):
     # All supported layers
     supported_layers = get_supported_pytorch_layers() + skip_layers
 
+    # Map inputs of skipped and split (activation) layers
+    inputs_map = {}
+
     input_layers = []
 
     # Output shape tracking
@@ -181,6 +184,10 @@ def pytorch_to_hls(config):
                 if pytorch_class == 'Sequential':  # Ignore the mother module's class name
                     continue
 
+                # Assuming only one input
+                parent_input = [str(i) for i in node.args][0]
+                inputs_map[layer_name] = inputs_map.get(parent_input, parent_input)
+
                 output_shapes[layer_name] = input_shapes[0]
 
                 continue
@@ -190,7 +197,7 @@ def pytorch_to_hls(config):
                 layer_counter += 1
 
             # parse info from class object
-            input_names = [str(i) for i in node.args]
+            input_names = [inputs_map.get(str(i), str(i)) for i in node.args]
             input_shapes = [output_shapes[str(i)] for i in node.args]
 
             # for Conv layers
@@ -228,7 +235,7 @@ def pytorch_to_hls(config):
             input_layer['input_shape'] = list(input_shapes[n_inputs][1:])
             layer_list.insert(n_inputs, input_layer)
 
-            output_shapes[input_layer['name']] = input_shapes[n_inputs]
+            output_shapes[input_layer['name']] = list(input_shapes[n_inputs])
             input_layers.append(input_layer['name'])
             n_inputs += 1
 
@@ -257,7 +264,7 @@ def pytorch_to_hls(config):
 
             layer_counter += 1
 
-            input_names = [str(i) for i in node.all_input_nodes]
+            input_names = [inputs_map.get(str(i), str(i)) for i in node.all_input_nodes]
             input_shapes = [list(output_shapes[str(i)]) for i in input_names]
 
             # Process the layer
@@ -310,10 +317,7 @@ def pytorch_to_hls(config):
 
             layer_counter += 1
 
-            if 'View' in operation:
-                input_names = [str(node.args[0])]
-            else:
-                input_names = [str(i) for i in node.args]
+            input_names = [inputs_map.get(str(i), str(i)) for i in node.all_input_nodes]
 
             # Process the layer
             input_shapes = [list(output_shapes[str(i)]) for i in input_names]

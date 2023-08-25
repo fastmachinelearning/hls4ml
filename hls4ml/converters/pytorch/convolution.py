@@ -9,6 +9,7 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer = {}
 
     layer['name'] = layer_name
+    layer['inputs'] = input_names
     layer['class_name'] = 'Conv1D'
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
 
@@ -58,6 +59,7 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer = {}
 
     layer['name'] = layer_name
+    layer['inputs'] = input_names
     layer['class_name'] = 'Conv2D'
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
 

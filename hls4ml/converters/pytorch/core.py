@@ -9,6 +9,7 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, c
 
     layer['class_name'] = 'Dense'
     layer['name'] = layer_name
+    layer['inputs'] = input_names
 
     layer['weight_data'] = class_object.weight.data.numpy()
     if class_object.bias is not None:
@@ -44,6 +45,7 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, nod
     layer['class_name'] = operation
     layer['activation'] = layer['class_name']
     layer['name'] = layer_name
+    layer['inputs'] = input_names
 
     # if layer['class_name'] != 'Activation':
     #    layer['activation'] = layer['class_name']
@@ -97,6 +99,7 @@ def parse_batchnorm_layer(operation, layer_name, input_names, input_shapes, node
     layer['class_name'] = 'BatchNormalization'
     layer['data_format'] = 'channels_first'
     layer['name'] = layer_name
+    layer['inputs'] = input_names
 
     # batchnorm para
     if node.op == 'call_module':

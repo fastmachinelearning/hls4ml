@@ -12,6 +12,7 @@ def parse_reshape_layer(operation, layer_name, input_names, input_shapes, node, 
     layer = {}
     layer['class_name'] = 'Reshape'
     layer['name'] = layer_name
+    layer['inputs'] = input_names
 
     layer['target_shape'] = [int(i) for i in node.args[1:]]
     # View can have -1 as one as the dimensions,
@@ -64,6 +65,7 @@ def parse_unsqueeze_layer(operation, layer_name, input_names, input_shapes, node
     layer = {}
     layer['class_name'] = 'Reshape'
     layer['name'] = layer_name
+    layer['inputs'] = input_names
 
     # Unlike in 'squeeze' in 'unsqueeze', dim argument must exist
     output_shape = [i for i in input_shapes[0]]
