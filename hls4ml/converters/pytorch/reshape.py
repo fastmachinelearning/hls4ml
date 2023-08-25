@@ -27,3 +27,55 @@ def parse_reshape_layer(operation, layer_name, input_names, input_shapes, node, 
     output_shape = input_shapes[0][:1] + layer['target_shape']
 
     return layer, output_shape
+
+@pytorch_handler('squeeze')
+def parse_squeeze_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+    assert operation == 'squeeze'
+
+    layer = {}
+    layer['class_name'] = 'Reshape'
+    layer['name'] = layer_name
+
+    if len(node.args) > 1 or len(node.kwargs) > 0: # 'dim' argument is specified
+        output_shape = [i for i in input_shapes[0]]
+        squeeze_dim = node.kwargs.get('dim', None)
+        if squeeze_dim is None:
+            squeeze_dim = node.args[1]
+        if isinstance(squeeze_dim, tuple):
+            for dim in squeeze_dim:
+                del output_shape[dim]
+        else:
+            del output_shape[squeeze_dim]
+    else:
+        output_shape = [i for i in input_shapes[0] if i != 1]
+
+    layer['target_shape'] = output_shape.copy()
+    if layer['target_shape'][0] is None:
+        del layer['target_shape'][0]
+
+    return layer, output_shape
+
+
+@pytorch_handler('unsqueeze')
+def parse_unsqueeze_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+    assert operation == 'unsqueeze'
+
+    layer = {}
+    layer['class_name'] = 'Reshape'
+    layer['name'] = layer_name
+
+    # Unlike in 'squeeze' in 'unsqueeze', dim argument must exist
+    output_shape = [i for i in input_shapes[0]]
+    if len(node.args) > 1:  # Specified as unsqueeze(x, n)
+        squeeze_dim = node.args[1]
+    else: # Specified as unsqueeze(x, dim=n)
+        squeeze_dim = node.kwargs['dim']
+    # insert() will add an element before the index, unsqueeze expects the location
+    index = output_shape.index(output_shape[squeeze_dim])# + 1
+    output_shape.insert(index, 1)
+
+    layer['target_shape'] = output_shape.copy()
+    if layer['target_shape'][0] is None:
+        del layer['target_shape'][0]
+
+    return layer, output_shape

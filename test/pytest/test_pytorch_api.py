@@ -613,3 +613,54 @@ def test_bn(backend, io_type):
     assert list(hls_model.get_layers())[3].attributes['class_name'] == 'BatchNormalization'
     assert list(hls_model.get_layers())[3].attributes['n_in'] == 8
     assert list(hls_model.get_layers())[3].attributes['n_out'] == 8
+
+
+class SqueezeModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear = nn.Linear(5, 3, bias=False)
+        self.bn = nn.BatchNorm1d(3)
+        nn.init.ones_(self.linear.weight) # This test is not about precision, so put 1's here
+
+    def forward(self, x):
+        x = torch.unsqueeze(x, dim=1) # (1, 5) -> (1, 1, 5)
+        x = self.linear(x) # (1, 1, 3)
+        x = torch.squeeze(x) # (3,)
+        x = torch.relu(x) # (3,)
+        return x
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_squeeze(backend, io_type):
+    model = SqueezeModel()
+    model.eval()
+
+    X_input = np.random.rand(1, 5)
+
+    pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy().flatten()
+
+    config = config_from_pytorch_model(model)
+    del config['Model']['InputsChannelLast'] # We don't want anything touched for this test
+    output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_squeeze_{backend}_{io_type}')
+
+    hls_model = convert_from_pytorch_model(
+        model, (None, 5), hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+
+    hls_model.compile()
+
+    hls_prediction = hls_model.predict(X_input).flatten()
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)
+
+    if io_type == 'io_parallel':
+        assert list(hls_model.get_layers())[1].attributes['class_name'] == 'Reshape'
+        assert list(hls_model.get_layers())[1].attributes['target_shape'] == [1, 5]
+        assert list(hls_model.get_layers())[3].attributes['class_name'] == 'Reshape'
+        assert list(hls_model.get_layers())[3].attributes['target_shape'] == [3]
+    elif io_type == 'io_stream':
+        assert list(hls_model.get_layers())[1].class_name == 'Repack'
+        assert list(hls_model.get_layers())[1].attributes['target_shape'] == [1, 5]
+        assert list(hls_model.get_layers())[3].attributes['class_name'] == 'Reshape' # Exists as in-place variable
+        assert list(hls_model.get_layers())[3].attributes['target_shape'] == [3]
