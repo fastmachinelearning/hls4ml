@@ -583,7 +583,7 @@ class BatchNormModel(nn.Module):
 
     def forward(self, x):
         x = self.linear(x)
-        x = self.relu(x) # This is to prevent merging of BN into Linear
+        x = self.relu(x)  # This is to prevent merging of BN into Linear
         return self.bn(x)
 
 
@@ -620,13 +620,13 @@ class SqueezeModel(nn.Module):
         super().__init__()
         self.linear = nn.Linear(5, 3, bias=False)
         self.bn = nn.BatchNorm1d(3)
-        nn.init.ones_(self.linear.weight) # This test is not about precision, so put 1's here
+        nn.init.ones_(self.linear.weight)  # This test is not about precision, so put 1's here
 
     def forward(self, x):
-        x = torch.unsqueeze(x, dim=1) # (1, 5) -> (1, 1, 5)
-        x = self.linear(x) # (1, 1, 3)
-        x = torch.squeeze(x) # (3,)
-        x = torch.relu(x) # (3,)
+        x = torch.unsqueeze(x, dim=1)  # (1, 5) -> (1, 1, 5)
+        x = self.linear(x)  # (1, 1, 3)
+        x = torch.squeeze(x)  # (3,)
+        x = torch.relu(x)  # (3,)
         return x
 
 
@@ -641,7 +641,7 @@ def test_squeeze(backend, io_type):
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy().flatten()
 
     config = config_from_pytorch_model(model)
-    del config['Model']['InputsChannelLast'] # We don't want anything touched for this test
+    del config['Model']['InputsChannelLast']  # We don't want anything touched for this test
     output_dir = str(test_root_path / f'hls4mlprj_pytorch_api_squeeze_{backend}_{io_type}')
 
     hls_model = convert_from_pytorch_model(
@@ -662,9 +662,10 @@ def test_squeeze(backend, io_type):
     elif io_type == 'io_stream':
         assert list(hls_model.get_layers())[1].class_name == 'Repack'
         assert list(hls_model.get_layers())[1].attributes['target_shape'] == [1, 5]
-        assert list(hls_model.get_layers())[3].attributes['class_name'] == 'Reshape' # Exists as in-place variable
+        assert list(hls_model.get_layers())[3].attributes['class_name'] == 'Reshape'  # Exists as in-place variable
         assert list(hls_model.get_layers())[3].attributes['target_shape'] == [3]
-        
+
+
 @pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
 def test_flatten(backend):
     input = torch.randn(1, 1, 5, 5)

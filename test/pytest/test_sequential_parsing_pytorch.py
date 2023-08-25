@@ -1,8 +1,8 @@
+from collections import OrderedDict
 from pathlib import Path
 
 import pytest
 import torch.nn as nn
-from collections import OrderedDict
 
 from hls4ml.converters import convert_from_pytorch_model
 from hls4ml.utils.config import config_from_pytorch_model
@@ -12,15 +12,10 @@ test_root_path = Path(__file__).parent
 # Model with unnamed Sequential and no named layers
 seq_unnamed = nn.Sequential(nn.Conv2d(1, 20, 5), nn.ReLU(), nn.Conv2d(20, 64, 5), nn.ReLU())
 
-# Model with unnamed Sequential and named layers 
+# Model with unnamed Sequential and named layers
 seq_named = nn.Sequential(
     OrderedDict(
-        [
-            ('conv_1', nn.Conv2d(1, 20, 5)),
-            ('relu_1', nn.ReLU()),
-            ('conv_2', nn.Conv2d(20, 64, 5)),
-            ('relu_2', nn.ReLU())
-        ]
+        [('conv_1', nn.Conv2d(1, 20, 5)), ('relu_1', nn.ReLU()), ('conv_2', nn.Conv2d(20, 64, 5)), ('relu_2', nn.ReLU())]
     )
 )
 
@@ -35,24 +30,26 @@ class SeqModelUnnamedLayers(nn.Module):
         output = self.layer(x)
         return output
 
+
 # Model with named Sequential and named layers
 class SeqModelNamedLayers(nn.Module):
     def __init__(self):
         super().__init__()
         self.layer = nn.Sequential(
-                OrderedDict(
-                    [
-                        ('conv_1', nn.Conv2d(1, 20, 5)),
-                        ('relu_1', nn.ReLU()),
-                        ('conv_2', nn.Conv2d(20, 64, 5)),
-                        ('relu_2', nn.ReLU())
-                    ]
-                )
+            OrderedDict(
+                [
+                    ('conv_1', nn.Conv2d(1, 20, 5)),
+                    ('relu_1', nn.ReLU()),
+                    ('conv_2', nn.Conv2d(20, 64, 5)),
+                    ('relu_2', nn.ReLU()),
+                ]
             )
+        )
 
     def forward(self, x):
         output = self.layer(x)
         return output
+
 
 @pytest.mark.parametrize('backend', ['Vivado'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
