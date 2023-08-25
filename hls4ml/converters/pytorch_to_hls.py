@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 
 from hls4ml.model import ModelGraph
@@ -95,6 +94,7 @@ layer_name_map = {
     'max_pool2d': 'MaxPool2d',
     'avg_pool1d': 'AvgPool1d',
     'avg_pool2d': 'AvgPool2d',
+    'flatten': 'Flatten',
 }
 
 
@@ -135,7 +135,7 @@ def pytorch_to_hls(config):
 
     traced_model = symbolic_trace(model)
     # Define layers to skip for conversion to HLS
-    skip_layers = ['Dropout', 'Flatten', 'Sequential']
+    skip_layers = ['Dropout', 'Sequential']
 
     # All supported layers
     supported_layers = get_supported_pytorch_layers() + skip_layers
@@ -181,10 +181,8 @@ def pytorch_to_hls(config):
                 if pytorch_class == 'Sequential':  # Ignore the mother module's class name
                     continue
 
-                if pytorch_class == 'Flatten':
-                    output_shapes[layer_name] = [input_shapes[0][0], np.prod(input_shapes[0][1:])]
-                else:
-                    output_shapes[layer_name] = input_shapes[0]
+                output_shapes[layer_name] = input_shapes[0]
+
                 continue
 
             # Increment the layer counter after initial screenings

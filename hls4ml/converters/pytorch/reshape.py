@@ -59,11 +59,7 @@ def parse_squeeze_layer(operation, layer_name, input_names, input_shapes, node, 
 @pytorch_handler('unsqueeze')
 def parse_unsqueeze_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
     assert operation == 'unsqueeze'
-
-    layer = {}
-    layer['class_name'] = 'Reshape'
-    layer['name'] = layer_name
-
+    
     # Unlike in 'squeeze' in 'unsqueeze', dim argument must exist
     output_shape = [i for i in input_shapes[0]]
     if len(node.args) > 1:  # Specified as unsqueeze(x, n)
@@ -76,6 +72,27 @@ def parse_unsqueeze_layer(operation, layer_name, input_names, input_shapes, node
 
     layer['target_shape'] = output_shape.copy()
     if layer['target_shape'][0] is None:
-        del layer['target_shape'][0]
+        del layer['target_shape'][0]    
+
+@pytorch_handler('Flatten')
+def parse_flatten_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+    assert operation == 'Flatten'
+
+    layer = {}
+    layer['class_name'] = 'Reshape'
+    layer['name'] = layer_name
+    layer['inputs'] = input_names
+
+    start_dim = class_object.start_dim
+    end_dim = class_object.end_dim
+    if end_dim + 1 == 0 or end_dim + 1 > len(input_shapes[0]):
+        end_dim = len(input_shapes[0])
+    else:
+        end_dim = end_dim + 1
+
+    layer['target_shape'] = (
+        input_shapes[0][0:start_dim] + [np.prod(input_shapes[0][start_dim:end_dim])] + input_shapes[0][end_dim:]
+    )
+    output_shape = layer['target_shape']
 
     return layer, output_shape
