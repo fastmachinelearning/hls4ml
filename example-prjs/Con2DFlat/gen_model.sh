@@ -1,7 +1,7 @@
 #! /bin/bash
-
-# This script runs the Vivado flows to generate the HLS.
-
+rm -rf tb_data my-* conv2d* a.out perf.data
+mkdir tb_data
+# This script runs the Vivado flows to generate the TensorFlow Keras Model.
 VENV=../../../../venv
 
 MGC_HOME=/wv/hlsb/CATAPULT/TOT/CURRENT/aol/Mgc_home
@@ -15,11 +15,8 @@ export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 export OSTYPE=linux-gnu
 
 echo "Activating Virtual Environment..."
-#    bash
+#bash
 source $VENV/bin/activate
 
-echo ""
-echo "====================================================="
-echo "====================================================="
-echo "Running Vivado"
-pushd my-Vivado-test; /wv/hlstools/vivado/ixl/Xilinx/Vivado/2018.3/bin/vivado_hls -f build_prj.tcl "csim=1 cosim=1 synth=1 vsynth=1 validation=1"; popd
+# actually run HLS4ML + Vivado HLS
+python3 model.py

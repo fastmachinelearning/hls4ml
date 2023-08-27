@@ -1,10 +1,10 @@
 #! /bin/bash
 
 
-clear
-printf '\033[3J'
+# clear
+# printf '\033[3J'
 
-# This script runs the Catapult flows to generate the HLS.
+# # This script runs the Catapult flows to generate the HLS.
 
 VENV=$HOME/venv
 
@@ -22,5 +22,6 @@ echo "====================================================="
 echo "====================================================="
 echo "C++ EXECUTION"
 rm -f a.out; $MGC_HOME/bin/g++ -g -std=c++17 -I. -DWEIGHTS_DIR=\"my-Catapult-test/firmware/weights\" -Imy-Catapult-test/firmware -I$MGC_HOME/shared/include my-Catapult-test/firmware/myproject.cpp my-Catapult-test/myproject_test.cpp;
-a.out
+perf record -g ./a.out
+# python3 agrmax.py
 
