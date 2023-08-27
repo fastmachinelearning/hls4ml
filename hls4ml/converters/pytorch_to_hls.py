@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 
 from hls4ml.model import ModelGraph
@@ -17,29 +16,10 @@ class PyTorchModelReader:
     def get_weights_data(self, layer_name, var_name):
         data = None
 
-        # Parameter mapping from pytorch to keras
-        torch_paramap = {
-            # Conv
-            'kernel': 'weight',
-            # Batchnorm
-            'gamma': 'weight',
-            # Activiation
-            'alpha': 'weight',
-            'beta': 'bias',
-            'moving_mean': 'running_mean',
-            'moving_variance': 'running_var',
-        }
-
         # Workaround for naming schme in nn.Sequential,
         # have to remove the prefix we previously had to add to make sure the tensors are found
         if 'layer_' in layer_name:
             layer_name = layer_name.split('layer_')[-1]
-
-        if var_name not in list(torch_paramap.keys()) + ['weight', 'bias']:
-            raise Exception('Pytorch parameter not yet supported!')
-
-        elif var_name in list(torch_paramap.keys()):
-            var_name = torch_paramap[var_name]
 
         # if a layer is reused in the model, torch.FX will append a "_n" for the n-th use
         # have to snap that off to find the tensors
@@ -124,6 +104,7 @@ layer_name_map = {
     'max_pool2d': 'MaxPool2d',
     'avg_pool1d': 'AvgPool1d',
     'avg_pool2d': 'AvgPool2d',
+    'flatten': 'Flatten',
 }
 
 
@@ -163,7 +144,7 @@ def pytorch_to_hls(config):
 
     traced_model = symbolic_trace(model)
     # Define layers to skip for conversion to HLS
-    skip_layers = ['Dropout', 'Flatten', 'Sequential']
+    skip_layers = ['Dropout', 'Sequential']
 
     # All supported layers
     supported_layers = get_supported_pytorch_layers() + skip_layers
@@ -208,10 +189,8 @@ def pytorch_to_hls(config):
                 if pytorch_class == 'Sequential':  # Ignore the mother module's class name
                     continue
 
-                if pytorch_class == 'Flatten':
-                    output_shapes[layer_name] = [input_shapes[0][0], np.prod(input_shapes[0][1:])]
-                else:
-                    output_shapes[layer_name] = input_shapes[0]
+                output_shapes[layer_name] = input_shapes[0]
+
                 continue
 
             # Increment the layer counter after initial screenings
