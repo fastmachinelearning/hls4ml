@@ -19,7 +19,7 @@ template <class x_T, class w_T> class both_binary : public Product {
   public:
     inline static x_T product(x_T a, w_T w) {
         // specialisation for 1-bit weights and incoming data
-        return a & w;
+        return a == w;
     }
 };
 

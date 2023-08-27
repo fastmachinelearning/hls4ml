@@ -88,7 +88,7 @@ void normalize_binary_tanh(data_T data[CONFIG_T::n_in], ap_uint<1> res[CONFIG_T:
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         datareg = data[ii];
         int norm_index = CONFIG_T::n_filt == -1 ? ii : ii % CONFIG_T::n_filt;
-        if (datareg > threshold[norm_index])
+        if (datareg >= threshold[norm_index])
             cache = 1;
         else
             cache = 0;
