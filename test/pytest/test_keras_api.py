@@ -312,7 +312,7 @@ def test_depthwise2d(backend, io_type):
     model.add(DepthwiseConv2D(kernel_size=(3, 3), input_shape=(32, 32, 3)))
     model.compile()
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', default_precision='fixed<32,12>')
     output_dir = str(test_root_path / f'hls4mlprj_keras_api_depthwiseconv2d_{backend}_{io_type}')
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
